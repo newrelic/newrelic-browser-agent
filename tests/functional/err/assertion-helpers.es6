@@ -1,0 +1,99 @@
+import url from 'url'
+import canonicalFunctionName from '../../../feature/err/aggregate/canonical-function-name'
+import stringHashCode from '../../../feature/err/aggregate/string-hash-code'
+
+function computeExpectedCanonicalStack (expectedStack) {
+  let canonicalStack = expectedStack.map((frame) => {
+    let line = ''
+    if (frame.f) line += `${canonicalFunctionName(frame.f)}@`
+    if (frame.u) line += frame.u
+    if (frame.l) line += `:${frame.l}`
+    return line
+  }).join('\n')
+
+  return canonicalStack
+}
+
+export function assertErrorAttributes (t, query) {
+  t.equal(query.pve, '1', 'pageViewErr reported')
+}
+
+export function verifyStackTraceOmits (t, actualErrors, query) {
+  t.equal(actualErrors.length, 1, 'Expected exactly one error')
+
+  let stackTrace = actualErrors[0].params.stack_trace
+  t.equal(stackTrace.indexOf(query), -1, 'stack trace should not include URL query string or fragment')
+}
+
+export function assertExpectedErrors (t, browser, actualErrors, expectedErrors, assetURL) {
+  let expectedPath = url.parse(assetURL).pathname
+
+  t.equal(actualErrors.length, expectedErrors.length, `exactly ${expectedErrors.length} errors`)
+
+  for (let expectedError of expectedErrors) {
+    let matchingErrors = actualErrors.filter((e) => {
+      return e.params.message.search(expectedError.message) !== -1
+    })
+    let actualError = matchingErrors[0]
+
+    t.ok(actualError, 'found expected error')
+    // This is a bit hacky here, where we check if the message is
+    // 'uncaught error' before testing the class name
+    if (expectedError.message === 'uncaught error') {
+      var errorClass = actualError.params.exceptionClass
+      if (browser.hasFeature('uncaughtErrorObject')) {
+        t.equal(errorClass, 'Error', 'Uncaught error is of Error class')
+      } else {
+        t.equal(errorClass, 'UncaughtException', 'Uncaught error class is UncaughtException')
+      }
+    }
+
+    // Test that instrumentation is filtered out from stack traces
+    let expectedStack = expectedError.stack
+    let actualStack = actualError.params.stack_trace
+
+    if (actualStack && actualStack.match(/nrWrapper/)) {
+      t.fail('instrumentation not filtered out of ' + actualStack)
+    }
+
+    // Evaluated code in Firefox is indistinguishable from anonymous function calls. Due to how we test
+    // errors, it's not easy to ensure the stack frame line number is correct. Skip this test, disaggregation
+    // when people are using eval is not a big concern.
+    if (expectedStack[0].f === 'evaluated code' && browser.match('firefox')) {
+      return t.skip('Skipping eval code check for browsers with indistinguishable stacks')
+    }
+
+    var expectedCanonicalStack = computeExpectedCanonicalStack(expectedStack)
+    var expectedStackHash = stringHashCode(expectedCanonicalStack)
+
+    t.equal(actualError.params.stackHash, expectedStackHash, 'Stack hash for error ' + expectedError.message)
+
+    if (actualError.params.stackHash !== expectedStackHash && actualError.params.canonicalStack) {
+      console.log('Actual stack from browser:\n' + actualError.params.origStack)
+      console.log('\nActual canonical stack from browser:\n' + actualError.params.canonicalStack)
+      console.log('\nExpected canonical stack:\n' + expectedCanonicalStack + '\n')
+      console.log(actualError.params.origStackInfo)
+    }
+
+    t.equal(actualError.params['request_uri'], expectedPath, 'has correct request_uri attribute')
+  }
+}
+
+export function getErrorsFromResponse(response, browser) {
+  if (response.body) {
+    try {
+      var parsedBody = JSON.parse(response.body)
+      if (parsedBody.err) {
+        return parsedBody.err
+      }
+    } catch (e) {}
+  }
+  if (response.query && response.query.err) {
+    try {
+      var parsedQueryParam = JSON.parse(response.query.err)
+      return parsedQueryParam
+    } catch (e) {}
+  }
+  return null
+}
+

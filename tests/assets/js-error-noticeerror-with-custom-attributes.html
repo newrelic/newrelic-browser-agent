@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {loader}
+    {config}
+
+    <script>
+      newrelic.noticeError(new Error('my error'), {custom1: 'val1', custom2: 'val2'})
+    </script>
+
+    <title>RUM Unit Test</title>
+  </head>
+  <body>
+    This page calls noticeError with custom attributes.
+  </body>
+</html>

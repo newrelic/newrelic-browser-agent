@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {config}
+    <script>
+    var config = NREUM.info
+    delete NREUM.info
+    window.addEventListener('load', function () {
+      window.loadEventHasFired = true
+      setTimeout(function () { NREUM.info = config }, 0)
+    })
+    </script>
+    {loader}
+  </head>
+  <body>
+    this is a generic page that is instrumented by the JS agent
+  </body>
+</html>

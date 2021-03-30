@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Error in interaction</title>
+  {loader} {config}
+</head>
+
+<body>
+  Tests the interaction between discarded Browser Interactions and Errors. Interaction is discarded when there is no change in URL hash.
+
+  <script>
+    document.addEventListener('click', function () {
+      setTimeout(function foo () {
+        (function bar () {
+          throw new Error('some error')
+        })()
+      }, 100)
+    })
+  </script>
+</body>
+
+</html>

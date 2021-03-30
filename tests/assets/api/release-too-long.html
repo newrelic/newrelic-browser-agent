@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {loader}
+    {config}
+  </head>
+  <body>
+    Api test!
+    <script>
+      var oneHundredY = 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy'
+      var oneHundredX = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+      var twoHundredOneCharacterString = oneHundredY + oneHundredX + 'q'
+      newrelic.addRelease('one', twoHundredOneCharacterString.length)
+      newrelic.addRelease(twoHundredOneCharacterString, '2')
+      newrelic.addRelease('three', twoHundredOneCharacterString)
+
+      setTimeout(function () {
+        throw new Error('error with release')
+      })
+    </script>
+  </body>
+</html>
+

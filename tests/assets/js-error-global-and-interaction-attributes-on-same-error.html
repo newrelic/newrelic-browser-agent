@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {loader}
+    {config}
+
+    <script>
+      newrelic.setCustomAttribute('globalKey', 1)
+      try {
+        throw new Error("My error")
+      } catch (e) {
+        NREUM.noticeError(e)
+      }
+      newrelic.interaction().setAttribute('localKey', 2)
+    </script>
+    <title>RUM Unit Test</title>
+  </head>
+  <body>
+    This page throws a new error with a caught exception before the page loads
+  </body>
+</html>

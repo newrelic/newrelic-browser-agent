@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {config}
+    {loader}
+  </head>
+  <body>
+    <div>This page fires a fetch request and calls pushState when clicked</div>
+
+    <script type="text/javascript">
+    document.addEventListener('click', simpleFetch)
+
+    function simpleFetch() {
+      fetch('/text')
+      .then(function (res) {})
+      window.location.hash = Math.random()
+    }
+    </script>
+  </body>
+</html>

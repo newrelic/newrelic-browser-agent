@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {config}
+    {loader}
+  </head>
+  <body>
+    this is a generic page that is instrumented by the JS agent
+    <script>
+      document.addEventListener('click', function () {
+        setTimeout(function () {
+          var xhr = new XMLHttpRequest()
+          xhr.onload = onload
+          xhr.open('GET', '/')
+          xhr.send()
+
+          function onload () {
+            fetch('/').then(function () {
+              window.history.replaceState(null, Math.random(), '#' + Math.random())
+              setTimeout(function () {
+                window.location.hash = '#' + Math.random()
+                Promise.resolve().catch().then(function () {
+                  setTimeout(function () {
+                  }, 10)
+                })
+              }, 10)
+            })
+          }
+        }, 100)
+      })
+    </script>
+  </body>
+</html>

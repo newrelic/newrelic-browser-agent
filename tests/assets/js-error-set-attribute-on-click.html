@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {loader}
+    {config}
+
+    <script>
+      function triggerError() {
+        try {
+          throw new Error("My error")
+        } catch (e) {
+          NREUM.noticeError(e)
+        }
+        newrelic.interaction().setAttribute('customParamKey', 1)
+        window.location.hash = Math.random()
+      }
+    </script>
+
+    <title>RUM Unit Test</title>
+  </head>
+  <body>
+    This page throws a new error with a caught exception when the click event fires
+    <button id="trigger">trigger</button>
+    <br/><br/>
+    <button>Trigger error</button>
+    <script>
+      var btn = document.getElementById('trigger')
+      if (window.addEventListener) {
+        btn.addEventListener('click', triggerError)
+      } else {
+        btn.onclick = triggerError
+      }
+    </script>
+  </body>
+</html>

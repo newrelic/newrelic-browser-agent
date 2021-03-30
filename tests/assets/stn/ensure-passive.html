@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    <script>
+      window.failed = false
+      window.gotScroll = false
+      var originalAddE = document.addEventListener
+      document.addEventListener = function (name, fn, flags) {
+        if (name === 'scroll') {
+          window.gotScroll = true
+          if (!flags.passive) {
+            window.failed = true
+          }
+        }
+
+        originalAddE.apply(this, arguments)
+      }
+    </script>
+    {loader}
+    {config}
+  </head>
+  <body>
+  </body>
+</html>

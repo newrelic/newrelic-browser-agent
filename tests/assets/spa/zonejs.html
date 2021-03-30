@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM inline hit test</title>
+    {loader}
+    {config}
+    <script type="text/javascript" src="../js/vendor/zone.js"></script>
+  </head>
+  <body>
+    <div>This page contains zone.js</div>
+    <script type="text/javascript">
+    document.addEventListener('click', function () {
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        window.location.hash = Math.random()
+      }), 500)
+    }, false)
+    </script>
+  </body>
+</html>

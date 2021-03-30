@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>JSONP Angular Unit Test</title>
+    {config}
+    {loader}
+    <script src="../../js/vendor/angular-1.6.6.js"></script>
+    <script src="../../js/vendor/angular-resource-1.6.6.js"></script>
+
+    <script>
+
+    angular.module('myApp', ['ngResource']).controller('myCtrl', function ($scope, $http) {
+      window.$http = $http
+    })
+
+    document.addEventListener('click', function () {
+      window.$http.jsonp("/jsonp").then(function (response) {
+        var el = document.createElement('p')
+        el.innerHTML = JSON.stringify(response.data)
+        document.body.appendChild(el)
+        setTimeout(newrelic.interaction().createTracer('tacoTimer', function () {
+          window.location.hash = Math.random()
+        }), 500)
+      })
+    }, false)
+    </script>
+  </head>
+  <body ng-app="myApp" ng-controller="myCtrl">
+      <p>Click me!</p>
+  </body>
+</html>

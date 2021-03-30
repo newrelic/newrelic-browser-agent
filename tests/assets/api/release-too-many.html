@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {loader}
+    {config}
+  </head>
+  <body>
+    Api test!
+    <script>
+      newrelic.addRelease('one', '1')
+      newrelic.addRelease('two', '2')
+      newrelic.addRelease('three', '3')
+      newrelic.addRelease('four', '4')
+      newrelic.addRelease('five', '5')
+      newrelic.addRelease('six', '6')
+      newrelic.addRelease('seven', '7')
+      newrelic.addRelease('eight', '8')
+      newrelic.addRelease('nine', '9')
+      newrelic.addRelease('ten', '10')
+      newrelic.addRelease('eleven', '11')
+
+      setTimeout(function () {
+        throw new Error('error with release')
+      })
+    </script>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {config}
+    {loader}
+  </head>
+  <body>
+    <div id="initial">initial content</div>
+
+    <script>
+      window.addEventListener('load', run)
+
+      function run() {
+        // when not delayed, the CLS entry is seen as having recent input
+        // not sure why that it, it only happens in Selenium
+        setTimeout(triggerCls, 600)
+      }
+
+      function triggerCls() {
+        var newDiv = document.createElement("div")
+        newDiv.id = 'clsText'
+        newDiv.innerText = 'inserted text'
+        document.body.insertBefore(newDiv, document.body.firstChild)
+        window.contentAdded = true
+      }
+    </script>
+  </body>
+</html>

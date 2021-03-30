@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {loader}
+    {config}
+  </head>
+  <body>
+    <script>
+      newrelic.setPageViewName('/foo', 'http://bar.baz')
+      setTimeout(function () {
+        newrelic.finished(new Date().getTime())
+      }, 0)
+    </script>
+  </body>
+</html>

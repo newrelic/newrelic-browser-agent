@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {config}
+    {loader}
+    {init}
+  </head>
+  <body>
+    <div>This page fires an XHR and calls pushState when clicked</div>
+    <script type="text/javascript">
+      var xhr = new XMLHttpRequest()
+
+      var testId = window.location.search.match(/testId=([^&]*)/)[1]
+      var url = '/dt/' + testId
+
+      xhr.open('GET', url)
+      xhr.send()
+    </script>
+  </body>
+</html>

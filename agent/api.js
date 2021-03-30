@@ -6,7 +6,10 @@ var submitData = require('./submit-data')
 var mapOwn = require('map-own')
 var loader = require('loader')
 var handle = require('handle')
+var config = require('config')
 var cycle = 0
+
+var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
 
 harvest.on('jserrors', function () {
   return { qs: agg.take([ 'cm' ]) }
@@ -70,7 +73,7 @@ function inlineHit (t, request_name, queue_time, app_time, total_be_time, dom_ti
 
   if (!loader.info.beacon) return
 
-  var url = 'https://' + loader.info.beacon + '/1/' + loader.info.licenseKey
+  var url = scheme + '://' + loader.info.beacon + '/1/' + loader.info.licenseKey
 
   url += '?a=' + loader.info.applicationID + '&'
   url += 't=' + request_name + '&'

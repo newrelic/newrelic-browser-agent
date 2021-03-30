@@ -17,6 +17,7 @@ var jsonp = 'NREUM.setToken'
 var _events = {}
 var haveSendBeacon = !!navigator.sendBeacon
 var tooManyRequestsDelay = config.getConfiguration('harvest.tooManyRequestsDelay') || 60
+var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
 
 // requiring ie version updates the IE version on the loader object
 var ieVersion = require('./ie-version')
@@ -107,7 +108,7 @@ function sendRUM (nr) {
     var queryString = encode.fromArray(chunksForQueryString, nr.maxBytes)
 
     submitData.jsonp(
-      'https://' + nr.info.beacon + '/' + protocol + '/' + nr.info.licenseKey + queryString,
+      scheme + '://' + nr.info.beacon + '/' + protocol + '/' + nr.info.licenseKey + queryString,
       jsonp
     )
   }
@@ -194,7 +195,7 @@ function _send (endpoint, nr, payload, opts, submitMethod, cbFinished) {
 
   if (!opts) opts = {}
 
-  var url = 'https://' + nr.info.errorBeacon + '/' + endpoint + '/1/' + nr.info.licenseKey + baseQueryString(nr)
+  var url = scheme + '://' + nr.info.errorBeacon + '/' + endpoint + '/1/' + nr.info.licenseKey + baseQueryString(nr)
   if (payload.qs) url += encode.obj(payload.qs, nr.maxBytes)
 
   if (!submitMethod) {
@@ -278,7 +279,7 @@ function getSubmitMethod(endpoint, opts) {
 }
 
 function pingErrors (nr) {
-  if (!(nr && nr.info && nr.info.errorBeacon && nr.ieVersion)) return
+  if (scheme === 'http' || !(nr && nr.info && nr.info.errorBeacon && nr.ieVersion)) return
 
   var url = 'https://' + nr.info.errorBeacon + '/jserrors/ping/' + nr.info.licenseKey + baseQueryString(nr)
 

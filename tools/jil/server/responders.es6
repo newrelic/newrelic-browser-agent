@@ -1,5 +1,5 @@
 import url from 'url'
-import querypack from '@datanerd/querypack'
+import querypack from '@newrelic/nr-querypack'
 
 let responders = {}
 export default responders

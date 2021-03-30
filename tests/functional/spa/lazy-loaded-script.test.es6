@@ -1,5 +1,5 @@
 import testDriver from '../../../tools/jil/index.es6'
-import querypack from '@datanerd/querypack'
+import querypack from '@newrelic/nr-querypack'
 
 const asserters = testDriver.asserters
 const supported = testDriver.Matcher.withFeature('addEventListener')

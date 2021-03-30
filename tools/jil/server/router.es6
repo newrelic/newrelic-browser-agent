@@ -6,7 +6,7 @@ import querystring from 'querystring'
 import path from 'path'
 import {_extend} from 'util'
 import {asserters} from 'wd'
-import querypack from '@datanerd/querypack'
+import querypack from '@newrelic/nr-querypack'
 
 let rootDir = path.resolve(__dirname, '../../../')
 
@@ -56,7 +56,7 @@ export default class Router extends BaseServer {
   urlFor (relativePath, options) {
     let query = querystring.encode(options)
     return url.resolve(
-      `${'https'}://${this.assetServer.host}:${this.sslPort}`,
+      `${'http'}://${this.assetServer.host}:${this.port}`,
       `${relativePath}?${query}`
     )
   }
@@ -226,7 +226,7 @@ class RouterHandle {
   }
 
   beaconURL() {
-    return `${'https'}://${this.router.assetServer.host}:${this.router.sslPort}`
+    return `${'http'}://${this.router.assetServer.host}:${this.router.port}`
   }
 
   urlForBrowserTest (file) {
@@ -235,7 +235,8 @@ class RouterHandle {
       config: new Buffer(JSON.stringify({
         licenseKey: this.testID,
         assetServerPort: this.router.assetServer.port,
-        assetServerSSLPort: this.router.assetServer.sslPort
+        assetServerSSLPort: this.router.assetServer.sslPort,
+        corsServerPort: this.router.assetServer.corsServer.port
       })).toString('base64'),
       script: '/' + path.relative(rootDir, file) + '?browserify=true'
     })

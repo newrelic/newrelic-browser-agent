@@ -4,6 +4,9 @@ var mapOwn = require('map-own')
 var ee = require('ee')
 var userAgent = require('./user-agent')
 var protocolAllowed = require('./protocol-allowed')
+var config = require('config')
+
+var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
 
 var win = window
 var doc = win.document
@@ -87,7 +90,7 @@ function windowLoaded () {
   handle('timing', ['load', ts])
 
   var agent = doc.createElement('script')
-  agent.src = 'https://' + info.agent
+  agent.src = scheme + '://' + info.agent
   firstScript.parentNode.insertBefore(agent, firstScript)
 }
 

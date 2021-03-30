@@ -1,16 +1,16 @@
 import http from 'http'
 import https from 'https'
-import path from 'path'
-import fs from 'fs'
+// import path from 'path'
+// import fs from 'fs'
 import cors from 'cors'
 import url from 'url'
 import enableDestroy from 'server-destroy'
 
-let sslCertDir = path.resolve(__dirname, '../../../lib/ssl_proxy/config/')
+// let sslCertDir = path.resolve(__dirname, '../')
 
 let sslOptions = {
-  key: fs.readFileSync(path.resolve(sslCertDir, 'nr-local.net.key')),
-  cert: fs.readFileSync(path.resolve(sslCertDir, 'nr-local.net.crt'))
+  // key: fs.readFileSync(path.resolve(sslCertDir, 'nr-local.net.key')),
+  // cert: fs.readFileSync(path.resolve(sslCertDir, 'nr-local.net.crt'))
 }
 
 export default class BaseServer {
@@ -24,6 +24,7 @@ export default class BaseServer {
     this.cors = cors({origin: true, credentials: true, exposedHeaders: 'X-NewRelic-App-Data'})
     this.tag = ''
     this.logRequests = false
+    this.sslPort = null
   }
 
   addHandler (fn) {
@@ -58,11 +59,12 @@ export default class BaseServer {
     }
   }
 
-  start (port = 0, sslPort = 0, done) {
+  start (port = null, sslPort = null, done) {
     if (port >= 0) {
       this.server.listen(port)
     }
     if (sslPort >= 0) {
+      this.sslPort = sslPort
       this.sslServer.listen(sslPort, done)
     }
   }
@@ -74,9 +76,5 @@ export default class BaseServer {
 
   get port () {
     return this.server.address() ? this.server.address().port : undefined
-  }
-
-  get sslPort () {
-    return this.sslServer.address().port
   }
 }

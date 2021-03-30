@@ -1,5 +1,5 @@
 import testDriver from '../../../tools/jil/index.es6'
-import querypack from '@datanerd/querypack'
+import querypack from '@newrelic/nr-querypack'
 
 var firstPaint = testDriver.Matcher.withFeature('firstPaint')
 var firstContentfulPaint = testDriver.Matcher.withFeature('firstContentfulPaint')

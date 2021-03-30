@@ -2,8 +2,8 @@ import jil from 'jil'
 import matcher from '../../../tools/jil/util/browser-matcher'
 
 let supported = matcher.withFeature('wrappableAddEventListener')
-var qp = require('@datanerd/querypack')
-let testCases = require('@datanerd/querypack/examples/all.json').filter((testCase) => {
+var qp = require('@newrelic/nr-querypack')
+let testCases = require('@newrelic/nr-querypack/examples/all.json').filter((testCase) => {
   return testCase.schema.name === 'bel' &&
     testCase.schema.version === 7 &&
     JSON.parse(testCase.json).length === 1

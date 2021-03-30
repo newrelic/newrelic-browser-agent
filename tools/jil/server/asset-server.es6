@@ -19,6 +19,8 @@ import loaders from '../../../loaders'
 
 mime.types['es6'] = 'application/javascript'
 
+const assetsDir = path.resolve(__dirname, '../../..')
+
 class AssetTransform {
   test (params) {
     return true
@@ -50,9 +52,9 @@ class AgentInjectorTransform extends AssetTransform {
     let payloadFilename = payloadSuffix ? `nr-${payloadSuffix}.js` : 'nr.js'
 
     let config = {
-      agent: `${this.assetServer.host}:${this.assetServer.sslPort}/build/${payloadFilename}`,
-      beacon: `${this.assetServer.host}:${this.router.sslPort}`,
-      errorBeacon: `${this.assetServer.host}:${this.router.sslPort}`
+      agent: `${this.assetServer.host}:${this.assetServer.port}/build/${payloadFilename}`,
+      beacon: `${this.assetServer.host}:${this.router.port}`,
+      errorBeacon: `${this.assetServer.host}:${this.router.port}`
     }
 
     let overrides = this.parseConfigFromQueryString(params) || {}
@@ -114,7 +116,7 @@ class AgentInjectorTransform extends AssetTransform {
 
   generateInit (initFromQueryString) {
     let initString = new Buffer(initFromQueryString, 'base64').toString()
-    return `window.NREUM||(NREUM={});NREUM.init=${initString};`
+    return `window.NREUM||(NREUM={});NREUM.init=${initString};NREUM.init.ssl=false;`
   }
 
   getDebugShim () {
@@ -129,7 +131,7 @@ class AgentInjectorTransform extends AssetTransform {
           if (typeof msg === 'object') {
             msg = JSON.stringify(msg)
           }
-          var url = 'https://' + NREUM.info.beacon + '/debug?m=' + escape(msg) + '&testId=' + NREUM.info.licenseKey + '&r=' + Math.random() + '&ix=' + count
+          var url = 'http://' + NREUM.info.beacon + '/debug?m=' + escape(msg) + '&testId=' + NREUM.info.licenseKey + '&r=' + Math.random() + '&ix=' + count
           if (!sync) {
             var img = new window.Image()
             img.src = url
@@ -177,8 +179,10 @@ class AgentInjectorTransform extends AssetTransform {
           }
         }
 
+        let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;'
+
         let rspData = rawContent
-          .split('{loader}').join(tagify(loaderContent))
+          .split('{loader}').join(tagify(disableSsl + loaderContent))
           .replace('{config}', tagify(configContent))
           .replace('{init}', tagify(initContent))
           .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
@@ -242,6 +246,167 @@ class Route {
   }
 }
 
+const testRoutes = [
+  new Route('GET', '/slowscript', (req, res) => {
+    const params = parseParams(req)
+    var abort = params.abort
+    var delay = params.delay || 200
+
+    setTimeout(() => {
+      if (abort) {
+        res.destroy()
+        return
+      }
+      res.end('window.slowScriptLoaded=1')
+    }, delay)
+  }),
+  new Route('GET', '/lazyscript', (req, res) => {
+    const params = parseParams(req)
+    var delay = params.delay || 0
+    var content = params.content || ''
+    setTimeout(() => res.end(content), delay)
+  }),
+  new Route('GET', '/slowimage', (req, res) => {
+    const params = parseParams(req)
+    var delay = params.delay || 0
+    var path = resolveAssetPath('/tests/assets/images/square.png', assetsDir)
+    setTimeout(() => {
+      fs.createReadStream(path).pipe(res)
+    }, delay)
+  }),
+  new Route('GET', '/abort', (req, res) => {
+    setTimeout(() => res.end('foo'), 300)
+  }),
+  new Route('PUT', '/timeout', (req, res) => {
+    setTimeout(() => res.end('foo'), 300)
+  }),
+  new Route('POST', '/echo', (req, res) => {
+    var body = ''
+    req.on('data', function (data) {
+      body += data
+    })
+    req.on('end', function () {
+      res.end(body)
+    })
+  }),
+  new Route('GET', '/jsonp', (req, res) => {
+    const params = parseParams(req)
+    const cbName = params.callback || params.cb || 'callback'
+    setTimeout(() => {
+      if (params.plain) {
+        res.setHeader('Content-Type', 'text/plain')
+        res.end(cbName + '("taco")')
+      } else {
+        res.setHeader('Content-Type', 'text/javascript')
+        res.end(cbName + '({name: "taco"})')
+      }
+    }, params.timeout || 0)
+  }),
+  new Route('GET', '/xhr_with_cat/*', (req, res) => {
+    res.setHeader('X-NewRelic-App-Data', 'foo')
+    res.end('xhr with CAT ' + new Array(100).join('data'))
+  }),
+  new Route('GET', '/xhr_no_cat', (req, res) => {
+    res.end('xhr no CAT')
+  }),
+  new Route('GET', '/echo-headers', (req, res) => {
+    res.end(JSON.stringify(req.headers))
+  }),
+  new Route('POST', '/postwithhi/*', (req, res) => {
+    req.pipe(concat((body) => {
+      if (body.toString() === 'hi!') {
+        res.end('hi!')
+      } else {
+        res.end('bad agent! - got body = "' + body.toString() + '"')
+      }
+    })).on('error', (err) => {
+      console.log(err)
+      res.writeHead(500)
+      res.end(err.stack)
+    })
+  }),
+  new Route('GET', '/json', (req, res) => {
+    res.end('{"text":"hi!"}')
+  }),
+  new Route('GET', '/text', (req, res) => {
+    const params = parseParams(req)
+    var length = params.length || 10
+    res.end('x'.repeat(length))
+  }),
+  new Route('POST', '/formdata', (req, res) => {
+    let form = new multiparty.Form()
+    form.parse(req, (err, fields, files) => {
+      if (err) {
+        res.writeHead(500)
+        res.end('failed to parse form data submission: ' + err)
+        return
+      }
+
+      try {
+        assert.deepEqual(fields, { name: ['bob'], x: ['5'] })
+        res.end('good')
+      } catch (err) {
+        res.end('bad')
+      }
+    })
+  }),
+  new Route('GET', '/slowresponse', (req, res) => {
+    res.writeHead(200)
+    res.write('x'.repeat(8192))
+    setTimeout(() => {
+      res.write('y'.repeat(8192))
+      res.end()
+    }, 25)
+  }),
+  new Route('GET', '/gzipped', (req, res) => {
+    res.writeHead(200, { 'Content-Encoding': 'gzip' })
+
+    let gzip = zlib.createGzip()
+    gzip.pipe(res)
+    gzip.end('x'.repeat(10000))
+  }),
+  new Route('GET', '/chunked', (req, res) => {
+    res.writeHead(200, {
+      'Transfer-Encoding': 'chunked'
+    })
+    res.end('x'.repeat(10000))
+  })
+]
+
+function parseParams (req) {
+  let query = url.parse(req.url).query
+  if (!query) return {}
+  return querystring.parse(query)
+}
+
+function resolveAssetPath (relativePath, baseDir) {
+  if (relativePath[0] === '/') relativePath = relativePath.slice(1)
+
+  let resolvedAbsolutePath = path.resolve(baseDir, relativePath)
+  if (resolvedAbsolutePath.slice(0, baseDir.length) === baseDir) {
+    return resolvedAbsolutePath
+  }
+}
+
+class TestServer extends BaseServer {
+  constructor() {
+    super()
+    this.routes = testRoutes
+    this.addHandler(this.serviceRequest.bind(this))
+  }
+
+  serviceRequest (req, rsp, ssl) {
+    for (let route of this.routes) {
+      if (route.match(req)) {
+        route.service(req, rsp, ssl)
+        return
+      }
+    }
+    rsp.writeHead(404)
+    rsp.end()
+  }
+}
+
 export default class AssetServer extends BaseServer {
   constructor (testConfig, defaultAgentConfig = {}, browserTests, output, renderIndex = false) {
     super()
@@ -259,139 +424,15 @@ export default class AssetServer extends BaseServer {
     this.browserTests = browserTests
     this.renderIndex = renderIndex
 
+    this.corsServer = new TestServer()
+
     this.transformMap = {
       'text/html': this.agentTransform,
       'application/javascript': new BrowserifyTransform(testConfig)
     }
     this.tag = 'asset'
     this.logRequests = !!testConfig.logRequests
-
-    this.routes = [
-      new Route('GET', '/slowscript', (req, res) => {
-        const params = this.parseParams(req)
-        var abort = params.abort
-        var delay = params.delay || 200
-
-        setTimeout(() => {
-          if (abort) {
-            res.destroy()
-            return
-          }
-          res.end('window.slowScriptLoaded=1')
-        }, delay)
-      }),
-      new Route('GET', '/lazyscript', (req, res) => {
-        const params = this.parseParams(req)
-        var delay = params.delay || 0
-        var content = params.content || ''
-        setTimeout(() => res.end(content), delay)
-      }),
-      new Route('GET', '/slowimage', (req, res) => {
-        const params = this.parseParams(req)
-        var delay = params.delay || 0
-        var path = this.resolveAssetPath('/tests/assets/images/square.png', this.assetsDir)
-        setTimeout(() => {
-          fs.createReadStream(path).pipe(res)
-        }, delay)
-      }),
-      new Route('GET', '/abort', (req, res) => {
-        setTimeout(() => res.end('foo'), 300)
-      }),
-      new Route('PUT', '/timeout', (req, res) => {
-        setTimeout(() => res.end('foo'), 300)
-      }),
-      new Route('POST', '/echo', (req, res) => {
-        var body = ''
-        req.on('data', function (data) {
-          body += data
-        })
-        req.on('end', function () {
-          res.end(body)
-        })
-      }),
-      new Route('GET', '/jsonp', (req, res) => {
-        const params = this.parseParams(req)
-        const cbName = params.callback || params.cb || 'callback'
-        setTimeout(() => {
-          if (params.plain) {
-            res.setHeader('Content-Type', 'text/plain')
-            res.end(cbName + '("taco")')
-          } else {
-            res.setHeader('Content-Type', 'text/javascript')
-            res.end(cbName + '({name: "taco"})')
-          }
-        }, params.timeout || 0)
-      }),
-      new Route('GET', '/xhr_with_cat/*', (req, res) => {
-        res.setHeader('X-NewRelic-App-Data', 'foo')
-        res.end('xhr with CAT ' + new Array(100).join('data'))
-      }),
-      new Route('GET', '/xhr_no_cat', (req, res) => {
-        res.end('xhr no CAT')
-      }),
-      new Route('GET', '/echo-headers', (req, res) => {
-        res.end(JSON.stringify(req.headers))
-      }),
-      new Route('POST', '/postwithhi/*', (req, res) => {
-        req.pipe(concat((body) => {
-          if (body.toString() === 'hi!') {
-            res.end('hi!')
-          } else {
-            res.end('bad agent! - got body = "' + body.toString() + '"')
-          }
-        })).on('error', (err) => {
-          console.log(err)
-          res.writeHead(500)
-          res.end(err.stack)
-        })
-      }),
-      new Route('GET', '/json', (req, res) => {
-        res.end('{"text":"hi!"}')
-      }),
-      new Route('GET', '/text', (req, res) => {
-        const params = this.parseParams(req)
-        var length = params.length || 10
-        res.end('x'.repeat(length))
-      }),
-      new Route('POST', '/formdata', (req, res) => {
-        let form = new multiparty.Form()
-        form.parse(req, (err, fields, files) => {
-          if (err) {
-            res.writeHead(500)
-            res.end('failed to parse form data submission: ' + err)
-            return
-          }
-
-          try {
-            assert.deepEqual(fields, { name: ['bob'], x: ['5'] })
-            res.end('good')
-          } catch (err) {
-            res.end('bad')
-          }
-        })
-      }),
-      new Route('GET', '/slowresponse', (req, res) => {
-        res.writeHead(200)
-        res.write('x'.repeat(8192))
-        setTimeout(() => {
-          res.write('y'.repeat(8192))
-          res.end()
-        }, 25)
-      }),
-      new Route('GET', '/gzipped', (req, res) => {
-        res.writeHead(200, { 'Content-Encoding': 'gzip' })
-
-        let gzip = zlib.createGzip()
-        gzip.pipe(res)
-        gzip.end('x'.repeat(10000))
-      }),
-      new Route('GET', '/chunked', (req, res) => {
-        res.writeHead(200, {
-          'Transfer-Encoding': 'chunked'
-        })
-        res.end('x'.repeat(10000))
-      })
-    ]
+    this.routes = testRoutes
   }
 
   findDynamicRoute (req) {
@@ -400,13 +441,15 @@ export default class AssetServer extends BaseServer {
     }
   }
 
-  start (port, sslPort) {
-    this.router.start(-1, 0)
+  start (port, sslPort, routerPort = 0, routerSslPort = null) {
+    this.router.start(routerPort, routerSslPort)
+    this.corsServer.start(0)
     super.start(port, sslPort)
   }
 
   stop () {
     this.router.stop()
+    this.corsServer.stop()
     super.stop()
   }
 
@@ -431,7 +474,7 @@ export default class AssetServer extends BaseServer {
 
   serveBuiltAsset (req, rsp, ssl) {
     let relativePath = url.parse(req.url).pathname.replace(/^\/build/, '')
-    let assetPath = this.resolveAssetPath(relativePath, this.buildDir)
+    let assetPath = resolveAssetPath(relativePath, this.buildDir)
 
     if (!assetPath) return rsp.end(404)
 
@@ -441,17 +484,8 @@ export default class AssetServer extends BaseServer {
     })
   }
 
-  resolveAssetPath (relativePath, baseDir) {
-    if (relativePath[0] === '/') relativePath = relativePath.slice(1)
-
-    let resolvedAbsolutePath = path.resolve(baseDir, relativePath)
-    if (resolvedAbsolutePath.slice(0, baseDir.length) === baseDir) {
-      return resolvedAbsolutePath
-    }
-  }
-
   serveAsset (req, rsp, parsedUrl, ssl) {
-    let assetPath = this.resolveAssetPath(parsedUrl.pathname, this.assetsDir)
+    let assetPath = resolveAssetPath(parsedUrl.pathname, this.assetsDir)
 
     if (assetPath) {
       this.serveAssetFromPath(req, rsp, assetPath, ssl)
@@ -466,19 +500,13 @@ export default class AssetServer extends BaseServer {
     rsp.end(errorMessage)
   }
 
-  parseParams (req) {
-    let query = url.parse(req.url).query
-    if (!query) return {}
-    return querystring.parse(query)
-  }
-
   serveAssetFromPath (req, rsp, assetPath, ssl) {
     let mimeType = mime.lookup(assetPath)
     let exists = fs.existsSync(assetPath)
 
     if (exists) {
       let transform = this.transformMap[mimeType]
-      let params = this.parseParams(req)
+      let params = parseParams(req)
 
       if (!transform || !transform.test(params)) {
         rsp.writeHead(200, {
@@ -549,7 +577,14 @@ export default class AssetServer extends BaseServer {
 
     function unitTestTarget (file) {
       let script = `/${path.relative(server.assetsDir, file)}?browserify=true`
-      return `/tests/assets/browser.html?script=${encodeURIComponent(script)}`
+      return server.urlFor('/tests/assets/browser.html', {
+        config: new Buffer(JSON.stringify({
+          assetServerPort: server.router.assetServer.port,
+          assetServerSSLPort: server.router.assetServer.sslPort,
+          corsServerPort: server.corsServer.port
+        })).toString('base64'),
+        script: script
+      })
     }
 
     function gotFiles () {

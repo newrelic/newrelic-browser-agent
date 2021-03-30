@@ -23,7 +23,7 @@ export default class Driver {
     let agentConfig = {licenseKey: 'asdf', applicationID: 42, accountID: 123, agentID: 456, trustKey: 789}
     this.browserTests = []
     this.assetServer = new AssetServer(config, agentConfig, this.browserTests, output)
-    this.assetServer.start(config.port, config.port ? config.port + 1 : 0)
+    this.assetServer.start(config.port)
     this.router = this.assetServer.router
     this.timeout = config.timeout = config.timeout || 32000
     this.output = output

@@ -1,0 +1,15 @@
+export default function getCaller () {
+  // 0 is getStack
+  // 1 is getCaller
+  // 2 is callSite of getCaller
+  // 3 is the thing that called the thing that called thiss
+  return getStack()[3].getFileName()
+}
+
+function getStack () {
+  let original = Error.prepareStackTrace
+  Error.prepareStackTrace = (raw, stack) => stack
+  let stack = new Error().stack
+  Error.prepareStackTrace = original
+  return stack
+}

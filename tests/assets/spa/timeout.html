@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {loader}
+    {config}
+  </head>
+  <body>
+    <script>
+    document.addEventListener('click', function () {
+      setTimeout(function () {
+        window.history.replaceState({}, '', window.location.pathname + '#' + Math.random())
+      }, 500)
+    })
+    </script>
+  </body>
+</html>

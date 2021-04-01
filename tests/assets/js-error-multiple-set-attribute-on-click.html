@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {loader}
+    {config}
+
+    <script>
+      function triggerError() {
+        try {
+          throw new Error("My error 1")
+        } catch (err) {
+          newrelic.noticeError(err)
+        }
+        newrelic.interaction().setAttribute('customParamKey', 1)
+
+        try {
+          throw new Error("My error 2")
+        } catch (err) {
+          newrelic.noticeError(err)
+        }
+        newrelic.interaction().setAttribute('customParamKey', 2)
+
+        try {
+          throw new Error("My error 3")
+        } catch (err) {
+          newrelic.noticeError(err)
+        }
+        newrelic.interaction().setAttribute('customParamKey', 3)
+
+        window.location.hash = Math.random()
+      }
+    </script>
+
+    <title>RUM Unit Test</title>
+  </head>
+  <body>
+    This page throws multiple errors with a caught exception when the click event fires
+    <button id="trigger">trigger</button>
+    <br/><br/>
+    <button>Trigger error</button>
+    <script>
+      var btn = document.getElementById('trigger')
+      btn.addEventListener('click', triggerError)
+    </script>
+  </body>
+</html>

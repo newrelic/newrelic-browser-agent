@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {config}
+    {loader}
+    <script>
+      newrelic.setCustomAttribute('test', 'testValue')
+      // default attributes reserved for PageViewTiming, should be dropped
+      newrelic.setCustomAttribute('size', 12345)
+      newrelic.setCustomAttribute('eid', 12345)
+      newrelic.setCustomAttribute('cls', 12345)
+      newrelic.setCustomAttribute('type', 12345)
+      newrelic.setCustomAttribute('fid', 12345)
+</script>
+  </head>
+  <body>
+    this is a generic page that is instrumented by the JS agent
+  </body>
+</html>

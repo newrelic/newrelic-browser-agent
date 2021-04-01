@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {config}
+    {loader}
+  </head>
+  <body>
+    <div>This page fires an XHR and calls pushState when clicked</div>
+    <script type="text/javascript">
+    document.addEventListener('click', function () {
+      var xhr = new XMLHttpRequest()
+      xhr.open('POST', '/echo')
+      xhr.send('123')
+
+      xhr.addEventListener('load', function () {}, true)
+
+      window.location.hash = Math.random()
+    }, false)
+    </script>
+  </body>
+</html>

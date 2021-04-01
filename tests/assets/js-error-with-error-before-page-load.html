@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {loader}
+    {config}
+
+    <script>
+      var i = 0
+      triggerError()
+
+      function triggerError() {
+        newrelic.setCustomAttribute('customParamKey', i)
+        i++
+        try {
+          throw new Error("My error")
+        } catch (e) {
+          NREUM.noticeError(e)
+        }
+      }
+    </script>
+
+    <title>RUM Unit Test</title>
+  </head>
+  <body>
+    This page throws a new error with a caught exception before the page loads
+    <br/><br/>
+    <button>Trigger error</button>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>JSONP MooTools Unit Test</title>
+    {config}
+    {loader}
+    <script src="../../js/vendor/mootools-1.6.0.js"></script>
+    <script src="../../js/vendor/mootools-1.6.0-more.js"></script>
+  </head>
+  <body>
+      <script>
+document.addEventListener('click', function () {
+  window.location.hash = Math.random()
+  var myJSONP = new Request.JSONP({
+    url: '/jsonp',
+    onComplete: function (data) {
+      var el = document.createElement('p')
+      el.innerHTML = JSON.stringify(data)
+      document.body.appendChild(el)
+      setTimeout(newrelic.interaction().createTracer('tacoTimer', function () {
+        window.location.hash = Math.random()
+      }), 500)
+    }
+  }).send();
+}, false)
+      </script>
+      <p>Click me!</p>
+  </body>
+</html>

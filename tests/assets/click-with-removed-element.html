@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {config}
+    {loader}
+  </head>
+  <body>
+    <button id="free_tacos">CLICK FOR FREE TACOS</button>
+
+    <script>
+    var el = document.getElementById('free_tacos')
+    el.addEventListener('click', function () {
+      el.parentNode.removeChild(el)
+    })
+
+    // Dispatch a click event immediately on DOMContentLoaded, so that we can
+    // be certain that the click happens before the load event on the window
+    // (which is what will trigger the aggregator to be executed).
+    document.addEventListener('DOMContentLoaded', function () {
+      var evt = document.createEvent('Events')
+      evt.initEvent('click', true, false)
+      el.dispatchEvent(evt)
+    })
+    </script>
+
+  </body>
+</html>

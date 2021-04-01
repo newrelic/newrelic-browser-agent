@@ -1,0 +1,13 @@
+/build
+/config
+/tmp
+/.npm
+log
+node_modules
+*.csv
+*.tap
+*.swp
+*.log
+.idea
+.DS_Store
+.vscode

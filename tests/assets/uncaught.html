@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      window.onerror = function originalOnerrorHandler (message) {
+        if (message && message.search('uncaught error') >= 0) {
+          // Thrown error used as a convoluted way to
+          // report to the fake beacon that
+          // this handler was called when the uncaught error
+          // happened.
+          try {
+            throw new Error('original onerror')
+          } catch (e) {
+            NREUM.noticeError(e)
+          }
+        }
+        return "abc";
+      }
+    </script>
+
+    {loader}
+    {config}
+
+    <title>RUM Unit Test</title>
+    <script type="text/javascript" src="js/uncaught1.js"></script>
+    <script type="text/javascript" src="js/uncaught2.js"></script>
+    {init}
+  </head>
+  <body>
+    This page fires an uncaught exception
+  </body>
+</html>

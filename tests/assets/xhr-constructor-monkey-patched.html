@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>XHR constructor monkey-patching test</title>
+    {init}
+    {loader}
+    {config}
+    <script type="text/javascript">
+    var origXHR = window.XMLHttpRequest
+    window.XMLHttpRequest = function (flags) {
+      return new origXHR(flags)
+    }
+
+    for (prop in origXHR) {
+      if (typeof origXHR[prop] === 'function') {
+        window.XMLHttpRequest[prop] = origXHR[prop]
+      }
+    }
+
+    var xhrDone = false
+    var xhr = new XMLHttpRequest()
+    xhr.open('GET', '/json')
+    xhr.onload = function () { xhrDone = true }
+    xhr.send()
+    </script>
+  </head>
+  <body>
+    The inline JS on this page emulates bad 3rd-party code which monkey-patches
+    the XMLHttpRequest constructor but does not re-set the prototype property on
+    it.
+  </body>
+</html>

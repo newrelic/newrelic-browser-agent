@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>JSONP jQuery Unit Test</title>
+    {config}
+    {loader}
+    <script src="../../js/vendor/jquery-3.2.1.js"></script>
+  </head>
+  <body>
+      <script>
+document.addEventListener('click', function () {
+  $.ajax({
+    url: '/jsonp?callback=?',
+    dataType: 'jsonp',
+    crossDomain: true
+  }).done(function(data) {
+    var el = document.createElement('p')
+    el.innerHTML = JSON.stringify(data)
+    document.body.appendChild(el)
+    window.location.hash = Math.random()
+    setTimeout(newrelic.interaction().createTracer('tacoTimer', function () {
+      window.location.hash = Math.random()
+    }), 500)
+  })
+}, false)
+      </script>
+      <p>Click me!</p>
+  </body>
+</html>

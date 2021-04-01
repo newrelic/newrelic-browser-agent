@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {loader}
+    {config}
+
+    <script>
+      newrelic.interaction().setAttribute('custom1', 'val1')
+      newrelic.noticeError(new Error('my error'), {custom1: 'val2'})
+    </script>
+
+    <title>RUM Unit Test</title>
+  </head>
+  <body>
+    This page calls setAttribute and noticeError with custom attributes.
+  </body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Test</title>
+    <script>
+      window.errorCount = 0
+      window.onerror = function(evt) {
+        window.errorCount++
+      }
+    </script>
+    <script>
+      window.onload = function () {
+        var html = document.getElementsByTagName('html')[0]
+        var body = document.getElementsByTagName('body')[0]
+
+        html.removeChild(body)
+        var confirmNoBody = document.getElementsByTagName('body')[0]
+        if (!confirmNoBody) {
+          newrelic.setCustomAttribute('no', 'body')
+        } else {
+          newrelic.setCustomAttribute('yes', 'body')
+        }
+
+      }
+    </script>
+    {loader}
+    {config}
+  </head>
+  <body>
+  </body>
+</html>

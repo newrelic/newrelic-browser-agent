@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ignrore error Test</title>
+    {loader}
+    {config}
+
+    <script type="text/javascript">
+    var count = 0
+    setTimeout(function () {
+      throw new Error('ignore')
+    }, 0)
+
+    setTimeout(function () {
+      throw new Error('report')
+    }, 0)
+
+    newrelic.setErrorHandler(function (err) {
+      if (++count === 2) window.errorsThrown = true
+      return err.message === 'ignore'
+    })
+    </script>
+    {init}
+  </head>
+  <body>
+  </body>
+</html>

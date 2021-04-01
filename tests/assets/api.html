@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {loader}
+    {config}
+  </head>
+  <body>
+    Api test!
+    <script>
+      newrelic.setPageViewName('foo')
+      newrelic.noticeError(new Error('no free taco coupons'))
+      setTimeout(function () {
+        newrelic.finished(new Date().getTime())
+      },0)
+    </script>
+  </body>
+</html>

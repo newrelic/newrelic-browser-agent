@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {config}
+    {loader}
+    <script>
+      window.history.pushState({},"title1","1")
+      window.history.pushState({},"title2","2")
+      window.history.pushState({},"title3","3")
+    </script>
+  </head>
+  <body>
+    this page does several pushState calls
+  </body>
+</html>

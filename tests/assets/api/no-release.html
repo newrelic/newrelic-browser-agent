@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {loader}
+    {config}
+  </head>
+  <body>
+    Api test!
+    <script>
+      setTimeout(function () {
+        throw new Error('error with release')
+      })
+    </script>
+  </body>
+</html>

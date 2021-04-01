@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Example Page</title>
+    {loader}
+    {config}
+    <script type="text/javascript">
+      if (!NREUM.loader_config) NREUM.loader_config = {}
+      NREUM.loader_config.xpid = '12#34'
+
+      var xhr = new XMLHttpRequest()
+      var testId = window.location.search.match(/testId=([^&]*)/)[1]
+      var url = 'https://' + NREUM.info.beacon + '/cat-cors/' + testId
+
+      xhr.open('GET', url)
+      xhr.send()
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Multiple load handlers</title>
+    {loader}
+    {config}
+  </head>
+  <body>
+    <div>Multiple load handlers</div>
+    <script type="text/javascript">
+      window.addEventListener('load', function () {
+        makeXhr()
+      })
+      window.addEventListener('load', function () {
+        makeXhr()
+      })
+
+      var ev
+
+      function makeXhr (ev2) {
+        var xhr = new XMLHttpRequest()
+        xhr.open('GET', '/')
+        xhr.send()
+      }
+    </script>
+  </body>
+</html>

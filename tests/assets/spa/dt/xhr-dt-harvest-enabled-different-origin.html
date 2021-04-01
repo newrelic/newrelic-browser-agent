@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {config}
+    {loader}
+    <script type="text/javascript">
+      if (!NREUM.loader_config) NREUM.loader_config = {}
+      NREUM.loader_config.xpid = '12#34'
+
+      // enable the feature
+      NREUM.init = {
+        distributed_tracing: {
+          enabled: true
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div>This page fires an XHR and calls pushState when clicked</div>
+    <script type="text/javascript">
+    document.addEventListener('click', function () {
+      var xhr = new XMLHttpRequest()
+      var url = 'https://' + NREUM.info.beacon + '/echo'
+
+      xhr.open('POST', url)
+      xhr.send('123')
+
+      xhr.addEventListener('load', function () {}, true)
+
+      window.location.hash = Math.random()
+    }, false)
+    </script>
+  </body>
+</html>

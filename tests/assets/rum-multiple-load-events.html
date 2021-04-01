@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Test</title>
+    {loader}
+    {config}
+    <script>
+    var fired = 0
+    var evt = document.createEvent('HTMLEvents')
+    evt.initEvent('load', true, true)
+    window.dispatchEvent(evt)
+    </script>
+  </head>
+  <body>
+    Generating some rum datas
+  </body>
+</html>

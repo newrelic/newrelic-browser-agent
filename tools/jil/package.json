@@ -20,7 +20,7 @@
     "jquery": "1.11.3",
     "just-debounce": "^1.0.0",
     "ls-stream": "^1.0.0",
-    "mime-types": "^2.1.11",
+    "mime-types": "^2.1.29",
     "minimatch": "^3.0.3",
     "multiparty": "^4.1.2",
     "newrelic": "^4.11.0",

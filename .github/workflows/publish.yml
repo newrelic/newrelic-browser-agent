@@ -24,3 +24,14 @@ jobs:
         with:
           name: build
           path: build
+  smoke-test:
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+      - name: download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: build
+      - name: run tests
+        run: ls build

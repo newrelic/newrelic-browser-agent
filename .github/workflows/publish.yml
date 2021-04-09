@@ -4,11 +4,10 @@ on:
   release:
     types:
       - published
-      
   workflow_dispatch:
 
 jobs:
-  lint:
+  build:
     runs-on: ubuntu-latest
     container: node:14
     steps:

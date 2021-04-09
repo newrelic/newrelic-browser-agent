@@ -1,17 +1,12 @@
 import http from 'http'
 import https from 'https'
-// import path from 'path'
-// import fs from 'fs'
 import cors from 'cors'
 import url from 'url'
 import enableDestroy from 'server-destroy'
 
-// let sslCertDir = path.resolve(__dirname, '../')
-
-let sslOptions = {
-  // key: fs.readFileSync(path.resolve(sslCertDir, 'nr-local.net.key')),
-  // cert: fs.readFileSync(path.resolve(sslCertDir, 'nr-local.net.crt'))
-}
+// SSL is currently not setup, tests will always run over HTTP
+// if we re-enable SSL, we would need to provide cert and key in sslConfiguration
+let sslOptions = {}
 
 export default class BaseServer {
   constructor () {

@@ -1,0 +1,70 @@
+name: Tests
+
+on:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build
+        run: npm run ci-build
+
+      - name: lint
+        run: npm run lint
+  latest-browsers:
+    runs-on: ubuntu-latest
+    container: node:14
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+      BUILD_NUMBER: PR${{ github.event.number }}-latest-${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build
+        run: npm run ci-build
+
+      - name: run tests
+        run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest,firefox@latest,safari@latest -s -t 85000 --concurrent=6
+  all-browsers-unit:
+    needs: latest-browsers
+    runs-on: ubuntu-latest
+    container: node:14
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build
+        run: npm run ci-build
+
+      - name: run tests
+        run: node ./tools/jil/bin/cli.js -f merged -b *@* -s -t 85000 --unit-only --concurrent=20
+  all-browsers-functional:
+    needs: latest-browsers
+    runs-on: ubuntu-latest
+    container: node:14
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+      BUILD_NUMBER: PR${{ github.event.number }}-functional-${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build
+        run: npm run ci-build
+
+      - name: run tests
+        run: node ./tools/jil/bin/cli.js -f merged -b *@* -s -t 85000 --functional-only --concurrent=40

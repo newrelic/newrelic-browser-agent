@@ -2,7 +2,7 @@ import jil from 'jil'
 import matcher from '../../tools/jil/util/browser-matcher'
 
 let supported = matcher.withFeature('wrappableAddEventListener')
-var qp = require('@datanerd/querypack')
+var qp = require('@newrelic/nr-querypack')
 
 var timing = require('../../agent/timings')
 

@@ -1,5 +1,5 @@
 import testDriver from '../../tools/jil/index.es6'
-import querypack from '@datanerd/querypack'
+import querypack from '@newrelic/nr-querypack'
 
 const BrowserMatcher = testDriver.Matcher
 let stnSupported = testDriver.Matcher.withFeature('stn')

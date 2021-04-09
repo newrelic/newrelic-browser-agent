@@ -18,5 +18,11 @@ driver.router.handle(driver.assetServer.defaultAgentConfig.licenseKey, true)
 
 driver.assetServer.renderIndex = true
 console.log('asset server: http://' + hostname + ':' + driver.assetServer.port)
-console.log('asset server (SSL): https://' + hostname + ':' + driver.assetServer.sslPort)
-console.log('fake router (SSL): https://' + hostname + ':' + driver.router.sslPort)
+if (driver.assetServer.sslPort) {
+  console.log('asset server (SSL): https://' + hostname + ':' + driver.assetServer.sslPort)
+}
+console.log('fake router: http://' + hostname + ':' + driver.router.port)
+if (driver.router.sslPort) {
+  console.log('fake router (SSL): https://' + hostname + ':' + driver.router.sslPort)
+}
+console.log('secondary (cors) server: http://' + hostname + ':' + driver.assetServer.corsServer.port)

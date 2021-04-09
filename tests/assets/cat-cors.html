@@ -11,7 +11,7 @@
 
       var xhr = new XMLHttpRequest()
       var testId = window.location.search.match(/testId=([^&]*)/)[1]
-      var url = 'https://' + NREUM.info.beacon + '/cat-cors/' + testId
+      var url = 'http://' + NREUM.info.beacon + '/cat-cors/' + testId
 
       xhr.open('GET', url)
       xhr.send()

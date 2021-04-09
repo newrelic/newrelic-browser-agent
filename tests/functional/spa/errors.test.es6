@@ -1,5 +1,5 @@
 import testDriver from '../../../tools/jil/index.es6'
-import querypack from '@datanerd/querypack'
+import querypack from '@newrelic/nr-querypack'
 import {getErrorsFromResponse} from '../err/assertion-helpers.es6'
 
 // browsers without addEventListener do not support SPA

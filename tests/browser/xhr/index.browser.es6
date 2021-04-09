@@ -17,12 +17,10 @@ let onloadtime = 2
 let loadeventtime = 2
 
 let proto = location.protocol
-let alternateProto = proto === 'http:' ? 'https:' : 'http:'
-
 let assetServerHTTPPort = NREUM.info.assetServerPort
 let assetServerSSLPort = NREUM.info.assetServerSSLPort
 let assetServerPort = proto === 'http:' ? assetServerHTTPPort : assetServerSSLPort
-let assetServerAlternatePort = proto === 'http:' ? assetServerSSLPort : assetServerHTTPPort
+let corsServerPort = NREUM.info.corsServerPort
 
 let assetServerHostname = window.location.host.split(':')[0]
 
@@ -201,9 +199,9 @@ var urls = {
       } else {
         t.equal(typeof metrics.cbTime, 'number', 'cbTime reported even w/o long running CBs')
       }
-      t.equal(params.host, assetServerHostname + ':' + assetServerAlternatePort, 'host has hostname and port')
+      t.equal(params.host, assetServerHostname + ':' + corsServerPort, 'host has hostname and port')
     },
-    host: alternateProto + '//' + assetServerHostname + ':' + assetServerAlternatePort,
+    host: proto + '//' + assetServerHostname + ':' + corsServerPort,
     plan: 5
   },
   // Test makes sure we don't swallow the only XHR event that gets fired in
@@ -217,7 +215,7 @@ var urls = {
       return true
     },
     check: function (params, metrics) {},
-    host: alternateProto + '//' + assetServerHostname + ':' + assetServerAlternatePort,
+    host: proto + '//' + assetServerHostname + ':' + corsServerPort,
     plan: 1,
     afterOpen: function (t) {
       var xhr = this.xhr
@@ -354,7 +352,7 @@ var urls = {
 // IE 9 throws when opening cross domain request, so this can be used in a
 // gating function to skip tests that rely on cross-domain XHRs in IE 9.
 function tryCrossDomainRequest () {
-  let url = alternateProto + '//' + assetServerHostname + ':' + assetServerAlternatePort
+  let url = proto + '//' + assetServerHostname + ':' + corsServerPort
   let xhr = new XMLHttpRequest()
   xhr.open('GET', url)
 }

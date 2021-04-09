@@ -9,10 +9,8 @@
       NREUM.loader_config.xpid = '12#34'
 
       // enable the feature
-      NREUM.init = {
-        distributed_tracing: {
-          enabled: true
-        }
+      NREUM.init.distributed_tracing = {
+        enabled: true
       }
     </script>
   </head>
@@ -20,7 +18,7 @@
     <div>This page fires an XHR and calls pushState when clicked</div>
     <script type="text/javascript">
       document.addEventListener('click', function () {
-        var url = 'https://' + NREUM.info.beacon + '/echo'
+        var url = 'http://' + NREUM.info.beacon + '/echo'
         fetch(url, {
           method: 'POST',
           body: '123'

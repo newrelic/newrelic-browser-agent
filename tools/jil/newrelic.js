@@ -39,11 +39,11 @@ const defaultConfig = {
 
 const envConfigs = {
   default: {
-    app_name: ['jil'],
-    license_key: ''
-  },
-  development: {
     agent_enabled: false
+  },
+  ci: {
+    agent_enabled: true,
+    app_name: ['jil']
   }
 }
 

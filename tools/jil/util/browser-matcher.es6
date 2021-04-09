@@ -333,3 +333,4 @@ features.supportsFirstInteraction = features.addEventListener
 features.originOnlyReferer = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=89')
+  .include('firefox', '>=87')

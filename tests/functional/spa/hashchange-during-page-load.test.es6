@@ -1,5 +1,5 @@
 import testDriver from '../../../tools/jil/index.es6'
-import querypack from '@datanerd/querypack'
+import querypack from '@newrelic/nr-querypack'
 
 let supported = testDriver.Matcher.withFeature('addEventListener')
   .exclude('opera@<=12') // Sauce Labs Opera doesn't trust our cert

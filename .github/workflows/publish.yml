@@ -1,0 +1,27 @@
+name: Build and publish release
+
+on:
+  release:
+    types:
+      - published
+      
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+      - name: setup build folder
+        run: |
+          mkdir build
+          cp VERSION build/build_number
+          echo $GITHUB_SHA > build/git_commit
+      - name: build
+        run: npm run ci-build
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: build

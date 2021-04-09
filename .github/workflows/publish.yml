@@ -25,6 +25,7 @@ jobs:
           name: build
           path: build
   smoke-test:
+    needs: build
     runs-on: ubuntu-latest
     container: node:14
     steps:

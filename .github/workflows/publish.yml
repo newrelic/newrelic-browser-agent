@@ -44,4 +44,4 @@ jobs:
       - name: run tests
         run: |
           npm ci
-          node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=6
+          node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=4

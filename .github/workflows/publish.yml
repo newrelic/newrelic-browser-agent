@@ -34,5 +34,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: build
+      - name: rename artifacts folder
+        run: mv newrelic-browser-agent build
       - name: run tests
         run: ls build

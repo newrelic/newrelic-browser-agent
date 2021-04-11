@@ -7,7 +7,15 @@ on:
   workflow_dispatch:
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+      - name: check files don't exist already
+        run: node tools/scripts/check-version.js -e no -v $(cat VERSION)
   build:
+    needs: check-version
     runs-on: ubuntu-latest
     container: node:14
     steps:

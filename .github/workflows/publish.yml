@@ -13,7 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: check files don't exist already
-        run: node tools/scripts/check-version.js -e no -v $(cat VERSION)
+        run: |
+          npm ci
+          node tools/scripts/check-version.js -e no -v $(cat VERSION)
   build:
     needs: check-version
     runs-on: ubuntu-latest

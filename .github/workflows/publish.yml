@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  check-version:
+  check-not-published:
     runs-on: ubuntu-latest
     container: node:14
     steps:
@@ -15,14 +15,15 @@ jobs:
       - name: Cache node modules
         uses: actions/cache@v2
         with:
-          path: ~/.npm
+          path: ./.npm
           key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+      - name: install
+        run: npm ci
       - name: check files don't exist already
-        run: |
-          npm ci --no-optional
-          node tools/scripts/check-version.js -e no -v $(cat VERSION)
+        # run: node tools/scripts/check-version.js -e no -v $(cat VERSION)
+        run: node tools/scripts/check-version.js -e yes -v $(cat VERSION)
   build:
-    needs: check-version
+    needs: check-not-published
     runs-on: ubuntu-latest
     container: node:14
     steps:
@@ -35,7 +36,7 @@ jobs:
       - name: Cache node modules
         uses: actions/cache@v2
         with:
-          path: ~/.npm
+          path: ./.npm
           key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
       - name: build
         run: npm run ci-build
@@ -64,9 +65,39 @@ jobs:
       - name: Cache node modules
         uses: actions/cache@v2
         with:
-          path: ~/.npm
+          path: ./.npm
           key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
       - name: run tests
         run: |
           npm ci
           node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=4
+  publish-artifacts:
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ./.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+      - name: install
+        run: npm ci
+      - name: upload artifacts to S3 and NR database
+        run: echo TODO
+  check-published:
+    needs: publish-artifacts
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ./.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+      - name: install
+        run: npm ci
+      - name: check files don't exist already
+        run: node tools/scripts/check-version.js -e yes -v $(cat VERSION)

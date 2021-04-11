@@ -12,9 +12,14 @@ jobs:
     container: node:14
     steps:
       - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
       - name: check files don't exist already
         run: |
-          npm ci
+          npm ci --no-optional
           node tools/scripts/check-version.js -e no -v $(cat VERSION)
   build:
     needs: check-version
@@ -27,6 +32,11 @@ jobs:
           mkdir build
           cp VERSION build/build_number
           echo $GITHUB_SHA > build/git_commit
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
       - name: build
         run: npm run ci-build
       - name: Archive artifacts
@@ -51,6 +61,11 @@ jobs:
         with:
           name: build
           path: build
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
       - name: run tests
         run: |
           npm ci

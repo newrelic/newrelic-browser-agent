@@ -9,7 +9,7 @@
     "build": "rm -rf build && mkdir build && gulp build",
     "build-mac": "gulp && osascript -e 'display notification \"The agent has been built.\" with title \"Build Complete\"'",
     "prepush": "npm run lint && node -e 'process.exit((process.argv[1] === \"master\") ? 1 : 0)' `git rev-parse --abbrev-ref HEAD`",
-    "preinstall": "cd tools/jil && npm ci",
+    "preinstall": "cd tools/jil && npm ci --no-optional",
     "postinstall": "rm -f node_modules/jil && ln -s ../tools/jil node_modules/jil",
     "phantomjs": "phantomjs",
     "lint": "eslint --ext .js,.es6 .",

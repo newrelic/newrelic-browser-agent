@@ -1,24 +1,26 @@
 # Contributing
 
-## Workflow
-Each change/feature should be developed on a new branch forked from master.
-We currently do not have a strict naming convention for branches, but branch
-names should be unlikely to collide, and ideally should provide some insight
-into what changes they were intended to contain (this helps when cleaning old
-branches).  Currently our branch names will often contain the authors name,
-and/or a JIRA ticket number.
+Contributions are always welcome. Before contributing please read the
+[code of conduct](https://github.com/newrelic/.github/blob/main/CODE_OF_CONDUCT.md) and [search the issue tracker](issues); your issue may have already been discussed or fixed in `main`. To contribute,
+[fork](https://help.github.com/articles/fork-a-repo/) this repository, commit your changes, and [send a Pull Request](https://help.github.com/articles/using-pull-requests/).
 
-During development we don't enforce any particular commit workflow, but once
-a change is ready to be merged we prefer commits be squashed down to 1 or 2
-commits with complete changes and clear messages that include the JIRA ticket
-associated with the change (if applicable).
+Note that our [code of conduct](https://github.com/newrelic/.github/blob/main/CODE_OF_CONDUCT.md) applies to all platforms and venues related to this project; please follow it in all your interactions with the project and its participants.
 
-When a PR is submitted, it will be reviewed by a member of the team. Once it
-has been submitted, and there are no outstanding changes or unaddressed
-feedback, a member of the team will add the `sidekick-approved` label to the PR,
-indicating that it can be merged.
+## Feature Requests
 
-## Code style
+Feature requests should be submitted in the [Issue tracker](../../issues), with a description of the expected behavior & use case, where they’ll remain closed until sufficient interest, [e.g. :+1: reactions](https://help.github.com/articles/about-discussions-in-issues-and-pull-requests/), has been [shown by the community](../../issues?q=label%3A%22votes+needed%22+sort%3Areactions-%2B1-desc).
+Before submitting an Issue, please search for similar ones in the
+[closed issues](../../issues?q=is%3Aissue+is%3Aclosed+label%3Aenhancement).
+
+## Pull Requests
+
+If you’re planning on contributing a new feature or an otherwise complex contribution, we kindly ask you to start a conversation with the maintainer team by opening up a Github issue first.
+
+### General Guidelines
+
+This project is licensed under the Apache-2.0 license. Any third party libraries added as dependencies of the project must have a similarly permissive open source license, e.g. MIT.
+
+### Coding Style Guidelines/Conventions
 
 All code should follow [![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)
 
@@ -55,5 +57,5 @@ and understood by another member of the team.
 * All code changes in the agent have been covered by new tests.
 * Appropriate documentation changes have been made (where applicable).
 * Extraneous commits have been squashed.
-* Commit message are concise, and contain relevant jira references.
-* the [change log]('./CHANGELOG.md') has been updated (where applicable).
+* Commit message are concise.
+* The [change log]('./CHANGELOG.md') has been updated (where applicable).

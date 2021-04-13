@@ -1,44 +1,154 @@
-[![Community Project header](https://github.com/newrelic/opensource-website/raw/master/src/images/categories/Community_Project.png)](https://opensource.newrelic.com/oss-category/#community-project)
+[![Community Plus header](https://github.com/newrelic/opensource-website/raw/master/src/images/categories/Community_Plus.png)](https://opensource.newrelic.com/oss-category/#community-plus)
 
-# [Name of Project] [build badges go here when available]
+# New Relic Browser Agent
 
->[Brief description - what is the software and what value does it provide? How often should users expect to get releases? How is versioning set up? What are some next phases for the project or how will it evolve?]
+The New Relic Browser Agent instruments your website and provides observability into the performance and behavior of your application.
 
-## Installing and using [project name]
+## Installing and using the Browser Agent
 
-> [Link to the relevant information for this agent on docs.newrelic.com. Create a bulleted list with links to install, usage, and getting started info on docs. Avoid duplicating information from docs in the open source content to ensure there's no inconsistency between the two.]
-
+To get started using the Browser Agent in your own code, our Docs site is the best place to look:
+* **[Installing the Browser Agent](https://docs.newrelic.com/docs/browser/browser-monitoring/installation/install-browser-monitoring-agent/)**
+* [Troubleshooting Browser Agent installation](https://docs.newrelic.com/docs/browser/browser-monitoring/troubleshooting/troubleshoot-your-browser-monitoring-installation/)
+* [Introduction to browser monitoring](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/introduction-browser-monitoring/)
+* [Browser monitoring best practices](https://docs.newrelic.com/docs/new-relic-solutions/best-practices-guides/full-stack-observability/browser-monitoring-best-practices-guide/)
 
 ## Building
 
->[**Optional** - Include this section if users will need to follow specific instructions to build the software from source. Be sure to include any third-party build dependencies that need to be installed separately. As mentioned, link to docs for install info that's already included there. Remove this section if it's not needed.]
+We use gulp to automate builds of the agent. To build:
+
+```bash
+npm install
+npm run build
+```
+
+Build artifacts are placed in the `/build` directory.
+
+To automatically rebuild the agent on each change:
+
+```bash
+npm run watch
+```
+
+### Running the agent locally
+The Browser Agent is loaded onto a webpage in two parts. To install a version of the agent build locally, host the assets generated in the `/build` directory (see instructions above to build the agent) via a local http server and insert the script below into the top of the `<head>` tag of your webpage.
+
+```html
+<!-- Browser agent configuration -->
+<script type="text/javascript">
+   window.NREUM||(NREUM={});
+   NREUM.info={
+     "licenseKey":"example",
+     "applicationID": 123,
+     "agent": "localhost:8080/nr-spa.js"
+   };
+</script>
+<!-- Browser agent loader script -->
+<script src="https://localhost:8080/nr-loader-spa.js"></script>
+```
+#### Configuring the agent
+The Browser Agent uses a JSON configuration to set license key, application ID and which agent type to use.
+
+**Set application ID and license key** - licenseKey and applicationID can be found in the New Relic UI's Browser Application settings page ([one.newrelic.com](https://one.newrelic.com) > Browser > (select an app) > Settings > Application settings.)
+
+![settings](https://user-images.githubusercontent.com/4779220/114478763-e5b18600-9bb3-11eb-98a1-7e4c2221eec4.jpg)
+
+**Set agent type** - Pick an agent type and update the following files from the table below:
+* The file loaded as the _Browser agent loader script_ from the HTML above using **loader filename**
+* The file loaded under `NREUM.info.agent` in _Browser agent configuration_ from the HTML above using **agent filename**.
+
+| Agent type | loader filename   | agent filename |
+|------------|-------------------|----------------|
+| Lite       | nr-loader-rum.js  | nr.js          |
+| Pro        | nr-loader-full.js | nr.js          |
+| Pro + SPA  | nr-loader-spa.js  | nr-spa.js      |
+
 
 ## Testing
 
->[**Optional** - Include instructions on how to run tests if we include tests with the codebase. Remove this section if it's not needed.]
+### Local testing
+
+#### Installing
+The Browser Agent uses a tool called the JavaScript Integration test Loader (`jil`) to run
+tests (located in `/tools/jil`).
+
+To run tests locally, run `npm install` within the `/tools/jil` directory:
+
+```
+# From the project's root directory
+cd tools/jil
+npm install
+cd ../..
+```
+
+#### Running the test suite
+To run all applicable tests against [PhantomJS](http://phantomjs.org/), just type `npm run test` with no additional arguments:
+
+```
+npm run test
+```
+
+Note: `jil` does not handle building the agent automatically,
+either run `npm run build` after each change, or use `npm run watch` to automatically rebuild on each change.
+
+#### Running a single test
+To run a single test in isolation, pass the path to `jil`:
+
+```
+node tools/jil/bin/cli.js tests/functional/api.test.es6
+```
+
+#### Debugging tests
+
+To debug a unit test (`/tests/browser`) or the asset under test in a unit or functional test (`/tests/assets`), run the command below: 
+
+```
+node tools/jil/bin/server.js
+```
+
+Running this command starts a server, available at http://localhost:3333, with a list of all available unit tests and test HTML pages with the Browser Agent installed. Select a unit test from the list to run the test itself in your browser, or select an asset from the list to debug.
+
+**Important**: When running `jil-server` be sure to tell HTML files which Browser agent type you want by adding a `?loader=spa` to the querystring. Example:
+```
+http://localhost:3333/tests/assets/spa/fetch.html?loader=spa
+```
+| Agent type | querystring name |
+| -----------| ---------------- |
+| Lite       | rum              |
+| Pro        | full             |
+| Pro + SPA  | spa              |
+
+
+Open a PR to run your tests on browsers other than PhantomJS.
+
+### PR Testing
+
+When you open a PR, the agent's functional and unit test suite will be run on the latest version of Chrome, Firefox and Safari to quickly validate the new code. If that passes, the PR will run functional and unit test again against the full matrix of browsers and browser versions that are required to pass before approving a PR.
 
 ## Support
 
 New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. Like all official New Relic open source projects, there's a related Community topic in the New Relic Explorers Hub. You can find this project's topic/threads here:
 
->[Add the url for the support thread here: discuss.newrelic.com]
+https://discuss.newrelic.com/c/full-stack-observability/browser
 
 ## Contribute
 
-We encourage your contributions to improve [project name]! Keep in mind that when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
+We encourage your contributions to improve the Browser Agent! Keep in mind that when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
 
 If you have any questions, or to execute our corporate CLA (which is required if your contribution is on behalf of a company), drop us an email at opensource@newrelic.com.
 
+For more details on how best to contribute, see [CONTRIBUTING.md](CONTRIBUTING.md)
+
 **A note about vulnerabilities**
 
-As noted in our [security policy](../../security/policy), New Relic is committed to the privacy and security of our customers and their data. We believe that providing coordinated disclosure by security researchers and engaging with the security community are important means to achieve our security goals.
+As noted in our [security policy](https://github.com/newrelic/newrelic-browser-agent/security/policy), New Relic is committed to the privacy and security of our customers and their data. We believe that providing coordinated disclosure by security researchers and engaging with the security community are important means to achieve our security goals.
 
 If you believe you have found a security vulnerability in this project or any of New Relic's products or websites, we welcome and greatly appreciate you reporting it to New Relic through [HackerOne](https://hackerone.com/newrelic).
 
 If you would like to contribute to this project, review [these guidelines](./CONTRIBUTING.md).
 
-To all contributors, we thank you!  Without your contribution, this project would not be what it is today.  We also host a community project page dedicated to [Project Name](<LINK TO https://opensource.newrelic.com/projects/... PAGE>).
+To all contributors, we thank you!  Without your contribution, this project would not be what it is today.  We also host [a community project page dedicated to the Browser Agent](https://opensource.newrelic.com/projects/newrelic/newrelic-browser-agent).
 
 ## License
 [Project name] is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
->[If applicable: The [project name] also uses source code from third-party libraries. Full details on which libraries are used and the terms under which they are licensed can be found in the third-party notices document.]
+
+The Browser Agent also uses source code from third-party libraries. Full details on which libraries are used and the terms under which they are licensed can be found in the [third-party notices document](THIRD_PARTY_NOTICES.md).

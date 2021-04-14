@@ -9,6 +9,8 @@ export function getSauceLabsCreds () {
   let sauceLabsUsername = process.env.JIL_SAUCE_LABS_USERNAME
   let sauceLabsAccessKey = process.env.JIL_SAUCE_LABS_ACCESS_KEY
 
+  console.log('searchme username', sauceLabsUsername)
+
   if (!sauceLabsUsername || !sauceLabsAccessKey) {
     throw new Error('Did not find Sauce Labs credentials in JIL_SAUCE_LABS_USERNAME and JIL_SAUCE_LABS_ACCESS_KEY environment variables. Please set them.')
   }

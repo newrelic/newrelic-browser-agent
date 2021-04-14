@@ -115,6 +115,8 @@ function loadBrowsersAndRunTests () {
     let connectionInfo = {}
 
     if (!browser.isPhantom()) {
+      let sauceCreds = getSauceLabsCreds()
+      console.log('searchme', sauceCreds.username)
       desired['tunnel-identifier'] = tunnelIdentifier
 
       if (config.seleniumServer) {

@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "NEWRELIC_ENVIRONMENT=development tape 'test/**/*.test.js'"
+    "test": "NEWRELIC_ENVIRONMENT=development tape 'test/**/*.test.js'",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "author": "",
   "license": "UNLICENSED",
@@ -34,6 +36,8 @@
     "tape": "^4.8.0",
     "through": "^2.3.8",
     "wd": "^1.11.2",
-    "yargs": "^3.32.0"
-  }
+    "yargs": "^3.32.0",
+    "snyk": "^1.541.0"
+  },
+  "snyk": true
 }

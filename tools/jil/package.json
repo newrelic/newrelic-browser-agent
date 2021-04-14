@@ -17,7 +17,7 @@
     "es6-require": "^0.2.1",
     "function-bind": "^1.1.1",
     "has": "^1.0.1",
-    "jquery": "1.11.3",
+    "jquery": "3.5.0",
     "just-debounce": "^1.0.0",
     "ls-stream": "^1.0.0",
     "mime-types": "^2.1.11",

@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import newrelic from 'newrelic'
 import Driver from './Driver.es6'
 import TestRun from './TestRun.es6'

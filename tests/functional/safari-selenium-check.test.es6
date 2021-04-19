@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // https://github.com/SeleniumHQ/selenium/issues/7649
 // once latest Safari does not have this bug, we can remove this
 

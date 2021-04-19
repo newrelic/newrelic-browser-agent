@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var wrapFn = require('../wrap-function')
 var promiseEE = require('ee').get('promise')
 var getContext = require('ee').getOrSetContext

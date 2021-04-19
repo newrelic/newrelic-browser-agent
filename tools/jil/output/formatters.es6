@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import DefaultFormatter from './default-formatter'
 import MergedFormatter from './merged-tap-formatter'
 import CIFormatter from './ci-formatter.es6'

@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var mapOwn = require('map-own')
 var ee = require('ee')
 var drain = require('./drain')

@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // wrap-events patches XMLHttpRequest.prototype.addEventListener for us.
 require('./wrap-events')
 

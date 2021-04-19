@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 module.exports = function dataSize (data) {
   if (typeof data === 'string' && data.length) return data.length
   if (typeof data !== 'object') return undefined

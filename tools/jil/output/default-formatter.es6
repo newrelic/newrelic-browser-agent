@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import charm from 'charm'
 import encode from 'charm/lib/encode'
 import BaseFormatter from './base-formatter'

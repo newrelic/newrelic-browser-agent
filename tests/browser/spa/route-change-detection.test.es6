@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import jil from 'jil'
 import matcher from '../../../tools/jil/util/browser-matcher'
 

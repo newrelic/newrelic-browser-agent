@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var id = require('../../loader/id')
 var test = require('../../tools/jil/browser-test.js')
 var win = window

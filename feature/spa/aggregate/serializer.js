@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var cleanURL = require('../../../agent/clean-url')
 var loader = require('loader')
 var mapOwn = require('map-own')

@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import sauceConnectLauncher from 'sauce-connect-launcher'
 import os from 'os'
 import childProcess from 'child_process'

@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import test from '../../../tools/jil/browser-test'
 var responseSizeFromXhr = require('../../../feature/xhr/instrument/response-size')
 

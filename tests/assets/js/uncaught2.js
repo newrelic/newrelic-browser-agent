@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Test Two:
 //   Calls js agent window.onerror handler manually with a fake error.
 //     stores the fake error.

@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var handle = require('handle')
 var frameworksEE = require('ee').get('frameworks')
 var promiseWrapper = require('wrap-function')(frameworksEE)

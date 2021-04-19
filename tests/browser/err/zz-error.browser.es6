@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Uncaught exception test.
 // Name prefixed with zz- to be the last file
 // included in the unit test bundle.

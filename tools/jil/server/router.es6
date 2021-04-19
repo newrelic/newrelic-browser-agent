@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import BaseServer from './base-server.es6'
 import defaultResponders from './responders.es6'
 import concat from 'concat-stream'

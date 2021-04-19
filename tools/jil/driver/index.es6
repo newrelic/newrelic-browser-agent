@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import wd, {asserters} from 'wd'
 // import DefaultDriver from './DefaultDriver.es6'
 import ParallelDriver from './ParallelDriver.es6'

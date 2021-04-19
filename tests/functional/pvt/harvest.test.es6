@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import testDriver from '../../../tools/jil/index.es6'
 
 // we use XHR for harvest calls only if browser support XHR

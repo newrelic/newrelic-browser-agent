@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Start assigning ids at 1 so 0 can always be used for window, without
 // actually setting it (which would create a global variable).
 var index = 1

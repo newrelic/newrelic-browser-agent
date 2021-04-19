@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Uses the following environment variables:
 // BUILD_SELECTOR
 // AWS_SECRET_ACCESS_KEY

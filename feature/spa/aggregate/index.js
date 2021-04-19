@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var register = require('../../../agent/register-handler')
 var parseUrl = require('../../xhr/instrument/parse-url')
 var harvest = require('../../../agent/harvest')

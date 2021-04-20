@@ -34,16 +34,12 @@ for more details).
 All changes to the Agent should include test coverage, and each PR must pass
 all tests against all browsers in SauceLabs locally before being merged.
 
-To run all tests against all browsers in saucelabs:
-```
-jil -s -b *@*
-```
+We run tests on a variety of browsers and platforms to ensure that the agent runs safely for all users. We use Saucelabs, and the test matrix is defined [here](tools/jil/util/browsers.json).
+
+When you first submit your PR, the tests will not be run automatically. After we review the PR, we will add a label that will trigger the full-matrix testing.
 
 See [Running Tests](https://github.com/newrelic/newrelic-browser-agent#running-tests)
-for more details on how to run tests.
-
-We often will include a screenshot of the passing output of the test run
-against sauce labs, to indicate that the tests are passing.
+for more details on how to run tests locally.
 
 ## Review
 

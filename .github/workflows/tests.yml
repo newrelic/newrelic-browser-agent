@@ -1,14 +1,19 @@
 name: Tests
 
 on:
-  pull_request:
+  pull_request_target:
+    types: [labeled]
+  workflow_dispatch:
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     container: node:14
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: build
         run: npm run ci-build
@@ -18,6 +23,7 @@ jobs:
   latest-browsers:
     runs-on: ubuntu-latest
     container: node:14
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -26,6 +32,8 @@ jobs:
       BUILD_NUMBER: PR${{ github.event.number }}-latest-${{ github.run_number }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: build
         run: npm run ci-build
@@ -36,6 +44,7 @@ jobs:
     needs: latest-browsers
     runs-on: ubuntu-latest
     container: node:14
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -44,6 +53,8 @@ jobs:
       BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: build
         run: npm run ci-build
@@ -54,6 +65,7 @@ jobs:
     needs: latest-browsers
     runs-on: ubuntu-latest
     container: node:14
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -62,6 +74,8 @@ jobs:
       BUILD_NUMBER: PR${{ github.event.number }}-functional-${{ github.run_number }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: build
         run: npm run ci-build

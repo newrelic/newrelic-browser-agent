@@ -95,8 +95,24 @@ To run all applicable tests against [PhantomJS](http://phantomjs.org/), just typ
 npm run test
 ```
 
-Note: `jil` does not handle building the agent automatically.
-Either run `npm run build` after each change, or use `npm run watch` to automatically rebuild on each change.
+To run all tests on a specific browser/platform, you can either run on Saucelabs or point the testing framework to your own Selenium server.
+
+To run tests on Saucelabs, you will need your own Saucelabs account. Export your Saucelabs username and access key in these environment variables - JIL_SAUCE_LABS_USERNAME, JIL_SAUCE_LABS_ACCESS_KEY. After that you can use the following command to run tests on a specific browser. Note that the browser/platform needs to be defined in this [matrix file](tools/jil/util/browsers.json).
+
+Here is an example of running all tests on the latest version of Chrome.
+
+```
+node tools/jil/bin/cli.js -s -b chrome@latest
+```
+
+Here is an example of using your own Selenium server:
+
+```
+node tools/jil/bin/cli.js -b chrome@latest --selenium-server=localhost:4444
+```
+
+Note: `jil` does not handle building the agent automatically;
+either run `npm run build` after each change, or use `npm run watch` to automatically rebuild on each change.
 
 #### Running a single test
 To run a single test in isolation, pass the path to `jil`:

@@ -41,7 +41,7 @@ function expectedErrorsForBrowser (router, browser) {
   let expected = [
     {
       message: 'uncaught error',
-      stack: [{u: uncaught1URL, l: 7}]
+      stack: [{u: uncaught1URL, l: 12}]
     },
     {
       message: 'fake',
@@ -50,13 +50,13 @@ function expectedErrorsForBrowser (router, browser) {
     {
       message: 'original onerror',
       stack: [
-        {f: 'originalOnerrorHandler', u: '<inline>', l: 12},
-        {f: 'r', u: '<inline>', l: 21}
+        {f: 'originalOnerrorHandler', u: '<inline>', l: 17},
+        {f: 'r', u: '<inline>', l: 26}
       ]
     },
     {
       message: 'original return abc',
-      stack: [{u: uncaught2URL, l: 12}]
+      stack: [{u: uncaught2URL, l: 17}]
     }
   ]
 
@@ -64,14 +64,14 @@ function expectedErrorsForBrowser (router, browser) {
     expected[2].stack = [{}]
   }
   if (browser.match('safari@<7')) {
-    expected[2].stack = [{u: '<inline>', l: 14}]
+    expected[2].stack = [{u: '<inline>', l: 19}]
   }
 
   if (browser.hasFeature('uncaughtErrorObject')) {
     expected[0].stack[0].f = 'uncaughtError'
-    expected[0].stack[1] = {u: uncaught1URL, l: 7}
+    expected[0].stack[1] = {u: uncaught1URL, l: 12}
     expected[3].stack[0].f = 'onerrorReturn'
-    expected[3].stack[1] = {u: uncaught2URL, l: 12}
+    expected[3].stack[1] = {u: uncaught2URL, l: 17}
     if (browser.match('ie@11')) {
       expected[0].stack[1].f = 'code'
       expected[3].stack[1].f = 'code'

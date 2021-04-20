@@ -27,7 +27,7 @@ testDriver.test('reporting errors from XHR callbacks', supported, function (t, b
     let xhrJSURL = router.assetURL('js/xhr-error.js').split('?')[0]
     let expectedErrors = [{
       message: 'xhr onload',
-      stack: [{f: 'goodxhr', u: xhrJSURL, l: 4}]
+      stack: [{f: 'goodxhr', u: xhrJSURL, l: 9}]
     }]
 
     if (browser.match('ie@<10, safari@<7, firefox@<15')) {

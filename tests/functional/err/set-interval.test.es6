@@ -27,7 +27,7 @@ testDriver.test('reporting errors from setInterval callbacks', supported, functi
       message: 'interval callback',
       stack: [{
         u: router.assetURL('js/set-interval-error.js').split('?')[0],
-        l: 5
+        l: 10
       }]
     }]
 

@@ -74,7 +74,7 @@ jobs:
         # run: |
         #   npm ci
         #   node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=4
-  publish-artifacts:
+  publish-to-s3:
     needs: smoke-test
     runs-on: ubuntu-latest
     container: node:14
@@ -98,8 +98,32 @@ jobs:
       - name: upload artifacts to S3
         run: |
           node tools/scripts/upload-to-s3.js --bucket ${{ secrets.AWS_BUCKET }}
+  publish-to-nr:
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ./.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+      - name: install
+        run: npm ci
+      - name: download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: build
+      - name: upload artifacts to NR
+        run: |
+          node tools/scripts/upload-to-nr.js \
+            --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
+            --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
+            --eu-api-key=${{ secrets.NR_API_KEY_EU }}
   check-published:
-    needs: publish-artifacts
+    needs: publish-to-s3
     runs-on: ubuntu-latest
     container: node:14
     steps:

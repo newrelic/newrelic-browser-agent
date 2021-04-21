@@ -2,7 +2,6 @@
 
 var fs = require('fs')
 var path = require('path')
-var AWS = require('aws-sdk')
 var request = require('request')
 var util = require('util')
 var yargs = require('yargs')
@@ -21,27 +20,15 @@ var argv = yargs
   .string('eu-api-key')
   .describe('eu-api-key', 'API key to use for talking to EU RPM site to upload loaders')
 
-  .string('local-api-key')
-  .describe('local-api-key', 'API key to use for talking to local RPM site to upload loaders')
-
   .boolean('skip-upload-failures')
   .describe('skip-upload-failures', "Don't bail out after the first failure, keep trying other requests")
-
-  .boolean('skip-s3')
-  .describe('skip-s3', 'Skip uploading to S3 (only upload loaders to the DB)')
-  .default('skip-s3', false)
 
   .help('h')
   .alias('h', 'help')
 
   .argv
 
-var s3 = new AWS.S3()
-
-var assetFilenames = allAssetFilenames()
-var loaders = assetFilenames.loaders
-var payloads = assetFilenames.payloads
-var maps = assetFilenames.maps
+var loaders = loaderFilenames()
 var targetEnvironments = argv.environments.split(',')
 
 var uploadErrors = []
@@ -59,13 +46,6 @@ var agentVersion = fs.readFileSync(
 ).trim()
 
 var steps = [ loadFiles ]
-
-if (argv.skipS3) {
-  console.log('Skipping uploads to S3')
-} else {
-  console.log('Will upload assets to S3')
-  steps.push(uploadAllToS3)
-}
 
 targetEnvironments.forEach(function (env) {
   console.log('Will upload loaders to ' + env)
@@ -90,7 +70,7 @@ asyncForEach(steps, function (fn, next) {
 })
 
 function loadFiles (cb) {
-  var allFiles = payloads.concat(loaders).concat(maps)
+  var allFiles = loaders
 
   asyncForEach(allFiles, readFile, cb)
 
@@ -103,19 +83,15 @@ function loadFiles (cb) {
   }
 }
 
-function uploadAllToS3 (cb) {
-  var allFiles = payloads.concat(loaders).concat(maps)
-
-  asyncForEach(allFiles, function (file, next) {
-    var filename = getFilenameWithVersion(file, agentVersion)
-    console.log('uploading ' + filename + ' to S3')
-    uploadToS3(filename, fileData[file], next)
-  }, cb, uploadErrorCallback)
-}
-
 function getFilenameWithVersion (file, version) {
   var parts = file.split('.')
-  return parts[0] + '-' + version + '.' + parts.slice(1).join('.')
+  var filename = parts[0] + '-' + version + '.' + parts.slice(1).join('.')
+
+  if (argv['test-mode']) {
+    filename = filename.replace('nr-', 'test-')
+  }
+
+  return filename
 }
 
 function uploadAllLoadersToDB (environment, cb) {
@@ -123,18 +99,6 @@ function uploadAllLoadersToDB (environment, cb) {
     var filename = getFilenameWithVersion(file, agentVersion)
     uploadLoaderToDB(filename, fileData[file], environment, next)
   }, cb, uploadErrorCallback)
-}
-
-function uploadToS3 (key, content, cb) {
-  var params = {
-    Body: content,
-    Bucket: 'nr-browser-agent',
-    ContentType: 'application/javascript',
-    CacheControl: 'public, max-age=3600',
-    Key: key
-  }
-
-  s3.putObject(params, cb)
 }
 
 function uploadLoaderToDB (filename, loader, environment, cb) {
@@ -149,14 +113,8 @@ function uploadLoaderToDB (filename, loader, environment, cb) {
       set_current: false
     }
   }
-// These should be turned into env vars in GH actions
+
   var envOptions = {
-    local: {
-      url: 'http://api.lvh.me:3000/v2/js_agent_loaders/create.json',
-      headers: {
-        'X-Api-Key': argv['local-api-key']
-      }
-    },
     staging: {
       url: 'https://staging-api.newrelic.com/v2/js_agent_loaders/create.json',
       headers: {
@@ -191,32 +149,16 @@ function uploadLoaderToDB (filename, loader, environment, cb) {
   })
 }
 
-function allAssetFilenames () {
+function loaderFilenames() {
   var loaderSpecs = require('../../loaders')
-  var loaders = []
-  var payloads = []
-  var maps = []
+  var filenames = []
 
   loaderSpecs.forEach(function (loaderSpec) {
-    loaders.push('nr-loader-' + loaderSpec.name + '.js')
-    loaders.push('nr-loader-' + loaderSpec.name + '.min.js')
-    maps.push('nr-loader-' + loaderSpec.name + '.js.map')
-    maps.push('nr-loader-' + loaderSpec.name + '.min.js.map')
-
-    var payloadName = loaderSpec.payload ? 'nr-' + loaderSpec.payload : 'nr'
-    if (payloads.indexOf(payloadName + '.js') === -1) {
-      payloads.push(payloadName + '.js')
-      payloads.push(payloadName + '.min.js')
-      maps.push(payloadName + '.js.map')
-      maps.push(payloadName + '.min.js.map')
-    }
+    filenames.push('nr-loader-' + loaderSpec.name + '.js')
+    filenames.push('nr-loader-' + loaderSpec.name + '.min.js')
   })
 
-  return {
-    loaders: loaders,
-    payloads: payloads,
-    maps: maps
-  }
+  return filenames
 }
 
 // errorCallback is optional

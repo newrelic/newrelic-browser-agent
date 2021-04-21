@@ -1,0 +1,13 @@
+name: Remove labels
+on:
+  pull_request_target:
+    types: [synchronize, reopened]
+
+jobs:
+  remove_labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: remove labels
+        uses: andymckay/labeler@master
+        with:
+          remove-labels: "safe to test"          

@@ -11,7 +11,7 @@ var loaders = require('./loaders')
 var preprocessify = require('preprocessify')
 var globalRequire = '__nr_require'
 var collapser = require('bundle-collapser/plugin')
-var cleanDeps = require('./tools/build/clean-deps')
+var cleanDeps = require('./tools/scripts/clean-deps')
 
 module.exports = 'build'
 

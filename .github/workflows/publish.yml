@@ -1,0 +1,135 @@
+name: Build and publish release
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+jobs:
+  check-not-published:
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ./.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+      - name: install
+        run: npm ci
+      - name: check files don't exist already
+        run: node tools/scripts/check-version.js -e no -v $(cat VERSION)
+  build:
+    needs: check-not-published
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+      - name: setup build folder
+        run: |
+          mkdir build
+          cp VERSION build/build_number
+          echo $GITHUB_SHA > build/git_commit
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ./.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+      - name: build
+        run: npm run ci-build
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: build
+  smoke-test:
+    needs: build
+    runs-on: ubuntu-latest
+    container: node:14
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+      BUILD_NUMBER: Release${{ github.event.number }}-${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ./.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+      - name: download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: build
+      - name: run tests
+        run: |
+          npm ci
+          node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=4
+  publish-to-s3:
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    container: node:14
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ./.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+      - name: install
+        run: npm ci
+      - name: download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: build
+      - name: upload artifacts to S3
+        run: |
+          node tools/scripts/upload-to-s3.js --bucket ${{ secrets.AWS_BUCKET }}
+  publish-to-nr:
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ./.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+      - name: install
+        run: npm ci
+      - name: download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: build
+      - name: upload artifacts to NR
+        run: |
+          node tools/scripts/upload-to-nr.js \
+            --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
+            --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
+            --eu-api-key=${{ secrets.NR_API_KEY_EU }}
+  check-published:
+    needs: publish-to-s3
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ./.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+      - name: install
+        run: npm ci
+      - name: check files exist
+        run: node tools/scripts/check-version.js -e yes -v $(cat VERSION)

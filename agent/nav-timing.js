@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // We don't use JSON.stringify directly on the performance timing data for these reasons:
 // * Chrome has extra data in the performance object that we don't want to send all the time (wasteful)
 // * Firefox fails to stringify the native object due to - http://code.google.com/p/v8/issues/detail?id=1223

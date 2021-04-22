@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var register = require('./register-handler')
 var harvest = require('./harvest')
 var agg = require('./aggregator')

@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var ctxId = 'nr@context'
 var getOrSet = require('gos')
 var mapOwn = require('map-own')

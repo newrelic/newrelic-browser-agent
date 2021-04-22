@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Use various techniques to determine the time at which this page started and whether to capture navigation timing information
 
 var sHash = require('./s-hash')

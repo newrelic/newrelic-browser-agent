@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import testDriver from '../../../tools/jil/index.es6'
 import {assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse} from './assertion-helpers.es6'
 
@@ -24,7 +29,7 @@ testDriver.test('ignoring errors works', supported, function (t, browser, router
       message: 'report',
       stack: [{
         u: '<inline>',
-        l: 15
+        l: 20
       }]
     }]
 

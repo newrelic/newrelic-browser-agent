@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import test from '../../../tools/jil/browser-test'
 var distributedTracing = require('../../../feature/xhr/instrument/distributed-tracing')
 var generateTracePayload = distributedTracing.generateTracePayload

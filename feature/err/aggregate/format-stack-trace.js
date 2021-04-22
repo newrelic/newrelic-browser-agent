@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var stripNewlinesRegex = /^\n+|\n+$/g
 var MAX_STACK_TRACE_LENGTH = 65530
 

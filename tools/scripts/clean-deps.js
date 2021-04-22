@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // This is a browserify plugin that removes each entry from the deps list of a
 // module where the key and value are identical in order to save space in the
 // final output.

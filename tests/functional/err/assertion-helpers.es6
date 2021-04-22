@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import url from 'url'
 import canonicalFunctionName from '../../../feature/err/aggregate/canonical-function-name'
 import stringHashCode from '../../../feature/err/aggregate/string-hash-code'

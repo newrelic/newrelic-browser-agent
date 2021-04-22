@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import jil from 'jil'
 let BrowserMatcher = require('../../../tools/jil/util/browser-matcher')
 let xhrSupported = BrowserMatcher.withFeature('xhr')

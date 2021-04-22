@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // History pushState wrapper
 var ee = require('ee').get('history')
 var wrapFn = require('../wrap-function')(ee)

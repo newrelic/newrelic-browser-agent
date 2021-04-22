@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var ee = require('ee').get('events')
 var wrapFn = require('../wrap-function')(ee, true)
 var getOrSet = require('gos')

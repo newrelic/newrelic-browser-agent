@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var uniqueId = require('../../../loader/unique-id')
 var parseUrl = require('./parse-url.js')
 

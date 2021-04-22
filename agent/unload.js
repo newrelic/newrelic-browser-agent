@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var ffVersion = require('../loader/firefox-version')
 var single = require('./single')
 var addE = require('./add-e')

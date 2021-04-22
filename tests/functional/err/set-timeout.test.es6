@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import testDriver from '../../../tools/jil/index.es6'
 import {assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse} from './assertion-helpers.es6'
 
@@ -22,7 +27,7 @@ testDriver.test('reporting errors from setTimeout callbacks', supported, functio
       message: 'timeout callback',
       stack: [{
         u: router.assetURL('js/set-timeout-error.js').split('?')[0],
-        l: 4
+        l: 9
       }]
     }]
 

@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 let test = require('../../../tools/jil/browser-test.js')
 let drain = require('../../../agent/drain')
 

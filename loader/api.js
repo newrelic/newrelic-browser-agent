@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var handle = require('handle')
 var mapOwn = require('map-own')
 var slice = require('lodash._slice')

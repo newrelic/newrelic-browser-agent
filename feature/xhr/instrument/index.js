@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var loader = require('loader')
 
 // Don't instrument Chrome for iOS, it is buggy and acts like there are URL verification issues

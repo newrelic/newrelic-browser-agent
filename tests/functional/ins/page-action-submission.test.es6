@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import testDriver from '../../../tools/jil/index.es6'
 let corsBrowsers = testDriver.Matcher.withFeature('cors')
 let reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')

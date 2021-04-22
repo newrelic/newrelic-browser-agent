@@ -1,3 +1,7 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 // represents a definition of a browser with Selenium server connection info
 export default class TestEnv {

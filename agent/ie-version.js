@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var div = document.createElement('div')
 
 div.innerHTML = '<!--[if lte IE 6]><div></div><![endif]-->' +

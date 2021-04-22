@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // collect page view timings unless the feature is explicitly disabled
 if ('init' in NREUM && 'page_view_timing' in NREUM.init &&
   'enabled' in NREUM.init.page_view_timing &&

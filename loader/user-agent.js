@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Feature-detection is much preferred over using User Agent to detect browser.
 // However, there are cases where feature detection is not possible, for example
 // when a specific version of a browser has a bug that requires a workaround in just

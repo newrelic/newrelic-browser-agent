@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var nullable = require('./bel-serializer').nullable
 var numeric = require('./bel-serializer').numeric
 var getAddStringContext = require('./bel-serializer').getAddStringContext

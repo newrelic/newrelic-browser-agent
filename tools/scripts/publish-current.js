@@ -9,12 +9,14 @@
 // BUILD_SELECTOR
 // AWS_SECRET_ACCESS_KEY
 // AWS_ACCESS_KEY_ID
+// BUCKET_NAME
 
 var AWS = require('aws-sdk')
 var request = require('request')
 var loaders = require('../../loaders.js')
 var s3 = new AWS.S3()
 var buildNum = process.env['BUILD_SELECTOR']
+var bucketName = process.env['BUCKET_NAME']
 
 var loaderNames = loaders.map(function (loader) {
   return 'nr-loader-' + loader.name + '-{version}'
@@ -61,7 +63,7 @@ function uploadToS3 (key, content, type, cb) {
   var params = {
     ACL: 'public-read',
     Body: content,
-    Bucket: 'nr-browser-agent',
+    Bucket: bucketName,
     ContentType: type,
     Key: key
   }

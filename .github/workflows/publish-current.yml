@@ -1,0 +1,19 @@
+name: Publish `current` files
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-current:
+    runs-on: ubuntu-latest
+    container: node:14
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      BUCKET_NAME: ${{ secrets.AWS_BUCKET }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: install
+        run: npm ci
+      - name: publish
+        run: BUILD_SELECTOR=$(cat VERSION) node tools/scripts/publish-current.js

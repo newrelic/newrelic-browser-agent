@@ -4,12 +4,9 @@
  */
 
 var tape = require('tape')
-var path = require('path')
-
-var require = module.require('es6-require')(module, null, path.resolve(__dirname, '../../util'))
-var BrowserMatcher = require('../../util/browser-matcher.es6')
-var BrowserSpec = require('../../util/browser-list.es6').BrowserSpec
-var setBrowserList = require('../../util/browser-list.es6').setBrowserList
+var BrowserMatcher = require('../../util/browser-matcher')
+var BrowserSpec = require('../../util/browser-list').BrowserSpec
+var setBrowserList = require('../../util/browser-list').setBrowserList
 
 tape('by default includes everything', function (t) {
   setBrowserList({

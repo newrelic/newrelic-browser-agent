@@ -2,7 +2,7 @@
   "name": "jil",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index",
   "scripts": {
     "test": "NEWRELIC_ENVIRONMENT=development tape 'test/**/*.test.js'"
   },
@@ -14,7 +14,6 @@
     "concat-stream": "^1.5.1",
     "cors": "^2.7.1",
     "defined": "^1.0.0",
-    "es6-require": "^0.2.1",
     "function-bind": "^1.1.1",
     "has": "^1.0.1",
     "jquery": "1.11.3",

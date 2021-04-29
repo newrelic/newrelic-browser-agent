@@ -74,18 +74,6 @@
       "email": "mail@substack.net",
       "url": "http://substack.net"
     },
-    "es6-require@0.2.1": {
-      "name": "es6-require",
-      "version": "0.2.1",
-      "range": "^0.2.1",
-      "licenses": "ISC",
-      "repoUrl": "https://github.com/hayes/es6-require",
-      "versionedRepoUrl": "https://github.com/hayes/es6-require/tree/v0.2.1",
-      "licenseFile": "node_modules/es6-require/LICENSE",
-      "licenseUrl": "https://github.com/hayes/es6-require/blob/v0.2.1/LICENSE",
-      "licenseTextSource": "file",
-      "publisher": "Michael Hayes"
-    },
     "eslint-config-standard@5.3.5": {
       "name": "eslint-config-standard",
       "version": "5.3.5",

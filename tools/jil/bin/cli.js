@@ -5,7 +5,4 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var path = module.require('path')
-var require = module.require('es6-require')(module, null, path.resolve(__dirname, '../../..'))
-
 require('../runner')

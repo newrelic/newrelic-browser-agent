@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import testDriver from '../../tools/jil/index.es6'
+const testDriver = require('../../tools/jil/index')
 
 testDriver.test('empty string for agent key', function (t, browser, router) {
   t.plan(1)

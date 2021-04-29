@@ -4,12 +4,9 @@
  */
 
 var tape = require('tape')
-var path = require('path')
-
-var require = module.require('es6-require')(module, null, path.resolve(__dirname, '../../util'))
 var browsers = require('../../util/browsers.json')
-var browserList = require('../../util/browser-list.es6').default
-var BrowserSpec = require('../../util/browser-list.es6').BrowserSpec
+var browserList = require('../../util/browser-list').default
+var BrowserSpec = require('../../util/browser-list').BrowserSpec
 
 tape('returns BrowserSpec instances', function (t) {
   var browserSpecs = browserList('*@*')

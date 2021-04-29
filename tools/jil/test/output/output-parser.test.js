@@ -4,11 +4,9 @@
  */
 
 var tape = require('tape')
-var path = require('path')
-var require = module.require('es6-require')(module, null, path.resolve(__dirname, '../..'))
 var through = require('through')
 
-var OutputParser = require('../../output/index.es6').OutputParser
+var OutputParser = require('../../output/index').OutputParser
 
 tape('basic', function (t) {
   // tape harness streams into browser spec stream

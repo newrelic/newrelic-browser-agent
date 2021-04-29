@@ -4,16 +4,12 @@
  */
 
 const test = require('tape')
-const path = require('path')
 const Parser = require('tap-parser')
 
-var require = module.require('es6-require')(module, null, path.resolve(__dirname, '..'))
-
-// var Driver = require('../driver/index.es6')
-var DefaultDriver = require('../driver/DefaultDriver.es6')
-var ParallelDriver = require('../driver/ParallelDriver.es6')
-var TestRun = require('../driver/TestRun.es6')
-var Output = require('../output').default
+var DefaultDriver = require('../driver/DefaultDriver')
+var ParallelDriver = require('../driver/ParallelDriver')
+var TestRun = require('../driver/TestRun')
+var Output = require('../output')
 
 // mocks
 TestRun.prototype._initializeBrowser = _initializeBrowser
@@ -282,7 +278,6 @@ function runTest(t, setup, inspect, driverName) {
   t.test(driverName, t => {
     runDriverTest(driver)
       .then(result => {
-        // console.log(result)
         inspect(t, result.parsed)
         t.end()
       })

@@ -6,7 +6,7 @@
 if (!(window.performance &&
   window.performance.timing &&
   window.performance.getEntriesByType
-  )) return
+)) return
 
 var ee = require('ee')
 var handle = require('handle')

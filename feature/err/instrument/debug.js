@@ -16,7 +16,7 @@ try {
     if (flagArr.indexOf('nr_dev') !== -1) flags.nrDev = true
   }
 } catch (err) {
- // no op
+  // no op
 }
 
 if (flags.nrDev) ee.on('internal-error', function (err) { log(err.stack) })

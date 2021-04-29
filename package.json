@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@newrelic/nr-querypack": "github:newrelic/nr-querypack",
-    "aws-sdk": "^2.4.13",
+    "aws-sdk": "^2.894.0",
     "babelify": "6.4.0",
     "browserify": "^13.0.0",
     "bundle-collapser": "^1.2.1",

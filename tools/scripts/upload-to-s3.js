@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 var fs = require('fs')
 var path = require('path')
 var AWS = require('aws-sdk')
@@ -9,18 +14,32 @@ var argv = yargs
   .string('bucket')
   .describe('bucket', 'S3 bucket name')
 
+  .string('role')
+  .describe('role', 'S3 role ARN')
+
   .boolean('skip-upload-failures')
   .describe('skip-upload-failures', "Don't bail out after the first failure, keep trying other requests")
+
+  .boolean('dry')
+  .describe('dry', 'run the script without actually uploading files')
+  .alias('d', 'dry')
+
+  .boolean('test')
+  .describe('test', 'for testing only, uploads scripts to folder named test')
+  .alias('t', 'test')
 
   .help('h')
   .alias('h', 'help')
 
   .argv
 
-var s3 = new AWS.S3()
-
 if (!argv['bucket']) {
   console.log('S3 bucket must be specified')
+  return process.exit(1)
+}
+
+if (!argv['role']) {
+  console.log('S3 role ARN must be specified')
   return process.exit(1)
 }
 
@@ -29,6 +48,7 @@ var loaders = assetFilenames.loaders
 var payloads = assetFilenames.payloads
 var maps = assetFilenames.maps
 
+var s3 = null
 var uploadErrors = []
 var uploadErrorCallback = null
 if (argv['skip-upload-failures']) {
@@ -43,7 +63,7 @@ var agentVersion = fs.readFileSync(
   'utf-8'
 ).trim()
 
-var steps = [ loadFiles ]
+var steps = [ initialize, loadFiles ]
 steps.push(uploadAllToS3)
 
 asyncForEach(steps, function (fn, next) {
@@ -60,6 +80,29 @@ asyncForEach(steps, function (fn, next) {
     process.exit(1)
   }
 })
+
+function initialize(cb) {
+  var roleToAssume = {
+    RoleArn: argv['role'],
+    RoleSessionName: 'uploadToS3Session',
+    DurationSeconds: 900
+  }
+
+  var sts = new AWS.STS();
+  sts.assumeRole(roleToAssume, function(err, data) {
+    if (err) {
+      return cb(err)
+    } else {
+      var roleCreds = {
+        accessKeyId: data.Credentials.AccessKeyId,
+        secretAccessKey: data.Credentials.SecretAccessKey,
+        sessionToken: data.Credentials.SessionToken
+      }
+      s3 = new AWS.S3(roleCreds)
+      cb()
+    }
+  })
+}
 
 function loadFiles (cb) {
   var allFiles = payloads.concat(loaders).concat(maps)
@@ -98,12 +141,22 @@ function uploadAllLoadersToDB (environment, cb) {
 }
 
 function uploadToS3 (bucket, key, content, cb) {
+  if (argv['test'] === true) {
+    key = 'test/' + key
+  }
+
   var params = {
     Body: content,
     Bucket: bucket,
     ContentType: 'application/javascript',
     CacheControl: 'public, max-age=3600',
     Key: key
+  }
+
+  if (argv['dry'] === true) {
+    console.log('running in dry mode, file not uploaded, params:', params)
+    process.nextTick(cb)
+    return
   }
 
   s3.putObject(params, cb)

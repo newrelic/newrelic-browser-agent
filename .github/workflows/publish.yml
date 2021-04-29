@@ -93,7 +93,9 @@ jobs:
           path: build
       - name: upload artifacts to S3
         run: |
-          node tools/scripts/upload-to-s3.js --bucket ${{ secrets.AWS_BUCKET }}
+          node tools/scripts/upload-to-s3.js \
+            --bucket ${{ secrets.AWS_BUCKET }} \
+            --role ${{ secrets.AWS_ROLE_ARN }}
   publish-to-nr:
     needs: smoke-test
     runs-on: ubuntu-latest

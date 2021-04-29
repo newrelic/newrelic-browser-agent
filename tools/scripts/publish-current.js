@@ -6,17 +6,54 @@
  */
 
 // Uses the following environment variables:
-// BUILD_SELECTOR
 // AWS_SECRET_ACCESS_KEY
 // AWS_ACCESS_KEY_ID
-// BUCKET_NAME
 
 var AWS = require('aws-sdk')
 var request = require('request')
+var yargs = require('yargs')
 var loaders = require('../../loaders.js')
-var s3 = new AWS.S3()
-var buildNum = process.env['BUILD_SELECTOR']
-var bucketName = process.env['BUCKET_NAME']
+
+var argv = yargs
+  .string('build-number')
+  .describe('build-number', 'build number to promote to current')
+
+  .string('bucket')
+  .describe('bucket', 'S3 bucket name')
+
+  .string('role')
+  .describe('role', 'S3 role ARN')
+
+  .boolean('dry')
+  .describe('dry', 'run the script without actually uploading files')
+  .alias('d', 'dry')
+
+  .boolean('test')
+  .describe('test', 'for testing only, uploads scripts to folder named test')
+  .alias('t', 'test')
+
+  .help('h')
+  .alias('h', 'help')
+  .argv
+
+if (!argv['buildNumber']) {
+  console.log('build number must be specified')
+  return process.exit(1)
+}
+
+if (!argv['bucket']) {
+  console.log('S3 bucket must be specified')
+  return process.exit(1)
+}
+
+if (!argv['role']) {
+  console.log('S3 role ARN must be specified')
+  return process.exit(1)
+}
+
+var s3 = null
+var buildNum = argv['build-number']
+var bucketName = argv['bucket']
 
 var loaderNames = loaders.map(function (loader) {
   return 'nr-loader-' + loader.name + '-{version}'
@@ -40,28 +77,58 @@ var toSet = allFiles.map(setVersion('current'))
 console.log('Promoting ' + buildNum + ' to be current')
 
 if (!(+buildNum > 470)) {
-  throw new Error('BUILD_SELECTOR must been a recent browser agent version (using buildNum `' + buildNum + '`)')
+  throw new Error('build number must been a recent browser agent version (using buildNum `' + buildNum + '`)')
 }
 
-toGet.forEach(function (name, idx) {
-  request('https://js-agent.newrelic.com/' + name, function (err, req, content) {
-    if (err) throw err
-    if (!(content.match('NREUM'))) {
-      throw new Error('Content is missing NREUM, something went wrong')
-    }
+initialize(function(err) {
+  if (err) throw err
 
-    var key = toSet[idx]
-    var type = 'application/javascript'
+  toGet.forEach(function (name, idx) {
+    request('https://js-agent.newrelic.com/' + name, function (err, req, content) {
+      if (err) throw err
+      if (!(content.match('NREUM'))) {
+        throw new Error('Content is missing NREUM, something went wrong')
+      }
 
-    uploadToS3(key, content, type, function (e) {
-      if (e) throw e
+      var key = toSet[idx]
+      var type = 'application/javascript'
+
+      uploadToS3(key, content, type, function (e) {
+        if (e) throw e
+      })
     })
   })
 })
 
+function initialize(cb) {
+  var roleToAssume = {
+    RoleArn: argv['role'],
+    RoleSessionName: 'uploadToS3Session',
+    DurationSeconds: 900
+  }
+
+  var sts = new AWS.STS();
+  sts.assumeRole(roleToAssume, function(err, data) {
+    if (err) {
+      return cb(err)
+    } else {
+      var roleCreds = {
+        accessKeyId: data.Credentials.AccessKeyId,
+        secretAccessKey: data.Credentials.SecretAccessKey,
+        sessionToken: data.Credentials.SessionToken
+      }
+      s3 = new AWS.S3(roleCreds)
+      cb()
+    }
+  })
+}
+
 function uploadToS3 (key, content, type, cb) {
+  if (argv['test'] === true) {
+    key = 'test/' + key
+  }
+
   var params = {
-    ACL: 'public-read',
     Body: content,
     Bucket: bucketName,
     ContentType: type,
@@ -72,6 +139,12 @@ function uploadToS3 (key, content, type, cb) {
 
   params.CacheControl = 'public, max-age=0'
   params.Expires = new Date()
+
+  if (argv['dry'] === true) {
+    console.log('running in dry mode, file not uploaded')
+    process.nextTick(cb)
+    return
+  }
 
   s3.putObject(params, cb)
 }

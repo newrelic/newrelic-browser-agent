@@ -19,4 +19,4 @@ If applicable, please include details on how to test your changes.
 
 ---   
 _More details on running your tests locally can be found in the
-[CONTRIBUTING](https://github.com/newrelic/newrelic-java-agent/blob/main/CONTRIBUTING.md) and [README](https://github.com/newrelic/newrelic-browser-agent/blob/main/README.md) docs._
+[CONTRIBUTING](https://github.com/newrelic/newrelic-browser-agent/blob/main/CONTRIBUTING.md) and [README](https://github.com/newrelic/newrelic-browser-agent/blob/main/README.md) docs._

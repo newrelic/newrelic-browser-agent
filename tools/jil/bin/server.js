@@ -5,8 +5,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-module.require('babel/polyfill')
-
 var config = require('../runner/args')
 
 if (!config.timeout) config.timeout = 32000

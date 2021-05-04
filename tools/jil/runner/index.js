@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-require('babel/polyfill')
 var newrelic = require('newrelic')
 const config = require('./args')
 const path = require('path')

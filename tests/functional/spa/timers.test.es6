@@ -6,7 +6,9 @@
 import testDriver from '../../../tools/jil/index.es6'
 import querypack from '@newrelic/nr-querypack'
 
-testDriver.test('incorrect timer', function (t, browser, router) {
+const supported = testDriver.Matcher.withFeature('addEventListener')
+
+testDriver.test('incorrect timer', supported, function (t, browser, router) {
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
   let loadPromise = browser.safeGet(router.assetURL('spa/incorrect-timer.html', { loader: 'spa' }))

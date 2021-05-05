@@ -15,7 +15,7 @@
     document.addEventListener('click', onclick)
 
     function onclick () {
-      window.history.replaceState({}, '', window.location.pathname + window.location.search + '#' + Math.random())
+      window.location.hash = Math.random()
       
       // call setTimeout with first arg that is not a function
       // the agent should be able to handle this gracefully

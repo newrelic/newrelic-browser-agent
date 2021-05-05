@@ -17,14 +17,13 @@ testDriver.test('incorrect timer', supported, function (t, browser, router) {
     .then(([eventsResult]) => {
       let eventPromise = router.expectEvents()
       let domPromise = browser.elementByCssSelector('body').click()
-
       return Promise.all([eventPromise, domPromise]).then(([eventData, domData]) => {
         return eventData
       })
     })
     .then(({query, body}) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
-      t.equal(interactionTree.trigger, 'click')
+      t.equal(interactionTree.category, 'Route change', 'gout route change harvest call')
       t.end()
     })
     .catch(fail)

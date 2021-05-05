@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/* eslint-disable no-useless-escape */
+
 // computeStackTrace: cross-browser stack traces in JavaScript
 //
 // Syntax:

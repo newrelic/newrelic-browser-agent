@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import testDriver from '../../../tools/jil/index.es6'
-import querypack from '@newrelic/nr-querypack'
+const testDriver = require('../../../tools/jil/index')
+const querypack = require('@newrelic/nr-querypack')
 
 let supported = testDriver.Matcher.withFeature('navTiming')
 

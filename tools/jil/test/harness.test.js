@@ -4,10 +4,7 @@
  */
 
 const tape = require('tape')
-const path = require('path')
 const concat = require('concat-stream')
-
-var require = module.require('es6-require')(module, null, path.resolve(__dirname, '..'))
 
 const TestHarness = require('../driver/harness')
 
@@ -53,11 +50,6 @@ tape('maintains test numbering when the harness is paused', t => {
   const harness = new TestHarness()
 
   const concatStream = concat(data => {
-    // assert that the TAP output is correct
-    // console.log('**************')
-    // console.log(data)
-    // console.log('**************')
-
     const tapLines = data.split('\n')
 
     t.ok(tapLines[1] === '# first fake test', 'first test name in output')

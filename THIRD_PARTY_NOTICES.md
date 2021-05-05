@@ -25,7 +25,6 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [browserify](#browserify)
 * [browser-pack](#browser-pack)
 * [bundle-collapser](#bundle-collapser)
-* [es6-require](#es6-require)
 * [eslint-config-standard](#eslint-config-standard)
 * [eslint-plugin-promise](#eslint-plugin-promise)
 * [eslint-plugin-standard](#eslint-plugin-standard)
@@ -667,28 +666,6 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-```
-
-### es6-require
-
-This product includes source derived from [es6-require](https://github.com/hayes/es6-require) ([v0.2.1](https://github.com/hayes/es6-require/tree/v0.2.1)), distributed under the [ISC License](https://github.com/hayes/es6-require/blob/v0.2.1/LICENSE):
-
-```
-Copyright (c) 2015, Michael Hayes <michael@hayes.io>
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
 
 ```
 

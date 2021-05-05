@@ -3,4 +3,5 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-module.exports = module.require('es6-require')(module)('./runner')
+const runner = require('./runner')
+module.exports = runner

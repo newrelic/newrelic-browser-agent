@@ -6,7 +6,7 @@
 var mapOwn = require('map-own')
 var stringify = require('./stringify')
 
-  // Characters that are safe in a qs, but get encoded.
+// Characters that are safe in a qs, but get encoded.
 var charMap = {
   '%2C': ',',
   '%3A': ':',

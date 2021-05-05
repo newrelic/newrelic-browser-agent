@@ -5,18 +5,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-module.require('babel/polyfill')
-
-var path = module.require('path')
-var require = module.require('es6-require')(module, null, path.resolve(__dirname, '../../..'))
-var config = require('../runner/args.es6')
+var config = require('../runner/args')
 
 if (!config.timeout) config.timeout = 32000
 if (!config.port) config.port = 3333
 
 config.cache = false
 
-var driver = require('../index.es6')
+var driver = require('../index')
 
 var hostname = config.host
 driver.router.handle(driver.assetServer.defaultAgentConfig.licenseKey, true)

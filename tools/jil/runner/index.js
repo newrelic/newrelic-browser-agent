@@ -41,7 +41,6 @@ let launchedFromJilServer = (relativeMainFile === '../bin/server.js')
 
 if (launchedFromCli) {
   if (!process.stdin.isTTY) {
-    console.log('!isTTY')
     process.stdin.pipe(concat((data) => {
       let filesFromStdin = data.toString('utf-8').split('\n').filter(Boolean)
       let testFiles = commandLineTestFiles.concat(filesFromStdin)
@@ -53,7 +52,6 @@ if (launchedFromCli) {
       }
     }))
   } else if (commandLineTestFiles.length) {
-    console.log('commandLineTestFiles', commandLineTestFiles)
     loadFiles(commandLineTestFiles, loadBrowsersAndRunTests)
   } else {
     loadDefaultFiles(loadBrowsersAndRunTests)
@@ -80,7 +78,7 @@ function loadDefaultFiles (cb) {
 function loadFiles (testFiles, cb) {
   for (let file of testFiles) {
     file = resolve(process.cwd(), file)
-    if (file.slice(-12) !== '.browser.js' && file.slice(-11) !== '.browser.js') {
+    if (file.slice(-11) !== '.browser.js') {
       require(file)
     } else {
       loadBrowser(testDriver, file)

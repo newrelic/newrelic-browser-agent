@@ -221,6 +221,7 @@ baseEE.on('feat-spa', function () {
   // callbacks that fire around the callback passed to setTimeout originally.
   register.on(timerEE, 'setTimeout-end', function saveId (args, obj, timerId) {
     if (!currentNode || (timerBudget - this.timerDuration) < 0) return
+    if (args && !(args[0] instanceof Function)) return
     currentNode[INTERACTION][REMAINING]++
     this.timerId = timerId
     timerMap[timerId] = currentNode

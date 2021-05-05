@@ -2,9 +2,8 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
-import testDriver from '../../../tools/jil/index.es6'
-import querypack from '@newrelic/nr-querypack'
+const testDriver = require('../../../tools/jil')
+const querypack = require('@newrelic/nr-querypack')
 
 const supported = testDriver.Matcher.withFeature('addEventListener')
 

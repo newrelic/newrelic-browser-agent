@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+var protocolAllowed = require('../../../loader/protocol-allowed')
+if (!protocolAllowed(window.location)) return
+
 var handle = require('handle')
 var slice = require('lodash._slice')
 var ee = require('ee')

@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+var protocolAllowed = require('../../../loader/protocol-allowed')
+if (!protocolAllowed(window.location)) return
+
 var loader = require('loader')
 
 // Don't instrument Chrome for iOS, it is buggy and acts like there are URL verification issues

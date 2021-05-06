@@ -42,12 +42,15 @@ The Browser agent is loaded onto a web page in two parts. To install a version o
    NREUM.info={
      "licenseKey":"example",
      "applicationID": 123,
-     "agent": "localhost:8080/nr-spa.js"
+     "agent": "http://localhost:8080/nr-spa.js"
    };
 </script>
 <!-- Browser agent loader script -->
-<script src="https://localhost:8080/nr-loader-spa.js"></script>
+<script src="http://localhost:8080/nr-loader-spa.js"></script>
 ```
+
+NOTE: Your browser might cache JS scripts, which means you may not see your changes when the agent files are re-built. To turn off caching in Chrome, open DevTools and check the [Disable cache](https://developer.chrome.com/docs/devtools/network/reference/#disable-cache) checkbox.
+
 ## Configure the agent
 The Browser agent uses a JSON configuration to set license key, application ID and which agent type to use.
 

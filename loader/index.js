@@ -98,7 +98,13 @@ function windowLoaded () {
   handle('timing', ['load', ts])
 
   var agent = doc.createElement('script')
-  agent.src = scheme + '://' + info.agent
+
+  if (info.agent.indexOf('http://') === 0 || info.agent.indexOf('https://') === 0) {
+    agent.src = info.agent
+  } else {
+    agent.src = scheme + '://' + info.agent
+  }
+
   firstScript.parentNode.insertBefore(agent, firstScript)
 }
 

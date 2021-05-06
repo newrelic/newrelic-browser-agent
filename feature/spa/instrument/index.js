@@ -3,9 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var protocolAllowed = require('../../../loader/protocol-allowed')
-if (!protocolAllowed(window.location)) return
-
 var START = '-start'
 var END = '-end'
 var BODY = '-body'
@@ -24,7 +21,7 @@ var loader = require('loader')
 
 // loader.xhrWrappable will be false in chrome for ios, but addEventListener is still available.
 // sauce does not have a browser to test this case against, so be careful when modifying this check
-if (!win[ADD_EVENT_LISTENER] || !loader.xhrWrappable) return
+if (!win[ADD_EVENT_LISTENER] || !loader.xhrWrappable || loader.disabled) return
 
 var mutationEE = require('../../wrap-mutation')
 var promiseEE = require('../../wrap-promise')

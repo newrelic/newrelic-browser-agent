@@ -3,9 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var protocolAllowed = require('../../../loader/protocol-allowed')
-if (!protocolAllowed(window.location)) return
-
 var handle = require('handle')
 var slice = require('lodash._slice')
 var ee = require('ee')
@@ -14,6 +11,8 @@ var getOrSet = require('gos')
 var origOnerror = window.onerror
 var handleErrors = false
 var NR_ERR_PROP = 'nr@seenError'
+
+if (loader.disabled) return
 
 // skipNext counter to keep track of uncaught
 // errors that will be the same as caught errors.

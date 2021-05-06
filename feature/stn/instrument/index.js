@@ -3,9 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var protocolAllowed = require('../../../loader/protocol-allowed')
-if (!protocolAllowed(window.location)) return
-
 if (!(window.performance &&
   window.performance.timing &&
   window.performance.getEntriesByType
@@ -30,8 +27,8 @@ var PUSH_STATE = 'pushState'
 
 // Turn on feature harvesting
 var loader = require('loader')
-loader = Object.assign({}, loader, {features: Object.assign(loader.features || {}, {stn: true})})
-console.log('stn loader')
+if (loader.disabled) return
+
 loader.features.stn = true
 
 // wrap history ap

@@ -21,7 +21,7 @@ var ATTACH_EVENT = 'attachEvent'
 var XHR = win.XMLHttpRequest
 var XHR_PROTO = XHR && XHR.prototype
 
-if (!protocolAllowed(win.location)) return
+var disabled = !protocolAllowed(win.location)
 
 NREUM.o = {
   ST: setTimeout,
@@ -52,8 +52,11 @@ var exp = module.exports = {
   origin: origin,
   features: {},
   xhrWrappable: xhrWrappable,
-  userAgent: userAgent
+  userAgent: userAgent,
+  disabled: disabled
 }
+
+if (disabled) return
 
 // api loads registers several event listeners, but does not have any exports
 require('api')

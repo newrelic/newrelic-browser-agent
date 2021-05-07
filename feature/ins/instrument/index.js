@@ -4,4 +4,7 @@
  */
 
 // Turn on feature
-require('loader').features.ins = true
+var loader = require('loader')
+
+if (loader.disabled) return
+loader.features.ins = true

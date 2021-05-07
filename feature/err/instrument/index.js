@@ -12,6 +12,8 @@ var origOnerror = window.onerror
 var handleErrors = false
 var NR_ERR_PROP = 'nr@seenError'
 
+if (loader.disabled) return
+
 // skipNext counter to keep track of uncaught
 // errors that will be the same as caught errors.
 var skipNext = 0

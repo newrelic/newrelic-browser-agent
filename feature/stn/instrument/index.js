@@ -27,6 +27,8 @@ var PUSH_STATE = 'pushState'
 
 // Turn on feature harvesting
 var loader = require('loader')
+if (loader.disabled) return
+
 loader.features.stn = true
 
 // wrap history ap

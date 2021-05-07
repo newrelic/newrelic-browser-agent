@@ -6,7 +6,7 @@
 var loader = require('loader')
 
 // Don't instrument Chrome for iOS, it is buggy and acts like there are URL verification issues
-if (!loader.xhrWrappable) return
+if (!loader.xhrWrappable || loader.disabled) return
 
 var handle = require('handle')
 var parseUrl = require('./parse-url.js')

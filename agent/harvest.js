@@ -33,7 +33,6 @@ var addPaintMetric = require('./paint-metrics').addMetric
 module.exports = {
   sendRUM: single(sendRUM), // wrapping this in single makes it so that it can only be called once from outside
   sendFinal: sendAllFromUnload,
-  pingErrors: pingErrors,
   sendX: sendX,
   send: send,
   on: on,
@@ -281,14 +280,6 @@ function getSubmitMethod(endpoint, opts) {
     method: method,
     useBody: useBody
   }
-}
-
-function pingErrors (nr) {
-  if (scheme === 'http' || !(nr && nr.info && nr.info.errorBeacon && nr.ieVersion)) return
-
-  var url = 'https://' + nr.info.errorBeacon + '/jserrors/ping/' + nr.info.licenseKey + baseQueryString(nr)
-
-  submitData.img(url)
 }
 
 // Constructs the transaction name param for the beacon URL.

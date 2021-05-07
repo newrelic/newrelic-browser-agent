@@ -64,11 +64,6 @@ function onHarvestStarted(options) {
 }
 
 function onHarvestFinished(result) {
-  if (!result.sent) {
-    // keep connection open
-    harvest.pingErrors(loader)
-  }
-
   if (result.retry && currentBody) {
     mapOwn(currentBody, function(key, value) {
       for (var i = 0; i < value.length; i++) {
@@ -80,9 +75,6 @@ function onHarvestFinished(result) {
     currentBody = null
   }
 }
-
-// open HTTPS connection, which is needed for sending data during page unload on older browsers
-harvest.pingErrors(loader)
 
 function nameHash (params) {
   return stringHashCode(params.exceptionClass) ^ params.stackHash

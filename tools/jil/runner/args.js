@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+if (findIndexWithRegex(process.argv, /^--$/) >= 0) process.argv.splice(process.argv.indexOf('--'), 1)
+
 const yargs = require('yargs')
 const loaders = require('../../../loaders')
 
@@ -112,3 +114,14 @@ module.exports = yargs
   .strict()
   .wrap(Math.min(110, yargs.terminalWidth()))
   .argv
+
+function findIndexWithRegex(arr, exp) {
+  let idx = -1
+  arr.find(function (value, i) {
+    if (exp.test(value)) {
+      idx = i
+      return
+    }
+  })
+  return idx
+}

@@ -72,16 +72,13 @@ Pick an agent type and update the following files from the table below:
 ## Testing
 See the sections below for details about local and PR testing.
 
-### Local testing
-Here are some options to help you get started with local testing.
-
-#### Installing
+### Installing
 The Browser agent uses a tool called the JavaScript Integration test Loader (`jil`) to run
 tests (located in `/tools/jil`).
 
 _Before running tests locally, be sure to [install and build](#building) from the root directory to ensure all dependencies are loaded and the application is properly built._
 
-#### Running the test suite
+### Running the test suite
 To run all applicable tests against [PhantomJS](http://phantomjs.org/), just type the following command with no additional arguments:
 
 ```
@@ -104,19 +101,19 @@ Here is an example of using your own Selenium server:
 npm run test -- -b chrome@latest --selenium-server=localhost:4444
 ```
 
-Important Notes: 
+**Important Notes:** 
 - `jil` does not handle building the agent automatically;
 either run `npm run build` after each change, or use `npm run watch` to automatically rebuild on each change.
 - To pass arguments to the testing suite using `npm run test` you must separate your arguments from the npm script using an empty `--` parameter as was exemplified above.
 
-#### Running a single test
+### Running a single test
 To run a single test in isolation, pass the path to `jil`:
 
 ```
 npm run test -- tests/functional/api.test.es6
 ```
 
-#### Debugging tests
+### Debugging tests
 
 To debug a unit test (`/tests/browser`) or the asset under test in a unit or functional test (`/tests/assets`), run the command below: 
 

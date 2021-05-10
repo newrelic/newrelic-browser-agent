@@ -3,3 +3,4 @@ tools/scripts/*.js
 **/node_modules/*
 **/vendor/*
 sandbox
+installer.js

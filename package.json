@@ -15,7 +15,8 @@
     "test-all": "tools/jil/bin/cli.js -b *@*",
     "ci-build": "npm ci --cache ./.npm && gulp build  --no-color",
     "build-tar": "npm run ci-build && tar czf ./build/browser-agent.tar.gz --exclude=.git --exclude=.npm --exclude=build/browser-agent.tar.gz .",
-    "watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests' --run -- npm run build-mac"
+    "watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests' --run -- npm run build-mac",
+    "test-server": "node ./tools/jil/bin/server"
   },
   "bin": {
     "jil": "./tools/jil/bin/cli.js",

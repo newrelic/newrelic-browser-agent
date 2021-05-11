@@ -38,6 +38,8 @@ ee.on('new-xhr', function (xhr) {
   ctx.xhrGuids = {}
   ctx.lastSize = null
   ctx.loadCaptureCalled = false
+  ctx.params = this.params || {}
+  ctx.metrics = this.metrics || {}
 
   xhr.addEventListener('load', function (event) {
     captureXhrData(ctx, xhr)

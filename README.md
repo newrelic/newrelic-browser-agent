@@ -110,7 +110,7 @@ either run `npm run build` after each change, or use `npm run watch` to automati
 To run a single test in isolation, pass the path to `jil`:
 
 ```
-npm run test -- tests/functional/api.test.es6
+npm run test -- tests/functional/api.test.js
 ```
 
 ### Debugging tests

@@ -75,23 +75,13 @@ Pick an agent type and update the following files from the table below:
 ## Testing
 See the sections below for details about local and PR testing.
 
-### Local testing
-Here are some options to help you get started with local testing.
-
-#### Installing
+### Installing
 The Browser agent uses a tool called the JavaScript Integration test Loader (`jil`) to run
 tests (located in `/tools/jil`).
 
-To run tests locally, run `npm install` within the `/tools/jil` directory:
+_Before running tests locally, be sure to [install and build](#building) from the root directory to ensure all dependencies are loaded and the application is properly built._
 
-```
-# From the project's root directory
-cd tools/jil
-npm install
-cd ../..
-```
-
-#### Running the test suite
+### Running the test suite
 To run all applicable tests against [PhantomJS](http://phantomjs.org/), just type the following command with no additional arguments:
 
 ```
@@ -105,31 +95,33 @@ To run tests on Saucelabs, you will need your own Saucelabs account. Export your
 Here is an example of running all tests on the latest version of Chrome.
 
 ```
-node tools/jil/bin/cli.js -s -b chrome@latest
+npm run test -- -s -b chrome@latest
 ```
 
 Here is an example of using your own Selenium server:
 
 ```
-node tools/jil/bin/cli.js -b chrome@latest --selenium-server=localhost:4444
+npm run test -- -b chrome@latest --selenium-server=localhost:4444
 ```
 
-Note: `jil` does not handle building the agent automatically;
+**Important Notes:** 
+- `jil` does not handle building the agent automatically;
 either run `npm run build` after each change, or use `npm run watch` to automatically rebuild on each change.
+- To pass arguments to the testing suite using `npm run test` you must separate your arguments from the npm script using an empty `--` parameter as was exemplified above.
 
-#### Running a single test
+### Running a single test
 To run a single test in isolation, pass the path to `jil`:
 
 ```
-node tools/jil/bin/cli.js tests/functional/api.test.es6
+npm run test -- tests/functional/api.test.js
 ```
 
-#### Debugging tests
+### Debugging tests
 
 To debug a unit test (`/tests/browser`) or the asset under test in a unit or functional test (`/tests/assets`), run the command below: 
 
 ```
-node tools/jil/bin/server.js
+npm run test-server
 ```
 
 Running this command starts a server, available at http://localhost:3333, with a list of all available unit tests and test HTML pages with the Browser agent installed. Select a unit test from the list to run the test itself in your browser, or select an asset from the list to debug.

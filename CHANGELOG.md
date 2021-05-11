@@ -1,3 +1,17 @@
+## v1208
+
+* Staging release date: 03/10/2021
+* Production APM-injected release date: 03/11/2021
+* Production Standalone release date: 03/22/2021
+
+### Retry harvest network requests
+
+The agent retries harvest XHR requests when it receives 408, 429, 500 or 503 response codes.
+
+### File protocol disallowed
+
+The agent will not report any data when it is on a page opened from a local file.
+
 ## v1198
 
 * Staging release date: 01/29/2021

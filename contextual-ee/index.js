@@ -106,6 +106,8 @@ function ee (old) {
   }
 
   function bufferEventsByGroup (types, group) {
+    // do not buffer events if agent has been aborted
+    if (baseEE.aborted) return
     mapOwn(types, function (i, type) {
       group = group || 'feature'
       bufferGroupMap[type] = group

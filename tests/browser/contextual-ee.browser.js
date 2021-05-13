@@ -65,3 +65,42 @@ test('ee.abort condition not met', function (t) {
 
   t.end()
 })
+
+test('EE clears eventBuffer (ee.backlog) after abort', function (t) {
+  ee.aborted = false
+  if (ee.backlog) {
+    delete ee.backlog.feature
+  }
+
+  ee.buffer(['eventType'], 'feature')
+
+  t.equal(ee.backlog.feature instanceof Array, true, 'feature backlog is an array')
+  t.equal(ee.backlog.feature.length, 0, 'feature backlog is an empty array')
+
+  ee.emit('eventType', [], {})
+
+  t.equal(ee.backlog.feature.length, 1, 'emitted event was buffered')
+
+  ee.abort()
+
+  t.equal(Object.keys(ee.backlog).length, 0, 'EE backlog was cleared after abort')
+
+  t.end()
+})
+
+test('Forced EE does not buffer events after it has been aborted', function (t) {
+  ee.aborted = false
+  if (ee.backlog) {
+    delete ee.backlog.feature
+  }
+
+  ee.buffer(['eventType'], 'feature')
+  ee.abort()
+
+  ee.buffer(['eventType'], 'feature')
+  ee.emit('eventType', [], {}, true)
+
+  t.equal(Object.keys(ee.backlog).length, 0, 'emitted event was not buffered after ee.abort')
+
+  t.end()
+})

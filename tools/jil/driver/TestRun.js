@@ -9,6 +9,7 @@ const through = require('through')
 const {EventEmitter} = require('events')
 const TestHarness = require('./harness')
 const {isSauceConnected} = require('../util/external-services')
+const observeTapeTest = require('./TapeTestObserver')
 
 /**
  * Runs tests on a specific browser session (represented by TestRun instance)
@@ -107,35 +108,24 @@ class TestRun extends EventEmitter {
 
     harness.addTest(testName, opts, (t) => {
       let startTime = Date.now()
-      let ended = false
 
       harness.pause()
+      observeTapeTest(t, onTestFinished, onTestResult)
 
-      t.on('end', function () {
+      function onTestFinished(passed) {
+        self.allOk = self.allOk && (passed || attempt < numberOfAttempts)
+        self.currentTest = null
         let endTime = Date.now()
 
-        let plannedOk = !t._plan || t._plan <= t.assertCount
-        let allAssertsOk = t._ok
-
-        self.allOk = self.allOk && (t._ok || attempt < numberOfAttempts)
-        self.currentTest = null
-        ended = true
-
-        if (allAssertsOk && plannedOk) {
+        if (passed) {
           harness.resume()
-          notifyTestFinished(allAssertsOk && plannedOk, endTime - startTime)
-        } else if (!plannedOk) {
-          t.once('result', function() {
-            handlePlanResult()
-            notifyTestFinished(allAssertsOk && plannedOk, endTime - startTime)
-          })
-        } else if (!allAssertsOk) {
+        } else {
           scheduleRetry()
-          notifyTestFinished(allAssertsOk && plannedOk, endTime - startTime)
         }
-      })
+        notifyTestFinished(passed, endTime - startTime)
+      }
 
-      t.on('result', function(result) {
+      function onTestResult(result) {
         if (!result.ok) {
           var eventData = {
             browserName: browserSpec.desired.browserName,
@@ -155,7 +145,7 @@ class TestRun extends EventEmitter {
           }
           newrelic.recordCustomEvent('JilTestResult', eventData)
         }
-      })
+      }
 
       function notifyTestFinished(passed, duration) {
         self.emit('testFinished', self, test, {
@@ -169,12 +159,6 @@ class TestRun extends EventEmitter {
         if (attempt < numberOfAttempts) {
           harness.clear()
           self._queueTest(deviceTest, attempt + 1)
-        }
-      }
-
-      function handlePlanResult () {
-        if (ended && t.error) {
-          scheduleRetry()
         }
       }
 

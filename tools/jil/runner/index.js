@@ -2,8 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
-var newrelic = require('newrelic')
+const newrelic = require('newrelic')
 const config = require('./args')
 const path = require('path')
 const resolve = require('path').resolve
@@ -17,7 +16,7 @@ const loadBrowser = require('../loader/loadBrowser')
 const {getSauceLabsCreds, startExternalServices, stopExternalServices} = require('../util/external-services')
 
 const buildIdentifier = getBuildIdentifier()
-let output = new Output(config)
+const output = new Output(config)
 const testDriver = new Driver(config, output)
 
 module.exports = testDriver

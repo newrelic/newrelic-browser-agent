@@ -225,6 +225,8 @@ function storeHist (path, old, time) {
 var laststart = 0
 
 function storeResources (resources) {
+  if (!resources || resources.length === 0) return
+
   resources.forEach(function (currentResource) {
     var parsed = parseUrl(currentResource.name)
     var res = {
@@ -236,12 +238,12 @@ function storeResources (resources) {
     }
 
     // don't recollect old resources
-    if (res.s < laststart) return
-
-    laststart = res.s
+    if (res.s <= laststart) return
 
     storeSTN(res)
   })
+
+  laststart = resources[resources.length - 1].fetchStart | 0
 }
 
 function storeErrorAgg (type, name, params, metrics) {

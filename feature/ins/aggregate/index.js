@@ -13,7 +13,7 @@ var HarvestScheduler = require('../../../agent/harvest-scheduler')
 var cleanURL = require('../../../agent/clean-url')
 var config = require('config')
 
-var eventsPerMinute = 120
+var eventsPerMinute = 240
 var harvestTimeSeconds = config.getConfiguration('ins.harvestTimeSeconds') || 30
 var eventsPerHarvest = eventsPerMinute * harvestTimeSeconds / 60
 var referrerUrl

@@ -133,10 +133,10 @@ testDriver.test('session traces are retried when collector returns 429 during sc
 
     // this is really checking that no nodes have been resent
     var resentNodes = intersectPayloads(secondParsed, firstParsed)
-    t.ok(resentNodes.length === 1 && resentNodes[0].t === 'resource', 'nodes from first successful harvest are not resend')
+    t.ok(resentNodes.length === 0, 'nodes from first successful harvest are not resent in second harvest')
 
     resentNodes = intersectPayloads(thirdParsed, firstParsed)
-    t.ok(resentNodes.length === 1 && resentNodes[0].t === 'resource', 'nodes from first successful harvest are not resend')
+    t.ok(resentNodes.length === 0, 'nodes from first successful harvest are not resent in third harvest')
 
     t.equal(result.res.statusCode, 200, 'server responded with 200')
     t.equal(router.seenRequests.resources, 3, 'got three harvest requests')

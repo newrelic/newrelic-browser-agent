@@ -1,7 +1,7 @@
 ## v1209
 
-* Staging release date: TBD
-* Production APM-injected release date: TBD
+* Staging release date: 05/24/2021
+* Production APM-injected release date: 05/26/2021
 * Production Standalone release date: TBD
 
 

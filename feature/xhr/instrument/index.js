@@ -239,6 +239,12 @@ ee.on('fetch-before-start', function (args) {
   }
 })
 
+ee.on('fetch-start', function (fetchArguments, dtPayload) {
+  this.startTime = loader.now()
+  if (fetchArguments.length >= 1) this.target = fetchArguments[0]
+  if (fetchArguments.length >= 2) this.opts = fetchArguments[1]
+})
+
 ee.on('fetch-done', function (err, res) {
   var target = this.target
   var opts = this.opts || {}
@@ -262,10 +268,15 @@ ee.on('fetch-done', function (err, res) {
   params.host = parsed.hostname + ':' + parsed.port
   params.status = res.status
 
+  var responseSize
+  if (typeof this.rxSize === 'string' && this.rxSize.length > 0) {
+    responseSize = +this.rxSize
+  }
+
   var metrics = {
     txSize: dataSize(opts.body) || 0,
-    rxSize: this.rxSize,
-    duration: loader.now() - this['fetch-start']
+    rxSize: responseSize,
+    duration: loader.now() - this.startTime
   }
 
   handle('xhr', [params, metrics, this.startTime])

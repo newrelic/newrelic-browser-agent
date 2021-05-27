@@ -22,8 +22,8 @@ ee.on('feat-err', function () { register('xhr', storeXhr) })
 
 module.exports = storeXhr
 
-function storeXhr (params, metrics, start) {
-  metrics.time = start
+function storeXhr (params, metrics, startTime) {
+  metrics.time = startTime
 
   var type = 'xhr'
   var hash

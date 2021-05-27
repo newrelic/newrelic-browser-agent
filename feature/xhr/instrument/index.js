@@ -19,6 +19,7 @@ var ffVersion = require('../../../loader/firefox-version')
 var dataSize = require('ds')
 var responseSizeFromXhr = require('./response-size')
 
+var origRequest = NREUM.o.REQ
 var origXHR = window.XMLHttpRequest
 
 // Declare that we are using xhr instrumentation
@@ -236,6 +237,38 @@ ee.on('fetch-before-start', function (args) {
     }
     return added
   }
+})
+
+ee.on('fetch-done', function (err, res) {
+  var target = this.target
+  var opts = this.opts || {}
+  if (err) return
+
+  var url, method
+  if (typeof target === 'string') {
+    url = target
+  } else if (typeof target === 'object' && target instanceof origRequest) {
+    url = target.url
+  } else if (window.URL && typeof target === 'object' && target instanceof URL) {
+    url = target.href
+  }
+
+  method = ('' + ((target && target instanceof origRequest && target.method) || opts.method || 'GET')).toUpperCase()
+
+  var params = {}
+  var parsed = parseUrl(url)
+  params.method = method
+  params.pathname = parsed.pathname
+  params.host = parsed.hostname + ':' + parsed.port
+  params.status = res.status
+
+  var metrics = {
+    txSize: dataSize(opts.body) || 0,
+    rxSize: this.rxSize,
+    duration: loader.now() - this['fetch-start']
+  }
+
+  handle('xhr', [params, metrics, this.startTime])
 })
 
 // Create report for XHR request that has finished

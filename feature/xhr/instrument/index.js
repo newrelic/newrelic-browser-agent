@@ -177,7 +177,6 @@ ee.on('fn-end', function (args, xhr) {
 
 // this event only handles DT
 ee.on('fetch-before-start', function (args) {
-  console.log('fetch-before-start')
   var opts = args[1] || {}
   var url
   // argument is USVString

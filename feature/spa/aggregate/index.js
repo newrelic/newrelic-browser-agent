@@ -361,9 +361,6 @@ baseEE.on('feat-spa', function () {
   register.on(fetchEE, FETCH_START, function (fetchArguments, dtPayload) {
     if (currentNode && fetchArguments) {
       this[SPA_NODE] = currentNode.child('ajax', this[FETCH_START])
-      if (fetchArguments.length >= 1) this.target = fetchArguments[0]
-      if (fetchArguments.length >= 2) this.opts = fetchArguments[1]
-
       if (dtPayload && this[SPA_NODE]) this[SPA_NODE].dt = dtPayload
     }
   })
@@ -393,30 +390,12 @@ baseEE.on('feat-spa', function () {
         return
       }
 
-      var url, method
-      if (typeof target === 'string') {
-        url = target
-      } else if (typeof target === 'object' && target instanceof origRequest) {
-        url = target.url
-      } else if (window.URL && typeof target === 'object' && target instanceof URL) {
-        url = target.href
-      }
-
-      method = ('' + ((target && target instanceof origRequest && target.method) || opts.method || 'GET')).toUpperCase()
       var attrs = node.attrs
-      var params = attrs.params = {}
-
-      var parsed = parseUrl(url)
-      params.method = method
-      params.pathname = parsed.pathname
-      params.host = parsed.hostname + ':' + parsed.port
-      params.status = res.status
-
+      attrs.params = this.params
       attrs.metrics = {
-        txSize: dataSize(opts.body) || 0,
+        txSize: this.txSize,
         rxSize: this.rxSize
       }
-
       attrs.isFetch = true
 
       node.finish(this[FETCH_DONE])

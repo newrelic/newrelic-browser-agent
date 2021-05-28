@@ -175,6 +175,7 @@ ee.on('fn-end', function (args, xhr) {
   if (this.xhrCbStart) ee.emit('xhr-cb-time', [loader.now() - this.xhrCbStart, this.onload, xhr], xhr)
 })
 
+// this event only handles DT
 ee.on('fetch-before-start', function (args) {
   var opts = args[1] || {}
   var url
@@ -240,17 +241,17 @@ ee.on('fetch-before-start', function (args) {
 })
 
 ee.on('fetch-start', function (fetchArguments, dtPayload) {
+  var opts = this.opts || {}
+
+  this.params = {}
+  this.metrics = {}
   this.startTime = loader.now()
+
   if (fetchArguments.length >= 1) this.target = fetchArguments[0]
   if (fetchArguments.length >= 2) this.opts = fetchArguments[1]
-})
 
-ee.on('fetch-done', function (err, res) {
   var target = this.target
-  var opts = this.opts || {}
-  if (err) return
-
-  var url, method
+  var url
   if (typeof target === 'string') {
     url = target
   } else if (typeof target === 'object' && target instanceof origRequest) {
@@ -258,28 +259,33 @@ ee.on('fetch-done', function (err, res) {
   } else if (window.URL && typeof target === 'object' && target instanceof URL) {
     url = target.href
   }
+  addUrl(this, url)
 
-  method = ('' + ((target && target instanceof origRequest && target.method) || opts.method || 'GET')).toUpperCase()
+  var method = ('' + ((target && target instanceof origRequest && target.method) 
+    || opts.method || 'GET')).toUpperCase()
+  this.params.method = method
 
-  var params = {}
-  var parsed = parseUrl(url)
-  params.method = method
-  params.pathname = parsed.pathname
-  params.host = parsed.hostname + ':' + parsed.port
-  params.status = res.status
+  this.txSize = dataSize(opts.body) || 0
+})
 
+ee.on('fetch-done', function (err, res) {
+  if (err) return
+
+  this.params.status = res.status
+
+  // convert rxSize to a number
   var responseSize
   if (typeof this.rxSize === 'string' && this.rxSize.length > 0) {
     responseSize = +this.rxSize
   }
 
   var metrics = {
-    txSize: dataSize(opts.body) || 0,
+    txSize: this.txSize,
     rxSize: responseSize,
     duration: loader.now() - this.startTime
   }
 
-  handle('xhr', [params, metrics, this.startTime])
+  handle('xhr', [this.params, metrics, this.startTime])
 })
 
 // Create report for XHR request that has finished

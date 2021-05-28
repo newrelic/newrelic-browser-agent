@@ -19,12 +19,18 @@ let assetServerPort = proto === 'http:' ? assetServerHTTPPort : assetServerSSLPo
 let assetServerHostname = window.location.host.split(':')[0]
 
 test('basic fetch call', function(t) {
+  if (!window.fetch) {
+    t.pass('fetch is not supported in this browser')
+    t.end()
+    return
+  }
+
   ee.emit('feat-err', [])
 
   if (!window.NREUM) NREUM = {}
   if (!NREUM.loader_config) NREUM.loader_config = {}
 
-  fetch('/json')
+  window.fetch('/json')
 
   register('xhr', function(params, metrics, start) {
     require('../../../feature/xhr/aggregate')(params, metrics, start)

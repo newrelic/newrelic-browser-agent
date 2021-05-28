@@ -177,6 +177,7 @@ ee.on('fn-end', function (args, xhr) {
 
 // this event only handles DT
 ee.on('fetch-before-start', function (args) {
+  console.log('fetch-before-start')
   var opts = args[1] || {}
   var url
   // argument is USVString
@@ -241,8 +242,6 @@ ee.on('fetch-before-start', function (args) {
 })
 
 ee.on('fetch-start', function (fetchArguments, dtPayload) {
-  var opts = this.opts || {}
-
   this.params = {}
   this.metrics = {}
   this.startTime = loader.now()
@@ -250,7 +249,9 @@ ee.on('fetch-start', function (fetchArguments, dtPayload) {
   if (fetchArguments.length >= 1) this.target = fetchArguments[0]
   if (fetchArguments.length >= 2) this.opts = fetchArguments[1]
 
+  var opts = this.opts || {}
   var target = this.target
+
   var url
   if (typeof target === 'string') {
     url = target
@@ -320,8 +321,8 @@ function addUrl (ctx, url) {
 
   params.host = parsed.hostname + ':' + parsed.port
   params.pathname = parsed.pathname
-  ctx.parsedOrigin = parseUrl(url)
-  ctx.sameOrigin = ctx.parsedOrigin.sameOrigin
+  ctx.parsedOrigin = parsed
+  ctx.sameOrigin = parsed.sameOrigin
 }
 
 function captureXhrData (ctx, xhr) {

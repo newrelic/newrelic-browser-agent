@@ -7,8 +7,6 @@ const test = require('../../../tools/jil/browser-test')
 const register = require('../../../agent/register-handler')
 const drain = require('../../../agent/drain')
 const ee = require('ee')
-const ffVersion = require('../../../loader/firefox-version')
-const jil = require('jil')
 
 require('../../../feature/xhr/instrument')
 require('../../../feature/err/instrument')
@@ -18,7 +16,6 @@ let proto = location.protocol
 let assetServerHTTPPort = NREUM.info.assetServerPort
 let assetServerSSLPort = NREUM.info.assetServerSSLPort
 let assetServerPort = proto === 'http:' ? assetServerHTTPPort : assetServerSSLPort
-let corsServerPort = NREUM.info.corsServerPort
 let assetServerHostname = window.location.host.split(':')[0]
 
 test('basic fetch call', function(t) {

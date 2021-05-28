@@ -261,8 +261,8 @@ ee.on('fetch-start', function (fetchArguments, dtPayload) {
   }
   addUrl(this, url)
 
-  var method = ('' + ((target && target instanceof origRequest && target.method) 
-    || opts.method || 'GET')).toUpperCase()
+  var method = ('' + ((target && target instanceof origRequest && target.method) ||
+    opts.method || 'GET')).toUpperCase()
   this.params.method = method
 
   this.txSize = dataSize(opts.body) || 0

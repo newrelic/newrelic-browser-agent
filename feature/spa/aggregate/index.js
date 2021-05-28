@@ -21,7 +21,6 @@ var xhrEE = baseEE.get('xhr')
 var tracerEE = baseEE.get('tracer')
 var mapOwn = require('map-own')
 var navTiming = require('../../../agent/nav-timing').nt
-var dataSize = require('ds')
 var uniqueId = require('unique-id')
 var paintMetrics = require('../../../agent/paint-metrics').metrics
 var Interaction = require('./Interaction')
@@ -51,7 +50,6 @@ var FETCH_BODY = 'fetch-body-'
 var JSONP_END = 'jsonp-end'
 
 var originals = NREUM.o
-var origRequest = originals.REQ
 var originalSetTimeout = originals.ST
 var initialPageURL = loader.origin
 var lastSeenUrl = initialPageURL
@@ -381,8 +379,6 @@ baseEE.on('feat-spa', function () {
 
   register.on(fetchEE, FETCH_DONE, function (err, res) {
     var node = this[SPA_NODE]
-    var target = this.target
-    var opts = this.opts || {}
     if (node) {
       if (err) {
         node.cancelled = true

@@ -8,8 +8,6 @@ const ee = require('ee')
 var handleEE = ee.get('handle')
 
 require('../../../feature/xhr/instrument')
-require('../../../feature/err/instrument')
-require('../../../feature/err/aggregate')
 
 let proto = location.protocol
 let assetServerHTTPPort = NREUM.info.assetServerPort

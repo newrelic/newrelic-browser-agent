@@ -70,7 +70,7 @@ ee.emit('feat-err', [])
 if (!window.NREUM) NREUM = {}
 if (!NREUM.loader_config) NREUM.loader_config = {}
 
-for (let testCase of testCases) {
+testCases.forEach(function(testCase) {
   test(testCase.name, function(t) {
     if (!window.fetch) {
       t.pass('fetch is not supported in this browser')
@@ -87,4 +87,4 @@ for (let testCase of testCases) {
       handleEE.removeEventListener('xhr', validate)
     }
   })
-}
+})

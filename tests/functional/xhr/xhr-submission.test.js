@@ -8,11 +8,13 @@ const {getXhrFromResponse} = require('./helpers')
 
 let reliableUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 let xhrBrowsers = testDriver.Matcher.withFeature('xhr')
+let fetchBrowsers = testDriver.Matcher.withFeature('fetch')
 let sendBeaconBrowsers = testDriver.Matcher.withFeature('sendBeacon')
 let brokenBeaconBrowsers = testDriver.Matcher.withFeature('brokenSendBeacon')
-let supported = xhrBrowsers.intersect(reliableUnload)
+let xhrSupported = xhrBrowsers.intersect(reliableUnload)
+let fetchSupported = fetchBrowsers.intersect(reliableUnload)
 
-testDriver.test('capturing XHR metrics', supported, function (t, browser, router) {
+testDriver.test('capturing XHR metrics', xhrSupported, function (t, browser, router) {
   let rumPromise = router.expectRumAndErrors()
   let loadPromise = browser.get(router.assetURL('xhr.html', {
     init: {
@@ -47,7 +49,7 @@ testDriver.test('capturing XHR metrics', supported, function (t, browser, router
   }
 })
 
-testDriver.test('capturing fetch metrics', supported, function (t, browser, router) {
+testDriver.test('capturing fetch metrics', fetchSupported, function (t, browser, router) {
   let rumPromise = router.expectRumAndErrors()
   let loadPromise = browser.get(router.assetURL('fetch.html', {
     init: {

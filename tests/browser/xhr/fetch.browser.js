@@ -110,6 +110,12 @@ testCases.forEach(function(testCase) {
 // the connection in the server, but it does not work when there is a proxy in between (like Saucelabs).
 // This tests therefore simulates failed fetch call by emitting the instrumentation events instead.
 test('rejected fetch call is captured', function(t) {
+  if (!window.fetch) {
+    t.pass('fetch is not supported in this browser')
+    t.end()
+    return
+  }
+
   const fetchEE = ee.get('fetch')
 
   handleEE.addEventListener('xhr', validate)
@@ -132,7 +138,7 @@ test('rejected fetch call is captured', function(t) {
     t.ok(metrics.duration > 0, 'duration is a positive number')
     t.ok(start > 0, 'start is a positive number')
 
-    t.end()
     handleEE.removeEventListener('xhr', validate)
+    t.end()
   }
 })

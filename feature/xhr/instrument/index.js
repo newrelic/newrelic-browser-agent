@@ -271,6 +271,9 @@ ee.on('fetch-start', function (fetchArguments, dtPayload) {
 // we capture failed call as status 0, the actual error is ignored
 // eslint-disable-next-line handle-callback-err
 ee.on('fetch-done', function (err, res) {
+  if (!this.params) {
+    this.params = {}
+  }
   this.params.status = res ? res.status : 0
 
   // convert rxSize to a number

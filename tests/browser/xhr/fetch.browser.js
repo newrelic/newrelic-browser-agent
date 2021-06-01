@@ -63,6 +63,41 @@ var testCases = [
       t.ok(metrics.duration > 1, 'duration is a positive number')
       t.ok(start > 0, 'start is a positive number')
     }
+  },
+  {
+    name: 'fetch with error response',
+    invoke: function() {
+      var request = new URL('http://' + assetServerHostname + ':' + assetServerPort + '/paththatdoesnotexist')
+      window.fetch(request)
+    },
+    check: function(t, params, metrics, start) {
+      t.equals(params.method, 'GET', 'method')
+      t.equals(params.status, 404, 'status')
+      t.equals(params.host, assetServerHostname + ':' + assetServerPort, 'host')
+      t.equals(params.pathname, '/paththatdoesnotexist', 'pathname')
+      t.equals(metrics.txSize, 0, 'request size')
+      t.ok(metrics.rxSize == null, 'response size is not defined')
+      t.ok(metrics.duration > 1, 'duration is a positive number')
+      t.ok(start > 0, 'start is a positive number')
+    }
+  },
+  {
+    name: 'fetch with closed connection',
+    invoke: function() {
+      var request = new URL('http://' + assetServerHostname + ':' + assetServerPort + '/closedconnection')
+      window.fetch(request)
+    },
+    check: function(t, params, metrics, start) {
+      console.log('checking')
+      t.equals(params.method, 'GET', 'method')
+      t.equals(params.status, 0, 'status')
+      t.equals(params.host, assetServerHostname + ':' + assetServerPort, 'host')
+      t.equals(params.pathname, '/closedconnection', 'pathname')
+      t.equals(metrics.txSize, 0, 'request size')
+      t.ok(metrics.rxSize == null, 'response size is not defined')
+      t.ok(metrics.duration > 1, 'duration is a positive number')
+      t.ok(start > 0, 'start is a positive number')
+    }
   }
 ]
 

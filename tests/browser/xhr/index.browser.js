@@ -351,13 +351,6 @@ var urls = {
         t.notok(xhr.getResponseHeader('content-length'), 'content-length header should not be present')
       }, false)
     }
-  },
-  '/closedconnection': {
-    check: function (params, metrics, t) {
-      t.equal(params.status, 0, 'Status code for timeout request is 0')
-    },
-    method: 'GET',
-    plan: 1
   }
 }
 

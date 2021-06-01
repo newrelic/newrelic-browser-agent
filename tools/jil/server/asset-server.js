@@ -377,9 +377,6 @@ const testRoutes = [
       'Transfer-Encoding': 'chunked'
     })
     res.end('x'.repeat(10000))
-  }),
-  new Route('GET', '/closedconnection', (req, res) => {
-    res.destroy()
   })
 ]
 

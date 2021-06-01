@@ -19,6 +19,7 @@ var ffVersion = require('../../../loader/firefox-version')
 var dataSize = require('ds')
 var responseSizeFromXhr = require('./response-size')
 
+var origRequest = NREUM.o.REQ
 var origXHR = window.XMLHttpRequest
 
 // Declare that we are using xhr instrumentation
@@ -174,6 +175,7 @@ ee.on('fn-end', function (args, xhr) {
   if (this.xhrCbStart) ee.emit('xhr-cb-time', [loader.now() - this.xhrCbStart, this.onload, xhr], xhr)
 })
 
+// this event only handles DT
 ee.on('fetch-before-start', function (args) {
   var opts = args[1] || {}
   var url
@@ -238,6 +240,57 @@ ee.on('fetch-before-start', function (args) {
   }
 })
 
+ee.on('fetch-start', function (fetchArguments, dtPayload) {
+  this.params = {}
+  this.metrics = {}
+  this.startTime = loader.now()
+
+  if (fetchArguments.length >= 1) this.target = fetchArguments[0]
+  if (fetchArguments.length >= 2) this.opts = fetchArguments[1]
+
+  var opts = this.opts || {}
+  var target = this.target
+
+  var url
+  if (typeof target === 'string') {
+    url = target
+  } else if (typeof target === 'object' && target instanceof origRequest) {
+    url = target.url
+  } else if (window.URL && typeof target === 'object' && target instanceof URL) {
+    url = target.href
+  }
+  addUrl(this, url)
+
+  var method = ('' + ((target && target instanceof origRequest && target.method) ||
+    opts.method || 'GET')).toUpperCase()
+  this.params.method = method
+
+  this.txSize = dataSize(opts.body) || 0
+})
+
+// we capture failed call as status 0, the actual error is ignored
+// eslint-disable-next-line handle-callback-err
+ee.on('fetch-done', function (err, res) {
+  if (!this.params) {
+    this.params = {}
+  }
+  this.params.status = res ? res.status : 0
+
+  // convert rxSize to a number
+  var responseSize
+  if (typeof this.rxSize === 'string' && this.rxSize.length > 0) {
+    responseSize = +this.rxSize
+  }
+
+  var metrics = {
+    txSize: this.txSize,
+    rxSize: responseSize,
+    duration: loader.now() - this.startTime
+  }
+
+  handle('xhr', [this.params, metrics, this.startTime])
+})
+
 // Create report for XHR request that has finished
 function end (xhr) {
   var params = this.params
@@ -270,8 +323,8 @@ function addUrl (ctx, url) {
 
   params.host = parsed.hostname + ':' + parsed.port
   params.pathname = parsed.pathname
-  ctx.parsedOrigin = parseUrl(url)
-  ctx.sameOrigin = ctx.parsedOrigin.sameOrigin
+  ctx.parsedOrigin = parsed
+  ctx.sameOrigin = parsed.sameOrigin
 }
 
 function captureXhrData (ctx, xhr) {

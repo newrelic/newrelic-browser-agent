@@ -21,7 +21,6 @@ var xhrEE = baseEE.get('xhr')
 var tracerEE = baseEE.get('tracer')
 var mapOwn = require('map-own')
 var navTiming = require('../../../agent/nav-timing').nt
-var dataSize = require('ds')
 var uniqueId = require('unique-id')
 var paintMetrics = require('../../../agent/paint-metrics').metrics
 var Interaction = require('./Interaction')
@@ -51,7 +50,6 @@ var FETCH_BODY = 'fetch-body-'
 var JSONP_END = 'jsonp-end'
 
 var originals = NREUM.o
-var origRequest = originals.REQ
 var originalSetTimeout = originals.ST
 var initialPageURL = loader.origin
 var lastSeenUrl = initialPageURL
@@ -361,9 +359,6 @@ baseEE.on('feat-spa', function () {
   register.on(fetchEE, FETCH_START, function (fetchArguments, dtPayload) {
     if (currentNode && fetchArguments) {
       this[SPA_NODE] = currentNode.child('ajax', this[FETCH_START])
-      if (fetchArguments.length >= 1) this.target = fetchArguments[0]
-      if (fetchArguments.length >= 2) this.opts = fetchArguments[1]
-
       if (dtPayload && this[SPA_NODE]) this[SPA_NODE].dt = dtPayload
     }
   })
@@ -384,8 +379,6 @@ baseEE.on('feat-spa', function () {
 
   register.on(fetchEE, FETCH_DONE, function (err, res) {
     var node = this[SPA_NODE]
-    var target = this.target
-    var opts = this.opts || {}
     if (node) {
       if (err) {
         node.cancelled = true
@@ -393,30 +386,12 @@ baseEE.on('feat-spa', function () {
         return
       }
 
-      var url, method
-      if (typeof target === 'string') {
-        url = target
-      } else if (typeof target === 'object' && target instanceof origRequest) {
-        url = target.url
-      } else if (window.URL && typeof target === 'object' && target instanceof URL) {
-        url = target.href
-      }
-
-      method = ('' + ((target && target instanceof origRequest && target.method) || opts.method || 'GET')).toUpperCase()
       var attrs = node.attrs
-      var params = attrs.params = {}
-
-      var parsed = parseUrl(url)
-      params.method = method
-      params.pathname = parsed.pathname
-      params.host = parsed.hostname + ':' + parsed.port
-      params.status = res.status
-
+      attrs.params = this.params
       attrs.metrics = {
-        txSize: dataSize(opts.body) || 0,
+        txSize: this.txSize,
         rxSize: this.rxSize
       }
-
       attrs.isFetch = true
 
       node.finish(this[FETCH_DONE])

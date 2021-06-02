@@ -2,7 +2,7 @@
 
 * Staging release date: 05/24/2021
 * Production APM-injected release date: 05/26/2021
-* Production Standalone release date: TBD
+* Production Standalone release date: 6/2/2021
 
 
 ### Doubled the limit of PageAction events per harvest

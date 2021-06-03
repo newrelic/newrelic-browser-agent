@@ -61,6 +61,86 @@ testDriver.test('final harvest sends page action', reliableFinalHarvest, functio
   }
 })
 
+testDriver.test('final harvest sends pageHide if not already recorded', reliableFinalHarvest, function (t, browser, router) {
+  t.plan(6)
+  let url = router.assetURL('final-harvest-timings.html', { loader: 'rum' })
+  let loadPromise = browser.safeGet(url).catch(fail)
+  let rumPromise = router.expectRum()
+  const start = Date.now()
+
+  Promise.all([rumPromise, loadPromise])
+    .then(() => {
+      t.equal(router.seenRequests.events, 0, 'no events harvest yet')
+
+      let timingsPromise = router.expectTimings()
+
+      let domPromise = browser
+        .setAsyncScriptTimeout(10000) // the default is too low for IE
+        .elementById('standardBtn')
+        .click()
+        .get(router.assetURL('/'))
+
+      return Promise.all([timingsPromise, domPromise]).then(([data, clicked]) => {
+        return data
+      })
+    })
+    .then(({body, query}) => {
+      t.equal(router.seenRequests.events, 1, 'received first events harvest')
+      const timings = querypack.decode(body && body.length ? body : query.e)
+      const pageHide = timings.find(x => x.type === 'timing' && x.name === 'pageHide')
+      const duration = Date.now() - start
+      t.ok(timings.length > 0, 'there should be at least one timing metric')
+      t.ok(!!pageHide, 'Final harvest should have a pageHide timing')
+      t.ok(pageHide.value > 0, 'pageHide should have a value')
+      t.ok(pageHide.value <= duration, 'pageHide value should be valid')
+      t.end()
+    })
+    .catch(fail)
+
+  function fail (err) {
+    t.error(err)
+    t.end()
+  }
+})
+
+testDriver.test('final harvest does not send pageHide if already recorded', reliableFinalHarvest, function (t, browser, router) {
+  let url = router.assetURL('pageHide.html', { loader: 'rum' })
+  let loadPromise = browser.safeGet(url).catch(fail)
+  let start = Date.now()
+
+  Promise.all([loadPromise, router.expectRum()])
+      .then(() => {
+        const clickPromise = browser
+          .elementById('btn1').click()
+          .get(router.assetURL('/'))
+        const timingsPromise = router.expectTimings()
+        return Promise.all([timingsPromise, clickPromise])
+      })
+      .then(([timingsResult]) => {
+        let domPromise = browser
+        .setAsyncScriptTimeout(10000) // the default is too low for IE
+        .get(router.assetURL('/'))
+
+        domPromise.then(() => {
+          const {body, query} = timingsResult
+          const timings = querypack.decode(body && body.length ? body : query.e)
+          let duration = Date.now() - start
+          t.ok(timings.length > 0, 'there should be at least one timing metric')
+          const pageHide = timings.filter(t => t.name === 'pageHide')
+          t.ok(timings && pageHide.length === 1, 'there should be ONLY ONE pageHide timing')
+          t.ok(pageHide[0].value > 0, 'value should be a positive number')
+          t.ok(pageHide[0].value <= duration, 'value should not be larger than time since start of the test')
+          t.end()
+        })
+      })
+      .catch(fail)
+
+  function fail (err) {
+    t.error(err)
+    t.end()
+  }
+})
+
 testDriver.test('final harvest sends js errors', reliableFinalHarvest, function (t, browser, router) {
   let url = router.assetURL('final-harvest.html')
   let loadPromise = browser.safeGet(url).catch(fail)

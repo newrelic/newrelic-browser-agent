@@ -102,6 +102,6 @@ subscribeToVisibilityChange(captureVisibilityChange)
 
 function captureVisibilityChange(state) {
   if (state === 'hidden') {
-    handle('pageHide', [loader.now(), state])
+    handle('pageHide', [loader.now()])
   }
 }

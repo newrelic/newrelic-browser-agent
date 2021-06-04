@@ -62,7 +62,6 @@ testDriver.test('final harvest sends page action', reliableFinalHarvest, functio
 })
 
 testDriver.test('final harvest sends pageHide if not already recorded', reliableFinalHarvest, function (t, browser, router) {
-  t.plan(6)
   let url = router.assetURL('final-harvest-timings.html', { loader: 'rum' })
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
@@ -103,7 +102,7 @@ testDriver.test('final harvest sends pageHide if not already recorded', reliable
   }
 })
 
-testDriver.test('final harvest does append pageHide if already previously recorded', reliableFinalHarvest, function (t, browser, router) {
+testDriver.test('final harvest doesnt append pageHide if already previously recorded', reliableFinalHarvest, function (t, browser, router) {
   let url = router.assetURL('pageHide.html', { loader: 'rum' })
   let loadPromise = browser.safeGet(url).catch(fail)
   let start = Date.now()
@@ -116,8 +115,7 @@ testDriver.test('final harvest does append pageHide if already previously record
         const timingsPromise = router.expectTimings()
         return Promise.all([timingsPromise, clickPromise])
       })
-      .then(([timingsResult]) => {
-        const {body, query} = timingsResult
+      .then(([{body, query}]) => {
         const timings = querypack.decode(body && body.length ? body : query.e)
         let duration = Date.now() - start
         t.ok(timings.length > 0, 'there should be at least one timing metric')

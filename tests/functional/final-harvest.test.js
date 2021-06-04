@@ -13,6 +13,7 @@ let notSafariWithSeleniumBug = testDriver.Matcher.withFeature('notSafariWithSele
 
 let reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')
   .and(notSafariWithSeleniumBug)
+const headless = testDriver.Matcher.withFeature('headless')
 
 // final harvest for resources intermittently fails on additional browsers, probably due
 // to the amount of data
@@ -64,7 +65,7 @@ testDriver.test('final harvest sends page action', reliableFinalHarvest, functio
   }
 })
 
-testDriver.test('final harvest sends pageHide if not already recorded', reliableFinalHarvest, function (t, browser, router) {
+testDriver.test('final harvest sends pageHide if not already recorded', reliableFinalHarvest.and(headless.inverse()), function (t, browser, router) {
   let url = router.assetURL('final-harvest-timings.html', { loader: 'rum' })
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
@@ -168,7 +169,7 @@ testDriver.test('final harvest sends js errors', reliableFinalHarvest, function 
   }
 })
 
-testDriver.test('final harvest sends resources', reliableResourcesHarvest.and(stnSupported), function (t, browser, router) {
+testDriver.test('final harvest sends resources', reliableResourcesHarvest.and(stnSupported).and(headless.inverse()), function (t, browser, router) {
   let url = router.assetURL('final-harvest.html')
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
@@ -202,7 +203,7 @@ testDriver.test('final harvest sends resources', reliableResourcesHarvest.and(st
   }
 })
 
-testDriver.test('final harvest sends timings data', reliableFinalHarvest, function (t, browser, router) {
+testDriver.test('final harvest sends timings data', reliableFinalHarvest.and(headless.inverse()), function (t, browser, router) {
   let url = router.assetURL('final-harvest-timings.html', { loader: 'rum' })
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
@@ -241,7 +242,7 @@ testDriver.test('final harvest sends timings data', reliableFinalHarvest, functi
 // This test checks that the agent sends multiple types of data types on unload
 // It does not check all of them, just errors and resources.  This is sufficient for the
 // test.  Sending more than that makes the test very fragile on some platforms.
-testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stnSupported), function (t, browser, router) {
+testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stnSupported).and(headless.inverse()), function (t, browser, router) {
   let url = router.assetURL('final-harvest-timings.html')
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
@@ -280,7 +281,7 @@ testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stn
   }
 })
 
-testDriver.test('final harvest sends ajax events', reliableFinalHarvest.and(doNotSupportWaitForConditionInBrowser), function (t, browser, router) {
+testDriver.test('final harvest sends ajax events', reliableFinalHarvest.and(doNotSupportWaitForConditionInBrowser).and(headless.inverse()), function (t, browser, router) {
   let url = router.assetURL('final-harvest-ajax.html', { loader: 'spa' })
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()

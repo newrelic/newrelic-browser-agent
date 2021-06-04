@@ -19,6 +19,10 @@ class BrowserSpec {
     return this.desired.browserName === 'phantom'
   }
 
+  isHeadlessChrome() {
+    return this.desired.browserName === 'chrome' && this.desired.headless === true
+  }
+
   toString () {
     return `${this.browserName}@${this.version} (${this.platformName})`
   }
@@ -35,7 +39,8 @@ class BrowserSpec {
       this.desired.platformVersion === other.desired.platformVersion &&
       this.desired.browserName === other.desired.browserName &&
       this.desired.platform === other.desired.platform &&
-      this.desired.version === other.desired.version
+      this.desired.version === other.desired.version &&
+      this.desired.headless === other.desired.headless
     )
   }
 
@@ -86,6 +91,7 @@ function browserList (pattern = 'phantom@latest') {
     .reduce((a, b) => a.concat(b), [])
 
   let specs = requested.map((b) => new BrowserSpec(b))
+
   let specSet = new Set(specs)
   let sortedSpecs = Array.from(specSet).sort((a, b) => {
     if (a.browserName === b.browserName) {
@@ -98,24 +104,30 @@ function browserList (pattern = 'phantom@latest') {
 }
 
 function parse (pattern) {
-  let [browser, range] = pattern.split('@')
-  return getBrowsersFor(browser || 'phantom', range)
+  let [browserFull, platform] = pattern.split('/')
+  let [browser, range] = browserFull.split('@')
+  return getBrowsersFor(browser || 'phantom', range, platform)
 }
 
-function getBrowsersFor (browser, range) {
+function getBrowsersFor (browser, range, platform) {
   let list = []
   if (allowedBrowsers[browser]) list = allowedBrowsers[browser].slice()
-  else if (browser === '*') list = Object.keys(allowedBrowsers).reduce(merge, [])
+  else if (browser === '*') {
+    list = Object.keys(allowedBrowsers)
+    .reduce(merge, [])
+  }
 
   list.sort(byVersion)
 
-  if (!range) {
+  if (!range && !platform) {
     return list
   } else if (range === 'beta') {
     return list.filter(findBetaVersions)
   } else if (range === 'latest') {
     var latest = list.filter(findLatestVersions)
     return latest.length ? latest : list.slice(0, 1)
+  } else if (range === 'headless') {
+    return list.filter(findHeadless)
   }
 
   list = list.filter(inRange)
@@ -125,6 +137,11 @@ function getBrowsersFor (browser, range) {
     if (option.platformVersion === 'beta' || option.version === 'beta') {
       return false
     }
+
+    if (platform && option.platform.toLowerCase() !== platform.toLowerCase()) {
+      return false
+    }
+
     return semver.satisfies(cleanVersion(option.platformVersion || option.version), range)
   }
 
@@ -133,7 +150,14 @@ function getBrowsersFor (browser, range) {
   }
 
   function findLatestVersions (option) {
+    if (platform && option.platform.toLowerCase() !== platform.toLowerCase()) {
+      return false
+    }
     return (option.version === 'latest')
+  }
+
+  function findHeadless(option) {
+    return option.headless === true
   }
 }
 

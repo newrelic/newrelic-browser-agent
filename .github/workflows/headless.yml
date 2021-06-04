@@ -1,0 +1,26 @@
+name: Headless Tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  headless-chrome:
+    runs-on: ubuntu-latest
+    container: 
+      image: node:14
+      options: --name testrunner
+
+    services:
+      selenium:
+        image: selenium/standalone-chrome
+        ports:
+          - 4444:4444
+        options: --shm-size="2g"
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: build
+        run: npm run ci-build
+      - name: run tests
+        run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest/linux -t 85000 --no-retry -H testrunner --selenium-server=selenium:4444

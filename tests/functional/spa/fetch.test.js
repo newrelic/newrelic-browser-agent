@@ -7,7 +7,8 @@ const testDriver = require('../../../tools/jil/index')
 const now = require('../../lib/now')
 const querypack = require('@newrelic/nr-querypack')
 
-let supported = testDriver.Matcher.withFeature('fetch')
+const supported = testDriver.Matcher.withFeature('fetch')
+const hostname = testDriver.assetServer.host
 
 testDriver.test('capturing fetch in SPA interactions', supported, function (t, browser, router) {
   t.plan(22)
@@ -58,7 +59,7 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
       t.equal(fetch.children.length, 0, 'should not have nested children')
       t.equal(fetch.method, 'POST', 'should be a POST request')
       t.equal(fetch.status, 200, 'should have a 200 status')
-      t.equal(fetch.domain.split(':')[0], 'bam-test-1.nr-local.net', 'should have a correct hostname')
+      t.equal(fetch.domain.split(':')[0], hostname, 'should have a correct hostname')
       var port = +fetch.domain.split(':')[1]
       t.ok(port > 1000 && port < 100000, 'port should be in expected range')
       t.equal(fetch.requestBodySize, 3, 'should have correct requestBodySize')

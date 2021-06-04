@@ -6,9 +6,10 @@
 const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
 
-let supported = testDriver.Matcher.withFeature('addEventListener')
+const supported = testDriver.Matcher.withFeature('addEventListener')
 // jQuery and Angular don't work on Firefox 5
-let supportedWithoutFirefox = supported.exclude('firefox@5')
+const supportedWithoutFirefox = supported.exclude('firefox@5')
+const hostname = testDriver.assetServer.host
 
 runTest('basic', 'spa/jsonp/basic.html', supported)
 runTest('jQuery', 'spa/jsonp/jquery.html', supportedWithoutFirefox)
@@ -35,7 +36,7 @@ function runTest (title, htmlPage, supported) {
         t.equal(xhr.type, 'ajax', 'should be an ajax node')
         t.equal(xhr.method, 'GET', 'should be a GET request')
         t.equal(xhr.status, 200, 'should have a 200 status')
-        t.equal(xhr.domain.split(':')[0], 'bam-test-1.nr-local.net', 'should have a correct hostname')
+        t.equal(xhr.domain.split(':')[0], hostname, 'should have a correct hostname')
         var port = +xhr.domain.split(':')[1]
         t.ok(port > 1000 && port < 100000, 'port should be in expected range')
         t.equal(xhr.requestBodySize, 0, 'should have correct requestBodySize')
@@ -76,7 +77,7 @@ testDriver.test('JSONP on initial page load', supported, function (t, browser, r
       t.equal(xhr.type, 'ajax', 'should be an ajax node')
       t.equal(xhr.method, 'GET', 'should be a GET request')
       t.equal(xhr.status, 200, 'should have a 200 status')
-      t.equal(xhr.domain.split(':')[0], 'bam-test-1.nr-local.net', 'should have a correct hostname')
+      t.equal(xhr.domain.split(':')[0], hostname, 'should have a correct hostname')
       var port = +xhr.domain.split(':')[1]
       t.ok(port > 1000 && port < 100000, 'port should be in expected range')
       t.equal(xhr.requestBodySize, 0, 'should have correct requestBodySize')

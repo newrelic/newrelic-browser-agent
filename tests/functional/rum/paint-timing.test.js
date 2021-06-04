@@ -7,8 +7,9 @@ const testDriver = require('../../../tools/jil/index')
 
 var firstPaint = testDriver.Matcher.withFeature('firstPaint')
 var firstContentfulPaint = testDriver.Matcher.withFeature('firstContentfulPaint')
+var headless = testDriver.Matcher.withFeature('headless')
 
-testDriver.test('First paint for supported browsers', firstPaint, function (t, browser, router) {
+testDriver.test('First paint for supported browsers', firstPaint.and(headless.inverse()), function (t, browser, router) {
   t.plan(1)
 
   let rumPromise = router.expectRum()
@@ -31,7 +32,7 @@ testDriver.test('First paint for supported browsers', firstPaint, function (t, b
   }
 })
 
-testDriver.test('First contentful paint for supported browsers', firstContentfulPaint, function (t, browser, router) {
+testDriver.test('First contentful paint for supported browsers', firstContentfulPaint.and(headless.inverse()), function (t, browser, router) {
   t.plan(1)
 
   let rumPromise = router.expectRum()

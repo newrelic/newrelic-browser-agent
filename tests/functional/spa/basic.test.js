@@ -7,7 +7,8 @@ const testDriver = require('../../../tools/jil/index')
 const now = require('../../lib/now')
 const querypack = require('@newrelic/nr-querypack')
 
-let supported = testDriver.Matcher.withFeature('addEventListener')
+const supported = testDriver.Matcher.withFeature('addEventListener')
+const hostname = testDriver.assetServer.host
 
 testDriver.test('capturing SPA interactions', supported, function (t, browser, router) {
   t.plan(23)
@@ -59,7 +60,7 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
       t.equal(xhr.children.length, 0, 'should not have nested children')
       t.equal(xhr.method, 'POST', 'should be a POST request')
       t.equal(xhr.status, 200, 'should have a 200 status')
-      t.equal(xhr.domain.split(':')[0], 'bam-test-1.nr-local.net', 'should have a correct hostname')
+      t.equal(xhr.domain.split(':')[0], hostname, 'should have a correct hostname')
       var port = +xhr.domain.split(':')[1]
       t.ok(port > 1000 && port < 100000, 'port should be in expected range')
       t.equal(xhr.requestBodySize, 3, 'should have correct requestBodySize')
@@ -129,7 +130,7 @@ testDriver.test('capturing SPA interactions using loader_config data', supported
       t.equal(xhr.children.length, 0, 'should not have nested children')
       t.equal(xhr.method, 'POST', 'should be a POST request')
       t.equal(xhr.status, 200, 'should have a 200 status')
-      t.equal(xhr.domain.split(':')[0], 'bam-test-1.nr-local.net', 'should have a correct hostname')
+      t.equal(xhr.domain.split(':')[0], hostname, 'should have a correct hostname')
       var port = +xhr.domain.split(':')[1]
       t.ok(port > 1000 && port < 100000, 'port should be in expected range')
       t.equal(xhr.requestBodySize, 3, 'should have correct requestBodySize')

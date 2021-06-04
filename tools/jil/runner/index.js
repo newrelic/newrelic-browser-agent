@@ -98,6 +98,14 @@ function getBuildIdentifier() {
 
 function loadBrowsersAndRunTests () {
   let browsers = browserList(config.browsers)
+
+  // when running all environment, exclude headless
+  if (config.browsers === '*@*') {
+    browsers = browsers.filter(b => {
+      return b.desired.headless !== true
+    })
+  }
+
   if (!browsers || browsers.length === 0) {
     console.log('No browsers matched: ' + config.browsers)
     return process.exit(1)
@@ -126,6 +134,12 @@ function loadBrowsersAndRunTests () {
       } else {
         let sauceCreds = getSauceLabsCreds()
         connectionInfo = `http://${sauceCreds.username}:${sauceCreds.accessKey}@ondemand.saucelabs.com/wd/hub`
+      }
+    }
+
+    if (browser.isHeadlessChrome()) {
+      desired.chromeOptions = {
+        args: ['--headless', '--disable-gpu', '--window-size=800,600']
       }
     }
 

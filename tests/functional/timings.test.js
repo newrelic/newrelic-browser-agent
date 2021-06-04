@@ -16,6 +16,7 @@ const testPageHide = testDriver.Matcher.withFeature('testPageHide')
 const badEvtTimestamp = testDriver.Matcher.withFeature('badEvtTimestamp')
 const unreliableEvtTimestamp = testDriver.Matcher.withFeature('unreliableEvtTimestamp')
 const supportsFirstInteraction = testDriver.Matcher.withFeature('supportsFirstInteraction')
+const headless = testDriver.Matcher.withFeature('headless')
 
 const isClickInteractionType = type => type === 'pointerdown' || type === 'mousedown' || type === 'click'
 
@@ -167,7 +168,7 @@ function runFirstInteractionTests(loader) {
 }
 
 function runLargestContentfulPaintFromInteractionTests(loader) {
-  testDriver.test(`Largest Contentful Paint from first interaction event for ${loader} agent`, supportedLcp, function (t, browser, router) {
+  testDriver.test(`Largest Contentful Paint from first interaction event for ${loader} agent`, supportedLcp.and(headless.inverse()), function (t, browser, router) {
     t.plan(9)
     const rumPromise = router.expectRum()
     const loadPromise = browser.safeGet(router.assetURL('basic-click-tracking.html', { loader: loader }))

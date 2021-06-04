@@ -68,7 +68,8 @@ BrowserMatcher.prototype.match = function (spec) {
   let included = includeSpec && spec.match(includeSpec)
   let matched = !excluded || included
 
-  return (!inverse && matched) || (inverse && !matched)
+  const result = (!inverse && matched) || (inverse && !matched)
+  return result
 }
 
 BrowserMatcher.prototype.and = getAndComposite
@@ -373,3 +374,6 @@ features.es6 = new BrowserMatcher()
   .include('firefox', '>=63')
   .include('edge', '>=79')
 
+features.headless = new BrowserMatcher()
+  .exclude('*')
+  .include('*', 'headless')

@@ -45,6 +45,12 @@
       "platform": "Windows 8.1",
       "version": "49",
       "comment": "Last version available for Windows XP and Vista, and Mac OS 10.6.-10.8."
+    },
+    {
+      "browserName": "chrome",
+      "platform": "linux",
+      "version": "latest",
+      "headless": true
     }
   ],
   "edge": [

@@ -6,6 +6,7 @@ const testDriver = require('../../../tools/jil')
 const querypack = require('@newrelic/nr-querypack')
 
 const supported = testDriver.Matcher.withFeature('addEventListener')
+const hostname = testDriver.assetServer.host
 
 testDriver.test('ajax in deny list is not harvested with interaction', supported, function (t, browser, router) {
   var cases = [
@@ -30,7 +31,7 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
     },
     {
       name: 'node at the end of tree branch',
-      denyList: [ 'bam-test-1.nr-local.net/text' ],
+      denyList: [ hostname + '/text' ],
       expected: {
         type: 'interaction',
         children: [
@@ -43,7 +44,7 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
     },
     {
       name: 'node in the middle of tree branch',
-      denyList: [ 'bam-test-1.nr-local.net/json' ],
+      denyList: [ hostname + '/json' ],
       expected: {
         type: 'interaction',
         children: [

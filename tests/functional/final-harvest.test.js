@@ -103,7 +103,7 @@ testDriver.test('final harvest sends pageHide if not already recorded', reliable
   }
 })
 
-testDriver.test('final harvest does not send pageHide if already recorded', reliableFinalHarvest, function (t, browser, router) {
+testDriver.test('final harvest does append pageHide if already previously recorded', reliableFinalHarvest, function (t, browser, router) {
   let url = router.assetURL('pageHide.html', { loader: 'rum' })
   let loadPromise = browser.safeGet(url).catch(fail)
   let start = Date.now()
@@ -117,21 +117,15 @@ testDriver.test('final harvest does not send pageHide if already recorded', reli
         return Promise.all([timingsPromise, clickPromise])
       })
       .then(([timingsResult]) => {
-        let domPromise = browser
-        .setAsyncScriptTimeout(10000) // the default is too low for IE
-        .get(router.assetURL('/'))
-
-        domPromise.then(() => {
-          const {body, query} = timingsResult
-          const timings = querypack.decode(body && body.length ? body : query.e)
-          let duration = Date.now() - start
-          t.ok(timings.length > 0, 'there should be at least one timing metric')
-          const pageHide = timings.filter(t => t.name === 'pageHide')
-          t.ok(timings && pageHide.length === 1, 'there should be ONLY ONE pageHide timing')
-          t.ok(pageHide[0].value > 0, 'value should be a positive number')
-          t.ok(pageHide[0].value <= duration, 'value should not be larger than time since start of the test')
-          t.end()
-        })
+        const {body, query} = timingsResult
+        const timings = querypack.decode(body && body.length ? body : query.e)
+        let duration = Date.now() - start
+        t.ok(timings.length > 0, 'there should be at least one timing metric')
+        const pageHide = timings.filter(t => t.name === 'pageHide')
+        t.ok(timings && pageHide.length === 1, 'there should be ONLY ONE pageHide timing')
+        t.ok(pageHide[0].value > 0, 'value should be a positive number')
+        t.ok(pageHide[0].value <= duration, 'value should not be larger than time since start of the test')
+        t.end()
       })
       .catch(fail)
 

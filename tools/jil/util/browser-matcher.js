@@ -301,6 +301,10 @@ features.cumulativeLayoutShift = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=84')
 
+features.unsupportedCumulativeLayoutShift = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', '<77')
+
 // btoa() is used to base-64-encode Distributed Tracing header data.
 // https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/btoa#Browser_compatibility
 features.btoa = new BrowserMatcher()

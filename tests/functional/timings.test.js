@@ -10,6 +10,7 @@ const supportedFirstPaint = testDriver.Matcher.withFeature('firstPaint')
 const supportedFirstContentfulPaint = testDriver.Matcher.withFeature('firstContentfulPaint')
 const supportedLcp = testDriver.Matcher.withFeature('largestContentfulPaint')
 const supportedCls = testDriver.Matcher.withFeature('cumulativeLayoutShift')
+const unsupportedCls = testDriver.Matcher.withFeature('unsupportedCumulativeLayoutShift')
 const reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')
 const testPageHide = testDriver.Matcher.withFeature('testPageHide')
 const badEvtTimestamp = testDriver.Matcher.withFeature('badEvtTimestamp')
@@ -147,7 +148,6 @@ function runFirstInteractionTests(loader) {
             t.equal(attribute.type, 'doubleAttribute', 'firstInputDelay attribute type is doubleAttribute')
           }
         } else {
-          t.equal(timing.attributes.length, 2, 'should have two attributes')
           attribute = timing.attributes.find(a => a.key === 'fid')
           t.ok(timing.value > 0, 'firstInputDelay is a non-negative value')
           t.equal(attribute.type, 'doubleAttribute', 'firstInputDelay attribute type is doubleAttribute')
@@ -192,7 +192,7 @@ function runLargestContentfulPaintFromInteractionTests(loader) {
         var size = timing.attributes.find(a => a.key === 'size')
         t.ok(size.value > 0, 'size is a non-negative value')
         t.equal(size.type, 'doubleAttribute', 'largestContentfulPaint attribute size is doubleAttribute')
-        t.equal(timing.attributes.length, 2, 'largestContentfulPaint has two attributes')
+        t.equal(timing.attributes.length, 3, 'largestContentfulPaint has two attributes')
 
         t.end()
       })
@@ -391,6 +391,76 @@ function runClsTests(loader) {
     }
   })
 
+  testDriver.test(`${loader} agent collects cls attribute when cls is 0`, supportedCls, function (t, browser, router) {
+    t.plan(2)
+
+    // load page without any expected layout shifts
+    let url = router.assetURL('instrumented.html', { loader: loader })
+    let loadPromise = browser.safeGet(url).catch(fail)
+
+    Promise.all([loadPromise, router.expectRum()])
+      .then(() => {
+        let timingsPromise = router.expectTimings()
+        let domPromise = browser.get(router.assetURL('/'))
+        return Promise.all([timingsPromise, domPromise]).then(([data, clicked]) => {
+          return data
+        })
+      })
+      .then(({body, query}) => {
+        const timings = querypack.decode(body && body.length ? body : query.e)
+
+        var unload = timings.find(t => t.name === 'unload')
+        var cls = unload.attributes.find(a => a.key === 'cls')
+
+        t.ok(unload, 'there should be an unload timing')
+        t.equal(cls.value, 0, 'cls value should be a perfect score of 0')
+
+        t.end()
+      })
+      .catch(fail)
+
+    function fail (err) {
+      t.error(err)
+      t.end()
+    }
+  })
+
+  testDriver.test(`${loader} agent does not collect cls attribute on unsupported browser`, unsupportedCls.and(reliableFinalHarvest), function (t, browser, router) {
+    t.plan(2)
+
+    const rumPromise = router.expectRum()
+    const loadPromise = browser
+      // in older browsers, the default timeout appeared to be 0 causing tests to fail instantly
+      .setAsyncScriptTimeout(10000)
+      .safeGet(router.assetURL('cls-basic.html', { loader: loader }))
+      .waitForConditionInBrowser('window.contentAdded === true')
+
+    Promise.all([rumPromise, loadPromise])
+      .then(() => {
+        let timingsPromise = router.expectTimings()
+        let domPromise = browser.get(router.assetURL('/'))
+        return Promise.all([timingsPromise, domPromise])
+      })
+      .then(([timingsResult]) => {
+        const {body, query} = timingsResult
+        const timings = querypack.decode(body && body.length ? body : query.e)
+
+        const unload = timings.find(t => t.name === 'unload')
+        var cls = unload.attributes.find(a => a.key === 'cls')
+
+        t.ok(unload, 'there should be an unload timing')
+        t.notok(cls, 'cls should not be recorded on unsupported browser')
+
+        t.end()
+      })
+      .catch(fail)
+
+    function fail (e) {
+      t.error(e)
+      t.end()
+    }
+  })
+
   testDriver.test(`First interaction ${loader} agent collects cls attribute`, supportedCls, function (t, browser, router) {
     t.plan(2)
 
@@ -502,7 +572,9 @@ function runCustomAttributeTests(loader) {
     var reservedTimingAttributes = {
       'size': true,
       'eid': true,
-      'cls': true
+      'cls': true,
+      'type': true,
+      'fid': true
     }
 
     Promise.all([loadPromise, router.expectRum()])
@@ -520,7 +592,8 @@ function runCustomAttributeTests(loader) {
         const timing = timings.find(t => t.name === 'load')
         t.ok(timings, 'there should be load timing')
 
-        const containsReservedAttributes = timing.attributes.some(a => reservedTimingAttributes[a.key])
+        // attributes are invalid if they have the 'invalid' value set via setCustomAttribute
+        const containsReservedAttributes = timing.attributes.some(a => reservedTimingAttributes[a.key] && a.value === 'invalid')
         t.notok(containsReservedAttributes, 'PageViewTiming custom attributes should not contain default attribute keys')
 
         const expectedAttribute = timing.attributes.find(a => a.key === 'test')

@@ -20,7 +20,8 @@ var timings = []
 var timingsSent = []
 var lcpRecorded = false
 var lcp = null
-var cls = null
+var clsSupported = false
+var cls = 0
 var pageHideRecorded = false
 
 module.exports = {
@@ -36,6 +37,10 @@ function init(nr, options) {
   if (!isEnabled(options)) return
 
   loader = nr
+
+  try {
+    clsSupported = PerformanceObserver.supportedEntryTypes.includes('layout-shift') // eslint-disable-line no-undef
+  } catch (e) {}
 
   if (!options) options = {}
   var maxLCPTimeSeconds = options.maxLCPTimeSeconds || 60
@@ -73,8 +78,8 @@ function recordLcp() {
       'size': lcpEntry.size,
       'eid': lcpEntry.id
     }
-
-    if (cls) {
+    // LCP is currently implemented in all browsers which support CLS, so this case should always be true
+    if (clsSupported) {
       attrs['cls'] = cls
     }
 
@@ -94,10 +99,9 @@ function updateLatestLcp(lcpEntry) {
 }
 
 function updateClsScore(clsEntry) {
-  if (cls === null) {
-    cls = 0
+  if (clsSupported) {
+    cls += clsEntry.value
   }
-  cls += clsEntry.value
 }
 
 function updatePageHide(timestamp, state) {
@@ -113,8 +117,7 @@ function recordUnload() {
 
 function addTiming(name, value, attrs, addCls) {
   attrs = attrs || {}
-
-  if (addCls && cls !== null) {
+  if (clsSupported && addCls) {
     attrs['cls'] = cls
   }
 

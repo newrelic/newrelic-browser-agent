@@ -103,7 +103,7 @@ testDriver.test('final harvest sends pageHide if not already recorded', reliable
 })
 
 testDriver.test('final harvest doesnt append pageHide if already previously recorded', reliableFinalHarvest, function (t, browser, router) {
-  let url = router.assetURL('pageHide.html', { loader: 'rum' })
+  let url = router.assetURL('pagehide.html', { loader: 'rum' })
   let loadPromise = browser.safeGet(url).catch(fail)
   let start = Date.now()
 

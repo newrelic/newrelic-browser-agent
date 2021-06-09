@@ -37,8 +37,9 @@ jil.browserTest('LCP is not collected on unload when the LCP value occurs after 
     // invoke final harvest, which includes harvesting LCP
     timingModule.finalHarvest()
 
-    t.equals(timingModule.timings.length, 1, 'there should be only one timing')
-    t.notEquals(timingModule.timings[0].name, 'lcp')
+    t.equals(timingModule.timings.length, 2, 'there should be only 2 timings (pageHide and unload)')
+    t.ok(timingModule.timings[0].name === 'pageHide', 'should have pageHide timing')
+    t.ok(timingModule.timings[1].name === 'unload', 'should have unload timing')
 
     t.end()
   }, 1000)

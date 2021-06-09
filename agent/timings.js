@@ -104,14 +104,15 @@ function updateClsScore(clsEntry) {
   }
 }
 
-function updatePageHide(timestamp, state) {
-  if (!pageHideRecorded && state === 'hidden') {
+function updatePageHide(timestamp) {
+  if (!pageHideRecorded) {
     addTiming('pageHide', timestamp, null, true)
     pageHideRecorded = true
   }
 }
 
 function recordUnload() {
+  updatePageHide(now())
   addTiming('unload', now(), null, true)
 }
 

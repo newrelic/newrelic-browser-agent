@@ -15,7 +15,8 @@ jobs:
       - name: install
         run: npm ci
       - name: publish
-        run: node tools/scripts/publish-current.js \
-          --bucket ${{ secrets.AWS_BUCKET }} \
-          --role ${{ secrets.AWS_ROLE_ARN }} \
-          --build-number $(cat VERSION)
+        run: |
+          node tools/scripts/publish-current.js \
+            --bucket ${{ secrets.AWS_BUCKET }} \
+            --role ${{ secrets.AWS_ROLE_ARN }} \
+            --build-number $(cat VERSION)

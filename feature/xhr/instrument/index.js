@@ -275,6 +275,7 @@ ee.on('fetch-start', function (fetchArguments, dtPayload) {
 // we capture failed call as status 0, the actual error is ignored
 // eslint-disable-next-line handle-callback-err
 ee.on('fetch-done', function (err, res) {
+  this.endTime = loader.now()
   if (!this.params) {
     this.params = {}
   }
@@ -292,7 +293,7 @@ ee.on('fetch-done', function (err, res) {
     duration: loader.now() - this.startTime
   }
 
-  handle('xhr', [this.params, metrics, this.startTime, 'fetch'])
+  handle('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'])
 })
 
 // Create report for XHR request that has finished
@@ -318,7 +319,7 @@ function end (xhr) {
   // Always send cbTime, even if no noticeable time was taken.
   metrics.cbTime = this.cbTime
   ee.emit('xhr-done', [xhr], xhr)
-  handle('xhr', [params, metrics, this.startTime, 'xhr'])
+  handle('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'])
 }
 
 function addUrl (ctx, url) {

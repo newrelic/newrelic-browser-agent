@@ -7,6 +7,9 @@ var agg = require('../../../agent/aggregator')
 var register = require('../../../agent/register-handler')
 var harvest = require('../../../agent/harvest')
 var stringify = require('../../../agent/stringify')
+var nullable = require('../../../agent/bel-serializer').nullable
+var numeric = require('../../../agent/bel-serializer').numeric
+var getAddStringContext = require('../../../agent/bel-serializer').getAddStringContext
 var loader = require('loader')
 var baseEE = require('ee')
 var xhrEE = baseEE.get('xhr')
@@ -25,15 +28,13 @@ baseEE.on('feat-err', function () {
     return { body: agg.take([ 'xhr' ]) }
   })
 
-  harvest.on('ajax', onEventsHarvestStarted)
-
-  var scheduler = new HarvestScheduler(loader, 'ajax', { onFinished: onEventsHarvestFinished })
+  var scheduler = new HarvestScheduler(loader, 'events', { onFinished: onEventsHarvestFinished, getPayload: prepareHarvest })
   scheduler.startTimer(5)
 })
 
 module.exports = storeXhr
 
-function storeXhr (params, metrics, startTime, type) {
+function storeXhr (params, metrics, startTime, endTime, type) {
   metrics.time = startTime
 
   // send to session traces
@@ -58,19 +59,55 @@ function storeXhr (params, metrics, startTime, type) {
     requestSize:  metrics.txSize,
     responseSize: metrics.rxSize,
     type: type,
-    duration: metrics.duration,
+    startTime: startTime,
+    endTime: endTime,
     callbackDuration: metrics.cbTime
   })
 }
 
-function onEventsHarvestStarted(options) {
-  var payload = ({
-    body: {
-      events: events
-    }
-  })
+function prepareHarvest(options) {
+  var payload = getPayload(events)
+  // TODO: implement retry
 
   events = []
+
+  return { body:  { e: payload } }
+}
+
+function getPayload (events) {
+  var addString = getAddStringContext()
+  var payload = 'bel.7;'
+
+  for (var i = 0; i < events.length; i++) {
+    var event = events[i]
+
+    payload += '2,0,'
+
+    var fields = [
+      numeric(event.startTime),
+      numeric(event.endTime),
+      numeric(0), // callbackEnd
+      numeric(event.callbackDuration),
+      addString(event.method),
+      numeric(event.status),
+      addString(event.domain),
+      addString(event.path),
+      numeric(event.requestSize),
+      numeric(event.responseSize),
+      event.type === 'fetch' ? 1 : '',
+      addString(0), // nodeId
+      nullable(null, addString, true) + // guid
+      nullable(null, addString, true) + // traceId
+      nullable(null, numeric, false) // timestamp
+    ]
+
+    payload += fields.join(',')
+
+    // TODO: add custom attributes
+
+    if ((i + 1) < events.length) payload += ';'
+  }
+
   return payload
 }
 

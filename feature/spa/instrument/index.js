@@ -77,9 +77,9 @@ promiseEE.buffer(['propagate', CB_START, CB_END, 'executor-err', 'resolve' + STA
 tracerEE.buffer([FN_START, 'no-' + FN_START])
 jsonpEE.buffer(['new-jsonp', 'cb-start', 'jsonp-error', 'jsonp-end'])
 
-timestamp(xhrEE, 'send-xhr' + START)
-timestamp(baseEE, 'xhr-resolved')
-timestamp(baseEE, 'xhr-done')
+timestamp(xhrEE, 'send-xhr' + START) // TODO: use timestamp from xhr instrumentation instead
+timestamp(baseEE, 'xhr-resolved') // TODO: use timestamp from xhr instrumentation instead
+timestamp(baseEE, 'xhr-done') // ? looks like this is not used
 timestamp(fetchEE, FETCH + START)
 timestamp(fetchEE, FETCH + '-done')
 timestamp(jsonpEE, 'new-jsonp')

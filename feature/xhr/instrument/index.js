@@ -154,6 +154,10 @@ ee.on('xhr-load-removed', function (cb, useCapture) {
   this.totalCbs -= 1
 })
 
+ee.on('xhr-resolved', function() {
+  this.endTime = loader.now()
+})
+
 // Listen for load listeners to be added to xhr objects
 ee.on('addEventListener-end', function (args, xhr) {
   if (xhr instanceof origXHR && args[0] === 'load') ee.emit('xhr-load-added', [args[1], args[2]], xhr)
@@ -288,7 +292,7 @@ ee.on('fetch-done', function (err, res) {
     duration: loader.now() - this.startTime
   }
 
-  handle('xhr', [this.params, metrics, this.startTime])
+  handle('xhr', [this.params, metrics, this.startTime, 'fetch'])
 })
 
 // Create report for XHR request that has finished
@@ -314,7 +318,7 @@ function end (xhr) {
   // Always send cbTime, even if no noticeable time was taken.
   metrics.cbTime = this.cbTime
   ee.emit('xhr-done', [xhr], xhr)
-  handle('xhr', [params, metrics, this.startTime])
+  handle('xhr', [params, metrics, this.startTime, 'xhr'])
 }
 
 function addUrl (ctx, url) {

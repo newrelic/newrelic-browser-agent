@@ -16,7 +16,8 @@ var xhrEE = baseEE.get('xhr')
 var handle = require('handle')
 var HarvestScheduler = require('../../../agent/harvest-scheduler')
 
-var events = []
+var ajaxEvents = []
+var spaAjaxEvents = {}
 
 // bail if not instrumented
 if (!loader.features.xhr) return
@@ -50,8 +51,7 @@ function storeXhr (params, metrics, startTime, endTime, type) {
   // store as metric
   agg.store('xhr', hash, params, metrics)
 
-  // store event
-  events.push({
+  var event = {
     method: params.method,
     status: params.status,
     domain: params.host,
@@ -62,14 +62,39 @@ function storeXhr (params, metrics, startTime, endTime, type) {
     startTime: startTime,
     endTime: endTime,
     callbackDuration: metrics.cbTime
-  })
+  }
+
+  // if the ajax happened inside an interaction, hold it until the interaction finishes
+  if (this.spaNode) {
+    var interactionId = this.spaNode.interaction.id
+    spaAjaxEvents[interactionId] = spaAjaxEvents[interactionId] || []
+    spaAjaxEvents[interactionId].push(event)
+  } else {
+    ajaxEvents.push(event)
+  }
 }
 
+baseEE.on('interactionSaved', function (interaction) {
+  if (!spaAjaxEvents[interaction.id]) return
+  // remove from the spaAjaxEvents buffer, and let spa harvest it 
+  delete spaAjaxEvents[interaction.id]
+})
+
+baseEE.on('interactionDiscarded', function (interaction) {
+  if (!spaAjaxEvents[interaction.id]) return
+
+  spaAjaxEvents[interaction.id].forEach(function (item) {
+    // move it from the spaAjaxEvents buffer to the ajaxEvents buffer for harvesting here
+    ajaxEvents.push(item)
+  })
+  delete spaAjaxEvents[interaction.id]
+})
+
 function prepareHarvest(options) {
-  var payload = getPayload(events)
+  var payload = getPayload(ajaxEvents)
   // TODO: implement retry
 
-  events = []
+  ajaxEvents = []
 
   return { body:  { e: payload } }
 }

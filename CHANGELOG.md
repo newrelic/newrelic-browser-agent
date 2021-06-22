@@ -5,17 +5,14 @@
 * Production Standalone release date: TBD
 
 
-### PageHide events are now accounted for during page unload events
-`PageHide` events are used to query CLS values, which led to inconsistencies if the `pageHide` value was never set.  Now when `pageUnload` fires, if `pageHide` has not already been set, it will set at to the time of unload. 
+### PageHide PageViewTiming events are now accounted for during page unload events
+`PageHide` PageViewTiming events are used to query CLS values. In cases where the page was never hidden, inconsistencies would arise because the PageViewTiming event with that type would not be collected.  Now when `pageUnload` fires, if a `pageHide` PageViewTiming has not already been set, it will set it to the time of unload. 
 
 ### Perfect Cumulative Layout Scores (CLS) are now recorded as 0
 Perfect CLS scores were being ignored, because a score was only recorded when content shifted.  This change reports perfect scores as 0, fixing inconsistent CLS queries.
 
 ### Record fetch calls as metrics
 Fetch calls are currently only recorded as AjaxRequest events with SPA browser interactions. This change records fetch calls as AJAX metrics, which will make them visible in the AJAX UI charts.
-
-### Updated configuration test for checking default URL values
-The config test that checks for the default URL value was not taking into account version number.
 
 
 ## v1209

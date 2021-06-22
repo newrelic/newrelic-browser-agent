@@ -10,6 +10,7 @@ var stringify = require('../../../agent/stringify')
 var nullable = require('../../../agent/bel-serializer').nullable
 var numeric = require('../../../agent/bel-serializer').numeric
 var getAddStringContext = require('../../../agent/bel-serializer').getAddStringContext
+var addCustomAttributes = require('../../../agent/bel-serializer').addCustomAttributes
 var loader = require('loader')
 var baseEE = require('ee')
 var xhrEE = baseEE.get('xhr')
@@ -21,6 +22,18 @@ var spaAjaxEvents = {}
 
 // bail if not instrumented
 if (!loader.features.xhr) return
+
+// TODO:
+//  - enable ajax events harvest as separate feature?
+
+// TODO: tests
+// unit:
+//  - prepareHarvest returns a correctly serialized payload (separate file)
+//  - storeXhr for a SPA-tracked ajax request buffers in spaAjaxEvents (how to do this?)
+//  - storeXhr for a non-SPA ajax request buffers in ajaxEvents (how to do this?)
+// functional:
+//  - ajax requests not made during spa are serialized and harvested separately 
+//  - SPA ajax request tests don't break (and there are enough tests for SPA ajax)
 
 baseEE.on('feat-err', function () { 
   register('xhr', storeXhr) 
@@ -34,6 +47,9 @@ baseEE.on('feat-err', function () {
 })
 
 module.exports = storeXhr
+module.exports.prepareHarvest = prepareHarvest
+module.exports.ajaxEvents = ajaxEvents
+module.exports.spaAjaxEvents = spaAjaxEvents
 
 function storeXhr (params, metrics, startTime, endTime, type) {
   metrics.time = startTime
@@ -112,7 +128,7 @@ function getPayload (events) {
       numeric(event.startTime),
       numeric(event.endTime),
       numeric(0), // callbackEnd
-      numeric(event.callbackDuration),
+      numeric(0), // no callbackDuration for non-SPA events
       addString(event.method),
       numeric(event.status),
       addString(event.domain),
@@ -128,7 +144,11 @@ function getPayload (events) {
 
     payload += fields.join(',')
 
-    // TODO: add custom attributes
+    // TODO: add protection for overriding default attributes
+    var attrParts = addCustomAttributes(loader.info.jsAttributes || {}, addString)
+    if (attrParts && attrParts.length > 0) {
+      payload += numeric(attrParts.length) + ';' + attrParts.join(';')
+    }
 
     if ((i + 1) < events.length) payload += ';'
   }

@@ -119,10 +119,13 @@ function getPayload (events) {
   var addString = getAddStringContext()
   var payload = 'bel.7;'
 
+  var attrParts = addCustomAttributes(loader.info.jsAttributes || {}, addString)
+
   for (var i = 0; i < events.length; i++) {
     var event = events[i]
 
-    payload += '2,0,'
+    payload += '2,'
+    payload += numeric(attrParts.length) + ','
 
     var fields = [
       numeric(event.startTime),
@@ -144,11 +147,11 @@ function getPayload (events) {
 
     payload += fields.join(',')
 
-    // TODO: add protection for overriding default attributes
-    var attrParts = addCustomAttributes(loader.info.jsAttributes || {}, addString)
     if (attrParts && attrParts.length > 0) {
-      payload += numeric(attrParts.length) + ';' + attrParts.join(';')
+      payload += ';' + attrParts.join(';')
     }
+
+    // TODO: add protection for overriding default attributes
 
     if ((i + 1) < events.length) payload += ';'
   }

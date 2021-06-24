@@ -11,8 +11,7 @@ test('storeXhr for a SPA ajax request buffers in spaAjaxEvents', function (t) {
   loader.features.xhr = true
   
   const storeXhr = require('../../../feature/xhr/aggregate/index')
-  const ajaxEvents = require('../../../feature/xhr/aggregate/index').ajaxEvents
-  const spaAjaxEvents = require('../../../feature/xhr/aggregate/index').spaAjaxEvents
+  const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
 
   const context = {
     spaNode: {
@@ -41,8 +40,8 @@ test('storeXhr for a SPA ajax request buffers in spaAjaxEvents', function (t) {
   
   storeXhr.apply(context, ajaxArguments)
 
-  console.log('spaAjaxEvents', spaAjaxEvents)
-  console.log('ajaxEvents', ajaxEvents)
+  console.log('spaAjaxEvents', getStoredEvents())
+  // TODO: add validation
 
   t.end()
 })
@@ -52,8 +51,7 @@ test('storeXhr for a non-SPA ajax request buffers in ajaxEvents', function (t) {
   loader.features.xhr = true
   
   const storeXhr = require('../../../feature/xhr/aggregate/index')
-  const ajaxEvents = require('../../../feature/xhr/aggregate/index').ajaxEvents
-  const spaAjaxEvents = require('../../../feature/xhr/aggregate/index').spaAjaxEvents
+  const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
 
   const context = {
     spaNode: undefined
@@ -78,34 +76,43 @@ test('storeXhr for a non-SPA ajax request buffers in ajaxEvents', function (t) {
   
   storeXhr.apply(context, ajaxArguments)
 
-  console.log('spaAjaxEvents', spaAjaxEvents)
-  console.log('ajaxEvents', ajaxEvents)
+  console.log('stored events', getStoredEvents())
+  // TODO: add validation
 
   t.end()
 })
 
+// TODO: multiple ajax events receive the same custom attributes
 test('prepareHarvest correctly serializes an AjaxRequest events payload', function (t) {
   const loader = require('loader')
   loader.features.xhr = true
   
   const storeXhr = require('../../../feature/xhr/aggregate/index')
+  const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
   const prepareHarvest = require('../../../feature/xhr/aggregate/index').prepareHarvest
-  const ajaxEvents = require('../../../feature/xhr/aggregate/index').ajaxEvents
 
-
-  const ajaxEvent = {
-    startTime: 0,
-    endTime: 5,
-    method: 'GET',
-    status: 200,
-    domain: 'https://example.com',
-    path: '/',
-    requestSize: 256,
-    responseSize: 256,
-    type: 'fetch'
+  const context = {
+    spaNode: undefined
   }
 
-  ajaxEvents.push(ajaxEvent)
+  const ajaxEvent = [
+    { // params
+      method: 'PUT',
+      status: 200,
+      host: 'https://example.com',
+      pathname: '/pathname'
+    },
+    { // metrics
+      txSize: 128,
+      rxSize: 256,
+      cbTime: 5
+    },
+    0, // startTime
+    30, // endTime
+    'XMLHttpRequest' // type
+  ]
+  
+  storeXhr.apply(context, ajaxEvent)
 
   loader.info = {
     jsAttributes: {
@@ -115,7 +122,7 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
     }
   }
 
-  const serializedPayload = prepareHarvest()
+  const serializedPayload = prepareHarvest({retry: false})
 
   console.log('serializedPayload', serializedPayload)
 

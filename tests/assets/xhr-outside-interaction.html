@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Basic XHR test</title>
+    {init}
+    {loader}
+    {config}
+    <script type="text/javascript">
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          var xhr = new XMLHttpRequest()
+          xhr.open('GET', '/json')
+          xhr.send()
+        }, 2000)  
+      })
+    </script>
+  </head>
+  <body>
+    This page sends an XHR after the window has loaded.
+  </body>
+</html>

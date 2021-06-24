@@ -20,6 +20,8 @@ var HarvestScheduler = require('../../../agent/harvest-scheduler')
 var ajaxEvents = []
 var spaAjaxEvents = {}
 
+var sentAjaxEvents = []
+
 // bail if not instrumented
 if (!loader.features.xhr) return
 
@@ -48,8 +50,14 @@ baseEE.on('feat-err', function () {
 
 module.exports = storeXhr
 module.exports.prepareHarvest = prepareHarvest
-module.exports.ajaxEvents = ajaxEvents
-module.exports.spaAjaxEvents = spaAjaxEvents
+module.exports.getStoredEvents = getStoredEvents
+
+function getStoredEvents () {
+  return {
+    ajaxEvents: ajaxEvents,
+    spaAjaxEvents: spaAjaxEvents
+  }
+}
 
 function storeXhr (params, metrics, startTime, endTime, type) {
   metrics.time = startTime
@@ -113,7 +121,9 @@ function prepareHarvest(options) {
 
   var payload = getPayload(ajaxEvents)
 
-  // TODO: implement retry
+  if (options && options.retry) {
+    sentAjaxEvents = ajaxEvents.slice()
+  }
 
   ajaxEvents = []
 
@@ -147,6 +157,7 @@ function getPayload (events) {
       nullable(null, numeric, false) // timestamp
     ]
 
+    // TODO: add protection for overriding default attributes
     // add custom attributes
     var attrParts = addCustomAttributes(loader.info.jsAttributes || {}, addString)
     fields.unshift(numeric(attrParts.length))
@@ -157,8 +168,6 @@ function getPayload (events) {
       payload += ';' + attrParts.join(';')
     }
 
-    // TODO: add protection for overriding default attributes
-
     if ((i + 1) < events.length) payload += ';'
   }
 
@@ -166,7 +175,8 @@ function getPayload (events) {
 }
 
 function onEventsHarvestFinished(result) {
-  if (result.retry) {
-    // TODO: implement retry
+  if (result.retry && sentAjaxEvents.length > 0) {
+    ajaxEvents = ajaxEvents.concat(sentAjaxEvents)
+    sentAjaxEvents = []
   }
 }

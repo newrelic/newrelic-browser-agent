@@ -107,7 +107,12 @@ baseEE.on('interactionDiscarded', function (interaction) {
 })
 
 function prepareHarvest(options) {
+  if (ajaxEvents.length === 0) {
+    return null
+  }
+
   var payload = getPayload(ajaxEvents)
+
   // TODO: implement retry
 
   ajaxEvents = []
@@ -119,17 +124,14 @@ function getPayload (events) {
   var addString = getAddStringContext()
   var payload = 'bel.7;'
 
-  var attrParts = addCustomAttributes(loader.info.jsAttributes || {}, addString)
-
   for (var i = 0; i < events.length; i++) {
     var event = events[i]
 
     payload += '2,'
-    payload += numeric(attrParts.length) + ','
 
     var fields = [
       numeric(event.startTime),
-      numeric(event.endTime),
+      numeric(event.endTime - event.startTime),
       numeric(0), // callbackEnd
       numeric(0), // no callbackDuration for non-SPA events
       addString(event.method),
@@ -144,6 +146,10 @@ function getPayload (events) {
       nullable(null, addString, true) + // traceId
       nullable(null, numeric, false) // timestamp
     ]
+
+    // add custom attributes
+    var attrParts = addCustomAttributes(loader.info.jsAttributes || {}, addString)
+    fields.unshift(numeric(attrParts.length))
 
     payload += fields.join(',')
 

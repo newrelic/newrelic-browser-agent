@@ -6,19 +6,18 @@
 const test = require('../../../tools/jil/browser-test')
 const qp = require('@newrelic/nr-querypack')
 
-test('storeXhr for a SPA ajax request buffers in spaAjaxEvents', function (t) {
-  const loader = require('loader')
-  loader.features.xhr = true
-  
-  const storeXhr = require('../../../feature/xhr/aggregate/index')
-  const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
+const baseEE =  require('ee')
+const loader = require('loader')
+loader.features.xhr = true
 
+const storeXhr = require('../../../feature/xhr/aggregate/index')
+const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
+const prepareHarvest = require('../../../feature/xhr/aggregate/index').prepareHarvest
+
+test('storeXhr for a SPA ajax request buffers in spaAjaxEvents', function (t) {
+  const interaction = { id: 0 }
   const context = {
-    spaNode: {
-      interaction: {
-        id: 0
-      }
-    }
+    spaNode: { interaction: interaction }
   }
 
   const ajaxArguments = [
@@ -40,23 +39,22 @@ test('storeXhr for a SPA ajax request buffers in spaAjaxEvents', function (t) {
   
   storeXhr.apply(context, ajaxArguments)
 
-  console.log('spaAjaxEvents', getStoredEvents())
-  // TODO: add validation
+  const events = getStoredEvents()
+  const interactionAjaxEvents = events.spaAjaxEvents[interaction.id]
+  t.ok(interactionAjaxEvents.length === 1, 'SPA ajax requests are buffered and associated in spaAjaxEvents by interaction id')
+  t.notok(events.ajaxEvents.length > 0, 'SPA ajax requests are not buffered in ajaxEvents')
+
+  const spaAjaxEvent = interactionAjaxEvents[0]
+  t.ok(spaAjaxEvent.startTime === 0 && spaAjaxEvent.path === '/pathname',  'expected SPA ajax event is buffered')
+
+  // clear spaAjaxEvents
+  baseEE.emit('interactionSaved', [interaction])
 
   t.end()
 })
 
 test('storeXhr for a non-SPA ajax request buffers in ajaxEvents', function (t) {
-  const loader = require('loader')
-  loader.features.xhr = true
-  
-  const storeXhr = require('../../../feature/xhr/aggregate/index')
-  const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
-
-  const context = {
-    spaNode: undefined
-  }
-
+  const context = { spaNode: undefined }
   const ajaxArguments = [
     { // params
       method: 'PUT',
@@ -75,64 +73,113 @@ test('storeXhr for a non-SPA ajax request buffers in ajaxEvents', function (t) {
   ]
   
   storeXhr.apply(context, ajaxArguments)
+  
+  const events = getStoredEvents()
+  t.ok(events.ajaxEvents.length === 1, 'non-SPA ajax requests are buffered in ajaxEvents')
+  t.notok(events.spaAjaxEvents.length > 0, 'non-SPA ajax requests are not buffered in spaAjaxEvents')
+  
+  const ajaxEvent = events.ajaxEvents[0]
+  t.ok(ajaxEvent.startTime === 0 && ajaxEvent.path === '/pathname',  'expected ajax event is buffered')
 
-  console.log('stored events', getStoredEvents())
-  // TODO: add validation
+  // clear ajaxEvents buffer
+  prepareHarvest({ retry: false })
 
   t.end()
 })
 
-// TODO: multiple ajax events receive the same custom attributes
 test('prepareHarvest correctly serializes an AjaxRequest events payload', function (t) {
-  const loader = require('loader')
-  loader.features.xhr = true
-  
-  const storeXhr = require('../../../feature/xhr/aggregate/index')
-  const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
-  const prepareHarvest = require('../../../feature/xhr/aggregate/index').prepareHarvest
-
-  const context = {
-    spaNode: undefined
+  const context = { spaNode: undefined }
+  const expected = {
+    type: 'ajax',
+    start: 0,
+    end: 30,
+    callbackEnd: 30,
+    callbackDuration: 0,
+    domain: 'https://example.com',
+    path: '/pathname',
+    method: 'PUT',
+    status: 200,
+    requestedWith: 'XMLHttpRequest',
+    requestBodySize: 128,
+    responseBodySize: 256,
+    nodeId: '0',
+    guid: null,
+    traceId: null,
+    timestamp: null
   }
-
   const ajaxEvent = [
     { // params
-      method: 'PUT',
-      status: 200,
-      host: 'https://example.com',
-      pathname: '/pathname'
+      method: expected.method,
+      status: expected.status,
+      host: expected.domain,
+      pathname: expected.path
     },
     { // metrics
-      txSize: 128,
-      rxSize: 256,
-      cbTime: 5
+      txSize: expected.requestBodySize,
+      rxSize: expected.responseBodySize,
+      cbTime: expected.callbackDuration
     },
-    0, // startTime
-    30, // endTime
-    'XMLHttpRequest' // type
+    expected.start,
+    expected.end,
+    expected.requestedWith
   ]
   
   storeXhr.apply(context, ajaxEvent)
+  storeXhr.apply(context, ajaxEvent)
+
+  const expectedCustomAttributes = {
+    customStringAttribute: 'customStringAttribute',
+    customNumAttribute: 2,
+    customBooleanAttribute: true,
+    undefinedCustomAttribute: undefined
+  }
+  const expectedCustomAttrCount = Object.keys(expectedCustomAttributes).length
 
   loader.info = {
-    jsAttributes: {
-      customStringAttribute: 'customStringAttribute',
-      customNumAttribute: 2,
-      customBooleanAttribute: true
-    }
+    jsAttributes: expectedCustomAttributes
   }
 
   const serializedPayload = prepareHarvest({retry: false})
+  const decodedEvents = qp.decode(serializedPayload.body.e)
 
-  console.log('serializedPayload', serializedPayload)
+  decodedEvents.forEach(event => {
+    t.equal(event.children.length, expectedCustomAttrCount, 'ajax event has expected number of custom attributes')
+    
+    // validate custom attribute values
+    event.children.forEach(attribute => {
+      switch (attribute.type) {
+        case 'stringAttribute':
+        case 'doubleAttribute':
+          t.ok(expectedCustomAttributes[attribute.key] === attribute.value, 'string & num custom attributes encoded')
+          break
+        case 'trueAttribute':
+          t.ok(expectedCustomAttributes[attribute.key] === true, 'true custom attribute encoded')
+          break
+        case 'falseAttribute':
+          t.ok(expectedCustomAttributes[attribute.key] === false, 'false custom attribute encoded')
+          break
+        case 'nullAttribute':
+          // undefined is treated as null in querypack
+          t.ok(expectedCustomAttributes[attribute.key] === undefined, 'undefined custom attributes encoded')
+          break
+        default:
+          t.fail('unexpected custom attribute type')
+      }
+    })
+    delete event.children
+    
+    t.deepEqual(expected, event, 'event attributes serialized correctly')
+  })
 
-  const decoded = qp.decode(serializedPayload.body.e)
+  // TODO: specify explicitly that cbTime is null for non-SPA ajax requests to avoid skewing callbackDuration queries
 
-  console.log('decoded', decoded)
-
-  // TODO: specify explicitly that cbTime is NOT included for non-SPA ajax requests
+  // clear ajaxEventsBuffer
+  prepareHarvest()
 
   t.end()
 })
 
+function resetEventBuffers () {
+  prepareHarvest()
 
+}

@@ -11,12 +11,12 @@ testDriver.test('capturing XHR ajax events', xhrBrowsers, function (t, browser, 
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
     .then(([response]) => {
-      const {body, query} = response
+      const {body} = response
       const ajaxEvents = querypack.decode(body)
       const ajaxEvent = ajaxEvents.find(e => e.type === 'ajax' && e.path === '/json')
-      
+
       t.ok(ajaxEvent, 'XMLHttpRequest ajax event was harvested')
-      
+
       t.end()
     }).catch(fail)
 
@@ -33,12 +33,12 @@ testDriver.test('capturing Fetch ajax events', fetchBrowsers, function (t, brows
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
     .then(([response]) => {
-      const {body, query} = response
+      const {body} = response
       const ajaxEvents = querypack.decode(body)
       const ajaxEvent = ajaxEvents.find(e => e.type === 'ajax' && e.path === '/json')
-      
+
       t.ok(ajaxEvent, 'Fetch ajax event was harvested')
-      
+
       t.end()
     }).catch(fail)
 

@@ -13,32 +13,18 @@ var getAddStringContext = require('../../../agent/bel-serializer').getAddStringC
 var addCustomAttributes = require('../../../agent/bel-serializer').addCustomAttributes
 var loader = require('loader')
 var baseEE = require('ee')
-var xhrEE = baseEE.get('xhr')
 var handle = require('handle')
 var HarvestScheduler = require('../../../agent/harvest-scheduler')
 
 var ajaxEvents = []
 var spaAjaxEvents = {}
-
 var sentAjaxEvents = []
 
 // bail if not instrumented
 if (!loader.features.xhr) return
 
-// TODO:
-//  - enable ajax events harvest as separate feature?
-
-// TODO: tests
-// unit:
-//  - prepareHarvest returns a correctly serialized payload (separate file)
-//  - storeXhr for a SPA-tracked ajax request buffers in spaAjaxEvents (how to do this?)
-//  - storeXhr for a non-SPA ajax request buffers in ajaxEvents (how to do this?)
-// functional:
-//  - ajax requests not made during spa are serialized and harvested separately 
-//  - SPA ajax request tests don't break (and there are enough tests for SPA ajax)
-
-baseEE.on('feat-err', function () { 
-  register('xhr', storeXhr) 
+baseEE.on('feat-err', function () {
+  register('xhr', storeXhr)
 
   harvest.on('jserrors', function () {
     return { body: agg.take([ 'xhr' ]) }
@@ -80,7 +66,7 @@ function storeXhr (params, metrics, startTime, endTime, type) {
     status: params.status,
     domain: params.host,
     path: params.pathname,
-    requestSize:  metrics.txSize,
+    requestSize: metrics.txSize,
     responseSize: metrics.rxSize,
     type: type,
     startTime: startTime,
@@ -100,7 +86,7 @@ function storeXhr (params, metrics, startTime, endTime, type) {
 
 baseEE.on('interactionSaved', function (interaction) {
   if (!spaAjaxEvents[interaction.id]) return
-  // remove from the spaAjaxEvents buffer, and let spa harvest it 
+  // remove from the spaAjaxEvents buffer, and let spa harvest it
   delete spaAjaxEvents[interaction.id]
 })
 
@@ -127,7 +113,7 @@ function prepareHarvest(options) {
 
   ajaxEvents = []
 
-  return { body:  { e: payload } }
+  return { body: { e: payload } }
 }
 
 function getPayload (events) {
@@ -157,7 +143,6 @@ function getPayload (events) {
       nullable(null, numeric, false) // timestamp
     ]
 
-    // TODO: add protection for overriding default attributes
     // add custom attributes
     var attrParts = addCustomAttributes(loader.info.jsAttributes || {}, addString)
     fields.unshift(numeric(attrParts.length))

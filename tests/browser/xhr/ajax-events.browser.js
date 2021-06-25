@@ -5,11 +5,9 @@
 
 const test = require('../../../tools/jil/browser-test')
 const qp = require('@newrelic/nr-querypack')
-
-const baseEE =  require('ee')
+const baseEE = require('ee')
 const loader = require('loader')
 loader.features.xhr = true
-
 const storeXhr = require('../../../feature/xhr/aggregate/index')
 const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
 const prepareHarvest = require('../../../feature/xhr/aggregate/index').prepareHarvest
@@ -36,7 +34,7 @@ test('storeXhr for a SPA ajax request buffers in spaAjaxEvents', function (t) {
     10, // endTime
     'XMLHttpRequest' // type
   ]
-  
+
   storeXhr.apply(context, ajaxArguments)
 
   const events = getStoredEvents()
@@ -45,7 +43,7 @@ test('storeXhr for a SPA ajax request buffers in spaAjaxEvents', function (t) {
   t.notok(events.ajaxEvents.length > 0, 'SPA ajax requests are not buffered in ajaxEvents')
 
   const spaAjaxEvent = interactionAjaxEvents[0]
-  t.ok(spaAjaxEvent.startTime === 0 && spaAjaxEvent.path === '/pathname',  'expected SPA ajax event is buffered')
+  t.ok(spaAjaxEvent.startTime === 0 && spaAjaxEvent.path === '/pathname', 'expected SPA ajax event is buffered')
 
   // clear spaAjaxEvents
   baseEE.emit('interactionSaved', [interaction])
@@ -71,20 +69,53 @@ test('storeXhr for a non-SPA ajax request buffers in ajaxEvents', function (t) {
     10, // endTime
     'XMLHttpRequest' // type
   ]
-  
+
   storeXhr.apply(context, ajaxArguments)
-  
+
   const events = getStoredEvents()
   t.ok(events.ajaxEvents.length === 1, 'non-SPA ajax requests are buffered in ajaxEvents')
-  t.notok(events.spaAjaxEvents.length > 0, 'non-SPA ajax requests are not buffered in spaAjaxEvents')
-  
+  t.notok(Object.keys(events.spaAjaxEvents).length > 0, 'non-SPA ajax requests are not buffered in spaAjaxEvents')
+
   const ajaxEvent = events.ajaxEvents[0]
-  t.ok(ajaxEvent.startTime === 0 && ajaxEvent.path === '/pathname',  'expected ajax event is buffered')
+  t.ok(ajaxEvent.startTime === 0 && ajaxEvent.path === '/pathname', 'expected ajax event is buffered')
 
   // clear ajaxEvents buffer
   prepareHarvest({ retry: false })
 
   t.end()
+})
+
+test('on interactionDiscarded, saved SPA events are buffered in ajaxEvents', function (t) {
+  const interaction = { id: 0 }
+  const context = {
+    spaNode: { interaction: interaction }
+  }
+
+  const ajaxArguments = [
+    { // params
+      method: 'PUT',
+      status: 200,
+      host: 'https://example.com',
+      pathname: '/pathname'
+    },
+    { // metrics
+      txSize: 128,
+      rxSize: 256,
+      cbTime: 5
+    },
+    0, // startTime
+    10, // endTime
+    'XMLHttpRequest' // type
+  ]
+
+  storeXhr.apply(context, ajaxArguments)
+  baseEE.emit('interactionDiscarded', [interaction])
+
+  const events = getStoredEvents()
+
+  // no interactions in SPA under interaction 0
+  t.notok(events.spaAjaxEvents[interaction.id], 'ajax requests from discarded interaction no longer held buffer')
+  t.ok(events.ajaxEvents.length === 1, 'ajax request buffered as non-SPA')
 })
 
 test('prepareHarvest correctly serializes an AjaxRequest events payload', function (t) {
@@ -123,7 +154,7 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
     expected.end,
     expected.requestedWith
   ]
-  
+
   storeXhr.apply(context, ajaxEvent)
   storeXhr.apply(context, ajaxEvent)
 
@@ -144,7 +175,7 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
 
   decodedEvents.forEach(event => {
     t.equal(event.children.length, expectedCustomAttrCount, 'ajax event has expected number of custom attributes')
-    
+
     // validate custom attribute values
     event.children.forEach(attribute => {
       switch (attribute.type) {
@@ -167,19 +198,12 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
       }
     })
     delete event.children
-    
+
     t.deepEqual(expected, event, 'event attributes serialized correctly')
   })
-
-  // TODO: specify explicitly that cbTime is null for non-SPA ajax requests to avoid skewing callbackDuration queries
 
   // clear ajaxEventsBuffer
   prepareHarvest()
 
   t.end()
 })
-
-function resetEventBuffers () {
-  prepareHarvest()
-
-}

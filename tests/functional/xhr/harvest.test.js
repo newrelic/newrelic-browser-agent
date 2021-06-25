@@ -32,7 +32,7 @@ testDriver.test('ajax events harvests are retried when collector returns 429', x
   let ajaxPromise = router.expectAjaxEvents()
   let rumPromise = router.expectRum()
   let loadPromise = browser.safeGet(assetURL)
-  
+
   let firstBody
 
   Promise.all([ajaxPromise, loadPromise, rumPromise]).then(([result]) => {
@@ -41,10 +41,10 @@ testDriver.test('ajax events harvests are retried when collector returns 429', x
     return router.expectAjaxEvents()
   }).then(result => {
     const secondBody = querypack.decode(result.body)
-    
+
     const secondContainsFirst = firstBody.every(firstElement => {
       return secondBody.find(secondElement => {
-          return secondElement.path === firstElement.path && secondElement.start === firstElement.start
+        return secondElement.path === firstElement.path && secondElement.start === firstElement.start
       })
     })
 

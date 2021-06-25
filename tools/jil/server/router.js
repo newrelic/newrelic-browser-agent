@@ -166,7 +166,6 @@ class RouterHandle {
 
   expectAjaxEvents () {
     return this.expectBeaconRequest(this.beaconRequests.events).then(request => {
-      // console.log('router: expectAjaxEvents request', request)
       let {body, query} = request
       let decoded = querypack.decode(body && body.length ? body : query.e)[0]
       if (decoded.type === 'ajax') {

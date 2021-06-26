@@ -43,7 +43,7 @@ testDriver.test('events are retried when collector returns 429', supported, func
 
     t.equal(result.res.statusCode, 200, 'server responded with 200')
     t.equal(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
-    t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
+    t.equal(router.seenRequests.events, 4, 'got two events harvest requests')
 
     t.end()
   }).catch(fail)

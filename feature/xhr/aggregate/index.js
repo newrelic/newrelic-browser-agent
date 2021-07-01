@@ -14,6 +14,7 @@ var addCustomAttributes = require('../../../agent/bel-serializer').addCustomAttr
 var loader = require('loader')
 var baseEE = require('ee')
 var handle = require('handle')
+var config = require('config')
 var HarvestScheduler = require('../../../agent/harvest-scheduler')
 
 var ajaxEvents = []
@@ -23,29 +24,31 @@ var sentAjaxEvents = []
 // bail if not instrumented
 if (!loader.features.xhr) return
 
-baseEE.on('feat-err', function () {
+var harvestTimeSeconds = config.getConfiguration('ajax.harvestTimeSeconds') || 60
+
+baseEE.on('feat-err', function() {
   register('xhr', storeXhr)
 
-  harvest.on('jserrors', function () {
+  harvest.on('jserrors', function() {
     return { body: agg.take([ 'xhr' ]) }
   })
 
   var scheduler = new HarvestScheduler(loader, 'events', { onFinished: onEventsHarvestFinished, getPayload: prepareHarvest })
-  scheduler.startTimer(5)
+  scheduler.startTimer(harvestTimeSeconds)
 })
 
 module.exports = storeXhr
 module.exports.prepareHarvest = prepareHarvest
 module.exports.getStoredEvents = getStoredEvents
 
-function getStoredEvents () {
+function getStoredEvents() {
   return {
     ajaxEvents: ajaxEvents,
     spaAjaxEvents: spaAjaxEvents
   }
 }
 
-function storeXhr (params, metrics, startTime, endTime, type) {
+function storeXhr(params, metrics, startTime, endTime, type) {
   metrics.time = startTime
 
   // send to session traces

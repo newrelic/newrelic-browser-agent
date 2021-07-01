@@ -19,6 +19,7 @@
     "space-before-function-paren": ["off"],
     "no-extend-native": 0,
     "no-wrap-func": 0,
-    "camelcase": 0
+    "camelcase": 0,
+    "no-warning-comments": ["error"]
   }
 }

@@ -280,7 +280,7 @@ baseEE.on('feat-spa', function () {
     if (node && !this.sent) {
       this.sent = true
       node.dt = this.dt
-      node.jsEnd = node.start = this['send-xhr-start']
+      node.jsEnd = node.start = this.startTime
       node[INTERACTION][REMAINING]++
     }
   })
@@ -292,7 +292,7 @@ baseEE.on('feat-spa', function () {
       attrs.params = this.params
       attrs.metrics = this.metrics
 
-      node.finish(this['xhr-resolved'])
+      node.finish(this.endTime)
     }
   })
 

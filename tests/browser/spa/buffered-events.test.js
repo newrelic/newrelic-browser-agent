@@ -19,7 +19,7 @@ jil.browserTest('spa buffers all expected events', supported, function (t) {
   require('../../../feature/spa/instrument/index.js')
 
   var events = {
-    'base': ['fn-start', 'fn-end', 'xhr-done', 'xhr-resolved'],
+    'base': ['fn-start', 'fn-end', 'xhr-resolved'],
     'events': ['fn-start'],
     'timer': ['setTimeout-end', 'clearTimeout-start', 'fn-start'],
     'xhr': ['fn-start', 'new-xhr', 'send-xhr-start'],

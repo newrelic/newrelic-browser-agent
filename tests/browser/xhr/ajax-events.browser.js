@@ -6,8 +6,11 @@
 const test = require('../../../tools/jil/browser-test')
 const qp = require('@newrelic/nr-querypack')
 const baseEE = require('ee')
+
 const loader = require('loader')
 loader.features.xhr = true
+loader.info = {}
+
 const storeXhr = require('../../../feature/xhr/aggregate/index')
 const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
 const prepareHarvest = require('../../../feature/xhr/aggregate/index').prepareHarvest
@@ -116,6 +119,11 @@ test('on interactionDiscarded, saved SPA events are buffered in ajaxEvents', fun
   // no interactions in SPA under interaction 0
   t.notok(events.spaAjaxEvents[interaction.id], 'ajax requests from discarded interaction no longer held buffer')
   t.ok(events.ajaxEvents.length === 1, 'ajax request buffered as non-SPA')
+
+  // clear ajaxEvents buffer
+  prepareHarvest({ retry: false })
+
+  t.end()
 })
 
 test('prepareHarvest correctly serializes an AjaxRequest events payload', function (t) {
@@ -199,7 +207,7 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
     })
     delete event.children
 
-    t.deepEqual(expected, event, 'event attributes serialized correctly')
+    t.deepEqual(event, expected, 'event attributes serialized correctly')
   })
 
   // clear ajaxEventsBuffer

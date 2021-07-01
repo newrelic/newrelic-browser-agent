@@ -18,8 +18,8 @@ testDriver.test('capturing XHR ajax events', xhrBrowsers, function (t, browser, 
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
     .then(([response]) => {
-      const {body} = response
-      const ajaxEvents = querypack.decode(body)
+      const {body, query} = response
+      const ajaxEvents = querypack.decode(body && body.length ? body : query.e)
 
       const ajaxEvent = ajaxEvents.find(e => e.type === 'ajax' && e.path === '/json')
       t.ok(ajaxEvent, 'XMLHttpRequest ajax event was harvested')

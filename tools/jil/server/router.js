@@ -164,6 +164,18 @@ class RouterHandle {
     })
   }
 
+  expectAjaxEvents () {
+    return this.expectBeaconRequest(this.beaconRequests.events).then(request => {
+      let {body, query} = request
+      let decoded = querypack.decode(body && body.length ? body : query.e)[0]
+      if (decoded.type === 'ajax') {
+        return request
+      } else {
+        return this.expectAjaxEvents()
+      }
+    })
+  }
+
   expectErrors () {
     // errors harvest at 60s
     return this.expectBeaconRequest(this.beaconRequests.errors, 80000)

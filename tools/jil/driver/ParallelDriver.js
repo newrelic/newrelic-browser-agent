@@ -138,7 +138,6 @@ class ParallelDriver extends Driver {
       testRuns.add(testRun)
 
       testRun.initialize(driver.assetServer.urlFor('/'), (err) => {
-        // TODO: stop all tests, retry, or what?
         if (err) {
           return cb(err)
         }

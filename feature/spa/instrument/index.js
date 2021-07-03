@@ -66,7 +66,7 @@ function endTimestamp () {
   this[FN_END] = time
 }
 
-baseEE.buffer([FN_START, FN_END, 'xhr-done', 'xhr-resolved'])
+baseEE.buffer([FN_START, FN_END, 'xhr-resolved'])
 eventsEE.buffer([FN_START])
 timerEE.buffer(['setTimeout' + END, 'clearTimeout' + START, FN_START])
 xhrEE.buffer([FN_START, 'new-xhr', 'send-xhr' + START])
@@ -77,9 +77,6 @@ promiseEE.buffer(['propagate', CB_START, CB_END, 'executor-err', 'resolve' + STA
 tracerEE.buffer([FN_START, 'no-' + FN_START])
 jsonpEE.buffer(['new-jsonp', 'cb-start', 'jsonp-error', 'jsonp-end'])
 
-timestamp(xhrEE, 'send-xhr' + START)
-timestamp(baseEE, 'xhr-resolved')
-timestamp(baseEE, 'xhr-done')
 timestamp(fetchEE, FETCH + START)
 timestamp(fetchEE, FETCH + '-done')
 timestamp(jsonpEE, 'new-jsonp')

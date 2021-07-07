@@ -21,6 +21,8 @@ var ajaxEvents = []
 var spaAjaxEvents = {}
 var sentAjaxEvents = []
 
+var MAX_PAYLOAD_SIZE = loader.maxPayloadSize || 1000000
+
 // bail if not instrumented
 if (!loader.features.xhr) return
 
@@ -124,52 +126,65 @@ function prepareHarvest(options) {
   return payloadObjs
 }
 
-function getPayload (events) {
-  var addString = getAddStringContext()
+function getPayload (events, chunks) {
+  chunks = chunks || 1
+  var adders = []
   var ver = 'bel.7;'
-  var payload = [ver]
-  var payloadIdx = 0
+  var payload = []
+  var chunkSize = events.length / chunks
+  var eventChunks = chunk(events, chunkSize)
 
-  for (var i = 0; i < events.length; i++) {
-    var event = events[i]
+  for (var i = 0; i < eventChunks.length; i++) {
+    adders.push(getAddStringContext())
+    payload.push(ver)
+    var currentChunk = eventChunks[i]
 
-    var fields = [
-      numeric(event.startTime),
-      numeric(event.endTime - event.startTime),
-      numeric(0), // callbackEnd
-      numeric(0), // no callbackDuration for non-SPA events
-      addString(event.method),
-      numeric(event.status),
-      addString(event.domain),
-      addString(event.path),
-      numeric(event.requestSize),
-      numeric(event.responseSize),
-      event.type === 'fetch' ? 1 : '',
-      addString(0), // nodeId
-      nullable(null, addString, true) + // guid
-      nullable(null, addString, true) + // traceId
-      nullable(null, numeric, false) // timestamp
-    ]
+    for (var j = 0; j < currentChunk.length; j++) {
+      var addString = adders[i]
+      var event = currentChunk[j]
 
-    var insert = '2,'
+      var fields = [
+        numeric(event.startTime),
+        numeric(event.endTime - event.startTime),
+        numeric(0), // callbackEnd
+        numeric(0), // no callbackDuration for non-SPA events
+        addString(event.method),
+        numeric(event.status),
+        addString(event.domain),
+        addString(event.path),
+        numeric(event.requestSize),
+        numeric(event.responseSize),
+        event.type === 'fetch' ? 1 : '',
+        addString(0), // nodeId
+        nullable(null, addString, true) + // guid
+        nullable(null, addString, true) + // traceId
+        nullable(null, numeric, false) // timestamp
+      ]
 
-    // add custom attributes
-    var attrParts = addCustomAttributes(loader.info.jsAttributes || {}, addString)
-    fields.unshift(numeric(attrParts.length))
+      var insert = '2,'
 
-    insert += fields.join(',')
+      // add custom attributes
+      var attrParts = addCustomAttributes(loader.info.jsAttributes || {}, addString)
+      fields.unshift(numeric(attrParts.length))
 
-    if (attrParts && attrParts.length > 0) {
-      insert += ';' + attrParts.join(';')
+      insert += fields.join(',')
+
+      if (attrParts && attrParts.length > 0) {
+        insert += ';' + attrParts.join(';')
+      }
+
+      if ((j + 1) < currentChunk.length) insert += ';'
+
+      payload[i] += insert
     }
-
-    if ((i + 1) < events.length) insert += ';'
-
-    // check if the current payload string is too big, if so then increment to a new bucket idx
-    if (exceedsSizeLimit(payload[payloadIdx] + insert)) payload[++payloadIdx] = ver
-    payload[payloadIdx] += insert
   }
-  return payload
+
+  var tooBig = false
+  for (var x = 0; x < payload.length; x++) {
+  // check if the current payload string is too big, if so then run getPayload again with more buckets
+    if (exceedsSizeLimit(payload[x])) tooBig = true
+  }
+  return tooBig ? getPayload(events, ++chunks) : payload
 }
 
 function onEventsHarvestFinished(result) {
@@ -180,5 +195,14 @@ function onEventsHarvestFinished(result) {
 }
 
 function exceedsSizeLimit(payload) {
-  return new Blob([payload]).size > loader.maxBytes
+  return window.Blob ? new Blob([payload]).size > MAX_PAYLOAD_SIZE : false
+}
+
+function chunk(arr, chunkSize) {
+  if (chunkSize <= 0) throw new Error('Invalid chunk size')
+  var chunks = []
+  for (var i = 0, len = arr.length; i < len; i += chunkSize) {
+    chunks.push(arr.slice(i, i + chunkSize))
+  }
+  return chunks
 }

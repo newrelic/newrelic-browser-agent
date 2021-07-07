@@ -10,14 +10,14 @@ const baseEE = require('ee')
 const loader = require('loader')
 loader.features.xhr = true
 loader.info = {}
-loader.maxBytes = 30000
+loader.maxPayloadSize = 500
 
 const storeXhr = require('../../../feature/xhr/aggregate/index')
 const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
 const prepareHarvest = require('../../../feature/xhr/aggregate/index').prepareHarvest
 
 function exceedsSizeLimit(payload) {
-  return new Blob([payload]).size > loader.maxBytes
+  return new Blob([payload]).size > loader.maxPayloadSize
 }
 
 test('storeXhr for a SPA ajax request buffers in spaAjaxEvents', function (t) {
@@ -225,14 +225,15 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
 
 test('prepareHarvest correctly serializes a very large AjaxRequest events payload', function (t) {
   const context = { spaNode: undefined }
-  const expected = {
+  let callNo = 0
+  const expected = () => ({
     type: 'ajax',
     start: 0,
     end: 30,
     callbackEnd: 30,
     callbackDuration: 0,
     domain: 'https://example.com',
-    path: '/pathname',
+    path: `/pathname/${callNo}`,
     method: 'PUT',
     status: 200,
     requestedWith: 'XMLHttpRequest',
@@ -242,34 +243,147 @@ test('prepareHarvest correctly serializes a very large AjaxRequest events payloa
     guid: null,
     traceId: null,
     timestamp: null
-  }
-  const ajaxEvent = [
+  })
+  const ajaxEvent = () => [
     { // params
-      method: expected.method,
-      status: expected.status,
-      host: expected.domain,
-      pathname: expected.path
+      method: expected().method,
+      status: expected().status,
+      host: expected().domain,
+      pathname: expected().path
     },
     { // metrics
-      txSize: expected.requestBodySize,
-      rxSize: expected.responseBodySize,
-      cbTime: expected.callbackDuration
+      txSize: expected().requestBodySize,
+      rxSize: expected().responseBodySize,
+      cbTime: expected().callbackDuration
     },
-    expected.start,
-    expected.end,
-    expected.requestedWith
+    expected().start,
+    expected().end,
+    expected().requestedWith
   ]
 
-  for (var i = 0; i < 2000; i++) {
-    storeXhr.apply(context, ajaxEvent)
+  for (var i = 0; i < 100; i++) {
+    storeXhr.apply(context, ajaxEvent())
+    callNo++
+  }
+
+  const expectedCustomAttributes = {
+    customStringAttribute: 'customStringAttribute',
+    customNumAttribute: 2,
+    customBooleanAttribute: true,
+    undefinedCustomAttribute: undefined
+  }
+
+  loader.info = {
+    jsAttributes: expectedCustomAttributes
   }
 
   const serializedPayload = prepareHarvest({retry: false})
 
   // we just want to check that the list of AJAX events to be sent contains multiple items because it exceeded the allowed byte limit,
   // and that each list item is smaller than the limit
-  t.ok(serializedPayload.length > 1, 'AJAX Events are broken into multiple sets')
-  t.ok(serializedPayload.every(sp => !exceedsSizeLimit(sp)), 'All AJAX sets are less than the loader maxBytes property')
+  t.ok(serializedPayload.length > 1, 'Large Payload of AJAX Events are broken into multiple chunks (' + serializedPayload.length + ')')
+  t.ok(serializedPayload.every(sp => !exceedsSizeLimit(sp)), 'All AJAX chunks are less than the maxPayloadSize property (' + loader.maxPayloadSize + ')')
+
+  console.log('serializedPayload', serializedPayload)
+  const decodedEvents = serializedPayload.map(sp => qp.decode(sp.body.e)).flat()
+
+  console.log('decodedEvents', decodedEvents)
+
+  decodedEvents.forEach((event, idx) => {
+    console.log('event', event)
+    t.ok(event.path.includes(idx), idx + ' - chunked string path includes the number it was indexed to')
+
+    event.children.forEach(attribute => {
+      console.log('attribute', attribute)
+      switch (attribute.type) {
+        case 'stringAttribute':
+          t.ok(expectedCustomAttributes[attribute.key] === attribute.value, idx + ' - chunked string attributes are valid')
+          break
+        case 'doubleAttribute':
+          t.ok(expectedCustomAttributes[attribute.key] === attribute.value, idx + ' - chunked string & num custom attributes encoded')
+          break
+        case 'trueAttribute':
+          t.ok(expectedCustomAttributes[attribute.key] === true, idx + ' - chunked true custom attribute encoded')
+          break
+        case 'falseAttribute':
+          t.ok(expectedCustomAttributes[attribute.key] === false, idx + ' - chunked false custom attribute encoded')
+          break
+        case 'nullAttribute':
+          // undefined is treated as null in querypack
+          t.ok(expectedCustomAttributes[attribute.key] === undefined, idx + ' - chunked undefined custom attributes encoded')
+          break
+        default:
+          t.fail(idx + ' - chunked unexpected custom attribute type')
+      }
+    })
+  })
+
+  // clear ajaxEventsBuffer
+  prepareHarvest()
+
+  t.end()
+})
+
+test('prepareHarvest does not chunk a very large AjaxRequest events payload if Blob is not supported', function (t) {
+  const context = { spaNode: undefined }
+  window.Blob = undefined
+  let callNo = 0
+  const expected = () => ({
+    type: 'ajax',
+    start: 0,
+    end: 30,
+    callbackEnd: 30,
+    callbackDuration: 0,
+    domain: 'https://example.com',
+    path: `/pathname/${callNo}`,
+    method: 'PUT',
+    status: 200,
+    requestedWith: 'XMLHttpRequest',
+    requestBodySize: 128,
+    responseBodySize: 256,
+    nodeId: '0',
+    guid: null,
+    traceId: null,
+    timestamp: null
+  })
+  const ajaxEvent = () => [
+    { // params
+      method: expected().method,
+      status: expected().status,
+      host: expected().domain,
+      pathname: expected().path
+    },
+    { // metrics
+      txSize: expected().requestBodySize,
+      rxSize: expected().responseBodySize,
+      cbTime: expected().callbackDuration
+    },
+    expected().start,
+    expected().end,
+    expected().requestedWith
+  ]
+
+  for (var i = 0; i < 100; i++) {
+    storeXhr.apply(context, ajaxEvent())
+    callNo++
+  }
+
+  const expectedCustomAttributes = {
+    customStringAttribute: 'customStringAttribute',
+    customNumAttribute: 2,
+    customBooleanAttribute: true,
+    undefinedCustomAttribute: undefined
+  }
+
+  loader.info = {
+    jsAttributes: expectedCustomAttributes
+  }
+
+  const serializedPayload = prepareHarvest({retry: false})
+
+  // we just want to check that the list of AJAX events to be sent contains multiple items because it exceeded the allowed byte limit,
+  // and that each list item is smaller than the limit
+  t.ok(serializedPayload.length === 1, 'Large Payload of AJAX Events are NOT broken into multiple chunks (' + serializedPayload.length + ')')
 
   // clear ajaxEventsBuffer
   prepareHarvest()

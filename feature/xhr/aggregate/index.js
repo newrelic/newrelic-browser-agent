@@ -110,23 +110,28 @@ function prepareHarvest(options) {
 
   var payload = getPayload(ajaxEvents)
 
+  var payloadObjs = []
+  for (var i = 0; i < payload.length; i++) {
+    payloadObjs.push({body: {e: payload[i]}})
+  }
+
   if (options && options.retry) {
     sentAjaxEvents = ajaxEvents.slice()
   }
 
   ajaxEvents = []
 
-  return { body: { e: payload } }
+  return payloadObjs
 }
 
 function getPayload (events) {
   var addString = getAddStringContext()
-  var payload = 'bel.7;'
+  var ver = 'bel.7;'
+  var payload = [ver]
+  var payloadIdx = 0
 
   for (var i = 0; i < events.length; i++) {
     var event = events[i]
-
-    payload += '2,'
 
     var fields = [
       numeric(event.startTime),
@@ -146,19 +151,24 @@ function getPayload (events) {
       nullable(null, numeric, false) // timestamp
     ]
 
+    var insert = '2,'
+
     // add custom attributes
     var attrParts = addCustomAttributes(loader.info.jsAttributes || {}, addString)
     fields.unshift(numeric(attrParts.length))
 
-    payload += fields.join(',')
+    insert += fields.join(',')
 
     if (attrParts && attrParts.length > 0) {
-      payload += ';' + attrParts.join(';')
+      insert += ';' + attrParts.join(';')
     }
 
-    if ((i + 1) < events.length) payload += ';'
-  }
+    if ((i + 1) < events.length) insert += ';'
 
+    // check if the current payload string is too big, if so then increment to a new bucket idx
+    if (exceedsSizeLimit(payload[payloadIdx] + insert)) payload[++payloadIdx] = ver
+    payload[payloadIdx] += insert
+  }
   return payload
 }
 
@@ -167,4 +177,8 @@ function onEventsHarvestFinished(result) {
     ajaxEvents = ajaxEvents.concat(sentAjaxEvents)
     sentAjaxEvents = []
   }
+}
+
+function exceedsSizeLimit(payload) {
+  return new Blob([payload]).size > loader.maxBytes
 }

@@ -10,10 +10,15 @@ const baseEE = require('ee')
 const loader = require('loader')
 loader.features.xhr = true
 loader.info = {}
+loader.maxBytes = 30000
 
 const storeXhr = require('../../../feature/xhr/aggregate/index')
 const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
 const prepareHarvest = require('../../../feature/xhr/aggregate/index').prepareHarvest
+
+function exceedsSizeLimit(payload) {
+  return new Blob([payload]).size > loader.maxBytes
+}
 
 test('storeXhr for a SPA ajax request buffers in spaAjaxEvents', function (t) {
   const interaction = { id: 0 }
@@ -179,7 +184,9 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
   }
 
   const serializedPayload = prepareHarvest({retry: false})
-  const decodedEvents = qp.decode(serializedPayload.body.e)
+  // serializedPayload from ajax comes back as an array of bodies now, so we just need to decode each one and flatten
+  // this decoding does not happen elsewhere in the app so this only needs to happen here in this specific test
+  const decodedEvents = serializedPayload.map(sp => qp.decode(sp.body.e)).flat()
 
   decodedEvents.forEach(event => {
     t.equal(event.children.length, expectedCustomAttrCount, 'ajax event has expected number of custom attributes')
@@ -209,6 +216,60 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
 
     t.deepEqual(event, expected, 'event attributes serialized correctly')
   })
+
+  // clear ajaxEventsBuffer
+  prepareHarvest()
+
+  t.end()
+})
+
+test('prepareHarvest correctly serializes a very large AjaxRequest events payload', function (t) {
+  const context = { spaNode: undefined }
+  const expected = {
+    type: 'ajax',
+    start: 0,
+    end: 30,
+    callbackEnd: 30,
+    callbackDuration: 0,
+    domain: 'https://example.com',
+    path: '/pathname',
+    method: 'PUT',
+    status: 200,
+    requestedWith: 'XMLHttpRequest',
+    requestBodySize: 128,
+    responseBodySize: 256,
+    nodeId: '0',
+    guid: null,
+    traceId: null,
+    timestamp: null
+  }
+  const ajaxEvent = [
+    { // params
+      method: expected.method,
+      status: expected.status,
+      host: expected.domain,
+      pathname: expected.path
+    },
+    { // metrics
+      txSize: expected.requestBodySize,
+      rxSize: expected.responseBodySize,
+      cbTime: expected.callbackDuration
+    },
+    expected.start,
+    expected.end,
+    expected.requestedWith
+  ]
+
+  for (var i = 0; i < 2000; i++) {
+    storeXhr.apply(context, ajaxEvent)
+  }
+
+  const serializedPayload = prepareHarvest({retry: false})
+
+  // we just want to check that the list of AJAX events to be sent contains multiple items because it exceeded the allowed byte limit,
+  // and that each list item is smaller than the limit
+  t.ok(serializedPayload.length > 1, 'AJAX Events are broken into multiple sets')
+  t.ok(serializedPayload.every(sp => !exceedsSizeLimit(sp)), 'All AJAX sets are less than the loader maxBytes property')
 
   // clear ajaxEventsBuffer
   prepareHarvest()

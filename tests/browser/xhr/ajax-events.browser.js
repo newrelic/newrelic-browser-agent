@@ -10,7 +10,6 @@ const baseEE = require('ee')
 const loader = require('loader')
 loader.features.xhr = true
 loader.info = {}
-loader.maxPayloadSize = 500
 
 const storeXhr = require('../../../feature/xhr/aggregate/index')
 const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
@@ -277,24 +276,19 @@ test('prepareHarvest correctly serializes a very large AjaxRequest events payloa
     jsAttributes: expectedCustomAttributes
   }
 
-  const serializedPayload = prepareHarvest({retry: false})
+  const serializedPayload = prepareHarvest({retry: false, maxPayloadSize: 500})
 
   // we just want to check that the list of AJAX events to be sent contains multiple items because it exceeded the allowed byte limit,
   // and that each list item is smaller than the limit
   t.ok(serializedPayload.length > 1, 'Large Payload of AJAX Events are broken into multiple chunks (' + serializedPayload.length + ')')
   t.ok(serializedPayload.every(sp => !exceedsSizeLimit(sp)), 'All AJAX chunks are less than the maxPayloadSize property (' + loader.maxPayloadSize + ')')
 
-  console.log('serializedPayload', serializedPayload)
   const decodedEvents = serializedPayload.map(sp => qp.decode(sp.body.e)).flat()
 
-  console.log('decodedEvents', decodedEvents)
-
   decodedEvents.forEach((event, idx) => {
-    console.log('event', event)
     t.ok(event.path.includes(idx), idx + ' - chunked string path includes the number it was indexed to')
 
     event.children.forEach(attribute => {
-      console.log('attribute', attribute)
       switch (attribute.type) {
         case 'stringAttribute':
           t.ok(expectedCustomAttributes[attribute.key] === attribute.value, idx + ' - chunked string attributes are valid')

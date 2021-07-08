@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Basic XHR test</title>
+    {init}
+    {loader}
+    {config}
+    <script type="text/javascript">
+        var loaded = [];
+        function getRandomNumber(){ Math.floor(Math.random() * 10000) }
+        var count = 0;
+        function sendHello() {
+          console.log("send hello")
+          var xhr = new XMLHttpRequest()
+              // const num = getRandomNumber();
+              xhr.open('GET', `/json`)
+
+              xhr.setRequestHeader('Content-Type', 'text/plain')
+              xhr.onload = function (e) {
+                  if (count < 50) {
+                      count++
+                      sendHello();
+                  }
+              }
+
+              xhr.send()
+        }
+        setTimeout(function() {
+              sendHello()
+        }, 1000)
+    </script>
+    <script>
+      
+    
+  </script>
+  </head>
+  <body>
+    This page sends 3000 XHRs after the window has loaded.
+    
+  </body>
+</html>

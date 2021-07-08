@@ -21,12 +21,11 @@ var ajaxEvents = []
 var spaAjaxEvents = {}
 var sentAjaxEvents = []
 
-var MAX_PAYLOAD_SIZE = loader.maxPayloadSize || 1000000
-
 // bail if not instrumented
 if (!loader.features.xhr) return
 
-var harvestTimeSeconds = config.getConfiguration('ajax.harvestTimeSeconds') || 60
+var harvestTimeSeconds = config.getConfiguration('ajax.harvestTimeSeconds') || 10
+var MAX_PAYLOAD_SIZE = config.getConfiguration('ajax.maxPayloadSize') || 500
 
 baseEE.on('feat-err', function() {
   register('xhr', storeXhr)
@@ -106,18 +105,20 @@ baseEE.on('interactionDiscarded', function (interaction) {
 })
 
 function prepareHarvest(options) {
+  options = options || {}
+
   if (ajaxEvents.length === 0) {
     return null
   }
 
-  var payload = getPayload(ajaxEvents)
+  var payload = getPayload(ajaxEvents, options.maxPayloadSize || MAX_PAYLOAD_SIZE)
 
   var payloadObjs = []
   for (var i = 0; i < payload.length; i++) {
     payloadObjs.push({body: {e: payload[i]}})
   }
 
-  if (options && options.retry) {
+  if (options.retry) {
     sentAjaxEvents = ajaxEvents.slice()
   }
 
@@ -126,7 +127,7 @@ function prepareHarvest(options) {
   return payloadObjs
 }
 
-function getPayload (events, chunks) {
+function getPayload (events, maxPayloadSize, chunks) {
   chunks = chunks || 1
   var adders = []
   var ver = 'bel.7;'
@@ -182,9 +183,9 @@ function getPayload (events, chunks) {
   var tooBig = false
   for (var x = 0; x < payload.length; x++) {
   // check if the current payload string is too big, if so then run getPayload again with more buckets
-    if (exceedsSizeLimit(payload[x])) tooBig = true
+    if (exceedsSizeLimit(payload[x], maxPayloadSize)) tooBig = true
   }
-  return tooBig ? getPayload(events, ++chunks) : payload
+  return tooBig ? getPayload(events, maxPayloadSize, ++chunks) : payload
 }
 
 function onEventsHarvestFinished(result) {
@@ -194,8 +195,9 @@ function onEventsHarvestFinished(result) {
   }
 }
 
-function exceedsSizeLimit(payload) {
-  return window.Blob ? new Blob([payload]).size > MAX_PAYLOAD_SIZE : false
+function exceedsSizeLimit(payload, maxPayloadSize) {
+  maxPayloadSize = maxPayloadSize || MAX_PAYLOAD_SIZE
+  return window.Blob ? new Blob([payload]).size > maxPayloadSize : false
 }
 
 function chunk(arr, chunkSize) {

@@ -16,7 +16,7 @@ const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStore
 const prepareHarvest = require('../../../feature/xhr/aggregate/index').prepareHarvest
 
 function exceedsSizeLimit(payload) {
-  return new Blob([payload]).size > loader.maxPayloadSize
+  return window.Blob ? new Blob([payload]).size > loader.maxPayloadSize : false
 }
 
 test('storeXhr for a SPA ajax request buffers in spaAjaxEvents', function (t) {

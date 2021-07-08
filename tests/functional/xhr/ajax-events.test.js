@@ -53,7 +53,6 @@ testDriver.test('capturing large payload of XHR ajax events', xhrBrowsers, funct
     const decoded = querypack.decode(body && body.length ? body : query.e)
     const ajaxEvents = decoded.filter(e => e.type === 'ajax' && e.path === '/json')
     if (ajaxEvents.length) ajaxBundles++
-    console.log('AJAX RESPONSE!', ajaxBundles)
     if (ajaxBundles < 2) router.expectAjaxEvents().then(r => parseAjaxPromise(r))
     else {
       t.ok(ajaxBundles > 1, 'AJAX load is split into multiple payloads and sent')

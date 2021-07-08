@@ -25,7 +25,7 @@ var sentAjaxEvents = []
 if (!loader.features.xhr) return
 
 var harvestTimeSeconds = config.getConfiguration('ajax.harvestTimeSeconds') || 10
-var MAX_PAYLOAD_SIZE = config.getConfiguration('ajax.maxPayloadSize') || 500
+var MAX_PAYLOAD_SIZE = config.getConfiguration('ajax.maxPayloadSize') || 1000000
 
 baseEE.on('feat-err', function() {
   register('xhr', storeXhr)

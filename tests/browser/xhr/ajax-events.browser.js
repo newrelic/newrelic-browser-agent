@@ -185,35 +185,37 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
   const serializedPayload = prepareHarvest({retry: false})
   // serializedPayload from ajax comes back as an array of bodies now, so we just need to decode each one and flatten
   // this decoding does not happen elsewhere in the app so this only needs to happen here in this specific test
-  const decodedEvents = serializedPayload.map(sp => qp.decode(sp.body.e)).flat()
+  const decodedEvents = serializedPayload.map(sp => qp.decode(sp.body.e))
 
-  decodedEvents.forEach(event => {
-    t.equal(event.children.length, expectedCustomAttrCount, 'ajax event has expected number of custom attributes')
+  decodedEvents.forEach(payload => {
+    payload.forEach(event => {
+      t.equal(event.children.length, expectedCustomAttrCount, 'ajax event has expected number of custom attributes')
 
     // validate custom attribute values
-    event.children.forEach(attribute => {
-      switch (attribute.type) {
-        case 'stringAttribute':
-        case 'doubleAttribute':
-          t.ok(expectedCustomAttributes[attribute.key] === attribute.value, 'string & num custom attributes encoded')
-          break
-        case 'trueAttribute':
-          t.ok(expectedCustomAttributes[attribute.key] === true, 'true custom attribute encoded')
-          break
-        case 'falseAttribute':
-          t.ok(expectedCustomAttributes[attribute.key] === false, 'false custom attribute encoded')
-          break
-        case 'nullAttribute':
+      event.children.forEach(attribute => {
+        switch (attribute.type) {
+          case 'stringAttribute':
+          case 'doubleAttribute':
+            t.ok(expectedCustomAttributes[attribute.key] === attribute.value, 'string & num custom attributes encoded')
+            break
+          case 'trueAttribute':
+            t.ok(expectedCustomAttributes[attribute.key] === true, 'true custom attribute encoded')
+            break
+          case 'falseAttribute':
+            t.ok(expectedCustomAttributes[attribute.key] === false, 'false custom attribute encoded')
+            break
+          case 'nullAttribute':
           // undefined is treated as null in querypack
-          t.ok(expectedCustomAttributes[attribute.key] === undefined, 'undefined custom attributes encoded')
-          break
-        default:
-          t.fail('unexpected custom attribute type')
-      }
-    })
-    delete event.children
+            t.ok(expectedCustomAttributes[attribute.key] === undefined, 'undefined custom attributes encoded')
+            break
+          default:
+            t.fail('unexpected custom attribute type')
+        }
+      })
+      delete event.children
 
-    t.deepEqual(event, expected, 'event attributes serialized correctly')
+      t.deepEqual(event, expected, 'event attributes serialized correctly')
+    })
   })
 
   // clear ajaxEventsBuffer
@@ -283,7 +285,7 @@ test('prepareHarvest correctly serializes a very large AjaxRequest events payloa
 
   // we just want to check that the list of AJAX events to be sent contains multiple items because it exceeded the allowed byte limit,
   // and that each list item is smaller than the limit
-  t.ok(decodedEvents.length > 1, 'Large Payload of AJAX Events are broken into multiple chunks (' + decodedEvents.length + ') of (' + decodedEvents.flat().length + ') total events')
+  t.ok(decodedEvents.length > 1, 'Large Payload of AJAX Events are broken into multiple chunks (' + decodedEvents.length + ')')
   t.ok(serializedPayload.every(sp => !exceedsSizeLimit(sp)), 'All AJAX chunks are less than the maxPayloadSize property (' + maxPayloadSize + ')')
 
   decodedEvents.forEach((payload, idx) => {

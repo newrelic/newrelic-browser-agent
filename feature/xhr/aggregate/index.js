@@ -163,56 +163,51 @@ function splitChunks(arr, chunkSize) {
   chunkSize = chunkSize || arr.length
   var chunks = []
   for (var i = 0, len = arr.length; i < len; i += chunkSize) {
-    var chunk = new Chunk(arr.slice(i, i + chunkSize))
-    chunk.serialize()
-    chunks.push(chunk)
+    chunks.push(new Chunk(arr.slice(i, i + chunkSize)))
   }
   return chunks
 }
 
 function Chunk (events) {
   this.addString = getAddStringContext()
-  this.payload = 'bel.7;'
   this.events = events
+  this.payload = 'bel.7;'
 
-  this.serialize = function() {
-    for (var i = 0; i < this.events.length; i++) {
-      var event = this.events[i]
-
-      var fields = [
-        numeric(event.startTime),
-        numeric(event.endTime - event.startTime),
-        numeric(0), // callbackEnd
-        numeric(0), // no callbackDuration for non-SPA events
-        this.addString(event.method),
-        numeric(event.status),
-        this.addString(event.domain),
-        this.addString(event.path),
-        numeric(event.requestSize),
-        numeric(event.responseSize),
-        event.type === 'fetch' ? 1 : '',
-        this.addString(0), // nodeId
-        nullable(null, this.addString, true) + // guid
+  for (var i = 0; i < this.events.length; i++) {
+    var event = this.events[i]
+    var fields = [
+      numeric(event.startTime),
+      numeric(event.endTime - event.startTime),
+      numeric(0), // callbackEnd
+      numeric(0), // no callbackDuration for non-SPA events
+      this.addString(event.method),
+      numeric(event.status),
+      this.addString(event.domain),
+      this.addString(event.path),
+      numeric(event.requestSize),
+      numeric(event.responseSize),
+      event.type === 'fetch' ? 1 : '',
+      this.addString(0), // nodeId
+      nullable(null, this.addString, true) + // guid
         nullable(null, this.addString, true) + // traceId
         nullable(null, numeric, false) // timestamp
-      ]
+    ]
 
-      var insert = '2,'
+    var insert = '2,'
 
     // add custom attributes
-      var attrParts = addCustomAttributes(loader.info.jsAttributes || {}, this.addString)
-      fields.unshift(numeric(attrParts.length))
+    var attrParts = addCustomAttributes(loader.info.jsAttributes || {}, this.addString)
+    fields.unshift(numeric(attrParts.length))
 
-      insert += fields.join(',')
+    insert += fields.join(',')
 
-      if (attrParts && attrParts.length > 0) {
-        insert += ';' + attrParts.join(';')
-      }
-
-      if ((i + 1) < this.events.length) insert += ';'
-
-      this.payload += insert
+    if (attrParts && attrParts.length > 0) {
+      insert += ';' + attrParts.join(';')
     }
+
+    if ((i + 1) < this.events.length) insert += ';'
+
+    this.payload += insert
   }
 
   this.tooBig = function(maxPayloadSize) {

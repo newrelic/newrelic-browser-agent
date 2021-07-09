@@ -318,7 +318,6 @@ function end (xhr) {
 
   // Always send cbTime, even if no noticeable time was taken.
   metrics.cbTime = this.cbTime
-  ee.emit('xhr-done', [xhr], xhr)
   handle('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this)
 }
 
@@ -326,6 +325,9 @@ function addUrl (ctx, url) {
   var parsed = parseUrl(url)
   var params = ctx.params
 
+  params.hostname = parsed.hostname
+  params.port = parsed.port
+  params.protocol = parsed.protocol
   params.host = parsed.hostname + ':' + parsed.port
   params.pathname = parsed.pathname
   ctx.parsedOrigin = parsed

@@ -70,6 +70,7 @@ function storeXhr(params, metrics, startTime, endTime, type) {
   agg.store('xhr', hash, params, metrics)
 
   if (!shouldCollectEvent(params)) {
+    baseEE.emit('xhr-event-ignore', [params], this)
     return
   }
 

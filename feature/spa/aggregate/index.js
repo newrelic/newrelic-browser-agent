@@ -296,6 +296,13 @@ baseEE.on('feat-spa', function () {
     }
   })
 
+  register.on(baseEE, 'xhr-event-ignore', function(params) {
+    var node = this.spaNode
+    if (node) {
+      node.ignore = true
+    }
+  })
+
   /**
    * *** JSONP ***
    *

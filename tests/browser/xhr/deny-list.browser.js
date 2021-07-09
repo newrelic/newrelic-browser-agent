@@ -15,7 +15,7 @@ var setDenyList = require('../../../feature/xhr/aggregate/index').setDenyList
 test('domain-only blocks all subdomains and all paths', function(t) {
   setDenyList([
     'foo.com'
-  ]) 
+  ])
 
   t.equals(shouldCollectEvent(parseUrl('http://foo.com')), false)
   t.equals(shouldCollectEvent(parseUrl('http://foo.com/')), false)
@@ -91,10 +91,11 @@ test('* blocks all domains', function(t) {
 
   t.end()
 })
-test('protocol is ignored', function(t) {
+
+test('protocol is ignored when not specified', function(t) {
   setDenyList([
     'foo.com'
-  ]) 
+  ])
 
   t.equals(shouldCollectEvent(parseUrl('http://foo.com')), false)
   t.equals(shouldCollectEvent(parseUrl('https://foo.com')), false)
@@ -102,13 +103,16 @@ test('protocol is ignored', function(t) {
   t.end()
 })
 
-test('port is ignored', function(t) {
+test('port is ignored when not specified', function(t) {
   setDenyList([
     'foo.com'
-  ]) 
+  ])
 
   t.equals(shouldCollectEvent(parseUrl('http://foo.com:8080')), false)
   t.equals(shouldCollectEvent(parseUrl('http://foo.com:8181')), false)
 
   t.end()
 })
+
+// test unexpected strings that don't represent URLs
+

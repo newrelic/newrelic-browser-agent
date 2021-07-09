@@ -196,7 +196,7 @@ function removeIgnoredNodes(node) {
     }
   }
 
-  for (var i = 0; i < node.children.length; i++) {
+  for (i = 0; i < node.children.length; i++) {
     removeIgnoredNodes(node.children[i])
   }
 }

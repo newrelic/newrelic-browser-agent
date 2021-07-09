@@ -24,7 +24,7 @@ var sentAjaxEvents = []
 // bail if not instrumented
 if (!loader.features.xhr) return
 
-var harvestTimeSeconds = config.getConfiguration('ajax.harvestTimeSeconds') || 10
+var harvestTimeSeconds = config.getConfiguration('ajax.harvestTimeSeconds') || 60
 var MAX_PAYLOAD_SIZE = config.getConfiguration('ajax.maxPayloadSize') || 1000000
 
 baseEE.on('feat-err', function() {
@@ -129,62 +129,26 @@ function prepareHarvest(options) {
 
 function getPayload (events, maxPayloadSize, chunks) {
   chunks = chunks || 1
-  var adders = []
-  var ver = 'bel.7;'
   var payload = []
   var chunkSize = events.length / chunks
-  var eventChunks = chunk(events, chunkSize)
-
+  var eventChunks = splitChunks(events, chunkSize)
+  var tooBig = false
   for (var i = 0; i < eventChunks.length; i++) {
-    adders.push(getAddStringContext())
-    payload.push(ver)
     var currentChunk = eventChunks[i]
-
-    for (var j = 0; j < currentChunk.length; j++) {
-      var addString = adders[i]
-      var event = currentChunk[j]
-
-      var fields = [
-        numeric(event.startTime),
-        numeric(event.endTime - event.startTime),
-        numeric(0), // callbackEnd
-        numeric(0), // no callbackDuration for non-SPA events
-        addString(event.method),
-        numeric(event.status),
-        addString(event.domain),
-        addString(event.path),
-        numeric(event.requestSize),
-        numeric(event.responseSize),
-        event.type === 'fetch' ? 1 : '',
-        addString(0), // nodeId
-        nullable(null, addString, true) + // guid
-        nullable(null, addString, true) + // traceId
-        nullable(null, numeric, false) // timestamp
-      ]
-
-      var insert = '2,'
-
-      // add custom attributes
-      var attrParts = addCustomAttributes(loader.info.jsAttributes || {}, addString)
-      fields.unshift(numeric(attrParts.length))
-
-      insert += fields.join(',')
-
-      if (attrParts && attrParts.length > 0) {
-        insert += ';' + attrParts.join(';')
+    if (currentChunk.tooBig(maxPayloadSize)) {
+      if (currentChunk.events.length !== 1) {
+        /* if it is too big BUT it isnt length 1, we can split it down again,
+         else we just want to NOT push it into payload
+         because if it's length 1 and still too big for the maxPayloadSize
+         it cant get any smaller and we dont want to recurse forever */
+        tooBig = true
+        break
       }
-
-      if ((j + 1) < currentChunk.length) insert += ';'
-
-      payload[i] += insert
+    } else {
+      payload.push(currentChunk.payload)
     }
   }
-
-  var tooBig = false
-  for (var x = 0; x < payload.length; x++) {
   // check if the current payload string is too big, if so then run getPayload again with more buckets
-    if (exceedsSizeLimit(payload[x], maxPayloadSize)) tooBig = true
-  }
   return tooBig ? getPayload(events, maxPayloadSize, ++chunks) : payload
 }
 
@@ -195,16 +159,64 @@ function onEventsHarvestFinished(result) {
   }
 }
 
-function exceedsSizeLimit(payload, maxPayloadSize) {
-  maxPayloadSize = maxPayloadSize || MAX_PAYLOAD_SIZE
-  return window.Blob ? new Blob([payload]).size > maxPayloadSize : false
-}
-
-function chunk(arr, chunkSize) {
-  if (chunkSize <= 0) throw new Error('Invalid chunk size')
+function splitChunks(arr, chunkSize) {
+  chunkSize = chunkSize || arr.length
   var chunks = []
   for (var i = 0, len = arr.length; i < len; i += chunkSize) {
-    chunks.push(arr.slice(i, i + chunkSize))
+    var chunk = new Chunk(arr.slice(i, i + chunkSize))
+    chunk.serialize()
+    chunks.push(chunk)
   }
   return chunks
+}
+
+function Chunk (events) {
+  this.addString = getAddStringContext()
+  this.payload = 'bel.7;'
+  this.events = events
+
+  this.serialize = function() {
+    for (var i = 0; i < this.events.length; i++) {
+      var event = this.events[i]
+
+      var fields = [
+        numeric(event.startTime),
+        numeric(event.endTime - event.startTime),
+        numeric(0), // callbackEnd
+        numeric(0), // no callbackDuration for non-SPA events
+        this.addString(event.method),
+        numeric(event.status),
+        this.addString(event.domain),
+        this.addString(event.path),
+        numeric(event.requestSize),
+        numeric(event.responseSize),
+        event.type === 'fetch' ? 1 : '',
+        this.addString(0), // nodeId
+        nullable(null, this.addString, true) + // guid
+        nullable(null, this.addString, true) + // traceId
+        nullable(null, numeric, false) // timestamp
+      ]
+
+      var insert = '2,'
+
+    // add custom attributes
+      var attrParts = addCustomAttributes(loader.info.jsAttributes || {}, this.addString)
+      fields.unshift(numeric(attrParts.length))
+
+      insert += fields.join(',')
+
+      if (attrParts && attrParts.length > 0) {
+        insert += ';' + attrParts.join(';')
+      }
+
+      if ((i + 1) < this.events.length) insert += ';'
+
+      this.payload += insert
+    }
+  }
+
+  this.tooBig = function(maxPayloadSize) {
+    maxPayloadSize = maxPayloadSize || MAX_PAYLOAD_SIZE
+    return this.payload.length * 2 > maxPayloadSize
+  }
 }

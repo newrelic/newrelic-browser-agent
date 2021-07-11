@@ -29,8 +29,6 @@ function serializeSingle(root, offset, navTiming, isRouteChange) {
 }
 
 function serializeInteraction (root, offset, navTiming, isRouteChange, addString) {
-  removeIgnoredNodes(root)
-
   offset = offset || 0
   var isInitialPage = root.attrs.trigger === 'initialPageLoad'
   var firstTimestamp
@@ -183,29 +181,5 @@ function serializeInteraction (root, offset, navTiming, isRouteChange, addString
     }
 
     return nodeList
-  }
-}
-
-function removeIgnoredNodes(node) {
-  var i = node.children.length
-  while (i--) {
-    var childNode = node.children[i]
-    if (childNode.ignore) {
-      copyChildren(childNode, node)
-      node.children.splice(i, 1)
-    }
-  }
-
-  for (i = 0; i < node.children.length; i++) {
-    removeIgnoredNodes(node.children[i])
-  }
-}
-
-function copyChildren(sourceNode, targetNode) {
-  for (var i = 0; i < sourceNode.children.length; i++) {
-    var child = sourceNode.children[i]
-    if (!child.ignore) {
-      targetNode.children.push(child)
-    }
   }
 }

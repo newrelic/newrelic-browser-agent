@@ -124,7 +124,7 @@ test('invalid values', function(t) {
 
   setDenyList([
     '!@$%^*',
-    'foo.com' 
+    'foo.com'
   ])
   t.equals(shouldCollectEvent(parseUrl('http://foo.com')), false)
   t.equals(shouldCollectEvent(parseUrl('http://bar.com')), true)

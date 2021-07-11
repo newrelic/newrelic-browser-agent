@@ -16,7 +16,8 @@ function shouldCollectEvent(params) {
     if (parsed.hostname === '*') {
       return false
     }
-    if (compareDomain(parsed.hostname, params.hostname) && comparePath(parsed.pathname, params.pathname)) {
+    if (compareDomain(parsed.hostname, params.hostname) &&
+        comparePath(parsed.pathname, params.pathname)) {
       return false
     }
   }

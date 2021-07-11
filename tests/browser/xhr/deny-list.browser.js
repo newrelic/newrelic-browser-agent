@@ -115,4 +115,19 @@ test('port is ignored when not specified', function(t) {
 })
 
 // test unexpected strings that don't represent URLs
+test('invalid values', function(t) {
+  setDenyList([
+    '!@$%^*'
+  ])
+  t.equals(shouldCollectEvent(parseUrl('http://foo.com')), true)
+  t.equals(shouldCollectEvent(parseUrl('http://bar.com')), true)
 
+  setDenyList([
+    '!@$%^*',
+    'foo.com' 
+  ])
+  t.equals(shouldCollectEvent(parseUrl('http://foo.com')), false)
+  t.equals(shouldCollectEvent(parseUrl('http://bar.com')), true)
+
+  t.end()
+})

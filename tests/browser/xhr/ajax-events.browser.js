@@ -15,8 +15,8 @@ const storeXhr = require('../../../feature/xhr/aggregate/index')
 const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
 const prepareHarvest = require('../../../feature/xhr/aggregate/index').prepareHarvest
 
-function exceedsSizeLimit(payload) {
-  return window.Blob ? new Blob([payload]).size > loader.maxPayloadSize : false
+function exceedsSizeLimit(payload, maxPayloadSize) {
+  return payload.length * 2 > maxPayloadSize
 }
 
 test('storeXhr for a SPA ajax request buffers in spaAjaxEvents', function (t) {
@@ -286,7 +286,7 @@ test('prepareHarvest correctly serializes a very large AjaxRequest events payloa
   // we just want to check that the list of AJAX events to be sent contains multiple items because it exceeded the allowed byte limit,
   // and that each list item is smaller than the limit
   t.ok(decodedEvents.length > 1, 'Large Payload of AJAX Events are broken into multiple chunks (' + decodedEvents.length + ')')
-  t.ok(serializedPayload.every(sp => !exceedsSizeLimit(sp)), 'All AJAX chunks are less than the maxPayloadSize property (' + maxPayloadSize + ')')
+  t.ok(serializedPayload.every(sp => !exceedsSizeLimit(sp, maxPayloadSize)), 'All AJAX chunks are less than the maxPayloadSize property (' + maxPayloadSize + ')')
 
   decodedEvents.forEach((payload, idx) => {
     payload.forEach(event => {

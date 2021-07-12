@@ -10,15 +10,11 @@
     {loader}
     {config}
     <script type="text/javascript">
-        var loaded = [];
-        function getRandomNumber(){ Math.floor(Math.random() * 10000) }
         var count = 0;
         function sendHello() {
           console.log("send hello")
           var xhr = new XMLHttpRequest()
-              // const num = getRandomNumber();
               xhr.open('GET', `/json`)
-
               xhr.setRequestHeader('Content-Type', 'text/plain')
               xhr.onload = function (e) {
                   if (count < 50) {
@@ -26,12 +22,11 @@
                       sendHello();
                   }
               }
-
               xhr.send()
         }
         setTimeout(function() {
               sendHello()
-        }, 1000)
+        }, 2000)
     </script>
     <script>
       

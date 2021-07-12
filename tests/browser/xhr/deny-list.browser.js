@@ -65,7 +65,9 @@ test('path is blocking only with exact match', function(t) {
   setDenyList([
     'foo.com/a'
   ])
+
   t.equals(shouldCollectEvent(parseUrl('http://foo.com/a')), false)
+  t.equals(shouldCollectEvent(parseUrl('http://foo.com')), true)
   t.equals(shouldCollectEvent(parseUrl('http://foo.com/b')), true)
   t.equals(shouldCollectEvent(parseUrl('http://foo.com/a/b')), true)
 
@@ -128,6 +130,23 @@ test('invalid values', function(t) {
   ])
   t.equals(shouldCollectEvent(parseUrl('http://foo.com')), false)
   t.equals(shouldCollectEvent(parseUrl('http://bar.com')), true)
+
+  t.end()
+})
+
+test('URL that contains protocol multiple times', function(t) {
+  setDenyList([
+    'https://example.com/http://foo.bar/'
+  ])
+
+  t.equals(shouldCollectEvent(parseUrl('https://example.com/http://foo.bar/')), false)
+  t.equals(shouldCollectEvent(parseUrl('https://example.com')), true)
+
+  setDenyList([
+    'example.com'
+  ])
+
+  t.equals(shouldCollectEvent(parseUrl('https://example.com/http://foo.bar/')), false)
 
   t.end()
 })

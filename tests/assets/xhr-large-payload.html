@@ -14,7 +14,7 @@
         function sendHello() {
           console.log("send hello")
           var xhr = new XMLHttpRequest()
-              xhr.open('GET', `/json`)
+              xhr.open('GET', '/json')
               xhr.setRequestHeader('Content-Type', 'text/plain')
               xhr.onload = function (e) {
                   if (count < 50) {

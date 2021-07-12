@@ -12,7 +12,6 @@
     <script type="text/javascript">
         var count = 0;
         function sendHello() {
-          console.log("send hello")
           var xhr = new XMLHttpRequest()
               xhr.open('GET', '/json')
               xhr.setRequestHeader('Content-Type', 'text/plain')
@@ -28,10 +27,6 @@
               sendHello()
         }, 2000)
     </script>
-    <script>
-      
-    
-  </script>
   </head>
   <body>
     This page sends 3000 XHRs after the window has loaded.

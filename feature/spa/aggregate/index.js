@@ -5,6 +5,7 @@
 
 var register = require('../../../agent/register-handler')
 var parseUrl = require('../../xhr/instrument/parse-url')
+var shouldCollectEvent = require('../../xhr/aggregate/deny-list').shouldCollectEvent
 var harvest = require('../../../agent/harvest')
 var HarvestScheduler = require('../../../agent/harvest-scheduler')
 var serializer = require('./serializer')
@@ -288,6 +289,11 @@ baseEE.on('feat-spa', function () {
   register.on(baseEE, 'xhr-resolved', function () {
     var node = this[SPA_NODE]
     if (node) {
+      if (!shouldCollectEvent(this.params)) {
+        node.cancel()
+        return
+      }
+
       var attrs = node.attrs
       attrs.params = this.params
       attrs.metrics = this.metrics
@@ -331,8 +337,7 @@ baseEE.on('feat-spa', function () {
     if (node) {
       // if no status is set then cb never fired - so it's not a valid JSONP
       if (this.status === null) {
-        node[INTERACTION][REMAINING]--
-        node.cancelled = true
+        node.cancel()
         return
       }
       var attrs = node.attrs
@@ -381,8 +386,7 @@ baseEE.on('feat-spa', function () {
     var node = this[SPA_NODE]
     if (node) {
       if (err) {
-        node.cancelled = true
-        node[INTERACTION][REMAINING]--
+        node.cancel()
         return
       }
 

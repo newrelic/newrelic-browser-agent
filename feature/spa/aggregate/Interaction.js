@@ -12,8 +12,6 @@ var originals = NREUM.o
 var originalSetTimeout = originals.ST
 var originalClearTimeout = originals.CT
 
-var REMAINING = 'remaining'
-
 var lastId = 0
 
 module.exports = Interaction
@@ -22,7 +20,7 @@ function Interaction (eventName, timestamp, url, routeName, onFinished) {
   this.id = ++lastId
   this.eventName = eventName
   this.nodes = 0
-  this[REMAINING] = 0
+  this.remaining = 0
   this.finishTimer = null
   this.checkingFinish = false
   this.lastCb = this.lastFinish = timestamp
@@ -45,7 +43,7 @@ var InteractionPrototype = Interaction.prototype
 InteractionPrototype.checkFinish = function checkFinish (url, routeName) {
   var interaction = this
 
-  if (interaction[REMAINING]) {
+  if (interaction.remaining) {
     interaction._resetFinishCheck()
     return
   }
@@ -65,7 +63,7 @@ InteractionPrototype.checkFinish = function checkFinish (url, routeName) {
     interaction.checkingFinish = false
     interaction.finishTimer = originalSetTimeout(function () {
       interaction.finishTimer = null
-      if (!interaction[REMAINING]) interaction.finish()
+      if (!interaction.remaining) interaction.finish()
     }, 1)
   }, 0)
 }

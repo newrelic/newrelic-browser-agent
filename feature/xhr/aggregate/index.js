@@ -16,6 +16,8 @@ var baseEE = require('ee')
 var handle = require('handle')
 var config = require('config')
 var HarvestScheduler = require('../../../agent/harvest-scheduler')
+var setDenyList = require('./deny-list').setDenyList
+var shouldCollectEvent = require('./deny-list').shouldCollectEvent
 
 var ajaxEvents = []
 var spaAjaxEvents = {}
@@ -25,6 +27,8 @@ var sentAjaxEvents = []
 if (!loader.features.xhr) return
 
 var harvestTimeSeconds = config.getConfiguration('ajax.harvestTimeSeconds') || 60
+
+setDenyList(config.getConfiguration('ajax.deny_list'))
 
 baseEE.on('feat-err', function() {
   register('xhr', storeXhr)
@@ -40,6 +44,8 @@ baseEE.on('feat-err', function() {
 module.exports = storeXhr
 module.exports.prepareHarvest = prepareHarvest
 module.exports.getStoredEvents = getStoredEvents
+module.exports.shouldCollectEvent = shouldCollectEvent
+module.exports.setDenyList = setDenyList
 
 function getStoredEvents() {
   return {
@@ -63,6 +69,10 @@ function storeXhr(params, metrics, startTime, endTime, type) {
 
   // store as metric
   agg.store('xhr', hash, params, metrics)
+
+  if (!shouldCollectEvent(params)) {
+    return
+  }
 
   var event = {
     method: params.method,

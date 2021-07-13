@@ -15,6 +15,10 @@ const storeXhr = require('../../../feature/xhr/aggregate/index')
 const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
 const prepareHarvest = require('../../../feature/xhr/aggregate/index').prepareHarvest
 
+function exceedsSizeLimit(payload, maxPayloadSize) {
+  return payload.length * 2 > maxPayloadSize
+}
+
 test('storeXhr for a SPA ajax request buffers in spaAjaxEvents', function (t) {
   const interaction = { id: 0 }
   const context = {
@@ -179,36 +183,199 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
   }
 
   const serializedPayload = prepareHarvest({retry: false})
-  const decodedEvents = qp.decode(serializedPayload.body.e)
+  // serializedPayload from ajax comes back as an array of bodies now, so we just need to decode each one and flatten
+  // this decoding does not happen elsewhere in the app so this only needs to happen here in this specific test
+  const decodedEvents = serializedPayload.map(sp => qp.decode(sp.body.e))
 
-  decodedEvents.forEach(event => {
-    t.equal(event.children.length, expectedCustomAttrCount, 'ajax event has expected number of custom attributes')
+  decodedEvents.forEach(payload => {
+    payload.forEach(event => {
+      t.equal(event.children.length, expectedCustomAttrCount, 'ajax event has expected number of custom attributes')
 
     // validate custom attribute values
-    event.children.forEach(attribute => {
-      switch (attribute.type) {
-        case 'stringAttribute':
-        case 'doubleAttribute':
-          t.ok(expectedCustomAttributes[attribute.key] === attribute.value, 'string & num custom attributes encoded')
-          break
-        case 'trueAttribute':
-          t.ok(expectedCustomAttributes[attribute.key] === true, 'true custom attribute encoded')
-          break
-        case 'falseAttribute':
-          t.ok(expectedCustomAttributes[attribute.key] === false, 'false custom attribute encoded')
-          break
-        case 'nullAttribute':
+      event.children.forEach(attribute => {
+        switch (attribute.type) {
+          case 'stringAttribute':
+          case 'doubleAttribute':
+            t.ok(expectedCustomAttributes[attribute.key] === attribute.value, 'string & num custom attributes encoded')
+            break
+          case 'trueAttribute':
+            t.ok(expectedCustomAttributes[attribute.key] === true, 'true custom attribute encoded')
+            break
+          case 'falseAttribute':
+            t.ok(expectedCustomAttributes[attribute.key] === false, 'false custom attribute encoded')
+            break
+          case 'nullAttribute':
           // undefined is treated as null in querypack
-          t.ok(expectedCustomAttributes[attribute.key] === undefined, 'undefined custom attributes encoded')
-          break
-        default:
-          t.fail('unexpected custom attribute type')
-      }
-    })
-    delete event.children
+            t.ok(expectedCustomAttributes[attribute.key] === undefined, 'undefined custom attributes encoded')
+            break
+          default:
+            t.fail('unexpected custom attribute type')
+        }
+      })
+      delete event.children
 
-    t.deepEqual(event, expected, 'event attributes serialized correctly')
+      t.deepEqual(event, expected, 'event attributes serialized correctly')
+    })
   })
+
+  // clear ajaxEventsBuffer
+  prepareHarvest()
+
+  t.end()
+})
+
+test('prepareHarvest correctly serializes a very large AjaxRequest events payload', function (t) {
+  const context = { spaNode: undefined }
+  let callNo = 0
+  const expected = () => ({
+    type: 'ajax',
+    start: 0,
+    end: 30,
+    callbackEnd: 30,
+    callbackDuration: 0,
+    domain: 'https://example.com',
+    path: `/pathname/${callNo}`,
+    method: 'PUT',
+    status: 200,
+    requestedWith: 'XMLHttpRequest',
+    requestBodySize: 128,
+    responseBodySize: 256,
+    nodeId: '0',
+    guid: null,
+    traceId: null,
+    timestamp: null
+  })
+  const ajaxEvent = () => [
+    { // params
+      method: expected().method,
+      status: expected().status,
+      host: expected().domain,
+      pathname: expected().path
+    },
+    { // metrics
+      txSize: expected().requestBodySize,
+      rxSize: expected().responseBodySize,
+      cbTime: expected().callbackDuration
+    },
+    expected().start,
+    expected().end,
+    expected().requestedWith
+  ]
+
+  for (var i = 0; i < 10; i++) {
+    storeXhr.apply(context, ajaxEvent())
+    callNo++
+  }
+
+  const expectedCustomAttributes = {
+    customStringAttribute: 'customStringAttribute',
+    customNumAttribute: 2,
+    customBooleanAttribute: true,
+    undefinedCustomAttribute: undefined
+  }
+
+  loader.info = {
+    jsAttributes: expectedCustomAttributes
+  }
+
+  const maxPayloadSize = 500
+
+  const serializedPayload = prepareHarvest({retry: false, maxPayloadSize})
+  const decodedEvents = serializedPayload.map(sp => qp.decode(sp.body.e))
+
+  // we just want to check that the list of AJAX events to be sent contains multiple items because it exceeded the allowed byte limit,
+  // and that each list item is smaller than the limit
+  t.ok(decodedEvents.length > 1, 'Large Payload of AJAX Events are broken into multiple chunks (' + decodedEvents.length + ')')
+  t.ok(serializedPayload.every(sp => !exceedsSizeLimit(sp, maxPayloadSize)), 'All AJAX chunks are less than the maxPayloadSize property (' + maxPayloadSize + ')')
+
+  decodedEvents.forEach((payload, idx) => {
+    payload.forEach(event => {
+      t.ok(event.children.every(attribute => {
+        switch (attribute.type) {
+          case 'stringAttribute':
+          case 'doubleAttribute':
+            return expectedCustomAttributes[attribute.key] === attribute.value
+          case 'trueAttribute':
+            return expectedCustomAttributes[attribute.key] === true
+          case 'falseAttribute':
+            return expectedCustomAttributes[attribute.key] === false
+          case 'nullAttribute':
+            return expectedCustomAttributes[attribute.key] === undefined
+          default:
+            return false
+        }
+      }), 'Custom attributes are accounted for in chunked AJAX payload (' + idx + ')')
+    })
+  })
+
+  // clear ajaxEventsBuffer
+  prepareHarvest()
+
+  t.end()
+})
+
+test('prepareHarvest correctly exits if maxPayload is too small', function (t) {
+  const context = { spaNode: undefined }
+  let callNo = 0
+  const expected = () => ({
+    type: 'ajax',
+    start: 0,
+    end: 30,
+    callbackEnd: 30,
+    callbackDuration: 0,
+    domain: 'https://example.com',
+    path: `/pathname/${callNo}`,
+    method: 'PUT',
+    status: 200,
+    requestedWith: 'XMLHttpRequest',
+    requestBodySize: 128,
+    responseBodySize: 256,
+    nodeId: '0',
+    guid: null,
+    traceId: null,
+    timestamp: null
+  })
+  const ajaxEvent = () => [
+    { // params
+      method: expected().method,
+      status: expected().status,
+      host: expected().domain,
+      pathname: expected().path
+    },
+    { // metrics
+      txSize: expected().requestBodySize,
+      rxSize: expected().responseBodySize,
+      cbTime: expected().callbackDuration
+    },
+    expected().start,
+    expected().end,
+    expected().requestedWith
+  ]
+
+  for (var i = 0; i < 10; i++) {
+    storeXhr.apply(context, ajaxEvent())
+    callNo++
+  }
+
+  const expectedCustomAttributes = {
+    customStringAttribute: 'customStringAttribute',
+    customNumAttribute: 2,
+    customBooleanAttribute: true,
+    undefinedCustomAttribute: undefined
+  }
+
+  loader.info = {
+    jsAttributes: expectedCustomAttributes
+  }
+
+  // this is too small for any AJAX payload to fit in
+  const maxPayloadSize = 10
+
+  const serializedPayload = prepareHarvest({retry: false, maxPayloadSize})
+
+  // we just want to check that the list of AJAX events to be sent contains multiple items because it exceeded the allowed byte limit,
+  // and that each list item is smaller than the limit
+  t.ok(serializedPayload.length === 0, 'Payload of AJAX Events that are each too small for limit will be dropped')
 
   // clear ajaxEventsBuffer
   prepareHarvest()

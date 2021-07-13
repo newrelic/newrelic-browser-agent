@@ -108,24 +108,24 @@ testDriver.test('final harvest doesnt append pageHide if already previously reco
   let start = Date.now()
 
   Promise.all([loadPromise, router.expectRum()])
-      .then(() => {
-        const clickPromise = browser
-          .elementById('btn1').click()
-          .get(router.assetURL('/'))
-        const timingsPromise = router.expectTimings()
-        return Promise.all([timingsPromise, clickPromise])
-      })
-      .then(([{body, query}]) => {
-        const timings = querypack.decode(body && body.length ? body : query.e)
-        let duration = Date.now() - start
-        t.ok(timings.length > 0, 'there should be at least one timing metric')
-        const pageHide = timings.filter(t => t.name === 'pageHide')
-        t.ok(timings && pageHide.length === 1, 'there should be ONLY ONE pageHide timing')
-        t.ok(pageHide[0].value > 0, 'value should be a positive number')
-        t.ok(pageHide[0].value <= duration, 'value should not be larger than time since start of the test')
-        t.end()
-      })
-      .catch(fail)
+    .then(() => {
+      const clickPromise = browser
+        .elementById('btn1').click()
+        .get(router.assetURL('/'))
+      const timingsPromise = router.expectTimings()
+      return Promise.all([timingsPromise, clickPromise])
+    })
+    .then(([{body, query}]) => {
+      const timings = querypack.decode(body && body.length ? body : query.e)
+      let duration = Date.now() - start
+      t.ok(timings.length > 0, 'there should be at least one timing metric')
+      const pageHide = timings.filter(t => t.name === 'pageHide')
+      t.ok(timings && pageHide.length === 1, 'there should be ONLY ONE pageHide timing')
+      t.ok(pageHide[0].value > 0, 'value should be a positive number')
+      t.ok(pageHide[0].value <= duration, 'value should not be larger than time since start of the test')
+      t.end()
+    })
+    .catch(fail)
 
   function fail (err) {
     t.error(err)

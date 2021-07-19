@@ -1,8 +1,8 @@
 ## v1210
 
-* Staging release date: TBD
-* Production APM-injected release date: TBD
-* Production Standalone release date: TBD
+* Staging release date: 07/01/2021
+* Production APM-injected release date: 07/06/2021
+* Production Standalone release date: 07/19/2021
 
 
 ### PageHide PageViewTiming events are now accounted for during page unload events

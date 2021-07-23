@@ -83,8 +83,8 @@ function storeXhr(params, metrics, startTime, endTime, type) {
     requestSize: metrics.txSize,
     responseSize: metrics.rxSize,
     type: type,
-    startTime: startTime,
-    endTime: endTime,
+    startTime: startTime && endTime ? startTime : metrics.time,
+    endTime: startTime && endTime ? endTime : metrics.time + metrics.duration,
     callbackDuration: metrics.cbTime
   }
 

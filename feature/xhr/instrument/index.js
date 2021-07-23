@@ -298,6 +298,7 @@ ee.on('fetch-done', function (err, res) {
 
 // Create report for XHR request that has finished
 function end (xhr) {
+  this.endTime = this.endTime || loader.now()
   var params = this.params
   var metrics = this.metrics
 

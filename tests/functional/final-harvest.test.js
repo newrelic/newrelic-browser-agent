@@ -239,7 +239,11 @@ testDriver.test('final harvest sends timings data', reliableFinalHarvest, functi
 // It does not check all of them, just errors and resources.  This is sufficient for the
 // test.  Sending more than that makes the test very fragile on some platforms.
 testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stnSupported), function (t, browser, router) {
-  let url = router.assetURL('final-harvest-timings.html')
+  let url = router.assetURL('final-harvest-timings.html', {
+    init: {
+      ajax: { deny_list: ['*'] }
+    }
+  })
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
 
@@ -289,6 +293,7 @@ testDriver.test('final harvest sends ajax events', reliableFinalHarvest, functio
       let eventsPromise = router.expectAjaxEvents()
 
       let domPromise = browser
+        .setAsyncScriptTimeout(10000) // the default is too low for IE
         .elementById('btnGenerate')
         .click()
         .waitForConditionInBrowser('window.ajaxCallsDone == true')

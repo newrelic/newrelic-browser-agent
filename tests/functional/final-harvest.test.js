@@ -278,3 +278,36 @@ testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stn
     t.end()
   }
 })
+
+testDriver.test('final harvest sends ajax events', reliableFinalHarvest, function (t, browser, router) {
+  let url = router.assetURL('final-harvest-ajax.html', { loader: 'spa' })
+  let loadPromise = browser.safeGet(url).catch(fail)
+  let rumPromise = router.expectRum()
+
+  Promise.all([rumPromise, loadPromise])
+    .then(() => {
+      let eventsPromise = router.expectAjaxEvents()
+
+      let domPromise = browser
+        .elementById('btnGenerate')
+        .click()
+        .waitForConditionInBrowser('window.ajaxCallsDone == true')
+        .get(router.assetURL('/'))
+
+      return Promise.all([eventsPromise, domPromise]).then(([data, clicked]) => {
+        return data
+      })
+    })
+    .then(({body, query}) => {
+      const events = querypack.decode(body && body.length ? body : query.e)
+      t.ok(events.length > 0, 'there should be at least one ajax call')
+      t.equal(events[0].type, 'ajax', 'first node is a ajax node')
+      t.end()
+    })
+    .catch(fail)
+
+  function fail (err) {
+    t.error(err)
+    t.end()
+  }
+})

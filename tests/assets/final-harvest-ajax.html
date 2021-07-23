@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Final Harvest Test</title>
+    {config}
+    {loader}
+  </head>
+  <body>
+    <div>This page is used for generating harvest data.</div>
+    <button id="btnGenerate" onclick="generateAjaxEvents();">generate ajax events</button>
+
+    <script type="text/javascript">
+      function generateAjaxEvents() {
+        var xhrDone = false
+        var xhr = new XMLHttpRequest()
+        xhr.open('GET', '/json')
+        xhr.addEventListener('load', function () {
+          return window.ajaxCallsDone = true
+        })
+        xhr.send()
+      }
+    </script>
+  </body>
+</html>

@@ -18,10 +18,12 @@ var config = require('config')
 var HarvestScheduler = require('../../../agent/harvest-scheduler')
 var setDenyList = require('./deny-list').setDenyList
 var shouldCollectEvent = require('./deny-list').shouldCollectEvent
+var subscribeToUnload = require('../../../agent/unload')
 
 var ajaxEvents = []
 var spaAjaxEvents = {}
 var sentAjaxEvents = []
+var scheduler
 
 // bail if not instrumented
 if (!loader.features.xhr) return
@@ -38,8 +40,10 @@ baseEE.on('feat-err', function() {
     return { body: agg.take([ 'xhr' ]) }
   })
 
-  var scheduler = new HarvestScheduler(loader, 'events', { onFinished: onEventsHarvestFinished, getPayload: prepareHarvest })
+  scheduler = new HarvestScheduler(loader, 'events', { onFinished: onEventsHarvestFinished, getPayload: prepareHarvest })
   scheduler.startTimer(harvestTimeSeconds)
+
+  subscribeToUnload(finalHarvest)
 })
 
 module.exports = storeXhr
@@ -167,6 +171,10 @@ function onEventsHarvestFinished(result) {
     ajaxEvents = ajaxEvents.concat(sentAjaxEvents)
     sentAjaxEvents = []
   }
+}
+
+function finalHarvest() {
+  scheduler.runHarvest({ unload: true })
 }
 
 function splitChunks(arr, chunkSize) {

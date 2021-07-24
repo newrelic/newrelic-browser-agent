@@ -21,6 +21,9 @@ let reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest'
 let excludeUnreliableResourcesHarvest = new BrowserMatcher()
   .exclude('ie')
 
+let doNotSupportWaitForConditionInBrowser = new BrowserMatcher()
+  .exclude('safari', '<=10.0')
+
 let reliableResourcesHarvest = reliableFinalHarvest.and(excludeUnreliableResourcesHarvest)
 
 testDriver.test('final harvest sends page action', reliableFinalHarvest, function (t, browser, router) {
@@ -283,7 +286,7 @@ testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stn
   }
 })
 
-testDriver.test('final harvest sends ajax events', reliableFinalHarvest, function (t, browser, router) {
+testDriver.test('final harvest sends ajax events', reliableFinalHarvest.and(doNotSupportWaitForConditionInBrowser), function (t, browser, router) {
   let url = router.assetURL('final-harvest-ajax.html', { loader: 'spa' })
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()

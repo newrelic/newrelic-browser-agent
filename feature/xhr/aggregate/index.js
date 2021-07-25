@@ -75,6 +75,8 @@ function storeXhr(params, metrics, startTime, endTime, type) {
     return
   }
 
+  var useMetrics = startTime === undefined || startTime === null || startTime < 0 || !endTime || endTime < startTime
+
   var event = {
     method: params.method,
     status: params.status,
@@ -83,8 +85,8 @@ function storeXhr(params, metrics, startTime, endTime, type) {
     requestSize: metrics.txSize,
     responseSize: metrics.rxSize,
     type: type,
-    startTime: startTime && endTime ? startTime : metrics.time,
-    endTime: startTime && endTime ? endTime : metrics.time + metrics.duration,
+    startTime: !useMetrics ? startTime : metrics.time,
+    endTime: !useMetrics ? endTime : metrics.time + metrics.duration,
     callbackDuration: metrics.cbTime
   }
 

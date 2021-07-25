@@ -224,6 +224,59 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
   t.end()
 })
 
+test('prepareHarvest correctly serializes an AjaxRequest events that is lacking an endTime', function (t) {
+  const context = { spaNode: undefined }
+  const expected = {
+    type: 'ajax',
+    start: 0,
+    callbackEnd: 30,
+    callbackDuration: 0,
+    domain: 'https://example.com',
+    path: '/pathname',
+    method: 'PUT',
+    status: 200,
+    requestedWith: 'XMLHttpRequest',
+    requestBodySize: 128,
+    responseBodySize: 256,
+    nodeId: '0',
+    guid: null,
+    traceId: null,
+    timestamp: null
+  }
+  const ajaxEvent = [
+    { // params
+      method: expected.method,
+      status: expected.status,
+      host: expected.domain,
+      pathname: expected.path
+    },
+    { // metrics
+      txSize: expected.requestBodySize,
+      rxSize: expected.responseBodySize,
+      cbTime: expected.callbackDuration,
+      time: 1000,
+      duration: 1100
+    },
+    expected.start,
+    undefined,
+    expected.requestedWith
+  ]
+
+  storeXhr.apply(context, ajaxEvent)
+  storeXhr.apply(context, ajaxEvent)
+
+  const serializedPayload = prepareHarvest({retry: false})
+  // serializedPayload from ajax comes back as an array of bodies now, so we just need to decode each one and flatten
+  // this decoding does not happen elsewhere in the app so this only needs to happen here in this specific test
+  const decodedEvents = serializedPayload.map(sp => qp.decode(sp.body.e))
+  t.ok(!!decodedEvents && !!decodedEvents.length)
+
+  // clear ajaxEventsBuffer
+  prepareHarvest()
+
+  t.end()
+})
+
 test('prepareHarvest correctly serializes a very large AjaxRequest events payload', function (t) {
   const context = { spaNode: undefined }
   let callNo = 0

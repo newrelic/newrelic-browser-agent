@@ -242,11 +242,7 @@ testDriver.test('final harvest sends timings data', reliableFinalHarvest, functi
 // It does not check all of them, just errors and resources.  This is sufficient for the
 // test.  Sending more than that makes the test very fragile on some platforms.
 testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stnSupported), function (t, browser, router) {
-  let url = router.assetURL('final-harvest-timings.html', {
-    init: {
-      ajax: { deny_list: ['*'] }
-    }
-  })
+  let url = router.assetURL('final-harvest-timings.html')
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
 
@@ -254,7 +250,6 @@ testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stn
     .then(() => {
       t.equal(router.seenRequests.resources, 1, 'resources harvest is sent on startup')
       t.equal(router.seenRequests.errors, 0, 'no errors harvest yet')
-      t.equal(router.seenRequests.events, 0, 'no events harvest yet')
 
       let resourcesPromise = router.expectResources()
       let errorsPromise = router.expectErrors()
@@ -275,7 +270,6 @@ testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stn
     .then(() => {
       t.equal(router.seenRequests.resources, 2, 'received second resources harvest')
       t.equal(router.seenRequests.errors, 1, 'received one errors harvest')
-      t.equal(router.seenRequests.events, 1, 'received one events/timing harvest')
       t.end()
     })
     .catch(fail)

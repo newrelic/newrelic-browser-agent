@@ -49,7 +49,7 @@ HarvestScheduler.prototype.runHarvest = function runHarvest(opts) {
   var scheduler = this
 
   if (this.opts.getPayload) {
-    var submitMethod = harvest.getSubmitMethod(this.endpoint)
+    var submitMethod = harvest.getSubmitMethod(this.endpoint, opts)
     if (!submitMethod) return false
 
     var retry = submitMethod.method === submitData.xhr

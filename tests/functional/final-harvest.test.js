@@ -21,6 +21,9 @@ let reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest'
 let excludeUnreliableResourcesHarvest = new BrowserMatcher()
   .exclude('ie')
 
+let doNotSupportWaitForConditionInBrowser = new BrowserMatcher()
+  .exclude('safari', '<=10.0')
+
 let reliableResourcesHarvest = reliableFinalHarvest.and(excludeUnreliableResourcesHarvest)
 
 testDriver.test('final harvest sends page action', reliableFinalHarvest, function (t, browser, router) {
@@ -247,7 +250,6 @@ testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stn
     .then(() => {
       t.equal(router.seenRequests.resources, 1, 'resources harvest is sent on startup')
       t.equal(router.seenRequests.errors, 0, 'no errors harvest yet')
-      t.equal(router.seenRequests.events, 0, 'no events harvest yet')
 
       let resourcesPromise = router.expectResources()
       let errorsPromise = router.expectErrors()
@@ -268,7 +270,40 @@ testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stn
     .then(() => {
       t.equal(router.seenRequests.resources, 2, 'received second resources harvest')
       t.equal(router.seenRequests.errors, 1, 'received one errors harvest')
-      t.equal(router.seenRequests.events, 1, 'received one events/timing harvest')
+      t.end()
+    })
+    .catch(fail)
+
+  function fail (err) {
+    t.error(err)
+    t.end()
+  }
+})
+
+testDriver.test('final harvest sends ajax events', reliableFinalHarvest.and(doNotSupportWaitForConditionInBrowser), function (t, browser, router) {
+  let url = router.assetURL('final-harvest-ajax.html', { loader: 'spa' })
+  let loadPromise = browser.safeGet(url).catch(fail)
+  let rumPromise = router.expectRum()
+
+  Promise.all([rumPromise, loadPromise])
+    .then(() => {
+      let eventsPromise = router.expectAjaxEvents()
+
+      let domPromise = browser
+        .setAsyncScriptTimeout(10000) // the default is too low for IE
+        .elementById('btnGenerate')
+        .click()
+        .waitForConditionInBrowser('window.ajaxCallsDone == true')
+        .get(router.assetURL('/'))
+
+      return Promise.all([eventsPromise, domPromise]).then(([data, clicked]) => {
+        return data
+      })
+    })
+    .then(({body, query}) => {
+      const events = querypack.decode(body && body.length ? body : query.e)
+      t.ok(events.length > 0, 'there should be at least one ajax call')
+      t.equal(events[0].type, 'ajax', 'first node is a ajax node')
       t.end()
     })
     .catch(fail)

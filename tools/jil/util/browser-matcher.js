@@ -292,6 +292,7 @@ features.firstContentfulPaint = new BrowserMatcher()
   .include('chrome', '>=60')
   .include('opera', '>=47')
   .include('firefox', '>=84')
+  .include('ios', '>=14.5')
 
 features.largestContentfulPaint = new BrowserMatcher()
   .exclude('*')

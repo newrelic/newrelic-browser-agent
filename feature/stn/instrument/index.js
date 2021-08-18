@@ -32,6 +32,10 @@ if (loader.disabled) return
 
 loader.features.stn = true
 
+module.exports = {
+  supportsResourceTimingPerfObserver: supportsResourceTimingPerfObserver
+}
+
 // wrap history ap
 require('../../wrap-history')
 
@@ -83,21 +87,26 @@ ee.on(PUSH_STATE + END, function (args) {
   handle('bstHist', [location.pathname + location.hash, this.startPath, this.time])
 })
 
-function observeResourceTimings () {
-  if (
-    'PerformanceObserver' in window &&
+function supportsResourceTimingPerfObserver () {
+  return 'PerformanceObserver' in window &&
     typeof window.PerformanceObserver === 'function' && 
     'supportedEntryTypes' in window.PerformanceObserver &&
     window.PerformanceObserver.supportedEntryTypes instanceof Array
     && window.PerformanceObserver.supportedEntryTypes.includes('resource')
-  ) {
-    var observer = new PerformanceObserver(function (list, observer) {
-      handle(BST_RESOURCE, [list.getEntries()])
-    })
-    
-    try {
-      observer.observe({entryTypes: ['resource']})
-    } catch (e) {}
+}
+
+function observeResourceTimings () {
+  var observer = new PerformanceObserver(function (list, observer) {
+    const entries = list.getEntries()
+    console.log('new resource observed', entries)
+
+    handle(BST_RESOURCE, [entries])
+  })
+  
+  try {
+    observer.observe({entryTypes: ['resource']})
+  } catch (e) {
+    console.log('failed to observe resourceTimings', e)
   }
 }
 
@@ -112,17 +121,21 @@ function onResourceTimingBufferFull (e) {
   try {
     window.performance[REMOVE_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
   } catch (e) {}
-  
-  // for supported browsers, start recording using observers
-  observeResourceTimings()
 }
 
-// collect resource timings when the buffer is full
-if (ADD_EVENT_LISTENER in window.performance) {
-  if (window.performance['c' + learResourceTimings]) {
-    window.performance[ADD_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
-  } else {
-    window.performance[ADD_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
+if (supportsResourceTimingPerfObserver()) {
+  // capture initial resources, in case our observer missed anything
+  handle(BST_RESOURCE, [window.performance.getEntriesByType('resource')])
+
+  observeResourceTimings()
+} else {
+  // collect resource timings once when buffer is full
+  if (ADD_EVENT_LISTENER in window.performance) {
+    if (window.performance['c' + learResourceTimings]) {
+      window.performance[ADD_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
+    } else {
+      window.performance[ADD_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
+    }
   }
 }
 

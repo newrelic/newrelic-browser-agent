@@ -12,6 +12,7 @@ var reduce = require('reduce')
 var stringify = require('../../../agent/stringify')
 var slice = require('lodash._slice')
 var parseUrl = require('../../xhr/instrument/parse-url')
+var supportsResourceTimingPerfObserver = require('../instrument/index').supportsResourceTimingPerfObserver
 var config = require('config')
 
 if (!harvest.xhrUsable || !loader.xhrWrappable) return
@@ -183,7 +184,7 @@ function evtName (type) {
   var name = type
 
   mapOwn(rename, function (key, val) {
-    if (type in val) name = key
+    if (type in val) name = key;
   })
 
   return name
@@ -224,6 +225,8 @@ function storeHist (path, old, time) {
 
 var laststart = 0
 
+// called from instrumentation when observer fires or once when legacy resourcetiming buffer fills
+// called from takeSTNs for legacy resourcetiming buffer method
 function storeResources (resources) {
   if (!resources || resources.length === 0) return
 
@@ -293,7 +296,12 @@ function mergeSTNs(key, nodes) {
 }
 
 function takeSTNs (retry) {
-  storeResources(window.performance.getEntriesByType('resource'))
+  // if the observer is not being used, this checks resourcetiming buffer every harvest
+  // TODO: does not currently stop checking buffer, even if it's full (previously we cleared the buffer)
+  if (!supportsResourceTimingPerfObserver()) {
+    storeResources(window.performance.getEntriesByType('resource'))
+  }
+
   var stns = reduce(mapOwn(trace, function (name, nodes) {
     if (!(name in toAggregate)) return nodes
 

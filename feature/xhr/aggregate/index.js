@@ -31,7 +31,7 @@ if (!loader.features.xhr) return
 var harvestTimeSeconds = config.getConfiguration('ajax.harvestTimeSeconds') || 60
 var MAX_PAYLOAD_SIZE = config.getConfiguration('ajax.maxPayloadSize') || 1000000
 
-setDenyList(config.getConfiguration('ajax.deny_list'))
+if (allAjaxIsEnabled()) setDenyList(config.getConfiguration('ajax.deny_list'))
 
 baseEE.on('feat-err', function() {
   register('xhr', storeXhr)
@@ -98,7 +98,7 @@ function storeXhr(params, metrics, startTime, endTime, type) {
     spaAjaxEvents[interactionId] = spaAjaxEvents[interactionId] || []
     spaAjaxEvents[interactionId].push(event)
   } else {
-    ajaxEvents.push(event)
+    if (allAjaxIsEnabled()) ajaxEvents.push(event)
   }
 }
 
@@ -109,7 +109,7 @@ baseEE.on('interactionSaved', function (interaction) {
 })
 
 baseEE.on('interactionDiscarded', function (interaction) {
-  if (!spaAjaxEvents[interaction.id]) return
+  if (!spaAjaxEvents[interaction.id] || !allAjaxIsEnabled()) return
 
   spaAjaxEvents[interaction.id].forEach(function (item) {
     // move it from the spaAjaxEvents buffer to the ajaxEvents buffer for harvesting here
@@ -121,7 +121,7 @@ baseEE.on('interactionDiscarded', function (interaction) {
 function prepareHarvest(options) {
   options = options || {}
 
-  if (ajaxEvents.length === 0) {
+  if (ajaxEvents.length === 0 || !allAjaxIsEnabled()) {
     return null
   }
 
@@ -167,7 +167,7 @@ function getPayload (events, maxPayloadSize, chunks) {
 }
 
 function onEventsHarvestFinished(result) {
-  if (result.retry && sentAjaxEvents.length > 0) {
+  if (result.retry && sentAjaxEvents.length > 0 && allAjaxIsEnabled()) {
     ajaxEvents = ajaxEvents.concat(sentAjaxEvents)
     sentAjaxEvents = []
   }
@@ -232,4 +232,8 @@ function Chunk (events) {
     maxPayloadSize = maxPayloadSize || MAX_PAYLOAD_SIZE
     return this.payload.length * 2 > maxPayloadSize
   }
+}
+
+function allAjaxIsEnabled() {
+  return (!!config.getConfiguration('ajax.enabled') || false)
 }

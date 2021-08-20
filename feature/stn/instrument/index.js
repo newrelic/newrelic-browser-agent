@@ -98,16 +98,13 @@ function supportsResourceTimingPerfObserver () {
 function observeResourceTimings () {
   var observer = new PerformanceObserver(function (list, observer) {
     const entries = list.getEntries()
-    console.log('new resource observed', entries)
 
     handle(BST_RESOURCE, [entries])
   })
   
   try {
     observer.observe({entryTypes: ['resource']})
-  } catch (e) {
-    console.log('failed to observe resourceTimings', e)
-  }
+  } catch (e) {}
 }
 
 function onResourceTimingBufferFull (e) {

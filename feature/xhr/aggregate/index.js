@@ -40,10 +40,12 @@ baseEE.on('feat-err', function() {
     return { body: agg.take([ 'xhr' ]) }
   })
 
-  scheduler = new HarvestScheduler(loader, 'events', { onFinished: onEventsHarvestFinished, getPayload: prepareHarvest })
-  scheduler.startTimer(harvestTimeSeconds)
+  if (allAjaxIsEnabled()) {
+    scheduler = new HarvestScheduler(loader, 'events', { onFinished: onEventsHarvestFinished, getPayload: prepareHarvest })
+    scheduler.startTimer(harvestTimeSeconds)
 
-  subscribeToUnload(finalHarvest)
+    subscribeToUnload(finalHarvest)
+  }
 })
 
 module.exports = storeXhr
@@ -75,7 +77,7 @@ function storeXhr(params, metrics, startTime, endTime, type) {
   // store as metric
   agg.store('xhr', hash, params, metrics)
 
-  if (!shouldCollectEvent(params)) {
+  if (!shouldCollectEvent(params) || !allAjaxIsEnabled()) {
     return
   }
 
@@ -98,7 +100,7 @@ function storeXhr(params, metrics, startTime, endTime, type) {
     spaAjaxEvents[interactionId] = spaAjaxEvents[interactionId] || []
     spaAjaxEvents[interactionId].push(event)
   } else {
-    if (allAjaxIsEnabled()) ajaxEvents.push(event)
+    ajaxEvents.push(event)
   }
 }
 
@@ -121,7 +123,7 @@ baseEE.on('interactionDiscarded', function (interaction) {
 function prepareHarvest(options) {
   options = options || {}
 
-  if (ajaxEvents.length === 0 || !allAjaxIsEnabled()) {
+  if (ajaxEvents.length === 0) {
     return null
   }
 
@@ -235,5 +237,5 @@ function Chunk (events) {
 }
 
 function allAjaxIsEnabled() {
-  return (!!config.getConfiguration('ajax.enabled') || false)
+  return !!config.getConfiguration('ajax.enabled')
 }

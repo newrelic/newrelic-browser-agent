@@ -5,8 +5,8 @@
 
 module.exports = function supportsResourceTimingPerfObserver () {
   return 'PerformanceObserver' in window &&
-    typeof window.PerformanceObserver === 'function' && 
+    typeof window.PerformanceObserver === 'function' &&
     'supportedEntryTypes' in window.PerformanceObserver &&
-    window.PerformanceObserver.supportedEntryTypes instanceof Array
-    && window.PerformanceObserver.supportedEntryTypes.includes('resource')
+    window.PerformanceObserver.supportedEntryTypes instanceof Array &&
+    window.PerformanceObserver.supportedEntryTypes.includes('resource')
 }

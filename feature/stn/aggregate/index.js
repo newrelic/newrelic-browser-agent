@@ -225,8 +225,6 @@ function storeHist (path, old, time) {
 
 var laststart = 0
 
-// called from instrumentation when observer fires or once when legacy resourcetiming buffer fills
-// called from takeSTNs for legacy resourcetiming buffer method
 function storeResources (resources) {
   if (!resources || resources.length === 0) return
 
@@ -297,7 +295,6 @@ function mergeSTNs(key, nodes) {
 
 function takeSTNs (retry) {
   // if the observer is not being used, this checks resourcetiming buffer every harvest
-  // TODO: does not currently stop checking buffer, even if it's full (previously we cleared the buffer)
   if (!supportsResourceTimingPerfObserver()) {
     storeResources(window.performance.getEntriesByType('resource'))
   }

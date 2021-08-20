@@ -8,9 +8,9 @@ let drain = require('../../../agent/drain')
 
 require('../../../feature/stn/instrument')
 require('../../../feature/xhr/instrument')
+require('../../../feature/xhr/aggregate')
 require('../../../feature/err/instrument')
 require('../../../feature/err/aggregate')
-require('../../../feature/xhr/aggregate')
 
 drain('api')
 

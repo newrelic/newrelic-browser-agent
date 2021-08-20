@@ -184,7 +184,7 @@ function evtName (type) {
   var name = type
 
   mapOwn(rename, function (key, val) {
-    if (type in val) name = key;
+    if (type in val) name = key
   })
 
   return name

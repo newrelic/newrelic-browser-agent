@@ -88,15 +88,13 @@ ee.on(PUSH_STATE + END, function (args) {
   handle('bstHist', [location.pathname + location.hash, this.startPath, this.time])
 })
 
-
-
 function observeResourceTimings () {
-  var observer = new PerformanceObserver(function (list, observer) {
-    const entries = list.getEntries()
+  var observer = new PerformanceObserver(function (list, observer) { // eslint-disable-line no-undef
+    var entries = list.getEntries()
 
     handle(BST_RESOURCE, [entries])
   })
-  
+
   try {
     observer.observe({entryTypes: ['resource']})
   } catch (e) {}
@@ -109,7 +107,7 @@ function onResourceTimingBufferFull (e) {
   try {
     window.performance[REMOVE_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
   } catch (e) {}
-  
+
   try {
     window.performance[REMOVE_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
   } catch (e) {}

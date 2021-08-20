@@ -14,8 +14,6 @@ require('../../../feature/err/aggregate')
 
 drain('api')
 
-let originalPath = window.location.pathname
-
 if ((window.performance &&
   window.performance.timing &&
   window.performance.getEntriesByType)) {
@@ -52,7 +50,6 @@ function runTests () {
     xhr.open('GET', window.location)
     xhr.send()
     xhr.addEventListener('load', () => t.ok(true))
-    console.log('wait for trace node generation test complete')
   })
 
   test('session trace nodes', function (t) {
@@ -79,10 +76,10 @@ function runTests () {
         })
 
         t.ok(match, 'found a match for ' + resource.n + ' resource with source ' + resource.o)
-        
+
         return match
       })
-      
+
       t.ok(identical, 'STN resource nodes match the ResourceTiming API buffer')
       t.end()
     })

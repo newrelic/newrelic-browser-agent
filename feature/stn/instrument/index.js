@@ -12,6 +12,7 @@ var ee = require('ee')
 var handle = require('handle')
 var timerEE = require('../../wrap-timer')
 var rafEE = require('../../wrap-raf')
+var supportsResourceTimingPerfObserver = require('supports-resource-observer')
 
 var learResourceTimings = 'learResourceTimings'
 var ADD_EVENT_LISTENER = 'addEventListener'
@@ -87,13 +88,7 @@ ee.on(PUSH_STATE + END, function (args) {
   handle('bstHist', [location.pathname + location.hash, this.startPath, this.time])
 })
 
-function supportsResourceTimingPerfObserver () {
-  return 'PerformanceObserver' in window &&
-    typeof window.PerformanceObserver === 'function' && 
-    'supportedEntryTypes' in window.PerformanceObserver &&
-    window.PerformanceObserver.supportedEntryTypes instanceof Array
-    && window.PerformanceObserver.supportedEntryTypes.includes('resource')
-}
+
 
 function observeResourceTimings () {
   var observer = new PerformanceObserver(function (list, observer) {

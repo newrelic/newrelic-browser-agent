@@ -6,6 +6,15 @@
 <html>
   <head>
     <title>Final Harvest Test</title>
+    <script>
+      // disable the page view timings feature
+      window.NREUM||(NREUM={});
+      NREUM.init = {
+        ajax: {
+          enabled: true
+        }
+      }
+    </script>
     {config}
     {loader}
   </head>

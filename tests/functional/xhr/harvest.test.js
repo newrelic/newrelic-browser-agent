@@ -25,7 +25,8 @@ testDriver.test('ajax events harvests are retried when collector returns 429', x
         enabled: false
       },
       ajax: {
-        harvestTimeSeconds: 2
+        harvestTimeSeconds: 2,
+        enabled: true
       }
     }
   })

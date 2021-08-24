@@ -31,7 +31,7 @@ if (!loader.features.xhr) return
 var harvestTimeSeconds = config.getConfiguration('ajax.harvestTimeSeconds') || 60
 var MAX_PAYLOAD_SIZE = config.getConfiguration('ajax.maxPayloadSize') || 1000000
 
-setDenyList(config.getConfiguration('ajax.deny_list'))
+if (allAjaxIsEnabled()) setDenyList(config.getConfiguration('ajax.deny_list'))
 
 baseEE.on('feat-err', function() {
   register('xhr', storeXhr)
@@ -40,10 +40,12 @@ baseEE.on('feat-err', function() {
     return { body: agg.take([ 'xhr' ]) }
   })
 
-  scheduler = new HarvestScheduler(loader, 'events', { onFinished: onEventsHarvestFinished, getPayload: prepareHarvest })
-  scheduler.startTimer(harvestTimeSeconds)
+  if (allAjaxIsEnabled()) {
+    scheduler = new HarvestScheduler(loader, 'events', { onFinished: onEventsHarvestFinished, getPayload: prepareHarvest })
+    scheduler.startTimer(harvestTimeSeconds)
 
-  subscribeToUnload(finalHarvest)
+    subscribeToUnload(finalHarvest)
+  }
 })
 
 module.exports = storeXhr
@@ -75,7 +77,7 @@ function storeXhr(params, metrics, startTime, endTime, type) {
   // store as metric
   agg.store('xhr', hash, params, metrics)
 
-  if (!shouldCollectEvent(params)) {
+  if (!shouldCollectEvent(params) || !allAjaxIsEnabled()) {
     return
   }
 
@@ -109,7 +111,7 @@ baseEE.on('interactionSaved', function (interaction) {
 })
 
 baseEE.on('interactionDiscarded', function (interaction) {
-  if (!spaAjaxEvents[interaction.id]) return
+  if (!spaAjaxEvents[interaction.id] || !allAjaxIsEnabled()) return
 
   spaAjaxEvents[interaction.id].forEach(function (item) {
     // move it from the spaAjaxEvents buffer to the ajaxEvents buffer for harvesting here
@@ -167,7 +169,7 @@ function getPayload (events, maxPayloadSize, chunks) {
 }
 
 function onEventsHarvestFinished(result) {
-  if (result.retry && sentAjaxEvents.length > 0) {
+  if (result.retry && sentAjaxEvents.length > 0 && allAjaxIsEnabled()) {
     ajaxEvents = ajaxEvents.concat(sentAjaxEvents)
     sentAjaxEvents = []
   }
@@ -232,4 +234,8 @@ function Chunk (events) {
     maxPayloadSize = maxPayloadSize || MAX_PAYLOAD_SIZE
     return this.payload.length * 2 > maxPayloadSize
   }
+}
+
+function allAjaxIsEnabled() {
+  return !!config.getConfiguration('ajax.enabled')
 }

@@ -64,7 +64,8 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
         loader: 'spa',
         init: {
           ajax: {
-            deny_list: testCase.denyList
+            deny_list: testCase.denyList,
+            enabled: true
           }
         }
       }))

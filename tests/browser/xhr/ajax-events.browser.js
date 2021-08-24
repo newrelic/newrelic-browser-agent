@@ -10,6 +10,9 @@ const baseEE = require('ee')
 const loader = require('loader')
 loader.features.xhr = true
 loader.info = {}
+NREUM.init = {
+  ajax: {enabled: true}
+}
 
 const storeXhr = require('../../../feature/xhr/aggregate/index')
 const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents

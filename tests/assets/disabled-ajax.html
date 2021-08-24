@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Final Harvest Test with page view timings disabled</title>
+    <script>
+      // disable the ajax feature
+      window.NREUM||(NREUM={});
+      NREUM.init = {
+        ajax: {
+          enabled: false
+        }
+      }
+    </script>
+    {config}
+    {loader}
+  </head>
+  <body>
+    <div>This page is used for testing disabled ajax feature.</div>
+    <button id="standardBtn">I'm just a regular button</button>
+  </body>
+</html>

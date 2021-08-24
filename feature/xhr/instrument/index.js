@@ -248,6 +248,7 @@ ee.on('fetch-start', function (fetchArguments, dtPayload) {
   this.params = {}
   this.metrics = {}
   this.startTime = loader.now()
+  this.dt = dtPayload
 
   if (fetchArguments.length >= 1) this.target = fetchArguments[0]
   if (fetchArguments.length >= 2) this.opts = fetchArguments[1]

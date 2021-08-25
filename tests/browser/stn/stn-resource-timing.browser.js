@@ -34,18 +34,7 @@ function runTests () {
 
   test('wait for trace node generation', function (t) {
     ee.emit('feat-err', [])
-    t.plan(4)
-    window.history.pushState(null, '', '#foo')
-    window.history.pushState(null, '', '#bar')
-    setTimeout(() => t.ok(true), 0)
-    let interval = setInterval(() => {
-      clearInterval(interval)
-      t.ok(true)
-    }, 0)
-    window.requestAnimationFrame(() => {
-      t.ok(true)
-      throw new Error('raf error')
-    })
+    t.plan(1)
     let xhr = new XMLHttpRequest()
     xhr.open('GET', window.location)
     xhr.send()

@@ -100,13 +100,15 @@ function onResourceTimingBufferFull (e) {
   handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)])
 
   // stop recording once buffer is full
-  try {
-    window.performance[REMOVE_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
-  } catch (e) {}
-
-  try {
-    window.performance[REMOVE_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
-  } catch (e) {}
+  if (window.performance['c' + learResourceTimings]) {
+    try {
+      window.performance[REMOVE_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
+    } catch (e) {}
+  } else {
+    try {
+      window.performance[REMOVE_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
+    } catch (e) {}
+  }
 }
 
 if (supportsResourceTimingPerfObserver()) {

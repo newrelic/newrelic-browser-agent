@@ -95,10 +95,9 @@ function storeXhr(params, metrics, startTime, endTime, type) {
   }
 
   if (xhrContext.dt) {
-    event.dt = {}
-    event.dt.spanId = xhrContext.dt.spanId
-    event.dt.traceId = xhrContext.dt.traceId
-    event.dt.timestamp = xhrContext.dt.timestamp
+    event.spanId = xhrContext.dt.spanId
+    event.traceId = xhrContext.dt.traceId
+    event.spanTimestamp = xhrContext.dt.timestamp
   }
 
   // if the ajax happened inside an interaction, hold it until the interaction finishes
@@ -215,9 +214,9 @@ function Chunk (events) {
       numeric(event.responseSize),
       event.type === 'fetch' ? 1 : '',
       this.addString(0), // nodeId
-      nullable(event.dt && event.dt.spanId, this.addString, true) + // guid
-      nullable(event.dt && event.dt.traceId, this.addString, true) + // traceId
-      nullable(event.dt && event.dt.timestamp, numeric, false) // timestamp
+      nullable(event.spanId, this.addString, true) + // guid
+      nullable(event.traceId, this.addString, true) + // traceId
+      nullable(event.spanTimestamp, numeric, false) // timestamp
     ]
 
     var insert = '2,'

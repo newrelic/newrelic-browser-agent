@@ -33,10 +33,6 @@ if (loader.disabled) return
 
 loader.features.stn = true
 
-module.exports = {
-  supportsResourceTimingPerfObserver: supportsResourceTimingPerfObserver
-}
-
 // wrap history ap
 require('../../wrap-history')
 

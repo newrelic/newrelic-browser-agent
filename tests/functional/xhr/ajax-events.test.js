@@ -130,3 +130,89 @@ testDriver.test('capturing Fetch ajax events', fetchBrowsers, function (t, brows
     t.end()
   }
 })
+
+testDriver.test('Distributed Tracing info is added to XHR ajax events', xhrBrowsers, function (t, browser, router) {
+  const config = {
+    accountID: '1234',
+    agentID: '1',
+    trustKey: '1'
+  }
+
+  const ajaxPromise = router.expectAjaxEvents()
+  const rumPromise = router.expectRum()
+  const loadPromise = browser.safeGet(router.assetURL('xhr-outside-interaction.html', {
+    loader: 'spa',
+    injectUpdatedLoaderConfig: true,
+    config,
+    init: {
+      distributed_tracing: {
+        enabled: true
+      },
+      ajax: {
+        harvestTimeSeconds: 2
+      }
+    }
+  }))
+
+  Promise.all([ajaxPromise, loadPromise, rumPromise])
+    .then(([response]) => {
+      const {body, query} = response
+      const ajaxEvents = querypack.decode(body && body.length ? body : query.e)
+
+      const ajaxEvent = ajaxEvents.find(e => e.type === 'ajax' && e.path === '/json')
+      t.ok(ajaxEvent, 'XMLHttpRequest ajax event was harvested')
+      t.ok(ajaxEvent.guid && ajaxEvent.guid.length > 0, 'should be a non-empty guid string')
+      t.ok(ajaxEvent.traceId && ajaxEvent.traceId.length > 0, 'should be a non-empty traceId string')
+      t.ok(ajaxEvent.timestamp != null && ajaxEvent.timestamp > 0, 'should be a non-zero timestamp')
+
+      t.end()
+    }).catch(fail)
+
+  function fail (err) {
+    t.error(err)
+    t.end()
+  }
+})
+
+testDriver.test('Distributed Tracing info is added to Fetch ajax events', fetchBrowsers, function (t, browser, router) {
+  const config = {
+    accountID: '1234',
+    agentID: '1',
+    trustKey: '1'
+  }
+
+  const ajaxPromise = router.expectAjaxEvents()
+  const rumPromise = router.expectRum()
+  const loadPromise = browser.safeGet(router.assetURL('fetch-outside-interaction.html', {
+    loader: 'spa',
+    injectUpdatedLoaderConfig: true,
+    config,
+    init: {
+      distributed_tracing: {
+        enabled: true
+      },
+      ajax: {
+        harvestTimeSeconds: 2
+      }
+    }
+  }))
+
+  Promise.all([ajaxPromise, loadPromise, rumPromise])
+    .then(([response]) => {
+      const {body} = response
+      const ajaxEvents = querypack.decode(body)
+      const ajaxEvent = ajaxEvents.find(e => e.type === 'ajax' && e.path === '/json')
+
+      t.ok(ajaxEvent, 'Fetch ajax event was harvested')
+      t.ok(ajaxEvent.guid && ajaxEvent.guid.length > 0, 'should be a non-empty guid string')
+      t.ok(ajaxEvent.traceId && ajaxEvent.traceId.length > 0, 'should be a non-empty traceId string')
+      t.ok(ajaxEvent.timestamp != null && ajaxEvent.timestamp > 0, 'should be a non-zero timestamp')
+
+      t.end()
+    }).catch(fail)
+
+  function fail (err) {
+    t.error(err)
+    t.end()
+  }
+})

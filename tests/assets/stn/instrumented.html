@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {config}
+    {loader}
+  </head>
+  <body>
+    <p>page with timeouts to ensure enough data to harvest a session trace</p>
+    <script type="text/javascript">
+      // we need to have >30 nodes in the session trace to ensure it actually gets
+      // sent, so make some nodes
+      for (var i = 0; i < 31; i++) {
+        setTimeout(function () {}, 0)
+      }
+      </script>
+  </body>
+</html>

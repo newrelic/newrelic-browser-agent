@@ -12,7 +12,7 @@ var reduce = require('reduce')
 var stringify = require('../../../agent/stringify')
 var slice = require('lodash._slice')
 var parseUrl = require('../../xhr/instrument/parse-url')
-var supportsResourceTimingPerfObserver = require('supports-resource-observer')
+var supportsPerformanceObserver = require('supports-performance-observer')
 var config = require('config')
 
 if (!harvest.xhrUsable || !loader.xhrWrappable) return
@@ -295,7 +295,7 @@ function mergeSTNs(key, nodes) {
 
 function takeSTNs (retry) {
   // if the observer is not being used, this checks resourcetiming buffer every harvest
-  if (!supportsResourceTimingPerfObserver()) {
+  if (!supportsPerformanceObserver()) {
     storeResources(window.performance.getEntriesByType('resource'))
   }
 

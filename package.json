@@ -76,6 +76,6 @@
     "reduce": "./reduce/index.js",
     "unique-id": "./loader/unique-id.js",
     "wrap-function": "./wrap-function/index.js",
-    "supports-resource-observer": "./feature/stn/instrument/supports-resource-observer.js"
+    "supports-performance-observer": "./feature/stn/instrument/supports-performance-observer.js"
   }
 }

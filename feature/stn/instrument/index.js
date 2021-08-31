@@ -12,7 +12,7 @@ var ee = require('ee')
 var handle = require('handle')
 var timerEE = require('../../wrap-timer')
 var rafEE = require('../../wrap-raf')
-var supportsResourceTimingPerfObserver = require('supports-resource-observer')
+var supportsPerformanceObserver = require('supports-performance-observer')
 
 var learResourceTimings = 'learResourceTimings'
 var ADD_EVENT_LISTENER = 'addEventListener'
@@ -111,7 +111,7 @@ function onResourceTimingBufferFull (e) {
   }
 }
 
-if (supportsResourceTimingPerfObserver()) {
+if (supportsPerformanceObserver()) {
   // capture initial resources, in case our observer missed anything
   handle(BST_RESOURCE, [window.performance.getEntriesByType('resource')])
 

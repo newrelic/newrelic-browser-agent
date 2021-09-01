@@ -11,13 +11,27 @@
     {loader}
   </head>
   <body>
-    <p>page with timeouts to ensure enough data to harvest a session trace</p>
+    <button id="trigger">trigger</button>
     <script type="text/javascript">
+      var btn = document.getElementById('trigger')
+      btn.addEventListener('click', trigger)
+
+      function trigger() {
+        var xhr = new XMLHttpRequest()
+        xhr.open('GET', '/json')
+        xhr.addEventListener('load', function () {
+          generateNodes()
+        })
+        xhr.send()
+      }
+
       // we need to have >30 nodes in the session trace to ensure it actually gets
       // sent, so make some nodes
-      for (var i = 0; i < 31; i++) {
-        setTimeout(function () {}, 0)
+      function generateNodes() {
+        for (var i = 0; i < 31; i++) {
+          setTimeout(function () {}, 0)
+        }
       }
-      </script>
+    </script>
   </body>
 </html>

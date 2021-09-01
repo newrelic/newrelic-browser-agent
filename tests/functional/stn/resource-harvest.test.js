@@ -12,7 +12,7 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
     loader: 'full',
     init: {
       stn: {
-        harvestTimeSeconds: 2
+        harvestTimeSeconds: 5
       },
       ajax: {
         enabled: false
@@ -31,14 +31,21 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
   Promise.all([resourcePromise, loadPromise, rumPromise]).then(([result]) => {
     t.equal(result.res.statusCode, 200, 'server responded with 200')
 
+    // first harvest is complete and should be a resource entry in second harvest
     firstBody = result.body
 
-    // first harvest is complete and should be a resource entry in second harvest
-    // now we capture resourceBuffer before second harvest request is made
-    const evalPromise = browser.eval("window.performance.getEntriesByType('resource')")
-    resourcePromise = router.expectResources()
+    // trigger an XHR call after
+    let domPromise = browser
+      .elementById('trigger')
+      .click()
 
-    return Promise.all([evalPromise, resourcePromise])
+    return domPromise
+  }).then(result => {
+    // capture resourceBuffer after /json call and before second harvest request is made
+    return browser.eval("window.performance.getEntriesByType('resource')")
+  }).then(evalResult => {
+    resourcePromise = router.expectResources()
+    return Promise.all([evalResult, resourcePromise])
   }).then(result => {
     const resourceBuffer = result[0]
     const secondBody = result[1].body

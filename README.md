@@ -108,6 +108,7 @@ npm run test -- -b chrome@latest --selenium-server=localhost:4444
 - `jil` does not handle building the agent automatically;
 either run `npm run build` after each change, or use `npm run watch` to automatically rebuild on each change.
 - To pass arguments to the testing suite using `npm run test` you must separate your arguments from the npm script using an empty `--` parameter as was exemplified above.
+- The browser agent officially supports and is tested against this [list of browsers and environments](./tools/jil/util/browsers.json). Use of the browser agent with unsupported browsers may lead to unexpected results.
 
 ### Running a single test
 To run a single test in isolation, pass the path to `jil`:

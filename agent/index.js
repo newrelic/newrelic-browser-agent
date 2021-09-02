@@ -41,7 +41,6 @@ if (autorun) harvest.sendRUM(loader)
 
 // Set a cookie when the page unloads. Consume this cookie on the next page to get a 'start time'.
 // The navigation start time cookie is removed when the browser supports the web timing API.
-// Doesn't work in some browsers (Opera).
 function finalHarvest (e) {
   harvest.sendFinal(loader, false)
   // write navigation start time cookie if needed

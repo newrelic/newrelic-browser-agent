@@ -7,7 +7,6 @@ const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
 
 let supported = testDriver.Matcher.withFeature('addEventListener')
-  .exclude('opera@<=12') // Sauce Labs Opera doesn't trust our cert
 // jQuery and Angular don't work on Firefox 5
 let supportedWithoutFirefox = supported.exclude('firefox@5')
 

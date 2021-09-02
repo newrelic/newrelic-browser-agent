@@ -20,9 +20,7 @@ testDriver.test('RUM backend time', withTls, function (t, browser, router) {
       return Promise.all([router.expectRum(), browser.get(url)])
     })
     .then(([{query}]) => {
-      if (browser.match('opera')) {
-        t.skip('Opera does not support before unload, so no be time')
-      } else if (browser.match('ie@<9')) {
+      if (browser.match('ie@<9')) {
         // IE 6 & 7 sometimes report a backend time of 0, and we don't know why.
         t.ok(+query.be >= 0, 'Backend time of ' + query.be + ' >= 0')
       } else {

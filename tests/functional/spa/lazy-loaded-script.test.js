@@ -8,7 +8,6 @@ const querypack = require('@newrelic/nr-querypack')
 
 const asserters = testDriver.asserters
 const supported = testDriver.Matcher.withFeature('addEventListener')
-  .exclude('opera@<=12') // Sauce Labs Opera doesn't trust our cert
 
 testDriver.test('interactions wait for external scripts to complete', supported, function (t, browser, router) {
   // load page and wait for initial load to complete

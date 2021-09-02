@@ -8,7 +8,6 @@ const now = require('../../lib/now')
 const querypack = require('@newrelic/nr-querypack')
 
 let supported = testDriver.Matcher.withFeature('addEventListener')
-  .exclude('opera@<=12') // Sauce Labs Opera doesn't trust our cert
 
 testDriver.test('capturing SPA interactions', supported, function (t, browser, router) {
   t.plan(23)

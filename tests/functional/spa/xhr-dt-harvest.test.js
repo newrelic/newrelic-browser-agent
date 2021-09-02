@@ -7,7 +7,6 @@ const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
 
 let supported = testDriver.Matcher.withFeature('addEventListener')
-  .exclude('opera@<=12') // Sauce Labs Opera doesn't trust our cert
 let withCors = testDriver.Matcher.withFeature('cors')
 
 testDriver.test('XHR request on same origin has AJAX request with DT payload', supported, function (t, browser, router) {

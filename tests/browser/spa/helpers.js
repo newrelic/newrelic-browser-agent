@@ -89,7 +89,7 @@ function onAggregatorLoaded (cb) {
 }
 
 function emitsPopstateEventOnHashChanges () {
-  return (!isEdge() && !isInternetExplorer() && !isOpera())
+  return (!isEdge() && !isInternetExplorer())
 }
 
 function isEdge () {
@@ -99,10 +99,6 @@ function isEdge () {
 function isInternetExplorer () {
   let userAgent = window.navigator.userAgent
   return userAgent.match(/msie/i) || userAgent.match(/rv:(\d+)/)
-}
-
-function isOpera () {
-  return !!window.opera
 }
 
 function startInteraction (onInteractionStart, afterInteractionFinish, options = {}) {

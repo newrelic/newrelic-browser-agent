@@ -75,6 +75,7 @@
     "performance-check": "./performance-check/index.js",
     "reduce": "./reduce/index.js",
     "unique-id": "./loader/unique-id.js",
-    "wrap-function": "./wrap-function/index.js"
+    "wrap-function": "./wrap-function/index.js",
+    "supports-performance-observer": "./feature/stn/instrument/supports-performance-observer.js"
   }
 }

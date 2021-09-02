@@ -12,9 +12,11 @@ var ee = require('ee')
 var handle = require('handle')
 var timerEE = require('../../wrap-timer')
 var rafEE = require('../../wrap-raf')
+var supportsPerformanceObserver = require('supports-performance-observer')
 
 var learResourceTimings = 'learResourceTimings'
 var ADD_EVENT_LISTENER = 'addEventListener'
+var REMOVE_EVENT_LISTENER = 'removeEventListener'
 var RESOURCE_TIMING_BUFFER_FULL = 'resourcetimingbufferfull'
 var BST_RESOURCE = 'bstResource'
 var RESOURCE = 'resource'
@@ -82,17 +84,46 @@ ee.on(PUSH_STATE + END, function (args) {
   handle('bstHist', [location.pathname + location.hash, this.startPath, this.time])
 })
 
-if (ADD_EVENT_LISTENER in window.performance) {
+function observeResourceTimings () {
+  var observer = new PerformanceObserver(function (list, observer) { // eslint-disable-line no-undef
+    var entries = list.getEntries()
+
+    handle(BST_RESOURCE, [entries])
+  })
+
+  try {
+    observer.observe({entryTypes: ['resource']})
+  } catch (e) {}
+}
+
+function onResourceTimingBufferFull (e) {
+  handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)])
+
+  // stop recording once buffer is full
   if (window.performance['c' + learResourceTimings]) {
-    window.performance[ADD_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, function (e) {
-      handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)])
-      window.performance['c' + learResourceTimings]()
-    }, false)
+    try {
+      window.performance[REMOVE_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
+    } catch (e) {}
   } else {
-    window.performance[ADD_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, function (e) {
-      handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)])
-      window.performance['webkitC' + learResourceTimings]()
-    }, false)
+    try {
+      window.performance[REMOVE_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
+    } catch (e) {}
+  }
+}
+
+if (supportsPerformanceObserver()) {
+  // capture initial resources, in case our observer missed anything
+  handle(BST_RESOURCE, [window.performance.getEntriesByType('resource')])
+
+  observeResourceTimings()
+} else {
+  // collect resource timings once when buffer is full
+  if (ADD_EVENT_LISTENER in window.performance) {
+    if (window.performance['c' + learResourceTimings]) {
+      window.performance[ADD_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
+    } else {
+      window.performance[ADD_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
+    }
   }
 }
 

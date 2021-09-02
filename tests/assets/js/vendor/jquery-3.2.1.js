@@ -788,7 +788,7 @@ function Sizzle( selector, context, results, seed ) {
 					if ( nodeType === 9 ) {
 						if ( (elem = context.getElementById( m )) ) {
 
-							// Support: IE, Opera, Webkit
+							// Support: IE, Webkit
 							// TODO: identify versions
 							// getElementById can match elements by name instead of ID
 							if ( elem.id === m ) {
@@ -802,7 +802,7 @@ function Sizzle( selector, context, results, seed ) {
 					// Element context
 					} else {
 
-						// Support: IE, Opera, Webkit
+						// Support: IE, Webkit
 						// TODO: identify versions
 						// getElementById can match elements by name instead of ID
 						if ( newContext && (elem = newContext.getElementById( m )) &&
@@ -1265,7 +1265,7 @@ setDocument = Sizzle.setDocument = function( node ) {
 
 	// QSA and matchesSelector support
 
-	// matchesSelector(:active) reports false when true (IE9/Opera 11.5)
+	// matchesSelector(:active) reports false when true (IE9)
 	rbuggyMatches = [];
 
 	// qSa(:focus) reports false when true (Chrome 21)
@@ -1288,9 +1288,8 @@ setDocument = Sizzle.setDocument = function( node ) {
 				"<select id='" + expando + "-\r\\' msallowcapture=''>" +
 				"<option selected=''></option></select>";
 
-			// Support: IE8, Opera 11-12.16
+			// Support: IE8
 			// Nothing should be selected when empty strings follow ^= or $= or *=
-			// The test attribute must be unknown in Opera but "safe" for WinRT
 			// https://msdn.microsoft.com/en-us/library/ie/hh465388.aspx#attribute_section
 			if ( el.querySelectorAll("[msallowcapture^='']").length ) {
 				rbuggyQSA.push( "[*^$]=" + whitespace + "*(?:''|\"\")" );
@@ -1307,7 +1306,6 @@ setDocument = Sizzle.setDocument = function( node ) {
 				rbuggyQSA.push("~=");
 			}
 
-			// Webkit/Opera - :checked should return selected option elements
 			// http://www.w3.org/TR/2011/REC-css3-selectors-20110929/#checked
 			// IE8 throws error here and will not see later tests
 			if ( !el.querySelectorAll(":checked").length ) {
@@ -1351,7 +1349,6 @@ setDocument = Sizzle.setDocument = function( node ) {
 				rbuggyQSA.push( ":enabled", ":disabled" );
 			}
 
-			// Opera 10-11 does not throw on post-comma invalid pseudos
 			el.querySelectorAll("*,:x");
 			rbuggyQSA.push(",.*:");
 		});

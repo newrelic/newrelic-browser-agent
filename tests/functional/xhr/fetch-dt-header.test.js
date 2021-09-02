@@ -6,7 +6,6 @@
 const testDriver = require('../../../tools/jil/index')
 
 let fetchBrowsers = testDriver.Matcher.withFeature('fetch')
-  .exclude('opera@<=12') // Sauce Labs Opera doesn't trust our cert
   .exclude('ie@<10') // IE 9 and below do not support btoa()
 let corsBrowsers = testDriver.Matcher.withFeature('cors')
 let supported = fetchBrowsers.intersect(corsBrowsers)

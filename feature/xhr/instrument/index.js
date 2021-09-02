@@ -60,9 +60,6 @@ ee.on('new-xhr', function (xhr) {
 
   if (ffVersion && (ffVersion > 34 || ffVersion < 10)) return
 
-  // In Opera, ProgressEvents report loaded values that are too high.
-  if (window.opera) return
-
   xhr.addEventListener('progress', function (event) {
     ctx.lastSize = event.loaded
   }, false)

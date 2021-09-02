@@ -12,9 +12,9 @@
   </head>
   <body>
     <button id="trigger">trigger</button>
+
     <script type="text/javascript">
-      var btn = document.getElementById('trigger')
-      btn.addEventListener('click', trigger)
+      document.addEventListener('click', trigger)
 
       function trigger() {
         var xhr = new XMLHttpRequest()

@@ -32,7 +32,7 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
 
     // trigger an XHR call after
     var clickPromise = browser
-      .elementById('trigger')
+      .elementByCssSelector('body')
       .click()
 
     resourcePromise = router.expectResources()

@@ -983,7 +983,7 @@ var parse = function(ua, platform){
 	// before checking if it's chrome.
 	var UA = ua.match(/(edge)[\s\/:]([\w\d\.]+)/);
 	if (!UA){
-		UA = ua.match(/(ie|firefox|chrome|trident|crios|version)[\s\/:]([\w\d\.]+)?.*?(safari|(?:rv[\s\/:]|version[\s\/:])([\w\d\.]+)|$)/) || [null, 'unknown', 0];
+		UA = ua.match(/(opera|ie|firefox|chrome|trident|crios|version)[\s\/:]([\w\d\.]+)?.*?(safari|(?:rv[\s\/:]|version[\s\/:])([\w\d\.]+)|$)/) || [null, 'unknown', 0];
 	}
 
 	if (UA[1] == 'trident'){

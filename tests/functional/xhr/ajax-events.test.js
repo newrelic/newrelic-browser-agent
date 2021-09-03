@@ -149,7 +149,8 @@ testDriver.test('Distributed Tracing info is added to XHR ajax events', xhrBrows
         enabled: true
       },
       ajax: {
-        harvestTimeSeconds: 2
+        harvestTimeSeconds: 2,
+        enabled: true
       }
     }
   }))
@@ -192,7 +193,8 @@ testDriver.test('Distributed Tracing info is added to Fetch ajax events', fetchB
         enabled: true
       },
       ajax: {
-        harvestTimeSeconds: 2
+        harvestTimeSeconds: 2,
+        enabled: true
       }
     }
   }))

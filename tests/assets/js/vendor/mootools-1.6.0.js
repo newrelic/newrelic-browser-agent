@@ -2098,12 +2098,6 @@ local.setDocument = function(document){
 				brokenSecondClassNameGEBCN = (testNode.getElementsByClassName('a').length != 2);
 			} catch (e){}
 
-			// Opera 9.6 getElementsByClassName doesnt detects the class if its not the first one
-			try {
-				testNode.innerHTML = '<a class="a"></a><a class="f b a"></a>';
-				brokenSecondClassNameGEBCN = (testNode.getElementsByClassName('a').length != 2);
-			} catch (e){}
-
 			features.brokenGEBCN = cachedGetElementsByClassName || brokenSecondClassNameGEBCN;
 		}
 

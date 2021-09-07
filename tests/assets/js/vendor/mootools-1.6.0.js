@@ -999,7 +999,7 @@ var parse = function(ua, platform){
 	return {
 		extend: Function.prototype.extend,
 		name: (UA[1] == 'version') ? UA[3] : UA[1],
-		version: parseFloat(UA[2]),
+		version: parseFloat((UA[1] == 'opera' && UA[4]) ? UA[4] : UA[2]),
 		platform: platform
 	};
 };
@@ -2092,6 +2092,18 @@ local.setDocument = function(document){
 				cachedGetElementsByClassName = (testNode.getElementsByClassName('b').length != 2);
 			} catch (e){};
 
+			// Opera 9.6 getElementsByClassName doesnt detects the class if its not the first one
+			try {
+				testNode.innerHTML = '<a class="a"></a><a class="f b a"></a>';
+				brokenSecondClassNameGEBCN = (testNode.getElementsByClassName('a').length != 2);
+			} catch (e){}
+
+			// Opera 9.6 getElementsByClassName doesnt detects the class if its not the first one
+			try {
+				testNode.innerHTML = '<a class="a"></a><a class="f b a"></a>';
+				brokenSecondClassNameGEBCN = (testNode.getElementsByClassName('a').length != 2);
+			} catch (e){}
+
 			features.brokenGEBCN = cachedGetElementsByClassName || brokenSecondClassNameGEBCN;
 		}
 
@@ -2109,7 +2121,7 @@ local.setDocument = function(document){
 				features.brokenMixedCaseQSA = !testNode.querySelectorAll('.MiX').length;
 			} catch (e){}
 
-			// Webkit doesn't return selected options on querySelectorAll
+			// Webkit and Opera dont return selected options on querySelectorAll
 			try {
 				testNode.innerHTML = '<select><option selected="selected">a</option></select>';
 				features.brokenCheckedQSA = (testNode.querySelectorAll(':checked').length == 0);
@@ -5216,7 +5228,7 @@ Fx.CSS = new Class({
 			if (unit && from && typeof from == 'string' && from.slice(-unit.length) != unit && parseFloat(from) != 0){
 				element.setStyle(property, to + unit);
 				var value = element.getComputedStyle(property);
-				// IE supports pixelLeft or pixelWidth
+				// IE and Opera support pixelLeft or pixelWidth
 				if (!(/px$/.test(value))){
 					value = element.style[('pixel-' + property).camelCase()];
 					if (value == null){

@@ -516,6 +516,11 @@ class AssetServer extends BaseServer {
       let transform = this.transformMap[mimeType]
       let params = parseParams(req)
 
+      if (mimeType === 'text/html') {
+        rsp.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
+        rsp.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+      }
+
       if (!transform || !transform.test(params)) {
         rsp.writeHead(200, {
           'Content-Type': 'text/html'

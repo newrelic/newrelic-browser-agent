@@ -25,6 +25,7 @@ responders['POST /resources/1/{key}'] = resourcesData
 
 function rumData (req, res, handle) {
   let parsed = url.parse(req.url, true)
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
   res.writeHead(200)
 
   if (!parsed.query.jsonp) return res.end()

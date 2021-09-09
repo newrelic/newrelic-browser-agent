@@ -22,8 +22,6 @@
 // Supports:
 //   - Firefox:  full stack trace with line numbers and unreliable column
 //               number on top frame
-//   - Opera 10: full stack trace with line and column numbers
-//   - Opera 9-: full stack trace with line numbers
 //   - Chrome:   full stack trace with line and column numbers
 //   - Safari:   line and column number for the topmost stacktrace element
 //               only
@@ -58,17 +56,10 @@
 // INTERNET EXPLORER:
 // ex.message = ...
 // ex.name = ReferenceError
-//
-// OPERA:
-// ex.message = ...message... (see the example below)
-// ex.name = ReferenceError
-// ex.opera#sourceloc = 11  (pretty much useless, duplicates the info in ex.message)
-// ex.stacktrace = n/a; see 'opera:config#UserPrefs|Exceptions Have Stacktrace'
 
 var reduce = require('reduce')
 var formatStackTrace = require('./format-stack-trace')
 
-var has = Object.prototype.hasOwnProperty
 var debug = false
 
 var classNameRegex = /function (.+?)\s*\(/
@@ -83,32 +74,7 @@ function computeStackTrace (ex) {
   var stack = null
 
   try {
-    // This must be tried first because Opera 10 *destroys*
-    // its stacktrace property if you try to access the stack
-    // property first!!
-    stack = computeStackTraceFromStacktraceProp(ex)
-    if (stack) {
-      return stack
-    }
-  } catch (e) {
-    if (debug) {
-      throw e
-    }
-  }
-
-  try {
     stack = computeStackTraceFromStackProp(ex)
-    if (stack) {
-      return stack
-    }
-  } catch (e) {
-    if (debug) {
-      throw e
-    }
-  }
-
-  try {
-    stack = computeStackTraceFromOperaMultiLineMessage(ex)
     if (stack) {
       return stack
     }
@@ -266,147 +232,4 @@ function getClassName (obj) {
 
 function isWrapper (functionName) {
   return (functionName && functionName.indexOf('nrWrapper') >= 0)
-}
-
-/**
- * Computes stack trace information from the stacktrace property.
- * Opera 10 uses this property.
- * @param {Error} ex
- * @return {?Object.<string, *>} Stack trace information.
- */
-function computeStackTraceFromStacktraceProp (ex) {
-  if (!ex.stacktrace) {
-    return null
-  }
-
-  // Access and store the stacktrace property before doing anything
-  // else to it because Opera is not very good at providing it
-  // reliably in other circumstances.
-  var stacktrace = ex.stacktrace
-
-  var testRE = / line (\d+), column (\d+) in (?:<anonymous function: ([^>]+)>|([^\)]+))\(.*\) in (.*):\s*$/i
-  var lines = stacktrace.split('\n')
-  var frames = []
-  var stackLines = []
-  var parts
-  var wrapperSeen = false
-
-  for (var i = 0, j = lines.length; i < j; i += 2) {
-    if ((parts = testRE.exec(lines[i]))) {
-      var element = {
-        'line': +parts[1],
-        'column': +parts[2],
-        'func': parts[3] || parts[4],
-        'url': parts[5]
-      }
-
-      if (isWrapper(element.func)) wrapperSeen = true
-      else stackLines.push(lines[i])
-
-      if (!wrapperSeen) frames.push(element)
-    } else {
-      stackLines.push(lines[i])
-    }
-  }
-
-  if (!frames.length) {
-    return null
-  }
-
-  return {
-    'mode': 'stacktrace',
-    'name': ex.name || getClassName(ex),
-    'message': ex.message,
-    'stackString': formatStackTrace(stackLines),
-    'frames': frames
-  }
-}
-/**
- * Computes stack trace information from an error message that includes
- * the stack trace.
- * Opera 9 and earlier use this method if the option to show stack
- * traces is turned on in opera:config.
- * @param {Error} ex
- * @return {?Object.<string, *>} Stack information.
- */
-function computeStackTraceFromOperaMultiLineMessage (ex) {
-  // Opera includes a stack trace into the exception message. An example is:
-  //
-  // Statement on line 3: Undefined variable: undefinedFunc
-  // Backtrace:
-  //   Line 3 of linked script file://localhost/Users/andreyvit/Projects/TraceKit/javascript-client/sample.js: In function zzz
-  //         undefinedFunc(a)
-  //   Line 7 of inline#1 script in file://localhost/Users/andreyvit/Projects/TraceKit/javascript-client/sample.html: In function yyy
-  //           zzz(x, y, z)
-  //   Line 3 of inline#1 script in file://localhost/Users/andreyvit/Projects/TraceKit/javascript-client/sample.html: In function xxx
-  //           yyy(a, a, a)
-  //   Line 1 of function script
-  //     try { xxx('hi'); return false; } catch(ex) { TraceKit.report(ex); }
-  //   ...
-
-  var lines = ex.message.split('\n')
-  if (lines.length < 4) {
-    return null
-  }
-
-  var lineRE1 = /^\s*Line (\d+) of linked script ((?:file|http|https)\S+)(?:: in function (\S+))?\s*$/i
-  var lineRE2 = /^\s*Line (\d+) of inline#(\d+) script in ((?:file|http|https)\S+)(?:: in function (\S+))?\s*$/i
-  var lineRE3 = /^\s*Line (\d+) of function script\s*$/i
-  var frames = []
-  var stackLines = []
-  var scripts = document.getElementsByTagName('script')
-  var inlineScriptBlocks = []
-  var parts
-  var i
-  var len
-  var wrapperSeen = false
-
-  for (i in scripts) {
-    if (has.call(scripts, i) && !scripts[i].src) {
-      inlineScriptBlocks.push(scripts[i])
-    }
-  }
-
-  for (i = 2, len = lines.length; i < len; i += 2) {
-    var item = null
-    if ((parts = lineRE1.exec(lines[i]))) {
-      item = {
-        'url': parts[2],
-        'func': parts[3],
-        'line': +parts[1]
-      }
-    } else if ((parts = lineRE2.exec(lines[i]))) {
-      item = {
-        'url': parts[3],
-        'func': parts[4]
-      }
-    } else if ((parts = lineRE3.exec(lines[i]))) {
-      var url = window.location.href.replace(/#.*$/, '')
-      var line = parts[1]
-
-      item = {
-        'url': url,
-        'line': line,
-        'func': ''
-      }
-    }
-
-    if (item) {
-      if (isWrapper(item.func)) wrapperSeen = true
-      else stackLines.push(lines[i])
-
-      if (!wrapperSeen) frames.push(item)
-    }
-  }
-  if (!frames.length) {
-    return null // could not parse multiline exception message as Opera stack trace
-  }
-
-  return {
-    'mode': 'multiline',
-    'name': ex.name || getClassName(ex),
-    'message': lines[0],
-    'stackString': formatStackTrace(stackLines),
-    'frames': frames
-  }
 }

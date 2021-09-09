@@ -6,7 +6,6 @@
 const testDriver = require('../../../tools/jil/index')
 
 let supported = new testDriver.Matcher()
-  .exclude('opera') // Opera sometimes drops inlineHit calls maybe?
   .exclude('ie@<8') // IE 6 & 7 sometimes fail this test, and we don't know why.
 
 testDriver.test('inline hit api', supported, function (t, browser, router) {

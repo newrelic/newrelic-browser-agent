@@ -8,7 +8,6 @@ const querypack = require('@newrelic/nr-querypack')
 
 let notSafariWithSeleniumBug = testDriver.Matcher.withFeature('notSafariWithSeleniumBug')
 let supported = testDriver.Matcher.withFeature('hasInnerText')
-  .exclude('opera@<=12') // Sauce Labs Opera doesn't trust our cert
   .and(notSafariWithSeleniumBug)
 
 testDriver.test('captures innerText', supported, function (t, browser, router) {

@@ -194,7 +194,7 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
     payload.forEach(event => {
       t.equal(event.children.length, expectedCustomAttrCount, 'ajax event has expected number of custom attributes')
 
-    // validate custom attribute values
+      // validate custom attribute values
       event.children.forEach(attribute => {
         switch (attribute.type) {
           case 'stringAttribute':

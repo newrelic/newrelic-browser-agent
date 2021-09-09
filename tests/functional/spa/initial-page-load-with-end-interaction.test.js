@@ -7,7 +7,6 @@ const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
 
 let supported = testDriver.Matcher.withFeature('addEventListener')
-  .exclude('opera@<=12') // Sauce Labs Opera doesn't trust our cert
 
 testDriver.test('sends SPA interactions even if endInteraction() is called before the window.load() event', supported, function (t, browser, router) {
   t.plan(8)

@@ -190,8 +190,6 @@ var urls = {
   },
   '/xhr_with_cat/2': {
     gate: function () {
-      // opera does not trust our cert
-      if (window.opera) return false
       tryCrossDomainRequest()
       return true
     },
@@ -214,8 +212,6 @@ var urls = {
   // CORS headers.
   '/foo?cors=false': {
     gate: function () {
-      // opera does not trust our cert
-      if (window.opera) return false
       tryCrossDomainRequest()
       return true
     },
@@ -269,7 +265,7 @@ var urls = {
         let oldIE = ieVersion && ieVersion <= 9
         let brokenFF = ffVersion && ffVersion > 33
 
-        if (!oldIE && !brokenFF && !window.opera) {
+        if (!oldIE && !brokenFF) {
           let descriptor = getResponsePropertyDescriptor(xhr)
           if (descriptor && descriptor.configurable) {
             Object.defineProperty(xhr, 'response', {

@@ -6,7 +6,6 @@
 const testDriver = require('../../../tools/jil/index')
 
 let supported = testDriver.Matcher.withFeature('addEventListener')
-  .exclude('opera@<=12') // Sauce Labs Opera doesn't trust our cert
 
 testDriver.test('does not send SPA interactions if flag is false', supported, function (t, browser, router) {
   t.plan(1)

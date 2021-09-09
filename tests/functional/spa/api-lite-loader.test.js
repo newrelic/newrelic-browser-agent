@@ -9,7 +9,6 @@ const querypack = require('@newrelic/nr-querypack')
 const asserters = testDriver.asserters
 
 let supported = testDriver.Matcher.withFeature('addEventListener')
-  .exclude('opera@<=12') // Sauce Labs Opera doesn't trust our cert
 
 testDriver.test('using SPA API with the lite loader', supported, function (t, browser, router) {
   t.plan(1)

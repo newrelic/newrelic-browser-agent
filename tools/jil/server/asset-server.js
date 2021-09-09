@@ -483,6 +483,7 @@ class AssetServer extends BaseServer {
     let relativePath = url.parse(req.url).pathname.replace(/^\/build/, '')
     let assetPath = resolveAssetPath(relativePath, this.buildDir)
 
+    rsp.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
     if (!assetPath) return rsp.end(404)
 
     fs.readFile(assetPath, (err, data) => {

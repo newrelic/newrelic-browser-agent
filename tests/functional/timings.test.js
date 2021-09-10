@@ -561,6 +561,80 @@ function runClsTests(loader) {
       t.end()
     }
   })
+
+  testDriver.test('cls only accumulates biggest session (short CLS session followed by long)', supportedCls, function (t, browser, router) {
+    const rumPromise = router.expectRum()
+    const loadPromise = browser
+      .safeGet(router.assetURL('cls-multiple-small-then-big.html', { loader: loader }))
+      .waitForConditionInBrowser('window.contentAdded === true', 10000)
+      .eval('window.allCls')
+
+    Promise.all([rumPromise, loadPromise])
+      .then(() => {
+        let timingsPromise = router.expectTimings()
+        let domPromise = browser.get(router.assetURL('/'))
+        return Promise.all([timingsPromise, domPromise, loadPromise])
+      })
+      .then(([timingsResult, domResult, loadResult]) => {
+        const {body, query} = timingsResult
+        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timing = timings.find(t => t.name === 'lcp')
+        const cls = timing.attributes.find(a => a.key === 'cls')
+        console.log('CLS COULD BE ANY OF:', loadResult)
+        console.log('CLS SHOULD BE:', Math.max(...loadResult))
+        console.log('CLS ACTUALLY IS:', cls.value)
+        t.ok(cls.value >= 0, 'cls is a non-negative value')
+        t.ok(cls.value === Math.max(...loadResult), 'CLS is set to the largest CLS session')
+        t.equal(cls.type, 'doubleAttribute', 'cls is doubleAttribute')
+
+        t.end()
+      })
+      .catch(fail)
+
+    function fail (e) {
+      t.error(e)
+      t.end()
+    }
+  })
+
+  testDriver.test('cls only accumulates biggest session (long CLS session followed by short)', supportedCls, function (t, browser, router) {
+    const rumPromise = router.expectRum()
+    const loadPromise = browser
+      .safeGet(router.assetURL('cls-multiple-big-then-small.html', { loader: loader }))
+      .waitForConditionInBrowser('window.contentAdded === true', 10000)
+      .eval('window.allCls')
+
+    Promise.all([rumPromise, loadPromise])
+      .then(() => {
+        let timingsPromise = router.expectTimings()
+        let domPromise = browser.get(router.assetURL('/'))
+        return Promise.all([timingsPromise, domPromise, loadPromise])
+      })
+      .then(([timingsResult, domResult, loadResult]) => {
+        const {body, query} = timingsResult
+        const timings = querypack.decode(body && body.length ? body : query.e)
+        const load = timings.find(t => t.name === 'load')
+        const loadCls = load.attributes.find(a => a.key === 'cls')
+        t.ok(loadCls.value === 0, 'initial CLS is 0')
+        t.equal(loadCls.type, 'doubleAttribute', 'cls is doubleAttribute')
+        const lcp = timings.find(t => t.name === 'lcp')
+        const lcpCls = lcp.attributes.find(a => a.key === 'cls')
+        console.log('new CLS COULD BE ANY OF:', loadResult)
+        console.log('new CLS SHOULD BE:', Math.max(...loadResult))
+        console.log('new CLS ACTUALLY IS:', lcpCls.value)
+        t.ok(lcpCls.value >= 0, 'cls is a non-negative value')
+        t.ok(lcpCls.value === Math.max(...loadResult), 'CLS is set to the largest CLS session')
+        t.equal(lcpCls.type, 'doubleAttribute', 'cls is doubleAttribute')
+
+        t.end()
+      })
+      .catch(fail)
+
+    function fail (e) {
+      t.error(e)
+      t.end()
+    }
+  })
 }
 
 function runCustomAttributeTests(loader) {

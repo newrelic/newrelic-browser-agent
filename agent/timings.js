@@ -22,6 +22,7 @@ var lcpRecorded = false
 var lcp = null
 var clsSupported = false
 var cls = 0
+var nextCls = {value: 0, startedAt: now(), updatedAt: now()}
 var pageHideRecorded = false
 
 module.exports = {
@@ -71,8 +72,7 @@ function init(nr, options) {
 
 function recordLcp() {
   if (!lcpRecorded && lcp !== null) {
-    var lcpEntry = lcp[0]
-    var cls = lcp[1]
+    var lcpEntry = lcp
 
     var attrs = {
       'size': lcpEntry.size,
@@ -90,17 +90,28 @@ function recordLcp() {
 
 function updateLatestLcp(lcpEntry) {
   if (lcp) {
-    var previous = lcp[0]
+    var previous = lcp
     if (previous.size >= lcpEntry.size) {
       return
     }
   }
-  lcp = [lcpEntry, cls]
+  lcp = lcpEntry
 }
 
 function updateClsScore(clsEntry) {
   if (clsSupported) {
-    cls += clsEntry.value
+    var n = now()
+    // this used to be cumulative for the whole page, now we need to split it to a
+    // new CLS measurement after 1s between shifts or 5s total
+    if ((n - nextCls.updatedAt) > 1000 || (n - nextCls.startedAt) > 5000) {
+      nextCls = {value: 0, startedAt: n}
+    }
+
+    nextCls.value += clsEntry.value
+    nextCls.updatedAt = n
+
+    // only keep the biggest CLS we've observed
+    if (cls < nextCls.value) cls = nextCls.value
   }
 }
 

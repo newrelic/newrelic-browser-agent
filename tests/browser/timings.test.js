@@ -9,7 +9,6 @@ const matcher = require('../../tools/jil/util/browser-matcher')
 let supported = matcher.withFeature('wrappableAddEventListener')
 var qp = require('@newrelic/nr-querypack')
 
-var timing = require('../../agent/timings')
 
 if (process.browser) {
   let helpers = require('./spa/helpers')
@@ -244,6 +243,7 @@ function waitForWindowLoad (fn) {
 }
 
 jil.browserTest('spa interaction serializer attributes', supported, function (t) {
+  var timing = require('../../agent/timings')
   var schema = qp.schemas['bel.6']
 
   waitForWindowLoad(startTest)
@@ -262,6 +262,7 @@ jil.browserTest('spa interaction serializer attributes', supported, function (t)
 })
 
 jil.browserTest('spa interaction serializer attributes', supported, function (t) {
+  var timing = require('../../agent/timings')
   waitForWindowLoad(startTest)
 
   function startTest () {

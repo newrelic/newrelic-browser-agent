@@ -72,7 +72,8 @@ function init(nr, options) {
 
 function recordLcp() {
   if (!lcpRecorded && lcp !== null) {
-    var lcpEntry = lcp
+    var lcpEntry = lcp[0]
+    var cls = lcp[1]
 
     var attrs = {
       'size': lcpEntry.size,
@@ -90,12 +91,12 @@ function recordLcp() {
 
 function updateLatestLcp(lcpEntry) {
   if (lcp) {
-    var previous = lcp
+    var previous = lcp[0]
     if (previous.size >= lcpEntry.size) {
       return
     }
   }
-  lcp = lcpEntry
+  lcp = [lcpEntry, cls]
 }
 
 function updateClsScore(clsEntry) {

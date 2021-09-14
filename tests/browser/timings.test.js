@@ -9,7 +9,6 @@ const matcher = require('../../tools/jil/util/browser-matcher')
 let supported = matcher.withFeature('wrappableAddEventListener')
 var qp = require('@newrelic/nr-querypack')
 
-
 if (process.browser) {
   let helpers = require('./spa/helpers')
   var loaded = false

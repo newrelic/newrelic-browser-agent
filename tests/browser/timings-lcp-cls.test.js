@@ -35,8 +35,24 @@ jil.browserTest('LCP event with CLS attribute', supported, function (t) {
   // invoke final harvest, which includes harvesting LCP
   timingModule.finalHarvest()
 
-  var timing = timingModule.timings.find(t => t.name === 'lcp')
+  var timing = find(timingModule.timings, function(t) {
+    return t.name === 'lcp'
+  })
+
   t.equal(timing.attrs.cls, 1, 'CLS value should be the one present at the time LCP happened')
 
   t.end()
 })
+
+function find(arr, fn) {
+  if (arr.find) {
+    return arr.find(fn)
+  }
+  var match = null
+  arr.forEach(function(t) {
+    if (fn(t)) {
+      match = t
+    }
+  })
+  return match
+}

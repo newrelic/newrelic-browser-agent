@@ -79,8 +79,8 @@ function recordLcp() {
       'size': lcpEntry.size,
       'eid': lcpEntry.id
     }
-    // LCP is currently implemented in all browsers which support CLS, so this case should always be true
-    if (clsSupported) {
+    // collect 0 only when CLS is supported, since 0 is a valid score
+    if (cls > 0 || clsSupported) {
       attrs['cls'] = cls
     }
 
@@ -100,20 +100,18 @@ function updateLatestLcp(lcpEntry) {
 }
 
 function updateClsScore(clsEntry) {
-  if (clsSupported) {
-    // this used to be cumulative for the whole page, now we need to split it to a
-    // new CLS measurement after 1s between shifts or 5s total
-    if ((clsEntry.startTime - clsSession.lastEntryTime) > 1000 ||
-        (clsEntry.startTime - clsSession.firstEntryTime) > 5000) {
-      clsSession = {value: 0, firstEntryTime: clsEntry.startTime, lastEntryTime: clsEntry.startTime}
-    }
-
-    clsSession.value += clsEntry.value
-    clsSession.lastEntryTime = Math.max(clsSession.lastEntryTime, clsEntry.startTime)
-
-    // only keep the biggest CLS we've observed
-    if (cls < clsSession.value) cls = clsSession.value
+  // this used to be cumulative for the whole page, now we need to split it to a
+  // new CLS measurement after 1s between shifts or 5s total
+  if ((clsEntry.startTime - clsSession.lastEntryTime) > 1000 ||
+      (clsEntry.startTime - clsSession.firstEntryTime) > 5000) {
+    clsSession = {value: 0, firstEntryTime: clsEntry.startTime, lastEntryTime: clsEntry.startTime}
   }
+
+  clsSession.value += clsEntry.value
+  clsSession.lastEntryTime = Math.max(clsSession.lastEntryTime, clsEntry.startTime)
+
+  // only keep the biggest CLS we've observed
+  if (cls < clsSession.value) cls = clsSession.value
 }
 
 function updatePageHide(timestamp) {
@@ -130,7 +128,8 @@ function recordUnload() {
 
 function addTiming(name, value, attrs, addCls) {
   attrs = attrs || {}
-  if (clsSupported && addCls) {
+  // collect 0 only when CLS is supported, since 0 is a valid score
+  if ((cls > 0 || clsSupported) && addCls) {
     attrs['cls'] = cls
   }
 

@@ -46,7 +46,6 @@ testDriver.test('Disabled timings feature', reliableFinalHarvest, function (t, b
       t.equal(router.seenRequests.events, 0, 'no events harvest yet')
 
       let domPromise = browser
-        .setAsyncScriptTimeout(10000) // the default is too low for IE
         .elementById('standardBtn')
         .click()
         .get(router.assetURL('/'))
@@ -537,7 +536,7 @@ function runClsTests(loader) {
         const domPromise = browser
           .elementById('btn1')
           .click()
-          .waitForConditionInBrowser('window.contentAdded === true')
+          .waitForConditionInBrowser('window.contentAdded === true', 10000)
           .get(router.assetURL('/'))
 
         const timingsPromise = router.expectTimings()
@@ -578,11 +577,9 @@ function runClsTests(loader) {
       .then(([timingsResult, domResult, loadResult]) => {
         const {body, query} = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
-        const timing = timings.find(t => t.name === 'lcp')
+
+        const timing = timings.find(t => t.name === 'unload')
         const cls = timing.attributes.find(a => a.key === 'cls')
-        console.log('CLS COULD BE ANY OF:', loadResult)
-        console.log('CLS SHOULD BE:', Math.max(...loadResult))
-        console.log('CLS ACTUALLY IS:', cls.value)
         t.ok(cls.value >= 0, 'cls is a non-negative value')
         t.ok(cls.value === Math.max(...loadResult), 'CLS is set to the largest CLS session')
         t.equal(cls.type, 'doubleAttribute', 'cls is doubleAttribute')
@@ -613,18 +610,17 @@ function runClsTests(loader) {
       .then(([timingsResult, domResult, loadResult]) => {
         const {body, query} = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
+
         const load = timings.find(t => t.name === 'load')
         const loadCls = load.attributes.find(a => a.key === 'cls')
         t.ok(loadCls.value === 0, 'initial CLS is 0')
         t.equal(loadCls.type, 'doubleAttribute', 'cls is doubleAttribute')
-        const lcp = timings.find(t => t.name === 'lcp')
-        const lcpCls = lcp.attributes.find(a => a.key === 'cls')
-        console.log('new CLS COULD BE ANY OF:', loadResult)
-        console.log('new CLS SHOULD BE:', Math.max(...loadResult))
-        console.log('new CLS ACTUALLY IS:', lcpCls.value)
-        t.ok(lcpCls.value >= 0, 'cls is a non-negative value')
-        t.ok(lcpCls.value === Math.max(...loadResult), 'CLS is set to the largest CLS session')
-        t.equal(lcpCls.type, 'doubleAttribute', 'cls is doubleAttribute')
+
+        const unload = timings.find(t => t.name === 'unload')
+        const unloadCls = unload.attributes.find(a => a.key === 'cls')
+        t.ok(unloadCls.value >= 0, 'cls is a non-negative value')
+        t.ok(unloadCls.value === Math.max(...loadResult), 'CLS is set to the largest CLS session')
+        t.equal(unloadCls.type, 'doubleAttribute', 'cls is doubleAttribute')
 
         t.end()
       })

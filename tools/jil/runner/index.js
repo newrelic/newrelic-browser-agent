@@ -77,10 +77,10 @@ function loadDefaultFiles (cb) {
 function loadFiles (testFiles, cb) {
   for (let file of testFiles) {
     file = resolve(process.cwd(), file)
-    if (file.slice(-11) !== '.browser.js') {
-      require(file)
-    } else {
+    if (file.slice(-11) === '.browser.js') {
       loadBrowser(testDriver, file)
+    } else if (file.slice(-8) === '.test.js') {
+      require(file)
     }
   }
 

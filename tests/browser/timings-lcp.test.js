@@ -8,12 +8,12 @@ const matcher = require('../../tools/jil/util/browser-matcher')
 
 let supported = matcher.withFeature('wrappableAddEventListener')
 
-var handle = require('handle')
-var harvest = require('../../agent/harvest')
-var timingModule = require('../../agent/timings')
-var drain = require('../../agent/drain')
-
 jil.browserTest('LCP is not collected on unload when the LCP value occurs after max timeout', supported, function (t) {
+  var handle = require('handle')
+  var harvest = require('../../agent/harvest')
+  var timingModule = require('../../agent/timings')
+  var drain = require('../../agent/drain')
+
   // override harvest calls, so that no network calls are made
   harvest.send = function() {
     return {}

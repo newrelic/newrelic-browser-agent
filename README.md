@@ -1,5 +1,3 @@
-This is a change to test if the labeler works.
-
 [![Community Plus header](https://github.com/newrelic/opensource-website/raw/master/src/images/categories/Community_Plus.png)](https://opensource.newrelic.com/oss-category/#community-plus)
 
 # New Relic Browser agent

@@ -8,6 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: remove labels
-        uses: andymckay/labeler@master
+        uses: newrelic/labeler@master
         with:
           remove-labels: "safe to test"          

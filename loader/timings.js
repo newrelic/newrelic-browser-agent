@@ -68,9 +68,14 @@ if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'fu
 // first interaction and first input delay
 if ('addEventListener' in document) {
   var fiRecorded = false
-  var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart']
-  allowedEventTypes.forEach(function (e) {
+  var activeEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown']
+  activeEventTypes.forEach(function (e) {
     document.addEventListener(e, captureInteraction, false)
+  })
+
+  var passiveEventTypes = ['touchstart']
+  passiveEventTypes.forEach(function (e) {
+    document.addEventListener(e, captureInteraction, {passive: true})
   })
 }
 

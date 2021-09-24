@@ -7,6 +7,15 @@
   <head>
     <title>RUM Unit Test</title>
     {config}
+    <script>
+      NREUM.init = {
+        page_view_timing: {
+          enabled: true,
+          harvestTimeSeconds: 15,
+          maxLCPTimeSeconds: 2
+        }
+      }
+    </script>
     {loader}
   </head>
   <body>
@@ -16,7 +25,6 @@
       setTimeout(function () {
         simulatePageHide()
         addLargerElement()
-        window.contentAdded = true
       }, 1000)
 
       function addLargerElement() {

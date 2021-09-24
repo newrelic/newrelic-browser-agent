@@ -684,14 +684,15 @@ function runCustomAttributeTests(loader) {
 }
 
 function runLcpTests (loader) {
-  testDriver.test('LCP is not collected after pageHide', testPageHide.and(supportedLcp), function (t, browser, router) {
+  testDriver.test(`${loader} loader: LCP is not collected after pageHide`, testPageHide.and(supportedLcp), function (t, browser, router) {
+    // HTML page manually sets maxLCPTimeSeconds to 5
     const assetURL = router.assetURL('lcp-pagehide.html', {
       loader: loader,
       init: {
         page_view_timing: {
           enabled: true,
-          harvestTimeSeconds: 2,
-          maxLCPTimeSeconds: 20
+          harvestTimeSeconds: 15,
+          // maxLCPTimeSeconds: 2
         }
       }
     })
@@ -701,15 +702,14 @@ function runLcpTests (loader) {
 
     Promise.all([rumPromise, loadPromise])
       .then(() => {
-        const domPromise = browser.waitForConditionInBrowser('window.contentAdded === true', 10000)
-        const timingsPromise = router.expectTimings()
-
-        return Promise.all([timingsPromise, domPromise])
+        return router.expectTimings()
       })
-      .then(([timingsResult]) => {
+      .then((timingsResult) => {
         const {body, query} = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
         const timing = timings.find(t => t.name === 'lcp')
+        t.ok(timing, 'found an LCP timing')
+        t.ok(timing.attributes, 'LCP has attributes')
         const elementId = timing.attributes.find(a => a.key === 'eid')
 
         t.equals(elementId.value, 'initial-content', 'LCP captured the pre-pageHide attribute')

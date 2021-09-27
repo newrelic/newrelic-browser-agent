@@ -1,3 +1,28 @@
+## v1211
+
+* Staging release date: 09/27/2021
+* Production APM-injected release date: 09/29/2021
+* Production Standalone release date: 10/13/2021
+
+### AjaxRequest events for all XHR/fetch requests
+
+Previously, XHR/fetch requests were captured as AjaxRequest events only when they were part of a route change. With this change, all requests will be captured as events. This feature can be further configured by specifying which requests should not be collected.
+
+### Span events are for all XHR/fetch requests
+
+Previously, Span events were generated only for XHR/fetch requests that were part of a route change. With this change, all requests will be captured as Spans.
+
+### Update to Cumulative Layout Shift calculation
+
+The CLS calculation has been updated to use session windows in order to align with Google Chrome tooling (Lighthouse, PageSpeed Insights, CrUX). For more information, see this [blog post on web.dev](https://web.dev/cls-web-tooling/).
+
+### Fixed issue with clearing Resources Buffer
+
+The agent no longer calls the `clearResourceTimings` API, which had the potential to affect other scripts from accessing all resources. Instead, it now uses the `PerformanceObserver` API to collect information about resources.
+
+### Removed Opera from test matrix
+
+
 ## v1210
 
 * Staging release date: 07/01/2021

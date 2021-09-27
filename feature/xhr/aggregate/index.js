@@ -245,5 +245,9 @@ function Chunk (events) {
 }
 
 function allAjaxIsEnabled() {
-  return !!config.getConfiguration('ajax.enabled')
+  var enabled = config.getConfiguration('ajax.enabled')
+  if (enabled === false) {
+    return false
+  }
+  return true
 }

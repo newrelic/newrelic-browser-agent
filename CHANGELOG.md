@@ -18,7 +18,7 @@ The CLS calculation has been updated to use session windows in order to align wi
 
 ### Fixed issue with clearing Resources Buffer
 
-The agent no longer calls the `clearResourceTimings` API. Instead, it now uses the `PerformanceObserver` API to collect information about resources.
+The agent no longer calls the `clearResourceTimings` API, which had the potential to affect other scripts from accessing all resources. Instead, it now uses the `PerformanceObserver` API to collect information about resources.
 
 ### Removed Opera from test matrix
 

@@ -18,6 +18,7 @@ var id = require('../../../loader/id')
 var ffVersion = require('../../../loader/firefox-version')
 var dataSize = require('ds')
 var responseSizeFromXhr = require('./response-size')
+var eventListenerOpts = require('../../../agent/event-listener-opts.js')
 
 var origRequest = NREUM.o.REQ
 var origXHR = window.XMLHttpRequest
@@ -44,7 +45,7 @@ ee.on('new-xhr', function (xhr) {
 
   xhr.addEventListener('load', function (event) {
     captureXhrData(ctx, xhr)
-  }, false)
+  }, eventListenerOpts(false))
 
   // In Firefox 34+, XHR ProgressEvents report pre-content-decoding sizes via
   // their 'loaded' property, rather than post-decoding sizes. We want
@@ -62,7 +63,7 @@ ee.on('new-xhr', function (xhr) {
 
   xhr.addEventListener('progress', function (event) {
     ctx.lastSize = event.loaded
-  }, false)
+  }, eventListenerOpts(false))
 })
 
 ee.on('open-xhr-start', function (args) {
@@ -122,7 +123,7 @@ ee.on('send-xhr-start', function (args, xhr) {
   }
 
   for (var i = 0; i < handlersLen; i++) {
-    xhr.addEventListener(handlers[i], this.listener, false)
+    xhr.addEventListener(handlers[i], this.listener, eventListenerOpts(false))
   }
 })
 

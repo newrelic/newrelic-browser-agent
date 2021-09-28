@@ -13,6 +13,7 @@ var handle = require('handle')
 var timerEE = require('../../wrap-timer')
 var rafEE = require('../../wrap-raf')
 var supportsPerformanceObserver = require('supports-performance-observer')
+var eventListenerOpts = require('../../../agent/event-listener-opts')
 
 var learResourceTimings = 'learResourceTimings'
 var ADD_EVENT_LISTENER = 'addEventListener'
@@ -120,15 +121,15 @@ if (supportsPerformanceObserver()) {
   // collect resource timings once when buffer is full
   if (ADD_EVENT_LISTENER in window.performance) {
     if (window.performance['c' + learResourceTimings]) {
-      window.performance[ADD_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
+      window.performance[ADD_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, eventListenerOpts(false))
     } else {
-      window.performance[ADD_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
+      window.performance[ADD_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, eventListenerOpts(false))
     }
   }
 }
 
-document[ADD_EVENT_LISTENER]('scroll', noOp, {passive: true})
-document[ADD_EVENT_LISTENER]('keypress', noOp, false)
-document[ADD_EVENT_LISTENER]('click', noOp, false)
+document[ADD_EVENT_LISTENER]('scroll', noOp, eventListenerOpts(false))
+document[ADD_EVENT_LISTENER]('keypress', noOp, eventListenerOpts(false))
+document[ADD_EVENT_LISTENER]('click', noOp, eventListenerOpts(false))
 
 function noOp (e) { /* no-op */ }

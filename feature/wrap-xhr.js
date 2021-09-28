@@ -9,6 +9,7 @@ require('./wrap-events')
 var baseEE = require('ee')
 var ee = baseEE.get('xhr')
 var wrapFn = require('../wrap-function')(ee)
+var eventListenerOpts = require('../agent/event-listener-opts')
 var originals = NREUM.o
 var OrigXHR = originals.XHR
 var MutationObserver = originals.MO
@@ -26,7 +27,7 @@ var XHR = window.XMLHttpRequest = function (opts) {
   var xhr = new OrigXHR(opts)
   try {
     ee.emit('new-xhr', [xhr], xhr)
-    xhr.addEventListener(READY_STATE_CHANGE, wrapXHR, false)
+    xhr.addEventListener(READY_STATE_CHANGE, wrapXHR, eventListenerOpts(false))
   } catch (e) {
     try {
       ee.emit('internal-error', [e])

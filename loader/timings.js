@@ -13,6 +13,7 @@ if ('init' in NREUM && 'page_view_timing' in NREUM.init &&
 var handle = require('handle')
 var loader = require('loader')
 var subscribeToVisibilityChange = require('visibility')
+var eventListenerOpts = require('../agent/event-listener-opts')
 
 var origEvent = NREUM.o.EV
 
@@ -68,14 +69,9 @@ if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'fu
 // first interaction and first input delay
 if ('addEventListener' in document) {
   var fiRecorded = false
-  var activeEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown']
-  activeEventTypes.forEach(function (e) {
-    document.addEventListener(e, captureInteraction, false)
-  })
-
-  var passiveEventTypes = ['touchstart']
-  passiveEventTypes.forEach(function (e) {
-    document.addEventListener(e, captureInteraction, {passive: true})
+  var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart']
+  allowedEventTypes.forEach(function (e) {
+    document.addEventListener(e, captureInteraction, eventListenerOpts(false))
   })
 }
 

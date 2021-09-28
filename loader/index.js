@@ -10,6 +10,7 @@ var ee = require('ee')
 var userAgent = require('./user-agent')
 var protocolAllowed = require('./protocol-allowed')
 var config = require('config')
+var eventListenerOpts = require('../agent/event-listener-opts')
 
 var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
 
@@ -65,8 +66,8 @@ require('api')
 require('./timings')
 
 if (doc[ADD_EVENT_LISTENER]) {
-  doc[ADD_EVENT_LISTENER]('DOMContentLoaded', loaded, false)
-  win[ADD_EVENT_LISTENER]('load', windowLoaded, false)
+  doc[ADD_EVENT_LISTENER]('DOMContentLoaded', loaded, eventListenerOpts(false))
+  win[ADD_EVENT_LISTENER]('load', windowLoaded, eventListenerOpts(false))
 } else {
   doc[ATTACH_EVENT]('onreadystatechange', stateChange)
   win[ATTACH_EVENT]('onload', windowLoaded)

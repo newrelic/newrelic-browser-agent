@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+var eventListenerOpts = require('../agent/event-listener-opts')
 var ee = require('ee').get('jsonp')
 var wrapFn = require('../wrap-function')(ee)
 
@@ -60,21 +61,21 @@ function wrapElement (el) {
   var context = {}
   wrapFn.inPlace(callback.parent, [callback.key], 'cb-', context)
 
-  el.addEventListener('load', onLoad, false)
-  el.addEventListener('error', onError, false)
+  el.addEventListener('load', onLoad, eventListenerOpts(false))
+  el.addEventListener('error', onError, eventListenerOpts(false))
   ee.emit('new-jsonp', [el.src], context)
 
   function onLoad () {
     ee.emit('jsonp-end', [], context)
-    el.removeEventListener('load', onLoad, false)
-    el.removeEventListener('error', onError, false)
+    el.removeEventListener('load', onLoad, eventListenerOpts(false))
+    el.removeEventListener('error', onError, eventListenerOpts(false))
   }
 
   function onError () {
     ee.emit('jsonp-error', [], context)
     ee.emit('jsonp-end', [], context)
-    el.removeEventListener('load', onLoad, false)
-    el.removeEventListener('error', onError, false)
+    el.removeEventListener('load', onLoad, eventListenerOpts(false))
+    el.removeEventListener('error', onError, eventListenerOpts(false))
   }
 }
 

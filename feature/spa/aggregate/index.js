@@ -26,6 +26,7 @@ var uniqueId = require('unique-id')
 var paintMetrics = require('../../../agent/paint-metrics').metrics
 var Interaction = require('./Interaction')
 var config = require('config')
+var eventListenerOpts = require('../../../agent/event-listener-opts')
 
 var INTERACTION_EVENTS = [
   'click',
@@ -443,8 +444,8 @@ baseEE.on('feat-spa', function () {
     if (isScript) {
       // increase remaining count to keep the interaction open
       interaction[REMAINING]++
-      el.addEventListener('load', onload, false)
-      el.addEventListener('error', onerror, false)
+      el.addEventListener('load', onload, eventListenerOpts(false))
+      el.addEventListener('error', onerror, eventListenerOpts(false))
     }
 
     function onload() {

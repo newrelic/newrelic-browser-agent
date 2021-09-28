@@ -33,6 +33,7 @@ var xhrEE = require('../../wrap-xhr')
 var jsonpEE = require('../../wrap-jsonp')
 var baseEE = require('ee')
 var tracerEE = baseEE.get('tracer')
+var eventListenerOpts = require('../../../agent/event-listener-opts')
 
 require('../../xhr/instrument')
 loader.features.spa = true
@@ -90,12 +91,12 @@ function trackURLChange (unusedArgs, hashChangedDuringCb) {
   historyEE.emit('newURL', ['' + location, hashChangedDuringCb])
 }
 
-win[ADD_EVENT_LISTENER]('hashchange', trackURLChange, true)
-win[ADD_EVENT_LISTENER]('load', trackURLChange, true)
+win[ADD_EVENT_LISTENER]('hashchange', trackURLChange, eventListenerOpts(true))
+win[ADD_EVENT_LISTENER]('load', trackURLChange, eventListenerOpts(true))
 
 win[ADD_EVENT_LISTENER]('popstate', function () {
   trackURLChange(0, depth > 1)
-}, true)
+}, eventListenerOpts(true))
 
 function timestamp (ee, type) {
   ee.on(type, function () {

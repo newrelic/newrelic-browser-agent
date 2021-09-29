@@ -338,4 +338,5 @@ features.passiveSupported = features.addEventListener
   .include('firefox', '>48')
   .include('chrome', '>50')
   .include('safari', '>9.3')
-  .include('android', '>4.4.4')
+  .include('android', '>=93')
+  .include('ios', '>=10')

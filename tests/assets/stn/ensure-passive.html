@@ -13,9 +13,7 @@
       document.addEventListener = function (name, fn, flags) {
         if (name === 'scroll') {
           window.gotScroll = true
-          if (!flags.passive) {
-            window.failed = true
-          }
+          window.isPassive = !!flags.passive
         }
 
         originalAddE.apply(this, arguments)

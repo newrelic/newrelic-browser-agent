@@ -692,7 +692,7 @@ function runLcpTests (loader) {
         page_view_timing: {
           enabled: true,
           harvestTimeSeconds: 15,
-          // maxLCPTimeSeconds: 2
+          maxLCPTimeSeconds: 2
         }
       }
     })
@@ -707,6 +707,7 @@ function runLcpTests (loader) {
       .then((timingsResult) => {
         const {body, query} = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
+
         const timing = timings.find(t => t.name === 'lcp')
         t.ok(timing, 'found an LCP timing')
         t.ok(timing.attributes, 'LCP has attributes')

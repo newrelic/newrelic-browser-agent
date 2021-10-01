@@ -15,6 +15,7 @@ var loader = require('loader')
 var subscribeToVisibilityChange = require('visibility')
 
 var origEvent = NREUM.o.EV
+var pageHiddenTime
 
 // paint metrics
 function perfObserver(list, observer) {
@@ -32,7 +33,10 @@ function perfObserver(list, observer) {
 function lcpObserver(list, observer) {
   var entries = list.getEntries()
   if (entries.length > 0) {
-    handle('lcp', [entries[entries.length - 1]])
+    var entry = entries[entries.length - 1]
+
+    if (pageHiddenTime && pageHiddenTime < entry.startTime) return
+    handle('lcp', [entry])
   }
 }
 
@@ -102,6 +106,7 @@ subscribeToVisibilityChange(captureVisibilityChange)
 
 function captureVisibilityChange(state) {
   if (state === 'hidden') {
-    handle('pageHide', [loader.now()])
+    pageHiddenTime = loader.now()
+    handle('pageHide', [pageHiddenTime])
   }
 }

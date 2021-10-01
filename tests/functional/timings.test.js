@@ -35,6 +35,8 @@ runClsTests('spa')
 runClsTests('rum')
 runCustomAttributeTests('spa')
 runCustomAttributeTests('rum')
+runLcpTests('rum')
+runLcpTests('spa')
 
 testDriver.test('Disabled timings feature', reliableFinalHarvest, function (t, browser, router) {
   let url = router.assetURL('final-harvest-page-view-timings-disabled.html', { loader: 'rum' })
@@ -676,6 +678,49 @@ function runCustomAttributeTests(loader) {
 
     function fail (err) {
       t.error(err)
+      t.end()
+    }
+  })
+}
+
+function runLcpTests (loader) {
+  testDriver.test(`${loader} loader: LCP is not collected after pageHide`, testPageHide.and(supportedLcp), function (t, browser, router) {
+    // HTML page manually sets maxLCPTimeSeconds to 5
+    const assetURL = router.assetURL('lcp-pagehide.html', {
+      loader: loader,
+      init: {
+        page_view_timing: {
+          enabled: true,
+          harvestTimeSeconds: 15,
+          maxLCPTimeSeconds: 2
+        }
+      }
+    })
+
+    const rumPromise = router.expectRum()
+    const loadPromise = browser.safeGet(assetURL)
+
+    Promise.all([rumPromise, loadPromise])
+      .then(() => {
+        return router.expectTimings()
+      })
+      .then((timingsResult) => {
+        const {body, query} = timingsResult
+        const timings = querypack.decode(body && body.length ? body : query.e)
+
+        const timing = timings.find(t => t.name === 'lcp')
+        t.ok(timing, 'found an LCP timing')
+        t.ok(timing.attributes, 'LCP has attributes')
+        const elementId = timing.attributes.find(a => a.key === 'eid')
+
+        t.equals(elementId.value, 'initial-content', 'LCP captured the pre-pageHide attribute')
+
+        t.end()
+      })
+      .catch(fail)
+
+    function fail (e) {
+      t.error(e)
       t.end()
     }
   })

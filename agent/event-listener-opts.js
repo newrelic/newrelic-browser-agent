@@ -10,6 +10,6 @@ try {
   window.removeEventListener('testPassive', null, opts)
 } catch (e) {}
 
-module.exports = function(fallback) {
-  return supportsPassive ? {passive: true} : fallback || false
+module.exports = function(useCapture) {
+  return supportsPassive ? {passive: true, capture: !!useCapture} : !!useCapture
 }

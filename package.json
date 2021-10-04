@@ -64,6 +64,7 @@
     "config": "./loader/config.js",
     "ds": "./loader/data-size.js",
     "ee": "./contextual-ee/index.js",
+    "event-listener-options": "./loader/event-listener-opts.js",
     "gos": "./loader/get-or-set.js",
     "handle": "./loader/handle.js",
     "id": "./loader/id.js",

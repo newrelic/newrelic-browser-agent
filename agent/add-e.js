@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var eventListenerOpts = require('./event-listener-opts')
+var eventListenerOpts = require('event-listener-opts')
 
 // Safely add an event listener to window in any browser
 module.exports = function (sType, callback) {

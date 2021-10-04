@@ -10,7 +10,7 @@ var ee = require('ee')
 var userAgent = require('./user-agent')
 var protocolAllowed = require('./protocol-allowed')
 var config = require('config')
-var eventListenerOpts = require('../agent/event-listener-opts')
+var eventListenerOpts = require('event-listener-opts')
 
 var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
 

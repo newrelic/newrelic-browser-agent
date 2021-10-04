@@ -13,7 +13,7 @@ var handle = require('handle')
 var timerEE = require('../../wrap-timer')
 var rafEE = require('../../wrap-raf')
 var supportsPerformanceObserver = require('supports-performance-observer')
-var eventListenerOpts = require('../../../agent/event-listener-opts')
+var eventListenerOpts = require('event-listener-opts')
 
 var learResourceTimings = 'learResourceTimings'
 var ADD_EVENT_LISTENER = 'addEventListener'

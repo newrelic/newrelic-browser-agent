@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var eventListenerOpts = require('../agent/event-listener-opts')
+var eventListenerOpts = require('event-listener-opts')
 var ee = require('ee').get('jsonp')
 var wrapFn = require('../wrap-function')(ee)
 

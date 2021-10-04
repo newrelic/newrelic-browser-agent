@@ -9,7 +9,7 @@ require('./wrap-events')
 var baseEE = require('ee')
 var ee = baseEE.get('xhr')
 var wrapFn = require('../wrap-function')(ee)
-var eventListenerOpts = require('../agent/event-listener-opts')
+var eventListenerOpts = require('event-listener-opts')
 var originals = NREUM.o
 var OrigXHR = originals.XHR
 var MutationObserver = originals.MO

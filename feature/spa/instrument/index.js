@@ -33,7 +33,7 @@ var xhrEE = require('../../wrap-xhr')
 var jsonpEE = require('../../wrap-jsonp')
 var baseEE = require('ee')
 var tracerEE = baseEE.get('tracer')
-var eventListenerOpts = require('../../../agent/event-listener-opts')
+var eventListenerOpts = require('event-listener-opts')
 
 require('../../xhr/instrument')
 loader.features.spa = true

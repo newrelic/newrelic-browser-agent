@@ -26,7 +26,7 @@ var uniqueId = require('unique-id')
 var paintMetrics = require('../../../agent/paint-metrics').metrics
 var Interaction = require('./Interaction')
 var config = require('config')
-var eventListenerOpts = require('../../../agent/event-listener-opts')
+var eventListenerOpts = require('event-listener-opts')
 
 var INTERACTION_EVENTS = [
   'click',

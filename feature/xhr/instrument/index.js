@@ -18,7 +18,7 @@ var id = require('../../../loader/id')
 var ffVersion = require('../../../loader/firefox-version')
 var dataSize = require('ds')
 var responseSizeFromXhr = require('./response-size')
-var eventListenerOpts = require('../../../agent/event-listener-opts.js')
+var eventListenerOpts = require('event-listener-opts')
 
 var origRequest = NREUM.o.REQ
 var origXHR = window.XMLHttpRequest

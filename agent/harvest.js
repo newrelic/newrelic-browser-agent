@@ -29,7 +29,7 @@ var ieVersion = require('./ie-version')
 var xhrUsable = ieVersion > 9 || ieVersion === 0
 
 var addPaintMetric = require('./paint-metrics').addMetric
-var eventListenerOpts = require('./event-listener-opts')
+var eventListenerOpts = require('event-listener-opts')
 
 module.exports = {
   sendRUM: single(sendRUM), // wrapping this in single makes it so that it can only be called once from outside

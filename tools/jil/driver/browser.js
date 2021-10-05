@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const eventListenerOpts = require('event-listener-opts')
+const eventListenerOpts = require('../../../loader/event-listener-opts')
 const testDriver = require('../browser-test')
 
 var loadQueue = []

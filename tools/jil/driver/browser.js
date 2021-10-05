@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const eventListenerOpts = require('../../../loader/event-listener-opts')
 const testDriver = require('../browser-test')
 
 var loadQueue = []
@@ -22,7 +21,7 @@ function browserTest (name, spec, test) {
 }
 
 window.addEventListener
-  ? window.addEventListener('load', loaded, eventListenerOpts(false))
+  ? window.addEventListener('load', loaded)
   : window.attachEvent('onload', loaded)
 
 function loaded () {

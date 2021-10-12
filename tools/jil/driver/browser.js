@@ -21,7 +21,7 @@ function browserTest (name, spec, test) {
 }
 
 window.addEventListener
-  ? window.addEventListener('load', loaded)
+  ? window.addEventListener('load', loaded, false)
   : window.attachEvent('onload', loaded)
 
 function loaded () {

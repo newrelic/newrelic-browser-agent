@@ -13,6 +13,7 @@ if ('init' in NREUM && 'page_view_timing' in NREUM.init &&
 var handle = require('handle')
 var loader = require('loader')
 var subscribeToVisibilityChange = require('visibility')
+var eventListenerOpts = require('event-listener-opts')
 
 var origEvent = NREUM.o.EV
 var pageHiddenTime
@@ -74,7 +75,7 @@ if ('addEventListener' in document) {
   var fiRecorded = false
   var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart']
   allowedEventTypes.forEach(function (e) {
-    document.addEventListener(e, captureInteraction, false)
+    document.addEventListener(e, captureInteraction, eventListenerOpts(false))
   })
 }
 

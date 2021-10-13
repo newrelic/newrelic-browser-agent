@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+var eventListenerOpts = require('event-listener-opts')
+
 module.exports = subscribeToVisibilityChange
 
 var hidden, eventName, state
@@ -22,7 +24,7 @@ if (typeof document.hidden !== 'undefined') {
 
 function subscribeToVisibilityChange(cb) {
   if ('addEventListener' in document && eventName) {
-    document.addEventListener(eventName, handleVisibilityChange, false)
+    document.addEventListener(eventName, handleVisibilityChange, eventListenerOpts(false))
   }
 
   function handleVisibilityChange() {

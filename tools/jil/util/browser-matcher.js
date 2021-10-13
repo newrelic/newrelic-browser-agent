@@ -331,3 +331,12 @@ features.originOnlyReferer = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=89')
   .include('firefox', '>=87')
+
+features.passiveSupported = features.addEventListener
+  .exclude('*')
+  .include('edge', '>15')
+  .include('firefox', '>48')
+  .include('chrome', '>50')
+  .include('safari', '>9.3')
+  .include('android', '>=93')
+  .include('ios', '>=10')

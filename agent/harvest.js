@@ -29,6 +29,7 @@ var ieVersion = require('./ie-version')
 var xhrUsable = ieVersion > 9 || ieVersion === 0
 
 var addPaintMetric = require('./paint-metrics').addMetric
+var eventListenerOpts = require('event-listener-opts')
 
 module.exports = {
   sendRUM: single(sendRUM), // wrapping this in single makes it so that it can only be called once from outside
@@ -235,7 +236,7 @@ function _send (endpoint, nr, payload, opts, submitMethod, cbFinished) {
         result.responseText = this.responseText
       }
       cbFinished(result)
-    }, false)
+    }, eventListenerOpts(false))
   }
 
   // if beacon request failed, retry with an alternative method

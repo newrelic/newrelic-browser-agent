@@ -54,14 +54,15 @@ testDriver.test('customTransactionName 1 arg unload', withUnload, function (t, b
   }))
 
   Promise.all([rumPromise, loadPromise])
-    .then(([data]) => {
+    .then(([{body, query}]) => {
+      const time = getTime(JSON.parse(body).cm)
       t.equal(
-        data.query.ct,
+        query.ct,
         'http://custom.transaction/foo',
         'Custom Transaction Name (1 arg)'
       )
-      t.equal(typeof getTime(data.query.cm), 'number', 'Finished exists XHR (1 arg)')
-      t.ok(getTime(data.query.cm) > 0, 'Finished time XHR > 0 (1 arg)')
+      t.equal(typeof time, 'number', 'Finished exists XHR (1 arg)')
+      t.ok(time > 0, 'Finished time XHR > 0 (1 arg)')
       t.end()
     })
     .catch(fail)
@@ -85,18 +86,19 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
   }))
 
   Promise.all([rumPromise, loadPromise])
-    .then(([data]) => {
+    .then(([{body, query}]) => {
+      const time = getTime(JSON.parse(body).cm)
       t.equal(
-        data.query.ct,
+        query.ct,
         'http://bar.baz/foo',
         'Custom Transaction Name (2 arg)'
       )
-      t.equal(typeof getTime(data.query.cm), 'number', 'Finished exists XHR (2 arg)')
+      t.equal(typeof time, 'number', 'Finished exists XHR (2 arg)')
 
       if (browser.match('firefox@<=19')) {
         t.skip('old firefox has inconsistent timing data')
       } else {
-        t.ok(getTime(data.query.cm) > 0, 'Finished time XHR > 0 (2 arg)')
+        t.ok(time > 0, 'Finished time XHR > 0 (2 arg)')
       }
       t.end()
     })
@@ -110,7 +112,7 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
 
 function getTime (cm) {
   try {
-    return JSON.parse(cm)[0].metrics.time.t
+    return cm[0].metrics.time.t
   } catch (e) {
     console.error(e)
     return 0
@@ -118,7 +120,7 @@ function getTime (cm) {
 }
 
 testDriver.test('noticeError takes an error object', withUnload, function (t, browser, router) {
-  t.plan(2)
+  t.plan(5)
   let rumPromise = router.expectRumAndErrors()
   let loadPromise = browser.get(router.assetURL('api.html', {
     init: {
@@ -130,13 +132,20 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
 
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
+      const body = JSON.parse(data.body)
+      var supportabilityMetrics = !!body && body.sm
       var errorData = getErrorsFromResponse(data, browser)
       var params = errorData[0] && errorData[0]['params']
       if (params) {
         var exceptionClass = params.exceptionClass
         var message = params.message
+        var sm = supportabilityMetrics && supportabilityMetrics[0]
         t.equal('Error', exceptionClass, 'The agent passes an error class instead of a string.')
         t.equal('no free taco coupons', message, 'Params contain the right error message.')
+        t.ok(sm && sm.params && sm.metrics, 'A supportabilityMetric was generated for noticeError')
+        t.equal(sm.params.name, 'API/noticeError', 'supportabilityMetric contains correct name')
+        t.equal(sm.metrics.count, 1, 'supportabilityMetric count was incremented by 1')
+        t.end()
       } else {
         fail('No error data was received.')
       }
@@ -150,7 +159,7 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
 })
 
 testDriver.test('noticeError takes a string', withUnload, function (t, browser, router) {
-  t.plan(2)
+  t.plan(5)
   let rumPromise = router.expectRumAndErrors()
   let loadPromise = browser.get(router.assetURL('api/noticeError.html', {
     init: {
@@ -162,13 +171,20 @@ testDriver.test('noticeError takes a string', withUnload, function (t, browser, 
 
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
+      const body = data.body && JSON.parse(data.body)
+      var supportabilityMetrics = !!body && body.sm
       var errorData = getErrorsFromResponse(data, browser)
       var params = errorData[0] && errorData[0]['params']
       if (params) {
         var exceptionClass = params.exceptionClass
         var message = params.message
+        var sm = supportabilityMetrics && supportabilityMetrics[0]
         t.equal('Error', exceptionClass, 'The agent passes an error class instead of a string.')
         t.equal('too many free taco coupons', message, 'Params contain the right error message.')
+        t.ok(sm && sm.params && sm.metrics, 'A supportabilityMetric was generated for noticeError')
+        t.equal(sm.params.name, 'API/noticeError', 'supportabilityMetric contains correct name')
+        t.equal(sm.metrics.count, 1, 'supportabilityMetric count was incremented by 1')
+        t.end()
       } else {
         fail('No error data was received.')
       }
@@ -196,7 +212,7 @@ testDriver.test('finished records a PageAction when called before RUM message', 
   }))
 
   Promise.all([insPromise, rumPromise, loadPromise])
-    .then(([insData]) => {
+    .then(([insData, rumData]) => {
       const query = insData.query
       const body = insData.body
       if (query.ins) {

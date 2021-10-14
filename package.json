@@ -62,6 +62,7 @@
   "browser": {
     "api": "./loader/api.js",
     "config": "./loader/config.js",
+    "custom-metrics": "./loader/custom-metrics.js",
     "ds": "./loader/data-size.js",
     "ee": "./contextual-ee/index.js",
     "event-listener-opts": "./loader/event-listener-opts.js",

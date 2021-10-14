@@ -190,8 +190,7 @@ function send (endpoint, nr, singlePayload, opts, submitMethod, cbFinished) {
 function _send (endpoint, nr, payload, opts, submitMethod, cbFinished) {
   if (!nr.info.errorBeacon) return false
 
-  // custom metrics data (cm) is sent as a query parameter to /jserrors
-  if (!payload.body && !(endpoint === 'jserrors' && payload.qs && payload.qs.cm)) {
+  if (!payload.body) {
     if (cbFinished) {
       cbFinished({ sent: false })
     }

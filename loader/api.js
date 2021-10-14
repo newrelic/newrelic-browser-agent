@@ -8,6 +8,7 @@ var mapOwn = require('map-own')
 var slice = require('lodash._slice')
 var tracerEE = require('ee').get('tracer')
 var loader = require('loader')
+var customMetrics = require('custom-metrics')
 
 var nr = NREUM
 if (typeof (window.newrelic) === 'undefined') newrelic = nr
@@ -77,5 +78,6 @@ function apiCall (name, notSpa, bufferGroup) {
 
 newrelic.noticeError = function (err, customAttributes) {
   if (typeof err === 'string') err = new Error(err)
+  customMetrics.incrementCounter('API/noticeError', true)
   handle('err', [err, loader.now(), false, customAttributes])
 }

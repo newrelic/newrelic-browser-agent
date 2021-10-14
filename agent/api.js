@@ -12,15 +12,17 @@ var mapOwn = require('map-own')
 var loader = require('loader')
 var handle = require('handle')
 var config = require('config')
+var customMetrics = require('custom-metrics')
 var cycle = 0
 
 var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
 
 harvest.on('jserrors', function () {
-  return { qs: agg.take([ 'cm' ]) }
+  return { body: agg.take([ 'cm', 'sm' ]) }
 })
 
 var api = {
+  storeCustomMetric: storeCustomMetric,
   finished: single(finished),
   setPageViewName: setPageViewName,
   setErrorHandler: setErrorHandler,
@@ -37,6 +39,10 @@ mapOwn(api, function (fnName, fn) {
 // All API functions get passed the time they were called as their
 // first parameter. These functions can be called asynchronously.
 
+function storeCustomMetric (t, type, name, params, newMetrics, customParams) {
+  agg.store(type, name, params, newMetrics, customParams)
+}
+
 function setPageViewName (t, name, host) {
   if (typeof name !== 'string') return
   if (name.charAt(0) !== '/') name = '/' + name
@@ -45,7 +51,7 @@ function setPageViewName (t, name, host) {
 
 function finished (t, providedTime) {
   var time = providedTime ? providedTime - loader.offset : t
-  agg.store('cm', 'finished', { name: 'finished' }, { time: time })
+  customMetrics.incrementValue('finished', {time: time})
   addToTrace(t, { name: 'finished', start: time + loader.offset, origin: 'nr' })
   handle('api-addPageAction', [ time, 'finished' ])
 }

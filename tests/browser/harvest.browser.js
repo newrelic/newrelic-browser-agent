@@ -342,33 +342,6 @@ test('does not send jserrors when there is nothing to send', function (t) {
   }
 })
 
-test('sends jserrors when there is no body but cm query parameter is present', function (t) {
-  resetSpies()
-  let baseUrl = 'https://foo/jserrors/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref=http://foo.com'
-  let expectedPayload = {cm: [1, 2, 3]}
-  harvest.on('jserrors', once(testPayload))
-
-  let result = harvest.sendX('jserrors', fakeNr)
-
-  let call
-  if (xhrUsable) {
-    call = submitData.xhr.getCall(0)
-  } else {
-    call = submitData.img.getCall(0)
-  }
-  t.ok(result, 'result truthy')
-  validateUrl(t, call.args[0], baseUrl + encode.obj(expectedPayload), 'correct URL given was used')
-  t.notOk(call.args[1], 'no body was sent')
-  t.end()
-
-  function testPayload() {
-    return {
-      qs: expectedPayload,
-      body: null
-    }
-  }
-})
-
 test('uses correct submission mechanism for events', function (t) {
   if (xhrUsable) {
     t.plan(4)

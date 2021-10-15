@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../tools/jil/index')
-const {getErrorsFromResponse} = require('./err/assertion-helpers')
+const {getErrorsFromResponse, getSupportabilityFromResponse} = require('./err/assertion-helpers')
 
 let withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 let withCors = testDriver.Matcher.withFeature('cors')
@@ -55,7 +55,7 @@ testDriver.test('customTransactionName 1 arg unload', withUnload, function (t, b
 
   Promise.all([rumPromise, loadPromise])
     .then(([{body, query}]) => {
-      const time = getTime(JSON.parse(body).cm)
+      const time = getTime(body ? JSON.parse(body).cm : JSON.parse(query.cm))
       t.equal(
         query.ct,
         'http://custom.transaction/foo',
@@ -87,7 +87,7 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
 
   Promise.all([rumPromise, loadPromise])
     .then(([{body, query}]) => {
-      const time = getTime(JSON.parse(body).cm)
+      const time = getTime(body ? JSON.parse(body).cm : JSON.parse(query.cm))
       t.equal(
         query.ct,
         'http://bar.baz/foo',
@@ -132,8 +132,7 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
 
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
-      const body = JSON.parse(data.body)
-      var supportabilityMetrics = !!body && body.sm
+      var supportabilityMetrics = getSupportabilityFromResponse(data, browser)
       var errorData = getErrorsFromResponse(data, browser)
       var params = errorData[0] && errorData[0]['params']
       if (params) {
@@ -171,8 +170,7 @@ testDriver.test('noticeError takes a string', withUnload, function (t, browser, 
 
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
-      const body = data.body && JSON.parse(data.body)
-      var supportabilityMetrics = !!body && body.sm
+      var supportabilityMetrics = getSupportabilityFromResponse(data, browser)
       var errorData = getErrorsFromResponse(data, browser)
       var params = errorData[0] && errorData[0]['params']
       if (params) {

@@ -102,4 +102,22 @@ function getErrorsFromResponse(response, browser) {
   return null
 }
 
-module.exports = {assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse}
+function getSupportabilityFromResponse(response, browser) {
+  if (response.body) {
+    try {
+      var parsedBody = JSON.parse(response.body)
+      if (parsedBody.sm) {
+        return parsedBody.sm
+      }
+    } catch (e) {}
+  }
+  if (response.query && response.query.sm) {
+    try {
+      var parsedQueryParam = JSON.parse(response.query.sm)
+      return parsedQueryParam
+    } catch (e) {}
+  }
+  return null
+}
+
+module.exports = {assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse, getSupportabilityFromResponse}

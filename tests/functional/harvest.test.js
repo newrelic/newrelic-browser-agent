@@ -43,7 +43,7 @@ testDriver.test('referrer sent in query does not include query parameters', with
   }
 })
 
-testDriver.test('referrer sent in referer header includes path', originOnlyReferer.inverse(), function(t, browser, router) {
+testDriver.test('referrer sent in referer header includes path', originOnlyReferer.include('ios', '>11.2').inverse(), function(t, browser, router) {
   t.plan(1)
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
   let rumPromise = router.expectRum()
@@ -125,7 +125,7 @@ testDriver.test('when url is changed using replaceState during load', withPushSt
 
     Promise.all([rumPromise, loadPromise]).then(([{query, headers}]) => {
       var headerUrl = url.parse(headers.referer)
-      if (browser.match('ie@10')) {
+      if (browser.match('ie@10') || browser.match('ios@>11.2')) {
         t.equal(headerUrl.pathname, originalPath, 'referer header contains the original URL in IE 10')
       } else {
         t.equal(headerUrl.pathname, redirectedPath, 'referer header contains the redirected URL')

@@ -270,6 +270,7 @@ features.addEventListenerOptions = new BrowserMatcher()
 
 features.pushstate = new BrowserMatcher()
   .exclude('ie', '<10')
+  .exclude('ios', '>11.2')
 
 features.firstPaint = new BrowserMatcher()
   .exclude('*')

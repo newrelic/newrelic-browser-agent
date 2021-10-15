@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../tools/jil/index')
-const {getErrorsFromResponse} = require('./err/assertion-helpers')
+const {getErrorsFromResponse, getSupportabilityFromResponse} = require('./err/assertion-helpers')
 
 let withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 
@@ -21,8 +21,7 @@ testDriver.test('noticeError API call generates a supportabilityMetric', withUnl
 
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
-      const body = JSON.parse(data.body)
-      var supportabilityMetrics = !!body && body.sm
+      var supportabilityMetrics = getSupportabilityFromResponse(data, browser)
       var errorData = getErrorsFromResponse(data, browser)
       var params = errorData[0] && errorData[0]['params']
       if (params) {

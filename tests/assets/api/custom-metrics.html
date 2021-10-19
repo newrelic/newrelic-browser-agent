@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {loader}
+    {config}
+  </head>
+  <body>
+    Api test!
+    <script>
+      newrelic.noticeError('too many free taco coupons')
+      newrelic.finished()
+      newrelic.finished()
+      newrelic.finished()
+    </script>
+  </body>
+</html>

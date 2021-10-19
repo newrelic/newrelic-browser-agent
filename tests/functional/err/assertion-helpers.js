@@ -102,22 +102,25 @@ function getErrorsFromResponse(response, browser) {
   return null
 }
 
-function getSupportabilityFromResponse(response, browser) {
+function getCustomMetricsFromResponse(response, isSupportability) {
   if (response.body) {
     try {
       var parsedBody = JSON.parse(response.body)
-      if (parsedBody.sm) {
+      if (isSupportability && parsedBody.sm) {
         return parsedBody.sm
+      }
+      if (!isSupportability && parsedBody.cm) {
+        return parsedBody.cm
       }
     } catch (e) {}
   }
-  if (response.query && response.query.sm) {
+  if (response.query && (isSupportability && response.query.sm) || response.query.cm) {
     try {
-      var parsedQueryParam = JSON.parse(response.query.sm)
+      var parsedQueryParam = JSON.parse(isSupportability ? response.query.sm : response.query.cm)
       return parsedQueryParam
     } catch (e) {}
   }
   return null
 }
 
-module.exports = {assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse, getSupportabilityFromResponse}
+module.exports = {assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse, getCustomMetricsFromResponse}

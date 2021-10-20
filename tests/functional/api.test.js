@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../tools/jil/index')
-const {getErrorsFromResponse} = require('./err/assertion-helpers')
+const {getErrorsFromResponse, getSupportabilityFromResponse} = require('./err/assertion-helpers')
 
 let withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 let withCors = testDriver.Matcher.withFeature('cors')
@@ -120,7 +120,7 @@ function getTime (cm) {
 }
 
 testDriver.test('noticeError takes an error object', withUnload, function (t, browser, router) {
-  t.plan(2)
+  t.plan(5)
   let rumPromise = router.expectRumAndErrors()
   let loadPromise = browser.get(router.assetURL('api.html', {
     init: {
@@ -132,13 +132,18 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
 
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
+      var supportabilityMetrics = getSupportabilityFromResponse(data, browser)
       var errorData = getErrorsFromResponse(data, browser)
       var params = errorData[0] && errorData[0]['params']
       if (params) {
         var exceptionClass = params.exceptionClass
         var message = params.message
+        var sm = supportabilityMetrics && supportabilityMetrics[0]
         t.equal('Error', exceptionClass, 'The agent passes an error class instead of a string.')
         t.equal('no free taco coupons', message, 'Params contain the right error message.')
+        t.ok(sm && sm.params && sm.metrics, 'A supportabilityMetric was generated for noticeError')
+        t.equal(sm.params.name, 'API/noticeError', 'supportabilityMetric contains correct name')
+        t.equal(sm.metrics.count, 1, 'supportabilityMetric count was incremented by 1')
         t.end()
       } else {
         fail('No error data was received.')
@@ -153,7 +158,7 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
 })
 
 testDriver.test('noticeError takes a string', withUnload, function (t, browser, router) {
-  t.plan(2)
+  t.plan(5)
   let rumPromise = router.expectRumAndErrors()
   let loadPromise = browser.get(router.assetURL('api/noticeError.html', {
     init: {
@@ -165,13 +170,18 @@ testDriver.test('noticeError takes a string', withUnload, function (t, browser, 
 
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
+      var supportabilityMetrics = getSupportabilityFromResponse(data, browser)
       var errorData = getErrorsFromResponse(data, browser)
       var params = errorData[0] && errorData[0]['params']
       if (params) {
         var exceptionClass = params.exceptionClass
         var message = params.message
+        var sm = supportabilityMetrics && supportabilityMetrics[0]
         t.equal('Error', exceptionClass, 'The agent passes an error class instead of a string.')
         t.equal('too many free taco coupons', message, 'Params contain the right error message.')
+        t.ok(sm && sm.params && sm.metrics, 'A supportabilityMetric was generated for noticeError')
+        t.equal(sm.params.name, 'API/noticeError', 'supportabilityMetric contains correct name')
+        t.equal(sm.metrics.count, 1, 'supportabilityMetric count was incremented by 1')
         t.end()
       } else {
         fail('No error data was received.')

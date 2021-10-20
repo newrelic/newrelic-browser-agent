@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {loader}
+    {config}
+  </head>
+  <body>
+    Api test!
+    <script>
+        // should create a 'sm' object for each tracked API call
+        newrelic.noticeError('too many free taco coupons')
+        newrelic.setPageViewName('test')
+        newrelic.setCustomAttribute('test')
+        newrelic.setErrorHandler()
+        newrelic.finished()
+        newrelic.addToTrace('test')
+        newrelic.inlineHit('test')
+        newrelic.addRelease('test')
+
+        // should increment count ~~-> 5
+        newrelic.setPageViewName('test')
+        newrelic.setPageViewName('test')
+        newrelic.setPageViewName('test')
+        newrelic.setPageViewName('test')
+    </script>
+  </body>
+</html>

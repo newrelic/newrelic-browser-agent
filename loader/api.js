@@ -72,7 +72,6 @@ mapOwn('actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get'.sp
 function apiCall (name, notSpa, bufferGroup) {
   return function () {
     var cleanedName = name.replace('api-', '')
-    console.log('an API was called, increment counter for', cleanedName)
     customMetrics.incrementCounter('API/' + cleanedName + '/called', true)
     handle(name, [loader.now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup)
     return notSpa ? void 0 : this

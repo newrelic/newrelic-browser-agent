@@ -20,7 +20,6 @@
         newrelic.setErrorHandler()
         newrelic.finished()
         newrelic.addToTrace('test')
-        newrelic.inlineHit('test')
         newrelic.addRelease('test')
 
         // should increment count ~~-> 5

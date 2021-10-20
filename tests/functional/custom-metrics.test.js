@@ -17,14 +17,13 @@ const asyncApiFns = [
   'setErrorHandler',
   'finished',
   'addToTrace',
-  'inlineHit',
   'addRelease'
 ].map(smLabel)
 
 const multipleApiCalls = smLabel('setPageViewName') // page should trigger 5 calls of this fn
 
 testDriver.test('Calling a newrelic[api] fn creates a supportability metric', withUnload, function (t, browser, router) {
-  // t.plan((asyncApiFns.length * 2) + 3)
+  t.plan((asyncApiFns.length * 2) + 3)
   let rumPromise = router.expectRumAndErrors()
   let loadPromise = browser.get(router.assetURL('api/customMetrics.html', {
     init: {
@@ -36,7 +35,6 @@ testDriver.test('Calling a newrelic[api] fn creates a supportability metric', wi
 
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
-      console.log('PROMISE ALL IS DONE')
       var supportabilityMetrics = getCustomMetricsFromResponse(data, true)
       var customMetrics = getCustomMetricsFromResponse(data, false)
       var errorData = getErrorsFromResponse(data, browser)

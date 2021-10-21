@@ -2,7 +2,7 @@
 
 * Staging release date: 09/27/2021
 * Production APM-injected release date: 09/29/2021
-* Production Standalone release date: 10/13/2021
+* Production Standalone release date: 10/21/2021
 
 ### AjaxRequest events for all XHR/fetch requests
 

@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../tools/jil/index')
-const {getErrorsFromResponse, getCustomMetricsFromResponse} = require('./err/assertion-helpers')
+const {getErrorsFromResponse, getMetricsFromResponse} = require('./err/assertion-helpers')
 
 let withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 
@@ -35,8 +35,8 @@ testDriver.test('Calling a newrelic[api] fn creates a supportability metric', wi
 
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
-      var supportabilityMetrics = getCustomMetricsFromResponse(data, true)
-      var customMetrics = getCustomMetricsFromResponse(data, false)
+      var supportabilityMetrics = getMetricsFromResponse(data, true)
+      var customMetrics = getMetricsFromResponse(data, false)
       var errorData = getErrorsFromResponse(data, browser)
       var params = errorData[0] && errorData[0]['params']
       if (params) {

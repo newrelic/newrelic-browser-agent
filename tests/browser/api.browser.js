@@ -25,17 +25,15 @@ test('api', function (t) {
     newrelic.noticeError(new Error('test'))
 
     var finishedTime = 0
-    var cm, sm
+    var cm
 
     try {
       var aggs = agg.take(['cm', 'sm'])
       cm = aggs.cm
-      sm = aggs.sm
       finishedTime = cm[0].metrics.time.t
     } catch (e) {}
 
     t.ok(finishedTime > 0, `Set custom metric for finished time: ${finishedTime} > 0`)
-    t.equal(sm[0].params.name, 'API/noticeError', 'SM metric is generated for noticeError')
     t.equal(typeof cm[1], 'undefined', 'only finish once')
 
     newrelic.finished()

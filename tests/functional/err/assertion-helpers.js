@@ -102,7 +102,7 @@ function getErrorsFromResponse(response, browser) {
   return null
 }
 
-function getCustomMetricsFromResponse(response, isSupportability) {
+function getMetricsFromResponse(response, isSupportability) {
   var attr = isSupportability ? 'sm' : 'cm'
   if (response.body) {
     try {
@@ -121,4 +121,4 @@ function getCustomMetricsFromResponse(response, isSupportability) {
   return null
 }
 
-module.exports = {assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse, getCustomMetricsFromResponse}
+module.exports = {assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse, getMetricsFromResponse}

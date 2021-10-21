@@ -331,6 +331,7 @@ features.originOnlyReferer = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=89')
   .include('firefox', '>=87')
+  .include('ios', '>=10.2')
 
 features.passiveSupported = features.addEventListener
   .exclude('*')

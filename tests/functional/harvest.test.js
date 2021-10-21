@@ -125,7 +125,7 @@ testDriver.test('when url is changed using replaceState during load', withPushSt
 
     Promise.all([rumPromise, loadPromise]).then(([{query, headers}]) => {
       var headerUrl = url.parse(headers.referer)
-      if (browser.match('ie@10') || browser.match('ios@>11.2')) {
+      if (browser.match('ie@10')) {
         t.equal(headerUrl.pathname, originalPath, 'referer header contains the original URL in IE 10')
       } else {
         t.equal(headerUrl.pathname, redirectedPath, 'referer header contains the redirected URL')

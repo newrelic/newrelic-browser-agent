@@ -120,7 +120,7 @@ function getTime (cm) {
 }
 
 testDriver.test('noticeError takes an error object', withUnload, function (t, browser, router) {
-  t.plan(5)
+  t.plan(2)
   let rumPromise = router.expectRumAndErrors()
   let loadPromise = browser.get(router.assetURL('api.html', {
     init: {
@@ -153,7 +153,7 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
 })
 
 testDriver.test('noticeError takes a string', withUnload, function (t, browser, router) {
-  t.plan(5)
+  t.plan(2)
   let rumPromise = router.expectRumAndErrors()
   let loadPromise = browser.get(router.assetURL('api/noticeError.html', {
     init: {

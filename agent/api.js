@@ -40,8 +40,8 @@ mapOwn(api, function (fnName, fn) {
 // All API functions get passed the time they were called as their
 // first parameter. These functions can be called asynchronously.
 
-function storeSupportability (t, type, name, params, newMetrics, customParams) {
-  agg.storeSupportability(type, name, params, newMetrics, customParams)
+function storeSupportability (t, type, name, params, value) {
+  agg.storeSupportability(type, name, params, value)
 }
 
 function storeMetric (t, type, name, params, newMetrics, customParams) {

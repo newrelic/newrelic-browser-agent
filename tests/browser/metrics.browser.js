@@ -16,7 +16,7 @@ function sum_sq(array) {
 const createAndStoreMetric = (value, isSupportability = true) => {
   const method = isSupportability ? 'recordSupportability' : 'recordCustom'
   const [timestamp, label, name, params, props] = metrics[method](metricName, value) //eslint-disable-line
-  agg.store(label, name, params, props)
+  isSupportability ? agg.storeSupportability(label, name, params, props) : agg.store(label, name, params, props)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~ RECORD SUPPORTABILITY METRIC ~~~~~~~~~~~~~~~~~~~~~~~~~`
@@ -27,7 +27,6 @@ test('recordSupportability with no value creates a metric with just a count', fu
   t.ok(record, 'An aggregated record exists')
   t.equals(record.params.name, metricName, 'Name is correct')
   t.ok(record.stats && record.stats.t === 1, 'Props has singular t metric')
-  t.ok(record.stats && record.stats.c === 1, 'Props has c metric and it should have incremented once')
   t.end()
 })
 
@@ -49,7 +48,6 @@ test('recordSupportability with a value aggregates stats section', function(t) {
   const [record] = agg.take([sLabel])[sLabel]
   t.ok(record, 'An aggregated record exists')
   t.equals(record.params.name, metricName, 'Name is correct')
-  t.ok(record.stats && Object.keys(record.stats).length > 1 && record.stats.c === 1, 'it should have incremented once')
   t.ok(record.stats && record.stats.t === 500, 'Props has t metric -- 500')
   t.end()
 })
@@ -61,8 +59,8 @@ test('recordSupportability with a value aggregates stats section and increments 
   const [record] = agg.take([sLabel])[sLabel]
   t.ok(record, 'An aggregated record exists')
   t.equals(record.params.name, metricName, 'Name is correct')
-  const {stats} = record
 
+  const {stats} = record
   t.ok(stats.t === values.reduce((curr, next) => curr + next, 0), 'aggregated totals sum correctly')
   t.ok(stats.min === Math.min(...values), 'min value is as expected')
   t.ok(stats.max === Math.max(...values), 'max value is as expected')

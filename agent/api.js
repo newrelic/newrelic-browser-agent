@@ -23,6 +23,7 @@ harvest.on('jserrors', function () {
 
 var api = {
   storeMetric: storeMetric,
+  storeSupportability: storeSupportability,
   finished: single(finished),
   setPageViewName: setPageViewName,
   setErrorHandler: setErrorHandler,
@@ -38,6 +39,10 @@ mapOwn(api, function (fnName, fn) {
 
 // All API functions get passed the time they were called as their
 // first parameter. These functions can be called asynchronously.
+
+function storeSupportability (t, type, name, params, newMetrics, customParams) {
+  agg.storeSupportability(type, name, params, newMetrics, customParams)
+}
 
 function storeMetric (t, type, name, params, newMetrics, customParams) {
   agg.store(type, name, params, newMetrics, customParams)

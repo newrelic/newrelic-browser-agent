@@ -45,8 +45,8 @@ testDriver.test('Calling a newrelic[api] fn creates a supportability metric', wi
 
         supportabilityMetrics.forEach(sm => {
           t.ok(asyncApiFns.includes(sm.params.name), sm.params.name + ' contains correct name')
-          if (sm.params.name === multipleApiCalls) t.equal(sm.metrics.count, 5, sm.params.name + ' count was incremented by 1 until reached 5')
-          else t.equal(sm.metrics.count, 1, sm.params.name + ' count was incremented by 1')
+          if (sm.params.name === multipleApiCalls) t.equal(sm.stats.c, 5, sm.params.name + ' count was incremented by 1 until reached 5')
+          else t.equal(sm.stats.c, 1, sm.params.name + ' count was incremented by 1')
         })
 
         t.ok(customMetrics[0].params.name === 'finished', 'a `Finished` Custom Metric (cm) was also generated')

@@ -28,7 +28,7 @@ test('api', function (t) {
     var cm
 
     try {
-      var aggs = agg.take(['cm', 'sm'])
+      var aggs = agg.take(['cm'])
       cm = aggs.cm
       finishedTime = cm[0].metrics.time.t
     } catch (e) {}

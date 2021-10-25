@@ -9,6 +9,7 @@ var aggregatedData = {}
 
 module.exports = {
   store: store,
+  storeSupportability: storeSupportability,
   take: take,
   get: get,
   merge: mergeMetrics
@@ -17,6 +18,14 @@ module.exports = {
 // Items with the same type and name get aggregated together
 // params are example data from the aggregated items
 // metrics are the numeric values to be aggregated
+
+function storeSupportability (type, name, params, value) {
+  var bucket = getBucket(type, name, params)
+  value = value || 1
+  bucket.stats = updateMetric(value, bucket.stats)
+  return bucket
+}
+
 function store (type, name, params, newMetrics, customParams) {
   var bucket = getBucket(type, name, params, customParams)
 

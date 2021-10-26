@@ -15,8 +15,8 @@ function sum_sq(array) {
 
 const createAndStoreMetric = (value, isSupportability = true) => {
   const method = isSupportability ? 'recordSupportability' : 'recordCustom'
-  const [timestamp, label, name, params, props] = metrics[method](metricName, value) //eslint-disable-line
-  isSupportability ? agg.storeSupportability(label, name, params, props) : agg.store(label, name, params, props)
+  const [label, name, params, props] = metrics[method](metricName, value) //eslint-disable-line
+  isSupportability ? agg.storeMetric(label, name, params, props) : agg.store(label, name, params, props)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~ RECORD SUPPORTABILITY METRIC ~~~~~~~~~~~~~~~~~~~~~~~~~`
@@ -26,7 +26,7 @@ test('recordSupportability with no value creates a metric with just a count', fu
   const [record] = agg.take([sLabel])[sLabel]
   t.ok(record, 'An aggregated record exists')
   t.equals(record.params.name, metricName, 'Name is correct')
-  t.ok(record.stats && record.stats.t === 1, 'Props has singular t metric')
+  t.ok(record.stats && record.stats.c === 1, 'Props has singular c metric')
   t.end()
 })
 
@@ -38,7 +38,6 @@ test('recordSupportability with no value increments multiple times correctly', f
   const [record] = agg.take([sLabel])[sLabel]
   t.ok(record, 'An aggregated record exists')
   t.equals(record.params.name, metricName, 'Name is correct')
-  t.ok(record.stats && record.stats.t === 3, 'Props has t metric === count')
   t.ok(record.stats && record.stats.c === 3, 'Props has c metric and it should have incremented thrice')
   t.end()
 })
@@ -74,7 +73,7 @@ test('recordSupportability does not create a customMetric (cm) item', function(t
   try {
     const record = agg.take([cLabel])[cLabel]
     t.ok(record, JSON.stringify(record))
-    t.fail('Should not have found a record in aggreator in wrong tag (cm)... but did')
+    t.fail('Should not have found a record in aggregator in wrong tag (cm)... but did')
   } catch (err) {
     agg.take([sLabel])
     t.end()
@@ -88,6 +87,7 @@ test('recordCustom with no value creates a metric with just a count', function(t
   const [record] = agg.take([cLabel])[cLabel]
   t.ok(record, 'An aggregated record exists')
   t.equals(record.params.name, metricName, 'Name is correct')
+  t.ok(record, JSON.stringify(record))
   t.ok(record.metrics && Object.keys(record.metrics).length === 1 && record.metrics.count === 1, 'Props only has count metric and it should have incremented once')
   t.end()
 })

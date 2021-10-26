@@ -8,8 +8,8 @@ var mapOwn = require('map-own')
 var aggregatedData = {}
 
 module.exports = {
-  store: store,
-  storeSupportability: storeSupportability,
+  store: storeEventMetrics,
+  storeMetric: storeMetric,
   take: take,
   get: get,
   merge: mergeMetrics
@@ -19,16 +19,16 @@ module.exports = {
 // params are example data from the aggregated items
 // metrics are the numeric values to be aggregated
 
-function storeSupportability (type, name, params, value) {
+// store a single metric not tied to an event, metric values are stored in a single `stats` object property
+function storeMetric (type, name, params, value) {
   var bucket = getBucket(type, name, params)
-  value = value || 1
   bucket.stats = updateMetric(value, bucket.stats)
   return bucket
 }
 
-function store (type, name, params, newMetrics, customParams) {
+// store multiple metrics tied to an event, metrics are stored in a `metrics` property (map of name-stats metrics)
+function storeEventMetrics (type, name, params, newMetrics, customParams) {
   var bucket = getBucket(type, name, params, customParams)
-
   bucket.metrics = aggregateMetrics(newMetrics, bucket.metrics)
   return bucket
 }
@@ -43,6 +43,11 @@ function aggregateMetrics (newMetrics, oldMetrics) {
 }
 
 function updateMetric (value, metric) {
+  // when there is no value, then send only count
+  if (value == null) {
+    return updateCounterMetric(metric)
+  }
+
   // When there is only one data point, the c (count), min, max, and sos (sum of squares) params are superfluous.
   if (!metric) return {t: value}
 
@@ -58,6 +63,15 @@ function updateMetric (value, metric) {
   if (value > metric.max) metric.max = value
   if (value < metric.min) metric.min = value
 
+  return metric
+}
+
+function updateCounterMetric(metric) {
+  if (!metric) {
+    metric = {c: 1}
+  } else {
+    metric.c++
+  }
   return metric
 }
 

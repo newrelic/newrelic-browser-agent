@@ -28,11 +28,11 @@ var spaPrefix = prefix + 'ixn-'
 
 // Setup stub functions that queue calls for later processing.
 mapOwn(asyncApiFns, function (num, fnName) {
-  nr[fnName] = apiCall(prefix + fnName, true, 'api')
+  nr[fnName] = apiCall(prefix, fnName, true, 'api')
 })
 
-nr.addPageAction = apiCall(prefix + 'addPageAction', true)
-nr.setCurrentRouteName = apiCall(prefix + 'routeName', true)
+nr.addPageAction = apiCall(prefix, 'addPageAction', true)
+nr.setCurrentRouteName = apiCall(prefix, 'routeName', true)
 
 module.exports = newrelic
 
@@ -66,14 +66,13 @@ var InteractionApiProto = InteractionHandle.prototype = {
 }
 
 mapOwn('actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get'.split(','), function addApi (n, name) {
-  InteractionApiProto[name] = apiCall(spaPrefix + name)
+  InteractionApiProto[name] = apiCall(spaPrefix, name)
 })
 
-function apiCall (name, notSpa, bufferGroup) {
+function apiCall (prefix, name, notSpa, bufferGroup) {
   return function () {
-    var cleanedName = name.replace('api-', '')
-    metrics.recordSupportability('API/' + cleanedName + '/called')
-    handle(name, [loader.now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup)
+    metrics.recordSupportability('API/' + name + '/called')
+    handle(prefix + name, [loader.now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup)
     return notSpa ? void 0 : this
   }
 }

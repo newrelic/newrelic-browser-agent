@@ -35,7 +35,7 @@ function recordCustom(name, metrics) {
     metrics
   ]
 
-  handle('storeMetric', opts, null, 'api')
+  handle('storeEventMetrics', opts, null, 'api')
   return opts
 }
 

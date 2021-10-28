@@ -12,13 +12,18 @@ var mapOwn = require('map-own')
 var loader = require('loader')
 var handle = require('handle')
 var config = require('config')
+var metrics = require('metrics')
 var cycle = 0
 
 var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
 
 harvest.on('jserrors', function () {
-  return { qs: agg.take([ 'cm' ]) }
+  return { body: agg.take([ 'cm', 'sm' ]) }
 })
+
+// process buffered metric data
+register('storeMetric', storeMetric, 'api')
+register('storeEventMetrics', storeEventMetrics, 'api')
 
 var api = {
   finished: single(finished),
@@ -37,6 +42,14 @@ mapOwn(api, function (fnName, fn) {
 // All API functions get passed the time they were called as their
 // first parameter. These functions can be called asynchronously.
 
+function storeMetric(type, name, params, value) {
+  agg.storeMetric(type, name, params, value)
+}
+
+function storeEventMetrics(type, name, params, metrics) {
+  agg.store(type, name, params, metrics)
+}
+
 function setPageViewName (t, name, host) {
   if (typeof name !== 'string') return
   if (name.charAt(0) !== '/') name = '/' + name
@@ -45,7 +58,7 @@ function setPageViewName (t, name, host) {
 
 function finished (t, providedTime) {
   var time = providedTime ? providedTime - loader.offset : t
-  agg.store('cm', 'finished', { name: 'finished' }, { time: time })
+  metrics.recordCustom('finished', {time: time})
   addToTrace(t, { name: 'finished', start: time + loader.offset, origin: 'nr' })
   handle('api-addPageAction', [ time, 'finished' ])
 }

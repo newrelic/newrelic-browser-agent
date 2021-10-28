@@ -8,6 +8,7 @@ var mapOwn = require('map-own')
 var slice = require('lodash._slice')
 var tracerEE = require('ee').get('tracer')
 var loader = require('loader')
+var metrics = require('metrics')
 
 var nr = NREUM
 if (typeof (window.newrelic) === 'undefined') newrelic = nr
@@ -27,11 +28,11 @@ var spaPrefix = prefix + 'ixn-'
 
 // Setup stub functions that queue calls for later processing.
 mapOwn(asyncApiFns, function (num, fnName) {
-  nr[fnName] = apiCall(prefix + fnName, true, 'api')
+  nr[fnName] = apiCall(prefix, fnName, true, 'api')
 })
 
-nr.addPageAction = apiCall(prefix + 'addPageAction', true)
-nr.setCurrentRouteName = apiCall(prefix + 'routeName', true)
+nr.addPageAction = apiCall(prefix, 'addPageAction', true)
+nr.setCurrentRouteName = apiCall(prefix, 'routeName', true)
 
 module.exports = newrelic
 
@@ -65,17 +66,19 @@ var InteractionApiProto = InteractionHandle.prototype = {
 }
 
 mapOwn('actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get'.split(','), function addApi (n, name) {
-  InteractionApiProto[name] = apiCall(spaPrefix + name)
+  InteractionApiProto[name] = apiCall(spaPrefix, name)
 })
 
-function apiCall (name, notSpa, bufferGroup) {
+function apiCall (prefix, name, notSpa, bufferGroup) {
   return function () {
-    handle(name, [loader.now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup)
+    metrics.recordSupportability('API/' + name + '/called')
+    handle(prefix + name, [loader.now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup)
     return notSpa ? void 0 : this
   }
 }
 
 newrelic.noticeError = function (err, customAttributes) {
   if (typeof err === 'string') err = new Error(err)
+  metrics.recordSupportability('API/noticeError/called')
   handle('err', [err, loader.now(), false, customAttributes])
 }

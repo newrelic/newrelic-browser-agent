@@ -43,7 +43,7 @@ testDriver.test('referrer sent in query does not include query parameters', with
   }
 })
 
-testDriver.test('referrer sent in referer header includes path', originOnlyReferer.inverse(), function(t, browser, router) {
+testDriver.test('referrer sent in referer header includes path', originOnlyReferer.include('ios', '>11.2').inverse(), function(t, browser, router) {
   t.plan(1)
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
   let rumPromise = router.expectRum()

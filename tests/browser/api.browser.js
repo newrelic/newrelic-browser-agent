@@ -22,16 +22,18 @@ test('api', function (t) {
     newrelic.finished()
     newrelic.finished()
 
+    newrelic.noticeError(new Error('test'))
+
     var finishedTime = 0
     var cm
 
     try {
-      cm = agg.take(['cm']).cm
+      var aggs = agg.take(['cm'])
+      cm = aggs.cm
       finishedTime = cm[0].metrics.time.t
     } catch (e) {}
 
     t.ok(finishedTime > 0, `Set custom metric for finished time: ${finishedTime} > 0`)
-
     t.equal(typeof cm[1], 'undefined', 'only finish once')
 
     newrelic.finished()

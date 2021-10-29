@@ -1,4 +1,3 @@
-
 var supportsPassive = false
 try {
   var opts = Object.defineProperty({}, 'passive', {
@@ -6,8 +5,8 @@ try {
       supportsPassive = true
     }
   })
-  window.addEventListener('testPassive', null, opts)
-  window.removeEventListener('testPassive', null, opts)
+  window.addEventListener('testPassive', function() {}, opts)
+  window.removeEventListener('testPassive', function() {}, opts)
 } catch (e) {}
 
 module.exports = function(useCapture) {

@@ -25,7 +25,9 @@ if ('getPrototypeOf' in Object) {
 
 ee.on(ADD_EVENT_LISTENER + '-start', function (args, target) {
   var originalListener = args[1]
-  if (typeof originalListener !== 'function') {
+  if (originalListener === null ||
+    (typeof originalListener !== 'function' && typeof originalListener !== 'object')
+  ) {
     return
   }
 

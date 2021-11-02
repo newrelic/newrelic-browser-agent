@@ -5,8 +5,8 @@ try {
       supportsPassive = true
     }
   })
-  window.addEventListener('testPassive', function() {}, opts)
-  window.removeEventListener('testPassive', function() {}, opts)
+  window.addEventListener('testPassive', null, opts)
+  window.removeEventListener('testPassive', null, opts)
 } catch (e) {}
 
 module.exports = function(useCapture) {

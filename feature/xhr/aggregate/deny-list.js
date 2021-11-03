@@ -16,7 +16,7 @@ function shouldCollectEvent(params) {
     if (parsed.hostname === '*') {
       return false
     }
-    if (compareDomain(parsed.hostname, params.hostname) &&
+    if (domainMatchesPattern(parsed.hostname, params.hostname) &&
         comparePath(parsed.pathname, params.pathname)) {
       return false
     }
@@ -51,7 +51,12 @@ function setDenyList(denyListConfig) {
   }
 }
 
-function compareDomain(pattern, domain) {
+// returns true if the right side of the domain matches the pattern
+function domainMatchesPattern(pattern, domain) {
+  if (pattern.length > domain.length) {
+    return false
+  }
+
   if (domain.indexOf(pattern) === (domain.length - pattern.length)) {
     return true
   }

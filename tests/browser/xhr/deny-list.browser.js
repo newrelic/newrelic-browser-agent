@@ -25,6 +25,8 @@ test('domain-only blocks all subdomains and all paths', function(t) {
   t.equals(shouldCollectEvent(parseUrl('http://a.b.foo.com')), false)
   t.equals(shouldCollectEvent(parseUrl('http://a.b.foo.com/c/d')), false)
 
+  t.equals(shouldCollectEvent(parseUrl('http://oo.com')), true, 'regression for length comparison')
+
   // other domains are allowed
   t.equals(shouldCollectEvent(parseUrl('http://bar.com')), true)
 

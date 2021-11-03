@@ -25,6 +25,11 @@ if ('getPrototypeOf' in Object) {
 
 ee.on(ADD_EVENT_LISTENER + '-start', function (args, target) {
   var originalListener = args[1]
+  if (originalListener === null ||
+    (typeof originalListener !== 'function' && typeof originalListener !== 'object')
+  ) {
+    return
+  }
 
   var wrapped = getOrSet(originalListener, 'nr@wrapped', function () {
     var listener = {

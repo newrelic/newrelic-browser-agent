@@ -19,6 +19,7 @@ var HarvestScheduler = require('../../../agent/harvest-scheduler')
 var setDenyList = require('./deny-list').setDenyList
 var shouldCollectEvent = require('./deny-list').shouldCollectEvent
 var subscribeToUnload = require('../../../agent/unload')
+var recordSupportability = require('metrics').recordSupportability
 
 var ajaxEvents = []
 var spaAjaxEvents = {}
@@ -77,7 +78,16 @@ function storeXhr(params, metrics, startTime, endTime, type) {
   // store as metric
   agg.store('xhr', hash, params, metrics)
 
-  if (!shouldCollectEvent(params) || !allAjaxIsEnabled()) {
+  if (!allAjaxIsEnabled()) {
+    return
+  }
+
+  if (!shouldCollectEvent(params)) {
+    if (params.hostname === loader.info.errorBeacon) {
+      recordSupportability('Ajax/Events/Excluded/Agent')
+    } else {
+      recordSupportability('Ajax/Events/Excluded/App')
+    }
     return
   }
 

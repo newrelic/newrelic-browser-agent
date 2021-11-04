@@ -1,3 +1,38 @@
+## v1212
+
+* Staging release date: 11/04/2021
+* Production APM-injected release date: TBD
+* Production Standalone release date: TBD
+
+### Updated LCP tracking
+
+Largest Contentful Paint will now stop being tracked when page visibility changes to hidden. This aligns with the [web-vitals](https://github.com/GoogleChrome/web-vitals) library.
+
+### Added passive flag to addEventListener calls
+
+Using the addEventEventListener without the passive flag for the `touchstart` event is flagged in Lighthouse. The passive flag is now applied to all addEventListener calls in the agent.
+
+### Fixed issue with Array.isArray() call
+
+`Array.isArray()` call is not supported on old browsers and can cause a runtime error. This call has been replaced with an alternative that works on older browsers.
+
+### Fixed issue with null function argument in the addEventListener API
+
+When a null value was passed in to the addEventListener API, the agent would report an internal error. This edge case is now being handled.
+
+### Fixed issue with Ajax deny list
+
+There was an edge case where certain ajax calls could have been excluded when they should not have been. This is now handled correctly.
+
+### Added support for collecting internal/supportability metrics
+
+The agent can now send metrics that capture information about how the agent itself is working internally.
+
+### Added agent supportability metrics for tracking API usage
+
+### Added agent supportability metrics for tracking excluded Ajax events
+
+
 ## v1211
 
 * Staging release date: 09/27/2021

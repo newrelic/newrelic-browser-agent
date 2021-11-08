@@ -15,6 +15,7 @@ var harvest = require('./harvest')
 var HarvestScheduler = require('./harvest-scheduler')
 var register = require('./register-handler')
 var subscribeToUnload = require('./unload')
+var cleanURL = require('./clean-url')
 
 var timings = []
 var timingsSent = []
@@ -79,6 +80,11 @@ function recordLcp() {
       'size': lcpEntry.size,
       'eid': lcpEntry.id
     }
+
+    if (lcpEntry.url) {
+      attrs['url'] = cleanURL(lcpEntry.url)
+    }
+
     // collect 0 only when CLS is supported, since 0 is a valid score
     if (cls > 0 || clsSupported) {
       attrs['cls'] = cls

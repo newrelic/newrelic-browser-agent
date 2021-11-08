@@ -85,6 +85,10 @@ function recordLcp() {
       attrs['url'] = cleanURL(lcpEntry.url)
     }
 
+    if (lcpEntry.element && lcpEntry.element.tagName) {
+      attrs['tag'] = lcpEntry.element.tagName
+    }
+
     // collect 0 only when CLS is supported, since 0 is a valid score
     if (cls > 0 || clsSupported) {
       attrs['cls'] = cls

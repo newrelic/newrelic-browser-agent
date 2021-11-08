@@ -28,7 +28,7 @@ jil.browserTest('sends expected attributes when available', supported, function(
     maxLCPTimeSeconds: 0.5
   })
 
-  // timingModule.init(mockLoader)
+  timingModule.init(mockLoader)
 
   // drain adds `timing` and `lcp` event listeners in the agent/timings module
   drain('feature')
@@ -38,7 +38,10 @@ jil.browserTest('sends expected attributes when available', supported, function(
     size: 123,
     startTime: 1,
     id: 'some-element-id',
-    url: 'http://foo.com/a/b?c=1#2'
+    url: 'http://foo.com/a/b?c=1#2',
+    element: {
+      tagName: 'IMG'
+    }
   }])
 
   setTimeout(function() {
@@ -49,6 +52,7 @@ jil.browserTest('sends expected attributes when available', supported, function(
     t.equal(attributes.eid, 'some-element-id', 'eid should be present')
     t.equal(attributes.size, 123, 'size should be present')
     t.equal(attributes.url, 'http://foo.com/a/b', 'url should be present')
+    t.equal(attributes.tag, 'IMG', 'element.tagName should be present')
 
     t.end()
   }, 1000)

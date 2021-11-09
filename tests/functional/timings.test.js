@@ -167,7 +167,7 @@ function runFirstInteractionTests(loader) {
 
 function runLargestContentfulPaintFromInteractionTests(loader) {
   testDriver.test(`Largest Contentful Paint from first interaction event for ${loader} agent`, supportedLcp, function (t, browser, router) {
-    t.plan(7)
+    t.plan(9)
     const rumPromise = router.expectRum()
     const loadPromise = browser.safeGet(router.assetURL('basic-click-tracking.html', { loader: loader }))
 
@@ -193,7 +193,12 @@ function runLargestContentfulPaintFromInteractionTests(loader) {
         var size = timing.attributes.find(a => a.key === 'size')
         t.ok(size.value > 0, 'size is a non-negative value')
         t.equal(size.type, 'doubleAttribute', 'largestContentfulPaint attribute size is doubleAttribute')
-        t.equal(timing.attributes.length, 3, 'largestContentfulPaint has two attributes')
+
+        var tagName = timing.attributes.find(a => a.key === 'tag')
+        t.equal(tagName.value, 'BUTTON', 'element.tagName is present and correct')
+        t.equal(size.type, 'doubleAttribute', 'largestContentfulPaint attribute elementTagName is stringAttribute')
+
+        t.equal(timing.attributes.length, 4, 'largestContentfulPaint has two attributes')
 
         t.end()
       })

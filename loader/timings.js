@@ -79,10 +79,8 @@ if ('addEventListener' in document) {
   })
 }
 
-if (window.navigator) {
-  var connection = getConnection()
-  if (!connection) return
-
+var connection = getConnection()
+if (connection) {
   handle('networkInformation', [connection])
 
   connection.addEventListener('change', function (evt) {
@@ -91,7 +89,7 @@ if (window.navigator) {
 }
 
 function getConnection () {
-  return window.navigator.connection || window.navigator.mozConnection || window.navigator.webkitConnection
+  return navigator.connection || navigator.mozConnection || navigator.webkitConnection
 }
 
 function captureInteraction(evt) {

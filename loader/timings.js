@@ -37,7 +37,13 @@ function lcpObserver(list, observer) {
     var entry = entries[entries.length - 1]
 
     if (pageHiddenTime && pageHiddenTime < entry.startTime) return
-    handle('lcp', [entry])
+
+    var payload = [entry]
+
+    var attributes = addConnectionAttributes({})
+    if (attributes) payload.push(attributes)
+
+    handle('lcp', payload)
   }
 }
 
@@ -79,17 +85,17 @@ if ('addEventListener' in document) {
   })
 }
 
-var connection = getConnection()
-if (connection) {
-  handle('networkInformation', [connection])
+// takes an attributes object and appends connection attributes if available
+function addConnectionAttributes (attributes) {
+  var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection
+  if (!connection) return
 
-  connection.addEventListener('change', function (evt) {
-    handle('networkInformation', [evt.target])
-  })
-}
+  if (connection.type) attributes['net-type'] = connection.type
+  if (connection.effectiveType) attributes['net-etype'] = connection.effectiveType
+  if (connection.rtt) attributes['net-rtt'] = connection.rtt
+  if (connection.downlink) attributes['net-dlink'] = connection.downlink
 
-function getConnection () {
-  return navigator.connection || navigator.mozConnection || navigator.webkitConnection
+  return attributes
 }
 
 function captureInteraction(evt) {
@@ -99,13 +105,7 @@ function captureInteraction(evt) {
       type: evt.type
     }
 
-    var connection = getConnection()
-    if (connection) {
-      if (connection.type) attributes['net-type'] = connection.type
-      if (connection.effectiveType) attributes['net-etype'] = connection.effectiveType
-      if (connection.rtt) attributes['net-rtt'] = connection.rtt
-      if (connection.downlink) attributes['net-dlink'] = connection.downlink
-    }
+    addConnectionAttributes(attributes)
 
     // The value of Event.timeStamp is epoch time in some old browser, and relative
     // timestamp in newer browsers. We assume that large numbers represent epoch time.

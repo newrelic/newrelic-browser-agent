@@ -25,7 +25,6 @@ var clsSupported = false
 var cls = 0
 var clsSession = {value: 0, firstEntryTime: 0, lastEntryTime: 0}
 var pageHideRecorded = false
-var networkInformation = null
 
 module.exports = {
   getPayload: getPayload,
@@ -56,7 +55,6 @@ function init(nr, options) {
   register('lcp', updateLatestLcp)
   register('cls', updateClsScore)
   register('pageHide', updatePageHide)
-  register('networkInformation', updateNetworkInformation)
 
   // final harvest is initiated from the main agent module, but since harvesting
   // here is not initiated by the harvester, we need to subscribe to the unload event
@@ -77,10 +75,18 @@ function recordLcp() {
   if (!lcpRecorded && lcp !== null) {
     var lcpEntry = lcp[0]
     var cls = lcp[1]
+    var networkInfo = lcp[2]
 
     var attrs = {
       'size': lcpEntry.size,
       'eid': lcpEntry.id
+    }
+
+    if (networkInfo) {
+      if (networkInfo['net-type']) attrs['net-type'] = networkInfo['net-type']
+      if (networkInfo['net-etype']) attrs['net-etype'] = networkInfo['net-etype']
+      if (networkInfo['net-rtt']) attrs['net-rtt'] = networkInfo['net-rtt']
+      if (networkInfo['net-dlink']) attrs['net-dlink'] = networkInfo['net-dlink']
     }
 
     if (lcpEntry.url) {
@@ -89,13 +95,6 @@ function recordLcp() {
 
     if (lcpEntry.element && lcpEntry.element.tagName) {
       attrs['tag'] = lcpEntry.element.tagName
-    }
-
-    if (networkInformation) {
-      if (networkInformation.type) attrs['net-type'] = networkInformation.type
-      if (networkInformation.effectiveType) attrs['net-etype'] = networkInformation.effectiveType
-      if (networkInformation.rtt) attrs['net-rtt'] = networkInformation.rtt
-      if (networkInformation.downlink) attrs['net-dlink'] = networkInformation.downlink
     }
 
     // collect 0 only when CLS is supported, since 0 is a valid score
@@ -108,14 +107,15 @@ function recordLcp() {
   }
 }
 
-function updateLatestLcp(lcpEntry) {
+function updateLatestLcp(lcpEntry, networkInformation) {
   if (lcp) {
     var previous = lcp[0]
     if (previous.size >= lcpEntry.size) {
       return
     }
   }
-  lcp = [lcpEntry, cls]
+
+  lcp = [lcpEntry, cls, networkInformation]
 }
 
 function updateClsScore(clsEntry) {
@@ -143,10 +143,6 @@ function updatePageHide(timestamp) {
 function recordUnload() {
   updatePageHide(now())
   addTiming('unload', now(), null, true)
-}
-
-function updateNetworkInformation (latest) {
-  networkInformation = latest
 }
 
 function addTiming(name, value, attrs, addCls) {

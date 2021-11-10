@@ -79,11 +79,34 @@ if ('addEventListener' in document) {
   })
 }
 
+if (window.navigator) {
+  var connection = getConnection()
+  if (!connection) return
+
+  handle('networkInformation', [connection])
+
+  connection.addEventListener('change', function (evt) {
+    handle('networkInformation', [evt.target])
+  })
+}
+
+function getConnection () {
+  return window.navigator.connection || window.navigator.mozConnection || window.navigator.webkitConnection
+}
+
 function captureInteraction(evt) {
   if (evt instanceof origEvent && !fiRecorded) {
     var fi = Math.round(evt.timeStamp)
     var attributes = {
       type: evt.type
+    }
+
+    var connection = getConnection()
+    if (connection) {
+      if (connection.type) attributes['net-type'] = connection.type
+      if (connection.effectiveType) attributes['net-etype'] = connection.effectiveType
+      if (connection.rtt) attributes['net-rtt'] = connection.rtt
+      if (connection.downlink) attributes['net-dlink'] = connection.downlink
     }
 
     // The value of Event.timeStamp is epoch time in some old browser, and relative

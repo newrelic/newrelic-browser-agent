@@ -25,6 +25,7 @@ var clsSupported = false
 var cls = 0
 var clsSession = {value: 0, firstEntryTime: 0, lastEntryTime: 0}
 var pageHideRecorded = false
+var networkInformation = null
 
 module.exports = {
   getPayload: getPayload,
@@ -55,6 +56,7 @@ function init(nr, options) {
   register('lcp', updateLatestLcp)
   register('cls', updateClsScore)
   register('pageHide', updatePageHide)
+  register('networkInformation', updateNetworkInformation)
 
   // final harvest is initiated from the main agent module, but since harvesting
   // here is not initiated by the harvester, we need to subscribe to the unload event
@@ -87,6 +89,13 @@ function recordLcp() {
 
     if (lcpEntry.element && lcpEntry.element.tagName) {
       attrs['tag'] = lcpEntry.element.tagName
+    }
+
+    if (networkInformation) {
+      if (networkInformation.type) attrs['net-type'] = networkInformation.type
+      if (networkInformation.effectiveType) attrs['net-etype'] = networkInformation.effectiveType
+      if (networkInformation.rtt) attrs['net-rtt'] = networkInformation.rtt
+      if (networkInformation.downlink) attrs['net-dlink'] = networkInformation.downlink
     }
 
     // collect 0 only when CLS is supported, since 0 is a valid score
@@ -134,6 +143,10 @@ function updatePageHide(timestamp) {
 function recordUnload() {
   updatePageHide(now())
   addTiming('unload', now(), null, true)
+}
+
+function updateNetworkInformation (latest) {
+  networkInformation = latest
 }
 
 function addTiming(name, value, attrs, addCls) {

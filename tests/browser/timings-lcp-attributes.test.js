@@ -28,13 +28,10 @@ jil.browserTest('sends expected attributes when available', supported, function(
     maxLCPTimeSeconds: 0.5
   })
 
-  timingModule.init(mockLoader)
-
   // drain adds `timing` and `lcp` event listeners in the agent/timings module
   drain('feature')
 
-  // simulate LCP observed
-  handle('lcp', [{
+  var lcpEntry = {
     size: 123,
     startTime: 1,
     id: 'some-element-id',
@@ -42,7 +39,17 @@ jil.browserTest('sends expected attributes when available', supported, function(
     element: {
       tagName: 'IMG'
     }
-  }])
+  }
+
+  var networkInfo = {
+    'net-type': 'cellular',
+    'net-etype': '3g',
+    'net-rtt': '270',
+    'net-dlink': '700'
+  }
+
+  // simulate LCP observed
+  handle('lcp', [lcpEntry, networkInfo])
 
   setTimeout(function() {
     t.equals(timingModule.timings.length, 1, 'there should be only 2 timings (pageHide and unload)')
@@ -53,6 +60,10 @@ jil.browserTest('sends expected attributes when available', supported, function(
     t.equal(attributes.size, 123, 'size should be present')
     t.equal(attributes.url, 'http://foo.com/a/b', 'url should be present')
     t.equal(attributes.tag, 'IMG', 'element.tagName should be present')
+    t.equal(attributes['net-type'], networkInfo['net-type'], 'network type should be present')
+    t.equal(attributes['net-etype'], networkInfo['net-etype'], 'network effectiveType should be present')
+    t.equal(attributes['net-rtt'], networkInfo['net-rtt'], 'network rtt should be present')
+    t.equal(attributes['net-dlink'], networkInfo['net-dlink'], 'network downlink should be present')
 
     t.end()
   }, 1000)

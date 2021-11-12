@@ -75,10 +75,18 @@ function recordLcp() {
   if (!lcpRecorded && lcp !== null) {
     var lcpEntry = lcp[0]
     var cls = lcp[1]
+    var networkInfo = lcp[2]
 
     var attrs = {
       'size': lcpEntry.size,
       'eid': lcpEntry.id
+    }
+
+    if (networkInfo) {
+      if (networkInfo['net-type']) attrs['net-type'] = networkInfo['net-type']
+      if (networkInfo['net-etype']) attrs['net-etype'] = networkInfo['net-etype']
+      if (networkInfo['net-rtt']) attrs['net-rtt'] = networkInfo['net-rtt']
+      if (networkInfo['net-dlink']) attrs['net-dlink'] = networkInfo['net-dlink']
     }
 
     if (lcpEntry.url) {
@@ -99,14 +107,15 @@ function recordLcp() {
   }
 }
 
-function updateLatestLcp(lcpEntry) {
+function updateLatestLcp(lcpEntry, networkInformation) {
   if (lcp) {
     var previous = lcp[0]
     if (previous.size >= lcpEntry.size) {
       return
     }
   }
-  lcp = [lcpEntry, cls]
+
+  lcp = [lcpEntry, cls, networkInformation]
 }
 
 function updateClsScore(clsEntry) {

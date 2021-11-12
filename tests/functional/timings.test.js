@@ -198,7 +198,7 @@ function runLargestContentfulPaintFromInteractionTests(loader) {
         t.equal(tagName.value, 'BUTTON', 'element.tagName is present and correct')
         t.equal(size.type, 'doubleAttribute', 'largestContentfulPaint attribute elementTagName is stringAttribute')
 
-        t.equal(timing.attributes.length, 4, 'largestContentfulPaint has two attributes')
+        t.equal(timing.attributes.length, 7, 'largestContentfulPaint has seven attributes')
 
         t.end()
       })

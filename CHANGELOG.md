@@ -1,8 +1,8 @@
 ## v1212
 
 * Staging release date: 11/04/2021
-* Production APM-injected release date: TBD
-* Production Standalone release date: TBD
+* Production APM-injected release date: 11/08/2021
+* Production Standalone release date: 11/16/2021
 
 ### Updated LCP tracking
 

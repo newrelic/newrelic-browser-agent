@@ -18,7 +18,7 @@ var config = require('config')
 if (!harvest.xhrUsable || !loader.xhrWrappable) return
 
 var ptid = ''
-var ignoredEvents = {mouseup: true, mousedown: true}
+var ignoredEvents = {mouseup: true, mousedown: true, load: true}
 var toAggregate = {
   typing: [1000, 2000],
   scrolling: [100, 1000],
@@ -115,9 +115,18 @@ ee.on('feat-stn', function () {
   registerHandler('bstXhrAgg', storeXhrAgg)
   registerHandler('bstApi', storeSTN)
   registerHandler('errorAgg', storeErrorAgg)
+  registerHandler('pvtAdded', processPVT)
 })
 
-function storeTiming (_t) {
+function processPVT (name, value, attrs) {
+  var t = {}
+  var owner = name === 'load' ? 'window' : 'document'
+  t[name] = value
+  storeTiming(t, true, owner)
+  if (hasFID(name, attrs)) storeEvent({type: 'fid', target: owner}, owner, value, value + attrs.fid)
+}
+
+function storeTiming (_t, ignoreOffset, owner) {
   var key
   var val
   var timeOffset
@@ -131,13 +140,13 @@ function storeTiming (_t) {
     // that are in the future (Microsoft Edge seems to sometimes produce these)
     if (!(typeof (val) === 'number' && val > 0 && val < now)) continue
 
-    timeOffset = _t[key] - loader.offset
+    timeOffset = !ignoreOffset ? _t[key] - loader.offset : _t[key]
 
     storeSTN({
       n: key,
       s: timeOffset,
       e: timeOffset,
-      o: 'document',
+      o: owner || 'document',
       t: 'timing'
     })
   }
@@ -203,7 +212,8 @@ function evtOrigin (t, target) {
   }
 
   if (origin === 'unknown') {
-    if (target === document) origin = 'document'
+    if (typeof target === 'string') origin = target
+    else if (target === document) origin = 'document'
     else if (target === window) origin = 'window'
     else if (target instanceof FileReader) origin = 'FileReader'
   }
@@ -272,6 +282,7 @@ function storeXhrAgg (type, name, params, metrics) {
 }
 
 function storeSTN (stn) {
+  console.log(stn)
   // limit the number of data that is stored
   if (nodeCount >= maxNodesPerHarvest) return
 
@@ -364,6 +375,10 @@ function val (key, value) {
 
 function flatten (a, b) {
   return a.concat(b)
+}
+
+function hasFID (name, attrs) {
+  return name === 'fi' && !!attrs && typeof attrs.fid === 'number'
 }
 
 function trivial (node) {

@@ -56,6 +56,9 @@ function runTests () {
 
   test('session trace nodes', function (t) {
     let stnAgg = require('../../../feature/stn/aggregate')
+    let timings = require('../../../agent/timings')
+
+    timings.addTiming('load', 20)
 
     ee.emit('feat-stn', [])
     drain('feature')
@@ -74,6 +77,7 @@ function runTests () {
       t.end()
     })
     t.test('stn window load', function (t) {
+      console.log('RES!', res)
       let node = res.filter(function (node) { return node.n === 'load' })[0]
       t.ok(node, 'load node created')
       t.ok(node.s > 10, 'load node has start time ' + node.s)

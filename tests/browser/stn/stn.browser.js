@@ -77,7 +77,6 @@ function runTests () {
       t.end()
     })
     t.test('stn window load', function (t) {
-      console.log('RES!', res)
       let node = res.filter(function (node) { return node.n === 'load' })[0]
       t.ok(node, 'load node created')
       t.ok(node.s > 10, 'load node has start time ' + node.s)

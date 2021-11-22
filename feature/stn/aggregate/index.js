@@ -282,7 +282,6 @@ function storeXhrAgg (type, name, params, metrics) {
 }
 
 function storeSTN (stn) {
-  console.log(stn)
   // limit the number of data that is stored
   if (nodeCount >= maxNodesPerHarvest) return
 

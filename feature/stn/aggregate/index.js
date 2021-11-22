@@ -83,6 +83,7 @@ ee.on('feat-stn', function () {
     // start timer only if ptid was returned by server
     if (result.sent && result.responseText && !ptid) {
       ptid = result.responseText
+      loader.info.ptid = ptid
       scheduler.startTimer(harvestTimeSeconds)
     }
 
@@ -314,7 +315,7 @@ function takeSTNs (retry) {
   nodeCount = 0
 
   var stnInfo = {
-    qs: {st: '' + loader.offset, ptid: ptid},
+    qs: {st: '' + loader.offset},
     body: {res: stns}
   }
 

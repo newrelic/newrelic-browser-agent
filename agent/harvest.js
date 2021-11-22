@@ -316,6 +316,7 @@ function baseQueryString (nr) {
     encode.param('ct', nr.customTransaction),
     '&rst=' + nr.now(),
     '&ck=' + (areCookiesEnabled ? '1' : '0'),
+    encode.param('ptid', nr.info.ptid),
     encode.param('ref', cleanURL(locationUtil.getLocation()))
   ].join(''))
 }

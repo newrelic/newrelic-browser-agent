@@ -57,8 +57,10 @@ function runTests () {
   test('session trace nodes', function (t) {
     let stnAgg = require('../../../feature/stn/aggregate')
     let timings = require('../../../agent/timings')
+    let fidVal = 8
 
     timings.addTiming('load', 20)
+    timings.addTiming('fi', 30, {fid: fidVal})
 
     ee.emit('feat-stn', [])
     drain('feature')
@@ -119,6 +121,22 @@ function runTests () {
       t.equal(hist.n, 'history.pushState', 'hist name')
       t.equal(hist.o, `${originalPath}#bar`, 'new path')
       t.equal(hist.t, `${originalPath}#foo`, 'old path')
+      t.end()
+    })
+    t.test('stn pvt items', function (t) {
+      const expectedPvtItems = ['fi', 'fid']
+      let pvtItems = res.filter(function (node) { return expectedPvtItems.includes(node.n) })
+      t.ok(pvtItems.length === expectedPvtItems.length, 'all pvt items exist')
+
+      const fi = pvtItems.find(x => x.n === 'fi')
+      t.ok(fi.o === 'document', 'FI owner is document')
+      t.ok(fi.s === fi.e, 'FI has no duration')
+      t.ok(fi.t === 'timing', 'FI is a timing node')
+
+      const fid = pvtItems.find(x => x.n === 'fid')
+      t.ok(fid.o === 'document', 'FID owner is document')
+      t.ok(fid.s === fi.s && fid.e === fi.e + fidVal, 'FID has a duration relative to FI')
+      t.ok(fid.t === 'event', 'FID is an event node')
       t.end()
     })
     let unknown = res.filter(function (n) { return n.o === 'unknown' })

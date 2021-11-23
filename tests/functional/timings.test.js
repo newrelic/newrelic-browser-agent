@@ -37,6 +37,7 @@ runCustomAttributeTests('spa')
 runCustomAttributeTests('rum')
 runLcpTests('rum')
 runLcpTests('spa')
+runPvtInStnTests('spa')
 
 testDriver.test('Disabled timings feature', reliableFinalHarvest, function (t, browser, router) {
   let url = router.assetURL('final-harvest-page-view-timings-disabled.html', { loader: 'rum' })
@@ -326,10 +327,42 @@ function runPageHideTests(loader) {
   })
 }
 
+function runPvtInStnTests(loader) {
+  testDriver.test(`Checking for PVT in STN payload for ${loader} agent`, supportedCls, function (t, browser, router) {
+    const rumPromise = router.expectRum()
+    const loadPromise = browser
+      .safeGet(router.assetURL('cls-lcp.html', { loader: loader }))
+      .waitForConditionInBrowser('window.contentAdded === true')
+
+    Promise.all([rumPromise, loadPromise])
+      .then(() => {
+        // click to stop collecting LCP
+        const clickPromise = browser
+          .elementById('btn1')
+          .click()
+          .get(router.assetURL('/'))
+        const resourcesPromise = router.expectResources()
+        return Promise.all([resourcesPromise, clickPromise])
+      })
+      .then(([resourcesResult]) => {
+        const expectedPVTItems = ['fi', 'fid', 'lcp', 'pageHide', 'fcp', 'load', 'unload']
+        const stnItems = !!resourcesResult && !!resourcesResult.body ? JSON.parse(resourcesResult.body).res : []
+        t.ok(stnItems.length, 'STN items were generated')
+        const pvtInStn = stnItems.filter(x => expectedPVTItems.includes(x.n))
+        t.equal(pvtInStn.length, expectedPVTItems.length, 'Expected PVT Items are present in STN payload')
+        t.end()
+      })
+      .catch(fail)
+
+    function fail (e) {
+      t.error(e)
+      t.end()
+    }
+  })
+}
+
 function runClsTests(loader) {
   testDriver.test(`LCP for ${loader} agent collects cls attribute`, supportedCls, function (t, browser, router) {
-    t.plan(2)
-
     const rumPromise = router.expectRum()
     const loadPromise = browser
       .safeGet(router.assetURL('cls-lcp.html', { loader: loader }))
@@ -353,7 +386,6 @@ function runClsTests(loader) {
         var cls = timing.attributes.find(a => a.key === 'cls')
         t.ok(cls.value >= 0, 'cls is a non-negative value')
         t.equal(cls.type, 'doubleAttribute', 'largestContentfulPaint attribute cls is doubleAttribute')
-
         t.end()
       })
       .catch(fail)

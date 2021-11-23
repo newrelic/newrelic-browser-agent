@@ -322,6 +322,38 @@ test('uses correct submission mechanism for jserrors', function (t) {
   }
 })
 
+test('adds ptid to harvest when ptid is present', function (t) {
+  if (xhrUsable) {
+    t.plan(2)
+  } else {
+    t.plan(2)
+  }
+
+  resetSpies(null, { xhrWithLoadEvent: true })
+  harvest.on('jserrors', once(dummyPayload('jserrors')))
+
+  // simulate ptid present (session trace in progress) after initial session trace (/resources) call
+  fakeNr.ptid = '54321'
+
+  let result = harvest.sendX('jserrors', fakeNr, null, function () {})
+
+  let baseUrl = 'https://foo/jserrors/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref=http://foo.com&ptid=54321&q1=v1&q2=v2'
+  let expectedPayload = {jserrors: ['one', 'two', 'three']}
+
+  if (xhrUsable) {
+    t.ok(result, 'result truthy when jserrors submitted via xhr')
+    let call = submitData.xhr.getCall(0)
+    validateUrl(t, call.args[0], baseUrl, 'correct URL given to xhr')
+  } else {
+    t.ok(result, 'result truthy when jserrors submitted via img')
+    let call = submitData.img.getCall(0)
+    let expectedUrl = baseUrl + encode.obj(expectedPayload)
+    validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
+  }
+
+  delete fakeNr.ptid
+})
+
 test('does not send jserrors when there is nothing to send', function (t) {
   resetSpies()
   harvest.on('jserrors', once(testPayload))

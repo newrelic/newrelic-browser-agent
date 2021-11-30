@@ -354,6 +354,32 @@ test('adds ptid to harvest when ptid is present', function (t) {
   delete fakeNr.ptid
 })
 
+test('does not add ptid to harvest when ptid is not present', function (t) {
+  if (xhrUsable) {
+    t.plan(2)
+  } else {
+    t.plan(2)
+  }
+
+  resetSpies(null, { xhrWithLoadEvent: true })
+  harvest.on('jserrors', once(dummyPayload('jserrors')))
+
+  // simulate session trace not started on page
+  fakeNr.ptid = null
+
+  let result = harvest.sendX('jserrors', fakeNr, null, function () {})
+
+  if (xhrUsable) {
+    t.ok(result, 'result truthy when jserrors submitted via xhr')
+    let call = submitData.xhr.getCall(0)
+    t.ok(call.args[0].indexOf('ptid') === -1, 'ptid not included in querystring')
+  } else {
+    t.ok(result, 'result truthy when jserrors submitted via img')
+    let call = submitData.img.getCall(0)
+    t.ok(call.args[0].indexOf('ptid') === -1, 'ptid not included in querystring')
+  }
+})
+
 test('does not send jserrors when there is nothing to send', function (t) {
   resetSpies()
   harvest.on('jserrors', once(testPayload))

@@ -18,7 +18,7 @@ var config = require('config')
 if (!harvest.xhrUsable || !loader.xhrWrappable) return
 
 var ptid = ''
-var ignoredEvents = {mouseup: true, mousedown: true, load: true}
+var ignoredEvents = {mouseup: true, mousedown: true}
 var toAggregate = {
   typing: [1000, 2000],
   scrolling: [100, 1000],
@@ -120,13 +120,12 @@ ee.on('feat-stn', function () {
 
 function processPVT (name, value, attrs) {
   var t = {}
-  var owner = name === 'load' ? 'window' : 'document'
   t[name] = value
-  storeTiming(t, true, owner)
-  if (hasFID(name, attrs)) storeEvent({type: 'fid', target: owner}, owner, value, value + attrs.fid)
+  storeTiming(t, true)
+  if (hasFID(name, attrs)) storeEvent({type: 'fid', target: 'document'}, 'document', value, value + attrs.fid)
 }
 
-function storeTiming (_t, ignoreOffset, owner) {
+function storeTiming (_t, ignoreOffset) {
   var key
   var val
   var timeOffset
@@ -146,7 +145,7 @@ function storeTiming (_t, ignoreOffset, owner) {
       n: key,
       s: timeOffset,
       e: timeOffset,
-      o: owner || 'document',
+      o: 'document',
       t: 'timing'
     })
   }
@@ -168,8 +167,7 @@ function storeTimer (target, start, end, type) {
 }
 
 function storeEvent (currentEvent, target, start, end) {
-  // we find that certain events make the data too noisy to be useful
-  if (currentEvent.type in ignoredEvents) { return false }
+  if (shouldIgnoreEvent(currentEvent, target)) return false
 
   var evt = {
     n: evtName(currentEvent.type),
@@ -384,4 +382,12 @@ function trivial (node) {
   var limit = 4
   if (node && typeof node.e === 'number' && typeof node.s === 'number' && (node.e - node.s) < limit) return true
   else return false
+}
+
+function shouldIgnoreEvent(event, target) {
+  // we find that certain events make the data too noisy to be useful
+  if (event.type in ignoredEvents) return true
+  // the load event is being tracked from the PVT metrics, and the window load should be ignored
+  if (event.type === 'load' && evtOrigin(event.target, target) === 'window') return true
+  return false
 }

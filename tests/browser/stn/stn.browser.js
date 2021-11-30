@@ -79,11 +79,11 @@ function runTests () {
       t.equal(node.o, 'document', 'DOMContentLoaded node origin ' + node.o)
       t.end()
     })
-    t.test('stn window load', function (t) {
-      let node = res.filter(function (node) { return node.n === 'load' })[0]
+    t.test('stn document load', function (t) {
+      let node = res.filter(function (node) { return node.n === 'load' && node.o === 'document' })[0]
       t.ok(node, 'load node created')
       t.ok(node.s > 10, 'load node has start time ' + node.s)
-      t.equal(node.o, 'window', 'load node origin ' + node.o)
+      t.equal(node.o, 'document', 'load node origin ' + node.o)
       t.end()
     })
     t.test('stn timer', function (t) {

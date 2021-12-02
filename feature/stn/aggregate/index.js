@@ -115,9 +115,17 @@ ee.on('feat-stn', function () {
   registerHandler('bstXhrAgg', storeXhrAgg)
   registerHandler('bstApi', storeSTN)
   registerHandler('errorAgg', storeErrorAgg)
+  registerHandler('pvtAdded', processPVT)
 })
 
-function storeTiming (_t) {
+function processPVT (name, value, attrs) {
+  var t = {}
+  t[name] = value
+  storeTiming(t, true)
+  if (hasFID(name, attrs)) storeEvent({type: 'fid', target: 'document'}, 'document', value, value + attrs.fid)
+}
+
+function storeTiming (_t, ignoreOffset) {
   var key
   var val
   var timeOffset
@@ -131,7 +139,7 @@ function storeTiming (_t) {
     // that are in the future (Microsoft Edge seems to sometimes produce these)
     if (!(typeof (val) === 'number' && val > 0 && val < now)) continue
 
-    timeOffset = _t[key] - loader.offset
+    timeOffset = !ignoreOffset ? _t[key] - loader.offset : _t[key]
 
     storeSTN({
       n: key,
@@ -159,8 +167,7 @@ function storeTimer (target, start, end, type) {
 }
 
 function storeEvent (currentEvent, target, start, end) {
-  // we find that certain events make the data too noisy to be useful
-  if (currentEvent.type in ignoredEvents) { return false }
+  if (shouldIgnoreEvent(currentEvent, target)) return false
 
   var evt = {
     n: evtName(currentEvent.type),
@@ -203,7 +210,8 @@ function evtOrigin (t, target) {
   }
 
   if (origin === 'unknown') {
-    if (target === document) origin = 'document'
+    if (typeof target === 'string') origin = target
+    else if (target === document) origin = 'document'
     else if (target === window) origin = 'window'
     else if (target instanceof FileReader) origin = 'FileReader'
   }
@@ -366,8 +374,20 @@ function flatten (a, b) {
   return a.concat(b)
 }
 
+function hasFID (name, attrs) {
+  return name === 'fi' && !!attrs && typeof attrs.fid === 'number'
+}
+
 function trivial (node) {
   var limit = 4
   if (node && typeof node.e === 'number' && typeof node.s === 'number' && (node.e - node.s) < limit) return true
   else return false
+}
+
+function shouldIgnoreEvent(event, target) {
+  // we find that certain events make the data too noisy to be useful
+  if (event.type in ignoredEvents) return true
+  // the load event is being tracked from the PVT metrics, and the window load should be ignored
+  if (event.type === 'load' && evtOrigin(event.target, target) === 'window') return true
+  return false
 }

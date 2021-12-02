@@ -56,6 +56,12 @@ function runTests () {
 
   test('session trace nodes', function (t) {
     let stnAgg = require('../../../feature/stn/aggregate')
+    let timings = require('../../../agent/timings')
+    let fiVal = 30
+    let fidVal = 8
+
+    timings.addTiming('load', 20)
+    timings.addTiming('fi', fiVal, {fid: fidVal})
 
     ee.emit('feat-stn', [])
     drain('feature')
@@ -73,11 +79,11 @@ function runTests () {
       t.equal(node.o, 'document', 'DOMContentLoaded node origin ' + node.o)
       t.end()
     })
-    t.test('stn window load', function (t) {
-      let node = res.filter(function (node) { return node.n === 'load' })[0]
+    t.test('stn document load', function (t) {
+      let node = res.filter(function (node) { return node.n === 'load' && node.o === 'document' })[0]
       t.ok(node, 'load node created')
       t.ok(node.s > 10, 'load node has start time ' + node.s)
-      t.equal(node.o, 'window', 'load node origin ' + node.o)
+      t.equal(node.o, 'document', 'load node origin ' + node.o)
       t.end()
     })
     t.test('stn timer', function (t) {
@@ -116,6 +122,25 @@ function runTests () {
       t.equal(hist.n, 'history.pushState', 'hist name')
       t.equal(hist.o, `${originalPath}#bar`, 'new path')
       t.equal(hist.t, `${originalPath}#foo`, 'old path')
+      t.end()
+    })
+    t.test('stn pvt items', function (t) {
+      let pvtItems = res.filter(function (node) { return node.n === 'fi' || node.n === 'fid' })
+      t.ok(pvtItems.length === 2, 'all pvt items exist')
+
+      for (let i = 0; i < pvtItems.length; i++) {
+        let x = pvtItems[i]
+        if (x.n === 'fi') {
+          t.ok(x.o === 'document', 'FI owner is document')
+          t.ok(x.s === x.e, 'FI has no duration')
+          t.ok(x.t === 'timing', 'FI is a timing node')
+        }
+        if (x.n === 'fid') {
+          t.ok(x.o === 'document', 'FID owner is document')
+          t.ok(x.s === fiVal && x.e === fiVal + fidVal, 'FID has a duration relative to FI')
+          t.ok(x.t === 'event', 'FID is an event node')
+        }
+      }
       t.end()
     })
     let unknown = res.filter(function (n) { return n.o === 'unknown' })

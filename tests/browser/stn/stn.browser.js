@@ -70,7 +70,6 @@ function runTests () {
     let qs = payload.qs
 
     t.ok(+qs.st > 1404952055986 && Date.now() > +qs.st, 'Start time is between recent time and now ' + qs.st)
-    t.equal(qs.ptid, '', 'no ptid generated ' + qs.ptid)
 
     t.test('stn DOMContentLoaded', function (t) {
       let node = res.filter(function (node) { return node.n === 'DOMContentLoaded' })[0]

@@ -1,3 +1,25 @@
+## v1213
+
+* Staging release date: 12/06/2021
+* Production APM-injected release date: 12/08/2021
+* Production Standalone release date: 12/17/2021
+
+### Included page view timing data in session trace payload
+
+The agent will now include core web vitals page view timings in the session trace waterfall payload. If observed, events such `FI`, `FID`, `LCP`, `FP`, `FCP` etc. will now be available in the browser `Session Traces` UI grouped under the `timing` type.
+
+### Added session trace IDs to harvests
+
+If a session trace ID exists, it will now be appended to harvests for the linking of session-related datasets downstream. This ID will be appended to any payload that exists at the time the session ID is determined, meaning the only harvests which won't have a session ID are `PageView` and `Initial Page Load Browser Interaction`.
+
+### Added NetworkInformation attributes to LCP & FI
+
+The core web vitals metrics `LCP` and `FI` will now include metadata describing the [network information](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation) observed on the page.  This includes [network type](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/type), [round trip time (rtt)](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/rtt) and [downlink](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/downlink).
+
+### Added element identification attributes to LCP
+
+`LCP` metrics will now also report a [tag name](https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName) and an [image URL](https://developer.mozilla.org/en-US/docs/Web/API/LargestContentfulPaint/url) if present (for LCP triggered by images).
+
 ## v1212
 
 * Staging release date: 11/04/2021

@@ -18,7 +18,12 @@ var config = require('config')
 if (!harvest.xhrUsable || !loader.xhrWrappable) return
 
 var ptid = ''
-var ignoredEvents = {mouseup: true, mousedown: true}
+var ignoredEvents = {
+  // we find that certain events make the data too noisy to be useful
+  global: {mouseup: true, mousedown: true},
+  // certain events are present both in the window and in PVT metrics.  PVT metrics are prefered so the window events should be ignored
+  window: {load: true, pagehide: true}
+}
 var toAggregate = {
   typing: [1000, 2000],
   scrolling: [100, 1000],
@@ -386,9 +391,8 @@ function trivial (node) {
 }
 
 function shouldIgnoreEvent(event, target) {
-  // we find that certain events make the data too noisy to be useful
-  if (event.type in ignoredEvents) return true
-  // the load event is being tracked from the PVT metrics, and the window load should be ignored
-  if (event.type === 'load' && evtOrigin(event.target, target) === 'window') return true
+  var origin = evtOrigin(event.target, target)
+  if (event.type in ignoredEvents.global) return true
+  if (!!ignoredEvents[origin] && event.type in ignoredEvents[origin]) return true
   return false
 }

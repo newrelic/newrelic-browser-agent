@@ -195,7 +195,7 @@ function runLargestContentfulPaintFromInteractionTests(loader) {
         t.ok(size.value > 0, 'size is a non-negative value')
         t.equal(size.type, 'doubleAttribute', 'largestContentfulPaint attribute size is doubleAttribute')
 
-        var tagName = timing.attributes.find(a => a.key === 'tag')
+        var tagName = timing.attributes.find(a => a.key === 'elTag')
         t.equal(tagName.value, 'BUTTON', 'element.tagName is present and correct')
         t.equal(size.type, 'doubleAttribute', 'largestContentfulPaint attribute elementTagName is stringAttribute')
 

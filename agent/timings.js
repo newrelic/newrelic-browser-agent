@@ -92,11 +92,11 @@ function recordLcp() {
     }
 
     if (lcpEntry.url) {
-      attrs['url'] = cleanURL(lcpEntry.url)
+      attrs['elUrl'] = cleanURL(lcpEntry.url)
     }
 
     if (lcpEntry.element && lcpEntry.element.tagName) {
-      attrs['tag'] = lcpEntry.element.tagName
+      attrs['elTag'] = lcpEntry.element.tagName
     }
 
     // collect 0 only when CLS is supported, since 0 is a valid score

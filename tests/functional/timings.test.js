@@ -678,13 +678,8 @@ function runCustomAttributeTests(loader) {
 
     let url = router.assetURL('instrumented-with-custom-attributes.html', { loader: loader })
     let loadPromise = browser.safeGet(url).catch(fail)
-    var reservedTimingAttributes = {
-      'size': true,
-      'eid': true,
-      'cls': true,
-      'type': true,
-      'fid': true
-    }
+    var reservedTimingAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elUrl', 'elTag',
+      'net-type', 'net-etype', 'net-rtt', 'net-dlink']
 
     Promise.all([loadPromise, router.expectRum()])
       .then(() => {
@@ -702,7 +697,7 @@ function runCustomAttributeTests(loader) {
         t.ok(timings, 'there should be load timing')
 
         // attributes are invalid if they have the 'invalid' value set via setCustomAttribute
-        const containsReservedAttributes = timing.attributes.some(a => reservedTimingAttributes[a.key] && a.value === 'invalid')
+        const containsReservedAttributes = timing.attributes.some(a => reservedTimingAttributes.includes(a.key) && a.value === 'invalid')
         t.notok(containsReservedAttributes, 'PageViewTiming custom attributes should not contain default attribute keys')
 
         const expectedAttribute = timing.attributes.find(a => a.key === 'test')

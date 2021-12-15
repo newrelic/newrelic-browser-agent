@@ -193,8 +193,10 @@ function appendGlobalCustomAttributes(timing) {
   var timingAttributes = timing.attrs || {}
   var customAttributes = loader.info.jsAttributes || {}
 
+  var reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
+    'net-etype', 'net-rtt', 'net-dlink']
   mapOwn(customAttributes, function (key, val) {
-    if (key !== 'size' && key !== 'eid' && key !== 'cls' && key !== 'type' && key !== 'fid') {
+    if (reservedAttributes.indexOf(key) < 0) {
       timingAttributes[key] = val
     }
   })

@@ -23,7 +23,7 @@ jobs:
           path: ./.npm
           key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
       - name: build
-        run: SUBPATH=dev npm run ci-build
+        run: SUBPATH=dev PRE_RELEASE=true npm run ci-build
       - name: Archive artifacts
         uses: actions/upload-artifact@v2
         with:

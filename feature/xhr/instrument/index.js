@@ -264,6 +264,8 @@ ee.on('fetch-start', function (fetchArguments, dtPayload) {
   }
   addUrl(this, url)
 
+  if (this.params.protocol === 'data') return
+
   var method = ('' + ((target && target instanceof origRequest && target.method) ||
     opts.method || 'GET')).toUpperCase()
   this.params.method = method
@@ -278,6 +280,9 @@ ee.on('fetch-done', function (err, res) {
   if (!this.params) {
     this.params = {}
   }
+
+  if (this.params.protocol === 'data') return
+
   this.params.status = res ? res.status : 0
 
   // convert rxSize to a number

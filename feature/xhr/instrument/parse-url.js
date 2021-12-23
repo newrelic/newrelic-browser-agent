@@ -10,6 +10,12 @@ module.exports = function parseUrl (url) {
     return stringsToParsedUrls[url]
   }
 
+  if (url.indexOf('data:') === 0) {
+    return {
+      protocol: 'data'
+    }
+  }
+
   var urlEl = document.createElement('a')
   var location = window.location
   var ret = {}

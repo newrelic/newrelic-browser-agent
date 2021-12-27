@@ -126,7 +126,7 @@ function uploadAllToS3 (cb) {
   var allFiles = payloads.concat(loaders).concat(maps)
 
   asyncForEach(allFiles, function (file, next) {
-    var filename = getFilenameWithVersion(file, agentVersion)
+    var filename = argv['dev'] === true ? file : getFilenameWithVersion(file, agentVersion)
     console.log('uploading ' + filename + ' to S3')
     uploadToS3(argv['bucket'], filename, fileData[file], next)
   }, cb, uploadErrorCallback)

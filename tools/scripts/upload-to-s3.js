@@ -28,6 +28,10 @@ var argv = yargs
   .describe('test', 'for testing only, uploads scripts to folder named test')
   .alias('t', 'test')
 
+  .boolean('dev')
+  .describe('dev', 'for dev early release directory only, uploads scripts to folder named dev')
+  .alias('D', 'dev')
+
   .help('h')
   .alias('h', 'help')
 
@@ -88,7 +92,7 @@ function initialize(cb) {
     DurationSeconds: 900
   }
 
-  var sts = new AWS.STS();
+  var sts = new AWS.STS()
   sts.assumeRole(roleToAssume, function(err, data) {
     if (err) {
       return cb(err)
@@ -143,6 +147,10 @@ function uploadAllLoadersToDB (environment, cb) {
 function uploadToS3 (bucket, key, content, cb) {
   if (argv['test'] === true) {
     key = 'test/' + key
+  }
+
+  if (argv['dev'] === true) {
+    key = 'dev/' + key
   }
 
   var params = {

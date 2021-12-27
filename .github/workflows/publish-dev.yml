@@ -1,0 +1,58 @@
+name: Build and publish dev builds
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+      - name: setup build folder
+        run: |
+          mkdir build
+          cp VERSION build/build_number
+          echo $GITHUB_SHA > build/git_commit
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ./.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+      - name: build
+        run: SUBPATH=dev PRE_RELEASE=true npm run ci-build
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: build
+  publish-to-s3:
+    needs: build
+    runs-on: ubuntu-latest
+    container: node:14
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ./.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+      - name: install
+        run: npm ci
+      - name: download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: build
+      - name: upload artifacts to S3
+        run: |
+          node tools/scripts/upload-to-s3.js \
+            --bucket ${{ secrets.AWS_BUCKET }} \
+            --role ${{ secrets.AWS_ROLE_ARN }} \
+            --dev

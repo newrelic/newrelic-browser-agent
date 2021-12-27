@@ -264,6 +264,7 @@ ee.on('fetch-start', function (fetchArguments, dtPayload) {
   }
   addUrl(this, url)
 
+  // Do not generate telemetry for Data URL requests because they don't behave like other network requests
   if (this.params.protocol === 'data') return
 
   var method = ('' + ((target && target instanceof origRequest && target.method) ||
@@ -281,6 +282,7 @@ ee.on('fetch-done', function (err, res) {
     this.params = {}
   }
 
+  // Do not generate telemetry for Data URL requests because they don't behave like other network requests
   if (this.params.protocol === 'data') return
 
   this.params.status = res ? res.status : 0
@@ -311,6 +313,9 @@ function end (xhr) {
   for (var i = 0; i < handlersLen; i++) {
     xhr.removeEventListener(handlers[i], this.listener, false)
   }
+
+  // Do not generate telemetry for Data URL requests because they don't behave like other network requests
+  if (params.protocol && params.protocol === 'data') return
 
   if (params.aborted) return
   metrics.duration = loader.now() - this.startTime

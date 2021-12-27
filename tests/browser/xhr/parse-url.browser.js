@@ -79,6 +79,12 @@ function xhr_tests () {
           port: location.port,
           sameOrigin: true
         }
+      },
+      {
+        url: 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ==',
+        results: {
+          protocol: 'data'
+        }
       }
     ]
 

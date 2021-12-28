@@ -11,7 +11,7 @@ module.exports = function parseUrl (url) {
   }
 
   // Return if URL is a data URL, parseUrl assumes urls are http/https
-  if (url.indexOf('data:') === 0) {
+  if ((url || '').indexOf('data:') === 0) {
     return {
       protocol: 'data'
     }

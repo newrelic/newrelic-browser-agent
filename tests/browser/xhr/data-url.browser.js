@@ -3,34 +3,44 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const test = require('../../../tools/jil/browser-test')
-const ee = require('ee')
-const handleEE = ee.get('handle')
+var test = require('../../../tools/jil/browser-test')
+var ee = require('ee')
+var handleEE = ee.get('handle')
 
-const hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener
+var hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener
 
 require('../../../feature/xhr/instrument')
 
 test('XHR request for Data URL does not generate telemetry', function(t) {
   if (!hasXhr) {
-    t.pass('xhr is not supported in this browser')
+    t.skip('XHR is not supported in this browser')
     t.end()
     return
   }
 
+  ee.addEventListener('send-xhr-start', validate)
   handleEE.addEventListener('xhr', failCase)
 
-  ee.addEventListener('send-xhr-start', validate)
+  try {
+    var xhr = new XMLHttpRequest()
+    xhr.open('GET', 'data:,dataUrl')
+    xhr.send()
+  } catch (e) {
+    ee.removeEventListener('send-xhr-start', validate)
+    handleEE.removeEventListener('xhr', failCase)
 
-  var xhr = new XMLHttpRequest()
-  xhr.open('GET', 'data:,data-uri')
-  xhr.send()
+    t.skip('XHR with data URL not supported in this browser')
+    t.end()
+    return
+  }
+
+  t.plan(2)
 
   function validate (args, xhr) {
     t.equals(this.params.protocol, 'data', 'XHR Data URL request recorded')
     setTimeout(() => {
-      handleEE.removeEventListener('xhr', failCase)
       ee.removeEventListener('send-xhr-start', validate)
+      handleEE.removeEventListener('xhr', failCase)
 
       t.pass('XHR Data URL request did not generate telemetry')
       t.end()
@@ -38,8 +48,10 @@ test('XHR request for Data URL does not generate telemetry', function(t) {
   }
 
   function failCase (params, metrics, start) {
-    t.fail('XHR request for Data URL should not generate telemetry')
+    ee.removeEventListener('send-xhr-start', validate)
     handleEE.removeEventListener('xhr', failCase)
+
+    t.fail('XHR Data URL request should not generate telemetry')
   }
 })
 

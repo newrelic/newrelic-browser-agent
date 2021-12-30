@@ -19,6 +19,7 @@ var ffVersion = require('../../../loader/firefox-version')
 var dataSize = require('ds')
 var responseSizeFromXhr = require('./response-size')
 var eventListenerOpts = require('event-listener-opts')
+var recordSupportability = require('metrics').recordSupportability
 
 var origRequest = NREUM.o.REQ
 var origXHR = window.XMLHttpRequest
@@ -283,7 +284,10 @@ ee.on('fetch-done', function (err, res) {
   }
 
   // Do not generate telemetry for Data URL requests because they don't behave like other network requests
-  if (this.params.protocol === 'data') return
+  if (this.params.protocol === 'data') {
+    recordSupportability('Ajax/DataUrl/Excluded')
+    return
+  }
 
   this.params.status = res ? res.status : 0
 
@@ -315,7 +319,10 @@ function end (xhr) {
   }
 
   // Do not generate telemetry for Data URL requests because they don't behave like other network requests
-  if (params.protocol && params.protocol === 'data') return
+  if (params.protocol && params.protocol === 'data') {
+    recordSupportability('Ajax/DataUrl/Excluded')
+    return
+  }
 
   if (params.aborted) return
   metrics.duration = loader.now() - this.startTime

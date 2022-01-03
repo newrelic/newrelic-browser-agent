@@ -92,11 +92,11 @@ function recordLcp() {
     }
 
     if (lcpEntry.url) {
-      attrs['url'] = cleanURL(lcpEntry.url)
+      attrs['elUrl'] = cleanURL(lcpEntry.url)
     }
 
     if (lcpEntry.element && lcpEntry.element.tagName) {
-      attrs['tag'] = lcpEntry.element.tagName
+      attrs['elTag'] = lcpEntry.element.tagName
     }
 
     // collect 0 only when CLS is supported, since 0 is a valid score
@@ -193,8 +193,10 @@ function appendGlobalCustomAttributes(timing) {
   var timingAttributes = timing.attrs || {}
   var customAttributes = loader.info.jsAttributes || {}
 
+  var reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
+    'net-etype', 'net-rtt', 'net-dlink']
   mapOwn(customAttributes, function (key, val) {
-    if (key !== 'size' && key !== 'eid' && key !== 'cls' && key !== 'type' && key !== 'fid') {
+    if (reservedAttributes.indexOf(key) < 0) {
       timingAttributes[key] = val
     }
   })

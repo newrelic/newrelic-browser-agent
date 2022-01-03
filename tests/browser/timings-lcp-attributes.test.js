@@ -58,8 +58,8 @@ jil.browserTest('sends expected attributes when available', supported, function(
     const attributes = timingModule.timings[0].attrs
     t.equal(attributes.eid, 'some-element-id', 'eid should be present')
     t.equal(attributes.size, 123, 'size should be present')
-    t.equal(attributes.url, 'http://foo.com/a/b', 'url should be present')
-    t.equal(attributes.tag, 'IMG', 'element.tagName should be present')
+    t.equal(attributes.elUrl, 'http://foo.com/a/b', 'url should be present')
+    t.equal(attributes.elTag, 'IMG', 'element.tagName should be present')
     t.equal(attributes['net-type'], networkInfo['net-type'], 'network type should be present')
     t.equal(attributes['net-etype'], networkInfo['net-etype'], 'network effectiveType should be present')
     t.equal(attributes['net-rtt'], networkInfo['net-rtt'], 'network rtt should be present')

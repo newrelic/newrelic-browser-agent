@@ -10,6 +10,13 @@ module.exports = function parseUrl (url) {
     return stringsToParsedUrls[url]
   }
 
+  // Return if URL is a data URL, parseUrl assumes urls are http/https
+  if ((url || '').indexOf('data:') === 0) {
+    return {
+      protocol: 'data'
+    }
+  }
+
   var urlEl = document.createElement('a')
   var location = window.location
   var ret = {}

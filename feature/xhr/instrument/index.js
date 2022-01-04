@@ -19,6 +19,7 @@ var ffVersion = require('../../../loader/firefox-version')
 var dataSize = require('ds')
 var responseSizeFromXhr = require('./response-size')
 var eventListenerOpts = require('event-listener-opts')
+var recordSupportability = require('metrics').recordSupportability
 
 var origRequest = NREUM.o.REQ
 var origXHR = window.XMLHttpRequest
@@ -264,6 +265,9 @@ ee.on('fetch-start', function (fetchArguments, dtPayload) {
   }
   addUrl(this, url)
 
+  // Do not generate telemetry for Data URL requests because they don't behave like other network requests
+  if (this.params.protocol === 'data') return
+
   var method = ('' + ((target && target instanceof origRequest && target.method) ||
     opts.method || 'GET')).toUpperCase()
   this.params.method = method
@@ -278,6 +282,13 @@ ee.on('fetch-done', function (err, res) {
   if (!this.params) {
     this.params = {}
   }
+
+  // Do not generate telemetry for Data URL requests because they don't behave like other network requests
+  if (this.params.protocol === 'data') {
+    recordSupportability('Ajax/DataUrl/Excluded')
+    return
+  }
+
   this.params.status = res ? res.status : 0
 
   // convert rxSize to a number
@@ -305,6 +316,12 @@ function end (xhr) {
 
   for (var i = 0; i < handlersLen; i++) {
     xhr.removeEventListener(handlers[i], this.listener, false)
+  }
+
+  // Do not generate telemetry for Data URL requests because they don't behave like other network requests
+  if (params.protocol && params.protocol === 'data') {
+    recordSupportability('Ajax/DataUrl/Excluded')
+    return
   }
 
   if (params.aborted) return

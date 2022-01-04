@@ -1,8 +1,22 @@
+## v1214
+
+* Internal NR Platform release date: TBD
+* Production APM-injected release date: TBD
+* Production Standalone release date: TBD
+
+### Exclude Data URL requests from Ajax events and metrics
+
+Previously, XMLHttpRequest and Fetch calls made with [Data URLs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs) could prevent the agent from harvesting data.
+
+### Updated LCP identifying attributes to have less generic names
+
+Renamed LargestContentfulPaint PageViewTiming attributes from `url` to `elUrl` and `tag` to `elTag`. This makes the names less generic and as a result less likely to collide with custom attributes.
+
 ## v1213
 
-* Staging release date: 12/06/2021
-* Production APM-injected release date: 12/08/2021
-* Production Standalone release date: 12/17/2021
+* Internal NR Platform release date: 12/06/2021
+* Production APM-injected release date: n/a
+* Production Standalone release date: n/a
 
 ### Included page view timing data in session trace payload
 

@@ -1,0 +1,15 @@
+{
+  "name": "nr-browser-err-instrument",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "dependencies": {
+    "lodash._slice": "^2.4.1",
+    "nr-browser-common": "file:../common"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}

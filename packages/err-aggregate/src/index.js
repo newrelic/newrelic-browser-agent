@@ -36,9 +36,14 @@ module.exports = {
   storeError: storeError
 }
 
-function initialize() {
+function initialize(captureGlobal) {
   register('err', storeError)
   register('ierr', storeError)
+
+  if (captureGlobal) {
+    register.global('err', storeError)
+    register.global('ierr', storeError)
+  }
 
   var harvestTimeSeconds = config.getConfiguration('jserrors.harvestTimeSeconds') || 60
 

@@ -2,8 +2,19 @@ if (!window.NREUM) {
   window.NREUM = {}
 }
 
+var config = require('./config')
+
 var win = window
 var XHR = win.XMLHttpRequest
+var XHR_PROTO = XHR && XHR.prototype
+var ADD_EVENT_LISTENER = 'addEventListener'
+
+var xhrWrappable = XHR &&
+  XHR_PROTO &&
+  XHR_PROTO[ADD_EVENT_LISTENER] &&
+  !/CriOS/.test(navigator.userAgent)
+
+config.runtime.xhrWrappable = xhrWrappable
 
 NREUM.o = {
   ST: setTimeout,

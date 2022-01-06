@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var handleEE = require('nr-browser-common').ee
+var handleEE = require('nr-browser-common').handle.ee
+var globalEE = require('nr-browser-common').handle.globalEE
 
 module.exports = defaultRegister
+module.exports.global = globalRegister
 
 defaultRegister.on = registerWithSpecificEmitter
 
@@ -13,6 +15,10 @@ var handlers = defaultRegister.handlers = {}
 
 function defaultRegister (type, handler, group, ee) {
   registerWithSpecificEmitter(ee || handleEE, type, handler, group)
+}
+
+function globalRegister (type, handler, group) {
+  registerWithSpecificEmitter(globalEE, type, handler, group)
 }
 
 function registerWithSpecificEmitter (ee, type, handler, group) {

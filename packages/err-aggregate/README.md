@@ -1,0 +1,1 @@
+This module provides normalization, aggregation, and harvesting for errors. It does NOT capture errors automatically. The code for instrumentation related to errors is in the `err-instrument` package.

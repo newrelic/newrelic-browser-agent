@@ -7,6 +7,8 @@ var runtimeConfiguration = {
   origin: '' + window.location
 }
 
+var info = {}
+
 module.exports = {
   getConfiguration: getConfiguration,
   setConfiguration: setConfiguration,
@@ -45,15 +47,17 @@ function setConfiguration(path, newValue) {
 }
 
 function getInfo() {
-  if (window.NREUM && window.NREUM.info) {
-    return window.NREUM.info
-  }
-  return {}
+  // if (window.NREUM && window.NREUM.info) {
+  //   return window.NREUM.info
+  // }
+  // return {}
+  return info
 }
 
 function setInfo(obj) {
-  window.NREUM = window.NREUM || {}
-  window.NREUM.info = info = window.NREUM.info || {}
+  // no longer global
+  // window.NREUM = window.NREUM || {}
+  // window.NREUM.info = info = window.NREUM.info || {}
 
   if (obj.licenseKey) {
     info.licenseKey = obj.licenseKey
@@ -64,8 +68,20 @@ function setInfo(obj) {
     info.errorBeacon = obj.beaconUrl
   }
 
+  if (obj.beacon) {
+    info.beacon = obj.beacon
+  }
+
+  if (obj.errorBeacon) {
+    info.errorBeacon = obj.errorBeacon
+  }
+
   if (obj.appId) {
     info.applicationID = obj.appId
+  }
+
+  if (obj.applicationID) {
+    info.applicationID = obj.applicationID
   }
 
   // TODO: there are others

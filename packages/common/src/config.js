@@ -8,18 +8,28 @@ var runtimeConfiguration = {
 }
 
 var info = {}
+var init = {}
 
 module.exports = {
-  getConfiguration: getConfiguration,
   setConfiguration: setConfiguration,
+  getConfiguration: getConfiguration,
+  getConfigurationValue: getConfigurationValue,
+  setConfigurationValue: setConfigurationValue,
   getInfo: getInfo,
   setInfo: setInfo,
   runtime: runtimeConfiguration
 }
 
-function getConfiguration(path) {
-  if (!NREUM.init) return
-  var val = NREUM.init
+function getConfiguration() {
+  return init
+}
+
+function setConfiguration(configuration) {
+  init = configuration
+}
+
+function getConfigurationValue(path) {
+  var val = init
   var parts = path.split('.')
   for (var i = 0; i < parts.length - 1; i++) {
     val = val[parts[i]]
@@ -29,13 +39,8 @@ function getConfiguration(path) {
   return val
 }
 
-function setConfiguration(path, newValue) {
-  window.NREUM = window.NREUM || {}
-
-  if (!NREUM.init) {
-    NREUM.init = {}
-  }
-  var val = NREUM.init
+function setConfigurationValue(path, newValue) {
+  var val = init
   var parts = path.split('.')
   for (var i = 0; i < parts.length - 1; i++) {
     if (typeof val[parts[i]] === 'undefined') {

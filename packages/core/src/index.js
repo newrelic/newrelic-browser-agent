@@ -5,6 +5,11 @@ var config = require('nr-browser-common').config
 if (require('./ie-version') === 6) config.runtime.maxBytes = 2000
 else config.runtime.maxBytes = 30000
 
+// TODO: the internal exports are intended for exposing modules to other packages,
+// while non-internal exports are intended as APIs that user-code would interact with
+// perhaps core should be a light package with just the API, and the other modules
+// could go to another package. Whether they should go to common or not, however,
+// depends on whether we still need to keep the loader bundle as small as possible.
 module.exports = {
   setConfiguration: config.setConfiguration,
   init: initialize,
@@ -15,7 +20,9 @@ module.exports = {
     harvest: require('./harvest'),
     harvestScheduler: require('./harvest-scheduler'),
     registerHandler: require('./register-handler'),
-    stringify: require('./stringify')
+    stringify: require('./stringify'),
+    belSerializer: require('./bel-serializer'),
+    unload: require('./unload')
   }
 }
 

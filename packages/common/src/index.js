@@ -3,6 +3,7 @@ if (!window.NREUM) {
 }
 
 var config = require('./config')
+var wrap = require('./wrap')
 
 var win = window
 var XHR = win.XMLHttpRequest
@@ -27,9 +28,19 @@ NREUM.o = {
   MO: win.MutationObserver
 }
 
+var ee = require('./contextual-ee')
+ee.on('internal-error', function() {
+  console.log('internal error', arguments)
+})
+
+ee.global.on('internal-error', function() {
+  console.log('internal error (global)', arguments)
+})
+
 module.exports = {
   cleanUrl: require('./clean-url'),
   config: require('./config'),
+  ds: require('./data-size'),
   ee: require('./contextual-ee'),
   eventListenerOpts: require('./event-listener-opts'),
   getOrSet: require('./get-or-set'),
@@ -40,27 +51,5 @@ module.exports = {
   now: require('./now'),
   performanceCheck: require('./performance-check'),
   reduce: require('./reduce'),
-  wrap: wrap
-}
-
-function wrap(apiName) {
-  if (apiName === 'events') {
-    require('./wrap-events')
-  } else if (apiName === 'fetch') {
-    require('./wrap-fetch')
-  } else if (apiName === 'history') {
-    require('./wrap-history')
-  } else if (apiName === 'jsonp') {
-    require('./wrap-jsonp')
-  } else if (apiName === 'mutation') {
-    require('./wrap-mutation')
-  } else if (apiName === 'promise') {
-    require('./wrap-promise')
-  } else if (apiName === 'raf') {
-    require('./wrap-raf')
-  } else if (apiName === 'timer') {
-    require('./wrap-timer')
-  } else if (apiName === 'xhr') {
-    require('./wrap-xhr')
-  }  
+  wrap: require('./wrap')
 }

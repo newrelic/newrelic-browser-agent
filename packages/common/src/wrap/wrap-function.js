@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var ee = require('./contextual-ee')
+var ee = require('../contextual-ee')
 var slice = require('lodash._slice')
 var flag = 'nr@original'
 var has = Object.prototype.hasOwnProperty

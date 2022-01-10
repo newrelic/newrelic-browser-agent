@@ -17,8 +17,8 @@ var version = '<VERSION>'
 var jsonp = 'NREUM.setToken'
 var _events = {}
 var haveSendBeacon = !!navigator.sendBeacon
-var tooManyRequestsDelay = config.getConfiguration('harvest.tooManyRequestsDelay') || 60
-var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
+var tooManyRequestsDelay = config.getConfigurationValue('harvest.tooManyRequestsDelay') || 60
+var scheme = (config.getConfigurationValue('ssl') === false) ? 'http' : 'https'
 
 // requiring ie version updates the IE version on the loader object
 var ieVersion = require('./ie-version')

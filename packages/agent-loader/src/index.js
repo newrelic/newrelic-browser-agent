@@ -9,7 +9,7 @@ var protocolAllowed = require('./protocol-allowed')
 var config = require('nr-browser-common').config
 var eventListenerOpts = require('nr-browser-common').eventListenerOpts
 
-var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
+var scheme = (config.getConfigurationValue('ssl') === false) ? 'http' : 'https'
 
 var win = window
 var doc = win.document

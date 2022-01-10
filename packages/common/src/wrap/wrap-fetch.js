@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var ee = require('./contextual-ee').gloabal.get('fetch')
+var ee = require('../contextual-ee').global.get('fetch')
 var slice = require('lodash._slice')
-var mapOwn = require('./map-own')
+var mapOwn = require('../map-own')
 
 module.exports = ee
 

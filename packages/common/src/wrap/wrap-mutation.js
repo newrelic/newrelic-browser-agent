@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var ee = require('./contextual-ee').globabl.get('mutation')
+var ee = require('../contextual-ee').globabl.get('mutation')
 var wrapFn = require('./wrap-function')(ee)
 var OriginalObserver = NREUM.o.MO
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var ee = require('./contextual-ee').global.get('timer')
+var ee = require('../contextual-ee').global.get('timer')
 var wrapFn = require('./wrap-function')(ee)
 
 var SET_TIMEOUT = 'setTimeout'

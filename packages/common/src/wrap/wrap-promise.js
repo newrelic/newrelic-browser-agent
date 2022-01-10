@@ -4,10 +4,10 @@
  */
 
 var wrapFn = require('./wrap-function')
-var promiseEE = require('./contextual-ee').global.get('promise')
-var getContext = require('./contextual-ee').getOrSetContext
+var promiseEE = require('../contextual-ee').global.get('promise')
+var getContext = require('../contextual-ee').getOrSetContext
 var promiseWrapper = wrapFn(promiseEE)
-var mapOwn = require('./map-own')
+var mapOwn = require('../map-own')
 var OriginalPromise = NREUM.o.PR
 
 module.exports = promiseEE

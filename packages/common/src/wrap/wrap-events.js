@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var ee = require('./contextual-ee').global.get('events')
+var ee = require('../contextual-ee').global.get('events')
 var wrapFn = require('./wrap-function')(ee, true)
-var getOrSet = require('./get-or-set')
+var getOrSet = require('../get-or-set')
 
 var XHR = XMLHttpRequest
 var ADD_EVENT_LISTENER = 'addEventListener'

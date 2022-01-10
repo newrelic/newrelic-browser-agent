@@ -6,10 +6,12 @@
 // wrap-events patches XMLHttpRequest.prototype.addEventListener for us.
 require('./wrap-events')
 
-var baseEE = require('./contextual-ee').global
+var config = require('../config')
+var baseEE = require('../contextual-ee').global
 var ee = baseEE.get('xhr')
 var wrapFn = require('./wrap-function')(ee)
-var eventListenerOpts = require('./event-listener-opts')
+var eventListenerOpts = require('../event-listener-opts')
+
 var originals = NREUM.o
 var OrigXHR = originals.XHR
 var MutationObserver = originals.MO

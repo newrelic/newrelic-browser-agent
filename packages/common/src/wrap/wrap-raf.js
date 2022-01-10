@@ -4,7 +4,7 @@
  */
 
 // Request Animation Frame wrapper
-var ee = require('./contextual-ee').global.get('raf')
+var ee = require('../contextual-ee').global.get('raf')
 var wrapFn = require('./wrap-function')(ee)
 
 var equestAnimationFrame = 'equestAnimationFrame'

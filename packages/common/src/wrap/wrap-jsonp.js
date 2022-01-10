@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var eventListenerOpts = require('./event-listener-opts')
-var ee = require('./contextual-ee').global.get('jsonp')
+var eventListenerOpts = require('../event-listener-opts')
+var ee = require('../contextual-ee').global.get('jsonp')
 var wrapFn = require('./wrap-function')(ee)
 
 module.exports = ee

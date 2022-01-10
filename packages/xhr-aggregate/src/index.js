@@ -25,8 +25,8 @@ var spaAjaxEvents = {}
 var sentAjaxEvents = []
 var scheduler
 
-var harvestTimeSeconds = config.getConfiguration('ajax.harvestTimeSeconds') || 60
-var MAX_PAYLOAD_SIZE = config.getConfiguration('ajax.maxPayloadSize') || 1000000
+var harvestTimeSeconds = config.getConfigurationValue('ajax.harvestTimeSeconds') || 60
+var MAX_PAYLOAD_SIZE = config.getConfigurationValue('ajax.maxPayloadSize') || 1000000
 
 if (allAjaxIsEnabled()) setDenyList(config.getConfiguration('ajax.deny_list'))
 
@@ -254,7 +254,7 @@ function Chunk (events) {
 }
 
 function allAjaxIsEnabled() {
-  var enabled = config.getConfiguration('ajax.enabled')
+  var enabled = config.getConfigurationValue('ajax.enabled')
   if (enabled === false) {
     return false
   }

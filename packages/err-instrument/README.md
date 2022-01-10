@@ -1,0 +1,1 @@
+This modules makes sense only in a global context. It observes errors from the global error handler and callbacks from various wrapped APIs.

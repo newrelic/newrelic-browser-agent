@@ -45,7 +45,7 @@ function initialize(captureGlobal) {
     register.global('ierr', storeError)
   }
 
-  var harvestTimeSeconds = config.getConfiguration('jserrors.harvestTimeSeconds') || 60
+  var harvestTimeSeconds = config.getConfigurationValue('jserrors.harvestTimeSeconds') || 60
 
   harvest.on('jserrors', onHarvestStarted)
   var scheduler = new HarvestScheduler('jserrors', { onFinished: onHarvestFinished })

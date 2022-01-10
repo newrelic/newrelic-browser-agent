@@ -4,7 +4,7 @@
  */
 
 // History pushState wrapper
-var ee = require('./contextual-ee').global.get('history')
+var ee = require('../contextual-ee').global.get('history')
 var wrapFn = require('./wrap-function')(ee)
 
 module.exports = ee

@@ -341,3 +341,7 @@ features.passiveSupported = features.addEventListener
   .include('safari', '>9.3')
   .include('android', '>=93')
   .include('ios', '>=10')
+
+features.frameworks = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', 'latest')

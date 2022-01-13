@@ -115,4 +115,7 @@ function stateChange () {
 
 function loaded () {
   handle('mark', ['domContent', now() + exp.offset], null, 'api')
+
+  // wait for dom to generate, then try to detect if it was built using popular frameworks
+  require('./framework-detection').recordFrameworks()
 }

@@ -39,7 +39,7 @@ var origin = '' + location
 var defInfo = {
   beacon: 'bam.nr-data.net',
   errorBeacon: 'bam.nr-data.net',
-  agent: 'js-agent.newrelic.com<PATH>nr<EXTENSION>.js'
+  agent: 'js-agent.newrelic.com/<PATH>nr<EXTENSION>.js'
 }
 
 var xhrWrappable = XHR &&
@@ -115,7 +115,4 @@ function stateChange () {
 
 function loaded () {
   handle('mark', ['domContent', now() + exp.offset], null, 'api')
-
-  // wait for dom to generate, then try to detect if it was built using popular frameworks
-  require('./framework-detection').recordFrameworks()
 }

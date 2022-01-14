@@ -37,6 +37,9 @@ stopwatch.mark('done')
 
 drain('api')
 
+// try to detect if the DOM was built using popular frameworks
+require('./framework-detection').recordFrameworks()
+
 if (autorun) harvest.sendRUM(loader)
 
 // Set a cookie when the page unloads. Consume this cookie on the next page to get a 'start time'.

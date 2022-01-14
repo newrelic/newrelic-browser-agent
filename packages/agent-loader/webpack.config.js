@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
   entry: './src/index.js',
   output: {
-    filename: 'nr-loader-webpack.js',
+    filename: 'nr-loader-spa.js',
     path: path.resolve(__dirname, 'dist'),
   },
   optimization: {

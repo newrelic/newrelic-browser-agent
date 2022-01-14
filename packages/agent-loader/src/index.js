@@ -35,7 +35,7 @@ var defInfo = {
 
 // api loads registers several event listeners, but does not have any exports
 // TODO: add global API
-// require('api')
+require('./api')
 
 if (doc[ADD_EVENT_LISTENER]) {
   win[ADD_EVENT_LISTENER]('load', windowLoaded, eventListenerOpts(false))

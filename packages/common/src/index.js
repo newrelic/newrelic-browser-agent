@@ -36,6 +36,7 @@ module.exports = {
   handle: require('./handle'),
   location: require('./location'),
   mapOwn: require('./map-own'),
+  metrics: require('./metrics'),
   now: require('./now'),
   performanceCheck: require('./performance-check'),
   reduce: require('./reduce'),

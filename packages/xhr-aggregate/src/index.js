@@ -32,8 +32,12 @@ if (allAjaxIsEnabled()) setDenyList(config.getConfiguration('ajax.deny_list'))
 
 // baseEE.on('feat-err', initialize) 
 
-function initialize() {
+function initialize(captureGlobal) {
   register('xhr', storeXhr)
+
+  if (captureGlobal) {
+    register.global('xhr', storeXhr)
+  }
 
   harvest.on('jserrors', function() {
     return { body: agg.take([ 'xhr' ]) }
@@ -62,6 +66,11 @@ function getStoredEvents() {
 }
 
 function storeXhr(params, metrics, startTime, endTime, type) {
+  // TODO: remove after testing
+  if (params.hostname === 'localhost') {
+    return
+  }
+
   metrics.time = startTime
 
   // send to session traces

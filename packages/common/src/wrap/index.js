@@ -16,12 +16,16 @@ if (!window.NREUM.o) {
     REQ: win.Request,
     EV: win.Event,
     PR: win.Promise,
-    MO: win.MutationObserver
+    MO: win.MutationObserver,
+    FETCH: win.fetch
   }
 }
 
 module.exports = {
   wrapGlobalEvents: wrapGlobalEvents,
+  wrapGlobalFetch: wrapGlobalFetch,
+  wrapGlobalRaf: wrapRaf,
+  wrapGlobalTimers: wrapTimer,
   wrapXhr: wrapXhr,
   wrapFetch: wrapFetch
 }
@@ -30,8 +34,12 @@ function wrapGlobalEvents() {
   require('./wrap-events')
 }
 
-function wrapFetch() {
-  require('./wrap-fetch')
+function wrapGlobalFetch() {
+  return require('./wrap-fetch').wrapGlobal()
+}
+
+function wrapFetch(ee) {
+  return require('./wrap-fetch').wrap(ee)
 }
 
 function wrapHistory() {

@@ -25,6 +25,9 @@ if (disabled) {
 
 // load auto-instrumentation
 var errorsInstrumentation = require('nr-browser-err-instrument')
+errorsInstrumentation.initialize()
+var xhrInstrumentation = require('nr-browser-xhr-instrument')
+xhrInstrumentation.initialize(true)
 
 var origin = '' + location
 var defInfo = {
@@ -61,6 +64,13 @@ function windowLoaded () {
     // the agent key in the config, in which case we want to use the default
     if (!info[key]) info[key] = val
   })
+
+  config.setInfo(info)
+
+  // set configuration from global NREUM.init
+  if (NREUM.init) {
+    config.setConfiguration(NREUM.init)
+  }
 
   var agent = doc.createElement('script')
 

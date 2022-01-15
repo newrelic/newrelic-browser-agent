@@ -17,6 +17,7 @@ module.exports = {
   recordPageAction: recordPageAction,
   internal: {
     aggregator: require('./aggregator'),
+    drain: require('./drain'),
     harvest: require('./harvest'),
     harvestScheduler: require('./harvest-scheduler'),
     registerHandler: require('./register-handler'),

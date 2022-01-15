@@ -18,28 +18,34 @@ var NR_ERR_PROP = 'nr@seenError'
 // errors that will be the same as caught errors.
 var skipNext = 0
 
-// Declare that we are using err instrumentation
-require('./debug')
+module.exports = {
+  initialize: initialize
+}
 
-window.onerror = onerrorHandler
+function initialize() {
+  // Declare that we are using err instrumentation
+  require('./debug')
 
-try {
-  throw new Error()
-} catch (e) {
-  // Only wrap stuff if try/catch gives us useful data. It doesn't in IE < 10.
-  if ('stack' in e) {
-    wrap('timer')
-    wrap('raf')
+  window.onerror = onerrorHandler
 
-    if ('addEventListener' in window) {
-      wrap('events')
+  try {
+    throw new Error()
+  } catch (e) {
+    // Only wrap stuff if try/catch gives us useful data. It doesn't in IE < 10.
+    if ('stack' in e) {
+      wrap.wrapGlobalTimers()
+      wrap.wrapGlobalRaf()
+
+      if ('addEventListener' in window) {
+        wrap.wrapGlobalEvents()
+      }
+
+      if (config.runtime.xhrWrappable) {
+        wrap.wrapXhr()
+      }
+
+      handleErrors = true
     }
-
-    if (config.runtime.xhrWrappable) {
-      wrap('xhr')
-    }
-
-    handleErrors = true
   }
 }
 

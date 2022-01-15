@@ -7,9 +7,6 @@ var ctxId = 'nr@context'
 var getOrSet = require('./get-or-set')
 var mapOwn = require('./map-own')
 
-var eventBuffer = {}
-var emitters = {}
-
 // create global emitter instance that can be shared among bundles
 var globalInstance = window.NREUM.ee || ee()
 if (window.NREUM.ee) {
@@ -23,13 +20,12 @@ var baseEE = module.exports = ee()
 module.exports.getOrSetContext = getOrSetContext
 module.exports.global = globalInstance
 
-baseEE.backlog = eventBuffer
-
 function EventContext () {}
 
 function ee (old) {
   var handlers = {}
   var bufferGroupMap = {}
+  var emitters = {}
 
   var emitter = {
     on: addEventListener,
@@ -43,6 +39,12 @@ function ee (old) {
     abort: abortIfNotLoaded,
     aborted: false,
     isBuffering: isBuffering
+  }
+
+  // buffer is associated with a base emitter, since there are two
+  // (global and scoped to the current bundle), it is now part of the emitter
+  if (!old) {
+    emitter.backlog = {}
   }
 
   return emitter
@@ -60,7 +62,7 @@ function ee (old) {
   function emit (type, args, contextOrStore, force, bubble) {
     if (bubble !== false) bubble = true
     if (baseEE.aborted && !force) { return }
-    if (old && bubble) old(type, args, contextOrStore)
+    if (old && bubble) old.emit(type, args, contextOrStore)
 
     var ctx = context(contextOrStore)
     var handlersArray = listeners(type)
@@ -84,7 +86,7 @@ function ee (old) {
     for (var i = 0; i < len; i++) handlersArray[i].apply(ctx, args)
 
     // Buffer after emitting for consistent ordering
-    var bufferGroup = eventBuffer[bufferGroupMap[type]]
+    var bufferGroup = getBuffer()[bufferGroupMap[type]]
     if (bufferGroup) {
       bufferGroup.push([emitter, type, args, ctx])
     }
@@ -113,12 +115,14 @@ function ee (old) {
   }
 
   function getOrCreate (name) {
-    return (emitters[name] = emitters[name] || ee(emit))
+    return (emitters[name] = emitters[name] || ee(emitter))
   }
 
   function bufferEventsByGroup (types, group) {
+    var eventBuffer = getBuffer()
+    
     // do not buffer events if agent has been aborted
-    if (baseEE.aborted) return
+    if (emitter.aborted) return
     mapOwn(types, function (i, type) {
       group = group || 'feature'
       bufferGroupMap[type] = group
@@ -129,8 +133,17 @@ function ee (old) {
   }
 
   function isBuffering(type) {
-    var bufferGroup = eventBuffer[bufferGroupMap[type]]
+    var bufferGroup = getBuffer()[bufferGroupMap[type]]
     return !!bufferGroup
+  }
+
+  // buffer is associated with a base emitter, since there are two
+  // (global and scoped to the current bundle), it is now part of the emitter
+  function getBuffer() {
+    if (old) {
+      return old.backlog
+    }
+    return emitter.backlog
   }
 }
 
@@ -147,8 +160,8 @@ function getNewContext () {
 // We should drop our data and stop collecting if we still have a backlog, which
 // signifies the rest of the agent wasn't loaded
 function abortIfNotLoaded () {
-  if (eventBuffer.api || eventBuffer.feature) {
+  if (baseEE.backlog.api || baseEE.backlog.feature) {
     baseEE.aborted = true
-    eventBuffer = baseEE.backlog = {}
+    baseEE.backlog = {}
   }
 }

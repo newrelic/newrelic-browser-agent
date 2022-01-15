@@ -8,6 +8,8 @@ var slice = require('lodash._slice')
 var mapOwn = require('../map-own')
 
 module.exports = ee
+module.exports.wrap = wrapFetch
+module.exports.wrapGlobal = wrapGlobal
 
 var win = window
 var prefix = 'fetch-'
@@ -19,17 +21,21 @@ var fetch = win.fetch
 var proto = 'prototype'
 var ctxId = 'nr@context'
 
-if (Req && Res && fetch) {
-  wrap()
-}
-
-function wrap() {
+function wrapGlobal() {
+  // since these are prototype methods, we can only wrap globally
   mapOwn(bodyMethods, function (i, name) {
-    wrapPromiseMethod(Req[proto], name, bodyPrefix)
-    wrapPromiseMethod(Res[proto], name, bodyPrefix)
+    wrapPromiseMethod(ee, Req[proto], name, bodyPrefix)
+    wrapPromiseMethod(ee, Res[proto], name, bodyPrefix)
   })
 
-  wrapPromiseMethod(win, 'fetch', prefix)
+  var wrappedFetch = wrapFetch(ee)
+  win.fetch = wrappedFetch
+}
+
+function wrapFetch(ee) {
+  var fn = NREUM.o.FETCH
+
+  var wrappedFetch = wrapPromiseMethod(ee, fn, prefix)
 
   ee.on(prefix + 'end', function (err, res) {
     var ctx = this
@@ -44,31 +50,30 @@ function wrap() {
     }
   })
 
+  return wrappedFetch
 }
 
-function wrapPromiseMethod (target, name, prefix) {
-  var fn = target[name]
-  if (typeof fn === 'function') {
-    target[name] = function () {
-      var args = slice(arguments)
+// this should probably go to the common module as a part of wrapping utility functions
+function wrapPromiseMethod(ee, fn, prefix) {
+  return function nrWrapper() {
+    var args = slice(arguments)
 
-      var ctx = {}
-      // we are wrapping args in an array so we can preserve the reference
-      ee.emit(prefix + 'before-start', [args], ctx)
-      var dtPayload
-      if (ctx[ctxId] && ctx[ctxId].dt) dtPayload = ctx[ctxId].dt
+    var ctx = {}
+    // we are wrapping args in an array so we can preserve the reference
+    ee.emit(prefix + 'before-start', [args], ctx)
+    var dtPayload
+    if (ctx[ctxId] && ctx[ctxId].dt) dtPayload = ctx[ctxId].dt
 
-      var promise = fn.apply(this, args)
+    var promise = fn.apply(this, args)
 
-      ee.emit(prefix + 'start', [args, dtPayload], promise)
+    ee.emit(prefix + 'start', [args, dtPayload], promise)
 
-      return promise.then(function (val) {
-        ee.emit(prefix + 'end', [null, val], promise)
-        return val
-      }, function (err) {
-        ee.emit(prefix + 'end', [err], promise)
-        throw err
-      })
-    }
+    return promise.then(function (val) {
+      ee.emit(prefix + 'end', [null, val], promise)
+      return val
+    }, function (err) {
+      ee.emit(prefix + 'end', [err], promise)
+      throw err
+    })
   }
 }

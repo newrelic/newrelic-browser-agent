@@ -7,6 +7,7 @@
     "nr-browser-common": "file:../common",
     "nr-browser-core": "file:../core",
     "nr-browser-err-aggregate": "file:../err-aggregate",
+    "nr-browser-xhr-aggregate": "file:../xhr-aggregate",
     "webpack": "^5.65.0"
   },
   "scripts": {

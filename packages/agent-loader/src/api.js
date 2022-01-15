@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var handle = require('nr-browser-common').handle
+var handle = require('nr-browser-common').handle.global
 var mapOwn = require('nr-browser-common').mapOwn
 var slice = require('lodash._slice')
 var tracerEE = require('nr-browser-common').ee.global.get('tracer')

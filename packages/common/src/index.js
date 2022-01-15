@@ -17,17 +17,6 @@ var xhrWrappable = XHR &&
 
 config.runtime.xhrWrappable = xhrWrappable
 
-NREUM.o = {
-  ST: setTimeout,
-  SI: win.setImmediate,
-  CT: clearTimeout,
-  XHR: XHR,
-  REQ: win.Request,
-  EV: win.Event,
-  PR: win.Promise,
-  MO: win.MutationObserver
-}
-
 var ee = require('./contextual-ee')
 ee.on('internal-error', function() {
   console.log('internal error', arguments)

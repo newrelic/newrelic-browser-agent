@@ -1,5 +1,3 @@
-var metrics = require('metrics')
-
 var FRAMEWORKS = {
   REACT: 'React',
   ANGULAR: 'Angular',
@@ -12,16 +10,23 @@ var FRAMEWORKS = {
   JQUERY: 'Jquery'
 }
 
-var frameworks = []
-if (detectReact()) frameworks.push(FRAMEWORKS.REACT)
-if (detectAngularJs()) frameworks.push(FRAMEWORKS.ANGULARJS)
-if (detectAngular()) frameworks.push(FRAMEWORKS.ANGULAR)
-if (window.Backbone) frameworks.push(FRAMEWORKS.BACKBONE)
-if (window.Ember) frameworks.push(FRAMEWORKS.EMBER)
-if (window.Vue) frameworks.push(FRAMEWORKS.VUE)
-if (window.Meteor) frameworks.push(FRAMEWORKS.METEOR)
-if (window.Zepto) frameworks.push(FRAMEWORKS.ZEPTO)
-if (window.jQuery) frameworks.push(FRAMEWORKS.JQUERY)
+function getFrameworks() {
+  var frameworks = []
+  try {
+    if (detectReact()) frameworks.push(FRAMEWORKS.REACT)
+    if (detectAngularJs()) frameworks.push(FRAMEWORKS.ANGULARJS)
+    if (detectAngular()) frameworks.push(FRAMEWORKS.ANGULAR)
+    if (window.Backbone) frameworks.push(FRAMEWORKS.BACKBONE)
+    if (window.Ember) frameworks.push(FRAMEWORKS.EMBER)
+    if (window.Vue) frameworks.push(FRAMEWORKS.VUE)
+    if (window.Meteor) frameworks.push(FRAMEWORKS.METEOR)
+    if (window.Zepto) frameworks.push(FRAMEWORKS.ZEPTO)
+    if (window.jQuery) frameworks.push(FRAMEWORKS.JQUERY)
+    return frameworks
+  } catch (err) {
+    // not supported?
+  }
+}
 
 function detectReact() {
   if (!!window.React || !!window.ReactDOM || !!window.ReactRedux) return true
@@ -45,13 +50,4 @@ function detectAngular() {
   return !!document.querySelectorAll('[ng-version]').length
 }
 
-function recordFrameworks () {
-  for (var i = 0; i < frameworks.length; i++) {
-    metrics.recordSupportability('Framework/' + frameworks[i] + '/Detected')
-  }
-}
-
-module.exports = {
-  frameworks: frameworks,
-  recordFrameworks: recordFrameworks
-}
+module.exports = getFrameworks()

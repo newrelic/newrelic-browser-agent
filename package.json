@@ -63,6 +63,7 @@
     "api": "./loader/api.js",
     "config": "./loader/config.js",
     "metrics": "./loader/metrics.js",
+    "framework-detection": "./loader/framework-detection.js",
     "ds": "./loader/data-size.js",
     "ee": "./contextual-ee/index.js",
     "event-listener-opts": "./loader/event-listener-opts.js",

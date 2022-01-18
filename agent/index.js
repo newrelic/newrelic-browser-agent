@@ -12,6 +12,8 @@ var loader = require('loader')
 var drain = require('./drain')
 var navCookie = require('./nav-cookie')
 var config = require('config')
+var frameworks = require('framework-detection')
+var metrics = require('metrics')
 
 // api loads registers several event listeners, but does not have any exports
 require('./api')
@@ -37,10 +39,12 @@ stopwatch.mark('done')
 
 drain('api')
 
-// try to detect if the DOM was built using popular frameworks
-require('./framework-detection').recordFrameworks()
-
 if (autorun) harvest.sendRUM(loader)
+
+setTimeout(function() {
+  for (var i = 0; i < frameworks.length; i++) {
+    metrics.recordSupportability('Framework/' + frameworks[i] + '/Detected')
+  } }, 0)
 
 // Set a cookie when the page unloads. Consume this cookie on the next page to get a 'start time'.
 // The navigation start time cookie is removed when the browser supports the web timing API.

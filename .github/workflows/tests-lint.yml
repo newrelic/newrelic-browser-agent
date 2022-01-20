@@ -2,7 +2,7 @@ name: Tests
 
 on:
   pull_request:
-    types: [review_requested, edited, syncronize]
+    types: [opened, reopened, review_requested, edited, syncronize]
 
 jobs:
   lint:

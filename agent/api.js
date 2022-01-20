@@ -34,6 +34,8 @@ var api = {
   addRelease: addRelease
 }
 
+console.log('this is a test')
+
 // Hook all of the api functions up to the queues/stubs created in loader/api.js
 mapOwn(api, function (fnName, fn) {
   register('api-' + fnName, fn, 'api')

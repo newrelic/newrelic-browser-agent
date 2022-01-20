@@ -2,12 +2,13 @@ name: Tests - Unit
 
 on:
   pull_request_target:
-    types: [opened, reopened, review_requested, edited, syncronize]
+    types: [labeled]
   workflow_dispatch:
 jobs:
   all-browsers-unit:
     runs-on: ubuntu-latest
     container: node:14
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}

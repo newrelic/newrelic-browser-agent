@@ -2,7 +2,7 @@ name: Tests - Lint
 
 on:
   pull_request_target:
-    types: [opened, reopened, review_requested, edited, syncronize]
+    types: [labeled]
   workflow_dispatch:
 
 
@@ -10,6 +10,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     container: node:14
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
     steps:
       - uses: actions/checkout@v2
         with:

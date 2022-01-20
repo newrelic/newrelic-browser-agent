@@ -1,8 +1,10 @@
-name: Tests
+name: Tests - Lint
 
 on:
   pull_request:
-    types: [review_requested, edited, syncronize]
+    types: [opened, reopened, review_requested, edited, syncronize]
+  pull_request_target:
+    types: [synchronize, reopened]
 
 jobs:
   lint:

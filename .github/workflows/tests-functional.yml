@@ -1,10 +1,9 @@
 name: Tests - Functional
 
 on:
-  pull_request:
-    types: [opened, reopened, review_requested, edited, syncronize]
   pull_request_target:
-    types: [synchronize, reopened]
+    types: [opened, reopened, review_requested, edited, syncronize]
+  workflow_dispatch:
 
 jobs:
   all-browsers-functional:

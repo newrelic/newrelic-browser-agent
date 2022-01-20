@@ -5,6 +5,7 @@ on:
     types: [opened, reopened, review_requested, edited, syncronize]
   workflow_dispatch:
 
+
 jobs:
   lint:
     runs-on: ubuntu-latest

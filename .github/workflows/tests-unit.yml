@@ -3,6 +3,8 @@ name: Tests - Unit
 on:
   pull_request:
     types: [opened, reopened, review_requested, edited, syncronize]
+  pull_request_target:
+    types: [synchronize, reopened]
 
 jobs:
   all-browsers-unit:

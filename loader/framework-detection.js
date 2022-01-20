@@ -33,7 +33,7 @@ function detectReact() {
   if (document.querySelector('[data-reactroot], [data-reactid]')) return true
   var divs = document.querySelectorAll('body > div')
   for (var i = 0; i < divs.length; i++) {
-    if (Object.keys(divs[i]).includes('_reactRootContainer')) return true
+    if (Object.keys(divs[i]).indexOf('_reactRootContainer') >= 0) return true
   }
   return false
 }

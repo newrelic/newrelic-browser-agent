@@ -4,3 +4,4 @@ tools/scripts/*.js
 **/vendor/*
 sandbox
 post-installer.js
+tests/assets/frameworks/*

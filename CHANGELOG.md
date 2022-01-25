@@ -1,8 +1,8 @@
 ## v1215
 
 * Internal NR Platform release date: 01/24/2021
-* Production APM-injected release date: TBD
-* Production Standalone release date: TBD
+* Production APM-injected release date: 01/25/2021
+* Production Standalone release date: 01/31/2021
 
 ### Collect supportability metrics for front end frameworks
 

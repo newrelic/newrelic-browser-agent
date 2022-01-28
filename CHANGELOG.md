@@ -1,3 +1,22 @@
+## v1215
+
+* Internal NR Platform release date: 01/24/2021
+* Production APM-injected release date: 01/25/2021
+* Production Standalone release date: 01/31/2021
+
+### Collect supportability metrics for front end frameworks
+
+Added front end framework detection metrics to help guide future priorities for browser agent features. The following front end frameworks will now be detected and analyzed:
+- React 
+- Angular
+- AngularJS
+- Backbone
+- Ember
+- Vue
+- Meteor
+- Zepto
+- Jquery
+
 ## v1214
 
 * Internal NR Platform release date: TBD

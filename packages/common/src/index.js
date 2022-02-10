@@ -3,7 +3,7 @@ if (!window.NREUM) {
 }
 
 var config = require('./config')
-var wrap = require('./wrap')
+// var wrap = require('./wrap')
 
 var win = window
 var XHR = win.XMLHttpRequest

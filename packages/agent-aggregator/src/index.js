@@ -1,7 +1,7 @@
-var core = require('nr-browser-core')
-var errorsAggregator = require('nr-browser-err-aggregate')
-var xhrAggregator = require('nr-browser-xhr-aggregate')
-var config = require('nr-browser-common').config
+import core from 'nr-browser-core'
+import errorsAggregator from 'nr-browser-err-aggregate'
+import xhrAggregator from 'nr-browser-xhr-aggregate'
+import { config } from 'nr-browser-utils'
 
 // set configuration from global NREUM
 if (NREUM && NREUM.info) {

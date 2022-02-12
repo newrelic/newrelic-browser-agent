@@ -2,16 +2,15 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import { uniqueId } from 'nr-browser-utils'
+import parseUrl from './parse-url'
 
-var uniqueId = require('../../../loader/unique-id')
-var parseUrl = require('./parse-url.js')
-
-module.exports = {
+export default {
   generateTracePayload: generateTracePayload,
   shouldGenerateTrace: shouldGenerateTrace
 }
 
-function generateTracePayload (parsedOrigin) {
+export function generateTracePayload (parsedOrigin) {
   if (!shouldGenerateTrace(parsedOrigin)) {
     return null
   }
@@ -96,7 +95,7 @@ function generateTraceHeader (spanId, traceId, timestamp, accountId, appId, trus
 
 // return true if DT is enabled and the origin is allowed, either by being
 // same-origin, or included in the allowed list
-function shouldGenerateTrace (parsedOrigin) {
+export function shouldGenerateTrace (parsedOrigin) {
   return isDtEnabled() && isAllowedOrigin(parsedOrigin)
 }
 

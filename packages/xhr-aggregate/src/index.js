@@ -2,23 +2,11 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import {aggregator as agg, registerHandler as register, harvest, stringify, belSerializer, ee as baseEE, handle, config, harvestScheduler as HarvestScheduler, unload as subscribeToUnload, metrics} from 'nr-browser-utils'
+import { setDenyList, shouldCollectEvent } from './deny-list'
 
-var agg = require('nr-browser-core').internal.aggregator
-var register = require('nr-browser-core').internal.registerHandler
-var harvest = require('nr-browser-core').internal.harvest
-var stringify = require('nr-browser-core').internal.stringify
-var nullable = require('nr-browser-core').internal.belSerializer.nullable
-var numeric = require('nr-browser-core').internal.belSerializer.numeric
-var getAddStringContext = require('nr-browser-core').internal.belSerializer.getAddStringContext
-var addCustomAttributes = require('nr-browser-core').internal.belSerializer.addCustomAttributes
-var baseEE = require('nr-browser-common').ee
-var handle = require('nr-browser-common').handle
-var config = require('nr-browser-common').config
-var HarvestScheduler = require('nr-browser-core').internal.harvestScheduler
-var setDenyList = require('./deny-list').setDenyList
-var shouldCollectEvent = require('./deny-list').shouldCollectEvent
-var subscribeToUnload = require('nr-browser-core').internal.unload
-var recordSupportability = require('nr-browser-common').metrics.recordSupportability
+var { nullable, numeric, getAddStringContext, addCustomAttributes } = belSerializer
+var { recordSupportability } = metrics
 
 var ajaxEvents = []
 var spaAjaxEvents = {}
@@ -32,7 +20,7 @@ if (allAjaxIsEnabled()) setDenyList(config.getConfiguration('ajax.deny_list'))
 
 // baseEE.on('feat-err', initialize) 
 
-function initialize(captureGlobal) {
+export function initialize(captureGlobal) {
   register('xhr', storeXhr)
 
   if (captureGlobal) {
@@ -51,21 +39,17 @@ function initialize(captureGlobal) {
   }
 }
 
-module.exports.storeXhr = storeXhr
-module.exports.initialize = initialize
-module.exports.prepareHarvest = prepareHarvest
-module.exports.getStoredEvents = getStoredEvents
-module.exports.shouldCollectEvent = shouldCollectEvent
-module.exports.setDenyList = setDenyList
+export { shouldCollectEvent }
+export { setDenyList }
 
-function getStoredEvents() {
+export function getStoredEvents() {
   return {
     ajaxEvents: ajaxEvents,
     spaAjaxEvents: spaAjaxEvents
   }
 }
 
-function storeXhr(params, metrics, startTime, endTime, type) {
+export function storeXhr(params, metrics, startTime, endTime, type) {
   // TODO: remove after testing
   if (params.hostname === 'localhost') {
     return
@@ -146,7 +130,7 @@ baseEE.on('interactionDiscarded', function (interaction) {
   delete spaAjaxEvents[interaction.id]
 })
 
-function prepareHarvest(options) {
+export function prepareHarvest(options) {
   options = options || {}
 
   if (ajaxEvents.length === 0) {

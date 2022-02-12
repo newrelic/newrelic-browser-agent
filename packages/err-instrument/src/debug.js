@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var ee = require('nr-browser-common').ee
-var mapOwn = require('nr-browser-common').mapOwn
+import { ee, mapOwn } from 'nr-browser-utils'
+
 var flags = {}
 var flagArr
 

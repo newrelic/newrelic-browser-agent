@@ -1,12 +1,12 @@
 
-module.exports = {
+export default {
   shouldCollectEvent: shouldCollectEvent,
   setDenyList: setDenyList
 }
 
 var denyList = []
 
-function shouldCollectEvent(params) {
+export function shouldCollectEvent(params) {
   if (denyList.length === 0) {
     return true
   }
@@ -24,7 +24,7 @@ function shouldCollectEvent(params) {
   return true
 }
 
-function setDenyList(denyListConfig) {
+export function setDenyList(denyListConfig) {
   denyList = []
   if (!denyListConfig || !denyListConfig.length) {
     return

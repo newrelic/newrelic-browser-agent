@@ -3,12 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var handle = require('nr-browser-common').handle.global
-var mapOwn = require('nr-browser-common').mapOwn
-var slice = require('lodash._slice')
-var tracerEE = require('nr-browser-common').ee.global.get('tracer')
-var metrics = require('nr-browser-common').metrics
-var now = require('nr-browser-common').now
+import { handle as handlePkg, mapOwn, ee, metrics, now } from 'nr-browser-utils'
+import slice from 'lodash._slice'
+
+var handle = handlePkg.global
+var tracerEE = ee.global.get('tracer')
 
 var nr = NREUM
 if (typeof (window.newrelic) === 'undefined') newrelic = nr
@@ -34,7 +33,7 @@ mapOwn(asyncApiFns, function (num, fnName) {
 nr.addPageAction = apiCall(prefix, 'addPageAction', true)
 nr.setCurrentRouteName = apiCall(prefix, 'routeName', true)
 
-module.exports = newrelic
+export default newrelic
 
 nr.interaction = function () {
   return new InteractionHandle().get()

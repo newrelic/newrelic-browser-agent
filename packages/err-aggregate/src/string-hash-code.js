@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-function stringHashCode (string) {
+export function stringHashCode (string) {
   var hash = 0
   var charVal
 
@@ -16,4 +16,5 @@ function stringHashCode (string) {
   return hash
 }
 
-module.exports = stringHashCode
+export default stringHashCode
+// module.exports = stringHashCode

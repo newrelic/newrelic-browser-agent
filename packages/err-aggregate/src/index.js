@@ -3,21 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var agg = require('nr-browser-core').internal.aggregator
-var canonicalFunctionName = require('./canonical-function-name')
-var cleanURL = require('nr-browser-common').cleanUrl
-var computeStackTrace = require('./compute-stack-trace')
-var stringHashCode = require('./string-hash-code')
-var ee = baseEE = require('nr-browser-common').ee
-var register = require('nr-browser-core').internal.registerHandler
-var harvest = require('nr-browser-core').internal.harvest
-var HarvestScheduler = require('nr-browser-core').internal.harvestScheduler
-var stringify = require('nr-browser-core').internal.stringify
-var handle = require('nr-browser-common').handle
-var mapOwn = require('nr-browser-common').mapOwn
-var config = require('nr-browser-common').config
-var truncateSize = require('./format-stack-trace').truncateSize
-var now = require('nr-browser-common').now
+import canonicalFunctionName from './canonical-function-name'
+import computeStackTrace from './compute-stack-trace'
+import stringHashCode from './string-hash-code'
+import { truncateSize } from './format-stack-trace'
+import { aggregator as agg, registerHandler as register, harvest, HarvestScheduler, stringify, handle, mapOwn, config, now, ee as baseEE, cleanUrl as cleanURL } from 'nr-browser-utils'
 
 var stackReported = {}
 var pageviewReported = {}
@@ -31,12 +21,12 @@ var errorOnPage = false
 
 // ee.on('feat-err', initialize)
 
-module.exports = {
+export default {
   initialize: initialize,
   storeError: storeError
 }
 
-function initialize(captureGlobal) {
+export function initialize(captureGlobal) {
   register('err', storeError)
   register('ierr', storeError)
 
@@ -146,7 +136,7 @@ function canonicalizeStackURLs (stackInfo) {
   return stackInfo
 }
 
-function storeError (err, time, internal, customAttributes) {
+export function storeError (err, time, internal, customAttributes) {
   // are we in an interaction
   time = time || now()
   if (!internal && config.runtime.onerror && config.runtime.onerror(err)) return

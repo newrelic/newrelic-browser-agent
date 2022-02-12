@@ -6,11 +6,12 @@
 var stripNewlinesRegex = /^\n+|\n+$/g
 var MAX_STACK_TRACE_LENGTH = 65530
 
-module.exports = function (stackLines) {
+export default function (stackLines) {
   return truncateStackLines(stackLines).replace(stripNewlinesRegex, '')
 }
 
-module.exports.truncateSize = truncateSize
+
+// module.exports.truncateSize = truncateSize
 
 // takes array of stack lines and returns string with top 50 and buttom 50 lines
 function truncateStackLines(stackLines) {
@@ -27,6 +28,6 @@ function truncateStackLines(stackLines) {
 }
 
 // truncates stack string to limit what is sent to backend
-function truncateSize(stackString) {
+export function truncateSize(stackString) {
   return (stackString.length > MAX_STACK_TRACE_LENGTH) ? stackString.substr(0, MAX_STACK_TRACE_LENGTH) : stackString
 }

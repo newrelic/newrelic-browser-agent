@@ -2,12 +2,11 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import { dataSize } from 'nr-browser-common'
 
-var dataSize = require('nr-browser-common').ds
+export default responseSizeFromXhr
 
-module.exports = responseSizeFromXhr
-
-function responseSizeFromXhr (xhr, lastSize) {
+export function responseSizeFromXhr (xhr, lastSize) {
   var type = xhr.responseType
   if (type === 'json' && lastSize !== null) return lastSize
   // Caution! Chrome throws an error if you try to access xhr.responseText for binary data

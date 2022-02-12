@@ -5,7 +5,7 @@
 
 var stringsToParsedUrls = {}
 
-module.exports = function parseUrl (url) {
+export default function parseUrl (url) {
   if (url in stringsToParsedUrls) {
     return stringsToParsedUrls[url]
   }

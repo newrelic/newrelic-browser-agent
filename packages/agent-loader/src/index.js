@@ -2,12 +2,10 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
-var mapOwn = require('nr-browser-common').mapOwn
-var ee = require('nr-browser-common').ee
-var protocolAllowed = require('./protocol-allowed')
-var config = require('nr-browser-common').config
-var eventListenerOpts = require('nr-browser-common').eventListenerOpts
+import { mapOwn, ee, protocolAllowed, config, eventListenerOpts } from 'nr-browser-utils'
+import errorsInstrumentation from 'nr-browser-err-instrument'
+import xhrInstrumentation from 'nr-browser-xhr-instrument'
+import './api'
 
 var scheme = (config.getConfigurationValue('ssl') === false) ? 'http' : 'https'
 
@@ -24,9 +22,9 @@ if (disabled) {
 }
 
 // load auto-instrumentation
-var errorsInstrumentation = require('nr-browser-err-instrument')
+// var errorsInstrumentation = require('nr-browser-err-instrument')
 errorsInstrumentation.initialize()
-var xhrInstrumentation = require('nr-browser-xhr-instrument')
+// var xhrInstrumentation = require('nr-browser-xhr-instrument')
 xhrInstrumentation.initialize(true)
 
 var origin = '' + location
@@ -38,7 +36,7 @@ var defInfo = {
 
 // api loads registers several event listeners, but does not have any exports
 // TODO: add global API
-require('./api')
+// require('./api')
 
 if (doc[ADD_EVENT_LISTENER]) {
   win[ADD_EVENT_LISTENER]('load', windowLoaded, eventListenerOpts(false))

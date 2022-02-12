@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var handle = require('nr-browser-common').handle.global
-var slice = require('lodash._slice')
-var ee = require('nr-browser-common').ee.global
-var config = require('nr-browser-common').config
-var now = require('nr-browser-common').now
-var getOrSet = require('nr-browser-common').getOrSet
-var wrap = require('nr-browser-common').wrap
+import { handle as handlePkg, ee as eePkg, config, now, getOrSet, wrap } from 'nr-browser-utils'
+import slice from 'lodash._slice'
+import './debug'
+
+var handle = handlePkg.global
+var ee = eePkg.global
 var origOnerror = window.onerror
 var handleErrors = false
 var NR_ERR_PROP = 'nr@seenError'
@@ -18,13 +17,13 @@ var NR_ERR_PROP = 'nr@seenError'
 // errors that will be the same as caught errors.
 var skipNext = 0
 
-module.exports = {
+export default {
   initialize: initialize
 }
 
-function initialize() {
+export function initialize() {
   // Declare that we are using err instrumentation
-  require('./debug')
+  // require('./debug')
 
   window.onerror = onerrorHandler
 

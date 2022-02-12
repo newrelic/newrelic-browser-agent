@@ -8,7 +8,7 @@ const root = process.cwd()
 // it will do `npm install` automatically inside the root folder before any of the subfolders.
 print('Installed Root Package')
 
-npm_install_recursive(root)
+// npm_install_recursive(root)
 
 function print(msg){
   console.log(`\n================================\n${msg}\n================================\n`)

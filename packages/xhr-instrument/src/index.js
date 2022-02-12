@@ -2,27 +2,18 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
-var config = require('nr-browser-common').config
-var handle = require('nr-browser-common').handle
-var parseUrl = require('./parse-url.js')
-var generateTracePayload = require('./distributed-tracing.js').generateTracePayload
-var globalEE = require('nr-browser-common').ee.global
-var ee = require('nr-browser-common').ee
+import { config, handle, ee, id, firefoxVersion as ffVersion, dataSize, eventListenerOpts, now, wrap } from 'nr-browser-utils'
+import parseUrl from './parse-url'
+import { generateTracePayload } from './distributed-tracing'
+import responseSizeFromXhr from './response-size'
+var globalEE = ee.global
 var handlers = [ 'load', 'error', 'abort', 'timeout' ]
 var handlersLen = handlers.length
-var id = require('../../../loader/id')
-var ffVersion = require('../../../loader/firefox-version')
-var dataSize = require('nr-browser-common').ds
-var responseSizeFromXhr = require('./response-size')
-var eventListenerOpts = require('nr-browser-common').eventListenerOpts
-var now = require('nr-browser-common').now
-var wrap = require('nr-browser-common').wrap
 
 var origRequest = NREUM.o.REQ
 var origXHR = window.XMLHttpRequest
 
-module.exports = {
+export default {
   initialize: initialize,
   getWrappedFetch: getWrappedFetch
 }

@@ -1,19 +1,22 @@
-import core from 'nr-browser-core'
-import errorsAggregator from 'nr-browser-err-aggregate'
-import xhrAggregator from 'nr-browser-xhr-aggregate'
-import { config } from 'nr-browser-utils'
+// import core from 'nr-browser-core'
+import {initialize as initializeErrors} from 'nr-browser-err-aggregate'
+import {initialize as initializeXhr} from 'nr-browser-xhr-aggregate'
+import { setInfo, setConfiguration } from 'nr-browser-common/src/config/config'
+import { global as globalDrain } from 'nr-browser-common/src/drain/drain'
 
 // set configuration from global NREUM
 if (NREUM && NREUM.info) {
-  config.setInfo(NREUM.info)
+  setInfo(NREUM.info)
 }
 
 if (NREUM && NREUM.init) {
-  config.setConfiguration(NREUM.init)
+  setConfiguration(NREUM.init)
 }
 
-errorsAggregator.initialize(true)
-xhrAggregator.initialize(true)
+initializeErrors(true)
+initializeXhr(true)
 
-core.internal.drain.global('api')
-core.internal.drain.global('feature')
+globalDrain('api')
+globalDrain('feature')
+// core.internal.drain.global('api')
+// core.internal.drain.global('feature')

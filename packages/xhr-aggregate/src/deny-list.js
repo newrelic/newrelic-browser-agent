@@ -1,8 +1,8 @@
 
-export default {
-  shouldCollectEvent: shouldCollectEvent,
-  setDenyList: setDenyList
-}
+// export default {
+//   shouldCollectEvent: shouldCollectEvent,
+//   setDenyList: setDenyList
+// }
 
 var denyList = []
 

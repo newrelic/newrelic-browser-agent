@@ -8,7 +8,7 @@ const root = process.cwd()
 // it will do `npm install` automatically inside the root folder before any of the subfolders.
 print('Installed Root Package')
 
-// npm_install_recursive(root)
+npm_install_recursive(root)
 
 function print(msg){
   console.log(`\n================================\n${msg}\n================================\n`)
@@ -31,7 +31,15 @@ function npm_install_recursive(folder){
 function npm_install(folder) {
   const cmd = /^win/.test(process.platform) ? 'npm.cmd' : 'npm';
   print(`Installing ./${path.relative(root, folder)}`)
+
+  child_process.execSync(`rm -rf ./node_modules`, { cwd: folder, env: process.env, stdio: 'inherit' })
+  child_process.execSync(`rm -f ./package-lock.json`, { cwd: folder, env: process.env, stdio: 'inherit' })
+  try{
   child_process.execSync(`${cmd} ci`, { cwd: folder, env: process.env, stdio: 'inherit' })
+  } catch(err){
+    print('No package-lock found! trying standard npm install command...')
+    child_process.execSync(`${cmd} install`, { cwd: folder, env: process.env, stdio: 'inherit' })
+  }
 }
 
 // Lists subfolders in a folder

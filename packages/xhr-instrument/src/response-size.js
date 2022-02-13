@@ -2,9 +2,9 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { dataSize } from 'nr-browser-common'
+import { dataSize } from 'nr-browser-common/src/util/data-size'
 
-export default responseSizeFromXhr
+// export default responseSizeFromXhr
 
 export function responseSizeFromXhr (xhr, lastSize) {
   var type = xhr.responseType

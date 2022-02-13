@@ -16,5 +16,5 @@ export function stringHashCode (string) {
   return hash
 }
 
-export default stringHashCode
+// export default stringHashCode
 // module.exports = stringHashCode

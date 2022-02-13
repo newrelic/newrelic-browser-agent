@@ -2,13 +2,13 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { uniqueId } from 'nr-browser-utils'
-import parseUrl from './parse-url'
+import { generateSpanId, generateTraceId } from 'nr-browser-common/src/ids/unique-id'
+import {parseUrl} from './parse-url'
 
-export default {
-  generateTracePayload: generateTracePayload,
-  shouldGenerateTrace: shouldGenerateTrace
-}
+// export default {
+//   generateTracePayload: generateTracePayload,
+//   shouldGenerateTrace: shouldGenerateTrace
+// }
 
 export function generateTracePayload (parsedOrigin) {
   if (!shouldGenerateTrace(parsedOrigin)) {
@@ -28,8 +28,8 @@ export function generateTracePayload (parsedOrigin) {
     return null
   }
 
-  var spanId = uniqueId.generateSpanId()
-  var traceId = uniqueId.generateTraceId()
+  var spanId = generateSpanId()
+  var traceId = generateTraceId()
   var timestamp = Date.now()
 
   var payload = {

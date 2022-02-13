@@ -3,12 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { handle as handlePkg, ee as eePkg, config, now, getOrSet, wrap } from 'nr-browser-utils'
+import { global as handle } from 'nr-browser-common/src/event-emitter/handle'
+import { global as ee } from 'nr-browser-common/src/event-emitter/contextual-ee'
+import { runtime } from 'nr-browser-common/src/config/config'
+import { now } from 'nr-browser-common/src/timing/now'
+import { getOrSet } from 'nr-browser-common/src/util/get-or-set'
+import { wrapRaf as wrapGlobalRaf, wrapTimer as wrapGlobalTimers, wrapGlobalEvents, wrapXhr } from 'nr-browser-common/src/wrap'
 import slice from 'lodash._slice'
 import './debug'
 
-var handle = handlePkg.global
-var ee = eePkg.global
 var origOnerror = window.onerror
 var handleErrors = false
 var NR_ERR_PROP = 'nr@seenError'
@@ -17,9 +20,9 @@ var NR_ERR_PROP = 'nr@seenError'
 // errors that will be the same as caught errors.
 var skipNext = 0
 
-export default {
-  initialize: initialize
-}
+// export default {
+//   initialize: initialize
+// }
 
 export function initialize() {
   // Declare that we are using err instrumentation
@@ -32,15 +35,15 @@ export function initialize() {
   } catch (e) {
     // Only wrap stuff if try/catch gives us useful data. It doesn't in IE < 10.
     if ('stack' in e) {
-      wrap.wrapGlobalTimers()
-      wrap.wrapGlobalRaf()
+      wrapGlobalTimers()
+      wrapGlobalRaf()
 
       if ('addEventListener' in window) {
-        wrap.wrapGlobalEvents()
+        wrapGlobalEvents()
       }
 
-      if (config.runtime.xhrWrappable) {
-        wrap.wrapXhr()
+      if (runtime.xhrWrappable) {
+        wrapXhr()
       }
 
       handleErrors = true

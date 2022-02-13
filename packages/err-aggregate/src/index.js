@@ -3,12 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import canonicalFunctionName from './canonical-function-name'
-import computeStackTrace from './compute-stack-trace'
-import stringHashCode from './string-hash-code'
+import {canonicalFunctionName} from './canonical-function-name'
+import {computeStackTrace} from './compute-stack-trace'
+import {stringHashCode} from './string-hash-code'
 import { truncateSize } from './format-stack-trace'
-import { aggregator as agg, registerHandler as register, harvest, HarvestScheduler, stringify, handle, mapOwn, config, now, ee as baseEE, cleanUrl as cleanURL } from 'nr-browser-utils'
 
+import * as agg from 'nr-browser-common/src/aggregate/aggregator'
+import { registerHandler as register, global } from 'nr-browser-common/src/event-emitter/register-handler'
+import { on } from 'nr-browser-common/src/harvest/harvest'
+import { HarvestScheduler } from 'nr-browser-common/src/harvest/harvest-scheduler'
+import { stringify } from 'nr-browser-common/src/util/stringify'
+import { handle } from 'nr-browser-common/src/event-emitter/handle'
+import { mapOwn } from 'nr-browser-common/src/util/map-own'
+import { getInfo, getConfigurationValue, runtime } from 'nr-browser-common/src/config/config'
+import { now } from 'nr-browser-common/src/timing/now'
+import { ee as baseEE } from 'nr-browser-common/src/event-emitter/contextual-ee'
+import { cleanURL } from 'nr-browser-common/src/url/clean-url'
+
+console.log('err-aggregate module has been imported!')
 var stackReported = {}
 var pageviewReported = {}
 var errorCache = {}
@@ -21,28 +33,30 @@ var errorOnPage = false
 
 // ee.on('feat-err', initialize)
 
-export default {
-  initialize: initialize,
-  storeError: storeError
-}
+// export default {
+//   initialize: initialize,
+//   storeError: storeError
+// }
 
 export function initialize(captureGlobal) {
+  console.log('errors has been initialized!')
   register('err', storeError)
   register('ierr', storeError)
 
   if (captureGlobal) {
-    register.global('err', storeError)
-    register.global('ierr', storeError)
+    global('err', storeError)
+    global('ierr', storeError)
   }
 
-  var harvestTimeSeconds = config.getConfigurationValue('jserrors.harvestTimeSeconds') || 60
+  var harvestTimeSeconds = getConfigurationValue('jserrors.harvestTimeSeconds') || 10
 
-  harvest.on('jserrors', onHarvestStarted)
+  on('jserrors', onHarvestStarted)
   var scheduler = new HarvestScheduler('jserrors', { onFinished: onHarvestFinished })
   scheduler.startTimer(harvestTimeSeconds)
 }
 
 function onHarvestStarted(options) {
+  console.log('onHarvestStarted!')
   var body = agg.take([ 'err', 'ierr' ])
 
   if (options.retry) {
@@ -50,7 +64,7 @@ function onHarvestStarted(options) {
   }
 
   var payload = { body: body, qs: {} }
-  var releaseIds = stringify(config.runtime.releaseIds)
+  var releaseIds = stringify(runtime.releaseIds)
 
   if (releaseIds !== '{}') {
     payload.qs.ri = releaseIds
@@ -121,7 +135,7 @@ function buildCanonicalStackString (stackInfo, cleanedOrigin) {
 function canonicalizeStackURLs (stackInfo) {
   // Currently, loader.origin might contain a fragment, but we don't want to use it
   // for comparing with frame URLs.
-  var cleanedOrigin = cleanURL(config.runtime.origin)
+  var cleanedOrigin = cleanURL(runtime.origin)
 
   for (var i = 0; i < stackInfo.frames.length; i++) {
     var frame = stackInfo.frames[i]
@@ -139,7 +153,7 @@ function canonicalizeStackURLs (stackInfo) {
 export function storeError (err, time, internal, customAttributes) {
   // are we in an interaction
   time = time || now()
-  if (!internal && config.runtime.onerror && config.runtime.onerror(err)) return
+  if (!internal && runtime.onerror && runtime.onerror(err)) return
 
   var stackInfo = canonicalizeStackURLs(computeStackTrace(err))
   var canonicalStack = buildCanonicalStackString(stackInfo)
@@ -159,7 +173,7 @@ export function storeError (err, time, internal, customAttributes) {
   } else {
     params.browser_stack_hash = stringHashCode(stackInfo.stackString)
   }
-  params.releaseIds = stringify(config.runtime.releaseIds)
+  params.releaseIds = stringify(runtime.releaseIds)
 
   // When debugging stack canonicalization/hashing, uncomment these lines for
   // more output in the test logs
@@ -187,7 +201,7 @@ export function storeError (err, time, internal, customAttributes) {
   } else {
     // store custom attributes
     var customParams = {}
-    var att = config.getInfo().jsAttributes
+    var att = getInfo().jsAttributes
     mapOwn(att, setCustom)
     if (customAttributes) {
       mapOwn(customAttributes, setCustom)

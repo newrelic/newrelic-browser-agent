@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "dependencies": {
     "lodash._slice": "^2.4.1",
-    "nr-browser-utils": "file:../utils"
+    "nr-browser-common": "file:../common"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

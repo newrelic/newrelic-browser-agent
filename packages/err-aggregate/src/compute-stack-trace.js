@@ -56,10 +56,8 @@
 // INTERNET EXPLORER:
 // ex.message = ...
 // ex.name = ReferenceError
-
-import { reduce } from 'nr-browser-utils'
-import formatStackTrace from './format-stack-trace'
-// var formatStackTrace = require('./format-stack-trace')
+import { reduce } from 'nr-browser-common/src/util/reduce'
+import {formatStackTrace} from './format-stack-trace'
 
 var debug = false
 
@@ -69,7 +67,7 @@ var gecko = /^\s*(?:(\S*|global code)(?:\(.*?\))?@)?((?:file|http|https|chrome|s
 var chrome_eval = /^\s*at .+ \(eval at \S+ \((?:(?:file|http|https):[^)]+)?\)(?:, [^:]*:\d+:\d+)?\)$/i
 var ie_eval = /^\s*at Function code \(Function code:\d+:\d+\)\s*/i
 
-export default computeStackTrace
+// export default computeStackTrace
 // module.exports = computeStackTrace
 
 export function computeStackTrace (ex) {

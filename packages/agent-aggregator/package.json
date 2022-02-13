@@ -4,7 +4,7 @@
   "description": "This is a package that is deployed as a bundle to CDN. It is downloaded by the `agent-loader` package. These two packages are intended to work together.",
   "main": "src/index.js",
   "dependencies": {
-    "nr-browser-utils": "file:../utils",
+    "nr-browser-common": "file:../common",
     "nr-browser-core": "file:../core",
     "nr-browser-err-aggregate": "file:../err-aggregate",
     "nr-browser-xhr-aggregate": "file:../xhr-aggregate",

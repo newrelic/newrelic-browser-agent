@@ -1,57 +1,46 @@
-import {now, handle, config, ieVersion} from 'nr-browser-utils'
+import { now } from 'nr-browser-common/src/timing/now'
+import { handle } from 'nr-browser-common/src/event-emitter/handle'
+import { runtime, getConfiguration, setConfiguration, setInfo } from 'nr-browser-common/src/config/config'
+import { ieVersion } from 'nr-browser-common/src/browser-version/ie-version'
 
-// var now = require('nr-browser-utils').now
-// var handle = require('nr-browser-utils').handle
-// var config = require('nr-browser-utils').config
+// if (require('./ie-version') === 6) runtime.maxBytes = 2000
+if (ieVersion === 6) runtime.maxBytes = 2000
+else runtime.maxBytes = 30000
 
-// if (require('./ie-version') === 6) config.runtime.maxBytes = 2000
-if (ieVersion === 6) config.runtime.maxBytes = 2000
-else config.runtime.maxBytes = 30000
+let initialized = false
+
+const nr = {
+  getConfiguration,
+  setConfiguration,
+  init: initialize,
+  recordError,
+  recordPageAction
+}
+
+export default nr
 
 // TODO: the internal exports are intended for exposing modules to other packages,
 // while non-internal exports are intended as APIs that user-code would interact with
 // perhaps core should be a light package with just the API, and the other modules
 // could go to another package. Whether they should go to common or not, however,
 // depends on whether we still need to keep the loader bundle as small as possible.
-export default {
-  setConfiguration: config.setConfiguration,
-  init: initialize,
-  recordError,
-  recordPageAction
-}
+// export default nr
 
 export { initialize as init }
-export const {setConfiguration} = config
-
-// module.exports = {
-//   setConfiguration: config.setConfi                                                                                                                                                                                    xguration,
-//   init: initialize,
-//   recordError: recordError,
-//   recordPageAction: recordPageAction,
-//   internal: {
-//     aggregator: require('./aggregator'),
-//     drain: require('./drain'),
-//     harvest: require('./harvest'),
-//     harvestScheduler: require('./harvest-scheduler'),
-//     registerHandler: require('./register-handler'),
-//     stringify: require('./stringify'),
-//     belSerializer: require('./bel-serializer'),
-//     unload: require('./unload')
-//   }
-// }
 
 async function initialize(opts) {
-  config.setInfo(opts)
+  console.log('initialize!')
+  if (initialized) return
+  setInfo(opts)
 
-  
-
-  if (opts.hasOwnProperty("disable") && !opts.disable.includes('errors')) {
-    console.log("errors!")
-    var errors = await import('nr-browser-err-aggregate')
+  if (!initialized && !opts.hasOwnProperty('disable') || (opts.hasOwnProperty('disable') && !opts.disable.includes('errors'))) {
+    const { storeError, ...errors } = await import('nr-browser-err-aggregate')
+    nr.storeError = storeError
+    console.log('set store error!', nr)
     errors.initialize(true)
   }
 
-
+  initialized = true
   // if (opts.plugins) {
   //   opts.plugins.forEach(function(plugin) {
   //     plugin.initialize()

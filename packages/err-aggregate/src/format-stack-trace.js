@@ -6,10 +6,9 @@
 var stripNewlinesRegex = /^\n+|\n+$/g
 var MAX_STACK_TRACE_LENGTH = 65530
 
-export default function (stackLines) {
+export function formatStackTrace(stackLines) {
   return truncateStackLines(stackLines).replace(stripNewlinesRegex, '')
 }
-
 
 // module.exports.truncateSize = truncateSize
 

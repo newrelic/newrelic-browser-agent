@@ -2,36 +2,43 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { config, handle, ee, id, firefoxVersion as ffVersion, dataSize, eventListenerOpts, now, wrap } from 'nr-browser-utils'
-import parseUrl from './parse-url'
+import { runtime } from 'nr-browser-common/src/config/config'
+import { handle } from 'nr-browser-common/src/event-emitter/handle'
+import { ee, global as globalEE } from 'nr-browser-common/src/event-emitter/contextual-ee'
+import { id } from 'nr-browser-common/src/ids/id'
+import { ffVersion } from 'nr-browser-common/src/browser-version/firefox-version'
+import { dataSize } from 'nr-browser-common/src/util/data-size'
+import { eventListenerOpts } from 'nr-browser-common/src/event-listener/event-listener-opts'
+import { now } from 'nr-browser-common/src/timing/now'
+import {wrapGlobalFetch, wrapFetch} from 'nr-browser-common/src/wrap'
+import {parseUrl} from './parse-url'
 import { generateTracePayload } from './distributed-tracing'
-import responseSizeFromXhr from './response-size'
-var globalEE = ee.global
+import {responseSizeFromXhr} from './response-size'
 var handlers = [ 'load', 'error', 'abort', 'timeout' ]
 var handlersLen = handlers.length
 
 var origRequest = NREUM.o.REQ
 var origXHR = window.XMLHttpRequest
 
-export default {
-  initialize: initialize,
-  getWrappedFetch: getWrappedFetch
-}
+// export default {
+//   initialize: initialize,
+//   getWrappedFetch: getWrappedFetch
+// }
 
-function initialize(captureGlobalCalls) {
+export function initialize(captureGlobalCalls) {
   // Don't instrument Chrome for iOS, it is buggy and acts like there are URL verification issues
-  if (!config.runtime.xhrWrappable || config.runtime.disabled) return
+  if (!runtime.xhrWrappable || runtime.disabled) return
 
   if (captureGlobalCalls) {
     // TODO
-    // require('nr-browser-common').wrap.wrapXhr()
-    wrap.wrapGlobalFetch()
+    // require('nr-browser-common').wrapXhr()
+    wrapGlobalFetch()
     subscribeToEvents(globalEE, handle.global)
   }
 }
 
-function getWrappedFetch() {
-  var wrappedFetch = wrap.wrapFetch(ee)
+export function getWrappedFetch() {
+  var wrappedFetch = wrapFetch(ee)
   subscribeToEvents(ee, handle)
   return wrappedFetch
 }

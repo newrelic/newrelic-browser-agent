@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ee, mapOwn } from 'nr-browser-utils'
+import {ee} from 'nr-browser-common/src/event-emitter/contextual-ee'
+import { mapOwn } from 'nr-browser-common/src/util/map-own'
 
 var flags = {}
 var flagArr

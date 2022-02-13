@@ -2,32 +2,39 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import {aggregator as agg, registerHandler as register, harvest, stringify, belSerializer, ee as baseEE, handle, config, harvestScheduler as HarvestScheduler, unload as subscribeToUnload, metrics} from 'nr-browser-utils'
+import * as agg from 'nr-browser-common/src/aggregate/aggregator'
+import { registerHandler as register, global as globalRegister } from 'nr-browser-common/src/event-emitter/register-handler'
+import { on as harvestOn } from 'nr-browser-common/src/harvest/harvest'
+import { stringify } from 'nr-browser-common/src/util/stringify'
+import { nullable, numeric, getAddStringContext, addCustomAttributes } from 'nr-browser-common/src/serialize/bel-serializer'
+import {ee as baseEE} from 'nr-browser-common/src/event-emitter/contextual-ee'
+import { handle } from 'nr-browser-common/src/event-emitter/handle'
+import { getConfiguration, getConfigurationValue, getInfo } from 'nr-browser-common/src/config/config'
+import { HarvestScheduler } from 'nr-browser-common/src/harvest/harvest-scheduler'
+import { subscribeToUnload } from 'nr-browser-common/src/unload/unload'
+import { recordSupportability } from 'nr-browser-common/src/metrics/metrics'
 import { setDenyList, shouldCollectEvent } from './deny-list'
-
-var { nullable, numeric, getAddStringContext, addCustomAttributes } = belSerializer
-var { recordSupportability } = metrics
 
 var ajaxEvents = []
 var spaAjaxEvents = {}
 var sentAjaxEvents = []
 var scheduler
 
-var harvestTimeSeconds = config.getConfigurationValue('ajax.harvestTimeSeconds') || 60
-var MAX_PAYLOAD_SIZE = config.getConfigurationValue('ajax.maxPayloadSize') || 1000000
+var harvestTimeSeconds = getConfigurationValue('ajax.harvestTimeSeconds') || 60
+var MAX_PAYLOAD_SIZE = getConfigurationValue('ajax.maxPayloadSize') || 1000000
 
-if (allAjaxIsEnabled()) setDenyList(config.getConfiguration('ajax.deny_list'))
+if (allAjaxIsEnabled()) setDenyList(getConfiguration('ajax.deny_list'))
 
-// baseEE.on('feat-err', initialize) 
+// baseEE.on('feat-err', initialize)
 
 export function initialize(captureGlobal) {
   register('xhr', storeXhr)
 
   if (captureGlobal) {
-    register.global('xhr', storeXhr)
+    globalRegister('xhr', storeXhr)
   }
 
-  harvest.on('jserrors', function() {
+  harvestOn('jserrors', function() {
     return { body: agg.take([ 'xhr' ]) }
   })
 
@@ -75,7 +82,7 @@ export function storeXhr(params, metrics, startTime, endTime, type) {
   }
 
   if (!shouldCollectEvent(params)) {
-    if (params.hostname === config.getInfo().errorBeacon) {
+    if (params.hostname === getInfo().errorBeacon) {
       recordSupportability('Ajax/Events/Excluded/Agent')
     } else {
       recordSupportability('Ajax/Events/Excluded/App')
@@ -226,7 +233,7 @@ function Chunk (events) {
     var insert = '2,'
 
     // add custom attributes
-    var attrParts = addCustomAttributes(config.getInfo().jsAttributes || {}, this.addString)
+    var attrParts = addCustomAttributes(getInfo().jsAttributes || {}, this.addString)
     fields.unshift(numeric(attrParts.length))
 
     insert += fields.join(',')
@@ -247,7 +254,7 @@ function Chunk (events) {
 }
 
 function allAjaxIsEnabled() {
-  var enabled = config.getConfigurationValue('ajax.enabled')
+  var enabled = getConfigurationValue('ajax.enabled')
   if (enabled === false) {
     return false
   }

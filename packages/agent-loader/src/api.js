@@ -3,14 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { handle as handlePkg, mapOwn, ee, metrics, now } from 'nr-browser-utils'
+import { global as handle } from 'nr-browser-common/src/event-emitter/handle'
+import { mapOwn } from 'nr-browser-common/src/util/map-own'
+import { global as globalEE } from 'nr-browser-common/src/event-emitter/contextual-ee'
+import { recordSupportability } from 'nr-browser-common/src/metrics/metrics'
+import { now } from 'nr-browser-common/src/timing/now'
 import slice from 'lodash._slice'
 
-var handle = handlePkg.global
-var tracerEE = ee.global.get('tracer')
+var tracerEE = globalEE.get('tracer')
 
 var nr = NREUM
-if (typeof (window.newrelic) === 'undefined') newrelic = nr
+if (typeof (window.newrelic) === 'undefined') window.newrelic = nr
 
 var asyncApiFns = [
   'setPageViewName',
@@ -70,7 +73,7 @@ mapOwn('actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get'.sp
 
 function apiCall (prefix, name, notSpa, bufferGroup) {
   return function () {
-    metrics.recordSupportability('API/' + name + '/called')
+    recordSupportability('API/' + name + '/called')
     handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup)
     return notSpa ? void 0 : this
   }
@@ -78,6 +81,6 @@ function apiCall (prefix, name, notSpa, bufferGroup) {
 
 newrelic.noticeError = function (err, customAttributes) {
   if (typeof err === 'string') err = new Error(err)
-  metrics.recordSupportability('API/noticeError/called')
+  recordSupportability('API/noticeError/called')
   handle('err', [err, now(), false, customAttributes])
 }

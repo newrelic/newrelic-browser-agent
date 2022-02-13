@@ -1,7 +1,7 @@
 {
   "parserOptions": {
     "globalReturn": true,
-    "sourceType": "module",
+    "sourceType": "script",
     "ecmaVersion": 5
   },
   "extends": "standard",

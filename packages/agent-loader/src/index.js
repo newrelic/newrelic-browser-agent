@@ -2,12 +2,17 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { mapOwn, ee, protocolAllowed, config, eventListenerOpts } from 'nr-browser-utils'
-import errorsInstrumentation from 'nr-browser-err-instrument'
-import xhrInstrumentation from 'nr-browser-xhr-instrument'
+import 'nr-browser-common/src/window/nreum'
+import { mapOwn } from 'nr-browser-common/src/util/map-own'
+import { ee } from 'nr-browser-common/src/event-emitter/contextual-ee'
+import { protocolAllowed } from 'nr-browser-common/src/url/protocol-allowed'
+import { setInfo, setConfiguration, getConfigurationValue } from 'nr-browser-common/src/config/config'
+import { eventListenerOpts } from 'nr-browser-common/src/event-listener/event-listener-opts'
+import {initialize as initializeErrors} from 'nr-browser-err-instrument'
+import {initialize as initializeXhr} from 'nr-browser-xhr-instrument'
 import './api'
 
-var scheme = (config.getConfigurationValue('ssl') === false) ? 'http' : 'https'
+var scheme = (getConfigurationValue('ssl') === false) ? 'http' : 'https'
 
 var win = window
 var doc = win.document
@@ -15,29 +20,26 @@ var doc = win.document
 var ADD_EVENT_LISTENER = 'addEventListener'
 var ATTACH_EVENT = 'attachEvent'
 
-// TODO: shutdown when protoco not allowed
 var disabled = !protocolAllowed(win.location)
 if (disabled) {
-
+  // shut down the protocol if not allowed here...
 }
 
 // load auto-instrumentation
 // var errorsInstrumentation = require('nr-browser-err-instrument')
-errorsInstrumentation.initialize()
+initializeErrors()
 // var xhrInstrumentation = require('nr-browser-xhr-instrument')
-xhrInstrumentation.initialize(true)
+initializeXhr(true)
 
-var origin = '' + location
+// var origin = '' + location
+// TODO: set agent string here based on current version
 var defInfo = {
   beacon: 'bam.nr-data.net',
   errorBeacon: 'bam.nr-data.net',
-  agent: 'js-agent.newrelic.com/nr<EXTENSION>.js'
+  agent: 'js-agent.newrelic.com/test/nr-spa.js'
 }
 
 // api loads registers several event listeners, but does not have any exports
-// TODO: add global API
-// require('./api')
-
 if (doc[ADD_EVENT_LISTENER]) {
   win[ADD_EVENT_LISTENER]('load', windowLoaded, eventListenerOpts(false))
 } else {
@@ -49,8 +51,10 @@ function windowLoaded () {
   if (loadFired++) return
   var info = NREUM.info
 
+  console.log('info!', info)
+
   var firstScript = doc.getElementsByTagName('script')[0]
-  setTimeout(ee.abort, 30000)
+  // setTimeout(ee.abort, 30000)
 
   if (!(info && info.licenseKey && info.applicationID && firstScript)) {
     return ee.abort()
@@ -63,11 +67,11 @@ function windowLoaded () {
     if (!info[key]) info[key] = val
   })
 
-  config.setInfo(info)
+  setInfo(info)
 
   // set configuration from global NREUM.init
   if (NREUM.init) {
-    config.setConfiguration(NREUM.init)
+    setConfiguration(NREUM.init)
   }
 
   var agent = doc.createElement('script')
@@ -77,6 +81,9 @@ function windowLoaded () {
   } else {
     agent.src = scheme + '://' + info.agent
   }
+
+  console.log('insert script!')
+  console.log('agent', agent)
 
   firstScript.parentNode.insertBefore(agent, firstScript)
 }

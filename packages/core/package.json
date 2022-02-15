@@ -7,7 +7,9 @@
     "lodash._slice": "^2.4.1",
     "nr-browser-common": "file:../common"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^8.8.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

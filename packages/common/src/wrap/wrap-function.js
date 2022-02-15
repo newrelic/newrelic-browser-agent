@@ -67,6 +67,7 @@ export function createWrapperWithEmitter(emitter, always) {
   }
 
   function inPlace (obj, methods, prefix, getContext, bubble) {
+    console.log('methods!', methods)
     if (!prefix) prefix = ''
     // If prefix starts with '-' set this boolean to add the method name to
     // the prefix before passing each one to wrap.

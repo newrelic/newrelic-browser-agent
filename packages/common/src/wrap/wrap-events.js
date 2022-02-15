@@ -62,6 +62,7 @@ function findAndWrapNode (object) {
 }
 
 function wrapNode (node) {
+  console.log('wrap events...')
   wrapFn.inPlace(node, [ADD_EVENT_LISTENER, REMOVE_EVENT_LISTENER], '-', uniqueListener)
 }
 

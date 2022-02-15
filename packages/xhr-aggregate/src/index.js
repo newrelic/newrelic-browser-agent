@@ -20,7 +20,7 @@ var spaAjaxEvents = {}
 var sentAjaxEvents = []
 var scheduler
 
-var harvestTimeSeconds = getConfigurationValue('ajax.harvestTimeSeconds') || 60
+var harvestTimeSeconds = getConfigurationValue('ajax.harvestTimeSeconds') || 10
 var MAX_PAYLOAD_SIZE = getConfigurationValue('ajax.maxPayloadSize') || 1000000
 
 if (allAjaxIsEnabled()) setDenyList(getConfiguration('ajax.deny_list'))

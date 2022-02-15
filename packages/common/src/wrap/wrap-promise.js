@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import {createWrapperWithEmitter as wrapFn} from './wrap-function'
+import {createWrapperWithEmitter as wrapFn, wrapInPlace} from './wrap-function'
 import {global as globalEE, getOrSetContext} from '../event-emitter/contextual-ee'
 import {mapOwn} from '../util/map-own'
 export var promiseEE = globalEE.get('promise')
@@ -57,9 +57,10 @@ function wrap() {
     return this.then(null, fn)
   }
 
-  OriginalPromise.prototype = Object.create(OriginalPromise.prototype, {
-    constructor: {value: WrappedPromise}
-  })
+  Object.assign(OriginalPromise.prototype, {constructor: {value: WrappedPromise}})
+  // OriginalPromise.prototype = Object.create(OriginalPromise.prototype, {
+  //   constructor: {value: WrappedPromise}
+  // })
 
   mapOwn(Object.getOwnPropertyNames(OriginalPromise), function copy (i, key) {
     try {
@@ -82,7 +83,7 @@ function wrap() {
     return promise
   }
 
-  wrapFn.wrapInPlace(OriginalPromise.prototype, 'then', function wrapThen(original) {
+  wrapInPlace(OriginalPromise.prototype, 'then', function wrapThen(original) {
     return function wrappedThen() {
       var originalThis = this
       var args = wrapFn.argsToArray.apply(this, arguments)

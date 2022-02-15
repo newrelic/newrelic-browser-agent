@@ -30,42 +30,51 @@
 //   wrapFetch: wrapFetch
 // }
 
-export function wrapGlobalEvents() {
-  import('./wrap-events')
-}
+import {wrap} from './wrap-fetch'
+import wt from './wrap-timer'
+import wr from './wrap-raf'
+import wh from './wrap-history'
+import wj from './wrap-jsonp'
+import wm from './wrap-mutation'
+import wp from './wrap-promise'
+import wx from './wrap-xhr'
+import we from './wrap-events'
 
-export function wrapGlobalFetch() {
-  return import('./wrap-fetch').then(module => module.wrapGlobal())
+export {wrapGlobal as wrapGlobalFetch} from './wrap-fetch'
+
+export function wrapGlobalEvents() {
+  return we
 }
 
 export function wrapFetch(ee) {
-  return import('./wrap-fetch').then(module => module.wrap(ee))
+  // return import('./wrap-fetch').then(module => module.wrap(ee))
+  wrap(ee)
 }
 
 export function wrapHistory() {
-  import('./wrap-history')
+  return wh
 }
 
 export function wrapJson() {
-  import('./wrap-jsonp')
+  return wj
 }
 
 export function wrapMutation() {
-  import('./wrap-mutation')
+  return wm
 }
 
 export function wrapPromise() {
-  import('./wrap-promise')
+  return wp
 }
 
 export function wrapRaf() {
-  import('./wrap-raf')
+  return wr
 }
 
 export function wrapTimer() {
-  import('./wrap-timer')
+  return wt
 }
 
 export function wrapXhr() {
-  import('./wrap-xhr')
+  return wx
 }

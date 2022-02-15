@@ -9,6 +9,14 @@ else runtime.maxBytes = 30000
 
 let initialized = false
 
+// import core
+// import err-agg
+// core.plugin = err-agg
+
+// import core
+// core <decides> if import err-agg
+// core initializes err-agg
+
 const nr = {
   getConfiguration,
   setConfiguration,

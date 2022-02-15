@@ -13,6 +13,8 @@ var equestAnimationFrame = 'equestAnimationFrame'
 
 export default ee
 
+console.log('wrap raf...')
+
 wrapFn.inPlace(window, [
   'r' + equestAnimationFrame,
   'mozR' + equestAnimationFrame,

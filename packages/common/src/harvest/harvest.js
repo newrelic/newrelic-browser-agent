@@ -114,6 +114,7 @@ function _send (endpoint, payload, opts, submitMethod, cbFinished) {
   if (!info.errorBeacon) return false
 
   if (!payload.body) {
+    console.log('no payload body')
     if (cbFinished) {
       cbFinished({ sent: false })
     }
@@ -143,7 +144,9 @@ function _send (endpoint, payload, opts, submitMethod, cbFinished) {
 
   var result = method(fullUrl, body)
 
+  console.log('result...', result)
   if (cbFinished && method === submitData.xhr) {
+    console.log('in cbFinished')
     var xhr = result
     xhr.addEventListener('load', function () {
       var result = { sent: true }

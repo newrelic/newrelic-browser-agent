@@ -1,4 +1,5 @@
 /build
+**/dist
 /config
 /tmp
 /.npm

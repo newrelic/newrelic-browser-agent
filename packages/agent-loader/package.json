@@ -16,7 +16,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack && cp dist/nr-loader-spa.js ../../build"
+    "build": "webpack --config ./spa.config.js && webpack --config ./pro.config.js && webpack --config ./lite.config.js && cp dist/* ../../build"
   },
   "author": "",
   "license": "ISC"

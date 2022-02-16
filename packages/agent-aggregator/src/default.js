@@ -13,6 +13,7 @@ if (NREUM && NREUM.init) {
   setConfiguration(NREUM.init)
 }
 
+initializeErrors(true)
 initializeXhr(true)
 // .. other features too
 

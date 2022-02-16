@@ -1,12 +1,11 @@
 const path = require('path')
 
 module.exports = {
-  entry: './src/index.js',
+  entry: './src/lite.js',
   output: {
-    filename: 'nr-loader-spa.js',
-    // path: path.resolve(__dirname, 'dist'),
+    filename: 'nr-loader-rum.js',
     path: path.resolve(__dirname, 'dist'),
-    publicPath: 'https://js-agent.newrelic.com/test/',
+    // publicPath: 'https://js-agent.newrelic.com/test/',
     libraryTarget: 'umd'
   },
   optimization: {

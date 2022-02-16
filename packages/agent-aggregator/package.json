@@ -12,7 +12,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack && cp dist/nr-spa.js ../../build"
+    "build": "webpack --config ./default.config.js && webpack --config ./spa.config.js && cp dist/* ../../build"
   },
   "author": "",
   "license": "ISC",

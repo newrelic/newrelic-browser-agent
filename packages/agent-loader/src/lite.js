@@ -32,7 +32,6 @@ initializeErrors()
 initializeXhr(true)
 
 // var origin = '' + location
-// TODO: set agent string here based on current version
 var defInfo = {
   beacon: 'bam.nr-data.net',
   errorBeacon: 'bam.nr-data.net',

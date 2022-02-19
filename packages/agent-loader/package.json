@@ -2,7 +2,7 @@
   "name": "nr-browser-loader",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.js",
+  "main": "src/spa.js",
   "dependencies": {
     "lodash._slice": "^2.4.1",
     "nr-browser-common": "file:../common",

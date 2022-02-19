@@ -2,12 +2,13 @@
   "name": "nr-browser-aggregator",
   "version": "1.0.0",
   "description": "This is a package that is deployed as a bundle to CDN. It is downloaded by the `agent-loader` package. These two packages are intended to work together.",
-  "main": "src/index.js",
+  "main": "src/spa.js",
   "dependencies": {
     "nr-browser-common": "file:../common",
     "nr-browser-core": "file:../core",
     "nr-browser-err-aggregate": "file:../err-aggregate",
     "nr-browser-xhr-aggregate": "file:../xhr-aggregate",
+    "nr-browser-page-view-timing": "file:../page-view-timing",
     "webpack": "^5.65.0"
   },
   "scripts": {

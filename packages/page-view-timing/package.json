@@ -1,5 +1,5 @@
 {
-  "name": "nr-browser-err-aggregate",
+  "name": "nr-browser-page-view-timing",
   "version": "1.0.0",
   "description": "",
   "main": "src/index.js",
@@ -7,7 +7,8 @@
     "nr-browser-common": "file:../common"
   },
   "devDependencies": {
-    "eslint": "^8.8.0"
+    "eslint": "^8.8.0",
+    "eslint-plugin-import": "^2.25.4"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

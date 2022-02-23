@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import {createWrapperWithEmitter as wrapFn, wrapInPlace} from './wrap-function'
+import {createWrapperWithEmitter as wrapFn, wrapInPlace, argsToArray} from './wrap-function'
 import {global as globalEE, getOrSetContext} from '../event-emitter/contextual-ee'
 import {mapOwn} from '../util/map-own'
 export var promiseEE = globalEE.get('promise')
@@ -86,7 +86,7 @@ function wrap() {
   wrapInPlace(OriginalPromise.prototype, 'then', function wrapThen(original) {
     return function wrappedThen() {
       var originalThis = this
-      var args = wrapFn.argsToArray.apply(this, arguments)
+      var args = argsToArray.apply(this, arguments)
 
       var ctx = getContext(originalThis)
       ctx.promise = originalThis

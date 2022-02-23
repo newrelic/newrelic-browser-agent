@@ -10,7 +10,7 @@ import { setInfo, setConfiguration, getConfigurationValue } from 'nr-browser-com
 import { eventListenerOpts } from 'nr-browser-common/src/event-listener/event-listener-opts'
 import {initialize as initializeErrors} from 'nr-browser-err-instrument'
 import {initialize as initializeXhr} from 'nr-browser-xhr-instrument'
-import './api'
+import '../api'
 
 var scheme = (getConfigurationValue('ssl') === false) ? 'http' : 'https'
 
@@ -36,7 +36,7 @@ initializeXhr(true)
 var defInfo = {
   beacon: 'bam.nr-data.net',
   errorBeacon: 'bam.nr-data.net',
-  agent: 'js-agent.newrelic.com/test/nr-spa.js'
+  agent:  `js-agent.newrelic.com/${env.PATH}nr.js`
 }
 
 // api loads registers several event listeners, but does not have any exports

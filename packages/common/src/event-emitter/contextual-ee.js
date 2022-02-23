@@ -9,7 +9,7 @@ import { mapOwn } from '../util/map-own'
 var ctxId = 'nr@context'
 
 // create global emitter instance that can be shared among bundles
-var globalInstance = window.NREUM.ee || ee()
+var globalInstance
 if (window.NREUM.ee) {
   globalInstance = window.NREUM.ee
 } else {

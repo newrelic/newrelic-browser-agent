@@ -15,11 +15,14 @@ const jsonp = 'NREUM.setToken'
 // nr is injected into all send methods. This allows for easier testing
 // we could require('loader') instead
 export function sendRUM () {
+  console.log('send rum!')
   const info = getInfo()
+  console.log('sendRum info', info)
   if (!info.beacon) return
   if (info.queueTime) aggregator.store('measures', 'qt', { value: info.queueTime })
   if (info.applicationTime) aggregator.store('measures', 'ap', { value: info.applicationTime })
 
+  console.log('sendRum continue')
   // some time in the past some code will have called stopwatch.mark('starttime', Date.now())
   // calling measure like this will create a metric that measures the time differential between
   // the two marks.
@@ -29,63 +32,68 @@ export function sendRUM () {
 
   var measuresMetrics = aggregator.get('measures')
 
+  console.log('measureMetrics', measuresMetrics)
+
   var measuresQueryString = mapOwn(measuresMetrics, function (metricName, measure) {
     return '&' + metricName + '=' + measure.params.value
   }).join('')
 
-  if (measuresQueryString) {
-    // currently we only have one version of our protocol
-    // in the future we may add more
-    var protocol = '1'
+  console.log('measuresQueryString', measuresQueryString)
 
-    var chunksForQueryString = [baseQueryString(runtime)]
+  // if (measuresQueryString) {
+  // currently we only have one version of our protocol
+  // in the future we may add more
+  var protocol = '1'
 
-    chunksForQueryString.push(measuresQueryString)
+  var chunksForQueryString = [baseQueryString(runtime)]
 
-    chunksForQueryString.push(param('tt', info.ttGuid))
-    chunksForQueryString.push(param('us', info.user))
-    chunksForQueryString.push(param('ac', info.account))
-    chunksForQueryString.push(param('pr', info.product))
-    chunksForQueryString.push(param('af', mapOwn(runtime.features, function (k) { return k }).join(',')))
+  chunksForQueryString.push(measuresQueryString)
 
-    if (window.performance && typeof (window.performance.timing) !== 'undefined') {
-      var navTimingApiData = ({
-        timing: addPT(window.performance.timing, {}),
-        navigation: addPN(window.performance.navigation, {})
-      })
-      chunksForQueryString.push(param('perf', stringify(navTimingApiData)))
-    }
+  chunksForQueryString.push(param('tt', info.ttGuid))
+  chunksForQueryString.push(param('us', info.user))
+  chunksForQueryString.push(param('ac', info.account))
+  chunksForQueryString.push(param('pr', info.product))
+  chunksForQueryString.push(param('af', mapOwn(runtime.features, function (k) { return k }).join(',')))
 
-    if (window.performance && window.performance.getEntriesByType) {
-      var entries = window.performance.getEntriesByType('paint')
-      if (entries && entries.length > 0) {
-        entries.forEach(function(entry) {
-          if (!entry.startTime || entry.startTime <= 0) return
-
-          if (entry.name === 'first-paint') {
-            chunksForQueryString.push(param('fp',
-              String(Math.floor(entry.startTime))))
-          } else if (entry.name === 'first-contentful-paint') {
-            chunksForQueryString.push(param('fcp',
-              String(Math.floor(entry.startTime))))
-          }
-          addPaintMetric(entry.name, Math.floor(entry.startTime))
-        })
-      }
-    }
-
-    chunksForQueryString.push(param('xx', info.extra))
-    chunksForQueryString.push(param('ua', info.userAttributes))
-    chunksForQueryString.push(param('at', info.atts))
-
-    var customJsAttributes = stringify(info.jsAttributes)
-    chunksForQueryString.push(param('ja', customJsAttributes === '{}' ? null : customJsAttributes))
-
-    var queryString = fromArray(chunksForQueryString, runtime.maxBytes)
-
-    submitData.jsonp(
-      scheme + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString,
-      jsonp
-    )
+  if (window.performance && typeof (window.performance.timing) !== 'undefined') {
+    var navTimingApiData = ({
+      timing: addPT(window.performance.timing, {}),
+      navigation: addPN(window.performance.navigation, {})
+    })
+    chunksForQueryString.push(param('perf', stringify(navTimingApiData)))
   }
+
+  if (window.performance && window.performance.getEntriesByType) {
+    var entries = window.performance.getEntriesByType('paint')
+    if (entries && entries.length > 0) {
+      entries.forEach(function(entry) {
+        if (!entry.startTime || entry.startTime <= 0) return
+
+        if (entry.name === 'first-paint') {
+          chunksForQueryString.push(param('fp',
+            String(Math.floor(entry.startTime))))
+        } else if (entry.name === 'first-contentful-paint') {
+          chunksForQueryString.push(param('fcp',
+            String(Math.floor(entry.startTime))))
+        }
+        addPaintMetric(entry.name, Math.floor(entry.startTime))
+      })
+    }
+  }
+
+  chunksForQueryString.push(param('xx', info.extra))
+  chunksForQueryString.push(param('ua', info.userAttributes))
+  chunksForQueryString.push(param('at', info.atts))
+
+  var customJsAttributes = stringify(info.jsAttributes)
+  chunksForQueryString.push(param('ja', customJsAttributes === '{}' ? null : customJsAttributes))
+
+  var queryString = fromArray(chunksForQueryString, runtime.maxBytes)
+
+  console.log('submitData!')
+  submitData.jsonp(
+    scheme + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString,
+    jsonp
+  )
+  // }
 }

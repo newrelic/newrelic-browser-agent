@@ -2,21 +2,23 @@
   "name": "nr-browser-loader",
   "version": "1.0.0",
   "description": "",
-  "main": "src/spa.js",
+  "main": "./src/spa/index.js",
   "dependencies": {
     "lodash._slice": "^2.4.1",
     "nr-browser-common": "file:../common",
     "nr-browser-err-instrument": "file:../err-instrument",
     "nr-browser-xhr-instrument": "file:../xhr-instrument",
+    "nr-browser-document-load": "file:../document-load",
     "webpack": "^5.65.0"
   },
   "devDependencies": {
-    "webpack-cli": "^4.9.1",
-    "eslint": "^8.8.0"
+    "dotenv-webpack": "^7.1.0",
+    "eslint": "^8.8.0",
+    "webpack-cli": "^4.9.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --config ./spa.config.js && webpack --config ./pro.config.js && webpack --config ./lite.config.js && cp dist/* ../../build"
+    "build": "webpack --config ./src/spa/webpack.config.js && webpack --config ./src/pro/webpack.config.js && webpack --config ./src/lite/webpack.config.js && cp dist/* ../../build"
   },
   "author": "",
   "license": "ISC"

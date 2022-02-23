@@ -14,8 +14,10 @@ import {cleanURL} from '../url/clean-url'
 import {now} from '../timing/now'
 import {eventListenerOpts} from '../event-listener/event-listener-opts'
 import {ieVersion} from '../browser-version/ie-version'
+import {VERSION as NR_VERSION} from '../constants/environment-variables'
 
-var version = '<VERSION>'
+const version = NR_VERSION
+// var version = '<VERSION>'
 // var jsonp = 'NREUM.setToken'
 var _events = {}
 var haveSendBeacon = !!navigator.sendBeacon

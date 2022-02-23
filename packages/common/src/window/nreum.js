@@ -5,6 +5,7 @@ export const defaults = {
   agent:  `js-agent.newrelic.com/${env.PATH}nr.js`,
   beacon: 'bam.nr-data.net',
   errorBeacon: 'bam.nr-data.net',
+  version: env.VERSION
 }
 
 function setNREUM() {

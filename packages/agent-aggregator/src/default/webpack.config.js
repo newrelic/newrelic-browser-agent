@@ -1,0 +1,19 @@
+const path = require('path')
+const Dotenv = require('dotenv-webpack')
+
+module.exports = {
+  entry:  path.resolve(__dirname, './index.js'),
+  output: {
+    filename: 'nr.js',
+    path: path.resolve(__dirname, '../../dist'),
+    libraryTarget: 'umd'
+  },
+  optimization: {
+    minimize: false
+  },
+  plugins: [
+    new Dotenv({
+      path: path.resolve(__dirname, './.env'),
+		})
+  ]
+}

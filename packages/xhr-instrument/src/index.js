@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { runtime } from 'nr-browser-common/src/config/config'
+import { runtime, originals } from 'nr-browser-common/src/config/config'
 import { handle } from 'nr-browser-common/src/event-emitter/handle'
 import { ee, global as globalEE } from 'nr-browser-common/src/event-emitter/contextual-ee'
 import { id } from 'nr-browser-common/src/ids/id'
@@ -14,10 +14,11 @@ import {wrapGlobalFetch, wrapFetch} from 'nr-browser-common/src/wrap'
 import {parseUrl} from './parse-url'
 import { generateTracePayload } from './distributed-tracing'
 import {responseSizeFromXhr} from './response-size'
+
 var handlers = [ 'load', 'error', 'abort', 'timeout' ]
 var handlersLen = handlers.length
 
-var origRequest = NREUM.o.REQ
+var origRequest = originals.REQ
 var origXHR = window.XMLHttpRequest
 
 // export default {

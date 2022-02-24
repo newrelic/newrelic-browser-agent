@@ -1,16 +1,23 @@
 const path = require('path')
 const Dotenv = require('dotenv-webpack');
+const TerserPlugin = require('terser-webpack-plugin')
 
 module.exports = {
-  entry:  path.resolve(__dirname, './index.js'),
+  entry:  {
+    'nr-loader-rum': path.resolve(__dirname, './index.js'),
+    'nr-loader-rum.min': path.resolve(__dirname, './index.js')
+  },
   output: {
-    filename: 'nr-loader-rum.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, '../../dist'),
     // publicPath: 'https://js-agent.newrelic.com/test/',
     libraryTarget: 'umd'
   },
   optimization: {
-    minimize: false
+    minimize: true,
+    minimizer: [new TerserPlugin({
+      include: /\.min\.js$/
+    })]
   },
   plugins: [
     new Dotenv({

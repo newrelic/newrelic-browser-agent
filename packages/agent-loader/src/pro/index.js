@@ -5,22 +5,22 @@
 import {setupLegacyAgent, defaults as nrDefaults} from 'nr-browser-common/src/window/nreum'
 setupLegacyAgent()
 
-import { mapOwn } from 'nr-browser-common/src/util/map-own'
+import '../api'
 import { ee } from 'nr-browser-common/src/event-emitter/contextual-ee'
 import { protocolAllowed } from 'nr-browser-common/src/url/protocol-allowed'
 import { setInfo, setConfiguration, getConfigurationValue } from 'nr-browser-common/src/config/config'
-import { eventListenerOpts } from 'nr-browser-common/src/event-listener/event-listener-opts'
 import {initialize as initializeErrors} from 'nr-browser-err-instrument'
 import {initialize as initializeXhr} from 'nr-browser-xhr-instrument'
-import '../api'
+import { listenForLoad } from 'nr-browser-document-load'
+
 
 var scheme = (getConfigurationValue('ssl') === false) ? 'http' : 'https'
 
 var win = window
 var doc = win.document
 
-var ADD_EVENT_LISTENER = 'addEventListener'
-var ATTACH_EVENT = 'attachEvent'
+// var ADD_EVENT_LISTENER = 'addEventListener'
+// var ATTACH_EVENT = 'attachEvent'
 
 var disabled = !protocolAllowed(win.location)
 if (disabled) {
@@ -34,40 +34,47 @@ initializeErrors()
 initializeXhr(true)
 
 // var origin = '' + location
-// TODO: set agent string here based on current version
-var defInfo = {
-  beacon: 'bam.nr-data.net',
-  errorBeacon: 'bam.nr-data.net',
-  agent:  `js-agent.newrelic.com/${env.PATH}nr.js`
-}
+// var defInfo = {
+//   beacon: 'bam.nr-data.net',
+//   errorBeacon: 'bam.nr-data.net',
+//   agent:  `js-agent.newrelic.com/${env.PATH}nr.js`
+// }
 
 // api loads registers several event listeners, but does not have any exports
-if (doc[ADD_EVENT_LISTENER]) {
-  win[ADD_EVENT_LISTENER]('load', windowLoaded, eventListenerOpts(false))
-} else {
-  win[ATTACH_EVENT]('onload', windowLoaded)
-}
+// if (doc[ADD_EVENT_LISTENER]) {
+//   win[ADD_EVENT_LISTENER]('load', windowLoaded, eventListenerOpts(false))
+// } else {
+//   win[ATTACH_EVENT]('onload', windowLoaded)
+// }
 
 var loadFired = 0
 function windowLoaded () {
+  console.log("WINDOW LOADED!")
   if (loadFired++) return
   var info = NREUM.info
 
-  console.log('info!', info)
 
   var firstScript = doc.getElementsByTagName('script')[0]
   // setTimeout(ee.abort, 30000)
+
 
   if (!(info && info.licenseKey && info.applicationID && firstScript)) {
     return ee.abort()
   }
 
-  mapOwn(defInfo, function (key, val) {
-    // this will overwrite any falsy value in config
-    // This is intentional because agents may write an empty string to
-    // the agent key in the config, in which case we want to use the default
-    if (!info[key]) info[key] = val
-  })
+
+  if (!info.agent){
+    info.agent = nrDefaults.agent
+  }
+
+  console.log('info!', info)
+
+  // mapOwn(defInfo, function (key, val) {
+  //   // this will overwrite any falsy value in config
+  //   // This is intentional because agents may write an empty string to
+  //   // the agent key in the config, in which case we want to use the default
+  //   if (!info[key]) info[key] = val
+  // })
 
   setInfo(info)
 
@@ -89,3 +96,5 @@ function windowLoaded () {
 
   firstScript.parentNode.insertBefore(agent, firstScript)
 }
+
+listenForLoad(windowLoaded)

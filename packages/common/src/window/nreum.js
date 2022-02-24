@@ -8,26 +8,33 @@ export const defaults = {
   version: env.VERSION
 }
 
-function setNREUM() {
-  console.log("setNREUM!")
+export function getOrSetNREUM(){
   if (!window.NREUM) {
     window.NREUM = {}
   }
+  return window.NREUM
+}
 
-  if (!window.NREUM.info){
-    window.NREUM.info = {
+export function getOrSetNREUMInfo(){
+  let nr = getOrSetNREUM()
+  if (!nr.info){
+    nr.info = {
       beacon: defaults.beacon,
       errorBeacon: defaults.errorBeacon,
       agent:  defaults.agent,
     }
   }
+  return nr
+}
 
-  if (!window.NREUM.o) {
+export function getOrSetNREUMOriginals() {
+  let nr = getOrSetNREUM()
+  if (!nr.o) {
     var win = window
     // var doc = win.document
     var XHR = win.XMLHttpRequest
 
-    NREUM.o = {
+    nr.o = {
       ST: setTimeout,
       SI: win.setImmediate,
       CT: clearTimeout,
@@ -39,8 +46,11 @@ function setNREUM() {
       FETCH: win.fetch
     }
   }
-
-  console.log("NREUM!", NREUM)
+  return nr
 }
 
-export default setNREUM()
+export function setupLegacyAgent() {
+  getOrSetNREUMInfo()
+  getOrSetNREUMOriginals()
+  console.log("NREUM!", NREUM)
+}

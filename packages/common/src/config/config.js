@@ -7,6 +7,20 @@ var runtimeConfiguration = {
   origin: '' + window.location
 }
 
+var win = window
+var XHR = win.XMLHttpRequest
+var originalMethods = {
+  ST: setTimeout,
+  SI: win.setImmediate,
+  CT: clearTimeout,
+  XHR: XHR,
+  REQ: win.Request,
+  EV: win.Event,
+  PR: win.Promise,
+  MO: win.MutationObserver,
+  FETCH: win.fetch
+}
+
 var info = {}
 var init = {}
 
@@ -21,6 +35,8 @@ var init = {}
 // }
 
 export { runtimeConfiguration as runtime }
+
+export { originalMethods as originals }
 
 export function getConfiguration() {
   return init

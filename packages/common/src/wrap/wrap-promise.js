@@ -5,10 +5,11 @@
 import {createWrapperWithEmitter as wrapFn, wrapInPlace, argsToArray} from './wrap-function'
 import {global as globalEE, getOrSetContext} from '../event-emitter/contextual-ee'
 import {mapOwn} from '../util/map-own'
+import {originals} from '../config/config'
 export var promiseEE = globalEE.get('promise')
 var getContext = getOrSetContext
 var promiseWrapper = wrapFn(promiseEE)
-var OriginalPromise = NREUM.o.PR
+var OriginalPromise = originals.PR
 
 export default promiseEE
 

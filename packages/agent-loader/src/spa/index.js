@@ -2,7 +2,9 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import 'nr-browser-common/src/window/nreum'
+import {setupLegacyAgent, defaults as nrDefaults} from 'nr-browser-common/src/window/nreum'
+setupLegacyAgent()
+
 import { mapOwn } from 'nr-browser-common/src/util/map-own'
 import { ee } from 'nr-browser-common/src/event-emitter/contextual-ee'
 import { protocolAllowed } from 'nr-browser-common/src/url/protocol-allowed'

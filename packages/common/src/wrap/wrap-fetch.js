@@ -6,6 +6,7 @@
 import {global as globalEE} from '../event-emitter/contextual-ee'
 import slice from 'lodash._slice'
 import {mapOwn} from '../util/map-own'
+import { originals } from '../config/config'
 export var ee = globalEE.get('fetch')
 
 export default ee
@@ -33,7 +34,7 @@ export function wrapGlobal() {
 }
 
 function wrapFetch(ee) {
-  var fn = NREUM.o.FETCH
+  var fn = originals.FETCH
 
   var wrappedFetch = wrapPromiseMethod(ee, fn, prefix)
 

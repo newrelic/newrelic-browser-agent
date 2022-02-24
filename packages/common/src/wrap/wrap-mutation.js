@@ -4,9 +4,11 @@
  */
 import {global as globalEE} from '../event-emitter/contextual-ee'
 import {createWrapperWithEmitter as wfn} from './wrap-function'
+import {originals} from '../config/config'
+
 export var ee = globalEE.get('mutation')
 var wrapFn = wfn(ee)
-var OriginalObserver = NREUM.o.MO
+var OriginalObserver = originals.MO
 
 export default ee
 

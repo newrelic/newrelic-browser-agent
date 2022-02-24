@@ -232,8 +232,9 @@ export function resetListeners() {
 // The stuff that gets sent every time.
 export function baseQueryString () {
   var areCookiesEnabled = true
-  if ('init' in NREUM && 'privacy' in NREUM.init) {
-    areCookiesEnabled = NREUM.init.privacy.cookies_enabled
+  const init = config.getConfiguration()
+  if ('privacy' in init) {
+    areCookiesEnabled = init.privacy.cookies_enabled
   }
 
   var info = config.getInfo()

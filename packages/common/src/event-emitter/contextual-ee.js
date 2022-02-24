@@ -3,18 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { getOrSetNREUM } from '../window/nreum'
 import { getOrSet } from '../util/get-or-set'
 import { mapOwn } from '../util/map-own'
 
 var ctxId = 'nr@context'
 
 // create global emitter instance that can be shared among bundles
+let NREUM = getOrSetNREUM()
 var globalInstance
 if (window.NREUM.ee) {
-  globalInstance = window.NREUM.ee
+  globalInstance = NREUM.ee
 } else {
   globalInstance = ee()
-  window.NREUM.ee = globalInstance
+  NREUM.ee = globalInstance
 }
 
 // export default ee()

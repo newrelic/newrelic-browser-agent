@@ -9,12 +9,12 @@ import './wrap-events'
 import {global as globalEE} from '../event-emitter/contextual-ee'
 import {eventListenerOpts} from '../event-listener/event-listener-opts'
 import {createWrapperWithEmitter as wfn} from './wrap-function'
+import {originals} from '../config/config'
 
 var baseEE = globalEE
 export var ee = baseEE.get('xhr')
 var wrapFn = wfn(ee)
 
-var originals = NREUM.o
 var OrigXHR = originals.XHR
 var MutationObserver = originals.MO
 var Promise = originals.PR

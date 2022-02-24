@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { generateSpanId, generateTraceId } from 'nr-browser-common/src/ids/unique-id'
+import { getOrSetNREUM } from 'nr-browser-common/src/window/nreum'
 import {parseUrl} from './parse-url'
 
 // export default {
@@ -15,7 +16,7 @@ export function generateTracePayload (parsedOrigin) {
     return null
   }
 
-  var nr = window.NREUM
+  var nr = getOrSetNREUM()
   if (!nr.loader_config) {
     return null
   }

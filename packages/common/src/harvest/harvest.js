@@ -22,7 +22,7 @@ const version = NR_VERSION
 var _events = {}
 var haveSendBeacon = !!navigator.sendBeacon
 var tooManyRequestsDelay = config.getConfigurationValue('harvest.tooManyRequestsDelay') || 60
-var scheme = (config.getConfigurationValue('ssl') === false) ? 'http' : 'https'
+var getScheme = () => (config.getConfigurationValue('ssl') === false) ? 'http' : 'https'
 
 // requiring ie version updates the IE version on the loader object
 // var ieVersion = require('./ie-version')
@@ -125,7 +125,8 @@ function _send (endpoint, payload, opts, submitMethod, cbFinished) {
 
   if (!opts) opts = {}
 
-  var url = scheme + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + baseQueryString()
+  console.log("_send... getScheme!", getScheme())
+  var url = getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + baseQueryString()
   if (payload.qs) url += encodeObj(payload.qs, config.runtime.maxBytes)
 
   if (!submitMethod) {

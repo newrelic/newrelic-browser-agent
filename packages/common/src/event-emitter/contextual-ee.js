@@ -10,13 +10,13 @@ import { mapOwn } from '../util/map-own'
 var ctxId = 'nr@context'
 
 // create global emitter instance that can be shared among bundles
-let NREUM = getOrSetNREUM()
+let nr = getOrSetNREUM()
 var globalInstance
-if (window.NREUM.ee) {
-  globalInstance = NREUM.ee
+if (nr.ee) {
+  globalInstance = nr.ee
 } else {
   globalInstance = ee()
-  NREUM.ee = globalInstance
+  nr.ee = globalInstance
 }
 
 // export default ee()

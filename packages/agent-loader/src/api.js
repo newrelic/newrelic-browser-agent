@@ -9,11 +9,11 @@ import { global as globalEE } from 'nr-browser-common/src/event-emitter/contextu
 import { recordSupportability } from 'nr-browser-common/src/metrics/metrics'
 import { now } from 'nr-browser-common/src/timing/now'
 import slice from 'lodash._slice'
+import { getOrSetNREUM } from 'nr-browser-common/src/window/nreum'
 
 var tracerEE = globalEE.get('tracer')
 
-var nr = NREUM
-if (typeof (window.newrelic) === 'undefined') window.newrelic = nr
+var nr = getOrSetNREUM()
 
 var asyncApiFns = [
   'setPageViewName',

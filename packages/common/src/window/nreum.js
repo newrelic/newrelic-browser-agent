@@ -12,6 +12,7 @@ export function getOrSetNREUM(){
   if (!window.NREUM) {
     window.NREUM = {}
   }
+  if (typeof (window.newrelic) === 'undefined') window.newrelic = window.NREUM
   return window.NREUM
 }
 

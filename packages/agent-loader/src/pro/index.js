@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import {setupLegacyAgent, defaults as nrDefaults} from 'nr-browser-common/src/window/nreum'
+import {setupLegacyAgent, defaults as nrDefaults, getOrSetNREUM} from 'nr-browser-common/src/window/nreum'
 setupLegacyAgent()
 
 import '../api'
@@ -14,7 +14,8 @@ import {initialize as initializeXhr} from 'nr-browser-xhr-instrument'
 import { listenForLoad } from 'nr-browser-document-load'
 
 
-var scheme = (getConfigurationValue('ssl') === false) ? 'http' : 'https'
+var scheme = (!getConfigurationValue('ssl')) ? 'http' : 'https'
+console.log("scheme", scheme)
 
 var win = window
 var doc = win.document
@@ -50,8 +51,9 @@ initializeXhr(true)
 var loadFired = 0
 function windowLoaded () {
   console.log("WINDOW LOADED!")
+  const nr = getOrSetNREUM()
   if (loadFired++) return
-  var info = NREUM.info
+  var info = nr.info
 
 
   var firstScript = doc.getElementsByTagName('script')[0]
@@ -79,8 +81,8 @@ function windowLoaded () {
   setInfo(info)
 
   // set configuration from global NREUM.init
-  if (NREUM.init) {
-    setConfiguration(NREUM.init)
+  if (nr.init) {
+    setConfiguration(nr.init)
   }
 
   var agent = doc.createElement('script')

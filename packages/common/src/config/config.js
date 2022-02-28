@@ -54,6 +54,7 @@ export function getConfigurationValue(path) {
     if (typeof val !== 'object') return
   }
   val = val[parts[parts.length - 1]]
+  console.log("val...", val)
   return val
 }
 

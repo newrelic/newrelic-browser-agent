@@ -11,6 +11,7 @@ import { drain } from '../drain/drain'
 // var drain = require('./drain')
 
 export function activateFeatures (flags) {
+  console.log("ACTIVATE FEATURES!")
   if (!(flags && typeof flags === 'object')) return
   mapOwn(flags, function (flag, val) {
     if (!val || activatedFeatures[flag]) return

@@ -103,9 +103,10 @@ export function shouldGenerateTrace (parsedOrigin) {
 function isAllowedOrigin(parsedOrigin) {
   var allowed = false
   var dtConfig = {}
+  var nr = getOrSetNREUM()
 
-  if ('init' in NREUM && 'distributed_tracing' in NREUM.init) {
-    dtConfig = NREUM.init.distributed_tracing
+  if ('init' in nr && 'distributed_tracing' in nr.init) {
+    dtConfig = nr.init.distributed_tracing
   }
 
   if (parsedOrigin.sameOrigin) {
@@ -125,30 +126,30 @@ function isAllowedOrigin(parsedOrigin) {
 }
 
 function isDtEnabled() {
-  if ('init' in NREUM && 'distributed_tracing' in NREUM.init) {
-    return !!NREUM.init.distributed_tracing.enabled
+  if ('init' in nr && 'distributed_tracing' in nr.init) {
+    return !!nr.init.distributed_tracing.enabled
   }
   return false
 }
 
 // exclude the newrelic header for same-origin calls
 function excludeNewrelicHeader() {
-  if ('init' in NREUM && 'distributed_tracing' in NREUM.init) {
-    return !!NREUM.init.distributed_tracing.exclude_newrelic_header
+  if ('init' in nr && 'distributed_tracing' in nr.init) {
+    return !!nr.init.distributed_tracing.exclude_newrelic_header
   }
   return false
 }
 
 function useNewrelicHeaderForCors() {
-  if ('init' in NREUM && 'distributed_tracing' in NREUM.init) {
-    return NREUM.init.distributed_tracing.cors_use_newrelic_header !== false
+  if ('init' in nr && 'distributed_tracing' in nr.init) {
+    return nr.init.distributed_tracing.cors_use_newrelic_header !== false
   }
   return false
 }
 
 function useTraceContextHeadersForCors() {
-  if ('init' in NREUM && 'distributed_tracing' in NREUM.init) {
-    return !!NREUM.init.distributed_tracing.cors_use_tracecontext_headers
+  if ('init' in nr && 'distributed_tracing' in nr.init) {
+    return !!nr.init.distributed_tracing.cors_use_tracecontext_headers
   }
   return false
 }

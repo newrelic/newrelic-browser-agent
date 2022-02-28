@@ -15,6 +15,7 @@ var g = drain.bind(null, globalEE, globalHandlers)
 export { g as global }
 
 function drain (baseEE, handlers, group) {
+  console.log("drain!")
   if (!baseEE.backlog) return
 
   var bufferedEventsInGroup = baseEE.backlog[group]

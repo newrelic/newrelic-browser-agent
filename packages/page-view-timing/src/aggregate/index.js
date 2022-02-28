@@ -9,7 +9,7 @@ import { addMetric as addPaintMetric } from 'nr-browser-common/src/metrics/paint
 import { submitData } from 'nr-browser-common/src/util/submit-data'
 import { getConfigurationValue, getInfo, runtime } from 'nr-browser-common/src/config/config'
 
-const scheme = getConfigurationValue('ssl') === false ? 'http' : 'https'
+const getScheme = () => getConfigurationValue('ssl') === false ? 'http' : 'https'
 const jsonp = 'NREUM.setToken'
 
 // nr is injected into all send methods. This allows for easier testing
@@ -90,9 +90,9 @@ export function sendRUM () {
 
   var queryString = fromArray(chunksForQueryString, runtime.maxBytes)
 
-  console.log('submitData!')
+  console.log('submitData! -- scheme...', getScheme())
   submitData.jsonp(
-    scheme + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString,
+    getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString,
     jsonp
   )
   // }

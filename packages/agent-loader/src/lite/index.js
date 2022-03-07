@@ -51,7 +51,7 @@ initializeXhr(true)
 
 var loadFired = 0
 function windowLoaded () {
-  const nr = getOrSetNREUM()
+  const nr = getOrSetNREUM() // returns window.NREUM
   console.log("WINDOW LOADED!")
   if (loadFired++) return
   var info = nr.info
@@ -79,6 +79,7 @@ function windowLoaded () {
   //   if (!info[key]) info[key] = val
   // })
 
+  
   setInfo(info)
 
   // set configuration from global NREUM.init

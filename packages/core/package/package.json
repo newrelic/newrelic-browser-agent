@@ -19,11 +19,9 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm run transpile && npm run compile && npm run clean",
-    "compile": "npx webpack --config ./webpack.config.js",
-    "transpile": "npm run clean && tsc",
-    "pack": "npm pack && cp ./nr-browser-core-*.tgz ./local-install",
-    "clean": "shx rm -rf lib"
+    "build": "npm run clean && tsc && npx webpack --config ./webpack.config.js",
+    "pack": "npm pack",
+    "clean": "shx rm -rf lib lib-esm"
   },
   "author": "",
   "license": "ISC",

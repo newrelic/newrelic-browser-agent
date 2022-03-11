@@ -1,6 +1,6 @@
 {
   "name": "nr-browser-core",
-  "version": "1.0.0",
+  "version": "0.0.4",
   "main": "dist/index.js",
   "description": "",
   "dependencies": {
@@ -22,8 +22,8 @@
     "build": "npm run transpile && npm run compile && npm run clean",
     "compile": "npx webpack --config ./webpack.config.js",
     "transpile": "npm run clean && tsc",
-    "pack": "npm pack && cp ./nr-browser-core-*.tgz ./local-install",
-    "clean": "shx rm -rf lib"
+    "pack": "npm pack && mkdir local-install && mv ./nr-browser-core-*.tgz ./local-install",
+    "clean": "shx rm -rf lib local-install"
   },
   "author": "",
   "license": "ISC",

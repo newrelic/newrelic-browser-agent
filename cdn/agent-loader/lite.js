@@ -3,24 +3,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// this must be imported first right now in CDN builds... it sets up and relies on the NREUM window object
+// cdn specific utility files
 import {setAPI} from './utils/api'
 import { injectAggregator } from './utils/inject-aggregator'
+// common modules
 import {gosCDN} from '../../modules/common/window/nreum'
 import { protocolAllowed } from '../../modules/common/url/protocol-allowed'
-import { listenForLoad } from '../../modules/features/document-load/instrument'
+import { onWindowLoad } from '../../modules/common/window/load'
+// feature modules
+import { instrumentPageView } from '../../modules/features/page-view-event/instrument'
+import { instrumentPageViewTiming } from '../../modules/features/page-view-timing/instrument'
 
 // set up the window.NREUM object that is specifically for the CDN build
 gosCDN()
 // add api calls to the NREUM object
 setAPI()
 
-if (!protocolAllowed(window.location)) {
+if (!protocolAllowed(window.location)) { //file: protocol
   // shut down the protocol if not allowed here...
 }
 
 // load auto-instrumentation here...
-// (lite doesn't do any)
+instrumentPageView() // document load (page view event + metrics)
+instrumentPageViewTiming() // page view timings instrumentation (/loader/timings.js)
 
-// inject aggregator when window loads...
-listenForLoad(injectAggregator)
+// inject the aggregator
+onWindowLoad(injectAggregator)

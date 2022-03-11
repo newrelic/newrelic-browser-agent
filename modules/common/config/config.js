@@ -3,15 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { gosNREUMOriginals } from "../window/nreum"
+import { gosNREUMOriginals, defaults as nrDefaults} from "../window/nreum"
+import { ieVersion } from "../browser-version/ie-version"
 
 var originalMethods = gosNREUMOriginals().o
 
 var runtimeConfiguration = {
-  origin: '' + window.location
+  origin: '' + window.location,
+  maxBytes: ieVersion === 6 ? 2000 : 30000
 }
 
-var info = {}
+var info = {beacon: nrDefaults.beacon, errorBeacon: nrDefaults.errorBeacon}
 var init = {}
 var loader_config = {}
 

@@ -10,7 +10,7 @@ import { submitData } from '../util/submit-data'
  * Periodically invokes harvest calls and handles retries
  */
 export function HarvestScheduler(endpoint, opts) {
-  // console.log('harvest scheduler!')
+  console.log('harvest scheduler!')
   this.endpoint = endpoint
   this.opts = opts || {}
   this.started = false

@@ -1,100 +1,266 @@
-import * as aggregator from '../../../common/aggregate/aggregator'
-import { measure } from '../../../common/timing/stopwatch'
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
+import { now } from '../../../common/timing/now'
 import { mapOwn } from '../../../common/util/map-own'
-import { baseQueryString } from '../../../common/harvest/harvest'
-import { param, fromArray } from '../../../common/url/encode'
-import { addPT, addPN } from '../../../common/timing/nav-timing'
-import { stringify } from '../../../common/util/stringify'
-import { addMetric as addPaintMetric } from '../../../common/metrics/paint-metrics'
-import { submitData } from '../../../common/util/submit-data'
-import { getConfigurationValue, getInfo, runtime } from '../../../common/config/config'
+import { send as sendHarvest } from '../../../common/harvest/harvest'
+import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler';
+import { defaultRegister as register} from '../../../common/event-emitter/register-handler';
+import { subscribeToUnload }  from '../../../common/unload/unload';
+import { cleanURL } from '../../../common/url/clean-url';
+import { handle } from '../../../common/event-emitter/handle';
+import { getInfo } from '../../../common/config/config';
 
-const getScheme = () => getConfigurationValue('ssl') === false ? 'http' : 'https'
+// var nullable = require('./bel-serializer').nullable
+// var numeric = require('./bel-serializer').numeric
+// var getAddStringContext = require('./bel-serializer').getAddStringContext
+// var addCustomAttributes = require('./bel-serializer').addCustomAttributes
+// var now = require('now')
+// var mapOwn = require('map-own')
 
-const jsonp = 'NREUM.setToken'
+// var loader = null
+// var harvest = require('./harvest') // no default export anymore -- all are named now
+// var HarvestScheduler = require('./harvest-scheduler')
+// var register = require('./register-handler')
+// var subscribeToUnload = require('./unload')
+// var cleanURL = require('./clean-url')
+// var handle = require('handle')
 
-// nr is injected into all send methods. This allows for easier testing
-// we could require('loader') instead
-export function sendRUM () {
-  console.log('send rum!')
-  const info = getInfo()
-  console.log('sendRum info', info)
-  if (!info.beacon) return
-  if (info.queueTime) aggregator.store('measures', 'qt', { value: info.queueTime })
-  if (info.applicationTime) aggregator.store('measures', 'ap', { value: info.applicationTime })
+export var timings = []
+var timingsSent = []
+var lcpRecorded = false
+var lcp = null
+var clsSupported = false
+var cls = 0
+var clsSession = {value: 0, firstEntryTime: 0, lastEntryTime: 0}
+var pageHideRecorded = false
 
-  console.log('sendRum continue')
-  // some time in the past some code will have called stopwatch.mark('starttime', Date.now())
-  // calling measure like this will create a metric that measures the time differential between
-  // the two marks.
-  measure('be', 'starttime', 'firstbyte')
-  measure('fe', 'firstbyte', 'onload')
-  measure('dc', 'firstbyte', 'domContent')
+// module.exports = {
+//   addTiming: addTiming,
+//   getPayload: getPayload,
+//   timings: timings,
+//   init: init,
+//   finalHarvest: finalHarvest
+// }
 
-  var measuresMetrics = aggregator.get('measures')
+var harvestTimeSeconds = 30
 
-  console.log('measureMetrics', measuresMetrics)
+export function init(options) {
+  if (!isEnabled(options)) return
 
-  var measuresQueryString = mapOwn(measuresMetrics, function (metricName, measure) {
-    return '&' + metricName + '=' + measure.params.value
-  }).join('')
+  try {
+    clsSupported = PerformanceObserver.supportedEntryTypes.includes('layout-shift') // eslint-disable-line no-undef
+  } catch (e) {}
 
-  console.log('measuresQueryString', measuresQueryString)
+  if (!options) options = {}
+  var maxLCPTimeSeconds = options.maxLCPTimeSeconds || 60
+  var initialHarvestSeconds = options.initialHarvestSeconds || 10
+  harvestTimeSeconds = options.harvestTimeSeconds || 30
 
-  // if (measuresQueryString) {
-  // currently we only have one version of our protocol
-  // in the future we may add more
-  var protocol = '1'
+  console.log("pvt init")
+  var scheduler = new HarvestScheduler('events', { onFinished: onHarvestFinished, getPayload: prepareHarvest })
 
-  var chunksForQueryString = [baseQueryString(runtime)]
+  register('timing', processTiming)
+  register('lcp', updateLatestLcp)
+  register('cls', updateClsScore)
+  register('pageHide', updatePageHide)
 
-  chunksForQueryString.push(measuresQueryString)
+  // final harvest is initiated from the main agent module, but since harvesting
+  // here is not initiated by the harvester, we need to subscribe to the unload event
+  // separately
+  subscribeToUnload(finalHarvest)
 
-  chunksForQueryString.push(param('tt', info.ttGuid))
-  chunksForQueryString.push(param('us', info.user))
-  chunksForQueryString.push(param('ac', info.account))
-  chunksForQueryString.push(param('pr', info.product))
-  chunksForQueryString.push(param('af', mapOwn(runtime.features, function (k) { return k }).join(',')))
+  // After 1 minute has passed, record LCP value if no user interaction has occurred first
+  setTimeout(function() {
+    recordLcp()
+    lcpRecorded = true
+  }, maxLCPTimeSeconds * 1000)
 
-  if (window.performance && typeof (window.performance.timing) !== 'undefined') {
-    var navTimingApiData = ({
-      timing: addPT(window.performance.timing, {}),
-      navigation: addPN(window.performance.navigation, {})
-    })
-    chunksForQueryString.push(param('perf', stringify(navTimingApiData)))
+  // send initial data sooner, then start regular
+  scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)
+}
+
+function recordLcp() {
+  if (!lcpRecorded && lcp !== null) {
+    var lcpEntry = lcp[0]
+    var cls = lcp[1]
+    var networkInfo = lcp[2]
+
+    var attrs = {
+      'size': lcpEntry.size,
+      'eid': lcpEntry.id
+    }
+
+    if (networkInfo) {
+      if (networkInfo['net-type']) attrs['net-type'] = networkInfo['net-type']
+      if (networkInfo['net-etype']) attrs['net-etype'] = networkInfo['net-etype']
+      if (networkInfo['net-rtt']) attrs['net-rtt'] = networkInfo['net-rtt']
+      if (networkInfo['net-dlink']) attrs['net-dlink'] = networkInfo['net-dlink']
+    }
+
+    if (lcpEntry.url) {
+      attrs['elUrl'] = cleanURL(lcpEntry.url)
+    }
+
+    if (lcpEntry.element && lcpEntry.element.tagName) {
+      attrs['elTag'] = lcpEntry.element.tagName
+    }
+
+    // collect 0 only when CLS is supported, since 0 is a valid score
+    if (cls > 0 || clsSupported) {
+      attrs['cls'] = cls
+    }
+
+    addTiming('lcp', Math.floor(lcpEntry.startTime), attrs, false)
+    lcpRecorded = true
   }
+}
 
-  if (window.performance && window.performance.getEntriesByType) {
-    var entries = window.performance.getEntriesByType('paint')
-    if (entries && entries.length > 0) {
-      entries.forEach(function(entry) {
-        if (!entry.startTime || entry.startTime <= 0) return
-
-        if (entry.name === 'first-paint') {
-          chunksForQueryString.push(param('fp',
-            String(Math.floor(entry.startTime))))
-        } else if (entry.name === 'first-contentful-paint') {
-          chunksForQueryString.push(param('fcp',
-            String(Math.floor(entry.startTime))))
-        }
-        addPaintMetric(entry.name, Math.floor(entry.startTime))
-      })
+function updateLatestLcp(lcpEntry, networkInformation) {
+    console.log("updateLatestLcp")
+  if (lcp) {
+    var previous = lcp[0]
+    if (previous.size >= lcpEntry.size) {
+      return
     }
   }
 
-  chunksForQueryString.push(param('xx', info.extra))
-  chunksForQueryString.push(param('ua', info.userAttributes))
-  chunksForQueryString.push(param('at', info.atts))
+  lcp = [lcpEntry, cls, networkInformation]
+}
 
-  var customJsAttributes = stringify(info.jsAttributes)
-  chunksForQueryString.push(param('ja', customJsAttributes === '{}' ? null : customJsAttributes))
+function updateClsScore(clsEntry) {
+    console.log("updateClsScore", arguments)
+  // this used to be cumulative for the whole page, now we need to split it to a
+  // new CLS measurement after 1s between shifts or 5s total
+  if ((clsEntry.startTime - clsSession.lastEntryTime) > 1000 ||
+      (clsEntry.startTime - clsSession.firstEntryTime) > 5000) {
+    clsSession = {value: 0, firstEntryTime: clsEntry.startTime, lastEntryTime: clsEntry.startTime}
+  }
 
-  var queryString = fromArray(chunksForQueryString, runtime.maxBytes)
+  clsSession.value += clsEntry.value
+  clsSession.lastEntryTime = Math.max(clsSession.lastEntryTime, clsEntry.startTime)
 
-  console.log('submitData! -- scheme...', getScheme())
-  submitData.jsonp(
-    getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString,
-    jsonp
-  )
-  // }
+  // only keep the biggest CLS we've observed
+  if (cls < clsSession.value) cls = clsSession.value
+}
+
+function updatePageHide(timestamp) {
+  if (!pageHideRecorded) {
+    addTiming('pageHide', timestamp, null, true)
+    pageHideRecorded = true
+  }
+}
+
+function recordUnload() {
+  updatePageHide(now())
+  addTiming('unload', now(), null, true)
+}
+
+export function addTiming(name, value, attrs, addCls) {
+  attrs = attrs || {}
+  // collect 0 only when CLS is supported, since 0 is a valid score
+  if ((cls > 0 || clsSupported) && addCls) {
+    attrs['cls'] = cls
+  }
+
+  timings.push({
+    name: name,
+    value: value,
+    attrs: attrs
+  })
+
+  handle('pvtAdded', [name, value, attrs])
+}
+
+function processTiming(name, value, attrs) {
+    console.log("processTiming", name, value)
+  // Upon user interaction, the Browser stops executing LCP logic, so we can send here
+  // We're using setTimeout to give the Browser time to finish collecting LCP value
+  if (name === 'fi') {
+    setTimeout(recordLcp, 0)
+  }
+
+  addTiming(name, value, attrs, true)
+}
+
+function onHarvestFinished(result) {
+  if (result.retry && timingsSent.length > 0) {
+    for (var i = 0; i < timingsSent.length; i++) {
+      timings.push(timingsSent[i])
+    }
+    timingsSent = []
+  }
+}
+
+export function finalHarvest() {
+  recordLcp()
+  recordUnload()
+  var payload = prepareHarvest({ retry: false })
+  sendHarvest('events', loader, payload, { unload: true })
+}
+
+function appendGlobalCustomAttributes(timing) {
+  var timingAttributes = timing.attrs || {}
+  var customAttributes = getInfo().jsAttributes || {}
+
+  var reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
+    'net-etype', 'net-rtt', 'net-dlink']
+  mapOwn(customAttributes, function (key, val) {
+    if (reservedAttributes.indexOf(key) < 0) {
+      timingAttributes[key] = val
+    }
+  })
+}
+
+// serialize and return current timing data, clear and save current data for retry
+function prepareHarvest(options) {
+    console.log("timings.length", timings.length)
+  if (timings.length === 0) return
+
+  var payload = getPayload(timings)
+  if (options.retry) {
+    for (var i = 0; i < timings.length; i++) {
+      timingsSent.push(timings[i])
+    }
+  }
+  timings = []
+  return { body: { e: payload } }
+}
+
+
+// serialize array of timing data
+export function getPayload(data) {
+  var addString = getAddStringContext()
+
+  var payload = 'bel.6;'
+
+  for (var i = 0; i < data.length; i++) {
+    var timing = data[i]
+
+    payload += 'e,'
+    payload += addString(timing.name) + ','
+    payload += nullable(timing.value, numeric, false) + ','
+
+    appendGlobalCustomAttributes(timing)
+
+    var attrParts = addCustomAttributes(timing.attrs, addString)
+    if (attrParts && attrParts.length > 0) {
+      payload += numeric(attrParts.length) + ';' + attrParts.join(';')
+    }
+
+    if ((i + 1) < data.length) payload += ';'
+  }
+
+  return payload
+}
+
+function isEnabled(config) {
+  // collect page view timings unless the feature is explicitly disabled
+  if (config && config.enabled === false) {
+    return false
+  }
+  return true
 }

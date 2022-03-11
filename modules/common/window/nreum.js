@@ -18,7 +18,7 @@ export function gosNREUM(){
 
 export function gosNREUMInfo(){
   let nr = gosNREUM()
-  const externallySupplied = nr?.info || {}
+  const externallySupplied = nr.info || {}
   
   nr.info = {
     beacon: defaults.beacon,
@@ -32,7 +32,7 @@ export function gosNREUMInfo(){
 
 export function gosNREUMLoaderConfig(){
   let nr = gosNREUM()
-  const externallySupplied = nr?.loader_config || {}
+  const externallySupplied = nr.loader_config || {}
   
   nr.loader_config = {
     ...externallySupplied
@@ -43,7 +43,7 @@ export function gosNREUMLoaderConfig(){
 
 export function gosNREUMInit(){
   let nr = gosNREUM()
-  const externallySupplied = nr?.init || {}
+  const externallySupplied = nr.init || {}
   
   nr.init = {
     ...externallySupplied
@@ -83,6 +83,7 @@ export function addFnToNREUM(fnName, fn){
 export function gosCDN() {
   console.log("set up NREUM for the CDN!")
   gosNREUMInfo()
+  gosNREUMInit()
   gosNREUMOriginals()
   gosNREUMLoaderConfig()
   return gosNREUM()

@@ -5,7 +5,8 @@ import { global as globalDrain } from '../../modules/common/drain/drain'
 import { activateFeatures } from '../../modules/common/util/feature-flags'
 import { addFnToNREUM, gosNREUM } from '../../modules/common/window/nreum'
 import { conditionallySet } from '../../modules/common/timing/start-time'
-import { sendRUM } from '../../modules/features/page-view-timing/aggregate'
+import { sendRUM } from '../../modules/features/page-view-event/aggregate'
+import { init as initPageViewTimings } from '../../modules/features/page-view-timing/aggregate'
 
 const nr = gosNREUM()
 console.log("NR IN THE AGGREGATOR!", nr)
@@ -19,8 +20,10 @@ setInfo(nr.info)
 setConfiguration(nr.init)
 setLoaderConfig(nr.loader_config)
 
+// page-view-event aggregation
 if (autorun) sendRUM()
-// .. other features too
+initPageViewTimings() // page-view-timings aggregation (./agent/timings.js)
+// .. other features too (every feature except SPA)
 
 globalDrain('api')
 globalDrain('feature')

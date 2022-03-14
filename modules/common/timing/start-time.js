@@ -8,7 +8,7 @@
 import {sHash} from '../util/s-hash'
 import { mark } from './stopwatch'
 import { ffVersion } from '../browser-version/firefox-version'
-import { offset } from './now'
+import { setOffset } from './now'
 import { exists as performanceCheckExists } from './performance-check'
 // var sHash = require('./s-hash')
 // var stopwatch = require('./stopwatch')
@@ -28,7 +28,8 @@ export function findStartTime () {
   console.log("mark the start time!")
   mark('starttime', starttime)
   // Refine loader.offset
-  offset = starttime
+  // offset = starttime
+  setOffset(starttime)
 }
 
 // Find the start time from the Web Timing 'performance' object.

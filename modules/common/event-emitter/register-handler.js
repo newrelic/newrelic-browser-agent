@@ -3,9 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {handle} from './handle'
-var handleEE = handle.ee
-var globalEE = handle.globalEE
+import { handleEE, globalEE } from './handle'
 
 // export default defaultRegister
 export { globalRegister as global }
@@ -17,6 +15,7 @@ var handlers = defaultRegister.handlers = {}
 var globalHandlers = globalRegister.handlers = {}
 
 export function defaultRegister (type, handler, group, ee) {
+  console.log("register...", type)
   registerWithSpecificEmitter(ee || handleEE, handlers, type, handler, group)
 }
 
@@ -27,6 +26,8 @@ function globalRegister (type, handler, group) {
 function registerWithSpecificEmitter (ee, handlers, type, handler, group) {
   if (!group) group = 'feature'
   if (!ee) ee = handleEE
+
+  console.log('type', type, 'should sub to ee', ee.debugId)
 
   if (ee.isBuffering(type)) {
     var groupHandlers = handlers[group] = handlers[group] || {}

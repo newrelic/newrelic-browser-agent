@@ -6,10 +6,9 @@ import { handle } from '../../../common/event-emitter/handle'
 import { subscribeToVisibilityChange } from '../../../common/window/visibility'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { gosNREUM } from '../../../common/window/nreum'
-import { now } from '../../../common/timing/now'
+import { getOffset, now } from '../../../common/timing/now'
+import { getConfigurationValue } from '../../../common/config/config'
 
-var origEvent = gosNREUM().o.EV
-console.log("origEvent...", origEvent)
 var pageHiddenTime
 var performanceObserver
 var lcpPerformanceObserver
@@ -17,14 +16,18 @@ var clsPerformanceObserver
 var fiRecorded = false
 
 // collect page view timings unless the feature is explicitly disabled
+// function isEnabled() {
+//     const NREUM = gosNREUM()
+//     if ('init' in NREUM && 'page_view_timing' in NREUM.init &&
+//         'enabled' in NREUM.init.page_view_timing &&
+//         NREUM.init.page_view_timing.enabled === false) {
+//         return false
+//     }
+//     return true
+// }
+
 function isEnabled() {
-    const NREUM = gosNREUM()
-    if ('init' in NREUM && 'page_view_timing' in NREUM.init &&
-        'enabled' in NREUM.init.page_view_timing &&
-        NREUM.init.page_view_timing.enabled === false) {
-        return false
-    }
-    return true
+    return getConfigurationValue('page_view_timing.enabled') === false ? false : true
 }
 
 // paint metrics
@@ -66,6 +69,7 @@ function clsObserver(list) {
 
 export function instrumentPageViewTiming () {
     if (isEnabled()) {
+        console.log("instrumentPageViewTiming!")
         if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {
             // passing in an unknown entry type to observer could throw an exception
             performanceObserver = new PerformanceObserver(perfObserver) // eslint-disable-line no-undef
@@ -89,6 +93,7 @@ export function instrumentPageViewTiming () {
             fiRecorded = false
             var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart']
             allowedEventTypes.forEach(function (e) {
+                console.log("click", e)
                 document.addEventListener(e, captureInteraction, eventListenerOpts(false))
             })
         }
@@ -111,9 +116,8 @@ function addConnectionAttributes(attributes) {
 }
 
 function captureInteraction(evt) {
-    console.log("captureInterction", evt, origEvent )
-    if (evt instanceof origEvent && !fiRecorded) {
-        console.log("origEvent")
+    // if (evt instanceof origEvent && !fiRecorded) {
+        if (evt instanceof gosNREUM().o.EV && !fiRecorded) {
         var fi = Math.round(evt.timeStamp)
         var attributes = {
             type: evt.type
@@ -125,15 +129,14 @@ function captureInteraction(evt) {
         // timestamp in newer browsers. We assume that large numbers represent epoch time.
         if (fi <= now()) {
             attributes['fid'] = now() - fi
-        } else if (fi > loader.offset && fi <= Date.now()) {
-            fi = fi - loader.offset
+        } else if (fi > getOffset() && fi <= Date.now()) {
+            fi = fi - getOffset()
             attributes['fid'] = now() - fi
         } else {
             fi = now()
         }
 
         fiRecorded = true
-        // debugger
         handle('timing', ['fi', fi, attributes])
     }
 }

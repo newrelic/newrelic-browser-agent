@@ -6,7 +6,11 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init}
+    <script type="text/javascript">
+      NREUM = {init: {page_view_timing: {
+          enabled: true
+      }}}
+  </script>
     {config}
     {loader}
   </head>

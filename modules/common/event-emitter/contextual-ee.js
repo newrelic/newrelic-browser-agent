@@ -15,12 +15,12 @@ var globalInstance
 if (nr.ee) {
   globalInstance = nr.ee
 } else {
-  globalInstance = ee()
+  globalInstance = ee(undefined, 'globalEE')
   nr.ee = globalInstance
 }
 
 // export default ee()
-var baseEE = ee()
+var baseEE = ee(undefined, 'baseEE')
 
 export { baseEE as ee }
 
@@ -28,7 +28,8 @@ export { globalInstance as global }
 
 function EventContext () {}
 
-function ee (old) {
+function ee (old, debugId) {
+  console.log("ee! old, debug", old, debugId)
   var handlers = {}
   var bufferGroupMap = {}
   var emitters = {}
@@ -44,7 +45,8 @@ function ee (old) {
     buffer: bufferEventsByGroup,
     abort: abortIfNotLoaded,
     aborted: false,
-    isBuffering: isBuffering
+    isBuffering: isBuffering,
+    debugId
   }
 
   // buffer is associated with a base emitter, since there are two
@@ -66,9 +68,11 @@ function ee (old) {
   }
 
   function emit (type, args, contextOrStore, force, bubble) {
+    console.log("emit...", type, args, contextOrStore, force, bubble)
     if (bubble !== false) bubble = true
     if (baseEE.aborted && !force) { return }
     if (old && bubble) old.emit(type, args, contextOrStore)
+    // console.log("continue...")
 
     var ctx = context(contextOrStore)
     var handlersArray = listeners(type)
@@ -89,13 +93,17 @@ function ee (old) {
     // Apply each handler function in the order they were added
     // to the context with the arguments
 
+    console.log("handlersArray...", handlersArray)
     for (var i = 0; i < len; i++) handlersArray[i].apply(ctx, args)
 
+    // console.log(bufferGroupMap[type])
     // Buffer after emitting for consistent ordering
     var bufferGroup = getBuffer()[bufferGroupMap[type]]
     if (bufferGroup) {
       bufferGroup.push([emitter, type, args, ctx])
     }
+
+    // console.log(bufferGroup)
 
     // Return the context so that the module that emitted can see what was done.
     return ctx
@@ -121,7 +129,8 @@ function ee (old) {
   }
 
   function getOrCreate (name) {
-    return (emitters[name] = emitters[name] || ee(emitter))
+    console.log("get or create emitter - ", name)
+    return (emitters[name] = emitters[name] || ee(emitter, name))
   }
 
   function bufferEventsByGroup (types, group) {

@@ -4,7 +4,7 @@
  */
 
 import { store } from '../aggregate/aggregator'
-import {now, offset} from './now'
+import {now, getOffset} from './now'
 
 var marks = {}
 
@@ -14,7 +14,7 @@ var marks = {}
 // }
 
 export function mark (markName, markTime) {
-  if (typeof markTime === 'undefined') markTime = (now() + offset)
+  if (typeof markTime === 'undefined') markTime = (now() + getOffset())
   marks[markName] = markTime
 }
 

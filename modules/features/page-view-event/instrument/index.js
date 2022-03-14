@@ -1,6 +1,6 @@
 
 import { handle } from '../../../common/event-emitter/handle'
-import { now, offset, getLastTimestamp } from '../../../common/timing/now'
+import { now, getOffset, getLastTimestamp } from '../../../common/timing/now'
 import { onDOMContentLoaded, onWindowLoad } from '../../../common/window/load'
 
 const win = window
@@ -15,11 +15,11 @@ export function instrumentPageView() {
 
 function measureWindowLoaded() {
   var ts = now()
-  handle('mark', ['onload', ts + offset], null, 'api')
+  handle('mark', ['onload', ts + getOffset()], null, 'api')
   handle('timing', ['load', ts])
 }
 
 function measureDomContentLoaded () {
   console.log('state change detected that it is LOADED!')
-  handle('mark', ['domContent', now() + offset], null, 'api')
+  handle('mark', ['domContent', now() + getOffset()], null, 'api')
 }

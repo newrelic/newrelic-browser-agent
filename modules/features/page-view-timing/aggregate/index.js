@@ -160,6 +160,7 @@ function recordUnload() {
 }
 
 export function addTiming(name, value, attrs, addCls) {
+  console.log("add timing")
   attrs = attrs || {}
   // collect 0 only when CLS is supported, since 0 is a valid score
   if ((cls > 0 || clsSupported) && addCls) {

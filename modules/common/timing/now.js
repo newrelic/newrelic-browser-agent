@@ -6,7 +6,7 @@
 import {exists} from './performance-check'
 
 var lastTimestamp = new Date().getTime()
-export var offset = lastTimestamp
+var offset = lastTimestamp
 
 // export default now
 
@@ -20,4 +20,12 @@ export function now () {
 
 export function getLastTimestamp() {
   return lastTimestamp
+}
+
+export function setOffset (val){
+  offset = val
+}
+
+export function getOffset (){
+  return offset
 }

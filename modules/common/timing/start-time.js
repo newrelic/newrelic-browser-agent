@@ -10,10 +10,6 @@ import { mark } from './stopwatch'
 import { ffVersion } from '../browser-version/firefox-version'
 import { setOffset } from './now'
 import { exists as performanceCheckExists } from './performance-check'
-// var sHash = require('./s-hash')
-// var stopwatch = require('./stopwatch')
-// var loader = require('loader')
-// var ffVersion = require('../loader/firefox-version')
 
 export let navCookie = true
 

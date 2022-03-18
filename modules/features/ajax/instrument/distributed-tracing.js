@@ -4,12 +4,7 @@
  */
 import { getLoaderConfig } from '../../../common/config/config'
 import { generateSpanId, generateTraceId } from '../../../common/ids/unique-id'
-import {parseUrl} from './parse-url'
-
-// export default {
-//   generateTracePayload: generateTracePayload,
-//   shouldGenerateTrace: shouldGenerateTrace
-// }
+import { parseUrl } from '../../../common/url/parse-url'
 
 export function generateTracePayload (parsedOrigin) {
   if (!shouldGenerateTrace(parsedOrigin)) {

@@ -6,7 +6,7 @@ import { onDOMContentLoaded, onWindowLoad } from '../../../common/window/load'
 const win = window
 const doc = win.document
 
-export function instrumentPageView() {
+export function initialize() {
   handle('mark', ['firstbyte', getLastTimestamp()], null, 'api')
 
   onWindowLoad(measureWindowLoaded)

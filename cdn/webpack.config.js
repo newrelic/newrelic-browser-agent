@@ -3,6 +3,7 @@ const path = require('path')
 const TerserPlugin = require('terser-webpack-plugin')
 const webpack = require('webpack')
 // const HtmlWebpackPlugin = require('html-webpack-plugin');
+const package = require('./package.json')
 
 module.exports = {
   entry:  {
@@ -21,39 +22,34 @@ module.exports = {
     filename: '[name].js',
     path: path.resolve(__dirname, '../build'),
     // publicPath: 'https://js-agent.newrelic.com/',
-    publicPath: 'http://bam-test-1.nr-local.net:3333/build/',
+    // publicPath: 'http://bam-test-1.nr-local.net:3333/build/',
+    publicPath: '/build/',
     libraryTarget: 'umd',
   },
   optimization: {
     minimize: true,
     minimizer: [new TerserPlugin({
-      include: /\.min\.js$/
+      include: [/\.min\.js$/] // TODO - Minimize chunks too
     })],
     // splitChunks: {
     //   chunks: 'all',
     // },
     chunkIds: 'named',
     moduleIds: 'named',
-    // flagIncludedChunks: true,
-    // mergeDuplicateChunks: true,
+    flagIncludedChunks: true,
+    mergeDuplicateChunks: true,
   },
   plugins: [
-    // new HtmlWebpackPlugin(),
     new webpack.DefinePlugin({
       'process.env.SUBPATH': JSON.stringify(process.env.SUBPATH || ''),
-      'process.env.VERSION': JSON.stringify(`-${process.env.VERSION}` || ''),
+      'process.env.VERSION': JSON.stringify(package.version || `-${process.env.VERSION}` || ''),
       'process.env.BUILD': JSON.stringify(process.env.BUILD || 'spa'),
     }),
-    // new webpack.EnvironmentPlugin(['PATH', 'VERSION', 'BUILD']),
-    // new Dotenv({
-    //   path: path.resolve(__dirname, './.env'),
-		// }),
     new webpack.SourceMapDevToolPlugin({
       append: '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]',
       filename: '[name].map',
     })
   ],
-  // devtool: 'source-map'
   devtool: false
 }
 

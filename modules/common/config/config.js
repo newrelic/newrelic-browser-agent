@@ -6,13 +6,16 @@
 import { gosNREUMOriginals, defaults as nrDefaults} from "../window/nreum"
 import { ieVersion } from "../browser-version/ie-version"
 import { getLastTimestamp } from "../timing/now"
+import { BUILD } from "../constants/environment-variables"
 
 var originalMethods = gosNREUMOriginals().o
 
 var runtimeConfiguration = {
+  build: BUILD,
   origin: '' + window.location,
   maxBytes: ieVersion === 6 ? 2000 : 30000,
-  offset: getLastTimestamp()
+  offset: getLastTimestamp(),
+  features: {}
 }
 
 var info = {beacon: nrDefaults.beacon, errorBeacon: nrDefaults.errorBeacon}
@@ -64,6 +67,7 @@ export function getInfo() {
 }
 
 export function setInfo(obj) {
+  console.log("SET INFO!!!!", obj)
   if (obj.licenseKey) {
     info.licenseKey = obj.licenseKey
   }

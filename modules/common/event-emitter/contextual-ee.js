@@ -126,7 +126,6 @@ function ee (old, debugId) {
   }
 
   function getOrCreate (name) {
-    console.log("get or create emitter - ", name)
     return (emitters[name] = emitters[name] || ee(emitter, name))
   }
 

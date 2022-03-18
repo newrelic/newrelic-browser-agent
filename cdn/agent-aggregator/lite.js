@@ -2,7 +2,7 @@ import { runtime} from '../../modules/common/config/config'
 import { drain } from '../../modules/common/drain/drain'
 import { features } from './util/features'
 import { activateFeatures } from '../../modules/common/util/feature-flags'
-import { addFnToNREUM } from '../../modules/common/window/nreum'
+import { addToNREUM, NREUMinitialized } from '../../modules/common/window/nreum'
 
 const autorun = typeof (runtime.autorun) !== 'undefined' ? runtime.autorun : true
 // this determines what features to build into the aggregator
@@ -11,7 +11,7 @@ const autorun = typeof (runtime.autorun) !== 'undefined' ? runtime.autorun : tru
 const build = 'lite'
 
 // Features are activated using the legacy setToken function name via JSONP
-addFnToNREUM('setToken', activateFeatures)
+addToNREUM('setToken', activateFeatures)
 initializeFeatures()
 
 async function initializeFeatures() {
@@ -22,6 +22,7 @@ async function initializeFeatures() {
     }))
     // once ALL the features all loaded, drain all the buffers
     drainAll()
+    NREUMinitialized()
 }
 
 function drainAll(){

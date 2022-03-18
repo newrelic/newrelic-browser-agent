@@ -38,7 +38,7 @@ export function initialize() {
     register('api-addPageAction', addPageAction)
 
     onHarvest('ins', onHarvestStarted)
-    var scheduler = new HarvestScheduler(loader, 'ins', { onFinished: onHarvestFinished })
+    var scheduler = new HarvestScheduler('ins', { onFinished: onHarvestFinished })
     scheduler.startTimer(harvestTimeSeconds, 0)
   })
 }

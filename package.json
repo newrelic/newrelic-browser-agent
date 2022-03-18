@@ -20,7 +20,8 @@
     "build-cdn": "npm --prefix cdn run build",
     "build-packages": "npm --prefix packages/core run build",
     "local-build-packages": "npm run build-packages && npm --prefix packages/core run pack",
-    "test-server": "node ./tools/jil/bin/server"
+    "test-server": "node ./tools/jil/bin/server",
+    "sauce:connect": "node ./tools/jil/bin/sauce"
   },
   "bin": {
     "jil": "./tools/jil/bin/cli.js",

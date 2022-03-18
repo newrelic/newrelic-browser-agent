@@ -12,7 +12,6 @@ export var globalEE = global.get('handle')
 export { globalHandle as global }
 
 export function handle (type, args, ctx, group) {
-  console.log("handle", type, args, ctx, group)
   handleEE.buffer([type], group)
   handleEE.emit(type, args, ctx)
 }

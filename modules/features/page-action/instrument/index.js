@@ -4,7 +4,8 @@
  */
 
 // Turn on feature
-var loader = require('loader')
+import { runtime } from '../../../common/config/config'
 
-if (loader.disabled) return
-loader.features.ins = true
+export function initialize() {
+    if (!runtime.disabled) runtime.features.ins = true
+}

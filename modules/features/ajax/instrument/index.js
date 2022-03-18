@@ -11,7 +11,7 @@ import { dataSize } from '../../../common/util/data-size'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
 import {wrapGlobalFetch, wrapFetch} from '../../../common/wrap'
-import {parseUrl} from './parse-url'
+import { parseUrl } from '../../../common/url/parse-url'
 import { generateTracePayload } from './distributed-tracing'
 import {responseSizeFromXhr} from './response-size'
 

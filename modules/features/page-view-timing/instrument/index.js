@@ -67,7 +67,7 @@ function clsObserver(list) {
     })
 }
 
-export function instrumentPageViewTiming () {
+export function initialize () {
     if (isEnabled()) {
         console.log("instrumentPageViewTiming!")
         if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {
@@ -144,7 +144,6 @@ function captureInteraction(evt) {
 function captureVisibilityChange(state) {
     if (state === 'hidden') {
         pageHiddenTime = now()
-        console.log("handle pageHide...", pageHiddenTime)
         handle('pageHide', [pageHiddenTime])
     }
 }

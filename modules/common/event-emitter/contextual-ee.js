@@ -29,7 +29,6 @@ export { globalInstance as global }
 function EventContext () {}
 
 function ee (old, debugId) {
-  console.log("ee! old, debug", old, debugId)
   var handlers = {}
   var bufferGroupMap = {}
   var emitters = {}
@@ -68,7 +67,6 @@ function ee (old, debugId) {
   }
 
   function emit (type, args, contextOrStore, force, bubble) {
-    console.log("emit...", type, args, contextOrStore, force, bubble)
     if (bubble !== false) bubble = true
     if (baseEE.aborted && !force) { return }
     if (old && bubble) old.emit(type, args, contextOrStore)
@@ -93,7 +91,6 @@ function ee (old, debugId) {
     // Apply each handler function in the order they were added
     // to the context with the arguments
 
-    console.log("handlersArray...", handlersArray)
     for (var i = 0; i < len; i++) handlersArray[i].apply(ctx, args)
 
     // console.log(bufferGroupMap[type])

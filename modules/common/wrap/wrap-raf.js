@@ -4,9 +4,9 @@
  */
 
 // Request Animation Frame wrapper
-import {global as globalEE} from '../event-emitter/contextual-ee'
+import {ee as contextualEE} from '../event-emitter/contextual-ee'
 import {createWrapperWithEmitter as wfn} from './wrap-function'
-export var ee = globalEE.get('raf')
+export var ee = contextualEE.get('raf')
 var wrapFn = wfn(ee)
 
 var equestAnimationFrame = 'equestAnimationFrame'

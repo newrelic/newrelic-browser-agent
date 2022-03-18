@@ -2,7 +2,7 @@
 import * as env from '../constants/environment-variables'
 
 export const defaults = {
-  agent:  `js-agent.newrelic.com/${env.PATH}nr${env.VERSION}.min.js`,
+  agent:  `js-agent.newrelic.com/${env.SUBPATH}nr${env.VERSION}.min.js`,
   beacon: 'bam.nr-data.net',
   errorBeacon: 'bam.nr-data.net',
   version: env.VERSION

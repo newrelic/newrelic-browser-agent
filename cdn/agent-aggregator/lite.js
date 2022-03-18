@@ -8,7 +8,7 @@ const autorun = typeof (runtime.autorun) !== 'undefined' ? runtime.autorun : tru
 // this determines what features to build into the aggregator
 // this could <possibly> be optimized to run on one file via env var
 // running out of time so keeping in 3 files for now
-const build = 'spa'
+const build = 'lite'
 
 // Features are activated using the legacy setToken function name via JSONP
 addFnToNREUM('setToken', activateFeatures)

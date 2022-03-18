@@ -5,13 +5,13 @@
 
 // cdn specific utility files
 import {setAPI} from './utils/api'
-import { injectAggregator } from './utils/inject-aggregator'
 // common modules
 import {gosCDN} from '../../modules/common/window/nreum'
 import { protocolAllowed } from '../../modules/common/url/protocol-allowed'
 import { onWindowLoad } from '../../modules/common/window/load'
 // feature modules
 import { instrumentPageView } from '../../modules/features/page-view-event/instrument'
+import { instrumentPageViewTiming } from '../../modules/features/page-view-timing/instrument'
 import {initialize as initializeErrors} from '../../modules/features/js-errors/instrument'
 import {initialize as initializeXhr} from '../../modules/features/ajax/instrument'
 
@@ -30,7 +30,13 @@ initializeXhr(true)
 // session traces
 // ins (apis)
 instrumentPageView() // document load (page view event + metrics)
-// page view timings instrumentation (/loader/timings.js)
+instrumentPageViewTiming() // page view timings instrumentation (/loader/timings.js)
 
 // inject the aggregator
-onWindowLoad(injectAggregator)
+onWindowLoad(importAggregator)
+
+let loadFired = 0
+export async function importAggregator () {
+    if (loadFired++) return
+    await import('../agent-aggregator/pro')
+}

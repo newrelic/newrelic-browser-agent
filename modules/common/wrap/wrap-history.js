@@ -4,9 +4,9 @@
  */
 
 // History pushState wrapper
-import {global as globalEE} from '../event-emitter/contextual-ee'
+import {ee as contextualEE} from '../event-emitter/contextual-ee'
 import {createWrapperWithEmitter as wfn} from './wrap-function'
-export var ee = globalEE.get('history')
+export var ee = contextualEE.get('history')
 var wrapFn = wfn(ee)
 
 export default ee

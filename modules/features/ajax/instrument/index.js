@@ -4,7 +4,7 @@
  */
 import { runtime, originals, getLoaderConfig } from '../../../common/config/config'
 import { handle } from '../../../common/event-emitter/handle'
-import { ee, global as globalEE } from '../../../common/event-emitter/contextual-ee'
+import { ee } from '../../../common/event-emitter/contextual-ee'
 import { id } from '../../../common/ids/id'
 import { ffVersion } from '../../../common/browser-version/firefox-version'
 import { dataSize } from '../../../common/util/data-size'
@@ -34,7 +34,7 @@ export function initialize(captureGlobalCalls) {
     // TODO
     // require('nr-browser-common').wrapXhr()
     wrapGlobalFetch()
-    subscribeToEvents(globalEE, handle.global)
+    // subscribeToEvents(globalEE, handle.global)
   }
 }
 

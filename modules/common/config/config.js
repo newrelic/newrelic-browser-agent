@@ -5,12 +5,14 @@
 
 import { gosNREUMOriginals, defaults as nrDefaults} from "../window/nreum"
 import { ieVersion } from "../browser-version/ie-version"
+import { getLastTimestamp } from "../timing/now"
 
 var originalMethods = gosNREUMOriginals().o
 
 var runtimeConfiguration = {
   origin: '' + window.location,
-  maxBytes: ieVersion === 6 ? 2000 : 30000
+  maxBytes: ieVersion === 6 ? 2000 : 30000,
+  offset: getLastTimestamp()
 }
 
 var info = {beacon: nrDefaults.beacon, errorBeacon: nrDefaults.errorBeacon}
@@ -62,10 +64,6 @@ export function getInfo() {
 }
 
 export function setInfo(obj) {
-  // no longer global
-  // window.NREUM = window.NREUM || {}
-  // window.NREUM.info = info = window.NREUM.info || {}
-
   if (obj.licenseKey) {
     info.licenseKey = obj.licenseKey
   }
@@ -89,6 +87,18 @@ export function setInfo(obj) {
 
   if (obj.applicationID) {
     info.applicationID = obj.applicationID
+  }
+
+  if (obj.jsAttributes) {
+    info.jsAttributes = obj.jsAttributes
+  }
+
+  if (obj.userAttributes) {
+    info.userAttributes = obj.userAttributes
+  }
+
+  if (obj.atts) {
+    info.atts = obj.atts
   }
 
   // TODO: there are others

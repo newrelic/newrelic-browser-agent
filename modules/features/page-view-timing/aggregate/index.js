@@ -14,21 +14,6 @@ import { cleanURL } from '../../../common/url/clean-url';
 import { handle } from '../../../common/event-emitter/handle';
 import { getInfo } from '../../../common/config/config';
 
-// var nullable = require('./bel-serializer').nullable
-// var numeric = require('./bel-serializer').numeric
-// var getAddStringContext = require('./bel-serializer').getAddStringContext
-// var addCustomAttributes = require('./bel-serializer').addCustomAttributes
-// var now = require('now')
-// var mapOwn = require('map-own')
-
-// var loader = null
-// var harvest = require('./harvest') // no default export anymore -- all are named now
-// var HarvestScheduler = require('./harvest-scheduler')
-// var register = require('./register-handler')
-// var subscribeToUnload = require('./unload')
-// var cleanURL = require('./clean-url')
-// var handle = require('handle')
-
 export var timings = []
 var timingsSent = []
 var lcpRecorded = false
@@ -38,17 +23,9 @@ var cls = 0
 var clsSession = {value: 0, firstEntryTime: 0, lastEntryTime: 0}
 var pageHideRecorded = false
 
-// module.exports = {
-//   addTiming: addTiming,
-//   getPayload: getPayload,
-//   timings: timings,
-//   init: init,
-//   finalHarvest: finalHarvest
-// }
-
 var harvestTimeSeconds = 30
 
-export function init(options) {
+export function initialize(options) {
   if (!isEnabled(options)) return
 
   try {

@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {global as globalEE} from '../event-emitter/contextual-ee'
+import {ee as contextualEE} from '../event-emitter/contextual-ee'
 import {createWrapperWithEmitter as wfn} from './wrap-function'
-export var ee = globalEE.get('timer')
+export var ee = contextualEE.get('timer')
 var wrapFn = wfn(ee)
 
 var SET_TIMEOUT = 'setTimeout'

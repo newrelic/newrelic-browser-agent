@@ -4,16 +4,18 @@
  */
 import slice from 'lodash._slice'
 import { gosNREUM } from '../../../modules/common/window/nreum'
-import { global as handle } from '../../../modules/common/event-emitter/handle'
+// import { global as handle } from '../../../modules/common/event-emitter/handle'
+import { handle } from '../../../modules/common/event-emitter/handle'
 import { mapOwn } from '../../../modules/common/util/map-own'
-import { global as globalEE } from '../../../modules/common/event-emitter/contextual-ee'
+// import { global as globalEE } from '../../../modules/common/event-emitter/contextual-ee'
+import { ee } from '../../../modules/common/event-emitter/contextual-ee'
 import { recordSupportability } from '../../../modules/common/metrics/metrics'
 import { now } from '../../../modules/common/timing/now'
 
 export function setAPI() {
   console.log("set up the API for the CDN!")
   var nr = gosNREUM()
-  var tracerEE = globalEE.get('tracer')
+  var tracerEE = ee.get('tracer')
 
   var asyncApiFns = [
     'setPageViewName',
@@ -24,7 +26,7 @@ export function setAPI() {
     'inlineHit',
     'addRelease'
   ]
-  
+
   var prefix = 'api-'
   var spaPrefix = prefix + 'ixn-'
 
@@ -40,7 +42,7 @@ export function setAPI() {
     return new InteractionHandle().get()
   }
 
-  function InteractionHandle () {}
+  function InteractionHandle() { }
 
   var InteractionApiProto = InteractionHandle.prototype = {
     createTracer: function (name, cb) {
@@ -65,11 +67,11 @@ export function setAPI() {
     }
   }
 
-  mapOwn('actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get'.split(','), function addApi (n, name) {
+  mapOwn('actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get'.split(','), function addApi(n, name) {
     InteractionApiProto[name] = apiCall(spaPrefix, name)
   })
 
-  function apiCall (prefix, name, notSpa, bufferGroup) {
+  function apiCall(prefix, name, notSpa, bufferGroup) {
     return function () {
       recordSupportability('API/' + name + '/called')
       handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup)

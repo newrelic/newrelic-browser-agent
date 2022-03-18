@@ -40,7 +40,18 @@ export interface NrLoaderConfig {
 
 export enum NrFeatures {
     JSERRORS='JSERRORS',
-    AJAX='AJAX'
+    AJAX='AJAX',
+    PAGE_VIEW_EVENT='PAGE_VIEW_EVENT',
+    PAGE_VIEW_TIMING='PAGE_VIEW_TIMING'
 }
 
 export type NrStoreError = (err: Error | String, time?: Number, internal?: any, customAttributes?: any) => void
+
+export interface NrFeaturesWithApi { 
+    [NrFeatures.JSERRORS]: {
+        storeError: NrStoreError
+    },
+    [NrFeatures.AJAX]: {},
+    [NrFeatures.PAGE_VIEW_EVENT]: {},
+    [NrFeatures.PAGE_VIEW_TIMING]: {}
+}

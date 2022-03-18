@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import {createWrapperWithEmitter as wrapFn, wrapInPlace, argsToArray} from './wrap-function'
-import {global as globalEE, getOrSetContext} from '../event-emitter/contextual-ee'
+import {ee, getOrSetContext} from '../event-emitter/contextual-ee'
 import {mapOwn} from '../util/map-own'
 import {originals} from '../config/config'
-export var promiseEE = globalEE.get('promise')
+export var promiseEE = ee.get('promise')
 var getContext = getOrSetContext
 var promiseWrapper = wrapFn(promiseEE)
 var OriginalPromise = originals.PR

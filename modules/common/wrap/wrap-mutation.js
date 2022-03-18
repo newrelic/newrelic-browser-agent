@@ -2,11 +2,11 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import {global as globalEE} from '../event-emitter/contextual-ee'
+import {ee as contextualEE} from '../event-emitter/contextual-ee'
 import {createWrapperWithEmitter as wfn} from './wrap-function'
 import {originals} from '../config/config'
 
-export var ee = globalEE.get('mutation')
+export var ee = contextualEE.get('mutation')
 var wrapFn = wfn(ee)
 var OriginalObserver = originals.MO
 

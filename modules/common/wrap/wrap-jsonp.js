@@ -4,10 +4,10 @@
  */
 
 import {eventListenerOpts} from '../event-listener/event-listener-opts'
-import {global as globalEE} from '../event-emitter/contextual-ee'
+import {ee as contextualEE} from '../event-emitter/contextual-ee'
 import {createWrapperWithEmitter as wfn} from './wrap-function'
 
-export var ee = globalEE.get('jsonp')
+export var ee = contextualEE.get('jsonp')
 var wrapFn = wfn(ee)
 
 export default ee

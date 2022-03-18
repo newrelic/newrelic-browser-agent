@@ -4,10 +4,10 @@
  */
 
 // console.log('wrap events!')
-import {global as globalEE} from '../event-emitter/contextual-ee'
+import {ee as contextualEE} from '../event-emitter/contextual-ee'
 import {createWrapperWithEmitter as wfn} from './wrap-function'
 import {getOrSet} from '../util/get-or-set'
-export var ee = globalEE.get('events')
+export var ee = contextualEE.get('events')
 var wrapFn = wfn(ee, true)
 
 var XHR = XMLHttpRequest

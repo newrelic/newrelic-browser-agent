@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {global as globalEE} from '../event-emitter/contextual-ee'
+import {ee as contextualEE} from '../event-emitter/contextual-ee'
 import slice from 'lodash._slice'
 import {mapOwn} from '../util/map-own'
 import { originals } from '../config/config'
-export var ee = globalEE.get('fetch')
+export var ee = contextualEE.get('fetch')
 
 export default ee
 export { wrapFetch as wrap }

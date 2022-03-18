@@ -6,12 +6,12 @@
 // wrap-events patches XMLHttpRequest.prototype.addEventListener for us.
 import './wrap-events'
 // import * as config from '../config'
-import {global as globalEE} from '../event-emitter/contextual-ee'
+import {ee as contextualEE} from '../event-emitter/contextual-ee'
 import {eventListenerOpts} from '../event-listener/event-listener-opts'
 import {createWrapperWithEmitter as wfn} from './wrap-function'
 import {originals} from '../config/config'
 
-var baseEE = globalEE
+var baseEE = contextualEE
 export var ee = baseEE.get('xhr')
 var wrapFn = wfn(ee)
 

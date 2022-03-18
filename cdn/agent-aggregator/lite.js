@@ -22,7 +22,7 @@ async function initializeFeatures() {
     }))
     // once ALL the features all loaded, drain all the buffers
     drainAll()
-    NREUMinitialized()
+    addToNREUM('activatedFeatures', activatedFeatures)
 }
 
 function drainAll(){

@@ -2,7 +2,7 @@ import { runtime} from '../../modules/common/config/config'
 import { drain } from '../../modules/common/drain/drain'
 import { features } from './util/features'
 import { activateFeatures } from '../../modules/common/util/feature-flags'
-import { addToNREUM, NREUMinitialized } from '../../modules/common/window/nreum'
+import { addToNREUM } from '../../modules/common/window/nreum'
 
 const autorun = typeof (runtime.autorun) !== 'undefined' ? runtime.autorun : true
 // this determines what features to build into the aggregator
@@ -22,7 +22,7 @@ async function initializeFeatures() {
     }))
     // once ALL the features all loaded, drain all the buffers
     drainAll()
-    NREUMinitialized()
+    addToNREUM('activatedFeatures', activatedFeatures)
 }
 
 function drainAll(){

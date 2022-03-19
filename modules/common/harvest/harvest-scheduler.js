@@ -5,12 +5,13 @@
 
 import { getSubmitMethod, send, sendX } from './harvest'
 import { submitData } from '../util/submit-data'
+import { log } from '../debug/logging'
 
 /**
  * Periodically invokes harvest calls and handles retries
  */
 export function HarvestScheduler(endpoint, opts) {
-  console.log('harvest scheduler!')
+  log('harvest scheduler!')
   this.endpoint = endpoint
   this.opts = opts || {}
   this.started = false
@@ -31,7 +32,7 @@ HarvestScheduler.prototype.stopTimer = function stopTimer() {
 }
 
 HarvestScheduler.prototype.scheduleHarvest = function scheduleHarvest(delay, opts) {
-  // console.log('schedule harvest!', delay, opts)
+  // log('schedule harvest!', delay, opts)
   if (this.timeoutHandle) return
   var timer = this
 
@@ -45,13 +46,13 @@ HarvestScheduler.prototype.scheduleHarvest = function scheduleHarvest(delay, opt
 }
 
 HarvestScheduler.prototype.runHarvest = function runHarvest(opts) {
-  // console.log('run harvest!')
+  // log('run harvest!')
   var scheduler = this
 
   if (this.opts.getPayload) {
-    // console.log('getPayload')
+    // log('getPayload')
     var submitMethod = getSubmitMethod(this.endpoint, opts)
-    // console.log('submitMethod', submitMethod)
+    // log('submitMethod', submitMethod)
     if (!submitMethod) return false
 
     var retry = submitMethod.method === submitData.xhr
@@ -59,17 +60,17 @@ HarvestScheduler.prototype.runHarvest = function runHarvest(opts) {
     if (payload) {
       payload = Object.prototype.toString.call(payload) === '[object Array]' ? payload : [payload]
       for (var i = 0; i < payload.length; i++) {
-        // console.log('send')
+        // log('send')
         send(this.endpoint, payload[i], opts, submitMethod, onHarvestFinished)
       }
     }
   } else {
-    // console.log('sendX')
+    // log('sendX')
     sendX(this.endpoint, opts, onHarvestFinished)
   }
 
   if (this.started) {
-    // console.log('started... schedule harvest')
+    // log('started... schedule harvest')
     this.scheduleHarvest()
   }
 
@@ -79,7 +80,7 @@ HarvestScheduler.prototype.runHarvest = function runHarvest(opts) {
 }
 
 HarvestScheduler.prototype.onHarvestFinished = function onHarvestFinished(opts, result) {
-  // console.log('harvest finished!')
+  // log('harvest finished!')
   if (this.opts.onFinished) {
     this.opts.onFinished(result)
   }

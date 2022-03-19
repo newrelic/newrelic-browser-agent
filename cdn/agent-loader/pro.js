@@ -9,7 +9,7 @@ import { setAPI } from './utils/api'
 import { gosCDN } from '../../modules/common/window/nreum'
 import { protocolAllowed } from '../../modules/common/url/protocol-allowed'
 import { onWindowLoad } from '../../modules/common/window/load'
-import { setConfiguration, setInfo, setLoaderConfig } from '../../modules/common/config/config'
+import { runtime, setConfiguration, setInfo, setLoaderConfig } from '../../modules/common/config/config'
 // feature modules
 import { initialize as instrumentPageViewEvent } from '../../modules/features/page-view-event/instrument'
 import { initialize as instrumentPageViewTiming } from '../../modules/features/page-view-timing/instrument'
@@ -18,7 +18,6 @@ import { initialize as instrumentXhr } from '../../modules/features/ajax/instrum
 import { initialize as instrumentSessionTrace } from '../../modules/features/session-trace/instrument'
 import { initialize as instrumentPageAction } from '../../modules/features/page-action/instrument'
 
-console.log("PRO AGENT!")
 // set up the window.NREUM object that is specifically for the CDN build
 const nr = gosCDN()
 // add api calls to the NREUM object
@@ -29,7 +28,6 @@ if (!protocolAllowed(window.location)) {
 }
 
 // set configuration from global NREUM.init (When building CDN specifically)
-console.log("set the info from nr!", nr.info)
 setInfo(nr.info)
 setConfiguration(nr.init)
 setLoaderConfig(nr.loader_config)

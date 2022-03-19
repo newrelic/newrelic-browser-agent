@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ee} from '../../../common/event-emitter/contextual-ee'
+import { ee } from '../../../common/event-emitter/contextual-ee'
 import { mapOwn } from '../../../common/util/map-own'
 
 var flags = {}
@@ -27,9 +27,9 @@ if (flags.dev) {
   log('flags: ' + mapOwn(flags, function (key, val) { return key }).join(', '))
 }
 
-function log (message) {
+function log(message) {
   try {
-    if (flags.console) console.log(message)
+    if (flags.console) log(message)
   } catch (err) {
     // no op
   }

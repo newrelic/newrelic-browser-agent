@@ -10,8 +10,9 @@ import '../../../common/wrap/wrap-history'
 import '../../../common/wrap/wrap-events'
 import { supportsPerformanceObserver } from '../../../common/window/supports-performance-observer'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
-import { originals, runtime } from '../../../common/config/config'
+import { originals, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
+import { log } from '../../../common/debug/logging'
 
 // var ee = require('ee')
 // var handle = require('handle')
@@ -38,7 +39,7 @@ var PUSH_STATE = 'pushState'
 // if (loader.disabled) return
 
 // loader.features.stn = true
-runtime.features.stn = true
+getRuntime().features.stn = true
 
 // wrap history ap
 // require('../../wrap-history')
@@ -58,7 +59,7 @@ export function initialize() {
     window.performance.getEntriesByType
   )) return
 
-  console.log("INITIALIZE SESSION TRACE INSTRUMENTATION!")
+  log("INITIALIZE SESSION TRACE INSTRUMENTATION!")
 
   ee.on(FN_START, function (args, target) {
     var evt = args[0]

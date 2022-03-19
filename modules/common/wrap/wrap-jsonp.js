@@ -22,11 +22,11 @@ if (shouldWrap()) {
 }
 
 function wrap() {
-  // console.log('wrap jsonp...')
+  // log('wrap jsonp...')
   // JSONP works by dynamically inserting <script> elements - wrap DOM methods for
   // inserting elements to detect insertion of JSONP-specific elements.
   if (Node && Node.prototype && Node.prototype.appendChild) {
-    // console.log('domInsertMethods', domInsertMethods)
+    // log('domInsertMethods', domInsertMethods)
     wrapFn.inPlace(Node.prototype, domInsertMethods, 'dom-')
   } else {
     wrapFn.inPlace(HTMLElement.prototype, domInsertMethods, 'dom-')
@@ -42,7 +42,7 @@ ee.on('dom-start', function (args) {
 // subscribe to events on the JSONP <script> element and wrap the JSONP callback
 // in order to track start and end of the interaction node
 function wrapElement (el) {
-  // console.log('wrapElement')
+  // log('wrapElement')
   var isScript = el && typeof el.nodeName === 'string' &&
     el.nodeName.toLowerCase() === 'script'
   if (!isScript) return
@@ -69,8 +69,8 @@ function wrapElement (el) {
   //   called.
 
   var context = {}
-  // console.log('wrap jsonp...')
-  // console.log('callback.key', callback.key)
+  // log('wrap jsonp...')
+  // log('callback.key', callback.key)
   wrapFn.inPlace(callback.parent, [callback.key], 'cb-', context)
 
   el.addEventListener('load', onLoad, eventListenerOpts(false))

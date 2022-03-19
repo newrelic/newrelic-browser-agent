@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// console.log('wrap events!')
+// log('wrap events!')
 import {ee as contextualEE} from '../event-emitter/contextual-ee'
 import {createWrapperWithEmitter as wfn} from './wrap-function'
 import {getOrSet} from '../util/get-or-set'
@@ -62,7 +62,7 @@ function findAndWrapNode (object) {
 }
 
 function wrapNode (node) {
-  // console.log('wrap events...')
+  // log('wrap events...')
   wrapFn.inPlace(node, [ADD_EVENT_LISTENER, REMOVE_EVENT_LISTENER], '-', uniqueListener)
 }
 

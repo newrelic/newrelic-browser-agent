@@ -5,7 +5,7 @@
 
 import { global as handle } from '../../../common/event-emitter/handle'
 import { global as ee } from '../../../common/event-emitter/contextual-ee'
-import { runtime } from '../../../common/config/config'
+import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { getOrSet } from '../../../common/util/get-or-set'
 import { wrapRaf as wrapGlobalRaf, wrapTimer as wrapGlobalTimers, wrapGlobalEvents, wrapXhr } from '../../../common/wrap'
@@ -42,7 +42,7 @@ export function initialize() {
         wrapGlobalEvents()
       }
 
-      if (runtime.xhrWrappable) {
+      if (getRuntime().xhrWrappable) {
         wrapXhr()
       }
 

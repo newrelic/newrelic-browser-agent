@@ -6,6 +6,8 @@
 import { ee, global as globalEE } from '../event-emitter/contextual-ee'
 import { mapOwn } from '../util/map-own'
 import { global, registerHandler as defaultHandlers } from '../event-emitter/register-handler'
+import { log } from '../debug/logging'
+
 var handlers = defaultHandlers.handlers
 var globalHandlers = global.handlers
 
@@ -15,7 +17,7 @@ var g = drain.bind(null, globalEE, globalHandlers)
 export { g as global }
 
 function drain (baseEE, handlers, group) {
-  console.log("drain!")
+  log("drain!")
   if (!baseEE.backlog) return
 
   var bufferedEventsInGroup = baseEE.backlog[group]

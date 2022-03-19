@@ -16,5 +16,5 @@ var object = window.history
 if (prototype && prototype.pushState && prototype.replaceState) {
   object = prototype
 }
-// console.log('wrap history')
+// log('wrap history')
 wrapFn.inPlace(object, [ 'pushState', 'replaceState' ], '-')

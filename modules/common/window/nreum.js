@@ -19,7 +19,6 @@ export function gosNREUM(){
 export function gosNREUMInfo(){
   let nr = gosNREUM()
   const externallySupplied = nr.info || {}
-  console.log("info externally supplied", externallySupplied)
   
   nr.info = {
     beacon: defaults.beacon,
@@ -87,7 +86,6 @@ export function NREUMinitialized(){
 }
 
 export function gosCDN() {
-  console.log("set up NREUM for the CDN!")
   gosNREUMInfo()
   gosNREUMInit()
   gosNREUMOriginals()

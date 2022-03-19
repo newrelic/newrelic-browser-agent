@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { runtime, originals, getLoaderConfig } from '../../../common/config/config'
+import { originals, getLoaderConfig, getRuntime } from '../../../common/config/config'
 import { handle } from '../../../common/event-emitter/handle'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import { id } from '../../../common/ids/id'
@@ -28,7 +28,7 @@ var origXHR = window.XMLHttpRequest
 
 export function initialize(captureGlobalCalls) {
   // Don't instrument Chrome for iOS, it is buggy and acts like there are URL verification issues
-  if (!runtime.xhrWrappable || runtime.disabled) return
+  if (!getRuntime().xhrWrappable || getRuntime().disabled) return
 
   if (captureGlobalCalls) {
     // TODO

@@ -13,6 +13,7 @@ import { subscribeToUnload }  from '../../../common/unload/unload';
 import { cleanURL } from '../../../common/url/clean-url';
 import { handle } from '../../../common/event-emitter/handle';
 import { getInfo } from '../../../common/config/config';
+import { log } from '../../../common/debug/logging';
 
 export var timings = []
 var timingsSent = []
@@ -37,7 +38,7 @@ export function initialize(options) {
   var initialHarvestSeconds = options.initialHarvestSeconds || 10
   harvestTimeSeconds = options.harvestTimeSeconds || 30
 
-  console.log("pvt init")
+  log("pvt init")
   var scheduler = new HarvestScheduler('events', { onFinished: onHarvestFinished, getPayload: prepareHarvest })
 
   register('timing', processTiming)
@@ -97,7 +98,7 @@ function recordLcp() {
 }
 
 function updateLatestLcp(lcpEntry, networkInformation) {
-    console.log("updateLatestLcp")
+    log("updateLatestLcp")
   if (lcp) {
     var previous = lcp[0]
     if (previous.size >= lcpEntry.size) {
@@ -109,7 +110,7 @@ function updateLatestLcp(lcpEntry, networkInformation) {
 }
 
 function updateClsScore(clsEntry) {
-    console.log("updateClsScore", arguments)
+    log("updateClsScore", arguments)
   // this used to be cumulative for the whole page, now we need to split it to a
   // new CLS measurement after 1s between shifts or 5s total
   if ((clsEntry.startTime - clsSession.lastEntryTime) > 1000 ||
@@ -137,7 +138,7 @@ function recordUnload() {
 }
 
 export function addTiming(name, value, attrs, addCls) {
-  console.log("add timing")
+  log("add timing")
   attrs = attrs || {}
   // collect 0 only when CLS is supported, since 0 is a valid score
   if ((cls > 0 || clsSupported) && addCls) {
@@ -154,7 +155,7 @@ export function addTiming(name, value, attrs, addCls) {
 }
 
 function processTiming(name, value, attrs) {
-    console.log("processTiming", name, value)
+    log("processTiming", name, value)
   // Upon user interaction, the Browser stops executing LCP logic, so we can send here
   // We're using setTimeout to give the Browser time to finish collecting LCP value
   if (name === 'fi') {
@@ -195,7 +196,7 @@ function appendGlobalCustomAttributes(timing) {
 
 // serialize and return current timing data, clear and save current data for retry
 function prepareHarvest(options) {
-    console.log("timings.length", timings.length)
+    log("timings.length", timings.length)
   if (timings.length === 0) return
 
   var payload = getPayload(timings)

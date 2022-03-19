@@ -10,7 +10,8 @@ import { registerHandler as register } from '../../../common/event-emitter/regis
 import { on as onHarvest } from '../../../common/harvest/harvest'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
-import { getConfigurationValue, getInfo, runtime, setInfo } from '../../../common/config/config'
+import { getConfigurationValue, getInfo, getRuntime, setInfo } from '../../../common/config/config'
+import { log } from '../../../common/debug/logging'
 
 var eventsPerMinute = 240
 // var harvestTimeSeconds = config.getConfiguration('ins.harvestTimeSeconds') || 30
@@ -26,12 +27,12 @@ setInfo({jsAttributes: att})
 if (document.referrer) referrerUrl = cleanURL(document.referrer)
 
 export function initialize() {
-  console.log("initialize pageActions!")
+  log("initialize pageActions!")
 
   register('api-setCustomAttribute', setCustomAttribute, 'api')
 
   ee.on('feat-ins', function () {
-    console.log("feat-ins!")
+    log("feat-ins!")
     // TODO 
     // Check why this isnt firing when called from the API
     // i think its not getting the NREUM info before making the call to get features
@@ -72,7 +73,7 @@ function onHarvestFinished (result) {
 
 // WARNING: Insights times are in seconds. EXCEPT timestamp, which is in ms.
 function addPageAction (t, name, attributes) {
-  console.log("add a page action!", t, name, attributes)
+  log("add a page action!", t, name, attributes)
   if (events.length >= eventsPerHarvest) return
   var width
   var height
@@ -86,13 +87,13 @@ function addPageAction (t, name, attributes) {
   }
 
   var defaults = {
-    timestamp: t + runtime.offset,
+    timestamp: t + getRuntime().offset,
     timeSinceLoad: t / 1000,
     browserWidth: width,
     browserHeight: height,
     referrerUrl: referrerUrl,
     currentUrl: cleanURL('' + location),
-    pageUrl: cleanURL(runtime.origin),
+    pageUrl: cleanURL(getRuntime().origin),
     eventType: 'PageAction'
   }
 

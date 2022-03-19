@@ -44,7 +44,7 @@ copy(OrigXHR, XHR)
 
 XHR.prototype = OrigXHR.prototype
 
-// console.log('wrap xhr...')
+// log('wrap xhr...')
 wrapFn.inPlace(XHR.prototype, ['open', 'send'], '-xhr-', getObject)
 
 ee.on('send-xhr-start', function (args, xhr) {

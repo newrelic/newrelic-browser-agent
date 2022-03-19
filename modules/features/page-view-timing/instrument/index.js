@@ -8,6 +8,7 @@ import { eventListenerOpts } from '../../../common/event-listener/event-listener
 import { gosNREUM } from '../../../common/window/nreum'
 import { getOffset, now } from '../../../common/timing/now'
 import { getConfigurationValue } from '../../../common/config/config'
+import { log } from '../../../common/debug/logging'
 
 var pageHiddenTime
 var performanceObserver
@@ -69,7 +70,7 @@ function clsObserver(list) {
 
 export function initialize () {
     if (isEnabled()) {
-        console.log("instrumentPageViewTiming!")
+        log("instrumentPageViewTiming!")
         if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {
             // passing in an unknown entry type to observer could throw an exception
             performanceObserver = new PerformanceObserver(perfObserver) // eslint-disable-line no-undef
@@ -93,7 +94,7 @@ export function initialize () {
             fiRecorded = false
             var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart']
             allowedEventTypes.forEach(function (e) {
-                console.log("click", e)
+                log("click", e)
                 document.addEventListener(e, captureInteraction, eventListenerOpts(false))
             })
         }

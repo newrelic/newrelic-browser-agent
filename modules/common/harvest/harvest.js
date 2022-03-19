@@ -4,25 +4,25 @@
  */
 
 import { mapOwn } from '../util/map-own'
-import {obj as encodeObj, param as encodeParam} from '../url/encode'
-import {stringify} from '../util/stringify'
-import {submitData} from '../util/submit-data'
-import {reduce} from '../util/reduce'
-import {getLocation} from '../url/location'
-import * as config from '../config/config'
-import {cleanURL} from '../url/clean-url'
-import {now} from '../timing/now'
-import {eventListenerOpts} from '../event-listener/event-listener-opts'
-import {ieVersion} from '../browser-version/ie-version'
-import {VERSION as NR_VERSION} from '../constants/environment-variables'
+import { obj as encodeObj, param as encodeParam } from '../url/encode'
+import { stringify } from '../util/stringify'
+import { submitData } from '../util/submit-data'
+import { reduce } from '../util/reduce'
+import { getLocation } from '../url/location'
+import {getInfo, getConfigurationValue, getRuntime, getConfiguration} from '../config/config'
+import { cleanURL } from '../url/clean-url'
+import { now } from '../timing/now'
+import { eventListenerOpts } from '../event-listener/event-listener-opts'
+import { ieVersion } from '../browser-version/ie-version'
+import { VERSION as NR_VERSION } from '../constants/environment-variables'
 
 const version = NR_VERSION
 // var version = '<VERSION>'
 // var jsonp = 'NREUM.setToken'
 var _events = {}
 var haveSendBeacon = !!navigator.sendBeacon
-var tooManyRequestsDelay = config.getConfigurationValue('harvest.tooManyRequestsDelay') || 60
-var getScheme = () => (config.getConfigurationValue('ssl') === false) ? 'http' : 'https'
+var tooManyRequestsDelay = getConfigurationValue('harvest.tooManyRequestsDelay') || 60
+var getScheme = () => (getConfigurationValue('ssl') === false) ? 'http' : 'https'
 
 // requiring ie version updates the IE version on the loader object
 // var ieVersion = require('./ie-version')
@@ -40,16 +40,16 @@ export var xhrUsable = ieVersion > 9 || ieVersion === 0
 
 export { sendAllFromUnload as sendFinal }
 
-function sendAllFromUnload () {
+function sendAllFromUnload() {
   var sents = mapOwn(_events, function (endpoint) {
     return sendX(endpoint, { unload: true })
   })
   return reduce(sents, or)
 }
 
-function or (a, b) { return a || b }
+function or(a, b) { return a || b }
 
-function createPayload (type, options) {
+function createPayload(type, options) {
   var makeBody = createAccumulator()
   var makeQueryString = createAccumulator()
   var listeners = (_events[type] && _events[type] || [])
@@ -74,14 +74,14 @@ function createPayload (type, options) {
  * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
  * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
  */
-export function sendX (endpoint, opts, cbFinished) {
+export function sendX(endpoint, opts, cbFinished) {
   var submitMethod = getSubmitMethod(endpoint, opts)
-  // console.log('submit method', submitMethod)
+  // log('submit method', submitMethod)
   if (!submitMethod) return false
   var options = {
     retry: submitMethod.method === submitData.xhr
   }
-  // console.log('_send!', endpoint, opts, options)
+  // log('_send!', endpoint, opts, options)
   return _send(endpoint, createPayload(endpoint, options), opts, submitMethod, cbFinished)
 }
 
@@ -100,7 +100,7 @@ export function sendX (endpoint, opts, cbFinished) {
  * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
  * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
  */
-export function send (endpoint, singlePayload, opts, submitMethod, cbFinished) {
+export function send(endpoint, singlePayload, opts, submitMethod, cbFinished) {
   var makeBody = createAccumulator()
   var makeQueryString = createAccumulator()
   if (singlePayload.body) mapOwn(singlePayload.body, makeBody)
@@ -110,13 +110,13 @@ export function send (endpoint, singlePayload, opts, submitMethod, cbFinished) {
   return _send(endpoint, payload, opts, submitMethod, cbFinished)
 }
 
-function _send (endpoint, payload, opts, submitMethod, cbFinished) {
-  var info = config.getInfo()
-  // console.log('info in send!', info)
+function _send(endpoint, payload, opts, submitMethod, cbFinished) {
+  var info = getInfo()
+  // log('info in send!', info)
   if (!info.errorBeacon) return false
 
   if (!payload.body) {
-    // console.log('no payload body')
+    // log('no payload body')
     if (cbFinished) {
       cbFinished({ sent: false })
     }
@@ -125,9 +125,9 @@ function _send (endpoint, payload, opts, submitMethod, cbFinished) {
 
   if (!opts) opts = {}
 
-  // console.log("_send... getScheme!", getScheme())
+  // log("_send... getScheme!", getScheme())
   var url = getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + baseQueryString()
-  if (payload.qs) url += encodeObj(payload.qs, config.runtime.maxBytes)
+  if (payload.qs) url += encodeObj(payload.qs, getRuntime().maxBytes)
 
   if (!submitMethod) {
     submitMethod = getSubmitMethod(endpoint, opts)
@@ -142,14 +142,14 @@ function _send (endpoint, payload, opts, submitMethod, cbFinished) {
   } else if (useBody) {
     body = stringify(payload.body)
   } else {
-    fullUrl = url + encodeObj(payload.body, config.runtime.maxBytes)
+    fullUrl = url + encodeObj(payload.body, getRuntime().maxBytes)
   }
 
   var result = method(fullUrl, body)
 
-  // console.log('result...', result)
+  // log('result...', result)
   if (cbFinished && method === submitData.xhr) {
-    // console.log('in cbFinished')
+    // log('in cbFinished')
     var xhr = result
     xhr.addEventListener('load', function () {
       var result = { sent: true }
@@ -170,7 +170,7 @@ function _send (endpoint, payload, opts, submitMethod, cbFinished) {
   // if beacon request failed, retry with an alternative method
   if (!result && method === submitData.beacon) {
     method = submitData.img
-    result = method(url + encodeObj(payload.body, config.runtime.maxBytes))
+    result = method(url + encodeObj(payload.body, getRuntime().maxBytes))
   }
 
   return result
@@ -214,48 +214,48 @@ export function getSubmitMethod(endpoint, opts) {
 // Constructs the transaction name param for the beacon URL.
 // Prefers the obfuscated transaction name over the plain text.
 // Falls back to making up a name.
-function transactionNameParam (info) {
+function transactionNameParam(info) {
   if (info.transactionName) return encodeParam('to', info.transactionName)
   return encodeParam('t', info.tNamePlain || 'Unnamed Transaction')
 }
 
-export function on (type, listener) {
+export function on(type, listener) {
   var listeners = (_events[type] || (_events[type] = []))
   listeners.push(listener)
 }
 
 export function resetListeners() {
-  mapOwn(_events, function(key) {
+  mapOwn(_events, function (key) {
     _events[key] = []
   })
 }
 
 // The stuff that gets sent every time.
-export function baseQueryString () {
+export function baseQueryString() {
   var areCookiesEnabled = true
-  const init = config.getConfiguration()
+  const init = getConfiguration()
   if ('privacy' in init) {
     areCookiesEnabled = init.privacy.cookies_enabled
   }
 
-  var info = config.getInfo()
+  var info = getInfo()
 
   return ([
     '?a=' + info.applicationID,
     encodeParam('sa', (info.sa ? '' + info.sa : '')),
     encodeParam('v', version),
     transactionNameParam(info),
-    encodeParam('ct', config.runtime.customTransaction),
+    encodeParam('ct', getRuntime().customTransaction),
     '&rst=' + now(),
     '&ck=' + (areCookiesEnabled ? '1' : '0'),
     encodeParam('ref', cleanURL(getLocation())),
-    encodeParam('ptid', (config.runtime.ptid ? '' + config.runtime.ptid : ''))
+    encodeParam('ptid', (getRuntime().ptid ? '' + getRuntime().ptid : ''))
   ].join(''))
 }
 
 // returns a function that can be called to accumulate values to a single object
 // when the function is called without parameters, then the accumulator is returned
-function createAccumulator () {
+function createAccumulator() {
   var accumulator = {}
   var hasData = false
   return function (key, val) {

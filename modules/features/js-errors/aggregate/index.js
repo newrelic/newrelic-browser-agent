@@ -15,12 +15,13 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
 import { mapOwn } from '../../../common/util/map-own'
-import { getInfo, getConfigurationValue, runtime } from '../../../common/config/config'
+import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { ee as baseEE } from '../../../common/event-emitter/contextual-ee'
 import { cleanURL } from '../../../common/url/clean-url'
+import { log } from '../../../common/debug/logging'
 
-console.log('err-aggregate module has been imported!')
+log('err-aggregate module has been imported!')
 var stackReported = {}
 var pageviewReported = {}
 var errorCache = {}
@@ -39,7 +40,7 @@ var errorOnPage = false
 // }
 
 export function initialize(captureGlobal) {
-  console.log('errors has been initialized!')
+  log('errors has been initialized!')
   register('err', storeError)
   register('ierr', storeError)
 
@@ -56,7 +57,7 @@ export function initialize(captureGlobal) {
 }
 
 function onHarvestStarted(options) {
-  console.log('onHarvestStarted!')
+  log('onHarvestStarted!')
   var body = agg.take([ 'err', 'ierr' ])
 
   if (options.retry) {
@@ -64,7 +65,7 @@ function onHarvestStarted(options) {
   }
 
   var payload = { body: body, qs: {} }
-  var releaseIds = stringify(runtime.releaseIds)
+  var releaseIds = stringify(getRuntime().releaseIds)
 
   if (releaseIds !== '{}') {
     payload.qs.ri = releaseIds
@@ -135,7 +136,7 @@ function buildCanonicalStackString (stackInfo, cleanedOrigin) {
 function canonicalizeStackURLs (stackInfo) {
   // Currently, loader.origin might contain a fragment, but we don't want to use it
   // for comparing with frame URLs.
-  var cleanedOrigin = cleanURL(runtime.origin)
+  var cleanedOrigin = cleanURL(getRuntime().origin)
 
   for (var i = 0; i < stackInfo.frames.length; i++) {
     var frame = stackInfo.frames[i]
@@ -153,7 +154,7 @@ function canonicalizeStackURLs (stackInfo) {
 export function storeError (err, time, internal, customAttributes) {
   // are we in an interaction
   time = time || now()
-  if (!internal && runtime.onerror && runtime.onerror(err)) return
+  if (!internal && getRuntime().onerror && getRuntime().onerror(err)) return
 
   var stackInfo = canonicalizeStackURLs(computeStackTrace(err))
   var canonicalStack = buildCanonicalStackString(stackInfo)
@@ -173,7 +174,7 @@ export function storeError (err, time, internal, customAttributes) {
   } else {
     params.browser_stack_hash = stringHashCode(stackInfo.stackString)
   }
-  params.releaseIds = stringify(runtime.releaseIds)
+  params.releaseIds = stringify(getRuntime().releaseIds)
 
   // When debugging stack canonicalization/hashing, uncomment these lines for
   // more output in the test logs

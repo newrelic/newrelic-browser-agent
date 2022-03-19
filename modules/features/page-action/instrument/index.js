@@ -4,8 +4,8 @@
  */
 
 // Turn on feature
-import { runtime } from '../../../common/config/config'
+import { getRuntime } from '../../../common/config/config'
 
 export function initialize() {
-    if (!runtime.disabled) runtime.features.ins = true
+    if (!getRuntime().disabled) getRuntime().features.ins = true
 }

@@ -44,6 +44,7 @@ module.exports = {
       'process.env.SUBPATH': JSON.stringify(process.env.SUBPATH || ''),
       'process.env.VERSION': JSON.stringify(package.version || `-${process.env.VERSION}` || ''),
       'process.env.BUILD': JSON.stringify(process.env.BUILD || 'spa'),
+      'process.env.DEBUG': JSON.stringify(process.env.DEBUG || false),
     }),
     new webpack.SourceMapDevToolPlugin({
       append: '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]',

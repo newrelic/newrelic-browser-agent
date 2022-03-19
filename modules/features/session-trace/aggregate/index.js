@@ -11,10 +11,11 @@ import { stringify } from '../../../common/util/stringify'
 import { parseUrl } from '../../../common/url/parse-url'
 import { supportsPerformanceObserver } from '../../../common/window/supports-performance-observer'
 import slice from 'lodash._slice'
-import { getConfigurationValue, getInfo, runtime } from '../../../common/config/config'
+import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import { findStartTime } from '../../../common/timing/start-time'
 import { now } from '../../../common/timing/now'
+import { log } from '../../../common/debug/logging'
 
 var ptid = ''
 var ignoredEvents = {
@@ -80,9 +81,9 @@ findStartTime()
 export function initialize() {
   if (!xhrUsable) return
   // bail if not instrumented
-  if (!runtime.features.stn) return
+  if (!getRuntime().features.stn) return
 
-  console.log("RUNTIME FEATURES!", runtime.features)
+  log("getRuntime() FEATURES!", getRuntime().features)
 
   ee.on('feat-stn', function () {
     storeTiming(window.performance.timing)
@@ -96,7 +97,7 @@ export function initialize() {
       // start timer only if ptid was returned by server
       if (result.sent && result.responseText && !ptid) {
         ptid = result.responseText
-        runtime.ptid = ptid
+        getRuntime().ptid = ptid
         scheduler.startTimer(harvestTimeSeconds)
       }
 
@@ -154,7 +155,7 @@ function storeTiming(_t, ignoreOffset) {
     // that are in the future (Microsoft Edge seems to sometimes produce these)
     if (!(typeof (val) === 'number' && val > 0 && val < dateNow)) continue
 
-    timeOffset = !ignoreOffset ? _t[key] - runtime.offset : _t[key]
+    timeOffset = !ignoreOffset ? _t[key] - getRuntime().offset : _t[key]
 
     storeSTN({
       n: key,
@@ -337,7 +338,7 @@ function takeSTNs(retry) {
   nodeCount = 0
 
   var stnInfo = {
-    qs: { st: '' + runtime.offset },
+    qs: { st: '' + getRuntime().offset },
     body: { res: stns }
   }
 

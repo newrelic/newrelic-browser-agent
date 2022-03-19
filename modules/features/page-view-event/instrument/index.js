@@ -1,4 +1,5 @@
 
+import { log } from '../../../common/debug/logging'
 import { handle } from '../../../common/event-emitter/handle'
 import { now, getOffset, getLastTimestamp } from '../../../common/timing/now'
 import { onDOMContentLoaded, onWindowLoad } from '../../../common/window/load'
@@ -20,6 +21,6 @@ function measureWindowLoaded() {
 }
 
 function measureDomContentLoaded () {
-  console.log('state change detected that it is LOADED!')
+  log('state change detected that it is LOADED!')
   handle('mark', ['domContent', now() + getOffset()], null, 'api')
 }

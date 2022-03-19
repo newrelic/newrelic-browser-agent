@@ -13,7 +13,6 @@ import { recordSupportability } from '../../../modules/common/metrics/metrics'
 import { now } from '../../../modules/common/timing/now'
 
 export function setAPI() {
-  console.log("set up the API for the CDN!")
   var nr = gosNREUM()
   var tracerEE = ee.get('tracer')
 

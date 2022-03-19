@@ -6,6 +6,7 @@
 import { gosNREUM } from '../window/nreum'
 import { getOrSet } from '../util/get-or-set'
 import { mapOwn } from '../util/map-own'
+import { log } from '../debug/logging'
 
 var ctxId = 'nr@context'
 
@@ -70,7 +71,7 @@ function ee (old, debugId) {
     if (bubble !== false) bubble = true
     if (baseEE.aborted && !force) { return }
     if (old && bubble) old.emit(type, args, contextOrStore)
-    // console.log("continue...")
+    // log("continue...")
 
     var ctx = context(contextOrStore)
     var handlersArray = listeners(type)
@@ -78,14 +79,14 @@ function ee (old, debugId) {
 
     // Extremely verbose debug logging
     // if ([/^xhr/].map(function (match) {return type.match(match)}).filter(Boolean).length) {
-    //  console.log(type + ' args:')
-    //  console.log(args)
-    //  console.log(type + ' handlers array:')
-    //  console.log(handlersArray)
-    //  console.log(type + ' context:')
-    //  console.log(ctx)
-    //  console.log(type + ' ctxStore:')
-    //  console.log(ctxStore)
+    //  log(type + ' args:')
+    //  log(args)
+    //  log(type + ' handlers array:')
+    //  log(handlersArray)
+    //  log(type + ' context:')
+    //  log(ctx)
+    //  log(type + ' ctxStore:')
+    //  log(ctxStore)
     // }
 
     // Apply each handler function in the order they were added
@@ -93,14 +94,14 @@ function ee (old, debugId) {
 
     for (var i = 0; i < len; i++) handlersArray[i].apply(ctx, args)
 
-    // console.log(bufferGroupMap[type])
+    // log(bufferGroupMap[type])
     // Buffer after emitting for consistent ordering
     var bufferGroup = getBuffer()[bufferGroupMap[type]]
     if (bufferGroup) {
       bufferGroup.push([emitter, type, args, ctx])
     }
 
-    // console.log(bufferGroup)
+    // log(bufferGroup)
 
     // Return the context so that the module that emitted can see what was done.
     return ctx
@@ -171,7 +172,7 @@ function getNewContext () {
 // We should drop our data and stop collecting if we still have a backlog, which
 // signifies the rest of the agent wasn't loaded
 function abortIfNotLoaded () {
-  console.log('aborted!')
+  log('aborted!')
   if (baseEE.backlog.api || baseEE.backlog.feature) {
     baseEE.aborted = true
     baseEE.backlog = {}

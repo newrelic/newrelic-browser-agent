@@ -1,10 +1,10 @@
-import { runtime, setConfiguration, setInfo, setLoaderConfig } from '../../../modules/common/config/config'
+import { getRuntime, setConfiguration, setInfo, setLoaderConfig } from '../../../modules/common/config/config'
 import { ieVersion } from '../../../modules/common/browser-version/ie-version'
 import { NrConfig, NrFeatures, NrInfo, NrLoaderConfig, NrStoreError } from './types'
 import { initialize as initializeApi, storeError } from './utils/api-defaults'
 
-if (ieVersion === 6) runtime.maxBytes = 2000
-else runtime.maxBytes = 30000
+if (ieVersion === 6) getRuntime().maxBytes = 2000
+else getRuntime().maxBytes = 30000
 
 let initialized = false
 

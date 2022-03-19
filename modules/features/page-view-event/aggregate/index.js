@@ -7,7 +7,8 @@ import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
 import { addMetric as addPaintMetric } from '../../../common/metrics/paint-metrics'
 import { submitData } from '../../../common/util/submit-data'
-import { getConfigurationValue, getInfo, runtime } from '../../../common/config/config'
+import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
+import { log } from '../../../common/debug/logging'
 
 const getScheme = () => getConfigurationValue('ssl') === false ? 'http' : 'https'
 
@@ -17,15 +18,15 @@ const jsonp = 'NREUM.setToken'
 // nr is injected into all send methods. This allows for easier testing
 // we could require('loader') instead
 export function initialize () {
-  console.log('initialize (send rum)!')
-  console.log("getInfo method...", getInfo)
+  log('initialize (send rum)!')
+  log("getInfo method...", getInfo)
   const info = getInfo()
-  console.log('sendRum info', info)
+  log('sendRum info', info)
   if (!info.beacon) return
   if (info.queueTime) aggregator.store('measures', 'qt', { value: info.queueTime })
   if (info.applicationTime) aggregator.store('measures', 'ap', { value: info.applicationTime })
 
-  console.log('sendRum continue')
+  log('sendRum continue')
   // some time in the past some code will have called stopwatch.mark('starttime', Date.now())
   // calling measure like this will create a metric that measures the time differential between
   // the two marks.
@@ -35,20 +36,20 @@ export function initialize () {
 
   var measuresMetrics = aggregator.get('measures')
 
-  console.log('measureMetrics', measuresMetrics)
+  log('measureMetrics', measuresMetrics)
 
   var measuresQueryString = mapOwn(measuresMetrics, function (metricName, measure) {
     return '&' + metricName + '=' + measure.params.value
   }).join('')
 
-  console.log('measuresQueryString', measuresQueryString)
+  log('measuresQueryString', measuresQueryString)
 
   // if (measuresQueryString) {
   // currently we only have one version of our protocol
   // in the future we may add more
   var protocol = '1'
 
-  var chunksForQueryString = [baseQueryString(runtime)]
+  var chunksForQueryString = [baseQueryString(getRuntime())]
 
   chunksForQueryString.push(measuresQueryString)
 
@@ -56,7 +57,7 @@ export function initialize () {
   chunksForQueryString.push(param('us', info.user))
   chunksForQueryString.push(param('ac', info.account))
   chunksForQueryString.push(param('pr', info.product))
-  chunksForQueryString.push(param('af', mapOwn(runtime.features, function (k) { return k }).join(',')))
+  chunksForQueryString.push(param('af', mapOwn(getRuntime().features, function (k) { return k }).join(',')))
 
   if (window.performance && typeof (window.performance.timing) !== 'undefined') {
     var navTimingApiData = ({
@@ -91,9 +92,9 @@ export function initialize () {
   var customJsAttributes = stringify(info.jsAttributes)
   chunksForQueryString.push(param('ja', customJsAttributes === '{}' ? null : customJsAttributes))
 
-  var queryString = fromArray(chunksForQueryString, runtime.maxBytes)
+  var queryString = fromArray(chunksForQueryString, getRuntime().maxBytes)
 
-  console.log('submitData! -- scheme...', getScheme())
+  log('submitData! -- scheme...', getScheme())
   submitData.jsonp(
     getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString,
     jsonp

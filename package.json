@@ -12,12 +12,17 @@
     "postinstall": "node post-installer && rm -f node_modules/jil && ln -s ../tools/jil node_modules/jil",
     "phantomjs": "phantomjs",
     "lint": "eslint --ext .js .",
+    "lint:fix": "eslint --ext .js . --fix",
     "test-all": "tools/jil/bin/cli.js -b *@*",
     "ci-build": "npm ci --cache ./.npm && gulp build  --no-color",
     "build-tar": "npm run ci-build && tar czf ./build/browser-agent.tar.gz --exclude=.git --exclude=.npm --exclude=build/browser-agent.tar.gz .",
-    "watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests' --run -- npm run build-bundles",
-    "build-bundles": "npm --prefix packages/agent-loader run build && npm --prefix packages/agent-aggregator run build",
-    "test-server": "node ./tools/jil/bin/server"
+    "watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests' --run -- npm run build-cdn:dev",
+    "build-cdn": "npm --prefix cdn run build",
+    "build-cdn:dev": "DEBUG=true npm --prefix cdn run build",
+    "build-packages": "npm --prefix packages/core run build",
+    "local-build-packages": "npm run build-packages && npm --prefix packages/core run pack",
+    "test-server": "node ./tools/jil/bin/server",
+    "sauce:connect": "node ./tools/jil/bin/sauce"
   },
   "bin": {
     "jil": "./tools/jil/bin/cli.js",

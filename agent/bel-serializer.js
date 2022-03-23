@@ -22,6 +22,13 @@ function nullable (val, fn, comma) {
     : '!'
 }
 
+obj = {
+
+  param: 'helllo'
+}
+
+obj.regex('l', `l'`)
+
 function numeric (n, noDefault) {
   if (noDefault) {
     return Math.floor(n).toString(36)

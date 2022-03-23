@@ -13,6 +13,9 @@ var config = require('config')
 var eventListenerOpts = require('event-listener-opts')
 
 var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
+var shouldObfuscate = !!config.getConfiguration('obfuscateUrls')
+
+console.log('shouldOb', shouldObfuscate)
 
 var win = window
 var doc = win.document
@@ -116,3 +119,4 @@ function stateChange () {
 function loaded () {
   handle('mark', ['domContent', now() + exp.offset], null, 'api')
 }
+

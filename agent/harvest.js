@@ -23,6 +23,7 @@ var _events = {}
 var haveSendBeacon = !!navigator.sendBeacon
 var tooManyRequestsDelay = config.getConfiguration('harvest.tooManyRequestsDelay') || 60
 var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
+var shouldObfuscate = !!config.getConfiguration('obfuscateUrls') // {regex, replacement}[]
 
 // requiring ie version updates the IE version on the loader object
 var ieVersion = require('./ie-version')
@@ -44,7 +45,7 @@ module.exports = {
 
 // nr is injected into all send methods. This allows for easier testing
 // we could require('loader') instead
-function sendRUM (nr) {
+function sendRUM(nr) {
   if (!nr.info.beacon) return
   if (nr.info.queueTime) aggregator.store('measures', 'qt', { value: nr.info.queueTime })
   if (nr.info.applicationTime) aggregator.store('measures', 'ap', { value: nr.info.applicationTime })
@@ -88,7 +89,7 @@ function sendRUM (nr) {
     if (window.performance && window.performance.getEntriesByType) {
       var entries = window.performance.getEntriesByType('paint')
       if (entries && entries.length > 0) {
-        entries.forEach(function(entry) {
+        entries.forEach(function (entry) {
           if (!entry.startTime || entry.startTime <= 0) return
 
           if (entry.name === 'first-paint') {
@@ -119,16 +120,16 @@ function sendRUM (nr) {
   }
 }
 
-function sendAllFromUnload (nr) {
+function sendAllFromUnload(nr) {
   var sents = mapOwn(_events, function (endpoint) {
     return sendX(endpoint, nr, { unload: true })
   })
   return reduce(sents, or)
 }
 
-function or (a, b) { return a || b }
+function or(a, b) { return a || b }
 
-function createPayload (type, options) {
+function createPayload(type, options) {
   var makeBody = createAccumulator()
   var makeQueryString = createAccumulator()
   var listeners = (_events[type] && _events[type] || [])
@@ -153,13 +154,13 @@ function createPayload (type, options) {
  * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
  * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
  */
-function sendX (endpoint, nr, opts, cbFinished) {
+function sendX(endpoint, nr, opts, cbFinished) {
   var submitMethod = getSubmitMethod(endpoint, opts)
   if (!submitMethod) return false
   var options = {
     retry: submitMethod.method === submitData.xhr
   }
-  return _send(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished)
+  return shouldObfuscate ? obfuscateAndSend(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished) : _send(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished)
 }
 
 /**
@@ -184,10 +185,47 @@ function send (endpoint, nr, singlePayload, opts, submitMethod, cbFinished) {
   if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
 
   var payload = { body: makeBody(), qs: makeQueryString() }
+  return shouldObfuscate ? obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) : _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
+}
+
+function obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) {
+  var rules = config.getConfiguration('obfuscateUrls')
+  for (var i = 0; i < rules.length; i++) {
+    var regex = rules[i].regex
+    var replacement = rules[i].replacement || '*'
+    console.log(regex, replacement)
+    var obfuscate = function(str) {
+      return str.replace(regex, replacement)
+    }
+
+    if (endpoint === 'ins' && payload.body && payload.body.ins) {
+      for (i = 0; i < payload.body.ins.length; i++) {
+        payload.body.ins[i].currentUrl = obfuscate(payload.body.ins[i].currentUrl)
+        payload.body.ins[i].pageUrl = obfuscate(payload.body.ins[i].pageUrl)
+        payload.body.ins[i].referrerUrl = obfuscate(payload.body.ins[i].referrerUrl)
+      }
+    }
+    if (endpoint === 'events' && payload.body && payload.body.e) {
+      payload.body.e = obfuscate(payload.body.e)
+    }
+    if (endpoint === 'resources' && payload.body && payload.body.res) {
+      for (i = 0; i < payload.body.res.length; i++) {
+        payload.body.res[i].o = obfuscate(payload.body.res[i].o)
+      }
+    }
+    // if (endpoint === 'jserrors' && payload.body && payload.body.xhr) {
+    //   for (i = 0; i < payload.body.xhr.length; i++) {
+    //     payload.body.xhr[i].params.host = obfuscate(payload.body.xhr[i].params.host)
+    //     payload.body.xhr[i].params.hostname = obfuscate(payload.body.xhr[i].params.hostname)
+    //     payload.body.xhr[i].params.pathname = obfuscate(payload.body.xhr[i].params.pathname)
+    //   }
+    // }
+  }
   return _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
 }
 
-function _send (endpoint, nr, payload, opts, submitMethod, cbFinished) {
+function _send(endpoint, nr, payload, opts, submitMethod, cbFinished) {
+  console.log(endpoint, nr, payload)
   if (!nr.info.errorBeacon) return false
 
   if (!payload.body) {
@@ -285,24 +323,24 @@ function getSubmitMethod(endpoint, opts) {
 // Constructs the transaction name param for the beacon URL.
 // Prefers the obfuscated transaction name over the plain text.
 // Falls back to making up a name.
-function transactionNameParam (nr) {
+function transactionNameParam(nr) {
   if (nr.info.transactionName) return encode.param('to', nr.info.transactionName)
   return encode.param('t', nr.info.tNamePlain || 'Unnamed Transaction')
 }
 
-function on (type, listener) {
+function on(type, listener) {
   var listeners = (_events[type] || (_events[type] = []))
   listeners.push(listener)
 }
 
 function resetListeners() {
-  mapOwn(_events, function(key) {
+  mapOwn(_events, function (key) {
     _events[key] = []
   })
 }
 
 // The stuff that gets sent every time.
-function baseQueryString (nr) {
+function baseQueryString(nr) {
   var areCookiesEnabled = true
   if ('init' in NREUM && 'privacy' in NREUM.init) {
     areCookiesEnabled = NREUM.init.privacy.cookies_enabled
@@ -323,7 +361,7 @@ function baseQueryString (nr) {
 
 // returns a function that can be called to accumulate values to a single object
 // when the function is called without parameters, then the accumulator is returned
-function createAccumulator () {
+function createAccumulator() {
   var accumulator = {}
   var hasData = false
   return function (key, val) {

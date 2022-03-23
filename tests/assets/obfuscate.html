@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {config}
+    <script>
+      NREUM.init = {
+      obfuscateUrls: [{
+        regex: /bam-test/g,
+        replacement: 'obfuscated'
+      }, {
+        regex: /fakeid/g
+      } ],
+      ajax: {
+        harvestTimeSeconds: 2,
+        enabled: true
+      }}
+    </script>
+    <script type="text/javascript">
+      setTimeout(function(){
+        fetch('http://fake-route.com/fakeid/login')
+        throw new Error('fakeid')
+        document.getElementById("btn").click()
+      }, 100)
+  </script>
+    {loader}
+  </head>
+  <body>
+    <a id="btn" href="#test">Click Me</a>
+  </body>
+</html>

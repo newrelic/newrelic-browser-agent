@@ -23,7 +23,7 @@ var _events = {}
 var haveSendBeacon = !!navigator.sendBeacon
 var tooManyRequestsDelay = config.getConfiguration('harvest.tooManyRequestsDelay') || 60
 var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
-var shouldObfuscate = !!config.getConfiguration('obfuscateUrls') // {regex, replacement}[]
+var shouldObfuscate = !!config.getConfiguration('obfuscateUrls')
 
 // requiring ie version updates the IE version on the loader object
 var ieVersion = require('./ie-version')
@@ -46,6 +46,7 @@ module.exports = {
 // nr is injected into all send methods. This allows for easier testing
 // we could require('loader') instead
 function sendRUM(nr) {
+  // TODO: filter data from sendRum
   if (!nr.info.beacon) return
   if (nr.info.queueTime) aggregator.store('measures', 'qt', { value: nr.info.queueTime })
   if (nr.info.applicationTime) aggregator.store('measures', 'ap', { value: nr.info.applicationTime })
@@ -188,44 +189,64 @@ function send (endpoint, nr, singlePayload, opts, submitMethod, cbFinished) {
   return shouldObfuscate ? obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) : _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
 }
 
-function obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) {
+// applies all regex obfuscation rules to provided URL string and returns the result
+function obfuscateUrl (urlString) {
+  // if urlString is empty string, null or not a string, return unmodified
+  if (!urlString || typeof urlString !== 'string') return urlString 
+  
   var rules = config.getConfiguration('obfuscateUrls')
+  var obfuscated = urlString
+
+  // apply every rule to URL string
   for (var i = 0; i < rules.length; i++) {
     var regex = rules[i].regex
     var replacement = rules[i].replacement || '*'
-    console.log(regex, replacement)
-    var obfuscate = function(str) {
-      return str.replace(regex, replacement)
-    }
-
-    if (endpoint === 'ins' && payload.body && payload.body.ins) {
-      for (i = 0; i < payload.body.ins.length; i++) {
-        payload.body.ins[i].currentUrl = obfuscate(payload.body.ins[i].currentUrl)
-        payload.body.ins[i].pageUrl = obfuscate(payload.body.ins[i].pageUrl)
-        payload.body.ins[i].referrerUrl = obfuscate(payload.body.ins[i].referrerUrl)
-      }
-    }
-    if (endpoint === 'events' && payload.body && payload.body.e) {
-      payload.body.e = obfuscate(payload.body.e)
-    }
-    if (endpoint === 'resources' && payload.body && payload.body.res) {
-      for (i = 0; i < payload.body.res.length; i++) {
-        payload.body.res[i].o = obfuscate(payload.body.res[i].o)
-      }
-    }
-    // if (endpoint === 'jserrors' && payload.body && payload.body.xhr) {
-    //   for (i = 0; i < payload.body.xhr.length; i++) {
-    //     payload.body.xhr[i].params.host = obfuscate(payload.body.xhr[i].params.host)
-    //     payload.body.xhr[i].params.hostname = obfuscate(payload.body.xhr[i].params.hostname)
-    //     payload.body.xhr[i].params.pathname = obfuscate(payload.body.xhr[i].params.pathname)
-    //   }
-    // }
+    // console.log(regex, replacement)
+    
+    // TODO: document we're using a combination of regex + String.replace.
+    //       are we reinforcing that rules must be regex or can they also be strings?
+    obfuscated = obfuscated.replace(regex, replacement)  
   }
+
+  return obfuscated
+}
+
+function obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) {
+
+  window.NRDEBUG ? window.NRDEBUG('obfuscateAndSend ' + endpoint + ' input payload') : console.log('obfuscateAndSend', endpoint, 'input payload')
+  window.NRDEBUG ? window.NRDEBUG(payload) : console.log(payload)
+
+  if (endpoint === 'ins' && payload.body && payload.body.ins) {
+    for (i = 0; i < payload.body.ins.length; i++) {
+      payload.body.ins[i].currentUrl = obfuscateUrl(payload.body.ins[i].currentUrl)
+      payload.body.ins[i].pageUrl = obfuscateUrl(payload.body.ins[i].pageUrl)
+      payload.body.ins[i].referrerUrl = obfuscateUrl(payload.body.ins[i].referrerUrl)
+    }
+  }
+
+  if (endpoint === 'events' && payload.body && payload.body.e) {
+    payload.body.e = obfuscateUrl(payload.body.e)
+  }
+
+  if (endpoint === 'resources' && payload.body && payload.body.res) {
+    for (i = 0; i < payload.body.res.length; i++) {
+      payload.body.res[i].o = obfuscateUrl(payload.body.res[i].o)
+    }
+  }
+
+  if (endpoint === 'jserrors' && payload.body && payload.body.xhr) {
+    for (i = 0; i < payload.body.xhr.length; i++) {
+      payload.body.xhr[i].params.host = obfuscateUrl(payload.body.xhr[i].params.host)
+      payload.body.xhr[i].params.hostname = obfuscateUrl(payload.body.xhr[i].params.hostname)
+      payload.body.xhr[i].params.pathname = obfuscateUrl(payload.body.xhr[i].params.pathname)
+    }
+  }
+
   return _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
 }
 
 function _send(endpoint, nr, payload, opts, submitMethod, cbFinished) {
-  console.log(endpoint, nr, payload)
+  console.log('_send', endpoint, nr, payload)
   if (!nr.info.errorBeacon) return false
 
   if (!payload.body) {

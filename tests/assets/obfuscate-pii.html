@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<!-- we're using this to test the whole obfuscation process -->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    <!-- Uncomment below for functional test -->
+    {init}
+    {config}
+    <!-- Uncomment below for manual local server test -->
+    <!-- <script>
+      NREUM.init = {
+      obfuscateUrls: [{
+        regex: /bam-test/g,
+        replacement: 'obfuscated'
+      }, {
+        regex: /fakeid/g
+      } ],
+      ajax: {
+        harvestTimeSeconds: 5,
+        enabled: true
+      },
+      jserrors: {
+        harvestTimeSeconds: 5,
+      },
+      ins: {
+        harvestTimeSeconds: 5,
+      }
+    }
+    </script>   -->
+    {loader}
+    <script type="text/javascript">
+      setTimeout(function(){
+        // fetch('http://fake-route.com/fakeid/login')  
+        fetch('/json')
+        throw new Error('example')
+        document.getElementById("btn").click()
+      }, 100)
+    </script>
+    <script>
+      newrelic.addPageAction('pageaction')
+    </script>
+  </head>
+  <body>
+    <a id="btn" href="#test">Click Me</a>
+  </body>
+</html>

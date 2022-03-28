@@ -7,56 +7,79 @@ const testDriver = require('../../tools/jil/index')
 
 const xhrBrowsers = testDriver.Matcher.withFeature('xhr')
 
+// TODO: test obfuscation doesn't break SPA serialize/deserialize
+
 testDriver.test('Obfuscate All Events', xhrBrowsers, function (t, browser, router) {
-  // TODO: include router promises for all harvest types
-   // TODO: load test HTML page that generates all event types
-    //   nr-data.net/events/
-    //    - browserinteraction harvest (includes SPA-associated ajax)
-    //    - non-spa ajax events
-    //    - pageviewtimings
-    //   nr-data.net/err/
-    //    - ajax metrics
-    //    - js error events
-    //   /
-    //   /err/
-  const ajaxPromise = router.expectAjaxEvents() // listening for /events (may specifically be listening for non-spa ajax events)
-  const errorsPromise = router.expectErrors() // errors payload
-  const insPromise = router.expectIns() // ins payload
-  const resourcePromise = router.expectResources() // resource payload
-  const interactionPromise = router.expectEvents() //
+  const spaPromise = router.expectEvents()
+  const ajaxPromise = router.expectAjaxEvents()
   const timingsPromise = router.expectTimings()
+  const errorsPromise = router.expectErrors()
+  const insPromise = router.expectIns()
+  const resourcePromise = router.expectResources()
   const rumPromise = router.expectRum()
-  const loadPromise = browser.safeGet(router.assetURL('obfuscate.html', {
+
+  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii.html', {
     loader: 'spa',
     init: {
       obfuscateUrls: [{
         regex: /bam-test/g,
-        replacement: 'obfuscated'
+        replacement: 'OBFUSCATED'
       }, {
         regex: /fakeid/g
-      } ],
+      }, {
+        regex: /pii/g,
+        replacement: 'OBFUSCATED'
+      }],
       ajax: {
         harvestTimeSeconds: 2,
         enabled: true
-      }}
+      },
+      jserrors: {
+        harvestTimeSeconds: 2,
+      },
+      ins: {
+        harvestTimeSeconds: 2,
+      }
+    }
   }))
 
+  // accepts an object payload, fails test if stringified payload contains data that should be obfuscated
   function checkPayload (payload, name) {
-    t.ok(payload, 'Errors Payload exists')
-    t.ok(!JSON.stringify(payload).includes('bam-test'), `bam-test was obfuscated in ${name}`)
-    t.ok(!JSON.stringify(payload).includes('fakeid'), `fakeid was obfuscated in ${name}`)
+    t.ok(payload, `${name} payload exists`)
+    
+    var strPayload = JSON.stringify(payload)
+    var failed = strPayload.includes('bam-test') || strPayload.includes('fakeid') || strPayload.includes('pii')
+    
+    // TODO: make this logging part of the final test
+    if (failed) {
+      console.log(`${name} failed`, payload)
+    }
+
+    t.ok(!strPayload.includes('pii'), `pii was obfuscated in ${name}`)
+    t.ok(!strPayload.includes('bam-test'), `bam-test was obfuscated in ${name}`)
+    t.ok(!strPayload.includes('fakeid'), `fakeid was obfuscated in ${name}`)
   }
 
-  Promise.all([ajaxPromise, errorsPromise, insPromise, resourcePromise, interactionPromise, timingsPromise, rumPromise, loadPromise])
-    .then(([ajaxResponse, errorsResponse, insResponse, resourceResponse, interactionResponse, timingsResponse, rumResponse]) => {
+  Promise.all([ajaxPromise, errorsPromise, insPromise, resourcePromise, spaPromise, timingsPromise, rumPromise, loadPromise])
+    .then(([ajaxResponse, errorsResponse, insResponse, resourceResponse, spaResponse, timingsResponse, rumResponse, loadPromise]) => {
       // TODO: check that all expected payloads came back
-      checkPayload(rumResponse.query, 'Page View')
-      checkPayload(ajaxResponse.body, 'AJAX')
-      checkPayload(errorsResponse.body, 'Errors')
-      checkPayload(insResponse.body, 'INS')
-      checkPayload(resourceResponse.body, 'Resource')
-      checkPayload(interactionResponse.body, 'Interactions')
-      checkPayload(timingsResponse.body, 'Timings')
+      
+      // Tentatively working
+      // checkPayload(ajaxResponse.body, 'AJAX')
+
+      // To test
+      // checkPayload(errorsResponse.body, 'Errors')
+      // checkPayload(insResponse.body, 'INS body')
+      // checkPayload(resourceResponse.body, 'Resource')
+      // checkPayload(spaResponse.body, 'SPA')
+      // checkPayload(timingsResponse.body, 'Timings')
+      // checkPayload(rumResponse.query, 'RUM') // see harvest.sendRum
+      // See harvest.baseQueryString
+      // checkPayload(errorsResponse.query, 'Errors query')
+      // checkPayload(insResponse.query, 'INS query')
+      // checkPayload(resourceResponse.query, 'Resource query')
+      // checkPayload(spaResponse.query, 'SPA query')
+      // checkPayload(timingsResponse.query, 'Timings query')
       t.end()
     }).catch(err => {
       t.error(err)

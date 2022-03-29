@@ -246,7 +246,6 @@ function obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished)
 }
 
 function _send(endpoint, nr, payload, opts, submitMethod, cbFinished) {
-  console.log('_send', endpoint, nr, payload)
   if (!nr.info.errorBeacon) return false
 
   if (!payload.body) {

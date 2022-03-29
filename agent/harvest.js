@@ -191,6 +191,24 @@ function send (endpoint, nr, singlePayload, opts, submitMethod, cbFinished) {
   return shouldObfuscate ? obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) : _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
 }
 
+// traverses an object and applies a fn to property values of a certain type
+function applyFnToProps(obj, fn, type) {
+  type = type || 'string'
+  return traverse(obj)
+  function traverse(obj) {
+    for (var property in obj) {
+      if (obj.hasOwnProperty(property)) {
+        if (typeof obj[property] === 'object') {
+          traverse(obj[property])
+        } else {
+          if (typeof obj[property] === type) obj[property] = fn(obj[property])
+        }
+      }
+    }
+    return obj
+  }
+}
+
 // applies all regex obfuscation rules to provided URL string and returns the result
 function obfuscateUrl (urlString) {
   // if urlString is empty string, null or not a string, return unmodified
@@ -205,43 +223,12 @@ function obfuscateUrl (urlString) {
     var replacement = rules[i].replacement || '*'
     obfuscated = obfuscated.replace(regex, replacement)
   }
-
   return obfuscated
 }
 
 function obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) {
   if (!payload.body) return _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
-
-  if (endpoint === 'ins' && payload.body.ins) {
-    for (var i = 0; i < payload.body.ins.length; i++) {
-      payload.body.ins[i].currentUrl = obfuscateUrl(payload.body.ins[i].currentUrl)
-      payload.body.ins[i].pageUrl = obfuscateUrl(payload.body.ins[i].pageUrl)
-      payload.body.ins[i].referrerUrl = obfuscateUrl(payload.body.ins[i].referrerUrl)
-    }
-  }
-  if (endpoint === 'events' && payload.body.e) {
-    payload.body.e = obfuscateUrl(payload.body.e)
-  }
-  if (endpoint === 'resources' && payload.body.res) {
-    for (i = 0; i < payload.body.res.length; i++) {
-      payload.body.res[i].o = obfuscateUrl(payload.body.res[i].o)
-    }
-  }
-  if (endpoint === 'jserrors') {
-    if (payload.body.xhr) {
-      for (i = 0; i < payload.body.xhr.length; i++) {
-        payload.body.xhr[i].params.host = obfuscateUrl(payload.body.xhr[i].params.host)
-        payload.body.xhr[i].params.hostname = obfuscateUrl(payload.body.xhr[i].params.hostname)
-        payload.body.xhr[i].params.pathname = obfuscateUrl(payload.body.xhr[i].params.pathname)
-      }
-    }
-    if (payload.body.err) {
-      for (i = 0; i < payload.body.err.length; i++) {
-        payload.body.err[i].params.message = obfuscateUrl(payload.body.err[i].params.message)
-        payload.body.err[i].params.request_uri = obfuscateUrl(payload.body.err[i].params.request_uri)
-      }
-    }
-  }
+  applyFnToProps(payload, obfuscateUrl, 'string')
   return _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
 }
 

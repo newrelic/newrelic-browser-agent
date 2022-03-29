@@ -16,6 +16,7 @@ var locationUtil = require('./location')
 var config = require('config')
 
 var cleanURL = require('./clean-url')
+var metrics = require('metrics')
 
 var version = '<VERSION>'
 var jsonp = 'NREUM.setToken'
@@ -24,6 +25,8 @@ var haveSendBeacon = !!navigator.sendBeacon
 var tooManyRequestsDelay = config.getConfiguration('harvest.tooManyRequestsDelay') || 60
 var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
 var shouldObfuscate = !!config.getConfiguration('obfuscateUrls')
+
+if (shouldObfuscate) metrics.recordSupportability('Generic/ObfuscateUrls/Detected')
 
 // requiring ie version updates the IE version on the loader object
 var ieVersion = require('./ie-version')
@@ -46,7 +49,6 @@ module.exports = {
 // nr is injected into all send methods. This allows for easier testing
 // we could require('loader') instead
 function sendRUM(nr) {
-  // TODO: filter data from sendRum
   if (!nr.info.beacon) return
   if (nr.info.queueTime) aggregator.store('measures', 'qt', { value: nr.info.queueTime })
   if (nr.info.applicationTime) aggregator.store('measures', 'ap', { value: nr.info.applicationTime })
@@ -192,8 +194,8 @@ function send (endpoint, nr, singlePayload, opts, submitMethod, cbFinished) {
 // applies all regex obfuscation rules to provided URL string and returns the result
 function obfuscateUrl (urlString) {
   // if urlString is empty string, null or not a string, return unmodified
-  if (!urlString || typeof urlString !== 'string') return urlString 
-  
+  if (!urlString || typeof urlString !== 'string') return urlString
+
   var rules = config.getConfiguration('obfuscateUrls')
   var obfuscated = urlString
 
@@ -201,47 +203,45 @@ function obfuscateUrl (urlString) {
   for (var i = 0; i < rules.length; i++) {
     var regex = rules[i].regex
     var replacement = rules[i].replacement || '*'
-    // console.log(regex, replacement)
-    
-    // TODO: document we're using a combination of regex + String.replace.
-    //       are we reinforcing that rules must be regex or can they also be strings?
-    obfuscated = obfuscated.replace(regex, replacement)  
+    obfuscated = obfuscated.replace(regex, replacement)
   }
 
   return obfuscated
 }
 
 function obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) {
+  if (!payload.body) return _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
 
-  window.NRDEBUG ? window.NRDEBUG('obfuscateAndSend ' + endpoint + ' input payload') : console.log('obfuscateAndSend', endpoint, 'input payload')
-  window.NRDEBUG ? window.NRDEBUG(payload) : console.log(payload)
-
-  if (endpoint === 'ins' && payload.body && payload.body.ins) {
-    for (i = 0; i < payload.body.ins.length; i++) {
+  if (endpoint === 'ins' && payload.body.ins) {
+    for (var i = 0; i < payload.body.ins.length; i++) {
       payload.body.ins[i].currentUrl = obfuscateUrl(payload.body.ins[i].currentUrl)
       payload.body.ins[i].pageUrl = obfuscateUrl(payload.body.ins[i].pageUrl)
       payload.body.ins[i].referrerUrl = obfuscateUrl(payload.body.ins[i].referrerUrl)
     }
   }
-
-  if (endpoint === 'events' && payload.body && payload.body.e) {
+  if (endpoint === 'events' && payload.body.e) {
     payload.body.e = obfuscateUrl(payload.body.e)
   }
-
-  if (endpoint === 'resources' && payload.body && payload.body.res) {
+  if (endpoint === 'resources' && payload.body.res) {
     for (i = 0; i < payload.body.res.length; i++) {
       payload.body.res[i].o = obfuscateUrl(payload.body.res[i].o)
     }
   }
-
-  if (endpoint === 'jserrors' && payload.body && payload.body.xhr) {
-    for (i = 0; i < payload.body.xhr.length; i++) {
-      payload.body.xhr[i].params.host = obfuscateUrl(payload.body.xhr[i].params.host)
-      payload.body.xhr[i].params.hostname = obfuscateUrl(payload.body.xhr[i].params.hostname)
-      payload.body.xhr[i].params.pathname = obfuscateUrl(payload.body.xhr[i].params.pathname)
+  if (endpoint === 'jserrors') {
+    if (payload.body.xhr) {
+      for (i = 0; i < payload.body.xhr.length; i++) {
+        payload.body.xhr[i].params.host = obfuscateUrl(payload.body.xhr[i].params.host)
+        payload.body.xhr[i].params.hostname = obfuscateUrl(payload.body.xhr[i].params.hostname)
+        payload.body.xhr[i].params.pathname = obfuscateUrl(payload.body.xhr[i].params.pathname)
+      }
+    }
+    if (payload.body.err) {
+      for (i = 0; i < payload.body.err.length; i++) {
+        payload.body.err[i].params.message = obfuscateUrl(payload.body.err[i].params.message)
+        payload.body.err[i].params.request_uri = obfuscateUrl(payload.body.err[i].params.request_uri)
+      }
     }
   }
-
   return _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
 }
 
@@ -367,6 +367,8 @@ function baseQueryString(nr) {
     areCookiesEnabled = NREUM.init.privacy.cookies_enabled
   }
 
+  var ref = shouldObfuscate ? obfuscateUrl(cleanURL(locationUtil.getLocation())) : cleanURL(locationUtil.getLocation())
+
   return ([
     '?a=' + nr.info.applicationID,
     encode.param('sa', (nr.info.sa ? '' + nr.info.sa : '')),
@@ -375,7 +377,7 @@ function baseQueryString(nr) {
     encode.param('ct', nr.customTransaction),
     '&rst=' + nr.now(),
     '&ck=' + (areCookiesEnabled ? '1' : '0'),
-    encode.param('ref', cleanURL(locationUtil.getLocation())),
+    encode.param('ref', ref),
     encode.param('ptid', (nr.ptid ? '' + nr.ptid : ''))
   ].join(''))
 }

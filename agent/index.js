@@ -44,7 +44,8 @@ if (autorun) harvest.sendRUM(loader)
 setTimeout(function() {
   for (var i = 0; i < frameworks.length; i++) {
     metrics.recordSupportability('Framework/' + frameworks[i] + '/Detected')
-  } }, 0)
+  }
+}, 0)
 
 // Set a cookie when the page unloads. Consume this cookie on the next page to get a 'start time'.
 // The navigation start time cookie is removed when the browser supports the web timing API.

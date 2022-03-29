@@ -5,46 +5,53 @@
 -->
 <!-- we're using this to test the whole obfuscation process -->
 <html>
-  <head>
-    <title>RUM Unit Test</title>
-    <!-- Uncomment below for functional test -->
-    {init}
-    {config}
-    <!-- Uncomment below for manual local server test -->
-    <!-- <script>
-      NREUM.init = {
+
+<head>
+  <title>RUM Unit Test</title>
+  <!-- Uncomment below for functional test -->
+  {init}
+  {config}
+  <!-- Uncomment below for manual local server test -->
+  <script>
+    NREUM.init = {
       obfuscateUrls: [{
         regex: /bam-test/g,
-        replacement: 'obfuscated'
+        replacement: 'OBFUSCATED'
       }, {
         regex: /fakeid/g
-      } ],
+      }, {
+        regex: /pii/g,
+        replacement: 'OBFUSCATED'
+      }],
       ajax: {
-        harvestTimeSeconds: 5,
+        harvestTimeSeconds: 2,
         enabled: true
       },
       jserrors: {
-        harvestTimeSeconds: 5,
+        harvestTimeSeconds: 2
       },
       ins: {
-        harvestTimeSeconds: 5,
+        harvestTimeSeconds: 2
       }
     }
-    </script>   -->
-    {loader}
-    <script type="text/javascript">
-      setTimeout(function(){
-        // fetch('http://fake-route.com/fakeid/login')  
-        fetch('/json')
-        throw new Error('example')
-        document.getElementById("btn").click()
-      }, 100)
-    </script>
-    <script>
-      newrelic.addPageAction('pageaction')
-    </script>
-  </head>
-  <body>
-    <a id="btn" href="#test">Click Me</a>
-  </body>
+    
+  </script>
+  {loader}
+  <script type="text/javascript">
+    setTimeout(function () {
+      fetch('/json')
+      throw new Error('example')
+      document.getElementById("btn").click()
+    }, 100)
+  </script>
+  <script>
+    newrelic.addPageAction('pageaction')
+    newrelic.setCustomAttribute('customAttribute', 'customAttribute')
+  </script>
+</head>
+
+<body>
+  <a id="btn" href="#test">Click Me</a>
+</body>
+
 </html>

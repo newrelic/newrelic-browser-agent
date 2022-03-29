@@ -7,8 +7,6 @@ const testDriver = require('../../tools/jil/index')
 
 const xhrBrowsers = testDriver.Matcher.withFeature('xhr')
 
-// TODO: test obfuscation doesn't break SPA serialize/deserialize
-
 testDriver.test('Obfuscate All Events', xhrBrowsers, function (t, browser, router) {
   const spaPromise = router.expectEvents()
   const ajaxPromise = router.expectAjaxEvents()
@@ -35,51 +33,66 @@ testDriver.test('Obfuscate All Events', xhrBrowsers, function (t, browser, route
         enabled: true
       },
       jserrors: {
-        harvestTimeSeconds: 2,
+        harvestTimeSeconds: 2
       },
       ins: {
-        harvestTimeSeconds: 2,
+        harvestTimeSeconds: 2
       }
     }
   }))
 
   // accepts an object payload, fails test if stringified payload contains data that should be obfuscated
-  function checkPayload (payload, name) {
+  function checkPayload(payload, name) {
     t.ok(payload, `${name} payload exists`)
-    
+
     var strPayload = JSON.stringify(payload)
     var failed = strPayload.includes('bam-test') || strPayload.includes('fakeid') || strPayload.includes('pii')
-    
-    // TODO: make this logging part of the final test
+
     if (failed) {
       console.log(`${name} failed`, payload)
     }
 
-    t.ok(!strPayload.includes('pii'), `pii was obfuscated in ${name}`)
-    t.ok(!strPayload.includes('bam-test'), `bam-test was obfuscated in ${name}`)
-    t.ok(!strPayload.includes('fakeid'), `fakeid was obfuscated in ${name}`)
+    t.ok(!strPayload.includes('pii'), `${name} -- pii was obfuscated`)
+    t.ok(!strPayload.includes('bam-test'), `${name} -- bam-test was obfuscated`)
+    t.ok(!strPayload.includes('fakeid'), `${name} -- fakeid was obfuscated`)
   }
 
-  Promise.all([ajaxPromise, errorsPromise, insPromise, resourcePromise, spaPromise, timingsPromise, rumPromise, loadPromise])
-    .then(([ajaxResponse, errorsResponse, insResponse, resourceResponse, spaResponse, timingsResponse, rumResponse, loadPromise]) => {
-      // TODO: check that all expected payloads came back
-      
+  Promise.all([
+    ajaxPromise,
+    errorsPromise,
+    insPromise,
+    resourcePromise,
+    spaPromise,
+    timingsPromise,
+    rumPromise,
+    loadPromise
+  ])
+    .then(([
+      ajaxResponse,
+      errorsResponse,
+      insResponse,
+      resourceResponse,
+      spaResponse,
+      timingsResponse,
+      rumResponse,
+      loadPromise
+    ]) => {
       // Tentatively working
-      // checkPayload(ajaxResponse.body, 'AJAX')
+      checkPayload(ajaxResponse.body, 'AJAX')
 
       // To test
-      // checkPayload(errorsResponse.body, 'Errors')
-      // checkPayload(insResponse.body, 'INS body')
-      // checkPayload(resourceResponse.body, 'Resource')
-      // checkPayload(spaResponse.body, 'SPA')
-      // checkPayload(timingsResponse.body, 'Timings')
-      // checkPayload(rumResponse.query, 'RUM') // see harvest.sendRum
+      checkPayload(errorsResponse.body, 'Errors')
+      checkPayload(insResponse.body, 'INS body')
+      checkPayload(resourceResponse.body, 'Resource')
+      checkPayload(spaResponse.body, 'SPA')
+      checkPayload(timingsResponse.body, 'Timings')
+      checkPayload(rumResponse.query, 'RUM') // see harvest.sendRum
       // See harvest.baseQueryString
-      // checkPayload(errorsResponse.query, 'Errors query')
-      // checkPayload(insResponse.query, 'INS query')
-      // checkPayload(resourceResponse.query, 'Resource query')
-      // checkPayload(spaResponse.query, 'SPA query')
-      // checkPayload(timingsResponse.query, 'Timings query')
+      checkPayload(errorsResponse.query, 'Errors query')
+      checkPayload(insResponse.query, 'INS query')
+      checkPayload(resourceResponse.query, 'Resource query')
+      checkPayload(spaResponse.query, 'SPA query')
+      checkPayload(timingsResponse.query, 'Timings query')
       t.end()
     }).catch(err => {
       t.error(err)

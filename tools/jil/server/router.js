@@ -230,8 +230,6 @@ class RouterHandle {
       }, query.config))).toString('base64')
     })
 
-    console.log('query init', query.init)
-
     if (query.init) {
       _extend(mergedQuery, {
         init: new Buffer(JSON.stringify(query.init)).toString('base64')

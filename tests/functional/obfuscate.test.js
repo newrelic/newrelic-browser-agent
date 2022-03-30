@@ -5,9 +5,9 @@
 
 const testDriver = require('../../tools/jil/index')
 
-const xhrBrowsers = testDriver.Matcher.withFeature('xhr')
+const browsers = testDriver.Matcher.withFeature('fetchExt')
 
-testDriver.test('Obfuscate All Events', xhrBrowsers, function (t, browser, router) {
+testDriver.test('Obfuscate All Events', browsers, function (t, browser, router) {
   const spaPromise = router.expectEvents()
   const ajaxPromise = router.expectAjaxEvents()
   const timingsPromise = router.expectTimings()

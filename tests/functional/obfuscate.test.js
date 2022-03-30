@@ -27,6 +27,15 @@ testDriver.test('Obfuscate All Events', browsers, function (t, browser, router) 
       }, {
         regex: /pii/g,
         replacement: 'OBFUSCATED'
+      }, {
+        regex: /comma/g,
+        replacement: 'invalid,string'
+      }, {
+        regex: /semicolon/g,
+        replacement: 'invalid;string'
+      }, {
+        regex: /backslash/g,
+        replacement: 'invalid\\string'
       }],
       ajax: {
         harvestTimeSeconds: 2,
@@ -77,10 +86,7 @@ testDriver.test('Obfuscate All Events', browsers, function (t, browser, router) 
       rumResponse,
       loadPromise
     ]) => {
-      // Tentatively working
       checkPayload(ajaxResponse.body, 'AJAX')
-
-      // To test
       checkPayload(errorsResponse.body, 'Errors')
       checkPayload(insResponse.body, 'INS body')
       checkPayload(resourceResponse.body, 'Resource')

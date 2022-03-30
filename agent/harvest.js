@@ -16,7 +16,7 @@ var locationUtil = require('./location')
 var config = require('config')
 
 var cleanURL = require('./clean-url')
-var metrics = require('metrics')
+var obfuscate = require('./obfuscate')
 
 var version = '<VERSION>'
 var jsonp = 'NREUM.setToken'
@@ -24,9 +24,6 @@ var _events = {}
 var haveSendBeacon = !!navigator.sendBeacon
 var tooManyRequestsDelay = config.getConfiguration('harvest.tooManyRequestsDelay') || 60
 var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
-var shouldObfuscate = !!config.getConfiguration('obfuscateUrls')
-
-if (shouldObfuscate) metrics.recordSupportability('Generic/ObfuscateUrls/Detected')
 
 // requiring ie version updates the IE version on the loader object
 var ieVersion = require('./ie-version')
@@ -163,7 +160,7 @@ function sendX(endpoint, nr, opts, cbFinished) {
   var options = {
     retry: submitMethod.method === submitData.xhr
   }
-  return shouldObfuscate ? obfuscateAndSend(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished) : _send(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished)
+  return obfuscate.shouldObfuscate ? obfuscateAndSend(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished) : _send(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished)
 }
 
 /**
@@ -188,47 +185,12 @@ function send (endpoint, nr, singlePayload, opts, submitMethod, cbFinished) {
   if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
 
   var payload = { body: makeBody(), qs: makeQueryString() }
-  return shouldObfuscate ? obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) : _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
-}
-
-// traverses an object and applies a fn to property values of a certain type
-function applyFnToProps(obj, fn, type) {
-  type = type || 'string'
-  return traverse(obj)
-  function traverse(obj) {
-    for (var property in obj) {
-      if (obj.hasOwnProperty(property)) {
-        if (typeof obj[property] === 'object') {
-          traverse(obj[property])
-        } else {
-          if (typeof obj[property] === type) obj[property] = fn(obj[property])
-        }
-      }
-    }
-    return obj
-  }
-}
-
-// applies all regex obfuscation rules to provided URL string and returns the result
-function obfuscateUrl (urlString) {
-  // if urlString is empty string, null or not a string, return unmodified
-  if (!urlString || typeof urlString !== 'string') return urlString
-
-  var rules = config.getConfiguration('obfuscateUrls')
-  var obfuscated = urlString
-
-  // apply every rule to URL string
-  for (var i = 0; i < rules.length; i++) {
-    var regex = rules[i].regex
-    var replacement = rules[i].replacement || '*'
-    obfuscated = obfuscated.replace(regex, replacement)
-  }
-  return obfuscated
+  return obfuscate.shouldObfuscate ? obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) : _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
 }
 
 function obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) {
-  if (!payload.body) return _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
-  applyFnToProps(payload, obfuscateUrl, 'string')
+  if (!payload.body || typeof payload.body !== 'object') return _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
+  obfuscate.applyFnToProps(payload, obfuscate.obfuscateUrl, 'string')
   return _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
 }
 
@@ -353,7 +315,7 @@ function baseQueryString(nr) {
     areCookiesEnabled = NREUM.init.privacy.cookies_enabled
   }
 
-  var ref = shouldObfuscate ? obfuscateUrl(cleanURL(locationUtil.getLocation())) : cleanURL(locationUtil.getLocation())
+  var ref = obfuscate.shouldObfuscate ? obfuscate.obfuscateUrl(cleanURL(locationUtil.getLocation())) : cleanURL(locationUtil.getLocation())
 
   return ([
     '?a=' + nr.info.applicationID,

@@ -160,7 +160,7 @@ function sendX(endpoint, nr, opts, cbFinished) {
   var options = {
     retry: submitMethod.method === submitData.xhr
   }
-  return obfuscate.shouldObfuscate ? obfuscateAndSend(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished) : _send(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished)
+  return obfuscate.shouldObfuscate() ? obfuscateAndSend(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished) : _send(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished)
 }
 
 /**
@@ -185,7 +185,7 @@ function send (endpoint, nr, singlePayload, opts, submitMethod, cbFinished) {
   if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
 
   var payload = { body: makeBody(), qs: makeQueryString() }
-  var caller = obfuscate.shouldObfuscate ? obfuscateAndSend : _send
+  var caller = obfuscate.shouldObfuscate() ? obfuscateAndSend : _send
 
   return caller(endpoint, nr, payload, opts, submitMethod, cbFinished)
 }
@@ -317,7 +317,7 @@ function baseQueryString(nr) {
   }
 
   var location = cleanURL(locationUtil.getLocation())
-  var ref = obfuscate.shouldObfuscate ? obfuscate.obfuscateString(location) : location
+  var ref = obfuscate.shouldObfuscate() ? obfuscate.obfuscateString(location) : location
 
   return ([
     '?a=' + nr.info.applicationID,

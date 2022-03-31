@@ -42,11 +42,11 @@ function applyFnToProps(obj, fn, type) {
 }
 
   // applies all regex obfuscation rules to provided URL string and returns the result
-function obfuscateUrl (urlString) {
-    // if urlString is empty string, null or not a string, return unmodified
-  if (!urlString || typeof urlString !== 'string') return urlString
+function obfuscateString (string) {
+    // if string is empty string, null or not a string, return unmodified
+  if (!string || typeof string !== 'string') return string
 
-  var obfuscated = urlString
+  var obfuscated = string
 
     // apply every rule to URL string
   for (var i = 0; i < rules.length; i++) {
@@ -59,6 +59,6 @@ function obfuscateUrl (urlString) {
 
 module.exports = {
   applyFnToProps: applyFnToProps,
-  obfuscateUrl: obfuscateUrl,
+  obfuscateString: obfuscateString,
   shouldObfuscate: shouldObfuscate
 }

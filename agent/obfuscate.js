@@ -28,7 +28,7 @@ function validateRules (rules) {
 
   for (var i = 0; i < rules.length; i++) {
     if (!('regex' in rules[i]) || typeof rules[i].regex !== 'string' || !(rules.regex instanceof RegExp)) {
-      if (console && console.warn) console.warn('')
+      if (console && console.warn) console.warn('Regex: ', rules[i].regex, ' with replacement ', rules[i].replacement, 'invalid')
       invalidRegexDetected = true
     }
 
@@ -86,5 +86,7 @@ function obfuscateString (string) {
 module.exports = {
   applyFnToProps: applyFnToProps,
   obfuscateString: obfuscateString,
-  shouldObfuscate: shouldObfuscate
+  shouldObfuscate: shouldObfuscate,
+  getRules: getRules,
+  validateRules: validateRules
 }

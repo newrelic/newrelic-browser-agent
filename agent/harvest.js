@@ -160,7 +160,7 @@ function sendX(endpoint, nr, opts, cbFinished) {
   var options = {
     retry: submitMethod.method === submitData.xhr
   }
-  return obfuscate.shouldObfuscate ? obfuscateAndSend(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished) : _send(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished)
+  return obfuscate.shouldObfuscate() ? obfuscateAndSend(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished) : _send(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished)
 }
 
 /**
@@ -185,12 +185,13 @@ function send (endpoint, nr, singlePayload, opts, submitMethod, cbFinished) {
   if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
 
   var payload = { body: makeBody(), qs: makeQueryString() }
-  return obfuscate.shouldObfuscate ? obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) : _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
+  var caller = obfuscate.shouldObfuscate() ? obfuscateAndSend : _send
+
+  return caller(endpoint, nr, payload, opts, submitMethod, cbFinished)
 }
 
 function obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) {
-  if (!payload.body || typeof payload.body !== 'object') return _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
-  obfuscate.applyFnToProps(payload, obfuscate.obfuscateUrl, 'string')
+  obfuscate.applyFnToProps(payload, obfuscate.obfuscateString, 'string')
   return _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
 }
 
@@ -315,7 +316,8 @@ function baseQueryString(nr) {
     areCookiesEnabled = NREUM.init.privacy.cookies_enabled
   }
 
-  var ref = obfuscate.shouldObfuscate ? obfuscate.obfuscateUrl(cleanURL(locationUtil.getLocation())) : cleanURL(locationUtil.getLocation())
+  var location = cleanURL(locationUtil.getLocation())
+  var ref = obfuscate.shouldObfuscate() ? obfuscate.obfuscateString(location) : location
 
   return ([
     '?a=' + nr.info.applicationID,

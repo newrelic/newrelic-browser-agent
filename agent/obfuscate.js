@@ -1,25 +1,57 @@
 var config = require('config')
 var metrics = require('metrics')
 
-var shouldObfuscate = !!config.getConfiguration('obfuscateUrls')
-
 var reservedChars = [',', ';', '\\']
-var rules = config.getConfiguration('obfuscateUrls') || []
 
-if (shouldObfuscate) {
-  metrics.recordSupportability('Generic/ObfuscateUrls/Detected')
+if (shouldObfuscate()) metrics.recordSupportability('Generic/ObfuscateUrls/Detected')
+if (validateRules(getRules())) metrics.recordSupportability('Generic/ObfuscateUrls/Invalid')
+
+function shouldObfuscate () {
+  return getRules().length > 0
+}
+
+function getRules () {
+  var rules = []
+  var configRules = config.getConfiguration('obfuscateUrls') || []
+
+  rules = rules.concat(configRules)
+
+  // could add additional runtime/environment-specific rules here
+
+  return rules
+}
+
+// takes array of rule objects, logs warning and returns false if any portion of rule is invalid
+function validateRules (rules) {
   var invalidReplacementDetected = false
+  var invalidRegexDetected = false
   for (var i = 0; i < rules.length; i++) {
-    var replacement = rules[i].replacement || '*'
-    for (var j = 0; j < reservedChars.length; j++) {
-      var reservedChar = reservedChars[j]
-      if (replacement.indexOf(reservedChar) >= 0) {
-        if (console && console.warn) console.warn('An invalid character was included in an obfuscation replacement rule: "' + replacement + '". The following characters can not be used in the "replacement" string: ', reservedChars)
+    if (!('regex' in rules[i])) {
+      if (console && console.warn) console.warn('An obfuscation replacement rule was detected missing a "regex" value.')
+      invalidRegexDetected = true
+    } else if (typeof rules[i].regex !== 'string' && !(rules[i].regex instanceof RegExp)) {
+      if (console && console.warn) console.warn('An obfuscation replacement rule contains a "regex" value with an invalid type (must be a string or RegExp)')
+      invalidRegexDetected = true
+    }
+
+    var replacement = rules[i].replacement
+    if (replacement) {
+      if (typeof replacement !== 'string') {
+        if (console && console.warn) console.warn('An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string)')
         invalidReplacementDetected = true
+      } else {
+        for (var j = 0; j < reservedChars.length; j++) {
+          var reservedChar = reservedChars[j]
+          if (replacement.indexOf(reservedChar) >= 0) {
+            if (console && console.warn) console.warn('An invalid character was included in an obfuscation replacement rule: "' + replacement + '". The following characters can not be used in the "replacement" string: ', reservedChars)
+            invalidReplacementDetected = true
+          }
+        }
       }
     }
   }
-  if (invalidReplacementDetected) metrics.recordSupportability('Generic/ObfuscateUrls/Invalid')
+
+  return !invalidReplacementDetected && !invalidRegexDetected
 }
 
 // traverses an object and applies a fn to property values of a certain type
@@ -42,11 +74,12 @@ function applyFnToProps(obj, fn, type) {
 }
 
   // applies all regex obfuscation rules to provided URL string and returns the result
-function obfuscateUrl (urlString) {
-    // if urlString is empty string, null or not a string, return unmodified
-  if (!urlString || typeof urlString !== 'string') return urlString
+function obfuscateString (string) {
+    // if string is empty string, null or not a string, return unmodified
+  if (!string || typeof string !== 'string') return string
 
-  var obfuscated = urlString
+  var rules = getRules()
+  var obfuscated = string
 
     // apply every rule to URL string
   for (var i = 0; i < rules.length; i++) {
@@ -59,6 +92,8 @@ function obfuscateUrl (urlString) {
 
 module.exports = {
   applyFnToProps: applyFnToProps,
-  obfuscateUrl: obfuscateUrl,
-  shouldObfuscate: shouldObfuscate
+  obfuscateString: obfuscateString,
+  shouldObfuscate: shouldObfuscate,
+  getRules: getRules,
+  validateRules: validateRules
 }

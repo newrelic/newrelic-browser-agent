@@ -25,20 +25,27 @@ function getRules () {
 function validateRules (rules) {
   var invalidReplacementDetected = false
   var invalidRegexDetected = false
-
   for (var i = 0; i < rules.length; i++) {
-    if (!('regex' in rules[i]) || typeof rules[i].regex !== 'string' || !(rules.regex instanceof RegExp)) {
-      if (console && console.warn) console.warn('Regex: ', rules[i].regex, ' with replacement ', rules[i].replacement, 'invalid')
+    if (!('regex' in rules[i])) {
+      if (console && console.warn) console.warn('An obfuscation replacement rule was detected missing a "regex" value.')
+      invalidRegexDetected = true
+    } else if (typeof rules[i].regex !== 'string' && !(rules[i].regex instanceof RegExp)) {
+      if (console && console.warn) console.warn('An obfuscation replacement rule contains a "regex" value with an invalid type (must be a string or RegExp)')
       invalidRegexDetected = true
     }
 
     var replacement = rules[i].replacement
     if (replacement) {
-      for (var j = 0; j < reservedChars.length; j++) {
-        var reservedChar = reservedChars[j]
-        if (replacement.indexOf(reservedChar) >= 0) {
-          if (console && console.warn) console.warn('An invalid character was included in an obfuscation replacement rule: "' + replacement + '". The following characters can not be used in the "replacement" string: ', reservedChars)
-          invalidReplacementDetected = true
+      if (typeof replacement !== 'string') {
+        if (console && console.warn) console.warn('An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string)')
+        invalidReplacementDetected = true
+      } else {
+        for (var j = 0; j < reservedChars.length; j++) {
+          var reservedChar = reservedChars[j]
+          if (replacement.indexOf(reservedChar) >= 0) {
+            if (console && console.warn) console.warn('An invalid character was included in an obfuscation replacement rule: "' + replacement + '". The following characters can not be used in the "replacement" string: ', reservedChars)
+            invalidReplacementDetected = true
+          }
         }
       }
     }

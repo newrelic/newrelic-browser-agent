@@ -4,9 +4,10 @@
  */
 
 const testDriver = require('../../tools/jil/index')
-const {getErrorsFromResponse, getMetricsFromResponse} = require('./err/assertion-helpers')
+const { getErrorsFromResponse, getMetricsFromResponse } = require('./err/assertion-helpers')
 
 let withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
+const fetchBrowsers = testDriver.Matcher.withFeature('fetchExt')
 
 const smLabel = (fn) => `API/${fn}/called`
 
@@ -57,7 +58,121 @@ testDriver.test('Calling a newrelic[api] fn creates a supportability metric', wi
     })
     .catch(fail)
 
-  function fail (err) {
+  function fail(err) {
+    t.error(err)
+    setTimeout(() => {
+      t.end()
+    }, 8000)
+  }
+})
+
+testDriver.test('a valid obfuscationRule creates detected supportability metric', fetchBrowsers, function (t, browser, router) {
+  let rumPromise = router.expectRumAndErrors()
+  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-valid.html', {
+    loader: 'spa',
+    init: {}
+  }))
+
+  Promise.all([rumPromise, loadPromise])
+      .then(([data]) => {
+        var supportabilityMetrics = getMetricsFromResponse(data, true)
+        t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
+        supportabilityMetrics.forEach(sm => {
+          console.log(sm.params.name)
+          t.ok(!sm.params.name.includes('Generic/ObfuscateUrls/Invalid'), sm.params.name + ' contains correct name')
+        })
+        t.end()
+      })
+      .catch(fail)
+
+  function fail(err) {
+    t.error(err)
+    setTimeout(() => {
+      t.end()
+    }, 8000)
+  }
+})
+
+testDriver.test('a comma obfuscationRule creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
+  let rumPromise = router.expectRumAndErrors()
+  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-comma.html', {
+    loader: 'spa',
+    init: {}
+  }))
+
+  Promise.all([rumPromise, loadPromise])
+    .then(([data]) => {
+      var supportabilityMetrics = getMetricsFromResponse(data, true)
+      t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
+      let invalidDetected = false
+      supportabilityMetrics.forEach(sm => {
+        if (sm.params.name.includes('Generic/ObfuscateUrls/Invalid')) invalidDetected = true
+      })
+
+      t.ok(invalidDetected, 'invalid regex rule detected')
+      t.end()
+    })
+    .catch(fail)
+
+  function fail(err) {
+    t.error(err)
+    setTimeout(() => {
+      t.end()
+    }, 8000)
+  }
+})
+
+testDriver.test('a semicolon obfuscationRule creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
+  let rumPromise = router.expectRumAndErrors()
+  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-semicolon.html', {
+    loader: 'spa',
+    init: {}
+  }))
+
+  Promise.all([rumPromise, loadPromise])
+    .then(([data]) => {
+      var supportabilityMetrics = getMetricsFromResponse(data, true)
+      t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
+      let invalidDetected = false
+      supportabilityMetrics.forEach(sm => {
+        if (sm.params.name.includes('Generic/ObfuscateUrls/Invalid')) invalidDetected = true
+      })
+
+      t.ok(invalidDetected, 'invalid regex rule detected')
+      t.end()
+    })
+    .catch(fail)
+
+  function fail(err) {
+    t.error(err)
+    setTimeout(() => {
+      t.end()
+    }, 8000)
+  }
+})
+
+testDriver.test('a backslash obfuscationRule creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
+  let rumPromise = router.expectRumAndErrors()
+  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-backslash.html', {
+    loader: 'spa',
+    init: {}
+  }))
+
+  Promise.all([rumPromise, loadPromise])
+    .then(([data]) => {
+      var supportabilityMetrics = getMetricsFromResponse(data, true)
+      t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
+      let invalidDetected = false
+      supportabilityMetrics.forEach(sm => {
+        if (sm.params.name.includes('Generic/ObfuscateUrls/Invalid')) invalidDetected = true
+      })
+
+      t.ok(invalidDetected, 'invalid regex rule detected')
+      t.end()
+    })
+    .catch(fail)
+
+  function fail(err) {
     t.error(err)
     setTimeout(() => {
       t.end()

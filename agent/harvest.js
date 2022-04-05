@@ -16,6 +16,7 @@ var locationUtil = require('./location')
 var config = require('config')
 
 var cleanURL = require('./clean-url')
+var obfuscate = require('./obfuscate')
 
 var version = '<VERSION>'
 var jsonp = 'NREUM.setToken'
@@ -44,7 +45,7 @@ module.exports = {
 
 // nr is injected into all send methods. This allows for easier testing
 // we could require('loader') instead
-function sendRUM (nr) {
+function sendRUM(nr) {
   if (!nr.info.beacon) return
   if (nr.info.queueTime) aggregator.store('measures', 'qt', { value: nr.info.queueTime })
   if (nr.info.applicationTime) aggregator.store('measures', 'ap', { value: nr.info.applicationTime })
@@ -88,7 +89,7 @@ function sendRUM (nr) {
     if (window.performance && window.performance.getEntriesByType) {
       var entries = window.performance.getEntriesByType('paint')
       if (entries && entries.length > 0) {
-        entries.forEach(function(entry) {
+        entries.forEach(function (entry) {
           if (!entry.startTime || entry.startTime <= 0) return
 
           if (entry.name === 'first-paint') {
@@ -119,16 +120,16 @@ function sendRUM (nr) {
   }
 }
 
-function sendAllFromUnload (nr) {
+function sendAllFromUnload(nr) {
   var sents = mapOwn(_events, function (endpoint) {
     return sendX(endpoint, nr, { unload: true })
   })
   return reduce(sents, or)
 }
 
-function or (a, b) { return a || b }
+function or(a, b) { return a || b }
 
-function createPayload (type, options) {
+function createPayload(type, options) {
   var makeBody = createAccumulator()
   var makeQueryString = createAccumulator()
   var listeners = (_events[type] && _events[type] || [])
@@ -153,13 +154,13 @@ function createPayload (type, options) {
  * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
  * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
  */
-function sendX (endpoint, nr, opts, cbFinished) {
+function sendX(endpoint, nr, opts, cbFinished) {
   var submitMethod = getSubmitMethod(endpoint, opts)
   if (!submitMethod) return false
   var options = {
     retry: submitMethod.method === submitData.xhr
   }
-  return _send(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished)
+  return obfuscate.shouldObfuscate() ? obfuscateAndSend(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished) : _send(endpoint, nr, createPayload(endpoint, options), opts, submitMethod, cbFinished)
 }
 
 /**
@@ -184,10 +185,17 @@ function send (endpoint, nr, singlePayload, opts, submitMethod, cbFinished) {
   if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
 
   var payload = { body: makeBody(), qs: makeQueryString() }
+  var caller = obfuscate.shouldObfuscate() ? obfuscateAndSend : _send
+
+  return caller(endpoint, nr, payload, opts, submitMethod, cbFinished)
+}
+
+function obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) {
+  obfuscate.applyFnToProps(payload, obfuscate.obfuscateString, 'string')
   return _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
 }
 
-function _send (endpoint, nr, payload, opts, submitMethod, cbFinished) {
+function _send(endpoint, nr, payload, opts, submitMethod, cbFinished) {
   if (!nr.info.errorBeacon) return false
 
   if (!payload.body) {
@@ -285,28 +293,31 @@ function getSubmitMethod(endpoint, opts) {
 // Constructs the transaction name param for the beacon URL.
 // Prefers the obfuscated transaction name over the plain text.
 // Falls back to making up a name.
-function transactionNameParam (nr) {
+function transactionNameParam(nr) {
   if (nr.info.transactionName) return encode.param('to', nr.info.transactionName)
   return encode.param('t', nr.info.tNamePlain || 'Unnamed Transaction')
 }
 
-function on (type, listener) {
+function on(type, listener) {
   var listeners = (_events[type] || (_events[type] = []))
   listeners.push(listener)
 }
 
 function resetListeners() {
-  mapOwn(_events, function(key) {
+  mapOwn(_events, function (key) {
     _events[key] = []
   })
 }
 
 // The stuff that gets sent every time.
-function baseQueryString (nr) {
+function baseQueryString(nr) {
   var areCookiesEnabled = true
   if ('init' in NREUM && 'privacy' in NREUM.init) {
     areCookiesEnabled = NREUM.init.privacy.cookies_enabled
   }
+
+  var location = cleanURL(locationUtil.getLocation())
+  var ref = obfuscate.shouldObfuscate() ? obfuscate.obfuscateString(location) : location
 
   return ([
     '?a=' + nr.info.applicationID,
@@ -316,14 +327,14 @@ function baseQueryString (nr) {
     encode.param('ct', nr.customTransaction),
     '&rst=' + nr.now(),
     '&ck=' + (areCookiesEnabled ? '1' : '0'),
-    encode.param('ref', cleanURL(locationUtil.getLocation())),
+    encode.param('ref', ref),
     encode.param('ptid', (nr.ptid ? '' + nr.ptid : ''))
   ].join(''))
 }
 
 // returns a function that can be called to accumulate values to a single object
 // when the function is called without parameters, then the accumulator is returned
-function createAccumulator () {
+function createAccumulator() {
   var accumulator = {}
   var hasData = false
   return function (key, val) {

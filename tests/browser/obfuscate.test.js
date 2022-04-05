@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var test = require('../../tools/jil/browser-test.js')
+var jil = require('jil')
+const matcher = require('jil/util/browser-matcher')
+let supported = matcher.withFeature('obfuscate')
 
-test('Obfuscation validateRules input', function (t) {
+jil.browserTest('Obfuscation validateRules input', supported, function (t) {
   var obfuscate = require('../../agent/obfuscate')
   var validationCases = [
     {

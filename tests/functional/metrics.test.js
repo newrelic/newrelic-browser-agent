@@ -7,6 +7,7 @@ const testDriver = require('../../tools/jil/index')
 const { getErrorsFromResponse, getMetricsFromResponse } = require('./err/assertion-helpers')
 
 let withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
+const fetchBrowsers = testDriver.Matcher.withFeature('fetchExt')
 
 const smLabel = (fn) => `API/${fn}/called`
 
@@ -65,7 +66,7 @@ testDriver.test('Calling a newrelic[api] fn creates a supportability metric', wi
   }
 })
 
-testDriver.test('a valid obfuscationRule creates detected supportability metric', withUnload, function (t, browser, router) {
+testDriver.test('a valid obfuscationRule creates detected supportability metric', fetchBrowsers, function (t, browser, router) {
   let rumPromise = router.expectRumAndErrors()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-valid.html', {
     loader: 'spa',
@@ -92,7 +93,7 @@ testDriver.test('a valid obfuscationRule creates detected supportability metric'
   }
 })
 
-testDriver.test('a comma obfuscationRule creates invalid supportability metric', withUnload, function (t, browser, router) {
+testDriver.test('a comma obfuscationRule creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
   let rumPromise = router.expectRumAndErrors()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-comma.html', {
     loader: 'spa',
@@ -121,7 +122,7 @@ testDriver.test('a comma obfuscationRule creates invalid supportability metric',
   }
 })
 
-testDriver.test('a semicolon obfuscationRule creates invalid supportability metric', withUnload, function (t, browser, router) {
+testDriver.test('a semicolon obfuscationRule creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
   let rumPromise = router.expectRumAndErrors()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-semicolon.html', {
     loader: 'spa',
@@ -150,7 +151,7 @@ testDriver.test('a semicolon obfuscationRule creates invalid supportability metr
   }
 })
 
-testDriver.test('a backslash obfuscationRule creates invalid supportability metric', withUnload, function (t, browser, router) {
+testDriver.test('a backslash obfuscationRule creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
   let rumPromise = router.expectRumAndErrors()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-backslash.html', {
     loader: 'spa',

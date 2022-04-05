@@ -4,7 +4,7 @@ var metrics = require('metrics')
 var reservedChars = [',', ';', '\\']
 
 if (shouldObfuscate()) metrics.recordSupportability('Generic/ObfuscateUrls/Detected')
-if (validateRules(getRules())) metrics.recordSupportability('Generic/ObfuscateUrls/Invalid')
+if (shouldObfuscate() && !validateRules(getRules())) metrics.recordSupportability('Generic/ObfuscateUrls/Invalid')
 
 function shouldObfuscate () {
   return getRules().length > 0
@@ -29,7 +29,7 @@ function validateRules (rules) {
     if (!('regex' in rules[i])) {
       if (console && console.warn) console.warn('An obfuscation replacement rule was detected missing a "regex" value.')
       invalidRegexDetected = true
-    } else if (typeof rules[i].regex !== 'string' && !(rules[i].regex instanceof RegExp)) {
+    } else if (typeof rules[i].regex !== 'string' && !(rules[i].regex.constructor === RegExp)) {
       if (console && console.warn) console.warn('An obfuscation replacement rule contains a "regex" value with an invalid type (must be a string or RegExp)')
       invalidRegexDetected = true
     }

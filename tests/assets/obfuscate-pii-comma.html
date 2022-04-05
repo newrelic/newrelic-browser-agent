@@ -13,25 +13,10 @@
   <!-- Uncomment below for manual local server test -->
   <script>
     NREUM = window.NREUM || {};NREUM.init = {
-      obfuscateUrls: [{
-        regex: /bam-test/g,
-        replacement: 'OBFUSCATED'
-      }, {
-        regex: /fakeid/g
-      }, {
-        regex: /pii/g,
-        replacement: 'OBFUSCATED'
-      },
+      obfuscateUrls: [
       {
         regex: /comma/g,
         replacement: 'invalid,string'
-      },
-      {
-        regex: /semicolon/g,
-        replacement: 'invalid;string'
-      },{
-        regex: /backslash/g,
-        replacement: 'invalid\\string'
       }
     ],
       ajax: {

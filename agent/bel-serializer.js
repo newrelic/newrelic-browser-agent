@@ -5,6 +5,7 @@
 
 var mapOwn = require('map-own')
 var stringify = require('./stringify')
+var obfuscate = require('./obfuscate')
 
 var hasOwnProp = Object.prototype.hasOwnProperty
 var MAX_ATTRIBUTES = 64
@@ -38,6 +39,7 @@ function getAddStringContext () {
   function addString(str) {
     if (typeof str === 'undefined' || str === '') return ''
     str = String(str)
+    if (obfuscate.shouldObfuscate()) str = obfuscate.obfuscateString(str)
     if (hasOwnProp.call(stringTable, str)) {
       return numeric(stringTable[str], true)
     } else {

@@ -79,7 +79,7 @@ testDriver.test('a valid obfuscationRule creates detected supportability metric'
         t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
         supportabilityMetrics.forEach(sm => {
           console.log(sm.params.name)
-          t.ok(!sm.params.name.includes('Generic/ObfuscateUrls/Invalid'), sm.params.name + ' contains correct name')
+          t.ok(!sm.params.name.includes('Generic/Obfuscate/Invalid'), sm.params.name + ' contains correct name')
         })
         t.end()
       })
@@ -106,7 +106,7 @@ testDriver.test('a comma obfuscationRule creates invalid supportability metric',
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
       let invalidDetected = false
       supportabilityMetrics.forEach(sm => {
-        if (sm.params.name.includes('Generic/ObfuscateUrls/Invalid')) invalidDetected = true
+        if (sm.params.name.includes('Generic/Obfuscate/Invalid')) invalidDetected = true
       })
 
       t.ok(invalidDetected, 'invalid regex rule detected')
@@ -135,7 +135,7 @@ testDriver.test('a semicolon obfuscationRule creates invalid supportability metr
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
       let invalidDetected = false
       supportabilityMetrics.forEach(sm => {
-        if (sm.params.name.includes('Generic/ObfuscateUrls/Invalid')) invalidDetected = true
+        if (sm.params.name.includes('Generic/Obfuscate/Invalid')) invalidDetected = true
       })
 
       t.ok(invalidDetected, 'invalid regex rule detected')
@@ -164,7 +164,7 @@ testDriver.test('a backslash obfuscationRule creates invalid supportability metr
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
       let invalidDetected = false
       supportabilityMetrics.forEach(sm => {
-        if (sm.params.name.includes('Generic/ObfuscateUrls/Invalid')) invalidDetected = true
+        if (sm.params.name.includes('Generic/Obfuscate/Invalid')) invalidDetected = true
       })
 
       t.ok(invalidDetected, 'invalid regex rule detected')

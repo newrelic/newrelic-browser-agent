@@ -3,8 +3,8 @@ var metrics = require('metrics')
 
 var reservedChars = [',', ';', '\\']
 
-if (shouldObfuscate()) metrics.recordSupportability('Generic/ObfuscateUrls/Detected')
-if (shouldObfuscate() && !validateRules(getRules())) metrics.recordSupportability('Generic/ObfuscateUrls/Invalid')
+if (shouldObfuscate()) metrics.recordSupportability('Generic/Obfuscate/Detected')
+if (shouldObfuscate() && !validateRules(getRules())) metrics.recordSupportability('Generic/Obfuscate/Invalid')
 
 function shouldObfuscate () {
   return getRules().length > 0
@@ -12,7 +12,7 @@ function shouldObfuscate () {
 
 function getRules () {
   var rules = []
-  var configRules = config.getConfiguration('obfuscateUrls') || []
+  var configRules = config.getConfiguration('obfuscate') || []
 
   rules = rules.concat(configRules)
 

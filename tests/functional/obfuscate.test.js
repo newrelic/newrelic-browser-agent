@@ -19,7 +19,7 @@ testDriver.test('Obfuscate All Events', browsers, function (t, browser, router) 
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii.html', {
     loader: 'spa',
     init: {
-      obfuscateUrls: [{
+      obfuscate: [{
         regex: /bam-test/g,
         replacement: 'OBFUSCATED'
       }, {

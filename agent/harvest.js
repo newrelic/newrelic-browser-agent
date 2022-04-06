@@ -17,6 +17,7 @@ var config = require('config')
 
 var cleanURL = require('./clean-url')
 var obfuscate = require('./obfuscate')
+var applyFnToProps = require('./traverse').applyFnToProps
 
 var version = '<VERSION>'
 var jsonp = 'NREUM.setToken'
@@ -191,7 +192,7 @@ function send (endpoint, nr, singlePayload, opts, submitMethod, cbFinished) {
 }
 
 function obfuscateAndSend(endpoint, nr, payload, opts, submitMethod, cbFinished) {
-  obfuscate.applyFnToProps(payload, obfuscate.obfuscateString, 'string')
+  applyFnToProps(payload, obfuscate.obfuscateString, 'string', ['e'])
   return _send(endpoint, nr, payload, opts, submitMethod, cbFinished)
 }
 

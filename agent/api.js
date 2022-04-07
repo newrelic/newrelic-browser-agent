@@ -18,7 +18,7 @@ var cycle = 0
 var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
 
 harvest.on('jserrors', function () {
-  return { body: agg.take([ 'cm', 'sm' ]) }
+  return { body: agg.take(['cm', 'sm']) }
 })
 
 // process buffered metric data
@@ -50,20 +50,20 @@ function storeEventMetrics(type, name, params, metrics) {
   agg.store(type, name, params, metrics)
 }
 
-function setPageViewName (t, name, host) {
+function setPageViewName(t, name, host) {
   if (typeof name !== 'string') return
   if (name.charAt(0) !== '/') name = '/' + name
   loader.customTransaction = (host || 'http://custom.transaction') + name
 }
 
-function finished (t, providedTime) {
+function finished(t, providedTime) {
   var time = providedTime ? providedTime - loader.offset : t
-  metrics.recordCustom('finished', {time: time})
+  metrics.recordCustom('finished', { time: time })
   addToTrace(t, { name: 'finished', start: time + loader.offset, origin: 'nr' })
-  handle('api-addPageAction', [ time, 'finished' ])
+  handle('api-addPageAction', [time, 'finished'])
 }
 
-function addToTrace (t, evt) {
+function addToTrace(t, evt) {
   if (!(evt && typeof evt === 'object' && evt.name && evt.start)) return
 
   var report = {
@@ -85,7 +85,7 @@ function addToTrace (t, evt) {
 // total_be_time - the total roundtrip time of the remote service call
 // dom_time - the time spent processing the result of the service call (or user defined)
 // fe_time - the time spent rendering the result of the service call (or user defined)
-function inlineHit (t, request_name, queue_time, app_time, total_be_time, dom_time, fe_time) {
+function inlineHit(t, request_name, queue_time, app_time, total_be_time, dom_time, fe_time) {
   request_name = window.encodeURIComponent(request_name)
   cycle += 1
 
@@ -105,12 +105,12 @@ function inlineHit (t, request_name, queue_time, app_time, total_be_time, dom_ti
   submitData.img(url)
 }
 
-function setErrorHandler (t, handler) {
+function setErrorHandler(t, handler) {
   loader.onerror = handler
 }
 
 var releaseCount = 0
-function addRelease (t, name, id) {
+function addRelease(t, name, id) {
   if (++releaseCount > 10) return
   loader.releaseIds[name.slice(-200)] = ('' + id).slice(-200)
 }

@@ -4,7 +4,6 @@
  */
 
 var jil = require('jil')
-var setWindow = require('win').setWindow
 
 const matcher = require('jil/util/browser-matcher')
 let supported = matcher.withFeature('obfuscate')
@@ -13,9 +12,9 @@ var fileLocation = {
   hash: '',
   host: '',
   hostname: '',
-  href: 'file:///Users/jporter/Documents/Code/scratch/noticeErrorTest.html',
+  href: 'file:///Users/jporter/Documents/Code/test.html',
   origin: 'file://',
-  pathname: '/Users/jporter/Documents/Code/scratch/noticeErrorTest.html',
+  pathname: '/Users/jporter/Documents/Code/test.html',
   port: '',
   protocol: 'file:'
 }
@@ -107,7 +106,8 @@ jil.browserTest('Obfuscation validateRules input', supported, function (t) {
 })
 
 jil.browserTest('Should Obfuscate', supported, function (t) {
-  window.NREUM = {
+  const win = require('../../loader/win')
+  win.getWindow().NREUM = {
     init: {
       obfuscate: validationCases.filter(x => x.expected).map(x => x.rule)
     }
@@ -116,13 +116,14 @@ jil.browserTest('Should Obfuscate', supported, function (t) {
   const obfuscate = require('../../agent/obfuscate')
   t.ok(obfuscate.shouldObfuscate(), 'When init.obfuscate is defined, shouldObfuscate is true')
 
-  delete window.NREUM.init.obfuscate
+  delete win.getWindow().NREUM.init.obfuscate
   t.ok(!obfuscate.shouldObfuscate(), 'When init.obfuscate is NOT defined, shouldObfuscate is false')
   t.end()
 })
 
 jil.browserTest('Get Rules', supported, function (t) {
-  window.NREUM = {
+  const win = require('../../loader/win')
+  win.getWindow().NREUM = {
     init: {
       obfuscate: validationCases.filter(x => x.expected).map(x => x.rule)
     }
@@ -131,19 +132,19 @@ jil.browserTest('Get Rules', supported, function (t) {
   const obfuscate = require('../../agent/obfuscate')
   t.ok(!!obfuscate.getRules().length, 'getRules should generate a list of rules from init.obfuscate')
 
-  delete window.NREUM.init.obfuscate
+  delete win.getWindow().NREUM.init.obfuscate
   t.ok(!obfuscate.getRules().length, 'getRules should generate an empty list if init.obfuscate is undefined')
 
-  const origWindow = window
-  setWindow({ ...window, location: { ...fileLocation } })
+  win.setWindow({ ...win.getWindow(), location: { ...fileLocation } })
   t.ok(!!obfuscate.getRules().filter(x => x.regex.source.includes('file')).length, 'getRules should generate a rule for file obfuscation if file protocol is detected')
 
-  setWindow(origWindow)
+  win.resetWindow()
   t.end()
 })
 
 jil.browserTest('Obfuscate String Method', supported, function (t) {
-  window.NREUM = {
+  const win = require('../../loader/win')
+  win.getWindow().NREUM = {
     init: {
       obfuscate: validationCases.filter(x => x.expected).map(x => x.rule)
     }
@@ -155,11 +156,10 @@ jil.browserTest('Obfuscate String Method', supported, function (t) {
   t.ok(!obfuscate.obfuscateString('http://example.com/pii/123').includes('pii'), 'Successfully obfuscates string')
   t.ok(!obfuscate.obfuscateString('http://example.com/abcdefghijklmnopqrstuvwxyz/123').includes('i'), 'Successfully obfuscates regex')
 
-  const origWindow = window
-  setWindow({ ...window, location: { ...fileLocation } })
+  win.setWindow({ ...win.getWindow(), location: { ...fileLocation } })
   delete window.NREUM.init.obfuscate
   t.ok(obfuscate.obfuscateString('file:///Users/jporter/Documents/Code/scratch/noticeErrorTest.html') === 'file://OBFUSCATED', 'Successfully obfuscates file protocol')
 
-  setWindow(origWindow)
+  win.resetWindow()
   t.end()
 })

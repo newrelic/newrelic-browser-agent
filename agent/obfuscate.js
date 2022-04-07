@@ -1,7 +1,13 @@
 var config = require('config')
 var metrics = require('metrics')
+var protocol = require('protocol')
 
 var reservedChars = [',', ';', '\\']
+
+var fileProtocolRule = {
+  regex: /^file:\/\/(.*)/,
+  replacement: 'file://OBFUSCATED'
+}
 
 if (shouldObfuscate()) metrics.recordSupportability('Generic/Obfuscate/Detected')
 if (shouldObfuscate() && !validateRules(getRules())) metrics.recordSupportability('Generic/Obfuscate/Invalid')
@@ -16,6 +22,7 @@ function getRules () {
 
   rules = rules.concat(configRules)
 
+  if (protocol.isFileProtocol()) rules.push(fileProtocolRule)
   // could add additional runtime/environment-specific rules here
 
   return rules

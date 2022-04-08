@@ -1,6 +1,6 @@
 var config = require('config')
 var metrics = require('metrics')
-var protocol = require('protocol')
+var protocol = require('./protocol')
 
 var reservedChars = [',', ';', '\\']
 

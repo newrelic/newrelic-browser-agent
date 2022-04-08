@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-var getWindow = require('win').getWindow
+var getWindow = require('./win').getWindow
 
 module.exports = { isFileProtocol: isFileProtocol }
 

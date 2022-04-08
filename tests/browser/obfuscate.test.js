@@ -106,7 +106,7 @@ jil.browserTest('Obfuscation validateRules input', supported, function (t) {
 })
 
 jil.browserTest('Should Obfuscate', supported, function (t) {
-  const win = require('../../loader/win')
+  const win = require('../../agent/win')
   win.getWindow().NREUM = {
     init: {
       obfuscate: validationCases.filter(x => x.expected).map(x => x.rule)
@@ -122,7 +122,7 @@ jil.browserTest('Should Obfuscate', supported, function (t) {
 })
 
 jil.browserTest('Get Rules', supported, function (t) {
-  const win = require('../../loader/win')
+  const win = require('../../agent/win')
   win.getWindow().NREUM = {
     init: {
       obfuscate: validationCases.filter(x => x.expected).map(x => x.rule)
@@ -143,7 +143,7 @@ jil.browserTest('Get Rules', supported, function (t) {
 })
 
 jil.browserTest('Obfuscate String Method', supported, function (t) {
-  const win = require('../../loader/win')
+  const win = require('../../agent/win')
   win.getWindow().NREUM = {
     init: {
       obfuscate: validationCases.filter(x => x.expected).map(x => x.rule)

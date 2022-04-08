@@ -3,8 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 var getWindow = require('./win').getWindow
+var metrics = require('metrics')
 
-module.exports = { isFileProtocol: isFileProtocol }
+var protocol = {
+  isFileProtocol: isFileProtocol,
+  supportabilityMetricSent: false
+}
+
+module.exports = protocol
+
+if (isFileProtocol()) {
+  metrics.recordSupportability('Generic/FileProtocol/Detected')
+  protocol.supportabilityMetricSent = true
+}
 
 function isFileProtocol () {
   var win = getWindow()

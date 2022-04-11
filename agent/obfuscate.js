@@ -2,8 +2,6 @@ var config = require('config')
 var metrics = require('metrics')
 var protocol = require('./protocol')
 
-var reservedChars = [',', ';', '\\']
-
 var fileProtocolRule = {
   regex: /^file:\/\/(.*)/,
   replacement: 'file://OBFUSCATED'
@@ -46,14 +44,6 @@ function validateRules (rules) {
       if (typeof replacement !== 'string') {
         if (console && console.warn) console.warn('An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string)')
         invalidReplacementDetected = true
-      } else {
-        for (var j = 0; j < reservedChars.length; j++) {
-          var reservedChar = reservedChars[j]
-          if (replacement.indexOf(reservedChar) >= 0) {
-            if (console && console.warn) console.warn('An invalid character was included in an obfuscation replacement rule: "' + replacement + '". The following characters can not be used in the "replacement" string: ', reservedChars)
-            invalidReplacementDetected = true
-          }
-        }
       }
     }
   }

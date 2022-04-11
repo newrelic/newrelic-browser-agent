@@ -44,30 +44,6 @@ var validationCases = [
     }
   },
   {
-    name: 'Invalid replacement character (,)',
-    expected: false,
-    rule: {
-      regex: 'invalid-replacement-character',
-      replacement: ','
-    }
-  },
-  {
-    name: 'Invalid replacement character (;)',
-    expected: false,
-    rule: {
-      regex: 'invalid-replacement-character',
-      replacement: ';'
-    }
-  },
-  {
-    name: 'Invalid replacement character (\\)',
-    expected: false,
-    rule: {
-      regex: 'invalid-replacement-character',
-      replacement: '\\'
-    }
-  },
-  {
     name: 'Invalid replacement type (must be string)',
     expected: false,
     rule: {

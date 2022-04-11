@@ -93,9 +93,9 @@ testDriver.test('a valid obfuscationRule creates detected supportability metric'
   }
 })
 
-testDriver.test('a comma obfuscationRule creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
+testDriver.test('an invalid obfuscation regex type creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
   let rumPromise = router.expectRumAndErrors()
-  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-comma.html', {
+  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-regex-type.html', {
     loader: 'spa',
     init: {}
   }))
@@ -122,9 +122,9 @@ testDriver.test('a comma obfuscationRule creates invalid supportability metric',
   }
 })
 
-testDriver.test('a semicolon obfuscationRule creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
+testDriver.test('an invalid obfuscation regex undefined creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
   let rumPromise = router.expectRumAndErrors()
-  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-semicolon.html', {
+  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-regex-undefined.html', {
     loader: 'spa',
     init: {}
   }))
@@ -151,9 +151,9 @@ testDriver.test('a semicolon obfuscationRule creates invalid supportability metr
   }
 })
 
-testDriver.test('a backslash obfuscationRule creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
+testDriver.test('an invalid obfuscation replacement type creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
   let rumPromise = router.expectRumAndErrors()
-  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-backslash.html', {
+  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-replacement-type.html', {
     loader: 'spa',
     init: {}
   }))

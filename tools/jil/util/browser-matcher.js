@@ -208,7 +208,7 @@ features.fetch = new BrowserMatcher()
 // MDN shows this function as not supported
 // https://developer.mozilla.org/en-US/docs/Web/API/Body/arrayBuffer
 features.fetchExt = features.fetch.and(new BrowserMatcher()
-  .exclude('ios', '<=11')
+  .exclude('ios')
   .exclude('safari', '<11.1') // MDN says no support (11.1 currently latest), but 11.1 is accounted for in the tests
 )
 

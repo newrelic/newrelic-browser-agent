@@ -1,8 +1,8 @@
 ## v1216
 
-* Internal NR Platform release date: TBD
-* Production APM-injected release date: TBD
-* Production Standalone release date: TBD
+* Internal NR Platform release date: 4/19/2022
+* Production APM-injected release date: 4/20/2022
+* Production Standalone release date: 4/27/2022
 
 ### Introduced obfuscation mechanism to payloads
 

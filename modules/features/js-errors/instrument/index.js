@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { global as handle } from '../../../common/event-emitter/handle'
-import { global as ee } from '../../../common/event-emitter/contextual-ee'
+import { handle } from '../../../common/event-emitter/handle'
+import { ee } from '../../../common/event-emitter/contextual-ee'
 import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { getOrSet } from '../../../common/util/get-or-set'
-import { wrapRaf as wrapGlobalRaf, wrapTimer as wrapGlobalTimers, wrapGlobalEvents, wrapXhr } from '../../../common/wrap'
+import { wrapRaf, wrapTimer, wrapGlobalEvents, wrapXhr } from '../../../common/wrap'
 import slice from 'lodash._slice'
 import './debug'
 
@@ -35,8 +35,8 @@ export function initialize() {
   } catch (e) {
     // Only wrap stuff if try/catch gives us useful data. It doesn't in IE < 10.
     if ('stack' in e) {
-      wrapGlobalTimers()
-      wrapGlobalRaf()
+      wrapTimer()
+      wrapRaf()
 
       if ('addEventListener' in window) {
         wrapGlobalEvents()

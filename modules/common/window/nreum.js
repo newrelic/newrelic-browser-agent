@@ -75,6 +75,18 @@ export function gosNREUMOriginals() {
   return nr
 }
 
+export function gosNREUMInitializedAgents(config){
+  let nr = gosNREUM()
+  const externallySupplied = nr.initializedAgents || []
+  
+  nr.initializedAgents = [
+    ...externallySupplied,
+    config
+  ]
+  
+  return nr
+}
+
 export function addToNREUM(fnName, fn){
   let nr = gosNREUM()
   nr[fnName] = fn

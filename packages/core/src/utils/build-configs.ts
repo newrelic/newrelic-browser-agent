@@ -54,7 +54,7 @@ export function buildConfigs(options: NrOptions): { info: NrInfo, config: NrConf
     if (Object.keys(loader_config).includes(key)) loader_config[key] = options[key]
   })
 
-  if (!validateInfo(info) || validateLoaderConfig(loader_config)) console.warn("Missing required config data")
+  if (!validateInfo(info) || !validateLoaderConfig(loader_config)) console.warn("Missing required config data")
   return { info, config, loader_config, disabled: options.disabled }
 }
 
@@ -62,6 +62,6 @@ function validateInfo(info: NrInfo): boolean {
   return !(!info.applicationID || !info.licenseKey || !info.beacon)
 }
 
-function validateLoaderConfig(info: NrLoaderConfig): boolean {
-  return !(!info.applicationID || !info.licenseKey)
+function validateLoaderConfig(loader_config: NrLoaderConfig): boolean {
+  return !(!loader_config.applicationID || !loader_config.licenseKey)
 }

@@ -2,8 +2,7 @@ import { ieVersion } from "../../browser-version/ie-version"
 import { getLastTimestamp } from "../../timing/now"
 import { BUILD, DEBUG } from "../../constants/environment-variables"
 import * as userAgent from '../../util/user-agent'
-import { setValues } from "./set-values"
-import { log } from "../../debug/logging"
+import { setValues, id as agentIdentifier } from "./set-values"
 
 var XHR = window.XMLHttpRequest
 var XHR_PROTO = XHR && XHR.prototype
@@ -21,7 +20,8 @@ const runtimeConfiguration = {
     disabled: undefined,
     ptid: undefined,
     userAgent,
-    debug: DEBUG
+    debug: DEBUG,
+    agentIdentifier
 }
 
 export function getRuntime() {
@@ -29,5 +29,5 @@ export function getRuntime() {
 }
 
 export function setRuntime(obj) {
-    setValues(obj, info)
+    setValues(obj, runtimeConfiguration, 'runtimeConfiguration')
 }

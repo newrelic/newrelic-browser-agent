@@ -2,6 +2,7 @@
 /config
 /tmp
 /.npm
+**/dist
 log
 node_modules
 *.csv

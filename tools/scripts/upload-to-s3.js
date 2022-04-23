@@ -9,6 +9,7 @@ var fs = require('fs')
 var path = require('path')
 var AWS = require('aws-sdk')
 var yargs = require('yargs')
+var generateConfigFile = require('./generate-config').generateConfigFile
 
 var argv = yargs
   .string('bucket')
@@ -31,6 +32,12 @@ var argv = yargs
   .boolean('dev')
   .describe('dev', 'for dev early release directory only, uploads scripts to folder named dev')
   .alias('D', 'dev')
+
+  .string('prepend-config-application-id')
+  .describe('prepend-config-application-id', 'prepend a config object before the script')
+
+  .string('prepend-config-license-key')
+  .describe('prepend-config', 'prepend a config object before the script')
 
   .help('h')
   .alias('h', 'help')
@@ -62,12 +69,17 @@ if (argv['skip-upload-failures']) {
 }
 
 var fileData = {}
-var agentVersion = fs.readFileSync(
-  path.resolve(__dirname, '../../build/build_number'),
-  'utf-8'
-).trim()
+var agentVersion
+try {
+  agentVersion = fs.readFileSync(
+    path.resolve(__dirname, '../../build/build_number'),
+    'utf-8'
+  ).trim()
+} catch (err) {
+  // do nothing
+}
 
-var steps = [ initialize, loadFiles ]
+var steps = argv['dry'] ? [loadFiles] : [initialize, loadFiles]
 steps.push(uploadAllToS3)
 
 asyncForEach(steps, function (fn, next) {
@@ -93,7 +105,7 @@ function initialize(cb) {
   }
 
   var sts = new AWS.STS()
-  sts.assumeRole(roleToAssume, function(err, data) {
+  sts.assumeRole(roleToAssume, function (err, data) {
     if (err) {
       return cb(err)
     } else {
@@ -108,50 +120,58 @@ function initialize(cb) {
   })
 }
 
-function loadFiles (cb) {
+function loadFiles(cb) {
   var allFiles = payloads.concat(loaders).concat(maps)
 
   asyncForEach(allFiles, readFile, cb)
 
-  function readFile (file, next) {
+  function readFile(file, next) {
     fs.readFile(path.resolve(__dirname, '../../build/', file), function (err, data) {
       if (err) return next(err)
-      fileData[file] = data
+      var appId = argv['prepend-config-application-id']
+      var licenseKey = argv['prepend-config-license-key']
+      var shouldPrependConfig = !!appId && !!licenseKey
+      fileData[file] = shouldPrependConfig ? generateConfigFile(appId, licenseKey) + data : data
       next()
     })
   }
 }
 
-function uploadAllToS3 (cb) {
+function uploadAllToS3(cb) {
   var allFiles = payloads.concat(loaders).concat(maps)
 
   asyncForEach(allFiles, function (file, next) {
-    var filename = argv['dev'] === true ? file : getFilenameWithVersion(file, agentVersion)
+    var filename = argv['dev'] === true || !!argv['subpath'] ? file : getFilenameWithVersion(file, agentVersion)
     console.log('uploading ' + filename + ' to S3')
     uploadToS3(argv['bucket'], filename, fileData[file], next)
   }, cb, uploadErrorCallback)
 }
 
-function getFilenameWithVersion (file, version) {
+function getFilenameWithVersion(file, version) {
   var parts = file.split('.')
   return parts[0] + '-' + version + '.' + parts.slice(1).join('.')
 }
 
-function uploadAllLoadersToDB (environment, cb) {
+function uploadAllLoadersToDB(environment, cb) {
   asyncForEach(loaders, function (file, next) {
     var filename = getFilenameWithVersion(file, agentVersion)
     uploadLoaderToDB(filename, fileData[file], environment, next)
   }, cb, uploadErrorCallback)
 }
 
-function uploadToS3 (bucket, key, content, cb) {
+function uploadToS3(bucket, key, content, cb) {
   if (argv['test'] === true) {
     key = 'test/' + key
   }
 
-  if (argv['dev'] === true) {
+  else if (argv['dev'] === true) {
     key = 'dev/' + key
   }
+
+  else if (!!argv['subpath']) {
+    key = argv['subpath'] + '/' + key
+  }
+
 
   var params = {
     Body: content,
@@ -170,8 +190,12 @@ function uploadToS3 (bucket, key, content, cb) {
   s3.putObject(params, cb)
 }
 
-function allAssetFilenames () {
+function allAssetFilenames() {
   var loaderSpecs = require('../../loaders')
+
+  var shouldPrependConfig = !!argv['prepend-config-application-id'] && !!argv['prepend-config-license-key']
+  if (shouldPrependConfig) loaderSpecs = loaderSpecs.filter(spec => spec.name === 'spa')
+
   var loaders = []
   var payloads = []
   var maps = []
@@ -202,12 +226,12 @@ function allAssetFilenames () {
 // If not specified, processing will terminate on the first error.
 // If specified, the errorCallback will be invoked once for each error error,
 // and the done callback will be invoked once each item has been processed.
-function asyncForEach (list, op, done, errorCallback) {
+function asyncForEach(list, op, done, errorCallback) {
   var index = 0
 
   process.nextTick(next)
 
-  function next (err) {
+  function next(err) {
     if (err) {
       if (errorCallback) {
         errorCallback(err)

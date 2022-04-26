@@ -7,5 +7,5 @@
 import { getRuntime } from '../../../common/config/config'
 
 export function initialize() {
-    if (!getRuntime().disabled) getRuntime().features.ins = true
+  if (!getRuntime().disabled) getRuntime().features.ins = true
 }

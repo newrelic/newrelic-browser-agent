@@ -4,9 +4,6 @@ import { handle } from '../../../common/event-emitter/handle'
 import { now, getOffset, getLastTimestamp } from '../../../common/timing/now'
 import { onDOMContentLoaded, onWindowLoad } from '../../../common/window/load'
 
-const win = window
-const doc = win.document
-
 export function initialize() {
   handle('mark', ['firstbyte', getLastTimestamp()], null, 'api')
 

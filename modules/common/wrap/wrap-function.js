@@ -9,6 +9,7 @@ var flag = 'nr@original'
 var has = Object.prototype.hasOwnProperty
 var inWrapper = false
 
+// eslint-disable-next-line
 export default createWrapperWithEmitter
 
 export function createWrapperWithEmitter(emitter, always) {
@@ -105,7 +106,9 @@ function report (args, emitter) {
   emitter || (emitter = ee)
   try {
     emitter.emit('internal-error', args)
-  } catch (err) {}
+  } catch (err) {
+    // do nothing
+  }
 }
 
 function copy (from, to, emitter) {
@@ -113,9 +116,11 @@ function copy (from, to, emitter) {
     // Create accessors that proxy to actual function
     try {
       var keys = Object.keys(from)
+      // eslint-disable-next-line
       keys.forEach(function (key) {
         Object.defineProperty(to, key, {
           get: function () { return from[key] },
+          // eslint-disable-next-line
           set: function (val) { from[key] = val; return val }
         })
       })

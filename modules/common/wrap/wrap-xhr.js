@@ -25,6 +25,7 @@ var READY_STATE_CHANGE = 'readystatechange'
 var handlers = ['onload', 'onerror', 'onabort', 'onloadstart', 'onloadend', 'onprogress', 'ontimeout']
 var pendingXhrs = []
 
+// eslint-disable-next-line
 export default ee
 
 var XHR = window.XMLHttpRequest = function (opts) {
@@ -35,7 +36,9 @@ var XHR = window.XMLHttpRequest = function (opts) {
   } catch (e) {
     try {
       ee.emit('internal-error', [e])
-    } catch (err) {}
+    } catch (err) {
+      // do nothing
+    }
   }
   return xhr
 }

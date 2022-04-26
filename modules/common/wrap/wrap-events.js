@@ -14,6 +14,7 @@ var XHR = XMLHttpRequest
 var ADD_EVENT_LISTENER = 'addEventListener'
 var REMOVE_EVENT_LISTENER = 'removeEventListener'
 
+// eslint-disable-next-line
 export default ee
 
 // Guard against instrumenting environments w/o necessary features
@@ -21,6 +22,7 @@ if ('getPrototypeOf' in Object) {
   findAndWrapNode(document)
   findAndWrapNode(window)
   findAndWrapNode(XHR.prototype)
+  // eslint-disable-next-line
 } else if (XHR.prototype.hasOwnProperty(ADD_EVENT_LISTENER)) {
   wrapNode(window)
   wrapNode(XHR.prototype)
@@ -57,6 +59,7 @@ ee.on(REMOVE_EVENT_LISTENER + '-start', function (args) {
 
 function findAndWrapNode (object) {
   var step = object
+  // eslint-disable-next-line
   while (step && !step.hasOwnProperty(ADD_EVENT_LISTENER)) { step = Object.getPrototypeOf(step) }
   if (step) { wrapNode(step) }
 }

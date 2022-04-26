@@ -84,6 +84,7 @@ function onerrorHandler (message, filename, lineno, column, errorObj) {
     try {
       handle('ierr', [e, now(), true])
     } catch (err) {
+      // do nothing
     }
   }
 

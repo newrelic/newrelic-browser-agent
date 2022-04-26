@@ -22,10 +22,10 @@ export function getLastTimestamp() {
   return lastTimestamp
 }
 
-export function setOffset (val){
+export function setOffset (val) {
   offset = val
 }
 
-export function getOffset (){
+export function getOffset () {
   return offset
 }

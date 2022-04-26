@@ -1,5 +1,5 @@
-import { getRuntime } from "../config/config";
+import { getRuntime } from '../config/config'
 
-export function log(){
-    if (getRuntime().debug) console.debug(...arguments)
+export function log() {
+  if (getRuntime().debug) console.debug(...arguments)
 }

@@ -151,7 +151,9 @@ function subscribeToEvents(ee, handle) {
       } catch (e) {
         try {
           ee.emit('internal-error', [e])
-        } catch (err) {}
+        } catch (err) {
+          // do nothing
+        }
       }
     }
 

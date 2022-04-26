@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getLoaderConfig } from '../../../common/config/config'
+import { getConfiguration, getConfigurationValue, getLoaderConfig } from '../../../common/config/config'
 import { generateSpanId, generateTraceId } from '../../../common/ids/unique-id'
 import { parseUrl } from '../../../common/url/parse-url'
 
@@ -101,7 +101,7 @@ function isAllowedOrigin(parsedOrigin) {
   var dt = getConfigurationValue('distributed_tracing')
 
   if (dt) {
-    dtConfig = nr.init.distributed_tracing
+    dtConfig = getConfiguration().distributed_tracing
   }
 
   if (parsedOrigin.sameOrigin) {

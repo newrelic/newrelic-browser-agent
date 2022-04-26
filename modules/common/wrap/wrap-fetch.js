@@ -9,6 +9,7 @@ import {mapOwn} from '../util/map-own'
 import { originals } from '../config/config'
 export var ee = contextualEE.get('fetch')
 
+// eslint-disable-next-line
 export default ee
 export { wrapFetch as wrap }
 

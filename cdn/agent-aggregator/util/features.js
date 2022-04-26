@@ -1,11 +1,11 @@
 
 export const modules = {
-    pageViewEvent: 'page-view-event', 
-    pageViewTiming: 'page-view-timing', 
-    jsErrors: 'js-errors', 
-    ajax: 'ajax',
-    pageAction: 'page-action',
-    sessionTrace: 'session-trace'
+  pageViewEvent: 'page-view-event',
+  pageViewTiming: 'page-view-timing',
+  jsErrors: 'js-errors',
+  ajax: 'ajax',
+  pageAction: 'page-action',
+  sessionTrace: 'session-trace'
 }
 
 const lite = [modules.pageViewEvent, modules.pageViewTiming]

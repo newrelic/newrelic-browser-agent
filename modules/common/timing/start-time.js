@@ -17,12 +17,12 @@ export let navCookie = true
 findStartTime()
 
 export function findStartTime () {
-  log("FIND START TIME!")
+  log('FIND START TIME!')
   var starttime = findStartWebTiming() || findStartCookie()
 
   if (!starttime) return
 
-  log("mark the start time!")
+  log('mark the start time!')
   mark('starttime', starttime)
   // Refine loader.offset
   // offset = starttime
@@ -36,7 +36,6 @@ function findStartWebTiming () {
   // FF 7/8 has a bug with the navigation start time, so use cookie instead of native interface
   if (ffVersion && ffVersion < 9) return
 
-  
   if (performanceCheckExists) {
     // note that we don't need to use a cookie to record navigation start time
     navCookie = false

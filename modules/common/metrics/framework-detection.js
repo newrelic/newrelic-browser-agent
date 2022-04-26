@@ -1,4 +1,4 @@
-import { recordSupportability } from "./metrics"
+import { recordSupportability } from './metrics'
 
 var FRAMEWORKS = {
   REACT: 'React',
@@ -59,6 +59,7 @@ function detectAngularJs() {
 
 function detectAngular() {
   try {
+    // eslint-disable-next-line
     if (window.hasOwnProperty('ng') && window.ng.hasOwnProperty('coreTokens') && window.ng.coreTokens.hasOwnProperty('NgZone')) return true
     return !!document.querySelectorAll('[ng-version]').length
   } catch (err) {
@@ -67,8 +68,9 @@ function detectAngular() {
   }
 }
 
-export function recordFrameworks(){
-  for (var i = 0; i < getFrameworks().length; i++) {
+export function recordFrameworks() {
+  var frameworks = getFrameworks()
+  for (var i = 0; i < frameworks.length; i++) {
     recordSupportability('Framework/' + frameworks[i] + '/Detected')
   }
 }

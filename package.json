@@ -16,11 +16,17 @@
     "test-all": "tools/jil/bin/cli.js -b *@*",
     "ci-build": "npm ci --cache ./.npm && gulp build  --no-color",
     "build-tar": "npm run ci-build && tar czf ./build/browser-agent.tar.gz --exclude=.git --exclude=.npm --exclude=build/browser-agent.tar.gz .",
-    "watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests' --run -- npm run build-cdn:dev",
-    "build-cdn": "npm --prefix cdn run build",
-    "build-cdn:dev": "DEBUG=true npm --prefix cdn run build",
-    "build-packages": "npm --prefix packages/core run build",
-    "local-build-packages": "npm run build-packages && npm --prefix packages/core run pack",
+    "watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests' --run -- npm run build-mac",
+
+    "cdn:build": "npm --prefix cdn run build",
+    "cdn:build-dev": "DEBUG=true npm --prefix cdn run build",
+    "cdn:watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests' --run -- npm run cdn:build-dev",
+
+    "packages:build": "npm --prefix packages/core run build",
+    "packages:pack": "npm --prefix packages/core run pack",
+    "packages:test": "npm --prefix packages/core run test",
+    "packages:watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests' --run -- npm run build-packages",
+
     "test-server": "node ./tools/jil/bin/server",
     "sauce:connect": "node ./tools/jil/bin/sauce"
   },

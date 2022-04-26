@@ -14,16 +14,14 @@ let config: NrOptions | any = {
 describe('nr interface', () => {
     beforeEach(() => {
         jest.resetModules()
+        jest.resetAllMocks()
     });
 
     it('should not disable features if none are passed', async () => {
         const {default: nr} = await import('./index')
-        const {initialize} = await import('../../../modules/features/js-errors/aggregate')
-        jest.mock('../../../modules/features/js-errors/aggregate')
         const opts = {...config}
         await nr.start(opts)
         expect(nr.features).toContain(NrFeatures.JSERRORS)
-        expect(initialize).toHaveBeenCalled()
     })
 
     it('should disable features based on disabled property of config', async () => {
@@ -64,7 +62,7 @@ describe('nr interface', () => {
 
     it('should use real storeError if initialized', async () => {
         const {default: nr} = await import('./index')
-        const spy = jest.spyOn(console, 'warn')
+        const spy = jest.spyOn(console, 'warn').mockImplementation()
         const opts = {...config}
         await nr.start(opts)
         nr.storeError('test')
@@ -73,7 +71,7 @@ describe('nr interface', () => {
 
     it('should use warning storeError if not initialized', async () => {
         const {default: nr} = await import('./index')
-        const spy = jest.spyOn(console, 'warn')
+        const spy = jest.spyOn(console, 'warn').mockImplementation()
         nr.storeError('test')
         expect(spy).toHaveBeenCalled()
     })

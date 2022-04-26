@@ -39,5 +39,6 @@
   "license": "ISC",
   "files": [
     "dist/"
-  ]
+  ],
+  "sideEffects": ["../../modules/common/wrap/*"]
 }

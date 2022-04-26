@@ -71,7 +71,7 @@ describe('nr interface', () => {
     })
 
     it('should warn if required props are not supplied', async () => {
-        const spy = jest.spyOn(console, 'warn')
+        const spy = jest.spyOn(console, 'warn').mockImplementation()
         // @ts-expect-error
         buildConfigs({...optsConfig})
         expect(spy).toHaveBeenCalled()
@@ -79,7 +79,7 @@ describe('nr interface', () => {
 
     it('should not warn if required props are supplied', async () => {
         buildConfigs(opts)
-        const spy = jest.spyOn(console, 'warn')
+        const spy = jest.spyOn(console, 'warn').mockImplementation()
         expect(spy).not.toHaveBeenCalled()
     })
 })

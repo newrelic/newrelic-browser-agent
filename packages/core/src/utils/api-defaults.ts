@@ -1,16 +1,5 @@
 import { NrFeatures, NrStoreError } from "../types"
 
-// export function recordError(err: string | Error, customAttributes, time) {
-//     if (typeof err === 'string') err = new Error(err)
-//     recordSupportability('API/noticeError/called')
-//     time = time || now()
-//     handle('err', [err, time, false, customAttributes])
-//   }
-  
-// export function recordPageAction() {
-
-// }
-
 let initialized = false
 
 let api: {[keys: string]: null | Function}  = {

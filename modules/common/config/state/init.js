@@ -20,7 +20,7 @@ const init = {
   }
   
   export function setConfiguration(obj) {
-    setValues(obj, init)
+    setValues(obj, init, 'config')
   }
   
   export function getConfigurationValue(path) {

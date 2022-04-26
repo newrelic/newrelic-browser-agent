@@ -1,5 +1,7 @@
 const path = require('path');
 const Dotenv = require('dotenv-webpack');
+const webpack = require('webpack')
+const package = require('./package.json')
 
 module.exports = {
   entry: './dist/index.js',
@@ -14,7 +16,13 @@ module.exports = {
   plugins: [
     new Dotenv({
       path: path.resolve(__dirname, './.env'),
-    })
+    }),
+    new webpack.DefinePlugin({
+      'process.env.SUBPATH': JSON.stringify(process.env.SUBPATH || ''),
+      'process.env.VERSION': JSON.stringify(package.version || `-${process.env.VERSION}` || ''),
+      'process.env.BUILD': JSON.stringify(process.env.BUILD || 'spa'),
+      'process.env.DEBUG': JSON.stringify(process.env.DEBUG || false),
+    }),
   ],
   optimization: {
     minimize: false

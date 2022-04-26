@@ -39,15 +39,10 @@ var errorOnPage = false
 //   storeError: storeError
 // }
 
-export function initialize(captureGlobal) {
+export function initialize() {
   log('errors has been initialized!')
   register('err', storeError)
   register('ierr', storeError)
-
-  if (captureGlobal) {
-    global('err', storeError)
-    global('ierr', storeError)
-  }
 
   var harvestTimeSeconds = getConfigurationValue('jserrors.harvestTimeSeconds') || 10
 

@@ -15,6 +15,6 @@ export function getLoaderConfig() {
   }
   
   export function setLoaderConfig(obj) {
-    setValues(obj, loader_config)
+    setValues(obj, loader_config, 'loader_config')
   }
   

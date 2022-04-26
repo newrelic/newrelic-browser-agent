@@ -30,5 +30,5 @@ export function getInfo() {
 }
 
 export function setInfo(obj) {
-    setValues(obj, info)
+    setValues(obj, info, 'info')
 }

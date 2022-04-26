@@ -1,5 +1,6 @@
 
 import * as env from '../constants/environment-variables'
+import { now } from '../timing/now'
 
 export const defaults = {
   agent:  `js-agent.newrelic.com/${env.SUBPATH}nr${env.VERSION}.min.js`,
@@ -72,6 +73,27 @@ export function gosNREUMOriginals() {
       FETCH: win.fetch
     }
   }
+  return nr
+}
+
+export function gosNREUMInitializedAgents(id, obj, target){
+  let nr = gosNREUM()
+  const externallySupplied = nr.initializedAgents || {}
+  const curr = externallySupplied[id] || {}
+
+  if (!Object.keys(curr).length) curr.initializedAt = {
+    ms: now(),
+    date: new Date()
+  }
+
+  nr.initializedAgents = {
+    ...externallySupplied,
+    [id]: {
+      ...curr,
+      [target]: obj
+    }
+  }
+  
   return nr
 }
 

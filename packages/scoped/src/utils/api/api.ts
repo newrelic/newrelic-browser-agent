@@ -1,4 +1,8 @@
+<<<<<<< HEAD:packages/scoped/src/utils/api/api.ts
 import { NrFeatures, NrStoreError } from "../../types"
+=======
+import { NrFeatures, NrStoreError } from "../types"
+>>>>>>> e9cec65726ffdbc4e906f400634344e62304d2ab:packages/core/src/utils/api-defaults.ts
 
 let initialized = false
 

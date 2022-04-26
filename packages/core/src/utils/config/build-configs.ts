@@ -1,4 +1,4 @@
-import { NrOptions, NrInfo, NrConfig, NrLoaderConfig, NrFeatures } from '../types'
+import { NrOptions, NrInfo, NrConfig, NrLoaderConfig, NrFeatures } from '../../types'
 
 export function buildConfigs(options: NrOptions): { info: NrInfo, config: NrConfig, loader_config: NrLoaderConfig, disabled?: NrFeatures[] } {
   const info: NrInfo = {

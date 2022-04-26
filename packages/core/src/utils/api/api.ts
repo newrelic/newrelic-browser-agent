@@ -1,18 +1,17 @@
-import { NrFeatures, NrStoreError } from "../types"
+import { NrFeatures, NrStoreError } from "../../types"
 
 let initialized = false
 
-let api: {[keys: string]: null | Function}  = {
+export const api: {[keys: string]: null | Function} = {
   storeError: null
 }
 
 export async function initialize(features: NrFeatures[]){
-  console.log("initialized agent! Setting up API!")
   initialized = true
 
   return Promise.all(features.map(async feature => {
     if (feature === NrFeatures.JSERRORS) {
-      const { storeError }: { storeError: NrStoreError, initialize: any } = await import('../../../../modules/features/js-errors/aggregate')
+      const { storeError }: { storeError: NrStoreError } = await import('../../../../../modules/features/js-errors/aggregate')
       api.storeError = storeError
     }
   }))

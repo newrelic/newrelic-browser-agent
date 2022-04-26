@@ -12,7 +12,8 @@ const init = {
       allowed_origins: undefined
     },
     page_view_timing: {enabled: undefined},
-    ssl: undefined
+    ssl: undefined,
+    obfuscate: undefined
   }
 
   export function getConfiguration() {

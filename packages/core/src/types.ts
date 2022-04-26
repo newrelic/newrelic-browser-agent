@@ -2,7 +2,8 @@ export interface NrOptions {
     applicationID: string;
     licenseKey: string;
     beacon: string // sets beacon and errorBeacon
-    sa: number
+    errorBeacon?: string
+    sa?: number
     queueTime?: number; 
     applicationTime?: number; 
     ttGuid?: string ; 
@@ -25,6 +26,8 @@ export interface NrOptions {
         allowed_origins?: string[]
     }
     obfuscate?: {regex: string | RegExp, replacement: string}[]
+    page_view_timing?: { enabled: boolean };
+    ssl?: boolean;
 
     accountID?: string
     trustKey?: string
@@ -84,7 +87,7 @@ export interface NrLoaderConfig extends NrShared {
 }
 
 export enum NrFeatures {
-    JSERRORS='JSERRORS',
+    JSERRORS='js-errors',
     // AJAX='AJAX',
     // PAGE_VIEW_EVENT='PAGE_VIEW_EVENT',
     // PAGE_VIEW_TIMING='PAGE_VIEW_TIMING'

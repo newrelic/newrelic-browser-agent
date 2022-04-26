@@ -10,7 +10,7 @@
     "@babel/plugin-transform-runtime": "^7.17.0",
     "@babel/preset-env": "^7.16.11",
     "@types/jest": "^27.4.1",
-    "babel-jest": "^28.0.0",
+    "babel-jest": "^27.0.0",
     "babel-plugin-add-module-exports": "^1.0.4",
     "babel-polyfill": "^6.26.0",
     "dotenv-webpack": "^7.1.0",
@@ -30,7 +30,7 @@
     "compile": "npx webpack --config ./webpack.config.js",
     "transpile": "npm run clean && tsc",
     "pack": "npm pack && mkdir local-install && mv ./nr-browser-core-*.tgz ./local-install",
-    "clean": "shx rm -rf lib local-install",
+    "clean": "shx rm -rf lib local-install dist",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "test:watch-cover": "jest --watch --coverage"

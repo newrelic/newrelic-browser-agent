@@ -158,6 +158,13 @@ class AgentInjectorTransform extends AssetTransform {
     fs.readFile(loaderPath, callback)
   }
 
+  getScopedModule (callback) {
+    let moduleFilename = 'index.js'
+    let distPath = path.resolve(__dirname, '../../../packages/scoped/dist')
+    let modulePath = path.join(distPath, moduleFilename)
+    fs.readFile(modulePath, callback)
+  }
+
   execute (params, assetPath, ssl, callback) {
     fs.readFile(assetPath, 'utf-8', (err, rawContent) => {
       if (err) return callback(err)
@@ -165,38 +172,44 @@ class AgentInjectorTransform extends AssetTransform {
       let loaderName = params.loader || this.assetServer.defaultLoader
       let injectUpdatedLoaderConfig = (params.injectUpdatedLoaderConfig === 'true')
 
-      this.getLoaderContent(loaderName, (err, loaderContent) => {
+      this.getScopedModule((err, scopedModule) => {
         if (err) return callback(err)
+        this.getLoaderContent(loaderName, (err, loaderContent) => {
+          if (err) return callback(err)
 
-        let configContent = ''
-        try {
-          configContent = this.generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig)
-        } catch (e) {
-          return callback(e)
-        }
-
-        let initContent = ''
-        if (params.init) {
+          let configContent = ''
           try {
-            initContent = this.generateInit(params.init)
+            configContent = this.generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig)
           } catch (e) {
             return callback(e)
           }
-        }
 
-        let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;'
+          let initContent = ''
+          if (params.init) {
+            try {
+              initContent = this.generateInit(params.init)
+            } catch (e) {
+              return callback(e)
+            }
+          }
 
-        let rspData = rawContent
-          .split('{loader}').join(tagify(disableSsl + loaderContent))
-          .replace('{config}', tagify(configContent))
-          .replace('{init}', tagify(initContent))
-          .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
+          let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;'
 
-        callback(null, rspData)
+          let rspData = rawContent
+            .split('{loader}').join(tagify(disableSsl + loaderContent))
+            .replace('{config}', tagify(configContent))
+            .replace('{init}', tagify(initContent))
+            .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
 
-        function tagify (s) {
-          return `<script type="text/javascript">${s}</script>`
-        }
+          rspData = rspData
+            .split('{packages/scoped}').join(tagify(scopedModule))
+
+          callback(null, rspData)
+
+          function tagify (s) {
+            return `<script type="text/javascript">${s}</script>`
+          }
+        })
       })
     })
   }

@@ -5,4 +5,5 @@ tools/scripts/*.js
 sandbox
 post-installer.js
 tests/assets/frameworks/*
-**/packages/*
+**/dist/*
+babel.config.js

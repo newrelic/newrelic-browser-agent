@@ -59,7 +59,7 @@ export function initialize() {
     window.performance.getEntriesByType
   )) return
 
-  log("INITIALIZE SESSION TRACE INSTRUMENTATION!")
+  log('INITIALIZE SESSION TRACE INSTRUMENTATION!')
 
   ee.on(FN_START, function (args, target) {
     var evt = args[0]
@@ -93,7 +93,7 @@ export function initialize() {
   })
 
   ee.on(PUSH_STATE + START, function (args) {
-    this.time = loader.now()
+    this.time = now()
     this.startPath = location.pathname + location.hash
   })
   ee.on(PUSH_STATE + END, function (args) {
@@ -110,7 +110,9 @@ function observeResourceTimings () {
 
   try {
     observer.observe({entryTypes: ['resource']})
-  } catch (e) {}
+  } catch (e) {
+    // do nothing
+  }
 }
 
 function onResourceTimingBufferFull (e) {
@@ -120,11 +122,15 @@ function onResourceTimingBufferFull (e) {
   if (window.performance['c' + learResourceTimings]) {
     try {
       window.performance[REMOVE_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
-    } catch (e) {}
+    } catch (e) {
+      // do nothing
+    }
   } else {
     try {
       window.performance[REMOVE_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
-    } catch (e) {}
+    } catch (e) {
+      // do nothing
+    }
   }
 }
 

@@ -11,6 +11,7 @@ var getContext = getOrSetContext
 var promiseWrapper = wrapFn(promiseEE)
 var OriginalPromise = originals.PR
 
+// eslint-disable-next-line
 export default promiseEE
 
 if (OriginalPromise) {

@@ -83,7 +83,7 @@ export function initialize() {
   // bail if not instrumented
   if (!getRuntime().features.stn) return
 
-  log("getRuntime() FEATURES!", getRuntime().features)
+  log('getRuntime() FEATURES!', getRuntime().features)
 
   ee.on('feat-stn', function () {
     storeTiming(window.performance.timing)

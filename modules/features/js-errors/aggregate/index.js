@@ -9,7 +9,7 @@ import {stringHashCode} from './string-hash-code'
 import { truncateSize } from './format-stack-trace'
 
 import * as agg from '../../../common/aggregate/aggregator'
-import { registerHandler as register, global } from '../../../common/event-emitter/register-handler'
+import { registerHandler as register } from '../../../common/event-emitter/register-handler'
 import { on } from '../../../common/harvest/harvest'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { stringify } from '../../../common/util/stringify'

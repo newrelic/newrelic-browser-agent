@@ -10,6 +10,7 @@ export var ee = contextualEE.get('mutation')
 var wrapFn = wfn(ee)
 var OriginalObserver = originals.MO
 
+// eslint-disable-next-line
 export default ee
 
 if (OriginalObserver) {

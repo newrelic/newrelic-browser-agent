@@ -27,13 +27,13 @@ setInfo({jsAttributes: att})
 if (document.referrer) referrerUrl = cleanURL(document.referrer)
 
 export function initialize() {
-  log("initialize pageActions!")
+  log('initialize pageActions!')
 
   register('api-setCustomAttribute', setCustomAttribute, 'api')
 
   ee.on('feat-ins', function () {
-    log("feat-ins!")
-    // TODO 
+    log('feat-ins!')
+    // TODO
     // Check why this isnt firing when called from the API
     // i think its not getting the NREUM info before making the call to get features
     register('api-addPageAction', addPageAction)
@@ -73,7 +73,7 @@ function onHarvestFinished (result) {
 
 // WARNING: Insights times are in seconds. EXCEPT timestamp, which is in ms.
 function addPageAction (t, name, attributes) {
-  log("add a page action!", t, name, attributes)
+  log('add a page action!', t, name, attributes)
   if (events.length >= eventsPerHarvest) return
   var width
   var height

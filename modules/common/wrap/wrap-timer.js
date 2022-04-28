@@ -14,6 +14,7 @@ var CLEAR_TIMEOUT = 'clearTimeout'
 var START = '-start'
 var DASH = '-'
 
+// eslint-disable-next-line
 export default ee
 
 // log('wrap timer...')

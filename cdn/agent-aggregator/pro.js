@@ -26,23 +26,23 @@ subscribeToUnload(finalHarvest)
 captureSupportabilityMetrics()
 
 async function initializeFeatures() {
-    // load all the features associated with this build type
-    await Promise.all(features[build].map(async feature => {
-        const { initialize } = await import(`../../modules/features/${feature}/aggregate`)
-        initialize()
-    }))
-    // once ALL the features all initialized, drain all the buffers
-    drainAll()
-    // add the activated features from the setToken call to the window for testing purposes
-    addToNREUM('activatedFeatures', activatedFeatures)
+  // load all the features associated with this build type
+  await Promise.all(features[build].map(async feature => {
+    const { initialize } = await import(`../../modules/features/${feature}/aggregate`)
+    initialize()
+  }))
+  // once ALL the features all initialized, drain all the buffers
+  drainAll()
+  // add the activated features from the setToken call to the window for testing purposes
+  addToNREUM('activatedFeatures', activatedFeatures)
 }
 
-function drainAll(){
-    drain('api')
-    drain('feature')
+function drainAll() {
+  drain('api')
+  drain('feature')
 }
 
-function captureSupportabilityMetrics(){
-    recordFrameworks()
-    // others could go here
+function captureSupportabilityMetrics() {
+  recordFrameworks()
+  // others could go here
 }

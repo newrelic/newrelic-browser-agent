@@ -3,6 +3,7 @@
 /config
 /tmp
 /.npm
+**/coverage
 log
 node_modules
 *.csv

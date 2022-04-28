@@ -22,7 +22,9 @@ submitData.xhr = function xhr (url, body, sync) {
   try {
     // Set cookie
     if ('withCredentials' in request) request.withCredentials = true
-  } catch (e) {}
+  } catch (e) {
+    // do nothing
+  }
 
   request.setRequestHeader('content-type', 'text/plain')
   request.send(body)

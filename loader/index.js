@@ -39,7 +39,7 @@ var origin = '' + location
 var defInfo = {
   beacon: 'bam.nr-data.net',
   errorBeacon: 'bam.nr-data.net',
-  agent: `js-agent.newrelic.com/<PATH>nr<EXTENSION>.js`
+  agent: 'js-agent.newrelic.com/<PATH>nr<EXTENSION>.js'
 }
 
 var xhrWrappable = XHR &&

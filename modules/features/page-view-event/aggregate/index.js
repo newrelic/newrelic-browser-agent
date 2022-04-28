@@ -14,12 +14,11 @@ const getScheme = () => getConfigurationValue('ssl') === false ? 'http' : 'https
 
 const jsonp = 'NREUM.setToken'
 
-
 // nr is injected into all send methods. This allows for easier testing
 // we could require('loader') instead
 export function initialize () {
   log('initialize (send rum)!')
-  log("getInfo method...", getInfo)
+  log('getInfo method...', getInfo)
   const info = getInfo()
   log('sendRum info', info)
   if (!info.beacon) return

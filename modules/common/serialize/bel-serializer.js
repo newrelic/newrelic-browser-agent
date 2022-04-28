@@ -30,6 +30,7 @@ export function numeric (n, noDefault) {
 }
 
 export function getAddStringContext () {
+  // eslint-disable-next-line
   var stringTable = Object.hasOwnProperty('create') ? Object.create(null) : {}
   var stringTableIdx = 0
 

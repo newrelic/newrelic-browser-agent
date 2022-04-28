@@ -7,13 +7,13 @@ import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../
 import { now } from '../../../common/timing/now'
 import { mapOwn } from '../../../common/util/map-own'
 import { send as sendHarvest } from '../../../common/harvest/harvest'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler';
-import { defaultRegister as register} from '../../../common/event-emitter/register-handler';
-import { subscribeToUnload }  from '../../../common/unload/unload';
-import { cleanURL } from '../../../common/url/clean-url';
-import { handle } from '../../../common/event-emitter/handle';
-import { getInfo } from '../../../common/config/config';
-import { log } from '../../../common/debug/logging';
+import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
+import { defaultRegister as register } from '../../../common/event-emitter/register-handler'
+import { subscribeToUnload } from '../../../common/unload/unload'
+import { cleanURL } from '../../../common/url/clean-url'
+import { handle } from '../../../common/event-emitter/handle'
+import { getInfo } from '../../../common/config/config'
+import { log } from '../../../common/debug/logging'
 
 export var timings = []
 var timingsSent = []
@@ -31,14 +31,16 @@ export function initialize(options) {
 
   try {
     clsSupported = PerformanceObserver.supportedEntryTypes.includes('layout-shift') // eslint-disable-line no-undef
-  } catch (e) {}
+  } catch (e) {
+    // do nothing
+  }
 
   if (!options) options = {}
   var maxLCPTimeSeconds = options.maxLCPTimeSeconds || 60
   var initialHarvestSeconds = options.initialHarvestSeconds || 10
   harvestTimeSeconds = options.harvestTimeSeconds || 30
 
-  log("pvt init")
+  log('pvt init')
   var scheduler = new HarvestScheduler('events', { onFinished: onHarvestFinished, getPayload: prepareHarvest })
 
   register('timing', processTiming)
@@ -98,7 +100,7 @@ function recordLcp() {
 }
 
 function updateLatestLcp(lcpEntry, networkInformation) {
-    log("updateLatestLcp")
+  log('updateLatestLcp')
   if (lcp) {
     var previous = lcp[0]
     if (previous.size >= lcpEntry.size) {
@@ -110,7 +112,7 @@ function updateLatestLcp(lcpEntry, networkInformation) {
 }
 
 function updateClsScore(clsEntry) {
-    log("updateClsScore", arguments)
+  log('updateClsScore', arguments)
   // this used to be cumulative for the whole page, now we need to split it to a
   // new CLS measurement after 1s between shifts or 5s total
   if ((clsEntry.startTime - clsSession.lastEntryTime) > 1000 ||
@@ -138,7 +140,7 @@ function recordUnload() {
 }
 
 export function addTiming(name, value, attrs, addCls) {
-  log("add timing")
+  log('add timing')
   attrs = attrs || {}
   // collect 0 only when CLS is supported, since 0 is a valid score
   if ((cls > 0 || clsSupported) && addCls) {
@@ -155,7 +157,7 @@ export function addTiming(name, value, attrs, addCls) {
 }
 
 function processTiming(name, value, attrs) {
-    log("processTiming", name, value)
+  log('processTiming', name, value)
   // Upon user interaction, the Browser stops executing LCP logic, so we can send here
   // We're using setTimeout to give the Browser time to finish collecting LCP value
   if (name === 'fi') {
@@ -178,7 +180,7 @@ export function finalHarvest() {
   recordLcp()
   recordUnload()
   var payload = prepareHarvest({ retry: false })
-  sendHarvest('events', loader, payload, { unload: true })
+  sendHarvest('events', payload, { unload: true })
 }
 
 function appendGlobalCustomAttributes(timing) {
@@ -196,7 +198,7 @@ function appendGlobalCustomAttributes(timing) {
 
 // serialize and return current timing data, clear and save current data for retry
 function prepareHarvest(options) {
-    log("timings.length", timings.length)
+  log('timings.length', timings.length)
   if (timings.length === 0) return
 
   var payload = getPayload(timings)
@@ -208,7 +210,6 @@ function prepareHarvest(options) {
   timings = []
   return { body: { e: payload } }
 }
-
 
 // serialize array of timing data
 export function getPayload(data) {

@@ -15,10 +15,6 @@ import { initialize as instrumentPageViewTiming } from '../../modules/features/p
 
 // set up the window.NREUM object that is specifically for the CDN build
 const nr = gosCDN()
-  
-if (!(nr.info && nr.info.licenseKey && nr.info.applicationID)) {
-    ee.abort()
-}
 
 // set configuration from global NREUM.init (When building CDN specifically)
 setInfo(nr.info)
@@ -28,7 +24,7 @@ setLoaderConfig(nr.loader_config)
 // add api calls to the NREUM object
 setAPI()
 
-if (!protocolAllowed(window.location)) { //file: protocol
+if (!protocolAllowed(window.location)) { // file: protocol
   // shut down the protocol if not allowed here...
 }
 
@@ -41,6 +37,6 @@ onWindowLoad(importAggregator)
 
 let loadFired = 0
 export async function importAggregator () {
-    if (loadFired++) return
-    await import('../agent-aggregator/lite')
+  if (loadFired++) return
+  await import('../agent-aggregator/lite')
 }

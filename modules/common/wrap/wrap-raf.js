@@ -11,6 +11,7 @@ var wrapFn = wfn(ee)
 
 var equestAnimationFrame = 'equestAnimationFrame'
 
+// eslint-disable-next-line
 export default ee
 
 wrapFn.inPlace(window, [

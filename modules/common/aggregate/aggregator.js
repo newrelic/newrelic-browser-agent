@@ -25,7 +25,7 @@ export { mergeMetrics as merge }
 
 // store a single metric not tied to an event, metric values are stored in a single `stats` object property
 export function storeMetric (type, name, params, value) {
-  log("store metric not tied to an event", type, name)
+  log('store metric not tied to an event', type, name)
   var bucket = getBucket(type, name, params)
   bucket.stats = updateMetric(value, bucket.stats)
   return bucket
@@ -33,7 +33,7 @@ export function storeMetric (type, name, params, value) {
 
 // store multiple metrics tied to an event, metrics are stored in a `metrics` property (map of name-stats metrics)
 function storeEventMetrics (type, name, params, newMetrics, customParams) {
-  log("storeEventMetrics", type, name)
+  log('storeEventMetrics', type, name)
   var bucket = getBucket(type, name, params, customParams)
   bucket.metrics = aggregateMetrics(newMetrics, bucket.metrics)
   return bucket

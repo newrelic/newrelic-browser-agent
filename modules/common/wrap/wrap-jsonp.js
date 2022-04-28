@@ -10,6 +10,7 @@ import {createWrapperWithEmitter as wfn} from './wrap-function'
 export var ee = contextualEE.get('jsonp')
 var wrapFn = wfn(ee)
 
+// eslint-disable-next-line
 export default ee
 
 var CALLBACK_REGEX = /[?&](?:callback|cb)=([^&#]+)/

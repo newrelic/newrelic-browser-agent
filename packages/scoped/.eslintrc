@@ -7,7 +7,8 @@
   "extends": ["eslint:recommended", "plugin:import/recommended"],
   "env": {
     "browser": true,
-    "node": true
+    "node": true,
+    "jest": true
   },
   "globals": {
     "NREUM": true,
@@ -21,9 +22,7 @@
     "no-wrap-func": 0,
     "camelcase": 0,
     "no-warning-comments": ["warn"],
-    "no-restricted-syntax": ["warn", {
-      "selector": "ExportDefaultDeclaration",
-      "message": "Prefer named exports"
-    }]
-  }
+    "no-restricted-syntax": ["error", "ExportDefaultDeclaration"],
+    "no-restricted-imports": ["error"]
+  },
 }

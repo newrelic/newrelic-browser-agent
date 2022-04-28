@@ -9,7 +9,7 @@ import { setAPI } from './utils/api'
 import { gosCDN } from '../../modules/common/window/nreum'
 import { protocolAllowed } from '../../modules/common/url/protocol-allowed'
 import { onWindowLoad } from '../../modules/common/window/load'
-import { runtime, setConfiguration, setInfo, setLoaderConfig } from '../../modules/common/config/config'
+import { setConfiguration, setInfo, setLoaderConfig } from '../../modules/common/config/config'
 // feature modules
 import { initialize as instrumentPageViewEvent } from '../../modules/features/page-view-event/instrument'
 import { initialize as instrumentPageViewTiming } from '../../modules/features/page-view-timing/instrument'

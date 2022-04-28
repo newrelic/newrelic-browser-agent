@@ -12,7 +12,7 @@ import { log } from '../debug/logging'
 // var drain = require('./drain')
 
 export function activateFeatures (flags) {
-  log("ACTIVATE FEATURES!", flags)
+  log('ACTIVATE FEATURES!', flags)
   if (!(flags && typeof flags === 'object')) return
   mapOwn(flags, function (flag, val) {
     if (!val || activatedFeatures[flag]) return

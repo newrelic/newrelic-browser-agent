@@ -9,6 +9,7 @@ import {createWrapperWithEmitter as wfn} from './wrap-function'
 export var ee = contextualEE.get('history')
 var wrapFn = wfn(ee)
 
+// eslint-disable-next-line
 export default ee
 
 var prototype = window.history && window.history.constructor && window.history.constructor.prototype

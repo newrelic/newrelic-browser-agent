@@ -16,7 +16,7 @@ var handlers = defaultRegister.handlers = {}
 var globalHandlers = globalRegister.handlers = {}
 
 export function defaultRegister (type, handler, group, ee) {
-  log("register...", type)
+  log('register...', type)
   registerWithSpecificEmitter(ee || handleEE, handlers, type, handler, group)
 }
 

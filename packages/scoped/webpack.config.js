@@ -13,7 +13,10 @@ module.exports = {
       type: 'umd'
     }
   },
-
+  watch: !!process.env.WATCH,
+  watchOptions: {
+    ignored: ['**/node_modules', '**/dist', '**/coverage']
+  },
   plugins: [
     new Dotenv({
       path: path.resolve(__dirname, './.env')

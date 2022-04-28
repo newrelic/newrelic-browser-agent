@@ -4,6 +4,7 @@ import { NrConfig, NrFeatures, NrInfo, NrLoaderConfig, NrOptions } from './types
 import { initialize as initializeApi, storeError } from './utils/api/api'
 import { buildConfigs } from './utils/config/build-configs'
 import { initializeFeatures } from './utils/features/initialize'
+import { gosNREUMInitializedAgents } from '../../../modules/common/window/nreum'
 
 if (ieVersion === 6) getRuntime().maxBytes = 2000
 else getRuntime().maxBytes = 30000
@@ -34,7 +35,8 @@ export default nr
 async function initialize(options: NrOptions) {
   try {
     if (initialized) return false
-    const { info, config, loader_config, disabled } = buildConfigs(options)
+    initialized = true
+    const { info, config, loader_config, disabled, initializationID } = buildConfigs(options)
     if (info) setInfo(info)
     if (config) setConfiguration(config)
     if (loader_config) setLoaderConfig(config)
@@ -45,9 +47,11 @@ async function initialize(options: NrOptions) {
       })
     }
 
-    await initializeFeatures(_enabledFeatures)
+    const initializedFeatures = await initializeFeatures(_enabledFeatures)
     await initializeApi(_enabledFeatures)
-    initialized = true
+    
+    gosNREUMInitializedAgents(initializationID, initializedFeatures, 'features')
+
     return true
   } catch (err) {
     return false

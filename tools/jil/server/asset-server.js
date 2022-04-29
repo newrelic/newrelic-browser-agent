@@ -202,7 +202,7 @@ class AgentInjectorTransform extends AssetTransform {
             .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
 
           rspData = rspData
-            .split('{packages/scoped}').join(tagify(scopedModule))
+            .split('{packages/scoped}').join(tagify(disableSsl + scopedModule))
 
           callback(null, rspData)
 
@@ -233,7 +233,7 @@ class BrowserifyTransform extends AssetTransform {
     let b = browserify({debug: true, extensions: ['.js']})
     b.transform(babelify.configure({
       extensions: ['.js'],
-      only: /tests|tools/
+      only: /tests|tools|modules/
     }))
     b.transform(preprocessify())
     b.add(assetPath)
@@ -484,7 +484,7 @@ class AssetServer extends BaseServer {
       this.serveIndex(req, rsp, ssl)
     } else if (parsedUrl.pathname.slice(0, 7) === '/build/') {
       this.serveBuiltAsset(req, rsp, ssl)
-    } else if (this.findDynamicRoute(req)) {
+    } else if (this.findDynamicRoute(req)) {      
       let route = this.findDynamicRoute(req)
       route.service(req, rsp, ssl)
     } else {

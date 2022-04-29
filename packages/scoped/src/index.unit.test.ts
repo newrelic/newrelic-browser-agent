@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-
+declare var window: any
 import { NrFeatures, NrOptions } from './types';
 
 let config: NrOptions | any = {
@@ -15,6 +15,7 @@ describe('nr interface', () => {
     beforeEach(() => {
         jest.resetModules()
         jest.resetAllMocks()
+        delete window.NREUM
     });
 
     it('should not disable features if none are passed', async () => {
@@ -46,7 +47,7 @@ describe('nr interface', () => {
     it('should not set invalid internal config values', async () => {
         const {default: nr} = await import('./index')
         const opts = {...config, invalidProperty: 'invalid'}
-        await nr.start(config)
+        await nr.start(opts)
         expect(nr.config.info).not.toHaveProperty('invalidProperty')
     })
 
@@ -74,5 +75,27 @@ describe('nr interface', () => {
         const spy = jest.spyOn(console, 'warn').mockImplementation()
         nr.storeError('test')
         expect(spy).toHaveBeenCalled()
+    })
+
+    it('should store initialized features in window.NREUM', async () => {
+        const {default: nr} = await import('./index')
+        const opts = {...config}
+        await nr.start(opts)
+
+        const {initializedAgents} = window.NREUM
+        Object.values(initializedAgents).forEach((x: any) => {
+            expect(x.features).toContain(NrFeatures.JSERRORS)
+        })
+    })
+
+    it('should store not store disabled features in window.NREUM', async () => {
+        const {default: nr} = await import('./index')
+        const opts = {...config, disabled: [NrFeatures.JSERRORS]}
+        await nr.start(opts)
+        
+        const {initializedAgents} = window.NREUM
+        Object.values(initializedAgents).forEach((x: any) => {
+            expect(x.features).not.toContain(NrFeatures.JSERRORS)
+        })
     })
 })

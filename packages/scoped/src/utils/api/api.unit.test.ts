@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import 'babel-polyfill'
-const { NrFeatures } = require('../../types')
+import { NrFeatures } from '../../types'
 
 describe('API', () => {
   beforeEach(() => {

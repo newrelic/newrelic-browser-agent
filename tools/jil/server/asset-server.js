@@ -484,7 +484,7 @@ class AssetServer extends BaseServer {
       this.serveIndex(req, rsp, ssl)
     } else if (parsedUrl.pathname.slice(0, 7) === '/build/') {
       this.serveBuiltAsset(req, rsp, ssl)
-    } else if (this.findDynamicRoute(req)) {      
+    } else if (this.findDynamicRoute(req)) {
       let route = this.findDynamicRoute(req)
       route.service(req, rsp, ssl)
     } else {

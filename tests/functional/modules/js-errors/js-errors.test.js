@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../../tools/jil/index')
-const {assertErrorAttributes, getErrorsFromResponse} = require('../../err/assertion-helpers')
+const {getErrorsFromResponse} = require('../../err/assertion-helpers')
 
 var es6 = testDriver.Matcher.withFeature('es6')
 

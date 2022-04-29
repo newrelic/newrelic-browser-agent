@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.common.json",
+  "exclude": [
+    "src/**/*.unit.test.ts"
+  ]
+}

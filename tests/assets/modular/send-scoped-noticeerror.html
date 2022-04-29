@@ -6,12 +6,14 @@
 <html>
   <head>
     <title>Fetch Unit Test</title>
+    {init}
+    {config}
     {packages/scoped}
     <script>
       const init = {
-        beacon: 'localhost:8181',
-        applicationID: 1,
-        licenseKey: 123
+        ...NREUM.init,
+        ...NREUM.info,
+        ...NREUM.loader_config
       }
       nrBrowserCore.default.start(init).then(() => {
         let err = new Error('hello')

@@ -350,3 +350,12 @@ features.frameworks = new BrowserMatcher()
   .include('safari', 'latest')
   .include('android', 'latest')
   .include('edge', 'latest')
+
+  features.es6 = new BrowserMatcher()
+    .exclude('*')
+    .include('chrome', '>=51')
+    .include('safari', '>=10')
+    .include('firefox', '>=54')
+    .include('edge', '>15')
+    .include('ios', '>=10')
+

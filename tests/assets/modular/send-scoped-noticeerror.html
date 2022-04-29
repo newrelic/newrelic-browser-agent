@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Fetch Unit Test</title>
+    {init}
+    {config}
+    {packages/scoped}
+    <script>
+      const init = {
+        ...NREUM.init,
+        ...NREUM.info,
+        ...NREUM.loader_config
+      }
+      nrBrowserCore.default.start(init).then(() => {
+        let err = new Error('hello')
+        nrBrowserCore.default.storeError(err)
+      })
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

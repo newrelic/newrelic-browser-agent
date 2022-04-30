@@ -15,9 +15,8 @@
     <script>
       const {default: nr} = nrBrowserScoped;
       const opts = {
-        ...NREUM.init,
-        ...NREUM.info,
-        ...NREUM.loader_config
+        invalidArg1: 1,
+        invalidArg2: 2
       };
       nr.start(opts).then(() => {
         let err = new Error('hello')

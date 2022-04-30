@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../../tools/jil/index')
-const {getErrorsFromResponse} = require('../../err/assertion-helpers')
+const { getErrorsFromResponse } = require('../../err/assertion-helpers')
 
 var es6 = testDriver.Matcher.withFeature('es6')
 
@@ -33,7 +33,7 @@ testDriver.test('Error sent via noticeError from scoped module', es6, function (
     })
     .catch(fail)
 
-  function fail (e) {
+  function fail(e) {
     t.error(e)
     t.end()
   }

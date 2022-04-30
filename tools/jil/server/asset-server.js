@@ -191,7 +191,7 @@ class AgentInjectorTransform extends AssetTransform {
       const htmlPackageTags = [...rawContent.matchAll(/{packages\/.*}/g)].map(x => x[0])
       const packageNames = htmlPackageTags.map(x => x.split('/')[1].replace(/}/g, ''))
       const packageFiles = await this.getBuiltPackages(packageNames)
-      
+
       this.getLoaderContent(loaderName, (err, loaderContent) => {
         if (err) return callback(err)
 

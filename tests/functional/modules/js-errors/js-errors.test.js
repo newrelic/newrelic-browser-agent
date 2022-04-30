@@ -6,12 +6,20 @@
 const testDriver = require('../../../../tools/jil/index')
 const { getErrorsFromResponse } = require('../../err/assertion-helpers')
 
-var es6 = testDriver.Matcher.withFeature('es6')
+const es6 = testDriver.Matcher.withFeature('es6')
 
-testDriver.test('Valid Errors are sent via noticeError from scoped module', es6, function (t, browser, router) {
+const opts = {
+  init: {
+    jserrors: {
+      harvestTimeSeconds: 2
+    }
+  }
+}
+
+testDriver.test('Error objects are sent via noticeError from scoped module', es6, function (t, browser, router) {
   t.plan(2)
 
-  let loadPromise = browser.safeGet(router.assetURL('modular/send-scoped-noticeerror.html'))
+  let loadPromise = browser.safeGet(router.assetURL('modular/send-scoped-noticeerror-error-obj.html', opts))
   let errorsPromise = router.expectErrors()
 
   Promise.all([loadPromise, errorsPromise])
@@ -28,8 +36,6 @@ testDriver.test('Valid Errors are sent via noticeError from scoped module', es6,
       } else {
         fail('No error data was received.')
       }
-
-      t.ok()
     })
     .catch(fail)
 
@@ -39,10 +45,10 @@ testDriver.test('Valid Errors are sent via noticeError from scoped module', es6,
   }
 })
 
-testDriver.test('Error sent via noticeError from scoped module', es6, function (t, browser, router) {
+testDriver.test('Strings are converted to errors via noticeError from scoped module', es6, function (t, browser, router) {
   t.plan(2)
 
-  let loadPromise = browser.safeGet(router.assetURL('modular/send-scoped-noticeerror.html'))
+  let loadPromise = browser.safeGet(router.assetURL('modular/send-scoped-noticeerror-string.html', opts))
   let errorsPromise = router.expectErrors()
 
   Promise.all([loadPromise, errorsPromise])
@@ -59,13 +65,36 @@ testDriver.test('Error sent via noticeError from scoped module', es6, function (
       } else {
         fail('No error data was received.')
       }
-
-      t.ok()
     })
     .catch(fail)
 
   function fail(e) {
     t.error(e)
     t.end()
+  }
+})
+
+testDriver.test('Errors are not sent if agent is not initialized', es6, function (t, browser, router) {
+  setRouterTimeout(5000)
+  t.plan(1)
+
+  let loadPromise = browser.setAsyncScriptTimeout(5000).safeGet(router.assetURL('modular/send-scoped-noticeerror-invalid-not-initialized.html', opts))
+  let errorsPromise = router.expectErrors()
+
+  Promise.all([loadPromise, errorsPromise])
+    .then(([response]) => {
+      t.error()
+      t.end()
+    })
+    .catch(fail)
+    .finally(() => setRouterTimeout(32000))
+
+  function fail() {
+    t.ok(true, 'Errors Promise did not execute because agent was not initialized')
+    t.end()
+  }
+
+  function setRouterTimeout(ms) {
+    router.timeout = router.router.timeout = ms
   }
 })

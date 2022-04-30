@@ -9,17 +9,18 @@
     {init}
     {config}
 
-    <!-- Anything injection tag with 'packages/<DIR>' will be 
+    <!-- Any injection tag with 'packages/<DIR>' will automatically be 
       replaced with packages/<DIR>/dist/index.js -->
     {packages/scoped}
     <script>
       const {default: nr} = nrBrowserScoped;
       const opts = {
-        invalidArg1: 1,
-        invalidArg2: 2
+        ...NREUM.init,
+        ...NREUM.info,
+        ...NREUM.loader_config
       };
       nr.start(opts).then(() => {
-        let err = new Error('hello')
+        let err = 'hello'
         nr.noticeError(err)
       });
     </script>

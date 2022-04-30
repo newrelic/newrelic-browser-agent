@@ -222,10 +222,8 @@ class AgentInjectorTransform extends AssetTransform {
         if (!!htmlPackageTags.length && !!packageFiles.length) {
           packageFiles.forEach(pkg => {
             const tag = htmlPackageTags.find(x => x.includes(pkg.name))
-            console.log("replace", tag)
             rspData = rspData
               .replace(tag, tagify(disableSsl + UglifyJS.minify(pkg.data).code))
-            console.log(rspData)
           })
         }
 
@@ -504,7 +502,6 @@ class AssetServer extends BaseServer {
   serviceRequest(req, rsp, ssl) {
     let parsedUrl = url.parse(req.url)
 
-    // console.log('serviceRequest!', parsedUrl)
     if (parsedUrl.pathname === '/') {
       this.serveIndex(req, rsp, ssl)
     } else if (parsedUrl.pathname.slice(0, 7) === '/build/') {
@@ -530,7 +527,6 @@ class AssetServer extends BaseServer {
   }
 
   serveAsset(req, rsp, parsedUrl, ssl) {
-    // console.log('serveAsset', parsedUrl)
     let assetPath = resolveAssetPath(parsedUrl.pathname, this.assetsDir)
 
     if (assetPath) {
@@ -561,7 +557,6 @@ class AssetServer extends BaseServer {
         return fs.createReadStream(assetPath).pipe(rsp)
       }
 
-      // console.log('transform.execute!', params)
       transform.execute(params, assetPath, ssl, (err, transformed) => {
         if (err) return this.writeError(rsp, `Error while transforming asset ${err}: ${err.stack}`)
         rsp.writeHead(200, {

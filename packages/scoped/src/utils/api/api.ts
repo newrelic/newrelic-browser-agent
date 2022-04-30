@@ -2,28 +2,28 @@ import { NrFeatures, NrStoreError } from "../../types"
 
 let initialized = false
 
-export const api: {[keys: string]: null | Function} = {
-  storeError: null
+export const api: {noticeError: NrStoreError | null} = {
+  noticeError: null
 }
 
 export async function initialize(features: NrFeatures[]){
+  if (initialized) return false
   initialized = true
 
   return Promise.all(features.map(async feature => {
     if (feature === NrFeatures.JSERRORS) {
-      const { storeError }: { storeError: NrStoreError } = await import('../../../../../modules/features/js-errors/aggregate')
-      api.storeError = storeError
+      const { storeError }: { storeError: NrStoreError} = await import('../../../../../modules/features/js-errors/aggregate')
+      api.noticeError = storeError
     }
   }))
-  
 }
 
-export function storeError(err: Error | String, time?: Number, internal?: any, customAttributes?: any): void {
-    if (initialized && !!api.storeError) return api.storeError(err, time, internal, customAttributes)
+export function noticeError(err: Error | String, time?: Number, internal?: any, customAttributes?: any): void {
+    if (initialized && !!api.noticeError) return api.noticeError(err, time, internal, customAttributes)
     // if the agent has not been started, the source API method will have not been loaded...
-    if (!initialized && !api.storeError) return notInitialized(NrFeatures.JSERRORS)
+    if (!initialized && !api.noticeError) return notInitialized(NrFeatures.JSERRORS)
     // if the error feature module is disabled, this function throws a warning message
-    if (initialized && !api.storeError) return isDisabled(NrFeatures.JSERRORS, 'storeError')
+    if (initialized && !api.noticeError) return isDisabled(NrFeatures.JSERRORS, 'noticeError')
 }
 
 function notInitialized(featureName: NrFeatures) {

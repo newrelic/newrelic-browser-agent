@@ -97,7 +97,7 @@ export type NrStoreError = (err: Error | String, time?: Number, internal?: any, 
 
 export interface NrFeaturesWithApi { 
     [NrFeatures.JSERRORS]: {
-        storeError: NrStoreError
+        noticeError: NrStoreError
     },
     // [NrFeatures.AJAX]: {},
     // [NrFeatures.PAGE_VIEW_EVENT]: {},

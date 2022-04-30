@@ -61,19 +61,19 @@ describe('nr interface', () => {
         expect(nr.features).toContain(NrFeatures.JSERRORS)
     })
 
-    it('should use real storeError if initialized', async () => {
+    it('should use real noticeError if initialized', async () => {
         const {default: nr} = await import('./index')
         const spy = jest.spyOn(console, 'warn').mockImplementation()
         const opts = {...config}
         await nr.start(opts)
-        nr.storeError('test')
+        nr.noticeError('test')
         expect(spy).not.toHaveBeenCalled()
     })
 
-    it('should use warning storeError if not initialized', async () => {
+    it('should use warning noticeError if not initialized', async () => {
         const {default: nr} = await import('./index')
         const spy = jest.spyOn(console, 'warn').mockImplementation()
-        nr.storeError('test')
+        nr.noticeError('test')
         expect(spy).toHaveBeenCalled()
     })
 

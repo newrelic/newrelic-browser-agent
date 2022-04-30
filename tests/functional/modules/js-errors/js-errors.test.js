@@ -8,7 +8,7 @@ const { getErrorsFromResponse } = require('../../err/assertion-helpers')
 
 var es6 = testDriver.Matcher.withFeature('es6')
 
-testDriver.test('Valid Errors are sent via storeError from scoped module', es6, function (t, browser, router) {
+testDriver.test('Valid Errors are sent via noticeError from scoped module', es6, function (t, browser, router) {
   t.plan(2)
 
   let loadPromise = browser.safeGet(router.assetURL('modular/send-scoped-noticeerror.html'))

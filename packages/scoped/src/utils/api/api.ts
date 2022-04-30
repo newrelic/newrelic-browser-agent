@@ -7,7 +7,7 @@ export const api: {noticeError: NrStoreError | null} = {
 }
 
 export async function initialize(features: NrFeatures[]){
-  if (initialized) return false
+  if (initialized) return initialized
   initialized = true
 
   return Promise.all(features.map(async feature => {

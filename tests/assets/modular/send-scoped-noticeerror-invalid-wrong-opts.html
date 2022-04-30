@@ -20,7 +20,7 @@
       };
       nr.start(opts).then(() => {
         let err = new Error('hello')
-        nr.storeError(err)
+        nr.noticeError(err)
       });
     </script>
   </head>

@@ -215,8 +215,8 @@ class AgentInjectorTransform extends AssetTransform {
 
         let rspData = rawContent
           .split('{loader}').join(tagify(disableSsl + loaderContent))
-          .replace('{config}', tagify(configContent))
-          .replace('{init}', tagify(initContent))
+          .replace('{config}', tagify(disableSsl + configContent))
+          .replace('{init}', tagify(disableSsl + initContent))
           .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
 
         if (!!htmlPackageTags.length && !!packageFiles.length) {

@@ -1,7 +1,7 @@
 import { getRuntime, setConfiguration, getConfiguration, setInfo, getInfo, setLoaderConfig, getLoaderConfig } from '../../../modules/common/config/config'
 import { ieVersion } from '../../../modules/common/browser-version/ie-version'
 import { NrConfig, NrFeatures, NrInfo, NrLoaderConfig, NrOptions } from './types'
-import { initialize as initializeApi, storeError } from './utils/api/api'
+import { initialize as initializeApi, noticeError } from './utils/api/api'
 import { buildConfigs } from './utils/config/build-configs'
 import { initializeFeatures } from './utils/features/initialize'
 import { gosNREUMInitializedAgents } from '../../../modules/common/window/nreum'
@@ -27,7 +27,7 @@ const nr = {
     return _enabledFeatures
   },
   start: initialize,
-  storeError
+  noticeError
 }
 
 export default nr

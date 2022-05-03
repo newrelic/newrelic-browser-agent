@@ -9,7 +9,7 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'index.js',
     library: {
-      name: 'nrBrowserCore',
+      name: 'nrBrowserScoped',
       type: 'umd'
     }
   },

@@ -28,7 +28,7 @@
   "scripts": {
     "build": "npm run transpile && npm run compile",
     "compile": "npx webpack --config ./webpack.config.js",
-    "transpile": "npm run clean && tsc",
+    "transpile": "npm run clean && tsc -p tsconfig.build.json",
     "pack": "npm pack && mkdir local-install && mv ./nr-browser-core-*.tgz ./local-install",
     "clean": "shx rm -rf lib local-install dist",
     "test": "jest --coverage",

@@ -21,23 +21,24 @@ const multiparty = require('multiparty')
 const assert = require('assert')
 const preprocessify = require('preprocessify')
 const loaders = require('../../../loaders')
+const UglifyJS = require('uglify-js')
 
 mime.types['es6'] = 'application/javascript'
 
 const assetsDir = path.resolve(__dirname, '../../..')
 
 class AssetTransform {
-  test (params) {
+  test(params) {
     return true
   }
 
-  execute () {
+  execute() {
     throw new Error('execute method of transforms must be implemented in subclasses')
   }
 }
 
 class AgentInjectorTransform extends AssetTransform {
-  constructor (buildDir, assetServer, router) {
+  constructor(buildDir, assetServer, router) {
     super()
     this.buildDir = buildDir
     this.defaultAgentConfig = {}
@@ -45,13 +46,13 @@ class AgentInjectorTransform extends AssetTransform {
     this.router = router
   }
 
-  parseConfigFromQueryString (params) {
+  parseConfigFromQueryString(params) {
     if (!params.config) return
     let configString = new Buffer(params.config, 'base64').toString()
     return JSON.parse(configString)
   }
 
-  generateConfig (loaderName, params, ssl, injectUpdatedLoaderConfig) {
+  generateConfig(loaderName, params, ssl, injectUpdatedLoaderConfig) {
     let loaderSpec = loaders.find((spec) => spec.name === loaderName)
     let payloadSuffix = loaderSpec.payload
     let payloadFilename = payloadSuffix ? `nr-${payloadSuffix}.js` : 'nr.js'
@@ -108,7 +109,7 @@ class AgentInjectorTransform extends AssetTransform {
     return updatedConfig
   }
 
-  generateConfigString (loaderName, params, ssl, injectUpdatedLoaderConfig) {
+  generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig) {
     let config = this.generateConfig(loaderName, params, ssl, injectUpdatedLoaderConfig)
     let infoJSON = JSON.stringify(config.info)
     let loaderConfigJSON = JSON.stringify(config.loaderConfig)
@@ -119,12 +120,12 @@ class AgentInjectorTransform extends AssetTransform {
     return `window.NREUM||(NREUM={});NREUM.info=${infoJSON};${loaderConfigAssignment}${debugShim}`
   }
 
-  generateInit (initFromQueryString) {
+  generateInit(initFromQueryString) {
     let initString = new Buffer(initFromQueryString, 'base64').toString()
     return `window.NREUM||(NREUM={});NREUM.init=${initString};NREUM.init.ssl=false;`
   }
 
-  getDebugShim () {
+  getDebugShim() {
     if (!this.assetServer.debugShim) return ''
 
     return `
@@ -152,18 +153,44 @@ class AgentInjectorTransform extends AssetTransform {
     `
   }
 
-  getLoaderContent (loaderName, callback) {
+  getLoaderContent(loaderName, callback) {
     let loaderFilename = `nr-loader-${loaderName}.min.js`
     let loaderPath = path.join(this.buildDir, loaderFilename)
     fs.readFile(loaderPath, callback)
   }
 
-  execute (params, assetPath, ssl, callback) {
-    fs.readFile(assetPath, 'utf-8', (err, rawContent) => {
+  getBuiltPackages(pkgNames) {
+    return new Promise((resolve, reject) => {
+      if (!pkgNames || !pkgNames.length) resolve([])
+      const proms = []
+      for (let i = 0; i < pkgNames.length; i++) {
+        const pkgName = pkgNames[i]
+        const moduleFilename = 'index.js'
+        const distPath = path.resolve(__dirname, `../../../packages/${pkgName}/dist`)
+        const modulePath = path.join(distPath, moduleFilename)
+        proms.push(fs.promises.readFile(modulePath, 'utf-8'))
+      }
+      Promise.all(proms).then(data => {
+        resolve(
+          pkgNames.map((x, i) => ({
+            name: x,
+            data: data[i]
+          })
+          ))
+      }).catch(err => resolve([]))
+    })
+  }
+
+  execute(params, assetPath, ssl, callback) {
+    fs.readFile(assetPath, 'utf-8', async (err, rawContent) => {
       if (err) return callback(err)
 
       let loaderName = params.loader || this.assetServer.defaultLoader
       let injectUpdatedLoaderConfig = (params.injectUpdatedLoaderConfig === 'true')
+
+      const htmlPackageTags = [...rawContent.matchAll(/{packages\/.*}/g)].map(x => x[0])
+      const packageNames = htmlPackageTags.map(x => x.split('/')[1].replace(/}/g, ''))
+      const packageFiles = await this.getBuiltPackages(packageNames)
 
       this.getLoaderContent(loaderName, (err, loaderContent) => {
         if (err) return callback(err)
@@ -192,9 +219,17 @@ class AgentInjectorTransform extends AssetTransform {
           .replace('{init}', tagify(initContent))
           .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
 
+        if (!!htmlPackageTags.length && !!packageFiles.length) {
+          packageFiles.forEach(pkg => {
+            const tag = htmlPackageTags.find(x => x.includes(pkg.name))
+            rspData = rspData
+              .replace(tag, tagify(disableSsl + UglifyJS.minify(pkg.data).code))
+          })
+        }
+
         callback(null, rspData)
 
-        function tagify (s) {
+        function tagify(s) {
           return `<script type="text/javascript">${s}</script>`
         }
       })
@@ -203,24 +238,24 @@ class AgentInjectorTransform extends AssetTransform {
 }
 
 class BrowserifyTransform extends AssetTransform {
-  constructor (config) {
+  constructor(config) {
     super()
     this.browserifyCache = {}
     this.config = config
   }
 
-  test (params) {
+  test(params) {
     return params.browserify
   }
 
-  execute (params, assetPath, ssl, callback) {
+  execute(params, assetPath, ssl, callback) {
     let result = this.browserifyCache[assetPath]
     if (result) return callback(null, result)
 
-    let b = browserify({debug: true, extensions: ['.js']})
+    let b = browserify({ debug: true, extensions: ['.js'] })
     b.transform(babelify.configure({
       extensions: ['.js'],
-      only: /tests|tools/
+      only: /tests|tools|modules/
     }))
     b.transform(preprocessify())
     b.add(assetPath)
@@ -236,19 +271,19 @@ class BrowserifyTransform extends AssetTransform {
 }
 
 class Route {
-  constructor (method, glob, handler) {
+  constructor(method, glob, handler) {
     this.method = method
     this.glob = glob
     this.handler = handler
   }
 
-  match (req) {
+  match(req) {
     if (req.method.toUpperCase() !== this.method.toUpperCase()) return false
     let path = url.parse(req.url).pathname
     return minimatch(path, this.glob)
   }
 
-  service (req, res) {
+  service(req, res) {
     this.handler(req, res)
   }
 }
@@ -380,13 +415,13 @@ const testRoutes = [
   })
 ]
 
-function parseParams (req) {
+function parseParams(req) {
   let query = url.parse(req.url).query
   if (!query) return {}
   return querystring.parse(query)
 }
 
-function resolveAssetPath (relativePath, baseDir) {
+function resolveAssetPath(relativePath, baseDir) {
   if (relativePath[0] === '/') relativePath = relativePath.slice(1)
 
   let resolvedAbsolutePath = path.resolve(baseDir, relativePath)
@@ -402,7 +437,7 @@ class TestServer extends BaseServer {
     this.addHandler(this.serviceRequest.bind(this))
   }
 
-  serviceRequest (req, rsp, ssl) {
+  serviceRequest(req, rsp, ssl) {
     for (let route of this.routes) {
       if (route.match(req)) {
         route.service(req, rsp, ssl)
@@ -415,7 +450,7 @@ class TestServer extends BaseServer {
 }
 
 class AssetServer extends BaseServer {
-  constructor (testConfig, defaultAgentConfig = {}, browserTests, output, renderIndex = false) {
+  constructor(testConfig, defaultAgentConfig = {}, browserTests, output, renderIndex = false) {
     super()
     this.host = testConfig.host
     this.timeout = testConfig.timeout
@@ -442,29 +477,29 @@ class AssetServer extends BaseServer {
     this.routes = testRoutes
   }
 
-  findDynamicRoute (req) {
+  findDynamicRoute(req) {
     for (let route of this.routes) {
       if (route.match(req)) return route
     }
   }
 
-  start (port, sslPort, routerPort = 0, routerSslPort = null) {
+  start(port, sslPort, routerPort = 0, routerSslPort = null) {
     this.router.start(routerPort, routerSslPort)
     this.corsServer.start(0)
     super.start(port, sslPort)
   }
 
-  stop () {
+  stop() {
     this.router.stop()
     this.corsServer.stop()
     super.stop()
   }
 
-  get defaultAgentConfig () {
+  get defaultAgentConfig() {
     return this.agentTransform.defaultAgentConfig
   }
 
-  serviceRequest (req, rsp, ssl) {
+  serviceRequest(req, rsp, ssl) {
     let parsedUrl = url.parse(req.url)
 
     if (parsedUrl.pathname === '/') {
@@ -479,7 +514,7 @@ class AssetServer extends BaseServer {
     }
   }
 
-  serveBuiltAsset (req, rsp, ssl) {
+  serveBuiltAsset(req, rsp, ssl) {
     let relativePath = url.parse(req.url).pathname.replace(/^\/build/, '')
     let assetPath = resolveAssetPath(relativePath, this.buildDir)
 
@@ -491,7 +526,7 @@ class AssetServer extends BaseServer {
     })
   }
 
-  serveAsset (req, rsp, parsedUrl, ssl) {
+  serveAsset(req, rsp, parsedUrl, ssl) {
     let assetPath = resolveAssetPath(parsedUrl.pathname, this.assetsDir)
 
     if (assetPath) {
@@ -502,12 +537,12 @@ class AssetServer extends BaseServer {
     }
   }
 
-  writeError (rsp, errorMessage) {
+  writeError(rsp, errorMessage) {
     rsp.writeHead(500)
     rsp.end(errorMessage)
   }
 
-  serveAssetFromPath (req, rsp, assetPath, ssl) {
+  serveAssetFromPath(req, rsp, assetPath, ssl) {
     let mimeType = mime.lookup(assetPath)
     let exists = fs.existsSync(assetPath)
 
@@ -536,7 +571,7 @@ class AssetServer extends BaseServer {
     }
   }
 
-  serveIndex (req, res) {
+  serveIndex(req, res) {
     res.writeHead(200, {
       'Content-Type': 'text/html'
     })
@@ -551,7 +586,7 @@ class AssetServer extends BaseServer {
     })
   }
 
-  generateIndex (done) {
+  generateIndex(done) {
     let server = this
     let files = this.browserTests.filter(unique).map((file) => ({
       name: path.relative(server.assetsDir, file),
@@ -582,7 +617,7 @@ class AssetServer extends BaseServer {
       })
     }, gotFiles))
 
-    function unitTestTarget (file) {
+    function unitTestTarget(file) {
       let script = `/${path.relative(server.assetsDir, file)}?browserify=true`
       return server.urlFor('/tests/assets/browser.html', {
         config: new Buffer(JSON.stringify({
@@ -594,11 +629,11 @@ class AssetServer extends BaseServer {
       })
     }
 
-    function gotFiles () {
+    function gotFiles() {
       if (!--remaining) buildResponse()
     }
 
-    function buildResponse () {
+    function buildResponse() {
       let response = '<html><head></head><body><ul>\n'
       files.forEach((entry) => {
         response += `<li><a href="${entry.target}">${entry.name}</a></li>\n`
@@ -609,7 +644,7 @@ class AssetServer extends BaseServer {
     }
   }
 
-  urlFor (relativePath, options, ssl = false) {
+  urlFor(relativePath, options, ssl = false) {
     let query = querystring.encode(options)
     return url.resolve(
       `${ssl ? 'https' : 'http'}://${this.host}:${ssl ? this.sslPort : this.port}`,
@@ -618,7 +653,7 @@ class AssetServer extends BaseServer {
   }
 }
 
-function unique (item, i, list) {
+function unique(item, i, list) {
   return list.indexOf(item) === i
 }
 

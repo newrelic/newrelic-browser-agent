@@ -25,8 +25,9 @@
     "packages:build": "npm --prefix packages/scoped run build",
     "packages:pack": "npm --prefix packages/scoped run pack",
     "packages:test": "npm --prefix packages/scoped run test",
+    "packages:test:watch": "npm --prefix packages/scoped run test:watch",
     "packages:watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests|coverage|dist' --run -- npm run packages:build",
-
+    
     "test-server": "node ./tools/jil/bin/server",
     "sauce:connect": "node ./tools/jil/bin/sauce"
   },
@@ -45,6 +46,7 @@
   },
   "devDependencies": {
     "@newrelic/nr-querypack": "github:newrelic/nr-querypack",
+    "@types/node": "^17.0.30",
     "aws-sdk": "^2.894.0",
     "babelify": "6.4.0",
     "browserify": "^13.0.0",

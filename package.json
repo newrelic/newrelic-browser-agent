@@ -7,7 +7,7 @@
   "scripts": {
     "test": "tools/jil/bin/cli.js",
     "build": "rm -rf build && mkdir build && gulp build",
-    "build:all": "rm -rf build && mkdir build && gulp build && npm run cdn:build && npm run packages:build && npm run tools:test-builds",
+    "build:all": "npm run build && npm run packages:build && npm run tools:test-builds",
     "build-mac": "gulp && osascript -e 'display notification \"The agent has been built.\" with title \"Build Complete\"'",
     "prepush": "npm run lint && node -e 'process.exit((process.argv[1] === \"master\") ? 1 : 0)' `git rev-parse --abbrev-ref HEAD`",
     "postinstall": "node post-installer && rm -f node_modules/jil && ln -s ../tools/jil node_modules/jil",
@@ -31,7 +31,7 @@
     
     "test-server": "node ./tools/jil/bin/server",
     "sauce:connect": "node ./tools/jil/bin/sauce",
-    
+
     "tools:test-builds": "npm run packages:pack && npm --prefix ./tools/test-builds/build-time-mfe run build"
   },
   "bin": {

@@ -1,0 +1,19 @@
+{
+  "name": "component-2",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "serve": "http-server -p 3001 -s",
+    "cleanInstall": "rm -rf node_modules package-lock.json && npm install",
+    "build": "webpack --progress"
+  },
+  "dependencies": {
+    "nr-browser-core": "file:../../../../packages/scoped/local-install/nr-browser-core.tgz"
+  },
+  "devDependencies": {
+    "shx": "^0.3.4",
+    "webpack": "^5.72.0",
+    "webpack-cli": "^4.9.2"
+  }
+}

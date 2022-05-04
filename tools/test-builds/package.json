@@ -1,0 +1,12 @@
+{
+  "name": "test-builds",
+  "version": "1.0.0",
+  "description": "",
+  "main": "builder.js",
+  "scripts": {
+    "build-all": "node ./builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

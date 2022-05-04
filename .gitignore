@@ -6,6 +6,7 @@
 **/coverage
 log
 node_modules
+**/node_modules
 *.csv
 *.tap
 *.swp
@@ -14,3 +15,4 @@ node_modules
 .DS_Store
 .vscode
 .secrets
+**/local-install

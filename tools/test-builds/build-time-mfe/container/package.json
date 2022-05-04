@@ -1,0 +1,23 @@
+{
+  "name": "container",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "serve": "http-server -p 3333 -s -o /dist/index.html",
+    "cleanInstall": "rm -rf node_modules package-lock.json && npm install",
+    "build": "npx webpack --progress"
+  },
+  "dependencies": {
+    "component-1": "file:../component-1",
+    "component-2": "file:../component-2"
+  },
+  "devDependencies": {
+    "html-inline-script-webpack-plugin": "^3.0.0",
+    "html-webpack-plugin": "^5.5.0",
+    "react-dev-utils": "^12.0.1",
+    "shx": "^0.3.4",
+    "webpack": "^5.72.0",
+    "webpack-cli": "^4.9.2"
+  }
+}

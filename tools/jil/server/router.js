@@ -130,18 +130,18 @@ class RouterHandle {
     this.scheduledResponses = {}
   }
 
-  expectBeaconRequest(spec, timeout) {
-    return this.expect(spec.methods, spec.path, timeout)
+  expectBeaconRequest(spec, timeout, appID) {
+    return this.expect(spec.methods, spec.path, timeout, undefined, appID)
   }
 
-  expectRum() {
-    return this.expectBeaconRequest(this.beaconRequests.rum).then((rumData) => {
+  expectRum(appID) {
+    return this.expectBeaconRequest(this.beaconRequests.rum, undefined, appID).then((rumData) => {
       return this.browser.waitForFeature('loaded').then(() => rumData)
     })
   }
 
-  expectEvents() {
-    return this.expectBeaconRequest(this.beaconRequests.events).then(request => {
+  expectEvents(appID) {
+    return this.expectBeaconRequest(this.beaconRequests.events, undefined, appID).then(request => {
       let { body, query } = request
       let decoded = querypack.decode(body && body.length ? body : query.e)[0]
       if (decoded.type === 'interaction') {
@@ -152,8 +152,8 @@ class RouterHandle {
     })
   }
 
-  expectTimings() {
-    return this.expectBeaconRequest(this.beaconRequests.events).then(request => {
+  expectTimings(appID) {
+    return this.expectBeaconRequest(this.beaconRequests.events, undefined, appID).then(request => {
       let { body, query } = request
       let decoded = querypack.decode(body && body.length ? body : query.e)[0]
       if (decoded.type === 'timing') {
@@ -164,8 +164,8 @@ class RouterHandle {
     })
   }
 
-  expectAjaxEvents() {
-    return this.expectBeaconRequest(this.beaconRequests.events).then(request => {
+  expectAjaxEvents(appID) {
+    return this.expectBeaconRequest(this.beaconRequests.events, undefined, appID).then(request => {
       let { body, query } = request
       let decoded = querypack.decode(body && body.length ? body : query.e)[0]
       if (decoded.type === 'ajax') {
@@ -176,42 +176,42 @@ class RouterHandle {
     })
   }
 
-  expectErrors() {
+  expectErrors(appID) {
     // errors harvest at 60s
-    return this.expectBeaconRequest(this.beaconRequests.errors, 80000)
+    return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID)
   }
 
-  expectIns() {
+  expectIns(appID) {
     // insights harvest at 30s
-    return this.expectBeaconRequest(this.beaconRequests.ins, 40000)
+    return this.expectBeaconRequest(this.beaconRequests.ins, 40000, appID)
   }
 
-  expectResources() {
-    return this.expectBeaconRequest(this.beaconRequests.resources)
+  expectResources(appID) {
+    return this.expectBeaconRequest(this.beaconRequests.resources, undefined, appID)
   }
 
-  expectRumAndErrors() {
-    return this.expectRum().then(() => {
+  expectRumAndErrors(appID) {
+    return this.expectRum(appID).then(() => {
       return Promise.all([
         this.browser.safeGet(this.assetURL('/')),
-        this.expectErrors()
+        this.expectErrors(appID)
       ]).then(([feat, err]) => err)
     })
   }
 
-  expectRumAndConditionAndErrors(condition) {
-    return this.expectRum().then(() => {
+  expectRumAndConditionAndErrors(condition, appID) {
+    return this.expectRum(appID).then(() => {
       return Promise.all([
         this.browser
           .waitFor(asserters.jsCondition(condition))
           .safeGet(this.assetURL('/')),
-        this.expectErrors()
+        this.expectErrors(appID)
       ]).then(([feat, err]) => err)
     })
   }
 
-  expectCustomGet(path, handler) {
-    return this.expect('GET', path, this.timeout, handler)
+  expectCustomGet(path, handler, appID) {
+    return this.expect('GET', path, this.timeout, handler, appID)
   }
 
   assetURL(asset, query = {}, useRouterUrl = false) {
@@ -296,7 +296,7 @@ class RouterHandle {
     }
   }
 
-  waitFor(methods, pathname, timeout, accept, reject, handler) {
+  waitFor(methods, pathname, timeout, accept, reject, handler, appID) {
     let handle = this
     let expectedPath = pathname.replace('{key}', this.testID)
     let duration = timeout
@@ -314,6 +314,20 @@ class RouterHandle {
     function test(req) {
       var parsed = url.parse(req.url)
       var methodMatch = methods.indexOf(req.method) !== -1
+
+      // if appID is passed into any of the above router.expect() methods,
+      // it will find its way here.  This check makes it so that the promise
+      // will not resolve unless it matches the ?a=<app_id> provided
+      // this is useful when testing more than one agent on one page
+      // and allows you to know which promise belongs to which agent
+      //
+      // ex. router.expectErrors(3) will create a promise that will only resolve
+      // once a request is made from the test with '?a=3 as part of its url query params
+      if (appID) {
+        const appIdInQuery = parsed.search.split('&')[0]
+        const id = appIdInQuery ? appIdInQuery.replace('?a=', '') : null
+        if (id) return methodMatch && parsed.pathname === expectedPath && Number(id) === appID
+      }
       return methodMatch && parsed.pathname === expectedPath
     }
 
@@ -341,10 +355,10 @@ class RouterHandle {
     return this.responders[`${req.method} ${pathname}`]
   }
 
-  expect(methodOrMethods, expectedPath, expectedTimeout = this.timeout, handler) {
+  expect(methodOrMethods, expectedPath, expectedTimeout = this.timeout, handler, appID) {
     let methods = [].concat(methodOrMethods).map((m) => m.toUpperCase())
     return new Promise((resolve, reject) => {
-      this.waitFor(methods, expectedPath, expectedTimeout, resolve, reject, handler)
+      this.waitFor(methods, expectedPath, expectedTimeout, resolve, reject, handler, appID)
     })
   }
 

@@ -1,5 +1,6 @@
-import { NrFeatures, NrStoreError } from "../../types"
+import { NrFeatures, NrNoticeError, NrStoreError } from "../../types"
 import { now } from '../../../../../modules/common/timing/now'
+import { getEnabledFeatures } from "../features/features"
 
 let initialized = false
 
@@ -7,19 +8,22 @@ export const importedMethods: {storeError: NrStoreError | null} = {
   storeError: null
 }
 
-export async function initialize(features: NrFeatures[]){
+export async function initialize(){
   if (initialized) return initialized
   initialized = true
 
-  return Promise.all(features.map(async feature => {
-    if (feature === NrFeatures.JSERRORS) {
-      const { storeError }: { storeError: NrStoreError} = await import('../../../../../modules/features/js-errors/aggregate')
+  const enabledFeatures = getEnabledFeatures()
+
+  return Promise.all(enabledFeatures.map(async feature => {
+    if (feature.featureName === NrFeatures.JSERRORS) {
+      const { storeError }: { storeError: NrStoreError} = await import(`../../../../../modules/features/${feature.featureName}/aggregate`)
       importedMethods.storeError = storeError
     }
+    return feature.featureName
   }))
 }
 
-export function noticeError(err: Error | String, customAttributes?: any): void {
+export const noticeError: NrNoticeError = (err, customAttributes) => {
     if (initialized && !!importedMethods.storeError) {
       if (typeof err !== 'string' && !(err instanceof Error)) return invalidCall('noticeError', err, 'Error | String')
       

@@ -1,55 +1,5 @@
 import nr from 'nr-browser-core'
 
-// const nrConfig = {
-//     applicationID: '35094707',
-//     beacon: 'staging-bam-cell.nr-data.net',
-//     licenseKey: '2fec6ab188',
-//     ajax: {deny_list: ['nr-data.net']}
-// }
-
-/* 
-features: {'js-errors': {
-  auto: true, // 
-  api: true // if disabled, it also disables auto
-}}
-
-features: {
-  'errors': {
-    enabled: true, // if false --> don't import anything | else import based on logic dealing w/ 'global'
-    scoped: false // if true --> import ins (if exists) + agg | else --> import only agg (if exists)
-  }
-}
-
-// could use getters and setters to ensure they can only set the appropriate data
-// defaults to true, true
-const errors = {
-  enabled: true, // if false --> don't import anything | else import based on logic dealing w/ 'global'
-  auto: true // if true --> import ins (if exists) + agg | else --> import only agg (if exists)
-}
-
-nr = {
-  features: {
-    'errors': {
-      get enabled(){ return errors.enabled },
-      set enabled(val) {
-        errors.enabled = Boolean(val)
-      },
-      get scoped(){ return errors.scoped },
-      set scoped(val) {
-        errors.scoped = Boolean(val)
-      },
-    }
-  }
-}
-*/
-// const nrConfig = {
-//     applicationID: '35094707',
-//     beacon: 'staging-bam-cell.nr-data.net',
-//     licenseKey: '2fec6ab188',
-//     ajax: {deny_list: ['nr-data.net']}
-// }
-
-// const nrConfig = { ...NREUM.init, ...NREUM.info, ...NREUM.loader_config, licenseKey: 'asdf', applicationID: 1 }
 const nrConfig = {
   ...NREUM.init,
    ...NREUM.info, 

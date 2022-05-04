@@ -1,11 +1,14 @@
-import { NrFeatures } from '../../types'
+import { getEnabledFeatures } from './features'
 
-export function initializeFeatures(enabledFeatures: NrFeatures[]) {
-    if (!enabledFeatures || !enabledFeatures.length) return []
-    return Promise.all(enabledFeatures.map(async feature => {
-        const { initialize: initializeAggregate }: { initialize: any } = await import(`../../../../../modules/features/${feature}/aggregate`)
-        initializeAggregate(true)
-        return feature
+export function initializeFeatures() {
+
+    return Promise.all(getEnabledFeatures().map(async feature => {
+        if (feature.auto) {
+            const { initialize: initializeInstrument }: { initialize: any } = await import(`../../../../../modules/features/${feature.featureName}/instrument`)
+            initializeInstrument()
+        }
+        const { initialize: initializeAggregate }: { initialize: any } = await import(`../../../../../modules/features/${feature.featureName}/aggregate`)
+        initializeAggregate()
+        return feature.featureName
     }))
-  }
-  
+}

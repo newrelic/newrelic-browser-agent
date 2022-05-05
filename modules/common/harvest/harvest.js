@@ -15,6 +15,8 @@ import { now } from '../timing/now'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { ieVersion } from '../browser-version/ie-version'
 import { VERSION as NR_VERSION } from '../constants/environment-variables'
+import { obfuscateString, shouldObfuscate } from '../util/obfuscate'
+import { applyFnToProps } from '../util/traverse'
 
 const version = NR_VERSION
 // var version = '<VERSION>'
@@ -76,13 +78,11 @@ function createPayload(type, options) {
  */
 export function sendX(endpoint, opts, cbFinished) {
   var submitMethod = getSubmitMethod(endpoint, opts)
-  // log('submit method', submitMethod)
   if (!submitMethod) return false
   var options = {
     retry: submitMethod.method === submitData.xhr
   }
-  // log('_send!', endpoint, opts, options)
-  return _send(endpoint, createPayload(endpoint, options), opts, submitMethod, cbFinished)
+  return shouldObfuscate() ? obfuscateAndSend(endpoint, createPayload(endpoint, options), opts, submitMethod, cbFinished) : _send(endpoint, createPayload(endpoint, options), opts, submitMethod, cbFinished)
 }
 
 /**
@@ -107,6 +107,12 @@ export function send(endpoint, singlePayload, opts, submitMethod, cbFinished) {
   if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
 
   var payload = { body: makeBody(), qs: makeQueryString() }
+  var caller = shouldObfuscate() ? obfuscateAndSend : _send
+  return caller(endpoint, payload, opts, submitMethod, cbFinished)
+}
+
+function obfuscateAndSend(endpoint, payload, opts, submitMethod, cbFinished) {
+  applyFnToProps(payload, obfuscateString, 'string', ['e'])
   return _send(endpoint, payload, opts, submitMethod, cbFinished)
 }
 
@@ -240,6 +246,9 @@ export function baseQueryString() {
 
   var info = getInfo()
 
+  var location = cleanURL(getLocation())
+  var ref = shouldObfuscate() ? obfuscateString(location) : location
+
   return ([
     '?a=' + info.applicationID,
     encodeParam('sa', (info.sa ? '' + info.sa : '')),
@@ -248,7 +257,7 @@ export function baseQueryString() {
     encodeParam('ct', getRuntime().customTransaction),
     '&rst=' + now(),
     '&ck=' + (areCookiesEnabled ? '1' : '0'),
-    encodeParam('ref', cleanURL(getLocation())),
+    encodeParam('ref', ref),
     encodeParam('ptid', (getRuntime().ptid ? '' + getRuntime().ptid : ''))
   ].join(''))
 }

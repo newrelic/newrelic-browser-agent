@@ -7,7 +7,6 @@
 import { setAPI } from './utils/api'
 // common modules
 import { gosCDN } from '../../modules/common/window/nreum'
-import { protocolAllowed } from '../../modules/common/url/protocol-allowed'
 import { onWindowLoad } from '../../modules/common/window/load'
 import { setConfiguration, setInfo, setLoaderConfig } from '../../modules/common/config/config'
 // feature modules
@@ -22,10 +21,6 @@ import { initialize as instrumentPageAction } from '../../modules/features/page-
 const nr = gosCDN()
 // add api calls to the NREUM object
 setAPI()
-
-if (!protocolAllowed(window.location)) {
-  // shut down the protocol if not allowed here...
-}
 
 // set configuration from global NREUM.init (When building CDN specifically)
 setInfo(nr.info)

@@ -5,6 +5,7 @@
 
 import { mapOwn } from '../util/map-own'
 import { stringify } from '../util/stringify'
+import { shouldObfuscate, obfuscateString } from '../util/obfuscate'
 
 var hasOwnProp = Object.prototype.hasOwnProperty
 var MAX_ATTRIBUTES = 64
@@ -39,6 +40,7 @@ export function getAddStringContext () {
   function addString(str) {
     if (typeof str === 'undefined' || str === '') return ''
     str = String(str)
+    if (shouldObfuscate()) str = obfuscateString(str)
     if (hasOwnProp.call(stringTable, str)) {
       return numeric(stringTable[str], true)
     } else {

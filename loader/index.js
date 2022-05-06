@@ -8,7 +8,6 @@ var handle = require('handle')
 var mapOwn = require('map-own')
 var ee = require('ee')
 var userAgent = require('./user-agent')
-var protocolAllowed = require('./protocol-allowed')
 var config = require('config')
 var eventListenerOpts = require('event-listener-opts')
 
@@ -22,7 +21,7 @@ var ATTACH_EVENT = 'attachEvent'
 var XHR = win.XMLHttpRequest
 var XHR_PROTO = XHR && XHR.prototype
 
-var disabled = !protocolAllowed(win.location)
+var disabled = false
 
 NREUM.o = {
   ST: setTimeout,

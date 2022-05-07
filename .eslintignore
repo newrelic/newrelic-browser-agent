@@ -9,3 +9,4 @@ tests/assets/frameworks/*
 babel.config.js
 tools/test-builds/*
 tests/assets/test-builds/**/*.js
+tests/*

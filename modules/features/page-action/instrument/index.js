@@ -5,7 +5,12 @@
 
 // Turn on feature
 import { getRuntime } from '../../../common/config/config'
+import { FeatureBase } from '../../../common/util/feature-base'
 
-export function initialize() {
-  if (!getRuntime().disabled) getRuntime().features.ins = true
+export class Instrument extends FeatureBase {
+  constructor(agentIdentifier) {
+    super(agentIdentifier)
+
+    if (!getRuntime(this.agentIdentifier).disabled) getRuntime(this.agentIdentifier).features.ins = true
+  }
 }

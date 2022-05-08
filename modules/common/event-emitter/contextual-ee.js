@@ -6,7 +6,6 @@
 import { gosNREUM } from '../window/nreum'
 import { getOrSet } from '../util/get-or-set'
 import { mapOwn } from '../util/map-own'
-import { log } from '../debug/logging'
 
 var ctxId = 'nr@context'
 
@@ -172,7 +171,6 @@ function getNewContext () {
 // We should drop our data and stop collecting if we still have a backlog, which
 // signifies the rest of the agent wasn't loaded
 function abortIfNotLoaded () {
-  log('aborted!')
   if (baseEE.backlog.api || baseEE.backlog.feature) {
     baseEE.aborted = true
     baseEE.backlog = {}

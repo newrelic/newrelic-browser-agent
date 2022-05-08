@@ -1,6 +1,7 @@
-import { setValues } from './set-values'
+import { gosNREUMInitializedAgents } from '../../window/nreum'
+import { Configurable } from './configurable'
 
-const loader_config = {
+const model = {
   accountID: undefined,
   trustKey: undefined,
   agentID: undefined,
@@ -9,10 +10,15 @@ const loader_config = {
   xpid: undefined
 }
 
-export function getLoaderConfig() {
-  return loader_config
+const _cache = {}
+
+export function getLoaderConfig(id) {
+  if (!id) throw new Error('All config objects require an agent identifier!')
+  return _cache[id]
 }
 
-export function setLoaderConfig(obj) {
-  setValues(obj, loader_config, 'loader_config')
+export function setLoaderConfig(id, obj) {
+  if (!id) throw new Error('All config objects require an agent identifier!')
+  _cache[id] = new Configurable(obj, model)
+  gosNREUMInitializedAgents(id, _cache[id], 'loader_config')
 }

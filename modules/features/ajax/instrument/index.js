@@ -10,10 +10,11 @@ import { ffVersion } from '../../../common/browser-version/firefox-version'
 import { dataSize } from '../../../common/util/data-size'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
-import {wrapGlobalFetch, wrapFetch} from '../../../common/wrap'
+import {wrapFetch} from '../../../common/wrap'
 import { parseUrl } from '../../../common/url/parse-url'
-import { generateTracePayload } from './distributed-tracing'
+import { DT } from './distributed-tracing'
 import {responseSizeFromXhr} from './response-size'
+import { FeatureBase } from '../../../common/util/feature-base'
 
 var handlers = [ 'load', 'error', 'abort', 'timeout' ]
 var handlersLen = handlers.length
@@ -21,20 +22,13 @@ var handlersLen = handlers.length
 var origRequest = originals.REQ
 var origXHR = window.XMLHttpRequest
 
-// export default {
-//   initialize: initialize,
-//   getWrappedFetch: getWrappedFetch
-// }
+export class Instrument extends FeatureBase {
+  constructor(agentIdentifier) {
+    super(agentIdentifier)
+    // Don't instrument Chrome for iOS, it is buggy and acts like there are URL verification issues
+    if (!getRuntime(this.agentIdentifier).xhrWrappable || getRuntime(this.agentIdentifier).disabled) return
 
-export function initialize(captureGlobalCalls) {
-  // Don't instrument Chrome for iOS, it is buggy and acts like there are URL verification issues
-  if (!getRuntime().xhrWrappable || getRuntime().disabled) return
-
-  if (captureGlobalCalls) {
-    // TODO
-    // require('nr-browser-common').wrapXhr()
-    wrapGlobalFetch()
-    // subscribeToEvents(globalEE, handle.global)
+    this.dt = new DT(this.agentIdentifier)
   }
 }
 
@@ -110,7 +104,7 @@ function subscribeToEvents(ee, handle) {
       xhr.setRequestHeader('X-NewRelic-ID', loader_config.xpid)
     }
 
-    var payload = generateTracePayload(this.parsedOrigin)
+    var payload = this.dt.generateTracePayload(this.parsedOrigin)
     if (payload) {
       var added = false
       if (payload.newrelicHeader) {
@@ -232,7 +226,7 @@ function subscribeToEvents(ee, handle) {
       this.sameOrigin = this.parsedOrigin.sameOrigin
     }
 
-    var payload = generateTracePayload(this.parsedOrigin)
+    var payload = this.dt.generateTracePayload(this.parsedOrigin)
     if (!payload || (!payload.newrelicHeader && !payload.traceContextParentHeader)) {
       return
     }

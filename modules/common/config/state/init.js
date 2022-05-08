@@ -1,7 +1,8 @@
-import { log } from '../../debug/logging'
-import { setValues } from './set-values'
 
-const init = {
+import { gosNREUMInitializedAgents } from '../../window/nreum'
+import { Configurable } from './configurable'
+
+const model = {
   privacy: { cookies_enabled: undefined },
   ajax: { deny_list: undefined },
   distributed_tracing: {
@@ -11,27 +12,34 @@ const init = {
     cors_use_tracecontext_headers: undefined,
     allowed_origins: undefined
   },
-  page_view_timing: {enabled: undefined},
+  page_view_timing: { enabled: undefined },
   ssl: undefined,
   obfuscate: undefined
 }
 
-export function getConfiguration() {
-  return init
+const _cache = {}
+
+export function getConfiguration(id) {
+  if (!id) throw new Error('All config objects require an agent identifier!')
+  return _cache[id]
 }
 
-export function setConfiguration(obj) {
-  setValues(obj, init, 'config')
+export function setConfiguration(id, obj) {
+  if (!id) throw new Error('All config objects require an agent identifier!')
+  _cache[id] = new Configurable(obj, model)
+  gosNREUMInitializedAgents(id, _cache[id], 'config')
 }
 
-export function getConfigurationValue(path) {
-  var val = init
-  var parts = path.split('.')
-  for (var i = 0; i < parts.length - 1; i++) {
-    val = val[parts[i]]
-    if (typeof val !== 'object') return
+export function getConfigurationValue(id, path) {
+  if (!id) throw new Error('All config objects require an agent identifier!')
+  var val = getConfiguration(id)
+  if (val) {
+    var parts = path.split('.')
+    for (var i = 0; i < parts.length - 1; i++) {
+      val = val[parts[i]]
+      if (typeof val !== 'object') return
+    }
+    val = val[parts[parts.length - 1]]
   }
-  val = val[parts[parts.length - 1]]
-  log('val...(', path, ')', val)
   return val
 }

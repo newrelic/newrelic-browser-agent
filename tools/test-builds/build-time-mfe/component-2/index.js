@@ -1,4 +1,4 @@
-import nr from 'nr-browser-core'
+import NR from 'nr-browser-core'
 
 
 // const nrConfig = { ...NREUM.init, ...NREUM.info, ...NREUM.loader_config, licenseKey: 'asdf', applicationID: 2 }
@@ -9,8 +9,10 @@ const nrConfig = {
   // licenseKey: 'asdf',
   applicationID: 2
 }
+const nr = new NR()
 nr.start(nrConfig).then(() => {
   console.log("agent initialized! -- COMPONENT-2", nrConfig)
+  window.nr2 = nr
 }) 
 
 class KittenComponent extends HTMLElement {

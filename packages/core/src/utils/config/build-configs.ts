@@ -1,7 +1,6 @@
 import { NrOptions, NrInfo, NrConfig, NrLoaderConfig } from '../../types'
-import {id as initializationID} from '../../../../../modules/common/config/state/set-values'
 
-export function buildConfigs(options: NrOptions): { info: NrInfo, config: NrConfig, loader_config: NrLoaderConfig, initializationID: number } {
+export function buildConfigs(options: NrOptions): { info: NrInfo, config: NrConfig, loader_config: NrLoaderConfig } {
   const info: NrInfo = {
     beacon: '',
     errorBeacon: undefined,
@@ -56,7 +55,7 @@ export function buildConfigs(options: NrOptions): { info: NrInfo, config: NrConf
   })
 
   if (!validateInfo(info) || !validateLoaderConfig(loader_config)) console.warn("Missing required config data")
-  return { info, config, loader_config, initializationID }
+  return { info, config, loader_config }
 }
 
 function validateInfo(info: NrInfo): boolean {

@@ -6,7 +6,6 @@
 import {setAPI} from './utils/api'
 // common modules
 import { gosCDN } from '../../modules/common/window/nreum'
-import { protocolAllowed } from '../../modules/common/url/protocol-allowed'
 import { onWindowLoad } from '../../modules/common/window/load'
 import { setConfiguration, setInfo, setLoaderConfig } from '../../modules/common/config/config'
 // feature modules
@@ -23,10 +22,6 @@ setLoaderConfig(nr.loader_config)
 
 // add api calls to the NREUM object
 setAPI()
-
-if (!protocolAllowed(window.location)) { // file: protocol
-  // shut down the protocol if not allowed here...
-}
 
 // load auto-instrumentation here...
 instrumentPageViewEvent() // document load (page view event + metrics)

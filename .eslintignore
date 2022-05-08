@@ -7,5 +7,6 @@ post-installer.js
 tests/assets/frameworks/*
 **/dist/*
 babel.config.js
-tools/test-builds/**/*.js
+tools/test-builds/*
 tests/assets/test-builds/**/*.js
+tests/*

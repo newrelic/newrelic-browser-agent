@@ -28,7 +28,12 @@ export function initialize() {
   // Declare that we are using err instrumentation
   // require('./debug')
 
-  window.onerror = onerrorHandler
+  const prevOnError = window.onerror
+  const newOnError = onerrorHandler
+  window.onerror = (...args) => {
+    prevOnError(...args)
+    newOnError(...args)
+  }
 
   try {
     throw new Error()

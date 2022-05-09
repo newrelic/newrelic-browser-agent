@@ -23,11 +23,11 @@
     "cdn:build-dev": "DEBUG=true npm --prefix cdn run build",
     "cdn:watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests' --run -- npm run cdn:build-dev",
 
-    "packages:build": "npm --prefix packages/scoped run build",
-    "packages:pack": "npm --prefix packages/scoped run pack",
-    "packages:test": "npm --prefix packages/scoped run test",
-    "packages:test:watch": "npm --prefix packages/scoped run test:watch",
-    "packages:watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests|coverage|dist' --run -- npm run packages:build",
+    "packages:build": "npm --prefix packages/core run build",
+    "packages:pack": "npm --prefix packages/core run pack",
+    "packages:test": "npm --prefix packages/core run test",
+    "packages:test:watch": "npm --prefix packages/core run test:watch",
+    "packages:watch": "jung -d './packages/core/src|./modules' --run -- npm run packages:build",
     
     "test-server": "node ./tools/jil/bin/server",
     "sauce:connect": "node ./tools/jil/bin/sauce",

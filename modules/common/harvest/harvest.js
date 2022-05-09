@@ -15,77 +15,48 @@ import { now } from '../timing/now'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { ieVersion } from '../browser-version/ie-version'
 import { VERSION as NR_VERSION } from '../constants/environment-variables'
-import { obfuscateString, shouldObfuscate } from '../util/obfuscate'
+import { Obfuscator } from '../util/obfuscate'
 import { applyFnToProps } from '../util/traverse'
+import { SharedContext } from '../context/shared-context'
 
 const version = NR_VERSION
 // var version = '<VERSION>'
 // var jsonp = 'NREUM.setToken'
-var _events = {}
+// var _events = {}
 var haveSendBeacon = !!navigator.sendBeacon
-var tooManyRequestsDelay = getConfigurationValue('harvest.tooManyRequestsDelay') || 60
-var getScheme = () => (getConfigurationValue('ssl') === false) ? 'http' : 'https'
 
 // requiring ie version updates the IE version on the loader object
 // var ieVersion = require('./ie-version')
 export var xhrUsable = ieVersion > 9 || ieVersion === 0
 
-// export default {
-//   sendFinal: sendAllFromUnload,
-//   sendX: sendX,
-//   send: send,
-//   on: on,
-//   xhrUsable: xhrUsable,
-//   resetListeners: resetListeners,
-//   getSubmitMethod: getSubmitMethod
-// }
+export class Harvest extends SharedContext {
+  constructor(parent) {
+    super(parent) // gets any allowed properties from the parent and stores them in `sharedContext`
 
-export { sendAllFromUnload as sendFinal }
+    this.tooManyRequestsDelay = getConfigurationValue(this.sharedContext.agentIdentifier, 'harvest.tooManyRequestsDelay') || 60
+    this.obfuscator = new Obfuscator(this.sharedContext)
+    this.getScheme = () => (getConfigurationValue(this.sharedContext.agentIdentifier, 'ssl') === false) ? 'http' : 'https'
 
-function sendAllFromUnload() {
-  var sents = mapOwn(_events, function (endpoint) {
-    return sendX(endpoint, { unload: true })
-  })
-  return reduce(sents, or)
-}
-
-function or(a, b) { return a || b }
-
-function createPayload(type, options) {
-  var makeBody = createAccumulator()
-  var makeQueryString = createAccumulator()
-  var listeners = (_events[type] && _events[type] || [])
-
-  for (var i = 0; i < listeners.length; i++) {
-    var singlePayload = listeners[i](options)
-    if (!singlePayload) continue
-    if (singlePayload.body) mapOwn(singlePayload.body, makeBody)
-    if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
+    this._events = {}
   }
-  return { body: makeBody(), qs: makeQueryString() }
-}
 
-/**
- * Initiate a harvest from multiple sources. An event that corresponds to the endpoint
- * name is emitted, which gives any listeners the opportunity to provide payload data.
- *
- * @param {string} endpoint - The endpoint of the harvest (jserrors, events, resources etc.)
- * @param {object} nr - The loader singleton.
- *
- * @param {object} opts
- * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
- * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
- */
-export function sendX(endpoint, opts, cbFinished) {
-  var submitMethod = getSubmitMethod(endpoint, opts)
-  if (!submitMethod) return false
-  var options = {
-    retry: submitMethod.method === submitData.xhr
+  sendFinal() {
+    var sents = mapOwn(this._events, (endpoint) => {
+      return this.sendX(endpoint, { unload: true })
+    })
+    return reduce(sents, or)
   }
-  return shouldObfuscate() ? obfuscateAndSend(endpoint, createPayload(endpoint, options), opts, submitMethod, cbFinished) : _send(endpoint, createPayload(endpoint, options), opts, submitMethod, cbFinished)
-}
 
-/**
+  sendX(endpoint, opts, cbFinished) {
+    var submitMethod = getSubmitMethod(endpoint, opts)
+    if (!submitMethod) return false
+    var options = {
+      retry: submitMethod.method === submitData.xhr
+    }
+    return this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateAndSend(endpoint, this.createPayload(endpoint, options), opts, submitMethod, cbFinished) : this._send(endpoint, this.createPayload(endpoint, options), opts, submitMethod, cbFinished)
+  }
+
+  /**
  * Initiate a harvest call.
  *
  * @param {string} endpoint - The endpoint of the harvest (jserrors, events, resources etc.)
@@ -100,87 +71,151 @@ export function sendX(endpoint, opts, cbFinished) {
  * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
  * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
  */
-export function send(endpoint, singlePayload, opts, submitMethod, cbFinished) {
-  var makeBody = createAccumulator()
-  var makeQueryString = createAccumulator()
-  if (singlePayload.body) mapOwn(singlePayload.body, makeBody)
-  if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
+  send(endpoint, singlePayload, opts, submitMethod, cbFinished) {
+    var makeBody = createAccumulator()
+    var makeQueryString = createAccumulator()
+    if (singlePayload.body) mapOwn(singlePayload.body, makeBody)
+    if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
 
-  var payload = { body: makeBody(), qs: makeQueryString() }
-  var caller = shouldObfuscate() ? obfuscateAndSend : _send
-  return caller(endpoint, payload, opts, submitMethod, cbFinished)
-}
+    var payload = { body: makeBody(), qs: makeQueryString() }
+    var caller = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateAndSend : this._send
+    return caller(endpoint, payload, opts, submitMethod, cbFinished)
+  }
 
-function obfuscateAndSend(endpoint, payload, opts, submitMethod, cbFinished) {
-  applyFnToProps(payload, obfuscateString, 'string', ['e'])
-  return _send(endpoint, payload, opts, submitMethod, cbFinished)
-}
+  obfuscateAndSend(endpoint, payload, opts, submitMethod, cbFinished) {
+    applyFnToProps(payload, (...args) => this.obfuscator.obfuscateString(...args), 'string', ['e'])
+    return this._send(endpoint, payload, opts, submitMethod, cbFinished)
+  }
 
-function _send(endpoint, payload, opts, submitMethod, cbFinished) {
-  var info = getInfo()
-  // log('info in send!', info)
-  if (!info.errorBeacon) return false
+  _send(endpoint, payload, opts, submitMethod, cbFinished) {
+    var info = getInfo(this.sharedContext.agentIdentifier)
+    if (!info.errorBeacon) return false
 
-  if (!payload.body) {
-    // log('no payload body')
-    if (cbFinished) {
-      cbFinished({ sent: false })
+    if (!payload.body) {
+      if (cbFinished) {
+        cbFinished({ sent: false })
+      }
+      return false
     }
-    return false
+
+    if (!opts) opts = {}
+
+    var url = this.getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + this.baseQueryString()
+    if (payload.qs) url += encodeObj(payload.qs, getRuntime(this.sharedContext.agentIdentifier).maxBytes)
+
+    if (!submitMethod) {
+      submitMethod = getSubmitMethod(endpoint, opts)
+    }
+    var method = submitMethod.method
+    var useBody = submitMethod.useBody
+
+    var body
+    var fullUrl = url
+    if (useBody && endpoint === 'events') {
+      body = payload.body.e
+    } else if (useBody) {
+      body = stringify(payload.body)
+    } else {
+      fullUrl = url + encodeObj(payload.body, getRuntime(this.sharedContext.agentIdentifier).maxBytes)
+    }
+
+    var result = method(fullUrl, body)
+
+    if (cbFinished && method === submitData.xhr) {
+      var xhr = result
+      xhr.addEventListener('load', function () {
+        var result = { sent: true }
+        if (this.status === 429) {
+          result.retry = true
+          result.delay = this.tooManyRequestsDelay
+        } else if (this.status === 408 || this.status === 500 || this.status === 503) {
+          result.retry = true
+        }
+
+        if (opts.needResponse) {
+          result.responseText = this.responseText
+        }
+        cbFinished(result)
+      }, eventListenerOpts(false))
+    }
+
+    // if beacon request failed, retry with an alternative method
+    if (!result && method === submitData.beacon) {
+      method = submitData.img
+      result = method(url + encodeObj(payload.body, getRuntime(this.sharedContext.agentIdentifier).maxBytes))
+    }
+
+    return result
   }
 
-  if (!opts) opts = {}
+  // The stuff that gets sent every time.
+  baseQueryString() {
+    var areCookiesEnabled = true
+    const init = getConfiguration(this.sharedContext.agentIdentifier)
+    var runtime = getRuntime(this.sharedContext.agentIdentifier)
+    var info = getInfo(this.sharedContext.agentIdentifier)
 
-  // log("_send... getScheme!", getScheme())
-  var url = getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + baseQueryString()
-  if (payload.qs) url += encodeObj(payload.qs, getRuntime().maxBytes)
+    if ('privacy' in init) {
+      areCookiesEnabled = init.privacy.cookies_enabled
+    }
 
-  if (!submitMethod) {
-    submitMethod = getSubmitMethod(endpoint, opts)
-  }
-  var method = submitMethod.method
-  var useBody = submitMethod.useBody
+    var location = cleanURL(getLocation())
+    var ref = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateString(location) : location
 
-  var body
-  var fullUrl = url
-  if (useBody && endpoint === 'events') {
-    body = payload.body.e
-  } else if (useBody) {
-    body = stringify(payload.body)
-  } else {
-    fullUrl = url + encodeObj(payload.body, getRuntime().maxBytes)
-  }
-
-  var result = method(fullUrl, body)
-
-  // log('result...', result)
-  if (cbFinished && method === submitData.xhr) {
-    // log('in cbFinished')
-    var xhr = result
-    xhr.addEventListener('load', function () {
-      var result = { sent: true }
-      if (this.status === 429) {
-        result.retry = true
-        result.delay = tooManyRequestsDelay
-      } else if (this.status === 408 || this.status === 500 || this.status === 503) {
-        result.retry = true
-      }
-
-      if (opts.needResponse) {
-        result.responseText = this.responseText
-      }
-      cbFinished(result)
-    }, eventListenerOpts(false))
+    return ([
+      '?a=' + info.applicationID,
+      encodeParam('sa', (info.sa ? '' + info.sa : '')),
+      encodeParam('v', version),
+      transactionNameParam(info),
+      encodeParam('ct', runtime.customTransaction),
+      '&rst=' + now(),
+      '&ck=' + (areCookiesEnabled ? '1' : '0'),
+      encodeParam('ref', ref),
+      encodeParam('ptid', (runtime.ptid ? '' + runtime.ptid : ''))
+    ].join(''))
   }
 
-  // if beacon request failed, retry with an alternative method
-  if (!result && method === submitData.beacon) {
-    method = submitData.img
-    result = method(url + encodeObj(payload.body, getRuntime().maxBytes))
+  createPayload(type, options) {
+    var makeBody = createAccumulator()
+    var makeQueryString = createAccumulator()
+    var listeners = (this._events[type] && this._events[type] || [])
+
+    for (var i = 0; i < listeners.length; i++) {
+      var singlePayload = listeners[i](options)
+      if (!singlePayload) continue
+      if (singlePayload.body) mapOwn(singlePayload.body, makeBody)
+      if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
+    }
+    return { body: makeBody(), qs: makeQueryString() }
   }
 
-  return result
+  on(type, listener) {
+    var listeners = (this._events[type] || (this._events[type] = []))
+    listeners.push(listener)
+  }
+
+  resetListeners() {
+    mapOwn(this._events, function (key) {
+      this._events[key] = []
+    })
+  }
 }
+
+function or(a, b) { return a || b }
+
+// function createPayload(type, options) {
+//   var makeBody = createAccumulator()
+//   var makeQueryString = createAccumulator()
+//   var listeners = (_events[type] && _events[type] || [])
+
+//   for (var i = 0; i < listeners.length; i++) {
+//     var singlePayload = listeners[i](options)
+//     if (!singlePayload) continue
+//     if (singlePayload.body) mapOwn(singlePayload.body, makeBody)
+//     if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
+//   }
+//   return { body: makeBody(), qs: makeQueryString() }
+// }
 
 export function getSubmitMethod(endpoint, opts) {
   opts = opts || {}
@@ -225,42 +260,16 @@ function transactionNameParam(info) {
   return encodeParam('t', info.tNamePlain || 'Unnamed Transaction')
 }
 
-export function on(type, listener) {
-  var listeners = (_events[type] || (_events[type] = []))
-  listeners.push(listener)
-}
+// export function on(type, listener) {
+//   var listeners = (_events[type] || (_events[type] = []))
+//   listeners.push(listener)
+// }
 
-export function resetListeners() {
-  mapOwn(_events, function (key) {
-    _events[key] = []
-  })
-}
-
-// The stuff that gets sent every time.
-export function baseQueryString() {
-  var areCookiesEnabled = true
-  const init = getConfiguration()
-  if ('privacy' in init) {
-    areCookiesEnabled = init.privacy.cookies_enabled
-  }
-
-  var info = getInfo()
-
-  var location = cleanURL(getLocation())
-  var ref = shouldObfuscate() ? obfuscateString(location) : location
-
-  return ([
-    '?a=' + info.applicationID,
-    encodeParam('sa', (info.sa ? '' + info.sa : '')),
-    encodeParam('v', version),
-    transactionNameParam(info),
-    encodeParam('ct', getRuntime().customTransaction),
-    '&rst=' + now(),
-    '&ck=' + (areCookiesEnabled ? '1' : '0'),
-    encodeParam('ref', ref),
-    encodeParam('ptid', (getRuntime().ptid ? '' + getRuntime().ptid : ''))
-  ].join(''))
-}
+// export function resetListeners() {
+//   mapOwn(_events, function (key) {
+//     _events[key] = []
+//   })
+// }
 
 // returns a function that can be called to accumulate values to a single object
 // when the function is called without parameters, then the accumulator is returned

@@ -1,7 +1,7 @@
-import { defaults as nrDefaults } from '../../window/nreum'
-import { setValues } from './set-values'
+import { defaults as nrDefaults, gosNREUMInitializedAgents } from '../../window/nreum'
+import { Configurable } from './configurable'
 
-const info = {
+const model = {
   // preset defaults
   beacon: nrDefaults.beacon,
   errorBeacon: nrDefaults.errorBeacon,
@@ -23,10 +23,15 @@ const info = {
   tNamePlain: undefined
 }
 
-export function getInfo() {
-  return info
+const _cache = {}
+
+export function getInfo(id) {
+  if (!id) throw new Error('All config objects require an agent identifier!')
+  return _cache[id]
 }
 
-export function setInfo(obj) {
-  setValues(obj, info, 'info')
+export function setInfo(id, obj) {
+  if (!id) throw new Error('All config objects require an agent identifier!')
+  _cache[id] = new Configurable(obj, model)
+  gosNREUMInitializedAgents(id, _cache[id], 'info')
 }

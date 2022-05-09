@@ -9,7 +9,7 @@
     "build": "webpack --progress"
   },
   "dependencies": {
-    "nr-browser-core": "file:../../../../packages/scoped/local-install/nr-browser-core.tgz"
+    "nr-browser-core": "file:../../../../packages/core/local-install/nr-browser-core.tgz"
   },
   "devDependencies": {
     "shx": "^0.3.4",

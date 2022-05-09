@@ -5,7 +5,7 @@
 
 import { mapOwn } from '../util/map-own'
 import { stringify } from '../util/stringify'
-import { shouldObfuscate, obfuscateString } from '../util/obfuscate'
+import { Obfuscator } from '../util/obfuscate'
 
 var hasOwnProp = Object.prototype.hasOwnProperty
 var MAX_ATTRIBUTES = 64
@@ -30,7 +30,7 @@ export function numeric (n, noDefault) {
   return (n === undefined || n === 0) ? '' : Math.floor(n).toString(36)
 }
 
-export function getAddStringContext () {
+export function getAddStringContext (agentIdentifier) {
   // eslint-disable-next-line
   var stringTable = Object.hasOwnProperty('create') ? Object.create(null) : {}
   var stringTableIdx = 0
@@ -39,8 +39,9 @@ export function getAddStringContext () {
 
   function addString(str) {
     if (typeof str === 'undefined' || str === '') return ''
+    var obfuscator = new Obfuscator({agentIdentifier: agentIdentifier})
     str = String(str)
-    if (shouldObfuscate()) str = obfuscateString(str)
+    if (obfuscator.shouldObfuscate()) str = obfuscator.obfuscateString(str)
     if (hasOwnProp.call(stringTable, str)) {
       return numeric(stringTable[str], true)
     } else {

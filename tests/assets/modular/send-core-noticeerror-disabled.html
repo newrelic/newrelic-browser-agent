@@ -11,20 +11,24 @@
 
     <!-- Anything injection tag with 'packages/<DIR>' will be 
       replaced with packages/<DIR>/dist/index.js -->
-    {packages/scoped}
+    {packages/core}
     <script>
-      const {default: nr} = nrBrowserScoped;
-      // enable the errors auto feature before initializing
-      // this enabled by default, but just for brevity of what we are testing here
-      nr.features.errors.auto = true
-      const opts = {
+      const {default: NR} = nrBrowserCore;
+      const opts1 = {
         ...NREUM.init,
         ...NREUM.info,
-        ...NREUM.loader_config
+        ...NREUM.loader_config,
+        applicationID: 1
       };
-      nr.start(opts).then(() => {
+      const agent = new NR()
+      agent.features.errors.enabled = false
+      // enable the errors auto feature before initializing
+      // this enabled by default, but just for brevity of what we are testing here
+      agent.features.errors.auto = true
+      agent.start(opts1).then(() => {
         setTimeout(() => {throw new Error('hello')}, 1000)
       });
+
     </script>
   </head>
   <body>

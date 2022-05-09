@@ -9,14 +9,18 @@
 import test from '../../../../tools/jil/browser-test'
 import { addE } from '../../../../modules/common/event-listener/add-e'
 
-import {initialize as initStnInstrument} from '../../../../modules/features/session-trace/instrument'
-import {initialize as initErrorInstrument} from '../../../../modules/features/js-errors/instrument'
-import {initialize as initErrorAggregate} from '../../../../modules/features/js-errors/aggregate'
+// import {initialize as initStnInstrument} from '../../../../modules/features/session-trace/instrument'
+// import {initialize as initErrorInstrument} from '../../../../modules/features/js-errors/instrument'
+// import {initialize as initErrorAggregate} from '../../../../modules/features/js-errors/aggregate'
+
+import {Instrument as initStnInstrument} from '../../../../modules/features/session-trace/instrument'
+import {Instrument as initErrorInstrument} from '../../../../modules/features/js-errors/instrument'
+import {Aggregate as initErrorAggregate} from '../../../../modules/features/js-errors/aggregate'
 
 // Should be loaded first
-initStnInstrument()
-initErrorInstrument()
-initErrorAggregate()
+new initStnInstrument()
+new initErrorInstrument()
+new initErrorAggregate()
 
 import { take } from '../../../../modules/common/aggregate/aggregator'
 import { ee } from '../../../../modules/common/event-emitter/contextual-ee'

@@ -8,7 +8,7 @@ let config: NrOptions | any = {
     applicationID: 'applicationID',
     beacon: 'beacon',
     licenseKey: 'licenseKey',
-    obfuscate: [{regex: /test/g, replacement: 'test'}]
+    obfuscate: [{ regex: /test/g, replacement: 'test' }]
 }
 
 describe('nr interface', () => {
@@ -19,22 +19,27 @@ describe('nr interface', () => {
     });
 
     it('should not disable features if none are passed', async () => {
-        const {default: nr} = await import('./index')
-        const opts = {...config}
+        const { default: NR } = await import('./index')
+        const nr = new NR()
+        const opts = { ...config }
         await nr.start(opts)
         expect(nr.features).toContain(NrFeatures.JSERRORS)
     })
 
     it('should disable features based on disabled property of config', async () => {
-        const {default: nr} = await import('./index')
-        const opts = {...config, disabled: [NrFeatures.JSERRORS]}
+
+        const { default: NR } = await import('./index')
+        const nr = new NR()
+        const opts = { ...config, disabled: [NrFeatures.JSERRORS] }
         await nr.start(opts)
         expect(nr.features).not.toContain(NrFeatures.JSERRORS)
     })
 
     it('should set internal config values on start()', async () => {
-        const {default: nr} = await import('./index')
-        const opts = {...config}
+
+        const { default: NR } = await import('./index')
+        const nr = new NR()
+        const opts = { ...config }
         await nr.start(opts)
         expect(nr.config.info).toHaveProperty('licenseKey')
         expect(nr.config.info).toHaveProperty('applicationID')
@@ -45,16 +50,20 @@ describe('nr interface', () => {
     })
 
     it('should not set invalid internal config values', async () => {
-        const {default: nr} = await import('./index')
-        const opts = {...config, invalidProperty: 'invalid'}
+
+        const { default: NR } = await import('./index')
+        const nr = new NR()
+        const opts = { ...config, invalidProperty: 'invalid' }
         await nr.start(opts)
         expect(nr.config.info).not.toHaveProperty('invalidProperty')
     })
 
     it('should early return if already initialized', async () => {
-        const {default: nr} = await import('./index')
-        const opts = {...config}
-        const opts2 = {...config, applicationID: 'applicationID2', disabled: [NrFeatures.JSERRORS]}
+
+        const { default: NR } = await import('./index')
+        const nr = new NR()
+        const opts = { ...config }
+        const opts2 = { ...config, applicationID: 'applicationID2', disabled: [NrFeatures.JSERRORS] }
         expect(await nr.start(opts)).toBeTruthy()
         expect(await nr.start(opts2)).toBeFalsy()
         expect(nr.config.info.applicationID).not.toEqual('applicationID2')
@@ -62,38 +71,45 @@ describe('nr interface', () => {
     })
 
     it('should use real noticeError if initialized', async () => {
-        const {default: nr} = await import('./index')
+        const { default: NR } = await import('./index')
+        const nr = new NR()
         const spy = jest.spyOn(console, 'warn').mockImplementation()
-        const opts = {...config}
+        const opts = { ...config }
         await nr.start(opts)
         nr.noticeError('test')
         expect(spy).not.toHaveBeenCalled()
     })
 
     it('should use warning noticeError if not initialized', async () => {
-        const {default: nr} = await import('./index')
+
+        const { default: NR } = await import('./index')
+        const nr = new NR()
         const spy = jest.spyOn(console, 'warn').mockImplementation()
         nr.noticeError('test')
         expect(spy).toHaveBeenCalled()
     })
 
     it('should store initialized features in window.NREUM', async () => {
-        const {default: nr} = await import('./index')
-        const opts = {...config}
+
+        const { default: NR } = await import('./index')
+        const nr = new NR()
+        const opts = { ...config }
         await nr.start(opts)
 
-        const {initializedAgents} = window.NREUM
+        const { initializedAgents } = window.NREUM
         Object.values(initializedAgents).forEach((x: any) => {
             expect(x.features).toContain(NrFeatures.JSERRORS)
         })
     })
 
     it('should store not store disabled features in window.NREUM', async () => {
-        const {default: nr} = await import('./index')
-        const opts = {...config, disabled: [NrFeatures.JSERRORS]}
+
+        const { default: NR } = await import('./index')
+        const nr = new NR()
+        const opts = { ...config, disabled: [NrFeatures.JSERRORS] }
         await nr.start(opts)
-        
-        const {initializedAgents} = window.NREUM
+
+        const { initializedAgents } = window.NREUM
         Object.values(initializedAgents).forEach((x: any) => {
             expect(x.features).not.toContain(NrFeatures.JSERRORS)
         })

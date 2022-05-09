@@ -1,4 +1,4 @@
-import nr from 'nr-browser-core'
+import NR from 'nr-browser-core'
 
 const nrConfig = {
   ...NREUM.init,
@@ -7,8 +7,10 @@ const nrConfig = {
   // licenseKey: 'asdf',
   applicationID: 1
 }
+const nr = new NR()
 nr.start(nrConfig).then(() => {
   console.log("agent initialized! -- COMPONENT-1", nrConfig)
+  window.nr1 = nr
 })
 
 class PuppyComponent extends HTMLElement {

@@ -10,19 +10,16 @@ import { mark } from './stopwatch'
 import { ffVersion } from '../browser-version/firefox-version'
 import { setOffset } from './now'
 import { exists as performanceCheckExists } from './performance-check'
-import { log } from '../debug/logging'
 
 export let navCookie = true
 
 findStartTime()
 
 export function findStartTime () {
-  log('FIND START TIME!')
   var starttime = findStartWebTiming() || findStartCookie()
 
   if (!starttime) return
 
-  log('mark the start time!')
   mark('starttime', starttime)
   // Refine loader.offset
   // offset = starttime

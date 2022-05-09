@@ -7,110 +7,109 @@ import { ee } from '../../../common/event-emitter/contextual-ee'
 import { mapOwn } from '../../../common/util/map-own'
 import { stringify } from '../../../common/util/stringify'
 import { registerHandler as register } from '../../../common/event-emitter/register-handler'
-import { on as onHarvest } from '../../../common/harvest/harvest'
+// import { on as onHarvest } from '../../../common/harvest/harvest'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { getConfigurationValue, getInfo, getRuntime, setInfo } from '../../../common/config/config'
-import { log } from '../../../common/debug/logging'
+import { FeatureBase } from '../../../common/util/feature-base'
 
-var eventsPerMinute = 240
-// var harvestTimeSeconds = config.getConfiguration('ins.harvestTimeSeconds') || 30
-var harvestTimeSeconds = getConfigurationValue('ins.harvestTimeSeconds') || 30
-var eventsPerHarvest = eventsPerMinute * harvestTimeSeconds / 60
-var referrerUrl
-var currentEvents
+export class Aggregate extends FeatureBase {
+  constructor(agentIdentifier, aggregator) {
+    super(agentIdentifier, aggregator)
+    this.eventsPerMinute = 240
+    this.harvestTimeSeconds = getConfigurationValue('ins.harvestTimeSeconds') || 30
+    this.eventsPerHarvest = this.eventsPerMinute * this.harvestTimeSeconds / 60
+    this.referrerUrl
+    this.currentEvents
 
-var events = []
-var att = {}
-setInfo({jsAttributes: att})
+    this.events = []
+    this.att = {}
+    setInfo(this.agentIdentifier, {jsAttributes: this.att})
 
-if (document.referrer) referrerUrl = cleanURL(document.referrer)
+    if (document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
-export function initialize() {
-  log('initialize pageActions!')
+    register('api-setCustomAttribute', (...args) => this.setCustomAttribute(...args), 'api')
 
-  register('api-setCustomAttribute', setCustomAttribute, 'api')
-
-  ee.on('feat-ins', function () {
-    log('feat-ins!')
+    ee.on('feat-ins', function () {
     // TODO
     // Check why this isnt firing when called from the API
     // i think its not getting the NREUM info before making the call to get features
-    register('api-addPageAction', addPageAction)
+      register('api-addPageAction', (...args) => this.addPageAction(...args))
 
-    onHarvest('ins', onHarvestStarted)
-    var scheduler = new HarvestScheduler('ins', { onFinished: onHarvestFinished })
-    scheduler.startTimer(harvestTimeSeconds, 0)
-  })
-}
+      var scheduler = new HarvestScheduler('ins', {onFinished: (...args) => this.onHarvestFinished(...args)}, this)
+      scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
+      scheduler.startTimer(this.harvestTimeSeconds, 0)
+    })
+  }
 
-function onHarvestStarted (options) {
-  const { userAttributes, atts } = getInfo()
-  var payload = ({
-    qs: {
-      ua: userAttributes,
-      at: atts
-    },
-    body: {
-      ins: events
+  onHarvestStarted (options) {
+    const { userAttributes, atts } = getInfo(this.agentIdentifier)
+    var payload = ({
+      qs: {
+        ua: userAttributes,
+        at: atts
+      },
+      body: {
+        ins: this.events
+      }
+    })
+
+    if (options.retry) {
+      this.currentEvents = this.events
     }
-  })
 
-  if (options.retry) {
-    currentEvents = events
+    this.events = []
+    return payload
   }
 
-  events = []
-  return payload
+  onHarvestFinished (result) {
+    if (result && result.sent && result.retry && this.currentEvents) {
+      this.events = this.events.concat(this.currentEvents)
+      this.currentEvents = null
+    }
+  }
+
+  // WARNING: Insights times are in seconds. EXCEPT timestamp, which is in ms.
+  addPageAction (t, name, attributes) {
+    if (this.events.length >= this.eventsPerHarvest) return
+    var width
+    var height
+    var eventAttributes = {}
+
+    if (typeof window !== 'undefined' && window.document && window.document.documentElement) {
+      // Doesn't include the nav bar when it disappears in mobile safari
+      // https://github.com/jquery/jquery/blob/10399ddcf8a239acc27bdec9231b996b178224d3/src/dimensions.js#L23
+      width = window.document.documentElement.clientWidth
+      height = window.document.documentElement.clientHeight
+    }
+
+    var defaults = {
+      timestamp: t + getRuntime(this.agentIdentifier).offset,
+      timeSinceLoad: t / 1000,
+      browserWidth: width,
+      browserHeight: height,
+      referrerUrl: this.referrerUrl,
+      currentUrl: cleanURL('' + location),
+      pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin),
+      eventType: 'PageAction'
+    }
+
+    mapOwn(defaults, set)
+    mapOwn(this.att, set)
+    if (attributes && typeof attributes === 'object') {
+      mapOwn(attributes, set)
+    }
+    eventAttributes.actionName = name || ''
+
+    this.events.push(eventAttributes)
+
+    function set (key, val) {
+      eventAttributes[key] = (val && typeof val === 'object' ? stringify(val) : val)
+    }
+  }
+
+  setCustomAttribute (t, key, value) {
+    this.att[key] = value
+  }
 }
 
-function onHarvestFinished (result) {
-  if (result && result.sent && result.retry && currentEvents) {
-    events = events.concat(currentEvents)
-    currentEvents = null
-  }
-}
-
-// WARNING: Insights times are in seconds. EXCEPT timestamp, which is in ms.
-function addPageAction (t, name, attributes) {
-  log('add a page action!', t, name, attributes)
-  if (events.length >= eventsPerHarvest) return
-  var width
-  var height
-  var eventAttributes = {}
-
-  if (typeof window !== 'undefined' && window.document && window.document.documentElement) {
-    // Doesn't include the nav bar when it disappears in mobile safari
-    // https://github.com/jquery/jquery/blob/10399ddcf8a239acc27bdec9231b996b178224d3/src/dimensions.js#L23
-    width = window.document.documentElement.clientWidth
-    height = window.document.documentElement.clientHeight
-  }
-
-  var defaults = {
-    timestamp: t + getRuntime().offset,
-    timeSinceLoad: t / 1000,
-    browserWidth: width,
-    browserHeight: height,
-    referrerUrl: referrerUrl,
-    currentUrl: cleanURL('' + location),
-    pageUrl: cleanURL(getRuntime().origin),
-    eventType: 'PageAction'
-  }
-
-  mapOwn(defaults, set)
-  mapOwn(att, set)
-  if (attributes && typeof attributes === 'object') {
-    mapOwn(attributes, set)
-  }
-  eventAttributes.actionName = name || ''
-
-  events.push(eventAttributes)
-
-  function set (key, val) {
-    eventAttributes[key] = (val && typeof val === 'object' ? stringify(val) : val)
-  }
-}
-
-function setCustomAttribute (t, key, value) {
-  att[key] = value
-}

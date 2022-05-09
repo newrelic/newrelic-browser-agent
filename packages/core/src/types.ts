@@ -9,7 +9,7 @@ export class NrFeature {
     private _enabled: boolean = true
     private _auto: boolean = true
     
-    constructor(public featureName: NrFeatures){}
+    constructor(public name: NrFeatures){}
 
     get enabled (): boolean {
         return this._enabled

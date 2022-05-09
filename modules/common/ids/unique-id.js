@@ -57,7 +57,7 @@ export function generateTraceId() {
   return generateRandomHexString(32)
 }
 
-function generateRandomHexString(length) {
+export function generateRandomHexString(length) {
   var randomVals = null
   var rvIndex = 0
   var crypto = window.crypto || window.msCrypto

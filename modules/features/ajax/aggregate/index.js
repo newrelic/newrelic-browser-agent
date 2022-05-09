@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { registerHandler as register } from '../../../common/event-emitter/register-handler'
-// import { on as harvestOn } from '../../../common/harvest/harvest'
 import { stringify } from '../../../common/util/stringify'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { ee as baseEE } from '../../../common/event-emitter/contextual-ee'
@@ -47,7 +46,10 @@ export class Aggregate extends FeatureBase {
     register('xhr', (...args) => this.storeXhr(...args))
 
     if (this.allAjaxIsEnabled()) {
-      this.scheduler = new HarvestScheduler('events', { onFinished: (...args) => this.onEventsHarvestFinished(...args), getPayload: (...args) => this.prepareHarvest(...args) })
+      this.scheduler = new HarvestScheduler('events', {
+        onFinished: (...args) => this.onEventsHarvestFinished(...args),
+        getPayload: (...args) => this.prepareHarvest(...args)
+      })
       this.scheduler.harvest.on('jserrors', function () {
         return { body: this.aggregator.take(['xhr']) }
       })
@@ -68,7 +70,6 @@ export class Aggregate extends FeatureBase {
   }
 
   storeXhr(params, metrics, startTime, endTime, type) {
-    // TODO: remove after testing
     if (params.hostname === 'localhost') {
       return
     }
@@ -185,10 +186,6 @@ export class Aggregate extends FeatureBase {
       this.ajaxEvents = this.ajaxEvents.concat(this.sentAjaxEvents)
       this.sentAjaxEvents = []
     }
-  }
-
-  finalHarvest() {
-    this.scheduler.runHarvest({ unload: true })
   }
 
   splitChunks(arr, chunkSize) {

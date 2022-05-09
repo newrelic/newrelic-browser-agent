@@ -8,7 +8,6 @@ import { now } from '../../../common/timing/now'
 import { mapOwn } from '../../../common/util/map-own'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { defaultRegister as register } from '../../../common/event-emitter/register-handler'
-import { subscribeToUnload } from '../../../common/unload/unload'
 import { cleanURL } from '../../../common/url/clean-url'
 import { handle } from '../../../common/event-emitter/handle'
 import { getInfo } from '../../../common/config/config'
@@ -38,7 +37,11 @@ export class Aggregate extends FeatureBase {
     var initialHarvestSeconds = this.options.initialHarvestSeconds || 10
     this.harvestTimeSeconds = this.options.harvestTimeSeconds || 30
 
-    this.scheduler = new HarvestScheduler('events', { onFinished: (...args) => this.onHarvestFinished(...args), getPayload: (...args) => this.prepareHarvest(...args) }, this)
+    this.scheduler = new HarvestScheduler('events', {
+      onFinished: (...args) => this.onHarvestFinished(...args),
+      getPayload: (...args) => this.prepareHarvest(...args),
+      onUnload: () => this.finalHarvest()
+    }, this)
 
     register('timing', (...args) => this.processTiming(...args))
     register('lcp', (...args) => this.updateLatestLcp(...args))
@@ -48,7 +51,7 @@ export class Aggregate extends FeatureBase {
     // final harvest is initiated from the main agent module, but since harvesting
     // here is not initiated by the harvester, we need to subscribe to the unload event
     // separately
-    subscribeToUnload((...args) => this.finalHarvest(...args))
+    // subscribeToUnload((...args) => this.finalHarvest(...args))
 
     // After 1 minute has passed, record LCP value if no user interaction has occurred first
     setTimeout(() => {

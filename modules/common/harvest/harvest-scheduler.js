@@ -7,6 +7,8 @@
 import { submitData } from '../util/submit-data'
 import { SharedContext } from '../context/shared-context'
 import { Harvest } from './harvest'
+import { subscribeToUnload } from '../unload/unload'
+import { conditionallySet } from '../../../agent/nav-cookie'
 
 /**
  * Periodically invokes harvest calls and handles retries
@@ -20,6 +22,14 @@ export class HarvestScheduler extends SharedContext {
     this.timeoutHandle = null
 
     this.harvest = new Harvest(this.sharedContext)
+
+    subscribeToUnload(() => {
+      // if opts.onUnload is defined, these are special actions that are meant
+      // to execute before attempting to send the final payload
+      if (this.opts.onUnload) this.opts.onUnload()
+      this.harvest.sendFinal()
+      conditionallySet()
+    })
   }
 
   startTimer(interval, initialDelay) {

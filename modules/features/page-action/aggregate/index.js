@@ -36,8 +36,7 @@ export class Aggregate extends FeatureBase {
     // i think its not getting the NREUM info before making the call to get features
       register('api-addPageAction', (...args) => this.addPageAction(...args))
 
-      // onHarvest('ins', onHarvestStarted)
-      var scheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
+      var scheduler = new HarvestScheduler('ins', {onFinished: (...args) => this.onHarvestFinished(...args)}, this)
       scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
       scheduler.startTimer(this.harvestTimeSeconds, 0)
     })

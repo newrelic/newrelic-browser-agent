@@ -79,7 +79,11 @@ export class Aggregate extends FeatureBase {
 
     // onHarvest('resources', prepareHarvest)
 
-    var scheduler = new HarvestScheduler('resources', { onFinished: (...args) => onHarvestFinished(...args), retryDelay: (...args) => this.harvestTimeSeconds(...args) })
+    var scheduler = new HarvestScheduler('resources', {
+      onFinished: (...args) => onHarvestFinished(...args),
+      retryDelay: (...args) => this.harvestTimeSeconds(...args)
+      // onUnload: () => this.finalHarvest() // no special actions needed before unloading
+    })
     scheduler.runHarvest({ needResponse: true })
     scheduler.harvest.on('resources', (...args) => prepareHarvest(...args))
 

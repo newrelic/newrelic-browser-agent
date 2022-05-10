@@ -1,0 +1,14 @@
+{
+  "name": "@newrelic/browser-agent-core",
+  "version": "0.0.1",
+  "description": "",
+  "dependencies": {
+    "lodash._slice": "^2.4.1"
+  },
+  "scripts": {},
+  "author": "",
+  "license": "ISC",
+  "sideEffects": [
+    "./modules/common/wrap/*"
+  ]
+}

@@ -1,4 +1,4 @@
-import NR from 'nr-browser-core'
+import NR from '@newrelic/browser-agent/dist/cjs'
 
 
 // const nrConfig = { ...NREUM.init, ...NREUM.info, ...NREUM.loader_config, licenseKey: 'asdf', applicationID: 2 }

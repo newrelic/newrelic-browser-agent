@@ -9,7 +9,7 @@
     "build": "webpack --progress"
   },
   "dependencies": {
-    "nr-browser-core": "file:../../../../packages/core/local-install/nr-browser-core.tgz"
+    "@newrelic/browser-agent": "file:../../../../packages/browser-agent"
   },
   "devDependencies": {
     "shx": "^0.3.4",

@@ -32,7 +32,7 @@
     "test-server": "node ./tools/jil/bin/server",
     "sauce:connect": "node ./tools/jil/bin/sauce",
 
-    "tools:test-builds": "npm run packages:pack && npm --prefix ./tools/test-builds/build-time-mfe run build"
+    "tools:test-builds": "npm --prefix ./tools/test-builds/build-time-mfe run build"
   },
   "bin": {
     "jil": "./tools/jil/bin/cli.js",

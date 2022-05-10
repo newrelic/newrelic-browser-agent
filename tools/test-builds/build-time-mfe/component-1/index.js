@@ -1,4 +1,11 @@
-import NR from '@newrelic/browser-agent/dist/cjs'
+// import {BrowserAgent} from '@newrelic/browser-agent/cjs' // should import cjs modules, should not code-splitting
+// import {BrowserAgent} from '@newrelic/browser-agent/bundled' // should import bundled code (umd), with lib namespace of 'NRBA'
+// import {BrowserAgent} from '@newrelic/browser-agent/umd' // should import umd modules, should allow code-splitting
+// import {BrowserAgent} from '@newrelic/browser-agent/es' // should import es modules, should allow code-splitting
+import {BrowserAgent} from '@newrelic/browser-agent' // should import es modules, should allow code-splitting
+// const { BrowserAgent } = require('@newrelic/browser-agent') // should import cjs, should not allow code-splitting
+
+console.log(BrowserAgent)
 
 const nrConfig = {
   ...NREUM.init,
@@ -7,7 +14,7 @@ const nrConfig = {
   // licenseKey: 'asdf',
   applicationID: 1
 }
-const nr = new NR()
+const nr = new BrowserAgent()
 nr.start(nrConfig).then(() => {
   console.log("agent initialized! -- COMPONENT-1", nrConfig)
   window.nr1 = nr

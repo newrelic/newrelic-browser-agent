@@ -21,7 +21,8 @@ describe('nr interface', () => {
     it('should import modules in enabledFeatures', async () => {
         const {Features} = await import('./features')
         const {Aggregate} = await import('@newrelic/browser-agent-core/features/js-errors/aggregate')
-        jest.mock('.@newrelic/browser-agent-core/features/js-errors/aggregate')
+        jest.mock('@newrelic/browser-agent-core/features/js-errors/aggregate')
+        jest.mock('@newrelic/browser-agent-core/features/js-errors/instrument')
         const aggregator = jest.mock('@newrelic/browser-agent-core/common/aggregate/aggregator', () => {})
         const initializedFeatures = await initializeFeatures('1234', new Api(id), aggregator, new Features())
         expect(Aggregate).toHaveBeenCalled()
@@ -32,8 +33,10 @@ describe('nr interface', () => {
         const {Features} = await import('./features')
         const features = new Features()
         features.errors.enabled = false
+        features.errors.auto = false
         const {Aggregate} = await import('@newrelic/browser-agent-core/features/js-errors/aggregate')
         jest.mock('@newrelic/browser-agent-core/features/js-errors/aggregate')
+        jest.mock('@newrelic/browser-agent-core/features/js-errors/instrument')
         const aggregator = jest.mock('@newrelic/browser-agent-core/common/aggregate/aggregator', () => {})
         const initializedFeatures = await initializeFeatures('1234', new Api(id), aggregator, features)
         expect(Aggregate).not.toHaveBeenCalled()

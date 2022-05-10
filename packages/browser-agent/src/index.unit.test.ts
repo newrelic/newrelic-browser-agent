@@ -3,6 +3,7 @@
  */
 declare var window: any
 import { NrFeatures, NrOptions } from './types';
+import { Features } from './utils/features/features';
 
 let config: NrOptions | any = {
     applicationID: 'applicationID',
@@ -18,25 +19,7 @@ describe('nr interface', () => {
         delete window.NREUM
     });
 
-    it('should not disable features if none are passed', async () => {
-        const { default: NR } = await import('./index')
-        const nr = new NR()
-        const opts = { ...config }
-        await nr.start(opts)
-        expect(nr.features).toContain(NrFeatures.JSERRORS)
-    })
-
-    it('should disable features based on disabled property of config', async () => {
-
-        const { default: NR } = await import('./index')
-        const nr = new NR()
-        const opts = { ...config, disabled: [NrFeatures.JSERRORS] }
-        await nr.start(opts)
-        expect(nr.features).not.toContain(NrFeatures.JSERRORS)
-    })
-
     it('should set internal config values on start()', async () => {
-
         const { default: NR } = await import('./index')
         const nr = new NR()
         const opts = { ...config }
@@ -63,11 +46,12 @@ describe('nr interface', () => {
         const { default: NR } = await import('./index')
         const nr = new NR()
         const opts = { ...config }
-        const opts2 = { ...config, applicationID: 'applicationID2', disabled: [NrFeatures.JSERRORS] }
+        const opts2 = { ...config, applicationID: 'applicationID2' }
         expect(await nr.start(opts)).toBeTruthy()
+        expect(nr.initialized).toBeTruthy()
         expect(await nr.start(opts2)).toBeFalsy()
+        expect(nr.initialized).toBeTruthy()
         expect(nr.config.info.applicationID).not.toEqual('applicationID2')
-        expect(nr.features).toContain(NrFeatures.JSERRORS)
     })
 
     it('should use real noticeError if initialized', async () => {
@@ -102,11 +86,12 @@ describe('nr interface', () => {
         })
     })
 
-    it('should store not store disabled features in window.NREUM', async () => {
+    it('should not store disabled features in window.NREUM', async () => {
 
         const { default: NR } = await import('./index')
         const nr = new NR()
-        const opts = { ...config, disabled: [NrFeatures.JSERRORS] }
+        const opts = { ...config }
+        nr.features.errors.enabled = false
         await nr.start(opts)
 
         const { initializedAgents } = window.NREUM

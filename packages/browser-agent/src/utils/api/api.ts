@@ -6,8 +6,11 @@ export class Api {
     storeError: null
   }
   private _initialized = false
-  constructor(public agentIdentifier) {
+  private _parent: any
+
+  constructor(parent) {
     this._initialized = true
+    this._parent = parent
   }
 
   noticeError(err: Error | String, customAttributes?: Object) {
@@ -21,18 +24,18 @@ export class Api {
       return this.importedMethods.storeError(err, time, internal, customAttributes)
     }
     // if the agent has not been started, the source API method will have not been loaded...
-    if (!this._initialized && !this.importedMethods.storeError) return notInitialized(NrFeatures.JSERRORS)
+    if (!this._parent.initialized && !this.importedMethods.storeError) return notInitialized(this._parent.id, NrFeatures.JSERRORS)
     // if the error feature module is disabled, this function throws a warning message
-    if (this._initialized && !this.importedMethods.storeError) return isDisabled(NrFeatures.JSERRORS, 'noticeError')
+    if (this._parent.initialized && !this.importedMethods.storeError) return isDisabled(this._parent.id, NrFeatures.JSERRORS, 'noticeError')
   }
 }
 
-function notInitialized(featureName: NrFeatures) {
-  console.warn(`You are calling a ${featureName} Feature API, but the Browser Agent has not been started... Please start the agent using .start({...opts})`)
+function notInitialized(agentIdentifier: string, featureName: NrFeatures) {
+  console.warn(`Agent ${agentIdentifier} is calling a ${featureName} Feature API, but the Browser Agent has not been started... Please start the agent using .start({...opts})`)
 }
 
-function isDisabled(featureName: NrFeatures, methodName: string) {
-  console.warn(`The ${featureName} Feature of the New Relic Browser Agent Has Been Disabled. Method "${methodName}" will not do anything!`)
+function isDisabled(agentIdentifier: string, featureName: NrFeatures, methodName: string) {
+  console.warn(`The ${featureName} Feature of agent ${agentIdentifier} Has Been Disabled. Method "${methodName}" will not do anything!`)
 }
 
 function invalidCall(methodName: string, argument: any, validType: any) {

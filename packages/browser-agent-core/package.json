@@ -1,7 +1,7 @@
 {
   "name": "@newrelic/browser-agent-core",
   "version": "0.0.1",
-  "description": "",
+  "description": "New Relic Browser Agent Core Modules",
   "dependencies": {
     "lodash._slice": "^2.4.1"
   },

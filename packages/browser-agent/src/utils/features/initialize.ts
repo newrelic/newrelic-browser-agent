@@ -10,7 +10,6 @@ export function initializeFeatures(agentIdentifier: string, api: Api, sharedAggr
         if (feature.auto) {
             const { Instrument }: { Instrument: any } = await import(`@newrelic/browser-agent-core/features/${feature.name}/instrument`) // dont lazy load this -- put it in main bundle
             const featureInstrumentation = new Instrument(agentIdentifier)
-            console.log("initialized instrument!", featureInstrumentation)
         }
         const { Aggregate }: { Aggregate: any } = await import(`@newrelic/browser-agent-core/features/${feature.name}/aggregate`)
         const featureAggregator = new Aggregate(agentIdentifier, sharedAggregator)

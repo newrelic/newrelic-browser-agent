@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "npm --prefix ./container run serve",
-    "build": "npm --prefix ./component-1 run cleanInstall && npm --prefix ./component-2 run cleanInstall && npm --prefix ./container run cleanInstall && npm --prefix ./container run build"
+    "build": "npm --prefix ./component-1 install && npm --prefix ./component-2 install && npm --prefix ./container install && npm --prefix ./container run build"
   },
   "keywords": [],
   "author": "",

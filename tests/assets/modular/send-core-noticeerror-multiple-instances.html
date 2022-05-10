@@ -11,10 +11,10 @@
 
     <!-- Any injection tag with 'packages/<DIR>' will automatically be 
       replaced with packages/<DIR>/dist/index.js -->
-    {packages/core}
+    {packages/browser-agent}
     <script>
       // 1st instance
-      const {default: NR} = nrBrowserCore;
+      const {default: NR} = NRBA;
       const opts1 = {
         ...NREUM.init,
         ...NREUM.info,

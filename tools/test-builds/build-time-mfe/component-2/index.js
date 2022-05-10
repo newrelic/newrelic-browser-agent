@@ -1,7 +1,12 @@
-import NR from 'nr-browser-core'
+// import {BrowserAgent} from '@newrelic/browser-agent/cjs' // should import cjs modules, should not code-splitting
+// import {BrowserAgent} from '@newrelic/browser-agent/bundled' // should import bundled code (umd), with lib namespace of 'NRBA'
+// import {BrowserAgent} from '@newrelic/browser-agent/umd' // should import umd modules, should allow code-splitting
+// import {BrowserAgent} from '@newrelic/browser-agent/es' // should import es modules, should allow code-splitting
+import {BrowserAgent} from '@newrelic/browser-agent' // should import es modules, should allow code-splitting
+// const { BrowserAgent } = require('@newrelic/browser-agent') // should import cjs, should not allow code-splitting
 
+console.log(BrowserAgent)
 
-// const nrConfig = { ...NREUM.init, ...NREUM.info, ...NREUM.loader_config, licenseKey: 'asdf', applicationID: 2 }
 const nrConfig = {
   ...NREUM.init,
    ...NREUM.info, 
@@ -9,11 +14,11 @@ const nrConfig = {
   // licenseKey: 'asdf',
   applicationID: 2
 }
-const nr = new NR()
+const nr = new BrowserAgent()
 nr.start(nrConfig).then(() => {
   console.log("agent initialized! -- COMPONENT-2", nrConfig)
   window.nr2 = nr
-}) 
+})
 
 class KittenComponent extends HTMLElement {
     constructor() {

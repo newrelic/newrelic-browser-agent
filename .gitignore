@@ -16,4 +16,4 @@ node_modules
 .vscode
 .secrets
 **/local-install
-tests/assets/test-builds/build-time-mfe/build-time-mfe.js
+tests/assets/test-builds/build-time-mfe/*

@@ -23,16 +23,16 @@
     "cdn:build-dev": "DEBUG=true npm --prefix cdn run build",
     "cdn:watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests' --run -- npm run cdn:build-dev",
 
-    "packages:build": "npm --prefix packages/core run build",
-    "packages:pack": "npm --prefix packages/core run pack",
-    "packages:test": "npm --prefix packages/core run test",
-    "packages:test:watch": "npm --prefix packages/core run test:watch",
-    "packages:watch": "jung -d './packages/core/src|./modules' --run -- npm run packages:build",
+    "packages:build": "npm --prefix packages/browser-agent run build",
+    "packages:pack": "npm --prefix packages/browser-agent run pack",
+    "packages:test": "npm --prefix packages/browser-agent run test",
+    "packages:test:watch": "npm --prefix packages/browser-agent run test:watch",
+    "packages:watch": "jung -d './packages/browser-agent/src|./modules' --run -- npm run packages:build",
     
     "test-server": "node ./tools/jil/bin/server",
     "sauce:connect": "node ./tools/jil/bin/sauce",
 
-    "tools:test-builds": "npm run packages:pack && npm --prefix ./tools/test-builds/build-time-mfe run build"
+    "tools:test-builds": "npm --prefix ./tools/test-builds/build-time-mfe run build"
   },
   "bin": {
     "jil": "./tools/jil/bin/cli.js",

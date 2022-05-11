@@ -11,6 +11,7 @@ import { wrapRaf, wrapTimer, wrapGlobalEvents, wrapXhr } from '../../../common/w
 import slice from 'lodash._slice'
 import './debug'
 import { FeatureBase } from '../../../common/util/feature-base'
+import {ee} from '../../../common/event-emitter/contextual-ee'
 
 var origOnerror = window.onerror
 var handleErrors = false

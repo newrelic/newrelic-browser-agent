@@ -1,11 +1,11 @@
-// import {BrowserAgent} from '@newrelic/browser-agent/cjs' // should import cjs modules, should not code-splitting
-// import {BrowserAgent} from '@newrelic/browser-agent/bundled' // should import bundled code (umd), with lib namespace of 'NRBA'
-// import {BrowserAgent} from '@newrelic/browser-agent/umd' // should import umd modules, should allow code-splitting
-// import {BrowserAgent} from '@newrelic/browser-agent/es' // should import es modules, should allow code-splitting
-import {BrowserAgent} from '@newrelic/browser-agent' // should import es modules, should allow code-splitting
-// const { BrowserAgent } = require('@newrelic/browser-agent') // should import cjs, should not allow code-splitting
+import { BrowserAgent } from '@newrelic/browser-agent' // should import es modules, should allow code-splitting
 
-console.log(BrowserAgent)
+// const nrConfig = {
+//   applicationID: 35094708,
+//   licenseKey: '2fec6ab188',
+//   beacon: 'staging-bam-cell.nr-data.net',
+//   jserrors: { harvestTimeSeconds: 5 }
+// }
 
 const nrConfig = {
   ...NREUM.init,
@@ -14,53 +14,61 @@ const nrConfig = {
   // licenseKey: 'asdf',
   applicationID: 2
 }
-const nr = new BrowserAgent()
+const nr = new BrowserAgent() // Create a new instance of the Browser Agent
+
+nr.features.errors.auto = false // Disable auto instrumentation (full page)
+
 nr.start(nrConfig).then(() => {
-  console.log("agent initialized! -- COMPONENT-2", nrConfig)
-  window.nr2 = nr
+  console.debug("agent initialized! -- Kitten Component")
 })
 
+
 class KittenComponent extends HTMLElement {
-    constructor() {
-        super()
-        this.shadow = this.attachShadow({ mode: 'open' })
-        this.elem = document.createElement('img')
-        this.elem.addEventListener("click", () => {
-          nr.noticeError(new Error('Component 2 Error'))
-          // throw new Error('Component 2 Error')
-        })
-        this.name = 'Kitten Component'
-        this.setImg()
-    }
+  static name = 'kitten-component'
+  constructor() {
+    super()
+    this.shadow = this.attachShadow({ mode: 'open' })
+    this.elem = document.createElement('img')
+    this.name = 'Kitten Component'
+    this.setImg()
+  }
 
-    fetchImg = async () => {
-        const params = { api_key: 'TMWFkdtKTv6To8CjL9OqC2KBNQTM8D3N', q: 'kitten', limit: 100 };
-        const url = new URL(`https://api.giphy.com/v1/gifs/search`)
-        Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
-        const resp = await fetch(url)
-        const json = await resp.json()
-        const result = json.data.length > 0 ? json.data[Math.floor(Math.random() * json.data.length)].images.downsized.url : 'https://media.giphy.com/media/3zhxq2ttgN6rEw8SDx/giphy.gif';
-        
-        return result
-    }
+  fetchImg = async () => {
+    const params = { api_key: 'TMWFkdtKTv6To8CjL9OqC2KBNQTM8D3N', q: 'kitten', limit: 100 };
+    const url = new URL(`https://api.giphy.com/v1/gifs/search`)
+    Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
+    const resp = await fetch(url)
+    const json = await resp.json()
+    const result = json.data.length > 0 ? json.data[Math.floor(Math.random() * json.data.length)].images.downsized.url : 'https://media.giphy.com/media/3zhxq2ttgN6rEw8SDx/giphy.gif';
 
-    setImg = async () => {
-        const img = await this.fetchImg()
-        this.elem.src = img
-        this.elem.style.maxWidth = "100vw"
-        this.shadow.appendChild(this.elem)
-        setTimeout(() => this.sendError(), 2000)
-    }
+    return result
+  }
 
-    sendError = () => {
-      nr.noticeError(new Error(`${this.name} called noticeError()`))
-    }
+  setImg = async () => {
+    const img = await this.fetchImg()
+    this.elem.src = img
+    this.elem.style.maxWidth = "100vw"
+    this.elem.style.maxHeight = '250px'
+    this.shadow.appendChild(this.elem)
+    this.sendError()
+  }
+
+  sendError = () => {
+    console.debug(`NOTICING (nr.noticeError()) an error in ${this.name}`)
+    const err = new Error(`nr.noticeError() called in ${this.name} (Component-2)!`)
+    nr.noticeError(err)
+    // throw new Error(`${this.name} called nr.noticeError() then intentionally threw this GLOBAL error!`)
+  }
+
 }
-customElements.define('kitten-component', KittenComponent)
+customElements.define(KittenComponent.name, KittenComponent)
 
-export function mount(){
-  const root = document.body
-  const webComponent = document.createElement('kitten-component')
-  
-  root.appendChild(webComponent)
+export function mount(elem) {
+  const webComponent = document.createElement(KittenComponent.name)
+
+  elem.appendChild(webComponent)
+}
+
+export function unmount() {
+  document.querySelectorAll(KittenComponent.name).forEach(component => component.remove())
 }

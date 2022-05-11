@@ -32,6 +32,8 @@ export class Instrument extends FeatureBase {
   }
 }
 
+// TODO update all of this to go into class and use this.ee for ee, handle, and register
+
 export function getWrappedFetch() {
   var wrappedFetch = wrapFetch(ee)
   subscribeToEvents(ee, handle)

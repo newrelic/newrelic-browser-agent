@@ -12,7 +12,6 @@ import { parseUrl } from '../../../common/url/parse-url'
 import { supportsPerformanceObserver } from '../../../common/window/supports-performance-observer'
 import slice from 'lodash._slice'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
-import { ee } from '../../../common/event-emitter/contextual-ee'
 import { findStartTime } from '../../../common/timing/start-time'
 import { now } from '../../../common/timing/now'
 import { FeatureBase } from '../../../common/util/feature-base'
@@ -117,14 +116,14 @@ export class Aggregate extends FeatureBase {
       return this.takeSTNs(options.retry)
     }
 
-    registerHandler('bst', (...args) => this.storeEvent(...args))
-    registerHandler('bstTimer', (...args) => this.storeTimer(...args))
-    registerHandler('bstResource', (...args) => this.storeResources(...args))
-    registerHandler('bstHist', (...args) => this.storeHist(...args))
-    registerHandler('bstXhrAgg', (...args) => this.storeXhrAgg(...args))
-    registerHandler('bstApi', (...args) => this.storeSTN(...args))
-    registerHandler('errorAgg', (...args) => this.storeErrorAgg(...args))
-    registerHandler('pvtAdded', (...args) => this.processPVT(...args))
+    registerHandler('bst', (...args) => this.storeEvent(...args), undefined, this.ee)
+    registerHandler('bstTimer', (...args) => this.storeTimer(...args), undefined, this.ee)
+    registerHandler('bstResource', (...args) => this.storeResources(...args), undefined, this.ee)
+    registerHandler('bstHist', (...args) => this.storeHist(...args), undefined, this.ee)
+    registerHandler('bstXhrAgg', (...args) => this.storeXhrAgg(...args), undefined, this.ee)
+    registerHandler('bstApi', (...args) => this.storeSTN(...args), undefined, this.ee)
+    registerHandler('errorAgg', (...args) => this.storeErrorAgg(...args), undefined, this.ee)
+    registerHandler('pvtAdded', (...args) => this.processPVT(...args), undefined, this.ee)
     // })
   }
 
@@ -211,7 +210,7 @@ export class Aggregate extends FeatureBase {
     var origin = 'unknown'
 
     if (t && t instanceof XMLHttpRequest) {
-      var params = ee.context(t).params
+      var params = this.ee.context(t).params
       origin = params.status + ' ' + params.method + ': ' + params.host + params.pathname
     } else if (t && typeof (t.tagName) === 'string') {
       origin = t.tagName.toLowerCase()

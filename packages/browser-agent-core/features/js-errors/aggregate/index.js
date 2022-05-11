@@ -15,7 +15,6 @@ import { handle } from '../../../common/event-emitter/handle'
 import { mapOwn } from '../../../common/util/map-own'
 import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
-import { ee as baseEE } from '../../../common/event-emitter/contextual-ee'
 import { cleanURL } from '../../../common/url/clean-url'
 import { FeatureBase } from '../../../common/util/feature-base'
 
@@ -29,7 +28,8 @@ export class Aggregate extends FeatureBase {
 
     this.errorOnPage = false
 
-    baseEE.on('interactionSaved', function (interaction) {
+    // this will need to change to match whatever ee we use in the instrument
+    this.ee.on('interactionSaved', function (interaction) {
       if (!this.errorCache[interaction.id]) return
 
       this.errorCache[interaction.id].forEach(function (item) {
@@ -63,7 +63,8 @@ export class Aggregate extends FeatureBase {
       delete this.errorCache[interaction.id]
     })
 
-    baseEE.on('interactionDiscarded', function (interaction) {
+    // this will need to change to match whatever ee we use in the instrument
+    this.ee.on('interactionDiscarded', function (interaction) {
       if (!this.errorCache || !this.errorCache[interaction.id]) return
 
       this.errorCache[interaction.id].forEach(function (item) {
@@ -91,8 +92,8 @@ export class Aggregate extends FeatureBase {
       })
       delete this.errorCache[interaction.id]
     })
-    register('err', (...args) => this.storeError(...args))
-    register('ierr', (...args) => this.storeError(...args))
+    register('err', (...args) => this.storeError(...args), undefined, this.ee)
+    register('ierr', (...args) => this.storeError(...args), undefined, this.ee)
 
     var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'jserrors.harvestTimeSeconds') || 10
 
@@ -238,7 +239,7 @@ export class Aggregate extends FeatureBase {
 
     // stn and spa aggregators listen to this event - stn sends the error in its payload,
     // and spa annotates the error with interaction info
-    handle('errorAgg', [type, hash, params, newMetrics])
+    handle('errorAgg', [type, hash, params, newMetrics], undefined, undefined, this.ee)
 
     if (params._interactionId != null) {
       // hold on to the error until the interaction finishes

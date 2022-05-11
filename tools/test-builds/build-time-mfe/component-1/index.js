@@ -1,11 +1,5 @@
-// import {BrowserAgent} from '@newrelic/browser-agent/cjs' // should import cjs modules, should not code-splitting
-// import {BrowserAgent} from '@newrelic/browser-agent/bundled' // should import bundled code (umd), with lib namespace of 'NRBA'
-// import {BrowserAgent} from '@newrelic/browser-agent/umd' // should import umd modules, should allow code-splitting
-// import {BrowserAgent} from '@newrelic/browser-agent/es' // should import es modules, should allow code-splitting
-import {BrowserAgent} from '@newrelic/browser-agent' // should import es modules, should allow code-splitting
-// const { BrowserAgent } = require('@newrelic/browser-agent') // should import cjs, should not allow code-splitting
-
-console.log(BrowserAgent)
+import {BrowserAgent} from '@newrelic/browser-agent'
+// 
 
 const nrConfig = {
   ...NREUM.init,
@@ -14,21 +8,21 @@ const nrConfig = {
   // licenseKey: 'asdf',
   applicationID: 1
 }
-const nr = new BrowserAgent()
+
+const nr = new BrowserAgent() // Create a new instance of the Browser Agent
+nr.features.errors.auto = false // Only capture errors through noticeError()
+
 nr.start(nrConfig).then(() => {
-  console.log("agent initialized! -- COMPONENT-1", nrConfig)
-  window.nr1 = nr
+  console.debug("agent initialized! -- Puppies Component", nrConfig)
 })
 
+
 class PuppyComponent extends HTMLElement {
+  static name = "puppy-component"
   constructor() {
     super()
     this.shadow = this.attachShadow({ mode: 'open' })
     this.elem = document.createElement('img')
-    this.shadow.addEventListener("click", () => {
-      nr.noticeError(new Error('Component 1 Error'))
-      // throw new Error('Component 1 Error')
-    })
     this.name = 'Puppy Component'
     this.setImg()
   }
@@ -47,19 +41,29 @@ class PuppyComponent extends HTMLElement {
     const img = await this.fetchImg()
     this.elem.src = img
     this.elem.style.maxWidth = "100vw"
+    this.elem.style.maxHeight = '250px'
     this.shadow.appendChild(this.elem)
-    setTimeout(() => this.sendError(), 2000)
+    this.sendError()
   }
 
   sendError = () => {
-    nr.noticeError(new Error(`${this.name} called noticeError()`))
+    console.debug(`NOTICING (nr.noticeError()) an error in ${this.name}`)
+    const err = new Error(`nr.noticeError() called in ${this.name} (Component-1)!`)
+    nr.noticeError(err)
+    // throw new Error(`${this.name} called nr.noticeError() then intentionally threw this GLOBAL error!`)
   }
-}
-customElements.define('puppy-component', PuppyComponent)
 
-export function mount(){
-  const root = document.body
-  const webComponent = document.createElement('puppy-component')
+
   
-  root.appendChild(webComponent)
+}
+customElements.define(PuppyComponent.name, PuppyComponent)
+
+export function mount(elem){
+  const webComponent = document.createElement(PuppyComponent.name)
+  
+  elem.appendChild(webComponent)
+}
+
+export function unmount() {
+  document.querySelectorAll(PuppyComponent.name).forEach(component => component.remove())
 }

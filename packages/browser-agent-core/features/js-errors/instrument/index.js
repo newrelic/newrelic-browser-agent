@@ -4,7 +4,6 @@
  */
 
 import { handle } from '../../../common/event-emitter/handle'
-import { ee } from '../../../common/event-emitter/contextual-ee'
 import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { getOrSet } from '../../../common/util/get-or-set'
@@ -27,38 +26,45 @@ export class Instrument extends FeatureBase {
     // skipNext counter to keep track of uncaught
     // errors that will be the same as caught errors.
     this.skipNext = 0
-    ee.on('fn-start', function (args, obj, methodName) {
-      if (handleErrors) this.skipNext += 1
+
+    this.ee.on('fn-start', function (args, obj, methodName) {
+      if (handleErrors) {
+        this.skipNext = this.skipNext ? this.skipNext + 1 : 1
+        this.ee = ee.get(this.agentIdentifier)
+      }
     })
 
-    ee.on('fn-err', function (args, obj, err) {
+    this.ee.on('fn-err', function (args, obj, err) {
       if (handleErrors && !err[NR_ERR_PROP]) {
         getOrSet(err, NR_ERR_PROP, function getVal() {
           return true
         })
         this.thrown = true
-        notice(err)
+        notice(err, undefined, this.ee)
       }
     })
 
-    ee.on('fn-end', function () {
+    this.ee.on('fn-end', function () {
       if (!handleErrors) return
       if (!this.thrown && this.skipNext > 0) this.skipNext -= 1
     })
 
-    ee.on('internal-error', function (e) {
-      handle('ierr', [e, now(), true])
+    this.ee.on('internal-error', (e) => {
+      handle('ierr', [e, now(), true], undefined, undefined, this.ee)
     })
 
     // Declare that we are using err instrumentation
     // require('./debug')
 
     const prevOnError = window.onerror
-    const newOnError = this.onerrorHandler
     window.onerror = (...args) => {
       if (prevOnError) prevOnError(...args)
-      newOnError(...args)
+      this.onerrorHandler(...args)
     }
+
+    window.addEventListener('unhandledrejection', (e) => {
+      this.onerrorHandler(null, null, null, null, new Error(e.reason))
+    })
 
     try {
       throw new Error()
@@ -86,10 +92,10 @@ export class Instrument extends FeatureBase {
   onerrorHandler(message, filename, lineno, column, errorObj) {
     try {
       if (this.skipNext) this.skipNext -= 1
-      else notice(errorObj || new UncaughtException(message, filename, lineno), true)
+      else notice(errorObj || new UncaughtException(message, filename, lineno), true, this.ee)
     } catch (e) {
       try {
-        handle('ierr', [e, now(), true])
+        handle('ierr', [e, now(), true], undefined, undefined, this.ee)
       } catch (err) {
         // do nothing
       }
@@ -107,9 +113,9 @@ function UncaughtException(message, filename, lineno) {
 }
 
 // emits 'handle > error' event, which the error aggregator listens on
-function notice(err, doNotStamp) {
+function notice(err, doNotStamp, ee) {
   // by default add timestamp, unless specifically told not to
   // this is to preserve existing behavior
   var time = (!doNotStamp) ? now() : null
-  handle('err', [err, time])
+  handle('err', [err, time], undefined, undefined, ee)
 }

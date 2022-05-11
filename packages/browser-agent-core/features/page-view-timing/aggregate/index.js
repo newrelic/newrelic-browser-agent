@@ -43,10 +43,10 @@ export class Aggregate extends FeatureBase {
       onUnload: () => this.finalHarvest()
     }, this)
 
-    register('timing', (...args) => this.processTiming(...args))
-    register('lcp', (...args) => this.updateLatestLcp(...args))
-    register('cls', (...args) => this.updateClsScore(...args))
-    register('pageHide', (...args) => this.updatePageHide(...args))
+    register('timing', (...args) => this.processTiming(...args), undefined, this.ee)
+    register('lcp', (...args) => this.updateLatestLcp(...args), undefined, this.ee)
+    register('cls', (...args) => this.updateClsScore(...args), undefined, this.ee)
+    register('pageHide', (...args) => this.updatePageHide(...args), undefined, this.ee)
 
     // final harvest is initiated from the main agent module, but since harvesting
     // here is not initiated by the harvester, we need to subscribe to the unload event

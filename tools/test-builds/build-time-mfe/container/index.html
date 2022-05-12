@@ -4,10 +4,9 @@
 <head>
   <meta charset="UTF-8">    
   {init}
-  {loader}
   {config}
   <script>
-    window.NREUM||(NREUM={});NREUM.info||(NREUM.info={});NREUM.info.applicationID=3;NREUM.init={...NREUM.init,jserrors:{harvestTimeSeconds:10}}
+    window.NREUM||(NREUM={});NREUM.info||(NREUM.info={});NREUM.info.applicationID=3;NREUM.init={...NREUM.init,jserrors:{harvestTimeSeconds:5}}
   </script>
   <style>
     .container {
@@ -44,9 +43,6 @@
     <button id="cats">Cats Rule</button>
   </div>
   <div id="content"></div>
-  <script>
-    newrelic.noticeError(new Error('full'))
-    </script>
 </body>
 
 </html>

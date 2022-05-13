@@ -5,10 +5,17 @@
   "dependencies": {
     "lodash._slice": "^2.4.1"
   },
-  "scripts": {},
+  "scripts": {
+    "babelify": "npx babel common --out-dir cjs/common && npx babel features --out-dir cjs/features"
+  },
   "author": "",
   "license": "ISC",
   "sideEffects": [
     "./modules/common/wrap/*"
-  ]
+  ],
+  "devDependencies": {
+    "@babel/cli": "^7.17.10",
+    "@babel/core": "^7.17.10",
+    "@babel/preset-env": "^7.17.10"
+  }
 }

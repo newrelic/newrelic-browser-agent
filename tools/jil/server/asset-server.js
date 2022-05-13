@@ -159,20 +159,18 @@ class AgentInjectorTransform extends AssetTransform {
     fs.readFile(loaderPath, callback)
   }
 
-  getBuiltPackages(pkgNames) {
+  getBuiltPackages(pkgPaths) {
     return new Promise((resolve, reject) => {
-      if (!pkgNames || !pkgNames.length) resolve([])
+      if (!pkgPaths || !pkgPaths.length) resolve([])
       const proms = []
-      for (let i = 0; i < pkgNames.length; i++) {
-        const pkgName = pkgNames[i]
-        const moduleFilename = 'index.js'
-        const distPath = path.resolve(__dirname, `../../../packages/${pkgName}/dist`)
-        const modulePath = path.join(distPath, moduleFilename)
-        proms.push(fs.promises.readFile(modulePath, 'utf-8'))
+      for (let i = 0; i < pkgPaths.length; i++) {
+        const pkgPath = pkgPaths[i]
+        const distPath = path.resolve(__dirname, `../../../${pkgPath}`)
+        proms.push(fs.promises.readFile(distPath, 'utf-8'))
       }
       Promise.all(proms).then(data => {
         resolve(
-          pkgNames.map((x, i) => ({
+          pkgPaths.map((x, i) => ({
             name: x,
             data: data[i]
           })
@@ -189,8 +187,8 @@ class AgentInjectorTransform extends AssetTransform {
       let injectUpdatedLoaderConfig = (params.injectUpdatedLoaderConfig === 'true')
 
       const htmlPackageTags = [...rawContent.matchAll(/{packages\/.*}/g)].map(x => x[0])
-      const packageNames = htmlPackageTags.map(x => x.split('/')[1].replace(/}/g, ''))
-      const packageFiles = await this.getBuiltPackages(packageNames)
+      const packagePaths = htmlPackageTags.map(x => x.replace(/[{}]/g, ''))
+      const packageFiles = await this.getBuiltPackages(packagePaths)
 
       this.getLoaderContent(loaderName, (err, loaderContent) => {
         if (err) return callback(err)
@@ -255,7 +253,7 @@ class BrowserifyTransform extends AssetTransform {
     let b = browserify({ debug: true, extensions: ['.js'] })
     b.transform(babelify.configure({
       extensions: ['.js'],
-      only: /tests|tools|modules/
+      only: /tests|tools|packages/
     }))
     b.transform(preprocessify())
     b.add(assetPath)

@@ -6,13 +6,14 @@
 <html>
 
 <head>
-  <title>Fetch Unit Test</title>
+  <title>RUM Unit Test</title>
   {init}
   {config}
 
-  <!-- Any injection tag with 'packages/<DIR>' will automatically be 
-      replaced with packages/<DIR>/dist/index.js -->
-  {packages/browser-agent}
+  <!-- Any injection tag with 'packages/<PATH>' will automatically be 
+        replaced with that file -->
+  {packages/browser-agent/dist/bundled/index.js}
+  <title>RUM Unit Test</title>
   <script>
     const { default: NR } = NRBA;
     const opts1 = {
@@ -22,15 +23,13 @@
       applicationID: 1
     };
     const agent = new NR()
-    agent.start(opts1).then(() => {
-      let err = new Error('hello')
-      agent.noticeError(err)
-    });
-
+    agent.start(opts1)
   </script>
 </head>
 
 <body>
+  This page fires errors after one 0 ms interval
+  <script type="text/javascript" src="js/set-timeout-error.js"></script>
 </body>
 
 </html>

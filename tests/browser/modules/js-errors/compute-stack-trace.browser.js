@@ -4,8 +4,8 @@
  */
 
 import test from '../../../../tools/jil/browser-test'
-import { computeStackTrace } from '../../../../modules/features/js-errors/aggregate/compute-stack-trace'
-import { stringify } from '../../../../modules/common/util/stringify'
+import { computeStackTrace } from '../../../../packages/browser-agent-core/cjs/features/js-errors/aggregate/compute-stack-trace'
+import { stringify } from '../../../../packages/browser-agent-core/cjs/common/util/stringify'
 import testcases from './stack-parse-testcases'
 
 test('computeStackTrace', function (t) {

@@ -49,7 +49,7 @@ class PuppyComponent extends HTMLElement {
   sendError = () => {
     console.debug(`NOTICING (nr.noticeError()) an error in ${this.name}`)
     const err = new Error(`nr.noticeError() called in ${this.name} (Component-1)!`)
-    nr.noticeError(err)
+    nr.noticeError(err, {customAttr: 'hi'})
     throw new Error(`component-1 threw global error`)
   }
 

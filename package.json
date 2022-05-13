@@ -5,6 +5,7 @@
   "author": "The New Relic Browser Team",
   "description": "Tests for the New Relic JavaScript agent",
   "scripts": {
+    "pretest": "npm --prefix packages/browser-agent-core run babelify",
     "test": "tools/jil/bin/cli.js",
     "build": "rm -rf build && mkdir build && gulp build",
     "build:all": "npm run build && npm run packages:build && npm run tools:test-builds",
@@ -31,6 +32,7 @@
     
     "test-server": "node ./tools/jil/bin/server",
     "sauce:connect": "node ./tools/jil/bin/sauce",
+
 
     "tools:test-builds": "npm --prefix ./tools/test-builds/build-time-mfe run build"
   },

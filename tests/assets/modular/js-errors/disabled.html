@@ -9,9 +9,9 @@
     {init}
     {config}
 
-    <!-- Anything injection tag with 'packages/<DIR>' will be 
-      replaced with packages/<DIR>/dist/index.js -->
-    {packages/browser-agent}
+     <!-- Any injection tag with 'packages/<PATH>' will automatically be 
+      replaced with that file -->
+  {packages/browser-agent/dist/bundled/index.js}
     <script>
       const {default: NR} = NRBA;
       const opts1 = {
@@ -21,12 +21,14 @@
         applicationID: 1
       };
       const agent = new NR()
+      agent.features.errors.enabled = false
       // enable the errors auto feature before initializing
       // this enabled by default, but just for brevity of what we are testing here
       agent.features.errors.auto = true
       agent.start(opts1).then(() => {
         setTimeout(() => {throw new Error('hello')}, 1000)
       });
+
     </script>
   </head>
   <body>

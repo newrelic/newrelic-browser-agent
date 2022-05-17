@@ -16,7 +16,7 @@
     "lint": "eslint --ext .js .",
     "lint:fix": "eslint --ext .js . --fix",
     "test-all": "tools/jil/bin/cli.js -b *@*",
-    "ci-build": "npm i --cache ./.npm && gulp build  --no-color",
+    "ci-build": "npm i --cache ./.npm && node post-installer && rm -f node_modules/jil && ln -s ../tools/jil node_modules/jil && gulp build  --no-color",
     "build-tar": "npm run ci-build && tar czf ./build/browser-agent.tar.gz --exclude=.git --exclude=.npm --exclude=build/browser-agent.tar.gz .",
     "watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests' --run -- npm run build-mac",
 

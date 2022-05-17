@@ -10,7 +10,7 @@
     "lodash._slice": "^2.4.1"
   },
   "scripts": {
-    "babelify": "npx babel common --out-dir cjs/common && npx babel features --out-dir cjs/features"
+    "build": "npx babel common --out-dir cjs/common && npx babel features --out-dir cjs/features"
   },
   "sideEffects": [
     "./modules/common/wrap/*"

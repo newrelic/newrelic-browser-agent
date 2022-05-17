@@ -36,8 +36,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: install-dependencies
+        run: npm install --cache ./.npm 
       - name: build
-        run: npm run ci-build
+        run: npm run build:all
 
       - name: run tests
         run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest,firefox@latest,safari@latest -s -t 85000 --concurrent=6
@@ -57,8 +59,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
+     - name: install-dependencies
+        run: npm install --cache ./.npm 
       - name: build
-        run: npm run ci-build
+        run: npm run build:all
 
       - name: run tests
         run: node ./tools/jil/bin/cli.js -f merged -b *@* -s -t 85000 --unit-only --concurrent=20
@@ -78,8 +82,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: install-dependencies
+        run: npm install --cache ./.npm 
       - name: build
-        run: npm run ci-build
+        run: npm run build:all
 
       - name: run tests
         run: node ./tools/jil/bin/cli.js -f merged -b *@* -s -t 85000 --functional-only --concurrent=40

@@ -5,7 +5,6 @@
 import { registerHandler as register } from '../../../common/event-emitter/register-handler'
 import { stringify } from '../../../common/util/stringify'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
-import { ee as baseEE } from '../../../common/event-emitter/contextual-ee'
 import { handle } from '../../../common/event-emitter/handle'
 import { getConfigurationValue, getInfo } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
@@ -25,13 +24,13 @@ export class Aggregate extends FeatureBase {
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'ajax.harvestTimeSeconds') || 10
     this.MAX_PAYLOAD_SIZE = getConfigurationValue(this.agentIdentifier, 'ajax.maxPayloadSize') || 1000000
 
-    baseEE.on('interactionSaved', function (interaction) {
+    this.ee.on('interactionSaved', function (interaction) {
       if (!this.spaAjaxEvents[interaction.id]) return
       // remove from the spaAjaxEvents buffer, and let spa harvest it
       delete this.spaAjaxEvents[interaction.id]
     })
 
-    baseEE.on('interactionDiscarded', function (interaction) {
+    this.ee.on('interactionDiscarded', function (interaction) {
       if (!this.spaAjaxEvents[interaction.id] || !this.allAjaxIsEnabled()) return
 
       this.spaAjaxEvents[interaction.id].forEach(function (item) {
@@ -43,7 +42,7 @@ export class Aggregate extends FeatureBase {
 
     if (this.allAjaxIsEnabled()) setDenyList(getConfigurationValue(this.agentIdentifier, 'ajax.deny_list'))
 
-    register('xhr', (...args) => this.storeXhr(...args))
+    register('xhr', (...args) => this.storeXhr(...args), undefined, this.ee)
 
     if (this.allAjaxIsEnabled()) {
       this.scheduler = new HarvestScheduler('events', {
@@ -84,7 +83,7 @@ export class Aggregate extends FeatureBase {
       hash = stringify([params.status, params.host, params.pathname])
     }
 
-    handle('bstXhrAgg', ['xhr', hash, params, metrics])
+    handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, undefined, this.ee)
 
     // store as metric
     this.aggregator.store('xhr', hash, params, metrics)

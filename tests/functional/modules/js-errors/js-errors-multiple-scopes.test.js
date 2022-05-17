@@ -20,22 +20,25 @@ testDriver.test('Error objects are sent to separate apps via noticeError from np
   t.plan(10)
 
   let loadPromise = browser.safeGet(router.assetURL('test-builds/build-time-mfe/index.html', opts))
-  let initPromise = router.expectCustomGet('/1/{key}', (req, res) => { res.end('NREUM.setToken({stn: 1, err: 1, ins: 1, cap: 1, spa: 1, loaded: 1})') })
 
   const appsOnPage = [
+    // component-1 - @newrelic/browser-agent
     {
       appID: 1,
       message: 'puppy',
       seen: false
     },
+    // component-2 - @newrelic/browser-agent
     {
       appID: 2,
       message: 'kitten',
       seen: false
     },
+    // container - @newrelic/browser-agent -- should detect global errors
+    // component - 1 throws a global error, container should catch that.
     {
       appID: 3,
-      message: 'full',
+      message: 'component-1 threw global error',
       seen: false
     }
   ]
@@ -50,8 +53,8 @@ testDriver.test('Error objects are sent to separate apps via noticeError from np
     t.ok(message.toLowerCase().includes(app.message), 'Params contain the right error message. -- ' + app.appID)
   }
 
-  Promise.all([loadPromise, initPromise, ...errorPromises])
-    .then(([loadResult, initResult, ...errors]) => {
+  Promise.all([loadPromise, ...errorPromises])
+    .then(([loadResult, ...errors]) => {
       errors.forEach(result => {
         var errorData = getErrorsFromResponse(result)
         var appID = getAppIdFromResponse(result)

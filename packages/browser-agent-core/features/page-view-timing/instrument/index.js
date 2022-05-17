@@ -64,11 +64,11 @@ export class Instrument extends FeatureBase {
   // paint metrics
   perfObserver(list, observer) {
     var entries = list.getEntries()
-    entries.forEach(function (entry) {
+    entries.forEach((entry) => {
       if (entry.name === 'first-paint') {
-        handle('timing', ['fp', Math.floor(entry.startTime)])
+        handle('timing', ['fp', Math.floor(entry.startTime)], undefined, undefined, this.ee)
       } else if (entry.name === 'first-contentful-paint') {
-        handle('timing', ['fcp', Math.floor(entry.startTime)])
+        handle('timing', ['fcp', Math.floor(entry.startTime)], undefined, undefined, this.ee)
       }
     })
   }
@@ -86,14 +86,14 @@ export class Instrument extends FeatureBase {
       var attributes = this.addConnectionAttributes({})
       if (attributes) payload.push(attributes)
 
-      handle('lcp', payload)
+      handle('lcp', payload, undefined, undefined, this.ee)
     }
   }
 
   clsObserver(list) {
     list.getEntries().forEach(function (entry) {
       if (!entry.hadRecentInput) {
-        handle('cls', [entry])
+        handle('cls', [entry], undefined, undefined, this.ee)
       }
     })
   }
@@ -133,14 +133,14 @@ export class Instrument extends FeatureBase {
       }
 
       this.fiRecorded = true
-      handle('timing', ['fi', fi, attributes])
+      handle('timing', ['fi', fi, attributes], undefined, undefined, this.ee)
     }
   }
 
   captureVisibilityChange(state) {
     if (state === 'hidden') {
       this.pageHiddenTime = now()
-      handle('pageHide', [this.pageHiddenTime])
+      handle('pageHide', [this.pageHiddenTime], undefined, undefined, this.ee)
     }
   }
 }

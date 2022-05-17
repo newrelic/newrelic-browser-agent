@@ -18,6 +18,7 @@ export function activateFeatures (flags) {
     activatedFeatures[flag] = true
   })
 
+  // if this is going to be used, should use the instanced EE?
   drain('feature')
 }
 

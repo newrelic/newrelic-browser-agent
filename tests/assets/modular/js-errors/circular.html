@@ -10,24 +10,29 @@
   {init}
   {config}
 
-  <!-- Anything injection tag with 'packages/<DIR>' will be 
-      replaced with packages/<DIR>/dist/index.js -->
-  {packages/browser-agent}
+  <!-- Any injection tag with 'packages/<PATH>' will automatically be 
+      replaced with that file -->
+  {packages/browser-agent/dist/bundled/index.js}
   <script>
     const { default: NR } = NRBA;
-    const opts = {
+    const opts1 = {
       ...NREUM.init,
       ...NREUM.info,
       ...NREUM.loader_config,
       applicationID: 1
     };
     const agent = new NR()
-    let err = 'hello'
-    agent.noticeError(err)
+    agent.start(opts1)
+
   </script>
+
 </head>
 
 <body>
+
+  This page generates a JS error where the message is a non-String object that
+  contains a circular reference.
+  <script type="text/javascript" src="js/circular.js"></script>
 </body>
 
 </html>

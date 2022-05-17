@@ -15,6 +15,7 @@ export { d as drain }
 var g = drain.bind(null, globalEE, globalHandlers)
 export { g as global }
 
+// calls will need to update to call this more directly so we can explicitly pass in the ee and handler
 function drain (baseEE, handlers, group) {
   if (!baseEE.backlog) return
 

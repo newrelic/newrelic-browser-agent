@@ -6,6 +6,7 @@ module.exports = {
   output: {
     filename: 'build-time-mfe.js',
     path: path.resolve(__dirname, '../../../../tests/assets/test-builds/build-time-mfe'),
+    // path: path.resolve(__dirname, './dist'),
     library: {
       name: 'container',
       type: 'umd'
@@ -18,5 +19,9 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './index.html'
     })
-  ]
+  ],
+  optimization: {
+    minimize: true
+  },
+  devtool: 'source-map',
 }

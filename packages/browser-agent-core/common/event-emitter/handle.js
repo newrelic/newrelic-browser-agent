@@ -11,9 +11,14 @@ export var globalEE = global.get('handle')
 // export default handle
 export { globalHandle as global }
 
-export function handle (type, args, ctx, group) {
-  handleEE.buffer([type], group)
-  handleEE.emit(type, args, ctx)
+export function handle(type, args, ctx, group, ee) {
+  if (ee) {
+    ee.buffer([type], group)
+    ee.emit(type, args, ctx)
+  } else {
+    handleEE.buffer([type], group)
+    handleEE.emit(type, args, ctx)
+  }
 }
 
 function globalHandle(type, args, ctx, group) {

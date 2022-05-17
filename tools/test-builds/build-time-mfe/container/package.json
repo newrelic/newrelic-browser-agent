@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "component-1": "file:../component-1",
-    "component-2": "file:../component-2"
+    "component-2": "file:../component-2",
+    "@newrelic/browser-agent": "file:../../../../packages/browser-agent"
   },
   "devDependencies": {
     "html-inline-script-webpack-plugin": "^3.0.0",

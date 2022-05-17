@@ -2,7 +2,6 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { ee } from '../../../common/event-emitter/contextual-ee'
 import { handle } from '../../../common/event-emitter/handle'
 import { ee as timerEE } from '../../../common/wrap/wrap-timer'
 import { ee as rafEE } from '../../../common/wrap/wrap-raf'
@@ -13,13 +12,6 @@ import { eventListenerOpts } from '../../../common/event-listener/event-listener
 import { originals, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { FeatureBase } from '../../../common/util/feature-base'
-
-// var ee = require('ee')
-// var handle = require('handle')
-// var timerEE = require('../../wrap-timer')
-// var rafEE = require('../../wrap-raf')
-// var supportsPerformanceObserver = require('supports-performance-observer')
-// var eventListenerOpts = require('event-listener-opts')
 
 var learResourceTimings = 'learResourceTimings'
 var ADD_EVENT_LISTENER = 'addEventListener'
@@ -45,14 +37,14 @@ export class Instrument extends FeatureBase {
       window.performance.getEntriesByType
     )) return
 
-    ee.on(FN_START, function (args, target) {
+    this.ee.on(FN_START, function (args, target) {
       var evt = args[0]
       if (evt instanceof origEvent) {
         this.bstStart = now()
       }
     })
 
-    ee.on(FN_END, function (args, target) {
+    this.ee.on(FN_END, function (args, target) {
       var evt = args[0]
       if (evt instanceof origEvent) {
         handle('bst', [evt, target, this.bstStart, now()])
@@ -76,11 +68,11 @@ export class Instrument extends FeatureBase {
       handle(BST_TIMER, [target, this.bstStart, now(), 'requestAnimationFrame'])
     })
 
-    ee.on(PUSH_STATE + START, function (args) {
+    this.ee.on(PUSH_STATE + START, function (args) {
       this.time = now()
       this.startPath = location.pathname + location.hash
     })
-    ee.on(PUSH_STATE + END, function (args) {
+    this.ee.on(PUSH_STATE + END, function (args) {
       handle('bstHist', [location.pathname + location.hash, this.startPath, this.time])
     })
 

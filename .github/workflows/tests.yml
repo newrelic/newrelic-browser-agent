@@ -15,9 +15,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: install-dependencies
+        run: npm install --cache ./.npm 
       - name: build
-        run: npm run ci-build
-
+        run: npm run build:all
       - name: lint
         run: npm run lint
   latest-browsers:

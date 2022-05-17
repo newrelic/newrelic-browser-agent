@@ -32,7 +32,7 @@ function npm_install(folder) {
   const cmd = /^win/.test(process.platform) ? 'npm.cmd' : 'npm';
   print(`Installing ./${path.relative(root, folder)}`)
 
-  child_process.execSync(`${cmd} ci`, { cwd: folder, env: process.env, stdio: 'inherit' })
+  child_process.execSync(`${cmd} i`, { cwd: folder, env: process.env, stdio: 'inherit' })
 }
 
 // Lists subfolders in a folder

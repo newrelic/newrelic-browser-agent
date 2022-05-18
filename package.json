@@ -5,7 +5,6 @@
   "author": "The New Relic Browser Team",
   "description": "Tests for the New Relic JavaScript agent",
   "scripts": {
-    "pretest": "npm --prefix packages/browser-agent-core run babelify",
     "test": "tools/jil/bin/cli.js",
     "build": "rm -rf build && mkdir build && gulp build",
     "build:all": "npm run build && npm run packages:build && npm run tools:test-builds",

@@ -258,6 +258,7 @@ class BrowserifyTransform extends AssetTransform {
     b.transform(preprocessify())
     b.add(assetPath)
     b.bundle((err, buf) => {
+      if (err) console.log('bundle err!', assetPath)
       if (err) return callback(err)
 
       let content = buf.toString()
@@ -536,6 +537,7 @@ class AssetServer extends BaseServer {
   }
 
   writeError(rsp, errorMessage) {
+    console.log('WRITE ERROR!')
     rsp.writeHead(500)
     rsp.end(errorMessage)
   }
@@ -556,6 +558,7 @@ class AssetServer extends BaseServer {
       }
 
       transform.execute(params, assetPath, ssl, (err, transformed) => {
+        if (err) console.log('err!', err)
         if (err) return this.writeError(rsp, `Error while transforming asset ${err}: ${err.stack}`)
         rsp.writeHead(200, {
           'Content-Type': 'text/html'

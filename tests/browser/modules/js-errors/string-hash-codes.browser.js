@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import test from '../../../../tools/jil/browser-test'
-import { stringHashCode } from '../../../../packages/browser-agent-core/cjs/features/js-errors/aggregate/string-hash-code'
+import { stringHashCode } from '../../../../packages/browser-agent-core/features/js-errors/aggregate/string-hash-code'
 
 test('stringHashCode', function (t) {
   var testcases = [

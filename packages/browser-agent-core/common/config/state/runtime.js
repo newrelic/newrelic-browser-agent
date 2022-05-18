@@ -25,6 +25,7 @@ const _cache = {}
 
 export function getRuntime(id) {
   if (!id) throw new Error('All config objects require an agent identifier!')
+  if (!_cache[id]) throw new Error(`Runtime for ${id} was never set`)
   return _cache[id]
 }
 

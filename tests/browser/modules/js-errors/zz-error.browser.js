@@ -7,31 +7,36 @@
 // Name prefixed with zz- to be the last file
 // included in the unit test bundle.
 import test from '../../../../tools/jil/browser-test'
-import { addE } from '../../../../packages/browser-agent-core/cjs/common/event-listener/add-e'
+import { addE } from '../../../../packages/browser-agent-core/common/event-listener/add-e'
+import { setRuntime, setInfo, setConfiguration, setLoaderConfig } from '../../../../packages/browser-agent-core/common/config/config'
 
-// import {initialize as initStnInstrument} from '../../../../modules/features/session-trace/instrument'
-// import {initialize as initErrorInstrument} from '../../../../modules/features/js-errors/instrument'
-// import {initialize as initErrorAggregate} from '../../../../modules/features/js-errors/aggregate'
+const agentIdentifier = '1234'
+setInfo(agentIdentifier, {})
+setConfiguration(agentIdentifier, {})
+setLoaderConfig(agentIdentifier, {})
+setRuntime(agentIdentifier, {})
 
-import {Instrument as initStnInstrument} from '../../../../packages/browser-agent-core/cjs/features/session-trace/instrument'
-import {Instrument as initErrorInstrument} from '../../../../packages/browser-agent-core/cjs/features/js-errors/instrument'
-import {Aggregate as initErrorAggregate} from '../../../../packages/browser-agent-core/cjs/features/js-errors/aggregate'
+import {Instrument as initStnInstrument} from '../../../../packages/browser-agent-core/features/session-trace/instrument'
+import {Instrument as initErrorInstrument} from '../../../../packages/browser-agent-core/features/js-errors/instrument'
+import {Aggregate as initErrorAggregate} from '../../../../packages/browser-agent-core/features/js-errors/aggregate'
 
-// Should be loaded first
-new initStnInstrument()
-new initErrorInstrument()
-new initErrorAggregate()
+import { Aggregator } from '../../../../packages/browser-agent-core/common/aggregate/aggregator'
+import { ee } from '../../../../packages/browser-agent-core/common/event-emitter/contextual-ee'
+import { ffVersion } from '../../../../packages/browser-agent-core/common/browser-version/firefox-version'
 
-import { take } from '../../../../packages/browser-agent-core/cjs/common/aggregate/aggregator'
-import { ee } from '../../../../packages/browser-agent-core/cjs/common/event-emitter/contextual-ee'
-import {ffVersion} from '../../../../packages/browser-agent-core/cjs/common/browser-version/firefox-version'
+
+
+new initStnInstrument(agentIdentifier)
+new initErrorInstrument(agentIdentifier)
+const sharedAggregator = new Aggregator({agentIdentifier})
+new initErrorAggregate(agentIdentifier, sharedAggregator)
+
 
 var raf = window.requestAnimationFrame ||
         window.mozRequestAnimationFrame ||
         window.webkitRequestAnimationFrame ||
         window.msRequestAnimationFrame
-
-var setTimeoutWrapped = !!(setTimeout['nr@wrapper'])
+var setTimeoutWrapped = !!(setTimeout['nr@original'])
 var shouldExpectXHRErrors = setTimeoutWrapped && (XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener)
 
 // Old versions of FF don't fire readystatechange on the document
@@ -161,8 +166,6 @@ function setupXHRError () {
 
 setTimeout('var shouldUseGlobalContext = 1', 0) // eslint-disable-line
 
-ee.emit('feat-err', [])
-
 if (!setTimeoutWrapped) {
   test('error', function (t) {
     t.skip('requires addEventListener')
@@ -199,7 +202,9 @@ if (!setTimeoutWrapped) {
     }
 
     function checkForErrors () {
-      var err = take(['err']).err
+      var cache = sharedAggregator.take(['err'])
+      console.log("cache", cache)
+      var err = cache.err
       var errors = {}
 
       for (var i in err) {
@@ -257,7 +262,7 @@ if (!setTimeoutWrapped) {
       setTimeout(intervalErrorFunc, 0)
 
       setTimeout(function () {
-        err = take(['err']).err
+        err = sharedAggregator.take(['err']).err
         t.ok(err.length >= 1, 'at least one more error reported again')
         t.equal(err[0].params.stack_trace, undefined, 'timeout error stack not reported again')
         t.ok(err[0].params.browser_stack_hash !== 0, 'timeout error browser stack hash reported')

@@ -97,7 +97,7 @@ export class Instrument extends FeatureBase {
     document[ADD_EVENT_LISTENER]('click', this.noOp, eventListenerOpts(false))
   }
 
-  observeResourceTimings () {
+  observeResourceTimings() {
     var observer = new PerformanceObserver(function (list, observer) { // eslint-disable-line no-undef
       var entries = list.getEntries()
 
@@ -105,13 +105,13 @@ export class Instrument extends FeatureBase {
     })
 
     try {
-      observer.observe({entryTypes: ['resource']})
+      observer.observe({ entryTypes: ['resource'] })
     } catch (e) {
-    // do nothing
+      // do nothing
     }
   }
 
-  onResourceTimingBufferFull (e) {
+  onResourceTimingBufferFull(e) {
     handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)])
 
     // stop recording once buffer is full
@@ -119,16 +119,16 @@ export class Instrument extends FeatureBase {
       try {
         window.performance[REMOVE_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false)
       } catch (e) {
-      // do nothing
+        // do nothing
       }
     } else {
       try {
         window.performance[REMOVE_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false)
       } catch (e) {
-      // do nothing
+        // do nothing
       }
     }
   }
 
-  noOp (e) { /* no-op */ }
+  noOp(e) { /* no-op */ }
 }

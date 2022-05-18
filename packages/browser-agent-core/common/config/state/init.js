@@ -21,6 +21,7 @@ const _cache = {}
 
 export function getConfiguration(id) {
   if (!id) throw new Error('All config objects require an agent identifier!')
+  if (!_cache[id]) throw new Error(`Configuration for ${id} was never set`)
   return _cache[id]
 }
 

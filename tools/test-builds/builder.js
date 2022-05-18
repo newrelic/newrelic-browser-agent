@@ -6,7 +6,7 @@ const root = process.cwd()
 
 // Since this script is intended to be run as a "postinstall" command,
 // it will do `npm install` automatically inside the root folder before any of the subfolders.
-print('Building Frontend Packages')
+print('Bundling "Test Builds"')
 
 recurse(root)
 

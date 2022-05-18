@@ -1,30 +1,6 @@
 {
   "parserOptions": {
-    "globalReturn": true,
     "sourceType": "module",
     "ecmaVersion": 2020
-  },
-  "extends": ["eslint:recommended", "plugin:import/recommended"],
-  "env": {
-    "browser": true,
-    "node": true,
-    "jest": true
-  },
-  "globals": {
-    "NREUM": true,
-    "newrelic": true,
-    "__nr_require": true,
-    "attachEvent": true
-  },
-  "rules": {
-    "space-before-function-paren": ["off"],
-    "no-extend-native": 0,
-    "no-wrap-func": 0,
-    "camelcase": 0,
-    "no-warning-comments": ["warn"],
-    "no-restricted-syntax": ["error", "ExportDefaultDeclaration"],
-    "no-restricted-imports": ["error"],
-    "handle-callback-err":"off",
-    "no-prototype-builtins":"off"
   }
 }

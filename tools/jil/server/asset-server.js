@@ -567,7 +567,7 @@ class AssetServer extends BaseServer {
       })
     } else {
       rsp.writeHead(404)
-      rsp.write(`Failed to locate asset at '${assetPath}'`)
+      // rsp.write(`Failed to locate asset at '${assetPath}'`)
       rsp.end()
     }
   }

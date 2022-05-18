@@ -4,7 +4,7 @@ var win = origWindow
 
 function getWindow() {
   return win
-};
+}
 
 function setWindow(x) {
   win = x

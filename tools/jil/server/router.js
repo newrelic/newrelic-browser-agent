@@ -152,8 +152,8 @@ class RouterHandle {
     })
   }
 
-  expectTimings(appID) {
-    return this.expectBeaconRequest(this.beaconRequests.events, undefined, appID).then(request => {
+  expectTimings(appID, timeout) {
+    return this.expectBeaconRequest(this.beaconRequests.events, timeout, appID).then(request => {
       let { body, query } = request
       let decoded = querypack.decode(body && body.length ? body : query.e)[0]
       if (decoded.type === 'timing') {

@@ -5,7 +5,6 @@
   "license": "MIT",
   "scripts": {
     "serve": "http-server -p 3333 -s -o /dist/index.html",
-    "cleanInstall": "rm -rf node_modules package-lock.json && npm install",
     "build": "npx webpack --progress"
   },
   "dependencies": {

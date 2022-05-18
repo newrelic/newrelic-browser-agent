@@ -62,7 +62,7 @@ function generateRandomHexString(length) {
   var rvIndex = 0
   var crypto = window.crypto || window.msCrypto
   if (crypto && crypto.getRandomValues && Uint8Array) {
-    randomVals = crypto.getRandomValues(new Uint8Array(31))
+    randomVals = crypto.getRandomValues(new Uint8Array(length))
   }
 
   var chars = []

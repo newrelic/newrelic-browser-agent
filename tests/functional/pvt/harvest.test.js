@@ -20,7 +20,7 @@ testDriver.test('timings are retried when collector returns 429', supported, fun
         harvestTimeSeconds: 2
       },
       harvest: {
-        tooManyRequestsDelay: 10
+        tooManyRequestsDelay: 5
       },
       spa: {
         enabled: false

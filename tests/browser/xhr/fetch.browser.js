@@ -71,7 +71,6 @@ var testCases = [
       window.fetch(request)
     },
     check: function(t, params, metrics, start) {
-      t.ok(true, JSON.stringify(metrics))
       t.equals(params.method, 'GET', 'method')
       t.equals(params.status, 404, 'status')
       t.equals(params.host, assetServerHostname + ':' + assetServerPort, 'host')

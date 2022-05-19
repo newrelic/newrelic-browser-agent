@@ -16,6 +16,6 @@ node_modules
 .vscode
 .secrets
 **/local-install
-tests/assets/test-builds/build-time-mfe/*
+tests/assets/test-builds/**/*
 packages/browser-agent-core/cjs
 packages/browser-agent/webpack-analysis.html

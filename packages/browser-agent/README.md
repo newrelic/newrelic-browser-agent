@@ -89,8 +89,7 @@ NR.start(options)
 
 You can find `licenseKey`, `applicationID` and `beacon` values in the New Relic UI's Browser Application **Settings** page ([one.newrelic.com](https://one.newrelic.com) > Browser > (select an app) > Settings > Application settings.)
 
-![settings](https://user-images.githubusercontent.com/4779220/114478763-e5b18600-9bb3-11eb-98a1-7e4c2221eec4.jpg)
-
+![configuration](https://user-images.githubusercontent.com/4779220/169617807-110f3938-8af9-4aa8-b651-7712589b0792.jpg)
 
 ## Features
 

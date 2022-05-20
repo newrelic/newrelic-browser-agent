@@ -47,7 +47,7 @@ NR.start(options).then(() => {
 
 ### Instrumenting a Micro Front End
 
-#### The New Relic Browser Agent can maintain separate configuration scopes for each bundle that is generated and included separately on the page.  This means that separate bundles, such as those used in certain micro front end patterns, can each report their own scoped data to separate New Relic applications.
+The New Relic Browser Agent can maintain separate configuration scopes for each generated bundle.  Multiple bundles, like those used in certain micro front end patterns, can each report their own scoped data to separate New Relic applications.
 
 ```javascript
 // <<< MICRO FRONT END APP 1 >>>
@@ -73,6 +73,7 @@ class MyComponent() {
 ```
 
 ## Configuring your application
+
 The NR interface's `start` method accepts an `options` object to configure the agent:
 
 ```js
@@ -92,6 +93,12 @@ You can find `licenseKey`, `applicationID` and `beacon` values in the New Relic 
 
 
 ## Features
+
+|Feature|Subfeature|Default|Description|
+|-|-|-|-|
+|JSERRORS|enabled |true|Enable's `noticeError` method|
+|JSERRORS|auto |false|Reports all global errors |
+
 
 ### JavaScript Errors
 
@@ -119,7 +126,7 @@ NR.noticeError(new Error())
 
 Set `NR.jserrors.enabled` to `true` to report specific errors via the noticeError API.
 
-### Automaically capture global JavaScript errors
+### Automatically capture global JavaScript errors
 
 ```javascript
 NR.features.jserrors.auto = true

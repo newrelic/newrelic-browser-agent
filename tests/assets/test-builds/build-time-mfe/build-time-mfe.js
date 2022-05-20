@@ -876,9 +876,9 @@ var init = __webpack_require__(1311);
 // }
 // module.exports = exp
 
-function conditionallySet() {
+function conditionallySet(agentIdentifier) {
   // var areCookiesEnabled = true
-  var areCookiesEnabled = (0,init/* getConfigurationValue */.Mt)('privacy.cookies_enabled'); // if ('init' in NREUM && 'privacy' in NREUM.init) {
+  var areCookiesEnabled = (0,init/* getConfigurationValue */.Mt)(agentIdentifier, 'privacy.cookies_enabled'); // if ('init' in NREUM && 'privacy' in NREUM.init) {
   //   areCookiesEnabled = NREUM.init.privacy.cookies_enabled
   // }
 
@@ -950,7 +950,7 @@ var HarvestScheduler = /*#__PURE__*/function (_SharedContext) {
 
       _this.harvest.sendFinal();
 
-      conditionallySet();
+      conditionallySet(_this.sharedContext.agentIdentifier);
     });
     return _this;
   }
@@ -5207,15 +5207,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Instrument": function() { return /* binding */ Instrument; }
 /* harmony export */ });
-/* harmony import */ var _common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8668);
-/* harmony import */ var _common_config_config__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(2469);
-/* harmony import */ var _common_timing_now__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9433);
-/* harmony import */ var _common_util_get_or_set__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(1403);
-/* harmony import */ var _common_wrap__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(2370);
+/* harmony import */ var _common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8668);
+/* harmony import */ var _common_config_config__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(2469);
+/* harmony import */ var _common_timing_now__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9433);
+/* harmony import */ var _common_util_get_or_set__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1403);
+/* harmony import */ var _common_wrap__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(2370);
 /* harmony import */ var lodash_slice__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1990);
 /* harmony import */ var lodash_slice__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash_slice__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _common_util_feature_base__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(9077);
-/* harmony import */ var _common_event_emitter_contextual_ee__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2666);
+/* harmony import */ var _common_util_feature_base__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(9077);
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -5272,20 +5271,21 @@ var Instrument = /*#__PURE__*/function (_FeatureBase) {
 
     _this.skipNext = 0;
 
+    var self = _assertThisInitialized(_this);
+
     _this.ee.on('fn-start', function (args, obj, methodName) {
       if (handleErrors) {
         this.skipNext = this.skipNext ? this.skipNext + 1 : 1;
-        this.ee = _common_event_emitter_contextual_ee__WEBPACK_IMPORTED_MODULE_1__.ee.get(this.agentIdentifier);
       }
     });
 
     _this.ee.on('fn-err', function (args, obj, err) {
       if (handleErrors && !err[NR_ERR_PROP]) {
-        (0,_common_util_get_or_set__WEBPACK_IMPORTED_MODULE_2__/* .getOrSet */ .X)(err, NR_ERR_PROP, function getVal() {
+        (0,_common_util_get_or_set__WEBPACK_IMPORTED_MODULE_1__/* .getOrSet */ .X)(err, NR_ERR_PROP, function getVal() {
           return true;
         });
         this.thrown = true;
-        notice(err, undefined, this.ee);
+        notice(err, undefined, self.ee);
       }
     });
 
@@ -5295,7 +5295,7 @@ var Instrument = /*#__PURE__*/function (_FeatureBase) {
     });
 
     _this.ee.on('internal-error', function (e) {
-      (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_3__/* .handle */ .pr)('ierr', [e, (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_4__/* .now */ .zO)(), true], undefined, undefined, _this.ee);
+      (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_2__/* .handle */ .pr)('ierr', [e, (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_3__/* .now */ .zO)(), true], undefined, undefined, _this.ee);
     }); // Declare that we are using err instrumentation
     // require('./debug')
 
@@ -5305,15 +5305,14 @@ var Instrument = /*#__PURE__*/function (_FeatureBase) {
     window.onerror = function () {
       var _this2;
 
-      console.log("window onerror called");
       if (prevOnError) prevOnError.apply(void 0, arguments);
 
       (_this2 = _this).onerrorHandler.apply(_this2, arguments);
+
+      return false;
     };
 
     window.addEventListener('unhandledrejection', function (e) {
-      console.log("unhandledrejection");
-
       _this.onerrorHandler(null, null, null, null, new Error(e.reason));
     });
 
@@ -5322,15 +5321,15 @@ var Instrument = /*#__PURE__*/function (_FeatureBase) {
     } catch (e) {
       // Only wrap stuff if try/catch gives us useful data. It doesn't in IE < 10.
       if ('stack' in e) {
-        (0,_common_wrap__WEBPACK_IMPORTED_MODULE_5__/* .wrapTimer */ .BV)();
-        (0,_common_wrap__WEBPACK_IMPORTED_MODULE_5__/* .wrapRaf */ .gy)();
+        (0,_common_wrap__WEBPACK_IMPORTED_MODULE_4__/* .wrapTimer */ .BV)();
+        (0,_common_wrap__WEBPACK_IMPORTED_MODULE_4__/* .wrapRaf */ .gy)();
 
         if ('addEventListener' in window) {
-          (0,_common_wrap__WEBPACK_IMPORTED_MODULE_5__/* .wrapGlobalEvents */ .Z$)();
+          (0,_common_wrap__WEBPACK_IMPORTED_MODULE_4__/* .wrapGlobalEvents */ .Z$)();
         }
 
-        if ((0,_common_config_config__WEBPACK_IMPORTED_MODULE_6__/* .getRuntime */ .O)(_this.agentIdentifier).xhrWrappable) {
-          (0,_common_wrap__WEBPACK_IMPORTED_MODULE_5__/* .wrapXhr */ .Kf)();
+        if ((0,_common_config_config__WEBPACK_IMPORTED_MODULE_5__/* .getRuntime */ .O)(_this.agentIdentifier).xhrWrappable) {
+          (0,_common_wrap__WEBPACK_IMPORTED_MODULE_4__/* .wrapXhr */ .Kf)();
         }
 
         handleErrors = true;
@@ -5349,7 +5348,7 @@ var Instrument = /*#__PURE__*/function (_FeatureBase) {
         if (this.skipNext) this.skipNext -= 1;else notice(errorObj || new UncaughtException(message, filename, lineno), true, this.ee);
       } catch (e) {
         try {
-          (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_3__/* .handle */ .pr)('ierr', [e, (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_4__/* .now */ .zO)(), true], undefined, undefined, this.ee);
+          (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_2__/* .handle */ .pr)('ierr', [e, (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_3__/* .now */ .zO)(), true], undefined, undefined, this.ee);
         } catch (err) {// do nothing
         }
       }
@@ -5360,7 +5359,7 @@ var Instrument = /*#__PURE__*/function (_FeatureBase) {
   }]);
 
   return Instrument;
-}(_common_util_feature_base__WEBPACK_IMPORTED_MODULE_7__/* .FeatureBase */ .W);
+}(_common_util_feature_base__WEBPACK_IMPORTED_MODULE_6__/* .FeatureBase */ .W);
 
 function UncaughtException(message, filename, lineno) {
   this.message = message || 'Uncaught error with no additional information';
@@ -5372,8 +5371,8 @@ function UncaughtException(message, filename, lineno) {
 function notice(err, doNotStamp, ee) {
   // by default add timestamp, unless specifically told not to
   // this is to preserve existing behavior
-  var time = !doNotStamp ? (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_4__/* .now */ .zO)() : null;
-  (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_3__/* .handle */ .pr)('err', [err, time], undefined, undefined, ee);
+  var time = !doNotStamp ? (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_3__/* .now */ .zO)() : null;
+  (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_2__/* .handle */ .pr)('err', [err, time], undefined, undefined, ee);
 }
 
 /***/ }),
@@ -7762,31 +7761,7 @@ var Aggregator = /*#__PURE__*/function (_SharedContext) {
   }]);
 
   return Aggregator;
-}(shared_context/* SharedContext */.w); // var aggregatedData = {}
-// export default {
-//   store: storeEventMetrics,
-//   storeMetric: storeMetric,
-//   take: take,
-//   get: get,
-//   merge: mergeMetrics
-// }
-// export { storeEventMetrics as store }
-// export { mergeMetrics as merge }
-// Items with the same type and name get aggregated together
-// params are example data from the aggregated items
-// metrics are the numeric values to be aggregated
-// store a single metric not tied to an event, metric values are stored in a single `stats` object property
-// export function storeMetric (type, name, params, value) {
-//   var bucket = getBucket(type, name, params)
-//   bucket.stats = updateMetric(value, bucket.stats)
-//   return bucket
-// }
-// store multiple metrics tied to an event, metrics are stored in a `metrics` property (map of name-stats metrics)
-// function storeEventMetrics (type, name, params, newMetrics, customParams) {
-//   var bucket = getBucket(type, name, params, customParams)
-//   bucket.metrics = aggregateMetrics(newMetrics, bucket.metrics)
-//   return bucket
-// }
+}(shared_context/* SharedContext */.w);
 
 function aggregateMetrics(newMetrics, oldMetrics) {
   if (!oldMetrics) oldMetrics = {
@@ -7834,36 +7809,6 @@ function updateCounterMetric(metric) {
 
   return metric;
 }
-/**
- * Merge metrics object into existing metrics.
- *
- * @param {string} type
- * @param {string} name
- * @param {object} metrics - Metrics to merge.
- */
-// function mergeMetrics (type, name, metrics, params, customParams) {
-//   var bucket = getBucket(type, name, params, customParams)
-//   if (!bucket.metrics) {
-//     bucket.metrics = metrics
-//     return
-//   }
-//   var oldMetrics = bucket.metrics
-//   oldMetrics.count += metrics.count
-//   // iterate through each new metric and merge
-//   mapOwn(metrics, function (key, value) {
-//     // count is a special case handled above
-//     if (key === 'count') return
-//     var oldMetric = oldMetrics[key]
-//     var newMetric = metrics[key]
-//     // handling the case where newMetric is a single-value first
-//     if (newMetric && !newMetric.c) {
-//       oldMetrics[key] = updateMetric(newMetric.t, oldMetric)
-//     } else { // newMetric is a metric object
-//       oldMetrics[key] = mergeMetric(newMetric, oldMetrics[key])
-//     }
-//   })
-// }
-
 
 function mergeMetric(newMetric, oldMetric) {
   if (!oldMetric) return newMetric;

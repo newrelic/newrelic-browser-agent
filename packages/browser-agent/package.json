@@ -62,7 +62,7 @@
   "scripts": {
     "build": "npm run clean && tsc -p ./tsconfig.build.cjs.json && tsc -p ./tsconfig.build.es.lazy.json && tsc -p ./tsconfig.build.umd.json && npm run compile",
     "compile": "npx webpack --config ./webpack.config.js --progress && npm run transpile",
-    "transpile": "BABEL_ENV=production npx babel dist/bundled/es6 --out-dir dist/bundled/es5",
+    "transpile": "BABEL_ENV=production babel dist/bundled/es6 --out-dir dist/bundled/es5",
     "pack": "npm run clean && npm run build && mkdir local-install && npm pack --pack-destination ./local-install && mv ./local-install/newrelic-browser-agent-*.tgz ./local-install/newrelic-browser-agent.tgz",
     "clean": "shx rm -rf lib local-install dist",
     "test": "jest --coverage",

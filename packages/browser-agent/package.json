@@ -36,12 +36,11 @@
     "@newrelic/browser-agent-core": "file:../browser-agent-core"
   },
   "devDependencies": {
-    "@babel/cli": "^7.17.10",
     "@babel/core": "^7.18.0",
     "@babel/preset-env": "^7.18.0",
     "@types/jest": "^27.4.1",
-    "babel-cli": "^6.26.0",
     "babel-jest": "^27.0.0",
+    "babel-loader": "^8.2.5",
     "babel-plugin-add-module-exports": "^1.0.4",
     "babel-polyfill": "^6.26.0",
     "babel-preset-minify": "^0.5.2",
@@ -61,8 +60,7 @@
   },
   "scripts": {
     "build": "npm run clean && tsc -p ./tsconfig.build.cjs.json && tsc -p ./tsconfig.build.es.lazy.json && tsc -p ./tsconfig.build.umd.json && npm run compile",
-    "compile": "npx webpack --config ./webpack.config.js --progress && npm run transpile",
-    "transpile": "BABEL_ENV=production babel dist/bundled/es6/index.js --out-dir dist/bundled/es5",
+    "compile": "npx webpack --config ./webpack.config.es6.js && npx webpack --config ./webpack.config.es5.js",
     "pack": "npm run clean && npm run build && mkdir local-install && npm pack --pack-destination ./local-install && mv ./local-install/newrelic-browser-agent-*.tgz ./local-install/newrelic-browser-agent.tgz",
     "clean": "shx rm -rf lib local-install dist",
     "test": "jest --coverage",

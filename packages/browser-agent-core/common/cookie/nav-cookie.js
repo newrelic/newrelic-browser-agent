@@ -18,9 +18,9 @@ import { getConfigurationValue } from '../config/config'
 
 // module.exports = exp
 
-export function conditionallySet() {
+export function conditionallySet(agentIdentifier) {
   // var areCookiesEnabled = true
-  var areCookiesEnabled = getConfigurationValue('privacy.cookies_enabled')
+  var areCookiesEnabled = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled')
   // if ('init' in NREUM && 'privacy' in NREUM.init) {
   //   areCookiesEnabled = NREUM.init.privacy.cookies_enabled
   // }

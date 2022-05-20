@@ -7,6 +7,8 @@ const testDriver = require('../../../../tools/jil/index')
 const { assertErrorAttributes, assertExpectedErrors, verifyStackTraceOmits, getErrorsFromResponse } = require('./assertion-helpers')
 
 const es6 = testDriver.Matcher.withFeature('es6')
+const unload = testDriver.Matcher.withFeature('reliableUnloadEvent')
+const supported = es6.and(unload)
 
 const opts = {
   init: {
@@ -16,7 +18,7 @@ const opts = {
   }
 }
 
-testDriver.test('Error objects are sent via noticeError from core module', es6, function (t, browser, router) {
+testDriver.test('Error objects are sent via noticeError from core module', supported, function (t, browser, router) {
   t.plan(2)
 
   let loadPromise = browser.safeGet(router.assetURL('modular/js-errors/error-obj.html', opts))
@@ -45,7 +47,7 @@ testDriver.test('Error objects are sent via noticeError from core module', es6, 
   }
 })
 
-testDriver.test('Strings are converted to errors via noticeError from core module', es6, function (t, browser, router) {
+testDriver.test('Strings are converted to errors via noticeError from core module', supported, function (t, browser, router) {
   t.plan(2)
 
   let loadPromise = browser.safeGet(router.assetURL('modular/js-errors/string.html', opts))
@@ -74,7 +76,7 @@ testDriver.test('Strings are converted to errors via noticeError from core modul
   }
 })
 
-testDriver.test('Error objects with custom attributes can be sent via noticeError from core module', es6, function (t, browser, router) {
+testDriver.test('Error objects with custom attributes can be sent via noticeError from core module', supported, function (t, browser, router) {
   t.plan(3)
 
   let loadPromise = browser.safeGet(router.assetURL('modular/js-errors/custom-attributes.html', opts))
@@ -106,7 +108,7 @@ testDriver.test('Error objects with custom attributes can be sent via noticeErro
   }
 })
 
-testDriver.test('Errors are sent from multiple instances to isolated targets via noticeError', es6, function (t, browser, router) {
+testDriver.test('Errors are sent from multiple instances to isolated targets via noticeError', supported, function (t, browser, router) {
   t.plan(4)
 
   let loadPromise = browser.safeGet(router.assetURL('modular/js-errors/multiple-instances.html', opts))
@@ -139,7 +141,7 @@ testDriver.test('Errors are sent from multiple instances to isolated targets via
   }
 })
 
-testDriver.test('Error objects are sent via thrown error from core module if auto is enabled', es6, function (t, browser, router) {
+testDriver.test('Error objects are sent via thrown error from core module if auto is enabled', supported, function (t, browser, router) {
   t.plan(2)
 
   let loadPromise = browser.safeGet(router.assetURL('modular/js-errors/auto.html', opts))
@@ -169,7 +171,7 @@ testDriver.test('Error objects are sent via thrown error from core module if aut
 })
 
 
-testDriver.test('encoding error where message contains a circular reference', es6, function (t, browser, router) {
+testDriver.test('encoding error where message contains a circular reference', supported, function (t, browser, router) {
   t.plan(2)
 
   let loadPromise = browser.get(router.assetURL('modular/js-errors/circular.html', opts))
@@ -204,7 +206,7 @@ testDriver.test('encoding error where message contains a circular reference', es
   }
 })
 
-testDriver.test('reporting errors from event listener callbacks', es6, function (t, browser, router) {
+testDriver.test('reporting errors from event listener callbacks', supported, function (t, browser, router) {
   let assetURL = router.assetURL('modular/js-errors/event-listener.html', opts)
 
   let loadPromise = browser.get(assetURL)
@@ -251,7 +253,7 @@ testDriver.test('reporting errors from event listener callbacks', es6, function 
   }
 })
 
-testDriver.test('reporting uncaught errors from external scripts', es6, function (t, browser, router) {
+testDriver.test('reporting uncaught errors from external scripts', supported, function (t, browser, router) {
   let errorsPromise = router.expectErrors()
   let loadPromise = browser.get(router.assetURL('modular/js-errors/external-uncaught-error.html', opts))
 
@@ -270,7 +272,7 @@ testDriver.test('reporting uncaught errors from external scripts', es6, function
   }
 })
 
-testDriver.test('reporting uncaught errors from inline scripts', es6, function (t, browser, router) {
+testDriver.test('reporting uncaught errors from inline scripts', supported, function (t, browser, router) {
   let errorsPromise = router.expectErrors()
   let loadPromise = browser.get(router.assetURL('modular/js-errors/inline-uncaught-error.html', opts))
 
@@ -290,7 +292,7 @@ testDriver.test('reporting uncaught errors from inline scripts', es6, function (
 })
 
 
-testDriver.test('reporting errors from setInterval callbacks', es6, function (t, browser, router) {
+testDriver.test('reporting errors from setInterval callbacks', supported, function (t, browser, router) {
   let assetURL = router.assetURL('modular/js-errors/set-interval-error.html', opts)
 
   // let rumPromise = router.expectRumAndConditionAndErrors('window.intervalFired')
@@ -320,7 +322,7 @@ testDriver.test('reporting errors from setInterval callbacks', es6, function (t,
 })
 
 
-testDriver.test('reporting errors from setTimeout callbacks', es6, function (t, browser, router) {
+testDriver.test('reporting errors from setTimeout callbacks', supported, function (t, browser, router) {
   let assetURL = router.assetURL('modular/js-errors/set-timeout-error.html', opts)
 
   // let rumPromise = router.expectRumAndConditionAndErrors('window.setTimeoutFired')
@@ -350,7 +352,7 @@ testDriver.test('reporting errors from setTimeout callbacks', es6, function (t, 
 })
 
 
-testDriver.test('reporting errors from XHR callbacks', es6, function (t, browser, router) {
+testDriver.test('reporting errors from XHR callbacks', supported, function (t, browser, router) {
   let assetURL = router.assetURL('modular/js-errors/xhr-error.html', opts)
 
   // let rumPromise = router.expectRumAndConditionAndErrors('window.xhrFired')
@@ -383,7 +385,7 @@ testDriver.test('reporting errors from XHR callbacks', es6, function (t, browser
 
 
 
-testDriver.test('Errors are not sent if agent is not initialized', es6, function (t, browser, router) {
+testDriver.test('Errors are not sent if agent is not initialized', supported, function (t, browser, router) {
   setRouterTimeout(5000)
   t.plan(1)
 
@@ -409,7 +411,7 @@ testDriver.test('Errors are not sent if agent is not initialized', es6, function
 })
 
 
-testDriver.test('Errors are not sent if feature is disabled', es6, function (t, browser, router) {
+testDriver.test('Errors are not sent if feature is disabled', supported, function (t, browser, router) {
   setRouterTimeout(5000)
   t.plan(1)
 

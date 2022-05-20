@@ -28,10 +28,11 @@ export class Instrument extends FeatureBase {
     // errors that will be the same as caught errors.
     this.skipNext = 0
 
+    const self = this
+
     this.ee.on('fn-start', function (args, obj, methodName) {
       if (handleErrors) {
         this.skipNext = this.skipNext ? this.skipNext + 1 : 1
-        this.ee = ee.get(this.agentIdentifier)
       }
     })
 
@@ -41,7 +42,7 @@ export class Instrument extends FeatureBase {
           return true
         })
         this.thrown = true
-        notice(err, undefined, this.ee)
+        notice(err, undefined, self.ee)
       }
     })
 
@@ -61,6 +62,7 @@ export class Instrument extends FeatureBase {
     window.onerror = (...args) => {
       if (prevOnError) prevOnError(...args)
       this.onerrorHandler(...args)
+      return false
     }
 
     window.addEventListener('unhandledrejection', (e) => {

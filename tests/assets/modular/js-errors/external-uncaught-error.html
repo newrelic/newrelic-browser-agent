@@ -11,8 +11,7 @@
 
   <!-- Any injection tag with 'packages/<PATH>' will automatically be 
       replaced with that file -->
-  {packages/browser-agent/dist/bundled/index.js}
-  <script type="text/javascript" src="js/external-uncaught-error.js?secretParameter=secretValue"></script>
+  {packages/browser-agent/dist/bundled/es6/index.js}
   <script>
     const { default: NR } = NRBA;
     const opts1 = {
@@ -29,9 +28,7 @@
 
 <body>
   This page fires an uncaught exception from external JS code
-  <script>
-    externalFunction()
-  </script>
+  <script type="text/javascript" src="js/external-uncaught-error.js?secretParameter=secretValue" async defer></script>
 </body>
 
 </html>

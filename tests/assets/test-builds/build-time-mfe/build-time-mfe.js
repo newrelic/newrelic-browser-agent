@@ -5305,12 +5305,15 @@ var Instrument = /*#__PURE__*/function (_FeatureBase) {
     window.onerror = function () {
       var _this2;
 
+      console.log("window onerror called");
       if (prevOnError) prevOnError.apply(void 0, arguments);
 
       (_this2 = _this).onerrorHandler.apply(_this2, arguments);
     };
 
     window.addEventListener('unhandledrejection', function (e) {
+      console.log("unhandledrejection");
+
       _this.onerrorHandler(null, null, null, null, new Error(e.reason));
     });
 

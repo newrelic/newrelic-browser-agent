@@ -3,10 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../../common/event-emitter/handle'
-import { ee as timerEE } from '../../../common/wrap/wrap-timer'
-import { ee as rafEE } from '../../../common/wrap/wrap-raf'
-import '../../../common/wrap/wrap-history'
-import '../../../common/wrap/wrap-events'
+import { wrapHistory, wrapEvents, wrapTimer, wrapRaf } from '../../../common/wrap'
 import { supportsPerformanceObserver } from '../../../common/window/supports-performance-observer'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { originals, getRuntime } from '../../../common/config/config'
@@ -32,6 +29,11 @@ export class Instrument extends FeatureBase {
     super(agentIdentifier)
     getRuntime(this.agentIdentifier).features.stn = true
 
+    this.timerEE = wrapTimer(this.ee)
+    this.rafEE = wrapRaf(this.ee)
+    wrapHistory(this.ee)
+    wrapEvents(this.ee)
+
     if (!(window.performance &&
       window.performance.timing &&
       window.performance.getEntriesByType
@@ -51,20 +53,20 @@ export class Instrument extends FeatureBase {
       }
     })
 
-    timerEE.on(FN_START, function (args, obj, type) {
+    this.timerEE.on(FN_START, function (args, obj, type) {
       this.bstStart = now()
       this.bstType = type
     })
 
-    timerEE.on(FN_END, function (args, target) {
+    this.timerEE.on(FN_END, function (args, target) {
       handle(BST_TIMER, [target, this.bstStart, now(), this.bstType])
     })
 
-    rafEE.on(FN_START, function () {
+    this.rafEE.on(FN_START, function () {
       this.bstStart = now()
     })
 
-    rafEE.on(FN_END, function (args, target) {
+    this.rafEE.on(FN_END, function (args, target) {
       handle(BST_TIMER, [target, this.bstStart, now(), 'requestAnimationFrame'])
     })
 

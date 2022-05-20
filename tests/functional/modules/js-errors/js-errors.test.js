@@ -6,9 +6,7 @@
 const testDriver = require('../../../../tools/jil/index')
 const { assertErrorAttributes, assertExpectedErrors, verifyStackTraceOmits, getErrorsFromResponse } = require('./assertion-helpers')
 
-const es6 = testDriver.Matcher.withFeature('es6')
-const unload = testDriver.Matcher.withFeature('reliableUnloadEvent')
-const supported = es6.and(unload)
+const supported = testDriver.Matcher.withFeature('es6')
 
 const opts = {
   init: {
@@ -196,7 +194,7 @@ testDriver.test('encoding error where message contains a circular reference', su
       return 'asdf'
     } else if (browser.match('firefox@<35')) {
       return 'Error'
-    } else if (browser.match('chrome, firefox@>=35, ie@11, android@>=4.4, safari@>=10')) {
+    } else if (browser.match('chrome, firefox@>=35, ie@11, android@>=4.4, safari@>=10, ios@>12')) {
       return '[object Object]'
     } else if (browser.match('android')) {
       return 'Uncaught Error: [object Object]'

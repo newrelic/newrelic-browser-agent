@@ -4,24 +4,30 @@
  */
 
 // Request Animation Frame wrapper
-import {ee as contextualEE} from '../event-emitter/contextual-ee'
-import {createWrapperWithEmitter as wfn} from './wrap-function'
-export var ee = contextualEE.get('raf')
-var wrapFn = wfn(ee)
+import { ee as baseEE } from '../event-emitter/contextual-ee'
+import { createWrapperWithEmitter as wfn } from './wrap-function'
 
-var equestAnimationFrame = 'equestAnimationFrame'
+export function wrapRaf(sharedEE) {
+  var ee = scopedEE(sharedEE)
+  var wrapFn = wfn(ee)
 
-// eslint-disable-next-line
-export default ee
+  var equestAnimationFrame = 'equestAnimationFrame'
 
-wrapFn.inPlace(window, [
-  'r' + equestAnimationFrame,
-  'mozR' + equestAnimationFrame,
-  'webkitR' + equestAnimationFrame,
-  'msR' + equestAnimationFrame
-], 'raf-')
+  wrapFn.inPlace(window, [
+    'r' + equestAnimationFrame,
+    'mozR' + equestAnimationFrame,
+    'webkitR' + equestAnimationFrame,
+    'msR' + equestAnimationFrame
+  ], 'raf-')
 
-ee.on('raf-start', function (args) {
-  // Wrap the callback handed to requestAnimationFrame
-  args[0] = wrapFn(args[0], 'fn-')
-})
+  ee.on('raf-start', function (args) {
+    // Wrap the callback handed to requestAnimationFrame
+    args[0] = wrapFn(args[0], 'fn-')
+  })
+
+  return ee
+}
+
+export function scopedEE(sharedEE){
+  return (sharedEE || baseEE).get('raf')
+}

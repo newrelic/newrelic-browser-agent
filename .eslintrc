@@ -24,7 +24,7 @@
     "no-extend-native": 0,
     "no-wrap-func": 0,
     "camelcase": 0,
-    "no-restricted-syntax": ["error", "ExportDefaultDeclaration"],
+    "no-restricted-syntax": ["error"],
     "no-restricted-imports": ["error"],
     "no-undef": "off",
     "no-empty": "off",

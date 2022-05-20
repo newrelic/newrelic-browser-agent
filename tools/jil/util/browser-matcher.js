@@ -125,6 +125,7 @@ features.wrappableAddEventListener = features.addEventListener
   // because in those versions, each descendent of Element gets its own unique
   // copy of addEventListener, rather than inheriting via the prototype chain.
   .exclude('firefox', '<25')
+  .exclude('phantom')
 
 features.hasInnerText = features.addEventListener
   // https://developer.mozilla.org/en-US/docs/Web/API/Node/innerText
@@ -361,8 +362,14 @@ features.obfuscate = new BrowserMatcher()
 features.es6 = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=60')
-  .include('safari', '>=11.1')
+  .include('safari', '>=11.3')
   .include('firefox', '>=55')
   .include('edge', '>79')
-  .include('ios', '>=11.1')
+  .include('ios', '>=11.3')
+
+  features.customElements = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', '>=67')
+  .include('firefox', '>=63')
+  .include('edge', '>=79')
 

@@ -2765,21 +2765,22 @@ function supportsPerformanceObserver() {
 
 /***/ }),
 
-/***/ 2370:
+/***/ 7423:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
+  "em": function() { return /* binding */ wrap_wrapEvents; },
   "u5": function() { return /* binding */ wrap_wrapFetch; },
-  "Z$": function() { return /* binding */ wrapGlobalEvents; },
-  "gy": function() { return /* binding */ wrapRaf; },
-  "BV": function() { return /* binding */ wrapTimer; },
-  "Kf": function() { return /* binding */ wrapXhr; }
+  "QU": function() { return /* binding */ wrap_wrapHistory; },
+  "gy": function() { return /* binding */ wrap_wrapRaf; },
+  "BV": function() { return /* binding */ wrap_wrapTimer; },
+  "Kf": function() { return /* binding */ wrap_wrapXhr; }
 });
 
-// UNUSED EXPORTS: wrapGlobalFetch, wrapHistory, wrapJson, wrapMutation, wrapPromise
+// UNUSED EXPORTS: wrapGlobalFetch, wrapJson, wrapMutation, wrapPromise
 
 // EXTERNAL MODULE: ../../../../packages/browser-agent-core/common/event-emitter/contextual-ee.js
 var contextual_ee = __webpack_require__(2666);
@@ -2797,10 +2798,6 @@ var originals = __webpack_require__(5301);
 
 
 
-var ee = contextual_ee.ee.get('fetch'); // eslint-disable-next-line
-
-/* harmony default export */ var wrap_fetch = ((/* unused pure expression or super */ null && (ee)));
-
 var win = window;
 var prefix = 'fetch-';
 var bodyPrefix = prefix + 'body-';
@@ -2813,15 +2810,15 @@ var ctxId = 'nr@context';
 function wrapGlobal() {
   // since these are prototype methods, we can only wrap globally
   mapOwn(bodyMethods, function (i, name) {
-    wrapPromiseMethod(ee, Req[proto], name, bodyPrefix);
-    wrapPromiseMethod(ee, Res[proto], name, bodyPrefix);
+    wrapPromiseMethod(baseEE, Req[proto], name, bodyPrefix);
+    wrapPromiseMethod(baseEE, Res[proto], name, bodyPrefix);
   });
-  var wrappedFetch = wrapFetch(ee);
+  var wrappedFetch = wrapFetch(baseEE);
   win.fetch = wrappedFetch;
 }
-
-function wrapFetch(ee) {
+function wrapFetch(sharedEE) {
   var fn = originals/* originals.FETCH */.Y.FETCH;
+  var ee = sharedEE || contextual_ee.ee;
   var wrappedFetch = wrapPromiseMethod(ee, fn, prefix);
   ee.on(prefix + 'end', function (err, res) {
     var ctx = this;
@@ -2840,7 +2837,6 @@ function wrapFetch(ee) {
   });
   return wrappedFetch;
 } // this should probably go to the common module as a part of wrapping utility functions
-
 
 function wrapPromiseMethod(ee, fn, prefix) {
   return function nrWrapper() {
@@ -2861,313 +2857,11 @@ function wrapPromiseMethod(ee, fn, prefix) {
     });
   };
 }
-// EXTERNAL MODULE: ../../../../packages/browser-agent-core/common/wrap/wrap-timer.js
-var wrap_timer = __webpack_require__(2807);
-// EXTERNAL MODULE: ../../../../packages/browser-agent-core/common/wrap/wrap-raf.js
-var wrap_raf = __webpack_require__(6483);
-// EXTERNAL MODULE: ../../../../packages/browser-agent-core/common/event-listener/event-listener-opts.js
-var event_listener_opts = __webpack_require__(3207);
-// EXTERNAL MODULE: ../../../../packages/browser-agent-core/common/wrap/wrap-function.js
-var wrap_function = __webpack_require__(5669);
-;// CONCATENATED MODULE: ../../../../packages/browser-agent-core/common/wrap/wrap-xhr.js
-/*
- * Copyright 2020 New Relic Corporation. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
- */
-// wrap-events patches XMLHttpRequest.prototype.addEventListener for us.
- // import * as config from '../config'
 
-
-
-
-
-var baseEE = contextual_ee.ee;
-var wrap_xhr_ee = baseEE.get('xhr');
-var wrapFn = (0,wrap_function/* createWrapperWithEmitter */.xJ)(wrap_xhr_ee);
-var OrigXHR = originals/* originals.XHR */.Y.XHR;
-var MutationObserver = originals/* originals.MO */.Y.MO;
-var Promise = originals/* originals.PR */.Y.PR;
-var setImmediate = originals/* originals.SI */.Y.SI;
-var READY_STATE_CHANGE = 'readystatechange';
-var handlers = ['onload', 'onerror', 'onabort', 'onloadstart', 'onloadend', 'onprogress', 'ontimeout'];
-var pendingXhrs = []; // eslint-disable-next-line
-
-/* harmony default export */ var wrap_xhr = (wrap_xhr_ee);
-
-var XHR = window.XMLHttpRequest = function (opts) {
-  var xhr = new OrigXHR(opts);
-
-  try {
-    wrap_xhr_ee.emit('new-xhr', [xhr], xhr);
-    xhr.addEventListener(READY_STATE_CHANGE, wrapXHR, (0,event_listener_opts/* eventListenerOpts */.m)(false));
-  } catch (e) {
-    try {
-      wrap_xhr_ee.emit('internal-error', [e]);
-    } catch (err) {// do nothing
-    }
-  }
-
-  return xhr;
-};
-
-copy(OrigXHR, XHR);
-XHR.prototype = OrigXHR.prototype; // log('wrap xhr...')
-
-wrapFn.inPlace(XHR.prototype, ['open', 'send'], '-xhr-', getObject);
-wrap_xhr_ee.on('send-xhr-start', function (args, xhr) {
-  wrapOnreadystatechange(args, xhr);
-  enqueuePendingXhr(xhr);
-});
-wrap_xhr_ee.on('open-xhr-start', wrapOnreadystatechange);
-
-function wrapOnreadystatechange(args, xhr) {
-  wrapFn.inPlace(xhr, ['onreadystatechange'], 'fn-', getObject);
+function scopedEE(sharedEE) {
+  return (sharedEE || baseEE).get('events');
 }
-
-function wrapXHR() {
-  var xhr = this;
-  var ctx = wrap_xhr_ee.context(xhr);
-
-  if (xhr.readyState > 3 && !ctx.resolved) {
-    ctx.resolved = true;
-    wrap_xhr_ee.emit('xhr-resolved', [], xhr);
-  }
-
-  wrapFn.inPlace(xhr, handlers, 'fn-', getObject);
-} // Wrapping the onreadystatechange property of XHRs takes some special tricks.
-//
-// The issue is that the onreadystatechange property may be assigned *after*
-// send() is called against an XHR. This is of particular importance because
-// jQuery uses a single onreadystatechange handler to implement all of the XHR
-// callbacks thtat it provides, and it assigns that property after calling send.
-//
-// There are several 'obvious' approaches to wrapping the onreadystatechange
-// when it's assigned after send:
-//
-// 1. Try to wrap the onreadystatechange handler from a readystatechange
-//    addEventListener callback (the addEventListener callback will fire before
-//    the onreadystatechange callback).
-//
-//      Caveat: this doesn't work in Chrome or Safari, and in fact will cause
-//      the onreadystatechange handler to not be invoked at all during the
-//      firing cycle in which it is wrapped, which may break applications :(
-//
-// 2. Use Object.defineProperty to create a setter for the onreadystatechange
-//    property, and wrap from that setter.
-//
-//      Caveat: onreadystatechange is not a configurable property in Safari or
-//      older versions of the Android browser.
-//
-// 3. Schedule wrapping of the onreadystatechange property using a setTimeout
-//    call issued just before the call to send.
-//
-//      Caveat: sometimes, the onreadystatechange handler fires before the
-//      setTimeout, meaning the wrapping happens too late.
-//
-// The setTimeout approach is closest to what we use here: we want to schedule
-// the wrapping of the onreadystatechange property when send is called, but
-// ensure that our wrapping happens before onreadystatechange has a chance to
-// fire.
-//
-// We achieve this using a hybrid approach:
-//
-// * In browsers that support MutationObserver, we use that to schedule wrapping
-//   of onreadystatechange.
-//
-// * We have discovered that MutationObserver in IE causes a memory leak, so we
-//   now will prefer setImmediate for IE, and use a resolved promise to schedule
-//   the wrapping in Edge (and other browsers that support promises)
-//
-// * In older browsers that don't support MutationObserver, we rely on the fact
-//   that the call to send is probably happening within a callback that we've
-//   already wrapped, and use our existing fn-end event callback to wrap the
-//   onreadystatechange at the end of the current callback.
-//
-
-
-if (MutationObserver) {
-  var resolved = Promise && Promise.resolve();
-
-  if (!setImmediate && !Promise) {
-    var toggle = 1;
-    var dummyNode = document.createTextNode(toggle);
-    new MutationObserver(drainPendingXhrs).observe(dummyNode, {
-      characterData: true
-    });
-  }
-} else {
-  baseEE.on('fn-end', function (args) {
-    // We don't want to try to wrap onreadystatechange from within a
-    // readystatechange callback.
-    if (args[0] && args[0].type === READY_STATE_CHANGE) return;
-    drainPendingXhrs();
-  });
-}
-
-function enqueuePendingXhr(xhr) {
-  pendingXhrs.push(xhr);
-
-  if (MutationObserver) {
-    if (resolved) {
-      resolved.then(drainPendingXhrs);
-    } else if (setImmediate) {
-      setImmediate(drainPendingXhrs);
-    } else {
-      toggle = -toggle;
-      dummyNode.data = toggle;
-    }
-  }
-}
-
-function drainPendingXhrs() {
-  for (var i = 0; i < pendingXhrs.length; i++) {
-    wrapOnreadystatechange([], pendingXhrs[i]);
-  }
-
-  if (pendingXhrs.length) pendingXhrs = [];
-} // Use the object these methods are on as their
-// context store for the event emitter
-
-
-function getObject(args, obj) {
-  return obj;
-}
-
-function copy(from, to) {
-  for (var i in from) {
-    to[i] = from[i];
-  }
-
-  return to;
-}
-// EXTERNAL MODULE: ../../../../packages/browser-agent-core/common/util/get-or-set.js
-var get_or_set = __webpack_require__(1403);
-;// CONCATENATED MODULE: ../../../../packages/browser-agent-core/common/wrap/wrap-events.js
-function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
-
-/*
- * Copyright 2020 New Relic Corporation. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
- */
-
-
-
-var wrap_events_ee = contextual_ee.ee.get('events');
-var wrap_events_wrapFn = (0,wrap_function/* createWrapperWithEmitter */.xJ)(wrap_events_ee, true);
-var wrap_events_XHR = XMLHttpRequest;
-var ADD_EVENT_LISTENER = 'addEventListener';
-var REMOVE_EVENT_LISTENER = 'removeEventListener'; // eslint-disable-next-line
-
-/* harmony default export */ var wrap_events = (wrap_events_ee); // Guard against instrumenting environments w/o necessary features
-
-if ('getPrototypeOf' in Object) {
-  findAndWrapNode(document);
-  findAndWrapNode(window);
-  findAndWrapNode(wrap_events_XHR.prototype); // eslint-disable-next-line
-} else if (wrap_events_XHR.prototype.hasOwnProperty(ADD_EVENT_LISTENER)) {
-  wrapNode(window);
-  wrapNode(wrap_events_XHR.prototype);
-}
-
-wrap_events_ee.on(ADD_EVENT_LISTENER + '-start', function (args, target) {
-  var originalListener = args[1];
-
-  if (originalListener === null || typeof originalListener !== 'function' && _typeof(originalListener) !== 'object') {
-    return;
-  }
-
-  var wrapped = (0,get_or_set/* getOrSet */.X)(originalListener, 'nr@wrapped', function () {
-    var listener = {
-      object: wrapHandleEvent,
-      'function': originalListener
-    }[_typeof(originalListener)];
-
-    return listener ? wrap_events_wrapFn(listener, 'fn-', null, listener.name || 'anonymous') : originalListener;
-
-    function wrapHandleEvent() {
-      if (typeof originalListener.handleEvent !== 'function') return;
-      return originalListener.handleEvent.apply(originalListener, arguments);
-    }
-  });
-  this.wrapped = args[1] = wrapped;
-});
-wrap_events_ee.on(REMOVE_EVENT_LISTENER + '-start', function (args) {
-  args[1] = this.wrapped || args[1];
-});
-
-function findAndWrapNode(object) {
-  var step = object; // eslint-disable-next-line
-
-  while (step && !step.hasOwnProperty(ADD_EVENT_LISTENER)) {
-    step = Object.getPrototypeOf(step);
-  }
-
-  if (step) {
-    wrapNode(step);
-  }
-}
-
-function wrapNode(node) {
-  wrap_events_wrapFn.inPlace(node, [ADD_EVENT_LISTENER, REMOVE_EVENT_LISTENER], '-', uniqueListener);
-}
-
-function uniqueListener(args, obj) {
-  // Context for the listener is stored on itself.
-  return args[1];
-}
-;// CONCATENATED MODULE: ../../../../packages/browser-agent-core/common/wrap/index.js
-
-
-
-
-
-
-
-
-
-
-function wrapGlobalEvents() {
-  return wrap_events;
-}
-function wrap_wrapFetch(ee) {
-  // return import('./wrap-fetch').then(module => module.wrap(ee))
-  wrapFetch(ee);
-}
-function wrapHistory() {
-  return wh;
-}
-function wrapJson() {
-  return wj;
-}
-function wrapMutation() {
-  return wm;
-}
-function wrapPromise() {
-  return wp;
-}
-function wrapRaf() {
-  return wrap_raf/* default */.Z;
-}
-function wrapTimer() {
-  return wrap_timer/* default */.Z;
-}
-function wrapXhr() {
-  return wrap_xhr;
-}
-
-/***/ }),
-
-/***/ 5669:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "xJ": function() { return /* binding */ createWrapperWithEmitter; }
-/* harmony export */ });
-/* unused harmony exports wrapFunction, wrapInPlace, argsToArray */
-/* harmony import */ var _event_emitter_contextual_ee__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2666);
-/* harmony import */ var lodash_slice__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1990);
-/* harmony import */ var lodash_slice__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash_slice__WEBPACK_IMPORTED_MODULE_0__);
+;// CONCATENATED MODULE: ../../../../packages/browser-agent-core/common/wrap/wrap-function.js
 /*
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
@@ -3178,9 +2872,9 @@ var flag = 'nr@original';
 var has = Object.prototype.hasOwnProperty;
 var inWrapper = false; // eslint-disable-next-line
 
-/* unused harmony default export */ var __WEBPACK_DEFAULT_EXPORT__ = (createWrapperWithEmitter);
+/* harmony default export */ var wrap_function = (createWrapperWithEmitter);
 function createWrapperWithEmitter(emitter, always) {
-  emitter || (emitter = _event_emitter_contextual_ee__WEBPACK_IMPORTED_MODULE_1__.ee);
+  emitter || (emitter = contextual_ee.ee);
   wrapFn.inPlace = inPlace;
   wrapFn.flag = flag;
   return wrapFn;
@@ -3201,7 +2895,7 @@ function createWrapperWithEmitter(emitter, always) {
 
       try {
         originalThis = this;
-        args = lodash_slice__WEBPACK_IMPORTED_MODULE_0___default()(arguments);
+        args = lodash_slice_default()(arguments);
 
         if (typeof getContext === 'function') {
           ctx = getContext(args, originalThis);
@@ -3265,7 +2959,7 @@ function createWrapperWithEmitter(emitter, always) {
 }
 
 function report(args, emitter) {
-  emitter || (emitter = _event_emitter_contextual_ee__WEBPACK_IMPORTED_MODULE_1__.ee);
+  emitter || (emitter = contextual_ee.ee);
 
   try {
     emitter.emit('internal-error', args);
@@ -3331,18 +3025,45 @@ function argsToArray() {
 
   return arr;
 }
+;// CONCATENATED MODULE: ../../../../packages/browser-agent-core/common/wrap/wrap-timer.js
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-/***/ }),
+ //eslint-disable-next-line
 
-/***/ 6483:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+function wrapTimer(sharedEE) {
+  var ee = wrap_timer_scopedEE(sharedEE);
+  var wrapFn = createWrapperWithEmitter(ee);
+  var SET_TIMEOUT = 'setTimeout';
+  var SET_INTERVAL = 'setInterval';
+  var CLEAR_TIMEOUT = 'clearTimeout';
+  var START = '-start';
+  var DASH = '-'; // log('wrap timer...')
 
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ee": function() { return /* binding */ ee; }
-/* harmony export */ });
-/* harmony import */ var _event_emitter_contextual_ee__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2666);
-/* harmony import */ var _wrap_function__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5669);
+  wrapFn.inPlace(window, [SET_TIMEOUT, 'setImmediate'], SET_TIMEOUT + DASH);
+  wrapFn.inPlace(window, [SET_INTERVAL], SET_INTERVAL + DASH);
+  wrapFn.inPlace(window, [CLEAR_TIMEOUT, 'clearImmediate'], CLEAR_TIMEOUT + DASH);
+  ee.on(SET_INTERVAL + START, interval);
+  ee.on(SET_TIMEOUT + START, timer);
+
+  function interval(args, obj, type) {
+    args[0] = wrapFn(args[0], 'fn-', null, type);
+  }
+
+  function timer(args, obj, type) {
+    this.method = type;
+    this.timerDuration = isNaN(args[1]) ? 0 : +args[1];
+    args[0] = wrapFn(args[0], 'fn-', this, type);
+  }
+
+  return ee;
+}
+function wrap_timer_scopedEE(sharedEE) {
+  return (sharedEE || contextual_ee.ee).get('timer');
+}
+;// CONCATENATED MODULE: ../../../../packages/browser-agent-core/common/wrap/wrap-raf.js
 /*
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
@@ -3350,58 +3071,342 @@ function argsToArray() {
 // Request Animation Frame wrapper
 
 
-var ee = _event_emitter_contextual_ee__WEBPACK_IMPORTED_MODULE_0__.ee.get('raf');
-var wrapFn = (0,_wrap_function__WEBPACK_IMPORTED_MODULE_1__/* .createWrapperWithEmitter */ .xJ)(ee);
-var equestAnimationFrame = 'equestAnimationFrame'; // eslint-disable-next-line
+function wrapRaf(sharedEE) {
+  var ee = wrap_raf_scopedEE(sharedEE);
+  var wrapFn = createWrapperWithEmitter(ee);
+  var equestAnimationFrame = 'equestAnimationFrame';
+  wrapFn.inPlace(window, ['r' + equestAnimationFrame, 'mozR' + equestAnimationFrame, 'webkitR' + equestAnimationFrame, 'msR' + equestAnimationFrame], 'raf-');
+  ee.on('raf-start', function (args) {
+    // Wrap the callback handed to requestAnimationFrame
+    args[0] = wrapFn(args[0], 'fn-');
+  });
+  return ee;
+}
+function wrap_raf_scopedEE(sharedEE) {
+  return (sharedEE || contextual_ee.ee).get('raf');
+}
+;// CONCATENATED MODULE: ../../../../packages/browser-agent-core/common/wrap/wrap-history.js
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+// History pushState wrapper
 
-/* harmony default export */ __webpack_exports__["Z"] = (ee);
-wrapFn.inPlace(window, ['r' + equestAnimationFrame, 'mozR' + equestAnimationFrame, 'webkitR' + equestAnimationFrame, 'msR' + equestAnimationFrame], 'raf-');
-ee.on('raf-start', function (args) {
-  // Wrap the callback handed to requestAnimationFrame
-  args[0] = wrapFn(args[0], 'fn-');
-});
 
-/***/ }),
+function wrapHistory(sharedEE) {
+  var ee = wrap_history_scopedEE(sharedEE);
+  var wrapFn = createWrapperWithEmitter(ee);
+  var prototype = window.history && window.history.constructor && window.history.constructor.prototype;
+  var object = window.history;
 
-/***/ 2807:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+  if (prototype && prototype.pushState && prototype.replaceState) {
+    object = prototype;
+  } // log('wrap history')
 
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ee": function() { return /* binding */ ee; }
-/* harmony export */ });
-/* harmony import */ var _event_emitter_contextual_ee__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2666);
-/* harmony import */ var _wrap_function__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5669);
+
+  wrapFn.inPlace(object, ['pushState', 'replaceState'], '-');
+  return ee;
+}
+3;
+function wrap_history_scopedEE(sharedEE) {
+  return (sharedEE || contextual_ee.ee).get('history');
+}
+// EXTERNAL MODULE: ../../../../packages/browser-agent-core/common/event-listener/event-listener-opts.js
+var event_listener_opts = __webpack_require__(3207);
+;// CONCATENATED MODULE: ../../../../packages/browser-agent-core/common/wrap/wrap-xhr.js
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+// wrap-events patches XMLHttpRequest.prototype.addEventListener for us.
+ // import * as config from '../config'
+
+
+
+
+ // eslint-disable-next-line
+
+function wrapXhr(sharedEE) {
+  var baseEE = sharedEE || contextual_ee.ee;
+  var ee = wrap_xhr_scopedEE(baseEE);
+  var wrapFn = createWrapperWithEmitter(ee);
+  var OrigXHR = originals/* originals.XHR */.Y.XHR;
+  var MutationObserver = originals/* originals.MO */.Y.MO;
+  var Promise = originals/* originals.PR */.Y.PR;
+  var setImmediate = originals/* originals.SI */.Y.SI;
+  var READY_STATE_CHANGE = 'readystatechange';
+  var handlers = ['onload', 'onerror', 'onabort', 'onloadstart', 'onloadend', 'onprogress', 'ontimeout'];
+  var pendingXhrs = [];
+
+  var XHR = window.XMLHttpRequest = function (opts) {
+    var xhr = new OrigXHR(opts);
+
+    try {
+      ee.emit('new-xhr', [xhr], xhr);
+      xhr.addEventListener(READY_STATE_CHANGE, wrapXHR, (0,event_listener_opts/* eventListenerOpts */.m)(false));
+    } catch (e) {
+      try {
+        ee.emit('internal-error', [e]);
+      } catch (err) {// do nothing
+      }
+    }
+
+    return xhr;
+  };
+
+  copy(OrigXHR, XHR);
+  XHR.prototype = OrigXHR.prototype; // log('wrap xhr...')
+
+  wrapFn.inPlace(XHR.prototype, ['open', 'send'], '-xhr-', getObject);
+  ee.on('send-xhr-start', function (args, xhr) {
+    wrapOnreadystatechange(args, xhr);
+    enqueuePendingXhr(xhr);
+  });
+  ee.on('open-xhr-start', wrapOnreadystatechange);
+
+  function wrapOnreadystatechange(args, xhr) {
+    wrapFn.inPlace(xhr, ['onreadystatechange'], 'fn-', getObject);
+  }
+
+  function wrapXHR() {
+    var xhr = this;
+    var ctx = ee.context(xhr);
+
+    if (xhr.readyState > 3 && !ctx.resolved) {
+      ctx.resolved = true;
+      ee.emit('xhr-resolved', [], xhr);
+    }
+
+    wrapFn.inPlace(xhr, handlers, 'fn-', getObject);
+  } // Wrapping the onreadystatechange property of XHRs takes some special tricks.
+  //
+  // The issue is that the onreadystatechange property may be assigned *after*
+  // send() is called against an XHR. This is of particular importance because
+  // jQuery uses a single onreadystatechange handler to implement all of the XHR
+  // callbacks thtat it provides, and it assigns that property after calling send.
+  //
+  // There are several 'obvious' approaches to wrapping the onreadystatechange
+  // when it's assigned after send:
+  //
+  // 1. Try to wrap the onreadystatechange handler from a readystatechange
+  //    addEventListener callback (the addEventListener callback will fire before
+  //    the onreadystatechange callback).
+  //
+  //      Caveat: this doesn't work in Chrome or Safari, and in fact will cause
+  //      the onreadystatechange handler to not be invoked at all during the
+  //      firing cycle in which it is wrapped, which may break applications :(
+  //
+  // 2. Use Object.defineProperty to create a setter for the onreadystatechange
+  //    property, and wrap from that setter.
+  //
+  //      Caveat: onreadystatechange is not a configurable property in Safari or
+  //      older versions of the Android browser.
+  //
+  // 3. Schedule wrapping of the onreadystatechange property using a setTimeout
+  //    call issued just before the call to send.
+  //
+  //      Caveat: sometimes, the onreadystatechange handler fires before the
+  //      setTimeout, meaning the wrapping happens too late.
+  //
+  // The setTimeout approach is closest to what we use here: we want to schedule
+  // the wrapping of the onreadystatechange property when send is called, but
+  // ensure that our wrapping happens before onreadystatechange has a chance to
+  // fire.
+  //
+  // We achieve this using a hybrid approach:
+  //
+  // * In browsers that support MutationObserver, we use that to schedule wrapping
+  //   of onreadystatechange.
+  //
+  // * We have discovered that MutationObserver in IE causes a memory leak, so we
+  //   now will prefer setImmediate for IE, and use a resolved promise to schedule
+  //   the wrapping in Edge (and other browsers that support promises)
+  //
+  // * In older browsers that don't support MutationObserver, we rely on the fact
+  //   that the call to send is probably happening within a callback that we've
+  //   already wrapped, and use our existing fn-end event callback to wrap the
+  //   onreadystatechange at the end of the current callback.
+  //
+
+
+  if (MutationObserver) {
+    var resolved = Promise && Promise.resolve();
+
+    if (!setImmediate && !Promise) {
+      var toggle = 1;
+      var dummyNode = document.createTextNode(toggle);
+      new MutationObserver(drainPendingXhrs).observe(dummyNode, {
+        characterData: true
+      });
+    }
+  } else {
+    baseEE.on('fn-end', function (args) {
+      // We don't want to try to wrap onreadystatechange from within a
+      // readystatechange callback.
+      if (args[0] && args[0].type === READY_STATE_CHANGE) return;
+      drainPendingXhrs();
+    });
+  }
+
+  function enqueuePendingXhr(xhr) {
+    pendingXhrs.push(xhr);
+
+    if (MutationObserver) {
+      if (resolved) {
+        resolved.then(drainPendingXhrs);
+      } else if (setImmediate) {
+        setImmediate(drainPendingXhrs);
+      } else {
+        toggle = -toggle;
+        dummyNode.data = toggle;
+      }
+    }
+  }
+
+  function drainPendingXhrs() {
+    for (var i = 0; i < pendingXhrs.length; i++) {
+      wrapOnreadystatechange([], pendingXhrs[i]);
+    }
+
+    if (pendingXhrs.length) pendingXhrs = [];
+  } // Use the object these methods are on as their
+  // context store for the event emitter
+
+
+  function getObject(args, obj) {
+    return obj;
+  }
+
+  function copy(from, to) {
+    for (var i in from) {
+      to[i] = from[i];
+    }
+
+    return to;
+  }
+
+  return ee;
+}
+function wrap_xhr_scopedEE(sharedEE) {
+  return (sharedEE || contextual_ee.ee).get('events');
+}
+// EXTERNAL MODULE: ../../../../packages/browser-agent-core/common/util/get-or-set.js
+var get_or_set = __webpack_require__(1403);
+;// CONCATENATED MODULE: ../../../../packages/browser-agent-core/common/wrap/wrap-events.js
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+
 /*
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 
-var ee = _event_emitter_contextual_ee__WEBPACK_IMPORTED_MODULE_0__.ee.get('timer');
-var wrapFn = (0,_wrap_function__WEBPACK_IMPORTED_MODULE_1__/* .createWrapperWithEmitter */ .xJ)(ee);
-var SET_TIMEOUT = 'setTimeout';
-var SET_INTERVAL = 'setInterval';
-var CLEAR_TIMEOUT = 'clearTimeout';
-var START = '-start';
-var DASH = '-'; // eslint-disable-next-line
 
-/* harmony default export */ __webpack_exports__["Z"] = (ee); // log('wrap timer...')
+function wrapEvents(sharedEE) {
+  var ee = wrap_events_scopedEE(sharedEE);
+  var wrapFn = createWrapperWithEmitter(ee, true);
+  var XHR = XMLHttpRequest;
+  var ADD_EVENT_LISTENER = 'addEventListener';
+  var REMOVE_EVENT_LISTENER = 'removeEventListener'; // Guard against instrumenting environments w/o necessary features
 
-wrapFn.inPlace(window, [SET_TIMEOUT, 'setImmediate'], SET_TIMEOUT + DASH);
-wrapFn.inPlace(window, [SET_INTERVAL], SET_INTERVAL + DASH);
-wrapFn.inPlace(window, [CLEAR_TIMEOUT, 'clearImmediate'], CLEAR_TIMEOUT + DASH);
-ee.on(SET_INTERVAL + START, interval);
-ee.on(SET_TIMEOUT + START, timer);
+  if ('getPrototypeOf' in Object) {
+    findAndWrapNode(document);
+    findAndWrapNode(window);
+    findAndWrapNode(XHR.prototype); // eslint-disable-next-line
+  } else if (XHR.prototype.hasOwnProperty(ADD_EVENT_LISTENER)) {
+    wrapNode(window);
+    wrapNode(XHR.prototype);
+  }
 
-function interval(args, obj, type) {
-  args[0] = wrapFn(args[0], 'fn-', null, type);
+  ee.on(ADD_EVENT_LISTENER + '-start', function (args, target) {
+    var originalListener = args[1];
+
+    if (originalListener === null || typeof originalListener !== 'function' && _typeof(originalListener) !== 'object') {
+      return;
+    }
+
+    var wrapped = (0,get_or_set/* getOrSet */.X)(originalListener, 'nr@wrapped', function () {
+      var listener = {
+        object: wrapHandleEvent,
+        'function': originalListener
+      }[_typeof(originalListener)];
+
+      return listener ? wrapFn(listener, 'fn-', null, listener.name || 'anonymous') : originalListener;
+
+      function wrapHandleEvent() {
+        if (typeof originalListener.handleEvent !== 'function') return;
+        return originalListener.handleEvent.apply(originalListener, arguments);
+      }
+    });
+    this.wrapped = args[1] = wrapped;
+  });
+  ee.on(REMOVE_EVENT_LISTENER + '-start', function (args) {
+    args[1] = this.wrapped || args[1];
+  });
+
+  function findAndWrapNode(object) {
+    var step = object; // eslint-disable-next-line
+
+    while (step && !step.hasOwnProperty(ADD_EVENT_LISTENER)) {
+      step = Object.getPrototypeOf(step);
+    }
+
+    if (step) {
+      wrapNode(step);
+    }
+  }
+
+  function wrapNode(node) {
+    wrapFn.inPlace(node, [ADD_EVENT_LISTENER, REMOVE_EVENT_LISTENER], '-', uniqueListener);
+  }
+
+  function uniqueListener(args, obj) {
+    // Context for the listener is stored on itself.
+    return args[1];
+  }
+
+  return ee;
 }
+function wrap_events_scopedEE(sharedEE) {
+  return (sharedEE || contextual_ee.ee).get('events');
+}
+;// CONCATENATED MODULE: ../../../../packages/browser-agent-core/common/wrap/index.js
 
-function timer(args, obj, type) {
-  this.method = type;
-  this.timerDuration = isNaN(args[1]) ? 0 : +args[1];
-  args[0] = wrapFn(args[0], 'fn-', this, type);
+
+
+
+
+
+
+
+
+
+function wrap_wrapEvents(sharedEE) {
+  return wrapEvents(sharedEE);
+}
+function wrap_wrapFetch(sharedEE) {
+  wrapFetch(sharedEE);
+}
+function wrap_wrapHistory(sharedEE) {
+  return wrapHistory(sharedEE);
+}
+function wrapJson(sharedEE) {
+  return wj(sharedEE);
+}
+function wrapMutation(sharedEE) {
+  return wm(sharedEE);
+}
+function wrapPromise(sharedEE) {
+  return wp(sharedEE);
+}
+function wrap_wrapRaf(sharedEE) {
+  return wrapRaf(sharedEE);
+}
+function wrap_wrapTimer(sharedEE) {
+  return wrapTimer(sharedEE);
+}
+function wrap_wrapXhr(sharedEE) {
+  return wrapXhr(sharedEE);
 }
 
 /***/ }),
@@ -3916,8 +3921,8 @@ function dataSize(data) {
 var event_listener_opts = __webpack_require__(3207);
 // EXTERNAL MODULE: ../../../../packages/browser-agent-core/common/timing/now.js
 var now = __webpack_require__(9433);
-// EXTERNAL MODULE: ../../../../packages/browser-agent-core/common/wrap/index.js + 3 modules
-var wrap = __webpack_require__(2370);
+// EXTERNAL MODULE: ../../../../packages/browser-agent-core/common/wrap/index.js + 7 modules
+var wrap = __webpack_require__(7423);
 // EXTERNAL MODULE: ../../../../packages/browser-agent-core/common/url/parse-url.js
 var parse_url = __webpack_require__(5060);
 // EXTERNAL MODULE: ../../../../packages/browser-agent-core/common/config/state/init.js
@@ -5211,7 +5216,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _common_config_config__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(2469);
 /* harmony import */ var _common_timing_now__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9433);
 /* harmony import */ var _common_util_get_or_set__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1403);
-/* harmony import */ var _common_wrap__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(2370);
+/* harmony import */ var _common_wrap__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7423);
 /* harmony import */ var lodash_slice__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1990);
 /* harmony import */ var lodash_slice__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash_slice__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _common_util_feature_base__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(9077);
@@ -5241,7 +5246,6 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 
 
 
@@ -5312,24 +5316,27 @@ var Instrument = /*#__PURE__*/function (_FeatureBase) {
       return false;
     };
 
-    window.addEventListener('unhandledrejection', function (e) {
-      _this.onerrorHandler(null, null, null, null, new Error(e.reason));
-    });
+    try {
+      window.addEventListener('unhandledrejection', function (e) {
+        _this.onerrorHandler(null, null, null, null, new Error(e.reason));
+      });
+    } catch (err) {// do nothing -- addEventListener is not supported
+    }
 
     try {
       throw new Error();
     } catch (e) {
       // Only wrap stuff if try/catch gives us useful data. It doesn't in IE < 10.
       if ('stack' in e) {
-        (0,_common_wrap__WEBPACK_IMPORTED_MODULE_4__/* .wrapTimer */ .BV)();
-        (0,_common_wrap__WEBPACK_IMPORTED_MODULE_4__/* .wrapRaf */ .gy)();
+        (0,_common_wrap__WEBPACK_IMPORTED_MODULE_4__/* .wrapTimer */ .BV)(_this.ee);
+        (0,_common_wrap__WEBPACK_IMPORTED_MODULE_4__/* .wrapRaf */ .gy)(_this.ee);
 
         if ('addEventListener' in window) {
-          (0,_common_wrap__WEBPACK_IMPORTED_MODULE_4__/* .wrapGlobalEvents */ .Z$)();
+          (0,_common_wrap__WEBPACK_IMPORTED_MODULE_4__/* .wrapEvents */ .em)(_this.ee);
         }
 
         if ((0,_common_config_config__WEBPACK_IMPORTED_MODULE_5__/* .getRuntime */ .O)(_this.agentIdentifier).xhrWrappable) {
-          (0,_common_wrap__WEBPACK_IMPORTED_MODULE_4__/* .wrapXhr */ .Kf)();
+          (0,_common_wrap__WEBPACK_IMPORTED_MODULE_4__/* .wrapXhr */ .Kf)(_this.ee);
         }
 
         handleErrors = true;
@@ -7076,15 +7083,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Instrument": function() { return /* binding */ Instrument; }
 /* harmony export */ });
-/* harmony import */ var _common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8668);
-/* harmony import */ var _common_wrap_wrap_timer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(2807);
-/* harmony import */ var _common_wrap_wrap_raf__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(6483);
-/* harmony import */ var _common_window_supports_performance_observer__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(807);
-/* harmony import */ var _common_event_listener_event_listener_opts__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(3207);
+/* harmony import */ var _common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(8668);
+/* harmony import */ var _common_wrap__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7423);
+/* harmony import */ var _common_window_supports_performance_observer__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(807);
+/* harmony import */ var _common_event_listener_event_listener_opts__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(3207);
 /* harmony import */ var _common_config_config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5301);
 /* harmony import */ var _common_config_config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2469);
-/* harmony import */ var _common_timing_now__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9433);
-/* harmony import */ var _common_util_feature_base__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(9077);
+/* harmony import */ var _common_timing_now__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9433);
+/* harmony import */ var _common_util_feature_base__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(9077);
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -7118,9 +7124,6 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 
 
-
-
-
 var learResourceTimings = 'learResourceTimings';
 var ADD_EVENT_LISTENER = 'addEventListener';
 var REMOVE_EVENT_LISTENER = 'removeEventListener';
@@ -7146,13 +7149,17 @@ var Instrument = /*#__PURE__*/function (_FeatureBase) {
 
     _this = _super.call(this, agentIdentifier);
     (0,_common_config_config__WEBPACK_IMPORTED_MODULE_1__/* .getRuntime */ .O)(_this.agentIdentifier).features.stn = true;
+    _this.timerEE = (0,_common_wrap__WEBPACK_IMPORTED_MODULE_2__/* .wrapTimer */ .BV)(_this.ee);
+    _this.rafEE = (0,_common_wrap__WEBPACK_IMPORTED_MODULE_2__/* .wrapRaf */ .gy)(_this.ee);
+    (0,_common_wrap__WEBPACK_IMPORTED_MODULE_2__/* .wrapHistory */ .QU)(_this.ee);
+    (0,_common_wrap__WEBPACK_IMPORTED_MODULE_2__/* .wrapEvents */ .em)(_this.ee);
     if (!(window.performance && window.performance.timing && window.performance.getEntriesByType)) return _possibleConstructorReturn(_this);
 
     _this.ee.on(FN_START, function (args, target) {
       var evt = args[0];
 
       if (evt instanceof origEvent) {
-        this.bstStart = (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_2__/* .now */ .zO)();
+        this.bstStart = (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_3__/* .now */ .zO)();
       }
     });
 
@@ -7160,52 +7167,55 @@ var Instrument = /*#__PURE__*/function (_FeatureBase) {
       var evt = args[0];
 
       if (evt instanceof origEvent) {
-        (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_3__/* .handle */ .pr)('bst', [evt, target, this.bstStart, (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_2__/* .now */ .zO)()]);
+        (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_4__/* .handle */ .pr)('bst', [evt, target, this.bstStart, (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_3__/* .now */ .zO)()]);
       }
     });
 
-    _common_wrap_wrap_timer__WEBPACK_IMPORTED_MODULE_4__.ee.on(FN_START, function (args, obj, type) {
-      this.bstStart = (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_2__/* .now */ .zO)();
+    _this.timerEE.on(FN_START, function (args, obj, type) {
+      this.bstStart = (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_3__/* .now */ .zO)();
       this.bstType = type;
     });
-    _common_wrap_wrap_timer__WEBPACK_IMPORTED_MODULE_4__.ee.on(FN_END, function (args, target) {
-      (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_3__/* .handle */ .pr)(BST_TIMER, [target, this.bstStart, (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_2__/* .now */ .zO)(), this.bstType]);
+
+    _this.timerEE.on(FN_END, function (args, target) {
+      (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_4__/* .handle */ .pr)(BST_TIMER, [target, this.bstStart, (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_3__/* .now */ .zO)(), this.bstType]);
     });
-    _common_wrap_wrap_raf__WEBPACK_IMPORTED_MODULE_5__.ee.on(FN_START, function () {
-      this.bstStart = (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_2__/* .now */ .zO)();
+
+    _this.rafEE.on(FN_START, function () {
+      this.bstStart = (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_3__/* .now */ .zO)();
     });
-    _common_wrap_wrap_raf__WEBPACK_IMPORTED_MODULE_5__.ee.on(FN_END, function (args, target) {
-      (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_3__/* .handle */ .pr)(BST_TIMER, [target, this.bstStart, (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_2__/* .now */ .zO)(), 'requestAnimationFrame']);
+
+    _this.rafEE.on(FN_END, function (args, target) {
+      (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_4__/* .handle */ .pr)(BST_TIMER, [target, this.bstStart, (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_3__/* .now */ .zO)(), 'requestAnimationFrame']);
     });
 
     _this.ee.on(PUSH_STATE + START, function (args) {
-      this.time = (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_2__/* .now */ .zO)();
+      this.time = (0,_common_timing_now__WEBPACK_IMPORTED_MODULE_3__/* .now */ .zO)();
       this.startPath = location.pathname + location.hash;
     });
 
     _this.ee.on(PUSH_STATE + END, function (args) {
-      (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_3__/* .handle */ .pr)('bstHist', [location.pathname + location.hash, this.startPath, this.time]);
+      (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_4__/* .handle */ .pr)('bstHist', [location.pathname + location.hash, this.startPath, this.time]);
     });
 
-    if ((0,_common_window_supports_performance_observer__WEBPACK_IMPORTED_MODULE_6__/* .supportsPerformanceObserver */ .W)()) {
+    if ((0,_common_window_supports_performance_observer__WEBPACK_IMPORTED_MODULE_5__/* .supportsPerformanceObserver */ .W)()) {
       // capture initial resources, in case our observer missed anything
-      (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_3__/* .handle */ .pr)(BST_RESOURCE, [window.performance.getEntriesByType('resource')]);
+      (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_4__/* .handle */ .pr)(BST_RESOURCE, [window.performance.getEntriesByType('resource')]);
 
       _this.observeResourceTimings();
     } else {
       // collect resource timings once when buffer is full
       if (ADD_EVENT_LISTENER in window.performance) {
         if (window.performance['c' + learResourceTimings]) {
-          window.performance[ADD_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, _this.onResourceTimingBufferFull, (0,_common_event_listener_event_listener_opts__WEBPACK_IMPORTED_MODULE_7__/* .eventListenerOpts */ .m)(false));
+          window.performance[ADD_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, _this.onResourceTimingBufferFull, (0,_common_event_listener_event_listener_opts__WEBPACK_IMPORTED_MODULE_6__/* .eventListenerOpts */ .m)(false));
         } else {
-          window.performance[ADD_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, _this.onResourceTimingBufferFull, (0,_common_event_listener_event_listener_opts__WEBPACK_IMPORTED_MODULE_7__/* .eventListenerOpts */ .m)(false));
+          window.performance[ADD_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, _this.onResourceTimingBufferFull, (0,_common_event_listener_event_listener_opts__WEBPACK_IMPORTED_MODULE_6__/* .eventListenerOpts */ .m)(false));
         }
       }
     }
 
-    document[ADD_EVENT_LISTENER]('scroll', _this.noOp, (0,_common_event_listener_event_listener_opts__WEBPACK_IMPORTED_MODULE_7__/* .eventListenerOpts */ .m)(false));
-    document[ADD_EVENT_LISTENER]('keypress', _this.noOp, (0,_common_event_listener_event_listener_opts__WEBPACK_IMPORTED_MODULE_7__/* .eventListenerOpts */ .m)(false));
-    document[ADD_EVENT_LISTENER]('click', _this.noOp, (0,_common_event_listener_event_listener_opts__WEBPACK_IMPORTED_MODULE_7__/* .eventListenerOpts */ .m)(false));
+    document[ADD_EVENT_LISTENER]('scroll', _this.noOp, (0,_common_event_listener_event_listener_opts__WEBPACK_IMPORTED_MODULE_6__/* .eventListenerOpts */ .m)(false));
+    document[ADD_EVENT_LISTENER]('keypress', _this.noOp, (0,_common_event_listener_event_listener_opts__WEBPACK_IMPORTED_MODULE_6__/* .eventListenerOpts */ .m)(false));
+    document[ADD_EVENT_LISTENER]('click', _this.noOp, (0,_common_event_listener_event_listener_opts__WEBPACK_IMPORTED_MODULE_6__/* .eventListenerOpts */ .m)(false));
     return _this;
   }
 
@@ -7215,7 +7225,7 @@ var Instrument = /*#__PURE__*/function (_FeatureBase) {
       var observer = new PerformanceObserver(function (list, observer) {
         // eslint-disable-line no-undef
         var entries = list.getEntries();
-        (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_3__/* .handle */ .pr)(BST_RESOURCE, [entries]);
+        (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_4__/* .handle */ .pr)(BST_RESOURCE, [entries]);
       });
 
       try {
@@ -7228,7 +7238,7 @@ var Instrument = /*#__PURE__*/function (_FeatureBase) {
   }, {
     key: "onResourceTimingBufferFull",
     value: function onResourceTimingBufferFull(e) {
-      (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_3__/* .handle */ .pr)(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)]); // stop recording once buffer is full
+      (0,_common_event_emitter_handle__WEBPACK_IMPORTED_MODULE_4__/* .handle */ .pr)(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)]); // stop recording once buffer is full
 
       if (window.performance['c' + learResourceTimings]) {
         try {
@@ -7250,7 +7260,7 @@ var Instrument = /*#__PURE__*/function (_FeatureBase) {
   }]);
 
   return Instrument;
-}(_common_util_feature_base__WEBPACK_IMPORTED_MODULE_8__/* .FeatureBase */ .W);
+}(_common_util_feature_base__WEBPACK_IMPORTED_MODULE_7__/* .FeatureBase */ .W);
 
 /***/ })
 

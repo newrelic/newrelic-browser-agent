@@ -12,7 +12,5 @@
   "scripts": {
     "build": "echo browser-agent-core does not need building"
   },
-  "sideEffects": [
-    "./modules/common/wrap/*"
-  ]
+  "sideEffects": false
 }

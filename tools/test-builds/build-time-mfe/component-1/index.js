@@ -52,9 +52,6 @@ class PuppyComponent extends HTMLElement {
     nr.noticeError(err, {customAttr: 'hi'})
     throw new Error(`component-1 threw global error`)
   }
-
-
-  
 }
 customElements.define(PuppyComponent.name, PuppyComponent)
 

@@ -9,6 +9,7 @@ const nrConfig = {
   applicationID: 1
 }
 
+
 const nr = new BrowserAgent() // Create a new instance of the Browser Agent
 nr.features.errors.auto = false // Only capture errors through noticeError()
 

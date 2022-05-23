@@ -7,11 +7,10 @@ import { handle } from '../../../common/event-emitter/handle'
 import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { getOrSet } from '../../../common/util/get-or-set'
-import { wrapRaf, wrapTimer, wrapGlobalEvents, wrapXhr } from '../../../common/wrap'
+import { wrapRaf, wrapTimer, wrapEvents, wrapXhr } from '../../../common/wrap'
 import slice from 'lodash._slice'
 import './debug'
 import { FeatureBase } from '../../../common/util/feature-base'
-import {ee} from '../../../common/event-emitter/contextual-ee'
 
 var origOnerror = window.onerror
 var handleErrors = false
@@ -28,10 +27,11 @@ export class Instrument extends FeatureBase {
     // errors that will be the same as caught errors.
     this.skipNext = 0
 
+    const self = this
+
     this.ee.on('fn-start', function (args, obj, methodName) {
       if (handleErrors) {
         this.skipNext = this.skipNext ? this.skipNext + 1 : 1
-        this.ee = ee.get(this.agentIdentifier)
       }
     })
 
@@ -41,7 +41,7 @@ export class Instrument extends FeatureBase {
           return true
         })
         this.thrown = true
-        notice(err, undefined, this.ee)
+        notice(err, undefined, self.ee)
       }
     })
 
@@ -61,26 +61,31 @@ export class Instrument extends FeatureBase {
     window.onerror = (...args) => {
       if (prevOnError) prevOnError(...args)
       this.onerrorHandler(...args)
+      return false
     }
 
-    window.addEventListener('unhandledrejection', (e) => {
-      this.onerrorHandler(null, null, null, null, new Error(e.reason))
-    })
+    try {
+      window.addEventListener('unhandledrejection', (e) => {
+        this.onerrorHandler(null, null, null, null, new Error(e.reason))
+      })
+    } catch (err) {
+      // do nothing -- addEventListener is not supported
+    }
 
     try {
       throw new Error()
     } catch (e) {
       // Only wrap stuff if try/catch gives us useful data. It doesn't in IE < 10.
       if ('stack' in e) {
-        wrapTimer()
-        wrapRaf()
+        wrapTimer(this.ee)
+        wrapRaf(this.ee)
 
         if ('addEventListener' in window) {
-          wrapGlobalEvents()
+          wrapEvents(this.ee)
         }
 
         if (getRuntime(this.agentIdentifier).xhrWrappable) {
-          wrapXhr()
+          wrapXhr(this.ee)
         }
 
         handleErrors = true

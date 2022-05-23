@@ -3,15 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ee as contextualEE} from '../event-emitter/contextual-ee'
+import {ee as baseEE} from '../event-emitter/contextual-ee'
 import slice from 'lodash._slice'
 import {mapOwn} from '../util/map-own'
 import { originals } from '../config/config'
-export var ee = contextualEE.get('fetch')
 
-// eslint-disable-next-line
-export default ee
-export { wrapFetch as wrap }
 
 var win = window
 var prefix = 'fetch-'
@@ -26,16 +22,17 @@ var ctxId = 'nr@context'
 export function wrapGlobal() {
   // since these are prototype methods, we can only wrap globally
   mapOwn(bodyMethods, function (i, name) {
-    wrapPromiseMethod(ee, Req[proto], name, bodyPrefix)
-    wrapPromiseMethod(ee, Res[proto], name, bodyPrefix)
+    wrapPromiseMethod(baseEE, Req[proto], name, bodyPrefix)
+    wrapPromiseMethod(baseEE, Res[proto], name, bodyPrefix)
   })
 
-  var wrappedFetch = wrapFetch(ee)
+  var wrappedFetch = wrapFetch(baseEE)
   win.fetch = wrappedFetch
 }
 
-function wrapFetch(ee) {
+export function wrapFetch(sharedEE) {
   var fn = originals.FETCH
+  var ee = (sharedEE || baseEE)
 
   var wrappedFetch = wrapPromiseMethod(ee, fn, prefix)
 
@@ -78,4 +75,9 @@ function wrapPromiseMethod(ee, fn, prefix) {
       throw err
     })
   }
+}
+
+
+export function scopedEE(sharedEE){
+  return (sharedEE || baseEE).get('events')
 }

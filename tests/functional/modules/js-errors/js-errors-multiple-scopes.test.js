@@ -6,7 +6,7 @@
 const testDriver = require('../../../../tools/jil/index')
 const { getErrorsFromResponse, getAppIdFromResponse } = require('../../err/assertion-helpers')
 
-const es6 = testDriver.Matcher.withFeature('es6')
+const supported = testDriver.Matcher.withFeature('customElements')
 
 const opts = {
   init: {
@@ -16,7 +16,7 @@ const opts = {
   }
 }
 
-testDriver.test('Error objects are sent to separate apps via noticeError from npm bundles and from top-level script', es6, function (t, browser, router) {
+testDriver.test('Error objects are sent to separate apps via noticeError from npm bundles and from top-level script', supported, function (t, browser, router) {
   t.plan(10)
 
   let loadPromise = browser.safeGet(router.assetURL('test-builds/build-time-mfe/index.html', opts))

@@ -10,7 +10,8 @@ module.exports = {
     library: {
       name: 'container',
       type: 'umd'
-    }
+    },
+    chunkFormat: 'module'
   },
   resolve: {
     extensions: ['.ts', '.js']
@@ -21,7 +22,22 @@ module.exports = {
     })
   ],
   optimization: {
-    minimize: true
+    minimize: false
   },
   devtool: 'source-map',
+  target: "es5", // include this!!
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /(node_modules)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
+        }
+      }
+    ]
+  }
 }

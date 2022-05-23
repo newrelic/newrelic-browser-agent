@@ -85,36 +85,6 @@ export class Aggregator extends SharedContext {
     return hasData ? results : null
   }
 }
-// var aggregatedData = {}
-
-// export default {
-//   store: storeEventMetrics,
-//   storeMetric: storeMetric,
-//   take: take,
-//   get: get,
-//   merge: mergeMetrics
-// }
-
-// export { storeEventMetrics as store }
-// export { mergeMetrics as merge }
-
-// Items with the same type and name get aggregated together
-// params are example data from the aggregated items
-// metrics are the numeric values to be aggregated
-
-// store a single metric not tied to an event, metric values are stored in a single `stats` object property
-// export function storeMetric (type, name, params, value) {
-//   var bucket = getBucket(type, name, params)
-//   bucket.stats = updateMetric(value, bucket.stats)
-//   return bucket
-// }
-
-// store multiple metrics tied to an event, metrics are stored in a `metrics` property (map of name-stats metrics)
-// function storeEventMetrics (type, name, params, newMetrics, customParams) {
-//   var bucket = getBucket(type, name, params, customParams)
-//   bucket.metrics = aggregateMetrics(newMetrics, bucket.metrics)
-//   return bucket
-// }
 
 function aggregateMetrics(newMetrics, oldMetrics) {
   if (!oldMetrics) oldMetrics = { count: 0 }
@@ -157,41 +127,6 @@ function updateCounterMetric(metric) {
   }
   return metric
 }
-
-/**
- * Merge metrics object into existing metrics.
- *
- * @param {string} type
- * @param {string} name
- * @param {object} metrics - Metrics to merge.
- */
-// function mergeMetrics (type, name, metrics, params, customParams) {
-//   var bucket = getBucket(type, name, params, customParams)
-
-//   if (!bucket.metrics) {
-//     bucket.metrics = metrics
-//     return
-//   }
-
-//   var oldMetrics = bucket.metrics
-//   oldMetrics.count += metrics.count
-
-//   // iterate through each new metric and merge
-//   mapOwn(metrics, function (key, value) {
-//     // count is a special case handled above
-//     if (key === 'count') return
-
-//     var oldMetric = oldMetrics[key]
-//     var newMetric = metrics[key]
-
-//     // handling the case where newMetric is a single-value first
-//     if (newMetric && !newMetric.c) {
-//       oldMetrics[key] = updateMetric(newMetric.t, oldMetric)
-//     } else { // newMetric is a metric object
-//       oldMetrics[key] = mergeMetric(newMetric, oldMetrics[key])
-//     }
-//   })
-// }
 
 function mergeMetric(newMetric, oldMetric) {
   if (!oldMetric) return newMetric

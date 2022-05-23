@@ -18,9 +18,8 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.js']
   },
-  // entry: './dist/es/bundled/index.js',
   output: {
-    path: path.resolve(__dirname, 'dist/bundled'),
+    path: path.resolve(__dirname, 'dist/bundled/es6'),
     filename: 'index.js',
     library: {
       name: 'NRBA',

@@ -12,7 +12,7 @@
 
   <!-- Any injection tag with 'packages/<PATH>' will automatically be 
         replaced with that file -->
-  {packages/browser-agent/dist/bundled/index.js}
+  {packages/browser-agent/dist/bundled/es6/index.js}
   <title>RUM Unit Test</title>
   <script>
     const { default: NR } = NRBA;
@@ -23,13 +23,15 @@
       applicationID: 1
     };
     const agent = new NR()
-    agent.start(opts1)
+    agent.start(opts1).then(() => {
+      console.log("initialized agent")
+    })
   </script>
 </head>
 
 <body>
   This page fires errors after one 0 ms interval
-  <script type="text/javascript" src="js/xhr-error.js"></script>
+  <script type="text/javascript" src="js/xhr-error.js" defer async></script>
 </body>
 
 </html>

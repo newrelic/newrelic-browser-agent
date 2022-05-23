@@ -4,20 +4,6 @@
  */
 
 const url = require('url')
-const canonicalFunctionName = require('../../../../packages/browser-agent-core/cjs/features/js-errors/aggregate/canonical-function-name').canonicalFunctionName
-const stringHashCode = require('../../../../packages/browser-agent-core/cjs/features/js-errors/aggregate/string-hash-code').stringHashCode
-
-function computeExpectedCanonicalStack (expectedStack) {
-  let canonicalStack = expectedStack.map((frame) => {
-    let line = ''
-    if (frame.f) line += `${canonicalFunctionName(frame.f)}@`
-    if (frame.u) line += frame.u
-    if (frame.l) line += `:${frame.l}`
-    return line
-  }).join('\n')
-
-  return canonicalStack
-}
 
 function assertErrorAttributes (t, query) {
   t.equal(query.pve, '1', 'pageViewErr reported')

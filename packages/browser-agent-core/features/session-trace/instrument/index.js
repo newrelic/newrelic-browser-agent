@@ -3,10 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../../common/event-emitter/handle'
-import { ee as timerEE } from '../../../common/wrap/wrap-timer'
-import { ee as rafEE } from '../../../common/wrap/wrap-raf'
-import '../../../common/wrap/wrap-history'
-import '../../../common/wrap/wrap-events'
+import { wrapHistory, wrapEvents, wrapTimer, wrapRaf } from '../../../common/wrap'
 import { supportsPerformanceObserver } from '../../../common/window/supports-performance-observer'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { originals, getRuntime } from '../../../common/config/config'
@@ -32,6 +29,11 @@ export class Instrument extends FeatureBase {
     super(agentIdentifier)
     getRuntime(this.agentIdentifier).features.stn = true
 
+    this.timerEE = wrapTimer(this.ee)
+    this.rafEE = wrapRaf(this.ee)
+    wrapHistory(this.ee)
+    wrapEvents(this.ee)
+
     if (!(window.performance &&
       window.performance.timing &&
       window.performance.getEntriesByType
@@ -51,20 +53,20 @@ export class Instrument extends FeatureBase {
       }
     })
 
-    timerEE.on(FN_START, function (args, obj, type) {
+    this.timerEE.on(FN_START, function (args, obj, type) {
       this.bstStart = now()
       this.bstType = type
     })
 
-    timerEE.on(FN_END, function (args, target) {
+    this.timerEE.on(FN_END, function (args, target) {
       handle(BST_TIMER, [target, this.bstStart, now(), this.bstType])
     })
 
-    rafEE.on(FN_START, function () {
+    this.rafEE.on(FN_START, function () {
       this.bstStart = now()
     })
 
-    rafEE.on(FN_END, function (args, target) {
+    this.rafEE.on(FN_END, function (args, target) {
       handle(BST_TIMER, [target, this.bstStart, now(), 'requestAnimationFrame'])
     })
 
@@ -97,7 +99,7 @@ export class Instrument extends FeatureBase {
     document[ADD_EVENT_LISTENER]('click', this.noOp, eventListenerOpts(false))
   }
 
-  observeResourceTimings () {
+  observeResourceTimings() {
     var observer = new PerformanceObserver(function (list, observer) { // eslint-disable-line no-undef
       var entries = list.getEntries()
 
@@ -105,13 +107,13 @@ export class Instrument extends FeatureBase {
     })
 
     try {
-      observer.observe({entryTypes: ['resource']})
+      observer.observe({ entryTypes: ['resource'] })
     } catch (e) {
-    // do nothing
+      // do nothing
     }
   }
 
-  onResourceTimingBufferFull (e) {
+  onResourceTimingBufferFull(e) {
     handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)])
 
     // stop recording once buffer is full
@@ -119,16 +121,16 @@ export class Instrument extends FeatureBase {
       try {
         window.performance[REMOVE_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false)
       } catch (e) {
-      // do nothing
+        // do nothing
       }
     } else {
       try {
         window.performance[REMOVE_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false)
       } catch (e) {
-      // do nothing
+        // do nothing
       }
     }
   }
 
-  noOp (e) { /* no-op */ }
+  noOp(e) { /* no-op */ }
 }

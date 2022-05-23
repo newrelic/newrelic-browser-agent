@@ -28,7 +28,7 @@ export class HarvestScheduler extends SharedContext {
       // to execute before attempting to send the final payload
       if (this.opts.onUnload) this.opts.onUnload()
       this.harvest.sendFinal()
-      conditionallySet()
+      conditionallySet(this.sharedContext.agentIdentifier)
     })
   }
 

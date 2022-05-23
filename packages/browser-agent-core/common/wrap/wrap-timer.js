@@ -3,34 +3,41 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ee as contextualEE} from '../event-emitter/contextual-ee'
-import {createWrapperWithEmitter as wfn} from './wrap-function'
-export var ee = contextualEE.get('timer')
-var wrapFn = wfn(ee)
+import { ee as baseEE } from '../event-emitter/contextual-ee'
+import { createWrapperWithEmitter as wfn } from './wrap-function'
 
-var SET_TIMEOUT = 'setTimeout'
-var SET_INTERVAL = 'setInterval'
-var CLEAR_TIMEOUT = 'clearTimeout'
-var START = '-start'
-var DASH = '-'
+//eslint-disable-next-line
+export function wrapTimer(sharedEE) {
+  var ee = scopedEE(sharedEE)
+  var wrapFn = wfn(ee)
 
-// eslint-disable-next-line
-export default ee
+  var SET_TIMEOUT = 'setTimeout'
+  var SET_INTERVAL = 'setInterval'
+  var CLEAR_TIMEOUT = 'clearTimeout'
+  var START = '-start'
+  var DASH = '-'
 
-// log('wrap timer...')
-wrapFn.inPlace(window, [SET_TIMEOUT, 'setImmediate'], SET_TIMEOUT + DASH)
-wrapFn.inPlace(window, [SET_INTERVAL], SET_INTERVAL + DASH)
-wrapFn.inPlace(window, [CLEAR_TIMEOUT, 'clearImmediate'], CLEAR_TIMEOUT + DASH)
+  // log('wrap timer...')
+  wrapFn.inPlace(window, [SET_TIMEOUT, 'setImmediate'], SET_TIMEOUT + DASH)
+  wrapFn.inPlace(window, [SET_INTERVAL], SET_INTERVAL + DASH)
+  wrapFn.inPlace(window, [CLEAR_TIMEOUT, 'clearImmediate'], CLEAR_TIMEOUT + DASH)
 
-ee.on(SET_INTERVAL + START, interval)
-ee.on(SET_TIMEOUT + START, timer)
+  ee.on(SET_INTERVAL + START, interval)
+  ee.on(SET_TIMEOUT + START, timer)
 
-function interval (args, obj, type) {
-  args[0] = wrapFn(args[0], 'fn-', null, type)
+  function interval(args, obj, type) {
+    args[0] = wrapFn(args[0], 'fn-', null, type)
+  }
+
+  function timer(args, obj, type) {
+    this.method = type
+    this.timerDuration = isNaN(args[1]) ? 0 : +args[1]
+    args[0] = wrapFn(args[0], 'fn-', this, type)
+  }
+
+  return ee
 }
 
-function timer (args, obj, type) {
-  this.method = type
-  this.timerDuration = isNaN(args[1]) ? 0 : +args[1]
-  args[0] = wrapFn(args[0], 'fn-', this, type)
+export function scopedEE(sharedEE){
+  return (sharedEE || baseEE).get('timer')
 }

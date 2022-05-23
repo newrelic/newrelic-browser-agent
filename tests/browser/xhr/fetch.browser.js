@@ -76,7 +76,7 @@ var testCases = [
       t.equals(params.host, assetServerHostname + ':' + assetServerPort, 'host')
       t.equals(params.pathname, '/paththatdoesnotexist', 'pathname')
       t.equals(metrics.txSize, 0, 'request size')
-      t.ok(metrics.rxSize == null, 'response size is not defined')
+      t.ok(!metrics.rxSize, 'response size is not defined')
       t.ok(metrics.duration > 1, 'duration is a positive number')
       t.ok(start > 0, 'start is a positive number')
     }

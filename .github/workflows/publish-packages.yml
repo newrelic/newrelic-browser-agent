@@ -2,8 +2,6 @@ name: Publish package builds
 
 on:
   workflow_dispatch:
-  release:
-    types: [published]
 
 jobs:
   publish-browser-agent-core:
@@ -26,4 +24,7 @@ jobs:
 
           npx lerna version --conventional-commits --conventional-graduate --yes
 
-          npx lerna publish from-git --yes
+          npx lerna publish from-package --yes
+
+VERSION
+1 git commit conatins ALL package version bumps (browser-agent -> 0.0.1, browser-agent-core --> 0.0.1, )

@@ -1,4 +1,4 @@
-name: Publish package builds
+name: Publish NPM Packages (Latest)
 
 on:
   workflow_dispatch:
@@ -15,22 +15,21 @@ on:
 jobs:
   publish-browser-agent-core:
     runs-on: ubuntu-latest
-    container: node:14
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/checkout@v3
+        with: 
+          token: ${{ secrets.PAT_GITHUB }}
 
       - name: build
         run: npm run ci-build 
 
       - name: "Version and publish"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_GITHUB }}
         run: |
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor}}@users.noreply.github.com"
 
           npx lerna version ${{ github.event.inputs.release_type }} --no-changelog --yes
 
-          npx lerna publish from-package --yes
+          npx lerna publish from-package --no-verify-access --yes

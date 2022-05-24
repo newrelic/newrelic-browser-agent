@@ -27,8 +27,8 @@ jobs:
           git config user.email "${{ github.actor}}@users.noreply.github.com"
 
           if [ ${{ github.base_ref }} = dev ]; then
-            npx lerna version --conventional-commits --conventional-prerelease --preid alpha --yes
+            npx lerna version --no-changelog --conventional-commits --conventional-prerelease --preid alpha --yes
           else
-            npx lerna version --conventional-commits --conventional-prerelease --preid beta --yes
+            npx lerna version --no-changelog --conventional-commits --conventional-prerelease --preid beta --yes
 
           npx lerna publish from-git --yes

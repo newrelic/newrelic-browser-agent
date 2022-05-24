@@ -1,16 +1,20 @@
-# Change Log
+## v1216
 
-All notable changes to this project will be documented in this file.
-See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+* Internal NR Platform release date: TBD
+* Production APM-injected release date: TBD
+* Production Standalone release date: TBD
 
-## 0.0.2 (2022-05-24)
+### Introduced obfuscation mechanism to payloads
 
-**Note:** Version bump only for package newrelic
+Added internal mechanism for applying regex and replacement rules to all strings in payloads to obfuscate before sending to ingest.
 
+### Automatically obfuscate `file://` protocol
 
+A change has been implemented in our handling of applications hosted locally on a `file://` protocol. For security reasons, we can not send payloads that contain file information, so our previous implementation revolved around completely shutting the agent down when `file://` protocols were detected. This change introduces the ability to obfuscate all `file://` paths from our payloads before sending to ingest.
 
+### Fixed issue with trace ID random hex character length
 
-
+The final character in trace ID hex generation was returning as `undefined`, which translated to always be `0` (`undefined & 15 === 0`).  This change fixes this final character and ensures it is valid.
 ## v1215
 
 * Internal NR Platform release date: 01/24/2021

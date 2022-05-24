@@ -13,5 +13,8 @@
     "build": "echo browser-agent-core does not need building",
     "test": "echo browser-agent-core unit tests do not exist yet"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  }
 }

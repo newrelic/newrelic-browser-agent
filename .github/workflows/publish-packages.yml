@@ -32,4 +32,4 @@ jobs:
 
           npx lerna version ${{ github.event.inputs.release_type }} --no-changelog --yes
 
-          npx lerna publish from-package --yes
+          npx lerna publish from-package --no-verify-access --yes

@@ -18,12 +18,6 @@ jobs:
     container: node:14
     steps:
       - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          
-          
-      - name: check-files
-        run: ls -la
 
       - name: build
         run: npm run ci-build 

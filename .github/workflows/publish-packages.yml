@@ -2,6 +2,15 @@ name: Publish package builds
 
 on:
   workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Type of release. patch or minor (major if breaking)'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 
 jobs:
   publish-browser-agent-core:
@@ -22,9 +31,6 @@ jobs:
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor}}@users.noreply.github.com"
 
-          npx lerna version --conventional-commits --conventional-graduate --yes
+          npx lerna version ${{ github.event.inputs.release_type }} --yes
 
           npx lerna publish from-package --yes
-
-VERSION
-1 git commit conatins ALL package version bumps (browser-agent -> 0.0.1, browser-agent-core --> 0.0.1, )

@@ -12,8 +12,8 @@ const nr = new BrowserAgent()
 
 nr.start(nrConfig)
 
-import { mount as dogsMount, unmount as dogsUnmount } from 'component-1'
-import { mount as catsMount, unmount as catsUnmount } from 'component-2'
+import { mount as dogsMount, unmount as dogsUnmount } from '@newrelic/component-1'
+import { mount as catsMount, unmount as catsUnmount } from '@newrelic/component-2'
 
 catsMount(document.querySelector("#content"))
 dogsMount(document.querySelector("#content"))

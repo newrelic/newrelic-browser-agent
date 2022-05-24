@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent-core",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "New Relic Browser agent team <browser-agent@newrelic.com>",
   "license": "Apache-2.0",
   "homepage": "https://github.com/newrelic/newrelic-browser-agent",
@@ -10,7 +10,8 @@
     "lodash._slice": "^2.4.1"
   },
   "scripts": {
-    "build": "echo browser-agent-core does not need building"
+    "build": "echo browser-agent-core does not need building",
+    "test": "echo browser-agent-core unit tests do not exist yet"
   },
   "sideEffects": false
 }

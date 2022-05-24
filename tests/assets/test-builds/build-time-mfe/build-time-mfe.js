@@ -1136,7 +1136,7 @@ function applyFnToProps(obj, fn, type, ignoreKeys) {
 // EXTERNAL MODULE: ../../../../packages/browser-agent-core/common/context/shared-context.js
 var shared_context = __webpack_require__(5522);
 ;// CONCATENATED MODULE: ../../../../packages/browser-agent-core/package.json
-var package_namespaceObject = {"i8":"0.0.1"};
+var package_namespaceObject = {"i8":"0.0.2"};
 ;// CONCATENATED MODULE: ../../../../packages/browser-agent-core/common/harvest/harvest.js
 function harvest_typeof(obj) { "@babel/helpers - typeof"; return harvest_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, harvest_typeof(obj); }
 
@@ -3385,7 +3385,7 @@ function wrap_wrapEvents(sharedEE) {
   return wrapEvents(sharedEE);
 }
 function wrap_wrapFetch(sharedEE) {
-  wrapFetch(sharedEE);
+  return wrapFetch(sharedEE);
 }
 function wrap_wrapHistory(sharedEE) {
   return wrapHistory(sharedEE);

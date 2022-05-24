@@ -1,5 +1,5 @@
 {
-  "name": "container",
+  "name": "@newrelic/container",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
@@ -8,9 +8,9 @@
     "build": "npx webpack --progress"
   },
   "dependencies": {
-    "@newrelic/browser-agent": "file:../../../../packages/browser-agent",
-    "component-1": "file:../component-1",
-    "component-2": "file:../component-2"
+    "@newrelic/browser-agent": "^0.0.2",
+    "@newrelic/component-1": "^1.0.0",
+    "@newrelic/component-2": "^1.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.0",

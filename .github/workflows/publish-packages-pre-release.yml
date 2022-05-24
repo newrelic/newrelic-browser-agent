@@ -1,0 +1,34 @@
+name: Publish package builds
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+  #     - dev
+
+jobs:
+  publish-browser-agent-core:
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: build
+        run: npm run ci-build 
+
+      - name: "Version and publish"
+        env:
+          GH_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor}}@users.noreply.github.com"
+
+          if [ ${{ github.base_ref }} = dev ]; then
+            npx lerna version --conventional-commits --conventional-prerelease --preid alpha --yes
+          else
+            npx lerna version --conventional-commits --conventional-prerelease --preid beta --yes
+
+          npx lerna publish from-git --yes

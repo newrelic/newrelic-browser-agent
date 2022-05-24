@@ -1,5 +1,6 @@
 {
-  "name": "component-2",
+  "name": "@newrelic/component-2",
+  "private": true,
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
@@ -8,7 +9,7 @@
     "build": "webpack --progress"
   },
   "dependencies": {
-    "@newrelic/browser-agent": "file:../../../../packages/browser-agent"
+    "@newrelic/browser-agent": "^0.0.2"
   },
   "devDependencies": {
     "shx": "^0.3.4",

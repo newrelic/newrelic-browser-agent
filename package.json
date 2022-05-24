@@ -32,6 +32,9 @@
     "lerna:bootstrap": "npx lerna bootstrap",
     "lerna:test": "npx lerna run test"
   },
+  "config": {
+    "unsafe-perm": true
+  },
   "bin": {
     "jil": "./tools/jil/bin/cli.js",
     "jil-server": "./tools/jil/bin/server.js",

@@ -40,9 +40,9 @@ jobs:
         run: |
           npx lerna version ${{ github.event.inputs.release_type }} --no-changelog --yes
       
-      - name: "NPM Identity"
-        run: |
-          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+#       - name: "NPM Identity"
+#         run: |
+#           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
           
       - name: "Publish"
         run: |

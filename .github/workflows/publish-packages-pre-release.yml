@@ -1,11 +1,11 @@
 name: Publish package builds
 
 on:
-  on:
-    push:
-      branches:
-        - main
-        - dev
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - dev
 
 jobs:
   publish-browser-agent-core:
@@ -21,7 +21,7 @@ jobs:
 
       - name: "Version and publish"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
         run: |
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor}}@users.noreply.github.com"

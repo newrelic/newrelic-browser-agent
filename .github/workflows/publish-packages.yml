@@ -1,7 +1,9 @@
 name: Publish package builds
 
-
-workflow_dispatch:
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   publish-browser-agent-core:

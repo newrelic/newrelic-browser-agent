@@ -126,7 +126,6 @@ function mergeMetric(newMetric, oldMetric) {
 
   return oldMetric
 }
-
 // take a value and create a metric object
 function createMetricObject (value) {
   return {

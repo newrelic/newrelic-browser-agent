@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+
+<head>
+  <title>Fetch Unit Test</title>
+  {init}
+  {config}
+
+   <!-- Any injection tag with 'packages/<PATH>' will automatically be 
+      replaced with that file -->
+      {packages/browser-agent/dist/bundled/es6/index.js}
+  <script>
+    const { default: NR } = NRBA;
+    const opts1 = {
+      ...NREUM.init,
+      ...NREUM.info,
+      ...NREUM.loader_config,
+      applicationID: 1
+    };
+    const agent = new NR()
+    agent.start(opts1).then(() => {
+      let err = new Error('hello')
+      agent.noticeError(err)
+    });
+
+  </script>
+</head>
+
+<body>
+</body>
+
+</html>

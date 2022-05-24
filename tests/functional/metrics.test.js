@@ -74,16 +74,16 @@ testDriver.test('a valid obfuscationRule creates detected supportability metric'
   }))
 
   Promise.all([rumPromise, loadPromise])
-      .then(([data]) => {
-        var supportabilityMetrics = getMetricsFromResponse(data, true)
-        t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
-        supportabilityMetrics.forEach(sm => {
-          console.log(sm.params.name)
-          t.ok(!sm.params.name.includes('Generic/Obfuscate/Invalid'), sm.params.name + ' contains correct name')
-        })
-        t.end()
+    .then(([data]) => {
+      var supportabilityMetrics = getMetricsFromResponse(data, true)
+      t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
+      supportabilityMetrics.forEach(sm => {
+        console.log(sm.params.name)
+        t.ok(!sm.params.name.includes('Generic/Obfuscate/Invalid'), sm.params.name + ' contains correct name')
       })
-      .catch(fail)
+      t.end()
+    })
+    .catch(fail)
 
   function fail(err) {
     t.error(err)

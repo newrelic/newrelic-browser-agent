@@ -102,6 +102,10 @@ function getErrorsFromResponse(response, browser) {
   return null
 }
 
+function getAppIdFromResponse(response) {
+  return response.query ? response.query.a : null
+}
+
 function getMetricsFromResponse(response, isSupportability) {
   var attr = isSupportability ? 'sm' : 'cm'
   if (response.body) {
@@ -121,4 +125,4 @@ function getMetricsFromResponse(response, isSupportability) {
   return null
 }
 
-module.exports = {assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse, getMetricsFromResponse}
+module.exports = {assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse, getMetricsFromResponse, getAppIdFromResponse}

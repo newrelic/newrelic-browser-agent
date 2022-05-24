@@ -8,6 +8,7 @@ const {assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse} = req
 
 let supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
   .exclude('ie@8')
+  .exclude('phantom')
 
 testDriver.test('reporting errors from XHR callbacks', supported, function (t, browser, router) {
   let assetURL = router.assetURL('xhr-error.html', {

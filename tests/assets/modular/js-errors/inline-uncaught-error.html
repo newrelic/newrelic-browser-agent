@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+
+<head>
+  {init}
+  {config}
+
+  <!-- Any injection tag with 'packages/<PATH>' will automatically be 
+      replaced with that file -->
+  {packages/browser-agent/dist/bundled/es6/index.js}
+  <title>RUM Unit Test</title>
+  <script>
+    const { default: NR } = NRBA;
+    const opts1 = {
+      ...NREUM.init,
+      ...NREUM.info,
+      ...NREUM.loader_config,
+      applicationID: 1
+    };
+    const agent = new NR()
+    agent.start(opts1)
+  </script>
+</head>
+
+<body>
+  This page fires an uncaught exception from inline JS code
+  <script>
+    window.onload = function throwError() {
+      throw new Error()
+    }
+  </script>
+</body>
+
+</html>

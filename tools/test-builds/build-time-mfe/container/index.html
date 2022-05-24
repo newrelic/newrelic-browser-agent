@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">    
+  {init}
+  {config}
+  <script>
+    window.NREUM||(NREUM={});NREUM.info||(NREUM.info={});NREUM.info.applicationID=3;NREUM.init={...NREUM.init,jserrors:{harvestTimeSeconds:5}}
+  </script>
+  <style>
+    .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    button {
+      width: 50vw;
+      height: 100px;
+      border: none !important;
+      font-size: x-large;
+      padding: 0;
+    }
+
+    button:hover {
+      background: #999;
+      cursor: pointer;
+    }
+
+    #content {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <button id="dogs">Dogs Rule</button>
+    <button id="cats">Cats Rule</button>
+  </div>
+  <div id="content"></div>
+</body>
+
+</html>

@@ -20,8 +20,8 @@ jobs:
         with: 
           token: ${{ secrets.PAT_GITHUB }}
 
-      - name: build
-        run: npm run ci-build 
+      - name: "Install and Build"
+        run: npx lerna bootstrap && npm run packages:build
 
       - name: "Version and publish"
         env:

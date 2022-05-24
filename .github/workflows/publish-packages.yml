@@ -15,7 +15,6 @@ on:
 jobs:
   publish-browser-agent-core:
     runs-on: ubuntu-latest
-    container: node:14
     steps:
       - uses: actions/checkout@v3
 

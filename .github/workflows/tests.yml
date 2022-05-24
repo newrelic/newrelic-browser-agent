@@ -30,7 +30,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
-        run: npm install
+        run: npm ci --cache ./.npm
 
       - name: test
         run: npm run packages:test

@@ -33,7 +33,7 @@
   },
   "description": "",
   "dependencies": {
-    "@newrelic/browser-agent-core": "file:../browser-agent-core"
+    "@newrelic/browser-agent-core": "^0.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.0",

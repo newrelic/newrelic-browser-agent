@@ -1,16 +1,16 @@
 {
-  "name": "browser-agent",
-  "version": "2.0.0",
+  "name": "newrelic",
+  "version": "0.0.1",
   "private": true,
   "author": "The New Relic Browser Team",
   "description": "Tests for the New Relic JavaScript agent",
   "scripts": {
     "test": "tools/jil/bin/cli.js",
     "build": "rm -rf build && mkdir build && gulp build",
-    "build:all": "npm run build && npm run packages:build && npm run tools:test-builds",
+    "build:all": "npm run build && lerna run build && npm run tools:test-builds",
     "build-mac": "gulp && osascript -e 'display notification \"The agent has been built.\" with title \"Build Complete\"'",
     "prepush": "npm run lint && node -e 'process.exit((process.argv[1] === \"master\") ? 1 : 0)' `git rev-parse --abbrev-ref HEAD`",
-    "postinstall": "node post-installer && rm -f node_modules/jil && ln -s ../tools/jil node_modules/jil && npm run build:all",
+    "postinstall": "lerna bootstrap && node post-installer && rm -f node_modules/jil && ln -s ../tools/jil node_modules/jil && npm run build:all",
     "phantomjs": "phantomjs",
     "lint": "eslint --ext .js .",
     "lint:fix": "eslint --ext .js . --fix",
@@ -28,7 +28,9 @@
     "packages:watch": "jung -d './packages/browser-agent/src|./modules' --run -- npm run packages:build",
     "test-server": "node ./tools/jil/bin/server",
     "sauce:connect": "node ./tools/jil/bin/sauce",
-    "tools:test-builds": "npm --prefix ./tools/test-builds/build-time-mfe run build"
+    "tools:test-builds": "npm --prefix ./tools/test-builds/build-time-mfe run build",
+    "lerna:bootstrap": "npx lerna bootstrap",
+    "lerna:test": "npx lerna run test"
   },
   "bin": {
     "jil": "./tools/jil/bin/cli.js",
@@ -40,7 +42,6 @@
     "url": "https://github.com/newrelic/newrelic-browser-agent.git"
   },
   "dependencies": {
-    "lerna": "^4.0.0",
     "lodash._slice": "^2.4.1"
   },
   "devDependencies": {
@@ -59,6 +60,7 @@
     "gulp-uglify": "^1.5.4",
     "husky": "^0.11.6",
     "jung": "^2.1.0",
+    "lerna": "^4.0.0",
     "preprocessify": "0.0.6",
     "request": "2.74.0",
     "sinon": "^1.17.5",

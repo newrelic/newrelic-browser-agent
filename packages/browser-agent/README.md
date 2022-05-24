@@ -24,9 +24,24 @@ yarn add @newrelic/browser-agent
 
 Using [unpkg](https://unpkg.com/)
 
+Default (defaults to ES6)
+
 ```html
 <script src="https://unpkg.com/@newrelic/browser-agent/bundled"></script>
 ```
+
+ES6 compatible (same resolve as default)
+
+```html
+<script src="https://unpkg.com/@newrelic/browser-agent/bundled/es6/index.js"></script>
+```
+
+ES5 compatible
+
+```html
+<script src="https://unpkg.com/@newrelic/browser-agent/bundled/es5/index.js"></script>
+```
+
 
 ## Usage Examples
 
@@ -37,27 +52,49 @@ Using [unpkg](https://unpkg.com/)
 // initialize the agent as close to 
 // the top level of the application as possible
 import NR from '@newrelic/browser-agent'
+
 const options = {
     // See 'Configuring your application'
 }
-NR.start(options).then(() => {
+const nr = new NR()
+
+nr.start(options).then(() => {
     console.log("Browser Agent Initialized!")
 })
 ```
 
+#### Using unpkg
+
+```html
+<head>
+    <script src="https://unpkg.com/@newrelic/browser-agent/bundled"></script>
+    <script>
+        const { BrowserAgent } = NRBA;
+        const options = {
+            // See 'Configuring your application'
+        }
+        const agent = new BrowserAgent()
+        agent.start(options).then(() => {
+            console.log("Browser Agent Initialized!")
+        })
+    </script>
+</head>
+```
+
 ### Instrumenting a Micro Front End
 
-The New Relic Browser Agent can maintain separate configuration scopes for each generated bundle.  Multiple bundles, like those used in certain micro front end patterns, can each report their own scoped data to separate New Relic applications.
+The New Relic Browser Agent can maintain separate configuration scopes by creating new instances. Micro front end patterns can rely on separate NR instances and can thus each report their own scoped data to separate New Relic applications.
 
 ```javascript
 // <<< MICRO FRONT END APP 1 >>>
 // ---- App.js ----
-import NR from '@newrelic/browser-agent'
+import { BrowserAgent } from '@newrelic/browser-agent'
 const options = {
     // see 'Configuring your application'
 }
-NR.features.JSERRORS.enabled = true
-NR.start(options).then(() => {
+const nr = new BrowserAgent() 
+nr.features.JSERRORS.enabled = true
+nr.start(options).then(() => {
     console.log("Browser Agent Initialized!")
 })
 
@@ -66,7 +103,7 @@ class MyComponent() {
     try {
         ...
     } catch(err) {
-        NR.noticeError(err)
+        nr.noticeError(err)
         // reports to applicationID 1
     }
 }
@@ -82,7 +119,7 @@ const options = {
   applicationID: String
   beacon: String
 }
-NR.start(options)
+nr.start(options)
 ```
 
 ### Get application ID, license key, beacon
@@ -98,40 +135,42 @@ You can find `licenseKey`, `applicationID` and `beacon` values in the New Relic 
 |JSERRORS|enabled |true|Enable's `noticeError` method|
 |JSERRORS|auto |false|Reports all global errors |
 
+> Features must be set before calling the .start() method.
 
 ### JavaScript Errors
 
 This NPM package can currently capture JavaScript Error reporting in two ways. These errors will be reported to the appId & licenseKey specified in your [configuration](#configuring-your-application).
 
 ```js
-import NR from '@newrelic/browser-agent'
+import { BrowserAgent } from '@newrelic/browser-agent'
+const browserAgent = new BrowserAgent()
 
 // enable API scoped to applicationID
-NR.features.JSERRORS.enabled = true
+browserAgent.features.JSERRORS.enabled = true
 
 // report global errors to applicationID
-NR.features.JSERRORS.auto = true
+browserAgent.features.JSERRORS.auto = true
 
 // enable features before starting the agent
-NR.start(options)
+browserAgent.start(options)
 ```
 
 ### Capture JavaScript errors via API
 
 ```javascript
-NR.features.jserrors.enabled = true
-NR.noticeError(new Error())
+browserAgent.features.jserrors.enabled = true
+browserAgent.noticeError(new Error())
 ```
 
-Set `NR.jserrors.enabled` to `true` to report specific errors via the noticeError API.
+Set `browserAgent.jserrors.enabled` to `true` to report specific errors via the noticeError API.
 
 ### Automatically capture global JavaScript errors
 
 ```javascript
-NR.features.jserrors.auto = true
+browserAgent.features.jserrors.auto = true
 ```
 
-Set `NR.jserrors.auto` to `true` to report all errors on the page.
+Set `browserAgent.jserrors.auto` to `true` to report all errors on the page.
 
 ## Contributing
 

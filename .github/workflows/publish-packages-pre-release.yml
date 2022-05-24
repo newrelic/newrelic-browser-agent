@@ -2,10 +2,10 @@ name: Publish package builds
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - dev
+  # push:
+  #   branches:
+  #     - main
+  #     - dev
 
 jobs:
   publish-browser-agent-core:

@@ -31,4 +31,3 @@ jil.browserTest('isFileProtocol returns coorectly when detecting file protocol',
   t.ok(!protocol.isFileProtocol(), 'Returned false when protocol is not file protocol')
   t.end()
 })
-

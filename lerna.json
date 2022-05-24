@@ -1,0 +1,7 @@
+{
+  "packages": [
+    "packages/*",
+    "tools/test-builds/build-time-mfe/*"
+  ],
+  "version": "0.0.2"
+}

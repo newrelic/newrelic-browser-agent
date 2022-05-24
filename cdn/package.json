@@ -1,0 +1,19 @@
+{
+  "name": "nr-browser-aggregator",
+  "version": "1.0.0",
+  "description": "This is a package that is deployed as a bundle to CDN. It is downloaded by the `agent-loader` package. These two packages are intended to work together.",
+  "main": "src/spa.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx webpack --config ./webpack.config.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "dotenv-webpack": "^7.1.0",
+    "eslint": "^8.8.0",
+    "html-webpack-plugin": "^5.5.0",
+    "webpack": "^5.65.0",
+    "webpack-cli": "^4.9.1"
+  }
+}

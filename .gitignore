@@ -1,9 +1,12 @@
 /build
+**/dist
 /config
 /tmp
 /.npm
+**/coverage
 log
 node_modules
+**/node_modules
 *.csv
 *.tap
 *.swp
@@ -12,3 +15,7 @@ node_modules
 .DS_Store
 .vscode
 .secrets
+**/local-install
+tests/assets/test-builds/**/*
+packages/browser-agent-core/cjs
+packages/browser-agent/webpack-analysis.html

@@ -51,15 +51,15 @@ function validateRules (rules) {
   return !invalidReplacementDetected && !invalidRegexDetected
 }
 
-  // applies all regex obfuscation rules to provided URL string and returns the result
+// applies all regex obfuscation rules to provided URL string and returns the result
 function obfuscateString (string) {
-    // if string is empty string, null or not a string, return unmodified
+  // if string is empty string, null or not a string, return unmodified
   if (!string || typeof string !== 'string') return string
 
   var rules = getRules()
   var obfuscated = string
 
-    // apply every rule to URL string
+  // apply every rule to URL string
   for (var i = 0; i < rules.length; i++) {
     var regex = rules[i].regex
     var replacement = rules[i].replacement || '*'

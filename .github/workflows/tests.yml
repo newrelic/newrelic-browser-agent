@@ -20,6 +20,20 @@ jobs:
 
       - name: lint
         run: npm run lint
+  package-tests:
+    runs-on: ubuntu-latest
+    container: node:14
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: install
+        run: npm ci --cache ./.npm
+
+      - name: test
+        run: npm run packages:test
   latest-browsers:
     runs-on: ubuntu-latest
     container: node:14

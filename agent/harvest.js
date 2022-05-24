@@ -20,7 +20,6 @@ var obfuscate = require('./obfuscate')
 var applyFnToProps = require('./traverse').applyFnToProps
 
 var version = '<VERSION>'
-var jsonp = 'NREUM.setToken'
 var _events = {}
 var haveSendBeacon = !!navigator.sendBeacon
 var tooManyRequestsDelay = config.getConfiguration('harvest.tooManyRequestsDelay') || 60
@@ -32,6 +31,8 @@ var xhrUsable = ieVersion > 9 || ieVersion === 0
 
 var addPaintMetric = require('./paint-metrics').addMetric
 var eventListenerOpts = require('event-listener-opts')
+
+var jsonp = 'NREUM.setToken'
 
 module.exports = {
   sendRUM: single(sendRUM), // wrapping this in single makes it so that it can only be called once from outside

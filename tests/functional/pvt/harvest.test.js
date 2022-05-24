@@ -20,7 +20,7 @@ testDriver.test('timings are retried when collector returns 429', supported, fun
         harvestTimeSeconds: 2
       },
       harvest: {
-        tooManyRequestsDelay: 10
+        tooManyRequestsDelay: 5
       },
       spa: {
         enabled: false
@@ -39,13 +39,12 @@ testDriver.test('timings are retried when collector returns 429', supported, fun
   Promise.all([timingsPromise, loadPromise, rumPromise]).then(([timingsResult]) => {
     t.equal(timingsResult.res.statusCode, 429, 'server responded with 429')
     firstBody = timingsResult.body
-    return router.expectTimings()
+    return router.expectTimings(undefined, 80000)
   }).then(result => {
     let secondBody = result.body
 
     t.equal(result.res.statusCode, 200, 'server responded with 200')
     t.equal(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
-    t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
 
     t.end()
   }).catch(fail)

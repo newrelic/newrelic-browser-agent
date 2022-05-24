@@ -1,0 +1,13 @@
+{
+  "name": "web-components-mfe",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "npm --prefix ./container run serve",
+    "build": "npm --prefix ./component-1 install && npm --prefix ./component-2 install && npm --prefix ./container install && npm --prefix ./container run build"
+  },
+  "keywords": [],
+  "author": "",
+  "description": ""
+}

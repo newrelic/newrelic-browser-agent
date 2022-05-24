@@ -20,8 +20,8 @@ jobs:
         with: 
           token: ${{ secrets.PAT_GITHUB }}
 
-      - name: build
-        run: npm run ci-build 
+      - name: "Install and Build"
+        run: npx lerna bootstrap && npm run packages:build
 
       - name: "Version and publish"
         env:
@@ -32,4 +32,4 @@ jobs:
 
           npx lerna version ${{ github.event.inputs.release_type }} --no-changelog --yes
 
-          npx lerna publish from-package --yes
+          npx lerna publish from-package --no-verify-access --yes

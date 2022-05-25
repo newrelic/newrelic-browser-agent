@@ -13,7 +13,7 @@ on:
           - major
 
 jobs:
-  publish-browser-agent-core:
+  publish-all-packages:
     runs-on: ubuntu-latest
     
     env:
@@ -35,14 +35,10 @@ jobs:
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git remote set-url origin https://${{github.actor}}:${GH_TOKEN}@github.com/$GITHUB_REPOSITORY
-
+          npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
       - name: "Version"
         run: |
           npx lerna version ${{ github.event.inputs.release_type }} --no-changelog --yes
-      
-#       - name: "NPM Identity"
-#         run: |
-#           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
           
       - name: "Publish"
         run: |

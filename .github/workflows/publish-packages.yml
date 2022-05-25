@@ -8,6 +8,7 @@ on:
         required: true
         type: choice
         options:
+          - graduate
           - patch
           - minor
           - major
@@ -36,10 +37,17 @@ jobs:
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git remote set-url origin https://${{github.actor}}:${GH_TOKEN}@github.com/$GITHUB_REPOSITORY
           npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
-      - name: "Version"
+      
+      - name: "Typed Version"
+        if: ${{ github.event.inputs.release_type != 'graduate' }}
         run: |
           npx lerna version ${{ github.event.inputs.release_type }} --no-changelog --yes
+      
+      - name: "Graduated Version"
+        if: ${{ github.event.inputs.release_type == 'graduate' }}
+        run: |
+          npx lerna version --conventional-commits --conventional-graduate --no-changelog --yes
           
       - name: "Publish"
         run: |
-          npx lerna publish from-package --no-verify-access --yes
+          npx lerna publish from-git --no-verify-access --yes

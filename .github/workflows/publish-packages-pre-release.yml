@@ -1,34 +1,43 @@
 name: Publish NPM Packages (Pre-Release)
 
 on:
-  workflow_dispatch:
-  # push:
-  #   branches:
-  #     - main
-  #     - dev
+  push:
+    branches:
+      - main
+      - dev
 
 jobs:
-  publish-browser-agent-core:
+  publish-all-packages:
     runs-on: ubuntu-latest
-    container: node:14
+    
+    env:
+      GH_TOKEN: ${{ secrets.PAT_GITHUB }}
+      GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
+      NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
+      NODE_AUTH_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
+    
     steps:
-      - uses: actions/checkout@v2
-        with:
+      - uses: actions/checkout@v3
+        with: 
+          token: ${{ secrets.PAT_GITHUB }}
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: build
-        run: npm run ci-build 
-
-      - name: "Version and publish"
-        env:
-          GH_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
+      - name: "Install and Build"
+        run: npx lerna bootstrap && npm run packages:build
+        
+      - name: "Identity"
         run: |
           git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor}}@users.noreply.github.com"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git remote set-url origin https://${{github.actor}}:${GH_TOKEN}@github.com/$GITHUB_REPOSITORY
 
+      - name: "Version"
+        run: |
           if [ ${{ github.base_ref }} = dev ]; then
             npx lerna version --no-changelog --conventional-commits --conventional-prerelease --preid alpha --yes
           else
             npx lerna version --no-changelog --conventional-commits --conventional-prerelease --preid beta --yes
-
-          npx lerna publish from-git --yes
+          
+      - name: "Publish"
+        run: |
+          npx lerna publish from-package --no-verify-access --yes

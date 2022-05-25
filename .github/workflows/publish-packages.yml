@@ -46,8 +46,8 @@ jobs:
       - name: "Graduated Version"
         if: ${{ github.event.inputs.release_type == 'graduate' }}
         run: |
-          npx lerna version --conventional-graduate --no-changelog --yes
+          npx lerna version --conventional-commits --conventional-graduate --no-changelog --yes
           
       - name: "Publish"
         run: |
-          npx lerna publish from-package --no-verify-access --yes
+          npx lerna publish from-git --no-verify-access --yes

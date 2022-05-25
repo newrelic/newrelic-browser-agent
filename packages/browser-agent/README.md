@@ -24,31 +24,26 @@ yarn add @newrelic/browser-agent
 
 Using [unpkg](https://unpkg.com/)
 
-Default (defaults to ES6)
+See [Using Unpkg](#using-unpkg) for implementation details
+
+ES6 compatible bundle
 
 ```html
-<script src="https://unpkg.com/@newrelic/browser-agent/bundled"></script>
+<script src="https://unpkg.com/@newrelic/browser-agent/dist/bundled/es6/index.js"></script>
 ```
 
-ES6 compatible (same resolve as default)
+ES5 compatible bundle
 
 ```html
-<script src="https://unpkg.com/@newrelic/browser-agent/bundled/es6/index.js"></script>
+<script src="https://unpkg.com/@newrelic/browser-agent/dist/bundled/es5/index.js"></script>
 ```
-
-ES5 compatible
-
-```html
-<script src="https://unpkg.com/@newrelic/browser-agent/bundled/es5/index.js"></script>
-```
-
 
 ## Usage Examples
 
 ### Basic Setup
 
 ```javascript
-<< App.js >>
+// << App.js >>
 // initialize the agent as close to 
 // the top level of the application as possible
 import NR from '@newrelic/browser-agent'
@@ -63,10 +58,24 @@ nr.start(options).then(() => {
 })
 ```
 
-#### Using unpkg
+### Notice Errors After Setup
+```javascript
+// << SomeComponent.js >>
+// notice handled errors
+try { 
+    ...
+} catch (err){
+    nr.noticeError(err)
+}
+
+// thrown errors *anywhere* on the page will be captured if `auto` is enabled
+```
+
+### Setup Using unpkg
 
 ```html
 <head>
+    <!-- Download and initialize as soon as possible to avoid missing early events -->
     <script src="https://unpkg.com/@newrelic/browser-agent/bundled"></script>
     <script>
         const { BrowserAgent } = NRBA;
@@ -81,30 +90,75 @@ nr.start(options).then(() => {
 </head>
 ```
 
-### Instrumenting a Micro Front End
+### Notice Errors after Setup
+```javascript
+// << somewhere in your app >>
 
-The New Relic Browser Agent can maintain separate configuration scopes by creating new instances. Micro front end patterns can rely on separate NR instances and can thus each report their own scoped data to separate New Relic applications.
+// notice handled errors
+try { 
+    ...
+} catch (err){
+    nr.noticeError(err)
+}
+
+// thrown errors *anywhere* on the page will be captured if `auto` is enabled
+```
+
+### Instrumenting a Micro Front Ends or Multiple Targets
+
+The New Relic Browser Agent can maintain separate configuration scopes by creating new instances. Separate NR instances can each report their own scoped data to separate New Relic applications. 
 
 ```javascript
-// <<< MICRO FRONT END APP 1 >>>
 // ---- App.js ----
+// Initialize as close to top of page as possible
 import { BrowserAgent } from '@newrelic/browser-agent'
-const options = {
+const options1 = {
     // see 'Configuring your application'
+    licenseKey: 'abc',
+    applicationID: '123',
+    beacon: 'bam.nr-data.net'
 }
-const nr = new BrowserAgent() 
-nr.features.JSERRORS.enabled = true
-nr.start(options).then(() => {
-    console.log("Browser Agent Initialized!")
+const agent1 = new BrowserAgent() 
+agent1.features.errors.enabled = true // this is enabled by default, but just for visibility
+agent1.start(options1).then(() => {
+    console.log("Browser Agent (options1) Initialized!")
 })
 
-// ---- MyComponent.js ----
+const options2 = {
+    // see 'Configuring your application'
+    licenseKey: 'xyz',
+    applicationID: '987',
+    beacon: 'bam.nr-data.net'
+}
+const agent2 = new BrowserAgent() 
+agent2.features.errors.auto = false // do not capture global errors on this instance
+agent2.start(options2).then(() => {
+    console.log("Browser Agent (options2) Initialized!")
+})
+
+// --- NOTE ---
+// thrown errors *anywhere* on the page will be captured if `auto` is enabled in your instance
+// agent2 has disabled `auto`, and will not capture globally thrown errors
+
+// ---- NavBarComponent.js ----
 class MyComponent() {
     try {
         ...
     } catch(err) {
-        nr.noticeError(err)
-        // reports to applicationID 1
+        agent1.noticeError(err)
+        // agent1 instance
+        // reports the error to applicationID '123', licenseKey 'abc'
+    }
+}
+
+// ---- SearchComponent.js ----
+class MyComponent() {
+    try {
+        ...
+    } catch(err) {
+        agent2.noticeError(err)
+        // agent2 instance
+        // reports to applicationID '987', licenseKey 'xyz'
     }
 }
 ```
@@ -115,9 +169,10 @@ The NR interface's `start` method accepts an `options` object to configure the a
 
 ```js
 const options = {
-  licenseKey: String
-  applicationID: String
-  beacon: String
+  licenseKey: String // (required)
+  applicationID: String // (required)
+  beacon: String // (required)
+  // ... other configurations
 }
 nr.start(options)
 ```
@@ -132,8 +187,8 @@ You can find `licenseKey`, `applicationID` and `beacon` values in the New Relic 
 
 |Feature|Subfeature|Default|Description|
 |-|-|-|-|
-|JSERRORS|enabled |true|Enable's `noticeError` method|
-|JSERRORS|auto |false|Reports all global errors |
+|errors |enabled |true|Enable's `noticeError` method|
+|errors |auto |false|Reports all global errors |
 
 > Features must be set before calling the .start() method.
 
@@ -145,32 +200,51 @@ This NPM package can currently capture JavaScript Error reporting in two ways. T
 import { BrowserAgent } from '@newrelic/browser-agent'
 const browserAgent = new BrowserAgent()
 
-// enable API scoped to applicationID
-browserAgent.features.JSERRORS.enabled = true
+// enable noticeError() API scoped to applicationID (enabled by default)
+browserAgent.features.errors.enabled = true
 
-// report global errors to applicationID
-browserAgent.features.JSERRORS.auto = true
+// report global errors to applicationID (enabled by default)
+browserAgent.features.errors.auto = true
 
-// enable features before starting the agent
+// configure features before starting the agent
 browserAgent.start(options)
 ```
 
 ### Capture JavaScript errors via API
 
 ```javascript
-browserAgent.features.jserrors.enabled = true
+// if browserAgent.features.errors.enabled === true (enabled by default)
 browserAgent.noticeError(new Error())
 ```
 
-Set `browserAgent.jserrors.enabled` to `true` to report specific errors via the noticeError API.
+Set `browserAgent.errors.enabled` to `true` to report specific errors via the noticeError API.
 
 ### Automatically capture global JavaScript errors
 
 ```javascript
-browserAgent.features.jserrors.auto = true
+browserAgent.features.errors.auto = true
 ```
 
-Set `browserAgent.jserrors.auto` to `true` to report all errors on the page.
+Set `browserAgent.errors.auto` to `true` to report all errors on the page.
+
+
+## Differences
+
+The Browser Agent delivered through NPM will eventually offer parity to its copy/paste and APM counterparts, but during this initial development phase, **it should not yet be treated as equivalent**.  Please see the following table describing the capabilities of each.  The availability of these features will change over time.
+
+| Feature | APM Injected | Copy/Paste | NPM |
+| ------- | ------------ | ---------- | --- |
+| JavaScript Errors | Auto, API | Auto, API | `Auto, API` |
+| Page View | Auto | Auto | `None` | 
+| Page View Timings | Auto | Auto | `None` |
+| Ajax Tracking | Auto | Auto | `None` |
+| Page Actions | API | API | `None` |
+| Session Traces | Auto | Auto | `None` |
+| Browser Interactions (SPA) | Auto, API | Auto, API | `None` |
+| Multiple Configurable Instances of Browser Agent on One Page | No | No | `Yes` |
+| Configurable Code Splitting | No | No | `Yes` |
+| IDE Code Completion and Typings | No | No | `Yes` |  
+
 
 ## Contributing
 

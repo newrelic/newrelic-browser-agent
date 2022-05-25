@@ -72,5 +72,13 @@
   ],
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "keywords": [
+    "new relic",
+    "browser",
+    "instrumentation",
+    "errors",
+    "micro front ends",
+    "browser agent"
+  ]
 }

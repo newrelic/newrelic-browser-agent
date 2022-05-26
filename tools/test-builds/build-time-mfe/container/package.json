@@ -1,7 +1,7 @@
 {
   "name": "@newrelic/container",
   "private": true,
-  "version": "0.0.9-beta.61",
+  "version": "0.0.9-beta.62",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
@@ -9,9 +9,9 @@
     "build": "npx webpack --progress"
   },
   "dependencies": {
-    "@newrelic/browser-agent": "^0.0.9-beta.61",
-    "@newrelic/component-1": "^0.0.9-beta.61",
-    "@newrelic/component-2": "^0.0.9-beta.61"
+    "@newrelic/browser-agent": "^0.0.9-beta.62",
+    "@newrelic/component-1": "^0.0.9-beta.62",
+    "@newrelic/component-2": "^0.0.9-beta.62"
   },
   "devDependencies": {
     "@babel/core": "^7.18.0",

@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent-core",
-  "version": "0.0.8",
+  "version": "0.0.9-beta.0",
   "author": "New Relic Browser agent team <browser-agent@newrelic.com>",
   "license": "Apache-2.0",
   "homepage": "https://github.com/newrelic/newrelic-browser-agent",

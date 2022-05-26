@@ -32,7 +32,7 @@ jobs:
 
       - name: "Version"
         run: |
-          npx lerna version --no-changelog --conventional-commits --conventional-prerelease --preid beta --yes
+          npx lerna version prepatch --no-changelog --preid beta --yes
           
       - name: "Publish"
         run: |

@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.9-beta.44](https://github.com/newrelic/newrelic-browser-agent/compare/v0.0.9-beta.43...v0.0.9-beta.44) (2022-05-26)
+
+**Note:** Version bump only for package @newrelic/component-2
+
+
+
+
+
 ## [0.0.9-beta.43](https://github.com/newrelic/newrelic-browser-agent/compare/v0.0.9-beta.42...v0.0.9-beta.43) (2022-05-26)
 
 **Note:** Version bump only for package @newrelic/component-2

@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "0.0.9-beta.0",
+  "version": "0.0.9-beta.1",
   "author": "New Relic Browser agent team <browser-agent@newrelic.com>",
   "license": "Apache-2.0",
   "contributors": [
@@ -33,7 +33,7 @@
   },
   "description": "",
   "dependencies": {
-    "@newrelic/browser-agent-core": "^0.0.9-beta.0"
+    "@newrelic/browser-agent-core": "^0.0.9-beta.1"
   },
   "devDependencies": {
     "@babel/core": "^7.18.0",

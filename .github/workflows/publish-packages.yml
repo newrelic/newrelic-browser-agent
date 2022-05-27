@@ -40,7 +40,7 @@ jobs:
       - name: "Typed Version"
         if: ${{ github.event.inputs.release_type != 'graduate' }}
         run: |
-          npx lerna version ${{ github.event.inputs.release_type }} --no-changelog --force-publish —-yes
+          npx lerna version ${{ github.event.inputs.release_type }} --no-changelog --force-publish --yes
           
       - name: "Publish"
         run: |

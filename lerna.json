@@ -3,5 +3,5 @@
     "packages/*",
     "tools/test-builds/build-time-mfe/*"
   ],
-  "version": "0.0.9-beta.0"
+  "version": "0.0.9"
 }

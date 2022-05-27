@@ -22,21 +22,21 @@ export class Instrument extends FeatureBase {
     if (this.isEnabled()) {
       if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {
         // passing in an unknown entry type to observer could throw an exception
-        this.performanceObserver = new PerformanceObserver(perfObserver) // eslint-disable-line no-undef
+        this.performanceObserver = new PerformanceObserver(this.perfObserver)
         try {
           this.performanceObserver.observe({ entryTypes: ['paint'] })
         } catch (e) {
           // do nothing
         }
 
-        this.lcpPerformanceObserver = new PerformanceObserver(lcpObserver) // eslint-disable-line no-undef
+        this.lcpPerformanceObserver = new PerformanceObserver(this.lcpObserver)
         try {
           this.lcpPerformanceObserver.observe({ entryTypes: ['largest-contentful-paint'] })
         } catch (e) {
           // do nothing
         }
 
-        this.clsPerformanceObserver = new PerformanceObserver(clsObserver) // eslint-disable-line no-undef
+        this.clsPerformanceObserver = new PerformanceObserver(this.clsObserver)
         try {
           this.clsPerformanceObserver.observe({ type: 'layout-shift', buffered: true })
         } catch (e) {

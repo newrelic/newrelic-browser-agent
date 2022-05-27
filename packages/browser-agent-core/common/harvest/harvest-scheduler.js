@@ -6,7 +6,7 @@
 // import { getSubmitMethod, send, sendX } from './harvest'
 import { submitData } from '../util/submit-data'
 import { SharedContext } from '../context/shared-context'
-import { Harvest } from './harvest'
+import { Harvest, getSubmitMethod } from './harvest'
 import { subscribeToUnload } from '../unload/unload'
 import { conditionallySet } from '../cookie/nav-cookie'
 
@@ -62,7 +62,7 @@ export class HarvestScheduler extends SharedContext {
     var scheduler = this
 
     if (this.opts.getPayload) {
-      var submitMethod = this.harvest.getSubmitMethod(this.endpoint, opts)
+      var submitMethod = getSubmitMethod(this.endpoint, opts)
       if (!submitMethod) return false
 
       var retry = submitMethod.method === submitData.xhr

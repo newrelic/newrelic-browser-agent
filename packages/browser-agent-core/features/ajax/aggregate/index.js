@@ -48,7 +48,7 @@ export class Aggregate extends FeatureBase {
       this.scheduler = new HarvestScheduler('events', {
         onFinished: (...args) => this.onEventsHarvestFinished(...args),
         getPayload: (...args) => this.prepareHarvest(...args)
-      })
+      }, this)
       this.scheduler.harvest.on('jserrors', function () {
         return { body: this.aggregator.take(['xhr']) }
       })
@@ -191,40 +191,39 @@ export class Aggregate extends FeatureBase {
     chunkSize = chunkSize || arr.length
     var chunks = []
     for (var i = 0, len = arr.length; i < len; i += chunkSize) {
-      chunks.push(new this.Chunk(arr.slice(i, i + chunkSize)))
+      chunks.push(this.Chunk(arr.slice(i, i + chunkSize)))
     }
     return chunks
   }
 
   Chunk(events) {
-    this.addString = getAddStringContext() // pass agentIdentifier here
-    this.events = events
-    this.payload = 'bel.7;'
+    const addString = getAddStringContext(this.agentIdentifier) // pass agentIdentifier here
+    let payload = 'bel.7;'
 
-    for (var i = 0; i < this.events.length; i++) {
-      var event = this.events[i]
+    for (var i = 0; i < events.length; i++) {
+      var event = events[i]
       var fields = [
         numeric(event.startTime),
         numeric(event.endTime - event.startTime),
         numeric(0), // callbackEnd
         numeric(0), // no callbackDuration for non-SPA events
-        this.addString(event.method),
+        addString(event.method),
         numeric(event.status),
-        this.addString(event.domain),
-        this.addString(event.path),
+        addString(event.domain),
+        addString(event.path),
         numeric(event.requestSize),
         numeric(event.responseSize),
         event.type === 'fetch' ? 1 : '',
-        this.addString(0), // nodeId
-        nullable(event.spanId, this.addString, true) + // guid
-        nullable(event.traceId, this.addString, true) + // traceId
+        addString(0), // nodeId
+        nullable(event.spanId, addString, true) + // guid
+        nullable(event.traceId, addString, true) + // traceId
         nullable(event.spanTimestamp, numeric, false) // timestamp
       ]
 
       var insert = '2,'
 
       // add custom attributes
-      var attrParts = addCustomAttributes(getInfo(this.agentIdentifier).jsAttributes || {}, this.addString)
+      var attrParts = addCustomAttributes(getInfo(this.agentIdentifier).jsAttributes || {}, addString)
       fields.unshift(numeric(attrParts.length))
 
       insert += fields.join(',')
@@ -233,14 +232,20 @@ export class Aggregate extends FeatureBase {
         insert += ';' + attrParts.join(';')
       }
 
-      if ((i + 1) < this.events.length) insert += ';'
+      if ((i + 1) < events.length) insert += ';'
 
-      this.payload += insert
+      payload += insert
     }
 
-    this.tooBig = function (maxPayloadSize) {
+    const tooBig = function (maxPayloadSize) {
       maxPayloadSize = maxPayloadSize || this.MAX_PAYLOAD_SIZE
       return this.payload.length * 2 > maxPayloadSize
+    }
+
+    return {
+      events,
+      payload,
+      tooBig,
     }
   }
 

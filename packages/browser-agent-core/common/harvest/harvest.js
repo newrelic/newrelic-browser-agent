@@ -78,7 +78,7 @@ export class Harvest extends SharedContext {
     if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
 
     var payload = { body: makeBody(), qs: makeQueryString() }
-    var caller = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateAndSend : this._send
+    var caller = this.obfuscator.shouldObfuscate() ? (...args) => this.obfuscator.obfuscateAndSend(...args) : (...args) => this._send(...args)
     return caller(endpoint, payload, opts, submitMethod, cbFinished)
   }
 

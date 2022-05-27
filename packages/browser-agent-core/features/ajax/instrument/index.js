@@ -4,7 +4,6 @@
  */
 import { originals, getLoaderConfig, getRuntime } from '../../../common/config/config'
 import { handle } from '../../../common/event-emitter/handle'
-import { ee } from '../../../common/event-emitter/contextual-ee'
 import { id } from '../../../common/ids/id'
 import { ffVersion } from '../../../common/browser-version/firefox-version'
 import { dataSize } from '../../../common/util/data-size'
@@ -29,18 +28,21 @@ export class Instrument extends FeatureBase {
     if (!getRuntime(this.agentIdentifier).xhrWrappable || getRuntime(this.agentIdentifier).disabled) return
 
     this.dt = new DT(this.agentIdentifier)
+
+    this.handler = (type, args, ctx, group) => handle(type, args, ctx, group, this.ee)
+    this.wrappedFetch = getWrappedFetch(this.ee, this.handler)
   }
 }
 
 // TODO update all of this to go into class and use this.ee for ee, handle, and register
 
-export function getWrappedFetch() {
+export function getWrappedFetch(ee, handler) {
   var wrappedFetch = wrapFetch(ee)
-  subscribeToEvents(ee, handle)
+  subscribeToEvents(ee, handler)
   return wrappedFetch
 }
 
-function subscribeToEvents(ee, handle) {
+function subscribeToEvents(ee, handler) {
   ee.on('new-xhr', onNewXhr)
   ee.on('open-xhr-start', onOpenXhrStart)
   ee.on('open-xhr-end', onOpenXhrEnd)
@@ -323,7 +325,7 @@ function subscribeToEvents(ee, handle) {
       duration: now() - this.startTime
     }
 
-    handle('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this)
+    handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this)
   }
 
   // Create report for XHR request that has finished
@@ -349,7 +351,7 @@ function subscribeToEvents(ee, handle) {
     // Always send cbTime, even if no noticeable time was taken.
     metrics.cbTime = this.cbTime
 
-    handle('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this)
+    handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this)
   }
 
   function addUrl (ctx, url) {

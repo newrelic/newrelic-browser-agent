@@ -16,14 +16,14 @@ export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator)
     this.eventsPerMinute = 240
-    this.harvestTimeSeconds = getConfigurationValue('ins.harvestTimeSeconds') || 30
+    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'ins.harvestTimeSeconds') || 30
     this.eventsPerHarvest = this.eventsPerMinute * this.harvestTimeSeconds / 60
     this.referrerUrl
     this.currentEvents
 
     this.events = []
     this.att = {}
-    setInfo(this.agentIdentifier, {jsAttributes: this.att})
+    setInfo(this.agentIdentifier, {...getInfo(this.agentIdentifier), jsAttributes: this.att})
 
     if (document.referrer) this.referrerUrl = cleanURL(document.referrer)
 

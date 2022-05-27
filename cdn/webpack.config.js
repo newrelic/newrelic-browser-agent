@@ -13,29 +13,33 @@ module.exports = {
     'nr-loader-full.min': path.resolve(__dirname, './agent-loader/pro.js'),
     'nr-loader-spa': path.resolve(__dirname, './agent-loader/spa.js'),
     'nr-loader-spa.min': path.resolve(__dirname, './agent-loader/spa.js')
-    // 'nr': path.resolve(__dirname, './agent-aggregator/basic.js'),
-    // 'nr.min': path.resolve(__dirname, './agent-aggregator/basic.js'),
-    // 'nr-spa': path.resolve(__dirname, './agent-aggregator/spa.js'),
-    // 'nr-spa.min': path.resolve(__dirname, './agent-aggregator/spa.js'),
   },
   output: {
     filename: '[name].js',
-    path: path.resolve(__dirname, '../build'),
-    // publicPath: 'https://js-agent.newrelic.com/',
-    // publicPath: 'http://bam-test-1.nr-local.net:3333/build/',
-    publicPath: '/build/',
-    libraryTarget: 'umd'
+    path: path.resolve(__dirname, './build'),
+    // publicPath: 'https://js-agent.newrelic.com/', // <- we need this to be set when we publish to the CDN
+    publicPath: '/cdn/build/', // <-- we need one property to be set when testing locally
+    library: {
+      name: 'NRBA',
+      type: 'umd'
+    }
   },
   optimization: {
     minimize: true,
     minimizer: [new TerserPlugin({
-      include: [/\.min\.js$/] // TODO - Minimize chunks too
+      include: [/\.min\.js$/, /^(?:[0-9]{3})/], // TODO - Minimize chunks too
+      terserOptions: {
+        mangle: true
+      }
+      // chunkFilter: (chunk) => {
+      //   return chunk.name.includes('.min.js') || !isNaN(Number(chunk.name.split(".")[0]))
+      // },
     })],
     // splitChunks: {
     //   chunks: 'all',
     // },
-    chunkIds: 'named',
-    moduleIds: 'named',
+    // chunkIds: 'named',
+    // moduleIds: 'named',
     flagIncludedChunks: true,
     mergeDuplicateChunks: true
   },
@@ -47,7 +51,8 @@ module.exports = {
       'process.env.DEBUG': JSON.stringify(process.env.DEBUG || false)
     }),
     new webpack.SourceMapDevToolPlugin({
-      append: '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]',
+      // append: '\n//# sourceMappingURL=https://js-agent.newrelic.com/[url]' // <- we need this to be set when we publish to the CDN
+      append: '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/cdn/build/[url]', // <-- we need one property to be set when testing locally
       filename: '[name].map'
     })
   ],

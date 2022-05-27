@@ -19,3 +19,4 @@ node_modules
 tests/assets/test-builds/**/*
 packages/browser-agent-core/cjs
 packages/browser-agent/webpack-analysis.html
+/cdn/build

@@ -27,6 +27,8 @@ export class Instrument extends FeatureBase {
     // errors that will be the same as caught errors.
     this.skipNext = 0
 
+    console.log("initialize js-errors instrument!", this.agentIdentifier)
+
     const self = this
 
     this.ee.on('fn-start', function (args, obj, methodName) {

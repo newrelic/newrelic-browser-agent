@@ -157,7 +157,7 @@ export class Aggregate extends FeatureBase {
   // Upon user interaction, the Browser stops executing LCP logic, so we can send here
   // We're using setTimeout to give the Browser time to finish collecting LCP value
     if (name === 'fi') {
-      setTimeout(this.recordLcp, 0)
+      setTimeout((...args) => this.recordLcp(...args), 0)
     }
 
     this.addTiming(name, value, attrs, true)
@@ -208,7 +208,7 @@ export class Aggregate extends FeatureBase {
 
   // serialize array of timing data
   getPayload(data) {
-    var addString = getAddStringContext()
+    var addString = getAddStringContext(this.agentIdentifier)
 
     var payload = 'bel.6;'
 

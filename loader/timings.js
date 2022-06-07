@@ -35,6 +35,8 @@ function lcpObserver(list, observer) {
   var entries = list.getEntries()
   if (entries.length > 0) {
     var entry = entries[entries.length - 1]
+    
+    console.log("goodbye cruel world!");
 
     if (pageHiddenTime && pageHiddenTime < entry.startTime) return
 

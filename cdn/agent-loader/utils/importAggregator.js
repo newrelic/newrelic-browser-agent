@@ -9,7 +9,6 @@ const priority = {
 }
 let loadFired = 0
 let aggregatorType = null
-let configured = false
 
 export function stageAggregator(loaderType, useTimeout, ms) {
     configure()
@@ -22,10 +21,12 @@ function prioritizeAggregator(loaderType) {
     if (!aggregatorType || priority[loaderType] > priority[aggregatorType]) aggregatorType = loaderType
 }
 
-async function importAggregator(loaderType) {
-    if (loaderType !== aggregatorType) return
-    if (loadFired++) return
-    console.log("import the aggregator -- ", loaderType)
-    const { aggregator } = await import('../../agent-aggregator/aggregator')
-    aggregator(loaderType)
+function importAggregator(loaderType) {
+    setTimeout(async () => {
+        if (loaderType !== aggregatorType) return
+        if (loadFired++) return
+        console.log("import the aggregator -- ", loaderType)
+        const { aggregator } = await import('../../agent-aggregator/aggregator')
+        aggregator(loaderType) // aggregator('spa')
+    }, 0)
 }

@@ -29,6 +29,8 @@ export class Instrument extends FeatureBase {
         // sauce does not have a browser to test this case against, so be careful when modifying this check
         if (!win[ADD_EVENT_LISTENER] || !getRuntime(this.agentIdentifier).xhrWrappable || getRuntime(this.agentIdentifier).disabled) return
 
+        console.log("initialize spa instrument!", agentIdentifier)
+
         getRuntime(this.agentIdentifier).features.spa = true
 
         this.depth = 0
@@ -44,13 +46,13 @@ export class Instrument extends FeatureBase {
         this.historyEE = wrapHistory(this.ee)
         this.mutationEE = wrapMutation(this.ee)
 
-        this.ee.on(FN_START, startTimestamp)
-        this.promiseEE.on(CB_START, startTimestamp)
-        this.jsonpEE.on(CB_START, startTimestamp)
+        this.ee.on(FN_START, (...args) => this.startTimestamp(...args))
+        this.promiseEE.on(CB_START, (...args) => this.startTimestamp(...args))
+        this.jsonpEE.on(CB_START, (...args) => this.startTimestamp(...args))
 
-        this.ee.on(FN_END, endTimestamp)
-        this.promiseEE.on(CB_END, endTimestamp)
-        this.jsonpEE.on(CB_END, endTimestamp)
+        this.ee.on(FN_END, (...args) => this.endTimestamp(...args))
+        this.promiseEE.on(CB_END, (...args) => this.endTimestamp(...args))
+        this.jsonpEE.on(CB_END, (...args) => this.endTimestamp(...args))
 
         this.ee.buffer([FN_START, FN_END, 'xhr-resolved'])
         this.eventsEE.buffer([FN_START])
@@ -63,17 +65,17 @@ export class Instrument extends FeatureBase {
         this.tracerEE.buffer([FN_START, 'no-' + FN_START])
         this.jsonpEE.buffer(['new-jsonp', 'cb-start', 'jsonp-error', 'jsonp-end'])
 
-        timestamp(this.fetchEE, FETCH + START)
-        timestamp(this.fetchEE, FETCH + '-done')
-        timestamp(this.jsonpEE, 'new-jsonp')
-        timestamp(this.jsonpEE, 'jsonp-end')
-        timestamp(this.jsonpEE, 'cb-start')
+        this.timestamp(this.fetchEE, FETCH + START)
+        this.timestamp(this.fetchEE, FETCH + '-done')
+        this.timestamp(this.jsonpEE, 'new-jsonp')
+        this.timestamp(this.jsonpEE, 'jsonp-end')
+        this.timestamp(this.jsonpEE, 'cb-start')
 
         this.historyEE.on('pushState-end', (...args) => this.trackURLChange(...args))
         this.historyEE.on('replaceState-end', (...args) => this.trackURLChange(...args))
 
-        win[ADD_EVENT_LISTENER]('hashchange', trackURLChange, eventListenerOpts(true))
-        win[ADD_EVENT_LISTENER]('load', trackURLChange, eventListenerOpts(true))
+        win[ADD_EVENT_LISTENER]('hashchange', (...args) => this.trackURLChange(...args), eventListenerOpts(true))
+        win[ADD_EVENT_LISTENER]('load', (...args) => this.trackURLChange(...args), eventListenerOpts(true))
         win[ADD_EVENT_LISTENER]('popstate', () => {
             this.trackURLChange(0, depth > 1)
         }, eventListenerOpts(true))
@@ -82,27 +84,28 @@ export class Instrument extends FeatureBase {
     trackURLChange(unusedArgs, hashChangedDuringCb) {
         this.historyEE.emit('newURL', ['' + location, hashChangedDuringCb])
     }
-}
 
-function startTimestamp() {
-    depth++
-    startHash = location.hash
-    this[FN_START] = now()
-}
-
-function endTimestamp() {
-    depth--
-    if (location.hash !== startHash) {
-        trackURLChange(0, true)
+    startTimestamp() {
+        this.depth++
+        this.startHash = location.hash
+        this[FN_START] = now()
     }
 
-    var time = now()
-    this[JS_TIME] = (~~this[JS_TIME]) + time - this[FN_START]
-    this[FN_END] = time
-}
+    endTimestamp() {
+        this.depth--
+        if (location.hash !== this.startHash) {
+            this.trackURLChange(0, true)
+        }
 
-function timestamp(ee, type) {
-    ee.on(type, function () {
-        this[type] = loader.now()
-    })
+        var time = now()
+        this[JS_TIME] = (~~this[JS_TIME]) + time - this[FN_START]
+        this[FN_END] = time
+    }
+
+    timestamp(ee, type) {
+        ee.on(type, () => {
+            this[type] = now()
+        })
+    }
+
 }

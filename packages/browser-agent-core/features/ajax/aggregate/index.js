@@ -10,7 +10,7 @@ import { getConfigurationValue, getInfo } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { subscribeToUnload } from '../../../common/unload/unload'
 import { recordSupportability } from '../../../common/metrics/metrics'
-import { setDenyList, shouldCollectEvent } from './deny-list'
+import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { FeatureBase } from '../../../common/util/feature-base'
 
 export class Aggregate extends FeatureBase {

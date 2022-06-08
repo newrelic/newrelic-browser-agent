@@ -7,6 +7,7 @@ import { onDOMContentLoaded, onWindowLoad } from '../../../common/window/load'
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
     super(agentIdentifier)
+    console.log("initialize page-view-event instrument!", agentIdentifier)
     handle('mark', ['firstbyte', getLastTimestamp()], null, 'api', this.ee)
 
     onWindowLoad(() => this.measureWindowLoaded())

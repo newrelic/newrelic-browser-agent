@@ -5,18 +5,13 @@
 
 import { ee, global as globalEE } from '../event-emitter/contextual-ee'
 import { mapOwn } from '../util/map-own'
-import { global, registerHandler as defaultHandlers } from '../event-emitter/register-handler'
+import { registerHandler as defaultHandlers } from '../event-emitter/register-handler'
 
-var handlers = defaultHandlers.handlers
-var globalHandlers = global.handlers
-
-var d = drain.bind(null, ee, handlers)
-export { d as drain }
-var g = drain.bind(null, globalEE, globalHandlers)
-export { g as global }
 
 // calls will need to update to call this more directly so we can explicitly pass in the ee and handler
-function drain (baseEE, handlers, group) {
+export function drain (agentIdentifier, group) {
+  const baseEE = ee.get(agentIdentifier)
+  const handlers = defaultHandlers.handlers
   if (!baseEE.backlog) return
 
   var bufferedEventsInGroup = baseEE.backlog[group]

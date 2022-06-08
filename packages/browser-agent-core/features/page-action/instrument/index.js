@@ -10,7 +10,7 @@ import { FeatureBase } from '../../../common/util/feature-base'
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
     super(agentIdentifier)
-
+    console.log("initialize page-action instrument!", agentIdentifier)
     if (!getRuntime(this.agentIdentifier).disabled) getRuntime(this.agentIdentifier).features.ins = true
   }
 }

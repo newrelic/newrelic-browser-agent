@@ -117,7 +117,7 @@ baseEE.on('feat-spa', function () {
 
   // register plugins
   var pluginApi = {
-    getCurrentNode: getCurrentNode,
+    getCurrentNode: this.getCurrentNode,
     setCurrentNode: setCurrentNode
   }
 

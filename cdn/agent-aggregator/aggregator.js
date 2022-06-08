@@ -8,7 +8,7 @@ import agentIdentifier from '../shared/agentIdentifier'
 import { Aggregator } from '@newrelic/browser-agent-core/common/aggregate/aggregator'
 
 export function aggregator (build) {
-    console.log("aggregator -- ", build)
+    console.log("-- loaded main aggregator module -- ", build)
     const autorun = typeof (getRuntime(agentIdentifier).autorun) !== 'undefined' ? getRuntime(agentIdentifier).autorun : true
     // this determines what features to build into the aggregator
     // this could <possibly> be optimized to run on one file via env var
@@ -17,7 +17,7 @@ export function aggregator (build) {
     const sharedAggregator = new Aggregator({ agentIdentifier })
     
     // Features are activated using the legacy setToken function name via JSONP
-    addToNREUM('setToken', activateFeatures)
+    addToNREUM('setToken', (flags) => activateFeatures(flags, agentIdentifier))
     
     // import relevant feature aggregators
     if (autorun) initializeFeatures()
@@ -28,7 +28,7 @@ export function aggregator (build) {
     async function initializeFeatures() {
       // load all the features associated with this build type
       await Promise.all(features[build].map(async feature => {
-        const { Aggregate } = await import(`@newrelic/browser-agent-core/features/${feature}/aggregate`)
+        const { Aggregate } = await import(`@newrelic/browser-agent-core/features/${feature}/aggregate`) // AJAX -- load a small bundle specific to that feature agg
         console.log("initialize aggregator for", feature, agentIdentifier, sharedAggregator)
         new Aggregate(agentIdentifier, sharedAggregator)
       }))
@@ -39,8 +39,8 @@ export function aggregator (build) {
     }
     
     function drainAll() {
-      drain('api')
-      drain('feature')
+      drain(agentIdentifier, 'api')
+      drain(agentIdentifier, 'feature')
     }
     
     function captureSupportabilityMetrics() {

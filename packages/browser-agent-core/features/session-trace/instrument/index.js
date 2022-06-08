@@ -29,6 +29,9 @@ export class Instrument extends FeatureBase {
     super(agentIdentifier)
     getRuntime(this.agentIdentifier).features.stn = true
 
+
+    console.log("initialize session-trace instrument!", agentIdentifier)
+
     this.timerEE = wrapTimer(this.ee)
     this.rafEE = wrapRaf(this.ee)
     wrapHistory(this.ee)

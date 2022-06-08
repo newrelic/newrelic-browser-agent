@@ -7,9 +7,7 @@ var MAX_NODES = 128
 
 var lastId = 0
 
-module.exports = InteractionNode
-
-function InteractionNode (interaction, parent, type, timestamp) {
+export function InteractionNode (interaction, parent, type, timestamp) {
   this.interaction = interaction
   this.parent = parent
   this.id = ++lastId

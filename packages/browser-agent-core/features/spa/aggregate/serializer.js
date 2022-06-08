@@ -2,33 +2,33 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import { cleanURL } from '../../../common/url/clean-url'
+import { mapOwn } from '../../../common/util/map-own'
+import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
+import { SharedContext } from '../../../common/context/shared-context'
+import { getInfo } from '../../../common/config/config'
 
-var cleanURL = require('../../../agent/clean-url')
-var loader = require('loader')
-var mapOwn = require('map-own')
-var nullable = require('../../../agent/bel-serializer').nullable
-var numeric = require('../../../agent/bel-serializer').numeric
-var getAddStringContext = require('../../../agent/bel-serializer').getAddStringContext
-var addCustomAttributes = require('../../../agent/bel-serializer').addCustomAttributes
+export class Serializer extends SharedContext {
+  constructor(parent) {
+    super(parent)
+  }
 
-module.exports = serializeSingle
-module.exports.serializeMultiple = serializeMultiple
+  serializeMultiple(interactions, offset, navTiming) {
+    var addString = getAddStringContext(this.sharedContext.agentIdentifier)
+    var serialized = 'bel.7'
+    interactions.forEach(function (interaction) {
+      serialized += ';' + serializeInteraction(interaction.root, offset, navTiming, interaction.routeChange, addString, getInfo(this.sharedContext.agentIdentifier))
+    })
+    return serialized
+  }
 
-function serializeMultiple(interactions, offset, navTiming) {
-  var addString = getAddStringContext()
-  var serialized = 'bel.7'
-  interactions.forEach(function(interaction) {
-    serialized += ';' + serializeInteraction(interaction.root, offset, navTiming, interaction.routeChange, addString)
-  })
-  return serialized
+  serializeSingle(root, offset, navTiming, isRouteChange) {
+    var addString = getAddStringContext(this.sharedContext.agentIdentifier)
+    return 'bel.7;' + serializeInteraction(root, offset, navTiming, isRouteChange, addString, getInfo(this.sharedContext.agentIdentifier))
+  }
 }
 
-function serializeSingle(root, offset, navTiming, isRouteChange) {
-  var addString = getAddStringContext()
-  return 'bel.7;' + serializeInteraction(root, offset, navTiming, isRouteChange, addString)
-}
-
-function serializeInteraction (root, offset, navTiming, isRouteChange, addString) {
+function serializeInteraction(root, offset, navTiming, isRouteChange, addString, info) {
   offset = offset || 0
   var isInitialPage = root.attrs.trigger === 'initialPageLoad'
   var firstTimestamp
@@ -43,21 +43,21 @@ function serializeInteraction (root, offset, navTiming, isRouteChange, addString
 
   return addNode(root, []).join(';')
 
-  function addNode (node, nodeList) {
+  function addNode(node, nodeList) {
     if (node.type === 'customEnd') return nodeList.push([3, numeric(node.end - firstTimestamp)])
     var typeName = node.type
     var typeId = typeIdsByName[typeName]
     var startTimestamp = node.start
     var childCount = node.children.length
     var attrCount = 0
-    var apmAttributes = loader.info.atts
+    var apmAttributes = info.atts
     var hasNavTiming = isInitialPage && navTiming.length && typeId === 1
     var children = []
     var attrs = node.attrs
     var metrics = attrs.metrics
     var params = attrs.params
-    var queueTime = loader.info.queueTime
-    var appTime = loader.info.applicationTime
+    var queueTime = info.queueTime
+    var appTime = info.applicationTime
 
     if (typeof firstTimestamp === 'undefined') {
       startTimestamp += offset

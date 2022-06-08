@@ -24,6 +24,7 @@ var origXHR = window.XMLHttpRequest
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
     super(agentIdentifier)
+    console.log("initialize ajax instrument!", agentIdentifier)
     // Don't instrument Chrome for iOS, it is buggy and acts like there are URL verification issues
     if (!getRuntime(this.agentIdentifier).xhrWrappable || getRuntime(this.agentIdentifier).disabled) return
 

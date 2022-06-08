@@ -18,5 +18,5 @@ new InstrumentPageViewEvent(agentIdentifier) // document load (page view event +
 new InstrumentPageViewTiming(agentIdentifier) // page view timings instrumentation (/loader/timings.js)
 
 // lazy-loads the aggregator features for 'lite' if no other aggregator takes precedence
-stageAggregator('lite', true, 1000)
+stageAggregator('lite')
 

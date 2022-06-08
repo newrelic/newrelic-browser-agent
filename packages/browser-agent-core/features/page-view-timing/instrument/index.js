@@ -19,24 +19,27 @@ export class Instrument extends FeatureBase {
     this.clsPerformanceObserver
     this.fiRecorded = false
 
+
+    console.log("initialize page-view-timing instrument!", agentIdentifier)
+
     if (this.isEnabled()) {
       if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {
         // passing in an unknown entry type to observer could throw an exception
-        this.performanceObserver = new PerformanceObserver(this.perfObserver)
+        this.performanceObserver = new PerformanceObserver((...args) => this.perfObserver(...args))
         try {
           this.performanceObserver.observe({ entryTypes: ['paint'] })
         } catch (e) {
           // do nothing
         }
 
-        this.lcpPerformanceObserver = new PerformanceObserver(this.lcpObserver)
+        this.lcpPerformanceObserver = new PerformanceObserver((...args) => this.lcpObserver(...args))
         try {
           this.lcpPerformanceObserver.observe({ entryTypes: ['largest-contentful-paint'] })
         } catch (e) {
           // do nothing
         }
 
-        this.clsPerformanceObserver = new PerformanceObserver(this.clsObserver)
+        this.clsPerformanceObserver = new PerformanceObserver((...args) => this.clsObserver(...args))
         try {
           this.clsPerformanceObserver.observe({ type: 'layout-shift', buffered: true })
         } catch (e) {
@@ -91,7 +94,7 @@ export class Instrument extends FeatureBase {
   }
 
   clsObserver(list) {
-    list.getEntries().forEach(function (entry) {
+    list.getEntries().forEach((entry) => {
       if (!entry.hadRecentInput) {
         handle('cls', [entry], undefined, undefined, this.ee)
       }

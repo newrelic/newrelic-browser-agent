@@ -25,4 +25,4 @@ new InstrumentSessionTrace(agentIdentifier) // session traces
 new InstrumentPageAction(agentIdentifier) // ins (apis)
 
 // imports the aggregator for 'lite' if no other aggregator takes precedence
-stageAggregator('pro', true, 1000)
+stageAggregator('pro')

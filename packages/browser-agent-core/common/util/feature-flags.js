@@ -10,7 +10,7 @@ import { drain } from '../drain/drain'
 // var ee = require('ee')
 // var drain = require('./drain')
 
-export function activateFeatures (flags) {
+export function activateFeatures (flags, agentIdentifier) {
   if (!(flags && typeof flags === 'object')) return
   mapOwn(flags, function (flag, val) {
     if (!val || activatedFeatures[flag]) return
@@ -19,7 +19,7 @@ export function activateFeatures (flags) {
   })
 
   // if this is going to be used, should use the instanced EE?
-  drain('feature')
+  drain(ee.get(agentIdentifier), 'feature')
 }
 
 export const activatedFeatures = {}

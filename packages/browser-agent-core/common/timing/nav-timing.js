@@ -25,12 +25,7 @@ var RESPONSE = 'response'
 var LOAD_EVENT = 'loadEvent'
 var DOM_CONTENT_LOAD_EVENT = 'domContentLoadedEvent'
 
-var navTimingValues = []
-// module.exports = {
-//   addPT: addPT,
-//   addPN: addPN,
-//   nt: navTimingValues
-// }
+export var navTimingValues = []
 
 export function addPT (pt, v) {
   var offset = pt['navigation' + START]

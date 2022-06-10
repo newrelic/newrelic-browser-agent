@@ -38,9 +38,10 @@ class AssetTransform {
 }
 
 class AgentInjectorTransform extends AssetTransform {
-  constructor(buildDir, assetServer, router) {
+  constructor(buildDir, modularBuildDir, assetServer, router) {
     super()
     this.buildDir = buildDir
+    this.modularBuildDir = modularBuildDir
     this.defaultAgentConfig = {}
     this.assetServer = assetServer
     this.router = router
@@ -153,9 +154,9 @@ class AgentInjectorTransform extends AssetTransform {
     `
   }
 
-  getLoaderContent(loaderName, callback) {
+  getLoaderContent(loaderName, dir, callback) {
     let loaderFilename = `nr-loader-${loaderName}.min.js`
-    let loaderPath = path.join(this.buildDir, loaderFilename)
+    let loaderPath = path.join(dir, loaderFilename)
     fs.readFile(loaderPath, callback)
   }
 
@@ -190,47 +191,52 @@ class AgentInjectorTransform extends AssetTransform {
       const packagePaths = htmlPackageTags.map(x => x.replace(/[{}]/g, ''))
       const packageFiles = await this.getBuiltPackages(packagePaths)
 
-      this.getLoaderContent(loaderName, (err, loaderContent) => {
-        if (err) return callback(err)
-
-        let configContent = ''
-        try {
-          configContent = this.generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig)
-        } catch (e) {
-          return callback(e)
-        }
-
-        let initContent = ''
-        if (params.init) {
+      this.getLoaderContent(
+        loaderName, 
+        rawContent.includes("{modular-loader}") ? this.modularBuildDir : this.buildDir, 
+        (err, loaderContent) => {
+          if (err) return callback(err)
+      
+          let configContent = ''
           try {
-            initContent = this.generateInit(params.init)
+            configContent = this.generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig)
           } catch (e) {
             return callback(e)
           }
+      
+          let initContent = ''
+          if (params.init) {
+            try {
+              initContent = this.generateInit(params.init)
+            } catch (e) {
+              return callback(e)
+            }
+          }
+      
+          let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;'
+      
+          let rspData = rawContent
+            .split('{loader}').join(tagify(disableSsl + loaderContent))
+            .replace('{modular-loader}', tagify(disableSsl + loaderContent))
+            .replace('{config}', tagify(disableSsl + configContent))
+            .replace('{init}', tagify(disableSsl + initContent))
+            .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
+      
+          if (!!htmlPackageTags.length && !!packageFiles.length) {
+            packageFiles.forEach(pkg => {
+              const tag = htmlPackageTags.find(x => x.includes(pkg.name))
+              rspData = rspData
+                .replace(tag, tagify(disableSsl + UglifyJS.minify(pkg.data).code))
+            })
+          }
+      
+          callback(null, rspData)
+      
+          function tagify(s) {
+            return `<script type="text/javascript">${s}</script>`
+          }
         }
-
-        let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;'
-
-        let rspData = rawContent
-          .split('{loader}').join(tagify(disableSsl + loaderContent))
-          .replace('{config}', tagify(disableSsl + configContent))
-          .replace('{init}', tagify(disableSsl + initContent))
-          .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
-
-        if (!!htmlPackageTags.length && !!packageFiles.length) {
-          packageFiles.forEach(pkg => {
-            const tag = htmlPackageTags.find(x => x.includes(pkg.name))
-            rspData = rspData
-              .replace(tag, tagify(disableSsl + UglifyJS.minify(pkg.data).code))
-          })
-        }
-
-        callback(null, rspData)
-
-        function tagify(s) {
-          return `<script type="text/javascript">${s}</script>`
-        }
-      })
+      )
     })
   }
 }
@@ -456,11 +462,12 @@ class AssetServer extends BaseServer {
     this.defaultLoader = testConfig.loader
     this.debugShim = testConfig.debugShim
     this.buildDir = path.resolve(__dirname, '../../../build')
+    this.modularBuildDir = path.resolve(__dirname, '../../../cdn/build')
     this.assetsDir = path.resolve(__dirname, '../../..')
     this.unitTestDir = path.resolve(__dirname, '../../../tests/browser')
     this.addHandler(this.serviceRequest.bind(this))
     this.router = new Router(this, testConfig, output)
-    this.agentTransform = new AgentInjectorTransform(this.buildDir, this, this.router)
+    this.agentTransform = new AgentInjectorTransform(this.buildDir, this.modularBuildDir, this, this.router)
     this.agentTransform.defaultAgentConfig = defaultAgentConfig
     this.browserTests = browserTests
     this.renderIndex = renderIndex

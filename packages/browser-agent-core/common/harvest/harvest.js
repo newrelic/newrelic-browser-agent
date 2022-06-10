@@ -20,9 +20,6 @@ import { SharedContext } from '../context/shared-context'
 import pkg from '../../package.json'
 
 const version = pkg.version
-// var version = '<VERSION>'
-// var jsonp = 'NREUM.setToken'
-// var _events = {}
 var haveSendBeacon = !!navigator.sendBeacon
 
 // requiring ie version updates the IE version on the loader object
@@ -203,20 +200,6 @@ export class Harvest extends SharedContext {
 
 function or(a, b) { return a || b }
 
-// function createPayload(type, options) {
-//   var makeBody = createAccumulator()
-//   var makeQueryString = createAccumulator()
-//   var listeners = (_events[type] && _events[type] || [])
-
-//   for (var i = 0; i < listeners.length; i++) {
-//     var singlePayload = listeners[i](options)
-//     if (!singlePayload) continue
-//     if (singlePayload.body) mapOwn(singlePayload.body, makeBody)
-//     if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
-//   }
-//   return { body: makeBody(), qs: makeQueryString() }
-// }
-
 export function getSubmitMethod(endpoint, opts) {
   opts = opts || {}
   var method
@@ -259,17 +242,6 @@ function transactionNameParam(info) {
   if (info.transactionName) return encodeParam('to', info.transactionName)
   return encodeParam('t', info.tNamePlain || 'Unnamed Transaction')
 }
-
-// export function on(type, listener) {
-//   var listeners = (_events[type] || (_events[type] = []))
-//   listeners.push(listener)
-// }
-
-// export function resetListeners() {
-//   mapOwn(_events, function (key) {
-//     _events[key] = []
-//   })
-// }
 
 // returns a function that can be called to accumulate values to a single object
 // when the function is called without parameters, then the accumulator is returned

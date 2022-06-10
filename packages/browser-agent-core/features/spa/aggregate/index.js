@@ -731,7 +731,7 @@ export class Aggregate extends FeatureBase {
   }
 
   isEnabled() {
-    var configuration = getConfigurationValue('spa')
+    var configuration = getConfigurationValue(this.agentIdentifier, 'spa')
     if (configuration && configuration.enabled === false) {
       return false
     }

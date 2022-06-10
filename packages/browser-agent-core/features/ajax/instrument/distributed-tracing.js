@@ -103,10 +103,10 @@ export class DT {
   isAllowedOrigin(parsedOrigin) {
     var allowed = false
     var dtConfig = {}
-    var dt = getConfigurationValue('distributed_tracing')
+    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
 
     if (dt) {
-      dtConfig = getConfiguration().distributed_tracing
+      dtConfig = getConfiguration(this.agentIdentifier).distributed_tracing
     }
 
     if (parsedOrigin.sameOrigin) {

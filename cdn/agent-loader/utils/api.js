@@ -72,7 +72,7 @@ export function setAPI() {
 
   function apiCall(prefix, name, notSpa, bufferGroup) {
     return function () {
-      recordSupportability('API/' + name + '/called')
+      handle('record-supportability', ['API/' + name + '/called'])
       handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup, instanceEE)
       return notSpa ? void 0 : this
     }
@@ -80,7 +80,7 @@ export function setAPI() {
 
   newrelic.noticeError = function (err, customAttributes) {
     if (typeof err === 'string') err = new Error(err)
-    recordSupportability('API/noticeError/called')
+    handle('record-supportability', ['API/noticeError/called'])
     handle('err', [err, now(), false, customAttributes], undefined, undefined, instanceEE)
   }
 

@@ -31,7 +31,8 @@ export class Instrument extends FeatureBase {
     this.dt = new DT(this.agentIdentifier)
 
     this.handler = (type, args, ctx, group) => handle(type, args, ctx, group, this.ee)
-    this.wrappedFetch = getWrappedFetch(this.ee, this.handler)
+    this.wrappedFetch = getWrappedFetch(this.ee)
+    subscribeToEvents(this.agentIdentifier, this.ee, this.handler, this.dt)
   }
 }
 
@@ -39,11 +40,10 @@ export class Instrument extends FeatureBase {
 
 export function getWrappedFetch(ee, handler) {
   var wrappedFetch = wrapFetch(ee)
-  subscribeToEvents(ee, handler)
   return wrappedFetch
 }
 
-function subscribeToEvents(ee, handler) {
+function subscribeToEvents(agentIdentifier, ee, handler, dt) {
   ee.on('new-xhr', onNewXhr)
   ee.on('open-xhr-start', onOpenXhrStart)
   ee.on('open-xhr-end', onOpenXhrEnd)
@@ -104,12 +104,12 @@ function subscribeToEvents(ee, handler) {
   }
 
   function onOpenXhrEnd(args, xhr) {
-    var loader_config = getLoaderConfig()
+    var loader_config = getLoaderConfig(agentIdentifier)
     if ('xpid' in loader_config && this.sameOrigin) {
       xhr.setRequestHeader('X-NewRelic-ID', loader_config.xpid)
     }
 
-    var payload = this.dt.generateTracePayload(this.parsedOrigin)
+    var payload = dt.generateTracePayload(this.parsedOrigin)
     if (payload) {
       var added = false
       if (payload.newrelicHeader) {
@@ -231,7 +231,7 @@ function subscribeToEvents(ee, handler) {
       this.sameOrigin = this.parsedOrigin.sameOrigin
     }
 
-    var payload = this.dt.generateTracePayload(this.parsedOrigin)
+    var payload = dt.generateTracePayload(this.parsedOrigin)
     if (!payload || (!payload.newrelicHeader && !payload.traceContextParentHeader)) {
       return
     }

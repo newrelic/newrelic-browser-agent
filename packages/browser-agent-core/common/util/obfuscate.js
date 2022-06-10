@@ -1,6 +1,5 @@
 import { getConfigurationValue } from '../config/config'
 import { SharedContext } from '../context/shared-context'
-import { recordSupportability } from '../metrics/metrics'
 import { protocol } from '../url/protocol'
 
 var fileProtocolRule = {
@@ -13,27 +12,10 @@ let recordedSupportability = false
 export class Obfuscator extends SharedContext {
   constructor(parent) {
     super(parent) // gets any allowed properties from the parent and stores them in `sharedContext`
-    if (!recordedSupportability) {
-      if (this.shouldObfuscate()) recordSupportability('Generic/Obfuscate/Detected')
-      if (this.shouldObfuscate() && !this.validateRules(this.getRules())) recordSupportability('Generic/Obfuscate/Invalid')
-      recordedSupportability = true
-    }
   }
 
   shouldObfuscate() {
-    return this.getRules().length > 0
-  }
-
-  getRules() {
-    var rules = []
-    var configRules = getConfigurationValue(this.sharedContext.agentIdentifier, 'obfuscate') || []
-
-    rules = rules.concat(configRules)
-
-    if (protocol.isFileProtocol()) rules.push(fileProtocolRule)
-    // could add additional runtime/environment-specific rules here
-
-    return rules
+    return getRules(this.sharedContext.agentIdentifier).length > 0
   }
 
   // takes array of rule objects, logs warning and returns false if any portion of rule is invalid
@@ -66,7 +48,7 @@ export class Obfuscator extends SharedContext {
     // if string is empty string, null or not a string, return unmodified
     if (!string || typeof string !== 'string') return string
 
-    var rules = this.getRules(agentIdentifier)
+    var rules = getRules(agentIdentifier)
     var obfuscated = string
 
     // apply every rule to URL string
@@ -77,4 +59,16 @@ export class Obfuscator extends SharedContext {
     }
     return obfuscated
   }
+}
+
+export function getRules(agentIdentifier) {
+  var rules = []
+  var configRules = getConfigurationValue(agentIdentifier, 'obfuscate') || []
+
+  rules = rules.concat(configRules)
+
+  if (protocol.isFileProtocol()) rules.push(fileProtocolRule)
+  // could add additional runtime/environment-specific rules here
+
+  return rules
 }

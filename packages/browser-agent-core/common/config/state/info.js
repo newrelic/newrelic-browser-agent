@@ -26,13 +26,13 @@ const model = {
 const _cache = {}
 
 export function getInfo(id) {
-  if (!id) throw new Error('All config objects require an agent identifier!')
+  if (!id) throw new Error('All info objects require an agent identifier!')
   if (!_cache[id]) throw new Error(`Info for ${id} was never set`)
   return _cache[id]
 }
 
 export function setInfo(id, obj) {
-  if (!id) throw new Error('All config objects require an agent identifier!')
+  if (!id) throw new Error('All info objects require an agent identifier!')
   _cache[id] = new Configurable(obj, model)
   gosNREUMInitializedAgents(id, _cache[id], 'info')
 }

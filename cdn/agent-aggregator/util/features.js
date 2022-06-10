@@ -6,10 +6,11 @@ export const modules = {
   ajax: 'ajax',
   pageAction: 'page-action',
   sessionTrace: 'session-trace',
-  spa: 'spa'
+  spa: 'spa',
+  metrics: 'metrics'
 }
 
-const lite = [modules.pageViewEvent, modules.pageViewTiming]
+const lite = [modules.pageViewEvent, modules.pageViewTiming, modules.metrics]
 const pro = [...lite, modules.jsErrors, modules.ajax, modules.pageAction, modules.sessionTrace]
 const spa = [...pro, modules.spa]
 

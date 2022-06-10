@@ -3,27 +3,22 @@ import { drain } from '@newrelic/browser-agent-core/common/drain/drain'
 import { features } from './util/features'
 import { activateFeatures, activatedFeatures } from '@newrelic/browser-agent-core/common/util/feature-flags'
 import { addToNREUM } from '@newrelic/browser-agent-core/common/window/nreum'
-import { recordFrameworks } from '@newrelic/browser-agent-core/common/metrics/framework-detection'
 import agentIdentifier from '../shared/agentIdentifier'
 import { Aggregator } from '@newrelic/browser-agent-core/common/aggregate/aggregator'
+import { initializeAPI } from './util/api'
 
 export function aggregator (build) {
     console.log("-- loaded main aggregator module -- ", build)
     const autorun = typeof (getRuntime(agentIdentifier).autorun) !== 'undefined' ? getRuntime(agentIdentifier).autorun : true
-    // this determines what features to build into the aggregator
-    // this could <possibly> be optimized to run on one file via env var
-    // running out of time so keeping in 3 files for now
-    // const build = 'lite'
+
     const sharedAggregator = new Aggregator({ agentIdentifier })
+    initializeAPI(agentIdentifier)
     
     // Features are activated using the legacy setToken function name via JSONP
     addToNREUM('setToken', (flags) => activateFeatures(flags, agentIdentifier))
     
     // import relevant feature aggregators
     if (autorun) initializeFeatures()
-    
-    // collect general supportability metrics
-    captureSupportabilityMetrics()
     
     async function initializeFeatures() {
       // load all the features associated with this build type
@@ -41,11 +36,6 @@ export function aggregator (build) {
     function drainAll() {
       drain(agentIdentifier, 'api')
       drain(agentIdentifier, 'feature')
-    }
-    
-    function captureSupportabilityMetrics() {
-      recordFrameworks()
-      // others could go here
     }
     
 }

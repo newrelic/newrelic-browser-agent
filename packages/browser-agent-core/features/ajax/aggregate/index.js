@@ -9,7 +9,6 @@ import { handle } from '../../../common/event-emitter/handle'
 import { getConfigurationValue, getInfo } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { subscribeToUnload } from '../../../common/unload/unload'
-import { recordSupportability } from '../../../common/metrics/metrics'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { FeatureBase } from '../../../common/util/feature-base'
 
@@ -94,9 +93,9 @@ export class Aggregate extends FeatureBase {
 
     if (!shouldCollectEvent(params)) {
       if (params.hostname === getInfo(this.agentIdentifier).errorBeacon) {
-        recordSupportability('Ajax/Events/Excluded/Agent')
+        handle('record-supportability', ['Ajax/Events/Excluded/Agent'])
       } else {
-        recordSupportability('Ajax/Events/Excluded/App')
+        handle('record-supportability', ['Ajax/Events/Excluded/App'])
       }
       return
     }

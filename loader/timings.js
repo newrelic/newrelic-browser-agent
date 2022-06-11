@@ -12,11 +12,16 @@ if ('init' in NREUM && 'page_view_timing' in NREUM.init &&
 
 var handle = require('handle')
 var loader = require('loader')
-var subscribeToVisibilityChange = require('visibility')
+var visibility = require('visibility')
 var eventListenerOpts = require('event-listener-opts')
 
 var origEvent = NREUM.o.EV
-var pageHiddenTime
+var pageHiddenTime = visibility.initializeHiddenTime();
+
+/* TODO: extend LCP's short circuit logic to FCP & CLS too, use this as refactor
+function pageWasHiddenBefore(perfEntryStartTime) {
+    return pageHiddenTime < perfEntryStartTime ? true : false;
+} */
 
 // paint metrics
 function perfObserver(list, observer) {
@@ -36,7 +41,8 @@ function lcpObserver(list, observer) {
   if (entries.length > 0) {
     var entry = entries[entries.length - 1]
 
-    if (pageHiddenTime && pageHiddenTime < entry.startTime) return
+    // metrics become inflated if the page was ever hidden, so they aren't sent
+    if (pageHiddenTime < entry.startTime) return;
 
     var payload = [entry]
 
@@ -124,10 +130,11 @@ function captureInteraction(evt) {
 }
 
 // page visibility events
-subscribeToVisibilityChange(captureVisibilityChange)
+visibility.subscribeToVisibilityChange(captureVisibilityChange)
 
-function captureVisibilityChange(state) {
-  if (state === 'hidden') {
+function captureVisibilityChange(newState) {
+  if (newState === 'hidden') {
+    // time is only recorded to be used for short-circuit logic in the observer callbacks
     pageHiddenTime = loader.now()
     handle('pageHide', [pageHiddenTime])
   }

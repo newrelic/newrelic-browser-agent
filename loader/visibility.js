@@ -5,7 +5,10 @@
 
 var eventListenerOpts = require('event-listener-opts')
 
-module.exports = subscribeToVisibilityChange
+module.exports = {
+  subscribeToVisibilityChange: subscribeToVisibilityChange,
+  initializeHiddenTime: initHidTime,
+};
 
 var hidden, eventName, state
 
@@ -36,4 +39,8 @@ function subscribeToVisibilityChange(cb) {
       cb('visible')
     }
   }
+}
+
+function initHidTime() {
+    return document.visibilityState === 'hidden' ? -1 : Infinity;
 }

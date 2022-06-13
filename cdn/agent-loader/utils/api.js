@@ -3,18 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import slice from 'lodash._slice'
-import { gosNREUM } from '../../../modules/common/window/nreum'
-// import { global as handle } from '../../../modules/common/event-emitter/handle'
-import { handle } from '../../../modules/common/event-emitter/handle'
-import { mapOwn } from '../../../modules/common/util/map-own'
-// import { global as globalEE } from '../../../modules/common/event-emitter/contextual-ee'
-import { ee } from '../../../modules/common/event-emitter/contextual-ee'
-import { recordSupportability } from '../../../modules/common/metrics/metrics'
-import { now } from '../../../modules/common/timing/now'
+import { gosNREUM } from '@newrelic/browser-agent-core/common/window/nreum'
+import { handle } from '@newrelic/browser-agent-core/common/event-emitter/handle'
+import { mapOwn } from '@newrelic/browser-agent-core/common/util/map-own'
+import { ee } from '@newrelic/browser-agent-core/common/event-emitter/contextual-ee'
+import { now } from '@newrelic/browser-agent-core/common/timing/now'
+import agentIdentifier from '../../shared/agentIdentifier'
 
 export function setAPI() {
   var nr = gosNREUM()
-  var tracerEE = ee.get('tracer')
+  var instanceEE = ee.get(agentIdentifier)
+  var tracerEE = instanceEE.get('tracer')
 
   var asyncApiFns = [
     'setPageViewName',
@@ -48,7 +47,7 @@ export function setAPI() {
       var contextStore = {}
       var ixn = this
       var hasCb = typeof cb === 'function'
-      handle(spaPrefix + 'tracer', [now(), name, contextStore], ixn)
+      handle(spaPrefix + 'tracer', [now(), name, contextStore], ixn, undefined, instanceEE)
       return function () {
         tracerEE.emit((hasCb ? '' : 'no-') + 'fn-start', [now(), ixn, hasCb], contextStore)
         if (hasCb) {
@@ -72,15 +71,20 @@ export function setAPI() {
 
   function apiCall(prefix, name, notSpa, bufferGroup) {
     return function () {
-      recordSupportability('API/' + name + '/called')
-      handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup)
+      handle('record-supportability', ['API/' + name + '/called'])
+      handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup, instanceEE)
       return notSpa ? void 0 : this
     }
   }
 
   newrelic.noticeError = function (err, customAttributes) {
     if (typeof err === 'string') err = new Error(err)
-    recordSupportability('API/noticeError/called')
-    handle('err', [err, now(), false, customAttributes])
+    handle('record-supportability', ['API/noticeError/called'])
+    handle('err', [err, now(), false, customAttributes], undefined, undefined, instanceEE)
+  }
+
+  newrelic.BrowserAgentInstance = async function (){
+    const { BrowserAgent } = await import('@newrelic/browser-agent')
+    return new BrowserAgent()
   }
 }

@@ -45,13 +45,8 @@ function ee (old, debugId) {
     abort: abortIfNotLoaded,
     aborted: false,
     isBuffering: isBuffering,
-    debugId
-  }
-
-  // buffer is associated with a base emitter, since there are two
-  // (global and scoped to the current bundle), it is now part of the emitter
-  if (!old) {
-    emitter.backlog = {}
+    debugId,
+    backlog: old && old.backlog ? old.backlog : {}
   }
 
   return emitter
@@ -67,11 +62,12 @@ function ee (old, debugId) {
   }
 
   function emit (type, args, contextOrStore, force, bubble) {
+
     if (bubble !== false) bubble = true
     if (baseEE.aborted && !force) { return }
     if (old && bubble) old.emit(type, args, contextOrStore)
     // log("continue...")
-
+    
     var ctx = context(contextOrStore)
     var handlersArray = listeners(type)
     var len = handlersArray.length
@@ -90,7 +86,7 @@ function ee (old, debugId) {
 
     // Apply each handler function in the order they were added
     // to the context with the arguments
-
+    
     for (var i = 0; i < len; i++) handlersArray[i].apply(ctx, args)
 
     // log(bufferGroupMap[type])
@@ -151,9 +147,6 @@ function ee (old, debugId) {
   // buffer is associated with a base emitter, since there are two
   // (global and scoped to the current bundle), it is now part of the emitter
   function getBuffer() {
-    if (old) {
-      return old.backlog
-    }
     return emitter.backlog
   }
 }

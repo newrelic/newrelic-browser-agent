@@ -1,5 +1,3 @@
-import { recordSupportability } from './metrics'
-
 var FRAMEWORKS = {
   REACT: 'React',
   ANGULAR: 'Angular',
@@ -68,9 +66,3 @@ function detectAngular() {
   }
 }
 
-export function recordFrameworks() {
-  var frameworks = getFrameworks()
-  for (var i = 0; i < frameworks.length; i++) {
-    recordSupportability('Framework/' + frameworks[i] + '/Detected')
-  }
-}

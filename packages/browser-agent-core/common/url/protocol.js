@@ -3,16 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { getWindow } from '../window/win'
-import { recordSupportability } from '../metrics/metrics'
 
 export const protocol = {
   isFileProtocol: isFileProtocol,
   supportabilityMetricSent: false
-}
-
-if (isFileProtocol()) {
-  recordSupportability('Generic/FileProtocol/Detected')
-  protocol.supportabilityMetricSent = true
 }
 
 function isFileProtocol () {

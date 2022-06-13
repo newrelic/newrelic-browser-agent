@@ -3,43 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// cdn specific utility files
-import { setAPI } from './utils/api'
-// common modules
-import { gosCDN } from '../../modules/common/window/nreum'
-import { onWindowLoad } from '../../modules/common/window/load'
-import { setConfiguration, setInfo, setLoaderConfig } from '../../modules/common/config/config'
-// feature modules
-import { initialize as instrumentPageViewEvent } from '../../modules/features/page-view-event/instrument'
-import { initialize as instrumentPageViewTiming } from '../../modules/features/page-view-timing/instrument'
-import { initialize as instrumentErrors } from '../../modules/features/js-errors/instrument'
-import { initialize as instrumentXhr } from '../../modules/features/ajax/instrument'
-import { initialize as instrumentSessionTrace } from '../../modules/features/session-trace/instrument'
-import { initialize as instrumentPageAction } from '../../modules/features/page-action/instrument'
+/* cdn specific utility files */
+import { stageAggregator } from './utils/importAggregator'
+import agentIdentifier from '../shared/agentIdentifier'
 
-// set up the window.NREUM object that is specifically for the CDN build
-const nr = gosCDN()
-// add api calls to the NREUM object
-setAPI()
+/* feature modules */
+import { Instrument as InstrumentSpa } from '@newrelic/browser-agent-core/features/spa/instrument'
 
-// set configuration from global NREUM.init (When building CDN specifically)
-setInfo(nr.info)
-setConfiguration(nr.init)
-setLoaderConfig(nr.loader_config)
+/* 'spa' extends the instrumentation in lite and pro loaders, so load those features too */
+import './lite'
+import './pro'
+import { configure } from './utils/configure'
 
-// load auto-instrumentation here...
-instrumentPageViewEvent() // document load (page view event + metrics)
-instrumentPageViewTiming() // page view timings instrumentation (/loader/timings.js)
-instrumentErrors(true)
-instrumentXhr(true)
-instrumentSessionTrace() // session traces
-instrumentPageAction() // ins (apis)
+// set up the NREUM, api, and internal configs
+configure()
 
-// inject the aggregator
-onWindowLoad(importAggregator)
+/* instantiate auto-instrumentation specific to this loader... */
+new InstrumentSpa(agentIdentifier) // ins (apis)
 
-let loadFired = 0
-export async function importAggregator() {
-  if (loadFired++) return
-  await import('../agent-aggregator/pro')
-}
+// imports the aggregator for 'lite' if no other aggregator takes precedence
+stageAggregator('spa')

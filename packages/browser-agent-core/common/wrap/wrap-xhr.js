@@ -27,18 +27,27 @@ export function wrapXhr (sharedEE) {
   var handlers = ['onload', 'onerror', 'onabort', 'onloadstart', 'onloadend', 'onprogress', 'ontimeout']
   var pendingXhrs = []
 
-  var XHR = window.XMLHttpRequest = function (opts) {
+  var activeListeners = window.XMLHttpRequest.listeners
+  
+  var XHR = window.XMLHttpRequest = newXHR
+  
+  function newXHR (opts) {
     var xhr = new OrigXHR(opts)
-    try {
-      ee.emit('new-xhr', [xhr], xhr)
-      xhr.addEventListener(READY_STATE_CHANGE, wrapXHR, eventListenerOpts(false))
-    } catch (e) {
+    this.listeners = activeListeners ? [...activeListeners, intercept] : [intercept]
+    function intercept (){
       try {
-        ee.emit('internal-error', [e])
-      } catch (err) {
-        // do nothing
+        ee.emit('new-xhr', [xhr], xhr)
+        xhr.addEventListener(READY_STATE_CHANGE, wrapXHR, eventListenerOpts(false))
+      } catch (e) {
+        console.error(e)
+        try {
+          ee.emit('internal-error', [e])
+        } catch (err) {
+          // do nothing
+        }
       }
     }
+    this.listeners.forEach(listener => listener())
     return xhr
   }
 

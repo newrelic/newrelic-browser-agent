@@ -17,6 +17,7 @@ function print(msg) {
 // Recurses into a folder
 function npm_install_recursive(folder) {
   if (folder.endsWith('newrelic-browser-agent/packages')) return
+  if (folder.endsWith('newrelic-browser-agent/cdn')) return
   const has_package_json = fs.existsSync(path.join(folder, 'package.json'))
   // If there is `package.json` in this folder then perform `npm install`.
   if (has_package_json && folder !== root) {

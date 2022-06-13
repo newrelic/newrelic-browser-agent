@@ -49,7 +49,7 @@ export function wrapFetch(sharedEE) {
     }
   })
 
-  return wrappedFetch
+  return ee
 }
 
 // this should probably go to the common module as a part of wrapping utility functions

@@ -1,0 +1,24 @@
+// cdn specific utility files
+import { setAPI } from './api'
+import agentIdentifier from '../../shared/agentIdentifier'
+// common modules
+import { gosCDN } from '@newrelic/browser-agent-core/common/window/nreum'
+import { setConfiguration, setInfo, setLoaderConfig, setRuntime } from '@newrelic/browser-agent-core/common/config/config'
+
+let configured = false
+export function configure() {
+    if (configured) return
+    // set up the window.NREUM object that is specifically for the CDN build
+    // do we still need this?
+    const nr = gosCDN()
+
+    setInfo(agentIdentifier, nr.info)
+    setConfiguration(agentIdentifier, nr.init)
+    setLoaderConfig(agentIdentifier, nr.loader_config)
+    setRuntime(agentIdentifier, {})
+
+    // add api calls to the NREUM object
+    setAPI()
+    configured = true
+}
+

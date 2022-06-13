@@ -1,9 +1,3 @@
-
-// export default {
-//   shouldCollectEvent: shouldCollectEvent,
-//   setDenyList: setDenyList
-// }
-
 var denyList = []
 
 export function shouldCollectEvent(params) {

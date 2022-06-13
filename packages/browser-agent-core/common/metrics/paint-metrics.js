@@ -5,11 +5,6 @@
 
 export var paintMetrics = {}
 
-// module.exports = {
-//   addMetric: addMetric,
-//   metrics: paintMetrics
-// }
-
 export function addMetric (name, value) {
   paintMetrics[name] = value
 }

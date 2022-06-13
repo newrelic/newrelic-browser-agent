@@ -16,9 +16,9 @@ module.exports = {
   },
   output: {
     filename: '[name].js',
-    path: path.resolve(__dirname, './build'),
+    path: path.resolve(__dirname, '../build'),
     // publicPath: 'https://js-agent.newrelic.com/', // <- we need this to be set when we publish to the CDN
-    publicPath: '/cdn/build/', // <-- we need one property to be set when testing locally
+    publicPath: '/build/', // <-- we need one property to be set when testing locally
     library: {
       name: 'NRBA',
       type: 'umd'

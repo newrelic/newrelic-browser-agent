@@ -1,5 +1,4 @@
 import { setRuntime, setConfiguration, getConfiguration, setInfo, getInfo, setLoaderConfig, getLoaderConfig } from '@newrelic/browser-agent-core/common/config/config'
-import { ieVersion } from '@newrelic/browser-agent-core/common/browser-version/ie-version'
 import { NrInfo, NrConfig, NrLoaderConfig, NrOptions } from './types'
 import { Api } from './utils/api/api'
 import { buildConfigs } from './utils/config/build-configs'
@@ -8,6 +7,7 @@ import { initializeFeatures } from './utils/features/initialize'
 import { gosNREUMInitializedAgents } from '@newrelic/browser-agent-core/common/window/nreum'
 import { generateRandomHexString } from '@newrelic/browser-agent-core/common/ids/unique-id'
 import { Aggregator } from '@newrelic/browser-agent-core/common/aggregate/aggregator'
+import { drain } from '@newrelic/browser-agent-core/common/drain/drain'
 
 
 export class BrowserAgent {
@@ -39,6 +39,7 @@ export class BrowserAgent {
 
     gosNREUMInitializedAgents(this._id, initializedFeatures, 'features')
 
+    drain(this._id)
     return true
 
   }

@@ -28,7 +28,8 @@ export class NrFeature {
     }
 }
 export interface AppFeatures {
-    'errors': NrFeature
+    'errors': NrFeature,
+    'metrics': NrFeature
 }
 
 export interface NrOptions extends NrInfo, NrConfig, NrLoaderConfig {}
@@ -83,6 +84,7 @@ export interface NrLoaderConfig extends NrShared {
 
 export enum NrFeatures {
     JSERRORS='js-errors',
+    METRICS='metrics'
     // AJAX='AJAX',
     // PAGE_VIEW_EVENT='PAGE_VIEW_EVENT',
     // PAGE_VIEW_TIMING='PAGE_VIEW_TIMING'

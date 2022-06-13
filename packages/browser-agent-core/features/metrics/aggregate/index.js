@@ -7,8 +7,8 @@ export class Aggregate extends FeatureBase {
     constructor(agentIdentifier, aggregator) {
         super(agentIdentifier, aggregator)
 
-        registerHandler('storeMetric', (...args) => this.storeMetric(...args), 'api', this.ee)
-        registerHandler('storeEventMetrics', (...args) => this.storeEventMetrics(...args), 'api', this.ee)
+        registerHandler('storeMetric', (...args) => this.storeMetric(...args), undefined, this.ee)
+        registerHandler('storeEventMetrics', (...args) => this.storeEventMetrics(...args), undefined, this.ee)
 
         var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'jserrors.harvestTimeSeconds') || 10
 

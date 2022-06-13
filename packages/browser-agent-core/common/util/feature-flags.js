@@ -17,9 +17,6 @@ export function activateFeatures (flags, agentIdentifier) {
     ee.emit('feat-' + flag, [])
     activatedFeatures[flag] = true
   })
-
-  // if this is going to be used, should use the instanced EE?
-  drain(ee.get(agentIdentifier), 'feature')
 }
 
 export const activatedFeatures = {}

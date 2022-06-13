@@ -4,6 +4,7 @@ import { FeatureBase } from '../../../common/util/feature-base'
 import { getFrameworks } from '../../../common/metrics/framework-detection'
 import { protocol } from '../../../common/url/protocol'
 import { getRules } from '../../../common/util/obfuscate'
+import { VERSION } from '../../../common/constants/environment-variables'
 
 var SUPPORTABILITY_METRIC = 'sm'
 var CUSTOM_METRIC = 'cm'
@@ -31,7 +32,7 @@ export class Instrument extends FeatureBase {
             { name: name },
             value
         ]
-        handle('storeMetric', opts, null, 'api', this.ee)
+        handle('storeMetric', opts, null, undefined, this.ee)
         return opts
     }
     /**
@@ -48,11 +49,14 @@ export class Instrument extends FeatureBase {
             metrics
         ]
 
-        handle('storeEventMetrics', opts, null, 'api')
+        handle('storeEventMetrics', opts, null, undefined, this.ee)
         return opts
     }
 
     singleChecks() {
+        // note the browser agent version
+        this.recordSupportability(`Generic/Version/${VERSION}`)
+
         // frameworks on page
         getFrameworks().forEach(framework => {
             this.recordSupportability('Framework/' + framework + '/Detected')

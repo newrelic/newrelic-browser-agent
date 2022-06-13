@@ -7,7 +7,6 @@ import { gosNREUM } from '@newrelic/browser-agent-core/common/window/nreum'
 import { handle } from '@newrelic/browser-agent-core/common/event-emitter/handle'
 import { mapOwn } from '@newrelic/browser-agent-core/common/util/map-own'
 import { ee } from '@newrelic/browser-agent-core/common/event-emitter/contextual-ee'
-import { recordSupportability } from '@newrelic/browser-agent-core/common/metrics/metrics'
 import { now } from '@newrelic/browser-agent-core/common/timing/now'
 import agentIdentifier from '../../shared/agentIdentifier'
 

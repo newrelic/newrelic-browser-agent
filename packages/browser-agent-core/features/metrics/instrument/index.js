@@ -55,7 +55,7 @@ export class Instrument extends FeatureBase {
 
     singleChecks() {
         // note the browser agent version
-        this.recordSupportability(`Generic/Version/${VERSION}`)
+        this.recordSupportability(`Generic/Version/${VERSION}/Detected`)
 
         // frameworks on page
         getFrameworks().forEach(framework => {

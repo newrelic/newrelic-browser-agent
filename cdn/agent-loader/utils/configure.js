@@ -8,8 +8,7 @@ import { setConfiguration, setInfo, setLoaderConfig, setRuntime } from '@newreli
 let configured = false
 export function configure() {
     if (configured) return
-    // set up the window.NREUM object that is specifically for the CDN build
-    // do we still need this?
+    
     const nr = gosCDN()
 
     setInfo(agentIdentifier, nr.info)

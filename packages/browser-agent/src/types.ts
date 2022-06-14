@@ -83,7 +83,7 @@ export interface NrLoaderConfig extends NrShared {
 }
 
 export enum NrFeatures {
-    JSERRORS='js-errors',
+    JSERRORS='jserrors',
     METRICS='metrics'
     // AJAX='AJAX',
     // PAGE_VIEW_EVENT='PAGE_VIEW_EVENT',

@@ -16,7 +16,7 @@ const model = {
   onerror: undefined,
   releaseIds: {},
   xhrWrappable: XHR && XHR_PROTO && XHR_PROTO['addEventListener'] && !/CriOS/.test(navigator.userAgent),
-  disabled: undefined,
+  disabled: false,
   ptid: undefined,
   userAgent
 }

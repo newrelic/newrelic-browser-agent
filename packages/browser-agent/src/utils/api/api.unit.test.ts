@@ -16,14 +16,14 @@ describe('API', () => {
     const { initializeFeatures } = await import('../features/initialize')
     const { Features } = await import('../features/features')
     const { Aggregator } = await import('@newrelic/browser-agent-core/common/aggregate/aggregator')
-    jest.mock('@newrelic/browser-agent-core/features/js-errors/aggregate', () => {
+    jest.mock('@newrelic/browser-agent-core/features/jserrors/aggregate', () => {
       return {
         Aggregate: jest.fn().mockImplementation(() => {
           return { storeError: jest.fn() }
         })
       }
     })
-    jest.mock('@newrelic/browser-agent-core/features/js-errors/instrument', () => {
+    jest.mock('@newrelic/browser-agent-core/features/jserrors/instrument', () => {
       return {
         Instrument: jest.fn().mockImplementation(() => {
           return { }

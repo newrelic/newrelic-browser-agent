@@ -15,6 +15,9 @@ testDriver.test('reporting errors from XHR callbacks', supported, function (t, b
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   })
@@ -28,8 +31,12 @@ testDriver.test('reporting errors from XHR callbacks', supported, function (t, b
     let xhrJSURL = router.assetURL('js/xhr-error.js').split('?')[0]
     let expectedErrors = [{
       message: 'xhr onload',
-      stack: [{f: 'goodxhr', u: xhrJSURL, l: 9}]
+      stack: [
+        {f: 'XMLHttpRequest.goodxhr', u: xhrJSURL, l: 9},
+        {f: 'XMLHttpRequest.c', u: "<inline>", l: 11},
+      ]
     }]
+    console.log("expectedErrors", expectedErrors)
 
     if (browser.match('ie@<10, safari@<7, firefox@<15')) {
       delete expectedErrors[0].stack[0].f

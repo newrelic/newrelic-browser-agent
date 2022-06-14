@@ -4,7 +4,7 @@ import { Configurable } from './configurable'
 
 const model = {
   privacy: { cookies_enabled: undefined },
-  ajax: { deny_list: undefined },
+  ajax: { deny_list: undefined, enabled: true },
   distributed_tracing: {
     enabled: undefined,
     exclude_newrelic_header: undefined,
@@ -12,9 +12,15 @@ const model = {
     cors_use_tracecontext_headers: undefined,
     allowed_origins: undefined
   },
-  page_view_timing: { enabled: undefined },
   ssl: undefined,
-  obfuscate: undefined
+  obfuscate: undefined,
+  jserrors: {enabled: true},
+  metrics: {enabled: true},
+  page_action: {enabled: true},
+  page_view_event: {enabled: true},
+  page_view_timing: {enabled: true},
+  session_trace: {enabled: true},
+  spa: {enabled: true}
 }
 
 const _cache = {}

@@ -29,10 +29,10 @@ export class Aggregate extends FeatureBase {
     this.errorOnPage = false
 
     // this will need to change to match whatever ee we use in the instrument
-    this.ee.on('interactionSaved', function (interaction) {
+    this.ee.on('interactionSaved',  (interaction) => {
       if (!this.errorCache[interaction.id]) return
 
-      this.errorCache[interaction.id].forEach(function (item) {
+      this.errorCache[interaction.id].forEach( (item) => {
         var customParams = {}
         var globalCustomParams = item[4]
         var localCustomParams = item[5]
@@ -64,10 +64,10 @@ export class Aggregate extends FeatureBase {
     })
 
     // this will need to change to match whatever ee we use in the instrument
-    this.ee.on('interactionDiscarded', function (interaction) {
+    this.ee.on('interactionDiscarded', (interaction) => {
       if (!this.errorCache || !this.errorCache[interaction.id]) return
 
-      this.errorCache[interaction.id].forEach(function (item) {
+      this.errorCache[interaction.id].forEach( (item) => {
         var customParams = {}
         var globalCustomParams = item[4]
         var localCustomParams = item[5]
@@ -126,7 +126,7 @@ export class Aggregate extends FeatureBase {
 
   onHarvestFinished(result) {
     if (result.retry && this.currentBody) {
-      mapOwn(this.currentBody, function (key, value) {
+      mapOwn(this.currentBody,  (key, value) => {
         for (var i = 0; i < value.length; i++) {
           var bucket = value[i]
           var name = this.getBucketName(bucket.params, bucket.custom)
@@ -198,6 +198,7 @@ export class Aggregate extends FeatureBase {
   }
 
   storeError(err, time, internal, customAttributes) {
+    console.log("notice error called... storeError!")
     // are we in an interaction
     time = time || now()
     if (!internal && getRuntime(this.agentIdentifier).onerror && getRuntime(this.agentIdentifier).onerror(err)) return

@@ -2,7 +2,7 @@
 export const modules = {
   pageViewEvent: 'page-view-event',
   pageViewTiming: 'page-view-timing',
-  jsErrors: 'js-errors',
+  jsErrors: 'jserrors',
   ajax: 'ajax',
   pageAction: 'page-action',
   sessionTrace: 'session-trace',

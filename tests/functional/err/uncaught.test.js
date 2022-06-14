@@ -13,6 +13,9 @@ testDriver.test('reporting uncaught errors', supported, function (t, browser, ro
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   })
@@ -51,7 +54,14 @@ function expectedErrorsForBrowser (router, browser) {
       message: 'original onerror',
       stack: [
         {f: 'originalOnerrorHandler', u: '<inline>', l: 17},
-        {f: 'r', u: '<inline>', l: 26}
+        {f: 'window.onerror', u: '<inline>', l: 28}
+      ]
+    },
+    {
+      message: 'original onerror',
+      stack: [
+        {f: 'originalOnerrorHandler', u: '<inline>', l: 17},
+        {f: 'window.onerror', u: '<inline>', l: 28}
       ]
     },
     {

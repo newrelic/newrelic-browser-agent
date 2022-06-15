@@ -5,19 +5,22 @@
 // cdn specific utility files
 import agentIdentifier from '../shared/agentIdentifier'
 import { stageAggregator } from './utils/importAggregator'
+import { configure } from './utils/configure'
 // feature modules
 import { Instrument as InstrumentPageViewEvent } from '@newrelic/browser-agent-core/features/page-view-event/instrument'
 import { Instrument as InstrumentPageViewTiming } from '@newrelic/browser-agent-core/features/page-view-timing/instrument'
 import { Instrument as InstrumentMetrics } from '@newrelic/browser-agent-core/features/metrics/instrument'
-import { configure } from './utils/configure'
+// common modules
+import { getEnabledFeatures } from '@newrelic/browser-agent-core/common/util/enabled-features'
 
 // set up the NREUM, api, and internal configs
 configure()
 
+const enabledFeatures = getEnabledFeatures(agentIdentifier)
 // instantiate auto-instrumentation specific to this loader...
-new InstrumentPageViewEvent(agentIdentifier) // document load (page view event + metrics)
-new InstrumentPageViewTiming(agentIdentifier) // page view timings instrumentation (/loader/timings.js)
-new InstrumentMetrics(agentIdentifier) // supportability & custom metrics
+if (enabledFeatures['page-view-event']) new InstrumentPageViewEvent(agentIdentifier) // document load (page view event + metrics)
+if (enabledFeatures['page-view-timing']) new InstrumentPageViewTiming(agentIdentifier) // page view timings instrumentation (/loader/timings.js)
+if (enabledFeatures.metrics) new InstrumentMetrics(agentIdentifier) // supportability & custom metrics
 
 // lazy-loads the aggregator features for 'lite' if no other aggregator takes precedence
 stageAggregator('lite')

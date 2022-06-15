@@ -6,6 +6,7 @@ import { addToNREUM } from '@newrelic/browser-agent-core/common/window/nreum'
 import agentIdentifier from '../shared/agentIdentifier'
 import { Aggregator } from '@newrelic/browser-agent-core/common/aggregate/aggregator'
 import { initializeAPI } from './util/api'
+import { getEnabledFeatures } from '@newrelic/browser-agent-core/common/util/enabled-features'
 
 export function aggregator (build) {
     console.log("-- loaded main aggregator module -- ", build)
@@ -21,11 +22,12 @@ export function aggregator (build) {
     if (autorun) initializeFeatures()
     
     async function initializeFeatures() {
+      const enabledFeatures = getEnabledFeatures(agentIdentifier)
       // load all the features associated with this build type
       await Promise.all(features[build].map(async feature => {
         const { Aggregate } = await import(`@newrelic/browser-agent-core/features/${feature}/aggregate`) // AJAX -- load a small bundle specific to that feature agg
         console.log("initialize aggregator for", feature, agentIdentifier, sharedAggregator)
-        new Aggregate(agentIdentifier, sharedAggregator)
+        if (enabledFeatures[feature.replace(/-/g, '_')]) new Aggregate(agentIdentifier, sharedAggregator)
       }))
       // once ALL the features all initialized, drain all the buffers
       drainAll()

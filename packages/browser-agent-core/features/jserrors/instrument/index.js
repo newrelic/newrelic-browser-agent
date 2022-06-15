@@ -61,6 +61,7 @@ export class Instrument extends FeatureBase {
 
     const prevOnError = window.onerror
     window.onerror = (...args) => {
+      console.log("wrappedOnError called...")
       if (prevOnError) prevOnError(...args)
       this.onerrorHandler(...args)
       return false

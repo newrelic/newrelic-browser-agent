@@ -23,10 +23,10 @@ describe('nr interface', () => {
         const features = new Features()
         features.errors.enabled = true
         features.errors.auto = true
-        const {Aggregate} = await import('@newrelic/browser-agent-core/features/js-errors/aggregate')
-        const {Instrument} = await import('@newrelic/browser-agent-core/features/js-errors/instrument')
-        jest.mock('@newrelic/browser-agent-core/features/js-errors/aggregate')
-        jest.mock('@newrelic/browser-agent-core/features/js-errors/instrument')
+        const {Aggregate} = await import('@newrelic/browser-agent-core/features/jserrors/aggregate')
+        const {Instrument} = await import('@newrelic/browser-agent-core/features/jserrors/instrument')
+        jest.mock('@newrelic/browser-agent-core/features/jserrors/aggregate')
+        jest.mock('@newrelic/browser-agent-core/features/jserrors/instrument')
         const aggregator = jest.mock('@newrelic/browser-agent-core/common/aggregate/aggregator', () => {})
         const initializedFeatures = await initializeFeatures('1234', new Api(id), aggregator, features)
         expect(Aggregate).toHaveBeenCalled()
@@ -39,10 +39,10 @@ describe('nr interface', () => {
         const features = new Features()
         features.errors.enabled = true
         features.errors.auto = false
-        const {Aggregate} = await import('@newrelic/browser-agent-core/features/js-errors/aggregate')
-        const {Instrument} = await import('@newrelic/browser-agent-core/features/js-errors/instrument')
-        jest.mock('@newrelic/browser-agent-core/features/js-errors/aggregate')
-        jest.mock('@newrelic/browser-agent-core/features/js-errors/instrument')
+        const {Aggregate} = await import('@newrelic/browser-agent-core/features/jserrors/aggregate')
+        const {Instrument} = await import('@newrelic/browser-agent-core/features/jserrors/instrument')
+        jest.mock('@newrelic/browser-agent-core/features/jserrors/aggregate')
+        jest.mock('@newrelic/browser-agent-core/features/jserrors/instrument')
         const aggregator = jest.mock('@newrelic/browser-agent-core/common/aggregate/aggregator', () => {})
         const initializedFeatures = await initializeFeatures('1234', new Api(id), aggregator, features)
         expect(Aggregate).toHaveBeenCalled()
@@ -55,10 +55,10 @@ describe('nr interface', () => {
         const features = new Features()
         features.errors.enabled = false
         features.errors.auto = false
-        const {Aggregate} = await import('@newrelic/browser-agent-core/features/js-errors/aggregate')
-        const {Instrument} = await import('@newrelic/browser-agent-core/features/js-errors/instrument')
-        jest.mock('@newrelic/browser-agent-core/features/js-errors/aggregate')
-        jest.mock('@newrelic/browser-agent-core/features/js-errors/instrument')
+        const {Aggregate} = await import('@newrelic/browser-agent-core/features/jserrors/aggregate')
+        const {Instrument} = await import('@newrelic/browser-agent-core/features/jserrors/instrument')
+        jest.mock('@newrelic/browser-agent-core/features/jserrors/aggregate')
+        jest.mock('@newrelic/browser-agent-core/features/jserrors/instrument')
         const aggregator = jest.mock('@newrelic/browser-agent-core/common/aggregate/aggregator', () => {})
         const initializedFeatures = await initializeFeatures('1234', new Api(id), aggregator, features)
         expect(Aggregate).not.toHaveBeenCalled()

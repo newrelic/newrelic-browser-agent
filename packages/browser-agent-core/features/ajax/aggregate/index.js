@@ -48,7 +48,7 @@ export class Aggregate extends FeatureBase {
         onFinished: (...args) => this.onEventsHarvestFinished(...args),
         getPayload: (...args) => this.prepareHarvest(...args)
       }, this)
-      this.scheduler.harvest.on('jserrors', function () {
+      this.scheduler.harvest.on('jserrors', () => {
         return { body: this.aggregator.take(['xhr']) }
       })
       this.scheduler.startTimer(this.harvestTimeSeconds)

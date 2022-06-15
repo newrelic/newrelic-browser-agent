@@ -8,21 +8,24 @@ import agentIdentifier from '../shared/agentIdentifier'
 import { stageAggregator } from './utils/importAggregator'
 import { configure } from './utils/configure'
 // feature modules
-import { Instrument as InstrumentErrors } from '@newrelic/browser-agent-core/features/js-errors/instrument'
+import { Instrument as InstrumentErrors } from '@newrelic/browser-agent-core/features/jserrors/instrument'
 import { Instrument as InstrumentXhr } from '@newrelic/browser-agent-core/features/ajax/instrument'
 import { Instrument as InstrumentSessionTrace } from '@newrelic/browser-agent-core/features/session-trace/instrument'
 import { Instrument as InstrumentPageAction } from '@newrelic/browser-agent-core/features/page-action/instrument'
+// common modules
+import { getEnabledFeatures } from '@newrelic/browser-agent-core/common/util/enabled-features'
 // 'pro' extends the instrumentation in lite loader, so load those features too
 import './lite'
 
 // set up the NREUM, api, and internal configs
 configure()
 
+const enabledFeatures = getEnabledFeatures(agentIdentifier)
 // instantiate auto-instrumentation specific to this loader...
-new InstrumentErrors(agentIdentifier) // errors
-new InstrumentXhr(agentIdentifier) // ajax
-new InstrumentSessionTrace(agentIdentifier) // session traces
-new InstrumentPageAction(agentIdentifier) // ins (apis)
+if (enabledFeatures.jserrors) new InstrumentErrors(agentIdentifier) // errors
+if (enabledFeatures.ajax) new InstrumentXhr(agentIdentifier) // ajax
+if (enabledFeatures['session-trace']) new InstrumentSessionTrace(agentIdentifier) // session traces
+if (enabledFeatures['page-action']) new InstrumentPageAction(agentIdentifier) // ins (apis)
 
 // imports the aggregator for 'lite' if no other aggregator takes precedence
 stageAggregator('pro')

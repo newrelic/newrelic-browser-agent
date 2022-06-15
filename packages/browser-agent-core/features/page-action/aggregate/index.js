@@ -29,7 +29,7 @@ export class Aggregate extends FeatureBase {
 
     register('api-setCustomAttribute', (...args) => this.setCustomAttribute(...args), 'api', this.ee)
 
-    this.ee.on('feat-ins', function () {
+    this.ee.on('feat-ins', () => {
       register('api-addPageAction', (...args) => this.addPageAction(...args), undefined, this.ee)
 
       var scheduler = new HarvestScheduler('ins', {onFinished: (...args) => this.onHarvestFinished(...args)}, this)

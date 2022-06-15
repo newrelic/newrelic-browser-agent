@@ -18,6 +18,9 @@ testDriver.test('reporting errors from event listener callbacks', supported, fun
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   })
@@ -28,20 +31,23 @@ testDriver.test('reporting errors from event listener callbacks', supported, fun
   Promise.all([rumPromise, loadPromise]).then(([response]) => {
     assertErrorAttributes(t, response.query)
     const actualErrors = getErrorsFromResponse(response, browser)
+    console.log("actualErrors", actualErrors)
     let eventListenersURL = router.assetURL('js/event-listener-error.js').split('?')[0]
     let expectedErrors = [
       {
         message: 'document addEventListener listener',
         stack: [
-          {f: 'handleEvent', u: eventListenersURL, l: 15},
-          {f: 't', u: '<inline>', l: 11}
+          {f: 'Object.handleEvent', u: eventListenersURL, l: 15},
+          {f: 'HTMLDocument.object', u: '<inline>', l: 12},
+          {f: 'HTMLDocument.c', u: '<inline>', l: 12}
         ]
       },
       {
         message: 'global addEventListener listener',
         stack: [
-          {f: 'handleEvent', u: eventListenersURL, l: 8},
-          {f: 't', u: '<inline>', l: 11}
+          {f: 'Object.handleEvent', u: eventListenersURL, l: 8},
+          {f: 'object', u: '<inline>', l: 12},
+          {f: 'c', u: '<inline>', l: 12}
         ]
       }
     ]

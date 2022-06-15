@@ -14,6 +14,9 @@ testDriver.test('reporting uncaught errors from external scripts', supported, fu
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   }))

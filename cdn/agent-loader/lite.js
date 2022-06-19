@@ -18,8 +18,8 @@ configure()
 
 const enabledFeatures = getEnabledFeatures(agentIdentifier)
 // instantiate auto-instrumentation specific to this loader...
-if (enabledFeatures['page-view-event']) new InstrumentPageViewEvent(agentIdentifier) // document load (page view event + metrics)
-if (enabledFeatures['page-view-timing']) new InstrumentPageViewTiming(agentIdentifier) // page view timings instrumentation (/loader/timings.js)
+if (enabledFeatures['page_view_event']) new InstrumentPageViewEvent(agentIdentifier) // document load (page view event + metrics)
+if (enabledFeatures['page_view_timing']) new InstrumentPageViewTiming(agentIdentifier) // page view timings instrumentation (/loader/timings.js)
 if (enabledFeatures.metrics) new InstrumentMetrics(agentIdentifier) // supportability & custom metrics
 
 // lazy-loads the aggregator features for 'lite' if no other aggregator takes precedence

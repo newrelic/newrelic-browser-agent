@@ -27,7 +27,7 @@ export class Aggregate extends FeatureBase {
     this.harvestTimeSeconds = 30
 
     try {
-      clsSupported = PerformanceObserver.supportedEntryTypes.includes('layout-shift') // eslint-disable-line no-undef
+      this.clsSupported = PerformanceObserver.supportedEntryTypes.includes('layout-shift')
     } catch (e) {
     // do nothing
     }
@@ -150,7 +150,7 @@ export class Aggregate extends FeatureBase {
       attrs: attrs
     })
 
-    handle('pvtAdded', [name, value, attrs])
+    handle('pvtAdded', [name, value, attrs], undefined, undefined, this.ee)
   }
 
   processTiming(name, value, attrs) {

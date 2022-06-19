@@ -17,6 +17,9 @@ testDriver.test('xhr instrumentation works with EventTarget.prototype.addEventLi
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   }))

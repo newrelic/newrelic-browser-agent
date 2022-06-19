@@ -13,23 +13,25 @@ import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-
 import { FeatureBase } from '../../../common/util/feature-base'
 
 export class Aggregate extends FeatureBase {
-  constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator)
+  constructor(agentIdentifier, aggregator, externalFeatures) {
+    super(agentIdentifier, aggregator, externalFeatures)
     this.ajaxEvents = []
     this.spaAjaxEvents = {}
     this.sentAjaxEvents = []
     this.scheduler
 
+    this.externalHarvestKeys = ['jserrors']
+
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'ajax.harvestTimeSeconds') || 10
     this.MAX_PAYLOAD_SIZE = getConfigurationValue(this.agentIdentifier, 'ajax.maxPayloadSize') || 1000000
 
-    this.ee.on('interactionSaved', function (interaction) {
+    this.ee.on('interactionSaved', (interaction) => {
       if (!this.spaAjaxEvents[interaction.id]) return
       // remove from the spaAjaxEvents buffer, and let spa harvest it
       delete this.spaAjaxEvents[interaction.id]
     })
 
-    this.ee.on('interactionDiscarded', function (interaction) {
+    this.ee.on('interactionDiscarded', (interaction) => {
       if (!this.spaAjaxEvents[interaction.id] || !this.allAjaxIsEnabled()) return
 
       this.spaAjaxEvents[interaction.id].forEach(function (item) {
@@ -48,17 +50,19 @@ export class Aggregate extends FeatureBase {
         onFinished: (...args) => this.onEventsHarvestFinished(...args),
         getPayload: (...args) => this.prepareHarvest(...args)
       }, this)
-      this.scheduler.harvest.on('jserrors', () => {
-        return { body: this.aggregator.take(['xhr']) }
+
+      this.externalFeatures.forEach(feat => {
+        this.externalHarvestKeys.forEach(key => {
+          feat.scheduler.harvest.on(key, () => {
+            return { body: this.aggregator.take(['xhr']) }
+          })
+        })
       })
       this.scheduler.startTimer(this.harvestTimeSeconds)
 
-      subscribeToUnload((...args) => this.finalHarvest(...args))
+      subscribeToUnload(() => this.scheduler.runHarvest({ unload: true }))
     }
   }
-
-  // export { shouldCollectEvent }
-  // export { setDenyList }
 
   getStoredEvents() {
     return {

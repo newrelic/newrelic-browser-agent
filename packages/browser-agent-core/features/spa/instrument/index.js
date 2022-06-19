@@ -77,7 +77,7 @@ export class Instrument extends FeatureBase {
         win[ADD_EVENT_LISTENER]('hashchange', (...args) => this.trackURLChange(...args), eventListenerOpts(true))
         win[ADD_EVENT_LISTENER]('load', (...args) => this.trackURLChange(...args), eventListenerOpts(true))
         win[ADD_EVENT_LISTENER]('popstate', () => {
-            this.trackURLChange(0, depth > 1)
+            this.trackURLChange(0, this.depth > 1)
         }, eventListenerOpts(true))
     }
 

@@ -2,20 +2,21 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
+/*eslint no-undef: "error"*/
 import { registerHandler as register } from '../../../common/event-emitter/register-handler'
 import { parseUrl } from '../../../common/url/parse-url'
 import { shouldCollectEvent } from '../../../common/deny-list/deny-list'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { Serializer } from './serializer'
 import { mapOwn } from '../../../common/util/map-own'
 import { navTimingValues as navTiming } from '../../../common/timing/nav-timing'
 import { generateUuid } from '../../../common/ids/unique-id'
 import { metrics as paintMetrics } from '../../../../../agent/paint-metrics'
 import { Interaction } from './Interaction'
-import { getConfigurationValue, getRuntime, originals } from '../../../common/config/config'
+import { getConfigurationValue, originals, getRuntime } from '../../../common/config/config'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { FeatureBase } from '../../../common/util/feature-base'
+import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
+import { Serializer } from './serializer'
+import { ee } from '../../../common/event-emitter/contextual-ee'
 
 var INTERACTION_EVENTS = [
   'click',
@@ -46,42 +47,41 @@ export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator)
 
-    this.serializer = new Serializer(this)
+    const state = {
+      initialPageURL: getRuntime(agentIdentifier).origin,
+      lastSeenUrl: getRuntime(agentIdentifier).origin,
+      lastSeenRouteName: null,
+      timerMap: {},
+      timerBudget: MAX_TIMER_BUDGET,
+      currentNode: null,
+      prevNode: null,
+      nodeOnLastHashUpdate: null,
+      initialPageLoad: null,
+      pageLoaded: false,
+      childTime: 0,
+      depth: 0,
+      harvestTimeSeconds: getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10,
+      interactionsToHarvest: [],
+      interactionsSent: []
+    }
+    const serializer = new Serializer(this)
 
-    this.initialPageURL = getRuntime(this.agentIdentifier).origin
-    this.lastSeenUrl = this.initialPageURL
-    this.lastSeenRouteName = null
+    const baseEE = ee.get(agentIdentifier) // <-- parent baseEE
+    const mutationEE = baseEE.get('mutation')
+    const promiseEE = baseEE.get('promise')
+    const historyEE = baseEE.get('history')
+    const eventsEE = baseEE.get('events') // ajax --> ee(123).emit() ee()
+    const timerEE = baseEE.get('timer')
+    const fetchEE = baseEE.get('fetch')
+    const jsonpEE = baseEE.get('jsonp')
+    const xhrEE = baseEE.get('xhr')
+    const tracerEE = baseEE.get('tracer')
 
-    this.timerMap = {}
-    this.timerBudget = MAX_TIMER_BUDGET
-    this.currentNode = null
-    this.prevNode = null
-    this.nodeOnLastHashUpdate = null
-    this.initialPageLoad = null
-    this.pageLoaded = false
-    this.childTime = 0
-    this.depth = 0
-
-    this.baseEE = this.ee
-    this.mutationEE = this.baseEE.get('mutation')
-    this.promiseEE = this.baseEE.get('promise')
-    this.historyEE = this.baseEE.get('history')
-    this.eventsEE = this.baseEE.get('events')
-    this.timerEE = this.baseEE.get('timer')
-    this.fetchEE = this.baseEE.get('fetch')
-    this.jsonpEE = this.baseEE.get('jsonp')
-    this.xhrEE = this.baseEE.get('xhr')
-    this.tracerEE = this.baseEE.get('tracer')
-
-    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'spa.harvestTimeSeconds') || 10
-    this.interactionsToHarvest = []
-    this.interactionsSent = []
-
-    this.scheduler = new HarvestScheduler('events', { 
-      onFinished: (...args) => this.onHarvestFinished(...args), 
-      retryDelay: this.harvestTimeSeconds 
-    }, this)
-    this.scheduler.harvest.on('events', (...args) => this.onHarvestStarted(...args))
+    const scheduler = new HarvestScheduler('events', {
+      onFinished: onHarvestFinished,
+      retryDelay: state.harvestTimeSeconds
+    }, { agentIdentifier })
+    scheduler.harvest.on('events', onHarvestStarted)
 
     // childTime is used when calculating exclusive time for a cb duration.
     //
@@ -115,34 +115,113 @@ export class Aggregate extends FeatureBase {
     //  | click ending:                   |   65  |    50    |        |           |           |
     // click fn-end                       |   70  |    0     |    0   |     70    |     20    |
 
-    this.baseEE.on('feat-spa', () => {
-      if (!this.isEnabled()) return
+    baseEE.on('feat-spa', function () {
+      if (!isEnabled()) return
 
-      this.initialPageLoad = new Interaction('initialPageLoad', 0, this.lastSeenUrl, this.lastSeenRouteName, (...args) => this.onInteractionFinished(...args), this)
-      this.initialPageLoad.save = true
-      this.currentNode = initialPageLoad.root // hint
+      state.initialPageLoad = new Interaction('initialPageLoad', 0, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
+      state.initialPageLoad.save = true
+      state.currentNode = state.initialPageLoad.root // hint
       // ensure that checkFinish calls are safe during initialPageLoad
-      this.initialPageLoad[REMAINING]++
+      state.initialPageLoad[REMAINING]++
 
-      register.on(this.baseEE, FN_START, (...args) => this.callbackStart(...args))
-      register.on(this.promiseEE, CB_START, (...args) => this.callbackStart(...args))
+      register(FN_START, callbackStart, undefined, baseEE)
+      register(CB_START, callbackStart, undefined, promiseEE)
 
       // register plugins
       var pluginApi = {
-        getCurrentNode: (...args) => this.getCurrentNode(...args),
-        setCurrentNode: (...args) => this.setCurrentNode(...args)
+        getCurrentNode: getCurrentNode,
+        setCurrentNode: setCurrentNode
       }
 
-      register('spa-register', (init) => {
+      register('spa-register', function (init) {
         if (typeof init === 'function') {
           init(pluginApi)
         }
-      }, undefined, this.baseEE)
+      })
 
+      function callbackStart() {
+        state.depth++
+        this.prevNode = state.currentNode
+        this.ct = state.childTime
+        state.childTime = 0
+        state.timerBudget = MAX_TIMER_BUDGET
+      }
 
-      register.on(this.baseEE, FN_END, (...args) => this.callbackEnd(...args))
-      register.on(this.promiseEE, 'cb-end', (...args) => this.callbackEnd(...args))
-      register.on(this.eventsEE, FN_START, (...args) => this.eventsEEStart(...args))
+      register(FN_END, callbackEnd, undefined, baseEE)
+      register('cb-end', callbackEnd, undefined, promiseEE)
+
+      function callbackEnd() {
+        state.depth--
+        var totalTime = this.jsTime || 0
+        var exclusiveTime = totalTime - state.childTime
+        state.childTime = this.ct + totalTime
+        if (state.currentNode) {
+          // transfer accumulated callback time to the active interaction node
+          // run even if jsTime is 0 to update jsEnd
+          state.currentNode.callback(exclusiveTime, this[FN_END])
+          if (this.isTraced) {
+            state.currentNode.attrs.tracedTime = exclusiveTime
+          }
+        }
+
+        this.jsTime = state.currentNode ? 0 : exclusiveTime
+        setCurrentNode(this.prevNode)
+        this.prevNode = null
+        state.timerBudget = MAX_TIMER_BUDGET
+      }
+
+      register(FN_START, function (args, eventSource) {
+        var ev = args[0]
+        var evName = ev.type
+        var eventNode = ev.__nrNode
+
+        if (!state.pageLoaded && evName === 'load' && eventSource === window) {
+          state.pageLoaded = true
+          // set to null so prevNode is set correctly
+          this.prevNode = state.currentNode = null
+          if (state.initialPageLoad) {
+            eventNode = state.initialPageLoad.root
+            state.initialPageLoad[REMAINING]--
+            originalSetTimeout(function () {
+              INTERACTION_EVENTS.push('popstate')
+            })
+          }
+        }
+
+        if (eventNode) {
+          // If we've already seen a previous handler for this specific event object,
+          // just restore that. We want multiple handlers for the same event to share
+          // a node.
+          setCurrentNode(eventNode)
+        } else if (evName === 'hashchange') {
+          setCurrentNode(state.nodeOnLastHashUpdate)
+          state.nodeOnLastHashUpdate = null
+        } else if (eventSource instanceof XMLHttpRequest) {
+          // If this event was emitted by an XHR, restore the node ID associated with
+          // that XHR.
+          setCurrentNode(baseEE.context(eventSource).spaNode)
+        } else if (!state.currentNode) {
+          // Otherwise, if no interaction is currently active, create a new node ID,
+          // and let the aggregator know that we entered a new event handler callback
+          // so that it has a chance to possibly start an interaction.
+          if (INTERACTION_EVENTS.indexOf(evName) !== -1) {
+            var ixn = new Interaction(evName, this[FN_START], state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
+            setCurrentNode(ixn.root)
+
+            if (evName === 'click') {
+              var value = getActionText(ev.target)
+              if (value) {
+                state.currentNode.attrs.custom['actionText'] = value
+              }
+            }
+            // @ifdef SPA_DEBUG
+            console.timeStamp('start interaction, ID=' + state.currentNode.id + ', evt=' + evName)
+            // @endif
+          }
+        }
+
+        ev.__nrNode = state.currentNode
+      }, undefined, eventsEE)
 
       /**
        * *** TIMERS ***
@@ -152,9 +231,36 @@ export class Aggregate extends FeatureBase {
 
       // The context supplied to this callback will be shared with the fn-start/fn-end
       // callbacks that fire around the callback passed to setTimeout originally.
-      register.on(this.timerEE, 'setTimeout-end', (...args) => this.saveId(...args))
-      register.on(this.timerEE, 'clearTimeout-start', (...args) => this.clear(...args))
-      register.on(this.timerEE, FN_START, (...args) => this.timerStart(...args))
+      register('setTimeout-end', function saveId(args, obj, timerId) {
+        if (!state.currentNode || (state.timerBudget - this.timerDuration) < 0) return
+        if (args && !(args[0] instanceof Function)) return
+        state.currentNode[INTERACTION][REMAINING]++
+        this.timerId = timerId
+        state.timerMap[timerId] = state.currentNode
+        this.timerBudget = state.timerBudget - 50
+      }, undefined, timerEE)
+
+      register('clearTimeout-start', function clear(args) {
+        var timerId = args[0]
+        var node = state.timerMap[timerId]
+        if (node) {
+          var interaction = node[INTERACTION]
+          interaction[REMAINING]--
+          interaction.checkFinish(state.lastSeenUrl, state.lastSeenRouteName)
+          delete state.timerMap[timerId]
+        }
+      }, undefined, timerEE)
+
+      register(FN_START, function () {
+        state.timerBudget = this.timerBudget || MAX_TIMER_BUDGET
+        var id = this.timerId
+        var node = state.timerMap[id]
+        setCurrentNode(node)
+        delete state.timerMap[id]
+        if (node) {
+          node[INTERACTION][REMAINING]--
+        }
+      }, undefined, timerEE)
 
       /**
        * *** XHR ***
@@ -171,34 +277,156 @@ export class Aggregate extends FeatureBase {
        */
 
       // context is shared with new-xhr event, and is stored on the xhr iteself.
-      register.on(this.xhrEE, FN_START,(...args) =>  this.xhrStart(...args))
+      register(FN_START, function () {
+        setCurrentNode(this[SPA_NODE])
+      }, undefined, xhrEE)
+
       // context is stored on the xhr and is shared with all callbacks associated
       // with the new xhr
-      register.on(this.xhrEE, 'new-xhr', (...args) => this.xhrNew(...args))
-      register.on(this.xhrEE, 'send-xhr-start', (...args) => this.xhrSend(...args))
-      register.on(this.baseEE, 'xhr-resolved', (...args) => this.xhrResolved(...args))
+      register('new-xhr', function () {
+        if (state.currentNode) {
+          this[SPA_NODE] = state.currentNode.child('ajax', null, null, true)
+        }
+      }, undefined, xhrEE)
+
+      register('send-xhr-start', function () {
+        var node = this[SPA_NODE]
+        if (node && !this.sent) {
+          this.sent = true
+          node.dt = this.dt
+          node.jsEnd = node.start = this.startTime
+          node[INTERACTION][REMAINING]++
+        }
+      }, undefined, xhrEE)
+
+      register('xhr-resolved', function () {
+        var node = this[SPA_NODE]
+        if (node) {
+          if (!shouldCollectEvent(this.params)) {
+            node.cancel()
+            return
+          }
+
+          var attrs = node.attrs
+          attrs.params = this.params
+          attrs.metrics = this.metrics
+
+          node.finish(this.endTime)
+        }
+      }, undefined, baseEE)
 
       /**
        * *** JSONP ***
        *
        */
-      register.on(this.jsonpEE, 'new-jsonp', (...args) => this.jsonPNew(...args))
-      register.on(this.jsonpEE, 'cb-start', (...args) => this.jsonPStart(...args))
-      register.on(this.jsonpEE, 'jsonp-error', (...args) => this.jsonPError(...args))
-      register.on(this.jsonpEE, JSONP_END, (...args) => this.jsonPEnd(...args))
-      /**
-       * *** fetch ***
-       *
-       */
-      register.on(this.fetchEE, FETCH_START, (...args) => this.fetchStart(...args))
-      register.on(this.fetchEE, FETCH_BODY + 'start', (...args) => this.fetchBodyStart(...args))
-      register.on(this.fetchEE, FETCH_BODY + 'end', (...args) => this.fetchBodyEnd(...args))
-      register.on(this.fetchEE, FETCH_DONE, (...args) => this.fetchDone(...args))
-      /**
-       * *** history ***
-       *
-       */
-      register.on(this.historyEE, 'newURL', (...args) => this.historyNew(...args))
+
+      register('new-jsonp', function (url) {
+        if (state.currentNode) {
+          var node = this[JSONP_NODE] = state.currentNode.child('ajax', this[FETCH_START])
+          node.start = this['new-jsonp']
+          this.url = url
+          this.status = null
+        }
+      }, undefined, jsonpEE)
+
+      register('cb-start', function (args) {
+        var node = this[JSONP_NODE]
+        if (node) {
+          setCurrentNode(node)
+          this.status = 200
+        }
+      }, undefined, jsonpEE)
+
+      register('jsonp-error', function () {
+        var node = this[JSONP_NODE]
+        if (node) {
+          setCurrentNode(node)
+          this.status = 0
+        }
+      }, undefined, jsonpEE)
+
+      register(jsonpEE, JSONP_END, function () {
+        var node = this[JSONP_NODE]
+        if (node) {
+          // if no status is set then cb never fired - so it's not a valid JSONP
+          if (this.status === null) {
+            node.cancel()
+            return
+          }
+          var attrs = node.attrs
+          var params = attrs.params = {}
+
+          var parsed = parseUrl(this.url)
+          params.method = 'GET'
+          params.pathname = parsed.pathname
+          params.host = parsed.hostname + ':' + parsed.port
+          params.status = this.status
+
+          attrs.metrics = {
+            txSize: 0,
+            rxSize: 0
+          }
+
+          attrs.isJSONP = true
+          node.jsEnd = this[JSONP_END]
+          node.jsTime = this[CB_START] ? (this[JSONP_END] - this[CB_START]) : 0
+          node.finish(node.jsEnd)
+        }
+      }, undefined, jsonpEE)
+
+      register(FETCH_START, function (fetchArguments, dtPayload) {
+        if (state.currentNode && fetchArguments) {
+          this[SPA_NODE] = state.currentNode.child('ajax', this[FETCH_START])
+          if (dtPayload && this[SPA_NODE]) this[SPA_NODE].dt = dtPayload
+        }
+      }, undefined, fetchEE)
+
+      register(FETCH_BODY + 'start', function (args) {
+        if (state.currentNode) {
+          this[SPA_NODE] = state.currentNode
+          state.currentNode[INTERACTION][REMAINING]++
+        }
+      }, undefined, fetchEE)
+
+      register(FETCH_BODY + 'end', function (args, ctx, bodyPromise) {
+        var node = this[SPA_NODE]
+        if (node) {
+          node[INTERACTION][REMAINING]--
+        }
+      }, undefined, fetchEE)
+
+      register(FETCH_DONE, function (err, res) {
+        var node = this[SPA_NODE]
+        if (node) {
+          if (err) {
+            node.cancel()
+            return
+          }
+
+          var attrs = node.attrs
+          attrs.params = this.params
+          attrs.metrics = {
+            txSize: this.txSize,
+            rxSize: this.rxSize
+          }
+          attrs.isFetch = true
+
+          node.finish(this[FETCH_DONE])
+        }
+      }, undefined, fetchEE)
+
+      register('newURL', function (url, hashChangedDuringCb) {
+        if (state.currentNode) {
+          if (state.lastSeenUrl !== url) {
+            state.currentNode[INTERACTION].routeChange = true
+          }
+          if (hashChangedDuringCb) {
+            state.nodeOnLastHashUpdate = state.currentNode
+          }
+        }
+
+        state.lastSeenUrl = url
+      }, undefined, historyEE)
 
       /**
        * SCRIPTS
@@ -218,526 +446,275 @@ export class Aggregate extends FeatureBase {
       // dom-start is emitted when appendChild or replaceChild are called. If the element being
       // inserted is script and we are inside an interaction, we will keep the interaction open
       // until the script is loaded.
-      this.jsonpEE.on('dom-start', (...args) => this.jsonPDomStart(...args))
+      jsonpEE.on('dom-start', function (args) {
+        if (!state.currentNode) return
 
-      register.on(this.mutationEE, FN_START, (...args) => this.mutationStart(...args))
+        var el = args[0]
+        var isScript = (el && el.nodeName === 'SCRIPT' && el.src !== '')
+        var interaction = state.currentNode.interaction
 
-      register.on(this.promiseEE, 'resolve-start', (...args) => this.resolvePromise(...args))
-      register.on(this.promiseEE, 'executor-err', (...args) => this.resolvePromise(...args))
-      register.on(this.promiseEE, 'propagate', (...args) => this.saveNode(...args))
-      register.on(this.promiseEE, CB_START, (...args) => this.promiseCbStart(...args))
+        if (isScript) {
+          // increase remaining count to keep the interaction open
+          interaction[REMAINING]++
+          el.addEventListener('load', onload, eventListenerOpts(false))
+          el.addEventListener('error', onerror, eventListenerOpts(false))
+        }
 
-      register(INTERACTION_API + 'get', (...args) => this.interactionGet(...args), undefined, this.baseEE)
-      register(INTERACTION_API + 'actionText', (...args) => this.interactionActionText(...args), undefined, this.baseEE)
-      register(INTERACTION_API + 'setName', (...args) => this.interactionSetName(...args), undefined, this.baseEE)
-      register(INTERACTION_API + 'setAttribute', (...args) => this.interactionSetAttribute(...args), undefined, this.baseEE)
-      register(INTERACTION_API + 'end', (...args) => this.interactionEnd(...args), undefined, this.baseEE)
-      register(INTERACTION_API + 'ignore', (...args) => this.interactionIgnore(...args), undefined, this.baseEE)
-      register(INTERACTION_API + 'save', (...args) => this.interactionSave(...args), undefined, this.baseEE)
-      register(INTERACTION_API + 'tracer', (...args) => this.interactionTracer(...args), undefined, this.baseEE)
-      register(INTERACTION_API + 'getContext', (...args) => this.interactionGetContext(...args), undefined, this.baseEE)
-      register(INTERACTION_API + 'onEnd', (...args) => this.interactionOnEnd(...args), undefined, this.baseEE)
+        function onload() {
+          // decrease remaining to allow interaction to finish
+          interaction[REMAINING]--
 
-      register.on(this.tracerEE, FN_START, (...args) => this.tracerDone(...args))
-      register.on(this.tracerEE, 'no-' + FN_START, (...args) => this.tracerDone(...args))
+          // checkFinish is what initiates closing interaction, but is only called
+          // when setCurrentNode is called. Since we are not restoring a node here,
+          // we need to initiate the check manually.
+          // The reason we are not restoring the node here is because 1) this is not
+          // where the code of the external script runs (by the time the load event
+          // fires, it has already executed), and 2) it would require storing the context
+          // probably on the DOM node and restoring in all callbacks, which is a different
+          // use case than lazy loading.
+          interaction.checkFinish(state.lastSeenUrl, state.lastSeenRouteName)
+        }
 
-      register('api-routeName', (...args) => this.apiRouteName(...args), undefined, this.baseEE)
+        function onerror() {
+          interaction[REMAINING]--
+          interaction.checkFinish(state.lastSeenUrl, state.lastSeenRouteName)
+        }
+      })
+
+      register(FN_START, function () {
+        setCurrentNode(state.prevNode)
+      }, undefined, mutationEE)
+
+      register('resolve-start', resolvePromise, undefined, promiseEE)
+      register('executor-err', resolvePromise, undefined, promiseEE)
+
+      register('propagate', saveNode, undefined, promiseEE)
+
+      register(CB_START, function () {
+        var ctx = this.getCtx ? this.getCtx() : this
+        setCurrentNode(ctx[SPA_NODE])
+      }, undefined, promiseEE)
+
+      function getOrSetIxn(t){
+        console.log("ixn is -- ", state.currentNode ? state.currentNode[INTERACTION] : new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier))
+        return state.currentNode ? state.currentNode[INTERACTION] : new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
+      }
+
+      register(INTERACTION_API + 'get',  function(t) {
+        // var interaction = this.ixn = state.currentNode ? state.currentNode[INTERACTION] : new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
+        var interaction = getOrSetIxn(t)
+        if (!state.currentNode) {
+          interaction.checkFinish(state.lastSeenUrl, state.lastSeenRouteName)
+          if (state.depth) setCurrentNode(interaction.root)
+        }
+      }, undefined, baseEE)
+
+
+      register(INTERACTION_API + 'actionText', function (t, actionText) {
+        // var customAttrs = this.ixn.root.attrs.custom
+        var ixn = getOrSetIxn(t)
+        var customAttrs = ixn.root.attrs.custom
+        if (actionText) customAttrs.actionText = actionText
+      }, undefined, baseEE)
+
+      register(INTERACTION_API + 'setName', function (t, name, trigger) {
+        // var attrs = this.ixn.root.attrs
+        var ixn = getOrSetIxn(t)
+        var attrs = ixn.root.attrs
+        if (name) attrs.customName = name
+        if (trigger) attrs.trigger = trigger
+      }, undefined, baseEE)
+
+      register(INTERACTION_API + 'setAttribute', function (t, name, value) {
+        // this.ixn.root.attrs.custom[name] = value
+        var ixn = getOrSetIxn(t)
+        ixn.root.attrs.custom[name] = value
+      }, undefined, baseEE)
+
+      register(INTERACTION_API + 'end', function (timestamp) {
+        // var interaction = this.ixn
+        var interaction = getOrSetIxn(timestamp)
+        var node = activeNodeFor(interaction)
+        setCurrentNode(null)
+        node.child('customEnd', timestamp).finish(timestamp)
+        interaction.finish()
+      }, undefined, baseEE)
+
+      register(INTERACTION_API + 'ignore', function (t) {
+        // this.ixn.ignored = true
+        var ixn = getOrSetIxn(t)
+        ixn.ignored = true
+      }, undefined, baseEE)
+
+      register(INTERACTION_API + 'save', function (t) {
+        // this.ixn.save = true
+        var ixn = getOrSetIxn(t)
+        ixn.save = true
+      }, undefined, baseEE)
+
+      register(INTERACTION_API + 'tracer', function (timestamp, name, store) {
+        // var interaction = this.ixn
+        var interaction = getOrSetIxn(timestamp)
+        var parent = activeNodeFor(interaction)
+        var ctx = baseEE.context(store)
+        if (!name) {
+          ctx.inc = ++interaction[REMAINING]
+          return (ctx[SPA_NODE] = parent)
+        }
+        ctx[SPA_NODE] = parent.child('customTracer', timestamp, name)
+      }, undefined, baseEE)
+
+      register(FN_START, tracerDone, undefined, tracerEE)
+      register('no-' + FN_START, tracerDone, undefined, tracerEE)
+
+      function tracerDone(timestamp, interactionContext, hasCb) {
+        var node = this[SPA_NODE]
+        if (!node) return
+        var interaction = node[INTERACTION]
+        var inc = this.inc
+        this.isTraced = true
+        if (inc) {
+          interaction[REMAINING]--
+        } else if (node) {
+          node.finish(timestamp)
+        }
+        hasCb ? setCurrentNode(node) : interaction.checkFinish(state.lastSeenUrl, state.lastSeenRouteName)
+      }
+
+      register(INTERACTION_API + 'getContext', function (t, cb) {
+        // var store = this.ixn.root.attrs.store
+        var ixn = getOrSetIxn(t)
+        var store = ixn.root.attrs.store
+        setTimeout(function () {
+          cb(store)
+        }, 0)
+      }, undefined, baseEE)
+
+      register(INTERACTION_API + 'onEnd', function (t, cb) {
+        // this.ixn.handlers.push(cb)
+        var ixn = getOrSetIxn(t)
+        ixn.handlers.push(cb)
+      }, undefined, baseEE)
+
+      register('api-routeName', function (t, currentRouteName) {
+        state.lastSeenRouteName = currentRouteName
+      }, undefined, baseEE)
+
+      function activeNodeFor(interaction) {
+        return (state.currentNode && state.currentNode[INTERACTION] === interaction) ? state.currentNode : interaction.root
+      }
     })
 
-    this.baseEE.on('errorAgg', (...args) => this.onErrAgg(...args))
-    this.baseEE.on('interaction',(...args) =>  this.saveInteraction(...args))
-  }
+    function saveNode(val, overwrite) {
+      if (overwrite || !this[SPA_NODE]) this[SPA_NODE] = state.currentNode
+    }
 
-  callbackStart() {
-    this.depth++
-    this.prevNode = currentNode
-    this.ct = childTime
-    this.childTime = 0
-    this.timerBudget = MAX_TIMER_BUDGET
-  }
-
-  callbackEnd() {
-    this.depth--
-    var totalTime = this.jsTime || 0
-    var exclusiveTime = totalTime - this.childTime
-    this.childTime = this.ct + totalTime
-    if (this.currentNode) {
-      // transfer accumulated callback time to the active interaction node
-      // run even if jsTime is 0 to update jsEnd
-      this.currentNode.callback(exclusiveTime, this[FN_END])
-      if (this.isTraced) {
-        this.currentNode.attrs.tracedTime = exclusiveTime
+    function resolvePromise() {
+      if (!this.resolved) {
+        this.resolved = true
+        this[SPA_NODE] = state.currentNode
       }
     }
 
-    this.jsTime = currentNode ? 0 : exclusiveTime
-    this.setCurrentNode(this.prevNode)
-    this.prevNode = null
-    timerBudget = MAX_TIMER_BUDGET
-  }
-
-  onErrAgg(type, name, params, metrics) {
-    if (!this.currentNode) return
-    params._interactionId = this.currentNode.interaction.id
-    // do not capture parentNodeId when in root node
-    if (this.currentNode.type && this.currentNode.type !== 'interaction') {
-      params._interactionNodeId = this.currentNode.id
-    }
-  }
-
-  activeNodeFor(interaction) {
-    return (this.currentNode && this.currentNode[INTERACTION] === interaction) ? this.currentNode : interaction.root
-  }
-
-  tracerDone(timestamp, interactionContext, hasCb) {
-    var node = this[SPA_NODE]
-    if (!node) return
-    var interaction = node[INTERACTION]
-    var inc = this.inc
-    this.isTraced = true
-    if (inc) {
-      interaction[REMAINING]--
-    } else if (node) {
-      node.finish(timestamp)
-    }
-    hasCb ? this.setCurrentNode(node) : interaction.checkFinish(lastSeenUrl, lastSeenRouteName)
-  }
-
-  apiRouteName(t, currentRouteName) {
-    this.lastSeenRouteName = currentRouteName
-  }
-
-  interactionOnEnd(t, cb) {
-    this.ixn.handlers.push(cb)
-  }
-
-  interactionGetContext(t, cb) {
-    var store = this.ixn.root.attrs.store
-    setTimeout(function () {
-      cb(store)
-    }, 0)
-  }
-
-  interactionTracer(timestamp, name, store) {
-    var interaction = this.ixn
-    var parent = this.activeNodeFor(interaction)
-    var ctx = this.baseEE.context(store)
-    if (!name) {
-      ctx.inc = ++interaction[REMAINING]
-      return (ctx[SPA_NODE] = parent)
-    }
-    ctx[SPA_NODE] = parent.child('customTracer', timestamp, name)
-  }
-
-  interactionSave() {
-    this.ixn.save = true
-  }
-
-  interactionIgnore() {
-    this.ixn.ignored = true
-  }
-
-  interactionEnd(timestamp) {
-    var interaction = this.ixn
-    var node = this.activeNodeFor(interaction)
-    this.setCurrentNode(null)
-    node.child('customEnd', timestamp).finish(timestamp)
-    interaction.finish()
-  }
-
-  interactionSetAttribute(t, name, value) {
-    this.ixn.root.attrs.custom[name] = value
-  }
-
-  interactionSetName(t, name, trigger) {
-    var attrs = this.ixn.root.attrs
-    if (name) attrs.customName = name
-    if (trigger) attrs.trigger = trigger
-  }
-
-  interactionActionText(t, actionText) {
-    var customAttrs = this.ixn.root.attrs.custom
-    if (actionText) customAttrs.actionText = actionText
-  }
-
-  interactionGet(t) {
-    var interaction = this.ixn = this.currentNode ? this.currentNode[INTERACTION] : new Interaction('api', t, this.lastSeenUrl, this.lastSeenRouteName, (...args) => this.onInteractionFinished(...args), this)
-
-    if (!this.currentNode) {
-      interaction.checkFinish(lastSeenUrl, lastSeenRouteName)
-      if (this.depth) this.setCurrentNode(interaction.root)
-    }
-  }
-
-  promiseCbStart() {
-    var ctx = this.getCtx ? this.getCtx() : this
-    this.setCurrentNode(ctx[SPA_NODE])
-  }
-
-  mutationStart() {
-    this.setCurrentNode(this.prevNode)
-  }
-
-  jsonPDomStart(args) {
-    if (!this.currentNode) return
-
-    var el = args[0]
-    var isScript = (el && el.nodeName === 'SCRIPT' && el.src !== '')
-    var interaction = this.currentNode.interaction
-
-    if (isScript) {
-      // increase remaining count to keep the interaction open
-      interaction[REMAINING]++
-      el.addEventListener('load', () => onload(), eventListenerOpts(false))
-      el.addEventListener('error', () => onerror(), eventListenerOpts(false))
+    function getCurrentNode() {
+      return state.currentNode
     }
 
-    function onload() {
-      // decrease remaining to allow interaction to finish
-      interaction[REMAINING]--
-
-      // checkFinish is what initiates closing interaction, but is only called
-      // when setCurrentNode is called. Since we are not restoring a node here,
-      // we need to initiate the check manually.
-      // The reason we are not restoring the node here is because 1) this is not
-      // where the code of the external script runs (by the time the load event
-      // fires, it has already executed), and 2) it would require storing the context
-      // probably on the DOM node and restoring in all callbacks, which is a different
-      // use case than lazy loading.
-      interaction.checkFinish(this.lastSeenUrl, this.lastSeenRouteName)
-    }
-
-    function onerror() {
-      interaction[REMAINING]--
-      interaction.checkFinish(this.lastSeenUrl, this.lastSeenRouteName)
-    }
-  }
-
-  historyNew(url, hashChangedDuringCb) {
-    if (this.currentNode) {
-      if (this.lastSeenUrl !== url) {
-        this.currentNode[INTERACTION].routeChange = true
-      }
-      if (hashChangedDuringCb) {
-        this.nodeOnLastHashUpdate = currentNode
-      }
-    }
-
-    this.lastSeenUrl = url
-  }
-
-  fetchDone(err, res) {
-    var node = this[SPA_NODE]
-    if (node) {
-      if (err) {
-        node.cancel()
-        return
+    function setCurrentNode(newNode) {
+      if (!state.pageLoaded && !newNode && state.initialPageLoad) newNode = state.initialPageLoad.root
+      if (state.currentNode) {
+        state.currentNode[INTERACTION].checkFinish(state.lastSeenUrl, state.lastSeenRouteName)
       }
 
-      var attrs = node.attrs
-      attrs.params = this.params
-      attrs.metrics = {
-        txSize: this.txSize,
-        rxSize: this.rxSize
-      }
-      attrs.isFetch = true
-
-      node.finish(this[FETCH_DONE])
+      state.prevNode = state.currentNode
+      state.currentNode = (newNode && !newNode[INTERACTION].root.end) ? newNode : null
     }
-  }
 
-  fetchBodyEnd(args, ctx, bodyPromise) {
-    var node = this[SPA_NODE]
-    if (node) {
-      node[INTERACTION][REMAINING]--
+    function onInteractionFinished(interaction) {
+      if (interaction === state.initialPageLoad) state.initialPageLoad = null
+
+      var root = interaction.root
+      var attrs = root.attrs
+
+      // make sure that newrelic[INTERACTION]() works in end handler
+      state.currentNode = root
+      mapOwn(interaction.handlers, function (i, cb) {
+        cb(attrs.store)
+      })
+      setCurrentNode(null)
     }
-  }
 
-  fetchBodyStart(args) {
-    if (this.currentNode) {
-      this[SPA_NODE] = this.currentNode
-      currentNode[INTERACTION][REMAINING]++
-    }
-  }
+    function onHarvestStarted(options) {
+      if (state.interactionsToHarvest.length === 0) return {}
+      var payload = serializer.serializeMultiple(state.interactionsToHarvest, 0, navTiming)
 
-  fetchStart(fetchArguments, dtPayload) {
-    if (this.currentNode && fetchArguments) {
-      this[SPA_NODE] = this.currentNode.child('ajax', this[FETCH_START])
-      if (dtPayload && this[SPA_NODE]) this[SPA_NODE].dt = dtPayload
-    }
-  }
-
-  jsonPEnd() {
-    var node = this[JSONP_NODE]
-    if (node) {
-      // if no status is set then cb never fired - so it's not a valid JSONP
-      if (this.status === null) {
-        node.cancel()
-        return
-      }
-      var attrs = node.attrs
-      var params = attrs.params = {}
-
-      var parsed = parseUrl(this.url)
-      params.method = 'GET'
-      params.pathname = parsed.pathname
-      params.host = parsed.hostname + ':' + parsed.port
-      params.status = this.status
-
-      attrs.metrics = {
-        txSize: 0,
-        rxSize: 0
-      }
-
-      attrs.isJSONP = true
-      node.jsEnd = this[JSONP_END]
-      node.jsTime = this[CB_START] ? (this[JSONP_END] - this[CB_START]) : 0
-      node.finish(node.jsEnd)
-    }
-  }
-
-  jsonPError() {
-    var node = this[JSONP_NODE]
-    if (node) {
-      this.setCurrentNode(node)
-      this.status = 0
-    }
-  }
-
-  jsonPStart(args) {
-    var node = this[JSONP_NODE]
-    if (node) {
-      this.setCurrentNode(node)
-      this.status = 200
-    }
-  }
-
-  jsonPNew(url) {
-    if (this.currentNode) {
-      var node = this[JSONP_NODE] = this.currentNode.child('ajax', this[FETCH_START])
-      node.start = this['new-jsonp']
-      this.url = url
-      this.status = null
-    }
-  }
-
-  xhrResolved() {
-    var node = this[SPA_NODE]
-    if (node) {
-      if (!shouldCollectEvent(this.params)) {
-        node.cancel()
-        return
-      }
-
-      var attrs = node.attrs
-      attrs.params = this.params
-      attrs.metrics = this.metrics
-
-      node.finish(this.endTime)
-    }
-  }
-
-  xhrSend() {
-    var node = this[SPA_NODE]
-    if (node && !this.sent) {
-      this.sent = true
-      node.dt = this.dt
-      node.jsEnd = node.start = this.startTime
-      node[INTERACTION][REMAINING]++
-    }
-  }
-
-  xhrNew() {
-    if (this.currentNode) {
-      this[SPA_NODE] = this.currentNode.child('ajax', null, null, true)
-    }
-  }
-
-  xhrStart() {
-    this.setCurrentNode(this[SPA_NODE])
-  }
-
-  timerStart() {
-    timerBudget = this.timerBudget || MAX_TIMER_BUDGET
-    var id = this.timerId
-    var node = this.timerMap[id]
-    this.setCurrentNode(node)
-    delete this.timerMap[id]
-    if (node) {
-      node[INTERACTION][REMAINING]--
-    }
-  }
-
-  clear(args) {
-    var timerId = args[0]
-    var node = timerMap[timerId]
-    if (node) {
-      var interaction = node[INTERACTION]
-      interaction[REMAINING]--
-      interaction.checkFinish(lastSeenUrl, lastSeenRouteName)
-      delete this.timerMap[timerId]
-    }
-  }
-
-  saveId(args, obj, timerId) {
-    if (!this.currentNode || (this.timerBudget - this.timerDuration) < 0) return
-    if (args && !(args[0] instanceof Function)) return
-    this.currentNode[INTERACTION][REMAINING]++
-    this.timerId = timerId
-    this.timerMap[this.timerId] = currentNode
-    this.timerBudget = this.timerBudget - 50
-  }
-
-  eventsEEStart(args, eventSource) {
-    var ev = args[0]
-    var evName = ev.type
-    var eventNode = ev.__nrNode
-
-    if (!this.pageLoaded && evName === 'load' && eventSource === window) {
-      this.pageLoaded = true
-      // set to null so prevNode is set correctly
-      this.prevNode = this.currentNode = null
-      if (this.initialPageLoad) {
-        eventNode = this.initialPageLoad.root
-        this.initialPageLoad[REMAINING]--
-        originalSetTimeout(() => {
-          INTERACTION_EVENTS.push('popstate')
+      if (options.retry) {
+        state.interactionsToHarvest.forEach(function (interaction) {
+          state.interactionsSent.push(interaction)
         })
       }
+      state.interactionsToHarvest = []
+
+      return { body: { e: payload } }
     }
 
-    if (eventNode) {
-      // If we've already seen a previous handler for this specific event object,
-      // just restore that. We want multiple handlers for the same event to share
-      // a node.
-      this.setCurrentNode(eventNode)
-    } else if (evName === 'hashchange') {
-      this.setCurrentNode(nodeOnLastHashUpdate)
-      this.nodeOnLastHashUpdate = null
-    } else if (eventSource instanceof XMLHttpRequest) {
-      // If this event was emitted by an XHR, restore the node ID associated with
-      // that XHR.
-      this.setCurrentNode(this.baseEE.context(eventSource).spaNode)
-    } else if (!this.currentNode) {
-      // Otherwise, if no interaction is currently active, create a new node ID,
-      // and let the aggregator know that we entered a new event handler callback
-      // so that it has a chance to possibly start an interaction.
-      if (INTERACTION_EVENTS.indexOf(evName) !== -1) {
-        var ixn = new Interaction(evName, this[FN_START], this.lastSeenUrl, this.lastSeenRouteName, (...args) => this.onInteractionFinished(...args), this)
-        this.setCurrentNode(ixn.root)
-
-        if (evName === 'click') {
-          var value = this.getActionText(ev.target)
-          if (value) {
-            this.currentNode.attrs.custom['actionText'] = value
-          }
-        }
-        // @ifdef SPA_DEBUG
-        console.timeStamp('start interaction, ID=' + currentNode.id + ', evt=' + evName)
-        // @endif
+    function onHarvestFinished(result) {
+      if (result.sent && result.retry && state.interactionsSent.length > 0) {
+        state.interactionsSent.forEach(function (interaction) {
+          state.interactionsToHarvest.push(interaction)
+        })
+        state.interactionsSent = []
       }
     }
 
-    ev.__nrNode = currentNode
-  }
-
-  saveNode(val, overwrite) {
-    if (overwrite || !this[SPA_NODE]) this[SPA_NODE] = this.currentNode
-  }
-
-  resolvePromise() {
-    if (!this.resolved) {
-      this.resolved = true
-      this[SPA_NODE] = this.currentNode
-    }
-  }
-
-  getCurrentNode() {
-    return this.currentNode
-  }
-
-  setCurrentNode(newNode) {
-    if (!this.pageLoaded && !newNode && this.initialPageLoad) newNode = this.initialPageLoad.root
-    if (this.currentNode) {
-      this.currentNode[INTERACTION].checkFinish(this.lastSeenUrl, this.lastSeenRouteName)
-    }
-
-    this.prevNode = this.currentNode
-    this.currentNode = (newNode && !newNode[INTERACTION].root.end) ? newNode : null
-  }
-
-  onInteractionFinished(interaction) {
-    if (interaction === this.initialPageLoad) this.initialPageLoad = null
-
-    var root = this.interaction.root
-    var attrs = root.attrs
-
-    // make sure that newrelic[INTERACTION]() works in end handler
-    this.currentNode = root
-    mapOwn(interaction.handlers, (i, cb) => {
-      cb(attrs.store)
+    baseEE.on('errorAgg', function (type, name, params, metrics) {
+      if (!state.currentNode) return
+      params._interactionId = state.currentNode.interaction.id
+      // do not capture parentNodeId when in root node
+      if (state.currentNode.type && state.currentNode.type !== 'interaction') {
+        params._interactionNodeId = state.currentNode.id
+      }
     })
-    this.setCurrentNode(null)
-  }
 
-  onHarvestStarted(options) {
-    if (this.interactionsToHarvest.length === 0) return {}
-    var payload = this.serializer.serializeMultiple(this.interactionsToHarvest, 0, navTiming)
+    baseEE.on('interaction', saveInteraction)
 
-    if (options.retry) {
-      this.interactionsToHarvest.forEach((interaction) => {
-        this.interactionsSent.push(interaction)
-      })
-    }
-    this.interactionsToHarvest = []
-
-    return { body: { e: payload } }
-  }
-
-  onHarvestFinished(result) {
-    if (result.sent && result.retry && this.interactionsSent.length > 0) {
-      this.interactionsSent.forEach((interaction) => {
-        this.interactionsToHarvest.push(interaction)
-      })
-      this.interactionsSent = []
-    }
-  }
-
-  getActionText(node) {
-    var nodeType = node.tagName.toLowerCase()
-    var goodNodeTypes = ['a', 'button', 'input']
-    var isGoodNode = goodNodeTypes.indexOf(nodeType) !== -1
-    if (isGoodNode) {
-      return node.title || node.value || node.innerText
-    }
-  }
-
-  saveInteraction(interaction) {
-    if (interaction.ignored || (!interaction.save && !interaction.routeChange)) {
-      this.baseEE.emit('interactionDiscarded', [interaction])
-      return
+    function getActionText(node) {
+      var nodeType = node.tagName.toLowerCase()
+      var goodNodeTypes = ['a', 'button', 'input']
+      var isGoodNode = goodNodeTypes.indexOf(nodeType) !== -1
+      if (isGoodNode) {
+        return node.title || node.value || node.innerText
+      }
     }
 
-    // assign unique id, this is serialized and used to link interactions with errors
-    interaction.root.attrs.id = generateUuid()
+    function saveInteraction(interaction) {
+      if (interaction.ignored || (!interaction.save && !interaction.routeChange)) {
+        baseEE.emit('interactionDiscarded', [interaction])
+        return
+      }
 
-    if (interaction.root.attrs.trigger === 'initialPageLoad') {
-      interaction.root.attrs.firstPaint = paintMetrics['first-paint']
-      interaction.root.attrs.firstContentfulPaint = paintMetrics['first-contentful-paint']
+      // assign unique id, this is serialized and used to link interactions with errors
+      interaction.root.attrs.id = generateUuid()
+
+      if (interaction.root.attrs.trigger === 'initialPageLoad') {
+        interaction.root.attrs.firstPaint = paintMetrics['first-paint']
+        interaction.root.attrs.firstContentfulPaint = paintMetrics['first-contentful-paint']
+      }
+      baseEE.emit('interactionSaved', [interaction])
+      state.interactionsToHarvest.push(interaction)
+      scheduler.scheduleHarvest(0)
+
     }
-    this.baseEE.emit('interactionSaved', [interaction])
-    this.interactionsToHarvest.push(interaction)
-    this.scheduler.scheduleHarvest(0)
-  }
 
-  isEnabled() {
-    var configuration = getConfigurationValue(this.agentIdentifier, 'spa')
-    if (configuration && configuration.enabled === false) {
-      return false
+    function isEnabled() {
+      var enabled = getConfigurationValue(agentIdentifier, 'spa.enabled')
+      if (enabled === false) {
+        return false
+      }
+      return true
     }
-    return true
-  }
 
+  }
 }
 // module.exports = function () {
 //   return currentNode && currentNode.id

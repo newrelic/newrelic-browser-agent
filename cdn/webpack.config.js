@@ -52,7 +52,7 @@ module.exports = {
     }),
     new webpack.SourceMapDevToolPlugin({
       // append: '\n//# sourceMappingURL=https://js-agent.newrelic.com/[url]' // <- we need this to be set when we publish to the CDN
-      append: '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/cdn/build/[url]', // <-- we need one property to be set when testing locally
+      append: '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]', // <-- we need one property to be set when testing locally
       filename: '[name].map'
     })
   ],

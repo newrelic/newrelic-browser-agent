@@ -21,8 +21,6 @@ export function findStartTime () {
   if (!starttime) return
 
   mark('starttime', starttime)
-  // Refine loader.offset
-  // offset = starttime
   setOffset(starttime)
 }
 

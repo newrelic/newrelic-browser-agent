@@ -26,6 +26,9 @@ testDriver.test('slow XHR submission should not delay next page load', supported
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   }))

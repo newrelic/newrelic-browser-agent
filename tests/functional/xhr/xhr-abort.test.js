@@ -18,6 +18,9 @@ testDriver.test('no abort call in xhr request', supported, function (t, browser,
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   }))
@@ -57,6 +60,9 @@ testDriver.test('xhr.abort() called in load callback', supported, function (t, b
   let loadPromise = browser.get(router.assetURL('xhr-abort-onload.html', {
     init: {
       page_view_timing: {
+        enabled: false
+      },
+      metrics: {
         enabled: false
       }
     }

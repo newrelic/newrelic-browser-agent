@@ -9,13 +9,13 @@ import { ffVersion } from '../../../common/browser-version/firefox-version'
 import { dataSize } from '../../../common/util/data-size'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
-import {wrapFetch} from '../../../common/wrap'
+import { wrapFetch, wrapXhr } from '../../../common/wrap'
 import { parseUrl } from '../../../common/url/parse-url'
 import { DT } from './distributed-tracing'
-import {responseSizeFromXhr} from './response-size'
+import { responseSizeFromXhr } from './response-size'
 import { FeatureBase } from '../../../common/util/feature-base'
 
-var handlers = [ 'load', 'error', 'abort', 'timeout' ]
+var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
 
 var origRequest = originals.REQ
@@ -32,6 +32,7 @@ export class Instrument extends FeatureBase {
 
     this.handler = (type, args, ctx, group) => handle(type, args, ctx, group, this.ee)
     this.wrappedFetch = getWrappedFetch(this.ee)
+    wrapXhr(this.ee)
     subscribeToEvents(this.agentIdentifier, this.ee, this.handler, this.dt)
   }
 }
@@ -218,10 +219,10 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     // argument is USVString
     if (typeof args[0] === 'string') {
       url = args[0]
-    // argument is Request object
+      // argument is Request object
     } else if (args[0] && args[0].url) {
       url = args[0].url
-    // argument is URL object
+      // argument is URL object
     } else if (window.URL && args[0] && args[0] instanceof URL) {
       url = args[0].href
     }
@@ -330,7 +331,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
   }
 
   // Create report for XHR request that has finished
-  function end (xhr) {
+  function end(xhr) {
     var params = this.params
     var metrics = this.metrics
 
@@ -355,7 +356,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this)
   }
 
-  function addUrl (ctx, url) {
+  function addUrl(ctx, url) {
     var parsed = parseUrl(url)
     var params = ctx.params
 
@@ -368,7 +369,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     ctx.sameOrigin = parsed.sameOrigin
   }
 
-  function captureXhrData (ctx, xhr) {
+  function captureXhrData(ctx, xhr) {
     ctx.params.status = xhr.status
 
     var size = responseSizeFromXhr(xhr, ctx.lastSize)

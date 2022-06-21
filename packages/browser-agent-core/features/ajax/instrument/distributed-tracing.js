@@ -153,7 +153,7 @@ export class DT {
   useTraceContextHeadersForCors() {
     var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
     if (dt) {
-      return !dt.cors_use_tracecontext_headers
+      return !!dt.cors_use_tracecontext_headers
     }
     return false
   }

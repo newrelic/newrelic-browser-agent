@@ -74,11 +74,12 @@ export function initializeAPI(agentIdentifier) {
         request_name = window.encodeURIComponent(request_name)
         cycle += 1
 
-        if (!getRuntime(agentIdentifier).info.beacon) return
+        const info = getInfo(agentIdentifier)
+        if (!info.beacon) return
 
-        var url = scheme + '://' + getInfo(agentIdentifier).beacon + '/1/' + getInfo(agentIdentifier).licenseKey
+        var url = scheme + '://' + info.beacon + '/1/' + info.licenseKey
 
-        url += '?a=' + getInfo(agentIdentifier).applicationID + '&'
+        url += '?a=' + info.applicationID + '&'
         url += 't=' + request_name + '&'
         url += 'qt=' + ~~queue_time + '&'
         url += 'ap=' + ~~app_time + '&'

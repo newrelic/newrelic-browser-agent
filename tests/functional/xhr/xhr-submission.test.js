@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {getXhrFromResponse} = require('./helpers')
+const { getXhrFromResponse } = require('./helpers')
 
 let reliableUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 let xhrBrowsers = testDriver.Matcher.withFeature('xhr')
@@ -19,6 +19,9 @@ testDriver.test('capturing XHR metrics', xhrSupported, function (t, browser, rou
   let loadPromise = browser.get(router.assetURL('xhr.html', {
     init: {
       page_view_timing: {
+        enabled: false
+      },
+      metrics: {
         enabled: false
       }
     }
@@ -43,7 +46,7 @@ testDriver.test('capturing XHR metrics', xhrSupported, function (t, browser, rou
     })
     .catch(fail)
 
-  function fail (err) {
+  function fail(err) {
     t.error(err)
     t.end()
   }
@@ -54,6 +57,9 @@ testDriver.test('capturing fetch metrics', fetchSupported, function (t, browser,
   let loadPromise = browser.get(router.assetURL('fetch.html', {
     init: {
       page_view_timing: {
+        enabled: false
+      },
+      metrics: {
         enabled: false
       }
     }
@@ -77,7 +83,7 @@ testDriver.test('capturing fetch metrics', fetchSupported, function (t, browser,
     })
     .catch(fail)
 
-  function fail (err) {
+  function fail(err) {
     t.error(err)
     t.end()
   }

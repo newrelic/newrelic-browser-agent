@@ -15,27 +15,23 @@ var bodyPrefix = prefix + 'body-'
 var bodyMethods = ['arrayBuffer', 'blob', 'json', 'text', 'formData']
 var Req = win.Request
 var Res = win.Response
-// var fetch = win.fetch
 var proto = 'prototype'
 var ctxId = 'nr@context'
 
-export function wrapGlobal() {
-  // since these are prototype methods, we can only wrap globally
+export function wrapFetch(sharedEE){
+  if (!(Req && Res && window.fetch)) {
+    return
+  }
+
+  const ee = scopedEE(sharedEE)
+  
   mapOwn(bodyMethods, function (i, name) {
-    wrapPromiseMethod(baseEE, Req[proto], name, bodyPrefix)
-    wrapPromiseMethod(baseEE, Res[proto], name, bodyPrefix)
+    wrapPromiseMethod(Req[proto], name, bodyPrefix)
+    wrapPromiseMethod(Res[proto], name, bodyPrefix)
   })
-
-  var wrappedFetch = wrapFetch(baseEE)
-  win.fetch = wrappedFetch
-}
-
-export function wrapFetch(sharedEE) {
-  var fn = originals.FETCH
-  var ee = (sharedEE || baseEE)
-
-  var wrappedFetch = wrapPromiseMethod(ee, fn, prefix)
-
+  
+  wrapPromiseMethod(win, 'fetch', prefix)
+  
   ee.on(prefix + 'end', function (err, res) {
     var ctx = this
     if (res) {
@@ -48,35 +44,36 @@ export function wrapFetch(sharedEE) {
       ee.emit(prefix + 'done', [err], ctx)
     }
   })
+  
+  function wrapPromiseMethod (target, name, prefix) {
+    var fn = target[name]
+    if (typeof fn === 'function') {
+      target[name] = function () {
+        var args = slice(arguments)
+  
+        var ctx = {}
+        // we are wrapping args in an array so we can preserve the reference
+        ee.emit(prefix + 'before-start', [args], ctx)
+        var dtPayload
+        if (ctx[ctxId] && ctx[ctxId].dt) dtPayload = ctx[ctxId].dt
+  
+        var promise = fn.apply(this, args)
+  
+        ee.emit(prefix + 'start', [args, dtPayload], promise)
+  
+        return promise.then(function (val) {
+          ee.emit(prefix + 'end', [null, val], promise)
+          return val
+        }, function (err) {
+          ee.emit(prefix + 'end', [err], promise)
+          throw err
+        })
+      }
+    }
+  }
 
   return ee
 }
-
-// this should probably go to the common module as a part of wrapping utility functions
-function wrapPromiseMethod(ee, fn, prefix) {
-  return function nrWrapper() {
-    var args = slice(arguments)
-
-    var ctx = {}
-    // we are wrapping args in an array so we can preserve the reference
-    ee.emit(prefix + 'before-start', [args], ctx)
-    var dtPayload
-    if (ctx[ctxId] && ctx[ctxId].dt) dtPayload = ctx[ctxId].dt
-
-    var promise = fn.apply(this, args)
-
-    ee.emit(prefix + 'start', [args, dtPayload], promise)
-
-    return promise.then(function (val) {
-      ee.emit(prefix + 'end', [null, val], promise)
-      return val
-    }, function (err) {
-      ee.emit(prefix + 'end', [err], promise)
-      throw err
-    })
-  }
-}
-
 
 export function scopedEE(sharedEE){
   return (sharedEE || baseEE).get('events')

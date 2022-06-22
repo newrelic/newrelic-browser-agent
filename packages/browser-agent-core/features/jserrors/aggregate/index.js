@@ -98,9 +98,9 @@ export class Aggregate extends FeatureBase {
     var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'jserrors.harvestTimeSeconds') || 10
 
     // on('jserrors', this.onHarvestStarted) //harvest.js --> now a class()
-    var scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
-    scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
-    scheduler.startTimer(harvestTimeSeconds)
+    this.scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
+    this.scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
+    this.scheduler.startTimer(harvestTimeSeconds)
   }
 
   onHarvestStarted(options) {
@@ -198,7 +198,6 @@ export class Aggregate extends FeatureBase {
   }
 
   storeError(err, time, internal, customAttributes) {
-    console.log("notice error called... storeError!")
     // are we in an interaction
     time = time || now()
     if (!internal && getRuntime(this.agentIdentifier).onerror && getRuntime(this.agentIdentifier).onerror(err)) return

@@ -74,7 +74,7 @@ export function initializeAPI(agentIdentifier) {
         request_name = window.encodeURIComponent(request_name)
         cycle += 1
 
-        if (!loader.info.beacon) return
+        if (!getRuntime(agentIdentifier).info.beacon) return
 
         var url = scheme + '://' + getInfo(agentIdentifier).beacon + '/1/' + getInfo(agentIdentifier).licenseKey
 

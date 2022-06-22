@@ -16,6 +16,9 @@ testDriver.test('encoding error where message contains a circular reference', su
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   }))

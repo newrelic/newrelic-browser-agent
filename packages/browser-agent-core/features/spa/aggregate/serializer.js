@@ -14,17 +14,19 @@ export class Serializer extends SharedContext {
   }
 
   serializeMultiple(interactions, offset, navTiming) {
+    const info = getInfo(this.sharedContext.agentIdentifier)
     var addString = getAddStringContext(this.sharedContext.agentIdentifier)
     var serialized = 'bel.7'
-    interactions.forEach(function (interaction) {
-      serialized += ';' + serializeInteraction(interaction.root, offset, navTiming, interaction.routeChange, addString, getInfo(this.sharedContext.agentIdentifier))
+    interactions.forEach((interaction) => {
+      serialized += ';' + serializeInteraction(interaction.root, offset, navTiming, interaction.routeChange, addString, info)
     })
     return serialized
   }
 
   serializeSingle(root, offset, navTiming, isRouteChange) {
+    const info = getInfo(this.sharedContext.agentIdentifier)
     var addString = getAddStringContext(this.sharedContext.agentIdentifier)
-    return 'bel.7;' + serializeInteraction(root, offset, navTiming, isRouteChange, addString, getInfo(this.sharedContext.agentIdentifier))
+    return 'bel.7;' + serializeInteraction(root, offset, navTiming, isRouteChange, addString, info)
   }
 }
 

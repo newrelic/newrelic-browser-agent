@@ -9,8 +9,6 @@ import {wrapPromise as wp} from './wrap-promise'
 import {wrapXhr as wx} from './wrap-xhr'
 import {wrapEvents as we} from './wrap-events'
 
-export {wrapGlobal as wrapGlobalFetch} from './wrap-fetch'
-
 export function wrapEvents(sharedEE) {
   return we(sharedEE)
 }

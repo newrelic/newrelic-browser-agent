@@ -13,246 +13,236 @@ import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-
 import { FeatureBase } from '../../../common/util/feature-base'
 
 export class Aggregate extends FeatureBase {
-  constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator)
-    this.ajaxEvents = []
-    this.spaAjaxEvents = {}
-    this.sentAjaxEvents = []
-    this.scheduler
+  constructor(agentIdentifier, aggregator, externalFeatures) {
+    super(agentIdentifier, aggregator, externalFeatures)
+    let ajaxEvents = []
+    let spaAjaxEvents = {}
+    let sentAjaxEvents = []
+    let scheduler
 
-    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'ajax.harvestTimeSeconds') || 10
-    this.MAX_PAYLOAD_SIZE = getConfigurationValue(this.agentIdentifier, 'ajax.maxPayloadSize') || 1000000
+    const ee = this.ee
 
-    this.ee.on('interactionSaved', function (interaction) {
-      if (!this.spaAjaxEvents[interaction.id]) return
+    const externalHarvestKeys = ['jserrors']
+
+    const harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'ajax.harvestTimeSeconds') || 10
+    const MAX_PAYLOAD_SIZE = getConfigurationValue(agentIdentifier, 'ajax.maxPayloadSize') || 1000000
+
+    ee.on('interactionSaved', (interaction) => {
+      if (!spaAjaxEvents[interaction.id]) return
       // remove from the spaAjaxEvents buffer, and let spa harvest it
-      delete this.spaAjaxEvents[interaction.id]
+      delete spaAjaxEvents[interaction.id]
     })
 
-    this.ee.on('interactionDiscarded', function (interaction) {
-      if (!this.spaAjaxEvents[interaction.id] || !this.allAjaxIsEnabled()) return
+    ee.on('interactionDiscarded', (interaction) => {
+      if (!spaAjaxEvents[interaction.id] || !allAjaxIsEnabled()) return
 
-      this.spaAjaxEvents[interaction.id].forEach(function (item) {
+      spaAjaxEvents[interaction.id].forEach(function (item) {
         // move it from the spaAjaxEvents buffer to the ajaxEvents buffer for harvesting here
-        this.ajaxEvents.push(item)
+        ajaxEvents.push(item)
       })
-      delete this.spaAjaxEvents[interaction.id]
+      delete spaAjaxEvents[interaction.id]
     })
 
-    if (this.allAjaxIsEnabled()) setDenyList(getConfigurationValue(this.agentIdentifier, 'ajax.deny_list'))
+    if (allAjaxIsEnabled()) setDenyList(getConfigurationValue(agentIdentifier, 'ajax.deny_list'))
 
-    register('xhr', (...args) => this.storeXhr(...args), undefined, this.ee)
+    register('xhr', storeXhr, undefined, this.ee)
 
-    if (this.allAjaxIsEnabled()) {
-      this.scheduler = new HarvestScheduler('events', {
-        onFinished: (...args) => this.onEventsHarvestFinished(...args),
-        getPayload: (...args) => this.prepareHarvest(...args)
+    if (allAjaxIsEnabled()) {
+      scheduler = new HarvestScheduler('events', {
+        onFinished: onEventsHarvestFinished,
+        getPayload: prepareHarvest
       }, this)
-      this.scheduler.harvest.on('jserrors', () => {
-        return { body: this.aggregator.take(['xhr']) }
+
+      externalFeatures.forEach(feat => {
+        externalHarvestKeys.forEach(key => {
+          feat.scheduler.harvest.on(key, () => {
+            return { body: aggregator.take(['xhr']) }
+          })
+        })
       })
-      this.scheduler.startTimer(this.harvestTimeSeconds)
+      scheduler.startTimer(harvestTimeSeconds)
 
-      subscribeToUnload((...args) => this.finalHarvest(...args))
-    }
-  }
-
-  // export { shouldCollectEvent }
-  // export { setDenyList }
-
-  getStoredEvents() {
-    return {
-      ajaxEvents: this.ajaxEvents,
-      spaAjaxEvents: this.spaAjaxEvents
-    }
-  }
-
-  storeXhr(params, metrics, startTime, endTime, type) {
-    if (params.hostname === 'localhost') {
-      return
+      subscribeToUnload(() => scheduler.runHarvest({ unload: true }))
     }
 
-    metrics.time = startTime
+    function storeXhr(params, metrics, startTime, endTime, type) {
+      metrics.time = startTime
 
-    // send to session traces
-    var hash
-    if (params.cat) {
-      hash = stringify([params.status, params.cat])
-    } else {
-      hash = stringify([params.status, params.host, params.pathname])
-    }
-
-    handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, undefined, this.ee)
-
-    // store as metric
-    this.aggregator.store('xhr', hash, params, metrics)
-
-    if (!this.allAjaxIsEnabled()) {
-      return
-    }
-
-    if (!shouldCollectEvent(params)) {
-      if (params.hostname === getInfo(this.agentIdentifier).errorBeacon) {
-        handle('record-supportability', ['Ajax/Events/Excluded/Agent'])
+      // send to session traces
+      var hash
+      if (params.cat) {
+        hash = stringify([params.status, params.cat])
       } else {
-        handle('record-supportability', ['Ajax/Events/Excluded/App'])
+        hash = stringify([params.status, params.host, params.pathname])
       }
-      return
-    }
 
-    var xhrContext = this
+      handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, undefined, ee)
 
-    var event = {
-      method: params.method,
-      status: params.status,
-      domain: params.host,
-      path: params.pathname,
-      requestSize: metrics.txSize,
-      responseSize: metrics.rxSize,
-      type: type,
-      startTime: startTime,
-      endTime: endTime,
-      callbackDuration: metrics.cbTime
-    }
+      // store as metric
+      aggregator.store('xhr', hash, params, metrics)
 
-    if (xhrContext.dt) {
-      event.spanId = xhrContext.dt.spanId
-      event.traceId = xhrContext.dt.traceId
-      event.spanTimestamp = xhrContext.dt.timestamp
-    }
+      if (!allAjaxIsEnabled()) {
+        return
+      }
 
-    // if the ajax happened inside an interaction, hold it until the interaction finishes
-    if (this.spaNode) {
-      var interactionId = this.spaNode.interaction.id
-      this.spaAjaxEvents[interactionId] = this.spaAjaxEvents[interactionId] || []
-      this.spaAjaxEvents[interactionId].push(event)
-    } else {
-      this.ajaxEvents.push(event)
-    }
-  }
-
-  prepareHarvest(options) {
-    options = options || {}
-
-    if (this.ajaxEvents.length === 0) {
-      return null
-    }
-
-    var payload = this.getPayload(this.ajaxEvents, options.maxPayloadSize || this.MAX_PAYLOAD_SIZE)
-
-    var payloadObjs = []
-    for (var i = 0; i < payload.length; i++) {
-      payloadObjs.push({ body: { e: payload[i] } })
-    }
-
-    if (options.retry) {
-      this.sentAjaxEvents = this.ajaxEvents.slice()
-    }
-
-    this.ajaxEvents = []
-
-    return payloadObjs
-  }
-
-  getPayload(events, maxPayloadSize, chunks) {
-    chunks = chunks || 1
-    var payload = []
-    var chunkSize = events.length / chunks
-    var eventChunks = this.splitChunks(events, chunkSize)
-    var tooBig = false
-    for (var i = 0; i < eventChunks.length; i++) {
-      var currentChunk = eventChunks[i]
-      if (currentChunk.tooBig(maxPayloadSize)) {
-        if (currentChunk.events.length !== 1) {
-          /* if it is too big BUT it isnt length 1, we can split it down again,
-           else we just want to NOT push it into payload
-           because if it's length 1 and still too big for the maxPayloadSize
-           it cant get any smaller and we dont want to recurse forever */
-          tooBig = true
-          break
+      if (!shouldCollectEvent(params)) {
+        if (params.hostname === getInfo(agentIdentifier).errorBeacon) {
+          handle('record-supportability', ['Ajax/Events/Excluded/Agent'])
+        } else {
+          handle('record-supportability', ['Ajax/Events/Excluded/App'])
         }
+        return
+      }
+
+      var xhrContext = this
+
+      var event = {
+        method: params.method,
+        status: params.status,
+        domain: params.host,
+        path: params.pathname,
+        requestSize: metrics.txSize,
+        responseSize: metrics.rxSize,
+        type: type,
+        startTime: startTime,
+        endTime: endTime,
+        callbackDuration: metrics.cbTime
+      }
+
+      if (xhrContext.dt) {
+        event.spanId = xhrContext.dt.spanId
+        event.traceId = xhrContext.dt.traceId
+        event.spanTimestamp = xhrContext.dt.timestamp
+      }
+
+      // if the ajax happened inside an interaction, hold it until the interaction finishes
+      if (this.spaNode) {
+        var interactionId = this.spaNode.interaction.id
+        spaAjaxEvents[interactionId] = spaAjaxEvents[interactionId] || []
+        spaAjaxEvents[interactionId].push(event)
       } else {
-        payload.push(currentChunk.payload)
+        ajaxEvents.push(event)
       }
     }
-    // check if the current payload string is too big, if so then run getPayload again with more buckets
-    return tooBig ? this.getPayload(events, maxPayloadSize, ++chunks) : payload
-  }
 
-  onEventsHarvestFinished(result) {
-    if (result.retry && this.sentAjaxEvents.length > 0 && this.allAjaxIsEnabled()) {
-      this.ajaxEvents = this.ajaxEvents.concat(this.sentAjaxEvents)
-      this.sentAjaxEvents = []
-    }
-  }
+    function prepareHarvest(options) {
+      options = options || {}
 
-  splitChunks(arr, chunkSize) {
-    chunkSize = chunkSize || arr.length
-    var chunks = []
-    for (var i = 0, len = arr.length; i < len; i += chunkSize) {
-      chunks.push(this.Chunk(arr.slice(i, i + chunkSize)))
-    }
-    return chunks
-  }
-
-  Chunk(events) {
-    const addString = getAddStringContext(this.agentIdentifier) // pass agentIdentifier here
-    let payload = 'bel.7;'
-
-    for (var i = 0; i < events.length; i++) {
-      var event = events[i]
-      var fields = [
-        numeric(event.startTime),
-        numeric(event.endTime - event.startTime),
-        numeric(0), // callbackEnd
-        numeric(0), // no callbackDuration for non-SPA events
-        addString(event.method),
-        numeric(event.status),
-        addString(event.domain),
-        addString(event.path),
-        numeric(event.requestSize),
-        numeric(event.responseSize),
-        event.type === 'fetch' ? 1 : '',
-        addString(0), // nodeId
-        nullable(event.spanId, addString, true) + // guid
-        nullable(event.traceId, addString, true) + // traceId
-        nullable(event.spanTimestamp, numeric, false) // timestamp
-      ]
-
-      var insert = '2,'
-
-      // add custom attributes
-      var attrParts = addCustomAttributes(getInfo(this.agentIdentifier).jsAttributes || {}, addString)
-      fields.unshift(numeric(attrParts.length))
-
-      insert += fields.join(',')
-
-      if (attrParts && attrParts.length > 0) {
-        insert += ';' + attrParts.join(';')
+      if (ajaxEvents.length === 0) {
+        return null
       }
 
-      if ((i + 1) < events.length) insert += ';'
+      var payload = getPayload(ajaxEvents, options.maxPayloadSize || MAX_PAYLOAD_SIZE)
 
-      payload += insert
+      var payloadObjs = []
+      for (var i = 0; i < payload.length; i++) {
+        payloadObjs.push({ body: { e: payload[i] } })
+      }
+
+      if (options.retry) {
+        sentAjaxEvents = ajaxEvents.slice()
+      }
+
+      ajaxEvents = []
+
+      return payloadObjs
     }
 
-    const tooBig = function (maxPayloadSize) {
-      maxPayloadSize = maxPayloadSize || this.MAX_PAYLOAD_SIZE
-      return this.payload.length * 2 > maxPayloadSize
+    function getPayload(events, maxPayloadSize, chunks) {
+      chunks = chunks || 1
+      var payload = []
+      var chunkSize = events.length / chunks
+      var eventChunks = splitChunks(events, chunkSize)
+      var tooBig = false
+      for (var i = 0; i < eventChunks.length; i++) {
+        var currentChunk = eventChunks[i]
+        if (currentChunk.tooBig(maxPayloadSize)) {
+          if (currentChunk.events.length !== 1) {
+            /* if it is too big BUT it isnt length 1, we can split it down again,
+             else we just want to NOT push it into payload
+             because if it's length 1 and still too big for the maxPayloadSize
+             it cant get any smaller and we dont want to recurse forever */
+            tooBig = true
+            break
+          }
+        } else {
+          payload.push(currentChunk.payload)
+        }
+      }
+      // check if the current payload string is too big, if so then run getPayload again with more buckets
+      return tooBig ? getPayload(events, maxPayloadSize, ++chunks) : payload
     }
 
-    return {
-      events,
-      payload,
-      tooBig,
+    function onEventsHarvestFinished(result) {
+      if (result.retry && sentAjaxEvents.length > 0 && allAjaxIsEnabled()) {
+        ajaxEvents = ajaxEvents.concat(sentAjaxEvents)
+        sentAjaxEvents = []
+      }
     }
-  }
 
-  allAjaxIsEnabled() {
-    var enabled = getConfigurationValue(this.agentIdentifier, 'ajax.enabled')
-    if (enabled === false) {
-      return false
+    function splitChunks(arr, chunkSize) {
+      chunkSize = chunkSize || arr.length
+      var chunks = []
+      for (var i = 0, len = arr.length; i < len; i += chunkSize) {
+        chunks.push(new Chunk(arr.slice(i, i + chunkSize)))
+      }
+      return chunks
     }
-    return true
+
+    function Chunk(events) {
+      this.addString = getAddStringContext(agentIdentifier) // pass agentIdentifier here
+      this.events = events
+      this.payload = 'bel.7;'
+
+      for (var i = 0; i < events.length; i++) {
+        var event = events[i]
+        var fields = [
+          numeric(event.startTime),
+          numeric(event.endTime - event.startTime),
+          numeric(0), // callbackEnd
+          numeric(0), // no callbackDuration for non-SPA events
+          this.addString(event.method),
+          numeric(event.status),
+          this.addString(event.domain),
+          this.addString(event.path),
+          numeric(event.requestSize),
+          numeric(event.responseSize),
+          event.type === 'fetch' ? 1 : '',
+          this.addString(0), // nodeId
+          nullable(event.spanId, this.addString, true) + // guid
+          nullable(event.traceId, this.addString, true) + // traceId
+          nullable(event.spanTimestamp, numeric, false) // timestamp
+        ]
+
+        var insert = '2,'
+
+        // add custom attributes
+        var attrParts = addCustomAttributes(getInfo(agentIdentifier).jsAttributes || {}, this.addString)
+        fields.unshift(numeric(attrParts.length))
+
+        insert += fields.join(',')
+
+        if (attrParts && attrParts.length > 0) {
+          insert += ';' + attrParts.join(';')
+        }
+
+        if ((i + 1) < events.length) insert += ';'
+
+        this.payload += insert
+      }
+
+      this.tooBig = function (maxPayloadSize) {
+        maxPayloadSize = maxPayloadSize || MAX_PAYLOAD_SIZE
+        return this.payload.length * 2 > maxPayloadSize
+      }
+    }
+
+    function allAjaxIsEnabled() {
+      var enabled = getConfigurationValue(agentIdentifier, 'ajax.enabled')
+      if (enabled === false) {
+        return false
+      }
+      return true
+    }
   }
 }

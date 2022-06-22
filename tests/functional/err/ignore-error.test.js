@@ -13,6 +13,9 @@ testDriver.test('ignoring errors works', supported, function (t, browser, router
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   })
@@ -25,11 +28,17 @@ testDriver.test('ignoring errors works', supported, function (t, browser, router
 
     const actualErrors = getErrorsFromResponse(response, browser)
 
+    console.log("actualErrors", actualErrors)
+
     let expectedErrors = [{
       message: 'report',
       stack: [{
         u: '<inline>',
-        l: 20
+        l: 22
+      }, {
+        f: 'c',
+        u: '<inline>',
+        l: 12
       }]
     }]
 

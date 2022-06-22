@@ -33,79 +33,78 @@ export class Instrument extends FeatureBase {
 
         getRuntime(this.agentIdentifier).features.spa = true
 
-        this.depth = 0
-        this.startHash
+        let depth = 0
+        let startHash
 
-        this.tracerEE = this.ee.get('tracer')
-        this.jsonpEE = wrapJson(this.ee)
-        this.promiseEE = wrapPromise(this.ee)
-        this.eventsEE = wrapEvents(this.ee)
-        this.timerEE = wrapTimer(this.ee)
-        this.xhrEE = wrapXhr(this.ee)
-        this.fetchEE = wrapFetch(this.ee)
-        this.historyEE = wrapHistory(this.ee)
-        this.mutationEE = wrapMutation(this.ee)
+        const tracerEE = this.ee.get('tracer')
+        const jsonpEE = wrapJson(this.ee)
+        const promiseEE = wrapPromise(this.ee)
+        const eventsEE = wrapEvents(this.ee)
+        const timerEE = wrapTimer(this.ee)
+        const xhrEE = wrapXhr(this.ee)
+        const fetchEE = wrapFetch(this.ee)
+        const historyEE = wrapHistory(this.ee)
+        const mutationEE = wrapMutation(this.ee)
 
-        this.ee.on(FN_START, (...args) => this.startTimestamp(...args))
-        this.promiseEE.on(CB_START, (...args) => this.startTimestamp(...args))
-        this.jsonpEE.on(CB_START, (...args) => this.startTimestamp(...args))
+        this.ee.on(FN_START, startTimestamp)
+        promiseEE.on(CB_START, startTimestamp)
+        jsonpEE.on(CB_START, startTimestamp)
 
-        this.ee.on(FN_END, (...args) => this.endTimestamp(...args))
-        this.promiseEE.on(CB_END, (...args) => this.endTimestamp(...args))
-        this.jsonpEE.on(CB_END, (...args) => this.endTimestamp(...args))
+        this.ee.on(FN_END, endTimestamp)
+        promiseEE.on(CB_END, endTimestamp)
+        jsonpEE.on(CB_END, endTimestamp)
 
         this.ee.buffer([FN_START, FN_END, 'xhr-resolved'])
-        this.eventsEE.buffer([FN_START])
-        this.timerEE.buffer(['setTimeout' + END, 'clearTimeout' + START, FN_START])
-        this.xhrEE.buffer([FN_START, 'new-xhr', 'send-xhr' + START])
-        this.fetchEE.buffer([FETCH + START, FETCH + '-done', FETCH + BODY + START, FETCH + BODY + END])
-        this.historyEE.buffer(['newURL'])
-        this.mutationEE.buffer([FN_START])
-        this.promiseEE.buffer(['propagate', CB_START, CB_END, 'executor-err', 'resolve' + START])
-        this.tracerEE.buffer([FN_START, 'no-' + FN_START])
-        this.jsonpEE.buffer(['new-jsonp', 'cb-start', 'jsonp-error', 'jsonp-end'])
+        eventsEE.buffer([FN_START])
+        timerEE.buffer(['setTimeout' + END, 'clearTimeout' + START, FN_START])
+        xhrEE.buffer([FN_START, 'new-xhr', 'send-xhr' + START])
+        fetchEE.buffer([FETCH + START, FETCH + '-done', FETCH + BODY + START, FETCH + BODY + END])
+        historyEE.buffer(['newURL'])
+        mutationEE.buffer([FN_START])
+        promiseEE.buffer(['propagate', CB_START, CB_END, 'executor-err', 'resolve' + START])
+        tracerEE.buffer([FN_START, 'no-' + FN_START])
+        jsonpEE.buffer(['new-jsonp', 'cb-start', 'jsonp-error', 'jsonp-end'])
 
-        this.timestamp(this.fetchEE, FETCH + START)
-        this.timestamp(this.fetchEE, FETCH + '-done')
-        this.timestamp(this.jsonpEE, 'new-jsonp')
-        this.timestamp(this.jsonpEE, 'jsonp-end')
-        this.timestamp(this.jsonpEE, 'cb-start')
+        timestamp(fetchEE, FETCH + START)
+        timestamp(fetchEE, FETCH + '-done')
+        timestamp(jsonpEE, 'new-jsonp')
+        timestamp(jsonpEE, 'jsonp-end')
+        timestamp(jsonpEE, 'cb-start')
 
-        this.historyEE.on('pushState-end', (...args) => this.trackURLChange(...args))
-        this.historyEE.on('replaceState-end', (...args) => this.trackURLChange(...args))
+        historyEE.on('pushState-end', trackURLChange)
+        historyEE.on('replaceState-end', trackURLChange)
 
-        win[ADD_EVENT_LISTENER]('hashchange', (...args) => this.trackURLChange(...args), eventListenerOpts(true))
-        win[ADD_EVENT_LISTENER]('load', (...args) => this.trackURLChange(...args), eventListenerOpts(true))
-        win[ADD_EVENT_LISTENER]('popstate', () => {
-            this.trackURLChange(0, depth > 1)
+        win[ADD_EVENT_LISTENER]('hashchange', trackURLChange, eventListenerOpts(true))
+        win[ADD_EVENT_LISTENER]('load', trackURLChange, eventListenerOpts(true))
+        win[ADD_EVENT_LISTENER]('popstate', function () {
+            trackURLChange(0, depth > 1)
         }, eventListenerOpts(true))
-    }
 
-    trackURLChange(unusedArgs, hashChangedDuringCb) {
-        this.historyEE.emit('newURL', ['' + location, hashChangedDuringCb])
-    }
-
-    startTimestamp() {
-        this.depth++
-        this.startHash = location.hash
-        this[FN_START] = now()
-    }
-
-    endTimestamp() {
-        this.depth--
-        if (location.hash !== this.startHash) {
-            this.trackURLChange(0, true)
+        function trackURLChange(unusedArgs, hashChangedDuringCb) {
+            historyEE.emit('newURL', ['' + location, hashChangedDuringCb])
         }
-
-        var time = now()
-        this[JS_TIME] = (~~this[JS_TIME]) + time - this[FN_START]
-        this[FN_END] = time
+    
+        function startTimestamp() {
+            depth++
+            startHash = location.hash
+            this[FN_START] = now()
+        }
+    
+        function endTimestamp() {
+            depth--
+            if (location.hash !== startHash) {
+                trackURLChange(0, true)
+            }
+    
+            var time = now()
+            this[JS_TIME] = (~~this[JS_TIME]) + time - this[FN_START]
+            this[FN_END] = time
+        }
+    
+        function timestamp(ee, type) {
+            ee.on(type, function () {
+                this[type] = now()
+            })
+        }
     }
-
-    timestamp(ee, type) {
-        ee.on(type, () => {
-            this[type] = now()
-        })
-    }
-
 }

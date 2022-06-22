@@ -18,6 +18,9 @@ testDriver.test('jserrors are retried when collector returns 429', supported, fu
       },
       harvest: {
         tooManyRequestsDelay: 10
+      },
+      metrics: {
+        enabled: false
       }
     }
   })

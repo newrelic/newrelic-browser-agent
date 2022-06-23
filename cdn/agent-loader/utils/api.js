@@ -54,7 +54,7 @@ export function setAPI() {
           try {
             return cb.apply(this, arguments)
           } catch (err) {
-            tracerEE.emit('fn-err', [arguments, this, err], contextStore)
+            tracerEE.emit('fn-err', [arguments, this, typeof err == 'string' ? new Error(err) : err], contextStore)
             // the error came from outside the agent, so don't swallow
             throw err
           } finally {

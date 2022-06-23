@@ -20,7 +20,12 @@ export class Instrument extends FeatureBase {
     // skipNext counter to keep track of uncaught
     // errors that will be the same as caught errors.
     this.skipNext = 0
+    this.handleErrors = false,
+    this.origOnerror = window.onerror
+    
+    const state = this
 
+<<<<<<< HEAD
     this.handleErrors = false,
     this.origOnerror = window.onerror
     
@@ -32,6 +37,10 @@ export class Instrument extends FeatureBase {
 
     console.log("initialize js-errors instrument!", state.agentIdentifier)
 
+=======
+    console.log("initialize js-errors instrument!", state.agentIdentifier)
+
+>>>>>>> a8cd8bc (update errors.test.js)
     state.ee.on('fn-start', function (args, obj, methodName) {
       if (state.handleErrors) state.skipNext += 1
     })

@@ -185,5 +185,5 @@ export function wrapXhr (sharedEE) {
 
 
 export function scopedEE(sharedEE){
-  return (sharedEE || contextualEE).get('events')
+  return (sharedEE || contextualEE).get('xhr')
 }

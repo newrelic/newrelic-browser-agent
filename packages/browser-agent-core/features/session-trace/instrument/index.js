@@ -29,6 +29,7 @@ export class Instrument extends FeatureBase {
     super(agentIdentifier)
     getRuntime(this.agentIdentifier).features.stn = true
 
+    const ee = this.ee
 
     console.log("initialize session-trace instrument!", agentIdentifier)
 
@@ -51,8 +52,10 @@ export class Instrument extends FeatureBase {
 
     this.ee.on(FN_END, function (args, target) {
       var evt = args[0]
-      if (evt instanceof origEvent) {
-        handle('bst', [evt, target, this.bstStart, now()])
+      if (evt instanceof origEvent) {        
+        // ISSUE: when target is XMLHttpRequest, nr@context should have params so we can calculate event origin
+        // When ajax is disabled, this may fail without making ajax a dependency of session-trace
+        handle('bst', [evt, target, this.bstStart, now()], undefined, undefined, ee)
       }
     })
 
@@ -62,7 +65,7 @@ export class Instrument extends FeatureBase {
     })
 
     this.timerEE.on(FN_END, function (args, target) {
-      handle(BST_TIMER, [target, this.bstStart, now(), this.bstType])
+      handle(BST_TIMER, [target, this.bstStart, now(), this.bstType], undefined, undefined, ee)
     })
 
     this.rafEE.on(FN_START, function () {
@@ -70,7 +73,7 @@ export class Instrument extends FeatureBase {
     })
 
     this.rafEE.on(FN_END, function (args, target) {
-      handle(BST_TIMER, [target, this.bstStart, now(), 'requestAnimationFrame'])
+      handle(BST_TIMER, [target, this.bstStart, now(), 'requestAnimationFrame'], undefined, undefined, ee)
     })
 
     this.ee.on(PUSH_STATE + START, function (args) {
@@ -78,7 +81,7 @@ export class Instrument extends FeatureBase {
       this.startPath = location.pathname + location.hash
     })
     this.ee.on(PUSH_STATE + END, function (args) {
-      handle('bstHist', [location.pathname + location.hash, this.startPath, this.time])
+      handle('bstHist', [location.pathname + location.hash, this.startPath, this.time], undefined, undefined, ee)
     })
 
     if (supportsPerformanceObserver()) {

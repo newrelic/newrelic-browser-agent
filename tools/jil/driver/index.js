@@ -31,7 +31,9 @@ wd.addAsyncMethod('safeGet', function (url, cb) {
 
 wd.addAsyncMethod('waitForFeature', function (feat, cb) {
   this.waitFor(
+    // condition for gulp built agent
     // asserters.jsCondition('window.NREUM && window.NREUM.setToken && window.NREUM.setToken.active && window.NREUM.setToken.active.err'),
+    // condition for webpack built agent
     asserters.jsCondition(`window.NREUM && window.NREUM.activatedFeatures && window.NREUM.activatedFeatures['${feat}'] || window.NREUM.activatedFeatures.err`),
     this._testDriver.timeout,
     cb

@@ -4,7 +4,11 @@
  */
 import slice from 'lodash._slice'
 import { gosNREUM } from '@newrelic/browser-agent-core/common/window/nreum'
+<<<<<<< HEAD
 import { getRuntime, setInfo, getInfo } from '@newrelic/browser-agent-core/common/config/config'
+=======
+import { getRuntime } from '@newrelic/browser-agent-core/common/config/config'
+>>>>>>> 363156d (update api.test.js)
 import { handle } from '@newrelic/browser-agent-core/common/event-emitter/handle'
 import { mapOwn } from '@newrelic/browser-agent-core/common/util/map-own'
 import { ee } from '@newrelic/browser-agent-core/common/event-emitter/contextual-ee'
@@ -18,6 +22,10 @@ export function setAPI() {
   var tracerEE = instanceEE.get('tracer')
 
   var asyncApiFns = [
+<<<<<<< HEAD
+=======
+    'setCustomAttribute',
+>>>>>>> 363156d (update api.test.js)
     'setErrorHandler',
     'finished',
     'addToTrace',
@@ -40,6 +48,7 @@ export function setAPI() {
     if (typeof name !== 'string') return
     if (name.charAt(0) !== '/') name = '/' + name
     getRuntime(agentIdentifier).customTransaction = (host || 'http://custom.transaction') + name
+<<<<<<< HEAD
     return apiCall(prefix, 'setPageViewName', true, 'api')()
   }
 
@@ -47,6 +56,9 @@ export function setAPI() {
     const currentInfo = getInfo(agentIdentifier)
     setInfo(agentIdentifier, {...currentInfo, jsAttributes: {...currentInfo.jsAttributes, [name]: value}})
     return apiCall(prefix, 'setCustomAttribute', true, 'api')()
+=======
+    return apiCall(prefix, 'setPageViewName', true, 'api')
+>>>>>>> 363156d (update api.test.js)
   }
 
   nr.interaction = function () {

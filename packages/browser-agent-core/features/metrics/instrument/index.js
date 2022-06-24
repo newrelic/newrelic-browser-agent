@@ -15,8 +15,8 @@ export class Instrument extends FeatureBase {
         // checks that are run only one time, at script load
         this.singleChecks()
         // listen for messages from features and capture them
-        registerHandler('record-supportability', (...args) => this.recordSupportability(...args), undefined, undefined, this.ee)
-        registerHandler('record-custom', (...args) => this.recordCustom(...args), undefined, undefined, this.ee)
+        registerHandler('record-supportability', (...args) => this.recordSupportability(...args), undefined, this.ee)
+        registerHandler('record-custom', (...args) => this.recordCustom(...args), undefined, this.ee)
     }
 
     /**

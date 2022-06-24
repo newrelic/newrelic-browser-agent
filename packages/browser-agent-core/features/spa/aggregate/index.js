@@ -137,7 +137,7 @@ export class Aggregate extends FeatureBase {
         if (typeof init === 'function') {
           init(pluginApi)
         }
-      })
+      }, undefined, baseEE)
 
       function callbackStart() {
         state.depth++

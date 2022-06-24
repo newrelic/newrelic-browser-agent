@@ -345,7 +345,7 @@ export class Aggregate extends FeatureBase {
         }
       }, undefined, jsonpEE)
 
-      register(jsonpEE, JSONP_END, function () {
+      register(JSONP_END, function () {
         var node = this[JSONP_NODE]
         if (node) {
           // if no status is set then cb never fired - so it's not a valid JSONP

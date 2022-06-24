@@ -19,7 +19,6 @@ export function initializeAPI(agentIdentifier) {
 
     var api = {
         finished: single(finished),
-        setPageViewName: setPageViewName,
         setErrorHandler: setErrorHandler,
         addToTrace: addToTrace,
         inlineHit: inlineHit,

@@ -29,6 +29,7 @@ export class Instrument extends FeatureBase {
     super(agentIdentifier)
     getRuntime(this.agentIdentifier).features.stn = true
 
+    const ee = this.ee
 
     console.log("initialize session-trace instrument!", agentIdentifier)
 
@@ -52,7 +53,9 @@ export class Instrument extends FeatureBase {
     this.ee.on(FN_END, function (args, target) {
       var evt = args[0]
       if (evt instanceof origEvent) {
-        handle('bst', [evt, target, this.bstStart, now()])
+        // ISSUE: when target is XMLHttpRequest, nr@context should have params so we can calculate event origin
+        // When ajax is disabled, this may fail without making ajax a dependency of session-trace
+        handle('bst', [evt, target, this.bstStart, now()], undefined, undefined, ee)
       }
     })
 
@@ -62,7 +65,7 @@ export class Instrument extends FeatureBase {
     })
 
     this.timerEE.on(FN_END, function (args, target) {
-      handle(BST_TIMER, [target, this.bstStart, now(), this.bstType])
+      handle(BST_TIMER, [target, this.bstStart, now(), this.bstType], undefined, undefined, ee)
     })
 
     this.rafEE.on(FN_START, function () {
@@ -70,7 +73,7 @@ export class Instrument extends FeatureBase {
     })
 
     this.rafEE.on(FN_END, function (args, target) {
-      handle(BST_TIMER, [target, this.bstStart, now(), 'requestAnimationFrame'])
+      handle(BST_TIMER, [target, this.bstStart, now(), 'requestAnimationFrame'], undefined, undefined, ee)
     })
 
     this.ee.on(PUSH_STATE + START, function (args) {
@@ -78,21 +81,21 @@ export class Instrument extends FeatureBase {
       this.startPath = location.pathname + location.hash
     })
     this.ee.on(PUSH_STATE + END, function (args) {
-      handle('bstHist', [location.pathname + location.hash, this.startPath, this.time])
+      handle('bstHist', [location.pathname + location.hash, this.startPath, this.time], undefined, undefined, ee)
     })
 
     if (supportsPerformanceObserver()) {
       // capture initial resources, in case our observer missed anything
-      handle(BST_RESOURCE, [window.performance.getEntriesByType('resource')])
+      handle(BST_RESOURCE, [window.performance.getEntriesByType('resource')], undefined, undefined, ee)
 
       this.observeResourceTimings()
     } else {
       // collect resource timings once when buffer is full
       if (ADD_EVENT_LISTENER in window.performance) {
         if (window.performance['c' + learResourceTimings]) {
-          window.performance[ADD_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, eventListenerOpts(false))
+          window.performance[ADD_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, (...args) => this.onResourceTimingBufferFull(...args), eventListenerOpts(false))
         } else {
-          window.performance[ADD_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, eventListenerOpts(false))
+          window.performance[ADD_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, (...args) => this.onResourceTimingBufferFull(...args), eventListenerOpts(false))
         }
       }
     }
@@ -106,7 +109,7 @@ export class Instrument extends FeatureBase {
     var observer = new PerformanceObserver(function (list, observer) { // eslint-disable-line no-undef
       var entries = list.getEntries()
 
-      handle(BST_RESOURCE, [entries])
+      handle(BST_RESOURCE, [entries], undefined, undefined, this.ee)
     })
 
     try {
@@ -117,18 +120,18 @@ export class Instrument extends FeatureBase {
   }
 
   onResourceTimingBufferFull(e) {
-    handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)])
+    handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)], undefined, undefined, this.ee)
 
     // stop recording once buffer is full
     if (window.performance['c' + learResourceTimings]) {
       try {
-        window.performance[REMOVE_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false)
+        window.performance[REMOVE_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, (...args) => this.onResourceTimingBufferFull(...args), false)
       } catch (e) {
         // do nothing
       }
     } else {
       try {
-        window.performance[REMOVE_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false)
+        window.performance[REMOVE_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, (...args) => this.onResourceTimingBufferFull(...args), false)
       } catch (e) {
         // do nothing
       }

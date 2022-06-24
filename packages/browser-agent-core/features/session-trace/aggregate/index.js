@@ -79,12 +79,12 @@ export class Aggregate extends FeatureBase {
     // onHarvest('resources', prepareHarvest)
 
     var scheduler = new HarvestScheduler('resources', {
-      onFinished: (...args) => onHarvestFinished(...args),
+      onFinished: onHarvestFinished.bind(this),
       retryDelay: (...args) => this.harvestTimeSeconds(...args)
       // onUnload: () => this.finalHarvest() // no special actions needed before unloading
     }, this)
+    scheduler.harvest.on('resources', prepareHarvest.bind(this))
     scheduler.runHarvest({ needResponse: true })
-    scheduler.harvest.on('resources', (...args) => prepareHarvest(...args))
 
     function onHarvestFinished(result) {
       // start timer only if ptid was returned by server
@@ -95,7 +95,7 @@ export class Aggregate extends FeatureBase {
       }
 
       if (result.sent && result.retry && this.sentTrace) {
-        mapOwn(this.sentTrace, function (name, nodes) {
+        mapOwn(this.sentTrace, (name, nodes) => {
           this.mergeSTNs(name, nodes)
         })
         this.sentTrace = null
@@ -314,7 +314,7 @@ export class Aggregate extends FeatureBase {
       this.storeResources(window.performance.getEntriesByType('resource'))
     }
 
-    var stns = reduce(mapOwn(this.trace, function (name, nodes) {
+    var stns = reduce(mapOwn(this.trace, (name, nodes) => {
       if (!(name in this.toAggregate)) return nodes
 
       return reduce(mapOwn(reduce(nodes.sort(this.byStart), this.smearEvtsByOrigin(name), {}), this.val), this.flatten, [])

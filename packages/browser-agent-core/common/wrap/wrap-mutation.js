@@ -6,8 +6,12 @@ import {ee as baseEE} from '../event-emitter/contextual-ee'
 import {createWrapperWithEmitter as wfn} from './wrap-function'
 import {originals} from '../config/config'
 
+const wrapped = {}
+
 export function wrapMutation (sharedEE){
-  var ee = scopedEE(sharedEE)
+  const ee = scopedEE(sharedEE)
+  if (wrapped[ee.debugId]) return ee
+  wrapped[ee.debugId] = true
   var wrapFn = wfn(ee)
   var OriginalObserver = originals.MO
   

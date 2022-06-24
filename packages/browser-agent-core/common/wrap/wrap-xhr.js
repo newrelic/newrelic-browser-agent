@@ -11,10 +11,13 @@ import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { originals } from '../config/config'
 
+const wrapped = {}
 // eslint-disable-next-line
 export function wrapXhr (sharedEE) {
   var baseEE = sharedEE || contextualEE
-  var ee = scopedEE(baseEE)
+  const ee = scopedEE(baseEE)
+  if (wrapped[ee.debugId]) return ee
+  wrapped[ee.debugId] = true
   var wrapFn = wfn(ee)
 
   var OrigXHR = originals.XHR

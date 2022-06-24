@@ -7,8 +7,12 @@ import {ee as baseEE} from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { getOrSet } from '../util/get-or-set'
 
+const wrapped = {}
+
 export function wrapEvents(sharedEE) {
   var ee = scopedEE(sharedEE)
+  if (wrapped[ee.debugId]) return ee
+  wrapped[ee.debugId] = true
   var wrapFn = wfn(ee, true)
 
   var XHR = XMLHttpRequest

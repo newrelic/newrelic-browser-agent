@@ -5,6 +5,7 @@ import { getFrameworks } from '../../../common/metrics/framework-detection'
 import { protocol } from '../../../common/url/protocol'
 import { getRules } from '../../../common/util/obfuscate'
 import { VERSION } from '../../../common/constants/environment-variables'
+import { onDOMContentLoaded } from '../../../common/window/load'
 
 var SUPPORTABILITY_METRIC = 'sm'
 var CUSTOM_METRIC = 'cm'
@@ -58,8 +59,11 @@ export class Instrument extends FeatureBase {
         this.recordSupportability(`Generic/Version/${VERSION}/Detected`)
 
         // frameworks on page
-        getFrameworks().forEach(framework => {
-            this.recordSupportability('Framework/' + framework + '/Detected')
+        onDOMContentLoaded(() => {
+            getFrameworks().forEach(framework => {
+                console.log("framework!", framework)
+                this.recordSupportability('Framework/' + framework + '/Detected')
+            })
         })
 
         // file protocol detection

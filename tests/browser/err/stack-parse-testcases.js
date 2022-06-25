@@ -14,7 +14,7 @@ function FakeError (message, stack) {
   this.stack = stack
 }
 
-module.exports = [
+export default [
   {
     stack: new FakeUncaughtException('Uncaught Error: uncaught error', 'http://localhost:9090/errors/uncaught1.js', 8),
     info: {

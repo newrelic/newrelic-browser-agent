@@ -153,7 +153,8 @@ export class Harvest extends SharedContext {
     var info = getInfo(this.sharedContext.agentIdentifier)
 
     if ('privacy' in init) {
-      areCookiesEnabled = init.privacy.cookies_enabled
+      const ce = getConfigurationValue(this.sharedContext.agentIdentifier, 'privacy.cookies_enabled')
+      areCookiesEnabled = ce !== undefined ? ce : true
     }
 
     var location = cleanURL(getLocation())

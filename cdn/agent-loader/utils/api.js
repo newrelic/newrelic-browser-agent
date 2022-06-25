@@ -4,7 +4,7 @@
  */
 import slice from 'lodash._slice'
 import { gosNREUM } from '@newrelic/browser-agent-core/common/window/nreum'
-import { getRuntime } from '@newrelic/browser-agent-core/common/config/config'
+import { getRuntime, setInfo, getInfo } from '@newrelic/browser-agent-core/common/config/config'
 import { handle } from '@newrelic/browser-agent-core/common/event-emitter/handle'
 import { mapOwn } from '@newrelic/browser-agent-core/common/util/map-own'
 import { ee } from '@newrelic/browser-agent-core/common/event-emitter/contextual-ee'
@@ -17,7 +17,6 @@ export function setAPI() {
   var tracerEE = instanceEE.get('tracer')
 
   var asyncApiFns = [
-    'setCustomAttribute',
     'setErrorHandler',
     'finished',
     'addToTrace',
@@ -41,6 +40,12 @@ export function setAPI() {
     if (name.charAt(0) !== '/') name = '/' + name
     getRuntime(agentIdentifier).customTransaction = (host || 'http://custom.transaction') + name
     return apiCall(prefix, 'setPageViewName', true, 'api')()
+  }
+
+  nr.setCustomAttribute = function(name, value){
+    const currentInfo = getInfo(agentIdentifier)
+    setInfo(agentIdentifier, {...currentInfo, jsAttributes: {...currentInfo.jsAttributes, [name]: value}})
+    return apiCall(prefix, 'setCustomAttribute', true, 'api')()
   }
 
   nr.interaction = function () {

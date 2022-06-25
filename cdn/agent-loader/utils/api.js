@@ -40,7 +40,7 @@ export function setAPI() {
     if (typeof name !== 'string') return
     if (name.charAt(0) !== '/') name = '/' + name
     getRuntime(agentIdentifier).customTransaction = (host || 'http://custom.transaction') + name
-    return apiCall(prefix, 'setPageViewName', true, 'api')
+    return apiCall(prefix, 'setPageViewName', true, 'api')()
   }
 
   nr.interaction = function () {
@@ -78,7 +78,7 @@ export function setAPI() {
 
   function apiCall(prefix, name, notSpa, bufferGroup) {
     return function () {
-      handle('record-supportability', ['API/' + name + '/called'])
+      handle('record-supportability', ['API/' + name + '/called'], undefined, undefined, instanceEE)
       handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup, instanceEE)
       return notSpa ? void 0 : this
     }
@@ -86,7 +86,7 @@ export function setAPI() {
 
   newrelic.noticeError = function (err, customAttributes) {
     if (typeof err === 'string') err = new Error(err)
-    handle('record-supportability', ['API/noticeError/called'])
+    handle('record-supportability', ['API/noticeError/called'], undefined, undefined, instanceEE)
     handle('err', [err, now(), false, customAttributes], undefined, undefined, instanceEE)
   }
 

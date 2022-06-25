@@ -12,7 +12,8 @@
   {init}
   <!-- Uncomment below for manual local server test -->
   <script>
-    NREUM = window.NREUM || {};NREUM.init = {
+    NREUM = window.NREUM || {init: {}};NREUM.init = {
+      ...NREUM.init,
       obfuscate: [{
         regex: /bam-test/g,
         replacement: 'OBFUSCATED'
@@ -39,7 +40,7 @@
         enabled: true
       },
       jserrors: {
-        harvestTimeSeconds: 2
+        enabled: false
       },
       ins: {
         harvestTimeSeconds: 2
@@ -47,8 +48,8 @@
     }
     
   </script>
-  {loader}
   {config}
+  {loader}
   <script type="text/javascript">
     setTimeout(function () {
       fetch('/json')

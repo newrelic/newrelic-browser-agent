@@ -3,7 +3,7 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { FeatureBase } from '../../../common/util/feature-base'
 import { getFrameworks } from '../../../common/metrics/framework-detection'
 import { protocol } from '../../../common/url/protocol'
-import { getRules } from '../../../common/util/obfuscate'
+import { getRules, validateRules } from '../../../common/util/obfuscate'
 import { VERSION } from '../../../common/constants/environment-variables'
 import { onDOMContentLoaded } from '../../../common/window/load'
 
@@ -73,8 +73,9 @@ export class Instrument extends FeatureBase {
         }
 
         // obfuscation rules detection
-        if (getRules(this.agentIdentifier).length > 0) this.recordSupportability('Generic/Obfuscate/Detected')
-        if (getRules(this.agentIdentifier).length > 0 && !this.validateRules(this.agentIdentifier)) this.recordSupportability('Generic/Obfuscate/Invalid')
+        const rules = getRules(this.agentIdentifier)
+        if (rules.length > 0) this.recordSupportability('Generic/Obfuscate/Detected')
+        if (rules.length > 0 && !validateRules(rules)) this.recordSupportability('Generic/Obfuscate/Invalid')
     }
 }
 

@@ -86,16 +86,50 @@ export class Instrument extends FeatureBase {
 
     if (supportsPerformanceObserver()) {
       // capture initial resources, in case our observer missed anything
-      handle(BST_RESOURCE, [window.performance.getEntriesByType('resource')])
+      handle(BST_RESOURCE, [window.performance.getEntriesByType('resource')], undefined, undefined, ee)
 
-      this.observeResourceTimings()
+      observeResourceTimings()
     } else {
       // collect resource timings once when buffer is full
       if (ADD_EVENT_LISTENER in window.performance) {
         if (window.performance['c' + learResourceTimings]) {
-          window.performance[ADD_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, eventListenerOpts(false))
+          window.performance[ADD_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, eventListenerOpts(false))
         } else {
-          window.performance[ADD_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, eventListenerOpts(false))
+          window.performance[ADD_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, eventListenerOpts(false))
+        }
+      }
+    }
+
+    function observeResourceTimings() {
+      var observer = new PerformanceObserver((list, observer) => { // eslint-disable-line no-undef
+        var entries = list.getEntries()
+
+        handle(BST_RESOURCE, [entries], undefined, undefined, ee)
+      })
+  
+      try {
+        observer.observe({ entryTypes: ['resource'] })
+      } catch (e) {
+        // do nothing
+      }
+    }
+  
+    function onResourceTimingBufferFull(e) {
+
+      handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)], undefined, undefined, ee)
+  
+      // stop recording once buffer is full
+      if (window.performance['c' + learResourceTimings]) {
+        try {
+          window.performance[REMOVE_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
+        } catch (e) {
+          // do nothing
+        }
+      } else {
+        try {
+          window.performance[REMOVE_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
+        } catch (e) {
+          // do nothing
         }
       }
     }
@@ -103,39 +137,6 @@ export class Instrument extends FeatureBase {
     document[ADD_EVENT_LISTENER]('scroll', this.noOp, eventListenerOpts(false))
     document[ADD_EVENT_LISTENER]('keypress', this.noOp, eventListenerOpts(false))
     document[ADD_EVENT_LISTENER]('click', this.noOp, eventListenerOpts(false))
-  }
-
-  observeResourceTimings() {
-    var observer = new PerformanceObserver(function (list, observer) { // eslint-disable-line no-undef
-      var entries = list.getEntries()
-
-      handle(BST_RESOURCE, [entries])
-    })
-
-    try {
-      observer.observe({ entryTypes: ['resource'] })
-    } catch (e) {
-      // do nothing
-    }
-  }
-
-  onResourceTimingBufferFull(e) {
-    handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)])
-
-    // stop recording once buffer is full
-    if (window.performance['c' + learResourceTimings]) {
-      try {
-        window.performance[REMOVE_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false)
-      } catch (e) {
-        // do nothing
-      }
-    } else {
-      try {
-        window.performance[REMOVE_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false)
-      } catch (e) {
-        // do nothing
-      }
-    }
   }
 
   noOp(e) { /* no-op */ }

@@ -246,7 +246,7 @@ export class Aggregate extends FeatureBase {
   storeResources(resources) {
     if (!resources || resources.length === 0) return
 
-    resources.forEach(function (currentResource) {
+    resources.forEach((currentResource) => {
       var parsed = parseUrl(currentResource.name)
       var res = {
         n: currentResource.initiatorType,

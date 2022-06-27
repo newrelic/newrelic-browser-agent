@@ -4,7 +4,7 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
+let matcher = require('jil/util/browser-matcher')
 let supported = matcher.withFeature('wrappableAddEventListener')
 
 if (process.browser) {
@@ -33,6 +33,7 @@ jil.browserTest('node is not restored for ended interaction', supported, functio
   }
 
   function onInteractionStart (cb) {
+    console.log(helpers.currentNodeId())
     t.ok(helpers.currentNodeId(), 'should be inside an interaction at the beginning')
     setTimeout(function() {
       t.ok(helpers.currentNodeId(), 'should be inside an interaction in timeout 1')
@@ -50,6 +51,7 @@ jil.browserTest('node is not restored for ended interaction', supported, functio
   }
 
   function afterInteractionDone (interaction) {
+    console.log("interaction", interaction)
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
   }

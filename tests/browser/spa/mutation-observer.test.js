@@ -7,10 +7,15 @@ const jil = require('jil')
 let matcher = require('../../../tools/jil/util/browser-matcher')
 let supported = matcher.withFeature('mutation')
 
+const { setup } = require('../utils/setup')
+
+const setupData = setup()
+const {agentIdentifier, nr} = setupData
+
 jil.browserTest('MutationObserver instanceof check', supported, function (t) {
   var origMutationObserver = MutationObserver
-  require('loader')
-  require('../../../feature/spa/instrument/index.js')
+  const {Instrument} = require('../../../packages/browser-agent-core/features/spa/instrument/index.js')
+  new Instrument(agentIdentifier)
 
   var observer = new MutationObserver(function () {})
 
@@ -21,8 +26,8 @@ jil.browserTest('MutationObserver instanceof check', supported, function (t) {
 
 jil.browserTest('MutationObserver double-instrumentation', supported, function (t) {
   var OrigMutationObserver = MutationObserver
-  require('loader')
-  require('../../../feature/spa/instrument/index.js')
+  const {Instrument} = require('../../../packages/browser-agent-core/features/spa/instrument/index.js')
+  new Instrument(agentIdentifier)
 
   // This simulates what zone.js does when they wrap MutationObserver
   var WrappedObserver = function (cb) {
@@ -37,7 +42,8 @@ jil.browserTest('MutationObserver double-instrumentation', supported, function (
 })
 
 jil.browserTest('MutationObserver functionality check', supported, function (t) {
-  require('../../../feature/spa/instrument/index.js')
+  const {Instrument} = require('../../../packages/browser-agent-core/features/spa/instrument/index.js')
+  new Instrument(agentIdentifier)
   let callbackInvocations = 0
 
   var observer = new MutationObserver(function () {

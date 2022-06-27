@@ -6,7 +6,8 @@
 let originalSetTimeout = global.setTimeout
 
 const jil = require('jil')
-const matcher = require('../../../tools/jil/util/browser-matcher')
+const matcher = require('jil/util/browser-matcher')
+const {getInfo} = require('../../../packages/browser-agent-core/common/config/config')
 
 let supported = matcher.withFeature('wrappableAddEventListener')
 
@@ -682,16 +683,16 @@ jil.browserTest('custom attributes and interaction attributes', supported, funct
   }
 
   function afterInteractionDone (interaction) {
-    var loader = require('loader')
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     t.notok(interaction.ignored, 'interaction should not be ignored')
     validator.validate(t, interaction)
 
-    delete loader.info.jsAttributes.customOutside
-    delete loader.info.jsAttributes.override
-    delete loader.info.jsAttributes.inside
-    delete loader.info.jsAttributes.customInside
+    const info = getInfo(helpers.setupData.agentIdentifier)
+    delete info.jsAttributes.customOutside
+    delete info.jsAttributes.override
+    delete info.jsAttributes.inside
+    delete info.jsAttributes.customInside
     t.end()
   }
 })

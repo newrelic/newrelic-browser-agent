@@ -8,11 +8,14 @@ const testDriver = require('../../../tools/jil/index')
 let supported = testDriver.Matcher.withFeature('stn')
 
 testDriver.test('session trace resources', supported, function (t, browser, router) {
-  let assetURL = router.assetURL('stn/instrumented.html', {
+  let assetURL = router.assetURL('stn/ajax-disabled.html', {
     loader: 'full',
     init: {
       stn: {
         harvestTimeSeconds: 5
+      },
+      ajax: {
+        enabled: false
       },
       page_view_timing: {
         enabled: false
@@ -27,6 +30,9 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
   Promise.all([resourcePromise, loadPromise, rumPromise]).then(([result]) => {
     t.equal(result.res.statusCode, 200, 'server responded with 200')
 
+    const body = result.body
+    const harvestBody = JSON.parse(body).res
+
     // trigger an XHR call after
     var clickPromise = browser
       .elementByCssSelector('body')
@@ -35,21 +41,15 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
     resourcePromise = router.expectResources()
 
     return Promise.all([resourcePromise, clickPromise])
-  }).then(([result]) => {
-    const body = result.body
-
+  })
+  .then(([result]) => {
     t.equal(router.seenRequests.resources, 2, 'got two harvest requests')
     t.equal(result.res.statusCode, 200, 'server responded with 200')
 
-    const parsed = JSON.parse(body).res
-    const harvestBody = parsed
-    const resources = harvestBody.filter(function (node) { return node.t === 'resource' })
-
-    t.ok(resources.length > 1, 'there is at least one resource node')
-
-    var url = 'http://' + router.router.assetServer.host + ':' + router.router.assetServer.port + '/json'
-    const found = resources.find(element => element.o === url)
-    t.ok(!!found, 'expected resource was found')
+    const body = result.body
+    const harvestBody = JSON.parse(body).res
+    const loadNodes = harvestBody.filter(function (node) { return node.t === 'event' && node.n === 'load' || node.n === 'readystatechange' })
+    t.notOk(loadNodes.length > 0, 'XMLHttpRequest nodes not captured when ajax instrumentation is disabled')
 
     t.end()
   }).catch(fail)

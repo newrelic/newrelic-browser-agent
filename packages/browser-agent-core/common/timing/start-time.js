@@ -13,14 +13,13 @@ import { exists as performanceCheckExists } from './performance-check'
 
 export let navCookie = true
 
-findStartTime()
+// findStartTime() *cli - comment out to add agentId context which is n/a at import time
 
-export function findStartTime () {
+export function findStartTime (agentId) {
   var starttime = findStartWebTiming() || findStartCookie()
-
   if (!starttime) return
 
-  mark('starttime', starttime)
+  mark(agentId, 'starttime', starttime)
   setOffset(starttime)
 }
 

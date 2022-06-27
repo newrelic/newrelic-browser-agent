@@ -69,7 +69,7 @@ export class Aggregate extends FeatureBase {
 
     this.laststart = 0
 
-    findStartTime()
+    findStartTime(agentIdentifier)
 
     if (!xhrUsable) return
     // bail if not instrumented

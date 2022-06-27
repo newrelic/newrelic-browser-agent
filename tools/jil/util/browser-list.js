@@ -19,6 +19,10 @@ class BrowserSpec {
     return this.desired.browserName === 'phantom'
   }
 
+  allowsExtendedDebugging () {
+    return ['chrome', 'firefox'].includes(this.desired.browserName) && this.version === 'latest'
+  }
+
   toString () {
     return `${this.browserName}@${this.version} (${this.platformName})`
   }

@@ -5,6 +5,12 @@
 
 const jil = require('jil')
 const matcher = require('../../../tools/jil/util/browser-matcher')
+const { setup } = require('../utils/setup')
+const { getInfo, setInfo } = require("../../../packages/browser-agent-core/common/config/config")
+
+const setupData = setup()
+const {baseEE, agentIdentifier, aggregator} = setupData
+
 
 let supported = matcher.withFeature('wrappableAddEventListener')
 var qp = require('@newrelic/nr-querypack')
@@ -15,10 +21,11 @@ let testCases = require('@newrelic/nr-querypack/examples/all.json').filter((test
 })
 
 if (process.browser) {
-  var serializer = require('../../../feature/spa/aggregate/serializer')
-  var Interaction = require('../../../feature/spa/aggregate/Interaction')
-  var loader = require('loader')
-  loader.info = {}
+  var {Serializer} = require('../../../packages/browser-agent-core/features/spa/aggregate/serializer')
+  var {Interaction} = require('../../../packages/browser-agent-core/features/spa/aggregate/interaction')
+
+  var serializer = new Serializer({agentIdentifier})
+  setInfo(agentIdentifier, {})
 }
 
 var fieldPropMap = {
@@ -38,13 +45,13 @@ _forEach(testCases, function (testCase) {
 })
 
 jil.browserTest('spa interaction serializer attributes', supported, function (t) {
-  let interaction = new Interaction('click', 1459358524622, 'http://example.com/')
+  let interaction = new Interaction('click', 1459358524622, 'http://example.com/', undefined, undefined, agentIdentifier)
   interaction.root.attrs.custom['undefined'] = void 0
   interaction.root.attrs.custom['function'] = function foo (bar) {
     return 123
   }
 
-  var decoded = qp.decode(serializer(interaction.root))[0]
+  var decoded = qp.decode(serializer.serializeSingle(interaction.root))[0]
   var attrs = decoded.children.reduce((map, attr) => {
     map[attr.key] = attr
     return map
@@ -69,13 +76,13 @@ jil.browserTest('spa interaction serializer attributes', supported, function (t)
 }, 'attributes should be correct')
 
 jil.browserTest('spa interaction serializer attributes', supported, function (t) {
-  let interaction = new Interaction('click', 1459358524622, 'http://example.com/')
+  let interaction = new Interaction('click', 1459358524622, 'http://example.com/', undefined, undefined, agentIdentifier)
 
   for (var i = 1; i < 100; ++i) {
     interaction.root.attrs.custom['attr ' + i] = i
   }
 
-  var decoded = qp.decode(serializer(interaction.root, 0, interaction.root.attrs.trigger === 'initialPageLoad'))[0]
+  var decoded = qp.decode(serializer.serializeSingle(interaction.root, 0, interaction.root.attrs.trigger === 'initialPageLoad'))[0]
   var attrs = decoded.children.reduce((map, attr) => {
     map[attr.key] = attr
     return map
@@ -86,17 +93,17 @@ jil.browserTest('spa interaction serializer attributes', supported, function (t)
 }, 'attributes should be limited')
 
 jil.browserTest('spa interaction serializer with undefined string values', supported, function (t) {
-  var interaction = new Interaction('click', 1459358524622, 'http://domain/path')
-  let decoded = qp.decode(serializer(interaction.root))
+  var interaction = new Interaction('click', 1459358524622, 'http://domain/path', undefined, undefined, agentIdentifier)
+  let decoded = qp.decode(serializer.serializeSingle(interaction.root))
   t.equal(decoded[0].customName, null, 'customName (which was undefined originally) should have default value')
   t.end()
 })
 
 jil.browserTest('serializing multiple interactions', supported, function(t) {
-  var ixn = new Interaction('initialPageLoad', 0, 'http://some-domain')
+  var ixn = new Interaction('initialPageLoad', 0, 'http://some-domain', undefined, undefined, agentIdentifier)
   addAjaxNode(ixn.root)
 
-  var ixn2 = new Interaction('click', 0, 'http://some-domain')
+  var ixn2 = new Interaction('click', 0, 'http://some-domain', undefined, undefined, agentIdentifier)
   ixn2.routeChange = true
   addAjaxNode(ixn2.root)
 
@@ -133,14 +140,14 @@ function runTest (testCase, t) {
   var navTiming = []
   var offset = 0
 
-  delete loader.info.atts
+  delete getInfo(agentIdentifier).atts
 
   _forEach(inputJSON, function (root) {
     offset = root.start
     mungeInput(root, schema)
   })
 
-  var result = serializer(inputJSON[0], 0, navTiming, inputJSON[0].attrs.category === 'Route change')
+  var result = serializer.serializeSingle(inputJSON[0], 0, navTiming, inputJSON[0].attrs.category === 'Route change')
 
   t.equal(result, testCase.querypack, 'agent serializer should produce same output as reference encoder')
   t.end()
@@ -156,7 +163,8 @@ function runTest (testCase, t) {
       }
     }
 
-    var loader = require('loader')
+    const info = getInfo(agentIdentifier)
+
     var typesByName = {}
     _forEach(schema.nodeTypes, function (type) {
       typesByName[type.type] = type
@@ -227,11 +235,11 @@ function runTest (testCase, t) {
         }
 
         if (fieldSpec.name === 'queueTime') {
-          loader.info.queueTime = node.queueTime
+          info.queueTime = node.queueTime
         }
 
         if (fieldSpec.name === 'appTime') {
-          loader.info.applicationTime = node.appTime
+         info.applicationTime = node.appTime
         }
 
         if (fieldSpec.name === 'tracedCallbackDuration') {
@@ -294,7 +302,7 @@ function handleAttributes (node) {
         node.attrs.custom[child.key] = null
         break
       case 'apmAttributes':
-        loader.info.atts = child.obfuscatedAttributes
+        info.atts = child.obfuscatedAttributes
         break
       case 'elementData':
         node.attrs.elementData = child

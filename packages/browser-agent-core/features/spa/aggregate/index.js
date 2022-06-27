@@ -47,7 +47,7 @@ export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator)
 
-    const state = {
+    this.state = {
       initialPageURL: getRuntime(agentIdentifier).origin,
       lastSeenUrl: getRuntime(agentIdentifier).origin,
       lastSeenRouteName: null,
@@ -64,7 +64,10 @@ export class Aggregate extends FeatureBase {
       interactionsToHarvest: [],
       interactionsSent: []
     }
-    const serializer = new Serializer(this)
+
+    this.serializer = new Serializer(this)
+
+    const {state, serializer} = this
 
     const baseEE = ee.get(agentIdentifier) // <-- parent baseEE
     const mutationEE = baseEE.get('mutation')

@@ -7,12 +7,17 @@ const jil = require('jil')
 let matcher = require('../../../tools/jil/util/browser-matcher')
 let supported = matcher.withFeature('mutation')
 
+const { setup } = require('../utils/setup')
+
+const setupData = setup()
+const {baseEE} = setupData
+
 jil.browserTest('fn-start events for MutationObserver callbacks should have args', supported, function (t) {
   t.plan(3)
 
-  var ee = require('ee')
-  require('loader')
-  require('../../../feature/wrap-mutation')
+  const {wrapMutation} = require('../../../packages/browser-agent-core/common/wrap/index')
+
+  wrapMutation(baseEE)
 
   var el = document.createElement('div')
   document.body.appendChild(el)
@@ -22,7 +27,7 @@ jil.browserTest('fn-start events for MutationObserver callbacks should have args
     t.equal(o, observer, 'observer received in callback matches original observer')
   })
 
-  ee.on('fn-start', function (args) {
+  baseEE.on('fn-start', function (args) {
     t.equal(args.length, 2, 'fn-start event gets MutationObserver callback args')
   })
 

@@ -4,19 +4,23 @@
  */
 
 const jil = require('jil')
-const matcher = require('../../../tools/jil/util/browser-matcher')
+const matcher = require('jil/util/browser-matcher')
+const { setup } = require('../utils/setup')
+
+const setupData = setup()
+const {baseEE, agentIdentifier, aggregator} = setupData
 
 let supported = matcher.withFeature('wrappableAddEventListener')
 
 jil.browserTest('spa buffers all expected events', supported, function (t) {
-  var baseEE = require('ee')
-  var register = require('../../../agent/register-handler.js')
-  var drain = require('../../../agent/drain')
+
+  var {registerHandler} = require('../../../packages/browser-agent-core/common/event-emitter/register-handler.js')
+  var {drain} = require('../../../packages/browser-agent-core/common/drain/drain')
 
   var plan = 0
 
-  require('loader')
-  require('../../../feature/spa/instrument/index.js')
+  const {Instrument} = require('../../../packages/browser-agent-core/features/spa/instrument/index')
+  const spaIns = new Instrument(agentIdentifier)
 
   var events = {
     'base': ['fn-start', 'fn-end', 'xhr-resolved'],
@@ -55,17 +59,17 @@ jil.browserTest('spa buffers all expected events', supported, function (t) {
       }]
       var ctx = baseEE.context()
       emitter.emit(evName, args, ctx)
-      register.on(emitter, evName, function (a, b) {
+      registerHandler(evName, function (a, b) {
         // filter out non test events
         if (this !== ctx) return
         t.equal(a, args[0])
         t.equal(b, args[1])
         t.equal(this, ctx)
-      })
+      }, undefined, emitter)
     })
   })
 
   t.plan(plan)
 
-  setTimeout(() => drain('feature'))
+  setTimeout(() => drain(agentIdentifier, 'feature'))
 })

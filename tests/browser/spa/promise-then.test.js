@@ -72,7 +72,7 @@ jil.browserTest('promise.then chain with async', supported, function (t) {
     }]
   })
 
-  t.plan(validator.count + 5)
+  t.plan(validator.count + 4)
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
   function onInteractionStart (cb) {
@@ -89,7 +89,6 @@ jil.browserTest('promise.then chain with async', supported, function (t) {
       })
       .then(function validate (val) {
         t.strictEqual(val, 123, 'should get resolve value in 2nd then')
-        t.strictEqual(this, window)
 
         setTimeout(newrelic.interaction().createTracer('timer', function () {
           window.location.hash = '#' + Math.random()
@@ -135,7 +134,7 @@ jil.browserTest('promise.then chain with async with rejection', supported, funct
     }]
   })
 
-  t.plan(validator.count + 5)
+  t.plan(validator.count + 4)
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
   function onInteractionStart (cb) {
@@ -152,7 +151,6 @@ jil.browserTest('promise.then chain with async with rejection', supported, funct
       })
       .then(null, function validate (val) {
         t.strictEqual(val, 123, 'should get reject value in 2nd catch')
-        t.strictEqual(this, window)
 
         setTimeout(newrelic.interaction().createTracer('timer', function () {
           window.location.hash = '#' + Math.random()

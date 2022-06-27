@@ -8,32 +8,20 @@
 // included in the unit test bundle.
 import test from '../../../tools/jil/browser-test'
 import {addE} from '../../../packages/browser-agent-core/common/event-listener/add-e'
-import { Aggregator } from '../../../packages/browser-agent-core/common/aggregate/aggregator'
-import { ee as baseEE } from '../../../packages/browser-agent-core/common/event-emitter/contextual-ee'
 import { ffVersion } from '../../../packages/browser-agent-core/common/browser-version/firefox-version'
-import { setInfo, setLoaderConfig, setConfiguration, setRuntime } from '../../../packages/browser-agent-core/common/config/config'
-import { gosCDN } from '../../../packages/browser-agent-core/common/window/nreum'
+import { setup } from '../utils/setup'
 // Should be loaded first
 import { Instrument as StnInstrument } from '../../../packages/browser-agent-core/features/session-trace/instrument/index'
 import { Instrument as JserrorsInstrument } from '../../../packages/browser-agent-core/features/jserrors/instrument/index'
 import { Aggregate as JserrorsAggregate } from '../../../packages/browser-agent-core/features/jserrors/aggregate/index'
 
+const {agentIdentifier, aggregator, baseEE} = setup()
 
-const agentIdentifier = "abc123"
-
-const nr = gosCDN()
-
-setInfo(agentIdentifier, nr.info)
-setConfiguration(agentIdentifier, nr.init)
-setLoaderConfig(agentIdentifier, nr.loader_config)
-setRuntime(agentIdentifier, {})
-
-const agg = new Aggregator({agentIdentifier})
 const stnInst = new StnInstrument(agentIdentifier)
 const jsErrorsInst = new JserrorsInstrument(agentIdentifier)
-const jsErrorsAgg = new JserrorsAggregate(agentIdentifier, agg)
+const jsErrorsAgg = new JserrorsAggregate(agentIdentifier, aggregator)
 
-const ee = baseEE.get(agentIdentifier)
+const ee = baseEE
 
 var raf = window.requestAnimationFrame ||
         window.mozRequestAnimationFrame ||

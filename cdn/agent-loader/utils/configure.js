@@ -17,7 +17,7 @@ export function configure() {
     setRuntime(agentIdentifier, {})
 
     // add api calls to the NREUM object
-    setAPI()
+    setAPI(agentIdentifier)
     configured = true
 }
 

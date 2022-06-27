@@ -9,10 +9,8 @@ import { handle } from '@newrelic/browser-agent-core/common/event-emitter/handle
 import { mapOwn } from '@newrelic/browser-agent-core/common/util/map-own'
 import { ee } from '@newrelic/browser-agent-core/common/event-emitter/contextual-ee'
 import { now } from '@newrelic/browser-agent-core/common/timing/now'
-import { getInfo } from '@newrelic/browser-agent-core/common/config/config'
-import agentIdentifier from '../../shared/agentIdentifier'
 
-export function setAPI() {
+export function setAPI(agentIdentifier) {
   var nr = gosNREUM()
   var instanceEE = ee.get(agentIdentifier)
   var tracerEE = instanceEE.get('tracer')

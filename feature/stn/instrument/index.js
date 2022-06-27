@@ -37,7 +37,7 @@ loader.features.stn = true
 // wrap history ap
 require('../../wrap-history')
 
-// wrap events
+// wrap events from [window, document, XHR].addEventListener
 if ('addEventListener' in window) {
   require('../../wrap-events')
 }
@@ -48,6 +48,7 @@ var origEvent = NREUM.o.EV
 
 ee.on(FN_START, function (args, target) {
   var evt = args[0]
+  // events from [window, document, XHR].addEventListener
   if (evt instanceof origEvent) {
     this.bstStart = loader.now()
   }
@@ -55,6 +56,7 @@ ee.on(FN_START, function (args, target) {
 
 ee.on(FN_END, function (args, target) {
   var evt = args[0]
+  // events from [window, document, XHR].addEventListener
   if (evt instanceof origEvent) {
     handle('bst', [evt, target, this.bstStart, loader.now()])
   }
@@ -128,6 +130,7 @@ if (supportsPerformanceObserver()) {
   }
 }
 
+// these trigger instrumentation above to create click, scroll and keypress events
 document[ADD_EVENT_LISTENER]('scroll', noOp, eventListenerOpts(false))
 document[ADD_EVENT_LISTENER]('keypress', noOp, eventListenerOpts(false))
 document[ADD_EVENT_LISTENER]('click', noOp, eventListenerOpts(false))

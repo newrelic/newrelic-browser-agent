@@ -24,7 +24,9 @@ export class Aggregate extends FeatureBase {
       // we find that certain events make the data too noisy to be useful
       global: { mouseup: true, mousedown: true },
       // certain events are present both in the window and in PVT metrics.  PVT metrics are prefered so the window events should be ignored
-      window: { load: true, pagehide: true }
+      window: { load: true, pagehide: true },
+      // when ajax instrumentation is disabled, all XMLHttpRequest events will return with origin = xhrOriginMissing and should be ignored
+      xhrOriginMissing: { ignoreAll: true }
     }
     this.toAggregate = {
       typing: [1000, 2000],
@@ -211,6 +213,7 @@ export class Aggregate extends FeatureBase {
     
     if (t && t instanceof XMLHttpRequest) {
       var params = this.ee.context(t).params
+      if (!params || !params.status || !params.method || !params.host || !params.pathname) return 'xhrOriginMissing'
       origin = params.status + ' ' + params.method + ': ' + params.host + params.pathname
     } else if (t && typeof (t.tagName) === 'string') {
       origin = t.tagName.toLowerCase()
@@ -395,6 +398,7 @@ export class Aggregate extends FeatureBase {
   shouldIgnoreEvent(event, target) {
     var origin = this.evtOrigin(event.target, target)
     if (event.type in this.ignoredEvents.global) return true
+    if (!!this.ignoredEvents[origin] && this.ignoredEvents[origin].ignoreAll) return true
     if (!!this.ignoredEvents[origin] && event.type in this.ignoredEvents[origin]) return true
     return false
   }

@@ -19,12 +19,7 @@ if (nr.ee) {
   nr.ee = globalInstance
 }
 
-// export default ee()
-var baseEE = ee(undefined, 'baseEE')
-
-export { baseEE as ee }
-
-export { globalInstance as global }
+export { globalInstance as ee }
 
 function EventContext () {}
 
@@ -64,7 +59,7 @@ function ee (old, debugId) {
   function emit (type, args, contextOrStore, force, bubble) {
 
     if (bubble !== false) bubble = true
-    if (baseEE.aborted && !force) { return }
+    if (globalInstance.aborted && !force) { return }
     if (old && bubble) old.emit(type, args, contextOrStore)
     // log("continue...")
     
@@ -164,8 +159,8 @@ function getNewContext () {
 // We should drop our data and stop collecting if we still have a backlog, which
 // signifies the rest of the agent wasn't loaded
 function abortIfNotLoaded () {
-  if (baseEE.backlog.api || baseEE.backlog.feature) {
-    baseEE.aborted = true
-    baseEE.backlog = {}
+  if (globalInstance.backlog.api || globalInstance.backlog.feature) {
+    globalInstance.aborted = true
+    globalInstance.backlog = {}
   }
 }

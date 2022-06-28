@@ -7,13 +7,16 @@
   <head>
     <title>RUM Unit Test</title>
     {init}
-    {loader}
     {config}
+    {loader}
+    <script>
+      console.log("setPageViewName")
+      newrelic.setPageViewName('foo')
+    </script>
   </head>
   <body>
     Api test!
     <script>
-      newrelic.setPageViewName('foo')
       newrelic.noticeError(new Error('no free taco coupons'))
       setTimeout(function () {
         newrelic.finished(new Date().getTime())

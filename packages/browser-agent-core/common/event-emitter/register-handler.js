@@ -3,23 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { handleEE, globalEE } from './handle'
+import { handleEE } from './handle'
 
-// export default defaultRegister
-export { globalRegister as global }
 export { defaultRegister as registerHandler }
 
 defaultRegister.on = registerWithSpecificEmitter
 
 var handlers = defaultRegister.handlers = {}
-var globalHandlers = globalRegister.handlers = {}
 
 export function defaultRegister (type, handler, group, ee) {
   registerWithSpecificEmitter(ee || handleEE, handlers, type, handler, group)
-}
-
-function globalRegister (type, handler, group) {
-  registerWithSpecificEmitter(globalEE, globalHandlers, type, handler, group)
 }
 
 function registerWithSpecificEmitter (ee, handlers, type, handler, group) {

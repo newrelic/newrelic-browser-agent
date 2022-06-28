@@ -7,8 +7,12 @@ import {eventListenerOpts} from '../event-listener/event-listener-opts'
 import {ee as baseEE} from '../event-emitter/contextual-ee'
 import {createWrapperWithEmitter as wfn} from './wrap-function'
 
+const wrapped = {}
+
 export function wrapJsonP(sharedEE){
-  var ee = scopedEE(sharedEE)
+  const ee = scopedEE(sharedEE)
+  if (wrapped[ee.debugId]) return ee
+  wrapped[ee.debugId] = true
   var wrapFn = wfn(ee)
   
   var CALLBACK_REGEX = /[?&](?:callback|cb)=([^&#]+)/

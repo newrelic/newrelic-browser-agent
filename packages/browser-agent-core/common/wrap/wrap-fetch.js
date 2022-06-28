@@ -18,12 +18,16 @@ var Res = win.Response
 var proto = 'prototype'
 var ctxId = 'nr@context'
 
+const wrapped = {}
+
 export function wrapFetch(sharedEE){
   if (!(Req && Res && window.fetch)) {
     return
   }
 
   const ee = scopedEE(sharedEE)
+  if (wrapped[ee.debugId]) return ee
+  wrapped[ee.debugId] = true
   
   mapOwn(bodyMethods, function (i, name) {
     wrapPromiseMethod(Req[proto], name, bodyPrefix)
@@ -76,5 +80,5 @@ export function wrapFetch(sharedEE){
 }
 
 export function scopedEE(sharedEE){
-  return (sharedEE || baseEE).get('events')
+  return (sharedEE || baseEE).get('fetch')
 }

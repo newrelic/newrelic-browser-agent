@@ -19,7 +19,6 @@ export function initializeAPI(agentIdentifier) {
 
     var api = {
         finished: single(finished),
-        setPageViewName: setPageViewName,
         setErrorHandler: setErrorHandler,
         addToTrace: addToTrace,
         inlineHit: inlineHit,
@@ -34,16 +33,10 @@ export function initializeAPI(agentIdentifier) {
     // All API functions get passed the time they were called as their
     // first parameter. These functions can be called asynchronously.
 
-    function setPageViewName(t, name, host) {
-        if (typeof name !== 'string') return
-        if (name.charAt(0) !== '/') name = '/' + name
-        getRuntime(agentIdentifier).customTransaction = (host || 'http://custom.transaction') + name
-    }
 
     function finished(t, providedTime) {
         var time = providedTime ? providedTime - getRuntime(agentIdentifier).offset : t
-        console.log("handle record-custom")
-        handle('record-custom', ['finished', {time}])
+        handle('record-custom', ['finished', {time}], undefined, undefined, sharedEE)
         addToTrace(t, { name: 'finished', start: time + getRuntime(agentIdentifier).offset, origin: 'nr' })
         handle('api-addPageAction', [time, 'finished'], undefined, undefined, sharedEE)
     }
@@ -73,6 +66,7 @@ export function initializeAPI(agentIdentifier) {
     function inlineHit(t, request_name, queue_time, app_time, total_be_time, dom_time, fe_time) {
         request_name = window.encodeURIComponent(request_name)
         cycle += 1
+
 
         const agentInfo = getInfo(agentIdentifier);
         if (!agentInfo.beacon) return

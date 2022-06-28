@@ -63,7 +63,7 @@ export class Aggregate extends FeatureBase {
     if (window.performance && window.performance.getEntriesByType) {
       var entries = window.performance.getEntriesByType('paint')
       if (entries && entries.length > 0) {
-        entries.forEach(function(entry) {
+        entries.forEach(function (entry) {
           if (!entry.startTime || entry.startTime <= 0) return
 
           if (entry.name === 'first-paint') {

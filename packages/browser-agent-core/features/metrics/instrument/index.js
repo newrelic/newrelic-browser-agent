@@ -3,8 +3,9 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { FeatureBase } from '../../../common/util/feature-base'
 import { getFrameworks } from '../../../common/metrics/framework-detection'
 import { protocol } from '../../../common/url/protocol'
-import { getRules } from '../../../common/util/obfuscate'
+import { getRules, validateRules } from '../../../common/util/obfuscate'
 import { VERSION } from '../../../common/constants/environment-variables'
+import { onDOMContentLoaded } from '../../../common/window/load'
 
 var SUPPORTABILITY_METRIC = 'sm'
 var CUSTOM_METRIC = 'cm'
@@ -15,8 +16,8 @@ export class Instrument extends FeatureBase {
         // checks that are run only one time, at script load
         this.singleChecks()
         // listen for messages from features and capture them
-        registerHandler('record-supportability', (...args) => this.recordSupportability(...args), undefined, undefined, this.ee)
-        registerHandler('record-custom', (...args) => this.recordCustom(...args), undefined, undefined, this.ee)
+        registerHandler('record-supportability', (...args) => this.recordSupportability(...args), undefined, this.ee)
+        registerHandler('record-custom', (...args) => this.recordCustom(...args), undefined, this.ee)
     }
 
     /**
@@ -58,8 +59,11 @@ export class Instrument extends FeatureBase {
         this.recordSupportability(`Generic/Version/${VERSION}/Detected`)
 
         // frameworks on page
-        getFrameworks().forEach(framework => {
-            this.recordSupportability('Framework/' + framework + '/Detected')
+        onDOMContentLoaded(() => {
+            getFrameworks().forEach(framework => {
+                console.log("framework!", framework)
+                this.recordSupportability('Framework/' + framework + '/Detected')
+            })
         })
 
         // file protocol detection
@@ -69,8 +73,9 @@ export class Instrument extends FeatureBase {
         }
 
         // obfuscation rules detection
-        if (getRules(this.agentIdentifier).length > 0) this.recordSupportability('Generic/Obfuscate/Detected')
-        if (getRules(this.agentIdentifier).length > 0 && !this.validateRules(this.agentIdentifier)) this.recordSupportability('Generic/Obfuscate/Invalid')
+        const rules = getRules(this.agentIdentifier)
+        if (rules.length > 0) this.recordSupportability('Generic/Obfuscate/Detected')
+        if (rules.length > 0 && !validateRules(rules)) this.recordSupportability('Generic/Obfuscate/Invalid')
     }
 }
 

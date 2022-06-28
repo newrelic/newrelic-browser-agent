@@ -191,10 +191,10 @@ testDriver.test('string error in custom tracer', supported, function (t, browser
       var nodeId = interactionTree.children[0].nodeId
 
       var error = errors[0]
-      t.equal(error.params.message, undefined)
+      t.equal(error.params.message, 'some error')
       t.equal(error.params.browserInteractionId, interactionId, 'should have the correct interaction id')
       t.equal(error.params.parentNodeId, nodeId, 'has the correct node id')
-      t.equal(error.metrics.count, 2, 'error will be reported twice')
+      t.equal(error.metrics.count, 1, 'error will be reported once')
 
       t.end()
     })
@@ -339,7 +339,7 @@ function waitForPageLoadAnInitialCalls (browser, router, urlPath) {
   return Promise.all([
     router.expectRum(),
     router.expectEvents(),
-    browser.safeGet(router.assetURL(urlPath, { loader: 'spa' }))
+    browser.safeGet(router.assetURL(urlPath, { loader: 'spa', init: {metrics: {enabled: false}} }))
   ])
 }
 

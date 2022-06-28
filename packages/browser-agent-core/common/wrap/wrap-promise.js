@@ -7,8 +7,12 @@ import {ee as baseEE, getOrSetContext} from '../event-emitter/contextual-ee'
 import {mapOwn} from '../util/map-own'
 import {originals} from '../config/config'
 
+const wrapped = {}
+
 export function wrapPromise(sharedEE){
-  var promiseEE = scopedEE(sharedEE)
+  const promiseEE = scopedEE(sharedEE)
+  if (wrapped[promiseEE.debugId]) return promiseEE
+  wrapped[promiseEE.debugId] = true
   var getContext = getOrSetContext
   var promiseWrapper = wrapFn(promiseEE)
   var OriginalPromise = originals.PR

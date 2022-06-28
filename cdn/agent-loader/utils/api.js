@@ -4,6 +4,7 @@
  */
 import slice from 'lodash._slice'
 import { gosNREUM } from '@newrelic/browser-agent-core/common/window/nreum'
+import { getRuntime, setInfo, getInfo } from '@newrelic/browser-agent-core/common/config/config'
 import { handle } from '@newrelic/browser-agent-core/common/event-emitter/handle'
 import { mapOwn } from '@newrelic/browser-agent-core/common/util/map-own'
 import { ee } from '@newrelic/browser-agent-core/common/event-emitter/contextual-ee'
@@ -17,7 +18,6 @@ export function setAPI() {
   var tracerEE = instanceEE.get('tracer')
 
   var asyncApiFns = [
-    'setPageViewName',
     'setErrorHandler',
     'finished',
     'addToTrace',
@@ -35,6 +35,19 @@ export function setAPI() {
 
   nr.addPageAction = apiCall(prefix, 'addPageAction', true)
   nr.setCurrentRouteName = apiCall(prefix, 'routeName', true)
+
+  nr.setPageViewName = function(name, host){
+    if (typeof name !== 'string') return
+    if (name.charAt(0) !== '/') name = '/' + name
+    getRuntime(agentIdentifier).customTransaction = (host || 'http://custom.transaction') + name
+    return apiCall(prefix, 'setPageViewName', true, 'api')()
+  }
+
+  nr.setCustomAttribute = function(name, value){
+    const currentInfo = getInfo(agentIdentifier)
+    setInfo(agentIdentifier, {...currentInfo, jsAttributes: {...currentInfo.jsAttributes, [name]: value}})
+    return apiCall(prefix, 'setCustomAttribute', true, 'api')()
+  }
 
   nr.interaction = function () {
     return new InteractionHandle().get()
@@ -54,7 +67,7 @@ export function setAPI() {
           try {
             return cb.apply(this, arguments)
           } catch (err) {
-            tracerEE.emit('fn-err', [arguments, this, err], contextStore)
+            tracerEE.emit('fn-err', [arguments, this, typeof err == 'string' ? new Error(err) : err], contextStore)
             // the error came from outside the agent, so don't swallow
             throw err
           } finally {
@@ -71,7 +84,7 @@ export function setAPI() {
 
   function apiCall(prefix, name, notSpa, bufferGroup) {
     return function () {
-      handle('record-supportability', ['API/' + name + '/called'])
+      handle('record-supportability', ['API/' + name + '/called'], undefined, undefined, instanceEE)
       handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup, instanceEE)
       return notSpa ? void 0 : this
     }
@@ -85,7 +98,7 @@ export function setAPI() {
 
   nr.noticeError = function (err, customAttributes) {
     if (typeof err === 'string') err = new Error(err)
-    handle('record-supportability', ['API/noticeError/called'])
+    handle('record-supportability', ['API/noticeError/called'], undefined, undefined, instanceEE)
     handle('err', [err, now(), false, customAttributes], undefined, undefined, instanceEE)
   }
 

@@ -9,7 +9,7 @@ import { shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { mapOwn } from '../../../common/util/map-own'
 import { navTimingValues as navTiming } from '../../../common/timing/nav-timing'
 import { generateUuid } from '../../../common/ids/unique-id'
-import { metrics as paintMetrics } from '../../../../../agent/paint-metrics'
+import { paintMetrics } from '../../../common/metrics/paint-metrics'
 import { Interaction } from './Interaction'
 import { getConfigurationValue, originals, getRuntime } from '../../../common/config/config'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
@@ -137,7 +137,7 @@ export class Aggregate extends FeatureBase {
         if (typeof init === 'function') {
           init(pluginApi)
         }
-      })
+      }, undefined, baseEE)
 
       function callbackStart() {
         state.depth++
@@ -345,7 +345,7 @@ export class Aggregate extends FeatureBase {
         }
       }, undefined, jsonpEE)
 
-      register(jsonpEE, JSONP_END, function () {
+      register(JSONP_END, function () {
         var node = this[JSONP_NODE]
         if (node) {
           // if no status is set then cb never fired - so it's not a valid JSONP
@@ -501,8 +501,7 @@ export class Aggregate extends FeatureBase {
       }
 
       register(INTERACTION_API + 'get',  function(t) {
-        // var interaction = this.ixn = state.currentNode ? state.currentNode[INTERACTION] : new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
-        var interaction = getOrSetIxn(t)
+        var interaction = this.ixn = state.currentNode ? state.currentNode[INTERACTION] : new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
         if (!state.currentNode) {
           interaction.checkFinish(state.lastSeenUrl, state.lastSeenRouteName)
           if (state.depth) setCurrentNode(interaction.root)
@@ -511,29 +510,22 @@ export class Aggregate extends FeatureBase {
 
 
       register(INTERACTION_API + 'actionText', function (t, actionText) {
-        // var customAttrs = this.ixn.root.attrs.custom
-        var ixn = getOrSetIxn(t)
-        var customAttrs = ixn.root.attrs.custom
+        var customAttrs = this.ixn.root.attrs.custom
         if (actionText) customAttrs.actionText = actionText
       }, undefined, baseEE)
 
       register(INTERACTION_API + 'setName', function (t, name, trigger) {
-        // var attrs = this.ixn.root.attrs
-        var ixn = getOrSetIxn(t)
-        var attrs = ixn.root.attrs
+        var attrs = this.ixn.root.attrs
         if (name) attrs.customName = name
         if (trigger) attrs.trigger = trigger
       }, undefined, baseEE)
 
       register(INTERACTION_API + 'setAttribute', function (t, name, value) {
-        // this.ixn.root.attrs.custom[name] = value
-        var ixn = getOrSetIxn(t)
-        ixn.root.attrs.custom[name] = value
+        this.ixn.root.attrs.custom[name] = value
       }, undefined, baseEE)
 
       register(INTERACTION_API + 'end', function (timestamp) {
-        // var interaction = this.ixn
-        var interaction = getOrSetIxn(timestamp)
+        var interaction = this.ixn
         var node = activeNodeFor(interaction)
         setCurrentNode(null)
         node.child('customEnd', timestamp).finish(timestamp)
@@ -541,20 +533,15 @@ export class Aggregate extends FeatureBase {
       }, undefined, baseEE)
 
       register(INTERACTION_API + 'ignore', function (t) {
-        // this.ixn.ignored = true
-        var ixn = getOrSetIxn(t)
-        ixn.ignored = true
+        this.ixn.ignored = true
       }, undefined, baseEE)
 
       register(INTERACTION_API + 'save', function (t) {
-        // this.ixn.save = true
-        var ixn = getOrSetIxn(t)
-        ixn.save = true
+        this.ixn.save = true
       }, undefined, baseEE)
 
       register(INTERACTION_API + 'tracer', function (timestamp, name, store) {
-        // var interaction = this.ixn
-        var interaction = getOrSetIxn(timestamp)
+        var interaction = this.ixn
         var parent = activeNodeFor(interaction)
         var ctx = baseEE.context(store)
         if (!name) {
@@ -582,18 +569,14 @@ export class Aggregate extends FeatureBase {
       }
 
       register(INTERACTION_API + 'getContext', function (t, cb) {
-        // var store = this.ixn.root.attrs.store
-        var ixn = getOrSetIxn(t)
-        var store = ixn.root.attrs.store
+        var store = this.ixn.root.attrs.store
         setTimeout(function () {
           cb(store)
         }, 0)
       }, undefined, baseEE)
 
       register(INTERACTION_API + 'onEnd', function (t, cb) {
-        // this.ixn.handlers.push(cb)
-        var ixn = getOrSetIxn(t)
-        ixn.handlers.push(cb)
+        this.ixn.handlers.push(cb)
       }, undefined, baseEE)
 
       register('api-routeName', function (t, currentRouteName) {

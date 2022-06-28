@@ -10,9 +10,10 @@ testDriver.test('RUM global count, full loader', withTls, function (t, browser, 
   runGlobalCountTest(t, browser, router, 'full')
 })
 
+/* DEPRECATED: no 'dev' build in new NPM version code
 testDriver.test('RUM global count, dev loader', withTls, function (t, browser, router) {
   runGlobalCountTest(t, browser, router, 'dev')
-})
+}) */
 
 function runGlobalCountTest (t, browser, router, loader) {
   t.plan(1)
@@ -28,7 +29,7 @@ function runGlobalCountTest (t, browser, router, loader) {
         if (browser.match('ie@<9')) {
           t.equal(added, 0, `Added ${added} mangled vars`)
         } else {
-          t.equal(added, 3, `Added ${added} globals`)
+          t.equal(added, 4, `Added ${added} globals`)
         }
       })
     })

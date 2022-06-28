@@ -25,13 +25,13 @@ var location = win.location
 export class Instrument extends FeatureBase {
     constructor(agentIdentifier) {
         super(agentIdentifier)
+        const agentRuntime = getRuntime(this.agentIdentifier);
         // loader.xhrWrappable will be false in chrome for ios, but addEventListener is still available.
         // sauce does not have a browser to test this case against, so be careful when modifying this check
-        if (!win[ADD_EVENT_LISTENER] || !getRuntime(this.agentIdentifier).xhrWrappable || getRuntime(this.agentIdentifier).disabled) return
+        if (!win[ADD_EVENT_LISTENER] || !agentRuntime.xhrWrappable || agentRuntime.disabled) return
+        agentRuntime.features.spa = true;
 
         console.log("initialize spa instrument!", agentIdentifier)
-
-        getRuntime(this.agentIdentifier).features.spa = true
 
         let depth = 0
         let startHash

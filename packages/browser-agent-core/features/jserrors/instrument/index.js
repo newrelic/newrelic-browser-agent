@@ -27,8 +27,6 @@ export class Instrument extends FeatureBase {
 
     this.handleErrors = false,
     this.origOnerror = window.onerror
-    
-    const state = this
 
     const agentRuntime = getRuntime(this.agentIdentifier);
     agentRuntime.features.err = true;   // declare that we are using err instrumentation

@@ -4,31 +4,37 @@
  */
 
 const jil = require('jil')
+const { setup } = require('../utils/setup')
 
-var loader = require('loader')
+const setupData = setup()
+const {baseEE, agentIdentifier, aggregator, nr} = setupData
 
-require('../../../feature/spa/instrument/index.js')
-var timerEE = require('../../../feature/wrap-timer.js')
-var drain = require('../../../agent/drain')
-var ee = require('ee')
-var mapOwn = require('map-own')
+const {Instrument: AjaxInstrument} = require('../../../packages/browser-agent-core/features/ajax/instrument/index')
+const {Instrument: SpaInstrument} = require('../../../packages/browser-agent-core/features/spa/instrument/index')
+const {Aggregate: SpaAggregate} = require('../../../packages/browser-agent-core/features/spa/aggregate/index')
+new AjaxInstrument(agentIdentifier)
+new SpaInstrument(agentIdentifier)
+const spaAgg = new SpaAggregate(agentIdentifier, aggregator)
+const {wrapTimer} = require("../../../packages/browser-agent-core/common/wrap/index")
+const timerEE = wrapTimer(baseEE)
+const { drain } = require('../../../packages/browser-agent-core/common/drain/drain')
+const {mapOwn} = require('../../../packages/browser-agent-core/common/util/map-own')
 
-loader.info = loader.info || {}
-var currentNodeId = require('../../../feature/spa/aggregate')
 
+var currentNodeId = () => spaAgg.state.currentNode && spaAgg.state.currentNode.id
 var aggregatorLoadQueue = []
 var aggregatorLoaded = false
-var originalSetTimeout = setTimeout['nr@original']
+var originalSetTimeout = nr.o.ST
 
 var afterLoad = false
 jil.onWindowLoaded(function () {
   afterLoad = true
   originalSetTimeout(function () {
-    require('../../../feature/ins/aggregate/index.js')
-
-    ee.emit('feat-spa')
-    drain('api')
-    drain('feature')
+    const {Aggregate: InsAggregate} = require('../../../packages/browser-agent-core/features/page-action/aggregate/index')
+    new InsAggregate(agentIdentifier)
+    baseEE.emit('feat-spa')
+    drain(agentIdentifier, 'api')
+    drain(agentIdentifier, 'feature')
 
     aggregatorLoaded = true
     for (var i = 0; i < aggregatorLoadQueue.length; i++) {
@@ -42,8 +48,8 @@ if (afterLoad) {
     // emulate load event
     let ev = {type: 'load'}
     let ctx = {}
-    ee.get('events').emit('fn-start', [[ev], window], ctx)
-    ee.get('events').emit('fn-end', [[ev], window], ctx)
+    baseEE.get('events').emit('fn-start', [[ev], window], ctx)
+    baseEE.get('events').emit('fn-end', [[ev], window], ctx)
   })
 }
 
@@ -63,7 +69,8 @@ module.exports = {
   isEdge,
   emitsPopstateEventOnHashChanges,
   onAggregatorLoaded,
-  now
+  now,
+  setupData
 }
 
 var lastId = 0
@@ -116,7 +123,7 @@ function startInteraction (onInteractionStart, afterInteractionFinish, options =
     originalSetTimeout(startFromUnwrappedTask)
   }
 
-  ee.on('interaction', function (interaction) {
+  baseEE.on('interaction', function (interaction) {
     let id = interaction.root.attrs.custom.__interactionId
     let isInitialPageLoad = eventType === 'initialPageLoad' && interaction.root.attrs.trigger === 'initialPageLoad'
     if (done) {

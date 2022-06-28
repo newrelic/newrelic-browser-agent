@@ -6,17 +6,22 @@
 // Uncaught exception test.
 // Name prefixed with zz- to be the last file
 // included in the unit test bundle.
-var test = require('../../../tools/jil/browser-test.js')
-var addE = require('../../../agent/add-e')
-
+import test from '../../../tools/jil/browser-test'
+import {addE} from '../../../packages/browser-agent-core/common/event-listener/add-e'
+import { ffVersion } from '../../../packages/browser-agent-core/common/browser-version/firefox-version'
+import { setup } from '../utils/setup'
 // Should be loaded first
-require('../../../feature/stn/instrument')
-require('../../../feature/err/instrument')
-require('../../../feature/err/aggregate')
+import { Instrument as StnInstrument } from '../../../packages/browser-agent-core/features/session-trace/instrument/index'
+import { Instrument as JserrorsInstrument } from '../../../packages/browser-agent-core/features/jserrors/instrument/index'
+import { Aggregate as JserrorsAggregate } from '../../../packages/browser-agent-core/features/jserrors/aggregate/index'
 
-var agg = require('../../../agent/aggregator')
-var ee = require('ee')
-var ffVersion = require('../../../loader/firefox-version')
+const {agentIdentifier, aggregator, baseEE} = setup()
+
+const stnInst = new StnInstrument(agentIdentifier)
+const jsErrorsInst = new JserrorsInstrument(agentIdentifier)
+const jsErrorsAgg = new JserrorsAggregate(agentIdentifier, aggregator)
+
+const ee = baseEE
 
 var raf = window.requestAnimationFrame ||
         window.mozRequestAnimationFrame ||

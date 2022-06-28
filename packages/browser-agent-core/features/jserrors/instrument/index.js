@@ -20,8 +20,7 @@ export class Instrument extends FeatureBase {
     // skipNext counter to keep track of uncaught
     // errors that will be the same as caught errors.
     this.skipNext = 0
-
-    this.handleErrors = false,
+    this.handleErrors = false
     this.origOnerror = window.onerror
     
     const state = this

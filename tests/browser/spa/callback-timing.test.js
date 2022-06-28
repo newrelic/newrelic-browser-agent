@@ -4,7 +4,7 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
+let matcher = require('jil/util/browser-matcher')
 let supported = matcher.withFeature('wrappableAddEventListener')
 
 jil.browserTest('callback timing', supported, function (t) {
@@ -77,6 +77,7 @@ jil.browserTest('callback timing multiple callbacks', supported, function (t) {
   }
 
   function afterInteractionDone (interaction) {
+    console.log("interaction", interaction)
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)

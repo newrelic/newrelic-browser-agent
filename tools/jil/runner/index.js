@@ -13,7 +13,7 @@ const os = require('os')
 const glob = require('glob')
 const Driver = require('../driver')
 const loadBrowser = require('../loader/loadBrowser')
-const {getSauceLabsCreds, startExternalServices, stopExternalServices} = require('../util/external-services')
+const { getSauceLabsCreds, startExternalServices, stopExternalServices } = require('../util/external-services')
 
 const buildIdentifier = getBuildIdentifier()
 const output = new Output(config)
@@ -61,7 +61,7 @@ if (launchedFromCli) {
   loadBrowsersAndRunTests()
 }
 
-function loadDefaultFiles (cb) {
+function loadDefaultFiles(cb) {
   let globOpts = { cwd: path.resolve(__dirname, '../../..') }
 
   let fileGlob = 'tests/@(browser|functional)/**/*.@(browser|test).js'
@@ -74,10 +74,10 @@ function loadDefaultFiles (cb) {
   })
 }
 
-function loadFiles (testFiles, cb) {
+function loadFiles(testFiles, cb) {
   for (let file of testFiles) {
     file = resolve(process.cwd(), file)
-    if (file.slice(-11) === '.browser.js') {
+    if (file.slice(-11) === '.browser.js' || (file.includes('/browser/') && file.endsWith('.test.js'))) {
       loadBrowser(testDriver, file)
     } else if (file.slice(-8) === '.test.js') {
       require(file)
@@ -96,7 +96,7 @@ function getBuildIdentifier() {
   return buildIdentifier
 }
 
-function loadBrowsersAndRunTests () {
+function loadBrowsersAndRunTests() {
   let browsers = browserList(config.browsers)
   if (!browsers || browsers.length === 0) {
     console.log('No browsers matched: ' + config.browsers)
@@ -105,7 +105,7 @@ function loadBrowsersAndRunTests () {
 
   startExternalServices(browsers, config, runTests)
 
-  function runTests (err) {
+  function runTests(err) {
     if (err) throw err
     for (let browser of browsers) {
       makeChild(browser)
@@ -114,7 +114,7 @@ function loadBrowsersAndRunTests () {
     testDriver.run(stopExternalServices)
   }
 
-  function makeChild (browser) {
+  function makeChild(browser) {
     let desired = browser.desired
     let connectionInfo = {}
 

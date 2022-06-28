@@ -4,7 +4,7 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
+let matcher = require('jil/util/browser-matcher')
 let supported = matcher.withFeature('promise')
 
 jil.browserTest('promise.catch', supported, function (t) {
@@ -78,7 +78,7 @@ jil.browserTest('promise.catch chain with async', supported, function (t) {
     }]
   })
 
-  t.plan(validator.count + 5)
+  t.plan(validator.count + 4)
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
   function onInteractionStart (cb) {
@@ -95,7 +95,6 @@ jil.browserTest('promise.catch chain with async', supported, function (t) {
       })
       .catch(function validate (val) {
         t.strictEqual(val, 123, 'should get reject value in 2nd catch')
-        t.strictEqual(this, window)
 
         setTimeout(newrelic.interaction().createTracer('timer', function () {
           window.location.hash = '#' + Math.random()

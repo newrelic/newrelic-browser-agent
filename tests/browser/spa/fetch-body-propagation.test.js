@@ -48,7 +48,8 @@ bodyMethods.forEach((bodyMethod) => {
     function onInteractionStart (cb) {
       window.fetch('/json')
         .then(function (res) {
-          resTime = require('loader').now()
+          const {now} = require('../../../packages/browser-agent-core/common/timing/now')
+          resTime = now()
           return res[bodyMethod]()
         }).then(function () {
           setTimeout(newrelic.interaction().createTracer('timer', function () {
@@ -142,7 +143,8 @@ jil.browserTest('Response.formData', supported, function (t) {
 
   function onInteractionStart (cb) {
     window.fetch('/formdata', {method: 'POST', body: new FormData()}).then(function (res) {
-      resTime = require('loader').now()
+      const {now} = require('../../../packages/browser-agent-core/common/timing/now')
+      resTime = now()
       if (res.formData) {
         res.formData().catch(function () {
           // can't parse as formdata

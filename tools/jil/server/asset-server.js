@@ -192,18 +192,18 @@ class AgentInjectorTransform extends AssetTransform {
       const packageFiles = await this.getBuiltPackages(packagePaths)
 
       this.getLoaderContent(
-        loaderName, 
-        rawContent.includes("{modular-loader}") ? this.modularBuildDir : this.buildDir, 
+        loaderName,
+        rawContent.includes("{modular-loader}") ? this.modularBuildDir : this.buildDir,
         (err, loaderContent) => {
           if (err) return callback(err)
-      
+
           let configContent = ''
           try {
             configContent = this.generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig)
           } catch (e) {
             return callback(e)
           }
-      
+
           let initContent = ''
           if (params.init) {
             try {
@@ -212,16 +212,16 @@ class AgentInjectorTransform extends AssetTransform {
               return callback(e)
             }
           }
-      
+
           let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;'
-      
+
           let rspData = rawContent
             .split('{loader}').join(tagify(disableSsl + loaderContent))
             .replace('{modular-loader}', tagify(disableSsl + loaderContent))
             .replace('{config}', tagify(disableSsl + configContent))
             .replace('{init}', tagify(disableSsl + initContent))
             .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
-      
+
           if (!!htmlPackageTags.length && !!packageFiles.length) {
             packageFiles.forEach(pkg => {
               const tag = htmlPackageTags.find(x => x.includes(pkg.name))
@@ -229,9 +229,9 @@ class AgentInjectorTransform extends AssetTransform {
                 .replace(tag, tagify(disableSsl + UglifyJS.minify(pkg.data).code))
             })
           }
-      
+
           callback(null, rspData)
-      
+
           function tagify(s) {
             return `<script type="text/javascript">${s}</script>`
           }
@@ -256,22 +256,23 @@ class BrowserifyTransform extends AssetTransform {
     let result = this.browserifyCache[assetPath]
     if (result) return callback(null, result)
 
-    let b = browserify({ debug: true, extensions: ['.js'] })
-    b.transform(babelify.configure({
-      extensions: ['.js'],
-      only: /tests|tools|packages/
-    }))
-    b.transform(preprocessify())
-    b.add(assetPath)
-    b.bundle((err, buf) => {
-      if (err) console.log('bundle err!', assetPath)
-      if (err) return callback(err)
+    browserify(assetPath)
+      .transform("babelify", {
+        presets: ["@babel/preset-env",],
+        plugins: ["@babel/plugin-syntax-dynamic-import", '@babel/plugin-transform-modules-commonjs'],
+        global: true
+      })
+      .transform(preprocessify())
+      .bundle((err, buf) => {
+        if (err) console.log('bundle err!', assetPath)
+        if (err) return callback(err)
+        
+        let content = buf.toString()
 
-      let content = buf.toString()
-      if (this.config.cache) this.browserifyCache[assetPath] = content
+        if (this.config.cache) this.browserifyCache[assetPath] = content
 
-      callback(err, content)
-    })
+        callback(err, content)
+      })
   }
 }
 

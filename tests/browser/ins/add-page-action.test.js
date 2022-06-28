@@ -4,13 +4,15 @@
  */
 
 const jil = require('jil')
+const {setup} = require('../utils/setup')
 
-jil.browserTest('parameters not modified', function (t) {
-  var ee = require('ee').get('handle')
-  var drain = require('../../../agent/drain')
-  let loader = require('loader')
-  loader.info = {}
-  require('../../../feature/ins/aggregate/index.js')
+jil.browserTest('parameters not modified', async function (t) {
+  const {drain} =  require('../../../packages/browser-agent-core/common/drain/drain')
+  const {Aggregate} = require('../../../packages/browser-agent-core/features/page-action/aggregate/index')
+
+  const {agentIdentifier, baseEE, aggregator} = setup()
+
+  new Aggregate(agentIdentifier, aggregator)
 
   let name = 'MyEvent'
   let args = {
@@ -18,9 +20,9 @@ jil.browserTest('parameters not modified', function (t) {
     hello: {world: 'again'}
   }
 
-  ee.emit('feat-ins', [])
-  drain('feature')
-  ee.emit('api-addPageAction', [t, name, args])
+  baseEE.emit('feat-ins', [])
+  drain(agentIdentifier, 'feature')
+  baseEE.emit('api-addPageAction', [t, name, args])
 
   t.deepEqual(args, {
     foo: 'bar',

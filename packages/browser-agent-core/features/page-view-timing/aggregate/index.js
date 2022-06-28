@@ -10,7 +10,7 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { defaultRegister as register } from '../../../common/event-emitter/register-handler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { handle } from '../../../common/event-emitter/handle'
-import { getInfo } from '../../../common/config/config'
+import { getInfo, getConfigurationValue } from '../../../common/config/config'
 import { FeatureBase } from '../../../common/util/feature-base'
 export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
@@ -32,10 +32,9 @@ export class Aggregate extends FeatureBase {
     // do nothing
     }
 
-    if (!this.options) this.options = {}
-    var maxLCPTimeSeconds = this.options.maxLCPTimeSeconds || 60
-    var initialHarvestSeconds = this.options.initialHarvestSeconds || 10
-    this.harvestTimeSeconds = this.options.harvestTimeSeconds || 30
+    var maxLCPTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.maxLCPTimeSeconds') || 60
+    var initialHarvestSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
+    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
 
     this.scheduler = new HarvestScheduler('events', {
       onFinished: (...args) => this.onHarvestFinished(...args),

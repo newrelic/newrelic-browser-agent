@@ -266,7 +266,6 @@ testDriver.test('click interaction: multiple errors - different attribute values
     })
     .then(([response]) => {
       const errorsFromPayload = getErrorsFromResponse(response, browser)
-      console.log("errorsFromPayload", errorsFromPayload)
       t.equal(errorsFromPayload.length, 3, 'exactly three errors')
 
       t.equal(errorsFromPayload[0].custom.customParamKey, 3, 'first error should have a custom parameter set with the expected value')

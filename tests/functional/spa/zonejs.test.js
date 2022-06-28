@@ -15,7 +15,7 @@ testDriver.test('capturing SPA interactions with zone.js', supported, function (
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/zonejs.html', { loader: 'spa' }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/zonejs.html', { loader: 'spa', init: { ajax: {deny_list: ['nr-local.net']}} }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {

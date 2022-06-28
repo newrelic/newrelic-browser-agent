@@ -13,18 +13,20 @@ testDriver.test('onreadystatechange only called once with zone.js', supported, f
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/zonejs-on-ready-state-change.html', { loader: 'spa' }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/zonejs-on-ready-state-change.html', { loader: 'spa', init: { ajax: { deny_list: ['nr-local.net'] }} }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
       let {body, query} = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
+      const interactionAttr = interactionTree.children.find(x => x.key === 'counts')
+
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
-      t.equal(interactionTree.children.length, 2, 'expect no child nodes')
+      t.ok(!!interactionAttr, 'expect counts child from API')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
-      t.equal(interactionTree.children[0].type, 'stringAttribute')
-      t.equal(interactionTree.children[0].key, 'counts')
+      t.equal(interactionAttr.type, 'stringAttribute')
+      t.equal(interactionAttr.value, '[0,1,1,1,1]')
       // the counts custom attribute is an array of number of times onreadystatechage is called
       // for each state.  state 1 and 3 may be called more than once, 2 and 4 should be called
       // exactly once

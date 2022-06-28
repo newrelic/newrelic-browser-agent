@@ -14,14 +14,13 @@ import { Instrument as InstrumentMetrics } from '@newrelic/browser-agent-core/fe
 import { getEnabledFeatures } from '@newrelic/browser-agent-core/common/util/enabled-features'
 
 // set up the NREUM, api, and internal configs
-configure()
+configure().then(() => {
+    const enabledFeatures = getEnabledFeatures(agentIdentifier)
+    // instantiate auto-instrumentation specific to this loader...
+    if (enabledFeatures['page_view_event']) new InstrumentPageViewEvent(agentIdentifier) // document load (page view event + metrics)
+    if (enabledFeatures['page_view_timing']) new InstrumentPageViewTiming(agentIdentifier) // page view timings instrumentation (/loader/timings.js)
+    if (enabledFeatures.metrics) new InstrumentMetrics(agentIdentifier) // supportability & custom metrics
 
-const enabledFeatures = getEnabledFeatures(agentIdentifier)
-// instantiate auto-instrumentation specific to this loader...
-if (enabledFeatures['page_view_event']) new InstrumentPageViewEvent(agentIdentifier) // document load (page view event + metrics)
-if (enabledFeatures['page_view_timing']) new InstrumentPageViewTiming(agentIdentifier) // page view timings instrumentation (/loader/timings.js)
-if (enabledFeatures.metrics) new InstrumentMetrics(agentIdentifier) // supportability & custom metrics
-
-// lazy-loads the aggregator features for 'lite' if no other aggregator takes precedence
-stageAggregator('lite')
-
+    // lazy-loads the aggregator features for 'lite' if no other aggregator takes precedence
+    stageAggregator('lite')
+})

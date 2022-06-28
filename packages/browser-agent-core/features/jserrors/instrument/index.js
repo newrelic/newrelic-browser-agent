@@ -14,20 +14,21 @@ import { FeatureBase } from '../../../common/util/feature-base'
 
 var NR_ERR_PROP = 'nr@seenError'
 
-// skipNext counter to keep track of uncaught
-// errors that will be the same as caught errors.
-// var skipNext = 0
-
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
     super(agentIdentifier)
     // skipNext counter to keep track of uncaught
     // errors that will be the same as caught errors.
     this.skipNext = 0
+
     this.handleErrors = false,
     this.origOnerror = window.onerror
     
     const state = this
+
+    const agentRuntime = getRuntime(this.agentIdentifier);
+    agentRuntime.features.err = true;   // declare that we are using err instrumentation
+
 
     console.log("initialize js-errors instrument!", state.agentIdentifier)
 
@@ -84,7 +85,7 @@ export class Instrument extends FeatureBase {
           wrapEvents(this.ee)
         }
 
-        if (getRuntime(this.agentIdentifier).xhrWrappable) {
+        if (agentRuntime.xhrWrappable) {
           wrapXhr(this.ee)
         }
 

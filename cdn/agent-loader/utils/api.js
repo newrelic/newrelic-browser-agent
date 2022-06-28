@@ -9,6 +9,7 @@ import { handle } from '@newrelic/browser-agent-core/common/event-emitter/handle
 import { mapOwn } from '@newrelic/browser-agent-core/common/util/map-own'
 import { ee } from '@newrelic/browser-agent-core/common/event-emitter/contextual-ee'
 import { now } from '@newrelic/browser-agent-core/common/timing/now'
+import { getInfo } from '@newrelic/browser-agent-core/common/config/config'
 import agentIdentifier from '../../shared/agentIdentifier'
 
 export function setAPI() {
@@ -89,13 +90,19 @@ export function setAPI() {
     }
   }
 
-  newrelic.noticeError = function (err, customAttributes) {
+  // 06.22 Test migration: removed 'setCustomAttribute' from our EE model due to race cond btwn page-action and page-view-event aggs
+  nr.setCustomAttribute = function (key, value) {
+    handle('record-supportability', ['API/setCustomAttribute/called'])
+    getInfo(agentIdentifier).jsAttributes[key] = value;
+  }
+
+  nr.noticeError = function (err, customAttributes) {
     if (typeof err === 'string') err = new Error(err)
     handle('record-supportability', ['API/noticeError/called'], undefined, undefined, instanceEE)
     handle('err', [err, now(), false, customAttributes], undefined, undefined, instanceEE)
   }
 
-  newrelic.BrowserAgentInstance = async function (){
+  nr.BrowserAgentInstance = async function (){
     const { BrowserAgent } = await import('@newrelic/browser-agent')
     return new BrowserAgent()
   }

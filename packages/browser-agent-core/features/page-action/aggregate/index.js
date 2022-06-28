@@ -9,7 +9,7 @@ import { registerHandler as register } from '../../../common/event-emitter/regis
 // import { on as onHarvest } from '../../../common/harvest/harvest'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
-import { getConfigurationValue, getInfo, getRuntime, setInfo } from '../../../common/config/config'
+import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { FeatureBase } from '../../../common/util/feature-base'
 
 export class Aggregate extends FeatureBase {
@@ -22,6 +22,8 @@ export class Aggregate extends FeatureBase {
     this.currentEvents
 
     this.events = []
+
+    this.att = getInfo(this.agentIdentifier).jsAttributes;  // per-agent, aggregators-shared info context
 
     if (document.referrer) this.referrerUrl = cleanURL(document.referrer)
 

@@ -6,6 +6,7 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
+    {init}
     {config}
     {loader}
   </head>
@@ -14,10 +15,19 @@
     <script type="text/javascript">
      // hook in to the internal api
     var spaApi = null
-    var handle = __nr_require('handle')
-    handle('spa-register', [function(api) {
+    var agentId = Object.keys(NREUM.initializedAgents)[0]
+    var ee = NREUM.ee
+    var scopedEE = ee.get(agentId)
+    var type = 'spa-register'
+    var args = [function(api) {
       spaApi = api
-    }])
+    }]
+    scopedEE.buffer([type])
+    scopedEE.emit(type, args)
+    // var handle = __nr_require('handle')
+    // handle('spa-register', [function(api) {
+    //   spaApi = api
+    // }])
 
     var node = null
 
@@ -45,6 +55,7 @@
 
       // store current node
       node = spaApi.getCurrentNode()
+      console.log("node", node)
     }, false)
 
     function makeAjaxCall() {

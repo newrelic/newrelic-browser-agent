@@ -12,8 +12,6 @@ import slice from 'lodash._slice'
 import './debug'
 import { FeatureBase } from '../../../common/util/feature-base'
 
-var origOnerror = window.onerror
-var handleErrors = false
 var NR_ERR_PROP = 'nr@seenError'
 
 export class Instrument extends FeatureBase {
@@ -22,36 +20,39 @@ export class Instrument extends FeatureBase {
     // skipNext counter to keep track of uncaught
     // errors that will be the same as caught errors.
     this.skipNext = 0
+
+    this.handleErrors = false,
+    this.origOnerror = window.onerror
+    
+    const state = this
+
     const agentRuntime = getRuntime(this.agentIdentifier);
     agentRuntime.features.err = true;   // declare that we are using err instrumentation
 
-    console.log("initialize js-errors instrument!", this.agentIdentifier)
 
-    const self = this
+    console.log("initialize js-errors instrument!", state.agentIdentifier)
 
-    this.ee.on('fn-start', function (args, obj, methodName) {
-      if (handleErrors) {
-        this.skipNext = this.skipNext ? this.skipNext + 1 : 1
-      }
+    state.ee.on('fn-start', function (args, obj, methodName) {
+      if (state.handleErrors) state.skipNext += 1
     })
 
-    this.ee.on('fn-err', function (args, obj, err) {
-      if (handleErrors && !err[NR_ERR_PROP]) {
+    state.ee.on('fn-err', function (args, obj, err) {
+      if (state.handleErrors && !err[NR_ERR_PROP]) {
         getOrSet(err, NR_ERR_PROP, function getVal() {
           return true
         })
         this.thrown = true
-        notice(err, undefined, self.ee)
+        notice(err, undefined, state.ee)
       }
     })
 
-    this.ee.on('fn-end', function () {
-      if (!handleErrors) return
-      if (!this.thrown && this.skipNext > 0) this.skipNext -= 1
+    state.ee.on('fn-end', function () {
+      if (!state.handleErrors) return
+      if (!this.thrown && state.skipNext > 0) state.skipNext -= 1
     })
 
-    this.ee.on('internal-error', (e) => {
-      handle('ierr', [e, now(), true], undefined, undefined, this.ee)
+    state.ee.on('internal-error', (e) => {
+      handle('ierr', [e, now(), true], undefined, undefined, state.ee)
     })
 
     // Declare that we are using err instrumentation
@@ -59,7 +60,6 @@ export class Instrument extends FeatureBase {
 
     const prevOnError = window.onerror
     window.onerror = (...args) => {
-      console.log("wrappedOnError called...")
       if (prevOnError) prevOnError(...args)
       this.onerrorHandler(...args)
       return false
@@ -89,7 +89,7 @@ export class Instrument extends FeatureBase {
           wrapXhr(this.ee)
         }
 
-        handleErrors = true
+        state.handleErrors = true
       }
     }
   }
@@ -108,7 +108,7 @@ export class Instrument extends FeatureBase {
       }
     }
 
-    if (typeof origOnerror === 'function') return origOnerror.apply(this, slice(arguments))
+    if (typeof this.origOnerror === 'function') return this.origOnerror.apply(this, slice(arguments))
     return false
   }
 }

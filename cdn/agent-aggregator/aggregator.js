@@ -1,5 +1,4 @@
 import { getRuntime } from '@newrelic/browser-agent-core/common/config/config'
-import { drain } from '@newrelic/browser-agent-core/common/drain/drain'
 import { importFeatures } from './util/features'
 import { activateFeatures, activatedFeatures } from '@newrelic/browser-agent-core/common/util/feature-flags'
 import { addToNREUM, gosNREUMInitializedAgents } from '@newrelic/browser-agent-core/common/window/nreum'
@@ -21,15 +20,10 @@ export function aggregator(build) {
   async function initializeFeatures() {
     const features = await importFeatures(build)
     // gosNREUMInitializedAgents(agentIdentifier, features, 'features')
-    // once ALL the enabled features all initialized, drain all the buffers
-    setTimeout(() => drainAll(), 100)
+    // once ALL the enabled features all initialized,
     // add the activated features from the setToken call to the window for testing purposes
+    // and activatedFeatures will drain all the buffers
     addToNREUM('activatedFeatures', activatedFeatures)
-  }
-
-  function drainAll() {
-    drain(agentIdentifier, 'api')
-    drain(agentIdentifier, 'feature')
   }
 
 }

@@ -53,6 +53,7 @@ export class Instrument extends FeatureBase {
     this.ee.on(FN_END, function (args, target) {
       var evt = args[0]
       if (evt instanceof origEvent) {        
+
         // ISSUE: when target is XMLHttpRequest, nr@context should have params so we can calculate event origin
         // When ajax is disabled, this may fail without making ajax a dependency of session-trace
         handle('bst', [evt, target, this.bstStart, now()], undefined, undefined, ee)

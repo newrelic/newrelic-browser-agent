@@ -22,11 +22,10 @@ export class Aggregate extends FeatureBase {
     this.currentEvents
 
     this.events = []
+
     this.att = getInfo(this.agentIdentifier).jsAttributes;  // per-agent, aggregators-shared info context
 
     if (document.referrer) this.referrerUrl = cleanURL(document.referrer)
-
-    //register('api-setCustomAttribute', (...args) => this.setCustomAttribute(...args), 'api', this.ee)
 
     this.ee.on('feat-ins', () => {
       register('api-addPageAction', (...args) => this.addPageAction(...args), undefined, this.ee)
@@ -90,7 +89,7 @@ export class Aggregate extends FeatureBase {
     }
 
     mapOwn(defaults, set)
-    mapOwn(this.att, set)
+    mapOwn(getInfo(this.agentIdentifier).jsAttributes, set)
     if (attributes && typeof attributes === 'object') {
       mapOwn(attributes, set)
     }
@@ -102,9 +101,5 @@ export class Aggregate extends FeatureBase {
       eventAttributes[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
   }
-
-  /* setCustomAttribute (t, key, value) {
-    this.att[key] = value
-  } */
 }
 

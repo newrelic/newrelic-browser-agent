@@ -6,12 +6,13 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
+    {init}
     {config}
-    {loader}
     <script type="text/javascript">
       if (!NREUM.loader_config) NREUM.loader_config = {}
       NREUM.loader_config.xpid = '12#34'
     </script>
+    {loader}
   </head>
   <body>
     <div>This page fires an XHR and calls pushState when clicked</div>
@@ -21,6 +22,7 @@
           method: 'POST',
           body: '123'
         }).then(function (res) {
+          return res.json()
         })
         window.location.hash = Math.random()
       }, false)

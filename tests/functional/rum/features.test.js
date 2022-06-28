@@ -29,6 +29,25 @@ testDriver.test('rum feature flags, full loader', withTls, function (t, browser,
   }
 })
 
+testDriver.test('rum feature flags, rum loader', withTls, function (t, browser, router) {
+  t.plan(1)
+
+  let rumPromise = router.expectRum()
+  let loadPromise = browser.get(router.assetURL('rum-data.html', {loader: 'rum'}))
+
+  Promise.all([rumPromise, loadPromise]).then(([{query}]) => {
+    t.equal(query.af, void 0)
+    t.end()
+  }).catch(fail)
+
+  function fail (err) {
+    t.fail(err)
+    t.end()
+  }
+})
+
+/* DEPRECATED: no 'dev', 'stn', and 'xhr' loader builds in new NPM version code
+---------
 testDriver.test('rum feature flags, dev loader', withTls, function (t, browser, router) {
   t.plan(1)
 
@@ -60,7 +79,6 @@ testDriver.test('rum feature flags, dev loader', withTls, function (t, browser, 
     t.end()
   }
 })
-
 testDriver.test('rum feature flags, stn loader', withTls, function (t, browser, router) {
   t.plan(1)
 
@@ -83,7 +101,6 @@ testDriver.test('rum feature flags, stn loader', withTls, function (t, browser, 
     t.end()
   }
 })
-
 testDriver.test('rum feature flags, xhr loader', withTls, function (t, browser, router) {
   t.plan(1)
 
@@ -104,20 +121,4 @@ testDriver.test('rum feature flags, xhr loader', withTls, function (t, browser, 
     t.end()
   }
 })
-
-testDriver.test('rum feature flags, rum loader', withTls, function (t, browser, router) {
-  t.plan(1)
-
-  let rumPromise = router.expectRum()
-  let loadPromise = browser.get(router.assetURL('rum-data.html', {loader: 'rum'}))
-
-  Promise.all([rumPromise, loadPromise]).then(([{query}]) => {
-    t.equal(query.af, void 0)
-    t.end()
-  }).catch(fail)
-
-  function fail (err) {
-    t.fail(err)
-    t.end()
-  }
-})
+*/

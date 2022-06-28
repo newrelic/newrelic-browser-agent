@@ -16,11 +16,11 @@ import './pro'
 import { configure } from './utils/configure'
 
 // set up the NREUM, api, and internal configs
-configure()
+configure().then(() => {
+    const enabledFeatures = getEnabledFeatures(agentIdentifier)
+    // instantiate auto-instrumentation specific to this loader...
+    if (enabledFeatures.spa) new InstrumentSpa(agentIdentifier) // spa
 
-const enabledFeatures = getEnabledFeatures(agentIdentifier)
-// instantiate auto-instrumentation specific to this loader...
-if (enabledFeatures.spa) new InstrumentSpa(agentIdentifier) // spa
-
-// imports the aggregator for 'lite' if no other aggregator takes precedence
-stageAggregator('spa')
+    // imports the aggregator for 'lite' if no other aggregator takes precedence
+    stageAggregator('spa')
+})

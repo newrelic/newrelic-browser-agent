@@ -12,6 +12,9 @@ const opts = {
   init: {
     jserrors: {
       harvestTimeSeconds: 2
+    },
+    metrics: {
+      enabled: false
     }
   }
 }

@@ -28,8 +28,6 @@ testDriver.test('ignoring errors works', supported, function (t, browser, router
 
     const actualErrors = getErrorsFromResponse(response, browser)
 
-    console.log("actualErrors", actualErrors)
-
     let expectedErrors = [{
       message: 'report',
       stack: [{

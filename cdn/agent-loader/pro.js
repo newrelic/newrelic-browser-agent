@@ -18,14 +18,15 @@ import { getEnabledFeatures } from '@newrelic/browser-agent-core/common/util/ena
 import './lite'
 
 // set up the NREUM, api, and internal configs
-configure()
+configure().then(() => {
 
-const enabledFeatures = getEnabledFeatures(agentIdentifier)
-// instantiate auto-instrumentation specific to this loader...
-if (enabledFeatures.jserrors) new InstrumentErrors(agentIdentifier) // errors
-if (enabledFeatures.ajax) new InstrumentXhr(agentIdentifier) // ajax
-if (enabledFeatures['session_trace']) new InstrumentSessionTrace(agentIdentifier) // session traces
-if (enabledFeatures['page_action']) new InstrumentPageAction(agentIdentifier) // ins (apis)
+    const enabledFeatures = getEnabledFeatures(agentIdentifier)
+    // instantiate auto-instrumentation specific to this loader...
+    if (enabledFeatures.jserrors) new InstrumentErrors(agentIdentifier) // errors
+    if (enabledFeatures.ajax) new InstrumentXhr(agentIdentifier) // ajax
+    if (enabledFeatures['session_trace']) new InstrumentSessionTrace(agentIdentifier) // session traces
+    if (enabledFeatures['page_action']) new InstrumentPageAction(agentIdentifier) // ins (apis)
 
-// imports the aggregator for 'lite' if no other aggregator takes precedence
-stageAggregator('pro')
+    // imports the aggregator for 'lite' if no other aggregator takes precedence
+    stageAggregator('pro')
+})

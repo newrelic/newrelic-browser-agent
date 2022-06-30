@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('eventListener methods work as expected after abort', supported, function (t) {
+jil.browserTest('eventListener methods work as expected after abort', function (t) {
   const ee = require('../../contextual-ee/index.js')
   require('../../feature/wrap-events.js')
 

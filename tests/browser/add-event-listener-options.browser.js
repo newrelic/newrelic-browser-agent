@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('addEventListenerOptions')
 
-jil.browserTest('addEventListener options work when wrapped', supported, function (t) {
+jil.browserTest('addEventListener options work when wrapped', function (t) {
   require('../../feature/wrap-events.js')
 
   let handlerCallCount = 0

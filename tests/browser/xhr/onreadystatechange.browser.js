@@ -4,7 +4,7 @@
  */
 
 const jil = require('jil')
-let BrowserMatcher = require('../../../tools/jil/util/browser-matcher')
+let BrowserMatcher = require('jil/util/browser-matcher')
 let supported = BrowserMatcher.withFeature('xhr')
 
 jil.browserTest('xhr with onreadystatechange assigned after send', supported, function (t) {

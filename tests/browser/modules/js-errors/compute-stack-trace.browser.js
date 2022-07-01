@@ -4,7 +4,7 @@
  */
 
 import test from '../../../../tools/jil/browser-test'
-import { computeStackTrace } from '../../../../packages/browser-agent-core/features/js-errors/aggregate/compute-stack-trace'
+import { computeStackTrace } from '../../../../packages/browser-agent-core/features/jserrors/aggregate/compute-stack-trace'
 import { stringify } from '../../../../packages/browser-agent-core/common/util/stringify'
 import testcases from './stack-parse-testcases'
 

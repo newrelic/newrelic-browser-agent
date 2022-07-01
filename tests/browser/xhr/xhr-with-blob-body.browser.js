@@ -4,15 +4,11 @@
  */
 
 const jil = require('jil')
-const BrowserMatcher = require('jil/util/browser-matcher')
 import { setup } from '../utils/setup'
 
 const { agentIdentifier, baseEE, aggregator } = setup();
-const xhrSupported = BrowserMatcher.withFeature('xhr')
-const blobSupported = BrowserMatcher.withFeature('blob')
-const supported = xhrSupported.intersect(blobSupported)
 
-jil.browserTest('xhr with blob request body', supported, async function (t) {
+jil.browserTest('xhr with blob request body', async function (t) {
   const { Instrument: AjaxInstrum } = await import('../../../packages/browser-agent-core/features/ajax/instrument/index');
   const ajaxTestInstr = new AjaxInstrum(agentIdentifier);
   const { drain } = await import('../../../packages/browser-agent-core/common/drain/drain')

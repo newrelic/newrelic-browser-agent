@@ -4,11 +4,9 @@
  */
 
 const jil = require('jil')
-const matcher = require('../../../tools/jil/util/browser-matcher')
 
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('setCurrentRouteName', supported, function (t) {
+jil.browserTest('setCurrentRouteName', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -40,7 +38,7 @@ jil.browserTest('setCurrentRouteName', supported, function (t) {
   }
 })
 
-jil.browserTest('interaction is not a route change if it does not change the url while route name is null', supported, function (t) {
+jil.browserTest('interaction is not a route change if it does not change the url while route name is null', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -67,7 +65,7 @@ jil.browserTest('interaction is not a route change if it does not change the url
   }
 })
 
-jil.browserTest('interaction is not a route change if it does not change url or route', supported, function (t) {
+jil.browserTest('interaction is not a route change if it does not change url or route', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -94,7 +92,7 @@ jil.browserTest('interaction is not a route change if it does not change url or 
   }
 })
 
-jil.browserTest('url change is a route change when route name is set', supported, function (t) {
+jil.browserTest('url change is a route change when route name is set', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -122,7 +120,7 @@ jil.browserTest('url change is a route change when route name is set', supported
   }
 })
 
-jil.browserTest('replaceState is a route change when route name is set', supported, function (t) {
+jil.browserTest('replaceState is a route change when route name is set', function (t) {
   let helpers = require('./helpers')
 
   if (!window.history.replaceState) {
@@ -158,7 +156,7 @@ jil.browserTest('replaceState is a route change when route name is set', support
   }
 })
 
-jil.browserTest('setting route to null does not count as a route change', supported, function (t) {
+jil.browserTest('setting route to null does not count as a route change', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -186,7 +184,7 @@ jil.browserTest('setting route to null does not count as a route change', suppor
   }
 })
 
-jil.browserTest('changing the url when route name is null counts as a route change', supported, function (t) {
+jil.browserTest('changing the url when route name is null counts as a route change', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -216,7 +214,7 @@ jil.browserTest('changing the url when route name is null counts as a route chan
   }
 })
 
-jil.browserTest('resetting the route to the same routename does not count as a route change', supported, function (t) {
+jil.browserTest('resetting the route to the same routename does not count as a route change', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -245,7 +243,7 @@ jil.browserTest('resetting the route to the same routename does not count as a r
   }
 })
 
-jil.browserTest('changeing route, and changing back to original is not a route change', supported, function (t) {
+jil.browserTest('changeing route, and changing back to original is not a route change', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -275,7 +273,7 @@ jil.browserTest('changeing route, and changing back to original is not a route c
   }
 })
 
-jil.browserTest('changeing url, and changing back to original is a route change', supported, function (t) {
+jil.browserTest('changeing url, and changing back to original is a route change', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({

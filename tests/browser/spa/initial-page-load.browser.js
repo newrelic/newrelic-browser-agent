@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('initial page load timing', supported, function (t) {
+jil.browserTest('initial page load timing', function (t) {
   var helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',

@@ -4,15 +4,13 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('mutation')
 
 const { setup } = require('../utils/setup')
 
 const setupData = setup()
 const {agentIdentifier, nr} = setupData
 
-jil.browserTest('MutationObserver instanceof check', supported, function (t) {
+jil.browserTest('MutationObserver instanceof check', function (t) {
   var origMutationObserver = MutationObserver
   const {Instrument} = require('../../../packages/browser-agent-core/features/spa/instrument/index.js')
   new Instrument(agentIdentifier)
@@ -24,7 +22,7 @@ jil.browserTest('MutationObserver instanceof check', supported, function (t) {
   t.end()
 })
 
-jil.browserTest('MutationObserver double-instrumentation', supported, function (t) {
+jil.browserTest('MutationObserver double-instrumentation', function (t) {
   var OrigMutationObserver = MutationObserver
   const {Instrument} = require('../../../packages/browser-agent-core/features/spa/instrument/index.js')
   new Instrument(agentIdentifier)
@@ -41,7 +39,7 @@ jil.browserTest('MutationObserver double-instrumentation', supported, function (
   t.end()
 })
 
-jil.browserTest('MutationObserver functionality check', supported, function (t) {
+jil.browserTest('MutationObserver functionality check', function (t) {
   const {Instrument} = require('../../../packages/browser-agent-core/features/spa/instrument/index.js')
   new Instrument(agentIdentifier)
   let callbackInvocations = 0

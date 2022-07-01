@@ -4,8 +4,6 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('addEventListener')
 
 function removeListener (type, fn) {
   const handlers = this.listeners(type)
@@ -36,7 +34,7 @@ invalidUrls.forEach((url) => {
 })
 
 function shouldWork (url) {
-  jil.browserTest('jsonp works with ' + url, supported, function (t) {
+  jil.browserTest('jsonp works with ' + url, function (t) {
     t.plan(1)
 
     var ee = require('ee').get('jsonp')
@@ -61,7 +59,7 @@ function shouldWork (url) {
 }
 
 function shouldNotWork (url) {
-  jil.browserTest('jsonp does not work with ' + url, supported, function (t) {
+  jil.browserTest('jsonp does not work with ' + url, function (t) {
     t.plan(1)
 
     var ee = require('ee').get('jsonp')

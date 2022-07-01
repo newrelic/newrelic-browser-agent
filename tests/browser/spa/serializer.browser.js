@@ -4,7 +4,6 @@
  */
 
 const jil = require('jil')
-const matcher = require('../../../tools/jil/util/browser-matcher')
 const { setup } = require('../utils/setup')
 const { getInfo, setInfo } = require("../../../packages/browser-agent-core/common/config/config")
 
@@ -12,7 +11,6 @@ const setupData = setup()
 const {baseEE, agentIdentifier, aggregator} = setupData
 
 
-let supported = matcher.withFeature('wrappableAddEventListener')
 var qp = require('@newrelic/nr-querypack')
 let testCases = require('@newrelic/nr-querypack/examples/all.json').filter((testCase) => {
   return testCase.schema.name === 'bel' &&
@@ -39,12 +37,12 @@ var fieldPropMap = {
 }
 
 _forEach(testCases, function (testCase) {
-  jil.browserTest('spa interaction serializer ' + testCase.name, supported, function (t) {
+  jil.browserTest('spa interaction serializer ' + testCase.name, function (t) {
     runTest(testCase, t)
   })
 })
 
-jil.browserTest('spa interaction serializer attributes', supported, function (t) {
+jil.browserTest('spa interaction serializer attributes', function (t) {
   let interaction = new Interaction('click', 1459358524622, 'http://example.com/', undefined, undefined, agentIdentifier)
   interaction.root.attrs.custom['undefined'] = void 0
   interaction.root.attrs.custom['function'] = function foo (bar) {
@@ -75,7 +73,7 @@ jil.browserTest('spa interaction serializer attributes', supported, function (t)
   t.end()
 }, 'attributes should be correct')
 
-jil.browserTest('spa interaction serializer attributes', supported, function (t) {
+jil.browserTest('spa interaction serializer attributes', function (t) {
   let interaction = new Interaction('click', 1459358524622, 'http://example.com/', undefined, undefined, agentIdentifier)
 
   for (var i = 1; i < 100; ++i) {
@@ -92,14 +90,14 @@ jil.browserTest('spa interaction serializer attributes', supported, function (t)
   t.end()
 }, 'attributes should be limited')
 
-jil.browserTest('spa interaction serializer with undefined string values', supported, function (t) {
+jil.browserTest('spa interaction serializer with undefined string values', function (t) {
   var interaction = new Interaction('click', 1459358524622, 'http://domain/path', undefined, undefined, agentIdentifier)
   let decoded = qp.decode(serializer.serializeSingle(interaction.root))
   t.equal(decoded[0].customName, null, 'customName (which was undefined originally) should have default value')
   t.end()
 })
 
-jil.browserTest('serializing multiple interactions', supported, function(t) {
+jil.browserTest('serializing multiple interactions', function(t) {
   var ixn = new Interaction('initialPageLoad', 0, 'http://some-domain', undefined, undefined, agentIdentifier)
   addAjaxNode(ixn.root)
 

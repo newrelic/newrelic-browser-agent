@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('callback timing', supported, function (t) {
+jil.browserTest('callback timing', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
@@ -43,7 +41,7 @@ jil.browserTest('callback timing', supported, function (t) {
   }
 })
 
-jil.browserTest('callback timing multiple callbacks', supported, function (t) {
+jil.browserTest('callback timing multiple callbacks', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
@@ -85,7 +83,7 @@ jil.browserTest('callback timing multiple callbacks', supported, function (t) {
   }
 })
 
-jil.browserTest('callback timing microtasks', supported, function (t) {
+jil.browserTest('callback timing microtasks', function (t) {
   // can't use multiple matchers in same file
   if (!window.Promise) {
     t.end()

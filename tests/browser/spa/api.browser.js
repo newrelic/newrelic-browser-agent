@@ -6,16 +6,14 @@
 let originalSetTimeout = global.setTimeout
 
 const jil = require('jil')
-const matcher = require('jil/util/browser-matcher')
 const {getInfo} = require('../../../packages/browser-agent-core/common/config/config')
 
-let supported = matcher.withFeature('wrappableAddEventListener')
 
 let raf = global.reqiestAnimationFrame || function (fn) {
   return originalSetTimeout(fn, 16)
 }
 
-jil.browserTest('simple sync api test', supported, function (t) {
+jil.browserTest('simple sync api test', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -78,7 +76,7 @@ jil.browserTest('simple sync api test', supported, function (t) {
   }
 })
 
-jil.browserTest('simple async api test', supported, function (t) {
+jil.browserTest('simple async api test', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -122,7 +120,7 @@ jil.browserTest('simple async api test', supported, function (t) {
   }
 })
 
-jil.browserTest('async api no callback', supported, function (t) {
+jil.browserTest('async api no callback', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -165,7 +163,7 @@ jil.browserTest('async api no callback', supported, function (t) {
   }
 })
 
-jil.browserTest('async api outside interaction', supported, function (t) {
+jil.browserTest('async api outside interaction', function (t) {
   t.plan(4)
 
   var tracer = newrelic.interaction().createTracer('requestAnimationFrame', function (a, b, c) {
@@ -181,7 +179,7 @@ jil.browserTest('async api outside interaction', supported, function (t) {
   }, 5)
 })
 
-jil.browserTest('sync api outside interaction', supported, function (t) {
+jil.browserTest('sync api outside interaction', function (t) {
   t.plan(4)
 
   var returnVal = newrelic.interaction().createTracer('function 1', (a, b, c) => {
@@ -195,7 +193,7 @@ jil.browserTest('sync api outside interaction', supported, function (t) {
   t.end()
 })
 
-jil.browserTest('async api outside interaction with throw', supported, function (t) {
+jil.browserTest('async api outside interaction with throw', function (t) {
   var expected = new Error()
   var tracer = newrelic.interaction().createTracer('requestAnimationFrame', function (a, b, c) {
     t.equal(a, 1)
@@ -212,7 +210,7 @@ jil.browserTest('async api outside interaction with throw', supported, function 
   }
 })
 
-jil.browserTest('sync api outside interaction with throw', supported, function (t) {
+jil.browserTest('sync api outside interaction with throw', function (t) {
   var expected = new Error()
 
   try {
@@ -228,7 +226,7 @@ jil.browserTest('sync api outside interaction with throw', supported, function (
   }
 })
 
-jil.browserTest('simple sync api test with throw', supported, function (t) {
+jil.browserTest('simple sync api test with throw', function (t) {
   var expected = new Error()
   let helpers = require('./helpers')
 
@@ -277,7 +275,7 @@ jil.browserTest('simple sync api test with throw', supported, function (t) {
   }
 })
 
-jil.browserTest('simple async api test with throw', supported, function (t) {
+jil.browserTest('simple async api test with throw', function (t) {
   var expected = new Error()
   let helpers = require('./helpers')
 
@@ -329,7 +327,7 @@ jil.browserTest('simple async api test with throw', supported, function (t) {
   }
 })
 
-jil.browserTest('async api test with throw does not leave context', supported, function (t) {
+jil.browserTest('async api test with throw does not leave context', function (t) {
   var expected = new Error()
   let helpers = require('./helpers')
 
@@ -382,7 +380,7 @@ jil.browserTest('async api test with throw does not leave context', supported, f
   }
 })
 
-jil.browserTest('simple sync api test with throw and sibling', supported, function (t) {
+jil.browserTest('simple sync api test with throw and sibling', function (t) {
   var expected = new Error()
   let helpers = require('./helpers')
 
@@ -450,7 +448,7 @@ jil.browserTest('simple sync api test with throw and sibling', supported, functi
   }
 })
 
-jil.browserTest('end interaction', supported, function (t) {
+jil.browserTest('end interaction', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -481,7 +479,7 @@ jil.browserTest('end interaction', supported, function (t) {
   }
 })
 
-jil.browserTest('custom interaction name', supported, function (t) {
+jil.browserTest('custom interaction name', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -511,7 +509,7 @@ jil.browserTest('custom interaction name', supported, function (t) {
   }
 })
 
-jil.browserTest('custom actionText', supported, function (t) {
+jil.browserTest('custom actionText', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -543,7 +541,7 @@ jil.browserTest('custom actionText', supported, function (t) {
   }
 })
 
-jil.browserTest('ignore interaction', supported, function (t) {
+jil.browserTest('ignore interaction', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -572,7 +570,7 @@ jil.browserTest('ignore interaction', supported, function (t) {
   }
 })
 
-jil.browserTest('custom attributes', supported, function (t) {
+jil.browserTest('custom attributes', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -611,7 +609,7 @@ jil.browserTest('custom attributes', supported, function (t) {
   }
 })
 
-jil.browserTest('custom attributes and interaction attributes', supported, function (t) {
+jil.browserTest('custom attributes and interaction attributes', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -651,7 +649,7 @@ jil.browserTest('custom attributes and interaction attributes', supported, funct
   }
 })
 
-jil.browserTest('custom attributes and interaction attributes', supported, function (t) {
+jil.browserTest('custom attributes and interaction attributes', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -697,7 +695,7 @@ jil.browserTest('custom attributes and interaction attributes', supported, funct
   }
 })
 
-jil.browserTest('context store and onEnd', supported, function (t) {
+jil.browserTest('context store and onEnd', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -751,7 +749,7 @@ jil.browserTest('context store and onEnd', supported, function (t) {
   }
 })
 
-jil.browserTest('save', supported, function (t) {
+jil.browserTest('save', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -775,7 +773,7 @@ jil.browserTest('save', supported, function (t) {
   }
 })
 
-jil.browserTest('save with ignore', supported, function (t) {
+jil.browserTest('save with ignore', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -801,7 +799,7 @@ jil.browserTest('save with ignore', supported, function (t) {
   }
 })
 
-jil.browserTest('save with ignore after', supported, function (t) {
+jil.browserTest('save with ignore after', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -827,7 +825,7 @@ jil.browserTest('save with ignore after', supported, function (t) {
   }
 })
 
-jil.browserTest('interaction outside interaction', supported, function (t) {
+jil.browserTest('interaction outside interaction', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -880,7 +878,7 @@ jil.browserTest('interaction outside interaction', supported, function (t) {
   }
 })
 
-jil.browserTest('interaction outside wrapped function', supported, function (t) {
+jil.browserTest('interaction outside wrapped function', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -940,7 +938,7 @@ jil.browserTest('interaction outside wrapped function', supported, function (t) 
   }
 })
 
-jil.browserTest('set trigger', supported, function (t) {
+jil.browserTest('set trigger', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -983,7 +981,7 @@ jil.browserTest('set trigger', supported, function (t) {
   }
 })
 
-jil.browserTest('createTracer no name', supported, function (t) {
+jil.browserTest('createTracer no name', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -1024,7 +1022,7 @@ jil.browserTest('createTracer no name', supported, function (t) {
   }
 })
 
-jil.browserTest('createTracer no name, no callback', supported, function (t) {
+jil.browserTest('createTracer no name, no callback', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -1055,7 +1053,7 @@ jil.browserTest('createTracer no name, no callback', supported, function (t) {
   }
 })
 
-jil.browserTest('reuse handle from outside interaction', supported, function (t) {
+jil.browserTest('reuse handle from outside interaction', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({

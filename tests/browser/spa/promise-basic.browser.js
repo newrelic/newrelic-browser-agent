@@ -6,18 +6,16 @@
 var unwrappedPromise = global.Promise
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('promise')
 
 // ff38 will throw if you copy the toString method from the native promise class
-jil.browserTest('stringifying promises still works', supported, function (t) {
+jil.browserTest('stringifying promises still works', function (t) {
   require('./helpers')
   t.ok(String(window.Promise).match(/function Promise\s*\(\)\s*{\s*\[native code\]\s*}/))
   t.ok(window.Promise.toString().match(/function Promise\s*\(\)\s*{\s*\[native code\]\s*}/))
   t.end()
 })
 
-jil.browserTest('basic promise chain', supported, function (t) {
+jil.browserTest('basic promise chain', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -80,7 +78,7 @@ jil.browserTest('basic promise chain', supported, function (t) {
   }
 })
 
-jil.browserTest('instanceof', supported, function diferTest (t) {
+jil.browserTest('instanceof', function diferTest (t) {
   var promise = Promise.resolve()
   var unwrapped = unwrappedPromise.resolve()
 
@@ -91,7 +89,7 @@ jil.browserTest('instanceof', supported, function diferTest (t) {
   t.end()
 })
 
-jil.browserTest('Promise throw in executor', supported, function (t) {
+jil.browserTest('Promise throw in executor', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({

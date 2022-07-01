@@ -4,15 +4,13 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('mutation')
 
 const { setup } = require('../utils/setup')
 
 const setupData = setup()
 const {baseEE} = setupData
 
-jil.browserTest('fn-start events for MutationObserver callbacks should have args', supported, function (t) {
+jil.browserTest('fn-start events for MutationObserver callbacks should have args', function (t) {
   t.plan(3)
 
   const {wrapMutation} = require('../../../packages/browser-agent-core/common/wrap/index')

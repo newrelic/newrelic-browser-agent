@@ -4,13 +4,11 @@
  */
 
 const jil = require('jil')
-const BrowserMatcher = require('jil/util/browser-matcher')
 import { setup } from '../utils/setup'
-const supported = BrowserMatcher.withFeature('xhr')
 
 const { agentIdentifier } = setup();
 
-jil.browserTest('xhr with onreadystatechange assigned after send', supported, async function (t) {
+jil.browserTest('xhr with onreadystatechange assigned after send', async function (t) {
   const ffVersion = await import('../../../packages/browser-agent-core/common/browser-version/firefox-version');
   const { Instrument: AjaxInstrum } = await import('../../../packages/browser-agent-core/features/ajax/instrument/index');
   const ajaxTestInstr = new AjaxInstrum(agentIdentifier);
@@ -44,7 +42,7 @@ jil.browserTest('xhr with onreadystatechange assigned after send', supported, as
   })
 })
 
-jil.browserTest('multiple XHRs with onreadystatechange assigned after send', supported, async function (t) {
+jil.browserTest('multiple XHRs with onreadystatechange assigned after send', async function (t) {
   const ffVersion = await import('../../../packages/browser-agent-core/common/browser-version/firefox-version');
   const { Instrument: AjaxInstrum } = await import('../../../packages/browser-agent-core/features/ajax/instrument/index');
   const ajaxTestInstr = new AjaxInstrum(agentIdentifier);

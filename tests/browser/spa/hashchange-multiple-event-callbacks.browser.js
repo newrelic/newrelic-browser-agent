@@ -4,14 +4,12 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
 if (process.browser) {
   var helpers = require('./helpers')
 }
 
-jil.browserTest('spa hashchange in second event callback', supported, function (t) {
+jil.browserTest('spa hashchange in second event callback', function (t) {
   var originalUrl = '' + window.location
   var expected = {
     name: 'interaction',

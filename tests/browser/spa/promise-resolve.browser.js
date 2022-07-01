@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('promise')
 
-jil.browserTest('Promise.resolve', supported, function (t) {
+jil.browserTest('Promise.resolve', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -48,7 +46,7 @@ jil.browserTest('Promise.resolve', supported, function (t) {
   }
 })
 
-jil.browserTest('promise.resolve with Promise argument', supported, function (t) {
+jil.browserTest('promise.resolve with Promise argument', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({

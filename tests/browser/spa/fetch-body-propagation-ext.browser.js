@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('fetchExt')
 
-jil.browserTest('spa single fetch with formData', supported, function (t) {
+jil.browserTest('spa single fetch with formData', function (t) {
   // check if Request.formData errors, see comment below
   var req = new Request('/formdata', {method: 'POST', body: new FormData()})
   if (req.formData) {

@@ -4,8 +4,6 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
 if (process.browser) {
   var helpers = require('./helpers')
@@ -13,7 +11,7 @@ if (process.browser) {
   helpers.onWindowLoad(() => { loaded = true })
 }
 
-jil.browserTest('spa interaction triggered by pushstate + popstate', supported, function (t) {
+jil.browserTest('spa interaction triggered by pushstate + popstate', function (t) {
   if (!window.history.pushState) {
     t.skip('skipping SPA test in browser that does not support pushState')
     t.end()

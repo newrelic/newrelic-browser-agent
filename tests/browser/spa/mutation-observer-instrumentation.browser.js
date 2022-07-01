@@ -4,12 +4,9 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supportsMutationObserver = matcher.withFeature('mutation')
-let supportsEventListenerWrapping = matcher.withFeature('wrappableAddEventListener')
 let supported = supportsMutationObserver.intersect(supportsEventListenerWrapping)
 
-jil.browserTest('basic MutationObserver instrumentation', supported, function (t) {
+jil.browserTest('basic MutationObserver instrumentation', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({

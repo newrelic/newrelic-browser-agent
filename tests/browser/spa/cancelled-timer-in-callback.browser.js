@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('spa cancelled timer in callback', supported, function (t) {
+jil.browserTest('spa cancelled timer in callback', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({

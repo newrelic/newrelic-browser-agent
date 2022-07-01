@@ -11,7 +11,7 @@ const { getInfo, setInfo } = require("../../../packages/browser-agent-core/commo
 const setupData = setup()
 const {baseEE, agentIdentifier, aggregator} = setupData
 
-
+// TO DO(?) - this file doesn't run correctly if it's cleaned up under pull #243, i.e. remove `matcher` and `supported`
 let supported = matcher.withFeature('wrappableAddEventListener')
 var qp = require('@newrelic/nr-querypack')
 let testCases = require('@newrelic/nr-querypack/examples/all.json').filter((testCase) => {

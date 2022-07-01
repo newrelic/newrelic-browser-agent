@@ -5,8 +5,6 @@
 
 var jil = require('jil')
 
-const matcher = require('jil/util/browser-matcher')
-let supported = matcher.withFeature('obfuscate')
 
 var fileLocation = {
   hash: '',
@@ -69,7 +67,7 @@ var validationCases = [
   }
 ]
 
-jil.browserTest('Obfuscation validateRules input', supported, function (t) {
+jil.browserTest('Obfuscation validateRules input', function (t) {
   const obfuscate = require('../../agent/obfuscate')
 
   validationCases.forEach(function (testCase) {
@@ -81,7 +79,7 @@ jil.browserTest('Obfuscation validateRules input', supported, function (t) {
   })
 })
 
-jil.browserTest('Should Obfuscate', supported, function (t) {
+jil.browserTest('Should Obfuscate', function (t) {
   const win = require('../../agent/win')
   win.getWindow().NREUM = {
     init: {
@@ -97,7 +95,7 @@ jil.browserTest('Should Obfuscate', supported, function (t) {
   t.end()
 })
 
-jil.browserTest('Get Rules', supported, function (t) {
+jil.browserTest('Get Rules', function (t) {
   const win = require('../../agent/win')
   win.getWindow().NREUM = {
     init: {
@@ -118,7 +116,7 @@ jil.browserTest('Get Rules', supported, function (t) {
   t.end()
 })
 
-jil.browserTest('Obfuscate String Method', supported, function (t) {
+jil.browserTest('Obfuscate String Method', function (t) {
   const win = require('../../agent/win')
   win.getWindow().NREUM = {
     init: {

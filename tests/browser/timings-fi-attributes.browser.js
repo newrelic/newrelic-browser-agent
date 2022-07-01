@@ -4,11 +4,9 @@
  */
 
 const jil = require('jil')
-const matcher = require('../../tools/jil/util/browser-matcher')
 
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('sends expected attributes when available', supported, function(t) {
+jil.browserTest('sends expected attributes when available', function(t) {
   var handle = require('handle')
   var harvest = require('../../agent/harvest')
   var timingModule = require('../../agent/timings')

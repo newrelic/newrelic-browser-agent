@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('fetch')
 
-jil.browserTest('fetch.reject', supported, function (t) {
+jil.browserTest('fetch.reject', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     type: 'interaction',
@@ -54,7 +52,7 @@ jil.browserTest('fetch.reject', supported, function (t) {
   }
 })
 
-jil.browserTest('fetch body.reject', supported, function (t) {
+jil.browserTest('fetch body.reject', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     type: 'interaction',

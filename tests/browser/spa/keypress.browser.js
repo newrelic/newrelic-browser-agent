@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('spa keypress trigger', supported, function (t) {
+jil.browserTest('spa keypress trigger', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     attrs: { trigger: 'keypress' },
@@ -49,7 +47,7 @@ jil.browserTest('spa keypress trigger', supported, function (t) {
   }
 })
 
-jil.browserTest('spa keyup trigger', supported, function (t) {
+jil.browserTest('spa keyup trigger', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     attrs: { trigger: 'keyup' },
@@ -91,7 +89,7 @@ jil.browserTest('spa keyup trigger', supported, function (t) {
   }
 })
 
-jil.browserTest('spa keydown trigger', supported, function (t) {
+jil.browserTest('spa keydown trigger', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     attrs: { trigger: 'keydown' },

@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('promise')
 
-jil.browserTest('Promise.race', supported, function (t) {
+jil.browserTest('Promise.race', function (t) {
   let helpers = require('./helpers')
   var validator = new helpers.InteractionValidator({
     attrs: {
@@ -49,7 +47,7 @@ jil.browserTest('Promise.race', supported, function (t) {
   }
 })
 
-jil.browserTest('Promise.race async accept', supported, function (t) {
+jil.browserTest('Promise.race async accept', function (t) {
   if (navigator.userAgent.match(/Edge\/\d/)) {
     t.skip('Promise.race is broken in edge 20, but fixed in latest release of edge which is not available in saucelabs')
     t.end()

@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('interaction does not include xhrs that are not sent', supported, function (t) {
+jil.browserTest('interaction does not include xhrs that are not sent', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',

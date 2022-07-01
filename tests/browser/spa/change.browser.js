@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('spa change trigger', supported, function (t) {
+jil.browserTest('spa change trigger', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     attrs: { trigger: 'change' },

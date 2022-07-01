@@ -4,15 +4,13 @@
  */
 
 const jil = require('jil')
-const matcher = require('jil/util/browser-matcher')
 const { setup } = require('../utils/setup')
 
 const setupData = setup()
 const {baseEE, agentIdentifier, aggregator} = setupData
 
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('spa buffers all expected events', supported, function (t) {
+jil.browserTest('spa buffers all expected events', function (t) {
 
   var {registerHandler} = require('../../../packages/browser-agent-core/common/event-emitter/register-handler.js')
   var {drain} = require('../../../packages/browser-agent-core/common/drain/drain')

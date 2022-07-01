@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('setImmediate')
 
-jil.browserTest('Does not throw an error when iframe with newrelic disappears', supported, function (t) {
+jil.browserTest('Does not throw an error when iframe with newrelic disappears', function (t) {
   var iframe = document.createElement('iframe')
   var followerDoc
   var attemptCount = 0

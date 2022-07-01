@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('timer cutoff', supported, function (t) {
+jil.browserTest('timer cutoff', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
@@ -58,7 +56,7 @@ jil.browserTest('timer cutoff', supported, function (t) {
   }
 })
 
-jil.browserTest('string values for duration', supported, function (t) {
+jil.browserTest('string values for duration', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',

@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('promise')
 
-jil.browserTest('timer between cb and microtasks', supported, function (t) {
+jil.browserTest('timer between cb and microtasks', function (t) {
   let helpers = require('./helpers')
   if (!window.performance) {
     t.skip('window.performance is required for this test')

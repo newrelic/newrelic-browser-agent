@@ -4,8 +4,6 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
 let loaded = false
 let loadQueue = []
@@ -27,7 +25,7 @@ function onWindowLoad (cb) {
   }
 }
 
-jil.browserTest('sync event in timer', supported, function (t) {
+jil.browserTest('sync event in timer', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
@@ -94,7 +92,7 @@ jil.browserTest('sync event in timer', supported, function (t) {
   }
 })
 
-jil.browserTest('sync event in click', supported, function (t) {
+jil.browserTest('sync event in click', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',

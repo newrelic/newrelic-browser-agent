@@ -4,12 +4,16 @@
  */
 
 const jil = require('jil')
-let BrowserMatcher = require('jil/util/browser-matcher')
-let supported = BrowserMatcher.withFeature('xhr')
+const BrowserMatcher = require('jil/util/browser-matcher')
+import { setup } from '../utils/setup'
+const supported = BrowserMatcher.withFeature('xhr')
 
-jil.browserTest('xhr with onreadystatechange assigned after send', supported, function (t) {
-  var ffVersion = require('../../../loader/firefox-version')
-  require('../../../feature/xhr/instrument/index')
+const { agentIdentifier } = setup();
+
+jil.browserTest('xhr with onreadystatechange assigned after send', supported, async function (t) {
+  const ffVersion = await import('../../../packages/browser-agent-core/common/browser-version/firefox-version');
+  const { Instrument: AjaxInstrum } = await import('../../../packages/browser-agent-core/features/ajax/instrument/index');
+  const ajaxTestInstr = new AjaxInstrum(agentIdentifier);
 
   setTimeout(() => {
     let xhr = new XMLHttpRequest()
@@ -40,9 +44,10 @@ jil.browserTest('xhr with onreadystatechange assigned after send', supported, fu
   })
 })
 
-jil.browserTest('multiple XHRs with onreadystatechange assigned after send', supported, function (t) {
-  var ffVersion = require('../../../loader/firefox-version')
-  require('../../../feature/xhr/instrument/index')
+jil.browserTest('multiple XHRs with onreadystatechange assigned after send', supported, async function (t) {
+  const ffVersion = await import('../../../packages/browser-agent-core/common/browser-version/firefox-version');
+  const { Instrument: AjaxInstrum } = await import('../../../packages/browser-agent-core/features/ajax/instrument/index');
+  const ajaxTestInstr = new AjaxInstrum(agentIdentifier);
 
   setTimeout(() => {
     let xhr1 = new XMLHttpRequest()

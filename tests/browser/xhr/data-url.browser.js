@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var test = require('../../../tools/jil/browser-test')
-var ee = require('ee')
-var handleEE = ee.get('handle')
+import test from '../../../tools/jil/browser-test'
+import { setup } from '../utils/setup'
+import { Instrument as AjaxInstrum } from '../../../packages/browser-agent-core/features/ajax/instrument/index'
 
-var hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener
-
-require('../../../feature/xhr/instrument')
+const { baseEE, agentIdentifier } = setup();
+const ajaxTestInstr = new AjaxInstrum(agentIdentifier); // attach instrumentation event handlers to agent's events (baseEE)
+const handleEE = baseEE.get('handle');
+const hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener;
 
 test('XHR request for Data URL does not generate telemetry', function(t) {
   if (!hasXhr) {
@@ -18,7 +19,7 @@ test('XHR request for Data URL does not generate telemetry', function(t) {
     return
   }
 
-  ee.addEventListener('send-xhr-start', validate)
+  baseEE.addEventListener('send-xhr-start', validate)
   handleEE.addEventListener('xhr', failCase)
 
   try {
@@ -26,7 +27,7 @@ test('XHR request for Data URL does not generate telemetry', function(t) {
     xhr.open('GET', 'data:,dataUrl')
     xhr.send()
   } catch (e) {
-    ee.removeEventListener('send-xhr-start', validate)
+    baseEE.removeEventListener('send-xhr-start', validate)
     handleEE.removeEventListener('xhr', failCase)
 
     t.skip('XHR with data URL not supported in this browser')
@@ -39,7 +40,7 @@ test('XHR request for Data URL does not generate telemetry', function(t) {
   function validate (args, xhr) {
     t.equals(this.params.protocol, 'data', 'XHR Data URL request recorded')
     setTimeout(() => {
-      ee.removeEventListener('send-xhr-start', validate)
+      baseEE.removeEventListener('send-xhr-start', validate)
       handleEE.removeEventListener('xhr', failCase)
 
       t.pass('XHR Data URL request did not generate telemetry')
@@ -48,7 +49,7 @@ test('XHR request for Data URL does not generate telemetry', function(t) {
   }
 
   function failCase (params, metrics, start) {
-    ee.removeEventListener('send-xhr-start', validate)
+    baseEE.removeEventListener('send-xhr-start', validate)
     handleEE.removeEventListener('xhr', failCase)
 
     t.fail('XHR Data URL request should not generate telemetry')
@@ -64,7 +65,7 @@ test('Data URL Fetch requests do not generate telemetry', function(t) {
 
   handleEE.addEventListener('xhr', failCase)
 
-  ee.addEventListener('fetch-done', validate)
+  baseEE.addEventListener('fetch-done', validate)
 
   fetch('data:,dataUrl')
 
@@ -73,7 +74,7 @@ test('Data URL Fetch requests do not generate telemetry', function(t) {
 
     setTimeout(() => {
       handleEE.removeEventListener('xhr', failCase)
-      ee.removeEventListener('fetch-done', validate)
+      baseEE.removeEventListener('fetch-done', validate)
 
       t.pass('Fetch data URL request did not generate telemetry')
       t.end()
@@ -83,6 +84,6 @@ test('Data URL Fetch requests do not generate telemetry', function(t) {
   function failCase(params, metrics, start) {
     t.fail('Data URL Fetch requests should not generate telemetry')
     handleEE.removeEventListener('xhr', failCase)
-    ee.removeEventListener('fetch-done', validate)
+    baseEE.removeEventListener('fetch-done', validate)
   }
 })

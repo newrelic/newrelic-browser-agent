@@ -3,14 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var test = require('../../../tools/jil/browser-test.js')
-var parseUrl = require('../../../feature/xhr/instrument/parse-url')
+import test from '../../../tools/jil/browser-test'
+import { parseUrl } from '../../../packages/browser-agent-core/common/url/parse-url'
+import { setDenyList, shouldCollectEvent } from '../../../packages/browser-agent-core/common/deny-list/deny-list'
 
-const loader = require('loader')
-loader.features.xhr = true
-
-var shouldCollectEvent = require('../../../feature/xhr/aggregate/index').shouldCollectEvent
-var setDenyList = require('../../../feature/xhr/aggregate/index').setDenyList
+/* NOTE: This file contains pure unit tests that has no need for the agent at all.
+*/
 
 test('domain-only blocks all subdomains and all paths', function(t) {
   setDenyList([

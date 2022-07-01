@@ -9,9 +9,13 @@ import { parseUrl } from '../../../common/url/parse-url'
 export class DT {
   constructor(agentIdentifier) {
     this.agentIdentifier = agentIdentifier
+    // Binds this class instance context to the following fn used in an external module (exported);
+    //  Alternatively, can make them class field arrow functions, but requires experimental features/plugin for eslint.
+    this.generateTracePayload = this.generateTracePayload.bind(this);
+    this.shouldGenerateTrace = this.shouldGenerateTrace.bind(this);
   }
 
-  generateTracePayload (parsedOrigin) {
+  generateTracePayload(parsedOrigin) {
     if (!this.shouldGenerateTrace(parsedOrigin)) {
       return null
     }
@@ -96,7 +100,7 @@ export class DT {
 
   // return true if DT is enabled and the origin is allowed, either by being
   // same-origin, or included in the allowed list
-  shouldGenerateTrace (parsedOrigin) {
+  shouldGenerateTrace(parsedOrigin) {
     return this.isDtEnabled() && this.isAllowedOrigin(parsedOrigin)
   }
 

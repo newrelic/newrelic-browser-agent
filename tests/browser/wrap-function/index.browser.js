@@ -3,9 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var ee = require('ee')
-var wrapFn = require('../../../wrap-function')()
-var test = require('../../../tools/jil/browser-test.js')
+import { setup } from '../utils/setup'
+import createWrapperWithEmitter from '../../../packages/browser-agent-core/common/wrap/wrap-function'
+import test from '../../../tools/jil/browser-test.js'
+
+const { baseEE } = setup();
+const wrapFn = createWrapperWithEmitter(baseEE);
 
 // set a prop to make sure it gets copied (nonenumerable on modern platforms)
 args.foobar = 100
@@ -27,32 +30,32 @@ test('Wrap Function', function (t) {
     t.equal(obj.args.foobar, 2, 'Proxy accessors work')
   }
 
-  ee.on('start', function (args, self, methodName) {
+  baseEE.on('start', function (args, self, methodName) {
     t.equal(args[1], 2, 'event args make sense')
   })
-  ee.on('end', function (args, self, result) {
+  baseEE.on('end', function (args, self, result) {
     t.equal(result, 3, 'result of calling function reported')
   })
 
-  ee.on('time-start', function (args, self, methodName) {
+  baseEE.on('time-start', function (args, self, methodName) {
     this.start = new Date().getTime()
   })
 
-  ee.on('time-end', function (args, self, result) {
+  baseEE.on('time-end', function (args, self, result) {
     t.ok((new Date().getTime() - this.start) > 9, 'start and end fired at least as far apart as fn took')
   })
 
-  ee.on('errFn-err', function (args, self, err) {
+  baseEE.on('errFn-err', function (args, self, err) {
     t.equal(err.message, 'This is an error', 'got thrown error')
   })
 
-  ee.on('args-start', function (args, self, methodName) {
+  baseEE.on('args-start', function (args, self, methodName) {
     t.equal(methodName, 'args', 'Methondname passed to event handler')
     args[2] = 42
     this.argsStart = true
   })
 
-  ee.on('takesTime-start', function (args, self, methodName) {
+  baseEE.on('takesTime-start', function (args, self, methodName) {
     t.ok(this.argsStart, 'Context reused among wrapped methods using sameCtx')
   })
 
@@ -78,11 +81,11 @@ test('Wrap Function', function (t) {
   }
 
   // Make sure default context isn't reused before a call is finished.
-  ee.on('out-start', function (args) {
+  baseEE.on('out-start', function (args) {
     t.notok(this.ok, 'Ctx not reused for ' + (args[0] ? 'inner' : 'outer'))
     this.ok = true
   })
-  ee.on('out-end', function (args) {
+  baseEE.on('out-end', function (args) {
     t.ok(this.ok, 'context not messed up for ' + (args[0] ? 'inner' : 'outer'))
   })
 
@@ -96,11 +99,11 @@ test('Wrap Function', function (t) {
 
   wrapFn(args, 'getContextError', makeError('getContext'))()
 
-  ee.on('prefix-start', makeError('ee.emit start'))
-  ee.on('prefix-end', makeError('ee.emit end'))
+  baseEE.on('prefix-start', makeError('baseEE.emit start'))
+  baseEE.on('prefix-end', makeError('baseEE.emit end'))
   wrapFn(args, 'prefix-')()
 
-  ee.on('prefixError-err', makeError('ee.emit err'))
+  baseEE.on('prefixError-err', makeError('baseEE.emit err'))
   try {
     wrapFn(errors, 'prefixError-')()
   } catch (e) {

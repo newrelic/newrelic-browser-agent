@@ -3,10 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const test = require('../../../tools/jil/browser-test')
-var distributedTracing = require('../../../feature/xhr/instrument/distributed-tracing')
-var generateTracePayload = distributedTracing.generateTracePayload
-var shouldGenerateTrace = distributedTracing.shouldGenerateTrace
+import test from '../../../tools/jil/browser-test'
+import { setup } from '../utils/setup'
+import { DT } from '../../../packages/browser-agent-core/features/ajax/instrument/distributed-tracing'
+import { setLoaderConfig, getLoaderConfig, setConfiguration } from '../../../packages/browser-agent-core/common/config/config'
+
+const { agentIdentifier } = setup();
+const distributedTracing = new DT(agentIdentifier);
+const generateTracePayload = distributedTracing.generateTracePayload;
+const shouldGenerateTrace = distributedTracing.shouldGenerateTrace;
+
 
 var supportsBase64 = ('atob' in window)
 var parsedOrigin = {
@@ -20,18 +26,18 @@ test('newrelic header has the correct format', function (t) {
     return
   }
 
-  window.NREUM.loader_config = {
+  setLoaderConfig(agentIdentifier, {
     accountID: '1234',
     agentID: '5678',
     trustKey: '1'
-  }
-  window.NREUM.init = {
+  });
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true
     }
-  }
+  });
 
-  var payload = generateTracePayload(parsedOrigin)
+  var payload = distributedTracing.generateTracePayload(parsedOrigin)
   var header = JSON.parse(atob(payload.newrelicHeader))
 
   t.ok(payload, 'payload is not null')
@@ -42,26 +48,27 @@ test('newrelic header has the correct format', function (t) {
   t.ok(payload.timestamp, 'timestamp is not null')
   t.equal(payload.timestamp, header.d.ti, 'timestamp is the same as ti in header')
 
+  const loadercfg = getLoaderConfig(agentIdentifier);
   t.deepEqual(header.v, [0, 1], 'version in header is set')
   t.equal(header.d.ty, 'Browser', 'type in header is set to Browser')
-  t.equal(header.d.ac, window.NREUM.loader_config.accountID, 'ac in header is set to account')
-  t.equal(header.d.ap, window.NREUM.loader_config.agentID, 'ap in header is set to app/agent ID')
-  t.equal(header.d.tk, window.NREUM.loader_config.trustKey, 'tk in header is set to trust key')
+  t.equal(header.d.ac, loadercfg.accountID, 'ac in header is set to account')
+  t.equal(header.d.ap, loadercfg.agentID, 'ap in header is set to app/agent ID')
+  t.equal(header.d.tk, loadercfg.trustKey, 'tk in header is set to trust key')
   t.end()
 })
 
 test('newrelic header is not generated for same-origin calls when disabled in configuration', function (t) {
-  window.NREUM.loader_config = {
+  setLoaderConfig(agentIdentifier, {
     accountID: '1234',
     agentID: '5678',
     trustKey: '1'
-  }
-  window.NREUM.init = {
+  });
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true,
       exclude_newrelic_header: true
     }
-  }
+  });
 
   var payload = generateTracePayload(parsedOrigin)
   t.ok(payload.newrelicHeader == null, 'newrelicHeader should not be generated')
@@ -77,17 +84,17 @@ test('newrelic header is added to cross-origin calls by default', function(t) {
     return
   }
 
-  window.NREUM.loader_config = {
+  setLoaderConfig(agentIdentifier, {
     accountID: '1234',
     agentID: '5678',
     trustKey: '1'
-  }
-  window.NREUM.init = {
+  });
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true,
       allowed_origins: ['https://someotherdomain.com']
     }
-  }
+  });
 
   var otherParsedOrigin = {
     sameOrigin: false,
@@ -111,18 +118,18 @@ test('newrelic header is added to cross-origin calls when enabled in configurati
     return
   }
 
-  window.NREUM.loader_config = {
+  setLoaderConfig(agentIdentifier, {
     accountID: '1234',
     agentID: '5678',
     trustKey: '1'
-  }
-  window.NREUM.init = {
+  });
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true,
       allowed_origins: ['https://someotherdomain.com'],
       cors_use_newrelic_header: true
     }
-  }
+  });
 
   var otherParsedOrigin = {
     sameOrigin: false,
@@ -140,18 +147,18 @@ test('newrelic header is added to cross-origin calls when enabled in configurati
 })
 
 test('newrelic header is not added to cross-origin calls when disabled in configuration', function(t) {
-  window.NREUM.loader_config = {
+  setLoaderConfig(agentIdentifier, {
     accountID: '1234',
     agentID: '5678',
     trustKey: '1'
-  }
-  window.NREUM.init = {
+  });
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true,
       allowed_origins: ['https://someotherdomain.com'],
       cors_use_newrelic_header: false
     }
-  }
+  });
 
   var otherParsedOrigin = {
     sameOrigin: false,
@@ -169,16 +176,16 @@ test('newrelic header is not added to cross-origin calls when disabled in config
 })
 
 test('TraceContext headers are generated with the correct format', function (t) {
-  window.NREUM.loader_config = {
+  setLoaderConfig(agentIdentifier, {
     accountID: '1234',
     agentID: '5678',
     trustKey: '1'
-  }
-  window.NREUM.init = {
+  });
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true
     }
-  }
+  });
 
   var payload = generateTracePayload(parsedOrigin)
   var parentHeader = payload.traceContextParentHeader
@@ -191,15 +198,16 @@ test('TraceContext headers are generated with the correct format', function (t) 
   t.equal(parts[2], payload.spanId, 'third part should be the span ID')
   t.equal(parts[3], '01', 'fourth part should be set to sampled flag')
 
+  const loadercfg = getLoaderConfig(agentIdentifier);
   var key = stateHeader.substring(0, stateHeader.indexOf('='))
-  t.equal(key, window.NREUM.loader_config.trustKey + '@nr', 'key should be in the right format')
+  t.equal(key, loadercfg.trustKey + '@nr', 'key should be in the right format')
 
   parts = stateHeader.substring(stateHeader.indexOf('=') + 1).split('-')
   t.equal(parts.length, 9, 'state header should have nine parts')
   t.equal(parts[0], '0', 'version is set to 0')
   t.equal(parts[1], '1', 'parent type is set to 1 for Browser')
-  t.equal(parts[2], window.NREUM.loader_config.accountID, 'third part is set to account ID')
-  t.equal(parts[3], window.NREUM.loader_config.agentID, 'fourth part is set to app/agent ID')
+  t.equal(parts[2], loadercfg.accountID, 'third part is set to account ID')
+  t.equal(parts[3], loadercfg.agentID, 'fourth part is set to app/agent ID')
   t.equal(parts[4], payload.spanId, 'fourth part is set to span ID')
   t.equal(parts[5], '', 'fifth part is empty - no transaction in Browser')
   t.equal(parts[6], '', 'fifth part is set to empty to defer sampling decision to next hop')
@@ -210,17 +218,17 @@ test('TraceContext headers are generated with the correct format', function (t) 
 })
 
 test('TraceContext headers are not added to cross-origin calls by default', function(t) {
-  window.NREUM.loader_config = {
+  setLoaderConfig(agentIdentifier, {
     accountID: '1234',
     agentID: '5678',
     trustKey: '1'
-  }
-  window.NREUM.init = {
+  });
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true,
       allowed_origins: ['https://someotherdomain.com']
     }
-  }
+  });
 
   var otherParsedOrigin = {
     sameOrigin: false,
@@ -240,18 +248,18 @@ test('TraceContext headers are not added to cross-origin calls by default', func
 })
 
 test('TraceContext headers are added to cross-origin calls when enabled in configuration', function(t) {
-  window.NREUM.loader_config = {
+  setLoaderConfig(agentIdentifier, {
     accountID: '1234',
     agentID: '5678',
     trustKey: '1'
-  }
-  window.NREUM.init = {
+  });
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true,
       allowed_origins: ['https://someotherdomain.com'],
       cors_use_tracecontext_headers: true
     }
-  }
+  });
 
   var otherParsedOrigin = {
     sameOrigin: false,
@@ -271,18 +279,18 @@ test('TraceContext headers are added to cross-origin calls when enabled in confi
 })
 
 test('TraceContext headers are not added to cross-origin calls when disabled in configuration', function(t) {
-  window.NREUM.loader_config = {
+  setLoaderConfig(agentIdentifier, {
     accountID: '1234',
     agentID: '5678',
     trustKey: '1'
-  }
-  window.NREUM.init = {
+  });
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true,
       allowed_origins: ['https://someotherdomain.com'],
       cors_use_tracecontext_headers: false
     }
-  }
+  });
 
   var otherParsedOrigin = {
     sameOrigin: false,
@@ -309,16 +317,16 @@ test('newrelic header is generated when configuration has numeric values', funct
     return
   }
 
-  window.NREUM.loader_config = {
+  setLoaderConfig(agentIdentifier, {
     accountID: 1234,
     agentID: 5678,
     trustKey: 1
-  }
-  window.NREUM.init = {
+  });
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true
     }
-  }
+  });
 
   var payload = generateTracePayload(parsedOrigin)
   var header = JSON.parse(atob(payload.newrelicHeader))
@@ -343,12 +351,12 @@ test('newrelic header is generated when configuration has numeric values', funct
 })
 
 test('NREUM.loader_config object is empty - no DT headers are generated', function (t) {
-  window.NREUM.loader_config = {}
-  window.NREUM.init = {
+  setLoaderConfig(agentIdentifier, {});
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true
     }
-  }
+  });
 
   var payload = generateTracePayload(parsedOrigin)
 
@@ -357,16 +365,16 @@ test('NREUM.loader_config object is empty - no DT headers are generated', functi
 })
 
 test('accountID is missing - no header generated', function (t) {
-  window.NREUM.loader_config = {
+  setLoaderConfig(agentIdentifier, {
     accountID: null,
     agentID: '5678',
     trustKey: '1'
-  }
-  window.NREUM.init = {
+  });
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true
     }
-  }
+  });
 
   var payload = generateTracePayload(parsedOrigin)
 
@@ -375,16 +383,16 @@ test('accountID is missing - no header generated', function (t) {
 })
 
 test('agentID is missing - no header generated', function (t) {
-  window.NREUM.loader_config = {
+  setLoaderConfig(agentIdentifier, {
     accountID: '1234',
     agentID: null,
     trustKey: '1'
-  }
-  window.NREUM.init = {
+  });
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true
     }
-  }
+  });
 
   var payload = generateTracePayload(parsedOrigin)
 
@@ -399,16 +407,16 @@ test('trustKey is missing - header generated, trustKey won\'t be in header', fun
     return
   }
 
-  window.NREUM.loader_config = {
+  setLoaderConfig(agentIdentifier, {
     accountID: '1234',
     agentID: '5678',
     trustKey: null
-  }
-  window.NREUM.init = {
+  });
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true
     }
-  }
+  });
 
   var payload = generateTracePayload(parsedOrigin)
   var header = JSON.parse(atob(payload.newrelicHeader))
@@ -421,10 +429,11 @@ test('trustKey is missing - header generated, trustKey won\'t be in header', fun
   t.ok(payload.timestamp)
   t.equal(payload.timestamp, header.d.ti)
 
+  const loadercfg = getLoaderConfig(agentIdentifier);
   t.deepEqual(header.v, [0, 1])
   t.equal(header.d.ty, 'Browser')
-  t.equal(header.d.ac, window.NREUM.loader_config.accountID)
-  t.equal(header.d.ap, window.NREUM.loader_config.agentID)
+  t.equal(header.d.ac, loadercfg.accountID)
+  t.equal(header.d.ap, loadercfg.agentID)
   t.notOk(header.d.tk)
   t.ok(header.d.id)
   t.ok(header.d.tr)
@@ -434,16 +443,16 @@ test('trustKey is missing - header generated, trustKey won\'t be in header', fun
 
 test('window.btoa is missing - no header generated', function (t) {
   /* eslint-disable no-native-reassign */
-  window.NREUM.loader_config = {
+  setLoaderConfig(agentIdentifier, {
     accountID: '1234',
     agentID: '5678',
     trustKey: '1'
-  }
-  window.NREUM.init = {
+  });
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true
     }
-  }
+  });
 
   var originalBtoa = window.btoa
   delete window.btoa
@@ -463,7 +472,7 @@ test('window.btoa is missing - no header generated', function (t) {
 })
 
 test('NREUM.init object has no DT section - shouldGenerateTrace is false', function (t) {
-  window.NREUM.init = {}
+  setConfiguration(agentIdentifier, {});
 
   var result = shouldGenerateTrace(parsedOrigin)
 
@@ -472,11 +481,11 @@ test('NREUM.init object has no DT section - shouldGenerateTrace is false', funct
 })
 
 test('NREUM.loader_config object has dt enabled/same origin - shouldGenerateTrace is true', function (t) {
-  window.NREUM.init = {
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true
     }
-  }
+  });
 
   var result = shouldGenerateTrace(parsedOrigin)
 
@@ -485,12 +494,12 @@ test('NREUM.loader_config object has dt enabled/same origin - shouldGenerateTrac
 })
 
 test('NREUM.loader_config object has dt enabled/allowed CORS origin - shouldGenerateTrace is true', function (t) {
-  window.NREUM.init = {
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true,
       allowed_origins: ['https://newrelic.com']
     }
-  }
+  });
 
   var otherParsedOrigin = {
     sameOrigin: false,
@@ -505,12 +514,12 @@ test('NREUM.loader_config object has dt enabled/allowed CORS origin - shouldGene
 })
 
 test('NREUM.loader_config object has dt enabled/disallowed CORS origin - shouldGenerateTrace is false', function (t) {
-  window.NREUM.init = {
+  setConfiguration(agentIdentifier, {
     distributed_tracing: {
       enabled: true,
       allowed_origins: ['https://newrelic.com']
     }
-  }
+  });
 
   var otherParsedOrigin = {
     sameOrigin: false,

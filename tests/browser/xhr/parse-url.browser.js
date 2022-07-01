@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var test = require('../../../tools/jil/browser-test.js')
-var parseUrl = require('../../../feature/xhr/instrument/parse-url')
+import test from '../../../tools/jil/browser-test'
+import { parseUrl } from '../../../packages/browser-agent-core/common/url/parse-url'
 
 if (window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener) xhr_tests()
 else {

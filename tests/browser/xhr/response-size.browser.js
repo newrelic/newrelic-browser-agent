@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const test = require('../../../tools/jil/browser-test')
-var responseSizeFromXhr = require('../../../feature/xhr/instrument/response-size')
+import test from '../../../tools/jil/browser-test'
+import { responseSizeFromXhr } from '../../../packages/browser-agent-core/features/ajax/instrument/response-size'
 
 test('ms-stream has undefined size', function(t) {
   var xhrRequest = {

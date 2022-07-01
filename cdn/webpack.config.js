@@ -1,9 +1,9 @@
 const path = require('path')
-// const Dotenv = require('dotenv-webpack');
 const TerserPlugin = require('terser-webpack-plugin')
 const webpack = require('webpack')
-// const HtmlWebpackPlugin = require('html-webpack-plugin');
 const pkg = require('./package.json')
+
+const isProd = process.env.NODE_ENV === 'production'
 
 module.exports = {
   entry: {
@@ -12,17 +12,19 @@ module.exports = {
     'nr-loader-full': path.resolve(__dirname, './agent-loader/pro.js'),
     'nr-loader-full.min': path.resolve(__dirname, './agent-loader/pro.js'),
     'nr-loader-spa': path.resolve(__dirname, './agent-loader/spa.js'),
-    'nr-loader-spa.min': path.resolve(__dirname, './agent-loader/spa.js')
+    'nr-loader-spa.min': path.resolve(__dirname, './agent-loader/spa.js'),
+    'nr-polyfills': path.resolve(__dirname, './agent-loader/polyfills.js'),
+    'nr-polyfills.min': path.resolve(__dirname, './agent-loader/polyfills.js'),
   },
   output: {
     filename: '[name].js',
     path: path.resolve(__dirname, '../build'),
-    // publicPath: 'https://js-agent.newrelic.com/', // <- we need this to be set when we publish to the CDN
-    publicPath: '/build/', // <-- we need one property to be set when testing locally
+    publicPath: isProd ? 'https://js-agent.newrelic.com/' : '/build/', // CDN route vs local route (for linking chunked assets)
     library: {
       name: 'NRBA',
       type: 'umd'
-    }
+    },
+    clean: true
   },
   optimization: {
     minimize: true,
@@ -31,15 +33,7 @@ module.exports = {
       terserOptions: {
         mangle: true
       }
-      // chunkFilter: (chunk) => {
-      //   return chunk.name.includes('.min.js') || !isNaN(Number(chunk.name.split(".")[0]))
-      // },
     })],
-    // splitChunks: {
-    //   chunks: 'all',
-    // },
-    // chunkIds: 'named',
-    // moduleIds: 'named',
     flagIncludedChunks: true,
     mergeDuplicateChunks: true
   },
@@ -51,11 +45,41 @@ module.exports = {
       'process.env.DEBUG': JSON.stringify(process.env.DEBUG || false)
     }),
     new webpack.SourceMapDevToolPlugin({
-      // append: '\n//# sourceMappingURL=https://js-agent.newrelic.com/[url]' // <- we need this to be set when we publish to the CDN
-      append: '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]', // <-- we need one property to be set when testing locally
+      append: isProd ? '\n//# sourceMappingURL=https://js-agent.newrelic.com/[url]' : '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]', // CDN route vs local route
       filename: '[name].map'
     })
   ],
-  devtool: false
+
+  mode: isProd ? 'production' : 'development',
+  devtool: false,
+  target: "browserslist", // include this!!
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /(node_modules)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-env', {
+                useBuiltIns: 'entry',
+                corejs: 3,
+                targets: {
+                  "chrome": "49",
+                  "edge": "14",
+                  "ie": "9", // <--- sauce 
+                  "safari": "8",
+                  "firefox": "5",
+                  "android": "6",
+                  "ios": "10.3"
+                }
+              }],
+            ]
+          }
+        }
+      }
+    ]
+  }
 }
 

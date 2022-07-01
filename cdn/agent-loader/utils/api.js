@@ -94,8 +94,9 @@ export function setAPI(agentIdentifier) {
     handle('err', [err, now(), false, customAttributes], undefined, undefined, instanceEE)
   }
 
-  nr.BrowserAgentInstance = async function (){
-    const { BrowserAgent } = await import('@newrelic/browser-agent')
-    return new BrowserAgent()
-  }
+  // experimental feature -- not ready
+  // nr.BrowserAgentInstance = async function (){
+  //   const { BrowserAgent } = await import('@newrelic/browser-agent')
+  //   return new BrowserAgent()
+  // }
 }

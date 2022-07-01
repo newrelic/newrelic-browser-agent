@@ -4,8 +4,6 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
 function removeListener (type, fn) {
   const handlers = this.listeners(type)
@@ -13,7 +11,7 @@ function removeListener (type, fn) {
   handlers.splice(index, 1)
 }
 
-jil.browserTest('addEventListener should target only the given event', supported, function (t) {
+jil.browserTest('addEventListener should target only the given event', function (t) {
   var ee = require('ee')
   ee.removeListener = removeListener
   require('../../feature/wrap-events.js')
@@ -39,7 +37,7 @@ jil.browserTest('addEventListener should target only the given event', supported
   t.end()
 })
 
-jil.browserTest('addEventListener should not blow up with a null func', supported, function (t) {
+jil.browserTest('addEventListener should not blow up with a null func', function (t) {
   require('../../feature/wrap-events.js')
 
   let e = createAndAddDomElement()
@@ -53,7 +51,7 @@ jil.browserTest('addEventListener should not blow up with a null func', supporte
   t.end()
 })
 
-jil.browserTest('addEventListener allows multiple subscribers to same event on same element', supported, function (t) {
+jil.browserTest('addEventListener allows multiple subscribers to same event on same element', function (t) {
   require('../../feature/wrap-events.js')
 
   let handler1CallCount = 0
@@ -71,7 +69,7 @@ jil.browserTest('addEventListener allows multiple subscribers to same event on s
   t.end()
 })
 
-jil.browserTest('addEventListener allows object with handleEvent property', supported, function (t) {
+jil.browserTest('addEventListener allows object with handleEvent property', function (t) {
   var ee = require('ee')
   ee.removeListener = removeListener
   require('../../feature/wrap-events.js')
@@ -106,7 +104,7 @@ jil.browserTest('addEventListener allows object with handleEvent property', supp
   t.end()
 })
 
-jil.browserTest('addEventListener allows for multiple event listeners with an object', supported, function (t) {
+jil.browserTest('addEventListener allows for multiple event listeners with an object', function (t) {
   var ee = require('ee')
   ee.removeListener = removeListener
   require('../../feature/wrap-events.js')
@@ -151,7 +149,7 @@ jil.browserTest('addEventListener allows for multiple event listeners with an ob
   t.end()
 })
 
-jil.browserTest('addEventListener allows object with handleEvent property that is mutated', supported, function (t) {
+jil.browserTest('addEventListener allows object with handleEvent property that is mutated', function (t) {
   var ee = require('ee')
   ee.removeListener = removeListener
   require('../../feature/wrap-events.js')
@@ -189,7 +187,7 @@ jil.browserTest('addEventListener allows object with handleEvent property that i
   t.end()
 })
 
-jil.browserTest('addEventListener allows object with handleEvent property that is originally null', supported, function (t) {
+jil.browserTest('addEventListener allows object with handleEvent property that is originally null', function (t) {
   require('../../feature/wrap-events.js')
 
   let Clicker = function (el) {
@@ -213,7 +211,7 @@ jil.browserTest('addEventListener allows object with handleEvent property that i
   t.end()
 })
 
-jil.browserTest('removeEventListener works with handleEvent property', supported, function (t) {
+jil.browserTest('removeEventListener works with handleEvent property', function (t) {
   require('../../feature/wrap-events.js')
 
   let Clicker = function (el) {
@@ -240,7 +238,7 @@ jil.browserTest('removeEventListener works with handleEvent property', supported
   t.end()
 })
 
-jil.browserTest('removeEventListener works when same callback is passed for different events', supported, function (t) {
+jil.browserTest('removeEventListener works when same callback is passed for different events', function (t) {
   require('../../feature/wrap-events.js')
 
   let handlerCallCount = 0
@@ -270,7 +268,7 @@ jil.browserTest('removeEventListener works when same callback is passed for diff
   function handler () { handlerCallCount++ }
 })
 
-jil.browserTest('removeEventListener works when same callback is passed for different elements', supported, function (t) {
+jil.browserTest('removeEventListener works when same callback is passed for different elements', function (t) {
   require('../../feature/wrap-events.js')
 
   let handlerCallCount = 0

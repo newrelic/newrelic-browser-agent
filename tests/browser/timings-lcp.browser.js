@@ -4,11 +4,9 @@
  */
 
 const jil = require('jil')
-const matcher = require('../../tools/jil/util/browser-matcher')
 
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('LCP is not collected on unload when the LCP value occurs after max timeout', supported, function (t) {
+jil.browserTest('LCP is not collected on unload when the LCP value occurs after max timeout', function (t) {
   var handle = require('handle')
   var harvest = require('../../agent/harvest')
   var timingModule = require('../../agent/timings')

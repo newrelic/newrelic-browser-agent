@@ -4,8 +4,6 @@
  */
 
 const jil = require('jil')
-let matcher = require('jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
 if (process.browser) {
   var helpers = require('./helpers')
@@ -15,7 +13,7 @@ if (process.browser) {
   })
 }
 
-jil.browserTest('node is not restored for ended interaction', supported, function (t) {
+jil.browserTest('node is not restored for ended interaction', function (t) {
   t.plan(6)
 
   t.notok(helpers.currentNodeId(), 'interaction should be null at first')

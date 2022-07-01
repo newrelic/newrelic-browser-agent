@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('jil/util/browser-matcher')
-let supported = matcher.withFeature('promise')
 
-jil.browserTest('promise.catch', supported, function (t) {
+jil.browserTest('promise.catch', function (t) {
   let helpers = require('./helpers')
   var validator = new helpers.InteractionValidator({
     attrs: {
@@ -49,7 +47,7 @@ jil.browserTest('promise.catch', supported, function (t) {
   }
 })
 
-jil.browserTest('promise.catch chain with async', supported, function (t) {
+jil.browserTest('promise.catch chain with async', function (t) {
   let helpers = require('./helpers')
 
   if (!window.Promise) {
@@ -111,7 +109,7 @@ jil.browserTest('promise.catch chain with async', supported, function (t) {
   }
 })
 
-jil.browserTest('throw in promise.catch', supported, function (t) {
+jil.browserTest('throw in promise.catch', function (t) {
   let helpers = require('./helpers')
 
   var validator = new helpers.InteractionValidator({

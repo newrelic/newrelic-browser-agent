@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('promise')
 
-jil.browserTest('promise.reject', supported, function (t) {
+jil.browserTest('promise.reject', function (t) {
   let helpers = require('./helpers')
   var validator = new helpers.InteractionValidator({
     attrs: {

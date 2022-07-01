@@ -4,8 +4,6 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('fetch')
 
 if (process.browser) {
   let helpers = require('./helpers')
@@ -18,7 +16,7 @@ if (process.browser) {
 var bodyMethods = ['arrayBuffer', 'blob', 'json', 'text']
 
 bodyMethods.forEach((bodyMethod) => {
-  jil.browserTest('Response.' + bodyMethod, supported, function (t) {
+  jil.browserTest('Response.' + bodyMethod, function (t) {
     let helpers = require('./helpers')
     let validator = new helpers.InteractionValidator({
       type: 'interaction',
@@ -70,7 +68,7 @@ bodyMethods.forEach((bodyMethod) => {
 })
 
 // Regression test that an interaction cannot have more than a set number of child nodes (MAX_NODES).
-jil.browserTest('Exceeding max SPA nodes', supported, function (t) {
+jil.browserTest('Exceeding max SPA nodes', function (t) {
   let helpers = require('./helpers')
   t.notok(helpers.currentNodeId(), 'interaction should be null at first')
 
@@ -114,7 +112,7 @@ jil.browserTest('Exceeding max SPA nodes', supported, function (t) {
   }
 })
 
-jil.browserTest('Response.formData', supported, function (t) {
+jil.browserTest('Response.formData', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     type: 'interaction',
@@ -166,7 +164,7 @@ jil.browserTest('Response.formData', supported, function (t) {
 })
 
 bodyMethods.forEach((bodyMethod) => {
-  jil.browserTest('Request.' + bodyMethod, supported, function (t) {
+  jil.browserTest('Request.' + bodyMethod, function (t) {
     let helpers = require('./helpers')
     let validator = new helpers.InteractionValidator({
       type: 'interaction',

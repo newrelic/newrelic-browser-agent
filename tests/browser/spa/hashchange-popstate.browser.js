@@ -5,8 +5,6 @@
 
 const jil = require('jil')
 let cleanUrl = require('../../../agent/clean-url')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
 if (process.browser) {
   var helpers = require('./helpers')
@@ -14,7 +12,7 @@ if (process.browser) {
   helpers.onWindowLoad(() => { loaded = true })
 }
 
-jil.browserTest('spa interaction triggered by hashchange + popstate', supported, function (t) {
+jil.browserTest('spa interaction triggered by hashchange + popstate', function (t) {
   if (!helpers.emitsPopstateEventOnHashChanges()) {
     t.skip('skipping popstate test in browser that does not emit popstate event on hash changes')
     t.end()

@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('spa aggregator receives complete interaction when hashchange fires after finish', supported, function (t) {
+jil.browserTest('spa aggregator receives complete interaction when hashchange fires after finish', function (t) {
   let helpers = require('./helpers')
   let originalUrl = window.location.toString()
 

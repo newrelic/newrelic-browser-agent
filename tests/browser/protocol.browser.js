@@ -5,8 +5,6 @@
 
 var jil = require('jil')
 
-const matcher = require('jil/util/browser-matcher')
-let supported = matcher.withFeature('obfuscate')
 
 var fileLocation = {
   hash: '',
@@ -19,7 +17,7 @@ var fileLocation = {
   protocol: 'file:'
 }
 
-jil.browserTest('isFileProtocol returns coorectly when detecting file protocol', supported, function (t) {
+jil.browserTest('isFileProtocol returns coorectly when detecting file protocol', function (t) {
   const win = require('../../agent/win')
   win.setWindow({ ...win.getWindow(), location: { ...fileLocation } })
 

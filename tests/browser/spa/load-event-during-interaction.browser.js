@@ -4,8 +4,6 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
 if (process.browser) {
   var helpers = require('./helpers')
@@ -15,7 +13,7 @@ if (process.browser) {
   })
 }
 
-jil.browserTest('load event during interaction', supported, function (t) {
+jil.browserTest('load event during interaction', function (t) {
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
     children: []

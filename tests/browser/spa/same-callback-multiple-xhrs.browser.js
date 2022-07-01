@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('multiple XHRs with the same callback function', supported, function (t) {
+jil.browserTest('multiple XHRs with the same callback function', function (t) {
   let helpers = require('./helpers')
 
   let i = 0

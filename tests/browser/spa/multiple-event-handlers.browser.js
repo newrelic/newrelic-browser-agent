@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('spa multiple event handlers', supported, function (t) {
+jil.browserTest('spa multiple event handlers', function (t) {
   let helpers = require('./helpers')
 
   if (!window.performance) {

@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('promise')
 
-jil.browserTest('Promise.all', supported, function (t) {
+jil.browserTest('Promise.all', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
@@ -49,7 +47,7 @@ jil.browserTest('Promise.all', supported, function (t) {
   }
 })
 
-jil.browserTest('Promise.all async resolve after rejected', supported, function (t) {
+jil.browserTest('Promise.all async resolve after rejected', function (t) {
   let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({

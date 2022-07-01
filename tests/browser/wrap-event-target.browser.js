@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('wrappableAddEventListener')
 
-jil.browserTest('AEL on window should call through to AEL on EventTarget', supported, function (t) {
+jil.browserTest('AEL on window should call through to AEL on EventTarget', function (t) {
   t.plan(3)
   var target = window
 

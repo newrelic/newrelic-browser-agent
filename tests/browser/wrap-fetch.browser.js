@@ -4,10 +4,8 @@
  */
 
 const jil = require('jil')
-var matcher = require('../../tools/jil/util/browser-matcher')
-var supported = matcher.withFeature('fetch')
 
-jil.browserTest('response size', supported, function(t) {
+jil.browserTest('response size', function(t) {
   var fetchEE = require('../../feature/wrap-fetch.js')
 
   t.test('is captured when content-length is present', function(t) {
@@ -57,7 +55,7 @@ jil.browserTest('response size', supported, function(t) {
   })
 })
 
-jil.browserTest('Safari 11 fetch clone regression', supported, function (t) {
+jil.browserTest('Safari 11 fetch clone regression', function (t) {
   var responseSizes = [1, 10, 100, 1000, 10000, 100000]
   responseSizes.forEach(function(size) {
     t.test('agent should not cause clone to fail, response size: ' + size, function(t) {

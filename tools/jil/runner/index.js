@@ -77,8 +77,14 @@ function loadDefaultFiles(cb) {
 function loadFiles(testFiles, cb) {
   for (let file of testFiles) {
     file = resolve(process.cwd(), file)
-    if (file.slice(-11) === '.browser.js' || (file.includes('/browser/') && file.endsWith('.test.js'))) {
-      loadBrowser(testDriver, file)
+    if (file.slice(-11) === '.browser.js') {
+      let spec
+      try {
+        spec = require(file.replace('.browser.', '.spec.'))
+      } catch (err) {
+        // no spec exists for this file
+      }
+      loadBrowser(testDriver, file, undefined, spec) // queued for later (browserify)
     } else if (file.slice(-8) === '.test.js') {
       require(file)
     }

@@ -4,7 +4,7 @@
  */
 
 const jil = require('jil')
-let BrowserMatcher = require('../../../tools/jil/util/browser-matcher')
+let BrowserMatcher = require('jil/util/browser-matcher')
 let xhrSupported = BrowserMatcher.withFeature('xhr')
 let blobSupported = BrowserMatcher.withFeature('blob')
 let supported = xhrSupported.intersect(blobSupported)

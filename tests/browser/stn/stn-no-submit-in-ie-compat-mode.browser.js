@@ -4,15 +4,12 @@
  */
 
 const jil = require('jil')
-let matcher = require('../../../tools/jil/util/browser-matcher')
-let supported = matcher.withFeature('cors').inverse()
 const { setup } = require('../utils/setup')
 
 const setupData = setup()
 const {agentIdentifier, aggregator} = setupData
 
-
-jil.browserTest('stn aggregator does nothing in ie compatability mode', supported, function (t) {
+jil.browserTest('stn aggregator does nothing in ie compatability mode', function (t) {
   require('../../../agent/ie-version')
   var {Aggregate: StnAggregate} = require('../../../packages/browser-agent-core/features/session-trace/aggregate/index')
   var stnAgg = new StnAggregate(agentIdentifier, aggregator)

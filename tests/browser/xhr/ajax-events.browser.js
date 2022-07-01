@@ -3,20 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const test = require('../../../tools/jil/browser-test')
+import test from '../../../tools/jil/browser-test'
+import { setup } from '../utils/setup'
+import { getRuntime, setInfo, setConfiguration } from '../../../packages/browser-agent-core/common/config/config'
+import { Aggregate as AjaxAggreg } from '../../../packages/browser-agent-core/features/ajax/aggregate/index'
 const qp = require('@newrelic/nr-querypack')
-const baseEE = require('ee')
 
-const loader = require('loader')
-loader.features.xhr = true
-loader.info = {}
-NREUM.init = {
+const { baseEE, agentIdentifier, aggregator } = setup();
+getRuntime(agentIdentifier).features.xhr = true;
+setInfo(agentIdentifier, {});
+setConfiguration(agentIdentifier, {
   ajax: {enabled: true}
-}
+});
 
-const storeXhr = require('../../../feature/xhr/aggregate/index')
-const getStoredEvents = require('../../../feature/xhr/aggregate/index').getStoredEvents
-const prepareHarvest = require('../../../feature/xhr/aggregate/index').prepareHarvest
+const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator);
+const storeXhr = ajaxTestAgg.storeXhr;
+const prepareHarvest = ajaxTestAgg.prepareHarvest;
+const getStoredEvents = ajaxTestAgg.getStoredEvents;
 
 function exceedsSizeLimit(payload, maxPayloadSize) {
   return payload.length * 2 > maxPayloadSize
@@ -181,9 +184,9 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
   }
   const expectedCustomAttrCount = Object.keys(expectedCustomAttributes).length
 
-  loader.info = {
+  setInfo(agentIdentifier, {
     jsAttributes: expectedCustomAttributes
-  }
+  });
 
   const serializedPayload = prepareHarvest({retry: false})
   // serializedPayload from ajax comes back as an array of bodies now, so we just need to decode each one and flatten
@@ -277,9 +280,9 @@ test('prepareHarvest correctly serializes a very large AjaxRequest events payloa
     undefinedCustomAttribute: undefined
   }
 
-  loader.info = {
+  setInfo(agentIdentifier, {
     jsAttributes: expectedCustomAttributes
-  }
+  });
 
   const maxPayloadSize = 500
 
@@ -367,9 +370,9 @@ test('prepareHarvest correctly exits if maxPayload is too small', function (t) {
     undefinedCustomAttribute: undefined
   }
 
-  loader.info = {
+  setInfo(agentIdentifier, {
     jsAttributes: expectedCustomAttributes
-  }
+  });
 
   // this is too small for any AJAX payload to fit in
   const maxPayloadSize = 10

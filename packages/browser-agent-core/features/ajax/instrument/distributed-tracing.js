@@ -11,7 +11,7 @@ export class DT {
     this.agentIdentifier = agentIdentifier
   }
 
-  generateTracePayload (parsedOrigin) {
+  generateTracePayload = (parsedOrigin) => {
     if (!this.shouldGenerateTrace(parsedOrigin)) {
       return null
     }
@@ -96,7 +96,7 @@ export class DT {
 
   // return true if DT is enabled and the origin is allowed, either by being
   // same-origin, or included in the allowed list
-  shouldGenerateTrace (parsedOrigin) {
+  shouldGenerateTrace = (parsedOrigin) => {
     return this.isDtEnabled() && this.isAllowedOrigin(parsedOrigin)
   }
 

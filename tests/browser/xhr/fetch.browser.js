@@ -3,15 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const test = require('../../../tools/jil/browser-test')
-const ee = require('ee')
-var handleEE = ee.get('handle')
+import test from '../../../tools/jil/browser-test.js'
+import { setup } from '../utils/setup'
+import { Instrument as AjaxInstrum } from '../../../packages/browser-agent-core/features/ajax/instrument/index.js'
 
-require('../../../feature/xhr/instrument')
+const { baseEE, agentIdentifier, nr } = setup();
+const ajaxTestInstr = new AjaxInstrum(agentIdentifier); // attach instrumentation event handlers to agent's events (baseEE)
 
 let proto = location.protocol
-let assetServerHTTPPort = NREUM.info.assetServerPort
-let assetServerSSLPort = NREUM.info.assetServerSSLPort
+let assetServerHTTPPort = nr.info.assetServerPort   // these ports are not stored per agent
+let assetServerSSLPort = nr.info.assetServerSSLPort
 let assetServerPort = proto === 'http:' ? assetServerHTTPPort : assetServerSSLPort
 let assetServerHostname = window.location.host.split(':')[0]
 
@@ -83,9 +84,11 @@ var testCases = [
   }
 ]
 
-ee.emit('feat-err', [])
+baseEE.emit('feat-err', [])
+/* NOTE: The following two lines are checked/performed by setup() at the top, and so aren't needed
 if (!window.NREUM) NREUM = {}
 if (!NREUM.loader_config) NREUM.loader_config = {}
+*/
 
 testCases.forEach(function(testCase) {
   test(testCase.name, function(t) {
@@ -95,13 +98,13 @@ testCases.forEach(function(testCase) {
       return
     }
 
-    handleEE.addEventListener('xhr', validate)
+    baseEE.addEventListener('xhr', validate)
     testCase.invoke()
 
     function validate(params, metrics, start) {
       testCase.check(t, params, metrics, start)
       t.end()
-      handleEE.removeEventListener('xhr', validate)
+      baseEE.removeEventListener('xhr', validate)
     }
   })
 })
@@ -116,9 +119,9 @@ test('rejected fetch call is captured', function(t) {
     return
   }
 
-  const fetchEE = ee.get('fetch')
+  const fetchEE = baseEE.get('fetch')
 
-  handleEE.addEventListener('xhr', validate)
+  baseEE.addEventListener('xhr', validate)
 
   const promise = new Promise((resolve, reject) => {})
   fetchEE.emit('fetch-start', [['/someurl'], null], promise)
@@ -138,7 +141,7 @@ test('rejected fetch call is captured', function(t) {
     t.ok(metrics.duration > 0, 'duration is a positive number')
     t.ok(start > 0, 'start is a positive number')
 
-    handleEE.removeEventListener('xhr', validate)
+    baseEE.removeEventListener('xhr', validate)
     t.end()
   }
 })

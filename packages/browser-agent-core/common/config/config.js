@@ -4,4 +4,5 @@ import { getLoaderConfig, setLoaderConfig } from './state/loader-config'
 import { originals } from './state/originals'
 import { getRuntime, setRuntime } from './state/runtime'
 
+// This module acts as a hub that bundles the static and dynamic properties used by each agent instance into one single interface
 export { getInfo, setInfo, getConfiguration, getConfigurationValue, setConfiguration, getLoaderConfig, setLoaderConfig, originals, getRuntime, setRuntime }

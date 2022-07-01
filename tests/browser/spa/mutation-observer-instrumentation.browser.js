@@ -4,7 +4,6 @@
  */
 
 const jil = require('jil')
-let supported = supportsMutationObserver.intersect(supportsEventListenerWrapping)
 
 jil.browserTest('basic MutationObserver instrumentation', function (t) {
   let helpers = require('./helpers')

@@ -4,15 +4,19 @@
  */
 
 const jil = require('jil')
-let BrowserMatcher = require('../../../tools/jil/util/browser-matcher')
-let xhrSupported = BrowserMatcher.withFeature('xhr')
-let blobSupported = BrowserMatcher.withFeature('blob')
-let supported = xhrSupported.intersect(blobSupported)
+const BrowserMatcher = require('jil/util/browser-matcher')
+import { setup } from '../utils/setup'
 
-jil.browserTest('xhr with blob request body', supported, function (t) {
-  require('../../../feature/xhr/instrument/index')
-  let drain = require('../../../agent/drain')
-  let register = require('../../../agent/register-handler')
+const { agentIdentifier, baseEE, aggregator } = setup();
+const xhrSupported = BrowserMatcher.withFeature('xhr')
+const blobSupported = BrowserMatcher.withFeature('blob')
+const supported = xhrSupported.intersect(blobSupported)
+
+jil.browserTest('xhr with blob request body', supported, async function (t) {
+  const { Instrument: AjaxInstrum } = await import('../../../packages/browser-agent-core/features/ajax/instrument/index');
+  const ajaxTestInstr = new AjaxInstrum(agentIdentifier);
+  const { drain } = await import('../../../packages/browser-agent-core/common/drain/drain')
+  const { registerHandler } = await import('../../../packages/browser-agent-core/common/event-emitter/register-handler')
 
   t.plan(3)
 
@@ -32,12 +36,14 @@ jil.browserTest('xhr with blob request body', supported, function (t) {
 
   xhr.send(new Blob(['hi!']))
 
-  register('xhr', function (params, metrics, start) {
-    require('../../../feature/xhr/aggregate')(params, metrics, start)
+  registerHandler('xhr', async function (params, metrics, start) {
+    const { Aggregate: AjaxAggreg } = await import('../../../packages/browser-agent-core/features/ajax/aggregate/index');
+    const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator);
+    ajaxTestAgg.storeXhr(params, metrics, start);
 
     t.equal(metrics.txSize, 3, 'correct size for sent blob objects')
     t.equal(metrics.rxSize, 3, 'correct size for received blob objects')
-  })
+  }, undefined, baseEE);
 
-  drain('feature')
+  drain(agentIdentifier, 'feature')
 })

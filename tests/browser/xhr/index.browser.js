@@ -3,29 +3,33 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const test = require('../../../tools/jil/browser-test')
-const register = require('../../../agent/register-handler')
-const drain = require('../../../agent/drain')
-const ee = require('ee')
-const ffVersion = require('../../../loader/firefox-version')
-const jil = require('jil')
+import test from '../../../tools/jil/browser-test'
+import jil from 'jil'
+import { setup } from '../utils/setup'
+import { getLoaderConfig } from '../../../packages/browser-agent-core/common/config/config'
+import { registerHandler } from '../../../packages/browser-agent-core/common/event-emitter/register-handler'
+import { drain } from '../../../packages/browser-agent-core/common/drain/drain'
+import { Instrument as AjaxInstrum } from '../../../packages/browser-agent-core/features/ajax/instrument/index'
+//import { Aggregate as AjaxAggreg } from '../../../packages/browser-agent-core/features/ajax/aggregate/index'
+import { Instrument as JsErrInstrum } from '../../../packages/browser-agent-core/features/jserrors/instrument/index'
+import { Aggregate as JsErrAggreg } from '../../../packages/browser-agent-core/features/jserrors/aggregate/index'
 
-require('../../../feature/xhr/instrument')
-require('../../../feature/err/instrument')
-require('../../../feature/err/aggregate')
+const { baseEE, agentIdentifier, aggregator, nr } = setup();
+const ajaxTestInstr = new AjaxInstrum(agentIdentifier);
+const jserrTestInstr = new JsErrInstrum(agentIdentifier);
+const jserrTestAgg = new JsErrAggreg(agentIdentifier, aggregator);
 
-let ieVersion = require('../../../agent/ie-version')
-
-let hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener
+import ffVersion from '../../../packages/browser-agent-core/common/browser-version/firefox-version'
+import ieVersion from '../../../packages/browser-agent-core/common/browser-version/ie-version'
+const hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener;
 
 let onloadtime = 2
 let loadeventtime = 2
-
 let proto = location.protocol
-let assetServerHTTPPort = NREUM.info.assetServerPort
-let assetServerSSLPort = NREUM.info.assetServerSSLPort
+let assetServerHTTPPort = nr.info.assetServerPort
+let assetServerSSLPort = nr.info.assetServerSSLPort
 let assetServerPort = proto === 'http:' ? assetServerHTTPPort : assetServerSSLPort
-let corsServerPort = NREUM.info.corsServerPort
+let corsServerPort = nr.info.corsServerPort
 
 let assetServerHostname = window.location.host.split(':')[0]
 
@@ -44,11 +48,13 @@ test('xhr timing', function (t) {
 
   if (oldFF) test.log("Can't instrument 'xhr.onload' handlers because they become not functions when assigned in FF " + ffVersion)
 
-  ee.emit('feat-err', [])
-  // Set cross process id to 123#456
+  baseEE.emit('feat-err', [])
+  /* 
   if (!window.NREUM) NREUM = {}
   if (!NREUM.loader_config) NREUM.loader_config = {}
-  NREUM.loader_config.xpid = 'CAEEGwAADw=='
+  */
+  // Set cross process id to 123#456
+  getLoaderConfig(agentIdentifier).xpid = 'CAEEGwAADw=='
 
   let plan = 0
 
@@ -79,16 +85,18 @@ test('xhr timing', function (t) {
 
   t.plan(plan)
 
-  register('xhr', function (params, metrics, start) {
-    require('../../../feature/xhr/aggregate')(params, metrics, start)
+  registerHandler('xhr', async function (params, metrics, start) {
+    const { Aggregate: AjaxAggreg } = await import('../../../packages/browser-agent-core/features/ajax/aggregate/index');
+    const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator);
+    ajaxTestAgg.storeXhr(params, metrics, start);
 
     if ('pathname' in params) fire('check', urls[params.pathname], [params, metrics, t])
     else if (params.method === 'GET') fire('check', urls['/'], [params, metrics, t])
     else if (params.method === 'PUT') fire('check', urls['/timeout'], [params, metrics, t])
     else if (params.method === 'POST') fire('check', urls['/asdf'], [params, metrics, t])
-  })
+  }, undefined, baseEE);
 
-  drain('feature')
+  drain(agentIdentifier, 'feature');
 
   function fire (fn, obj, args) {
     if (obj && obj[fn]) return obj[fn].apply(obj, args)

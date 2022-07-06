@@ -5,22 +5,20 @@
 
 const testDriver = require('../../../tools/jil/index')
 
-const asserters = testDriver.asserters
-
 testDriver.test('RUM ', function (t, browser, router) {
   t.plan(1)
 
-  let url = router.assetURL('unconfigured-on-load.html')
+  setTimeout(() => {
+    t.ok(1===1, "The agent was unconfigured, so no rum event fired!")
+    t.end()
+  }, 5000)
 
-  browser.get(url)
-    .waitFor(asserters.jsCondition('window.loadEventHasFired'))
-    .safeEval('NREUM.ee.get(Object.keys(NREUM.initializedAgents)[0]).backlog', function (err, backlog) {
-      if (err) throw (err)
-      t.notOk(backlog.api, 'ee buffer should be empty')
-    })
-    .catch(fail)
+  let rumPromise = router.expectRum()
+  let loadPromise = browser.get(router.assetURL('unconfigured-on-load.html'))
 
-  browser.get(url)
+  Promise.all([rumPromise, loadPromise])
+  .then(() => fail("should not have recieved rum call!"))
+
 
   function fail (e) {
     t.error(e)

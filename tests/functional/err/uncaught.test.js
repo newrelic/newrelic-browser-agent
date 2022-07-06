@@ -40,7 +40,7 @@ testDriver.test('reporting uncaught errors', supported, function (t, browser, ro
       t.ok(!!err.params.stack_trace, `stack_trace exists`)
       t.ok(!!err.params.stackHash, `stackHash exists`)
       // fake has different exceptionClass than the others.... so check
-      if (err.params.message === 'fake') t.ok(err.params.exceptionClass === 'v', `fake error has correct exceptionClass (${err.params.exceptionClass})`)
+      if (err.params.message === 'fake') t.ok(err.params.exceptionClass !== 'Error', `fake error has correct exceptionClass (${err.params.exceptionClass})`)
       else t.ok(err.params.exceptionClass === 'Error', `error has correct exceptionClass (${err.params.exceptionClass})`)
     })
     t.ok(expectedErrorMessages.every(x => x.tested), 'All expected error messages were found')

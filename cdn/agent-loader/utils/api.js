@@ -88,12 +88,6 @@ export function setAPI(agentIdentifier) {
     }
   }
 
-  // 06.22 Test migration: removed 'setCustomAttribute' from our EE model due to race cond btwn page-action and page-view-event aggs
-  nr.setCustomAttribute = function (key, value) {
-    handle('record-supportability', ['API/setCustomAttribute/called'])
-    getInfo(agentIdentifier).jsAttributes[key] = value;
-  }
-
   nr.noticeError = function (err, customAttributes) {
     if (typeof err === 'string') err = new Error(err)
     handle('record-supportability', ['API/noticeError/called'], undefined, undefined, instanceEE)

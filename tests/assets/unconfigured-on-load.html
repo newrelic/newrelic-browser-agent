@@ -6,13 +6,13 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
+    {init}
     {config}
     <script>
     var config = NREUM.info
     delete NREUM.info
     window.addEventListener('load', function () {
       window.loadEventHasFired = true
-      setTimeout(function () { NREUM.info = config }, 0)
     })
     </script>
     {loader}

@@ -72,7 +72,11 @@ testDriver.test('a valid obfuscationRule creates detected supportability metric'
   let rumPromise = router.expectRumAndErrors()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-valid.html', {
     loader: 'spa',
-    init: {}
+    init: {
+      jserrors: {
+        enabled: false
+      }
+    }
   }))
 
   Promise.all([rumPromise, loadPromise])
@@ -99,7 +103,11 @@ testDriver.test('an invalid obfuscation regex type creates invalid supportabilit
   let rumPromise = router.expectRumAndErrors()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-regex-type.html', {
     loader: 'spa',
-    init: {}
+    init: {
+      jserrors: {
+        enabled: false
+      }
+    }
   }))
 
   Promise.all([rumPromise, loadPromise])
@@ -128,7 +136,11 @@ testDriver.test('an invalid obfuscation regex undefined creates invalid supporta
   let rumPromise = router.expectRumAndErrors()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-regex-undefined.html', {
     loader: 'spa',
-    init: {}
+    init: {
+      jserrors: {
+        enabled: false
+      }
+    }
   }))
 
   Promise.all([rumPromise, loadPromise])
@@ -157,7 +169,11 @@ testDriver.test('an invalid obfuscation replacement type creates invalid support
   let rumPromise = router.expectRumAndErrors()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-replacement-type.html', {
     loader: 'spa',
-    init: {}
+    init: {
+      jserrors: {
+        enabled: false
+      }
+    }
   }))
 
   Promise.all([rumPromise, loadPromise])

@@ -9,7 +9,7 @@ const querypack = require('@newrelic/nr-querypack')
 let supported = testDriver.Matcher.withFeature('wrappableAddEventListener')
 
 testDriver.test('onreadystatechange only called once with zone.js', supported, function (t, browser, router) {
-  t.plan(6)
+  t.plan(5)
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
@@ -26,7 +26,6 @@ testDriver.test('onreadystatechange only called once with zone.js', supported, f
       t.ok(!!interactionAttr, 'expect counts child from API')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
       t.equal(interactionAttr.type, 'stringAttribute')
-      t.equal(interactionAttr.value, '[0,1,1,1,1]')
       // the counts custom attribute is an array of number of times onreadystatechage is called
       // for each state.  state 1 and 3 may be called more than once, 2 and 4 should be called
       // exactly once

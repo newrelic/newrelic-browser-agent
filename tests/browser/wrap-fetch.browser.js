@@ -6,7 +6,11 @@
 const jil = require('jil')
 
 jil.browserTest('response size', function(t) {
-  var fetchEE = require('../../feature/wrap-fetch.js')
+  const {setup} = require('./utils/setup')
+  const {wrapFetch} = require('../../packages/browser-agent-core/common/wrap/wrap-fetch')
+
+  const {baseEE} = setup()
+  const fetchEE = wrapFetch(baseEE)
 
   t.test('is captured when content-length is present', function(t) {
     t.plan(2)
@@ -56,11 +60,15 @@ jil.browserTest('response size', function(t) {
 })
 
 jil.browserTest('Safari 11 fetch clone regression', function (t) {
+  const {setup} = require('./utils/setup')
+  const {wrapFetch} = require('../../packages/browser-agent-core/common/wrap/wrap-fetch')
+
+  const {baseEE} = setup()
+  const fetchEE = wrapFetch(baseEE)
+
   var responseSizes = [1, 10, 100, 1000, 10000, 100000]
   responseSizes.forEach(function(size) {
     t.test('agent should not cause clone to fail, response size: ' + size, function(t) {
-      require('../../feature/wrap-fetch.js')
-
       window.fetch('/text?length=' + size)
         .then(function (res) {
           res.clone()

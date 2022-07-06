@@ -5,10 +5,14 @@
 
 const jil = require('jil')
 
+const {setup} = require('./utils/setup')
+const {wrapJsonP} = require('../../packages/browser-agent-core/common/wrap/wrap-jsonp')
+const {baseEE} = setup()
+
 jil.browserTest('functions are wrapped', function (t) {
   t.plan(9)
   // wrap
-  require('../../feature/wrap-jsonp.js')
+  wrapJsonP(baseEE)
 
   t.ok(isWrapped(HTMLElement.prototype.appendChild), 'appendChild is wrapped on HTMLElement')
   t.ok(isWrapped(HTMLElement.prototype.insertBefore), 'insertBefore is wrapped on HTMLElement')
@@ -25,7 +29,7 @@ jil.browserTest('functions are wrapped', function (t) {
 
 jil.browserTest('new property is not added to HTMLElement', function (t) {
   // wrap
-  require('../../feature/wrap-jsonp.js')
+  wrapJsonP(baseEE)
 
   if (Node.prototype.appendChild) {
     t.equal(HTMLElement.prototype.hasOwnProperty('appendChild'), false)

@@ -21,11 +21,15 @@ export class Aggregate extends FeatureBase {
     let scheduler
 
     const ee = this.ee
-
     const externalHarvestKeys = ['jserrors']
 
     const harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'ajax.harvestTimeSeconds') || 10
     const MAX_PAYLOAD_SIZE = getConfigurationValue(agentIdentifier, 'ajax.maxPayloadSize') || 1000000
+
+    // Exposes these methods to browser test files -- future TO DO: can be removed once these fns are extracted from the constructor into class func
+    this.storeXhr = storeXhr;
+    this.prepareHarvest = prepareHarvest;
+    this.getStoredEvents = function() { return { ajaxEvents, spaAjaxEvents } };
 
     ee.on('interactionSaved', (interaction) => {
       if (!spaAjaxEvents[interaction.id]) return
@@ -45,12 +49,12 @@ export class Aggregate extends FeatureBase {
 
     if (allAjaxIsEnabled()) setDenyList(getConfigurationValue(agentIdentifier, 'ajax.deny_list'))
 
-    register('xhr', this.storeXhr, undefined, this.ee)
+    register('xhr', storeXhr, undefined, this.ee)
 
     if (allAjaxIsEnabled()) {
       scheduler = new HarvestScheduler('events', {
         onFinished: onEventsHarvestFinished,
-        getPayload: this.prepareHarvest
+        getPayload: prepareHarvest
       }, this)
 
       externalFeatures.forEach(feat => {
@@ -65,15 +69,7 @@ export class Aggregate extends FeatureBase {
       subscribeToUnload(() => scheduler.runHarvest({ unload: true }))
     }
 
-    /**
-     * Expose local storage members for testing purposes.
-     * @returns
-     */
-    this.getStoredEvents = function() {
-      return { ajaxEvents, spaAjaxEvents }
-    }
-
-    this.storeXhr = function(params, metrics, startTime, endTime, type) {
+    function storeXhr(params, metrics, startTime, endTime, type) {
       metrics.time = startTime
 
       // send to session traces
@@ -133,7 +129,7 @@ export class Aggregate extends FeatureBase {
       }
     }
 
-    this.prepareHarvest = function(options) {
+    function prepareHarvest(options) {
       options = options || {}
 
       if (ajaxEvents.length === 0) {

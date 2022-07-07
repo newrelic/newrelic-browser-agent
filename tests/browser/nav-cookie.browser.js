@@ -3,9 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var test = require('../../tools/jil/browser-test.js')
-var navCookie = require('../../agent/nav-cookie')
-var startTime = require('../../agent/start-time')
+import test from '../../tools/jil/browser-test'
+import { setup } from './utils/setup'
+import { setConfiguration } from '../../packages/browser-agent-core/common/config/config'
+import * as navCookie from '../../packages/browser-agent-core/common/cookie/nav-cookie'
+import * as startTime from '../../packages/browser-agent-core/common/timing/start-time'
+
+const { agentIdentifier } = setup();
+startTime.findStartTime(agentIdentifier);
 
 test('nav cookie is set by default', function (t) {
   var called = false
@@ -14,7 +19,7 @@ test('nav cookie is set by default', function (t) {
   }
 
   startTime.navCookie = true
-  navCookie.conditionallySet()
+  navCookie.conditionallySet(agentIdentifier)
 
   t.equals(called, true, 'NREUM cookie was set')
   t.end()
@@ -26,16 +31,14 @@ test('nav cookie is set if user tracking is enabled', function (t) {
     called = true
   }
 
-  window.NREUM = {
-    init: {
-      privacy: {
-        cookies_enabled: true
-      }
+  setConfiguration(agentIdentifier, {
+    privacy: {
+      cookies_enabled: true
     }
-  }
+  });
 
   startTime.navCookie = true
-  navCookie.conditionallySet()
+  navCookie.conditionallySet(agentIdentifier)
 
   t.equals(called, true, 'NREUM cookie was set')
   t.end()
@@ -47,16 +50,14 @@ test('nav cookie is not set if user tracking is disabled', function (t) {
     called = true
   }
 
-  window.NREUM = {
-    init: {
-      privacy: {
-        cookies_enabled: false
-      }
+  setConfiguration(agentIdentifier, {
+    privacy: {
+      cookies_enabled: false
     }
-  }
+  });
 
   startTime.navCookie = true
-  navCookie.conditionallySet()
+  navCookie.conditionallySet(agentIdentifier)
 
   t.equals(called, false, 'NREUM cookie was not set')
   t.end()
@@ -69,7 +70,7 @@ test('nav cookie is not set if performance API is available ', function (t) {
   }
 
   startTime.navCookie = false
-  navCookie.conditionallySet()
+  navCookie.conditionallySet(agentIdentifier)
 
   t.equals(called, false, 'NREUM cookie was not set')
   t.end()

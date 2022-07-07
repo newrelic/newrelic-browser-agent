@@ -26,7 +26,7 @@ export function conditionallySet(agentIdentifier) {
   // }
 
   if (navCookie && areCookiesEnabled) {
-    setCookie()
+    this.setCookie(); // allow importing modules (e.g., browser tests) to change setCookie() below
   }
 }
 

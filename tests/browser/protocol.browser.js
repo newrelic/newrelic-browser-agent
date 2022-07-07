@@ -4,7 +4,8 @@
  */
 
 var jil = require('jil')
-
+import * as win from '../../packages/browser-agent-core/common/window/win'
+import { protocol } from '../../packages/browser-agent-core/common/url/protocol'
 
 var fileLocation = {
   hash: '',
@@ -18,10 +19,8 @@ var fileLocation = {
 }
 
 jil.browserTest('isFileProtocol returns coorectly when detecting file protocol', function (t) {
-  const win = require('../../agent/win')
   win.setWindow({ ...win.getWindow(), location: { ...fileLocation } })
 
-  const protocol = require('../../agent/protocol')
   t.ok(protocol.isFileProtocol(), 'Returned false when protocol is not file protocol')
   t.ok(protocol.supportabilityMetricSent, 'isFileProtocol should send supportability metric if file protocol is detected')
   win.resetWindow()

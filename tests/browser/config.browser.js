@@ -3,39 +3,44 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var test = require('../../tools/jil/browser-test.js')
-var config = require('../../loader/config')
+import test from '../../tools/jil/browser-test'
+import { setup } from './utils/setup'
+import { setConfiguration, getConfigurationValue, getConfiguration } from '../../packages/browser-agent-core/common/config/config'
+
+const { agentIdentifier } = setup();
 
 test('getConfiguration', function (t) {
   t.test('returns value from NREUM.init using provided path', function(t) {
-    NREUM.init = { a: 123 }
-    t.equal(config.getConfiguration('a'), 123)
+    setConfiguration(agentIdentifier, { a: 123 })
+    t.equal(getConfigurationValue(agentIdentifier, 'a'), 123)
 
-    NREUM.init = { a: { b: 123 } }
-    t.equal(config.getConfiguration('a.b'), 123)
+    setConfiguration(agentIdentifier, { a: { b: 123 } })
+    t.equal(getConfigurationValue(agentIdentifier, 'a.b'), 123)
 
-    NREUM.init = { a: { b: { c: 123 } } }
-    t.equal(config.getConfiguration('a.b.c'), 123)
+    setConfiguration(agentIdentifier, { a: { b: { c: 123 } } })
+    t.equal(getConfigurationValue(agentIdentifier, 'a.b.c'), 123)
 
     t.end()
   })
 
   t.test('returns undefined when path does not match', function(t) {
-    NREUM.init = { a: 123 }
-    t.equal(config.getConfiguration('b', 456), undefined)
+    setConfiguration(agentIdentifier, { a: 123 })
+    t.equal(getConfigurationValue(agentIdentifier, 'b', 456), undefined)
 
-    NREUM.init = { a: { b: 123 } }
-    t.equal(config.getConfiguration('a.c', 456), undefined)
+    setConfiguration(agentIdentifier, { a: { b: 123 } })
+    t.equal(getConfigurationValue(agentIdentifier, 'a.c', 456), undefined)
 
     t.end()
   })
 
   t.test('returns undefined when configuration is missing', function(t) {
-    delete NREUM.init
-    t.equal(config.getConfiguration('a', 456), undefined)
+    //delete NREUM.init
+    // DEPRECATED case: the underlying config storage is not exposed and it has no deletion method (yet).
+    //  Any alternative would be equivalent to the test immediately below.
+    //t.equal(getConfigurationValue(agentIdentifier, 'a', 456), undefined)
 
-    NREUM.init = {}
-    t.equal(config.getConfiguration('a', 456), undefined)
+    setConfiguration(agentIdentifier, {})
+    t.equal(getConfigurationValue(agentIdentifier, 'a', 456), undefined)
 
     t.end()
   })

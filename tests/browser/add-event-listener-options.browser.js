@@ -5,8 +5,9 @@
 
 const jil = require('jil')
 
-jil.browserTest('addEventListener options work when wrapped', function (t) {
-  require('../../feature/wrap-events.js')
+jil.browserTest('addEventListener options work when wrapped', async function (t) {
+  const { scopedEE } = await import('../../packages/browser-agent-core/common/wrap/wrap-events');
+  scopedEE();
 
   let handlerCallCount = 0
   let el = createAndAddDomElement()

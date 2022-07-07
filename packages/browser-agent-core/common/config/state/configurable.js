@@ -4,7 +4,7 @@ export class Configurable {
     if (!model || typeof model !== 'object') return console.error('setting a Configurable requires a model to set its initial properties')
     Object.assign(this, model)
     Object.entries(obj).forEach(([key, value]) => {
-      if (Object.keys(model).includes(key)) this[key] = value
+      if (!Object.keys(model).includes(key)) this[key] = value
     })
   }
 }

@@ -5,29 +5,32 @@
 
 const jil = require('jil')
 
+const {setup} = require('./utils/setup')
+const {drain} = require('../../packages/browser-agent-core/common/drain/drain')
+const {handle} = require('../../packages/browser-agent-core/common/event-emitter/handle')
+const {setConfiguration} = require("../../packages/browser-agent-core/common/config/state/init")
+const {Aggregate: PvtAggregate} = require('../../packages/browser-agent-core/features/page-view-timing/aggregate/index')
+
+const {agentIdentifier, aggregator} = setup()
 
 jil.browserTest('sends expected attributes when available', function(t) {
-  var handle = require('handle')
-  var harvest = require('../../agent/harvest')
-  var timingModule = require('../../agent/timings')
-  var drain = require('../../agent/drain')
+  // timeout causes LCP to be added to the queue of timings for next harvest
+  setConfiguration(agentIdentifier, { page_view_timing: {maxLCPTimeSeconds: 0.5} })
+
+  const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
 
   // override harvest calls, so that no network calls are made
-  harvest.send = function() {
+  pvtAgg.scheduler.harvest.send = function() {
     return {}
   }
 
-  var mockLoader = {
-    info: {}
+   // prevent prepareHarvest from clearing timings
+   pvtAgg.prepareHarvest = function() {
+    return {}
   }
 
-  // timeout causes LCP to be added to the queue of timings for next harvest
-  timingModule.init(mockLoader, {
-    maxLCPTimeSeconds: 0.5
-  })
-
   // drain adds `timing` and `lcp` event listeners in the agent/timings module
-  drain('feature')
+  drain(agentIdentifier, 'feature')
 
   var lcpEntry = {
     size: 123,
@@ -47,13 +50,13 @@ jil.browserTest('sends expected attributes when available', function(t) {
   }
 
   // simulate LCP observed
-  handle('lcp', [lcpEntry, networkInfo])
+  handle('lcp', [lcpEntry, networkInfo], undefined, undefined, pvtAgg.ee)
 
   setTimeout(function() {
-    t.equals(timingModule.timings.length, 1, 'there should be only 2 timings (pageHide and unload)')
-    t.ok(timingModule.timings[0].name === 'lcp', 'lcp should be present')
+    t.equals(pvtAgg.timings.length, 1, 'there should be only 2 timings (pageHide and unload)')
+    t.ok(pvtAgg.timings[0].name === 'lcp', 'lcp should be present')
 
-    const attributes = timingModule.timings[0].attrs
+    const attributes = pvtAgg.timings[0].attrs
     t.equal(attributes.eid, 'some-element-id', 'eid should be present')
     t.equal(attributes.size, 123, 'size should be present')
     t.equal(attributes.elUrl, 'http://foo.com/a/b', 'url should be present')

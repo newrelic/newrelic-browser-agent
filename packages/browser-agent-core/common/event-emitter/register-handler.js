@@ -19,11 +19,7 @@ function registerWithSpecificEmitter (ee, handlers, type, handler, group) {
   if (!group) group = 'feature'
   if (!ee) ee = handleEE
 
-  if (ee.isBuffering(type)) {
     var groupHandlers = handlers[group] = handlers[group] || {}
     var list = groupHandlers[type] = groupHandlers[type] || []
     list.push([ee, handler])
-  } else {
-    ee.on(type, handler)
-  }
 }

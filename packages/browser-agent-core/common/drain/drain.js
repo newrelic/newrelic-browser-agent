@@ -28,12 +28,11 @@ export function drain(agentIdentifier, group = 'feature') {
         registration[0].on(eventType, registration[1])
       })
     })
-    
-    delete handlers[group]
-    // Keep the group as a property so we know it was created and drained
-    baseEE.backlog[group] = null
   }
 
+  delete handlers[group]
+    // Keep the group as a property so we know it was created and drained
+  baseEE.backlog[group] = null
 }
 
 function emitEvent(evt, groupHandlers) {

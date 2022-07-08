@@ -6,8 +6,12 @@
 const jil = require('jil')
 
 jil.browserTest('eventListener methods work as expected after abort', function (t) {
-  const ee = require('../../contextual-ee/index.js')
-  require('../../feature/wrap-events.js')
+  const {setup} = require('./utils/setup')
+  const {wrapEvents} = require('../../packages/browser-agent-core/common/wrap/wrap-events.js')
+
+  const {baseEE} = setup()
+  wrapEvents(baseEE)
+  const ee = baseEE
 
   let handler1CallCount = 0
   let handler2CallCount = 0

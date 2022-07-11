@@ -2,6 +2,11 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+// polyfills
+import 'core-js/stable/promise'
+import 'core-js/stable/array/includes'
+import 'core-js/stable/object/assign'
+import 'core-js/stable/object/entries'
 // cdn specific utility files
 import agentIdentifier from '../shared/agentIdentifier'
 import { stageAggregator } from './utils/importAggregator'

@@ -6,11 +6,7 @@
   "description": "Tests for the New Relic JavaScript agent",
   "scripts": {
     "test": "tools/jil/bin/cli.js",
-<<<<<<< HEAD
     "legacy:build": "rm -rf build && mkdir build && gulp build",
-=======
-    "build": "rm -rf build && mkdir build && gulp build",
->>>>>>> b4d7261 (add transpiling and polyfill generation for now)
     "build:all": "npx lerna run build",
     "build-mac": "gulp && osascript -e 'display notification \"The agent has been built.\" with title \"Build Complete\"'",
     "prepush": "npm run lint && node -e 'process.exit((process.argv[1] === \"master\") ? 1 : 0)' `git rev-parse --abbrev-ref HEAD`",
@@ -25,7 +21,7 @@
     "cdn:build": "npm --prefix cdn run build",
     "cdn:build:prod": "npm --prefix cdn run build:prod",
     "cdn:build-dev": "DEBUG=true npm --prefix cdn run build",
-    "cdn:watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests' --run -- npm run cdn:build-dev",
+    "cdn:watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests|cdn' --run -- npm run cdn:build-dev",
     "packages:build": "npm --prefix ./packages run build",
     "packages:pack": "npm --prefix packages/browser-agent run pack",
     "packages:test": "npm --prefix packages/browser-agent run test",

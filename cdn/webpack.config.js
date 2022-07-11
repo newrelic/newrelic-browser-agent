@@ -3,6 +3,8 @@ const TerserPlugin = require('terser-webpack-plugin')
 const webpack = require('webpack')
 const pkg = require('./package.json')
 
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+
 const isProd = process.env.NODE_ENV === 'production'
 
 module.exports = {
@@ -13,8 +15,8 @@ module.exports = {
     'nr-loader-full.min': path.resolve(__dirname, './agent-loader/pro.js'),
     'nr-loader-spa': path.resolve(__dirname, './agent-loader/spa.js'),
     'nr-loader-spa.min': path.resolve(__dirname, './agent-loader/spa.js'),
-    'nr-polyfills': path.resolve(__dirname, './agent-loader/polyfills.js'),
-    'nr-polyfills.min': path.resolve(__dirname, './agent-loader/polyfills.js'),
+    ...(isProd ? {'nr-polyfills': path.resolve(__dirname, './agent-loader/polyfills.js')} : null),
+    ...(isProd ? {'nr-polyfills.min': path.resolve(__dirname, './agent-loader/polyfills.js')} : null),
   },
   output: {
     filename: '[name].js',
@@ -47,6 +49,12 @@ module.exports = {
     new webpack.SourceMapDevToolPlugin({
       append: isProd ? '\n//# sourceMappingURL=https://js-agent.newrelic.com/[url]' : '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]', // CDN route vs local route
       filename: '[name].map'
+    }),
+    new BundleAnalyzerPlugin({
+      analyzerMode: 'static',
+      openAnalyzer: false,
+      defaultSizes: 'stat',
+      reportFilename: path.resolve(__dirname, './webpack-analysis.html')
     })
   ],
 
@@ -68,7 +76,7 @@ module.exports = {
                 targets: {
                   "chrome": "49",
                   "edge": "14",
-                  "ie": "9", // <--- sauce 
+                  "ie": "11",
                   "safari": "8",
                   "firefox": "5",
                   "android": "6",

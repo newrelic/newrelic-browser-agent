@@ -10,7 +10,7 @@ import { registerHandler as defaultHandlers } from '../event-emitter/register-ha
 
 // calls will need to update to call this more directly so we can explicitly pass in the ee and handler
 export function drain(agentIdentifier, group = 'feature') {
-  const baseEE = ee.get(agentIdentifier)
+  const baseEE = agentIdentifier ? ee.get(agentIdentifier) : ee
   const handlers = defaultHandlers.handlers
   if (!baseEE.backlog || !handlers) return
 

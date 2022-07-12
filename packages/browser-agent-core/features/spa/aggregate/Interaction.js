@@ -6,7 +6,7 @@
 import { getInfo, getRuntime, originals } from '../../../common/config/config'
 import { mapOwn } from '../../../common/util/map-own'
 import { ee } from '../../../common/event-emitter/contextual-ee'
-import { InteractionNode } from './InteractionNode'
+import { InteractionNode } from './interaction-node'
 import { now } from '../../../common/timing/now'
 
 var originalSetTimeout = originals.ST

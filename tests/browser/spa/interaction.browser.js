@@ -26,7 +26,7 @@ jil.browserTest('checkFinish', function (t) {
     return setTimeoutCalls
   }
 
-  var { Interaction } = require('../../../packages/browser-agent-core/features/spa/aggregate/Interaction')
+  var { Interaction } = require('../../../packages/browser-agent-core/features/spa/aggregate/interaction')
 
   t.test('checkFinish sets timers', function(t) {
     var interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, agentIdentifier)

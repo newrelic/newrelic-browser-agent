@@ -17,9 +17,8 @@ import { ieVersion } from '../browser-version/ie-version'
 import { Obfuscator } from '../util/obfuscate'
 import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
-import pkg from '../../package.json'
+import { VERSION } from '../constants/environment-variables'
 
-const version = pkg.version
 var haveSendBeacon = !!navigator.sendBeacon
 
 // requiring ie version updates the IE version on the loader object
@@ -163,7 +162,7 @@ export class Harvest extends SharedContext {
     return ([
       '?a=' + info.applicationID,
       encodeParam('sa', (info.sa ? '' + info.sa : '')),
-      encodeParam('v', version),
+      encodeParam('v', VERSION),
       transactionNameParam(info),
       encodeParam('ct', runtime.customTransaction),
       '&rst=' + now(),
@@ -193,7 +192,7 @@ export class Harvest extends SharedContext {
   }
 
   resetListeners() {
-    mapOwn(this._events, function (key) {
+    mapOwn(this._events, (key) => {
       this._events[key] = []
     })
   }

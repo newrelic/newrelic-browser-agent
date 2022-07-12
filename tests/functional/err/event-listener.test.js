@@ -50,16 +50,14 @@ testDriver.test('reporting errors from event listener callbacks', supported, fun
         ]
       }
     ]
+    t.equal(actualErrors.length, 2, 'Has 2 errors')
+    actualErrors.forEach((err, i) => {
+      t.equal(err.params.exceptionClass, 'Error', err.params.message + 'exceptionClass is Error')
+      t.equal(err.params.message, expectedErrors[i].message, err.params.message + 'message is correct')
+      t.ok(err.params.stack_trace.includes('handleEvent'), 'Stack trace has handleEvent')
+      t.ok(err.params.stack_trace.includes(eventListenersURL), 'Stack trace has eventListenerUrl')
+    })
 
-    // No function name from earlier IEs
-    if (browser.match('ie@<10, safari@<7')) {
-      delete expectedErrors[0].stack[0].f
-      delete expectedErrors[1].stack[0].f
-      expectedErrors[0].stack.splice(1, 1)
-      expectedErrors[1].stack.splice(1, 1)
-    }
-
-    assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL)
     t.end()
   }).catch(fail)
 

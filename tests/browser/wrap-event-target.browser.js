@@ -5,6 +5,10 @@
 
 const jil = require('jil')
 
+const {setup} = require('./utils/setup')
+const {wrapEvents} = require('../../packages/browser-agent-core/common/wrap/wrap-events')
+const {baseEE} = setup()
+
 jil.browserTest('AEL on window should call through to AEL on EventTarget', function (t) {
   t.plan(3)
   var target = window
@@ -13,7 +17,7 @@ jil.browserTest('AEL on window should call through to AEL on EventTarget', funct
     target = Object.getPrototypeOf(target)
   }
 
-  require('../../feature/wrap-events.js')
+  wrapEvents(baseEE)
 
   let addE = target.addEventListener
   target.addEventListener = function (evName, handler, capture) {

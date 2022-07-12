@@ -7,7 +7,11 @@ const jil = require('jil')
 
 jil.browserTest('history functions are wrapped', function (t) {
   // wrap
-  require('../../feature/wrap-history.js')
+  const {setup} = require('./utils/setup')
+  const {wrapHistory} = require('../../packages/browser-agent-core/common/wrap/wrap-history')
+
+  const {baseEE} = setup()
+  wrapHistory(baseEE)
 
   if (window.history && window.history.pushState) {
     t.ok(isWrapped(window.history.pushState), 'pushState is wrapped')
@@ -21,7 +25,11 @@ jil.browserTest('history functions are wrapped', function (t) {
 
 jil.browserTest('a new property is not shown in the history object', function (t) {
   // wrap
-  require('../../feature/wrap-history.js')
+  const {setup} = require('./utils/setup')
+  const {wrapHistory} = require('../../packages/browser-agent-core/common/wrap/wrap-history')
+
+  const {baseEE} = setup()
+  wrapHistory(baseEE)
 
   var proto = window.history.constructor && window.history.constructor.prototype
   if (proto.pushState) {

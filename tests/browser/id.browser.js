@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var id = require('../../loader/id')
-var test = require('../../tools/jil/browser-test.js')
+import test from '../../tools/jil/browser-test'
+import { id } from '../../packages/browser-agent-core/common/ids/id'
 var win = window
 
 test('id', function (t) {

@@ -3,25 +3,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var test = require('../../tools/jil/browser-test.js')
-var submitData = require('../../agent/submit-data')
-var harvest = require('../../agent/harvest')
-var sinon = require('sinon')
-var loader = require('loader')
-var encode = require('../../agent/encode')
-var stringify = require('../../agent/stringify')
-var ieVersion = require('../../agent/ie-version')
-var locationUtil = require('../../agent/location')
-var config = require('../../loader/config')
+import test from '../../tools/jil/browser-test'
+import { setup } from './utils/setup'
+import { getRuntime, setRuntime, setInfo } from '../../packages/browser-agent-core/common/config/config'
+import { submitData } from '../../packages/browser-agent-core/common/util/submit-data'
+import * as harvest from '../../packages/browser-agent-core/common/harvest/harvest'
+import * as sinon from 'sinon'
+import * as encode from '../../packages/browser-agent-core/common/url/encode'
+import * as locationUtil  from '../../packages/browser-agent-core/common/url/location'
+import { stringify } from '../../packages/browser-agent-core/common/util/stringify'
+import { VERSION } from '../../packages/browser-agent-core/common/constants/environment-variables'
 
-var scheme = (config.getConfiguration('ssl') === false) ? 'http' : 'https'
-var nrFeatures = { err: true, xhr: true }
-var nrInfo = { errorBeacon: 'foo', licenseKey: 'bar' }
-var nrOrigin = scheme + '://foo.com?bar=crunchy#bacon'
-var fakeNr = { features: nrFeatures, info: nrInfo, origin: nrOrigin, offset: loader.offset, now: loader.now }
+const { agentIdentifier } = setup();
+const harvesterInst = new harvest.Harvest({agentIdentifier});
+const scheme = harvesterInst.getScheme();
+const agentRuntime = getRuntime(agentIdentifier);
+const nrInfo = { errorBeacon: 'foo', licenseKey: 'bar' }
+const nrFeatures = { err: true, xhr: true }
+const nrOrigin = scheme + '://foo.com?bar=crunchy#bacon'  // default origin
+const setupFakeNr = (tArgs) => {
+  setInfo(agentIdentifier, nrInfo);
+  setRuntime(agentIdentifier, { features: nrFeatures, origin: tArgs?.origin || nrOrigin, ptid: tArgs?.ptid || undefined });
+};
 
-var hasSendBeacon = !!navigator.sendBeacon
-var xhrUsable = loader.xhrWrappable && (ieVersion > 9 || ieVersion === 0)
+const hasSendBeacon = !!navigator.sendBeacon
+const xhrUsable = agentRuntime.xhrWrappable && harvest.xhrUsable;
 
 function once (cb) {
   var done = false
@@ -51,7 +57,7 @@ function createMockedXhr(responseCode) {
 }
 
 function resetSpies (origin, options) {
-  harvest.resetListeners()
+  harvesterInst.resetListeners()
   options = options || {}
   submitData.img = sinon.stub().returns(true)
   submitData.beacon = sinon.stub().returns(true)
@@ -108,16 +114,18 @@ function validateUrl (t, actualUrl, expectedUrlTemplate, message) {
 
 test('returns false if nothing is sent', function (t) {
   resetSpies()
-  let result = harvest.sendX('ins', fakeNr)
+  setupFakeNr();
+  let result = harvesterInst.sendX('ins');
   t.notOk(result, 'sendX returns a falsy value when nothing was sent')
   t.end()
 })
 
 test('encodes only the origin of the referrer url, not the fragment ', function (t) {
   resetSpies()
-  harvest.on('ins', once(dummyPayload('ins')))
-  let result = harvest.sendX('ins', fakeNr)
-  let baseUrl = scheme + '://foo/ins/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
+  harvesterInst.on('ins', once(dummyPayload('ins')))
+  setupFakeNr();
+  let result = harvesterInst.sendX('ins');
+  let baseUrl = scheme + '://foo/ins/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
 
   if (xhrUsable) {
     let call = submitData.xhr.getCall(0)
@@ -133,10 +141,10 @@ test('encodes referrer urls that include spaces', function (t) {
   let testOriginWithSpace = scheme + '://foo.com%20crunchy%20bacon'
   resetSpies(testOriginWithSpace)
 
-  harvest.on('ins', once(dummyPayload('ins')))
-  let testNr = { features: nrFeatures, info: nrInfo, origin: testOriginWithSpace, offset: loader.offset, now: loader.now }
-  let result = harvest.sendX('ins', testNr)
-  let baseUrl = scheme + '://foo/ins/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com%2520crunchy%2520bacon&q1=v1&q2=v2'
+  harvesterInst.on('ins', once(dummyPayload('ins')))
+  setupFakeNr({ origin: testOriginWithSpace });
+  let result = harvesterInst.sendX('ins');
+  let baseUrl = scheme + '://foo/ins/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com%2520crunchy%2520bacon&q1=v1&q2=v2'
 
   if (xhrUsable) {
     let call = submitData.xhr.getCall(0)
@@ -152,10 +160,10 @@ test('encodes referrer urls that include ampersands', function (t) {
   let testOriginWithSpace = scheme + '://foo.com&crunchy&bacon'
   resetSpies(testOriginWithSpace)
 
-  harvest.on('ins', once(dummyPayload('ins')))
-  let testNr = { features: nrFeatures, info: nrInfo, origin: testOriginWithSpace, offset: loader.offset, now: loader.now }
-  let result = harvest.sendX('ins', testNr)
-  let baseUrl = scheme + '://foo/ins/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com%26crunchy%26bacon&q1=v1&q2=v2'
+  harvesterInst.on('ins', once(dummyPayload('ins')))
+  setupFakeNr({ origin: testOriginWithSpace });
+  let result = harvesterInst.sendX('ins');
+  let baseUrl = scheme + '://foo/ins/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com%26crunchy%26bacon&q1=v1&q2=v2'
 
   if (xhrUsable) {
     let call = submitData.xhr.getCall(0)
@@ -175,14 +183,15 @@ test('uses correct submission mechanism for ins', function (t) {
   }
 
   resetSpies(null, { xhrWithLoadEvent: true })
-  harvest.on('ins', once(dummyPayload('ins')))
+  harvesterInst.on('ins', once(dummyPayload('ins')))
 
   function harvestFinished() {
     t.pass('harvest finished callback has been called')
   }
 
-  let result = harvest.sendX('ins', fakeNr, null, harvestFinished)
-  let baseUrl = scheme + '://foo/ins/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
+  setupFakeNr();
+  let result = harvesterInst.sendX('ins', null, harvestFinished);
+  let baseUrl = scheme + '://foo/ins/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
   let expectedPayload = {ins: ['one', 'two', 'three']}
 
   if (xhrUsable) {
@@ -198,9 +207,10 @@ test('uses correct submission mechanism for ins', function (t) {
 
 test('does not send ins call when there is no body', function (t) {
   resetSpies()
-  harvest.on('ins', once(testPayload))
+  harvesterInst.on('ins', once(testPayload))
 
-  let result = harvest.sendX('ins', fakeNr)
+  setupFakeNr();
+  let result = harvesterInst.sendX('ins');
 
   t.notOk(result, 'result should be falsy')
   t.equal(submitData.xhr.callCount, 0, 'no xhr call should have been made')
@@ -226,15 +236,16 @@ test('uses correct submission mechanism for resources', function (t) {
   }
 
   resetSpies(null, { xhrWithLoadEvent: true })
-  harvest.on('resources', once(dummyPayload('resources')))
+  harvesterInst.on('resources', once(dummyPayload('resources')))
 
   function harvestFinished() {
     t.pass('harvest finished callback has been called')
   }
 
-  let result = harvest.sendX('resources', fakeNr, null, harvestFinished)
+  setupFakeNr();
+  let result = harvesterInst.sendX('resources', null, harvestFinished);
 
-  let baseUrl = scheme + '://foo/resources/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
+  let baseUrl = scheme + '://foo/resources/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
   let expectedPayload = {resources: ['one', 'two', 'three']}
 
   if (xhrUsable) {
@@ -250,9 +261,10 @@ test('uses correct submission mechanism for resources', function (t) {
 
 test('does not send resources when there is no body', function (t) {
   resetSpies()
-  harvest.on('resources', once(testPayload))
+  harvesterInst.on('resources', once(testPayload))
 
-  let result = harvest.sendX('resources', fakeNr)
+  setupFakeNr();
+  let result = harvesterInst.sendX('resources');
 
   t.notOk(result, 'result should be falsy')
   t.equal(submitData.xhr.callCount, 0, 'no xhr call should have been made')
@@ -270,10 +282,11 @@ test('does not send resources when there is no body', function (t) {
 
 test('uses an XHR and returns it for first resources POST', function (t) {
   resetSpies()
-  harvest.on('resources', once(dummyPayload('resources')))
-  let result = harvest.sendX('resources', fakeNr, { needResponse: true })
+  harvesterInst.on('resources', once(dummyPayload('resources')))
+  setupFakeNr();
+  let result = harvesterInst.sendX('resources', { needResponse: true });
 
-  let baseUrl = scheme + '://foo/resources/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
+  let baseUrl = scheme + '://foo/resources/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
   let expectedPayload = {resources: ['one', 'two', 'three']}
 
   if (xhrUsable) {
@@ -299,15 +312,16 @@ test('uses correct submission mechanism for jserrors', function (t) {
   }
 
   resetSpies(null, { xhrWithLoadEvent: true })
-  harvest.on('jserrors', once(dummyPayload('jserrors')))
+  harvesterInst.on('jserrors', once(dummyPayload('jserrors')))
 
   function harvestFinished() {
     t.pass('harvest finished callback has been called')
   }
 
-  let result = harvest.sendX('jserrors', fakeNr, null, harvestFinished)
+  setupFakeNr();
+  let result = harvesterInst.sendX('jserrors', null, harvestFinished)
 
-  let baseUrl = scheme + '://foo/jserrors/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
+  let baseUrl = scheme + '://foo/jserrors/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
   let expectedPayload = {jserrors: ['one', 'two', 'three']}
 
   if (xhrUsable) {
@@ -332,14 +346,13 @@ test('adds ptid to harvest when ptid is present', function (t) {
   }
 
   resetSpies(null, { xhrWithLoadEvent: true })
-  harvest.on('jserrors', once(dummyPayload('jserrors')))
+  harvesterInst.on('jserrors', once(dummyPayload('jserrors')))
 
   // simulate ptid present (session trace in progress) after initial session trace (/resources) call
-  fakeNr.ptid = '54321'
+  setupFakeNr({ ptid: '54321' });
+  let result = harvesterInst.sendX('jserrors', null, function () {});
 
-  let result = harvest.sendX('jserrors', fakeNr, null, function () {})
-
-  let baseUrl = scheme + '://foo/jserrors/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&ptid=54321&q1=v1&q2=v2'
+  let baseUrl = scheme + '://foo/jserrors/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&ptid=54321&q1=v1&q2=v2'
   let expectedPayload = {jserrors: ['one', 'two', 'three']}
 
   if (xhrUsable) {
@@ -353,7 +366,8 @@ test('adds ptid to harvest when ptid is present', function (t) {
     validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
   }
 
-  delete fakeNr.ptid
+  //delete fakeNr.ptid
+  setupFakeNr();  // this'll reset ptid to 'undefined' since we currently lack a delete API in runtime.js
 })
 
 test('does not add ptid to harvest when ptid is not present', function (t) {
@@ -364,12 +378,11 @@ test('does not add ptid to harvest when ptid is not present', function (t) {
   }
 
   resetSpies(null, { xhrWithLoadEvent: true })
-  harvest.on('jserrors', once(dummyPayload('jserrors')))
+  harvesterInst.on('jserrors', once(dummyPayload('jserrors')))
 
   // simulate session trace not started on page
-  fakeNr.ptid = null
-
-  let result = harvest.sendX('jserrors', fakeNr, null, function () {})
+  setupFakeNr({ ptid: null });  // === ptid: undefined
+  let result = harvesterInst.sendX('jserrors', null, function () {});
 
   if (xhrUsable) {
     t.ok(result, 'result truthy when jserrors submitted via xhr')
@@ -384,9 +397,10 @@ test('does not add ptid to harvest when ptid is not present', function (t) {
 
 test('does not send jserrors when there is nothing to send', function (t) {
   resetSpies()
-  harvest.on('jserrors', once(testPayload))
+  harvesterInst.on('jserrors', once(testPayload))
 
-  let result = harvest.sendX('jserrors', fakeNr)
+  setupFakeNr();
+  let result = harvesterInst.sendX('jserrors');
 
   t.notOk(result, 'result should be falsy')
   t.equal(submitData.xhr.callCount, 0, 'no xhr call should have been made')
@@ -410,7 +424,7 @@ test('uses correct submission mechanism for events', function (t) {
   }
 
   resetSpies(null, { xhrWithLoadEvent: true })
-  harvest.on('events', once(function () {
+  harvesterInst.on('events', once(function () {
     return {
       body: {
         e: 'bel.1;1;'
@@ -422,9 +436,10 @@ test('uses correct submission mechanism for events', function (t) {
     t.pass('harvest finished callback has been called')
   }
 
-  let result = harvest.sendX('events', fakeNr, null, harvestFinished)
+  setupFakeNr();
+  let result = harvesterInst.sendX('events', null, harvestFinished);
 
-  let baseUrl = scheme + '://foo/events/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com'
+  let baseUrl = scheme + '://foo/events/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com'
   let expectedPayload = {e: 'bel.1;1;'}
 
   if (xhrUsable) {
@@ -443,9 +458,10 @@ test('uses correct submission mechanism for events', function (t) {
 
 test('does not send eents when there is nothing to send', function (t) {
   resetSpies()
-  harvest.on('events', once(testPayload))
+  harvesterInst.on('events', once(testPayload))
 
-  let result = harvest.sendX('events', fakeNr)
+  setupFakeNr();
+  let result = harvesterInst.sendX('events');
 
   t.notOk(result, 'result should be falsy')
   t.equal(submitData.xhr.callCount, 0, 'no xhr call should have been made')
@@ -463,10 +479,10 @@ test('does not send eents when there is nothing to send', function (t) {
 test('uses correct submission mechanisms on unload', function (t) {
   resetSpies()
 
-  harvest.on('ins', once(dummyPayload('ins')))
-  harvest.on('resources', once(dummyPayload('resources')))
-  harvest.on('jserrors', once(dummyPayload('jserrors')))
-  harvest.on('events', once(function () {
+  harvesterInst.on('ins', once(dummyPayload('ins')))
+  harvesterInst.on('resources', once(dummyPayload('resources')))
+  harvesterInst.on('jserrors', once(dummyPayload('jserrors')))
+  harvesterInst.on('events', once(function () {
     return {
       body: {
         e: 'bel.1;1;'
@@ -474,7 +490,8 @@ test('uses correct submission mechanisms on unload', function (t) {
     }
   }))
 
-  harvest.sendFinal(fakeNr)
+  setupFakeNr();
+  harvesterInst.sendFinal();
 
   t.equal(submitData.xhr.callCount, 0, 'did not send any final submissions via XHR')
 
@@ -525,7 +542,7 @@ test('uses correct submission mechanisms on unload', function (t) {
   t.end()
 
   function baseUrlFor (endpoint, qs) {
-    return `${scheme}://foo/${endpoint}/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref=${scheme}://foo.com${qs !== undefined ? qs : '&q1=v1&q2=v2'}`
+    return `${scheme}://foo/${endpoint}/1/bar?a=undefined&v=${VERSION}&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref=${scheme}://foo.com${qs !== undefined ? qs : '&q1=v1&q2=v2'}`
   }
 
   function findCallForEndpoint (calls, desiredEndpoint) {
@@ -540,15 +557,16 @@ test('uses correct submission mechanisms on unload', function (t) {
 
 test('when sendBeacon returns false', function(t) {
   t.test('uses img for jserrors', function(t) {
-    let baseUrl = scheme + '://foo/jserrors/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
+    let baseUrl = scheme + '://foo/jserrors/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
     let expectedPayload = {jserrors: ['one', 'two', 'three']}
 
     resetSpies()
     submitData.beacon = sinon.stub().returns(false)
 
-    harvest.on('jserrors', once(dummyPayload('jserrors')))
+    harvesterInst.on('jserrors', once(dummyPayload('jserrors')))
 
-    harvest.sendFinal(fakeNr)
+    setupFakeNr();
+    harvesterInst.sendFinal();
 
     t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (jserrors)')
     let call = submitData.img.getCall(0)
@@ -560,15 +578,16 @@ test('when sendBeacon returns false', function(t) {
   })
 
   t.test('uses img for ins', function(t) {
-    let baseUrl = scheme + '://foo/ins/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
+    let baseUrl = scheme + '://foo/ins/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
     let expectedPayload = {ins: ['one', 'two', 'three']}
 
     resetSpies()
     submitData.beacon = sinon.stub().returns(false)
 
-    harvest.on('ins', once(dummyPayload('ins')))
+    harvesterInst.on('ins', once(dummyPayload('ins')))
 
-    harvest.sendFinal(fakeNr)
+    setupFakeNr();
+    harvesterInst.sendFinal();
 
     t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (ins)')
     let call = submitData.img.getCall(0)
@@ -580,15 +599,16 @@ test('when sendBeacon returns false', function(t) {
   })
 
   t.test('uses img for resources', function(t) {
-    let baseUrl = scheme + '://foo/resources/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
+    let baseUrl = scheme + '://foo/resources/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
     let expectedPayload = {resources: ['one', 'two', 'three']}
 
     resetSpies()
     submitData.beacon = sinon.stub().returns(false)
 
-    harvest.on('resources', once(dummyPayload('resources')))
+    harvesterInst.on('resources', once(dummyPayload('resources')))
 
-    harvest.sendFinal(fakeNr)
+    setupFakeNr();
+    harvesterInst.sendFinal();
 
     t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (resources)')
     let call = submitData.img.getCall(0)
@@ -600,15 +620,16 @@ test('when sendBeacon returns false', function(t) {
   })
 
   t.test('uses img for events', function(t) {
-    let baseUrl = scheme + '://foo/events/1/bar?a=undefined&v=%3CVERSION%3E&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
+    let baseUrl = scheme + '://foo/events/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
     let expectedPayload = {events: ['one', 'two', 'three']}
 
     resetSpies()
     submitData.beacon = sinon.stub().returns(false)
 
-    harvest.on('events', once(dummyPayload('events')))
+    harvesterInst.on('events', once(dummyPayload('events')))
 
-    harvest.sendFinal(fakeNr)
+    setupFakeNr();
+    harvesterInst.sendFinal();
 
     t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (events)')
     let call = submitData.img.getCall(0)
@@ -676,9 +697,10 @@ test('response codes', function(t) {
       t.plan(1)
 
       resetSpies(null, { xhrWithLoadEvent: true, xhrResponseCode: responseCode })
-      harvest.on(type, once(dummyPayload(type)))
+      harvesterInst.on(type, once(dummyPayload(type)))
 
-      harvest.sendX(type, fakeNr, null, function(result) {
+      setupFakeNr();
+      harvesterInst.sendX(type, null, function(result) {
         t.equal(result.retry, testCase.retry)
       })
     })

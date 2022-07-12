@@ -5,6 +5,10 @@
 
 const jil = require('jil')
 
+const {setup} = require('./utils/setup')
+const {wrapJsonP} = require('../../packages/browser-agent-core/common/wrap/wrap-jsonp')
+const {baseEE} = setup()
+
 function removeListener (type, fn) {
   const handlers = this.listeners(type)
   var index = handlers.indexOf(fn)
@@ -12,17 +16,17 @@ function removeListener (type, fn) {
 }
 
 var validUrls = [
-  '/path?cb=foo',
-  '/path?cb=foo#abc',
-  '/path?callback=foo',
-  '/path?callback=foo#abc'
+  '/jsonp?cb=foo',
+  '/jsonp?cb=foo#abc',
+  '/jsonp?callback=foo',
+  '/jsonp?callback=foo#abc'
 ]
 
 var invalidUrls = [
-  '/path?mycb=foo',
-  '/path?ab=1&mycb=foo',
-  '/path?mycallback=foo',
-  '/path?ab=1&mycallback=foo'
+  '/jsonp?mycb=foo',
+  '/jsonp?ab=1&mycb=foo',
+  '/jsonp?mycallback=foo',
+  '/jsonp?ab=1&mycallback=foo'
 ]
 
 validUrls.forEach((url) => {
@@ -37,18 +41,17 @@ function shouldWork (url) {
   jil.browserTest('jsonp works with ' + url, function (t) {
     t.plan(1)
 
-    var ee = require('ee').get('jsonp')
-    ee.removeListener = removeListener
+    const jsonpEE = wrapJsonP(baseEE)
 
-    require('../../feature/wrap-jsonp.js')
+    jsonpEE.removeListener = removeListener
 
     var listener = function () {
       t.comment('listener called')
-      ee.removeListener('new-jsonp', listener)
+      jsonpEE.removeListener('new-jsonp', listener)
       t.ok(true, 'should get here')
       t.end()
     }
-    ee.on('new-jsonp', listener)
+    jsonpEE.on('new-jsonp', listener)
 
     var document = window.document
     window.foo = function () {}
@@ -62,17 +65,16 @@ function shouldNotWork (url) {
   jil.browserTest('jsonp does not work with ' + url, function (t) {
     t.plan(1)
 
-    var ee = require('ee').get('jsonp')
-    ee.removeListener = removeListener
-
-    require('../../feature/wrap-jsonp.js')
+    const jsonpEE = wrapJsonP(baseEE)
+    
+    jsonpEE.removeListener = removeListener
 
     var listener = function () {
       t.fail('should not have been called')
       t.end()
     }
 
-    ee.on('new-jsonp', listener)
+    jsonpEE.on('new-jsonp', listener)
 
     var document = window.document
     window.foo = function () {}
@@ -80,7 +82,7 @@ function shouldNotWork (url) {
     el.src = url
     window.document.body.appendChild(el)
 
-    ee.removeListener('new-jsonp', listener)
+    jsonpEE.removeListener('new-jsonp', listener)
     t.ok(true)
     t.end()
   })

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var test = require('../../tools/jil/browser-test.js')
-var stringify = require('../../agent/stringify')
+import test from '../../tools/jil/browser-test'
+import { stringify } from '../../packages/browser-agent-core/common/util/stringify.js'
 
 test('fake stringify', function (t) {
   var arr = [0, 1, 'asdf', undefined, null, 'weee']

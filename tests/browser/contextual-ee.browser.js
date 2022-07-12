@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var ee = require('../../contextual-ee')
+const {ee} = require('../../packages/browser-agent-core/common/event-emitter/contextual-ee')
 var test = require('../../tools/jil/browser-test.js')
 
 test('Contextual EE', function (t) {

@@ -26,13 +26,14 @@ testDriver.test('reporting errors from setTimeout callbacks', supported, functio
   Promise.all([rumPromise, loadPromise]).then(([response]) => {
     assertErrorAttributes(t, response.query)
     const actualErrors = getErrorsFromResponse(response, browser)
+    console.log(actualErrors)
     let expectedErrors = [{
       message: 'timeout callback',
       stack: [{
         u: router.assetURL('js/set-timeout-error.js').split('?')[0],
         l: 9
       },{
-        f: 'c', u: '<inline>', l: 11
+        f: 'u', u: '<inline>', l: 12
       }]
     }]
 

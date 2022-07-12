@@ -231,6 +231,14 @@ function haveCustomAttributes(timings) {
   })
 }
 
+function overriddenReservedAttributes(timings) {
+  return timings.some(timing => {
+    return timing.attributes.some(attr => {
+      return attr.key === 'cls' && attr.value === 'customVal'
+    })
+  })
+}
+
 function waitForWindowLoad (fn) {
   if (loaded) {
     fn()
@@ -239,18 +247,23 @@ function waitForWindowLoad (fn) {
   }
 }
 
-jil.browserTest('spa interaction serializer attributes', function (t) {
-  var timing = require('../../agent/timings')
+const {setup} = require('./utils/setup')
+const {Aggregate: PvtAggregate} = require('../../packages/browser-agent-core/features/page-view-timing/aggregate/index')
+
+const {agentIdentifier, aggregator} = setup()
+
+jil.browserTest('page-view-timing serializer default attributes', function (t) {
+  const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
+
   var schema = qp.schemas['bel.6']
 
   waitForWindowLoad(startTest)
 
   function startTest () {
-    timing.init({ info: {} })
 
     testCases.forEach(testCase => {
       var expectedPayload = qp.encode(testCase.input, schema)
-      var payload = timing.getPayload(getAgentInternalFormat(testCase.input))
+      var payload = pvtAgg.getPayload(getAgentInternalFormat(testCase.input))
       t.equal(payload, expectedPayload, testCase.name)
     })
 
@@ -258,21 +271,23 @@ jil.browserTest('spa interaction serializer attributes', function (t) {
   }
 })
 
-jil.browserTest('spa interaction serializer attributes', function (t) {
-  var timing = require('../../agent/timings')
+jil.browserTest('page-view-timing serializer handles custom attributes', function (t) {
+  const {setInfo} = require("../../packages/browser-agent-core/common/config/config")
+
+  const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
+
   waitForWindowLoad(startTest)
 
   function startTest () {
-    timing.init({
-      info: {
-        jsAttributes: {'custom': 'val', 'cls': 2}
-      }
-    })
+    // should add custom, should not add cls (reserved)
+    setInfo(agentIdentifier, { jsAttributes: {'custom': 'val', 'cls': 'customVal'} })
 
     testCases.forEach(testCase => {
-      var payload = timing.getPayload(getAgentInternalFormat(testCase.input))
+      var payload = pvtAgg.getPayload(getAgentInternalFormat(testCase.input))
       var events = qp.decode(payload)
+      var hasReserved = overriddenReservedAttributes(events)
       var result = haveCustomAttributes(events)
+      t.notOk(hasReserved, 'should not allow overridden reserved attribute')
       t.ok(result, 'all events should have the set custom attribute')
     })
 

@@ -5,35 +5,37 @@
 
 const jil = require('jil')
 
+const {setup} = require('./utils/setup')
+const {drain} = require('../../packages/browser-agent-core/common/drain/drain')
+const {handle} = require('../../packages/browser-agent-core/common/event-emitter/handle')
+const {Aggregate: PvtAggregate} = require('../../packages/browser-agent-core/features/page-view-timing/aggregate/index')
+
+const {agentIdentifier, aggregator} = setup()
 
 jil.browserTest('LCP event with CLS attribute', function (t) {
-  var handle = require('handle')
-  var harvest = require('../../agent/harvest')
-  var timingModule = require('../../agent/timings')
-  var drain = require('../../agent/drain')
+  const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
 
   // override harvest calls, so that no network calls are made
-  harvest.send = function() {
+  pvtAgg.scheduler.harvest.send = function() {
     return {}
   }
 
-  var mockLoader = {
-    info: {}
+  // prevent prepareHarvest from clearing timings
+  pvtAgg.prepareHarvest = function() {
+    return {}
   }
 
-  timingModule.init(mockLoader, {})
-
   // drain adds `timing` and `lcp` event listeners in the agent/timings module
-  drain('feature')
+  drain(agentIdentifier, 'feature')
 
-  handle('cls', [{ value: 1 }])
-  handle('lcp', [{ size: 1, startTime: 1 }])
-  handle('cls', [{ value: 2 }])
+  handle('cls', [{ value: 1 }], undefined, undefined, pvtAgg.ee)
+  handle('lcp', [{ size: 1, startTime: 1 }], undefined, undefined, pvtAgg.ee)
+  handle('cls', [{ value: 2 }], undefined, undefined, pvtAgg.ee)
 
   // invoke final harvest, which includes harvesting LCP
-  timingModule.finalHarvest()
+  pvtAgg.finalHarvest()
 
-  var timing = find(timingModule.timings, function(t) {
+  var timing = find(pvtAgg.timings, function(t) {
     return t.name === 'lcp'
   })
 

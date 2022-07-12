@@ -21,6 +21,7 @@ test('api', function (t) {
   t.equal(getRuntime(agentIdentifier).customTransaction, undefined)
   nr.setPageViewName('bar/baz')
   drain(agentIdentifier, 'api')
+  drain(agentIdentifier) // drains 'feature' bucket too
   t.equal(getRuntime(agentIdentifier).customTransaction, 'http://custom.transaction/bar/baz')
 
   setTimeout(() => {

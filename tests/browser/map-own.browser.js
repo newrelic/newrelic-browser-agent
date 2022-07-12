@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var mapOwn = require('../../map-own')
-var test = require('../../tools/jil/browser-test.js')
+import test from '../../tools/jil/browser-test'
+import { mapOwn } from '../../packages/browser-agent-core/common/util/map-own'
 
 test('map-own', function (t) {
   var obj = {a: 10}

@@ -32,11 +32,11 @@ testDriver.test('ignoring errors works', supported, function (t, browser, router
       message: 'report',
       stack: [{
         u: '<inline>',
-        l: 22
+        l: 23
       }, {
-        f: 'c',
+        f: 'u',
         u: '<inline>',
-        l: 12
+        l: 13
       }]
     }]
 

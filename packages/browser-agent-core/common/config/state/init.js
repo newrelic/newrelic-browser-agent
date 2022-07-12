@@ -3,7 +3,7 @@ import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { Configurable } from './configurable'
 
 const model = {
-  privacy: { cookies_enabled: undefined },
+  privacy: { cookies_enabled: true }, // *cli - per discussion, default should be true
   ajax: { deny_list: undefined, enabled: true },
   distributed_tracing: {
     enabled: undefined,
@@ -50,3 +50,6 @@ export function getConfigurationValue(id, path) {
   }
   return val
 }
+
+// TO DO: a setConfigurationValue equivalent may be nice so individual 
+//  properties can be tuned instead of reseting the whole model per call to `setConfiguration(agentIdentifier, {})`

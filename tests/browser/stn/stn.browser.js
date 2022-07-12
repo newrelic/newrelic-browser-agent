@@ -3,16 +3,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-let test = require('../../../tools/jil/browser-test.js')
-let drain = require('../../../agent/drain')
+const test = require('../../../tools/jil/browser-test.js')
+const {setup} = require('../utils/setup') 
 
-require('../../../feature/stn/instrument')
-require('../../../feature/xhr/instrument')
-require('../../../feature/xhr/aggregate')
-require('../../../feature/err/instrument')
-require('../../../feature/err/aggregate')
+const {Instrument: StnInstrument} = require('../../../packages/browser-agent-core/features/session-trace/instrument/index')
+const {Instrument: AjaxInstrument} = require('../../../packages/browser-agent-core/features/ajax/instrument/index')
+const {Aggregate: AjaxAggregate} = require('../../../packages/browser-agent-core/features/ajax/aggregate/index')
+const {Instrument: JsErrorsInstrument} = require('../../../packages/browser-agent-core/features/jserrors/instrument/index')
+const {Aggregate: JsErrorsAggregate} = require('../../../packages/browser-agent-core/features/jserrors/aggregate/index')
 
-drain('api')
+const {drain} = require('../../../packages/browser-agent-core/common/drain/drain')
+
+const {agentIdentifier, baseEE, aggregator} = setup()
+
+new StnInstrument(agentIdentifier)
+new AjaxInstrument(agentIdentifier)
+new AjaxAggregate(agentIdentifier, aggregator)
+new JsErrorsInstrument(agentIdentifier)
+new JsErrorsAggregate(agentIdentifier, aggregator)
+
+drain(agentIdentifier, 'api')
 
 let originalPath = window.location.pathname
 
@@ -32,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => null)
 window.addEventListener('load', () => null)
 
 function runTests () {
-  let ee = require('ee')
+  const ee = baseEE
 
   test('wait for trace node generation', function (t) {
     ee.emit('feat-err', [])
@@ -55,17 +65,22 @@ function runTests () {
   })
 
   test('session trace nodes', function (t) {
-    let stnAgg = require('../../../feature/stn/aggregate')
-    let timings = require('../../../agent/timings')
+    const {Aggregate: StnAggregate} = require('../../../packages/browser-agent-core/features/session-trace/aggregate/index')
+    const stnAgg = new StnAggregate(agentIdentifier, aggregator)
+    const {Aggregate: PvtAggregate} = require('../../../packages/browser-agent-core/features/page-view-timing/aggregate/index')
+    const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
+
     let fiVal = 30
     let fidVal = 8
 
-    timings.addTiming('load', 20)
-    timings.addTiming('fi', fiVal, {fid: fidVal})
+    pvtAgg.addTiming('load', 20)
+    pvtAgg.addTiming('fi', fiVal, {fid: fidVal})
 
     ee.emit('feat-stn', [])
-    drain('feature')
-    let payload = stnAgg._takeSTNs()
+    drain(agentIdentifier, 'feature')
+
+    const payload = stnAgg.takeSTNs()
+
     let res = payload.body.res
     let qs = payload.qs
 

@@ -3,17 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var test = require('../../tools/jil/browser-test.js')
-var agg = require('../../agent/aggregator')
-var stopwatch = require('../../agent/stopwatch')
+import test from '../../tools/jil/browser-test'
+import { setup } from './utils/setup'
+import * as stopwatch from '../../packages/browser-agent-core/common/timing/stopwatch'
+
+const { aggregator: agg, agentIdentifier } = setup();
 
 test('stopwatch', function (t) {
-  stopwatch.mark('a', 0)
-  stopwatch.mark('b', 100)
+  stopwatch.mark(agentIdentifier, 'a', 0)
+  stopwatch.mark(agentIdentifier, 'b', 100)
 
-  stopwatch.measure('first', 'a', 'b')
-  stopwatch.measure('second', 'a', 'd')
-  stopwatch.measure('third', 'c', 'b')
+  stopwatch.measure(agg, 'first', 'a', 'b')
+  stopwatch.measure(agg, 'second', 'a', 'd')
+  stopwatch.measure(agg, 'third', 'c', 'b')
 
   t.equal(agg.get('measures', 'first').params.value, 100, 'Able to measure marks')
   t.equal(agg.get('measures', 'second'), undefined, 'Missing second mark turns into undefined measure')

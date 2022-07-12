@@ -6,9 +6,12 @@
 const jil = require('jil')
 
 jil.browserTest('drain', function (t) {
-  let baseEE = require('ee')
-  let drain = require('../../agent/drain')
-  let register = require('../../agent/register-handler')
+  const {setup} = require('./utils/setup')
+  const {drain} = require('../../packages/browser-agent-core/common/drain/drain')
+
+  const {baseEE, agentIdentifier} = setup()
+
+  var {registerHandler: register} = require('../../packages/browser-agent-core/common/event-emitter/register-handler.js')
 
   let eventId = 0
   let bufferId = 0
@@ -55,7 +58,7 @@ jil.browserTest('drain', function (t) {
 
     t.equal(step++, 2, 'should be in right order')
 
-    drain(bufferName)
+    drain(agentIdentifier, bufferName)
 
     t.equal(step++, 4, 'should be in right order')
     t.end()
@@ -102,7 +105,7 @@ jil.browserTest('drain', function (t) {
     ee.emit(eventName, args, ctx)
     t.equal(step++, 2, 'should be in right order')
 
-    drain(bufferName)
+    drain(agentIdentifier, bufferName)
     t.equal(step++, 4, 'should be in right order')
     t.end()
   })
@@ -147,7 +150,7 @@ jil.browserTest('drain', function (t) {
       t.fail('should not be called')
     }, 'otherGroup', ee)
 
-    drain(bufferName)
+    drain(agentIdentifier, bufferName)
     ee.emit(eventName, args, ctx)
     t.equal(step++, 4, 'should be in right order')
 
@@ -197,7 +200,7 @@ jil.browserTest('drain', function (t) {
     ee.emit(otherEvent, args, ctx)
 
     t.equal(step++, 0, 'should be in right order')
-    drain(bufferName)
+    drain(agentIdentifier, bufferName)
     t.equal(step++, 4, 'should be in right order')
     t.end()
   })
@@ -234,7 +237,7 @@ jil.browserTest('drain', function (t) {
     ee.emit(eventName, args, ctx)
 
     t.equal(step++, 0, 'should be in right order')
-    drain(bufferName)
+    drain(agentIdentifier, bufferName)
     t.equal(step++, 3, 'should be in right order')
     t.end()
   })
@@ -249,7 +252,7 @@ jil.browserTest('drain', function (t) {
     ee.buffer([eventName], bufferName)
     ee.emit(eventName)
     t.equal(baseEE.backlog[bufferName].length, 1, 'should buffer events before drain')
-    drain(bufferName)
+    drain(agentIdentifier, bufferName)
     ee.buffer([eventName], bufferName)
     ee.emit(eventName)
     t.equal(baseEE.backlog[bufferName], null, 'should not buffer after drain')

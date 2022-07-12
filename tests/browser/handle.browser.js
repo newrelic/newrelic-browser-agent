@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var test = require('../../tools/jil/browser-test.js')
-var handle = require('handle')
-var registerHandler = require('../../agent/register-handler')
-var drain = require('../../agent/drain')
+const test = require('../../tools/jil/browser-test.js')
+const {handle, handleEE} = require('../../packages/browser-agent-core/common/event-emitter/handle')
+const {registerHandler} = require('../../packages/browser-agent-core/common/event-emitter/register-handler')
+const {drain} = require('../../packages/browser-agent-core/common/drain/drain')
 
 test('Handler', function (t) {
   var count = 0
-  var ctx = handle.ee.context()
+  var ctx = handleEE.context()
 
   t.plan(18)
   handle('asdf', [{a: 0}], ctx)
@@ -36,7 +36,7 @@ test('Handler', function (t) {
     count += 1
   })
   handle('many', [5, 4, 3, 3], ctx)
-  drain('feature')
+  drain(null, 'feature')
   registerHandler('noq', function (foo) {
     t.equal(this, ctx, 'should have right context')
     t.equal(foo, 'bar', count + ' handler added before any events')
@@ -46,7 +46,7 @@ test('Handler', function (t) {
   handle('noq', ['bar'], ctx, 'other')
   setTimeout(function () {
     handle('noq', ['bar'], ctx)
-    drain('other')
+    drain(null, 'other')
     t.end()
   }, 0)
 })

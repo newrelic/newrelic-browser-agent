@@ -12,6 +12,11 @@ let recordedSupportability = false
 export class Obfuscator extends SharedContext {
   constructor(parent) {
     super(parent) // gets any allowed properties from the parent and stores them in `sharedContext`
+
+    /* Note: we may need these lines from legacy code -- (when passing in an optional metrics Instrument instance as argument)
+    if (shouldObfuscate()) metrics.recordSupportability('Generic/Obfuscate/Detected')
+    if (shouldObfuscate() && !validateRules(getRules())) metrics.recordSupportability('Generic/Obfuscate/Invalid')
+    */
   }
 
   shouldObfuscate() {
@@ -36,6 +41,7 @@ export class Obfuscator extends SharedContext {
   }
 }
 
+// TO DO: this function should be inside the Obfuscator class since its context relates to agentID
 export function getRules(agentIdentifier) {
   var rules = []
   var configRules = getConfigurationValue(agentIdentifier, 'obfuscate') || []

@@ -32,7 +32,7 @@ testDriver.test('reporting errors from setInterval callbacks', supported, functi
         u: router.assetURL('js/set-interval-error.js').split('?')[0],
         l: 10
       }, {
-        f: 'c', u: '<inline>', l: 11
+        f: 'u', u: '<inline>', l: 12
       }]
     }]
 

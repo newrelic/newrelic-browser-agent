@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var test = require('../../tools/jil/browser-test.js')
-var encode = require('../../agent/encode')
+import test from '../../tools/jil/browser-test'
+import * as encode from '../../packages/browser-agent-core/common/url/encode'
 
 test('encode.qs', function (t) {
   t.equal(encode.qs('Asdf:, :, /@$;'), 'Asdf:,%20:,%20/@$;', 'Escapes and unescapes')

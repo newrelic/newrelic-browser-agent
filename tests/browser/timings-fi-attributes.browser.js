@@ -5,26 +5,28 @@
 
 const jil = require('jil')
 
+const {setup} = require('./utils/setup')
+const {drain} = require('../../packages/browser-agent-core/common/drain/drain')
+const {handle} = require('../../packages/browser-agent-core/common/event-emitter/handle')
+const {Aggregate: PvtAggregate} = require('../../packages/browser-agent-core/features/page-view-timing/aggregate/index')
+
+const {agentIdentifier, aggregator} = setup()
 
 jil.browserTest('sends expected attributes when available', function(t) {
-  var handle = require('handle')
-  var harvest = require('../../agent/harvest')
-  var timingModule = require('../../agent/timings')
-  var drain = require('../../agent/drain')
+  const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
 
   // override harvest calls, so that no network calls are made
-  harvest.send = function() {
+  pvtAgg.scheduler.harvest.send = function() {
     return {}
   }
 
-  var mockLoader = {
-    info: {}
+  // prevent prepareHarvest from clearing timings
+  pvtAgg.prepareHarvest = function() {
+    return {}
   }
 
-  timingModule.init(mockLoader)
-
   // drain adds `timing` event listener in the agent/timings module
-  drain('feature')
+  drain(agentIdentifier, 'feature')
 
   var firstInteraction = 1234
 
@@ -38,12 +40,12 @@ jil.browserTest('sends expected attributes when available', function(t) {
   }
 
   // simulate first interaction observed
-  handle('timing', ['fi', firstInteraction, attributes])
+  handle('timing', ['fi', firstInteraction, attributes], undefined, undefined, pvtAgg.ee)
 
-  t.equals(timingModule.timings.length, 1, 'there should be only 1 timing (firstInteraction)')
-  t.ok(timingModule.timings[0].name === 'fi', 'fi should be present')
+  t.equals(pvtAgg.timings.length, 1, 'there should be only 1 timing (firstInteraction)')
+  t.ok(pvtAgg.timings[0].name === 'fi', 'fi should be present')
 
-  const payload = timingModule.timings[0].attrs
+  const payload = pvtAgg.timings[0].attrs
   t.equal(payload.type, attributes.type, 'interactionType should be present')
   t.equal(payload.fid, attributes.fid, 'fid should be present')
   t.equal(payload['net-type'], attributes['net-type'], 'network type should be present')

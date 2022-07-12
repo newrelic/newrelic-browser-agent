@@ -372,4 +372,9 @@ features.es6 = new BrowserMatcher()
   .include('chrome', '>=67')
   .include('firefox', '>=63')
   .include('edge', '>=79')
+  
+  features.latestSmoke = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', 'latest')
+  .include('firefox', 'latest')
 

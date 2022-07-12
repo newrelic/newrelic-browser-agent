@@ -13,8 +13,8 @@ import { Aggregate as MetricsAggreg } from '../../packages/browser-agent-core/fe
 
 const { aggregator: agg, agentIdentifier, nr } = setup();
 // api loads registers several event listeners, but does not have any exports
-new MetricsInstrum(agentIdentifier);  // registers 'record-custom' which handles 'storeEventMetrics'
 initializeAPI(agentIdentifier);   // maps finished() which handles 'record-custom'
+new MetricsInstrum(agentIdentifier);  // registers 'record-custom' which handles 'storeEventMetrics'
 new MetricsAggreg(agentIdentifier, agg); // registers 'storeEventMetrics'
 
 test('api', function (t) {

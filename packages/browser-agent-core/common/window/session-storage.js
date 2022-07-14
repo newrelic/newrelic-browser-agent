@@ -7,7 +7,7 @@
  */
 import { generateRandomHexString } from '../ids/unique-id'
 
-export { getCurrentSessionId };
+export { getCurrentSessionIdOrMakeNew };
 
 const ss = window.sessionStorage;
 const SESS_ID = Symbol("session id").toString(); // prevents potential key collisions in session storage
@@ -15,9 +15,10 @@ const SESS_ID = Symbol("session id").toString(); // prevents potential key colli
 /**
  * @returns {string} This tab|window's session identifier, or a new ID if not found in storage
  */
-function getCurrentSessionId() {
+function getCurrentSessionIdOrMakeNew() {
   let sessionId;
-  if ((sessionId = ss.getItem(SESS_ID)) === null) {  // it's possible that the ID is (was previously set to) 0
+  if ((sessionId = ss.getItem(SESS_ID)) === null) {
+    // Generate a new one if storage is empty (no previous ID was created or currently exists)
     sessionId = generateRandomHexString(16);
     ss.setItem(SESS_ID, sessionId);
   }

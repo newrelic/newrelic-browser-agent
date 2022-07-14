@@ -3,7 +3,7 @@ import { getLastTimestamp } from '../../timing/now'
 import * as userAgent from '../../util/user-agent'
 import { Configurable } from './configurable'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
-import { getCurrentSessionId } from '../../window/session-storage'
+import { getCurrentSessionIdOrMakeNew } from '../../window/session-storage'
 import { getConfigurationValue } from '../config'
 
 var XHR = window.XMLHttpRequest
@@ -19,7 +19,7 @@ const model = agentId => { return {
   origin: '' + window.location,
   ptid: undefined,
   releaseIds: {},
-  sessionId: getConfigurationValue(agentId, 'privacy.cookies_enabled') === true ? getCurrentSessionId() : '0',
+  sessionId: getConfigurationValue(agentId, 'privacy.cookies_enabled') === true ? getCurrentSessionIdOrMakeNew() : '0',
   xhrWrappable: XHR && XHR_PROTO && XHR_PROTO['addEventListener'] && !/CriOS/.test(navigator.userAgent),
   userAgent
 }}

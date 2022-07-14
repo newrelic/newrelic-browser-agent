@@ -191,6 +191,8 @@ class AgentInjectorTransform extends AssetTransform {
       const packagePaths = htmlPackageTags.map(x => x.replace(/[{}]/g, ''))
       const packageFiles = await this.getBuiltPackages(packagePaths)
 
+      const polyfills = rawContent.includes('{polyfills}') && fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`)
+
       this.getLoaderContent(
         loaderName,
         rawContent.includes("{modular-loader}") ? this.modularBuildDir : this.buildDir,
@@ -221,6 +223,7 @@ class AgentInjectorTransform extends AssetTransform {
             .replace('{config}', tagify(disableSsl + configContent))
             .replace('{init}', tagify(disableSsl + initContent))
             .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
+            .replace('{polyfills}', `<script type="text/javascript">${polyfills}</script>`)
 
           if (!!htmlPackageTags.length && !!packageFiles.length) {
             packageFiles.forEach(pkg => {
@@ -257,16 +260,29 @@ class BrowserifyTransform extends AssetTransform {
     if (result) return callback(null, result)
 
     browserify(assetPath)
-      .transform("babelify", {
-        presets: ["@babel/preset-env",],
+    .transform("babelify", {
+        presets: [
+          ["@babel/preset-env", {
+            useBuiltIns: 'entry',
+            corejs: 3,
+            loose: true,
+            targets: {
+              "chrome": "73",
+              "edge": "14",
+              "safari": "11",
+              "firefox": "52",
+              "android": "6",
+              "ios": "10.3"
+            }
+          }]
+        ],
         plugins: ["@babel/plugin-syntax-dynamic-import", '@babel/plugin-transform-modules-commonjs'],
         global: true
       })
       .transform(preprocessify())
       .bundle((err, buf) => {
-        if (err) console.log('bundle err!', assetPath)
         if (err) return callback(err)
-        
+
         let content = buf.toString()
 
         if (this.config.cache) this.browserifyCache[assetPath] = content

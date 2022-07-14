@@ -147,7 +147,7 @@ function byVersion (left, right) {
 
 function cleanVersion (version) {
   // assign to high number, so that it is high in the list when sorted (i.e. beta is latest)
-  if (!version || version === 'latest') version = '9999'
+  if (!version || version.includes('latest')) version = '9999'
   if (!version || version === 'beta') version = '10000'
   version = version + '.0.0'
   return version.split('.', 3).join('.')

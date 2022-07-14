@@ -15,8 +15,7 @@ module.exports = {
     'nr-loader-full.min': path.resolve(__dirname, './agent-loader/pro.js'),
     'nr-loader-spa': path.resolve(__dirname, './agent-loader/spa.js'),
     'nr-loader-spa.min': path.resolve(__dirname, './agent-loader/spa.js'),
-    ...(isProd ? {'nr-polyfills': path.resolve(__dirname, './agent-loader/polyfills.js')} : null),
-    ...(isProd ? {'nr-polyfills.min': path.resolve(__dirname, './agent-loader/polyfills.js')} : null),
+    'nr-polyfills.min': path.resolve(__dirname, './agent-loader/polyfills.js')
   },
   output: {
     filename: '[name].js',
@@ -73,12 +72,12 @@ module.exports = {
               ['@babel/preset-env', {
                 useBuiltIns: 'entry',
                 corejs: 3,
+                loose: true,
                 targets: {
-                  "chrome": "49",
+                  "chrome": "73",
                   "edge": "14",
-                  "ie": "11",
-                  "safari": "8",
-                  "firefox": "5",
+                  "safari": "11",
+                  "firefox": "52",
                   "android": "6",
                   "ios": "10.3"
                 }

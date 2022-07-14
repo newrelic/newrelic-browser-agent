@@ -21,11 +21,11 @@ var ctxId = 'nr@context'
 const wrapped = {}
 
 export function wrapFetch(sharedEE){
+  const ee = scopedEE(sharedEE)
   if (!(Req && Res && window.fetch)) {
-    return
+    return ee
   }
 
-  const ee = scopedEE(sharedEE)
   if (wrapped[ee.debugId]) return ee
   wrapped[ee.debugId] = true
   

@@ -10,7 +10,7 @@ import { generateRandomHexString } from '../ids/unique-id'
 export { getCurrentSessionIdOrMakeNew };
 
 const ss = window.sessionStorage;
-const SESS_ID = Symbol("session id").toString(); // prevents potential key collisions in session storage
+const SESS_ID = "NRBA_SESSION_ID"; // prevents potential key collisions in session storage
 
 /**
  * @returns {string} This tab|window's session identifier, or a new ID if not found in storage

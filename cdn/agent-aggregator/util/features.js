@@ -75,3 +75,6 @@ function initializeStagedFeatures(passes = 0) {
     return aggregators
   }
 }
+
+// These are exposed for testing purposes only
+export {stageFeatures, features as buildToFeatsList, aggregators as aggChecklist};

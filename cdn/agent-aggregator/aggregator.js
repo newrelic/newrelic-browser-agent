@@ -15,7 +15,7 @@ export function aggregator(build) {
   addToNREUM('setToken', (flags) => activateFeatures(flags, agentIdentifier))
 
   // import relevant feature aggregators
-  if (autorun) initializeFeatures()
+  if (autorun) return initializeFeatures();
 
   async function initializeFeatures() {
     const features = await importFeatures(build)
@@ -25,6 +25,5 @@ export function aggregator(build) {
     // and activatedFeatures will drain all the buffers
     addToNREUM('activatedFeatures', activatedFeatures)
   }
-
 }
 

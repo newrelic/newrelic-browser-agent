@@ -176,6 +176,20 @@ class RouterHandle {
     })
   }
 
+  async expectSpecificEvents({
+    appID, 
+    condition=(e) => e.type === 'ajax', 
+    expecter='expectAjaxEvents', 
+    retries=5
+  }){
+    if (retries <= 0) return null
+    const {body, query} = await this[expecter](appID)
+    const ajaxEvents = querypack.decode(body && body.length ? body : query.e)
+    let matches = ajaxEvents.filter(condition)
+    if (!matches.length) matches = this.expectSpecificEvents({expecter, condition, retries: retries - 1})
+    return matches
+  }  
+
   expectErrors(appID) {
     // errors harvest at 60s
     return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID)

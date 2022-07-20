@@ -5,7 +5,7 @@
 
 const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
-const {getErrorsFromResponse} = require('../err/assertion-helpers')
+const { getErrorsFromResponse } = require('../err/assertion-helpers')
 
 // browsers without addEventListener do not support SPA
 // browsers without Error stack are not captured (IE < 10)
@@ -61,7 +61,7 @@ testDriver.test('error on the initial page load', supported, function (t, browse
     })
     .catch(fail)
 
-  function fail (err) {
+  function fail(err) {
     t.error(err)
     t.end()
   }
@@ -114,6 +114,7 @@ testDriver.test('error in xhr', supported, function (t, browser, router) {
 
       let { body, query } = eventData
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      console.log("interactionTree", interactionTree)
       var interactionId = interactionTree.id
       t.ok(interactionId != null, 'interaction id should not be null')
       t.ok(interactionTree.nodeId != null, 'interaction should have nodeId attribute')
@@ -335,22 +336,28 @@ testDriver.test('same error in multiple interactions', supported, function (t, b
   }
 })
 
-function waitForPageLoadAnInitialCalls (browser, router, urlPath) {
+function waitForPageLoadAnInitialCalls(browser, router, urlPath) {
   return Promise.all([
     router.expectRum(),
     router.expectEvents(),
-    browser.safeGet(router.assetURL(urlPath, { loader: 'spa', init: {metrics: {enabled: false}} }))
+    browser.safeGet(router.assetURL(urlPath, {
+      loader: 'spa',
+      init: {
+        metrics: { enabled: false },
+        session_trace: { enabled: false }
+      }
+    }))
   ])
 }
 
-function clickPageAndWaitForEventsAndErrors (t, browser, router) {
+function clickPageAndWaitForEventsAndErrors(t, browser, router) {
   var useRedirect = browser.hasFeature('reliableFinalHarvest')
   return clickPageAndWaitForEvents(t, browser, router)
     .then(eventData => {
       if (useRedirect) {
         return Promise.all([
-        // leave page to force final harvest (faster than waiting 60s for errors
-        // to be harvested)
+          // leave page to force final harvest (faster than waiting 60s for errors
+          // to be harvested)
           leavePage(browser, router),
           router.expectErrors()
         ])
@@ -366,7 +373,7 @@ function clickPageAndWaitForEventsAndErrors (t, browser, router) {
     })
 }
 
-function clickPageAndWaitForEvents (t, browser, router) {
+function clickPageAndWaitForEvents(t, browser, router) {
   return Promise.all([
     browser.elementByCssSelector('body').click(),
     router.expectEvents()
@@ -379,7 +386,7 @@ function clickPageAndWaitForEvents (t, browser, router) {
 // Click page (which triggers interaction to test), and then immediately load
 // a different page, which triggers final harvest.
 // This way the test is faster than waiting 60s for errors to be harvested.
-function clickAndRedirect (browser, router, wait) {
+function clickAndRedirect(browser, router, wait) {
   return browser.elementByCssSelector('body').click()
     .then(function () {
       if (wait) {
@@ -391,7 +398,7 @@ function clickAndRedirect (browser, router, wait) {
       }
     })
 
-  function sleep (duration) {
+  function sleep(duration) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         resolve()
@@ -400,6 +407,6 @@ function clickAndRedirect (browser, router, wait) {
   }
 }
 
-function leavePage (browser, router) {
+function leavePage(browser, router) {
   return browser.safeGet(router.assetURL('_blank.html'))
 }

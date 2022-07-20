@@ -10,11 +10,17 @@ let notSafariWithSeleniumBug = testDriver.Matcher.withFeature('notSafariWithSele
 let supported = testDriver.Matcher.withFeature('hasInnerText')
   .and(notSafariWithSeleniumBug)
 
+const init = {
+  ajax: {
+    deny_list: ['bam-test-1.nr-local.net']
+  }
+}
+
 testDriver.test('captures innerText', supported, function (t, browser, router) {
   t.plan(5)
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa' }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
@@ -55,7 +61,7 @@ testDriver.test('captures value', supported, function (t, browser, router) {
   t.plan(5)
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa' }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
@@ -96,7 +102,7 @@ testDriver.test('captures title', supported, function (t, browser, router) {
   t.plan(5)
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa' }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
@@ -137,7 +143,7 @@ testDriver.test('does not capture body text', supported, function (t, browser, r
   t.plan(4)
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa' }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {

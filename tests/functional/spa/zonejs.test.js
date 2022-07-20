@@ -9,13 +9,19 @@ const querypack = require('@newrelic/nr-querypack')
 
 let supported = testDriver.Matcher.withFeature('wrappableAddEventListener')
 
+const init = {
+  ajax: {
+    deny_list: ['bam-test-1.nr-local.net']
+  }
+}
+
 testDriver.test('capturing SPA interactions with zone.js', supported, function (t, browser, router) {
   t.plan(7)
   let testStartTime = now()
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/zonejs.html', { loader: 'spa', init: { ajax: {deny_list: ['nr-local.net']}} }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/zonejs.html', { loader: 'spa', init }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {

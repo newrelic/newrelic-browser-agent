@@ -16,6 +16,7 @@ testDriver.test('RUM navTiming', supported, function (t, browser, router) {
 
   Promise.all([rumPromise, loadPromise])
     .then(([{query}]) => {
+      console.log("query", query)
       try {
         let timing = JSON.parse(query.perf).timing
         t.ok(typeof timing.le === 'number', 'navTiming')

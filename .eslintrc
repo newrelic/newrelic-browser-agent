@@ -32,6 +32,7 @@
     "no-unused-vars": 0,
     "no-warning-comments": 0,
     "no-prototype-builtins": "off",
-    "getter-return": "warn"
+    "getter-return": "warn",
+    "comma-dangle": "error"
   }
 }

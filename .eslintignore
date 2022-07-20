@@ -10,6 +10,5 @@ babel.config.js
 tools/test-builds/*
 tests/assets/test-builds/**/*.js
 tests/*
-cdn/*
 packages/browser-agent-core/cjs/*
 packages/builder.js

@@ -61,6 +61,7 @@ InteractionNodePrototype.cancel = function cancel() {
 
 InteractionNodePrototype.finish = function finish (timestamp) {
   var node = this
+  console.log("interation-node finish!", this.id)
   if (node.end) return
   node.end = timestamp
   var parent = node.parent
@@ -71,4 +72,7 @@ InteractionNodePrototype.finish = function finish (timestamp) {
   var interaction = this.interaction
   interaction.remaining--
   interaction.lastFinish = timestamp
+
+  interaction.checkFinish()
+  console.log("done!", node)
 }

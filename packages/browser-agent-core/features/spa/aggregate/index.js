@@ -67,7 +67,7 @@ export class Aggregate extends FeatureBase {
 
     this.serializer = new Serializer(this)
 
-    const {state, serializer} = this
+    const { state, serializer } = this
 
     const baseEE = ee.get(agentIdentifier) // <-- parent baseEE
     const mutationEE = baseEE.get('mutation')
@@ -126,6 +126,7 @@ export class Aggregate extends FeatureBase {
       state.currentNode = state.initialPageLoad.root // hint
       // ensure that checkFinish calls are safe during initialPageLoad
       state.initialPageLoad[REMAINING]++
+      // console.log("FEAT-SPA INCREASE")
 
       register(FN_START, callbackStart, undefined, baseEE)
       register(CB_START, callbackStart, undefined, promiseEE)
@@ -150,10 +151,14 @@ export class Aggregate extends FeatureBase {
         state.timerBudget = MAX_TIMER_BUDGET
       }
 
+      // register(FN_END, () => // console.log("FN_END"), undefined, baseEE)
+      // register('cb-end', () => // console.log("cb-end"), undefined, promiseEE)
       register(FN_END, callbackEnd, undefined, baseEE)
       register('cb-end', callbackEnd, undefined, promiseEE)
 
+
       function callbackEnd() {
+        // console.log("callbackEnd")
         state.depth--
         var totalTime = this.jsTime || 0
         var exclusiveTime = totalTime - state.childTime
@@ -168,12 +173,14 @@ export class Aggregate extends FeatureBase {
         }
 
         this.jsTime = state.currentNode ? 0 : exclusiveTime
+        // console.log("setCurrentNode() to ", this.prevNode)
         setCurrentNode(this.prevNode)
         this.prevNode = null
         state.timerBudget = MAX_TIMER_BUDGET
       }
 
       register(FN_START, function (args, eventSource) {
+        // console.log("FN_START... args.... eventSource", args, eventSource)
         var ev = args[0]
         var evName = ev.type
         var eventNode = ev.__nrNode
@@ -185,6 +192,7 @@ export class Aggregate extends FeatureBase {
           if (state.initialPageLoad) {
             eventNode = state.initialPageLoad.root
             state.initialPageLoad[REMAINING]--
+            // console.log("FN START DECREASE (initialPageLoad)", state.initialPageLoad[REMAINING])
             originalSetTimeout(function () {
               INTERACTION_EVENTS.push('popstate')
             })
@@ -217,6 +225,8 @@ export class Aggregate extends FeatureBase {
                 state.currentNode.attrs.custom['actionText'] = value
               }
             }
+
+            // console.log("currentNode!", state.currentNode)
             // @ifdef SPA_DEBUG
             console.timeStamp('start interaction, ID=' + state.currentNode.id + ', evt=' + evName)
             // @endif
@@ -238,6 +248,7 @@ export class Aggregate extends FeatureBase {
         if (!state.currentNode || (state.timerBudget - this.timerDuration) < 0) return
         if (args && !(args[0] instanceof Function)) return
         state.currentNode[INTERACTION][REMAINING]++
+        // console.log("setTimeout-end INCREASE (currentNode Interaction)", state.currentNode[INTERACTION][REMAINING])
         this.timerId = timerId
         state.timerMap[timerId] = state.currentNode
         this.timerBudget = state.timerBudget - 50
@@ -249,6 +260,7 @@ export class Aggregate extends FeatureBase {
         if (node) {
           var interaction = node[INTERACTION]
           interaction[REMAINING]--
+          // console.log("clearTimeout-start DECREASE (state.timerMap interaction)", interaction[REMAINING])
           interaction.checkFinish(state.lastSeenUrl, state.lastSeenRouteName)
           delete state.timerMap[timerId]
         }
@@ -258,10 +270,12 @@ export class Aggregate extends FeatureBase {
         state.timerBudget = this.timerBudget || MAX_TIMER_BUDGET
         var id = this.timerId
         var node = state.timerMap[id]
+        // console.log("TIMER EE ! fn-start (setCurrentNode) --> node: ",)
         setCurrentNode(node)
         delete state.timerMap[id]
         if (node) {
           node[INTERACTION][REMAINING]--
+          // console.log("FN_START DECREASE (state.timerMap interaction)", node[INTERACTION][REMAINING])
         }
       }, undefined, timerEE)
 
@@ -299,6 +313,7 @@ export class Aggregate extends FeatureBase {
           node.dt = this.dt
           node.jsEnd = node.start = this.startTime
           node[INTERACTION][REMAINING]++
+          // console.log("SEND-XHR-START INCREASE (this[SPA_NODE])", node[INTERACTION][REMAINING])
         }
       }, undefined, xhrEE)
 
@@ -315,6 +330,7 @@ export class Aggregate extends FeatureBase {
           attrs.metrics = this.metrics
 
           node.finish(this.endTime)
+          if (!!this.currentNode && !!this.currentNode.interaction) this.currentNode.interaction.checkFinish(state.lastSeenUrl, state.lastSeenRouteName)
         }
       }, undefined, baseEE)
 
@@ -388,6 +404,7 @@ export class Aggregate extends FeatureBase {
         if (state.currentNode) {
           this[SPA_NODE] = state.currentNode
           state.currentNode[INTERACTION][REMAINING]++
+          // console.log("FETCH_BODY START INCREASE (this[SPA_NODE] || state.currentNode)", state.currentNode[INTERACTION][REMAINING])
         }
       }, undefined, fetchEE)
 
@@ -395,11 +412,13 @@ export class Aggregate extends FeatureBase {
         var node = this[SPA_NODE]
         if (node) {
           node[INTERACTION][REMAINING]--
+          // console.log("FETCH_BODY END DECREASE (this[SPA_NODE])", node[INTERACTION][REMAINING])
         }
       }, undefined, fetchEE)
 
       register(FETCH_DONE, function (err, res) {
         var node = this[SPA_NODE]
+        // console.log(FETCH_DONE, node && node.id)
         if (node) {
           if (err) {
             node.cancel()
@@ -459,6 +478,7 @@ export class Aggregate extends FeatureBase {
         if (isScript) {
           // increase remaining count to keep the interaction open
           interaction[REMAINING]++
+          // console.log("jsonpEE isScript INCREASE (state.currentNode)", interaction[REMAINING])
           el.addEventListener('load', onload, eventListenerOpts(false))
           el.addEventListener('error', onerror, eventListenerOpts(false))
         }
@@ -466,6 +486,7 @@ export class Aggregate extends FeatureBase {
         function onload() {
           // decrease remaining to allow interaction to finish
           interaction[REMAINING]--
+          // console.log("jsonp onload DECREASE (currentNode)", interaction[REMAINING])
 
           // checkFinish is what initiates closing interaction, but is only called
           // when setCurrentNode is called. Since we are not restoring a node here,
@@ -480,6 +501,7 @@ export class Aggregate extends FeatureBase {
 
         function onerror() {
           interaction[REMAINING]--
+          // console.log("jsonp onerror DECREASE (currentNode)", interaction[REMAINING])
           interaction.checkFinish(state.lastSeenUrl, state.lastSeenRouteName)
         }
       })
@@ -498,12 +520,12 @@ export class Aggregate extends FeatureBase {
         setCurrentNode(ctx[SPA_NODE])
       }, undefined, promiseEE)
 
-      function getOrSetIxn(t){
-        console.log("ixn is -- ", state.currentNode ? state.currentNode[INTERACTION] : new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier))
+      function getOrSetIxn(t) {
+        // console.log("ixn is -- ", state.currentNode ? state.currentNode[INTERACTION] : new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier))
         return state.currentNode ? state.currentNode[INTERACTION] : new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
       }
 
-      register(INTERACTION_API + 'get',  function(t) {
+      register(INTERACTION_API + 'get', function (t) {
         var interaction = this.ixn = state.currentNode ? state.currentNode[INTERACTION] : new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
         if (!state.currentNode) {
           interaction.checkFinish(state.lastSeenUrl, state.lastSeenRouteName)
@@ -549,6 +571,8 @@ export class Aggregate extends FeatureBase {
         var ctx = baseEE.context(store)
         if (!name) {
           ctx.inc = ++interaction[REMAINING]
+
+          // console.log("interaction_api INCREASE (this.ixn)", interaction[REMAINING])
           return (ctx[SPA_NODE] = parent)
         }
         ctx[SPA_NODE] = parent.child('customTracer', timestamp, name)
@@ -565,6 +589,7 @@ export class Aggregate extends FeatureBase {
         this.isTraced = true
         if (inc) {
           interaction[REMAINING]--
+          // console.log("tracerDone DECREASE (this[SPA_NODE])", interaction[REMAINING])
         } else if (node) {
           node.finish(timestamp)
         }
@@ -609,6 +634,7 @@ export class Aggregate extends FeatureBase {
     function setCurrentNode(newNode) {
       if (!state.pageLoaded && !newNode && state.initialPageLoad) newNode = state.initialPageLoad.root
       if (state.currentNode) {
+        // console.log("setCurrentNode was called.... check finish!")
         state.currentNode[INTERACTION].checkFinish(state.lastSeenUrl, state.lastSeenRouteName)
       }
 
@@ -617,6 +643,7 @@ export class Aggregate extends FeatureBase {
     }
 
     function onInteractionFinished(interaction) {
+      // console.log("!!! ON INTERACTION FINISHED! !!!")
       if (interaction === state.initialPageLoad) state.initialPageLoad = null
 
       var root = interaction.root

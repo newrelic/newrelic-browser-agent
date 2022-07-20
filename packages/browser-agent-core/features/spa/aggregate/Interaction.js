@@ -45,6 +45,7 @@ var InteractionPrototype = Interaction.prototype
 
 InteractionPrototype.checkFinish = function checkFinish(url, routeName) {
   var interaction = this
+  console.log("check the finish for id:", interaction.id)
  
   if (interaction.remaining) {
     interaction._resetFinishCheck()
@@ -88,6 +89,7 @@ InteractionPrototype._resetFinishCheck = function _resetFinishCheck() {
 
 // serialize report and remove nodes from map
 InteractionPrototype.finish = function finishInteraction() {
+  console.log("inside Interaction.finish (checkFinish)")
   var interaction = this
   var root = interaction.root
   if (root.end !== null) return

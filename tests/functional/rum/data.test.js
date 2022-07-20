@@ -27,6 +27,7 @@ testDriver.test('rum data', withTls, function (t, browser, router) {
   let loadPromise = browser.get(router.assetURL('rum-data.html', {config}))
 
   Promise.all([rumPromise, loadPromise]).then(([{query}]) => {
+    console.log("query", query)
     t.equal(+query.ap, 382, 'Application time')
     t.equal(+query.qt, 837, 'Queue time')
     t.ok(+query.fe >= +query.dc, 'Front end time')
@@ -83,6 +84,7 @@ testDriver.test('rum data using loader_config data', withTls, function (t, brows
   let loadPromise = browser.get(router.assetURL('rum-data.html', {config, injectUpdatedLoaderConfig: true}))
 
   Promise.all([rumPromise, loadPromise]).then(([{query}]) => {
+    console.log("query", query)
     t.equal(+query.ap, 382, 'Application time')
     t.equal(+query.qt, 837, 'Queue time')
     t.ok(+query.fe >= +query.dc, 'Front end time')

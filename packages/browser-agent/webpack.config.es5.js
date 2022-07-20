@@ -30,7 +30,7 @@ module.exports = {
       name: 'NRBA',
       type: 'umd'
     },
-    chunkFormat: 'module',
+    chunkFormat: 'module'
   },
 
   plugins: [

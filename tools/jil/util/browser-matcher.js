@@ -275,12 +275,14 @@ features.pushstate = new BrowserMatcher()
 features.firstPaint = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=60')
+  .include('android')
 
 features.firstContentfulPaint = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=60')
   .include('firefox', '>=84')
   .include('ios', '>=14.5')
+  .include('android')
 
 features.largestContentfulPaint = new BrowserMatcher()
   .exclude('*')
@@ -333,6 +335,7 @@ features.originOnlyReferer = new BrowserMatcher()
   .include('chrome', '>=89')
   .include('firefox', '>=87')
   .include('ios', '>=10.2')
+  .include('android')
 
 features.passiveSupported = features.addEventListener
   .exclude('*')
@@ -340,7 +343,7 @@ features.passiveSupported = features.addEventListener
   .include('firefox', '>48')
   .include('chrome', '>50')
   .include('safari', '>9.3')
-  .include('android', '>=93')
+  .include('android')
   .include('ios', '>=10')
 
 features.frameworks = new BrowserMatcher()

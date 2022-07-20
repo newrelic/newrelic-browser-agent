@@ -15,7 +15,8 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/xhr.html', { loader: 'spa' }))
+  const asset = router.assetURL('spa/xhr.html', { loader: 'spa', init: {session_trace: {enabled: false} }} )
+  let loadPromise = browser.safeGet(asset)
 
   rumPromise.then(({query}) => {
     t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa')
@@ -85,7 +86,7 @@ testDriver.test('capturing SPA interactions using loader_config data', supported
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/xhr.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/xhr.html', { loader: 'spa', injectUpdatedLoaderConfig: true, init: {session_trace: {enabled: false}} }))
 
   rumPromise.then(({query}) => {
     t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa')

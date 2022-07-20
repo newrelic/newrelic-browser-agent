@@ -60,6 +60,7 @@
     "babelify": "^10.0.0",
     "browserify": "^17.0.0",
     "bundle-collapser": "^1.2.1",
+    "create-polyfill-service-url": "^2.2.6",
     "eslint": "8.8",
     "eslint-plugin-import": "^2.26.0",
     "glob": "^7.0.5",

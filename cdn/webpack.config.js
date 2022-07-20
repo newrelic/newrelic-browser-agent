@@ -9,7 +9,7 @@ const isProd = process.env.NODE_ENV === 'production'
 
 module.exports = {
   entry: {
-    'nr-loader-rum': path.resolve(__dirname, './agent-loader/lite.js'),
+    'nr-loader-rum': [path.resolve(__dirname, './agent-loader/lite.js')],
     'nr-loader-rum.min': path.resolve(__dirname, './agent-loader/lite.js'),
     'nr-loader-full': path.resolve(__dirname, './agent-loader/pro.js'),
     'nr-loader-full.min': path.resolve(__dirname, './agent-loader/pro.js'),
@@ -71,17 +71,17 @@ module.exports = {
             presets: [
               ['@babel/preset-env', {
                 useBuiltIns: 'entry',
-                corejs: 3,
+                corejs: {version: 3.23, proposals: true},
                 loose: true,
                 targets: {
-                  "chrome": "73",
-                  "edge": "14",
+                  "chrome": "60",
+                  "edge": "79",
                   "safari": "11",
-                  "firefox": "52",
-                  "android": "6",
-                  "ios": "10.3"
+                  "firefox": "55",
+                  "ios": "10.3",
+                  "ie": "11"
                 }
-              }],
+              }]
             ]
           }
         }

@@ -14,8 +14,18 @@ const jsonp = 'NREUM.setToken'
 export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator)
-    this.getScheme = () => getConfigurationValue(this.agentIdentifier, 'ssl') === false ? 'http' : 'https'
+    // the window should have already loaded by the time this class is instanced, however
+    // some onWindowLoad listeners in other features are required to have fired before `sendRum()` 
+    // can successfully gather timings in older browsers (mark/measure, window.performance).
+    // This ensures that other timing events will have finished executing by doing this
+    setTimeout(() => this.sendRum(), 0)
+  }
 
+  getScheme() { 
+    return getConfigurationValue(this.agentIdentifier, 'ssl') === false ? 'http' : 'https' 
+  }
+
+  sendRum() {
     const info = getInfo(this.agentIdentifier)
     if (!info.beacon) return
     if (info.queueTime) this.aggregator.store('measures', 'qt', { value: info.queueTime })
@@ -24,6 +34,7 @@ export class Aggregate extends FeatureBase {
     // some time in the past some code will have called stopwatch.mark('starttime', Date.now())
     // calling measure like this will create a metric that measures the time differential between
     // the two marks.
+    console.log("measure!")
     measure(this.aggregator, 'be', 'starttime', 'firstbyte')
     measure(this.aggregator, 'fe', 'firstbyte', 'onload')
     measure(this.aggregator, 'dc', 'firstbyte', 'domContent')
@@ -50,9 +61,11 @@ export class Aggregate extends FeatureBase {
     chunksForQueryString.push(param('us', info.user))
     chunksForQueryString.push(param('ac', info.account))
     chunksForQueryString.push(param('pr', info.product))
-    chunksForQueryString.push(param('af', Object.keys(agentRuntime.features).join(',') ))
+    chunksForQueryString.push(param('af', Object.keys(agentRuntime.features).join(',')))
 
     if (window.performance && typeof (window.performance.timing) !== 'undefined') {
+      console.log("loadEventEnd....", window.performance.timing.loadEventEnd)
+      setTimeout(() => console.log("loadEventEnd.... (setTimeout)", window.performance.timing.loadEventEnd), 1)
       var navTimingApiData = ({
         timing: addPT(window.performance.timing, {}),
         navigation: addPN(window.performance.navigation, {})

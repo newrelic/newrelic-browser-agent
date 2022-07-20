@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 // polyfills
-import 'core-js/stable/promise'
-import 'core-js/stable/array/includes'
-import 'core-js/stable/object/assign'
-import 'core-js/stable/object/entries'
+import 'core-js/actual/promise'
+import 'core-js/actual/array/includes'
+import 'core-js/actual/object/assign'
+import 'core-js/actual/object/entries'
 // cdn specific utility files
 import agentIdentifier from '../shared/agentIdentifier'
 import { stageAggregator } from './utils/importAggregator'

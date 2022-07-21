@@ -14,11 +14,7 @@ const jsonp = 'NREUM.setToken'
 export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator)
-    // the window should have already loaded by the time this class is instanced, however
-    // some onWindowLoad listeners in other features are required to have fired before `sendRum()` 
-    // can successfully gather timings in older browsers (mark/measure, window.performance).
-    // This ensures that other timing events will have finished executing by doing this
-    setTimeout(() => this.sendRum(), 0)
+    this.sendRum()
   }
 
   getScheme() { 
@@ -64,8 +60,6 @@ export class Aggregate extends FeatureBase {
     chunksForQueryString.push(param('af', Object.keys(agentRuntime.features).join(',')))
 
     if (window.performance && typeof (window.performance.timing) !== 'undefined') {
-      console.log("loadEventEnd....", window.performance.timing.loadEventEnd)
-      setTimeout(() => console.log("loadEventEnd.... (setTimeout)", window.performance.timing.loadEventEnd), 1)
       var navTimingApiData = ({
         timing: addPT(window.performance.timing, {}),
         navigation: addPN(window.performance.navigation, {})

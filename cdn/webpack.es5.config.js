@@ -9,13 +9,13 @@ const isProd = process.env.NODE_ENV === 'production'
 
 module.exports = {
   entry: {
-    'nr-loader-rum': [path.resolve(__dirname, './agent-loader/lite.js')],
-    'nr-loader-rum.min': path.resolve(__dirname, './agent-loader/lite.js'),
-    'nr-loader-full': path.resolve(__dirname, './agent-loader/pro.js'),
-    'nr-loader-full.min': path.resolve(__dirname, './agent-loader/pro.js'),
-    'nr-loader-spa': path.resolve(__dirname, './agent-loader/spa.js'),
-    'nr-loader-spa.min': path.resolve(__dirname, './agent-loader/spa.js'),
-    'nr-polyfills.min': path.resolve(__dirname, './agent-loader/polyfills.js')
+    'nr-loader-rum.es5': [path.resolve(__dirname, './agent-loader/lite.js')],
+    'nr-loader-rum.es5.min': path.resolve(__dirname, './agent-loader/lite.js'),
+    'nr-loader-full.es5': path.resolve(__dirname, './agent-loader/pro.js'),
+    'nr-loader-full.es5.min': path.resolve(__dirname, './agent-loader/pro.js'),
+    'nr-loader-spa.es5': path.resolve(__dirname, './agent-loader/spa.js'),
+    'nr-loader-spa.es5.min': path.resolve(__dirname, './agent-loader/spa.js'),
+    'nr-polyfills.es5.min': path.resolve(__dirname, './agent-loader/polyfills.js')
   },
   output: {
     filename: '[name].js',
@@ -25,7 +25,7 @@ module.exports = {
       name: 'NRBA',
       type: 'umd'
     },
-    clean: true
+    clean: false
   },
   optimization: {
     minimize: true,
@@ -59,7 +59,7 @@ module.exports = {
 
   mode: isProd ? 'production' : 'development',
   devtool: false,
-  target: "browserslist", // include this!!
+  // target: "browserslist", // include this!!
   module: {
     rules: [
       {
@@ -74,13 +74,12 @@ module.exports = {
                 corejs: {version: 3.23, proposals: true},
                 loose: true,
                 targets: {
-                  browsers: [
-                    "chrome >= 60",
-                    "safari >= 11",
-                    "firefox >= 56",
-                    "ios >= 10.3",
-                    "ie >= 11"
-                  ]
+                  "chrome": "60",
+                  "edge": "14",
+                  "safari": "11",
+                  "firefox": "55",
+                  "ios": "10.3",
+                  "ie": "11"
                 }
               }]
             ]

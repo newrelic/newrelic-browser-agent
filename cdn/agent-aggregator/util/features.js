@@ -32,12 +32,14 @@ export async function importFeatures(build) {
   const enabledFeatures = getEnabledFeatures(agentIdentifier) // determines if enabled from config --> ajax.enabled = false
   try {
     await Promise.all(features[build].map(async featureName => {
-      const { Aggregate } = await import(`@newrelic/browser-agent-core/features/${featureName}/aggregate`) // AJAX -- load a small bundle specific to that feature agg
-      if (enabledFeatures[featureName.replace(/-/g, '_')]) aggregators.notInitialized[featureName] = Aggregate
+      if (enabledFeatures[featureName.replace(/-/g, '_')]) {
+        const { Aggregate } = await import(`@newrelic/browser-agent-core/features/${featureName}/aggregate`) // AJAX -- load a small bundle specific to that feature agg
+        aggregators.notInitialized[featureName] = Aggregate
+      }
     }))
   } catch (err) {
     console.error("Failed to import one or more feature(s) for", build);
-    throw(err);
+    throw (err);
   }
   return stageFeatures()
 }
@@ -82,4 +84,4 @@ function initializeStagedFeatures(passes = 0) {
 }
 
 // These are exposed for testing purposes only
-export {stageFeatures, features as buildToFeatsList, aggregators as aggChecklist};
+export { stageFeatures, features as buildToFeatsList, aggregators as aggChecklist };

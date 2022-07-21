@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npx webpack --progress --config ./webpack.config.js",
-    "build:prod": "NODE_ENV=production npx webpack --progress --config ./webpack.config.js"
+    "build:prod": "NODE_ENV=production npm run build"
   },
   "author": "",
   "license": "ISC",
@@ -27,13 +27,11 @@
     "core-js": "^3.23.3"
   },
   "browserslist": [
-    "chrome >=73",
-    "edge >=14",
-    "ie >=11",
-    "safari >=11",
-    "firefox >=52",
-    "chromeandroid >=6",
-    "ios >=10.3"
+    "chrome >= 60",
+    "safari >= 11",
+    "firefox >= 56",
+    "ios >= 10.3",
+    "ie >= 11"
   ],
   "sideEffects": false
 }

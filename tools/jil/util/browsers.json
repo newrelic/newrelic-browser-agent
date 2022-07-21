@@ -13,30 +13,45 @@
     {
       "browserName": "chrome",
       "platform": "Windows 10",
+      "version": "latest-1"
+    },
+    {
+      "browserName": "chrome",
+      "platform": "Windows 10",
       "version": "latest-2"
     },
     {
       "browserName": "chrome",
       "platform": "Windows 10",
-      "version": "latest-3"
+      "version": "73"
     },
     {
       "browserName": "chrome",
       "platform": "Windows 10",
-      "version": "73"
+      "version": "60"
     }
   ],
   "edge": [
     {
       "browserName": "MicrosoftEdge",
       "platform": "Windows 10",
-      "version": "14.14393"
+      "version": "latest"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platform": "Windows 10",
+      "version": "latest-1"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platform": "Windows 10",
+      "version": "latest-2"
     }
   ],
   "ie": [
     {
       "browserName": "internet explorer",
-      "platform": "Windows 8.1",
+      "platform": "Windows 10",
       "version": "11"
     }
   ],

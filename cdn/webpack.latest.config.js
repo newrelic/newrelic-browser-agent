@@ -25,7 +25,7 @@ module.exports = {
       name: 'NRBA',
       type: 'umd'
     },
-    clean: true
+    clean: false
   },
   optimization: {
     minimize: true,
@@ -59,7 +59,6 @@ module.exports = {
 
   mode: isProd ? 'production' : 'development',
   devtool: false,
-  target: "browserslist", // include this!!
   module: {
     rules: [
       {
@@ -75,11 +74,10 @@ module.exports = {
                 loose: true,
                 targets: {
                   browsers: [
-                    "chrome >= 60",
-                    "safari >= 11",
-                    "firefox >= 56",
-                    "ios >= 10.3",
-                    "ie >= 11"
+                    "last 5 Chrome versions",
+                    "last 5 Safari versions",
+                    "last 5 Firefox versions",
+                    "last 5 iOS versions"
                   ]
                 }
               }]

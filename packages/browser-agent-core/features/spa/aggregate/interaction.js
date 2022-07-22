@@ -45,7 +45,6 @@ var InteractionPrototype = Interaction.prototype
 
 InteractionPrototype.checkFinish = function checkFinish(url, routeName) {
   var interaction = this
-  console.log("check the finish for id:", interaction.id)
  
   if (interaction.remaining) {
     interaction._resetFinishCheck()
@@ -63,7 +62,6 @@ InteractionPrototype.checkFinish = function checkFinish(url, routeName) {
   var attrs = this.root.attrs
   attrs.newURL = url
   attrs.newRoute = routeName
-
 
   interaction.checkingFinish = true
   interaction.finishTimer = originalSetTimeout(function () {
@@ -89,15 +87,15 @@ InteractionPrototype._resetFinishCheck = function _resetFinishCheck() {
 
 // serialize report and remove nodes from map
 InteractionPrototype.finish = function finishInteraction() {
-  console.log("inside Interaction.finish (checkFinish)")
+  // // NREUM.debug("inside Interaction.finish (checkFinish)")
   var interaction = this
   var root = interaction.root
+  // // NREUM.debug("root.end -- is it null?", root.end)
   if (root.end !== null) return
   var endTimestamp = Math.max(interaction.lastCb, interaction.lastFinish)
-  // @ifdef SPA_DEBUG
   var delta = now() - endTimestamp
-  console.timeStamp('finish interaction, ID=' + root.id + ', lastTime = ' + delta + ' ms ago, urlChange=' + this.routeChange)
-  // @endif
+  // // NREUM.debug('finish interaction, ID=' + root.id + ', lastTime = ' + delta + ' ms ago, urlChange=' + this.routeChange)
+
 
   var attrs = root.attrs
   var customAttrs = attrs.custom

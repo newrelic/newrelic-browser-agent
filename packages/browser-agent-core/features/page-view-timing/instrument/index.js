@@ -20,7 +20,7 @@ export class Instrument extends FeatureBase {
     this.fiRecorded = false
 
 
-    console.log("initialize page-view-timing instrument!", agentIdentifier)
+    // // NREUM.debug("initialize page-view-timing instrument!", agentIdentifier)
 
     if (this.isEnabled()) {
       if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {

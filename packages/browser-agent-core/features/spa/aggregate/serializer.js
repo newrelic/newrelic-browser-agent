@@ -61,6 +61,8 @@ function serializeInteraction(root, offset, navTiming, isRouteChange, addString,
     var queueTime = info.queueTime
     var appTime = info.applicationTime
 
+    // // NREUM.debug("attrs....", attrs)
+
     if (typeof firstTimestamp === 'undefined') {
       startTimestamp += offset
       firstTimestamp = startTimestamp

@@ -14,14 +14,14 @@ export class Instrument extends FeatureBase {
     mark(agentIdentifier, 'firstbyte', getLastTimestamp());
     //handle('mark', ['firstbyte', getLastTimestamp()], null, 'api', this.ee)
 
-    console.log("initialize page-view-event instrument!", agentIdentifier)
+    // // NREUM.debug("initialize page-view-event instrument!", agentIdentifier)
     onWindowLoad(() => this.measureWindowLoaded())
     onDOMContentLoaded(() => this.measureDomContentLoaded())
   }
 
   measureWindowLoaded() {
     var ts = now()
-    console.log("measure the window loaded! onload")
+    // // NREUM.debug("measure the window loaded! onload")
     mark(this.agentIdentifier, 'onload', ts + getOffset());
     //handle('mark', ['onload', ts + getOffset()], null, 'api', this.ee)
     handle('timing', ['load', ts], undefined, undefined, this.ee)

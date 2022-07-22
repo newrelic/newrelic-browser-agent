@@ -31,7 +31,7 @@ export class Instrument extends FeatureBase {
 
     const ee = this.ee
 
-    console.log("initialize session-trace instrument!", agentIdentifier)
+    // // NREUM.debug("initialize session-trace instrument!", agentIdentifier)
 
     this.timerEE = wrapTimer(this.ee)
     this.rafEE = wrapRaf(this.ee)

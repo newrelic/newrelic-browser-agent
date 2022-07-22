@@ -43,7 +43,7 @@ module.exports = {
       'process.env.SUBPATH': JSON.stringify(process.env.SUBPATH || ''),
       'process.env.VERSION': JSON.stringify(pkg.version || `-${process.env.VERSION}` || ''),
       'process.env.BUILD': JSON.stringify(process.env.BUILD || 'spa'),
-      'process.env.DEBUG': JSON.stringify(process.env.DEBUG || false)
+      'process.env.DEBUG': JSON.stringify(!isProd || false)
     }),
     new webpack.SourceMapDevToolPlugin({
       append: isProd ? '\n//# sourceMappingURL=https://js-agent.newrelic.com/[url]' : '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]', // CDN route vs local route

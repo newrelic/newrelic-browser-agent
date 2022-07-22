@@ -10,7 +10,7 @@ import { FeatureBase } from '../../../common/util/feature-base'
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
     super(agentIdentifier)
-    console.log("initialize page-action instrument!", agentIdentifier)
+    // // NREUM.debug("initialize page-action instrument!", agentIdentifier)
     const agentRuntime = getRuntime(this.agentIdentifier);
     if (!agentRuntime.disabled) agentRuntime.features.ins = true;
   }

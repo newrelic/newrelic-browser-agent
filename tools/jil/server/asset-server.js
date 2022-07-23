@@ -191,8 +191,6 @@ class AgentInjectorTransform extends AssetTransform {
       const packagePaths = htmlPackageTags.map(x => x.replace(/[{}]/g, ''))
       const packageFiles = await this.getBuiltPackages(packagePaths)
 
-      const polyfills = rawContent.includes('{polyfills}') && fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`)
-
       this.getLoaderContent(
         loaderName,
         rawContent.includes("{modular-loader}") ? this.modularBuildDir : this.buildDir,
@@ -223,7 +221,7 @@ class AgentInjectorTransform extends AssetTransform {
             .replace('{config}', tagify(disableSsl + configContent))
             .replace('{init}', tagify(disableSsl + initContent))
             .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
-            .replace('{polyfills}', `<script type="text/javascript">${polyfills}</script>`)
+            .replace('{polyfills}', `<script type="text/javascript">${this.polyfills}</script>`)
 
           if (!!htmlPackageTags.length && !!packageFiles.length) {
             packageFiles.forEach(pkg => {
@@ -263,16 +261,15 @@ class BrowserifyTransform extends AssetTransform {
     .transform("babelify", {
         presets: [
           ["@babel/preset-env", {
-            useBuiltIns: 'entry',
-            corejs: 3,
             loose: true,
             targets: {
-              "chrome": "73",
-              "edge": "14",
-              "safari": "11",
-              "firefox": "52",
-              "android": "6",
-              "ios": "10.3"
+              browsers: [
+                "chrome >= 60",
+                "safari >= 11",
+                "firefox >= 56",
+                "ios >= 10.3",
+                "ie >= 11"
+              ]
             }
           }]
         ],
@@ -488,6 +485,8 @@ class AssetServer extends BaseServer {
     this.agentTransform.defaultAgentConfig = defaultAgentConfig
     this.browserTests = browserTests
     this.renderIndex = renderIndex
+
+    this.polyfills = fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`)
 
     this.corsServer = new TestServer()
 

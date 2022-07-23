@@ -34,28 +34,33 @@ jobs:
 
       - name: test
         run: npm run packages:test
-  latest-browsers:
-    runs-on: ubuntu-latest
-    container: node:14
-    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: PR${{ github.event.number }}-latest-${{ github.run_number }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
+  # latest-browsers:
+  #   runs-on: ubuntu-latest
+  #   container: node:14
+  #   if: contains(github.event.pull_request.labels.*.name, 'safe to test')
+  #   env:
+  #     NEWRELIC_ENVIRONMENT: ci
+  #     JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+  #     JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+  #     NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+  #     BUILD_NUMBER: PR${{ github.event.number }}-latest-${{ github.run_number }}
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: build
-        run: npm run ci-build
+  #     - name: build
+  #       run: npm run ci-build
 
+<<<<<<< HEAD
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@latest,firefox@latest,safari@latest -s -t 85000 --concurrent=6
+=======
+  #     - name: run tests
+  #       run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest,firefox@latest,safari@latest -s -t 85000 --concurrent=6
+>>>>>>> main
   all-browsers-unit:
-    needs: latest-browsers
+    # needs: latest-browsers
     runs-on: ubuntu-latest
     container: node:14
     if: contains(github.event.pull_request.labels.*.name, 'safe to test')
@@ -76,7 +81,7 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b *@* -s -t 85000 --unit-only --concurrent=20
   all-browsers-functional:
-    needs: latest-browsers
+    # needs: latest-browsers
     runs-on: ubuntu-latest
     container: node:14
     if: contains(github.event.pull_request.labels.*.name, 'safe to test')

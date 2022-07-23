@@ -53,7 +53,9 @@ jobs:
         run: npm run ci-build
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@latest,firefox@latest,safari@latest -s -t 85000 --concurrent=6
+        env: 
+          NODE_OPTIONS: "--max-old-space-size=8192"
+        run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest,firefox@latest,safari@latest -s -t 85000 --concurrent=6
   all-browsers-unit:
     needs: latest-browsers
     runs-on: ubuntu-latest
@@ -74,7 +76,9 @@ jobs:
         run: npm run ci-build
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b *@* -s -t 85000 --unit-only --concurrent=20
+        env: 
+          NODE_OPTIONS: "--max-old-space-size=8192"
+        run: node ./tools/jil/bin/cli.js -f merged -b *@* -s -t 85000 --unit-only --concurrent=20
   all-browsers-functional:
     needs: latest-browsers
     runs-on: ubuntu-latest
@@ -95,5 +99,7 @@ jobs:
         run: npm run ci-build
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b *@* -s -t 85000 --functional-only --concurrent=40
+        env: 
+          NODE_OPTIONS: "--max-old-space-size=8192"
+        run: node ./tools/jil/bin/cli.js -f merged -b *@* -s -t 85000 --functional-only --concurrent=40
         

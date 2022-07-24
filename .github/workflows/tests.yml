@@ -9,6 +9,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     container: node:14
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
     steps:
       - uses: actions/checkout@v2
         with:
@@ -22,6 +23,7 @@ jobs:
   package-tests:
     runs-on: ubuntu-latest
     container: node:14
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
     steps:
       - uses: actions/checkout@v2
         with:
@@ -35,6 +37,7 @@ jobs:
   all-browsers-unit:
     runs-on: ubuntu-latest
     container: node:14
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}

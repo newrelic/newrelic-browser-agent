@@ -56,7 +56,8 @@ jil.browserTest('checkFinish', function (t) {
     t.ok(interaction.root.attrs.newURL === undefined, 'url is undefined initially')
     t.ok(interaction.root.attrs.newRoute === undefined, 'route name is undefined initially')
 
-    interaction.checkFinish('some url', 'some route name')
+    interaction.setNewUrl('some url')
+    interaction.setNewRoute('some route name')
 
     t.ok(interaction.root.attrs.newURL === 'some url', 'url has been set')
     t.ok(interaction.root.attrs.newRoute === 'some route name', 'route name has been set')

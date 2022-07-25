@@ -45,6 +45,8 @@ class AgentInjectorTransform extends AssetTransform {
     this.defaultAgentConfig = {}
     this.assetServer = assetServer
     this.router = router
+
+    this.polyfills = fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`)
   }
 
   parseConfigFromQueryString(params) {
@@ -485,8 +487,6 @@ class AssetServer extends BaseServer {
     this.agentTransform.defaultAgentConfig = defaultAgentConfig
     this.browserTests = browserTests
     this.renderIndex = renderIndex
-
-    this.polyfills = fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`)
 
     this.corsServer = new TestServer()
 

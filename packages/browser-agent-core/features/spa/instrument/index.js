@@ -31,7 +31,7 @@ export class Instrument extends FeatureBase {
         if (!win[ADD_EVENT_LISTENER] || !agentRuntime.xhrWrappable || agentRuntime.disabled) return
         agentRuntime.features.spa = true;
 
-        // // NREUM.debug("initialize spa instrument!", agentIdentifier)
+        // console.log("initialize spa instrument!", agentIdentifier)
 
         let depth = 0
         let startHash

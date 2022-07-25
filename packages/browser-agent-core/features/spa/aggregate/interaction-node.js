@@ -39,7 +39,10 @@ InteractionNodePrototype.child = function child (type, timestamp, name, dontWait
   var node = new InteractionNode(interaction, this, type, timestamp)
   node.attrs.name = name
   interaction.nodes++
-  if (!dontWait) interaction.remaining++
+  if (!dontWait) {
+    interaction.remaining++
+    console.log("InteractionNode.child Dont wait (increase)", interaction.remaining)
+  }
   return node
 }
 
@@ -57,11 +60,12 @@ InteractionNodePrototype.cancel = function cancel() {
   this.cancelled = true
   var interaction = this.interaction
   interaction.remaining--
+  console.log("interactionNode.cancel (decrease)", interaction.remaining)
 }
 
 InteractionNodePrototype.finish = function finish (timestamp) {
   var node = this
-  // // NREUM.debug("interation-node finish!", this.id)
+  // console.log("interation-node finish!", this.id)
   if (node.end) return
   node.end = timestamp
   var parent = node.parent
@@ -71,5 +75,8 @@ InteractionNodePrototype.finish = function finish (timestamp) {
 
   var interaction = this.interaction
   interaction.remaining--
+  console.log("interactionNode.finish (decrease)", interaction.remaining)
   interaction.lastFinish = timestamp
+  // check if interaction has finished, (this is needed for older browsers for unknown reasons)
+  interaction.checkFinish()
 }

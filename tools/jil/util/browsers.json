@@ -150,12 +150,6 @@
         "platformName": "iOS",
         "platformVersion": "11.2",
         "browserName": "Safari"
-      },
-      {
-        "deviceName": "iPhone Simulator",
-        "platformName": "iOS",
-        "platformVersion": "10.3",
-        "browserName": "Safari"
       }
     ]
   }

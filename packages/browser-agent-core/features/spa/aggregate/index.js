@@ -295,7 +295,7 @@ export class Aggregate extends FeatureBase {
           node.dt = this.dt
           node.jsEnd = node.start = this.startTime
           node[INTERACTION][REMAINING]++
-          }
+        }
       }, undefined, xhrEE)
 
       register('xhr-resolved', function () {
@@ -385,14 +385,12 @@ export class Aggregate extends FeatureBase {
         if (state.currentNode) {
           this[SPA_NODE] = state.currentNode
           state.currentNode[INTERACTION][REMAINING]++
-          }
+        }
       }, undefined, fetchEE)
 
       register(FETCH_BODY + 'end', function (args, ctx, bodyPromise) {
         var node = this[SPA_NODE]
-        if (node) {
-          node[INTERACTION][REMAINING]--
-          }
+        if (node) node[INTERACTION][REMAINING]--
       }, undefined, fetchEE)
 
       register(FETCH_DONE, function (err, res) {

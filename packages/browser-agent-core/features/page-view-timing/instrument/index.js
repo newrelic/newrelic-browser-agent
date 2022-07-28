@@ -19,9 +19,6 @@ export class Instrument extends FeatureBase {
     this.clsPerformanceObserver
     this.fiRecorded = false
 
-
-    // // NREUM.debug("initialize page-view-timing instrument!", agentIdentifier)
-
     if (this.isEnabled()) {
       if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {
         // passing in an unknown entry type to observer could throw an exception

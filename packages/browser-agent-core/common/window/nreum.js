@@ -94,26 +94,6 @@ export function gosNREUMInitializedAgents(id, obj, target) {
   return nr
 }
 
-function gosNRDEBUG() {
-  const nr = gosNREUM()
-  nr.debug = (function () {
-    var count = 0;
-    return nrdebug;
-    function nrdebug(...messages) {
-      console.log(...messages)
-      count++;
-      let msg = messages.join(' ')
-      var url = 'http://' + nr.info.beacon + '/debug?m=' + escape(msg) + '&testId=' + nr.info.licenseKey + '&r=' + Math.random() + '&ix=' + count
-
-      var request = new XMLHttpRequest()
-      request.open('POST', url, false)
-      request.setRequestHeader('content-type', 'text/plain')
-      request.send()
-    }
-  })()
-  return nr
-}
-
 export function addToNREUM(fnName, fn) {
   let nr = gosNREUM()
   nr[fnName] = fn
@@ -129,6 +109,5 @@ export function gosCDN() {
   gosNREUMInit()
   gosNREUMOriginals()
   gosNREUMLoaderConfig()
-  gosNRDEBUG()
   return gosNREUM()
 }

@@ -6,7 +6,6 @@ import agentIdentifier from '../shared/agentIdentifier'
 import { initializeAPI } from './util/api'
 
 export function aggregator(build) {
-  console.log("-- loaded main aggregator module -- ", build)
   const autorun = typeof (getRuntime(agentIdentifier).autorun) !== 'undefined' ? getRuntime(agentIdentifier).autorun : true
 
   initializeAPI(agentIdentifier)

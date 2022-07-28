@@ -5,7 +5,7 @@
   "author": "The New Relic Browser Team",
   "description": "Tests for the New Relic JavaScript agent",
   "scripts": {
-    "test": "tools/jil/bin/cli.js",
+    "test": "node tools/jil/bin/cli.js",
     "legacy:build": "rm -rf build && mkdir build && gulp build",
     "build:all": "npx lerna run build",
     "build-mac": "gulp && osascript -e 'display notification \"The agent has been built.\" with title \"Build Complete\"'",

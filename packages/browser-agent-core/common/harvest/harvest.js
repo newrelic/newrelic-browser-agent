@@ -146,15 +146,8 @@ export class Harvest extends SharedContext {
 
   // The stuff that gets sent every time.
   baseQueryString() {
-    var areCookiesEnabled = true
-    const init = getConfiguration(this.sharedContext.agentIdentifier)
     var runtime = getRuntime(this.sharedContext.agentIdentifier)
     var info = getInfo(this.sharedContext.agentIdentifier)
-
-    if ('privacy' in init) {
-      const ce = getConfigurationValue(this.sharedContext.agentIdentifier, 'privacy.cookies_enabled')
-      areCookiesEnabled = ce !== undefined ? ce : true
-    }
 
     var location = cleanURL(getLocation())
     var ref = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateString(location) : location
@@ -166,7 +159,8 @@ export class Harvest extends SharedContext {
       transactionNameParam(info),
       encodeParam('ct', runtime.customTransaction),
       '&rst=' + now(),
-      '&ck=' + (areCookiesEnabled ? '1' : '0'),
+      '&ck=0',  // ck param DEPRECATED - still expected by backend
+      '&s=' + runtime.sessionId,
       encodeParam('ref', ref),
       encodeParam('ptid', (runtime.ptid ? '' + runtime.ptid : ''))
     ].join(''))

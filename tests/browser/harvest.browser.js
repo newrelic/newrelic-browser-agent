@@ -95,7 +95,7 @@ function validateUrl (t, actualUrl, expectedUrlTemplate, message) {
   // Also get the ck parameter value from the actual URL
   let queryString = actualUrl.split('?')[1]
   let pairs = queryString.split('&')
-  let submissionTimestamp
+  let submissionTimestamp, sessionId;
   let ckValue = '1'
   for (var i = 0; i < pairs.length; i++) {
     let pair = pairs[i].split('=')
@@ -103,12 +103,14 @@ function validateUrl (t, actualUrl, expectedUrlTemplate, message) {
       submissionTimestamp = pair[1]
     } else if (pair[0] === 'ck') {
       ckValue = pair[1]
+    } else if (pair[0] === 's') {
+      sessionId = pair[1];
     }
   }
 
   // In addition to replacing timestamp, add in the ck parameter which goes after timestamp
-  let expectedUrl = expectedUrlTemplate.replace('{TIMESTAMP}', submissionTimestamp + '&ck=' + ckValue)
-
+  let expectedUrl = expectedUrlTemplate.replace('{TIMESTAMP}', `${submissionTimestamp}&ck=${ckValue}&s=${sessionId}`)
+  
   t.equal(actualUrl, expectedUrl, message)
 }
 

@@ -23,8 +23,7 @@ if (navigator.userAgent) {
   }
 }
 
-export { agentName as agent }
-export { agentVersion as version }
+export { agentName as agent, agentVersion as version }
 
 export function match (name, version) {
   if (!agentName) {

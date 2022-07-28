@@ -58,7 +58,6 @@ export function wrapXhr (sharedEE) {
 
   XHR.prototype = OrigXHR.prototype
 
-  // log('wrap xhr...')
   wrapFn.inPlace(XHR.prototype, ['open', 'send'], '-xhr-', getObject)
 
   ee.on('send-xhr-start', function (args, xhr) {

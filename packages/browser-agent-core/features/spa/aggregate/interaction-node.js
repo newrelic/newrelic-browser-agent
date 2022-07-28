@@ -8,7 +8,9 @@ var MAX_NODES = 128
 var lastId = 0
 
 export function InteractionNode (interaction, parent, type, timestamp) {
-  this.interaction = interaction
+  Object.defineProperty(this, 'interaction', {
+    value: interaction, writable: true, // enumerable: false -- by default, which hides this prop from obj (iterations)
+  })
   this.parent = parent
   this.id = ++lastId
   this.type = type

@@ -1060,7 +1060,7 @@ jil.browserTest('reuse handle from outside interaction', function (t) {
     name: 'interaction',
     attrs: {
       custom: {
-        foo: 'bar'
+        foo: 'baz'
       }
     },
     children: []
@@ -1072,14 +1072,12 @@ jil.browserTest('reuse handle from outside interaction', function (t) {
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  setTimeout(function () {
-    interactionHandle.setAttribute('foo', 'bar')
-    newrelic.interaction().setAttribute('foo', 'baz')
-  })
-
   function onInteractionStart (cb) {
     interactionHandle = newrelic.interaction()
     cb()
+
+    interactionHandle.setAttribute('foo', 'bar')
+    newrelic.interaction().setAttribute('foo', 'baz')
   }
 
   function afterInteractionDone (interaction) {

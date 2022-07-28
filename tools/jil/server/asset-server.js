@@ -270,7 +270,8 @@ class BrowserifyTransform extends AssetTransform {
                 "safari >= 11",
                 "firefox >= 56",
                 "ios >= 10.3",
-                "ie >= 11"
+                "ie >= 11",
+                "edge >= 60"
               ]
             }
           }]

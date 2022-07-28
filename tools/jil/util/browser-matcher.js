@@ -197,7 +197,7 @@ features.mutation = new BrowserMatcher()
 features.fetch = new BrowserMatcher()
   .exclude('ie', '<=11')
   .exclude('edge', '<14')
-  .exclude('firefox', '<39')
+  .exclude('firefox', '<=60')
   .exclude('chrome', '<42')
   .exclude('safari', '<10.1') // MDN says 10, but per tests 10.1 (also noted here https://en.wikipedia.org/wiki/Safari_version_history)
   .exclude('ios', '<=10.2') // https://github.com/github/fetch/issues/401
@@ -233,8 +233,7 @@ features.sendBeacon = new BrowserMatcher()
 // https://bugs.webkit.org/show_bug.cgi?id=188329
 features.brokenSendBeacon = new BrowserMatcher()
   .exclude('*')
-  .include('safari', '11.1')
-  .include('safari', '12.0')
+  .include('safari', '<=11.1')
 
 features.workingSendBeacon = features.sendBeacon.and(features.brokenSendBeacon.inverse())
 
@@ -276,6 +275,7 @@ features.firstPaint = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=60')
   .include('android')
+  .include('edge')
 
 features.firstContentfulPaint = new BrowserMatcher()
   .exclude('*')
@@ -283,6 +283,7 @@ features.firstContentfulPaint = new BrowserMatcher()
   .include('firefox', '>=84')
   .include('ios', '>=14.5')
   .include('android')
+  .include('edge')
 
 features.largestContentfulPaint = new BrowserMatcher()
   .exclude('*')
@@ -336,6 +337,7 @@ features.originOnlyReferer = new BrowserMatcher()
   .include('firefox', '>=87')
   .include('ios', '>=10.2')
   .include('android')
+  .include('edge')
 
 features.passiveSupported = features.addEventListener
   .exclude('*')

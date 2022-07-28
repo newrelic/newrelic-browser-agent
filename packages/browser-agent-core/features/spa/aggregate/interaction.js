@@ -44,9 +44,7 @@ export function Interaction(eventName, timestamp, url, routeName, onFinished, ag
 var InteractionPrototype = Interaction.prototype
 
 InteractionPrototype.checkFinish = function checkFinish() {
-  console.log("checkFinish", this.root.attrs.newUrl, this.root.attrs.newRoute)
   var interaction = this
-  console.log("check finish!!! checking?, remaining, id", interaction.checkingFinish, interaction.remaining, interaction.id)
  
   if (interaction.remaining) {
     interaction._resetFinishCheck()
@@ -61,20 +59,11 @@ InteractionPrototype.checkFinish = function checkFinish() {
 
   interaction._resetFinishCheck()
 
-  // var attrs = this.root.attrs
-  // attrs.newURL = url
-  // attrs.newRoute = routeName
-
-  console.log("check finish -- set timeouts....", interaction.id)
-
   interaction.checkingFinish = true
   interaction.finishTimer = originalSetTimeout(() => {
-    console.log("checkingFinish = false")
     interaction.checkingFinish = false
     interaction.finishTimer = originalSetTimeout(() => {
-      console.log("finishTimer = null")
       interaction.finishTimer = null
-      console.log("interaction.remaining...", interaction.remaining)
       if (!interaction.remaining) interaction.finish()
     }, 1)
   }, 0)
@@ -102,16 +91,11 @@ InteractionPrototype._resetFinishCheck = function _resetFinishCheck() {
 
 // serialize report and remove nodes from map
 InteractionPrototype.finish = function finishInteraction() {
-  console.log("inside Interaction.finish (checkFinish)") 
   var interaction = this
   var root = interaction.root
-  console.log("root.end -- is it null?", root.end)
   if (root.end !== null) return
   var endTimestamp = Math.max(interaction.lastCb, interaction.lastFinish)
   var delta = now() - endTimestamp
-  console.log('finish interaction, ID=' + root.id + ', lastTime = ' + delta + ' ms ago, urlChange=' + this.routeChange)
-
-
   var attrs = root.attrs
   var customAttrs = attrs.custom
 

@@ -39,11 +39,11 @@ testDriver.test('encoding error where message contains a circular reference', su
 })
 
 function expectedErrorForBrowser (browser) {
-  if (browser.match('ie@<11, edge')) {
+  if (browser.match('ie@<11')) {
     return 'asdf'
   } else if (browser.match('firefox@<35')) {
     return 'Error'
-  } else if (browser.match('chrome, firefox@>=35, ie@11, android@>=4.4, safari@>=10')) {
+  } else if (browser.match('chrome, firefox@>=35, ie@11, android@>=4.4, safari@>=10, edge')) {
     return '[object Object]'
   } else if (browser.match('android')) {
     return 'Uncaught Error: [object Object]'

@@ -66,20 +66,6 @@
     {
       "browserName": "safari",
       "platform": "macOS 10.13",
-      "version": "latest-1",
-      "acceptInsecureCerts": false,
-      "seleniumVersion": "3.4.0"
-    },
-    {
-      "browserName": "safari",
-      "platform": "macOS 10.13",
-      "version": "latest-2",
-      "acceptInsecureCerts": false,
-      "seleniumVersion": "3.4.0"
-    },
-    {
-      "browserName": "safari",
-      "platform": "macOS 10.13",
       "version": "12.1",
       "acceptInsecureCerts": false,
       "seleniumVersion": "3.4.0"
@@ -87,7 +73,7 @@
     {
       "browserName": "safari",
       "platform": "macOS 10.13",
-      "version": "11",
+      "version": "11.1",
       "comment": "macOS High Sierra - sendBeacon API with bug"
     }
   ],

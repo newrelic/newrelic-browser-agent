@@ -120,7 +120,7 @@ function startInteraction (onInteractionStart, afterInteractionFinish, options =
     options.handle.setAttribute('__interactionId', interactionId)
     onInteractionStart(() => { done = true })
   } else {
-    originalSetTimeout(startFromUnwrappedTask)
+    originalSetTimeout(startFromUnwrappedTask, 100)
   }
 
   baseEE.on('interaction', function (interaction) {

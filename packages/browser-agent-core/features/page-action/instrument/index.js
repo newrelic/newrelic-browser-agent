@@ -11,6 +11,6 @@ export class Instrument extends FeatureBase {
     super(agentIdentifier)
     const agentRuntime = getRuntime(this.agentIdentifier)
     // Turn on feature
-    agentRuntime.features.ins = true;
+    agentRuntime.features.ins = true
   }
 }

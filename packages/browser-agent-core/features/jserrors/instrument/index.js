@@ -27,7 +27,7 @@ export class Instrument extends FeatureBase {
 
     const agentRuntime = getRuntime(this.agentIdentifier)
     // Declare that we are using err instrumentation
-    agentRuntime.features.err = true;
+    agentRuntime.features.err = true
 
     state.ee.on('fn-start', function (args, obj, methodName) {
       if (state.handleErrors) state.skipNext += 1

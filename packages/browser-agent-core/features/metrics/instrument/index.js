@@ -61,7 +61,6 @@ export class Instrument extends FeatureBase {
         // frameworks on page
         onDOMContentLoaded(() => {
             getFrameworks().forEach(framework => {
-                // // NREUM.debug("framework!", framework)
                 this.recordSupportability('Framework/' + framework + '/Detected')
             })
         })

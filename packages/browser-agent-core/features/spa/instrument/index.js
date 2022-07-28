@@ -31,7 +31,6 @@ export class Instrument extends FeatureBase {
         if (!win[ADD_EVENT_LISTENER] || !agentRuntime.xhrWrappable || agentRuntime.disabled) return
         agentRuntime.features.spa = true;
 
-
         let depth = 0
         let startHash
 

@@ -20,7 +20,6 @@ export function wrapTimer(sharedEE) {
   var START = '-start'
   var DASH = '-'
 
-  // log('wrap timer...')
   wrapFn.inPlace(window, [SET_TIMEOUT, 'setImmediate'], SET_TIMEOUT + DASH)
   wrapFn.inPlace(window, [SET_INTERVAL], SET_INTERVAL + DASH)
   wrapFn.inPlace(window, [CLEAR_TIMEOUT, 'clearImmediate'], CLEAR_TIMEOUT + DASH)

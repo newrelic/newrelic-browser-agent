@@ -30,8 +30,6 @@ export function qs (value) {
   return encodeURIComponent(value).replace(safeEncoded, real)
 }
 
-// export default {obj: obj, fromArray: fromArray, qs: qs, param: param}
-
 export function fromArray (qs, maxBytes) {
   var bytes = 0
   for (var i = 0; i < qs.length; i++) {

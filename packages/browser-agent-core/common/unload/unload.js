@@ -6,8 +6,6 @@ import { ffVersion } from '../browser-version/firefox-version'
 import {single} from '../util/single'
 import {addE} from '../event-listener/add-e'
 
-// export default subscribeToUnload
-
 // Used to subscribe a callback to when a page is being unloaded. This is used,
 // for example, to submit a final harvest.
 export function subscribeToUnload (cb) {

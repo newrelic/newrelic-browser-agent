@@ -17,8 +17,6 @@ var meta = {
   '\\': '\\\\'
 }
 
-// export default stringify
-
 export function stringify (val) {
   try {
     return str('', {'': val})

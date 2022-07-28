@@ -4,7 +4,6 @@
  */
 
 export const submitData = {}
-// export default submitData
 
 submitData.jsonp = function jsonp (url, jsonp) {
   var element = document.createElement('script')

@@ -9,8 +9,6 @@ import { getOrSet } from '../util/get-or-set'
 var index = 1
 var prop = 'nr@id'
 
-// export default id
-
 // Always returns id of obj, may tag obj with an id in the process.
 export function id (obj) {
   var type = typeof obj

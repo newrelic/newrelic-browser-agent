@@ -7,11 +7,6 @@ import {now, getOffset} from './now'
 
 var marks = {}
 
-// module.exports = {
-//   mark: mark,
-//   measure: measure
-// }
-
 export function mark (agentId, markName, markTime) {
   if (typeof markTime === 'undefined') markTime = (now() + getOffset())
   marks[agentId] = marks[agentId] || {};

@@ -67,18 +67,6 @@ function ee (old, debugId) {
     var handlersArray = listeners(type)
     var len = handlersArray.length
 
-    // Extremely verbose debug logging
-    // if ([/^xhr/].map(function (match) {return type.match(match)}).filter(Boolean).length) {
-    //  log(type + ' args:')
-    //  log(args)
-    //  log(type + ' handlers array:')
-    //  log(handlersArray)
-    //  log(type + ' context:')
-    //  log(ctx)
-    //  log(type + ' ctxStore:')
-    //  log(ctxStore)
-    // }
-
     // Apply each handler function in the order they were added
     // to the context with the arguments
     

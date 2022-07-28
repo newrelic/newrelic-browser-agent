@@ -5,8 +5,6 @@
 
 var has = Object.prototype.hasOwnProperty
 
-// export default mapOwn
-
 export function mapOwn (obj, fn) {
   var results = []
   var key = ''

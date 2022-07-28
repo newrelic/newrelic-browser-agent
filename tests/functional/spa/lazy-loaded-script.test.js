@@ -13,7 +13,6 @@ testDriver.test('interactions wait for external scripts to complete', supported,
   // load page and wait for initial load to complete
   loadAndWaitForLoad(router, browser, 'spa/external-scripts/lazy-loaded-script.html')
     .then(() => {
-      console.log("got load....")
       // click, wait for global callback to be called, and route interaction to finish
       let eventPromise = router.expectEvents()
       let domPromise = browser.elementByCssSelector('body').click()
@@ -24,7 +23,6 @@ testDriver.test('interactions wait for external scripts to complete', supported,
     })
     .then(({query, body}) => {
       let i = querypack.decode(body && body.length ? body : query.e)[0]
-      console.log("i", i)
       t.ok(i.start, 'start is present')
       t.ok(i.end, 'end is present')
       var duration = i.end - i.start
@@ -87,9 +85,6 @@ function loadAndWaitForLoad(router, browser, url) {
   let rumPromise = router.expectRum()
   let eventPromise = router.expectEvents()
 
-  loadPromise.then(() => console.log("got loadPromise"))
-  rumPromise.then(() => console.log("got rum"))
-  eventPromise.then(() => console.log("got event"))
   return Promise.all([loadPromise, rumPromise, eventPromise])
 }
 

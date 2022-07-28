@@ -31,7 +31,6 @@ jil.browserTest('node is not restored for ended interaction', function (t) {
   }
 
   function onInteractionStart (cb) {
-    console.log(helpers.currentNodeId())
     t.ok(helpers.currentNodeId(), 'should be inside an interaction at the beginning')
     setTimeout(function() {
       t.ok(helpers.currentNodeId(), 'should be inside an interaction in timeout 1')
@@ -49,7 +48,6 @@ jil.browserTest('node is not restored for ended interaction', function (t) {
   }
 
   function afterInteractionDone (interaction) {
-    console.log("interaction", interaction)
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
   }

@@ -66,7 +66,6 @@ testDriver.test('JSONP on initial page load', supported, function (t, browser, r
       ({query, body} = result[1])
 
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
-      console.log("interactionTree", interactionTree)
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
       t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')
       t.ok(interactionTree.callbackEnd <= interactionTree.end, 'interaction callback end should be <= interaction end')

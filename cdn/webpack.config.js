@@ -38,8 +38,6 @@ switch (PUBLISH) {
     MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]'
 }
 
-console.log(VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH)
-
 const IS_LOCAL = SUBVERSION === 'LOCAL'
 
 module.exports = {

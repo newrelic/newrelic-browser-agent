@@ -17,7 +17,7 @@ import { ieVersion } from '../browser-version/ie-version'
 import { Obfuscator } from '../util/obfuscate'
 import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
-import { VERSION } from '../constants/environment-variables'
+import { VERSION, SUBVERSION } from '../constants/environment-variables'
 
 var haveSendBeacon = !!navigator.sendBeacon
 
@@ -155,7 +155,7 @@ export class Harvest extends SharedContext {
     return ([
       '?a=' + info.applicationID,
       encodeParam('sa', (info.sa ? '' + info.sa : '')),
-      encodeParam('v', VERSION),
+      encodeParam('v', `${VERSION}.${SUBVERSION}`),
       transactionNameParam(info),
       encodeParam('ct', runtime.customTransaction),
       '&rst=' + now(),

@@ -1,13 +1,26 @@
-name: Build and publish dev builds
+name: Build and publish DEV Release
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types:
+      - published
   workflow_dispatch:
 
 jobs:
+  install:
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ./.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+      - name: install
+        run: npm ci
   build:
+    needs: install
     runs-on: ubuntu-latest
     container: node:14
     steps:
@@ -15,22 +28,20 @@ jobs:
       - name: setup build folder
         run: |
           mkdir build
-          cp VERSION build/build_number
-          echo $GITHUB_SHA > build/git_commit
       - name: Cache node modules
         uses: actions/cache@v2
         with:
           path: ./.npm
           key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
       - name: build
-        run: SUBPATH=dev PRE_RELEASE=true npm run ci-build
+        run: npm run cdn:build:dev
       - name: Archive artifacts
         uses: actions/upload-artifact@v2
         with:
           name: build
           path: build
   publish-to-s3:
-    needs: build
+    needs: smoke-test
     runs-on: ubuntu-latest
     container: node:14
     env:
@@ -43,8 +54,6 @@ jobs:
         with:
           path: ./.npm
           key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
-      - name: install
-        run: npm ci
       - name: download artifacts
         uses: actions/download-artifact@v2
         with:
@@ -54,5 +63,19 @@ jobs:
         run: |
           node tools/scripts/upload-to-s3.js \
             --bucket ${{ secrets.AWS_BUCKET }} \
-            --role ${{ secrets.AWS_ROLE_ARN }} \
-            --dev
+            --role ${{ secrets.AWS_ROLE_ARN }}
+  check-published:
+    needs: publish-to-s3
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ./.npm
+          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+      - name: install
+        run: npm ci
+      - name: check files exist
+        run: node tools/scripts/check-version.js -e yes -v $(cat VERSION)

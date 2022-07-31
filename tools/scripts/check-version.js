@@ -7,6 +7,8 @@
 
 var yargs = require('yargs')
 var request = require('request')
+var path = require('path')
+var fs = require('fs')
 
 var config = require('yargs')
   .usage('$0 [options]')
@@ -27,15 +29,15 @@ var config = require('yargs')
   .wrap(Math.min(110, yargs.terminalWidth()))
   .argv
 
-var filenames = getLoaderFilenames(['rum', 'full', 'spa'], config.version)
-filenames = filenames.concat(getAggregatorFilenames(config.version))
+const buildDir = path.resolve(__dirname, '../../build/')
+const builtFileNames = fs.readdirSync(buildDir)
 var errors = []
 
 validate()
 
 async function validate() {
   var checks = []
-  for (var filename of filenames) {
+  for (var filename of builtFileNames) {
     console.log('checking ', filename)
     checks.push(getFile(filename))
   }
@@ -93,23 +95,4 @@ function getFile(filename) {
       resolve([filename, res, body])
     })
   })
-}
-
-function getLoaderFilenames(loaders, version) {
-  var filenames = []
-  loaders.forEach(function (loaderName) {
-    var base = 'nr-loader-' + loaderName + '-' + version
-    filenames.push(base + '.js')
-    filenames.push(base + '.min.js')
-  })
-  return filenames
-}
-
-function getAggregatorFilenames(version) {
-  var filenames = []
-  filenames.push('nr-' + version + '.js')
-  filenames.push('nr-' + version + '.min.js')
-  filenames.push('nr-spa-' + version + '.js')
-  filenames.push('nr-spa-' + version + '.min.js')
-  return filenames
 }

@@ -7,7 +7,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npx webpack --progress --config ./webpack.config.js",
-    "build:prod": "NODE_ENV=production npm run build"
+    "build:current": "PUBLISH=CURRENT npm run build",
+    "build:dev": "PUBLISH=DEV npm run build",
+    "build:prod": "PUBLISH=PROD npm run build"
   },
   "author": "",
   "license": "ISC",

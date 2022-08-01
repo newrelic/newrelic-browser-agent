@@ -22,6 +22,7 @@
     "cdn:build:prod": "npm --prefix cdn run build:prod",
     "cdn:build:dev": "npm --prefix cdn run build:dev",
     "cdn:build:current": "npm --prefix cdn run build:current",
+    "cdn:build:nr": "npm --prefix cdn run build:nr",
     "cdn:watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests|cdn' --run -- npm run cdn:build-dev",
     "packages:build": "npm --prefix ./packages run build",
     "packages:pack": "npm --prefix packages/browser-agent run pack",

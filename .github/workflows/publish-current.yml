@@ -16,27 +16,6 @@ jobs:
           key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
       - name: install
         run: npm ci
-  build:
-    needs: install
-    runs-on: ubuntu-latest
-    container: node:14
-    steps:
-      - uses: actions/checkout@v2
-      - name: setup build folder
-        run: |
-          mkdir build
-      - name: Cache node modules
-        uses: actions/cache@v2
-        with:
-          path: ./.npm
-          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
-      - name: build
-        run: npm run cdn:build:current
-      - name: Archive artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: build
-          path: build
   publish-to-s3:
     needs: smoke-test
     runs-on: ubuntu-latest
@@ -51,11 +30,10 @@ jobs:
         with:
           path: ./.npm
           key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
-      - name: download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: build
-          path: build
+      - name: install
+        run: npm ci
+      - name: build
+        run: npm run cdn:build:current
       - name: upload artifacts to S3
         run: |
           node tools/scripts/upload-to-s3.js \
@@ -75,4 +53,4 @@ jobs:
       - name: install
         run: npm ci
       - name: check files exist
-        run: node tools/scripts/check-version.js -e yes -v $(cat VERSION)
+        run: node tools/scripts/check-version.js -e yes

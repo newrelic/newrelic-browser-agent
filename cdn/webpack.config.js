@@ -8,7 +8,7 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 
 // this will change to package.json.version when it is aligned between all the packages
 const VERSION = fs.readFileSync('../VERSION', 'utf-8')
-const PUBLISH = process.env.PUBLISH
+const {PUBLISH, SOURCEMAPS = true} = process.env
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
 
 switch (PUBLISH) {
@@ -39,6 +39,14 @@ switch (PUBLISH) {
 }
 
 const IS_LOCAL = SUBVERSION === 'LOCAL'
+
+console.log("VERSION", VERSION)
+console.log("SOURCEMAPS", SOURCEMAPS)
+console.log("PATH_VERSION", PATH_VERSION)
+console.log("SUBVERSION", SUBVERSION)
+console.log("PUBLIC_PATH", PUBLIC_PATH)
+console.log("MAP_PATH", MAP_PATH)
+console.log("IS_LOCAL", IS_LOCAL)
 
 module.exports = {
   entry: {
@@ -80,7 +88,8 @@ module.exports = {
     }),
     new webpack.SourceMapDevToolPlugin({
       append: MAP_PATH, // CDN route vs local route
-      filename: `[name].[chunkhash:8].map`
+      filename: `[name].[chunkhash:8].map`,
+      ...(JSON.parse(SOURCEMAPS) === false && {exclude: new RegExp(".*")}) // exclude all files if disabled
     }),
     new BundleAnalyzerPlugin({
       analyzerMode: 'static',

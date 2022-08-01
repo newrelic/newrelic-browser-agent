@@ -7,6 +7,20 @@ on:
   workflow_dispatch:
 
 jobs:
+  install:
+    runs-on: ubuntu-latest
+      container: node:14
+      steps:
+        - uses: actions/checkout@v2
+        - name: Cache node modules
+          uses: actions/cache@v2
+          with:
+            path: ./.npm
+            key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
+        - name: install
+          run: npm ci
+        - name: check files don't exist already
+          run: node tools/scripts/check-version.js -e no -v $(cat VERSION)
   check-not-published:
     runs-on: ubuntu-latest
     container: node:14
@@ -20,28 +34,7 @@ jobs:
       - name: install
         run: npm ci
       - name: check files don't exist already
-        run: node tools/scripts/check-version.js -e no -v $(cat VERSION)
-  build:
-    needs: check-not-published
-    runs-on: ubuntu-latest
-    container: node:14
-    steps:
-      - uses: actions/checkout@v2
-      - name: setup build folder
-        run: |
-          mkdir build
-      - name: Cache node modules
-        uses: actions/cache@v2
-        with:
-          path: ./.npm
-          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
-      - name: build
-        run: npm run cdn:build:prod
-      - name: Archive artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: build
-          path: build
+        run: node tools/scripts/check-version.js -e no
   smoke-test:
     needs: build
     runs-on: ubuntu-latest
@@ -59,11 +52,10 @@ jobs:
         with:
           path: ./.npm
           key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
-      - name: download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: build
-          path: build
+      - name: install
+        run: npm ci
+      - name: build
+        run: npm run build:all
       - name: run tests
         run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=4
   publish-to-s3:
@@ -80,11 +72,10 @@ jobs:
         with:
           path: ./.npm
           key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
-      - name: download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: build
-          path: build
+      - name: install
+        run: npm ci
+      - name: build
+        run: npm run cdn:build:prod
       - name: upload artifacts to S3
         run: |
           node tools/scripts/upload-to-s3.js \
@@ -101,11 +92,10 @@ jobs:
         with:
           path: ./.npm
           key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
-      - name: download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: build
-          path: build
+      - name: install
+        run: npm ci
+      - name: build
+        run: npm run cdn:build:nr
       - name: upload artifacts to NR
         run: |
           node tools/scripts/upload-to-nr.js \
@@ -126,4 +116,4 @@ jobs:
       - name: install
         run: npm ci
       - name: check files exist
-        run: node tools/scripts/check-version.js -e yes -v $(cat VERSION)
+        run: node tools/scripts/check-version.js -e yes

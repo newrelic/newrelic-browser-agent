@@ -18,11 +18,6 @@ var config = require('yargs')
   .describe('e', 'Fails when set to yes and scripts do not exist or when set to no and scripts do exist.')
   .default('e', 'yes,no')
 
-  .string('v')
-  .alias('v', 'version')
-  .describe('v', 'Version to check, defaults to current')
-  .default('v', 'current')
-
   .help('h')
   .alias('h', 'help')
   .strict()
@@ -31,6 +26,7 @@ var config = require('yargs')
 
 const buildDir = path.resolve(__dirname, '../../build/')
 const builtFileNames = fs.readdirSync(buildDir)
+const version = getVersionFromFilenames(builtFileNames)
 var errors = []
 
 validate()
@@ -47,6 +43,14 @@ async function validate() {
   })
 
   checkErrorsAndExit()
+}
+
+function getVersionFromFilenames(fileNames){
+  return Array.from(fileNames.reduce((prev, next) => {
+    const parts = next.split(".")
+    if (parts.length === 2 && parts[1] === 'js') prev.add(parts[0].split("-").at(-1))
+    return prev
+  }, new Set()))[0]
 }
 
 function checkErrorsAndExit() {
@@ -67,9 +71,6 @@ function validateResponse(filename, res, body) {
     }
     if (body.length === 0) {
       errors.push(`body for ${filename} was empty`)
-    }
-    if (!res.body.match(config.version + '.')) {
-      errors.push(`${filename} does not contain version ${config.version}`)
     }
   } else if (config.exists === 'no') {
     if (res.statusCode === 200) {

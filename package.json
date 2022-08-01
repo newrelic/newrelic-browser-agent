@@ -19,6 +19,7 @@
     "build-tar": "npm run ci-build && tar czf ./build/browser-agent.tar.gz --exclude=.git --exclude=.npm --exclude=build/browser-agent.tar.gz .",
     "watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests' --run -- npm run build:all",
     "cdn:build": "npm --prefix cdn run build",
+    "cdn:build:local": "npm --prefix cdn run build:local",
     "cdn:build:prod": "npm --prefix cdn run build:prod",
     "cdn:build:dev": "npm --prefix cdn run build:dev",
     "cdn:build:current": "npm --prefix cdn run build:current",

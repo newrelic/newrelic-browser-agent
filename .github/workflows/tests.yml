@@ -17,7 +17,7 @@ jobs:
 
       - name: install
         run: npm ci --cache ./.npm
-        - name: build
+      - name: build
         run: npm run build:all
 
       - name: lint
@@ -33,7 +33,7 @@ jobs:
 
       - name: install
         run: npm ci --cache ./.npm
-        - name: build
+      - name: build
         run: npm run build:all
 
       - name: test
@@ -55,7 +55,7 @@ jobs:
 
       - name: install
         run: npm ci --cache ./.npm
-        - name: build
+      - name: build
         run: npm run build:all
 
       - name: run tests
@@ -76,7 +76,7 @@ jobs:
 
       - name: install
         run: npm ci --cache ./.npm
-        - name: build
+      - name: build
         run: npm run build:all
 
       - name: run tests
@@ -98,7 +98,7 @@ jobs:
 
       - name: install
         run: npm ci --cache ./.npm
-        - name: build
+      - name: build
         run: npm run build:all
 
       - name: run tests

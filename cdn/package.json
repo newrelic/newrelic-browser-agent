@@ -6,12 +6,13 @@
   "main": "src/spa.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "webpack": "npx webpack --progress --config ./webpack.config.js",
     "build": "npm run build:prod",
-    "build:local": "npx webpack --progress --config ./webpack.config.js",
-    "build:current": "PUBLISH=CURRENT npm run build",
-    "build:dev": "PUBLISH=DEV npm run build",
-    "build:prod": "PUBLISH=PROD npm run build",
-    "build:nr": "PUBLISH=PROD SOURCEMAPS=false npm run build"
+    "build:local": "npm run webpack",
+    "build:current": "PUBLISH=CURRENT npm run webpack",
+    "build:dev": "PUBLISH=DEV npm run webpack",
+    "build:prod": "PUBLISH=PROD npm run webpack",
+    "build:nr": "PUBLISH=PROD SOURCEMAPS=false npm run webpack"
   },
   "author": "",
   "license": "ISC",

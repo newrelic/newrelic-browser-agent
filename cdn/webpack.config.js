@@ -82,9 +82,9 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      'process.env.SUBVERSION': JSON.stringify(SUBVERSION),
-      'process.env.VERSION': JSON.stringify(VERSION || ''),
-      'process.env.DEBUG': JSON.stringify(IS_LOCAL || false)
+      'WEBPACK_SUBVERSION': JSON.stringify(SUBVERSION || ''),
+      'WEBPACK_VERSION': JSON.stringify(VERSION || ''),
+      'WEBPACK_DEBUG': JSON.stringify(IS_LOCAL || false)
     }),
     new webpack.SourceMapDevToolPlugin({
       append: MAP_PATH, // CDN route vs local route

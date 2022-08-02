@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../../common/event-emitter/handle'
-import { subscribeToVisibilityChange } from '../../../common/window/visibility'
+import { subscribeToVisibilityChange, initializeHiddenTime } from '../../../common/window/visibility'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { gosNREUM } from '../../../common/window/nreum'
 import { getOffset, now } from '../../../common/timing/now'
@@ -13,7 +13,7 @@ import { FeatureBase } from '../../../common/util/feature-base'
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
     super(agentIdentifier)
-    this.pageHiddenTime
+    this.pageHiddenTime = initializeHiddenTime()  // synonymous with initial visibilityState
     this.performanceObserver
     this.lcpPerformanceObserver
     this.clsPerformanceObserver
@@ -82,7 +82,8 @@ export class Instrument extends FeatureBase {
     if (entries.length > 0) {
       var entry = entries[entries.length - 1]
 
-      if (this.pageHiddenTime && this.pageHiddenTime < entry.startTime) return
+      // metrics become inflated if the page was ever hidden, so they aren't sent
+      if (this.pageHiddenTime < entry.startTime) return;
 
       var payload = [entry]
 
@@ -140,8 +141,9 @@ export class Instrument extends FeatureBase {
     }
   }
 
-  captureVisibilityChange(state) {
-    if (state === 'hidden') {
+  captureVisibilityChange(newState) {
+    if (newState === 'hidden') {
+      // time is only recorded to be used for short-circuit logic in the observer callbacks
       this.pageHiddenTime = now()
       handle('pageHide', [this.pageHiddenTime], undefined, undefined, this.ee)
     }

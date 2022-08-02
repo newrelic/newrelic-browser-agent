@@ -756,4 +756,40 @@ function runLcpTests (loader) {
       t.end()
     }
   })
+  testDriver.test(`${loader} loader: LCP is not collected on hidden page`, testPageHide.and(supportedLcp), function (t, browser, router) {
+    // HTML page manually sets maxLCPTimeSeconds to 5
+    const assetURL = router.assetURL('pagehide-beforeload.html', {
+      loader: loader,
+      init: {
+        page_view_timing: {
+          enabled: true,
+          harvestTimeSeconds: 15,
+          maxLCPTimeSeconds: 2
+        }
+      }
+    })
+
+    const rumPromise = router.expectRum()
+    const loadPromise = browser.safeGet(assetURL)
+
+    Promise.all([rumPromise, loadPromise])
+      .then(() => {
+        return router.expectTimings()
+      })
+      .then((timingsResult) => {
+        const {body, query} = timingsResult
+        const timings = querypack.decode(body && body.length ? body : query.e)
+
+        const timing = timings.find(t => t.name === 'lcp')
+        t.notOk(timing, 'did NOT find an LCP timing')
+
+        t.end()
+      })
+      .catch(fail)
+
+    function fail (e) {
+      t.error(e)
+      t.end()
+    }
+  })
 }

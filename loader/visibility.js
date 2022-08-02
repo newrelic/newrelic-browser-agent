@@ -7,7 +7,7 @@ var eventListenerOpts = require('event-listener-opts')
 
 module.exports = {
   subscribeToVisibilityChange: subscribeToVisibilityChange,
-  initializeHiddenTime: initHidTime,
+  initializeHiddenTime: initHidTime
 };
 
 var hidden, eventName, state

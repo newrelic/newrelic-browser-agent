@@ -57,7 +57,7 @@
 // ex.message = ...
 // ex.name = ReferenceError
 import { reduce } from '../../../common/util/reduce'
-import {formatStackTrace} from './format-stack-trace'
+import { formatStackTrace } from './format-stack-trace'
 
 var debug = false
 
@@ -67,8 +67,6 @@ var gecko = /^\s*(?:(\S*|global code)(?:\(.*?\))?@)?((?:file|http|https|chrome|s
 var chrome_eval = /^\s*at .+ \(eval at \S+ \((?:(?:file|http|https):[^)]+)?\)(?:, [^:]*:\d+:\d+)?\)$/i
 var ie_eval = /^\s*at Function code \(Function code:\d+:\d+\)\s*/i
 
-// export default computeStackTrace
-// module.exports = computeStackTrace
 
 export function computeStackTrace (ex) {
   var stack = null

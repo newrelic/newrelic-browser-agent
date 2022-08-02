@@ -3,12 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// export default {
-//   generateUuid: generateUuid,
-//   generateSpanId: generateSpanId,
-//   generateTraceId: generateTraceId
-// }
-
 export function generateUuid () {
   var randomVals = null
   var rvIndex = 0

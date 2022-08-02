@@ -700,9 +700,3 @@ export class Aggregate extends FeatureBase {
 
   }
 }
-// module.exports = function () {
-//   return currentNode && currentNode.id
-// }
-
-
-

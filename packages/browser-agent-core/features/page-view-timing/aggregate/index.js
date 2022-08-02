@@ -7,7 +7,7 @@ import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../
 import { now } from '../../../common/timing/now'
 import { mapOwn } from '../../../common/util/map-own'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { defaultRegister as register } from '../../../common/event-emitter/register-handler'
+import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { handle } from '../../../common/event-emitter/handle'
 import { getInfo, getConfigurationValue } from '../../../common/config/config'
@@ -15,6 +15,7 @@ import { FeatureBase } from '../../../common/util/feature-base'
 export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator)
+
     this.timings = []
     this.timingsSent = []
     this.lcpRecorded = false
@@ -24,8 +25,6 @@ export class Aggregate extends FeatureBase {
     this.clsSession = {value: 0, firstEntryTime: 0, lastEntryTime: 0}
     this.pageHideRecorded = false
 
-    this.harvestTimeSeconds = 30
-
     try {
       this.clsSupported = PerformanceObserver.supportedEntryTypes.includes('layout-shift')
     } catch (e) {
@@ -34,7 +33,7 @@ export class Aggregate extends FeatureBase {
 
     var maxLCPTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.maxLCPTimeSeconds') || 60
     var initialHarvestSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
-    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
+    var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
 
     this.scheduler = new HarvestScheduler('events', {
       onFinished: (...args) => this.onHarvestFinished(...args),
@@ -42,15 +41,10 @@ export class Aggregate extends FeatureBase {
       onUnload: () => this.finalHarvest()
     }, this)
 
-    register('timing', (...args) => this.processTiming(...args), undefined, this.ee)
-    register('lcp', (...args) => this.updateLatestLcp(...args), undefined, this.ee)
-    register('cls', (...args) => this.updateClsScore(...args), undefined, this.ee)
-    register('pageHide', (...args) => this.updatePageHide(...args), undefined, this.ee)
-
-    // final harvest is initiated from the main agent module, but since harvesting
-    // here is not initiated by the harvester, we need to subscribe to the unload event
-    // separately
-    // subscribeToUnload((...args) => this.finalHarvest(...args))
+    registerHandler('timing', (...args) => this.processTiming(...args), undefined, this.ee)
+    registerHandler('lcp', (...args) => this.updateLatestLcp(...args), undefined, this.ee)
+    registerHandler('cls', (...args) => this.updateClsScore(...args), undefined, this.ee)
+    registerHandler('pageHide', (...args) => this.updatePageHide(...args), undefined, this.ee)
 
     // After 1 minute has passed, record LCP value if no user interaction has occurred first
     setTimeout(() => {
@@ -59,7 +53,7 @@ export class Aggregate extends FeatureBase {
     }, maxLCPTimeSeconds * 1000)
 
     // send initial data sooner, then start regular
-    this.scheduler.startTimer(this.harvestTimeSeconds, initialHarvestSeconds)
+    this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)
   }
 
   recordLcp() {

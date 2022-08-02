@@ -43,7 +43,6 @@ export function setAPI(agentIdentifier) {
 
   nr.setCustomAttribute = function(name, value){
     const currentInfo = getInfo(agentIdentifier)
-    console.log("setCustomAttribute!")
     setInfo(agentIdentifier, {...currentInfo, jsAttributes: {...currentInfo.jsAttributes, [name]: value}})
     return apiCall(prefix, 'setCustomAttribute', true, 'api')()
   }

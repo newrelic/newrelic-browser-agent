@@ -7,23 +7,8 @@ import { sHash } from '../util/s-hash'
 import { navCookie } from '../timing/start-time'
 import { getConfigurationValue } from '../config/config'
 
-// var sHash = require('./s-hash')
-// var startTime = require('./start-time')
-
-// functions are on object, so that they can be mocked
-// var exp = {
-//   conditionallySet: conditionallySet,
-//   setCookie: setCookie
-// }
-
-// module.exports = exp
-
 export function conditionallySet(agentIdentifier) {
-  // var areCookiesEnabled = true
   var areCookiesEnabled = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled')
-  // if ('init' in NREUM && 'privacy' in NREUM.init) {
-  //   areCookiesEnabled = NREUM.init.privacy.cookies_enabled
-  // }
 
   if (navCookie && areCookiesEnabled) {
     exports.setCookie(); // allow importing modules (e.g., browser tests) to change setCookie() below

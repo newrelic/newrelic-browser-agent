@@ -61,8 +61,6 @@ function serializeInteraction(root, offset, navTiming, isRouteChange, addString,
     var queueTime = info.queueTime
     var appTime = info.applicationTime
 
-    // console.log("attrs....", attrs)
-
     if (typeof firstTimestamp === 'undefined') {
       startTimestamp += offset
       firstTimestamp = startTimestamp

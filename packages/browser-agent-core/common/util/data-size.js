@@ -17,5 +17,3 @@ export function dataSize (data) {
     return undefined
   }
 }
-
-// export default dataSize

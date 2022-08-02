@@ -10,8 +10,6 @@ export function formatStackTrace(stackLines) {
   return truncateStackLines(stackLines).replace(stripNewlinesRegex, '')
 }
 
-// module.exports.truncateSize = truncateSize
-
 // takes array of stack lines and returns string with top 50 and buttom 50 lines
 function truncateStackLines(stackLines) {
   var stackString

@@ -27,21 +27,20 @@ var origEvent = originals.EV
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
     super(agentIdentifier)
-    getRuntime(this.agentIdentifier).features.stn = true
-
-    const ee = this.ee
-
-    // // NREUM.debug("initialize session-trace instrument!", agentIdentifier)
-
-    this.timerEE = wrapTimer(this.ee)
-    this.rafEE = wrapRaf(this.ee)
-    wrapHistory(this.ee)
-    wrapEvents(this.ee)
 
     if (!(window.performance &&
       window.performance.timing &&
       window.performance.getEntriesByType
     )) return
+
+    getRuntime(this.agentIdentifier).features.stn = true
+
+    const ee = this.ee
+
+    this.timerEE = wrapTimer(this.ee)
+    this.rafEE = wrapRaf(this.ee)
+    wrapHistory(this.ee)
+    wrapEvents(this.ee)
 
     this.ee.on(FN_START, function (args, target) {
       var evt = args[0]

@@ -57,11 +57,9 @@ function ee (old, debugId) {
   }
 
   function emit (type, args, contextOrStore, force, bubble) {
-
     if (bubble !== false) bubble = true
     if (globalInstance.aborted && !force) { return }
     if (old && bubble) old.emit(type, args, contextOrStore)
-    // log("continue...")
     
     var ctx = context(contextOrStore)
     var handlersArray = listeners(type)
@@ -84,14 +82,11 @@ function ee (old, debugId) {
     
     for (var i = 0; i < len; i++) handlersArray[i].apply(ctx, args)
 
-    // log(bufferGroupMap[type])
     // Buffer after emitting for consistent ordering
     var bufferGroup = getBuffer()[bufferGroupMap[type]]
     if (bufferGroup) {
       bufferGroup.push([emitter, type, args, ctx])
     }
-
-    // log(bufferGroup)
 
     // Return the context so that the module that emitted can see what was done.
     return ctx

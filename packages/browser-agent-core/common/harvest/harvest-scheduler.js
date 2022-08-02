@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// import { getSubmitMethod, send, sendX } from './harvest'
 import { submitData } from '../util/submit-data'
 import { SharedContext } from '../context/shared-context'
 import { Harvest, getSubmitMethod } from './harvest'

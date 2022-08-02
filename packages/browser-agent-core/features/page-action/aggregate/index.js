@@ -6,7 +6,6 @@
 import { mapOwn } from '../../../common/util/map-own'
 import { stringify } from '../../../common/util/stringify'
 import { registerHandler as register } from '../../../common/event-emitter/register-handler'
-// import { on as onHarvest } from '../../../common/harvest/harvest'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'

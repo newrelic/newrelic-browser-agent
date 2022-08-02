@@ -5,7 +5,7 @@
 
 // Use various techniques to determine the time at which this page started and whether to capture navigation timing information
 
-import {sHash} from '../util/s-hash'
+import { sHash } from '../util/s-hash'
 import { mark } from './stopwatch'
 import { ffVersion } from '../browser-version/firefox-version'
 import { setOffset } from './now'
@@ -16,6 +16,7 @@ export let navCookie = true
 // findStartTime() *cli - comment out to add agentId context which is n/a at import time
 
 export function findStartTime (agentId) {
+  // findStartCookie is used for FF7/8 & browsers which do not support window.performance.timing.navigationStart
   var starttime = findStartWebTiming() || findStartCookie()
   if (!starttime) return
 

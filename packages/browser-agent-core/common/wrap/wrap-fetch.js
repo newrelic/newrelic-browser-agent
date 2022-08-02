@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ee as baseEE} from '../event-emitter/contextual-ee'
+import { ee as baseEE } from '../event-emitter/contextual-ee'
 import slice from 'lodash._slice'
-import {mapOwn} from '../util/map-own'
-import { originals } from '../config/config'
+import { mapOwn } from '../util/map-own'
 
 
 var win = window

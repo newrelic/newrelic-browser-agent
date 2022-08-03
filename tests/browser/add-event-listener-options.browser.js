@@ -4,7 +4,7 @@
  */
 
 const jil = require('jil')
-import { setup } from '../utils/setup'
+import { setup } from './utils/setup'
 import { wrapEvents } from '../../packages/browser-agent-core/common/wrap/wrap-events'
 
 const { baseEE } = setup()

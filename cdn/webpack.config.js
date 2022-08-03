@@ -82,8 +82,8 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      'WEBPACK_SUBVERSION': JSON.stringify(SUBVERSION || ''),
-      'WEBPACK_VERSION': JSON.stringify(VERSION || ''),
+      'WEBPACK_MINOR_VERSION': JSON.stringify(SUBVERSION || ''),
+      'WEBPACK_MAJOR_VERSION': JSON.stringify(VERSION || ''),
       'WEBPACK_DEBUG': JSON.stringify(IS_LOCAL || false)
     }),
     new webpack.SourceMapDevToolPlugin({

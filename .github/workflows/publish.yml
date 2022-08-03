@@ -19,8 +19,6 @@ jobs:
             key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
         - name: install
           run: npm ci
-        - name: check files don't exist already
-          run: node tools/scripts/check-version.js -e no -v $(cat VERSION)
   check-not-published:
     runs-on: ubuntu-latest
     container: node:14

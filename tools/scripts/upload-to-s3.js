@@ -1,9 +1,3 @@
-#!/usr/bin/env node
-
-/*
- * Copyright 2020 New Relic Corporation. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
- */
 
 var fs = require('fs')
 var path = require('path')
@@ -11,214 +5,129 @@ var AWS = require('aws-sdk')
 var yargs = require('yargs')
 
 var argv = yargs
-  .string('bucket')
-  .describe('bucket', 'S3 bucket name')
+    .string('bucket')
+    .describe('bucket', 'S3 bucket name')
 
-  .string('role')
-  .describe('role', 'S3 role ARN')
+    .string('role')
+    .describe('role', 'S3 role ARN')
 
-  .boolean('skip-upload-failures')
-  .describe('skip-upload-failures', "Don't bail out after the first failure, keep trying other requests")
+    .boolean('skip-upload-failures')
+    .describe('skip-upload-failures', "Don't bail out after the first failure, keep trying other requests")
 
-  .boolean('dry')
-  .describe('dry', 'run the script without actually uploading files')
-  .alias('d', 'dry')
+    .boolean('dry')
+    .describe('dry', 'run the script without actually uploading files')
+    .alias('d', 'dry')
 
-  .boolean('test')
-  .describe('test', 'for testing only, uploads scripts to folder named test')
-  .alias('t', 'test')
+    .boolean('test')
+    .describe('test', 'for testing only, uploads scripts to folder named test')
+    .alias('t', 'test')
 
-  .boolean('dev')
-  .describe('dev', 'for dev early release directory only, uploads scripts to folder named dev')
-  .alias('D', 'dev')
+    .boolean('dev')
+    .describe('dev', 'for dev early release directory only, uploads scripts to folder named dev')
+    .alias('D', 'dev')
 
-  .help('h')
-  .alias('h', 'help')
+    .help('h')
+    .alias('h', 'help')
 
-  .argv
+    .argv
 
 if (!argv['bucket']) {
-  console.log('S3 bucket must be specified')
-  return process.exit(1)
+    console.log('S3 bucket must be specified')
+    return process.exit(1)
 }
 
 if (!argv['role']) {
-  console.log('S3 role ARN must be specified')
-  return process.exit(1)
+    console.log('S3 role ARN must be specified')
+    return process.exit(1)
 }
 
-var assetFilenames = allAssetFilenames()
-var loaders = assetFilenames.loaders
-var payloads = assetFilenames.payloads
-var maps = assetFilenames.maps
+const buildDir = path.resolve(__dirname, '../../build/')
+const builtFileNames = fs.readdirSync(buildDir)
 
-var s3 = null
-var uploadErrors = []
-var uploadErrorCallback = null
-if (argv['skip-upload-failures']) {
-  uploadErrorCallback = function (err) {
-    uploadErrors.push(err)
-  }
-}
+console.log(`found ${builtFileNames.length} files to upload to S3`)
 
-var fileData = {}
-var agentVersion = fs.readFileSync(
-  path.resolve(__dirname, '../../build/build_number'),
-  'utf-8'
-).trim()
-
-var steps = [ initialize, loadFiles ]
-steps.push(uploadAllToS3)
-
-asyncForEach(steps, function (fn, next) {
-  fn(next)
-}, function (err) {
-  if (err) throw err
-  console.log('All steps finished.')
-
-  if (uploadErrorCallback && uploadErrors.length > 0) {
-    console.log('Failures:')
-    uploadErrors.forEach(function (e) {
-      console.log(e)
-    })
+connectToS3().then(async () => {
+    const uploads = await uploadFiles()
+    console.log(`Successfully uploaded ${uploads.length} files to S3`)
+    process.exit(0)
+}).catch(err => {
+    console.log(err)
     process.exit(1)
-  }
 })
 
-function initialize(cb) {
-  var roleToAssume = {
-    RoleArn: argv['role'],
-    RoleSessionName: 'uploadToS3Session',
-    DurationSeconds: 900
-  }
-
-  var sts = new AWS.STS()
-  sts.assumeRole(roleToAssume, function(err, data) {
+async function uploadFiles(err) {
     if (err) {
-      return cb(err)
-    } else {
-      var roleCreds = {
-        accessKeyId: data.Credentials.AccessKeyId,
-        secretAccessKey: data.Credentials.SecretAccessKey,
-        sessionToken: data.Credentials.SessionToken
-      }
-      s3 = new AWS.S3(roleCreds)
-      cb()
+        return reject(err)
     }
-  })
+    const files = await Promise.all(builtFileNames.map(fileName => {
+        return fs.promises.readFile(`${buildDir}/${fileName}`)
+    }))
+
+
+    const uploads = await Promise.all(files.map((f, i) => {
+        const fileName = builtFileNames[i]
+        const content = f
+        return uploadToS3(fileName, content)
+    }))
+
+    return uploads
 }
 
-function loadFiles (cb) {
-  var allFiles = payloads.concat(loaders).concat(maps)
+function connectToS3() {
+    return new Promise((resolve, reject) => {
+        if (argv.dry) return resolve()
 
-  asyncForEach(allFiles, readFile, cb)
+        var roleToAssume = {
+            RoleArn: argv['role'],
+            RoleSessionName: 'uploadToS3Session',
+            DurationSeconds: 900
+        }
 
-  function readFile (file, next) {
-    fs.readFile(path.resolve(__dirname, '../../build/', file), function (err, data) {
-      if (err) return next(err)
-      fileData[file] = data
-      next()
+        var sts = new AWS.STS()
+        sts.assumeRole(roleToAssume, function (err, data) {
+            if (err) {
+                reject(err)
+            } else {
+                var roleCreds = {
+                    accessKeyId: data.Credentials.AccessKeyId,
+                    secretAccessKey: data.Credentials.SecretAccessKey,
+                    sessionToken: data.Credentials.SessionToken
+                }
+                s3 = new AWS.S3(roleCreds)
+                resolve()
+            }
+        })
     })
-  }
 }
 
-function uploadAllToS3 (cb) {
-  var allFiles = payloads.concat(loaders).concat(maps)
+function uploadToS3(fileName, content) {
+    return new Promise((resolve, reject) => {
+        if (argv['test'] === true) {
+            fileName = 'test/' + key
+        }
 
-  asyncForEach(allFiles, function (file, next) {
-    var filename = argv['dev'] === true ? file : getFilenameWithVersion(file, agentVersion)
-    console.log('uploading ' + filename + ' to S3')
-    uploadToS3(argv['bucket'], filename, fileData[file], next)
-  }, cb, uploadErrorCallback)
-}
+        if (argv['dev'] === true) {
+            fileName = 'dev/' + key
+        }
 
-function getFilenameWithVersion (file, version) {
-  var parts = file.split('.')
-  return parts[0] + '-' + version + '.' + parts.slice(1).join('.')
-}
+        var params = {
+            Body: content,
+            Bucket: argv.bucket,
+            ContentType: 'application/javascript',
+            CacheControl: 'public, max-age=3600',
+            Key: fileName
+        }
 
-function uploadAllLoadersToDB (environment, cb) {
-  asyncForEach(loaders, function (file, next) {
-    var filename = getFilenameWithVersion(file, agentVersion)
-    uploadLoaderToDB(filename, fileData[file], environment, next)
-  }, cb, uploadErrorCallback)
-}
+        if (argv['dry'] === true) {
+            console.log('running in dry mode, file not uploaded, params:', params)
+            return resolve()
+        }
 
-function uploadToS3 (bucket, key, content, cb) {
-  if (argv['test'] === true) {
-    key = 'test/' + key
-  }
 
-  if (argv['dev'] === true) {
-    key = 'dev/' + key
-  }
-
-  var params = {
-    Body: content,
-    Bucket: bucket,
-    ContentType: 'application/javascript',
-    CacheControl: 'public, max-age=3600',
-    Key: key
-  }
-
-  if (argv['dry'] === true) {
-    console.log('running in dry mode, file not uploaded, params:', params)
-    process.nextTick(cb)
-    return
-  }
-
-  s3.putObject(params, cb)
-}
-
-function allAssetFilenames () {
-  var loaderSpecs = require('../../loaders')
-  var loaders = []
-  var payloads = []
-  var maps = []
-
-  loaderSpecs.forEach(function (loaderSpec) {
-    loaders.push('nr-loader-' + loaderSpec.name + '.js')
-    loaders.push('nr-loader-' + loaderSpec.name + '.min.js')
-    maps.push('nr-loader-' + loaderSpec.name + '.js.map')
-    maps.push('nr-loader-' + loaderSpec.name + '.min.js.map')
-
-    var payloadName = loaderSpec.payload ? 'nr-' + loaderSpec.payload : 'nr'
-    if (payloads.indexOf(payloadName + '.js') === -1) {
-      payloads.push(payloadName + '.js')
-      payloads.push(payloadName + '.min.js')
-      maps.push(payloadName + '.js.map')
-      maps.push(payloadName + '.min.js.map')
-    }
-  })
-
-  return {
-    loaders: loaders,
-    payloads: payloads,
-    maps: maps
-  }
-}
-
-// errorCallback is optional
-// If not specified, processing will terminate on the first error.
-// If specified, the errorCallback will be invoked once for each error error,
-// and the done callback will be invoked once each item has been processed.
-function asyncForEach (list, op, done, errorCallback) {
-  var index = 0
-
-  process.nextTick(next)
-
-  function next (err) {
-    if (err) {
-      if (errorCallback) {
-        errorCallback(err)
-      } else {
-        return done(err)
-      }
-    }
-
-    if (index >= list.length) return done(null)
-    op(list[index++], function (err, result) {
-      next(err)
+        s3.putObject(params, (err, data) => {
+            if (err) reject(err)
+            else resolve(data)
+        })
     })
-  }
+
 }

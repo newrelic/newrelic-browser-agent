@@ -7,6 +7,8 @@
 
 var yargs = require('yargs')
 var request = require('request')
+var path = require('path')
+var fs = require('fs')
 
 var config = require('yargs')
   .usage('$0 [options]')
@@ -16,26 +18,22 @@ var config = require('yargs')
   .describe('e', 'Fails when set to yes and scripts do not exist or when set to no and scripts do exist.')
   .default('e', 'yes,no')
 
-  .string('v')
-  .alias('v', 'version')
-  .describe('v', 'Version to check, defaults to current')
-  .default('v', 'current')
-
   .help('h')
   .alias('h', 'help')
   .strict()
   .wrap(Math.min(110, yargs.terminalWidth()))
   .argv
 
-var filenames = getLoaderFilenames(['rum', 'full', 'spa'], config.version)
-filenames = filenames.concat(getAggregatorFilenames(config.version))
+const buildDir = path.resolve(__dirname, '../../build/')
+const builtFileNames = fs.readdirSync(buildDir)
+const version = getVersionFromFilenames(builtFileNames)
 var errors = []
 
 validate()
 
 async function validate() {
   var checks = []
-  for (var filename of filenames) {
+  for (var filename of builtFileNames) {
     console.log('checking ', filename)
     checks.push(getFile(filename))
   }
@@ -45,6 +43,14 @@ async function validate() {
   })
 
   checkErrorsAndExit()
+}
+
+function getVersionFromFilenames(fileNames){
+  return Array.from(fileNames.reduce((prev, next) => {
+    const parts = next.split(".")
+    if (parts.length === 2 && parts[1] === 'js') prev.add(parts[0].split("-").at(-1))
+    return prev
+  }, new Set()))[0]
 }
 
 function checkErrorsAndExit() {
@@ -65,9 +71,6 @@ function validateResponse(filename, res, body) {
     }
     if (body.length === 0) {
       errors.push(`body for ${filename} was empty`)
-    }
-    if (!res.body.match(config.version + '.')) {
-      errors.push(`${filename} does not contain version ${config.version}`)
     }
   } else if (config.exists === 'no') {
     if (res.statusCode === 200) {
@@ -93,23 +96,4 @@ function getFile(filename) {
       resolve([filename, res, body])
     })
   })
-}
-
-function getLoaderFilenames(loaders, version) {
-  var filenames = []
-  loaders.forEach(function (loaderName) {
-    var base = 'nr-loader-' + loaderName + '-' + version
-    filenames.push(base + '.js')
-    filenames.push(base + '.min.js')
-  })
-  return filenames
-}
-
-function getAggregatorFilenames(version) {
-  var filenames = []
-  filenames.push('nr-' + version + '.js')
-  filenames.push('nr-' + version + '.min.js')
-  filenames.push('nr-spa-' + version + '.js')
-  filenames.push('nr-spa-' + version + '.min.js')
-  return filenames
 }

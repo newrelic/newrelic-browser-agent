@@ -45,10 +45,6 @@ if (argv['skip-upload-failures']) {
 }
 
 var fileData = {}
-var agentVersion = fs.readFileSync(
-  path.resolve(__dirname, '../../build/build_number'),
-  'utf-8'
-).trim()
 
 var steps = [ loadFiles ]
 
@@ -88,21 +84,9 @@ function loadFiles (cb) {
   }
 }
 
-function getFilenameWithVersion (file, version) {
-  var parts = file.split('.')
-  var filename = parts[0] + '-' + version + '.' + parts.slice(1).join('.')
-
-  if (argv['test-mode']) {
-    filename = filename.replace('nr-', 'test-')
-  }
-
-  return filename
-}
-
 function uploadAllLoadersToDB (environment, cb) {
-  asyncForEach(loaders, function (file, next) {
-    var filename = getFilenameWithVersion(file, agentVersion)
-    uploadLoaderToDB(filename, fileData[file], environment, next)
+  asyncForEach(loaders, function (filename, next) {
+    uploadLoaderToDB(filename, fileData[filename], environment, next)
   }, cb, uploadErrorCallback)
 }
 
@@ -155,15 +139,8 @@ function uploadLoaderToDB (filename, loader, environment, cb) {
 }
 
 function loaderFilenames() {
-  var loaderSpecs = require('../../loaders')
-  var filenames = []
-
-  loaderSpecs.forEach(function (loaderSpec) {
-    filenames.push('nr-loader-' + loaderSpec.name + '.js')
-    filenames.push('nr-loader-' + loaderSpec.name + '.min.js')
-  })
-
-  return filenames
+  const buildDir = path.resolve(__dirname, '../../build/')
+  return fs.readdirSync(buildDir).filter(x => x.startsWith('nr-loader') && x.endsWith('.js')) 
 }
 
 // errorCallback is optional

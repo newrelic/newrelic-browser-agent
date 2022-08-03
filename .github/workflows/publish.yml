@@ -20,6 +20,7 @@ jobs:
         - name: install
           run: npm ci
   check-not-published:
+    needs: install
     runs-on: ubuntu-latest
     container: node:14
     steps:
@@ -34,7 +35,7 @@ jobs:
       - name: check files don't exist already
         run: node tools/scripts/check-version.js -e no
   smoke-test:
-    needs: build
+    needs: check-not-published
     runs-on: ubuntu-latest
     container: node:14
     env:

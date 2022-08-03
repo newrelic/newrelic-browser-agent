@@ -17,7 +17,7 @@ jobs:
       - name: install
         run: npm ci
   publish-to-s3:
-    needs: smoke-test
+    needs: install
     runs-on: ubuntu-latest
     container: node:14
     env:

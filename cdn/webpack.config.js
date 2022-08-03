@@ -25,7 +25,7 @@ switch (PUBLISH) {
     MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/[url]'
     break
   case 'DEV':
-    PATH_VERSION = `-${VERSION}`
+    PATH_VERSION = ``
     SUBVERSION = 'DEV'
     PUBLIC_PATH = 'https://js-agent.newrelic.com/dev/'
     MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/dev/[url]'

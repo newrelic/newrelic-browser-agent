@@ -7,20 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  install:
-    runs-on: ubuntu-latest
-    container: node:14
-    steps:
-      - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v2
-        with:
-          path: ./.npm
-          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
-      - name: install
-        run: npm ci
   publish-to-s3:
-    needs: install
     runs-on: ubuntu-latest
     container: node:14
     env:
@@ -28,11 +15,6 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v2
-        with:
-          path: ./.npm
-          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
       - name: install
         run: npm ci
       - name: build
@@ -41,19 +23,7 @@ jobs:
         run: |
           node tools/scripts/upload-to-s3.js \
             --bucket ${{ secrets.AWS_BUCKET }} \
-            --role ${{ secrets.AWS_ROLE_ARN }}
-  check-published:
-    needs: publish-to-s3
-    runs-on: ubuntu-latest
-    container: node:14
-    steps:
-      - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v2
-        with:
-          path: ./.npm
-          key: ${{ runner.os }}-publish-${{ hashFiles('**/package-lock.json') }}
-      - name: install
-        run: npm ci
+            --role ${{ secrets.AWS_ROLE_ARN }} \
+            --dev
       - name: check files exist
-        run: node tools/scripts/check-version.js -e yes
+        run: node tools/scripts/check-version.js -e yes -d

@@ -18,11 +18,17 @@ var config = require('yargs')
   .describe('e', 'Fails when set to yes and scripts do not exist or when set to no and scripts do exist.')
   .default('e', 'yes,no')
 
+  .boolean('d')
+  .alias('d', 'dev')
+  .describe('d', 'Instructs to check the dev folder instead of the root folder')
+  .default('d', false)
+
   .help('h')
   .alias('h', 'help')
   .strict()
   .wrap(Math.min(110, yargs.terminalWidth()))
   .argv
+
 
 const buildDir = path.resolve(__dirname, '../../build/')
 const builtFileNames = fs.readdirSync(buildDir)
@@ -34,7 +40,6 @@ validate()
 async function validate() {
   var checks = []
   for (var filename of builtFileNames) {
-    console.log('checking ', filename)
     checks.push(getFile(filename))
   }
   var results = await Promise.all(checks)
@@ -48,7 +53,7 @@ async function validate() {
 function getVersionFromFilenames(fileNames){
   return Array.from(fileNames.reduce((prev, next) => {
     const parts = next.split(".")
-    if (parts.length === 2 && parts[1] === 'js') prev.add(parts[0].split("-").at(-1))
+    if (parts.length === 2 && parts[1] === 'js') prev.add(parts[0].split("-")[parts[0].split("-").length - 1])
     return prev
   }, new Set()))[0]
 }
@@ -63,29 +68,32 @@ function checkErrorsAndExit() {
   }
 }
 
-function validateResponse(filename, res, body) {
+function validateResponse(url, res, body) {
   if (config.exists === 'yes') {
     if (res.statusCode !== 200) {
-      errors.push(filename + ' does not exist, ' + res.statusCode)
+      errors.push(url + ' does not exist, ' + res.statusCode)
       return
     }
     if (body.length === 0) {
-      errors.push(`body for ${filename} was empty`)
+      errors.push(`body for ${url} was empty`)
     }
   } else if (config.exists === 'no') {
     if (res.statusCode === 200) {
-      errors.push(filename + ' exists, ' + res.statusCode)
+      errors.push(url + ' exists, ' + res.statusCode)
     }
   }
 }
 
 function getFile(filename) {
-  var url = 'https://js-agent.newrelic.com/' + filename
+  var url = 'https://js-agent.newrelic.com/' + (config.d ? 'dev/' : '') + filename
   var opts = {
     uri: url,
     method: 'GET',
     gzip: true
   }
+
+
+  console.log('checking ', url)
 
   return new Promise((resolve, reject) => {
     request(opts, (err, res, body) => {
@@ -93,7 +101,7 @@ function getFile(filename) {
         reject(err)
         return
       }
-      resolve([filename, res, body])
+      resolve([url, res, body])
     })
   })
 }

@@ -103,11 +103,11 @@ function connectToS3() {
 function uploadToS3(fileName, content) {
     return new Promise((resolve, reject) => {
         if (argv['test'] === true) {
-            fileName = 'test/' + key
+            fileName = 'test/' + fileName
         }
 
         if (argv['dev'] === true) {
-            fileName = 'dev/' + key
+            fileName = 'dev/' + fileName
         }
 
         var params = {

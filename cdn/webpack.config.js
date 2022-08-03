@@ -88,7 +88,7 @@ module.exports = {
     }),
     new webpack.SourceMapDevToolPlugin({
       append: MAP_PATH, // CDN route vs local route
-      filename: `[name].[chunkhash:8].map`,
+      filename: SUBVERSION === 'PROD' ? `[name].[chunkhash:8].map` : `[name].map`,
       ...(JSON.parse(SOURCEMAPS) === false && {exclude: new RegExp(".*")}) // exclude all files if disabled
     }),
     new BundleAnalyzerPlugin({

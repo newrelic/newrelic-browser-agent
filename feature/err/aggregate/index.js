@@ -137,7 +137,6 @@ function canonicalizeStackURLs (stackInfo) {
 }
 
 function storeError (err, time, internal, customAttributes) {
-  // console.log('storeError', err)
   // are we in an interaction
   time = time || loader.now()
   if (!internal && loader.onerror && loader.onerror(err)) return
@@ -196,7 +195,6 @@ function storeError (err, time, internal, customAttributes) {
 
     var jsAttributesHash = stringHashCode(stringify(customParams))
     var aggregateHash = hash + ':' + jsAttributesHash
-    console.log('aggregateHash', aggregateHash)
     agg.store(type, aggregateHash, params, newMetrics, customParams)
   }
 

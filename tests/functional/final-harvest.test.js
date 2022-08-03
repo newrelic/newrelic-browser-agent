@@ -40,7 +40,6 @@ testDriver.test('final harvest sends page action', reliableFinalHarvest, functio
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
-      console.log("got first promises")
       t.equal(router.seenRequests.ins, 0, 'no ins harvest yet')
 
       let insPromise = router.expectIns()
@@ -54,7 +53,6 @@ testDriver.test('final harvest sends page action', reliableFinalHarvest, functio
       })
     })
     .then(() => {
-      console.log("got second promises")
       t.equal(router.seenRequests.ins, 1, 'received one ins harvest')
       t.end()
     })

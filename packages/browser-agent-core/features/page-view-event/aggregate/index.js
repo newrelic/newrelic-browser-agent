@@ -30,7 +30,6 @@ export class Aggregate extends FeatureBase {
     // some time in the past some code will have called stopwatch.mark('starttime', Date.now())
     // calling measure like this will create a metric that measures the time differential between
     // the two marks.
-    // // NREUM.debug("measure!")
     measure(this.aggregator, 'be', 'starttime', 'firstbyte')
     measure(this.aggregator, 'fe', 'firstbyte', 'onload')
     measure(this.aggregator, 'dc', 'firstbyte', 'domContent')

@@ -6,10 +6,10 @@
 const jil = require('jil')
 import { setup } from '../utils/setup'
 
-const { agentIdentifier, baseEE, aggregator } = setup();
+const { agentIdentifier, baseEE, aggregator } = setup()
 
 jil.browserTest('xhr with blob request body', async function (t) {
-  const { Instrument: AjaxInstrum } = await import('../../../packages/browser-agent-core/features/ajax/instrument/index');
+  const { Instrument: AjaxInstrum } = await import('../../../packages/browser-agent-core/features/ajax/instrument/index')
   const ajaxTestInstr = new AjaxInstrum(agentIdentifier);
   const { drain } = await import('../../../packages/browser-agent-core/common/drain/drain')
   const { registerHandler } = await import('../../../packages/browser-agent-core/common/event-emitter/register-handler')

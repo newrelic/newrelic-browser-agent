@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {mapOwn} from '../util/map-own'
-import {stringify} from '../util/stringify'
+import { mapOwn } from '../util/map-own'
+import { stringify } from '../util/stringify'
 
 // Characters that are safe in a qs, but get encoded.
 var charMap = {
@@ -29,8 +29,6 @@ export function qs (value) {
   if (value === null || value === undefined) return 'null'
   return encodeURIComponent(value).replace(safeEncoded, real)
 }
-
-// export default {obj: obj, fromArray: fromArray, qs: qs, param: param}
 
 export function fromArray (qs, maxBytes) {
   var bytes = 0

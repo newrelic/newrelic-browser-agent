@@ -10,13 +10,6 @@ import { Obfuscator } from '../util/obfuscate'
 var hasOwnProp = Object.prototype.hasOwnProperty
 var MAX_ATTRIBUTES = 64
 
-// export default {
-//   nullable,
-//   numeric,
-//   getAddStringContext,
-//   addCustomAttributes
-// }
-
 export function nullable (val, fn, comma) {
   return val || val === 0 || val === ''
     ? fn(val) + (comma ? ',' : '')

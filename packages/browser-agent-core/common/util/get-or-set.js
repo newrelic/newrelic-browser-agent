@@ -5,8 +5,6 @@
 
 var has = Object.prototype.hasOwnProperty
 
-// export default getOrSet
-
 // Always returns the current value of obj[prop], even if it has to set it first
 export function getOrSet (obj, prop, getVal) {
   // If the value exists return it.

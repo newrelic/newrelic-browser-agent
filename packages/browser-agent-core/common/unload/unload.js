@@ -3,10 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { ffVersion } from '../browser-version/firefox-version'
-import {single} from '../util/single'
-import {addE} from '../event-listener/add-e'
-
-// export default subscribeToUnload
+import { single } from '../util/single'
+import { addE } from '../event-listener/add-e'
 
 // Used to subscribe a callback to when a page is being unloaded. This is used,
 // for example, to submit a final harvest.

@@ -32,4 +32,3 @@ export function wrapMutation (sharedEE){
 export function scopedEE(sharedEE){
   return (sharedEE || baseEE).get('mutation')
 }
-

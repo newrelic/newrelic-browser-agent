@@ -12,6 +12,3 @@ export function canonicalFunctionName (orig) {
 
   return
 }
-
-// export default canonicalFunctionName
-// module.exports = canonicalFunctionName

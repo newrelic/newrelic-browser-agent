@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ee} from '../event-emitter/contextual-ee'
+import { ee } from '../event-emitter/contextual-ee'
 import slice from 'lodash._slice'
 var flag = 'nr@original'
 var has = Object.prototype.hasOwnProperty
@@ -68,7 +68,6 @@ export function createWrapperWithEmitter(emitter, always) {
   }
 
   function inPlace (obj, methods, prefix, getContext, bubble) {
-    // log('methods!', methods)
     if (!prefix) prefix = ''
     // If prefix starts with '-' set this boolean to add the method name to
     // the prefix before passing each one to wrap.

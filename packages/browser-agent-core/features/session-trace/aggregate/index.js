@@ -19,6 +19,13 @@ import { FeatureBase } from '../../../common/util/feature-base'
 export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator)
+
+    const agentRuntime = getRuntime(agentIdentifier)
+
+    if (!xhrUsable) return
+    // bail if not instrumented
+    if (!agentRuntime.features.stn || !agentRuntime.xhrWrappable) return
+
     this.ptid = ''
     this.ignoredEvents = {
       // we find that certain events make the data too noisy to be useful
@@ -34,7 +41,6 @@ export class Aggregate extends FeatureBase {
       mousing: [1000, 2000],
       touching: [1000, 2000]
     }
-
     this.rename = {
       typing: {
         keydown: true,
@@ -64,69 +70,62 @@ export class Aggregate extends FeatureBase {
     this.trace = {}
     this.nodeCount = 0
     this.sentTrace = null
-    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'stn.harvestTimeSeconds') || 10
-    this.maxNodesPerHarvest = getConfigurationValue(this.agentIdentifier, 'stn.maxNodesPerHarvest') || 1000
+    this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'stn.harvestTimeSeconds') || 10
+    this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'stn.maxNodesPerHarvest') || 1000
 
     this.laststart = 0
-
     findStartTime(agentIdentifier)
 
-    if (!xhrUsable) return
-    // bail if not instrumented
-    if (!getRuntime(this.agentIdentifier).features.stn) return
+    this.ee.on('feat-stn', () => {
 
-    // ee.on('feat-stn', () => {
-    this.storeTiming(window.performance.timing)
+      this.storeTiming(window.performance.timing)
 
-    // onHarvest('resources', prepareHarvest)
+      var scheduler = new HarvestScheduler('resources', {
+        onFinished: onHarvestFinished.bind(this),
+        retryDelay: this.harvestTimeSeconds
+      }, this)
+      scheduler.harvest.on('resources', prepareHarvest.bind(this))
+      scheduler.runHarvest({ needResponse: true })
 
-    var scheduler = new HarvestScheduler('resources', {
-      onFinished: onHarvestFinished.bind(this),
-      retryDelay: this.harvestTimeSeconds
-      // onUnload: () => this.finalHarvest() // no special actions needed before unloading
-    }, this)
-    scheduler.harvest.on('resources', prepareHarvest.bind(this))
-    scheduler.runHarvest({ needResponse: true })
+      function onHarvestFinished(result) {
+        // start timer only if ptid was returned by server
+        if (result.sent && result.responseText && !this.ptid) {
+          this.ptid = result.responseText
+          getRuntime(this.agentIdentifier).ptid = this.ptid
+          scheduler.startTimer(this.harvestTimeSeconds)
+        }
 
-    function onHarvestFinished(result) {
-      // start timer only if ptid was returned by server
-      if (result.sent && result.responseText && !this.ptid) {
-        this.ptid = result.responseText
-        getRuntime(this.agentIdentifier).ptid = this.ptid
-        scheduler.startTimer(this.harvestTimeSeconds)
+        if (result.sent && result.retry && this.sentTrace) {
+          mapOwn(this.sentTrace, (name, nodes) => {
+            this.mergeSTNs(name, nodes)
+          })
+          this.sentTrace = null
+        }
       }
 
-      if (result.sent && result.retry && this.sentTrace) {
-        mapOwn(this.sentTrace, (name, nodes) => {
-          this.mergeSTNs(name, nodes)
-        })
-        this.sentTrace = null
-      }
-    }
+      function prepareHarvest(options) {
+        if ((now()) > (15 * 60 * 1000)) {
+          // been collecting for over 15 min, empty trace object and bail
+          scheduler.stopTimer()
+          this.trace = {}
+          return
+        }
 
-    function prepareHarvest(options) {
-      if ((now()) > (15 * 60 * 1000)) {
-        // been collecting for over 15 min, empty trace object and bail
-        scheduler.stopTimer()
-        this.trace = {}
-        return
+        // only send when there are more than 30 nodes to send
+        if (this.ptid && this.nodeCount <= 30) return
+
+        return this.takeSTNs(options.retry)
       }
 
-      // only send when there are more than 30 nodes to send
-      if (this.ptid && this.nodeCount <= 30) return
-
-      return this.takeSTNs(options.retry)
-    }
-
-    registerHandler('bst', (...args) => this.storeEvent(...args), undefined, this.ee)
-    registerHandler('bstTimer', (...args) => this.storeTimer(...args), undefined, this.ee)
-    registerHandler('bstResource', (...args) => this.storeResources(...args), undefined, this.ee)
-    registerHandler('bstHist', (...args) => this.storeHist(...args), undefined, this.ee)
-    registerHandler('bstXhrAgg', (...args) => this.storeXhrAgg(...args), undefined, this.ee)
-    registerHandler('bstApi', (...args) => this.storeSTN(...args), undefined, this.ee)
-    registerHandler('errorAgg', (...args) => this.storeErrorAgg(...args), undefined, this.ee)
-    registerHandler('pvtAdded', (...args) => this.processPVT(...args), undefined, this.ee)
-    // })
+      registerHandler('bst', (...args) => this.storeEvent(...args), undefined, this.ee)
+      registerHandler('bstTimer', (...args) => this.storeTimer(...args), undefined, this.ee)
+      registerHandler('bstResource', (...args) => this.storeResources(...args), undefined, this.ee)
+      registerHandler('bstHist', (...args) => this.storeHist(...args), undefined, this.ee)
+      registerHandler('bstXhrAgg', (...args) => this.storeXhrAgg(...args), undefined, this.ee)
+      registerHandler('bstApi', (...args) => this.storeSTN(...args), undefined, this.ee)
+      registerHandler('errorAgg', (...args) => this.storeErrorAgg(...args), undefined, this.ee)
+      registerHandler('pvtAdded', (...args) => this.processPVT(...args), undefined, this.ee)
+    })
   }
 
   processPVT(name, value, attrs) {

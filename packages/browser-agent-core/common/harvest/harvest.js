@@ -9,7 +9,7 @@ import { stringify } from '../util/stringify'
 import { submitData } from '../util/submit-data'
 import { reduce } from '../util/reduce'
 import { getLocation } from '../url/location'
-import {getInfo, getConfigurationValue, getRuntime, getConfiguration} from '../config/config'
+import { getInfo, getConfigurationValue, getRuntime, getConfiguration } from '../config/config'
 import { cleanURL } from '../url/clean-url'
 import { now } from '../timing/now'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
@@ -22,7 +22,6 @@ import { VERSION } from '../constants/environment-variables'
 var haveSendBeacon = !!navigator.sendBeacon
 
 // requiring ie version updates the IE version on the loader object
-// var ieVersion = require('./ie-version')
 export var xhrUsable = ieVersion > 9 || ieVersion === 0
 
 export class Harvest extends SharedContext {
@@ -43,6 +42,16 @@ export class Harvest extends SharedContext {
     return reduce(sents, or)
   }
 
+  /**
+   * Initiate a harvest from multiple sources. An event that corresponds to the endpoint
+   * name is emitted, which gives any listeners the opportunity to provide payload data.
+   *
+   * @param {string} endpoint - The endpoint of the harvest (jserrors, events, resources etc.)
+   *
+   * @param {object} opts
+   * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
+   * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
+   */
   sendX(endpoint, opts, cbFinished) {
     var submitMethod = getSubmitMethod(endpoint, opts)
     if (!submitMethod) return false
@@ -75,6 +84,7 @@ export class Harvest extends SharedContext {
 
     var payload = { body: makeBody(), qs: makeQueryString() }
     var caller = this.obfuscator.shouldObfuscate() ? (...args) => this.obfuscateAndSend(...args) : (...args) => this._send(...args)
+    
     return caller(endpoint, payload, opts, submitMethod, cbFinished)
   }
 
@@ -87,6 +97,8 @@ export class Harvest extends SharedContext {
     var info = getInfo(this.sharedContext.agentIdentifier)
     if (!info.errorBeacon) return false
 
+    var agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
+
     if (!payload.body) {
       if (cbFinished) {
         cbFinished({ sent: false })
@@ -97,7 +109,7 @@ export class Harvest extends SharedContext {
     if (!opts) opts = {}
 
     var url = this.getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + this.baseQueryString()
-    if (payload.qs) url += encodeObj(payload.qs, getRuntime(this.sharedContext.agentIdentifier).maxBytes)
+    if (payload.qs) url += encodeObj(payload.qs, agentRuntime.maxBytes)
 
     if (!submitMethod) {
       submitMethod = getSubmitMethod(endpoint, opts)
@@ -112,7 +124,7 @@ export class Harvest extends SharedContext {
     } else if (useBody) {
       body = stringify(payload.body)
     } else {
-      fullUrl = url + encodeObj(payload.body, getRuntime(this.sharedContext.agentIdentifier).maxBytes)
+      fullUrl = url + encodeObj(payload.body, agentRuntime.maxBytes)
     }
 
     var result = method(fullUrl, body)
@@ -138,7 +150,7 @@ export class Harvest extends SharedContext {
     // if beacon request failed, retry with an alternative method
     if (!result && method === submitData.beacon) {
       method = submitData.img
-      result = method(url + encodeObj(payload.body, getRuntime(this.sharedContext.agentIdentifier).maxBytes))
+      result = method(url + encodeObj(payload.body, agentRuntime.maxBytes))
     }
 
     return result

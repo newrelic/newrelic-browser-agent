@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // traverses an object and applies a fn to property values of a certain type
 export function applyFnToProps(obj, fn, type, ignoreKeys) {
   if (!obj || typeof obj !== 'object') return obj

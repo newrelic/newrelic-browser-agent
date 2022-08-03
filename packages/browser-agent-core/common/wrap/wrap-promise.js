@@ -64,9 +64,6 @@ export function wrapPromise(sharedEE){
     }
   
     Object.assign(OriginalPromise.prototype, {constructor: {value: WrappedPromise}})
-    // OriginalPromise.prototype = Object.create(OriginalPromise.prototype, {
-    //   constructor: {value: WrappedPromise}
-    // })
   
     mapOwn(Object.getOwnPropertyNames(OriginalPromise), function copy (i, key) {
       try {

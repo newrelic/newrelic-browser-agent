@@ -5,13 +5,13 @@
 
 import { ee } from '../event-emitter/contextual-ee'
 import { mapOwn } from '../util/map-own'
-import { registerHandler as defaultHandlers } from '../event-emitter/register-handler'
+import { registerHandler as defaultRegister } from '../event-emitter/register-handler'
 
 
 // calls will need to update to call this more directly so we can explicitly pass in the ee and handler
 export function drain(agentIdentifier, group = 'feature') {
   const baseEE = agentIdentifier ? ee.get(agentIdentifier) : ee
-  const handlers = defaultHandlers.handlers
+  const handlers = defaultRegister.handlers
   if (!baseEE.backlog || !handlers) return
 
   var bufferedEventsInGroup = baseEE.backlog[group]

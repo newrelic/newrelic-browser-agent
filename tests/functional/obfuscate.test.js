@@ -57,10 +57,6 @@ testDriver.test('Obfuscate All Events', browsers, function (t, browser, router) 
     var strPayload = JSON.stringify(payload)
     var failed = strPayload.includes('bam-test') || strPayload.includes('fakeid') || strPayload.includes('pii')
 
-    if (failed) {
-      console.log(`${name} failed`, payload)
-    }
-
     t.ok(!strPayload.includes('pii'), `${name} -- pii was obfuscated`)
     t.ok(!strPayload.includes('bam-test'), `${name} -- bam-test was obfuscated`)
     t.ok(!strPayload.includes('fakeid'), `${name} -- fakeid was obfuscated`)

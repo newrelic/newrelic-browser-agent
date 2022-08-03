@@ -4,9 +4,9 @@
  */
 
 // wrap-events patches XMLHttpRequest.prototype.addEventListener for us.
-import './wrap-events'
-// import * as config from '../config'
-import {ee as contextualEE} from '../event-emitter/contextual-ee'
+// TODO: if we want to load Ajax feature on its own, we'll need to call wrapEvents(sharedEE)
+// import { wrapEvents } from './wrap-events'
+import { ee as contextualEE } from '../event-emitter/contextual-ee'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { originals } from '../config/config'
@@ -58,7 +58,6 @@ export function wrapXhr (sharedEE) {
 
   XHR.prototype = OrigXHR.prototype
 
-  // log('wrap xhr...')
   wrapFn.inPlace(XHR.prototype, ['open', 'send'], '-xhr-', getObject)
 
   ee.on('send-xhr-start', function (args, xhr) {

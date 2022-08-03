@@ -81,4 +81,3 @@ export function wrapEvents(sharedEE) {
 export function scopedEE(sharedEE){
   return (sharedEE || baseEE).get('events')
 }
-

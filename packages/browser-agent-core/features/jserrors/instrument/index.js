@@ -25,11 +25,9 @@ export class Instrument extends FeatureBase {
     
     const state = this
 
-    const agentRuntime = getRuntime(this.agentIdentifier);
-    agentRuntime.features.err = true;   // declare that we are using err instrumentation
-
-
-    // // NREUM.debug("initialize js-errors instrument!", state.agentIdentifier)
+    const agentRuntime = getRuntime(this.agentIdentifier)
+    // Declare that we are using err instrumentation
+    agentRuntime.features.err = true
 
     state.ee.on('fn-start', function (args, obj, methodName) {
       if (state.handleErrors) state.skipNext += 1
@@ -53,9 +51,6 @@ export class Instrument extends FeatureBase {
     state.ee.on('internal-error', (e) => {
       handle('ierr', [e, now(), true], undefined, undefined, state.ee)
     })
-
-    // Declare that we are using err instrumentation
-    // require('./debug')
 
     const prevOnError = window.onerror
     window.onerror = (...args) => {

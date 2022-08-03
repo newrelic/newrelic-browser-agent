@@ -32,7 +32,6 @@ testDriver.test('reporting uncaught errors', supported, function (t, browser, ro
       { message: 'fake', tested: false }, 
       { message: 'original return false', tested: false }
     ]
-    console.log("actualErrors messages", actualErrors.map(x => x.params.message))
     actualErrors.forEach(err => {
       const targetError = expectedErrorMessages.find(x => x.message === err.params.message)
       if (targetError) targetError.tested = true

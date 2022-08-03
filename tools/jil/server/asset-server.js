@@ -38,10 +38,9 @@ class AssetTransform {
 }
 
 class AgentInjectorTransform extends AssetTransform {
-  constructor(buildDir, modularBuildDir, assetServer, router) {
+  constructor(buildDir, assetServer, router) {
     super()
     this.buildDir = buildDir
-    this.modularBuildDir = modularBuildDir
     this.defaultAgentConfig = {}
     this.assetServer = assetServer
     this.router = router
@@ -195,7 +194,7 @@ class AgentInjectorTransform extends AssetTransform {
 
       this.getLoaderContent(
         loaderName,
-        rawContent.includes("{modular-loader}") ? this.modularBuildDir : this.buildDir,
+        this.buildDir,
         (err, loaderContent) => {
           if (err) return callback(err)
 
@@ -219,7 +218,6 @@ class AgentInjectorTransform extends AssetTransform {
 
           let rspData = rawContent
             .split('{loader}').join(tagify(disableSsl + loaderContent))
-            .replace('{modular-loader}', tagify(disableSsl + loaderContent))
             .replace('{config}', tagify(disableSsl + configContent))
             .replace('{init}', tagify(disableSsl + initContent))
             .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
@@ -479,12 +477,11 @@ class AssetServer extends BaseServer {
     this.defaultLoader = testConfig.loader
     this.debugShim = testConfig.debugShim
     this.buildDir = path.resolve(__dirname, '../../../build')
-    this.modularBuildDir = path.resolve(__dirname, '../../../cdn/build')
     this.assetsDir = path.resolve(__dirname, '../../..')
     this.unitTestDir = path.resolve(__dirname, '../../../tests/browser')
     this.addHandler(this.serviceRequest.bind(this))
     this.router = new Router(this, testConfig, output)
-    this.agentTransform = new AgentInjectorTransform(this.buildDir, this.modularBuildDir, this, this.router)
+    this.agentTransform = new AgentInjectorTransform(this.buildDir, this, this.router)
     this.agentTransform.defaultAgentConfig = defaultAgentConfig
     this.browserTests = browserTests
     this.renderIndex = renderIndex
@@ -582,7 +579,6 @@ class AssetServer extends BaseServer {
       }
 
       transform.execute(params, assetPath, ssl, (err, transformed) => {
-        if (err) console.log('err!', err)
         if (err) return this.writeError(rsp, `Error while transforming asset ${err}: ${err.stack}`)
         rsp.writeHead(200, {
           'Content-Type': 'text/html'

@@ -10,11 +10,11 @@ export const protocol = {
 }
 
 function isFileProtocol () {
-  let win = getWindow();
-  let isFile = !!(win.location && win.location.protocol && win.location.protocol === 'file:');
+  let win = getWindow()
+  let isFile = !!(win.location && win.location.protocol && win.location.protocol === 'file:')
   if (isFile) {
     //metrics.recordSupportability('Generic/FileProtocol/Detected') -- may be implemented later? Probably make sure it's once per window
     protocol.supportabilityMetricSent = true
   }
-  return isFile;
+  return isFile
 }

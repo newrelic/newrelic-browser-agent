@@ -7,19 +7,14 @@ import {now, getOffset} from './now'
 
 var marks = {}
 
-// module.exports = {
-//   mark: mark,
-//   measure: measure
-// }
-
 export function mark (agentId, markName, markTime) {
   if (typeof markTime === 'undefined') markTime = (now() + getOffset())
-  marks[agentId] = marks[agentId] || {};
+  marks[agentId] = marks[agentId] || {}
   marks[agentId][markName] = markTime
 }
 
 export function measure (aggregator, metricName, startMark, endMark) {
-  const agentId = aggregator.sharedContext.agentIdentifier;
+  const agentId = aggregator.sharedContext.agentIdentifier
   var start = marks[agentId]?.[startMark]
   var end = marks[agentId]?.[endMark]
 

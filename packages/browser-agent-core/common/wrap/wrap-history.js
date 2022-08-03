@@ -20,12 +20,12 @@ export function wrapHistory(sharedEE){
   if (prototype && prototype.pushState && prototype.replaceState) {
     object = prototype
   }
-  // log('wrap history')
+
   wrapFn.inPlace(object, [ 'pushState', 'replaceState' ], '-')
 
   return ee
 }
-3
+
 export function scopedEE(sharedEE){
   return (sharedEE || baseEE).get('history')
 }

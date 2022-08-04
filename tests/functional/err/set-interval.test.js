@@ -13,6 +13,9 @@ testDriver.test('reporting errors from setInterval callbacks', supported, functi
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   })
@@ -28,6 +31,8 @@ testDriver.test('reporting errors from setInterval callbacks', supported, functi
       stack: [{
         u: router.assetURL('js/set-interval-error.js').split('?')[0],
         l: 10
+      }, {
+        f: 'u', u: '<inline>', l: 12
       }]
     }]
 

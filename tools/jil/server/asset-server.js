@@ -44,6 +44,8 @@ class AgentInjectorTransform extends AssetTransform {
     this.defaultAgentConfig = {}
     this.assetServer = assetServer
     this.router = router
+
+    this.polyfills = fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`)
   }
 
   parseConfigFromQueryString(params) {
@@ -153,9 +155,9 @@ class AgentInjectorTransform extends AssetTransform {
     `
   }
 
-  getLoaderContent(loaderName, callback) {
+  getLoaderContent(loaderName, dir, callback) {
     let loaderFilename = `nr-loader-${loaderName}.min.js`
-    let loaderPath = path.join(this.buildDir, loaderFilename)
+    let loaderPath = path.join(dir, loaderFilename)
     fs.readFile(loaderPath, callback)
   }
 
@@ -190,47 +192,52 @@ class AgentInjectorTransform extends AssetTransform {
       const packagePaths = htmlPackageTags.map(x => x.replace(/[{}]/g, ''))
       const packageFiles = await this.getBuiltPackages(packagePaths)
 
-      this.getLoaderContent(loaderName, (err, loaderContent) => {
-        if (err) return callback(err)
+      this.getLoaderContent(
+        loaderName,
+        this.buildDir,
+        (err, loaderContent) => {
+          if (err) return callback(err)
 
-        let configContent = ''
-        try {
-          configContent = this.generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig)
-        } catch (e) {
-          return callback(e)
-        }
-
-        let initContent = ''
-        if (params.init) {
+          let configContent = ''
           try {
-            initContent = this.generateInit(params.init)
+            configContent = this.generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig)
           } catch (e) {
             return callback(e)
           }
+
+          let initContent = ''
+          if (params.init) {
+            try {
+              initContent = this.generateInit(params.init)
+            } catch (e) {
+              return callback(e)
+            }
+          }
+
+          let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;'
+
+          let rspData = rawContent
+            .split('{loader}').join(tagify(disableSsl + loaderContent))
+            .replace('{config}', tagify(disableSsl + configContent))
+            .replace('{init}', tagify(disableSsl + initContent))
+            .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
+            .replace('{polyfills}', `<script type="text/javascript">${this.polyfills}</script>`)
+
+          if (!!htmlPackageTags.length && !!packageFiles.length) {
+            packageFiles.forEach(pkg => {
+              const tag = htmlPackageTags.find(x => x.includes(pkg.name))
+              rspData = rspData
+                .replace(tag, tagify(disableSsl + UglifyJS.minify(pkg.data).code))
+            })
+          }
+
+          callback(null, rspData)
+
+          function tagify(s) {
+            return `<script type="text/javascript">${s}</script>`
+          }
         }
-
-        let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;'
-
-        let rspData = rawContent
-          .split('{loader}').join(tagify(disableSsl + loaderContent))
-          .replace('{config}', tagify(disableSsl + configContent))
-          .replace('{init}', tagify(disableSsl + initContent))
-          .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
-
-        if (!!htmlPackageTags.length && !!packageFiles.length) {
-          packageFiles.forEach(pkg => {
-            const tag = htmlPackageTags.find(x => x.includes(pkg.name))
-            rspData = rspData
-              .replace(tag, tagify(disableSsl + UglifyJS.minify(pkg.data).code))
-          })
-        }
-
-        callback(null, rspData)
-
-        function tagify(s) {
-          return `<script type="text/javascript">${s}</script>`
-        }
-      })
+      )
     })
   }
 }
@@ -250,22 +257,36 @@ class BrowserifyTransform extends AssetTransform {
     let result = this.browserifyCache[assetPath]
     if (result) return callback(null, result)
 
-    let b = browserify({ debug: true, extensions: ['.js'] })
-    b.transform(babelify.configure({
-      extensions: ['.js'],
-      only: /tests|tools|packages/
-    }))
-    b.transform(preprocessify())
-    b.add(assetPath)
-    b.bundle((err, buf) => {
-      if (err) console.log('bundle err!', assetPath)
-      if (err) return callback(err)
+    browserify(assetPath)
+    .transform("babelify", {
+        presets: [
+          ["@babel/preset-env", {
+            loose: true,
+            targets: {
+              browsers: [
+                "chrome >= 60",
+                "safari >= 11",
+                "firefox >= 56",
+                "ios >= 10.3",
+                "ie >= 11",
+                "edge >= 60"
+              ]
+            }
+          }]
+        ],
+        plugins: ["@babel/plugin-syntax-dynamic-import", '@babel/plugin-transform-modules-commonjs'],
+        global: true
+      })
+      .transform(preprocessify())
+      .bundle((err, buf) => {
+        if (err) return callback(err)
 
-      let content = buf.toString()
-      if (this.config.cache) this.browserifyCache[assetPath] = content
+        let content = buf.toString()
 
-      callback(err, content)
-    })
+        if (this.config.cache) this.browserifyCache[assetPath] = content
+
+        callback(err, content)
+      })
   }
 }
 
@@ -558,7 +579,6 @@ class AssetServer extends BaseServer {
       }
 
       transform.execute(params, assetPath, ssl, (err, transformed) => {
-        if (err) console.log('err!', err)
         if (err) return this.writeError(rsp, `Error while transforming asset ${err}: ${err.stack}`)
         rsp.writeHead(200, {
           'Content-Type': 'text/html'

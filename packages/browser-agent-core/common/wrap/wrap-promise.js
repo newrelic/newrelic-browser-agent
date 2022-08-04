@@ -7,8 +7,12 @@ import {ee as baseEE, getOrSetContext} from '../event-emitter/contextual-ee'
 import {mapOwn} from '../util/map-own'
 import {originals} from '../config/config'
 
+const wrapped = {}
+
 export function wrapPromise(sharedEE){
-  var promiseEE = scopedEE(sharedEE)
+  const promiseEE = scopedEE(sharedEE)
+  if (wrapped[promiseEE.debugId]) return promiseEE
+  wrapped[promiseEE.debugId] = true
   var getContext = getOrSetContext
   var promiseWrapper = wrapFn(promiseEE)
   var OriginalPromise = originals.PR
@@ -25,6 +29,7 @@ export function wrapPromise(sharedEE){
       OriginalPromise[method] = function (subPromises) {
         var finalized = false
         mapOwn(subPromises, function (i, sub) {
+          // eslint-disable-next-line
           Promise.resolve(sub).then(setNrId(method === 'all'), setNrId(false))
         })
   
@@ -59,9 +64,6 @@ export function wrapPromise(sharedEE){
     }
   
     Object.assign(OriginalPromise.prototype, {constructor: {value: WrappedPromise}})
-    // OriginalPromise.prototype = Object.create(OriginalPromise.prototype, {
-    //   constructor: {value: WrappedPromise}
-    // })
   
     mapOwn(Object.getOwnPropertyNames(OriginalPromise), function copy (i, key) {
       try {
@@ -119,6 +121,7 @@ export function wrapPromise(sharedEE){
     promiseEE.on('propagate', function (val, overwrite, trigger) {
       if (!this.getCtx || overwrite) {
         this.getCtx = function () {
+          // eslint-disable-next-line
           if (val instanceof Promise) {
             var store = promiseEE.context(val)
           }

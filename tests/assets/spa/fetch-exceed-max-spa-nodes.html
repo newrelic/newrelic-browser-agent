@@ -6,12 +6,16 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
+    {init}
     {config}
     <script>
       window.NREUM.init = {
         distributed_tracing: {
           enabled: true,
           allowed_origins: ['http://test-1.fake-nr-beacon.com:3333']
+        },
+        session_trace: {
+          enabled: false
         }
       }
       window.NREUM.loader_config = {

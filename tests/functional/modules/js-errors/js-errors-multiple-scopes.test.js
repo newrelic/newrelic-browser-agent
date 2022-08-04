@@ -6,12 +6,15 @@
 const testDriver = require('../../../../tools/jil/index')
 const { getErrorsFromResponse, getAppIdFromResponse } = require('../../err/assertion-helpers')
 
-const supported = testDriver.Matcher.withFeature('customElements')
+const supported = testDriver.Matcher.withFeature('mfe')
 
 const opts = {
   init: {
     jserrors: {
       harvestTimeSeconds: 2
+    },
+    metrics: {
+      enabled: false
     }
   }
 }

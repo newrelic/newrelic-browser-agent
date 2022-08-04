@@ -8,8 +8,6 @@ import {exists} from './performance-check'
 var lastTimestamp = new Date().getTime()
 var offset = lastTimestamp
 
-// export default now
-
 export function now () {
   if (exists && performance.now) {
     return Math.round(performance.now())

@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Turn on feature
 import { getRuntime } from '../../../common/config/config'
 import { FeatureBase } from '../../../common/util/feature-base'
 
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
     super(agentIdentifier)
-
-    if (!getRuntime(this.agentIdentifier).disabled) getRuntime(this.agentIdentifier).features.ins = true
+    const agentRuntime = getRuntime(this.agentIdentifier)
+    // Turn on feature
+    agentRuntime.features.ins = true
   }
 }

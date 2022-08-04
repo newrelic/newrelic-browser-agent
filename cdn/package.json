@@ -1,19 +1,43 @@
 {
-  "name": "nr-browser-aggregator",
+  "name": "@newrelic/browser-agent-cdn",
+  "private": true,
   "version": "1.0.0",
   "description": "This is a package that is deployed as a bundle to CDN. It is downloaded by the `agent-loader` package. These two packages are intended to work together.",
   "main": "src/spa.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx webpack --config ./webpack.config.js"
+    "webpack": "npx webpack --progress --config ./webpack.config.js",
+    "build": "npm run build:prod",
+    "build:local": "npm run webpack",
+    "build:current": "PUBLISH=CURRENT npm run webpack",
+    "build:dev": "PUBLISH=DEV npm run webpack",
+    "build:prod": "PUBLISH=PROD npm run webpack",
+    "build:nr": "PUBLISH=PROD SOURCEMAPS=false npm run webpack"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "babel-loader": "^8.2.5",
     "dotenv-webpack": "^7.1.0",
     "eslint": "^8.8.0",
     "html-webpack-plugin": "^5.5.0",
+    "terser-webpack-plugin": "^5.3.1",
     "webpack": "^5.65.0",
+    "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.9.1"
-  }
+  },
+  "dependencies": {
+    "@newrelic/browser-agent": "^0.0.9",
+    "@newrelic/browser-agent-core": "^0.0.9",
+    "core-js": "^3.23.3"
+  },
+  "browserslist": [
+    "chrome >= 60",
+    "safari >= 11",
+    "firefox >= 56",
+    "ios >= 10.3",
+    "ie >= 11",
+    "edge >= 60"
+  ],
+  "sideEffects": false
 }

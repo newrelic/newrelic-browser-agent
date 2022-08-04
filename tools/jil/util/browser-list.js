@@ -9,6 +9,7 @@ const BrowserMatcher = require('./browser-matcher')
 
 // list of pre-defined browsers = require(test matrix
 var allowedBrowsers = browsers
+const latestVersStringRe = /latest(?:-[1-9])?$/;
 
 class BrowserSpec {
   constructor (desired) {
@@ -17,6 +18,10 @@ class BrowserSpec {
 
   isPhantom () {
     return this.desired.browserName === 'phantom'
+  }
+
+  allowsExtendedDebugging () {
+    return ['chrome', 'firefox'].includes(this.desired.browserName) && this.version === 'latest'
   }
 
   toString () {
@@ -113,9 +118,9 @@ function getBrowsersFor (browser, range) {
     return list
   } else if (range === 'beta') {
     return list.filter(findBetaVersions)
-  } else if (range === 'latest') {
-    var latest = list.filter(findLatestVersions)
-    return latest.length ? latest : list.slice(0, 1)
+  } else if (latestVersStringRe.test(range)) {
+    var latestX = list.filter(findLatestVersions, range);
+    return latestX.length ? latestX : list.slice(0, 1)  // default to the highest version if latest-# cannot be found
   }
 
   list = list.filter(inRange)
@@ -125,6 +130,7 @@ function getBrowsersFor (browser, range) {
     if (option.platformVersion === 'beta' || option.version === 'beta') {
       return false
     }
+    // NOTE: 'range' itself needs to be sanitized as semver will not accept "latest - 73" or even "9999 - 73"
     return semver.satisfies(cleanVersion(option.platformVersion || option.version), range)
   }
 
@@ -133,7 +139,7 @@ function getBrowsersFor (browser, range) {
   }
 
   function findLatestVersions (option) {
-    return (option.version === 'latest')
+    return (option.version === this.valueOf())  // 'this' should be bound to the lastest version string (object)
   }
 }
 
@@ -142,9 +148,15 @@ function byVersion (left, right) {
 }
 
 function cleanVersion (version) {
-  // assign to high number, so that it is high in the list when sorted (i.e. beta is latest)
-  if (!version || version === 'latest') version = '9999'
-  if (!version || version === 'beta') version = '10000'
+  // assign to high number, so that it is high in the list when sorted (i.e. beta is highest)
+  if (!version || latestVersStringRe.test(version)) {
+    let prevVersionOffset = version?.split('-')[1];
+    if (prevVersionOffset)
+      version = '9999' - prevVersionOffset;
+    else
+      version = '9999'; // undefined 'version' (e.g., mobile) will be set to 'latest' too
+  }
+  else if (version === 'beta') version = '10000';
   version = version + '.0.0'
   return version.split('.', 3).join('.')
 }
@@ -157,3 +169,4 @@ module.exports = browserList
 module.exports.BrowserSpec = BrowserSpec
 module.exports.setBrowserList = setBrowserList
 module.exports.resetBrowserList = resetBrowserList
+module.exports.latestVersStringRe = latestVersStringRe;

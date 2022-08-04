@@ -84,6 +84,7 @@ function loadAndWaitForLoad(router, browser, url) {
   let loadPromise = browser.safeGet(router.assetURL(url, { loader: 'spa' }))
   let rumPromise = router.expectRum()
   let eventPromise = router.expectEvents()
+
   return Promise.all([loadPromise, rumPromise, eventPromise])
 }
 

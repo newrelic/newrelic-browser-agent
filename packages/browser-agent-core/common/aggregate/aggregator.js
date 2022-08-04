@@ -12,6 +12,10 @@ export class Aggregator extends SharedContext {
     this.aggregatedData = {}
   }
 
+  // Items with the same type and name get aggregated together
+  // params are example data from the aggregated items
+  // metrics are the numeric values to be aggregated
+
   store(type, name, params, newMetrics, customParams) {
     var bucket = this.getBucket(type, name, params, customParams)
     bucket.metrics = aggregateMetrics(newMetrics, bucket.metrics)

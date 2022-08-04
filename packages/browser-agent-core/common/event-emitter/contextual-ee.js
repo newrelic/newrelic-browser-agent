@@ -19,12 +19,7 @@ if (nr.ee) {
   nr.ee = globalInstance
 }
 
-// export default ee()
-var baseEE = ee(undefined, 'baseEE')
-
-export { baseEE as ee }
-
-export { globalInstance as global }
+export { globalInstance as ee }
 
 function EventContext () {}
 
@@ -45,13 +40,8 @@ function ee (old, debugId) {
     abort: abortIfNotLoaded,
     aborted: false,
     isBuffering: isBuffering,
-    debugId
-  }
-
-  // buffer is associated with a base emitter, since there are two
-  // (global and scoped to the current bundle), it is now part of the emitter
-  if (!old) {
-    emitter.backlog = {}
+    debugId,
+    backlog: old && old.backlog ? old.backlog : {}
   }
 
   return emitter
@@ -68,39 +58,23 @@ function ee (old, debugId) {
 
   function emit (type, args, contextOrStore, force, bubble) {
     if (bubble !== false) bubble = true
-    if (baseEE.aborted && !force) { return }
+    if (globalInstance.aborted && !force) { return }
     if (old && bubble) old.emit(type, args, contextOrStore)
-    // log("continue...")
-
+    
     var ctx = context(contextOrStore)
     var handlersArray = listeners(type)
     var len = handlersArray.length
 
-    // Extremely verbose debug logging
-    // if ([/^xhr/].map(function (match) {return type.match(match)}).filter(Boolean).length) {
-    //  log(type + ' args:')
-    //  log(args)
-    //  log(type + ' handlers array:')
-    //  log(handlersArray)
-    //  log(type + ' context:')
-    //  log(ctx)
-    //  log(type + ' ctxStore:')
-    //  log(ctxStore)
-    // }
-
     // Apply each handler function in the order they were added
     // to the context with the arguments
-
+    
     for (var i = 0; i < len; i++) handlersArray[i].apply(ctx, args)
 
-    // log(bufferGroupMap[type])
     // Buffer after emitting for consistent ordering
     var bufferGroup = getBuffer()[bufferGroupMap[type]]
     if (bufferGroup) {
       bufferGroup.push([emitter, type, args, ctx])
     }
-
-    // log(bufferGroup)
 
     // Return the context so that the module that emitted can see what was done.
     return ctx
@@ -151,9 +125,6 @@ function ee (old, debugId) {
   // buffer is associated with a base emitter, since there are two
   // (global and scoped to the current bundle), it is now part of the emitter
   function getBuffer() {
-    if (old) {
-      return old.backlog
-    }
     return emitter.backlog
   }
 }
@@ -171,8 +142,8 @@ function getNewContext () {
 // We should drop our data and stop collecting if we still have a backlog, which
 // signifies the rest of the agent wasn't loaded
 function abortIfNotLoaded () {
-  if (baseEE.backlog.api || baseEE.backlog.feature) {
-    baseEE.aborted = true
-    baseEE.backlog = {}
+  if (globalInstance.backlog.api || globalInstance.backlog.feature) {
+    globalInstance.aborted = true
+    globalInstance.backlog = {}
   }
 }

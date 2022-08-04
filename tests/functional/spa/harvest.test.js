@@ -22,6 +22,9 @@ testDriver.test('events are retried when collector returns 429', supported, func
       },
       page_view_timing: {
         enabled: false
+      },
+      ajax: {
+        deny_list: ['bam-test-1.nr-local.net']
       }
     }
   })

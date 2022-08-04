@@ -4,17 +4,21 @@
  */
 
 // wrap-events patches XMLHttpRequest.prototype.addEventListener for us.
-import './wrap-events'
-// import * as config from '../config'
-import {ee as contextualEE} from '../event-emitter/contextual-ee'
+// TODO: if we want to load Ajax feature on its own, we'll need to call wrapEvents(sharedEE)
+import { wrapEvents } from './wrap-events'
+import { ee as contextualEE } from '../event-emitter/contextual-ee'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { originals } from '../config/config'
 
+const wrapped = {}
 // eslint-disable-next-line
 export function wrapXhr (sharedEE) {
   var baseEE = sharedEE || contextualEE
-  var ee = scopedEE(baseEE)
+  const ee = scopedEE(baseEE)
+  if (wrapped[ee.debugId]) return ee
+  wrapped[ee.debugId] = true
+  wrapEvents(baseEE)
   var wrapFn = wfn(ee)
 
   var OrigXHR = originals.XHR
@@ -27,18 +31,27 @@ export function wrapXhr (sharedEE) {
   var handlers = ['onload', 'onerror', 'onabort', 'onloadstart', 'onloadend', 'onprogress', 'ontimeout']
   var pendingXhrs = []
 
-  var XHR = window.XMLHttpRequest = function (opts) {
+  var activeListeners = window.XMLHttpRequest.listeners
+  
+  var XHR = window.XMLHttpRequest = newXHR
+  
+  function newXHR (opts) {
     var xhr = new OrigXHR(opts)
-    try {
-      ee.emit('new-xhr', [xhr], xhr)
-      xhr.addEventListener(READY_STATE_CHANGE, wrapXHR, eventListenerOpts(false))
-    } catch (e) {
+    this.listeners = activeListeners ? [...activeListeners, intercept] : [intercept]
+    function intercept (){
       try {
-        ee.emit('internal-error', [e])
-      } catch (err) {
-        // do nothing
+        ee.emit('new-xhr', [xhr], xhr)
+        xhr.addEventListener(READY_STATE_CHANGE, wrapXHR, eventListenerOpts(false))
+      } catch (e) {
+        console.error(e)
+        try {
+          ee.emit('internal-error', [e])
+        } catch (err) {
+          // do nothing
+        }
       }
     }
+    this.listeners.forEach(listener => listener())
     return xhr
   }
 
@@ -46,7 +59,6 @@ export function wrapXhr (sharedEE) {
 
   XHR.prototype = OrigXHR.prototype
 
-  // log('wrap xhr...')
   wrapFn.inPlace(XHR.prototype, ['open', 'send'], '-xhr-', getObject)
 
   ee.on('send-xhr-start', function (args, xhr) {
@@ -176,5 +188,5 @@ export function wrapXhr (sharedEE) {
 
 
 export function scopedEE(sharedEE){
-  return (sharedEE || contextualEE).get('events')
+  return (sharedEE || contextualEE).get('xhr')
 }

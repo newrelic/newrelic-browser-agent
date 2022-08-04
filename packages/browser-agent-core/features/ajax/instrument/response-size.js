@@ -4,8 +4,6 @@
  */
 import { dataSize } from '../../../common/util/data-size'
 
-// export default responseSizeFromXhr
-
 export function responseSizeFromXhr (xhr, lastSize) {
   var type = xhr.responseType
   if (type === 'json' && lastSize !== null) return lastSize

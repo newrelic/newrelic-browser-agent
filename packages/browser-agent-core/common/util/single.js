@@ -5,8 +5,6 @@
 
 import slice from 'lodash._slice'
 
-// export default single
-
 export function single (fn) {
   var called = false
   var res

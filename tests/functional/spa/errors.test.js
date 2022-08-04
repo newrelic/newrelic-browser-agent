@@ -5,7 +5,7 @@
 
 const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
-const {getErrorsFromResponse} = require('../err/assertion-helpers')
+const { getErrorsFromResponse } = require('../err/assertion-helpers')
 
 // browsers without addEventListener do not support SPA
 // browsers without Error stack are not captured (IE < 10)
@@ -61,7 +61,7 @@ testDriver.test('error on the initial page load', supported, function (t, browse
     })
     .catch(fail)
 
-  function fail (err) {
+  function fail(err) {
     t.error(err)
     t.end()
   }
@@ -172,6 +172,9 @@ testDriver.test('error in custom tracer', supported, function (t, browser, route
 })
 
 testDriver.test('string error in custom tracer', supported, function (t, browser, router) {
+  // This tests throwing a string inside a custom tracer.  It shows that in a specific case, the
+  // agent will double count the error because the error is first caught in the custom node, re-thrown, and caught again in the click event listener.
+  // This behavior only happens in ie11, other browsers ignore the string error and only generate 1 error.
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-custom-string.html')
     .then(() => {
       return clickPageAndWaitForEventsAndErrors(t, browser, router)
@@ -180,7 +183,8 @@ testDriver.test('string error in custom tracer', supported, function (t, browser
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
-      t.equal(errors.length, 1, 'should have 1 unique errors')
+      if (browser.match('ie@>=11')) t.equal(errors.length, 2, 'should have 2 errors (1 String Class, 1 Error Class)')
+      else t.equal(errors.length, 1, 'should have 1 errors')
 
       let { body, query } = eventData
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
@@ -191,10 +195,10 @@ testDriver.test('string error in custom tracer', supported, function (t, browser
       var nodeId = interactionTree.children[0].nodeId
 
       var error = errors[0]
-      t.equal(error.params.message, undefined)
+      t.equal(error.params.message, 'some error')
       t.equal(error.params.browserInteractionId, interactionId, 'should have the correct interaction id')
       t.equal(error.params.parentNodeId, nodeId, 'has the correct node id')
-      t.equal(error.metrics.count, 2, 'error will be reported twice')
+      t.equal(error.metrics.count, 1, 'error will be reported once')
 
       t.end()
     })
@@ -335,22 +339,28 @@ testDriver.test('same error in multiple interactions', supported, function (t, b
   }
 })
 
-function waitForPageLoadAnInitialCalls (browser, router, urlPath) {
+function waitForPageLoadAnInitialCalls(browser, router, urlPath) {
   return Promise.all([
     router.expectRum(),
     router.expectEvents(),
-    browser.safeGet(router.assetURL(urlPath, { loader: 'spa' }))
+    browser.safeGet(router.assetURL(urlPath, {
+      loader: 'spa',
+      init: {
+        metrics: { enabled: false },
+        session_trace: { enabled: false }
+      }
+    }))
   ])
 }
 
-function clickPageAndWaitForEventsAndErrors (t, browser, router) {
+function clickPageAndWaitForEventsAndErrors(t, browser, router) {
   var useRedirect = browser.hasFeature('reliableFinalHarvest')
   return clickPageAndWaitForEvents(t, browser, router)
     .then(eventData => {
       if (useRedirect) {
         return Promise.all([
-        // leave page to force final harvest (faster than waiting 60s for errors
-        // to be harvested)
+          // leave page to force final harvest (faster than waiting 60s for errors
+          // to be harvested)
           leavePage(browser, router),
           router.expectErrors()
         ])
@@ -366,7 +376,7 @@ function clickPageAndWaitForEventsAndErrors (t, browser, router) {
     })
 }
 
-function clickPageAndWaitForEvents (t, browser, router) {
+function clickPageAndWaitForEvents(t, browser, router) {
   return Promise.all([
     browser.elementByCssSelector('body').click(),
     router.expectEvents()
@@ -379,7 +389,7 @@ function clickPageAndWaitForEvents (t, browser, router) {
 // Click page (which triggers interaction to test), and then immediately load
 // a different page, which triggers final harvest.
 // This way the test is faster than waiting 60s for errors to be harvested.
-function clickAndRedirect (browser, router, wait) {
+function clickAndRedirect(browser, router, wait) {
   return browser.elementByCssSelector('body').click()
     .then(function () {
       if (wait) {
@@ -391,7 +401,7 @@ function clickAndRedirect (browser, router, wait) {
       }
     })
 
-  function sleep (duration) {
+  function sleep(duration) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         resolve()
@@ -400,6 +410,6 @@ function clickAndRedirect (browser, router, wait) {
   }
 }
 
-function leavePage (browser, router) {
+function leavePage(browser, router) {
   return browser.safeGet(router.assetURL('_blank.html'))
 }

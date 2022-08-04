@@ -6,9 +6,12 @@
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 
+const wrapped = {}
 //eslint-disable-next-line
 export function wrapTimer(sharedEE) {
-  var ee = scopedEE(sharedEE)
+  const ee = scopedEE(sharedEE)
+  if (wrapped[ee.debugId]) return ee
+  wrapped[ee.debugId] = true
   var wrapFn = wfn(ee)
 
   var SET_TIMEOUT = 'setTimeout'
@@ -17,7 +20,6 @@ export function wrapTimer(sharedEE) {
   var START = '-start'
   var DASH = '-'
 
-  // log('wrap timer...')
   wrapFn.inPlace(window, [SET_TIMEOUT, 'setImmediate'], SET_TIMEOUT + DASH)
   wrapFn.inPlace(window, [SET_INTERVAL], SET_INTERVAL + DASH)
   wrapFn.inPlace(window, [CLEAR_TIMEOUT, 'clearImmediate'], CLEAR_TIMEOUT + DASH)

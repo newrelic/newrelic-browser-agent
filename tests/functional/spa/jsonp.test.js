@@ -231,7 +231,7 @@ function waitForPageLoad (browser, router, urlPath) {
   return Promise.all([
     router.expectRum(),
     router.expectEvents(),
-    browser.safeGet(router.assetURL(urlPath, { loader: 'spa' }))
+    browser.safeGet(router.assetURL(urlPath, { loader: 'spa', init: {session_trace: {enabled: false}} }))
   ])
 }
 

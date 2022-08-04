@@ -6,7 +6,7 @@
 const testDriver = require('../../../../tools/jil/index')
 const { assertErrorAttributes, assertExpectedErrors, verifyStackTraceOmits, getErrorsFromResponse } = require('./assertion-helpers')
 
-const supported = testDriver.Matcher.withFeature('es6')
+const supported = testDriver.Matcher.withFeature('mfe')
 
 const opts = {
   init: {
@@ -215,7 +215,6 @@ testDriver.test('reporting errors from event listener callbacks', supported, fun
     const actualErrors = getErrorsFromResponse(errorsResponse)
     let eventListenersURL = router.assetURL('js/event-listener-error.js').split('?')[0]
 
-    // console.log("actualErrors", actualErrors)
     let expectedErrors = [
       {
         message: 'document addEventListener listener',

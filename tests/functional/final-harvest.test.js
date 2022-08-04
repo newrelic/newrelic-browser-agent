@@ -58,7 +58,7 @@ testDriver.test('final harvest sends page action', reliableFinalHarvest, functio
     })
     .catch(fail)
 
-  function fail (err) {
+  function fail(err) {
     t.error(err)
     t.end()
   }
@@ -86,7 +86,7 @@ testDriver.test('final harvest sends pageHide if not already recorded', reliable
         return data
       })
     })
-    .then(({body, query}) => {
+    .then(({ body, query }) => {
       t.equal(router.seenRequests.events, 1, 'received first events harvest')
       const timings = querypack.decode(body && body.length ? body : query.e)
       const pageHide = timings.find(x => x.type === 'timing' && x.name === 'pageHide')
@@ -99,7 +99,7 @@ testDriver.test('final harvest sends pageHide if not already recorded', reliable
     })
     .catch(fail)
 
-  function fail (err) {
+  function fail(err) {
     t.error(err)
     t.end()
   }
@@ -118,7 +118,7 @@ testDriver.test('final harvest doesnt append pageHide if already previously reco
       const timingsPromise = router.expectTimings()
       return Promise.all([timingsPromise, clickPromise])
     })
-    .then(([{body, query}]) => {
+    .then(([{ body, query }]) => {
       const timings = querypack.decode(body && body.length ? body : query.e)
       let duration = Date.now() - start
       t.ok(timings.length > 0, 'there should be at least one timing metric')
@@ -130,14 +130,14 @@ testDriver.test('final harvest doesnt append pageHide if already previously reco
     })
     .catch(fail)
 
-  function fail (err) {
+  function fail(err) {
     t.error(err)
     t.end()
   }
 })
 
 testDriver.test('final harvest sends js errors', reliableFinalHarvest, function (t, browser, router) {
-  let url = router.assetURL('final-harvest.html')
+  let url = router.assetURL('final-harvest.html', { init: { metrics: { enabled: false } } })
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
 
@@ -162,7 +162,7 @@ testDriver.test('final harvest sends js errors', reliableFinalHarvest, function 
     })
     .catch(fail)
 
-  function fail (err) {
+  function fail(err) {
     t.error(err)
     t.end()
   }
@@ -196,7 +196,7 @@ testDriver.test('final harvest sends resources', reliableResourcesHarvest.and(st
     })
     .catch(fail)
 
-  function fail (err) {
+  function fail(err) {
     t.error(err)
     t.end()
   }
@@ -223,7 +223,7 @@ testDriver.test('final harvest sends timings data', reliableFinalHarvest, functi
         return data
       })
     })
-    .then(({body, query}) => {
+    .then(({ body, query }) => {
       t.equal(router.seenRequests.events, 1, 'received first events harvest')
       const timings = querypack.decode(body && body.length ? body : query.e)
       t.ok(timings.length > 0, 'there should be at least one timing metric')
@@ -232,7 +232,7 @@ testDriver.test('final harvest sends timings data', reliableFinalHarvest, functi
     })
     .catch(fail)
 
-  function fail (err) {
+  function fail(err) {
     t.error(err)
     t.end()
   }
@@ -242,7 +242,7 @@ testDriver.test('final harvest sends timings data', reliableFinalHarvest, functi
 // It does not check all of them, just errors and resources.  This is sufficient for the
 // test.  Sending more than that makes the test very fragile on some platforms.
 testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stnSupported), function (t, browser, router) {
-  let url = router.assetURL('final-harvest-timings.html')
+  let url = router.assetURL('final-harvest-timings.html', { init: { metrics: { enabled: false } } })
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
 
@@ -274,7 +274,7 @@ testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stn
     })
     .catch(fail)
 
-  function fail (err) {
+  function fail(err) {
     t.error(err)
     t.end()
   }
@@ -300,7 +300,7 @@ testDriver.test('final harvest sends ajax events', reliableFinalHarvest.and(doNo
         return data
       })
     })
-    .then(({body, query}) => {
+    .then(({ body, query }) => {
       const events = querypack.decode(body && body.length ? body : query.e)
       t.ok(events.length > 0, 'there should be at least one ajax call')
       t.equal(events[0].type, 'ajax', 'first node is a ajax node')
@@ -308,7 +308,7 @@ testDriver.test('final harvest sends ajax events', reliableFinalHarvest.and(doNo
     })
     .catch(fail)
 
-  function fail (err) {
+  function fail(err) {
     t.error(err)
     t.end()
   }

@@ -35,3 +35,7 @@ export function subscribeToVisibilityChange(cb) {
     }
   }
 }
+
+export function initializeHiddenTime() {
+  return document.visibilityState === 'hidden' ? -1 : Infinity;
+}

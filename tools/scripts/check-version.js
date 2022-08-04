@@ -7,6 +7,8 @@
 
 var yargs = require('yargs')
 var request = require('request')
+var path = require('path')
+var fs = require('fs')
 
 var config = require('yargs')
   .usage('$0 [options]')
@@ -16,10 +18,15 @@ var config = require('yargs')
   .describe('e', 'Fails when set to yes and scripts do not exist or when set to no and scripts do exist.')
   .default('e', 'yes,no')
 
-  .string('v')
-  .alias('v', 'version')
-  .describe('v', 'Version to check, defaults to current')
-  .default('v', 'current')
+  .boolean('d')
+  .alias('d', 'dev')
+  .describe('d', 'Instructs to check the dev folder instead of the root folder')
+  .default('d', false)
+
+  .boolean('m')
+  .alias('m', 'maps')
+  .describe('m', 'Check for map files')
+  .default('m', false)
 
   .help('h')
   .alias('h', 'help')
@@ -27,16 +34,17 @@ var config = require('yargs')
   .wrap(Math.min(110, yargs.terminalWidth()))
   .argv
 
-var filenames = getLoaderFilenames(['rum', 'full', 'spa'], config.version)
-filenames = filenames.concat(getAggregatorFilenames(config.version))
+
+const buildDir = path.resolve(__dirname, '../../build/')
+const builtFileNames = fs.readdirSync(buildDir).filter(x => !config.m ? !x.endsWith('.map') : x )
+const version = getVersionFromFilenames(builtFileNames)
 var errors = []
 
 validate()
 
 async function validate() {
   var checks = []
-  for (var filename of filenames) {
-    console.log('checking ', filename)
+  for (var filename of builtFileNames) {
     checks.push(getFile(filename))
   }
   var results = await Promise.all(checks)
@@ -45,6 +53,14 @@ async function validate() {
   })
 
   checkErrorsAndExit()
+}
+
+function getVersionFromFilenames(fileNames){
+  return Array.from(fileNames.reduce((prev, next) => {
+    const parts = next.split(".")
+    if (parts.length === 2 && parts[1] === 'js') prev.add(parts[0].split("-")[parts[0].split("-").length - 1])
+    return prev
+  }, new Set()))[0]
 }
 
 function checkErrorsAndExit() {
@@ -57,32 +73,32 @@ function checkErrorsAndExit() {
   }
 }
 
-function validateResponse(filename, res, body) {
+function validateResponse(url, res, body) {
   if (config.exists === 'yes') {
     if (res.statusCode !== 200) {
-      errors.push(filename + ' does not exist, ' + res.statusCode)
+      errors.push(url + ' does not exist, ' + res.statusCode)
       return
     }
     if (body.length === 0) {
-      errors.push(`body for ${filename} was empty`)
-    }
-    if (!res.body.match(config.version + '.')) {
-      errors.push(`${filename} does not contain version ${config.version}`)
+      errors.push(`body for ${url} was empty`)
     }
   } else if (config.exists === 'no') {
     if (res.statusCode === 200) {
-      errors.push(filename + ' exists, ' + res.statusCode)
+      errors.push(url + ' exists, ' + res.statusCode)
     }
   }
 }
 
 function getFile(filename) {
-  var url = 'https://js-agent.newrelic.com/' + filename
+  var url = 'https://js-agent.newrelic.com/' + (config.d ? 'dev/' : '') + filename
   var opts = {
     uri: url,
     method: 'GET',
     gzip: true
   }
+
+
+  console.log('checking ', url)
 
   return new Promise((resolve, reject) => {
     request(opts, (err, res, body) => {
@@ -90,26 +106,7 @@ function getFile(filename) {
         reject(err)
         return
       }
-      resolve([filename, res, body])
+      resolve([url, res, body])
     })
   })
-}
-
-function getLoaderFilenames(loaders, version) {
-  var filenames = []
-  loaders.forEach(function (loaderName) {
-    var base = 'nr-loader-' + loaderName + '-' + version
-    filenames.push(base + '.js')
-    filenames.push(base + '.min.js')
-  })
-  return filenames
-}
-
-function getAggregatorFilenames(version) {
-  var filenames = []
-  filenames.push('nr-' + version + '.js')
-  filenames.push('nr-' + version + '.min.js')
-  filenames.push('nr-spa-' + version + '.js')
-  filenames.push('nr-spa-' + version + '.min.js')
-  return filenames
 }

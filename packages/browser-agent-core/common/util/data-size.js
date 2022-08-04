@@ -6,6 +6,7 @@
 export function dataSize (data) {
   if (typeof data === 'string' && data.length) return data.length
   if (typeof data !== 'object') return undefined
+  // eslint-disable-next-line
   if (typeof ArrayBuffer !== 'undefined' && data instanceof ArrayBuffer && data.byteLength) return data.byteLength
   if (typeof Blob !== 'undefined' && data instanceof Blob && data.size) return data.size
   if (typeof FormData !== 'undefined' && data instanceof FormData) return undefined
@@ -16,5 +17,3 @@ export function dataSize (data) {
     return undefined
   }
 }
-
-// export default dataSize

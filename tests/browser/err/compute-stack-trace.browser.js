@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var test = require('../../../tools/jil/browser-test')
-var computeStackTrace = require('../../../feature/err/aggregate/compute-stack-trace')
-var stringify = require('../../../agent/stringify')
-var testcases = require('./stack-parse-testcases')
+import test from '../../../tools/jil/browser-test'
+import { computeStackTrace } from '../../../packages/browser-agent-core/features/jserrors/aggregate/compute-stack-trace'
+import { stringify } from '../../../packages/browser-agent-core/common/util/stringify'
+import testcases from './stack-parse-testcases'
 
 test('computeStackTrace', function (t) {
   for (var i = 0; i < testcases.length; i++) {

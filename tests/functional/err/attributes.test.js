@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {getErrorsFromResponse} = require('./assertion-helpers')
+const { getErrorsFromResponse } = require('./assertion-helpers')
 
 let notSafariWithSeleniumBug = testDriver.Matcher.withFeature('notSafariWithSeleniumBug')
 let reliableFinalHarvestFeature = testDriver.Matcher.withFeature('reliableFinalHarvest')
@@ -16,9 +16,25 @@ let supportedWithSpa = reliableFinalHarvestFeature.and(eventListenerFeature).and
 runTests('full', reliableFinalHarvestFeature)
 runTests('spa', supportedWithSpa)
 
-function runTests (loader, supported) {
+const init = {
+  metrics: {
+    enabled: false
+  },
+  jserrors: {
+    harvestTimeSeconds: 5
+  }
+}
+
+function runTests(loader, supported) {
+  const opts = {
+    loader: loader, init: {
+      metrics: {
+        enabled: false
+      }
+    }
+  }
   testDriver.test(`set multiple custom attributes after page load with multiple JS errors occurring after page load (${loader})`, supported, function (t, browser, router) {
-    let url = router.assetURL('js-error-with-custom-attribute.html', { loader: loader })
+    let url = router.assetURL('js-error-with-custom-attribute.html', opts)
 
     let loadPromise = browser.get(url)
     let rumPromise = router.expectRum()
@@ -46,14 +62,14 @@ function runTests (loader, supported) {
       })
       .catch(fail)
 
-    function fail (e) {
+    function fail(e) {
       t.error(e)
       t.end()
     }
   })
 
   testDriver.test(`set single custom attribute before page load with single JS error occurring before page load (${loader})`, supported, function (t, browser, router) {
-    let url = router.assetURL('js-error-with-error-before-page-load.html', { loader: loader })
+    let url = router.assetURL('js-error-with-error-before-page-load.html', opts)
 
     let loadPromise = browser.get(url)
     let rumPromise = router.expectRum()
@@ -74,14 +90,14 @@ function runTests (loader, supported) {
       })
       .catch(fail)
 
-    function fail (e) {
+    function fail(e) {
       t.error(e)
       t.end()
     }
   })
 
   testDriver.test(`set multiple custom attributes before page load with multiple JS errors occurring after page load (${loader})`, supported, function (t, browser, router) {
-    let url = router.assetURL('js-error-with-error-after-page-load.html', { loader: loader })
+    let url = router.assetURL('js-error-with-error-after-page-load.html', opts)
 
     let loadPromise = browser.get(url)
     let rumPromise = router.expectRum()
@@ -108,14 +124,14 @@ function runTests (loader, supported) {
       })
       .catch(fail)
 
-    function fail (e) {
+    function fail(e) {
       t.error(e)
       t.end()
     }
   })
 
   testDriver.test(`noticeError accepts custom attributes in an argument (${loader})`, supported, function (t, browser, router) {
-    let url = router.assetURL('js-error-noticeerror-with-custom-attributes.html', { loader: loader })
+    let url = router.assetURL('js-error-noticeerror-with-custom-attributes.html', opts)
 
     let loadPromise = browser.get(url)
     let rumPromise = router.expectRum()
@@ -137,7 +153,7 @@ function runTests (loader, supported) {
       })
       .catch(fail)
 
-    function fail (e) {
+    function fail(e) {
       t.error(e)
       t.end()
     }
@@ -145,7 +161,7 @@ function runTests (loader, supported) {
 }
 
 testDriver.test('initial load interaction: simple case - single error', supportedWithSpa, function (t, browser, router) {
-  let url = router.assetURL('js-error-set-attribute-before-load.html', { loader: 'spa' })
+  let url = router.assetURL('js-error-set-attribute-before-load.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
   let rumPromise = router.expectRum()
@@ -166,14 +182,14 @@ testDriver.test('initial load interaction: simple case - single error', supporte
     })
     .catch(fail)
 
-  function fail (e) {
+  function fail(e) {
     t.error(e)
     t.end()
   }
 })
 
 testDriver.test('initial load interaction: muliple errors - different attribute values', supportedWithSpa, function (t, browser, router) {
-  let url = router.assetURL('js-error-multiple-set-attribute-before-load.html', { loader: 'spa' })
+  let url = router.assetURL('js-error-multiple-set-attribute-before-load.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
   let rumPromise = router.expectRum()
@@ -196,14 +212,14 @@ testDriver.test('initial load interaction: muliple errors - different attribute 
     })
     .catch(fail)
 
-  function fail (e) {
+  function fail(e) {
     t.error(e)
     t.end()
   }
 })
 
 testDriver.test('click interaction: simple case - single error', supportedWithSpa, function (t, browser, router) {
-  let url = router.assetURL('js-error-set-attribute-on-click.html', { loader: 'spa' })
+  let url = router.assetURL('js-error-set-attribute-on-click.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
   let rumPromise = router.expectRum()
@@ -227,14 +243,14 @@ testDriver.test('click interaction: simple case - single error', supportedWithSp
     })
     .catch(fail)
 
-  function fail (e) {
+  function fail(e) {
     t.error(e)
     t.end()
   }
 })
 
 testDriver.test('click interaction: multiple errors - different attribute values', supportedWithSpa, function (t, browser, router) {
-  let url = router.assetURL('js-error-multiple-set-attribute-on-click.html', { loader: 'spa' })
+  let url = router.assetURL('js-error-multiple-set-attribute-on-click.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
   let rumPromise = router.expectRum()
@@ -260,14 +276,14 @@ testDriver.test('click interaction: multiple errors - different attribute values
     })
     .catch(fail)
 
-  function fail (e) {
+  function fail(e) {
     t.error(e)
     t.end()
   }
 })
 
 testDriver.test('click interaction: attributes captured in discarded interaction are still collected', supportedWithSpa, function (t, browser, router) {
-  let url = router.assetURL('js-error-set-attribute-on-discarded.html', { loader: 'spa' })
+  let url = router.assetURL('js-error-set-attribute-on-discarded.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
   let rumPromise = router.expectRum()
@@ -291,14 +307,14 @@ testDriver.test('click interaction: attributes captured in discarded interaction
     })
     .catch(fail)
 
-  function fail (e) {
+  function fail(e) {
     t.error(e)
     t.end()
   }
 })
 
 testDriver.test('global and interaction attributes on same error', supportedWithSpa, function (t, browser, router) {
-  let url = router.assetURL('js-error-global-and-interaction-attributes-on-same-error.html', { loader: 'spa' })
+  let url = router.assetURL('js-error-global-and-interaction-attributes-on-same-error.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
   let rumPromise = router.expectRum()
@@ -320,14 +336,14 @@ testDriver.test('global and interaction attributes on same error', supportedWith
     })
     .catch(fail)
 
-  function fail (e) {
+  function fail(e) {
     t.error(e)
     t.end()
   }
 })
 
 testDriver.test('setAttribute takes precedence over setCustomAttribute', supportedWithSpa, function (t, browser, router) {
-  let url = router.assetURL('js-error-attribute-precedence.html', { loader: 'spa' })
+  let url = router.assetURL('js-error-attribute-precedence.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
   let rumPromise = router.expectRum()
@@ -348,14 +364,14 @@ testDriver.test('setAttribute takes precedence over setCustomAttribute', support
     })
     .catch(fail)
 
-  function fail (e) {
+  function fail(e) {
     t.error(e)
     t.end()
   }
 })
 
 testDriver.test('noticeError takes precedence over setAttribute', supportedWithSpa, function (t, browser, router) {
-  let url = router.assetURL('js-error-noticeerror-precedence.html', { loader: 'spa' })
+  let url = router.assetURL('js-error-noticeerror-precedence.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
   let rumPromise = router.expectRum()
@@ -383,7 +399,7 @@ testDriver.test('noticeError takes precedence over setAttribute', supportedWithS
 })
 
 testDriver.test('noticeError takes precedence over setAttribute in discarded interactions', supportedWithSpa, function (t, browser, router) {
-  let url = router.assetURL('js-error-noticeerror-precedence-discarded.html', { loader: 'spa' })
+  let url = router.assetURL('js-error-noticeerror-precedence-discarded.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
   let rumPromise = router.expectRum()

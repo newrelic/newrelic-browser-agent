@@ -14,9 +14,6 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
       stn: {
         harvestTimeSeconds: 5
       },
-      ajax: {
-        enabled: false
-      },
       page_view_timing: {
         enabled: false
       }

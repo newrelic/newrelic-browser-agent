@@ -15,6 +15,7 @@ module.exports = { navCookie: true }
 findStartTime()
 
 function findStartTime () {
+  // findStartCookie is used for FF7/8 & browsers which do not support window.performance.timing.navigationStart
   var starttime = findStartWebTiming() || findStartCookie()
 
   if (!starttime) return

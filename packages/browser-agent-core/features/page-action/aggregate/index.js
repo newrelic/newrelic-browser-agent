@@ -6,30 +6,27 @@
 import { mapOwn } from '../../../common/util/map-own'
 import { stringify } from '../../../common/util/stringify'
 import { registerHandler as register } from '../../../common/event-emitter/register-handler'
-// import { on as onHarvest } from '../../../common/harvest/harvest'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
-import { getConfigurationValue, getInfo, getRuntime, setInfo } from '../../../common/config/config'
+import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { FeatureBase } from '../../../common/util/feature-base'
 
 export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator)
     this.eventsPerMinute = 240
-    this.harvestTimeSeconds = getConfigurationValue('ins.harvestTimeSeconds') || 30
+    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'ins.harvestTimeSeconds') || 30
     this.eventsPerHarvest = this.eventsPerMinute * this.harvestTimeSeconds / 60
     this.referrerUrl
     this.currentEvents
 
     this.events = []
-    this.att = {}
-    setInfo(this.agentIdentifier, {jsAttributes: this.att})
+
+    this.att = getInfo(this.agentIdentifier).jsAttributes;  // per-agent, aggregators-shared info context
 
     if (document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
-    register('api-setCustomAttribute', (...args) => this.setCustomAttribute(...args), 'api', this.ee)
-
-    this.ee.on('feat-ins', function () {
+    this.ee.on('feat-ins', () => {
       register('api-addPageAction', (...args) => this.addPageAction(...args), undefined, this.ee)
 
       var scheduler = new HarvestScheduler('ins', {onFinished: (...args) => this.onHarvestFinished(...args)}, this)
@@ -91,7 +88,7 @@ export class Aggregate extends FeatureBase {
     }
 
     mapOwn(defaults, set)
-    mapOwn(this.att, set)
+    mapOwn(getInfo(this.agentIdentifier).jsAttributes, set)
     if (attributes && typeof attributes === 'object') {
       mapOwn(attributes, set)
     }
@@ -102,10 +99,6 @@ export class Aggregate extends FeatureBase {
     function set (key, val) {
       eventAttributes[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
-  }
-
-  setCustomAttribute (t, key, value) {
-    this.att[key] = value
   }
 }
 

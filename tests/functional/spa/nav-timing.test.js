@@ -13,7 +13,7 @@ testDriver.test('navTiming on initialPageLoad', supported, function (t, browser,
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/xhr.html', { loader: 'spa' }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/xhr.html', { loader: 'spa', init: {session_trace: {enabled: false}} }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {

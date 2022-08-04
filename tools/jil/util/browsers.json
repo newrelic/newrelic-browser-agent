@@ -1,9 +1,9 @@
 {
   "chrome": [
-    { 
-      "browserName": "chrome",  
-      "platform": "Windows 10", 
-      "version": "beta" 
+    {
+      "browserName": "chrome",
+      "platform": "Windows 10",
+      "version": "beta"
     },
     {
       "browserName": "chrome",
@@ -13,62 +13,46 @@
     {
       "browserName": "chrome",
       "platform": "Windows 10",
-      "version": "73",
-      "comment": "Support for PerformanceObserver.supportedEntryTypes"
+      "version": "latest-1"
     },
     {
       "browserName": "chrome",
       "platform": "Windows 10",
-      "version": "61",
-      "comment": "Native support for JavaScript modules"
+      "version": "latest-2"
     },
     {
       "browserName": "chrome",
       "platform": "Windows 10",
-      "version": "56",
-      "comment": "HTML5 enabled by default"
+      "version": "73"
     },
     {
       "browserName": "chrome",
       "platform": "Windows 10",
-      "version": "53",
-      "comment": "Shadow DOM v1"
-    },
-    {
-      "browserName": "chrome",
-      "platform": "OS X 10.11",
-      "version": "50",
-      "comment": "No longer supports Windows XP and Vista"
-    },
-    {
-      "browserName": "chrome",
-      "platform": "Windows 8.1",
-      "version": "49",
-      "comment": "Last version available for Windows XP and Vista, and Mac OS 10.6.-10.8."
+      "version": "60"
     }
   ],
   "edge": [
     {
       "browserName": "MicrosoftEdge",
       "platform": "Windows 10",
-      "version": "14.14393"
+      "version": "latest"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platform": "Windows 10",
+      "version": "latest-1"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platform": "Windows 10",
+      "version": "latest-2"
     }
   ],
   "ie": [
     {
       "browserName": "internet explorer",
-      "platform": "Windows 8.1",
+      "platform": "Windows 10",
       "version": "11"
-    },
-    {
-      "browserName": "internet explorer",
-      "platform": "Windows 8",
-      "version": "10"
-    },
-    {
-      "browserName": "internet explorer",
-      "platform": "Windows 7",
-      "version": "9"
     }
   ],
   "safari": [
@@ -91,46 +75,23 @@
       "platform": "macOS 10.13",
       "version": "11.1",
       "comment": "macOS High Sierra - sendBeacon API with bug"
-    },
-    {
-      "browserName": "safari",
-      "platform": "macOS 10.12",
-      "version": "11.0",
-      "comment": "macOS Sierra - empty fetch issue"
-    },
-    {
-      "browserName": "safari",
-      "platform": "OS X 10.12",
-      "version": "10.1",
-      "comment": "Safari 10.1 is the first version with fetch support"
-    },
-    {
-      "browserName": "safari",
-      "platform": "OS X 10.11",
-      "version": "10.0",
-      "comment": "OS X El Capitan"
-    },
-    {
-      "browserName": "safari",
-      "platform": "OS X 10.11",
-      "version": "9"
-    },
-    {
-      "browserName": "safari",
-      "platform": "OS X 10.10",
-      "version": "8"
     }
   ],
   "firefox": [
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "beta"
+      "version": "latest"
     },
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "latest"
+      "version": "latest-1"
+    },
+    {
+      "browserName": "firefox",
+      "platform": "Windows 10",
+      "version": "latest-2"
     },
     {
       "browserName": "firefox",
@@ -149,71 +110,32 @@
       "platform": "Windows 10",
       "version": "56",
       "comment": "last version before Quantum"
-    },
-    {
-      "browserName": "firefox",
-      "platform": "Windows 8.1",
-      "version": "52"
-    },
-    {
-      "browserName": "firefox",
-      "platform": "Linux",
-      "version": "38"
-    },
-    {
-      "browserName": "firefox",
-      "platform": "Linux",
-      "version": "25"
-    },
-    {
-      "browserName": "firefox",
-      "platform": "Windows 7",
-      "version": "17"
-    },
-    {
-      "browserName": "firefox",
-      "platform": "Windows 7",
-      "version": "10"
-    },
-    {
-      "browserName": "firefox",
-      "platform": "Windows 7",
-      "version": "5"
     }
   ],
   "android": [
     {
-      "deviceName": "Android Emulator",
-      "deviceType": "phone",
-      "browserName": "Browser",
-      "platformVersion": "6.0",
-      "platformName": "Android"
+      "platformName": "Android",
+      "browserName": "Chrome",
+      "platformVersion": "12.0",
+      "appium:deviceName": "Google Pixel 4a (5G) GoogleAPI Emulator",
+      "appium:platformVersion": "12.0",
+      "sauce:options": {
+        "appiumVersion": "1.22.1"
+      }
     }
-  ],
-  "ios": [
-    {
-      "deviceName": "iPhone Simulator",
-      "platformName": "iOS",
-      "platformVersion": "latest",
-      "browserName": "Safari"
-    },
-    {
-      "deviceName": "iPhone Simulator",
-      "platformName": "iOS",
-      "platformVersion": "11.2",
-      "browserName": "Safari"
-    },
-    {
-      "deviceName": "iPhone Simulator",
-      "platformName": "iOS",
-      "platformVersion": "10.3",
-      "browserName": "Safari"
-    }
-  ],
-  "phantom": [
-    {
-      "browserName": "phantom",
-      "version": "2"
-    }
-  ]
-}
+    ],
+    "ios": [
+      {
+        "deviceName": "iPhone Simulator",
+        "platformName": "iOS",
+        "platformVersion": "latest",
+        "browserName": "Safari"
+      },
+      {
+        "deviceName": "iPhone Simulator",
+        "platformName": "iOS",
+        "platformVersion": "11.2",
+        "browserName": "Safari"
+      }
+    ]
+  }

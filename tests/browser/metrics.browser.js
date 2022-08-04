@@ -1,10 +1,19 @@
-var test = require('../../tools/jil/browser-test.js')
-var agg = require('../../agent/aggregator')
-var metrics = require('metrics')
+import test from '../../tools/jil/browser-test'
+import { setup } from './utils/setup'
+import { Instrument as MetricsInstrum, constants } from '../../packages/browser-agent-core/features/metrics/instrument/index'
+import { Aggregate as MetricsAggreg } from '../../packages/browser-agent-core/features/metrics/aggregate/index'
 
 const metricName = 'test'
-const sLabel = metrics.constants.SUPPORTABILITY_METRIC
-const cLabel = metrics.constants.CUSTOM_METRIC
+const sLabel = constants.SUPPORTABILITY_METRIC
+const cLabel = constants.CUSTOM_METRIC
+
+const { aggregator: agg, agentIdentifier } = setup();
+const metricsInstr = new MetricsInstrum(agentIdentifier);
+new MetricsAggreg(agentIdentifier, agg);
+const metrics = {
+  recordSupportability: metricsInstr.recordSupportability,
+  recordCustom: metricsInstr.recordCustom,
+};
 
 function sum_sq(array) {
   let sum = 0

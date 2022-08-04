@@ -2,36 +2,43 @@
  * @jest-environment jsdom
  */
 import 'babel-polyfill'
+import { setInfo, setConfiguration, setLoaderConfig, setRuntime } from '@newrelic/browser-agent-core/common/config/config'
 
 const id = '1234'
 
 describe('API', () => {
   beforeEach(async () => {
     jest.resetModules()
+
     jest.resetAllMocks()
   })
 
   it('should set the exposed API method to the imported API method', async function () {
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    setInfo(id, {})
+    setConfiguration(id, {})
+    setLoaderConfig(id, {})
+    setRuntime(id, {})
     const { Api } = await import('./api')
     const { initializeFeatures } = await import('../features/initialize')
     const { Features } = await import('../features/features')
     const { Aggregator } = await import('@newrelic/browser-agent-core/common/aggregate/aggregator')
-    jest.mock('@newrelic/browser-agent-core/features/js-errors/aggregate', () => {
+    jest.mock('@newrelic/browser-agent-core/features/jserrors/aggregate', () => {
       return {
         Aggregate: jest.fn().mockImplementation(() => {
           return { storeError: jest.fn() }
         })
       }
     })
-    jest.mock('@newrelic/browser-agent-core/features/js-errors/instrument', () => {
+    jest.mock('@newrelic/browser-agent-core/features/jserrors/instrument', () => {
       return {
         Instrument: jest.fn().mockImplementation(() => {
-          return { }
+          return {}
         })
       }
     })
     const spy = jest.spyOn(console, 'warn').mockImplementation()
-    const api = new Api({id, initialized: true})
+    const api = new Api({ id, initialized: true })
     await initializeFeatures(id, api, new Aggregator({ agentIdentifier: id }), new Features())
     expect(api.importedMethods.storeError).not.toEqual(null)
     api.noticeError('test')
@@ -39,8 +46,13 @@ describe('API', () => {
   })
 
   it('should warn if feature is disabled', async function () {
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    setInfo(id, {})
+    setConfiguration(id, {})
+    setLoaderConfig(id, {})
+    setRuntime(id, {})
     const { Api } = await import('./api')
-    const api = new Api({id, initialized: true})
+    const api = new Api({ id, initialized: true })
     api.importedMethods.storeError = null
     const spy = jest.spyOn(console, 'warn').mockImplementation()
     api.noticeError('test')
@@ -48,8 +60,13 @@ describe('API', () => {
   })
 
   it('should warn if error is invalid', async function () {
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    setInfo(id, {})
+    setConfiguration(id, {})
+    setLoaderConfig(id, {})
+    setRuntime(id, {})
     const { Api } = await import('./api')
-    const api = new Api({id, initialized: true})
+    const api = new Api({ id, initialized: true })
     api.importedMethods.storeError = jest.fn()
     const spy = jest.spyOn(console, 'warn').mockImplementation()
     // @ts-expect-error
@@ -59,8 +76,13 @@ describe('API', () => {
   })
 
   it('should warn if parent is not initialized', async function () {
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    setInfo(id, {})
+    setConfiguration(id, {})
+    setLoaderConfig(id, {})
+    setRuntime(id, {})
     const { Api } = await import('./api')
-    const api = new Api({id, initialized: false})
+    const api = new Api({ id, initialized: false })
     api.importedMethods.storeError = jest.fn()
     const spy = jest.spyOn(console, 'warn').mockImplementation()
     // @ts-expect-error
@@ -70,8 +92,13 @@ describe('API', () => {
   })
 
   it('should not warn if initialized, not disabled, and has valid error', async function () {
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    setInfo(id, {})
+    setConfiguration(id, {})
+    setLoaderConfig(id, {})
+    setRuntime(id, {})
     const { Api } = await import('./api')
-    const api = new Api({id, initialized: true})
+    const api = new Api({ id, initialized: true })
     api.importedMethods.storeError = jest.fn()
     const spy = jest.spyOn(console, 'warn').mockImplementation()
     api.noticeError(new Error("test"))
@@ -80,8 +107,13 @@ describe('API', () => {
   })
 
   it('should pass Error Object and custom attr args successfully to jsErrors.storeError', async function () {
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    setInfo(id, {})
+    setConfiguration(id, {})
+    setLoaderConfig(id, {})
+    setRuntime(id, {})
     const { Api } = await import('./api')
-    const api = new Api({id, initialized: true})
+    const api = new Api({ id, initialized: true })
     const mockFn = jest.fn()
     api.importedMethods.storeError = mockFn
     const err = new Error("test")
@@ -93,8 +125,13 @@ describe('API', () => {
   })
 
   it('should convert string to Error() and pass custom attr args successfully to jsErrors.storeError', async function () {
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    setInfo(id, {})
+    setConfiguration(id, {})
+    setLoaderConfig(id, {})
+    setRuntime(id, {})
     const { Api } = await import('./api')
-    const api = new Api({id, initialized: true})
+    const api = new Api({ id, initialized: true })
     const mockFn = jest.fn()
     api.importedMethods.storeError = mockFn
     const err = "test"
@@ -106,8 +143,13 @@ describe('API', () => {
   })
 
   it('should not pass invalid error args to jsErrors.storeError', async function () {
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    setInfo(id, {})
+    setConfiguration(id, {})
+    setLoaderConfig(id, {})
+    setRuntime(id, {})
     const { Api } = await import('./api')
-    const api = new Api({id, initialized: true})
+    const api = new Api({ id, initialized: true })
     const mockFn = jest.fn()
     api.importedMethods.storeError = mockFn
 

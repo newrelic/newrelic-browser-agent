@@ -193,13 +193,14 @@ testDriver.test('browsers that decode the url when accessing window.location sub
   }
 })
 
-testDriver.test('cookie attribute in the query string is false when disabled', withTls, function (t, browser, router) {
-  t.plan(1)
+testDriver.test('cookie disabled: query string attributes', withTls, function (t, browser, router) {
+  t.plan(2)
   let loadPromise = browser.safeGet(router.assetURL('instrumented-disable-cookies.html'))
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {
-    t.equal(query.ck, '0', 'The query string attribute ck should equal 0.')
+    t.equal(query.ck, '0', "The cookie flag ('ck') should equal 0.");
+    t.equal(query.s, '0', "The session id attr 's' should be 0.");
   }).catch(fail)
 
   function fail(err) {
@@ -208,13 +209,14 @@ testDriver.test('cookie attribute in the query string is false when disabled', w
   }
 })
 
-testDriver.test('cookie attribute in the query string is true by default', withTls, function (t, browser, router) {
-  t.plan(1)
+testDriver.test('cookie enabled by default: query string attributes', withTls, function (t, browser, router) {
+  t.plan(2)
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {
-    t.equal(query.ck, '1', 'The query string attribute ck should equal 1.')
+    t.equal(query.ck, '0', "The cookie flag ('ck') should equal 0.");
+    t.notEqual(query.s, '0', "The session id ('s') should NOT be 0.");
   }).catch(fail)
 
   function fail (err) {

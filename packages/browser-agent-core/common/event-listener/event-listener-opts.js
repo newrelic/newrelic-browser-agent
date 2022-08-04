@@ -15,5 +15,3 @@ try {
 export function eventListenerOpts(useCapture) {
   return supportsPassive ? {passive: true, capture: !!useCapture} : !!useCapture
 }
-
-// export default eventListenerOpts

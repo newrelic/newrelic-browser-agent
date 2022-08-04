@@ -3,22 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import slice from 'lodash._slice'
-import { gosNREUM } from '../../../modules/common/window/nreum'
-// import { global as handle } from '../../../modules/common/event-emitter/handle'
-import { handle } from '../../../modules/common/event-emitter/handle'
-import { mapOwn } from '../../../modules/common/util/map-own'
-// import { global as globalEE } from '../../../modules/common/event-emitter/contextual-ee'
-import { ee } from '../../../modules/common/event-emitter/contextual-ee'
-import { recordSupportability } from '../../../modules/common/metrics/metrics'
-import { now } from '../../../modules/common/timing/now'
+import { gosNREUM } from '@newrelic/browser-agent-core/common/window/nreum'
+import { getRuntime, setInfo, getInfo } from '@newrelic/browser-agent-core/common/config/config'
+import { handle } from '@newrelic/browser-agent-core/common/event-emitter/handle'
+import { mapOwn } from '@newrelic/browser-agent-core/common/util/map-own'
+import { ee } from '@newrelic/browser-agent-core/common/event-emitter/contextual-ee'
+import { now } from '@newrelic/browser-agent-core/common/timing/now'
 
-export function setAPI() {
+export function setAPI(agentIdentifier) {
   var nr = gosNREUM()
-  var tracerEE = ee.get('tracer')
+  var instanceEE = ee.get(agentIdentifier)
+  var tracerEE = instanceEE.get('tracer')
 
   var asyncApiFns = [
-    'setPageViewName',
-    'setCustomAttribute',
     'setErrorHandler',
     'finished',
     'addToTrace',
@@ -37,6 +34,19 @@ export function setAPI() {
   nr.addPageAction = apiCall(prefix, 'addPageAction', true)
   nr.setCurrentRouteName = apiCall(prefix, 'routeName', true)
 
+  nr.setPageViewName = function(name, host){
+    if (typeof name !== 'string') return
+    if (name.charAt(0) !== '/') name = '/' + name
+    getRuntime(agentIdentifier).customTransaction = (host || 'http://custom.transaction') + name
+    return apiCall(prefix, 'setPageViewName', true, 'api')()
+  }
+
+  nr.setCustomAttribute = function(name, value){
+    const currentInfo = getInfo(agentIdentifier)
+    setInfo(agentIdentifier, {...currentInfo, jsAttributes: {...currentInfo.jsAttributes, [name]: value}})
+    return apiCall(prefix, 'setCustomAttribute', true, 'api')()
+  }
+
   nr.interaction = function () {
     return new InteractionHandle().get()
   }
@@ -48,14 +58,14 @@ export function setAPI() {
       var contextStore = {}
       var ixn = this
       var hasCb = typeof cb === 'function'
-      handle(spaPrefix + 'tracer', [now(), name, contextStore], ixn)
+      handle(spaPrefix + 'tracer', [now(), name, contextStore], ixn, undefined, instanceEE)
       return function () {
         tracerEE.emit((hasCb ? '' : 'no-') + 'fn-start', [now(), ixn, hasCb], contextStore)
         if (hasCb) {
           try {
             return cb.apply(this, arguments)
           } catch (err) {
-            tracerEE.emit('fn-err', [arguments, this, err], contextStore)
+            tracerEE.emit('fn-err', [arguments, this, typeof err == 'string' ? new Error(err) : err], contextStore)
             // the error came from outside the agent, so don't swallow
             throw err
           } finally {
@@ -72,15 +82,21 @@ export function setAPI() {
 
   function apiCall(prefix, name, notSpa, bufferGroup) {
     return function () {
-      recordSupportability('API/' + name + '/called')
-      handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup)
+      handle('record-supportability', ['API/' + name + '/called'], undefined, undefined, instanceEE)
+      handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup, instanceEE)
       return notSpa ? void 0 : this
     }
   }
 
-  newrelic.noticeError = function (err, customAttributes) {
+  nr.noticeError = function (err, customAttributes) {
     if (typeof err === 'string') err = new Error(err)
-    recordSupportability('API/noticeError/called')
-    handle('err', [err, now(), false, customAttributes])
+    handle('record-supportability', ['API/noticeError/called'], undefined, undefined, instanceEE)
+    handle('err', [err, now(), false, customAttributes], undefined, undefined, instanceEE)
   }
+
+  // experimental feature -- not ready
+  // nr.BrowserAgentInstance = async function (){
+  //   const { BrowserAgent } = await import('@newrelic/browser-agent')
+  //   return new BrowserAgent()
+  // }
 }

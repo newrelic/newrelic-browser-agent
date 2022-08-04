@@ -3,21 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ee, global as globalEE } from '../event-emitter/contextual-ee'
+import { ee } from '../event-emitter/contextual-ee'
 import { mapOwn } from '../util/map-own'
-import { global, registerHandler as defaultHandlers } from '../event-emitter/register-handler'
+import { registerHandler as defaultRegister } from '../event-emitter/register-handler'
 
-var handlers = defaultHandlers.handlers
-var globalHandlers = global.handlers
-
-var d = drain.bind(null, ee, handlers)
-export { d as drain }
-var g = drain.bind(null, globalEE, globalHandlers)
-export { g as global }
 
 // calls will need to update to call this more directly so we can explicitly pass in the ee and handler
-function drain (baseEE, handlers, group) {
-  if (!baseEE.backlog) return
+export function drain(agentIdentifier, group = 'feature') {
+  const baseEE = agentIdentifier ? ee.get(agentIdentifier) : ee
+  const handlers = defaultRegister.handlers
+  if (!baseEE.backlog || !handlers) return
 
   var bufferedEventsInGroup = baseEE.backlog[group]
   var groupHandlers = handlers[group]
@@ -36,11 +31,11 @@ function drain (baseEE, handlers, group) {
   }
 
   delete handlers[group]
-  // Keep the group as a property so we know it was created and drained
+    // Keep the group as a property so we know it was created and drained
   baseEE.backlog[group] = null
 }
 
-function emitEvent (evt, groupHandlers) {
+function emitEvent(evt, groupHandlers) {
   var type = evt[1]
   mapOwn(groupHandlers[type], function (i, registration) {
     var sourceEE = evt[0]

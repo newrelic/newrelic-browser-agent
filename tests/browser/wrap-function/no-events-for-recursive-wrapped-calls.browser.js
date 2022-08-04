@@ -3,15 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var rootEE = require('ee')
-var wrapFn = require('../../../wrap-function')
-var test = require('../../../tools/jil/browser-test.js')
+import { setup } from '../utils/setup'
+import createWrapperWithEmitter from '../../../packages/browser-agent-core/common/wrap/wrap-function'
+import test from '../../../tools/jil/browser-test.js'
+
+const { baseEE } = setup();
 
 var eeId = 0
 
 test('recursive calls to wrapped functions from start/end event callbacks should not trigger more events', function (t) {
-  let ee = rootEE.get(eeId++)
-  let wrappedFoo = wrapFn(ee)(foo, 'fn-')
+  let ee = baseEE.get(eeId++)
+  let wrappedFoo = createWrapperWithEmitter(ee)(foo, 'fn-')
 
   let fooCallCount = 0
   let fnStartCount = 0
@@ -40,8 +42,8 @@ test('recursive calls to wrapped functions from start/end event callbacks should
 })
 
 test('calls to other wrapped functions from start/end event callbacks should not trigger more events', function (t) {
-  let ee = rootEE.get(eeId++)
-  let wrapper = wrapFn(ee)
+  let ee = baseEE.get(eeId++)
+  let wrapper = createWrapperWithEmitter(ee)
   let wrappedFoo = wrapper(foo, 'fn-')
   let wrappedBar = wrapper(bar, 'fn-')
 
@@ -78,8 +80,8 @@ test('calls to other wrapped functions from start/end event callbacks should not
 })
 
 test('calls to other wrapped functions from start/end event callbacks with different prefix should not trigger more events', function (t) {
-  let ee = rootEE.get(eeId++)
-  let wrapper = wrapFn(ee)
+  let ee = baseEE.get(eeId++)
+  let wrapper = createWrapperWithEmitter(ee)
   let wrappedFoo = wrapper(foo, 'foo-')
   let wrappedBar = wrapper(bar, 'bar-')
 
@@ -129,9 +131,9 @@ test('always flag allows nested calls', function (t) {
   let fooStartCount = 0
   let barStartCount = 0
 
-  let ee = rootEE.get(eeId++)
-  let alwaysWrappedFoo = wrapFn(ee, true)(foo, 'foo-')
-  let wrappedBar = wrapFn(ee)(bar, 'bar-')
+  let ee = baseEE.get(eeId++)
+  let alwaysWrappedFoo = createWrapperWithEmitter(ee, true)(foo, 'foo-')
+  let wrappedBar = createWrapperWithEmitter(ee)(bar, 'bar-')
 
   ee.on('foo-start', function () {
     fooStartCount += 1

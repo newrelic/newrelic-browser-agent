@@ -18,4 +18,5 @@ node_modules
 **/local-install
 tests/assets/test-builds/**/*
 packages/browser-agent-core/cjs
-packages/browser-agent/webpack-analysis.html
+**/webpack-analysis.html
+/cdn/build

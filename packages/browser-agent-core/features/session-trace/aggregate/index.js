@@ -19,12 +19,21 @@ import { FeatureBase } from '../../../common/util/feature-base'
 export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator)
+
+    const agentRuntime = getRuntime(agentIdentifier)
+
+    if (!xhrUsable) return
+    // bail if not instrumented
+    if (!agentRuntime.features.stn || !agentRuntime.xhrWrappable) return
+
     this.ptid = ''
     this.ignoredEvents = {
       // we find that certain events make the data too noisy to be useful
       global: { mouseup: true, mousedown: true },
       // certain events are present both in the window and in PVT metrics.  PVT metrics are prefered so the window events should be ignored
-      window: { load: true, pagehide: true }
+      window: { load: true, pagehide: true },
+      // when ajax instrumentation is disabled, all XMLHttpRequest events will return with origin = xhrOriginMissing and should be ignored
+      xhrOriginMissing: { ignoreAll: true }
     }
     this.toAggregate = {
       typing: [1000, 2000],
@@ -32,7 +41,6 @@ export class Aggregate extends FeatureBase {
       mousing: [1000, 2000],
       touching: [1000, 2000]
     }
-
     this.rename = {
       typing: {
         keydown: true,
@@ -62,69 +70,62 @@ export class Aggregate extends FeatureBase {
     this.trace = {}
     this.nodeCount = 0
     this.sentTrace = null
-    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'stn.harvestTimeSeconds') || 10
-    this.maxNodesPerHarvest = getConfigurationValue(this.agentIdentifier, 'stn.maxNodesPerHarvest') || 1000
+    this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'stn.harvestTimeSeconds') || 10
+    this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'stn.maxNodesPerHarvest') || 1000
 
     this.laststart = 0
+    findStartTime(agentIdentifier)
 
-    findStartTime()
+    this.ee.on('feat-stn', () => {
 
-    if (!xhrUsable) return
-    // bail if not instrumented
-    if (!getRuntime(this.agentIdentifier).features.stn) return
+      this.storeTiming(window.performance.timing)
 
-    // ee.on('feat-stn', () => {
-    this.storeTiming(window.performance.timing)
+      var scheduler = new HarvestScheduler('resources', {
+        onFinished: onHarvestFinished.bind(this),
+        retryDelay: this.harvestTimeSeconds
+      }, this)
+      scheduler.harvest.on('resources', prepareHarvest.bind(this))
+      scheduler.runHarvest({ needResponse: true })
 
-    // onHarvest('resources', prepareHarvest)
+      function onHarvestFinished(result) {
+        // start timer only if ptid was returned by server
+        if (result.sent && result.responseText && !this.ptid) {
+          this.ptid = result.responseText
+          getRuntime(this.agentIdentifier).ptid = this.ptid
+          scheduler.startTimer(this.harvestTimeSeconds)
+        }
 
-    var scheduler = new HarvestScheduler('resources', {
-      onFinished: (...args) => onHarvestFinished(...args),
-      retryDelay: (...args) => this.harvestTimeSeconds(...args)
-      // onUnload: () => this.finalHarvest() // no special actions needed before unloading
+        if (result.sent && result.retry && this.sentTrace) {
+          mapOwn(this.sentTrace, (name, nodes) => {
+            this.mergeSTNs(name, nodes)
+          })
+          this.sentTrace = null
+        }
+      }
+
+      function prepareHarvest(options) {
+        if ((now()) > (15 * 60 * 1000)) {
+          // been collecting for over 15 min, empty trace object and bail
+          scheduler.stopTimer()
+          this.trace = {}
+          return
+        }
+
+        // only send when there are more than 30 nodes to send
+        if (this.ptid && this.nodeCount <= 30) return
+
+        return this.takeSTNs(options.retry)
+      }
+
+      registerHandler('bst', (...args) => this.storeEvent(...args), undefined, this.ee)
+      registerHandler('bstTimer', (...args) => this.storeTimer(...args), undefined, this.ee)
+      registerHandler('bstResource', (...args) => this.storeResources(...args), undefined, this.ee)
+      registerHandler('bstHist', (...args) => this.storeHist(...args), undefined, this.ee)
+      registerHandler('bstXhrAgg', (...args) => this.storeXhrAgg(...args), undefined, this.ee)
+      registerHandler('bstApi', (...args) => this.storeSTN(...args), undefined, this.ee)
+      registerHandler('errorAgg', (...args) => this.storeErrorAgg(...args), undefined, this.ee)
+      registerHandler('pvtAdded', (...args) => this.processPVT(...args), undefined, this.ee)
     })
-    scheduler.runHarvest({ needResponse: true })
-    scheduler.harvest.on('resources', (...args) => prepareHarvest(...args))
-
-    function onHarvestFinished(result) {
-      // start timer only if ptid was returned by server
-      if (result.sent && result.responseText && !this.ptid) {
-        this.ptid = result.responseText
-        getRuntime(this.agentIdentifier).ptid = this.ptid
-        scheduler.startTimer(this.harvestTimeSeconds)
-      }
-
-      if (result.sent && result.retry && this.sentTrace) {
-        mapOwn(this.sentTrace, function (name, nodes) {
-          this.mergeSTNs(name, nodes)
-        })
-        this.sentTrace = null
-      }
-    }
-
-    function prepareHarvest(options) {
-      if ((now()) > (15 * 60 * 1000)) {
-        // been collecting for over 15 min, empty trace object and bail
-        scheduler.stopTimer()
-        this.trace = {}
-        return
-      }
-
-      // only send when there are more than 30 nodes to send
-      if (this.ptid && this.nodeCount <= 30) return
-
-      return this.takeSTNs(options.retry)
-    }
-
-    registerHandler('bst', (...args) => this.storeEvent(...args), undefined, this.ee)
-    registerHandler('bstTimer', (...args) => this.storeTimer(...args), undefined, this.ee)
-    registerHandler('bstResource', (...args) => this.storeResources(...args), undefined, this.ee)
-    registerHandler('bstHist', (...args) => this.storeHist(...args), undefined, this.ee)
-    registerHandler('bstXhrAgg', (...args) => this.storeXhrAgg(...args), undefined, this.ee)
-    registerHandler('bstApi', (...args) => this.storeSTN(...args), undefined, this.ee)
-    registerHandler('errorAgg', (...args) => this.storeErrorAgg(...args), undefined, this.ee)
-    registerHandler('pvtAdded', (...args) => this.processPVT(...args), undefined, this.ee)
-    // })
   }
 
   processPVT(name, value, attrs) {
@@ -208,9 +209,10 @@ export class Aggregate extends FeatureBase {
 
   evtOrigin(t, target) {
     var origin = 'unknown'
-
+    
     if (t && t instanceof XMLHttpRequest) {
       var params = this.ee.context(t).params
+      if (!params || !params.status || !params.method || !params.host || !params.pathname) return 'xhrOriginMissing'
       origin = params.status + ' ' + params.method + ': ' + params.host + params.pathname
     } else if (t && typeof (t.tagName) === 'string') {
       origin = t.tagName.toLowerCase()
@@ -243,7 +245,7 @@ export class Aggregate extends FeatureBase {
   storeResources(resources) {
     if (!resources || resources.length === 0) return
 
-    resources.forEach(function (currentResource) {
+    resources.forEach((currentResource) => {
       var parsed = parseUrl(currentResource.name)
       var res = {
         n: currentResource.initiatorType,
@@ -314,7 +316,7 @@ export class Aggregate extends FeatureBase {
       this.storeResources(window.performance.getEntriesByType('resource'))
     }
 
-    var stns = reduce(mapOwn(this.trace, function (name, nodes) {
+    var stns = reduce(mapOwn(this.trace, (name, nodes) => {
       if (!(name in this.toAggregate)) return nodes
 
       return reduce(mapOwn(reduce(nodes.sort(this.byStart), this.smearEvtsByOrigin(name), {}), this.val), this.flatten, [])
@@ -395,6 +397,7 @@ export class Aggregate extends FeatureBase {
   shouldIgnoreEvent(event, target) {
     var origin = this.evtOrigin(event.target, target)
     if (event.type in this.ignoredEvents.global) return true
+    if (!!this.ignoredEvents[origin] && this.ignoredEvents[origin].ignoreAll) return true
     if (!!this.ignoredEvents[origin] && event.type in this.ignoredEvents[origin]) return true
     return false
   }

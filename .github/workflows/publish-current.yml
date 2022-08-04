@@ -1,10 +1,10 @@
-name: Publish `current` files
+name: Build and publish CURRENT Release
 
 on:
   workflow_dispatch:
 
 jobs:
-  publish-current:
+  publish-to-s3:
     runs-on: ubuntu-latest
     container: node:14
     env:
@@ -14,9 +14,12 @@ jobs:
       - uses: actions/checkout@v2
       - name: install
         run: npm ci
-      - name: publish
+      - name: build
+        run: npm run cdn:build:current
+      - name: upload artifacts to S3
         run: |
-          node tools/scripts/publish-current.js \
+          node tools/scripts/upload-to-s3.js \
             --bucket ${{ secrets.AWS_BUCKET }} \
-            --role ${{ secrets.AWS_ROLE_ARN }} \
-            --build-number $(cat VERSION)
+            --role ${{ secrets.AWS_ROLE_ARN }}
+      - name: check files exist
+        run: node tools/scripts/check-version.js -e yes

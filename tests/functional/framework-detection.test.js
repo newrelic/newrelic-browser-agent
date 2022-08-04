@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../tools/jil/index')
-const {getMetricsFromResponse} = require('./err/assertion-helpers')
+const { getMetricsFromResponse } = require('./err/assertion-helpers')
 
 let frameworks = testDriver.Matcher.withFeature('frameworks')
 
@@ -22,8 +22,8 @@ testDriver.test('Agent detects a page built with REACT and sends a supportabilit
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
-      t.ok(supportabilityMetrics && !!supportabilityMetrics.length && supportabilityMetrics.length === 1, 'SupportabilityMetrics object was generated')
-      const sm = supportabilityMetrics[0]
+      t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics objects were generated')
+      const sm = supportabilityMetrics.find(x => x.params.name.includes('Framework'))
       t.equals(sm.params.name, 'Framework/React/Detected', 'Supportability metric is React and is formatted correctly')
       t.end()
     })
@@ -51,8 +51,8 @@ testDriver.test('Agent detects a page built with ANGULAR and sends a supportabil
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
-      t.ok(supportabilityMetrics && !!supportabilityMetrics.length && supportabilityMetrics.length === 1, 'SupportabilityMetrics object was generated')
-      const sm = supportabilityMetrics[0]
+      t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics objects were generated')
+      const sm = supportabilityMetrics.find(x => x.params.name.includes('Framework'))
       t.equals(sm.params.name, 'Framework/Angular/Detected', 'Supportability metric is Angular and is formatted correctly')
       t.end()
     })
@@ -80,8 +80,14 @@ testDriver.test('Agent detects a page built with NO FRAMEWORK and DOES NOT send 
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
-      t.ok(!supportabilityMetrics, 'FRAMEWORK SupportabilityMetrics object(s) were NOT generated')
-      t.end()
+      if (!supportabilityMetrics) {
+        t.ok(1 === 1, 'FRAMEWORK SupportabilityMetrics object(s) were NOT generated')
+        t.end()
+      } else {
+        const sm = supportabilityMetrics.find(x => x.params.name.includes('Framework'))
+        t.ok(!sm, 'FRAMEWORK SupportabilityMetrics object(s) were NOT generated')
+        t.end()
+      }
     })
     .catch(fail)
 

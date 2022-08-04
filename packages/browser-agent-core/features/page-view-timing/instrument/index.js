@@ -3,58 +3,57 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../../common/event-emitter/handle'
-import { subscribeToVisibilityChange } from '../../../common/window/visibility'
+import { subscribeToVisibilityChange, initializeHiddenTime } from '../../../common/window/visibility'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
-import { gosNREUM } from '../../../common/window/nreum'
 import { getOffset, now } from '../../../common/timing/now'
-import { getConfigurationValue } from '../../../common/config/config'
+import { getConfigurationValue, originals } from '../../../common/config/config'
 import { FeatureBase } from '../../../common/util/feature-base'
 
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
     super(agentIdentifier)
-    this.pageHiddenTime
+    this.pageHiddenTime = initializeHiddenTime()  // synonymous with initial visibilityState
     this.performanceObserver
     this.lcpPerformanceObserver
     this.clsPerformanceObserver
     this.fiRecorded = false
 
-    if (this.isEnabled()) {
-      if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {
-        // passing in an unknown entry type to observer could throw an exception
-        this.performanceObserver = new PerformanceObserver(perfObserver) // eslint-disable-line no-undef
-        try {
-          this.performanceObserver.observe({ entryTypes: ['paint'] })
-        } catch (e) {
-          // do nothing
-        }
+    if (!this.isEnabled()) return
 
-        this.lcpPerformanceObserver = new PerformanceObserver(lcpObserver) // eslint-disable-line no-undef
-        try {
-          this.lcpPerformanceObserver.observe({ entryTypes: ['largest-contentful-paint'] })
-        } catch (e) {
-          // do nothing
-        }
-
-        this.clsPerformanceObserver = new PerformanceObserver(clsObserver) // eslint-disable-line no-undef
-        try {
-          this.clsPerformanceObserver.observe({ type: 'layout-shift', buffered: true })
-        } catch (e) {
-          // do nothing
-        }
+    if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {
+      // passing in an unknown entry type to observer could throw an exception
+      this.performanceObserver = new PerformanceObserver((...args) => this.perfObserver(...args))
+      try {
+        this.performanceObserver.observe({ entryTypes: ['paint'] })
+      } catch (e) {
+        // do nothing
       }
 
-      // first interaction and first input delay
-      if ('addEventListener' in document) {
-        this.fiRecorded = false
-        var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart']
-        allowedEventTypes.forEach((e) => {
-          document.addEventListener(e, (...args) => this.captureInteraction(...args), eventListenerOpts(false))
-        })
+      this.lcpPerformanceObserver = new PerformanceObserver((...args) => this.lcpObserver(...args))
+      try {
+        this.lcpPerformanceObserver.observe({ entryTypes: ['largest-contentful-paint'] })
+      } catch (e) {
+        // do nothing
       }
-      // page visibility events
-      subscribeToVisibilityChange((...args) => this.captureVisibilityChange(...args))
+
+      this.clsPerformanceObserver = new PerformanceObserver((...args) => this.clsObserver(...args))
+      try {
+        this.clsPerformanceObserver.observe({ type: 'layout-shift', buffered: true })
+      } catch (e) {
+        // do nothing
+      }
     }
+
+    // first interaction and first input delay
+    if ('addEventListener' in document) {
+      this.fiRecorded = false
+      var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart']
+      allowedEventTypes.forEach((e) => {
+        document.addEventListener(e, (...args) => this.captureInteraction(...args), eventListenerOpts(false))
+      })
+    }
+    // page visibility events
+    subscribeToVisibilityChange((...args) => this.captureVisibilityChange(...args))
   }
 
   isEnabled() {
@@ -79,7 +78,8 @@ export class Instrument extends FeatureBase {
     if (entries.length > 0) {
       var entry = entries[entries.length - 1]
 
-      if (this.pageHiddenTime && this.pageHiddenTime < entry.startTime) return
+      // metrics become inflated if the page was ever hidden, so they aren't sent
+      if (this.pageHiddenTime < entry.startTime) return;
 
       var payload = [entry]
 
@@ -91,7 +91,7 @@ export class Instrument extends FeatureBase {
   }
 
   clsObserver(list) {
-    list.getEntries().forEach(function (entry) {
+    list.getEntries().forEach((entry) => {
       if (!entry.hadRecentInput) {
         handle('cls', [entry], undefined, undefined, this.ee)
       }
@@ -113,7 +113,7 @@ export class Instrument extends FeatureBase {
 
   captureInteraction(evt) {
     // if (evt instanceof origEvent && !fiRecorded) {
-    if (evt instanceof gosNREUM().o.EV && !this.fiRecorded) {
+    if (evt instanceof originals.EV && !this.fiRecorded) {
       var fi = Math.round(evt.timeStamp)
       var attributes = {
         type: evt.type
@@ -137,8 +137,9 @@ export class Instrument extends FeatureBase {
     }
   }
 
-  captureVisibilityChange(state) {
-    if (state === 'hidden') {
+  captureVisibilityChange(newState) {
+    if (newState === 'hidden') {
+      // time is only recorded to be used for short-circuit logic in the observer callbacks
       this.pageHiddenTime = now()
       handle('pageHide', [this.pageHiddenTime], undefined, undefined, this.ee)
     }

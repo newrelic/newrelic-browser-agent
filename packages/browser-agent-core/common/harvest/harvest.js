@@ -9,7 +9,7 @@ import { stringify } from '../util/stringify'
 import { submitData } from '../util/submit-data'
 import { reduce } from '../util/reduce'
 import { getLocation } from '../url/location'
-import {getInfo, getConfigurationValue, getRuntime, getConfiguration} from '../config/config'
+import { getInfo, getConfigurationValue, getRuntime, getConfiguration } from '../config/config'
 import { cleanURL } from '../url/clean-url'
 import { now } from '../timing/now'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
@@ -17,16 +17,11 @@ import { ieVersion } from '../browser-version/ie-version'
 import { Obfuscator } from '../util/obfuscate'
 import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
-import pkg from '../../package.json'
+import { VERSION } from '../constants/environment-variables'
 
-const version = pkg.version
-// var version = '<VERSION>'
-// var jsonp = 'NREUM.setToken'
-// var _events = {}
 var haveSendBeacon = !!navigator.sendBeacon
 
 // requiring ie version updates the IE version on the loader object
-// var ieVersion = require('./ie-version')
 export var xhrUsable = ieVersion > 9 || ieVersion === 0
 
 export class Harvest extends SharedContext {
@@ -47,13 +42,23 @@ export class Harvest extends SharedContext {
     return reduce(sents, or)
   }
 
+  /**
+   * Initiate a harvest from multiple sources. An event that corresponds to the endpoint
+   * name is emitted, which gives any listeners the opportunity to provide payload data.
+   *
+   * @param {string} endpoint - The endpoint of the harvest (jserrors, events, resources etc.)
+   *
+   * @param {object} opts
+   * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
+   * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
+   */
   sendX(endpoint, opts, cbFinished) {
     var submitMethod = getSubmitMethod(endpoint, opts)
     if (!submitMethod) return false
     var options = {
       retry: submitMethod.method === submitData.xhr
     }
-    return this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateAndSend(endpoint, this.createPayload(endpoint, options), opts, submitMethod, cbFinished) : this._send(endpoint, this.createPayload(endpoint, options), opts, submitMethod, cbFinished)
+    return this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend(endpoint, this.createPayload(endpoint, options), opts, submitMethod, cbFinished) : this._send(endpoint, this.createPayload(endpoint, options), opts, submitMethod, cbFinished)
   }
 
   /**
@@ -78,7 +83,8 @@ export class Harvest extends SharedContext {
     if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
 
     var payload = { body: makeBody(), qs: makeQueryString() }
-    var caller = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateAndSend : this._send
+    var caller = this.obfuscator.shouldObfuscate() ? (...args) => this.obfuscateAndSend(...args) : (...args) => this._send(...args)
+    
     return caller(endpoint, payload, opts, submitMethod, cbFinished)
   }
 
@@ -91,6 +97,8 @@ export class Harvest extends SharedContext {
     var info = getInfo(this.sharedContext.agentIdentifier)
     if (!info.errorBeacon) return false
 
+    var agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
+
     if (!payload.body) {
       if (cbFinished) {
         cbFinished({ sent: false })
@@ -101,7 +109,7 @@ export class Harvest extends SharedContext {
     if (!opts) opts = {}
 
     var url = this.getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + this.baseQueryString()
-    if (payload.qs) url += encodeObj(payload.qs, getRuntime(this.sharedContext.agentIdentifier).maxBytes)
+    if (payload.qs) url += encodeObj(payload.qs, agentRuntime.maxBytes)
 
     if (!submitMethod) {
       submitMethod = getSubmitMethod(endpoint, opts)
@@ -116,7 +124,7 @@ export class Harvest extends SharedContext {
     } else if (useBody) {
       body = stringify(payload.body)
     } else {
-      fullUrl = url + encodeObj(payload.body, getRuntime(this.sharedContext.agentIdentifier).maxBytes)
+      fullUrl = url + encodeObj(payload.body, agentRuntime.maxBytes)
     }
 
     var result = method(fullUrl, body)
@@ -142,7 +150,7 @@ export class Harvest extends SharedContext {
     // if beacon request failed, retry with an alternative method
     if (!result && method === submitData.beacon) {
       method = submitData.img
-      result = method(url + encodeObj(payload.body, getRuntime(this.sharedContext.agentIdentifier).maxBytes))
+      result = method(url + encodeObj(payload.body, agentRuntime.maxBytes))
     }
 
     return result
@@ -150,14 +158,8 @@ export class Harvest extends SharedContext {
 
   // The stuff that gets sent every time.
   baseQueryString() {
-    var areCookiesEnabled = true
-    const init = getConfiguration(this.sharedContext.agentIdentifier)
     var runtime = getRuntime(this.sharedContext.agentIdentifier)
     var info = getInfo(this.sharedContext.agentIdentifier)
-
-    if ('privacy' in init) {
-      areCookiesEnabled = init.privacy.cookies_enabled
-    }
 
     var location = cleanURL(getLocation())
     var ref = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateString(location) : location
@@ -165,11 +167,12 @@ export class Harvest extends SharedContext {
     return ([
       '?a=' + info.applicationID,
       encodeParam('sa', (info.sa ? '' + info.sa : '')),
-      encodeParam('v', version),
+      encodeParam('v', VERSION),
       transactionNameParam(info),
       encodeParam('ct', runtime.customTransaction),
       '&rst=' + now(),
-      '&ck=' + (areCookiesEnabled ? '1' : '0'),
+      '&ck=0',  // ck param DEPRECATED - still expected by backend
+      '&s=' + runtime.sessionId,
       encodeParam('ref', ref),
       encodeParam('ptid', (runtime.ptid ? '' + runtime.ptid : ''))
     ].join(''))
@@ -195,27 +198,13 @@ export class Harvest extends SharedContext {
   }
 
   resetListeners() {
-    mapOwn(this._events, function (key) {
+    mapOwn(this._events, (key) => {
       this._events[key] = []
     })
   }
 }
 
 function or(a, b) { return a || b }
-
-// function createPayload(type, options) {
-//   var makeBody = createAccumulator()
-//   var makeQueryString = createAccumulator()
-//   var listeners = (_events[type] && _events[type] || [])
-
-//   for (var i = 0; i < listeners.length; i++) {
-//     var singlePayload = listeners[i](options)
-//     if (!singlePayload) continue
-//     if (singlePayload.body) mapOwn(singlePayload.body, makeBody)
-//     if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
-//   }
-//   return { body: makeBody(), qs: makeQueryString() }
-// }
 
 export function getSubmitMethod(endpoint, opts) {
   opts = opts || {}
@@ -259,17 +248,6 @@ function transactionNameParam(info) {
   if (info.transactionName) return encodeParam('to', info.transactionName)
   return encodeParam('t', info.tNamePlain || 'Unnamed Transaction')
 }
-
-// export function on(type, listener) {
-//   var listeners = (_events[type] || (_events[type] = []))
-//   listeners.push(listener)
-// }
-
-// export function resetListeners() {
-//   mapOwn(_events, function (key) {
-//     _events[key] = []
-//   })
-// }
 
 // returns a function that can be called to accumulate values to a single object
 // when the function is called without parameters, then the accumulator is returned

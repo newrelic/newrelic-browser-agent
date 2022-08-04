@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var reduce = require('../../reduce')
-var test = require('../../tools/jil/browser-test.js')
+import test from '../../tools/jil/browser-test'
+import { reduce } from '../../packages/browser-agent-core/common/util/reduce.js'
 
 test('reduce', function (t) {
   var nums = [ 1, 5, 10 ]

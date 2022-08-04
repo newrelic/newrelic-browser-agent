@@ -18,6 +18,9 @@ testDriver.test('reporting errors from event listener callbacks', supported, fun
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   })
@@ -33,28 +36,28 @@ testDriver.test('reporting errors from event listener callbacks', supported, fun
       {
         message: 'document addEventListener listener',
         stack: [
-          {f: 'handleEvent', u: eventListenersURL, l: 15},
-          {f: 't', u: '<inline>', l: 11}
+          {f: 'Object.handleEvent', u: eventListenersURL, l: 15},
+          {f: 'HTMLDocument.object', u: '<inline>', l: 13},
+          {f: 'HTMLDocument.u', u: '<inline>', l: 13}
         ]
       },
       {
         message: 'global addEventListener listener',
         stack: [
-          {f: 'handleEvent', u: eventListenersURL, l: 8},
-          {f: 't', u: '<inline>', l: 11}
+          {f: 'Object.handleEvent', u: eventListenersURL, l: 8},
+          {f: 'object', u: '<inline>', l: 13},
+          {f: 'u', u: '<inline>', l: 13}
         ]
       }
     ]
+    t.equal(actualErrors.length, 2, 'Has 2 errors')
+    actualErrors.forEach((err, i) => {
+      t.equal(err.params.exceptionClass, 'Error', err.params.message + 'exceptionClass is Error')
+      t.equal(err.params.message, expectedErrors[i].message, err.params.message + 'message is correct')
+      t.ok(err.params.stack_trace.includes('handleEvent'), 'Stack trace has handleEvent')
+      t.ok(err.params.stack_trace.includes(eventListenersURL), 'Stack trace has eventListenerUrl')
+    })
 
-    // No function name from earlier IEs
-    if (browser.match('ie@<10, safari@<7')) {
-      delete expectedErrors[0].stack[0].f
-      delete expectedErrors[1].stack[0].f
-      expectedErrors[0].stack.splice(1, 1)
-      expectedErrors[1].stack.splice(1, 1)
-    }
-
-    assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL)
     t.end()
   }).catch(fail)
 

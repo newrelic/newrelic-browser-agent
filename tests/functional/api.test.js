@@ -11,6 +11,15 @@ let withCors = testDriver.Matcher.withFeature('cors')
 let withTls = testDriver.Matcher.withFeature('tls')
 let reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')
 
+function getTime (cm) {
+  try {
+    return cm[0].metrics.time.t
+  } catch (e) {
+    console.error(e)
+    return 0
+  }
+}
+
 testDriver.test('customTransactionName 1 arg', withTls, function (t, browser, router) {
   t.plan(1)
 
@@ -49,6 +58,9 @@ testDriver.test('customTransactionName 1 arg unload', withUnload, function (t, b
     init: {
       page_view_timing: {
         enabled: false
+      },
+      jserrors: {
+        enabled: false
       }
     }
   }))
@@ -81,6 +93,9 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
     init: {
       page_view_timing: {
         enabled: false
+      },
+      jserrors: {
+        enabled: false
       }
     }
   }))
@@ -110,14 +125,6 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
   }
 })
 
-function getTime (cm) {
-  try {
-    return cm[0].metrics.time.t
-  } catch (e) {
-    console.error(e)
-    return 0
-  }
-}
 
 testDriver.test('noticeError takes an error object', withUnload, function (t, browser, router) {
   t.plan(2)
@@ -125,6 +132,9 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
   let loadPromise = browser.get(router.assetURL('api.html', {
     init: {
       page_view_timing: {
+        enabled: false
+      },
+      metrics: {
         enabled: false
       }
     }
@@ -158,6 +168,9 @@ testDriver.test('noticeError takes a string', withUnload, function (t, browser, 
   let loadPromise = browser.get(router.assetURL('api/noticeError.html', {
     init: {
       page_view_timing: {
+        enabled: false
+      },
+      metrics: {
         enabled: false
       }
     }
@@ -227,6 +240,9 @@ testDriver.test('release api adds releases to jserrors', withUnload, function (t
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   }))
@@ -257,6 +273,9 @@ testDriver.test('release api limits releases to jserrors', withUnload, function 
   let loadPromise = browser.get(router.assetURL('api/release-too-many.html', {
     init: {
       page_view_timing: {
+        enabled: false
+      },
+      metrics: {
         enabled: false
       }
     }
@@ -302,6 +321,9 @@ testDriver.test('release api limits release size to jserrors', withUnload, funct
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   }))
@@ -342,6 +364,9 @@ testDriver.test('no query param when release is not set', withUnload, function (
   let loadPromise = browser.get(router.assetURL('api/no-release.html', {
     init: {
       page_view_timing: {
+        enabled: false
+      },
+      metrics: {
         enabled: false
       }
     }

@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var test = require('../../tools/jil/browser-test.js')
-var agg = require('../../agent/aggregator')
+import test from '../../tools/jil/browser-test'
+import { setup } from './utils/setup'
+
+const { aggregator: agg } = setup();
 
 test('aggregator', function (t) {
   // Test condensed metric data when there is only one data point

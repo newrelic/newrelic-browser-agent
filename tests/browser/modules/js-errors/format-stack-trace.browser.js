@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import test from '../../../../tools/jil/browser-test'
-import { formatStackTrace, truncateSize } from '../../../../packages/browser-agent-core/features/js-errors/aggregate/format-stack-trace'
+import { formatStackTrace, truncateSize } from '../../../../packages/browser-agent-core/features/jserrors/aggregate/format-stack-trace'
 
 test('formatStackTrace', function (t) {
   var lines = []

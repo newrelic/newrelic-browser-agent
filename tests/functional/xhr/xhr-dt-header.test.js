@@ -43,6 +43,9 @@ testDriver.test('XHR request on same origin has DT headers', supported, function
   let init = {
     distributed_tracing: {
       enabled: true
+    },
+    metrics: {
+      enabled: true
     }
   }
 
@@ -115,6 +118,9 @@ testDriver.test('XHR request on same origin has no newrelic header when disabled
     distributed_tracing: {
       enabled: true,
       exclude_newrelic_header: true
+    },
+    metrics: {
+      enabled: false
     }
   }
 
@@ -149,6 +155,9 @@ testDriver.test('XHR request on different origin has no DT headers', supported, 
       allowed_origins: [
         'https://newrelic.com'
       ]
+    },
+    metrics: {
+      enabled: false
     }
   }
 
@@ -183,6 +192,9 @@ testDriver.test('default headers on XHR request to allowed cross-origin call', s
       allowed_origins: [
         router.beaconURL()
       ]
+    },
+    metrics: {
+      enabled: false
     }
   }
 
@@ -219,6 +231,9 @@ testDriver.test('headers configuration for cross-origin calls is respected', sup
       allowed_origins: [
         router.beaconURL()
       ]
+    },
+    metrics: {
+      enabled: false
     }
   }
 

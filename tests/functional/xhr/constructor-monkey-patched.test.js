@@ -17,6 +17,9 @@ testDriver.test('xhr instrumentation works with bad XHR constructor monkey-patch
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   }))

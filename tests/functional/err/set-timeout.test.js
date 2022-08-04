@@ -13,6 +13,9 @@ testDriver.test('reporting errors from setTimeout callbacks', supported, functio
     init: {
       page_view_timing: {
         enabled: false
+      },
+      metrics: {
+        enabled: false
       }
     }
   })
@@ -28,6 +31,8 @@ testDriver.test('reporting errors from setTimeout callbacks', supported, functio
       stack: [{
         u: router.assetURL('js/set-timeout-error.js').split('?')[0],
         l: 9
+      },{
+        f: 'u', u: '<inline>', l: 12
       }]
     }]
 

@@ -128,6 +128,7 @@ testDriver.test('fetch request using object URL on same origin has AJAX request 
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
       var xhr = interactionTree.children[0]
+
       t.ok(xhr.guid && xhr.guid.length > 0, 'should be a non-empty guid string')
       t.ok(xhr.traceId && xhr.traceId.length > 0, 'should be a non-empty traceId string')
       t.ok(xhr.timestamp != null && xhr.timestamp > 0, 'should be a non-zero timestamp')

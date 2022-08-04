@@ -23,6 +23,11 @@ var config = require('yargs')
   .describe('d', 'Instructs to check the dev folder instead of the root folder')
   .default('d', false)
 
+  .boolean('m')
+  .alias('m', 'maps')
+  .describe('m', 'Check for map files')
+  .default('m', false)
+
   .help('h')
   .alias('h', 'help')
   .strict()
@@ -31,7 +36,7 @@ var config = require('yargs')
 
 
 const buildDir = path.resolve(__dirname, '../../build/')
-const builtFileNames = fs.readdirSync(buildDir)
+const builtFileNames = fs.readdirSync(buildDir).filter(x => !config.m ? !x.endsWith('.map') : x )
 const version = getVersionFromFilenames(builtFileNames)
 var errors = []
 

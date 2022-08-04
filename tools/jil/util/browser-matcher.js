@@ -383,3 +383,6 @@ features.es6 = new BrowserMatcher()
   .include('chrome', 'latest')
   .include('firefox', 'latest')
 
+  // TODO -- Enable this and add appropriate browsers when NPM is fixed
+  features.mfe = new BrowserMatcher()
+  .exclude('*')

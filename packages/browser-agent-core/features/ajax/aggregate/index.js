@@ -59,7 +59,7 @@ export class Aggregate extends FeatureBase {
 
       externalFeatures.forEach(feat => {
         externalHarvestKeys.forEach(key => {
-          feat.scheduler.harvest.on(key, () => {
+          feat?.scheduler?.harvest?.on(key, () => {
             return { body: aggregator.take(['xhr']) }
           })
         })

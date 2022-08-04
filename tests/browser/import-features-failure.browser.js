@@ -1,6 +1,7 @@
 const test = require('../../tools/jil/browser-test')
 const {setup} = require('./utils/setup')
 import {ee} from '../../packages/browser-agent-core/common/event-emitter/contextual-ee'
+import { onWindowLoad } from '../../packages/browser-agent-core/common/window/load'
 import agentIdentifier from '../../cdn/shared/agentIdentifier'
 import {stageAggregator} from '../../cdn/agent-loader/utils/importAggregator'
 import {Instrument} from '../../packages/browser-agent-core/features/page-view-event/instrument/index'
@@ -16,9 +17,10 @@ new Instrument(agentIdentifier);
 test("import features failure", function (t) {
   stageAggregator("lite");
 
-  setTimeout(function() {
-    t.ok(ee.aborted, "global EE is aborted");
-
-    t.end();
-  }, 0);
+  onWindowLoad(function () {
+    setTimeout(() => {
+      t.ok(ee.aborted, "global EE is aborted");
+      t.end();
+    }, 0)
+  });
 })

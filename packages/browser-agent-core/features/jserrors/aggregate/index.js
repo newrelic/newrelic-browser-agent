@@ -35,10 +35,10 @@ export class Aggregate extends FeatureBase {
     this.errorOnPage = false
 
     // this will need to change to match whatever ee we use in the instrument
-    this.ee.on('interactionSaved',  (args) => this.onInteractionSaved(...args))
+    this.ee.on('interactionSaved', (interaction) => this.onInteractionSaved(interaction))
 
     // this will need to change to match whatever ee we use in the instrument
-    this.ee.on('interactionDiscarded', (args) => this.onInteractionDiscarded(...args))
+    this.ee.on('interactionDiscarded', (interaction) => this.onInteractionDiscarded(interaction))
 
     register('err', (...args) => this.storeError(...args), undefined, this.ee)
     register('ierr', (...args) => this.storeError(...args), undefined, this.ee)

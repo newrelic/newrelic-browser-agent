@@ -1,10 +1,12 @@
+// TODO: is this used anywhere?
 export interface NrInterface {
     config: { info: NrInfo, config: NrConfig, loader_config: NrLoaderConfig };
     features: AppFeatures;
-    start: NrInitialize,
-    noticeError: NrNoticeError
+    start: NrInitialize;
+    noticeError: NrNoticeError;
 }
 
+// TODO: auto may not fit the model for PageAction
 export class NrFeature {
     private _enabled: boolean = true
     private _auto: boolean = true
@@ -27,7 +29,9 @@ export class NrFeature {
         this._auto = val
     }
 }
+// TODO: where does this get used?
 export interface AppFeatures {
+    // TODO: maybe add page_action
     'errors': NrFeature,
     'metrics': NrFeature
 }
@@ -84,7 +88,8 @@ export interface NrLoaderConfig extends NrShared {
 
 export enum NrFeatures {
     JSERRORS='jserrors',
-    METRICS='metrics'
+    METRICS='metrics',
+    PAGE_ACTION='page-action',
     // AJAX='AJAX',
     // PAGE_VIEW_EVENT='PAGE_VIEW_EVENT',
     // PAGE_VIEW_TIMING='PAGE_VIEW_TIMING'
@@ -92,11 +97,17 @@ export enum NrFeatures {
 
 export type NrStoreError = (err: Error | String, time?: Number, internal?: any, customAttributes?: any) => void
 export type NrInitialize = (opts: NrOptions) => Promise<Boolean>
-export type NrNoticeError = (err: Error | String, customAttributes: Object) => void;
+export type NrNoticeError = (err: Error | String, customAttributes: Object) => void
+export type NrAddPageAction = (time: Number, name: String, customAttributes?: Object) => void
+
+// TODO: where is this interface used?
 export interface NrFeaturesWithApi { 
     [NrFeatures.JSERRORS]: {
         noticeError: NrStoreError
     },
+    [NrFeatures.PAGE_ACTION]: {
+        addPageAction: NrAddPageAction
+    }
     // [NrFeatures.AJAX]: {},
     // [NrFeatures.PAGE_VIEW_EVENT]: {},
     // [NrFeatures.PAGE_VIEW_TIMING]: {}

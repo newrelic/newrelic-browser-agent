@@ -13,7 +13,10 @@ export function initializeFeatures(agentIdentifier: string, api: Api, sharedAggr
         }
         const { Aggregate }: { Aggregate: any } = await import(`@newrelic/browser-agent-core/features/${feature.name}/aggregate`)
         const featureAggregator = new Aggregate(agentIdentifier, sharedAggregator)
+
         if (feature.name === NrFeatures.JSERRORS) api.importedMethods.storeError = (...args) => featureAggregator.storeError(...args)
+        if (feature.name === NrFeatures.PAGE_ACTION) api.importedMethods.addPageAction = (...args) => featureAggregator.addPageAction(...args)
+
         return feature.name
     }))
 }

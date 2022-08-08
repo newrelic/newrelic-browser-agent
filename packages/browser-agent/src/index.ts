@@ -44,6 +44,7 @@ export class BrowserAgent {
 
   }
   public noticeError = (err: Error | String, customAttributes?: Object) => this._api.noticeError(err, customAttributes);
+  public addPageAction = (name: String, customAttributes?: Object) => this._api.addPageAction(name, customAttributes);
 }
 
 export default BrowserAgent

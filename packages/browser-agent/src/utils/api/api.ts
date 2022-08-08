@@ -1,9 +1,10 @@
-import { NrFeatures, NrStoreError } from "../../types"
+import { NrFeatures, NrStoreError, NrAddPageAction } from "../../types"
 import { now } from '@newrelic/browser-agent-core/common/timing/now'
 
 export class Api {
-  importedMethods: { storeError: NrStoreError | null } = {
-    storeError: null
+  importedMethods: { storeError: NrStoreError | null, addPageAction: NrAddPageAction | null } = {
+    storeError: null,
+    addPageAction: null,
   }
   private _initialized = false
   private _parent: any
@@ -27,6 +28,27 @@ export class Api {
     if (!this._parent.initialized && !this.importedMethods.storeError) return notInitialized(this._parent.id, NrFeatures.JSERRORS)
     // if the error feature module is disabled, this function throws a warning message
     if (this._parent.initialized && !this.importedMethods.storeError) return isDisabled(this._parent.id, NrFeatures.JSERRORS, 'noticeError')
+  }
+
+  addPageAction(name: String, customAttributes?: Object) {
+    console.log('addPageAction called!')
+
+    if (this._initialized && !!this.importedMethods.addPageAction) {
+      // TODO: remove or finalize validation
+      if (!validateAddPageAction(arguments)) return invalidCall('addPageAction', customAttributes, 'Object')
+
+      const time = now()
+      return this.importedMethods.addPageAction(time, name, customAttributes)
+    }
+
+    // if the agent has not been started, the source API method will have not been loaded...
+    if (!this._parent.initialized && !this.importedMethods.addPageAction) return notInitialized(this._parent.id, NrFeatures.PAGE_ACTION)
+    // if the error feature module is disabled, this function throws a warning message
+    if (this._parent.initialized && !this.importedMethods.addPageAction) return isDisabled(this._parent.id, NrFeatures.PAGE_ACTION, 'addPageAction')
+
+    function validateAddPageAction(args) {
+      return true
+    }
   }
 }
 

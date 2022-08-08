@@ -222,14 +222,15 @@ class AgentInjectorTransform extends AssetTransform {
             .replace('{init}', tagify(disableSsl + initContent))
             .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
             .replace('{polyfills}', `<script type="text/javascript">${this.polyfills}</script>`)
-
-          if (!!htmlPackageTags.length && !!packageFiles.length) {
-            packageFiles.forEach(pkg => {
-              const tag = htmlPackageTags.find(x => x.includes(pkg.name))
-              rspData = rspData
-                .replace(tag, tagify(disableSsl + UglifyJS.minify(pkg.data).code))
-            })
-          }
+          
+            if (!!htmlPackageTags.length && !!packageFiles.length) {
+              packageFiles.forEach(pkg => {
+                const tag = htmlPackageTags.find(x => x.includes(pkg.name))
+                rspData = rspData
+                  // .replace(tag, tagify(disableSsl + UglifyJS.minify(pkg.data).code))
+                  .replace(tag, tagify(disableSsl + pkg.data)) // temporarily removing minification
+              })
+            }
 
           callback(null, rspData)
 

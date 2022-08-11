@@ -15,13 +15,14 @@ export class Api {
   }
 
   noticeError(err: Error | String, customAttributes?: Object) {
-    
+    const time = now()
+
     if (this._initialized && !!this.importedMethods.storeError) {
       if (typeof err !== 'string' && !(err instanceof Error)) return invalidCall('noticeError', err, 'Error | String')
 
       err = typeof err === 'string' ? new Error(err) : err
-      const time = now()
       const internal = false
+      this._parent._ee.emit('record-supportability', ['API/noticeError/called'])
       return this.importedMethods.storeError(err, time, internal, customAttributes)
     }
     // if the agent has not been started, the source API method will have not been loaded...
@@ -31,13 +32,14 @@ export class Api {
   }
 
   addPageAction(name: String, customAttributes?: Object) {
-    console.log('addPageAction called!')
+    const time = now()
 
     if (this._initialized && !!this.importedMethods.addPageAction) {
       // TODO: remove or finalize validation
       if (!validateAddPageAction(arguments)) return invalidCall('addPageAction', customAttributes, 'Object')
 
-      const time = now()
+      
+      this._parent._ee.emit('record-supportability', ['API/addPageAction/called'])
       return this.importedMethods.addPageAction(time, name, customAttributes)
     }
 

@@ -45,6 +45,27 @@ testDriver.test('Error objects are sent via noticeError from core module', suppo
   }
 })
 
+testDriver.test('Successfully calling noticeError sends a supportability metric', supported, function (t, browser, router) {
+  t.plan(2)
+
+  let loadPromise = browser.safeGet(router.assetURL('modular/js-errors/error-obj.html', opts))
+  let metricsPromise = router.expectSupportabilityMetrics()
+
+  Promise.all([loadPromise, metricsPromise])
+    .then(([loadResult, metricsResult]) => {
+      const supportability = metricsResult.filter((m) => m.params.name === 'API/noticeError/called')[0]
+
+      t.ok(supportability, 'noticeError supportability metric sent')
+      t.equal(supportability.stats.c, 1, 'noticeError was called once')
+    })
+    .catch(fail)
+
+  function fail(e) {
+    t.error(e)
+    t.end()
+  }
+})
+
 testDriver.test('Strings are converted to errors via noticeError from core module', supported, function (t, browser, router) {
   t.plan(2)
 

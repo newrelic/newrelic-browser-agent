@@ -34,6 +34,27 @@ testDriver.test('NPM PageActions are sent via addPageAction from core module', s
   }
 })
 
+testDriver.test('Successfully calling noticeError sends a supportability metric', supported, function (t, browser, router) {
+  t.plan(2)
+
+  let loadPromise = browser.safeGet(router.assetURL('modular/page-action/enabled.html', opts))
+  let metricsPromise = router.expectSupportabilityMetrics()
+
+  Promise.all([loadPromise, metricsPromise])
+    .then(([loadResult, metricsResult]) => {
+      const supportability = metricsResult.filter((m) => m.params.name === 'API/addPageAction/called')[0]
+
+      t.ok(supportability, 'addPageAction supportability metric sent')
+      t.equal(supportability.stats.c, 1, 'addPageAction was called once')
+    })
+    .catch(fail)
+
+  function fail(e) {
+    t.error(e)
+    t.end()
+  }
+})
+
 function validatePageActionData (t, pageActionData, query) {
   // imitating browser-agent-core/common/timing/now.js
   let receiptTime = Math.round(performance.now())

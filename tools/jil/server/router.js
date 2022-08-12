@@ -193,6 +193,16 @@ class RouterHandle {
     return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID)
   }
 
+  async expectSupportabilityMetrics(appID) {
+    const { body } = await this.expectErrors(appID)
+    const parsedBody = JSON.parse(body)
+
+    let metrics = parsedBody['sm']
+    if (!metrics) metrics = this.expectSupportabilityMetrics(appID)
+
+    return metrics
+  }
+
   expectIns(appID) {
     // insights harvest at 30s
     return this.expectBeaconRequest(this.beaconRequests.ins, 40000, appID)

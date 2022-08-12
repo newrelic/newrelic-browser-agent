@@ -73,6 +73,25 @@ describe('nr interface', () => {
         expect(spy).toHaveBeenCalled()
     })
 
+    it('should use real addPageAction if initialized', async () => {
+        const { default: NR } = await import('./index')
+        const nr = new NR()
+        const spy = jest.spyOn(console, 'warn').mockImplementation()
+        const opts = { ...config }
+        await nr.start(opts)
+        nr.addPageAction('test')
+        expect(spy).not.toHaveBeenCalled()
+    })
+
+    it('should use warning addPageAction if not initialized', async () => {
+
+        const { default: NR } = await import('./index')
+        const nr = new NR()
+        const spy = jest.spyOn(console, 'warn').mockImplementation()
+        nr.addPageAction('test')
+        expect(spy).toHaveBeenCalled()
+    })
+
     it('should store initialized features in window.NREUM', async () => {
 
         const { default: NR } = await import('./index')

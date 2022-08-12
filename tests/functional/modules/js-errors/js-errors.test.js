@@ -6,7 +6,7 @@
 const testDriver = require('../../../../tools/jil/index')
 const { assertErrorAttributes, assertExpectedErrors, verifyStackTraceOmits, getErrorsFromResponse } = require('./assertion-helpers')
 
-const supported = testDriver.Matcher.withFeature('mfe')
+const supported = testDriver.Matcher.withFeature('es6')
 
 const opts = {
   init: {

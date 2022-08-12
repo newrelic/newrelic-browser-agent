@@ -20,19 +20,33 @@ describe('nr interface', () => {
         setConfiguration(id, {})
         setLoaderConfig(id, {})
         setRuntime(id, {})
+        
         const { Features } = await import('./features')
         const features = new Features()
         features.errors.enabled = true
         features.errors.auto = true
-        const { Aggregate } = await import('@newrelic/browser-agent-core/features/jserrors/aggregate')
-        const { Instrument } = await import('@newrelic/browser-agent-core/features/jserrors/instrument')
+        features.page_action.enabled = true
+        
+        const { Aggregate: JSErrorsAggregate } = await import('@newrelic/browser-agent-core/features/jserrors/aggregate')
+        const { Instrument: JSErrorsInstrument } = await import('@newrelic/browser-agent-core/features/jserrors/instrument')
+        const { Aggregate: PageActionAggregate } = await import('@newrelic/browser-agent-core/features/page-action/aggregate')
+        const { Instrument: PageActionInstrument } = await import('@newrelic/browser-agent-core/features/page-action/instrument')
+
         jest.mock('@newrelic/browser-agent-core/features/jserrors/aggregate')
         jest.mock('@newrelic/browser-agent-core/features/jserrors/instrument')
+        jest.mock('@newrelic/browser-agent-core/features/page-action/aggregate')
+        jest.mock('@newrelic/browser-agent-core/features/page-action/instrument')
+
         const aggregator = jest.mock('@newrelic/browser-agent-core/common/aggregate/aggregator', () => { })
         const initializedFeatures = await initializeFeatures('1234', new Api(id), aggregator, features)
-        expect(Aggregate).toHaveBeenCalled()
-        expect(Instrument).toHaveBeenCalled()
+        
+        expect(JSErrorsAggregate).toHaveBeenCalled()
+        expect(JSErrorsInstrument).toHaveBeenCalled()
+        expect(PageActionAggregate).toHaveBeenCalled()
+        expect(PageActionInstrument).toHaveBeenCalled()
+        
         expect(initializedFeatures).toContain(NrFeatures.JSERRORS)
+        expect(initializedFeatures).toContain(NrFeatures.PAGE_ACTION)
     })
 
     it('should not import instrument modules if auto is false', async () => {

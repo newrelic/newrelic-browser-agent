@@ -8,7 +8,6 @@ import { gosNREUMInitializedAgents } from '@newrelic/browser-agent-core/common/w
 import { generateRandomHexString } from '@newrelic/browser-agent-core/common/ids/unique-id'
 import { Aggregator } from '@newrelic/browser-agent-core/common/aggregate/aggregator'
 import { drain } from '@newrelic/browser-agent-core/common/drain/drain'
-import { ee } from '@newrelic/browser-agent-core/common/event-emitter/contextual-ee'
 
 
 export class BrowserAgent {
@@ -16,7 +15,6 @@ export class BrowserAgent {
   private _id = generateRandomHexString(16);
   private _api = new Api(this)
   private _aggregator = new Aggregator({ agentIdentifier: this._id })
-  private _ee = ee.get(this._id)
 
   public get config(): { info: NrInfo, config: NrConfig, loader_config: NrLoaderConfig } {
     return {

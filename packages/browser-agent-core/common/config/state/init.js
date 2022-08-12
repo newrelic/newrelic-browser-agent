@@ -16,6 +16,7 @@ const model = {
   obfuscate: undefined,
   jserrors: {enabled: true},
   metrics: {enabled: true},
+  ins: { enabled: true },
   page_action: {enabled: true},
   page_view_event: {enabled: true},
   page_view_timing: {enabled: true},

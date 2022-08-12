@@ -1,5 +1,6 @@
 import { NrFeatures, NrStoreError, NrAddPageAction } from "../../types"
 import { now } from '@newrelic/browser-agent-core/common/timing/now'
+import { ee } from '@newrelic/browser-agent-core/common/event-emitter/contextual-ee'
 
 export class Api {
   importedMethods: { storeError: NrStoreError | null, addPageAction: NrAddPageAction | null } = {
@@ -8,25 +9,29 @@ export class Api {
   }
   private _initialized = false
   private _parent: any
+  private _ee: any
 
   constructor(parent) {
     this._initialized = true
     this._parent = parent
+    this._ee = ee.get(this._parent._id)
   }
 
   noticeError(err: Error | String, customAttributes?: Object) {
     const time = now()
+
+    // if the agent has not been started, the source API method will have not been loaded...
+    if (!this._parent.initialized) return notInitialized(this._parent.id, NrFeatures.JSERRORS)
 
     if (this._initialized && !!this.importedMethods.storeError) {
       if (typeof err !== 'string' && !(err instanceof Error)) return invalidCall('noticeError', err, 'Error | String')
 
       err = typeof err === 'string' ? new Error(err) : err
       const internal = false
-      this._parent._ee.emit('record-supportability', ['API/noticeError/called'])
+      this._ee.emit('record-supportability', ['API/noticeError/called'])
       return this.importedMethods.storeError(err, time, internal, customAttributes)
     }
-    // if the agent has not been started, the source API method will have not been loaded...
-    if (!this._parent.initialized && !this.importedMethods.storeError) return notInitialized(this._parent.id, NrFeatures.JSERRORS)
+ 
     // if the error feature module is disabled, this function throws a warning message
     if (this._parent.initialized && !this.importedMethods.storeError) return isDisabled(this._parent.id, NrFeatures.JSERRORS, 'noticeError')
   }
@@ -34,21 +39,24 @@ export class Api {
   addPageAction(name: String, customAttributes?: Object) {
     const time = now()
 
-    if (this._initialized && !!this.importedMethods.addPageAction) {
-      // TODO: remove or finalize validation
-      if (!validateAddPageAction(arguments)) return invalidCall('addPageAction', customAttributes, 'Object')
+    // if the agent has not been started, the source API method will have not been loaded...
+    if (!this._parent.initialized) return notInitialized(this._parent.id, NrFeatures.PAGE_ACTION)
 
-      
-      this._parent._ee.emit('record-supportability', ['API/addPageAction/called'])
+    if (this._initialized && !!this.importedMethods.addPageAction) {
+      if (!validateAddPageAction(arguments)) return
+
+      this._ee.emit('record-supportability', ['API/addPageAction/called'])
       return this.importedMethods.addPageAction(time, name, customAttributes)
     }
 
-    // if the agent has not been started, the source API method will have not been loaded...
-    if (!this._parent.initialized && !this.importedMethods.addPageAction) return notInitialized(this._parent.id, NrFeatures.PAGE_ACTION)
-    // if the error feature module is disabled, this function throws a warning message
+    // if the PageAction feature module is disabled, this function throws a warning message
     if (this._parent.initialized && !this.importedMethods.addPageAction) return isDisabled(this._parent.id, NrFeatures.PAGE_ACTION, 'addPageAction')
 
     function validateAddPageAction(args) {
+      if (!args[0] || typeof args[0] !== 'string') return invalidCall('addPageAction', args[0], 'String')
+      // matches core module's addPageAction attribute validation
+      if (args[1] && typeof args[1] !== 'object') return invalidCall('addPageAction', args[1], 'Object')
+      
       return true
     }
   }

@@ -354,7 +354,7 @@ export class Aggregate extends FeatureBase {
     var maxLen = this.toAggregate[name][1]
     var lastO = {}
 
-    return function (byOrigin, evt) {
+    return (byOrigin, evt) => {
       var lastArr = byOrigin[evt.o]
 
       lastArr || (lastArr = byOrigin[evt.o] = [])

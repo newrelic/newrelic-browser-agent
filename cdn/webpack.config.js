@@ -30,12 +30,19 @@ switch (PUBLISH) {
     PUBLIC_PATH = 'https://js-agent.newrelic.com/dev/'
     MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/dev/[url]'
     break
-  default:
-    // local build
+  case 'EXTENSION':
+    // build for extension injection
     PATH_VERSION = ``
-    SUBVERSION = 'LOCAL'
-    PUBLIC_PATH = '/build/'
+    SUBVERSION = 'EXTENSION'
+    PUBLIC_PATH = 'http://localhost:3333/build/'
     MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]'
+    break
+  default:
+  // local build
+  PATH_VERSION = ``
+  SUBVERSION = 'LOCAL'
+  PUBLIC_PATH = '/build/'
+  MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]'
 }
 
 const IS_LOCAL = SUBVERSION === 'LOCAL'

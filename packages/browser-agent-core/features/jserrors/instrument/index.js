@@ -61,7 +61,8 @@ export class Instrument extends FeatureBase {
 
     try {
       window.addEventListener('unhandledrejection', (e) => {
-        this.onerrorHandler(null, null, null, null, new Error(e.reason))
+        const err = new Error(`${e.reason}`)
+        handle('err', [err, now(), false, {unhandledPromiseRejection: 1}], undefined, undefined, this.ee)
       })
     } catch (err) {
       // do nothing -- addEventListener is not supported

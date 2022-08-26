@@ -67,7 +67,7 @@ module.exports = {
   },
   output: {
     filename: `[name].js`,
-    chunkFilename: `[name]${PATH_VERSION}.js`,
+    chunkFilename: SUBVERSION === 'PROD' ? `[name].[hash:8]${PATH_VERSION}.js` : `[name]${PATH_VERSION}.js`,
     path: path.resolve(__dirname, '../build'),
     publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
     library: {
@@ -95,7 +95,7 @@ module.exports = {
     }),
     new webpack.SourceMapDevToolPlugin({
       append: MAP_PATH, // CDN route vs local route
-      filename: SUBVERSION === 'PROD' ? `[name].[chunkhash:8].map` : `[name].map`,
+      filename: SUBVERSION === 'PROD' ? `[name].[hash:8].map` : `[name].map`,
       ...(JSON.parse(SOURCEMAPS) === false && {exclude: new RegExp(".*")}) // exclude all files if disabled
     }),
     new BundleAnalyzerPlugin({

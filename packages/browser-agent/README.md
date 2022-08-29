@@ -58,19 +58,6 @@ nr.start(options).then(() => {
 })
 ```
 
-### Notice Errors After Setup
-```javascript
-// << SomeComponent.js >>
-// notice handled errors
-try { 
-    ...
-} catch (err){
-    nr.noticeError(err)
-}
-
-// thrown errors *anywhere* on the page will be captured if `auto` is enabled
-```
-
 ### Setup Using unpkg
 
 ```html

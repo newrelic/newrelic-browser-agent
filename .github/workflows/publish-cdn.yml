@@ -1,9 +1,6 @@
-name: Build and publish PROD Release
+name: Build and publish PROD to CDN
 
 on:
-  release:
-    types:
-      - published
   workflow_dispatch:
 
 jobs:
@@ -35,13 +32,5 @@ jobs:
           node tools/scripts/upload-to-s3.js \
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }}
-      - name: build:nr
-        run: npm run cdn:build:nr
-      - name: upload artifacts to NR
-        run: |
-          node tools/scripts/upload-to-nr.js \
-            --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
-            --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
-            --eu-api-key=${{ secrets.NR_API_KEY_EU }}
       - name: check files exist
         run: node tools/scripts/check-version.js -e yes -m

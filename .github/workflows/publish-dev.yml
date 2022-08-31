@@ -1,4 +1,4 @@
-name: Build and publish DEV Release
+name: Build and publish DEV to CDN
 
 on:
   push:

@@ -30,12 +30,19 @@ switch (PUBLISH) {
     PUBLIC_PATH = 'https://js-agent.newrelic.com/dev/'
     MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/dev/[url]'
     break
-  default:
-    // local build
+  case 'EXTENSION':
+    // build for extension injection
     PATH_VERSION = ``
-    SUBVERSION = 'LOCAL'
-    PUBLIC_PATH = '/build/'
+    SUBVERSION = 'EXTENSION'
+    PUBLIC_PATH = 'http://localhost:3333/build/'
     MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]'
+    break
+  default:
+  // local build
+  PATH_VERSION = ``
+  SUBVERSION = 'LOCAL'
+  PUBLIC_PATH = '/build/'
+  MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]'
 }
 
 const IS_LOCAL = SUBVERSION === 'LOCAL'
@@ -60,7 +67,7 @@ module.exports = {
   },
   output: {
     filename: `[name].js`,
-    chunkFilename: `[name]${PATH_VERSION}.js`,
+    chunkFilename: SUBVERSION === 'PROD' ? `[name].[hash:8]${PATH_VERSION}.js` : `[name]${PATH_VERSION}.js`,
     path: path.resolve(__dirname, '../build'),
     publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
     library: {
@@ -88,7 +95,7 @@ module.exports = {
     }),
     new webpack.SourceMapDevToolPlugin({
       append: MAP_PATH, // CDN route vs local route
-      filename: SUBVERSION === 'PROD' ? `[name].[chunkhash:8].map` : `[name].map`,
+      filename: SUBVERSION === 'PROD' ? `[name].[hash:8].map` : `[name].map`,
       ...(JSON.parse(SOURCEMAPS) === false && {exclude: new RegExp(".*")}) // exclude all files if disabled
     }),
     new BundleAnalyzerPlugin({

@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1219
+
+### Remove non-ASCII characters from builds
+Polyfill dependencies were appending non-ASCII characters to build files. These characters were affecting older Python agent implementations downstream that worked to encode the agent snippet. The build files are now checked and cleaned of non-ASCII characters before shipping.
+
 ## v1218
 
 ### Removed 3rd Party Cookies
@@ -19,7 +24,7 @@ Individual features of the browser agent can now be dynamically loaded, enabled,
 
 ### Removal of script tag injection
 
-The agent no longer inserts other features into the page via a script tag insertion.  It now uses network requests to instiate other code modules.
+The agent no longer inserts other features into the page via a script tag insertion.  It now uses network requests to instantiate other code modules.
 
 ### Polyfilling
 

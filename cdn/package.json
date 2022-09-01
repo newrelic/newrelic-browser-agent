@@ -12,8 +12,9 @@
     "build:extension": "PUBLISH=EXTENSION npm run webpack",
     "build:current": "PUBLISH=CURRENT npm run webpack",
     "build:dev": "PUBLISH=DEV npm run webpack",
-    "build:prod": "PUBLISH=PROD npm run webpack",
-    "build:nr": "PUBLISH=PROD SOURCEMAPS=false npm run webpack"
+    "build:prod": "PUBLISH=PROD npm run webpack && npm run cleanup",
+    "build:nr": "PUBLISH=PROD SOURCEMAPS=false npm run webpack",
+    "cleanup": "node ../tools/scripts/post-build-cleanup"
   },
   "author": "",
   "license": "ISC",

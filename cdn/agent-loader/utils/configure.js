@@ -15,10 +15,6 @@ export function configure() {
             return
         }
         const nr = gosCDN()
-        if (!requiredKeys.every(key => Object.keys(nr.info).includes(key))) {
-            reject(new Error(`Missing Configuration -- New Relic Browser Agent requires ${requiredKeys.join(", ")}`))
-            return
-        }
         
         try {
         setInfo(agentIdentifier, nr.info)

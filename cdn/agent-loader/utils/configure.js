@@ -7,7 +7,6 @@ import { setConfiguration, setInfo, setLoaderConfig, setRuntime } from '@newreli
 
 let configured = false
 
-const requiredKeys = ['applicationID', 'errorBeacon', 'beacon', 'licenseKey']
 export function configure() {
     return new Promise((resolve, reject) => {
         if (configured) {

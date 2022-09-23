@@ -226,7 +226,6 @@ class AgentInjectorTransform extends AssetTransform {
             .replace('{config}', tagify(disableSsl + configContent))
             .replace('{init}', tagify(disableSsl + initContent))
             .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
-            .replace('{polyfills}', `<script type="text/javascript">${this.polyfills}</script>`)
 
           if (!!htmlPackageTags.length && !!packageFiles.length) {
             packageFiles.forEach(pkg => {
@@ -263,7 +262,7 @@ class BrowserifyTransform extends AssetTransform {
     if (result) return callback(null, result)
 
     browserify(assetPath)
-    .transform("babelify", {
+      .transform("babelify", {
         presets: [
           ["@babel/preset-env", {
             loose: true,

@@ -12,10 +12,11 @@ var SUPPORTABILITY_METRIC = 'sm'
 var CUSTOM_METRIC = 'cm'
 
 export class Instrument extends FeatureBase {
-    constructor(agentIdentifier) {
+    constructor(agentIdentifier, PfFeatStatusEnum = {}) {
         super(agentIdentifier)
         // checks that are run only one time, at script load
-        this.singleChecks()
+        this.reportPolyfillsNeeded(PfFeatStatusEnum);
+        this.singleChecks();
         // listen for messages from features and capture them
         registerHandler('record-supportability', (...args) => this.recordSupportability(...args), undefined, this.ee)
         registerHandler('record-custom', (...args) => this.recordCustom(...args), undefined, this.ee)
@@ -79,6 +80,13 @@ export class Instrument extends FeatureBase {
 
         // poll web worker support
         WorkerHelper.insertSupportMetrics(this.recordSupportability.bind(this));
+    }
+
+    reportPolyfillsNeeded(PfFeatStatusEnum) {
+        this.recordSupportability(`Generic/Polyfill/Promise/${PfFeatStatusEnum.PROMISE}`);
+        this.recordSupportability(`Generic/Polyfill/ArrayIncludes/${PfFeatStatusEnum.ARRAY_INCLUDES}`);
+        this.recordSupportability(`Generic/Polyfill/ObjectAssign/${PfFeatStatusEnum.OBJECT_ASSIGN}`);
+        this.recordSupportability(`Generic/Polyfill/ObjectEntries/${PfFeatStatusEnum.OBJECT_ENTRIES}`);
     }
 }
 

@@ -2,6 +2,8 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import { detectPolyfillFeatures } from './utils/feature-detection'
+const PolyfillFeatures = detectPolyfillFeatures();
 /* cdn specific utility files */
 import { stageAggregator } from './utils/importAggregator'
 import agentIdentifier from '../shared/agentIdentifier'
@@ -24,7 +26,7 @@ configure().then(() => {
     // lite features
     if (enabledFeatures['page_view_event']) new InstrumentPageViewEvent(agentIdentifier) // document load (page view event + metrics)
     if (enabledFeatures['page_view_timing']) new InstrumentPageViewTiming(agentIdentifier) // page view timings instrumentation (/loader/timings.js)
-    if (enabledFeatures.metrics) new InstrumentMetrics(agentIdentifier) // supportability & custom metrics
+    if (enabledFeatures.metrics) new InstrumentMetrics(agentIdentifier, PolyfillFeatures)   // supportability & custom metrics
     // pro features
     if (enabledFeatures.jserrors) new InstrumentErrors(agentIdentifier) // errors
     if (enabledFeatures.ajax) new InstrumentXhr(agentIdentifier) // ajax

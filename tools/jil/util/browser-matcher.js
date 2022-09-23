@@ -386,3 +386,10 @@ features.es6 = new BrowserMatcher()
   // TODO -- Enable this and add appropriate browsers when NPM is fixed
   features.mfe = new BrowserMatcher()
   .exclude('*')
+
+  features.polyfillsNeeded = new BrowserMatcher()
+  .exclude("*")
+  .include("chrome", "<=63")
+  .include("firefox", "<=67")
+  .include("edge", "<=79")
+  .include("safari", "<=11.3")

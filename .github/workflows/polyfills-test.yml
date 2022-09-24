@@ -1,0 +1,42 @@
+name: Polyfills Test
+
+on:
+  push:
+    branches:
+      - main 
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container: node:14
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: install
+        run: npm ci --cache ./.npm
+      - name: build
+        run: npm run build:all
+
+      - name: lint
+        run: npm run lint
+  polyfills-tests:
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: install
+        run: npm ci --cache ./.npm
+      - name: build
+        run: npm run build:all
+
+      - name: test
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b *@* -s -t 85000 -P
+  
+        

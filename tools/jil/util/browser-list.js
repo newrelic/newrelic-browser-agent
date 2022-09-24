@@ -4,7 +4,7 @@
  */
 
 const browsersPolyfill = require('./browsers-polyfill.json')
-const browsersSupported = require('./browsers-supported.json')
+const browsersSupported = require('./browsers-sauce.json')
 const semver = require('semver')
 const BrowserMatcher = require('./browser-matcher')
 var config = require('../runner/args')
@@ -14,29 +14,29 @@ var allowedBrowsers = config.polyfills ? browsersPolyfill : browsersSupported
 const latestVersStringRe = /latest(?:-[1-9])?$/;
 
 class BrowserSpec {
-  constructor (desired) {
+  constructor(desired) {
     this.desired = desired
   }
 
-  isPhantom () {
+  isPhantom() {
     return this.desired.browserName === 'phantom'
   }
 
-  allowsExtendedDebugging () {
+  allowsExtendedDebugging() {
     return ['chrome', 'firefox'].includes(this.desired.browserName) && this.version === 'latest'
   }
 
-  toString () {
+  toString() {
     return `${this.browserName}@${this.version} (${this.platformName})`
   }
 
-  match (specString) {
+  match(specString) {
     let list = browserList(specString)
     var result = !!Array.from(list).filter((b) => this.same(b)).length
     return result
   }
 
-  same (other) {
+  same(other) {
     return (
       this.desired.platformName === other.desired.platformName &&
       this.desired.platformVersion === other.desired.platformVersion &&
@@ -46,16 +46,16 @@ class BrowserSpec {
     )
   }
 
-  hasFeature (feature) {
+  hasFeature(feature) {
     let matcher = BrowserMatcher.withFeature(feature)
     return matcher.match(this)
   }
 
-  get isMobile () {
+  get isMobile() {
     return !!(this.desired.platformName && this.desired.platformVersion)
   }
 
-  get platformName () {
+  get platformName() {
     if (this.desired.platformName) {
       return this.desired.platformName.toLowerCase()
     }
@@ -65,15 +65,15 @@ class BrowserSpec {
     return ''
   }
 
-  get platformVersion () {
+  get platformVersion() {
     return this.desired.platformVersion
   }
 
-  get browserName () {
+  get browserName() {
     return this.isMobile ? this.platformName : this.desired.browserName
   }
 
-  get version () {
+  get version() {
     return this.isMobile ? this.platformVersion : this.desired.version
   }
 }
@@ -87,7 +87,7 @@ function resetBrowserList() {
   allowedBrowsers = browsers
 }
 
-function browserList (pattern = 'phantom@latest') {
+function browserList(pattern = 'phantom@latest') {
   let requested = pattern.trim().split(/\s*,\s*/)
     .map(parse)
     .reduce((a, b) => a.concat(b), [])
@@ -104,12 +104,12 @@ function browserList (pattern = 'phantom@latest') {
   return sortedSpecs
 }
 
-function parse (pattern) {
+function parse(pattern) {
   let [browser, range] = pattern.split('@')
   return getBrowsersFor(browser || 'phantom', range)
 }
 
-function getBrowsersFor (browser, range) {
+function getBrowsersFor(browser, range) {
   let list = []
   if (allowedBrowsers[browser]) list = allowedBrowsers[browser].slice()
   else if (browser === '*') list = Object.keys(allowedBrowsers).reduce(merge, [])
@@ -128,7 +128,7 @@ function getBrowsersFor (browser, range) {
   list = list.filter(inRange)
   return list
 
-  function inRange (option) {
+  function inRange(option) {
     if (option.platformVersion === 'beta' || option.version === 'beta') {
       return false
     }
@@ -136,20 +136,20 @@ function getBrowsersFor (browser, range) {
     return semver.satisfies(cleanVersion(option.platformVersion || option.version), range)
   }
 
-  function findBetaVersions (option) {
+  function findBetaVersions(option) {
     return (option.platformVersion === 'beta' || option.version === 'beta')
   }
 
-  function findLatestVersions (option) {
+  function findLatestVersions(option) {
     return (option.version === this.valueOf())  // 'this' should be bound to the lastest version string (object)
   }
 }
 
-function byVersion (left, right) {
+function byVersion(left, right) {
   return semver.lt(cleanVersion(left.version), cleanVersion(right.version)) ? 1 : -1
 }
 
-function cleanVersion (version) {
+function cleanVersion(version) {
   // assign to high number, so that it is high in the list when sorted (i.e. beta is highest)
   if (!version || latestVersStringRe.test(version)) {
     let prevVersionOffset = version?.split('-')[1];
@@ -163,7 +163,7 @@ function cleanVersion (version) {
   return version.split('.', 3).join('.')
 }
 
-function merge (list, browser) {
+function merge(list, browser) {
   return list.concat(allowedBrowsers[browser])
 }
 

@@ -9,10 +9,14 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
         }
     })
     const json = await r.json()
+    console.log("Browser Types Found:", json.reduce((prev, next) => prev.add(next.api_name), new Set()))
     console.log(`fetched ${json.length} browsers from saucelabs`)
     fs.writeFileSync('./tools/jil/util/browsers-supported.json', JSON.stringify(getBrowsers(json)))
     console.log(`saved saucelabs browsers to browsers-supported.json`)
     console.log(`-----------------------------------------------`)
+    console.log(`-----------------------------------------------`)
+    console.log('\x1b[43m%s\x1b[0m', 'If browsers-supported.json has updated, please make another commit.');  //yellow
+
 })()
 
 const browsers = {
@@ -20,9 +24,9 @@ const browsers = {
     edge: [],
     safari: [],
     firefox: [],
-    android: [],
+    // android: [], // no longer works with W3C commands.... need to change JIL or do deeper dive to get this to work
     ios: []
-    // ie: []
+    // ie: [] // no longer supported
 }
 
 const browserName = name => {
@@ -39,11 +43,13 @@ const browserName = name => {
 }
 
 const browserLength = name => {
+    // takes half of this in the end
     switch (name) {
         case "ios":
+        case "iphone":
+        case "ipad":
         case "android":
-        case "safari":
-            return 5
+            return 4
         default:
             return 10
     }
@@ -63,7 +69,7 @@ const minVersion = name => {
         case "safari":
         case 'ios':
         case 'iphone':
-            return 11.3
+            return 12
     }
 }
 
@@ -78,13 +84,22 @@ function getBrowsers(sauceBrowsers) {
             Math.round(latest.length / 2)
         )
         dist.forEach(b => {
+            console.log("b", b)
             const metadata = {
-                browserName: b.api_name === 'iphone' ? 'Safari' : b.api_name,
-                platform: b.os,
+                browserName: mBrowserName(b),
+                platform: mPlatformName(b),
+                ...(!['safari', 'firefox'].includes(b.api_name) && { platformName: mPlatformName(b) }),
                 version: b.short_version,
+                ...(b.automation_backend !== 'appium' && !['safari', 'firefox'].includes(b.api_name) && { browserVersion: b.short_version }),
                 ...(b.device && { device: b.device }),
                 ...(b.automation_backend === 'appium' && { ["appium:deviceName"]: b.long_name }),
-                ...(b.automation_backend === 'appium' && { ["appium:platformVersion"]: b.short_version })
+                ...(b.automation_backend === 'appium' && { ["appium:platformVersion"]: b.short_version }),
+                ...(b.automation_backend === 'appium' && { ["appium:automationName"]: b.api_name === 'android' ? 'UiAutomator2' : 'XCUITest' }),
+                ...(b.automation_backend === 'appium' && {
+                    ["sauce:options"]: {
+                        appiumVersion: b.recommended_backend_version
+                    }
+                })
             }
             if (metadata.browserName.toLowerCase() === 'safari') metadata.acceptInsecureCerts = false
             browsers[browser].push(metadata)
@@ -97,6 +112,8 @@ function getLatestOfArr(arr, remaining = 0, out = []) {
     if (remaining <= 0 || !arr.length) return out
     const latest = arr.shift()
     if (latest.short_version < minVersion(latest.api_name)) return out
+    if (['iphone', 'ipad', 'android'].includes(latest.api_name) && latest.automation_backend !== 'appium') return getLatestOfArr(arr, remaining, out)
+    if (['firefox'].includes(latest.api_name) && latest.os !== 'Windows 10') return getLatestOfArr(arr, remaining, out)
     if (!out.find(x => x.short_version === latest.short_version)) {
         out.push(latest)
         remaining--
@@ -115,4 +132,31 @@ function getDistributionOfArr(arr, n = 5) {
     }
     elements.push(arr[arr.length - 1]);
     return elements;
+}
+
+function mBrowserName(b) {
+    switch (b.api_name) {
+        case 'iphone':
+        case 'ipad':
+            return 'Safari'
+        case 'android':
+            return 'Chrome'
+        default:
+            return b.api_name
+    }
+}
+
+function mPlatformName(b) {
+    switch (b.api_name) {
+        case 'iphone':
+        case 'ipad':
+            return 'iOS'
+        case 'safari':
+            // return b.os.replace('Mac', 'macOS')
+            return b.os
+        case 'android':
+            return 'Android'
+        default:
+            return b.os
+    }
 }

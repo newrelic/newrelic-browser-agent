@@ -1,0 +1,59 @@
+{
+    "chrome": [
+      {
+        "browserName": "chrome",
+        "platform": "Windows 10",
+        "version": "60"
+      }
+    ],
+    "edge": [
+      {
+        "browserName": "MicrosoftEdge",
+        "platform": "Windows 10",
+        "version": "79"
+      }
+    ],
+    "ie": [
+      {
+        "browserName": "internet explorer",
+        "platform": "Windows 10",
+        "version": "11"
+      }
+    ],
+    "safari": [
+      {
+        "browserName": "safari",
+        "platform": "macOS 10.13",
+        "version": "11.1",
+        "comment": "macOS High Sierra - sendBeacon API with bug"
+      }
+    ],
+    "firefox": [
+      {
+        "browserName": "firefox",
+        "platform": "Windows 10",
+        "version": "56",
+        "comment": "last version before Quantum"
+      }
+    ],
+    "android": [
+      {
+        "platformName": "Android",
+        "browserName": "Chrome",
+        "platformVersion": "12.0",
+        "appium:deviceName": "Google Pixel 4a (5G) GoogleAPI Emulator",
+        "appium:platformVersion": "12.0",
+        "sauce:options": {
+          "appiumVersion": "1.22.1"
+        }
+      }
+      ],
+      "ios": [
+        {
+          "deviceName": "iPhone Simulator",
+          "platformName": "iOS",
+          "platformVersion": "11.2",
+          "browserName": "Safari"
+        }
+      ]
+    }

@@ -7,9 +7,10 @@ const browsersPolyfill = require('./browsers-polyfill.json')
 const browsersSupported = require('./browsers-supported.json')
 const semver = require('semver')
 const BrowserMatcher = require('./browser-matcher')
+var config = require('../runner/args')
 
 // list of pre-defined browsers = require(test matrix
-var allowedBrowsers = browsers
+var allowedBrowsers = config.polyfills ? browsersPolyfill : browsersSupported
 const latestVersStringRe = /latest(?:-[1-9])?$/;
 
 class BrowserSpec {

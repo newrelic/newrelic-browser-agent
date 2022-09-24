@@ -34,6 +34,7 @@
     "packages:watch": "jung -d './packages/browser-agent/src|./modules' --run -- npm run packages:build",
     "test-server": "node ./tools/jil/bin/server",
     "sauce:connect": "node ./tools/jil/bin/sauce",
+    "sauce:get-browsers": "node ./tools/jil/util/sauce-browsers",
     "tools:test-builds": "npm --prefix ./tools/test-builds/build-time-mfe run build",
     "lerna:bootstrap": "npx lerna bootstrap",
     "lerna:test": "npx lerna run test"
@@ -41,6 +42,7 @@
   "config": {
     "unsafe-perm": true
   },
+  "pre-commit": "sauce:get-browsers",
   "bin": {
     "jil": "./tools/jil/bin/cli.js",
     "jil-server": "./tools/jil/bin/server.js",

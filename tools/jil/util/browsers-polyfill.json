@@ -38,14 +38,12 @@
     ],
     "android": [
       {
-        "platformName": "Android",
-        "browserName": "Chrome",
-        "platformVersion": "12.0",
-        "appium:deviceName": "Google Pixel 4a (5G) GoogleAPI Emulator",
-        "appium:platformVersion": "12.0",
-        "sauce:options": {
-          "appiumVersion": "1.22.1"
-        }
+          "browserName": "android",
+          "platform": "Linux",
+          "version": "8.1",
+          "device": "GalaxyS8PlusWQHDGoogleAPI",
+          "appium:deviceName": "Samsung Galaxy S8 Plus WQHD GoogleAPI Emulator",
+          "appium:platformVersion": "8.1"
       }
       ],
       "ios": [

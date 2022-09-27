@@ -1,13 +1,13 @@
-name: Tests - Polyfill
+name: Tests
 
 on:
-  push:
-    branches:
-      - main 
+  pull_request_target:
+    types: [labeled]
   workflow_dispatch:
 
 jobs:
   cache-build:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test') 
     timeout-minutes: 25
     name: Build
     runs-on: ubuntu-latest
@@ -34,10 +34,12 @@ jobs:
     needs: [cache-build]
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
-
+      
       - uses: actions/cache@v2
         id: restore-build
         with:
@@ -53,6 +55,8 @@ jobs:
     needs: [cache-build]
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -79,6 +83,8 @@ jobs:
       BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -90,7 +96,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 -P 
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 
   firefox:
     timeout-minutes: 25
     continue-on-error: true
@@ -105,6 +111,8 @@ jobs:
       BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -116,7 +124,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 -P 
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 
   safari:
     timeout-minutes: 25
     continue-on-error: true
@@ -131,6 +139,8 @@ jobs:
       BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -142,7 +152,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 -P 
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 
   edge:
     timeout-minutes: 25
     continue-on-error: true
@@ -157,6 +167,8 @@ jobs:
       BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -168,7 +180,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 -P 
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 
   # android:
   #   timeout-minutes: 25
   #   continue-on-error: true
@@ -183,6 +195,8 @@ jobs:
   #     BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
   #   steps:
   #     - uses: actions/checkout@v2
+  #       with:
+  #         ref: ${{ github.event.pull_request.head.sha }}
 
   #     - name: install
   #       run: npm ci --cache ./.npm
@@ -194,7 +208,7 @@ jobs:
   #         key: ${{ github.sha }}
 
   #     - name: run tests
-  #       run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 -P 
+  #       run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 
   ios:
     timeout-minutes: 25
     continue-on-error: true
@@ -209,6 +223,8 @@ jobs:
       BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -220,7 +236,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --concurrent=10 -P
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --concurrent=10
   check-failures:
     runs-on: ubuntu-latest
     container: node:14
@@ -230,6 +246,8 @@ jobs:
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm

@@ -34,8 +34,6 @@ jobs:
     needs: [cache-build]
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -55,8 +53,6 @@ jobs:
     needs: [cache-build]
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -83,8 +79,6 @@ jobs:
       BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -111,8 +105,6 @@ jobs:
       BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -139,8 +131,6 @@ jobs:
       BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -167,8 +157,6 @@ jobs:
       BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -195,8 +183,6 @@ jobs:
   #     BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
   #   steps:
   #     - uses: actions/checkout@v2
-  #       with:
-  #         ref: ${{ github.event.pull_request.head.sha }}
 
   #     - name: install
   #       run: npm ci --cache ./.npm
@@ -223,8 +209,6 @@ jobs:
       BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -246,8 +230,6 @@ jobs:
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm

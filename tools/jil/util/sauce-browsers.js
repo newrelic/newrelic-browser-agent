@@ -49,7 +49,7 @@ const browserLength = name => {
         case "iphone":
         case "ipad":
         case "android":
-            return 4
+            return 5
         default:
             return 10
     }
@@ -79,7 +79,7 @@ function getBrowsers(sauceBrowsers) {
         const matches = sauceBrowsers.filter(sb => (sb.api_name === name || sb.os === name) && !isNaN(Number(sb.short_version)))
         matches.sort((a, b) => Number(b.short_version) - Number(a.short_version))
         const latest = getLatestOfArr(matches, browserLength(name))
-        const dist = getDistributionOfArr(
+        const dist = ['safari','ios'].includes(browser) ? latest : getDistributionOfArr(
             latest,
             Math.round(latest.length / 2)
         )

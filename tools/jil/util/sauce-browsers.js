@@ -84,7 +84,6 @@ function getBrowsers(sauceBrowsers) {
             Math.round(latest.length / 2)
         )
         dist.forEach(b => {
-            console.log("b", b)
             const metadata = {
                 browserName: mBrowserName(b),
                 platform: mPlatformName(b),

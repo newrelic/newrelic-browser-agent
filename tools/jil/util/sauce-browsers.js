@@ -49,6 +49,7 @@ const browserLength = name => {
         case "iphone":
         case "ipad":
         case "android":
+        case "safari":
             return 5
         default:
             return 10

@@ -27,6 +27,3 @@ if (driver.router.sslPort) {
   console.log('fake router (SSL): https://' + hostname + ':' + driver.router.sslPort)
 }
 console.log('secondary (cors) server: http://' + hostname + ':' + driver.assetServer.corsServer.port)
-
-
-

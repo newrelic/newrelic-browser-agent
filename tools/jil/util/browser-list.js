@@ -4,7 +4,7 @@
  */
 
 const browsersPolyfill = require('./browsers-polyfill.json')
-const browsersSupported = require('./browsers-sauce.json')
+const browsersSupported = require('./browsers-supported.json')
 const semver = require('semver')
 const BrowserMatcher = require('./browser-matcher')
 var config = require('../runner/args')

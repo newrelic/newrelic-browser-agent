@@ -4,7 +4,7 @@
  */
 
 var tape = require('tape')
-var browsers = require('../../util/browsers.json')
+var browsers = require('../../util/browsers-supported.json')
 var browserList = require('../../util/browser-list')
 var BrowserSpec = require('../../util/browser-list').BrowserSpec
 const latestVersStringRe = require('../../util/browser-list').latestVersStringRe;

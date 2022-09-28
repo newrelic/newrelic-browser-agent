@@ -109,6 +109,11 @@ module.exports = yargs
   .alias('F', 'functional-only')
   .describe('F', 'run only functional tests')
 
+  .boolean('P')
+  .default('P', false)
+  .alias('P', 'polyfills')
+  .describe('P', 'Add Polyfills script to top of page')
+
   .help('h')
   .alias('h', 'help')
   .strict()

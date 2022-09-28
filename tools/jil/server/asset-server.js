@@ -22,6 +22,7 @@ const assert = require('assert')
 const preprocessify = require('preprocessify')
 const loaders = require('../../../loaders')
 const UglifyJS = require('uglify-js')
+var runnerArgs = require('../runner/args')
 
 mime.types['es6'] = 'application/javascript'
 
@@ -191,6 +192,10 @@ class AgentInjectorTransform extends AssetTransform {
       const htmlPackageTags = [...rawContent.matchAll(/{packages\/.*}/g)].map(x => x[0])
       const packagePaths = htmlPackageTags.map(x => x.replace(/[{}]/g, ''))
       const packageFiles = await this.getBuiltPackages(packagePaths)
+
+      if (runnerArgs.polyfills) {
+        rawContent = rawContent.replace('<html>', `<html><script src="/build/nr-polyfills.min.js" />`)
+      }
 
       this.getLoaderContent(
         loaderName,

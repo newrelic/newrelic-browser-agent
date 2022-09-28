@@ -164,6 +164,7 @@ class Driver {
 
       function queueTest (test, attempt) {
         let name = test.name
+        let fileName = test.fileName
         let fn = test.fn
 
         if (!attempt) {
@@ -194,6 +195,7 @@ class Driver {
                 platformVersion: browserSpec.desired.platformVersion || null,
                 build: browserSpec.desired.build,
                 testName: name,
+                testFileName: fileName,
                 retry: (attempt - 1),
                 retryRun: isRetry,
                 name: result.name,
@@ -246,6 +248,7 @@ class Driver {
               platformVersion: browserSpec.desired.platformVersion || null,
               build: browserSpec.desired.build,
               testName: name,
+              testFileName: fileName,
               retry: (attempt - 1),
               retryRun: isRetry,
               passed: plannedOk && allAssertsOk,

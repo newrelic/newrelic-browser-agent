@@ -27,48 +27,6 @@ jobs:
         with:
           path: ./*
           key: ${{ github.sha }}
-  lint:
-    timeout-minutes: 30
-    runs-on: ubuntu-latest
-    container: node:14
-    needs: [cache-build]
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-      
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
-
-      - name: lint
-        run: npm run lint
-  package-tests:
-    timeout-minutes: 30
-    runs-on: ubuntu-latest
-    container: node:14
-    needs: [cache-build]
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-      
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
-
-      - name: test
-        run: npm run packages:test
   chrome-functional:
     timeout-minutes: 30
     continue-on-error: true
@@ -96,7 +54,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 -P --functional-only
   chrome-unit:
     timeout-minutes: 30
     continue-on-error: true
@@ -124,7 +82,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 -P --unit-only
   firefox-functional:
     timeout-minutes: 30
     continue-on-error: true
@@ -152,7 +110,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 -P --functional-only
   firefox-unit:
     timeout-minutes: 30
     continue-on-error: true
@@ -180,7 +138,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 -P --unit-only
   edge-functional:
     timeout-minutes: 30
     continue-on-error: true
@@ -208,7 +166,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 -P --functional-only
   edge-unit:
     timeout-minutes: 30
     continue-on-error: true
@@ -236,7 +194,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 -P --unit-only
   safari-functional:
     timeout-minutes: 30
     continue-on-error: true
@@ -264,7 +222,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 -P --functional-only
   safari-unit:
     timeout-minutes: 30
     continue-on-error: true
@@ -292,7 +250,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 -P --unit-only
   ios-functional:
     timeout-minutes: 30
     continue-on-error: true
@@ -320,7 +278,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --concurrent=10 --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --concurrent=10 -P --functional-only
   ios-unit:
     timeout-minutes: 30
     continue-on-error: true
@@ -348,67 +306,123 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --concurrent=10 --unit-only
-  # android-functional:
-  #   timeout-minutes: 30
-  #   continue-on-error: true
-  #   runs-on: ubuntu-latest
-  #   container: node:14
-  #   needs: [cache-build]
-  #   env:
-  #     NEWRELIC_ENVIRONMENT: ci
-  #     JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-  #     JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-  #     NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-  #     BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         ref: ${{ github.event.pull_request.head.sha }}
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --concurrent=10 -P --unit-only
+  android-functional:
+    timeout-minutes: 30
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    container: node:14
+    needs: [cache-build]
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
-  #     - name: install
-  #       run: npm ci --cache ./.npm
+      - name: install
+        run: npm ci --cache ./.npm
 
-  #     - uses: actions/cache@v2
-  #       id: restore-build
-  #       with:
-  #         path: ./*
-  #         key: ${{ github.sha }}
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
 
-  #     - name: run tests
-  #       run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 --functional-only
-  # android-unit:
-  #   timeout-minutes: 30
-  #   continue-on-error: true
-  #   runs-on: ubuntu-latest
-  #   container: node:14
-  #   needs: [cache-build]
-  #   env:
-  #     NEWRELIC_ENVIRONMENT: ci
-  #     JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-  #     JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-  #     NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-  #     BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         ref: ${{ github.event.pull_request.head.sha }}
+      - name: run tests
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 -P --functional-only
+  android-unit:
+    timeout-minutes: 30
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    container: node:14
+    needs: [cache-build]
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
-  #     - name: install
-  #       run: npm ci --cache ./.npm
+      - name: install
+        run: npm ci --cache ./.npm
 
-  #     - uses: actions/cache@v2
-  #       id: restore-build
-  #       with:
-  #         path: ./*
-  #         key: ${{ github.sha }}
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
 
-  #     - name: run tests
-  #       run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 --unit-only
+      - name: run tests
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 -P --unit-only
+  ie-functional:
+    timeout-minutes: 30
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    container: node:14
+    needs: [cache-build]
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: install
+        run: npm ci --cache ./.npm
+
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+
+      - name: run tests
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ie@* -s -t 85000 --concurrent=10 -P --functional-only
+  ie-unit:
+    timeout-minutes: 30
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    container: node:14
+    needs: [cache-build]
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: install
+        run: npm ci --cache ./.npm
+
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+
+      - name: run tests
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ie@* -s -t 85000 --concurrent=10 -P --unit-only
   check-failures:
     runs-on: ubuntu-latest
     container: node:14
-    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, safari-functional, safari-unit, edge-functional, edge-unit, ios-functional, ios-unit]
+    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, safari-functional, safari-unit, edge-functional, edge-unit, ios-functional, ios-unit, android-functional, android-unit, ie-functional, ie-unit]
     env:
       BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}

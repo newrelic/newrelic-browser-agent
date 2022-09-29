@@ -1,10 +1,14 @@
-export default {workersApiIsSupported, insertSupportMetrics};
+export { insertSupportMetrics };    // export list
 
 /**
- * True if Web Workers are supported in browser's execution context. Not all browser versions may support certain Workers or options however.
+ * True for each Worker type supported in browser's execution context. Not all browser versions may support certain Workers or options however.
  * - Warning: service workers are not available on unsecured HTTP sites
  */
-const workersApiIsSupported = Boolean(self.Worker && self.SharedWorker && self.ServiceWorker);
+const workersApiIsSupported = {
+    dedicated: Boolean(self.Worker),
+    shared: Boolean(self.SharedWorker),
+    service: Boolean(self.ServiceWorker)
+};
 
 let origWorker, origSharedWorker, origServiceWorkerCreate;
 /**
@@ -12,10 +16,9 @@ let origWorker, origSharedWorker, origServiceWorkerCreate;
  * @returns void
  */
 function resetSupportability() {
-    if (!origWorker) return;    // Worker wasn't changed by this module or was already restored
-    self.Worker = origWorker;
-    self.SharedWorker = origSharedWorker;
-    self.navigator.serviceWorker.register = origServiceWorkerCreate;
+    if (origWorker) self.Worker = origWorker;  // Worker was changed by this module
+    if (origSharedWorker) self.SharedWorker = origSharedWorker;
+    if (origServiceWorkerCreate) self.navigator.serviceWorker.register = origServiceWorkerCreate;
     origWorker = origSharedWorker = origServiceWorkerCreate = undefined;
 }
 
@@ -25,26 +28,35 @@ function resetSupportability() {
  * @returns void
  */
 function insertSupportMetrics(report) {
-    if (origWorker) return; // ensure we only insert the metrics once
-    if (!workersApiIsSupported) {
-        report('Workers/NotSupported'); // accounts for: old browser versions w/o all 3 workers API, non-HTTPS sites
-        return;
-    }
-    origWorker = Worker;
-    origSharedWorker = SharedWorker;
-    origServiceWorkerCreate = navigator.serviceWorker.register;
+    // Of the 3, the normal worker is the most widely supported, so we can be sure metric was already inserted w/o checking other 2.
+    if (origWorker) return;
 
-    try {
-        self.Worker = extendWorkerConstructor(origWorker, 'Dedicated');
-        self.SharedWorker = extendWorkerConstructor(origSharedWorker, 'Shared');
-        self.navigator.serviceWorker.register = extendServiceCreation(origServiceWorkerCreate);
-    } catch (e) {
-        report('Workers/Implementation/Unsupported');   // this indicates the browser version doesn't support how code is injected, such as Proxy API
-        console.warning("NR Agent: ", e);
+    if (!workersApiIsSupported.dedicated) {
+        reportUnavailable('All');
+        return; // similarly, if dedicated is n/a, none of them are supported so quit
+    } else {
+        origWorker = Worker;
+        try { self.Worker = extendWorkerConstructor(origWorker, 'Dedicated'); }
+        catch (e) { handleInsertionError(e, 'Dedicated'); }
+    }
+    
+    if (!workersApiIsSupported.shared) {
+        reportUnavailable('Shared');
+    } else {
+        origSharedWorker = SharedWorker;
+        try { self.SharedWorker = extendWorkerConstructor(origSharedWorker, 'Shared'); }
+        catch (e) { handleInsertionError(e, 'Shared'); }
+    }
+    if (!workersApiIsSupported.service) {
+        reportUnavailable('Service');
+    } else {
+        origServiceWorkerCreate = navigator.serviceWorker.register;
+        try { self.navigator.serviceWorker.register = extendServiceCreation(origServiceWorkerCreate); }
+        catch (e) { handleInsertionError(e, 'Service'); }
     }
     return;
 
-    // --- Internal helpers ---
+    // Internal helpers - Core
     /**
      * Report each time a Worker or SharedWorker is created in page execution. Note the current trap is set for only "new" and Reflect.construct operations.
      * @param {func obj} origClass - Worker() or SharedWorker()
@@ -54,11 +66,7 @@ function insertSupportMetrics(report) {
     function extendWorkerConstructor(origClass, workerType) {
         const newHandler = {
             construct(oConstructor, args) {
-                if (args[1]?.type === 'module') {
-                    report(`Workers/${workerType}/Module`);
-                } else {
-                    report(`Workers/${workerType}/Classic`);
-                }
+                reportWorkerCreationAttempt(workerType, args[1]?.type);
                 return new oConstructor(...args);
             }
         }
@@ -71,12 +79,24 @@ function insertSupportMetrics(report) {
      */
     function extendServiceCreation(origFunc) {
         return (...args) => {
-            if (args[1]?.type === 'module') {
-                report('Workers/Service/Module');
-            } else {
-                report('Workers/Service/Classic');
-            }
+            reportWorkerCreationAttempt('Service', args[1]?.type);
             return origFunc.apply(navigator.serviceWorker, args);   // register() has to be rebound to the ServiceWorkerContainer object
         }
+    }
+
+    // Internal helpers - Reporting & logging
+    function reportUnavailable(workerType) {
+        report(`Workers/${workerType}/Unavailable`);
+    }
+    function reportWorkerCreationAttempt(workerType, optionType) {
+        if (optionType === 'module') {
+            report(`Workers/${workerType}/Module`);
+        } else {
+            report(`Workers/${workerType}/Classic`);
+        }
+    }
+    function handleInsertionError(e, workerType) {
+        report(`Workers/${workerType}/SM/Unsupported`); // indicates the browser version doesn't support how code is injected, such as Proxy API
+        console.warning("NR Agent: ", e);
     }
 }

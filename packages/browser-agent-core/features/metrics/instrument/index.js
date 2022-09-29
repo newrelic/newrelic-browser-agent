@@ -6,7 +6,7 @@ import { protocol } from '../../../common/url/protocol'
 import { getRules, validateRules } from '../../../common/util/obfuscate'
 import { VERSION } from '../../../common/constants/environment-variables'
 import { onDOMContentLoaded } from '../../../common/window/load'
-import WorkerHelper from './workers-helper'
+import * as WorkersHelper from './workers-helper'
 
 var SUPPORTABILITY_METRIC = 'sm'
 var CUSTOM_METRIC = 'cm'
@@ -79,7 +79,7 @@ export class Instrument extends FeatureBase {
         if (rules.length > 0 && !validateRules(rules)) this.recordSupportability('Generic/Obfuscate/Invalid')
 
         // poll web worker support
-        WorkerHelper.insertSupportMetrics(this.recordSupportability.bind(this));
+        WorkersHelper.insertSupportMetrics(this.recordSupportability.bind(this));
     }
 
     reportPolyfillsNeeded(PfFeatStatusEnum) {

@@ -1,4 +1,4 @@
-name: Tests
+name: Polyfill Tests
 
 on:
   pull_request_target:
@@ -54,7 +54,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 -P --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=5 -P --functional-only
   chrome-unit:
     timeout-minutes: 30
     continue-on-error: true
@@ -82,7 +82,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 -P --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=5 -P --unit-only
   firefox-functional:
     timeout-minutes: 30
     continue-on-error: true
@@ -110,7 +110,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 -P --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=5 -P --functional-only
   firefox-unit:
     timeout-minutes: 30
     continue-on-error: true
@@ -138,7 +138,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 -P --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=5 -P --unit-only
   edge-functional:
     timeout-minutes: 30
     continue-on-error: true
@@ -166,7 +166,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 -P --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=5 -P --functional-only
   edge-unit:
     timeout-minutes: 30
     continue-on-error: true
@@ -194,7 +194,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 -P --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=5 -P --unit-only
   safari-functional:
     timeout-minutes: 30
     continue-on-error: true
@@ -222,7 +222,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 -P --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=5 -P --functional-only
   safari-unit:
     timeout-minutes: 30
     continue-on-error: true
@@ -250,7 +250,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 -P --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=5 -P --unit-only
   ios-functional:
     timeout-minutes: 30
     continue-on-error: true
@@ -278,7 +278,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --concurrent=10 -P --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --concurrent=5 -P --functional-only
   ios-unit:
     timeout-minutes: 30
     continue-on-error: true
@@ -306,7 +306,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --concurrent=10 -P --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --concurrent=5 -P --unit-only
   android-functional:
     timeout-minutes: 30
     continue-on-error: true
@@ -334,7 +334,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 -P --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=5 -P --functional-only
   android-unit:
     timeout-minutes: 30
     continue-on-error: true
@@ -362,7 +362,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 -P --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=5 -P --unit-only
   ie-functional:
     timeout-minutes: 30
     continue-on-error: true
@@ -390,7 +390,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ie@* -s -t 85000 --concurrent=10 -P --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ie@* -s -t 85000 --concurrent=5 -P --functional-only
   ie-unit:
     timeout-minutes: 30
     continue-on-error: true
@@ -418,7 +418,7 @@ jobs:
           key: ${{ github.sha }}
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ie@* -s -t 85000 --concurrent=10 -P --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ie@* -s -t 85000 --concurrent=5 -P --unit-only
   check-failures:
     runs-on: ubuntu-latest
     container: node:14

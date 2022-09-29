@@ -70,8 +70,8 @@ export class Aggregate extends FeatureBase {
     this.trace = {}
     this.nodeCount = 0
     this.sentTrace = null
-    this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'stn.harvestTimeSeconds') || 10
-    this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'stn.maxNodesPerHarvest') || 1000
+    this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
+    this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
 
     this.laststart = 0
     findStartTime(agentIdentifier)

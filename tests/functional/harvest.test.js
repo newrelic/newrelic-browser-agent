@@ -7,12 +7,13 @@ const testDriver = require('../../tools/jil/index')
 const cleanURL = require('../../agent/clean-url.js')
 const url = require('url')
 
+let notSafariWithSeleniumBug = testDriver.Matcher.withFeature('notSafariWithSeleniumBug')
 let locationDecodesUrl = testDriver.Matcher.withFeature('locationDecodesUrl')
 let withTls = testDriver.Matcher.withFeature('tls')
 let withPushState = testDriver.Matcher.withFeature('pushstate')
 const originOnlyReferer = testDriver.Matcher.withFeature('originOnlyReferer')
 
-testDriver.test('referrer attribute is sent in the query string', withTls, function (t, browser, router) {
+testDriver.test('referrer attribute is sent in the query string', withTls.and(notSafariWithSeleniumBug), function (t, browser, router) {
   t.plan(1)
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
   let rumPromise = router.expectRum()
@@ -27,7 +28,7 @@ testDriver.test('referrer attribute is sent in the query string', withTls, funct
   }
 })
 
-testDriver.test('referrer sent in query does not include query parameters', withTls, function(t, browser, router) {
+testDriver.test('referrer sent in query does not include query parameters', withTls.and(notSafariWithSeleniumBug), function(t, browser, router) {
   t.plan(1)
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
   let rumPromise = router.expectRum()
@@ -43,7 +44,7 @@ testDriver.test('referrer sent in query does not include query parameters', with
   }
 })
 
-testDriver.test('referrer sent in referer header includes path', originOnlyReferer.include('ios', '>11.2').inverse(), function(t, browser, router) {
+testDriver.test('referrer sent in referer header includes path', originOnlyReferer.include('ios', '>11.2').inverse().and(notSafariWithSeleniumBug), function(t, browser, router) {
   t.plan(1)
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
   let rumPromise = router.expectRum()
@@ -59,7 +60,7 @@ testDriver.test('referrer sent in referer header includes path', originOnlyRefer
   }
 })
 
-testDriver.test('when url is changed using pushState during load', withPushState, function(t, browser, router) {
+testDriver.test('when url is changed using pushState during load', withPushState.and(notSafariWithSeleniumBug), function(t, browser, router) {
   var originalUrl = router.assetURL('referrer-pushstate.html')
   var originalPath = url.parse(originalUrl).pathname
   var redirectedPath = url.parse(router.assetURL('instrumented.html')).pathname
@@ -107,7 +108,7 @@ testDriver.test('when url is changed using pushState during load', withPushState
   })
 })
 
-testDriver.test('when url is changed using replaceState during load', withPushState, function(t, browser, router) {
+testDriver.test('when url is changed using replaceState during load', withPushState.and(notSafariWithSeleniumBug), function(t, browser, router) {
   var originalUrl = router.assetURL('referrer-replacestate.html')
   var originalPath = url.parse(originalUrl).pathname
   var redirectedPath = url.parse(router.assetURL('instrumented.html')).pathname
@@ -156,7 +157,7 @@ testDriver.test('when url is changed using replaceState during load', withPushSt
   })
 })
 
-testDriver.test('browsers that do not decode the url when accessing window.location encode special characters in the referrer attribute', locationDecodesUrl.inverse().and(withTls), function (t, browser, router) {
+testDriver.test('browsers that do not decode the url when accessing window.location encode special characters in the referrer attribute', locationDecodesUrl.inverse().and(withTls).and(notSafariWithSeleniumBug), function (t, browser, router) {
   t.plan(2)
   let assetURL = router.assetURL('symbols%20in&referrer.html')
   let loadPromise = browser.safeGet(assetURL).catch(fail)
@@ -174,7 +175,7 @@ testDriver.test('browsers that do not decode the url when accessing window.locat
   }
 })
 
-testDriver.test('browsers that decode the url when accessing window.location submit non url encoded special characters in the referrer attribute', locationDecodesUrl, function (t, browser, router) {
+testDriver.test('browsers that decode the url when accessing window.location submit non url encoded special characters in the referrer attribute', locationDecodesUrl.and(notSafariWithSeleniumBug), function (t, browser, router) {
   t.plan(3)
   let assetURL = router.assetURL('symbols%20in&referrer.html')
   let loadPromise = browser.safeGet(assetURL).catch(fail)
@@ -193,7 +194,7 @@ testDriver.test('browsers that decode the url when accessing window.location sub
   }
 })
 
-testDriver.test('cookie disabled: query string attributes', withTls, function (t, browser, router) {
+testDriver.test('cookie disabled: query string attributes', withTls.and(notSafariWithSeleniumBug), function (t, browser, router) {
   t.plan(2)
   let loadPromise = browser.safeGet(router.assetURL('instrumented-disable-cookies.html'))
   let rumPromise = router.expectRum()
@@ -209,7 +210,7 @@ testDriver.test('cookie disabled: query string attributes', withTls, function (t
   }
 })
 
-testDriver.test('cookie enabled by default: query string attributes', withTls, function (t, browser, router) {
+testDriver.test('cookie enabled by default: query string attributes', withTls.and(notSafariWithSeleniumBug), function (t, browser, router) {
   t.plan(2)
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
   let rumPromise = router.expectRum()

@@ -229,11 +229,12 @@ features.sendBeacon = new BrowserMatcher()
   .include('android', '>=6')
   .include('safari', '>=11.1')
 
-// Safari 11.1 has a bug in the sendBeacon API, the agent falls back to using image
+// Safari 11.1 & 12.0 has a bug in the sendBeacon API, the agent falls back to using image
 // https://bugs.webkit.org/show_bug.cgi?id=188329
 features.brokenSendBeacon = new BrowserMatcher()
   .exclude('*')
   .include('safari', '<=11.1')
+  .include('safari', '12.0') // somehow this got removed, this is still broken
 
 features.workingSendBeacon = features.sendBeacon.and(features.brokenSendBeacon.inverse())
 

@@ -11,7 +11,7 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
   let assetURL = router.assetURL('stn/instrumented.html', {
     loader: 'full',
     init: {
-      stn: {
+      session_trace: {
         harvestTimeSeconds: 5
       },
       page_view_timing: {

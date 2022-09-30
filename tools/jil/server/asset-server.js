@@ -177,7 +177,7 @@ class AgentInjectorTransform extends AssetTransform {
   }
 
   getLoaderContent(loaderName, dir, callback) {
-    let loaderFilename = `nr-loader-${loaderName}.min.js`
+    let loaderFilename = `nr-loader-${loaderName}${runnerArgs.polyfills ? '-polyfills' : ''}.min.js`
     let loaderPath = path.join(dir, loaderFilename)
     fs.readFile(loaderPath, callback)
   }
@@ -213,9 +213,7 @@ class AgentInjectorTransform extends AssetTransform {
       const packagePaths = htmlPackageTags.map(x => x.replace(/[{}]/g, ''))
       const packageFiles = await this.getBuiltPackages(packagePaths)
 
-      if (runnerArgs.polyfills) {
-        rawContent = rawContent.replace('<html>', `<html><script src="/build/nr-polyfills.min.js" />`)
-      }
+
 
       this.getLoaderContent(
         loaderName,
@@ -246,6 +244,10 @@ class AgentInjectorTransform extends AssetTransform {
             .replace('{config}', tagify(disableSsl + configContent))
             .replace('{init}', tagify(disableSsl + initContent))
             .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
+
+          if (runnerArgs.polyfills) {
+            rspData = rspData.replace('{polyfills}', `<script type="text/javascript">${this.polyfills}</script>`)
+          }
 
           if (!!htmlPackageTags.length && !!packageFiles.length) {
             packageFiles.forEach(pkg => {

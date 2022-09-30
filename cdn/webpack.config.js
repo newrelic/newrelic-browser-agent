@@ -63,6 +63,12 @@ module.exports = {
     [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/pro.js'),
     [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/spa.js'),
     [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/spa.js'),
+    [`nr-loader-rum-polyfills${PATH_VERSION}`]: [path.resolve(__dirname, './agent-loader/polyfills/lite.js')],
+    [`nr-loader-rum-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/lite.js'),
+    [`nr-loader-full-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
+    [`nr-loader-full-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
+    [`nr-loader-spa-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
+    [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
     [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills.js')
   },
   output: {

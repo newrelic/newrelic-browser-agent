@@ -3,12 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## v1219
+## v1220
+
+### Add feature detection supportability metrics for Web Workers & Service workers
+Detecting the prevalence of Worker implementation and usage will help guide future development efforts.
 
 ### Remove non-ASCII characters from builds
-Polyfill dependencies were appending non-ASCII characters to build files. These characters were affecting older Python agent implementations downstream that worked to encode the agent snippet. The build files are now checked and cleaned of non-ASCII characters before shipping.
-
-## v1218
+Certain dependencies were appending non-ASCII characters to build files. These characters were affecting older Python agent implementations downstream that worked to encode the agent snippet. The build files are now checked and cleaned of non-ASCII characters before shipping.
 
 ### Removed 3rd Party Cookies
 

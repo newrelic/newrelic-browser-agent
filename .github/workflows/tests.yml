@@ -6,32 +6,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  cache-build:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test') 
-    timeout-minutes: 30
-    name: Build
-    runs-on: ubuntu-latest
-    container: node:14
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 14
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - run: npm run build:all
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
   lint:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     runs-on: ubuntu-latest
     container: node:14
-    needs: [cache-build]
+    
     steps:
       - uses: actions/checkout@v2
         with:
@@ -39,20 +19,18 @@ jobs:
 
       - name: install
         run: npm ci --cache ./.npm
-      
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
+
+      - name: build
+        run: npm run build:all
 
       - name: lint
         run: npm run lint
   package-tests:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     runs-on: ubuntu-latest
     container: node:14
-    needs: [cache-build]
+    
     steps:
       - uses: actions/checkout@v2
         with:
@@ -60,21 +38,19 @@ jobs:
 
       - name: install
         run: npm ci --cache ./.npm
-      
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
+
+      - name: build
+        run: npm run build:all
 
       - name: test
         run: npm run packages:test
   chrome-functional:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [cache-build]
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -89,20 +65,18 @@ jobs:
       - name: install
         run: npm ci --cache ./.npm
 
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
+      - name: build
+        run: npm run build:all
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 --functional-only
   chrome-unit:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [cache-build]
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -117,20 +91,18 @@ jobs:
       - name: install
         run: npm ci --cache ./.npm
 
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
+      - name: build
+        run: npm run build:all
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 --unit-only
   firefox-functional:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [cache-build]
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -145,20 +117,18 @@ jobs:
       - name: install
         run: npm ci --cache ./.npm
 
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
+      - name: build
+        run: npm run build:all
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 --functional-only
   firefox-unit:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [cache-build]
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -173,20 +143,18 @@ jobs:
       - name: install
         run: npm ci --cache ./.npm
 
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
+      - name: build
+        run: npm run build:all
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 --unit-only
   edge-functional:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [cache-build]
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -201,20 +169,18 @@ jobs:
       - name: install
         run: npm ci --cache ./.npm
 
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
+      - name: build
+        run: npm run build:all
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 --functional-only
   edge-unit:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [cache-build]
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -229,20 +195,18 @@ jobs:
       - name: install
         run: npm ci --cache ./.npm
 
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
+      - name: build
+        run: npm run build:all
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 --unit-only
   safari-functional:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [cache-build]
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -257,20 +221,18 @@ jobs:
       - name: install
         run: npm ci --cache ./.npm
 
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
+      - name: build
+        run: npm run build:all
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 --functional-only
   safari-unit:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [cache-build]
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -285,20 +247,18 @@ jobs:
       - name: install
         run: npm ci --cache ./.npm
 
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
+      - name: build
+        run: npm run build:all
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 --unit-only
   ios-functional:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [cache-build]
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -313,20 +273,18 @@ jobs:
       - name: install
         run: npm ci --cache ./.npm
 
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
+      - name: build
+        run: npm run build:all
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --concurrent=10 --functional-only
   ios-unit:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [cache-build]
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -341,20 +299,18 @@ jobs:
       - name: install
         run: npm ci --cache ./.npm
 
-      - uses: actions/cache@v2
-        id: restore-build
-        with:
-          path: ./*
-          key: ${{ github.sha }}
+      - name: build
+        run: npm run build:all
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --concurrent=10 --unit-only
   # android-functional:
+    # if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
   #   timeout-minutes: 30
   #   continue-on-error: true
   #   runs-on: ubuntu-latest
   #   container: node:14
-  #   needs: [cache-build]
+  #   
   #   env:
   #     NEWRELIC_ENVIRONMENT: ci
   #     JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -369,20 +325,19 @@ jobs:
   #     - name: install
   #       run: npm ci --cache ./.npm
 
-  #     - uses: actions/cache@v2
-  #       id: restore-build
-  #       with:
-  #         path: ./*
-  #         key: ${{ github.sha }}
+  #     
+      # - name: build
+      #   run: npm run build:all
 
   #     - name: run tests
   #       run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 --functional-only
   # android-unit:
+  #   if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
   #   timeout-minutes: 30
   #   continue-on-error: true
   #   runs-on: ubuntu-latest
   #   container: node:14
-  #   needs: [cache-build]
+  #   
   #   env:
   #     NEWRELIC_ENVIRONMENT: ci
   #     JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -397,11 +352,9 @@ jobs:
   #     - name: install
   #       run: npm ci --cache ./.npm
 
-  #     - uses: actions/cache@v2
-  #       id: restore-build
-  #       with:
-  #         path: ./*
-  #         key: ${{ github.sha }}
+  #     
+      # - name: build
+      #   run: npm run build:all
 
   #     - name: run tests
   #       run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 --unit-only

@@ -40,6 +40,5 @@
     "ios >= 10.3",
     "ie >= 11",
     "edge >= 60"
-  ],
-  "sideEffects": false
+  ]
 }

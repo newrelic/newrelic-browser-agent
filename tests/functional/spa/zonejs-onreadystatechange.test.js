@@ -6,7 +6,8 @@
 const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
 
-let supported = testDriver.Matcher.withFeature('wrappableAddEventListener')
+let notSafariWithSeleniumBug = testDriver.Matcher.withFeature('notSafariWithSeleniumBug')
+let supported = testDriver.Matcher.withFeature('wrappableAddEventListener').and(notSafariWithSeleniumBug)
 
 testDriver.test('onreadystatechange only called once with zone.js', supported, function (t, browser, router) {
   let rumPromise = router.expectRum()

@@ -23,6 +23,7 @@
     "minimatch": "^3.0.3",
     "multiparty": "^4.1.2",
     "newrelic": "^4.11.0",
+    "node-fetch": "^3.2.10",
     "object-inspect": "^1.5.0",
     "phantomjs-prebuilt": "^2.1.11",
     "preprocessify": "0.0.6",

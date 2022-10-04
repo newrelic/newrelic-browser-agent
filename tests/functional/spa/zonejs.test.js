@@ -7,7 +7,8 @@ const testDriver = require('../../../tools/jil/index')
 const now = require('../../lib/now')
 const querypack = require('@newrelic/nr-querypack')
 
-let supported = testDriver.Matcher.withFeature('wrappableAddEventListener')
+let notSafariWithSeleniumBug = testDriver.Matcher.withFeature('notSafariWithSeleniumBug')
+let supported = testDriver.Matcher.withFeature('wrappableAddEventListener').and(notSafariWithSeleniumBug)
 
 const init = {
   ajax: {

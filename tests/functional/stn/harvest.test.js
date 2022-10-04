@@ -11,8 +11,8 @@ testDriver.test('session traces are retried when collector returns 429 during fi
   let assetURL = router.assetURL('instrumented.html', {
     loader: 'spa',
     init: {
-      stn: {
-        harvestTimeSeconds: 2
+      session_trace: {
+        harvestTimeSeconds: 10
       },
       harvest: {
         tooManyRequestsDelay: 10
@@ -56,7 +56,7 @@ testDriver.test('retried first harvest captures ptid', supported, function (t, b
   let assetURL = router.assetURL('lotsatimers.html', {
     loader: 'spa',
     init: {
-      stn: {
+      session_trace: {
         harvestTimeSeconds: 10
       },
       harvest: {
@@ -96,7 +96,7 @@ testDriver.test('session traces are retried when collector returns 429 during sc
   let assetURL = router.assetURL('lotsatimers.html', {
     loader: 'spa',
     init: {
-      stn: {
+      session_trace: {
         harvestTimeSeconds: 10
       },
       harvest: {

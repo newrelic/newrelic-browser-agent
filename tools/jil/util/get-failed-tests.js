@@ -3,6 +3,8 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 
 const { BUILD_NUMBER, NRQL_API_KEY } = process.env
 
+console.log("NRQL_API_KEY", NRQL_API_KEY)
+
 if (!BUILD_NUMBER) process.exit(1)
 
 const queryNR = async () => {
@@ -49,7 +51,7 @@ const queryNR = async () => {
     var isValid = true
     var out = failures?.data?.actor?.account?.nrql?.results?.length ? 'node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -s -t 85000 -b ' : ''
     Object.entries(failedTests).forEach(([key, val]) => {
-        if (!val) return
+        if (!val || (typeof val === 'object' && !Object.keys(val).length)) return
         isValid = false
         const b = `${key}@`
         const browsers = []

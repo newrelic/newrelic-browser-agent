@@ -5,10 +5,11 @@
 
 const testDriver = require('../../../tools/jil/index')
 
+let notSafariWithSeleniumBug = testDriver.Matcher.withFeature('notSafariWithSeleniumBug')
 var firstPaint = testDriver.Matcher.withFeature('firstPaint')
 var firstContentfulPaint = testDriver.Matcher.withFeature('firstContentfulPaint')
 
-testDriver.test('First paint for supported browsers', firstPaint, function (t, browser, router) {
+testDriver.test('First paint for supported browsers', firstPaint.and(notSafariWithSeleniumBug), function (t, browser, router) {
   t.plan(1)
 
   let rumPromise = router.expectRum()
@@ -31,7 +32,7 @@ testDriver.test('First paint for supported browsers', firstPaint, function (t, b
   }
 })
 
-testDriver.test('First contentful paint for supported browsers', firstContentfulPaint, function (t, browser, router) {
+testDriver.test('First contentful paint for supported browsers', firstContentfulPaint.and(notSafariWithSeleniumBug), function (t, browser, router) {
   t.plan(1)
 
   let rumPromise = router.expectRum()
@@ -54,7 +55,7 @@ testDriver.test('First contentful paint for supported browsers', firstContentful
   }
 })
 
-testDriver.test('First paint for unsupported browsers', firstPaint.inverse(), function (t, browser, router) {
+testDriver.test('First paint for unsupported browsers', firstPaint.inverse().and(notSafariWithSeleniumBug), function (t, browser, router) {
   t.plan(1)
 
   let rumPromise = router.expectRum()
@@ -77,7 +78,7 @@ testDriver.test('First paint for unsupported browsers', firstPaint.inverse(), fu
   }
 })
 
-testDriver.test('First contentful paint for unsupported browsers', firstContentfulPaint.inverse(), function (t, browser, router) {
+testDriver.test('First contentful paint for unsupported browsers', firstContentfulPaint.inverse().and(notSafariWithSeleniumBug), function (t, browser, router) {
   t.plan(1)
 
   let rumPromise = router.expectRum()

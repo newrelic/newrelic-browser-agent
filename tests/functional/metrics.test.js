@@ -198,6 +198,7 @@ testDriver.test('workers creation generates sm', fetchBrowsers, function (t, bro
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, `${supportabilityMetrics.length} SupportabilityMetrics object(s) were generated`);
       let classicWorker = moduleWorker = classicShared = moduleShared = classicService = moduleService = false;
       let sharedUnavail = serviceUnavail = false;
+      let workerImplFail = sharedImplFail = serviceImplFail = false;
 
       // Comb through for specific worker SM tags we want to see.
       for (const sm of supportabilityMetrics) {
@@ -206,16 +207,22 @@ testDriver.test('workers creation generates sm', fetchBrowsers, function (t, bro
             classicWorker = true; break;
           case 'Workers/Dedicated/Module':
             moduleWorker = true; break;
+          case 'Workers/Dedicated/SM/Unsupported':
+            workerImplFail = true; break;
           case 'Workers/Shared/Classic':
             classicShared = true; break;
           case 'Workers/Shared/Module':
             moduleShared = true; break;
+          case 'Workers/Shared/SM/Unsupported':
+            sharedImplFail = true; break;
           case 'Workers/Shared/Unavailable':
             sharedUnavail = true; break;
           case 'Workers/Service/Classic':
             classicService = true; break;
           case 'Workers/Service/Module':
             moduleService = true; break;
+          case 'Workers/Service/SM/Unsupported':
+            serviceImplFail = true; break;
           case 'Workers/Service/Unavailable':
             serviceUnavail = true; break;
         }
@@ -223,23 +230,23 @@ testDriver.test('workers creation generates sm', fetchBrowsers, function (t, bro
 
       // Just assume that all the browsers & versions we test will support workers because it's been long supported; don't bother test 'Workers/All/Unavailable'.
       let workerShouldExistOnThisBrowser = testDriver.Matcher.withFeature('workers').match(browser.browserSpec);
-      if (workerShouldExistOnThisBrowser) {
+      if (workerShouldExistOnThisBrowser && !workerImplFail) {  // worker may be avail in Chrome v4, but our SM implementation may not be supported until v60, etc.
         t.ok(classicWorker, 'classic worker is expected and used');
         t.ok(moduleWorker, 'module worker is expected and used');
       }
 
       // Shared & Service workers below are more niche.
       workerShouldExistOnThisBrowser = testDriver.Matcher.withFeature('sharedWorkers').match(browser.browserSpec);
-      if (workerShouldExistOnThisBrowser) {
+      if (workerShouldExistOnThisBrowser && !sharedImplFail) {
         t.ok(classicShared, 'classic sharedworker is expected and used');
         t.ok(moduleShared, 'module sharedworker is expected and used');
       } else {
-        t.ok(sharedUnavail, 'sharedworker api should be unavailable on this browser version');
+        t.ok(sharedUnavail || sharedImplFail, 'sharedworker API or SM should be unavailable on this browser version');
       }
 
       // Service Workers won't be available in tests until JIL local asset server runs on HTTPS or changes to localhost/127.#.#.# url
       t.notOk(classicService || moduleService, 'classic or module serviceworker is NOT expected or used');
-      t.ok(serviceUnavail, 'serviceworker api should be unavailable on all');
+      t.ok(serviceUnavail, 'serviceworker API should be unavailable on all');
 
       t.end()
     })

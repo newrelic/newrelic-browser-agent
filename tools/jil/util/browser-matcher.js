@@ -394,3 +394,31 @@ features.es6 = new BrowserMatcher()
   .include("firefox", "<=67")
   .include("edge", "<=79")
   .include("safari", "<=11.3")
+
+  features.workers = new BrowserMatcher([
+    new MatcherRule(TYPE_EXCLUDE, '*@*'),
+    new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
+    new MatcherRule(TYPE_INCLUDE, 'edge@>=12'),
+    new MatcherRule(TYPE_INCLUDE, 'safari@>=4'),
+    new MatcherRule(TYPE_INCLUDE, 'firefox@>=3.5'),
+    new MatcherRule(TYPE_INCLUDE, 'ie@>=10'),
+    new MatcherRule(TYPE_INCLUDE, 'android@>=4.4'),
+    new MatcherRule(TYPE_INCLUDE, 'ios@>=5')
+  ]);
+  features.sharedWorkers = new BrowserMatcher([ // not avail android, or Safari below 16
+    new MatcherRule(TYPE_EXCLUDE, '*@*'),
+    new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
+    new MatcherRule(TYPE_INCLUDE, 'edge@>=79'),
+    new MatcherRule(TYPE_INCLUDE, 'safari@>=16.0'),
+    new MatcherRule(TYPE_INCLUDE, 'firefox@>=29'),
+    new MatcherRule(TYPE_INCLUDE, 'ios@>=16.0')
+  ]);
+  features.serviceWorkers = new BrowserMatcher([
+    new MatcherRule(TYPE_EXCLUDE, '*@*'),
+    new MatcherRule(TYPE_INCLUDE, 'chrome@>=40'),
+    new MatcherRule(TYPE_INCLUDE, 'edge@>=17'),
+    new MatcherRule(TYPE_INCLUDE, 'safari@>=11.1'),
+    new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'),
+    new MatcherRule(TYPE_INCLUDE, 'android@>=105'),
+    new MatcherRule(TYPE_INCLUDE, 'ios@>=11.3')
+  ]);

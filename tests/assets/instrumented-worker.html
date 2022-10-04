@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {config}
+    {loader}
+
+    <script>
+        try {
+            let worker1 = new Worker('./worker-scripts/simple.js');
+            let worker2 = new Worker('./worker-scripts/simple.js', {type: 'module'});
+            let worker3 = new SharedWorker('./worker-scripts/simple.js');
+            let worker4 = new SharedWorker('./worker-scripts/simple.js', {type: 'module'});
+            let worker5 = self.navigator.serviceWorker.register('./worker-scripts/simple.js');  // This will probably throw an error
+            let worker6 = self.navigator.serviceWorker.register('./worker-scripts/simple.js', {type: 'module'});
+        } catch (e) {
+            newrelic.noticeError(e);
+        }
+    </script>
+  </head>
+  <body>
+    this is a generic page that is instrumented by the JS agent with spawned worker
+  </body>
+</html>

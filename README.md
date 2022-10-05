@@ -14,11 +14,11 @@ To get started using the Browser agent in your own code, our Docs site is the be
 
 ## Building
 
-We use gulp to automate builds of the agent. To build:
+We use webpack to automate builds of the agent. To build:
 
 ```bash
-npm install
-npm run build
+npm ci
+npm run cdn:build:local
 ```
 
 Build artifacts are placed in the `/build` directory.
@@ -26,7 +26,7 @@ Build artifacts are placed in the `/build` directory.
 To automatically rebuild the agent on each change:
 
 ```bash
-npm run watch
+npm run cdn:watch
 ```
 
 ## Running the agent locally
@@ -65,11 +65,11 @@ Pick an agent type and update the following files from the table below:
 * The file loaded as the _Browser agent loader script_ from the HTML above using **loader filename**
 * The file loaded under `NREUM.info.agent` in _Browser agent configuration_ from the HTML above using **agent filename**.
 
-| Agent type | loader filename   | agent filename |
-|------------|-------------------|----------------|
-| Lite       | nr-loader-rum.js  | nr.js          |
-| Pro        | nr-loader-full.js | nr.js          |
-| Pro + SPA  | nr-loader-spa.js  | nr-spa.js      |
+| Agent type | loader filename   |
+|------------|-------------------|
+| Lite       | nr-loader-rum.js  |
+| Pro        | nr-loader-full.js |
+| Pro + SPA  | nr-loader-spa.js  |
 
 
 ## Testing
@@ -104,11 +104,14 @@ Here is an example of using your own Selenium server:
 npm run test -- -b chrome@latest --selenium-server=localhost:4444
 ```
 
+### Supported Browsers
+- The browser agent is tested against this [list of browsers and environments](./tools/jil/util/browsers-supported.json). Use of the browser agent with untested browsers may lead to unexpected results.
+
 **Important Notes:** 
 - `jil` does not handle building the agent automatically;
 either run `npm run build` after each change, or use `npm run watch` to automatically rebuild on each change.
 - To pass arguments to the testing suite using `npm run test` you must separate your arguments from the npm script using an empty `--` parameter as was exemplified above.
-- The browser agent officially supports and is tested against this [list of browsers and environments](./tools/jil/util/browsers.json). Use of the browser agent with unsupported browsers may lead to unexpected results.
+
 
 ### Running a single test
 To run a single test in isolation, pass the path to `jil`:

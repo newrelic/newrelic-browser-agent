@@ -7,7 +7,7 @@ export { insertSupportMetrics };    // export list
 const workersApiIsSupported = {
     dedicated: Boolean(self.Worker),
     shared: Boolean(self.SharedWorker),
-    service: Boolean(self.ServiceWorker)
+    service: Boolean(self.navigator?.serviceWorker)
 };
 
 let origWorker, origSharedWorker, origServiceWorkerCreate;

@@ -97,6 +97,6 @@ function insertSupportMetrics(report) {
     }
     function handleInsertionError(e, workerType) {
         report(`Workers/${workerType}/SM/Unsupported`); // indicates the browser version doesn't support how code is injected, such as Proxy API
-        console.warning("NR Agent: ", e);
+        console.warn(`NR Agent: Unable to capture ${workerType} workers.`, e);
     }
 }

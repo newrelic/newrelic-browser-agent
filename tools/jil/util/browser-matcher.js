@@ -395,7 +395,7 @@ features.es6 = new BrowserMatcher()
   .include("edge", "<=79")
   .include("safari", "<=11.3")
 
-  features.workers = new BrowserMatcher([
+  features.workers = new BrowserMatcher([ // NOTE: module type workers have different (higher) compatibility versions
     new MatcherRule(TYPE_EXCLUDE, '*@*'),
     new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
     new MatcherRule(TYPE_INCLUDE, 'edge@>=12'),

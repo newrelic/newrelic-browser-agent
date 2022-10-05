@@ -415,7 +415,7 @@ features.es6 = new BrowserMatcher()
   ]);
   features.serviceWorkers = new BrowserMatcher([
     new MatcherRule(TYPE_EXCLUDE, '*@*'),
-    new MatcherRule(TYPE_INCLUDE, 'chrome@>=40'),
+    new MatcherRule(TYPE_INCLUDE, 'chrome@>60'),  // v60 has unexpected behavior of working on unsecured HTTP tests
     new MatcherRule(TYPE_INCLUDE, 'edge@>=17'),
     new MatcherRule(TYPE_INCLUDE, 'safari@>=11.1'),
     new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'),

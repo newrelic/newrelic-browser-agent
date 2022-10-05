@@ -245,8 +245,11 @@ testDriver.test('workers creation generates sm', fetchBrowsers, function (t, bro
       }
 
       // Service Workers won't be available in tests until JIL local asset server runs on HTTPS or changes to localhost/127.#.#.# url
-      t.notOk(classicService || moduleService, 'classic or module serviceworker is NOT expected or used');
-      t.ok(serviceUnavail, 'serviceworker API should be unavailable on all');
+      workerShouldExistOnThisBrowser = testDriver.Matcher.withFeature('serviceWorkers').match(browser.browserSpec);
+      if (workerShouldExistOnThisBrowser) {
+        t.notOk(classicService || moduleService, 'classic or module serviceworker is NOT expected or used');
+        t.ok(serviceUnavail || serviceImplFail, 'serviceworker API should be unavailable on all');
+      }
 
       t.end()
     })

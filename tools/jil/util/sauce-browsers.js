@@ -11,7 +11,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
     const json = await r.json()
     console.log("Browser Types Found:", json.reduce((prev, next) => prev.add(next.api_name), new Set()))
     console.log(`fetched ${json.length} browsers from saucelabs`)
-    fs.writeFileSync('./tools/jil/util/browsers-supported.json', JSON.stringify(getBrowsers(json)))
+    fs.writeFileSync('./tools/jil/util/browsers-supported.json', JSON.stringify(getBrowsers(json), null, 2))
     console.log(`saved saucelabs browsers to browsers-supported.json`)
     console.log(`-----------------------------------------------`)
     console.log(`-----------------------------------------------`)
@@ -26,7 +26,7 @@ const browsers = {
     firefox: [],
     // android: [], // no longer works with W3C commands.... need to change JIL or do deeper dive to get this to work
     ios: []
-    // ie: [] // no longer supported
+    // ie: [] // no longer supported for current-versions testing v1220+ - Oct '22
 }
 
 const browserName = name => {
@@ -42,8 +42,7 @@ const browserName = name => {
     }
 }
 
-const browserLength = name => {
-    // takes half of this in the end
+const numOfLatestVersionsSupported = name => {
     switch (name) {
         case "ios":
         case "iphone":
@@ -73,18 +72,28 @@ const minVersion = name => {
             return 12
     }
 }
+const maxVersionExclusive = name => {
+    switch (name) {
+        case 'ios':
+        case 'iphone':      // Sauce only uses Appium 2.0 for ios16 which requires W3C that we don't comply with yet
+            return 16.0     // TO DO: this can be removed once that work is incorporated into JIL
+        default:
+            return 9999
+    }
+}
 
 function getBrowsers(sauceBrowsers) {
     Object.keys(browsers).forEach(browser => {
         const name = browserName(browser)
-        const matches = sauceBrowsers.filter(sb => (sb.api_name === name || sb.os === name) && !isNaN(Number(sb.short_version)))
-        matches.sort((a, b) => Number(b.short_version) - Number(a.short_version))
-        const latest = getLatestOfArr(matches, browserLength(name))
-        const dist = ['safari','ios'].includes(browser) ? latest : getDistributionOfArr(
-            latest,
-            Math.round(latest.length / 2)
-        )
-        dist.forEach(b => {
+        const versListForBrowser = sauceBrowsers.filter(sb => (sb.api_name === name || sb.os === name) && !isNaN(Number(sb.short_version)))
+        versListForBrowser.sort((a, b) => Number(a.short_version) - Number(b.short_version));   // in ascending order
+
+        const maxVersionLookback = numOfLatestVersionsSupported(name);
+        let latest = truncateToLatestVersions(versListForBrowser, maxVersionLookback);
+        if (maxVersionLookback != 5)   // in all cases, we only test 5 versions, so trim the array
+            latest = getDistributionOfArr(latest, Math.round(latest.length / 2));   // just pick every other version from the list
+        
+        latest.forEach(b => {
             const metadata = {
                 browserName: mBrowserName(b),
                 platform: mPlatformName(b),
@@ -108,17 +117,27 @@ function getBrowsers(sauceBrowsers) {
     return browsers
 }
 
-function getLatestOfArr(arr, remaining = 0, out = []) {
-    if (remaining <= 0 || !arr.length) return out
-    const latest = arr.shift()
-    if (latest.short_version < minVersion(latest.api_name)) return out
-    if (['iphone', 'ipad', 'android'].includes(latest.api_name) && latest.automation_backend !== 'appium') return getLatestOfArr(arr, remaining, out)
-    if (['firefox'].includes(latest.api_name) && latest.os !== 'Windows 10') return getLatestOfArr(arr, remaining, out)
-    if (!out.find(x => x.short_version === latest.short_version)) {
-        out.push(latest)
-        remaining--
+function truncateToLatestVersions(arr, leftToGet, out = []) {
+    const versSeen = new Set();
+    while (arr.length && leftToGet) {
+        let nextLatest = arr.pop();
+        if (['iphone', 'ipad', 'android'].includes(nextLatest.api_name) && nextLatest.automation_backend !== 'appium')
+            continue;
+        if (['firefox'].includes(nextLatest.api_name) && nextLatest.os !== 'Windows 10')
+            continue;
+
+        if (nextLatest.short_version < minVersion(nextLatest.api_name))
+            break;  // we don't want to test any version lower than that which we've specified
+        else if (nextLatest.short_version >= maxVersionExclusive(nextLatest.api_name))
+            continue;   // we may have to skip some recent versions
+
+        if (versSeen.has(nextLatest.short_version))
+            continue;
+        out.push(nextLatest);
+        versSeen.add(nextLatest.short_version);
+        leftToGet--;
     }
-    return getLatestOfArr(arr, remaining, out)
+    return out;
 }
 
 function getDistributionOfArr(arr, n = 5) {

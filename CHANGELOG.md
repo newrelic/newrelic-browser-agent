@@ -5,8 +5,12 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## v1220
 
-### Add feature detection supportability metrics for Web Workers & Service workers
-Detecting the prevalence of Worker implementation and usage will help guide future development efforts.
+* Internal NR Platform release date: 10/5/2022
+* Production APM-injected release date: 10/6/2022
+* Production Standalone release date: TBD
+
+### Capture unhandled Promise rejections
+The Agent will now observes and captures __*unhandled*__ Promise rejections as JavaScript Error objects.
 
 ### Remove non-ASCII characters from builds
 Certain dependencies were appending non-ASCII characters to build files. These characters were affecting older Python agent implementations downstream that worked to encode the agent snippet. The build files are now checked and cleaned of non-ASCII characters before shipping.
@@ -26,6 +30,9 @@ Individual features of the browser agent can now be dynamically loaded, enabled,
 ### Removal of script tag injection
 
 The agent no longer inserts other features into the page via a script tag insertion.  It now uses network requests to instantiate other code modules.
+
+### Updated test process
+In an effort to better support the majority of our traffic, the test suite required to merge PRs has been updated to run against the __latest 10 major versions__ of Chrome, Firefox, Edge, Android, and the __latest 5 major versions__ of Safari and iOS. As part of this process, outdated code and polyfill libraries aimed at supporting deprecated browsers are no longer included in production builds by default.
 
 ### Polyfilling
 

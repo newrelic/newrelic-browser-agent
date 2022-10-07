@@ -31,6 +31,9 @@ Individual features of the browser agent can now be dynamically loaded, enabled,
 
 The agent no longer inserts other features into the page via a script tag insertion.  It now uses network requests to instantiate other code modules.
 
+### Updated test process
+In an effort to better support the majority of our traffic, the test suite required to merge PRs has been updated to run against the __latest 10 major versions__ of Chrome, Firefox, Edge, Android, and the __latest 5 major versions__ of Safari and iOS. As part of this process, outdated code and polyfill libraries aimed at supporting deprecated browsers are no longer included in production builds by default.
+
 ### Polyfilling
 
 Polyfills for IE11 have been included with the agent bundle.

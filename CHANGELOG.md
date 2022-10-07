@@ -5,8 +5,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## v1220
 
-### Add feature detection supportability metrics for Web Workers & Service workers
-Detecting the prevalence of Worker implementation and usage will help guide future development efforts.
+### Capture unhandled Promise rejections
+The Agent will now observes and captures __*unhandled*__ Promise rejections as JavaScript Error objects.
 
 ### Remove non-ASCII characters from builds
 Certain dependencies were appending non-ASCII characters to build files. These characters were affecting older Python agent implementations downstream that worked to encode the agent snippet. The build files are now checked and cleaned of non-ASCII characters before shipping.

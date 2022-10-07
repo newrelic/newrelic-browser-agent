@@ -5,6 +5,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## v1220
 
+* Internal NR Platform release date: 10/5/2022
+* Production APM-injected release date: 10/6/2022
+* Production Standalone release date: TBD
+
 ### Capture unhandled Promise rejections
 The Agent will now observes and captures __*unhandled*__ Promise rejections as JavaScript Error objects.
 

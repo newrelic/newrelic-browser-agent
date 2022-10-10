@@ -146,6 +146,9 @@ function platformSelector(desiredBrowser, minBrowserShortVers = 0, maxBrowserSho
                 if (!sb.os.startsWith('Windows 1')) return false;    // exclude Linux, Mac, and pre-Win10
                 break;
             // 'safari' will only ever be on MacOS
+            case 'safari':
+                if (sb.short_version == 12 && sb.os == 'Mac 10.13') return false;   // this OS+safari combo has issues with functional/XHR tests
+                break;
         }
         return true;
     }

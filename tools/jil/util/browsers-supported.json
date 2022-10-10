@@ -100,7 +100,7 @@
     },
     {
       "browserName": "safari",
-      "platform": "Mac 10.13",
+      "platform": "Mac 10.14",
       "version": "12",
       "acceptInsecureCerts": false
     }

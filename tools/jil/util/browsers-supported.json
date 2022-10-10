@@ -2,22 +2,22 @@
   "chrome": [
     {
       "browserName": "chrome",
-      "platform": "Windows 2012",
-      "platformName": "Windows 2012",
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
       "version": "106",
       "browserVersion": "106"
     },
     {
       "browserName": "chrome",
-      "platform": "Mac 10.15",
-      "platformName": "Mac 10.15",
+      "platform": "Windows 10",
+      "platformName": "Windows 10",
       "version": "104",
       "browserVersion": "104"
     },
     {
       "browserName": "chrome",
-      "platform": "Mac 11",
-      "platformName": "Mac 11",
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
       "version": "102",
       "browserVersion": "102"
     },
@@ -30,8 +30,8 @@
     },
     {
       "browserName": "chrome",
-      "platform": "Mac 10.12",
-      "platformName": "Mac 10.12",
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
       "version": "97",
       "browserVersion": "97"
     }
@@ -39,36 +39,36 @@
   "edge": [
     {
       "browserName": "MicrosoftEdge",
-      "platform": "Mac 10.14",
-      "platformName": "Mac 10.14",
+      "platform": "Windows 10",
+      "platformName": "Windows 10",
       "version": "105",
       "browserVersion": "105"
     },
     {
       "browserName": "MicrosoftEdge",
-      "platform": "Mac 12",
-      "platformName": "Mac 12",
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
       "version": "103",
       "browserVersion": "103"
     },
     {
       "browserName": "MicrosoftEdge",
-      "platform": "Mac 10.12",
-      "platformName": "Mac 10.12",
+      "platform": "Windows 10",
+      "platformName": "Windows 10",
       "version": "101",
       "browserVersion": "101"
     },
     {
       "browserName": "MicrosoftEdge",
-      "platform": "Mac 12",
-      "platformName": "Mac 12",
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
       "version": "99",
       "browserVersion": "99"
     },
     {
       "browserName": "MicrosoftEdge",
-      "platform": "Mac 10.14",
-      "platformName": "Mac 10.14",
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
       "version": "96",
       "browserVersion": "96"
     }

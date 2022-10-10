@@ -72,11 +72,11 @@ const minVersion = name => {
             return 12
     }
 }
-const maxVersionExclusive = name => {
+const maxVersion = name => {
     switch (name) {
         case 'ios':
         case 'iphone':      // Sauce only uses Appium 2.0 for ios16 which requires W3C that we don't comply with yet
-            return 16.0     // TO DO: this can be removed once that work is incorporated into JIL
+            return 15.9     // TO DO: this can be removed once that work is incorporated into JIL
         default:
             return 9999
     }
@@ -85,12 +85,19 @@ const maxVersionExclusive = name => {
 function getBrowsers(sauceBrowsers) {
     Object.keys(browsers).forEach(browser => {
         const name = browserName(browser)
-        const versListForBrowser = sauceBrowsers.filter(sb => (sb.api_name === name || sb.os === name) && !isNaN(Number(sb.short_version)))
-        versListForBrowser.sort((a, b) => Number(a.short_version) - Number(b.short_version));   // in ascending order
+        const versListForBrowser = sauceBrowsers.filter(platformSelector(name, minVersion(name), maxVersion(name)));
+        versListForBrowser.sort((a, b) => Number(a.short_version) - Number(b.short_version));   // in ascending version order
 
-        const maxVersionLookback = numOfLatestVersionsSupported(name);
-        let latest = truncateToLatestVersions(versListForBrowser, maxVersionLookback);
-        if (maxVersionLookback != 5)   // in all cases, we only test 5 versions, so trim the array
+        let latest = [], lastXVersions = numOfLatestVersionsSupported(name), versionsSeen = new Set();
+        while (versListForBrowser.length && lastXVersions) {    // grab the last X (10) versions to test, removing duplicates
+            let nextLatest = versListForBrowser.pop();
+            if (versionsSeen.has(nextLatest.short_version))
+                continue;
+            latest.push(nextLatest);
+            versionsSeen.add(nextLatest.short_version);
+            lastXVersions--;
+        }
+        if (numOfLatestVersionsSupported(name) == 10)   // in all cases, we only test 5 versions, so trim the array
             latest = getDistributionOfArr(latest, Math.round(latest.length / 2));   // just pick every other version from the list
         
         latest.forEach(b => {
@@ -117,27 +124,31 @@ function getBrowsers(sauceBrowsers) {
     return browsers
 }
 
-function truncateToLatestVersions(arr, leftToGet, out = []) {
-    const versSeen = new Set();
-    while (arr.length && leftToGet) {
-        let nextLatest = arr.pop();
-        if (['iphone', 'ipad', 'android'].includes(nextLatest.api_name) && nextLatest.automation_backend !== 'appium')
-            continue;
-        if (['firefox'].includes(nextLatest.api_name) && nextLatest.os !== 'Windows 10')
-            continue;
+function platformSelector(desiredBrowser, minBrowserShortVers = 0, maxBrowserShortVers = 9999) {
+    return (sb) => {
+        if (sb.api_name !== desiredBrowser) return false;
+        if (isNaN(Number(sb.short_version))) return false;
+        if (sb.short_version < minBrowserShortVers) return false;
+        if (sb.short_version > maxBrowserShortVers) return false;
 
-        if (nextLatest.short_version < minVersion(nextLatest.api_name))
-            break;  // we don't want to test any version lower than that which we've specified
-        else if (nextLatest.short_version >= maxVersionExclusive(nextLatest.api_name))
-            continue;   // we may have to skip some recent versions
-
-        if (versSeen.has(nextLatest.short_version))
-            continue;
-        out.push(nextLatest);
-        versSeen.add(nextLatest.short_version);
-        leftToGet--;
+        switch (desiredBrowser) {
+            case 'iphone':
+            case 'ipad':
+            case 'android':
+                if (sb.automation_backend !== 'appium') return false;
+                break;
+            // NOTE: the following platform limitation per browser is FRAGILE -- will have to update this in the future!
+            case 'firefox':
+                if (sb.os !== 'Windows 10') return false;   // we're only testing FF on Win10
+                break;
+            case 'MicrosoftEdge':
+            case 'chrome':
+                if (!sb.os.startsWith('Windows 1')) return false;    // exclude Linux, Mac, and pre-Win10
+                break;
+            // 'safari' will only ever be on MacOS
+        }
+        return true;
     }
-    return out;
 }
 
 function getDistributionOfArr(arr, n = 5) {

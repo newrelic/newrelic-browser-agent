@@ -1,12 +1,21 @@
 name: Build and Deploy PR to NR Dev
 
 on:
+  workflow_dispatch:
+    inputs:
+      pr_build:
+        description: 'PR build'
+        required: true
+        type: boolean
+        options:
+          - clear
+          - build
   pull_request_target:
     types: [labeled, closed]
 
 jobs:
   pr-dev-build:
-    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     runs-on: ubuntu-latest
     container: node:14
     env:
@@ -23,7 +32,7 @@ jobs:
             --role ${{ secrets.AWS_ROLE_ARN }} \
             --pr PR${{ github.event.number }}
       - name: build
-        if: github.event.action != 'closed'
+        if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
         run: npm run cdn:build:pr
       - name: upload artifacts to S3
         run: |

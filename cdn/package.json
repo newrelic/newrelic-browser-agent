@@ -12,6 +12,7 @@
     "build:extension": "PUBLISH=EXTENSION npm run webpack && npm run cleanup",
     "build:current": "PUBLISH=CURRENT npm run webpack && npm run cleanup",
     "build:dev": "PUBLISH=DEV npm run webpack && npm run cleanup",
+    "build:pr": "PUBLISH=PR npm run webpack && npm run cleanup",
     "build:prod": "PUBLISH=PROD npm run webpack && npm run cleanup",
     "build:nr": "PUBLISH=PROD SOURCEMAPS=false npm run webpack && npm run cleanup",
     "cleanup": "node ../tools/scripts/post-build-cleanup"

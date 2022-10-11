@@ -26,6 +26,9 @@ var argv = yargs
     .describe('dev', 'for dev early release directory only, uploads scripts to folder named dev')
     .alias('D', 'dev')
 
+    .string('pr')
+    .describe('pr', 'PR name for PR Dev builds')
+
     .help('h')
     .alias('h', 'help')
 
@@ -108,6 +111,10 @@ function uploadToS3(fileName, content) {
 
         if (argv['dev'] === true) {
             fileName = 'dev/' + fileName
+        }
+
+        if (argv['pr']) {
+            fileName = 'pr/' + argv['pr'] + '/' + fileName
         }
 
         var params = {

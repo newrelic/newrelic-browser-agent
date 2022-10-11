@@ -8,7 +8,7 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 
 // this will change to package.json.version when it is aligned between all the packages
 const VERSION = fs.readFileSync('../VERSION', 'utf-8')
-const {PUBLISH, SOURCEMAPS = true} = process.env
+const {PUBLISH, SOURCEMAPS = true, PR_NAME} = process.env
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
 
 switch (PUBLISH) {
@@ -29,6 +29,12 @@ switch (PUBLISH) {
     SUBVERSION = 'DEV'
     PUBLIC_PATH = 'https://js-agent.newrelic.com/dev/'
     MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/dev/[url]'
+    break
+  case 'PR':
+    PATH_VERSION = ``
+    SUBVERSION = `${PR_NAME}`
+    PUBLIC_PATH = `https://js-agent.newrelic.com/pr/${PR_NAME}/`
+    MAP_PATH = `\n//# sourceMappingURL=https://js-agent.newrelic.com/pr/${PR_NAME}/[url]`
     break
   case 'EXTENSION':
     // build for extension injection
@@ -54,6 +60,7 @@ console.log("SUBVERSION", SUBVERSION)
 console.log("PUBLIC_PATH", PUBLIC_PATH)
 console.log("MAP_PATH", MAP_PATH)
 console.log("IS_LOCAL", IS_LOCAL)
+if (PR_NAME) console.log("PR_NAME", PR_NAME)
 
 module.exports = {
   entry: {

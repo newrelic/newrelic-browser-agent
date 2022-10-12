@@ -156,7 +156,7 @@ export class Aggregate extends FeatureBase {
     var params = {
       stackHash: stringHashCode(canonicalStack),
       exceptionClass: stackInfo.name,
-      request_uri: window.location.pathname
+      request_uri: self.location.pathname
     }
     if (stackInfo.message) {
       params.message = '' + stackInfo.message

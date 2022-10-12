@@ -22,7 +22,7 @@ export function wrapPromise(sharedEE){
   }
   
   function wrap() {
-    window.Promise = WrappedPromise
+    self.Promise = WrappedPromise
   
     ;['all', 'race'].forEach(function (method) {
       var original = OriginalPromise[method]

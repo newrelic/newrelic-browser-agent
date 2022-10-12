@@ -19,11 +19,11 @@ var fileLocation = {
 }
 
 jil.browserTest('isFileProtocol returns coorectly when detecting file protocol', function (t) {
-  win.setWindow({ ...win.getWindow(), location: { ...fileLocation } })
+  win.setWindowOrWorkerGlobScope({ ...win.getWindowOrWorkerGlobScope(), location: { ...fileLocation } })
 
   t.ok(protocol.isFileProtocol(), 'Returned false when protocol is not file protocol')
   t.ok(protocol.supportabilityMetricSent, 'isFileProtocol should send supportability metric if file protocol is detected')
-  win.resetWindow()
+  win.resetWindowOrWorkerGlobScope()
 
   t.ok(!protocol.isFileProtocol(), 'Returned false when protocol is not file protocol')
   t.end()

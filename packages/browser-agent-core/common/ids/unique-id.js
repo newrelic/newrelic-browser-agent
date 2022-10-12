@@ -6,7 +6,7 @@
 export function generateUuid () {
   var randomVals = null
   var rvIndex = 0
-  var crypto = window.crypto || window.msCrypto
+  var crypto = self.crypto || self.msCrypto
   if (crypto && crypto.getRandomValues) {
     // eslint-disable-next-line
     randomVals = crypto.getRandomValues(new Uint8Array(31))
@@ -55,7 +55,7 @@ export function generateTraceId() {
 export function generateRandomHexString(length) {
   var randomVals = null
   var rvIndex = 0
-  var crypto = window.crypto || window.msCrypto
+  var crypto = self.crypto || self.msCrypto
   // eslint-disable-next-line
   if (crypto && crypto.getRandomValues && Uint8Array) {
     // eslint-disable-next-line

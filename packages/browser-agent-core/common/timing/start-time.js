@@ -17,7 +17,7 @@ export let navCookie = true
 
 export function findStartTime (agentId) {
   // findStartCookie is used for FF7/8 & browsers which do not support window.performance.timing.navigationStart
-  var starttime = findStartWebTiming() || findStartCookie()
+  var starttime = findStartWebTiming(); // || findStartCookie() -- now redundant *cli oct'22, TO DO: slated for removal
   if (!starttime) return
 
   mark(agentId, 'starttime', starttime)
@@ -34,10 +34,10 @@ function findStartWebTiming () {
   if (performanceCheckExists) {
     // note that we don't need to use a cookie to record navigation start time
     navCookie = false
-    return window.performance.timing.navigationStart
+    return self.performance.timing.navigationStart
   }
 }
-
+/*
 // Find the start time based on a cookie set by Episodes in the unload handler.
 function findStartCookie () {
   var aCookies = document.cookie.split(' ')
@@ -87,3 +87,4 @@ function findStartCookie () {
     }
   }
 }
+*/

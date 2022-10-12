@@ -8,7 +8,7 @@ import slice from 'lodash._slice'
 import { mapOwn } from '../util/map-own'
 
 
-var win = window
+var win = self
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
 var bodyMethods = ['arrayBuffer', 'blob', 'json', 'text', 'formData']
@@ -21,7 +21,7 @@ const wrapped = {}
 
 export function wrapFetch(sharedEE){
   const ee = scopedEE(sharedEE)
-  if (!(Req && Res && window.fetch)) {
+  if (!(Req && Res && win.fetch)) {
     return ee
   }
 

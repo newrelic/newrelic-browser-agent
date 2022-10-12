@@ -7,11 +7,11 @@ export const defaults = {
 }
 
 export function gosNREUM() {
-  if (!window.NREUM) {
-    window.NREUM = {}
+  if (!self.NREUM) {
+    self.NREUM = {}
   }
-  if (typeof (window.newrelic) === 'undefined') window.newrelic = window.NREUM
-  return window.NREUM
+  if (typeof (self.newrelic) === 'undefined') self.newrelic = self.NREUM
+  return self.NREUM
 }
 
 export function gosNREUMInfo() {
@@ -52,7 +52,7 @@ export function gosNREUMInit() {
 export function gosNREUMOriginals() {
   let nr = gosNREUM()
   if (!nr.o) {
-    var win = window
+    var win = self
     // var doc = win.document
     var XHR = win.XMLHttpRequest
 
@@ -64,7 +64,7 @@ export function gosNREUMOriginals() {
       REQ: win.Request,
       EV: win.Event,
       PR: win.Promise,
-      MO: win.MutationObserver,
+      MO: win.MutationObserver, // this'll be undefined if not in a web window
       FETCH: win.fetch
     }
   }

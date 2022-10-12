@@ -6,7 +6,7 @@ import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { getCurrentSessionIdOrMakeNew } from '../../window/session-storage'
 import { getConfigurationValue } from '../config'
 
-var XHR = window.XMLHttpRequest
+var XHR = self.XMLHttpRequest
 var XHR_PROTO = XHR && XHR.prototype
 
 const model = agentId => { return {
@@ -16,10 +16,11 @@ const model = agentId => { return {
   maxBytes: ieVersion === 6 ? 2000 : 30000,
   offset: getLastTimestamp(),
   onerror: undefined,
-  origin: '' + window.location,
+  origin: '' + self.location,
   ptid: undefined,
   releaseIds: {},
-  sessionId: getConfigurationValue(agentId, 'privacy.cookies_enabled') === true ? getCurrentSessionIdOrMakeNew() : '0',
+  sessionId: getConfigurationValue(agentId, 'privacy.cookies_enabled') == true ?
+    getCurrentSessionIdOrMakeNew() : null,  // if cookies (now session tracking) is turned off or can't get session ID, this is null
   xhrWrappable: XHR && XHR_PROTO && XHR_PROTO['addEventListener'] && !/CriOS/.test(navigator.userAgent),
   userAgent
 }}

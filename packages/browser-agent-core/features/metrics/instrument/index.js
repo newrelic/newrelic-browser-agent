@@ -6,6 +6,7 @@ import { protocol } from '../../../common/url/protocol'
 import { getRules, validateRules } from '../../../common/util/obfuscate'
 import { VERSION } from '../../../common/constants/environment-variables'
 import { onDOMContentLoaded } from '../../../common/window/load'
+import { isBrowserWindow } from '../../../common/window/win'
 import * as WorkersHelper from './workers-helper'
 
 var SUPPORTABILITY_METRIC = 'sm'
@@ -61,11 +62,11 @@ export class Instrument extends FeatureBase {
         this.recordSupportability(`Generic/Version/${VERSION}/Detected`)
 
         // frameworks on page
-        onDOMContentLoaded(() => {
+        if(isBrowserWindow) onDOMContentLoaded(() => {
             getFrameworks().forEach(framework => {
                 this.recordSupportability('Framework/' + framework + '/Detected')
             })
-        })
+        });
 
         // file protocol detection
         if (protocol.isFileProtocol()) {

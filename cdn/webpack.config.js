@@ -8,7 +8,7 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 
 // this will change to package.json.version when it is aligned between all the packages
 const VERSION = fs.readFileSync('../VERSION', 'utf-8')
-const {PUBLISH, SOURCEMAPS = true} = process.env
+const { PUBLISH, SOURCEMAPS = true } = process.env
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
 
 switch (PUBLISH) {
@@ -38,11 +38,11 @@ switch (PUBLISH) {
     MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]'
     break
   default:
-  // local build
-  PATH_VERSION = ``
-  SUBVERSION = 'LOCAL'
-  PUBLIC_PATH = '/build/'
-  MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]'
+    // local build
+    PATH_VERSION = ``
+    SUBVERSION = 'LOCAL'
+    PUBLIC_PATH = '/build/'
+    MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]'
 }
 
 const IS_LOCAL = SUBVERSION === 'LOCAL'
@@ -57,7 +57,6 @@ console.log("IS_LOCAL", IS_LOCAL)
 
 const config = (target) => {
   const isWorker = target === 'webworker'
-  if (isWorker) SUB_TAG = `-webworker`
   return {
     entry: {
       ...(!isWorker && {
@@ -77,7 +76,7 @@ const config = (target) => {
       }),
       ...(isWorker && {
         [`nr-loader-worker${PATH_VERSION}.min`]: {
-          import: path.resolve(__dirname, './agent-loader/pro.js'),
+          import: path.resolve(__dirname, './agent-loader/worker.js'),
           chunkLoading: false
         }
       })
@@ -93,69 +92,70 @@ const config = (target) => {
       },
       clean: false
     },
-    clean: true
-  },
-  optimization: {
-    minimize: true,
-    minimizer: [new TerserPlugin({
-      include: [/\.min\.js$/, /^(?:[0-9])/],
-      terserOptions: {
-        mangle: true
-      }
-    })],
-    flagIncludedChunks: true,
-    mergeDuplicateChunks: true
-  },
-  plugins: [
-    new webpack.DefinePlugin({
-      'WEBPACK_MINOR_VERSION': JSON.stringify(SUBVERSION || ''),
-      'WEBPACK_MAJOR_VERSION': JSON.stringify(VERSION || ''),
-      'WEBPACK_DEBUG': JSON.stringify(IS_LOCAL || false)
-    }),
-    new webpack.SourceMapDevToolPlugin({
-      append: MAP_PATH, // CDN route vs local route
-      filename: SUBVERSION === 'PROD' ? `[name].[hash:8].map` : `[name].map`,
-      ...(JSON.parse(SOURCEMAPS) === false && {exclude: new RegExp(".*")}) // exclude all files if disabled
-    }),
-    new BundleAnalyzerPlugin({
-      analyzerMode: 'static',
-      openAnalyzer: false,
-      defaultSizes: 'stat',
-      reportFilename: path.resolve(__dirname, './webpack-analysis.html')
-    })
-  ],
 
-  mode: !IS_LOCAL ? 'production' : 'development',
-  devtool: false,
-  target: "browserslist", // include this!!
-  module: {
-    rules: [
-      {
-        test: /\.js$/,
-        exclude: /(node_modules)/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: [
-              ['@babel/preset-env', {
-                useBuiltIns: 'entry',
-                corejs: {version: 3.23, proposals: true},
-                loose: true,
-                targets: {
-                  browsers: [
-                    "chrome >= 60",
-                    "safari >= 11",
-                    "firefox >= 56",
-                    "ios >= 10.3",
-                    "ie >= 11",
-                    "edge >= 60"
-                  ]
-                }
-              }]
-            ]
+    optimization: {
+      minimize: true,
+      minimizer: [new TerserPlugin({
+        include: [/\.min\.js$/, /^(?:[0-9])/],
+        terserOptions: {
+          mangle: true
+        }
+      })],
+      flagIncludedChunks: true,
+      mergeDuplicateChunks: true
+    },
+    plugins: [
+      new webpack.DefinePlugin({
+        'WEBPACK_MINOR_VERSION': JSON.stringify(SUBVERSION || ''),
+        'WEBPACK_MAJOR_VERSION': JSON.stringify(VERSION || ''),
+        'WEBPACK_DEBUG': JSON.stringify(IS_LOCAL || false)
+      }),
+      new webpack.SourceMapDevToolPlugin({
+        append: MAP_PATH, // CDN route vs local route
+        filename: SUBVERSION === 'PROD' ? `[name].[hash:8].map` : `[name].map`,
+        ...(JSON.parse(SOURCEMAPS) === false && { exclude: new RegExp(".*") }) // exclude all files if disabled
+      }),
+      new BundleAnalyzerPlugin({
+        analyzerMode: 'static',
+        openAnalyzer: false,
+        defaultSizes: 'stat',
+        reportFilename: path.resolve(__dirname, './webpack-analysis.html')
+      })
+    ],
+    mode: !IS_LOCAL ? 'production' : 'development',
+    devtool: false,
+    target, // include this!!
+    module: {
+      rules: [
+        {
+          test: /\.js$/,
+          exclude: /(node_modules)/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              presets: [
+                ['@babel/preset-env', {
+                  useBuiltIns: 'entry',
+                  corejs: { version: 3.23, proposals: true },
+                  loose: true,
+                  targets: {
+                    browsers: [
+                      "chrome >= 60",
+                      "safari >= 11",
+                      "firefox >= 56",
+                      "ios >= 10.3",
+                      "ie >= 11",
+                      "edge >= 60"
+                    ]
+                  }
+                }]
+              ]
+            }
           }
         }
-      }
-    ]
+      ]
+    }
   }
 }
+
+module.exports = [config('browserslist'), config('webworker')]

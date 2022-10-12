@@ -458,6 +458,13 @@ const testRoutes = [
       'Transfer-Encoding': 'chunked'
     })
     res.end('x'.repeat(10000))
+  }),
+  new Route('GET', '/web-worker-agent', (req, res) => {
+    fs.readFile( path.resolve(__dirname, '../../../build/nr-loader-worker.min.js'), 'utf-8', (err, data) => {
+      res.writeHead(200, {"Content-Type": "text/javascript"}) //Solution!
+      res.write(data)
+      res.end()
+    })
   })
 ]
 
@@ -599,7 +606,7 @@ class AssetServer extends BaseServer {
 
       if (!transform || !transform.test(params)) {
         rsp.writeHead(200, {
-          'Content-Type': 'text/html'
+          'Content-Type': mimeType || 'text/html'
         })
         return fs.createReadStream(assetPath).pipe(rsp)
       }

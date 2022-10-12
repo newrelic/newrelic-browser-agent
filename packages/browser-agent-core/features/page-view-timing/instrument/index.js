@@ -46,7 +46,7 @@ export class Instrument extends FeatureBase {
     }
 
     // first interaction and first input delay
-    if ('addEventListener' in document) {
+    if (typeof document !== 'undefined' && 'addEventListener' in document) {
       this.fiRecorded = false
       var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart']
       allowedEventTypes.forEach((e) => {

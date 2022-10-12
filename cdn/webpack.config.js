@@ -55,30 +55,43 @@ console.log("PUBLIC_PATH", PUBLIC_PATH)
 console.log("MAP_PATH", MAP_PATH)
 console.log("IS_LOCAL", IS_LOCAL)
 
-module.exports = {
-  entry: {
-    [`nr-loader-rum${PATH_VERSION}`]: [path.resolve(__dirname, './agent-loader/lite.js')],
-    [`nr-loader-rum${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/lite.js'),
-    [`nr-loader-full${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/pro.js'),
-    [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/pro.js'),
-    [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/spa.js'),
-    [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/spa.js'),
-    [`nr-loader-rum-polyfills${PATH_VERSION}`]: [path.resolve(__dirname, './agent-loader/polyfills/lite.js')],
-    [`nr-loader-rum-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/lite.js'),
-    [`nr-loader-full-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
-    [`nr-loader-full-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
-    [`nr-loader-spa-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
-    [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
-    [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills.js')
-  },
-  output: {
-    filename: `[name].js`,
-    chunkFilename: SUBVERSION === 'PROD' ? `[name].[hash:8]${PATH_VERSION}.js` : `[name]${PATH_VERSION}.js`,
-    path: path.resolve(__dirname, '../build'),
-    publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
-    library: {
-      name: 'NRBA',
-      type: 'umd'
+const config = (target) => {
+  const isWorker = target === 'webworker'
+  if (isWorker) SUB_TAG = `-webworker`
+  return {
+    entry: {
+      ...(!isWorker && {
+        [`nr-loader-rum${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/lite.js'),
+        [`nr-loader-rum${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/lite.js'),
+        [`nr-loader-full${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/pro.js'),
+        [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/pro.js'),
+        [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/spa.js'),
+        [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/spa.js'),
+        [`nr-loader-rum-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/lite.js'),
+        [`nr-loader-rum-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/lite.js'),
+        [`nr-loader-full-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
+        [`nr-loader-full-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
+        [`nr-loader-spa-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
+        [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
+        [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills.js')
+      }),
+      ...(isWorker && {
+        [`nr-loader-worker${PATH_VERSION}.min`]: {
+          import: path.resolve(__dirname, './agent-loader/pro.js'),
+          chunkLoading: false
+        }
+      })
+    },
+    output: {
+      filename: `[name].js`,
+      chunkFilename: SUBVERSION === 'PROD' ? `[name].[hash:8]${PATH_VERSION}.js` : `[name]${PATH_VERSION}.js`,
+      path: path.resolve(__dirname, '../build'),
+      publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
+      library: {
+        name: 'NRBA',
+        type: 'umd'
+      },
+      clean: false
     },
     clean: true
   },

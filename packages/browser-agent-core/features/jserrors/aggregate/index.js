@@ -19,6 +19,8 @@ import { now } from '../../../common/timing/now'
 
 import { FeatureBase } from '../../../common/util/feature-base'
 
+const ref = typeof window !== 'undefined' ? window : self
+
 export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator)
@@ -45,7 +47,6 @@ export class Aggregate extends FeatureBase {
 
     var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'jserrors.harvestTimeSeconds') || 10
 
-    // on('jserrors', this.onHarvestStarted) //harvest.js --> now a class()
     this.scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
     this.scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
     this.scheduler.startTimer(harvestTimeSeconds)
@@ -146,6 +147,7 @@ export class Aggregate extends FeatureBase {
   }
 
   storeError(err, time, internal, customAttributes) {
+    console.log("storeError...", err)
     // are we in an interaction
     time = time || now()
     if (!internal && getRuntime(this.agentIdentifier).onerror && getRuntime(this.agentIdentifier).onerror(err)) return
@@ -156,7 +158,11 @@ export class Aggregate extends FeatureBase {
     var params = {
       stackHash: stringHashCode(canonicalStack),
       exceptionClass: stackInfo.name,
+<<<<<<< HEAD
       request_uri: self.location.pathname
+=======
+      request_uri: ref.location.pathname
+>>>>>>> 7a6feff (set up worker build)
     }
     if (stackInfo.message) {
       params.message = '' + stackInfo.message

@@ -24,6 +24,7 @@ if (isBrowserWindow) {
 }
 
 export function subscribeToVisibilityChange(cb) {
+  if (!doc) return
   if ('addEventListener' in document && eventName) {
     document.addEventListener(eventName, handleVisibilityChange, eventListenerOpts(false))
   }
@@ -40,5 +41,6 @@ export function subscribeToVisibilityChange(cb) {
 }
 
 export function initializeHiddenTime() {
+  if (!doc) return
   return document.visibilityState === 'hidden' ? -1 : Infinity;
 }

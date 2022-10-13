@@ -5,6 +5,9 @@ on:
     types: [labeled]
   workflow_dispatch:
 
+env:
+  BUILD_NUMBER: PR${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+
 jobs:
   lint:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
@@ -56,7 +59,7 @@ jobs:
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
       JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -82,7 +85,7 @@ jobs:
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
       JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -108,7 +111,7 @@ jobs:
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
       JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -134,7 +137,7 @@ jobs:
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
       JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -160,7 +163,7 @@ jobs:
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
       JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -186,7 +189,7 @@ jobs:
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
       JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -212,7 +215,7 @@ jobs:
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
       JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -238,7 +241,7 @@ jobs:
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
       JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -264,7 +267,7 @@ jobs:
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
       JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -290,7 +293,7 @@ jobs:
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
       JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -316,7 +319,7 @@ jobs:
   #     JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
   #     JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
   #     NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-  #     BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+
   #   steps:
   #     - uses: actions/checkout@v2
   #       with:
@@ -343,7 +346,7 @@ jobs:
   #     JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
   #     JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
   #     NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-  #     BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
+
   #   steps:
   #     - uses: actions/checkout@v2
   #       with:
@@ -363,7 +366,6 @@ jobs:
     container: node:14
     needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, safari-functional, safari-unit, edge-functional, edge-unit, ios-functional, ios-unit]
     env:
-      BUILD_NUMBER: PR${{ github.event.number }}-unit-${{ github.run_number }}
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
     steps:
       - uses: actions/checkout@v2

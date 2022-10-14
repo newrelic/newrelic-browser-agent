@@ -40,6 +40,5 @@ export function subscribeToVisibilityChange(cb) {
 }
 
 export function initializeHiddenTime() {
-  if (!doc) return
   return document.visibilityState === 'hidden' ? -1 : Infinity;
 }

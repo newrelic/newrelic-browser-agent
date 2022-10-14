@@ -21,7 +21,7 @@ export class Instrument extends FeatureBase {
     // errors that will be the same as caught errors.
     this.skipNext = 0
     this.handleErrors = false
-    this.origOnerror = window.onerror
+    this.origOnerror = self.onerror
     
     const state = this
 
@@ -52,15 +52,15 @@ export class Instrument extends FeatureBase {
       handle('ierr', [e, now(), true], undefined, undefined, state.ee)
     })
 
-    const prevOnError = window.onerror
-    window.onerror = (...args) => {
+    const prevOnError = self.onerror
+    self.onerror = (...args) => {
       if (prevOnError) prevOnError(...args)
       this.onerrorHandler(...args)
       return false
     }
 
     try {
-      window.addEventListener('unhandledrejection', (e) => {
+      self.addEventListener('unhandledrejection', (e) => {
         const err = new Error(`${e.reason}`)
         handle('err', [err, now(), false, {unhandledPromiseRejection: 1}], undefined, undefined, this.ee)
       })
@@ -76,7 +76,7 @@ export class Instrument extends FeatureBase {
         wrapTimer(this.ee)
         wrapRaf(this.ee)
 
-        if ('addEventListener' in window) {
+        if ('addEventListener' in self) {
           wrapEvents(this.ee)
         }
 

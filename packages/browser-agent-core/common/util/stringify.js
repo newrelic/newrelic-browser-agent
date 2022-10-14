@@ -53,7 +53,7 @@ function str (key, holder) {
 
       // The value is an array. Stringify every element. Use null as a placeholder
       // for non-JSON values.
-      if (value instanceof window.Array || Object.prototype.toString.apply(value) === '[object Array]') {
+      if (value instanceof self.Array || Object.prototype.toString.apply(value) === '[object Array]') {
         var length = value.length
         for (var i = 0; i < length; i += 1) {
           partial[i] = str(i, value) || 'null'

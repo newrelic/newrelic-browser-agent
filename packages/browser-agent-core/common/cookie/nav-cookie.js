@@ -6,11 +6,14 @@
 import { sHash } from '../util/s-hash'
 import { navCookie } from '../timing/start-time'
 import { getConfigurationValue } from '../config/config'
+import { isBrowserWindow } from '../window/win'
+
+// TO DO: this entire file & document.cookie & conditionallySet in harvester are severely outdated and can be scraped
 
 export function conditionallySet(agentIdentifier) {
   var areCookiesEnabled = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled')
 
-  if (navCookie && areCookiesEnabled) {
+  if (navCookie && areCookiesEnabled && isBrowserWindow) {
     exports.setCookie(); // allow importing modules (e.g., browser tests) to change setCookie() below
   }
 }

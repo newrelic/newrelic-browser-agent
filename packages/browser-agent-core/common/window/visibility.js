@@ -4,20 +4,23 @@
  */
 
 import {eventListenerOpts} from '../event-listener/event-listener-opts'
+import { isBrowserWindow } from './win'
 
 var hidden, eventName, state
 
-if (typeof document.hidden !== 'undefined') {
-  hidden = 'hidden'
-  eventName = 'visibilitychange'
-  state = 'visibilityState'
-} else if (typeof document.msHidden !== 'undefined') {
-  hidden = 'msHidden'
-  eventName = 'msvisibilitychange'
-} else if (typeof document.webkitHidden !== 'undefined') {
-  hidden = 'webkitHidden'
-  eventName = 'webkitvisibilitychange'
-  state = 'webkitVisibilityState'
+if (isBrowserWindow) {
+  if (typeof document.hidden !== 'undefined') {
+    hidden = 'hidden'
+    eventName = 'visibilitychange'
+    state = 'visibilityState'
+  } else if (typeof document.msHidden !== 'undefined') {
+    hidden = 'msHidden'
+    eventName = 'msvisibilitychange'
+  } else if (typeof document.webkitHidden !== 'undefined') {
+    hidden = 'webkitHidden'
+    eventName = 'webkitvisibilitychange'
+    state = 'webkitVisibilityState'
+  }
 }
 
 export function subscribeToVisibilityChange(cb) {

@@ -1,15 +1,18 @@
 
-var origWindow = window
-var win = origWindow
+const origWindowOrWorkerGlobScope = self
+let curGlobScope = origWindowOrWorkerGlobScope
 
-export function getWindow() {
-  return win
+export function getWindowOrWorkerGlobScope() {
+  return curGlobScope
 }
 
-export function setWindow(x) {
-  win = x
+export function setWindowOrWorkerGlobScope(x) {
+  curGlobScope = x
 }
 
-export function resetWindow() {
-  win = origWindow
+export function resetWindowOrWorkerGlobScope() {
+  curGlobScope = origWindowOrWorkerGlobScope
 }
+
+export const isBrowserWindow = Boolean(typeof window === 'object' && self.document);
+export const isWebWorker = Boolean(typeof WorkerGlobalScope !== 'undefined' && typeof importScripts === 'function');

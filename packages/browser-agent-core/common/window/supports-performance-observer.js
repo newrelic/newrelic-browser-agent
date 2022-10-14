@@ -4,5 +4,5 @@
  */
 
 export function supportsPerformanceObserver () {
-  return 'PerformanceObserver' in window && typeof window.PerformanceObserver === 'function'
+  return (typeof self.PerformanceObserver === 'function');
 }

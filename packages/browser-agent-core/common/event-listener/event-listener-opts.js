@@ -6,8 +6,8 @@ try {
       supportsPassive = true
     }
   })
-  window.addEventListener('testPassive', null, opts)
-  window.removeEventListener('testPassive', null, opts)
+  self.addEventListener('testPassive', null, opts)
+  self.removeEventListener('testPassive', null, opts)
 } catch (e) {
   // do nothing
 }

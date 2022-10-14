@@ -2,15 +2,21 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import { isBrowserWindow } from "../window/win"
 
-var div = document.createElement('div')
+// TO DO: this entire file & ieVersion descendents are severely outdated and can be scraped
 
-div.innerHTML = '<!--[if lte IE 6]><div></div><![endif]-->' +
-  '<!--[if lte IE 7]><div></div><![endif]-->' +
-  '<!--[if lte IE 8]><div></div><![endif]-->' +
-  '<!--[if lte IE 9]><div></div><![endif]-->'
+let len;
+if (isBrowserWindow) {
+  const div = document.createElement('div')
 
-var len = div.getElementsByTagName('div').length
+  div.innerHTML = '<!--[if lte IE 6]><div></div><![endif]-->' +
+    '<!--[if lte IE 7]><div></div><![endif]-->' +
+    '<!--[if lte IE 8]><div></div><![endif]-->' +
+    '<!--[if lte IE 9]><div></div><![endif]-->'
+  
+  len = div.getElementsByTagName('div').length
+}
 
 export var ieVersion
 if (len === 4) ieVersion = 6

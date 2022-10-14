@@ -5,11 +5,11 @@
 
 import { eventListenerOpts } from './event-listener-opts'
 
-// Safely add an event listener to window in any browser
+// Safely add an event listener to WindowOrWorkerGlobalScope in any browser
 export function addE (sType, callback) {
-  if ('addEventListener' in window) {
-    return window.addEventListener(sType, callback, eventListenerOpts(false))
-  } else if ('attachEvent' in window) {
-    return window.attachEvent('on' + sType, callback)
+  if ('addEventListener' in self) {
+    return self.addEventListener(sType, callback, eventListenerOpts(false))
+  } else if ('attachEvent' in self) {
+    return self.attachEvent('on' + sType, callback)
   }
 }

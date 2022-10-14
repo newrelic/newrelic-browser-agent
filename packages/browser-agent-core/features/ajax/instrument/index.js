@@ -19,7 +19,7 @@ var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
 
 var origRequest = originals.REQ
-var origXHR = window.XMLHttpRequest
+var origXHR = self.XMLHttpRequest
 
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
@@ -226,7 +226,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     } else if (args[0] && args[0].url) {
       url = args[0].url
       // argument is URL object
-    } else if (window.URL && args[0] && args[0] instanceof URL) {
+    } else if (self.URL && args[0] && args[0] instanceof URL) {
       url = args[0].href
     }
 
@@ -240,7 +240,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
       return
     }
 
-    if (typeof args[0] === 'string' || (window.URL && args[0] && args[0] instanceof URL)) {
+    if (typeof args[0] === 'string' || (self.URL && args[0] && args[0] instanceof URL)) {
       var clone = {}
 
       for (var key in opts) {
@@ -297,7 +297,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
       url = target
     } else if (typeof target === 'object' && target instanceof origRequest) {
       url = target.url
-    } else if (window.URL && typeof target === 'object' && target instanceof URL) {
+    } else if (self.URL && typeof target === 'object' && target instanceof URL) {
       url = target.href
     }
     addUrl(this, url)

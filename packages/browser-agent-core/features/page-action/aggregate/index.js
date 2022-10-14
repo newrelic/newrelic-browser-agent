@@ -10,6 +10,7 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { FeatureBase } from '../../../common/util/feature-base'
+import { isBrowserWindow } from '../../../common/window/win'
 
 export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
@@ -24,7 +25,7 @@ export class Aggregate extends FeatureBase {
 
     this.att = getInfo(this.agentIdentifier).jsAttributes;  // per-agent, aggregators-shared info context
 
-    if (document.referrer) this.referrerUrl = cleanURL(document.referrer)
+    if (isBrowserWindow && document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
     this.ee.on('feat-ins', () => {
       register('api-addPageAction', (...args) => this.addPageAction(...args), undefined, this.ee)
@@ -69,7 +70,7 @@ export class Aggregate extends FeatureBase {
     var height
     var eventAttributes = {}
 
-    if (typeof window !== 'undefined' && window.document && window.document.documentElement) {
+    if (isBrowserWindow && window.document.documentElement) {
       // Doesn't include the nav bar when it disappears in mobile safari
       // https://github.com/jquery/jquery/blob/10399ddcf8a239acc27bdec9231b996b178224d3/src/dimensions.js#L23
       width = window.document.documentElement.clientWidth

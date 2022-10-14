@@ -24,7 +24,6 @@ if (isBrowserWindow) {
 }
 
 export function subscribeToVisibilityChange(cb) {
-  if (!doc) return
   if ('addEventListener' in document && eventName) {
     document.addEventListener(eventName, handleVisibilityChange, eventListenerOpts(false))
   }

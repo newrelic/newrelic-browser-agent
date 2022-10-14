@@ -15,4 +15,4 @@ export function resetWindowOrWorkerGlobScope() {
 }
 
 export const isBrowserWindow = Boolean(typeof window === 'object' && self.document);
-export const isWebWorker = Boolean(typeof WorkerGlobalScope !== 'undefined' && typeof importScripts === 'function');
+export const isWebWorker = Boolean(typeof WorkerGlobalScope !== 'undefined' && self.navigator instanceof WorkerNavigator);

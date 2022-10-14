@@ -19,7 +19,7 @@ import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/environment-variables'
 
-var haveSendBeacon = !!navigator.sendBeacon
+const haveSendBeacon = !!navigator.sendBeacon;  // only the web window obj has sendBeacon at this time, so 'false' for other envs
 
 // requiring ie version updates the IE version on the loader object
 export var xhrUsable = ieVersion > 9 || ieVersion === 0
@@ -211,14 +211,14 @@ export function getSubmitMethod(endpoint, opts) {
   var method
   var useBody
 
-  if (opts.needResponse) {
+  if (opts.needResponse) {  // currently: only STN needs a response
     if (xhrUsable) {
       useBody = true
       method = submitData.xhr
     } else {
       return false
     }
-  } else if (opts.unload) {
+  } else if (opts.unload) { // all the features' final harvest
     useBody = haveSendBeacon
     method = haveSendBeacon ? submitData.beacon : submitData.img
   } else {

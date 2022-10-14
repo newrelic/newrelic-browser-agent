@@ -6,7 +6,7 @@
 export const submitData = {}
 
 /**
- * Do NOT use this function outside of a guaranteed web window environment.
+ * Do NOT call this function outside of a guaranteed web window environment.
  */
 submitData.jsonp = function jsonp (url, jsonp) {
   var element = document.createElement('script')
@@ -43,6 +43,9 @@ submitData.img = function img (url) {
   return element
 }
 
+/**
+ * Do NOT call this function outside of a guaranteed web window environment.
+ */
 submitData.beacon = function (url, body) {
-  return navigator.sendBeacon(url, body)
+  return window.navigator.sendBeacon(url, body)
 }

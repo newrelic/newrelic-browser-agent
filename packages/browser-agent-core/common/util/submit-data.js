@@ -33,10 +33,16 @@ submitData.xhr = function xhr (url, body, sync) {
   return request
 }
 
-submitData.xhrSync = function xhrSync (url, body) {
-  return submitData.xhr(url, body, true)
-}
+/**
+ * Unused at the moment -- DEPRECATED
+ */
+// submitData.xhrSync = function xhrSync (url, body) {
+//   return submitData.xhr(url, body, true)
+// }
 
+/**
+ * Do NOT call this function outside of a guaranteed web window environment.
+ */
 submitData.img = function img (url) {
   var element = new Image()
   element.src = url

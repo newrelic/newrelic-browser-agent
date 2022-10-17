@@ -70,6 +70,7 @@ function insertSupportMetrics(report) {
                 return new oConstructor(...args);
             }
         }
+        // eslint-disable-next-line
         return new Proxy(origClass, newHandler);
     }
     /**

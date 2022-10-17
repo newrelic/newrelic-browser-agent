@@ -17,8 +17,9 @@ export const modules = {
 const lite = [modules.pageViewEvent, modules.pageViewTiming, modules.metrics]
 const pro = [...lite, modules.jsErrors, modules.ajax, modules.pageAction, modules.sessionTrace]
 const spa = [...pro, modules.spa]
+const worker = [ modules.metrics, modules.jsErrors, modules.ajax, modules.pageAction]
 
-const features = { lite, pro, spa }
+const features = { lite, pro, spa, worker }
 
 const sharedAggregator = new Aggregator({agentIdentifier})
 

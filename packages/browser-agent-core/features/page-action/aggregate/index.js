@@ -27,13 +27,11 @@ export class Aggregate extends FeatureBase {
 
     if (isBrowserWindow && document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
-    this.ee.on('feat-ins', () => {
       register('api-addPageAction', (...args) => this.addPageAction(...args), undefined, this.ee)
 
       var scheduler = new HarvestScheduler('ins', {onFinished: (...args) => this.onHarvestFinished(...args)}, this)
       scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
       scheduler.startTimer(this.harvestTimeSeconds, 0)
-    })
   }
 
   onHarvestStarted (options) {

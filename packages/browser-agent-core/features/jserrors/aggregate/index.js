@@ -19,8 +19,6 @@ import { now } from '../../../common/timing/now'
 
 import { FeatureBase } from '../../../common/util/feature-base'
 
-const ref = typeof window !== 'undefined' ? window : self
-
 export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator)
@@ -147,7 +145,6 @@ export class Aggregate extends FeatureBase {
   }
 
   storeError(err, time, internal, customAttributes) {
-    console.log("storeError...", err)
     // are we in an interaction
     time = time || now()
     if (!internal && getRuntime(this.agentIdentifier).onerror && getRuntime(this.agentIdentifier).onerror(err)) return

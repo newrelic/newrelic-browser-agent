@@ -2,8 +2,6 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { detectPolyfillFeatures } from './utils/feature-detection'
-const PolyfillFeatures = detectPolyfillFeatures();
 // cdn specific utility files
 import agentIdentifier from '../shared/agentIdentifier'
 import { stageAggregator } from './utils/importAggregator'

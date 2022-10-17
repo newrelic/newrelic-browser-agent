@@ -6,7 +6,7 @@
 import { submitData } from '../util/submit-data'
 import { SharedContext } from '../context/shared-context'
 import { Harvest, getSubmitMethod } from './harvest'
-import { subscribeToUnload } from '../unload/unload'
+import { subscribeToEOL } from '../unload/eol'
 import { conditionallySet } from '../cookie/nav-cookie'
 
 /**
@@ -22,7 +22,7 @@ export class HarvestScheduler extends SharedContext {
 
     this.harvest = new Harvest(this.sharedContext)
 
-    subscribeToUnload(() => {
+    subscribeToEOL(() => {
       // if opts.onUnload is defined, these are special actions that are meant
       // to execute before attempting to send the final payload
       if (this.opts.onUnload) this.opts.onUnload()

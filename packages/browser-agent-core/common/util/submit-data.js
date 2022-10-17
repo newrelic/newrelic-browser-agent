@@ -6,7 +6,7 @@
 export const submitData = {}
 
 /**
- * Do NOT use this function outside of a guaranteed web window environment.
+ * Do NOT call this function outside of a guaranteed web window environment.
  */
 submitData.jsonp = function jsonp (url, jsonp) {
   var element = document.createElement('script')
@@ -33,16 +33,25 @@ submitData.xhr = function xhr (url, body, sync) {
   return request
 }
 
-submitData.xhrSync = function xhrSync (url, body) {
-  return submitData.xhr(url, body, true)
-}
+/**
+ * Unused at the moment -- DEPRECATED
+ */
+// submitData.xhrSync = function xhrSync (url, body) {
+//   return submitData.xhr(url, body, true)
+// }
 
+/**
+ * Do NOT call this function outside of a guaranteed web window environment.
+ */
 submitData.img = function img (url) {
   var element = new Image()
   element.src = url
   return element
 }
 
+/**
+ * Do NOT call this function outside of a guaranteed web window environment.
+ */
 submitData.beacon = function (url, body) {
-  return navigator.sendBeacon(url, body)
+  return window.navigator.sendBeacon(url, body)
 }

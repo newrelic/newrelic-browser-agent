@@ -101,7 +101,7 @@ export class Instrument extends FeatureBase {
 
   // takes an attributes object and appends connection attributes if available
   addConnectionAttributes(attributes) {
-    var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection
+    var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection; // to date, both window & worker shares the same support for connection
     if (!connection) return
 
     if (connection.type) attributes['net-type'] = connection.type

@@ -18,8 +18,9 @@ import { Obfuscator } from '../util/obfuscate'
 import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/environment-variables'
+import { isBrowserWindow, isWebWorker } from '../window/win'
 
-var haveSendBeacon = !!navigator.sendBeacon
+const haveSendBeacon = !!navigator.sendBeacon;  // only the web window obj has sendBeacon at this time, so 'false' for other envs
 
 // requiring ie version updates the IE version on the loader object
 export var xhrUsable = ieVersion > 9 || ieVersion === 0
@@ -127,7 +128,10 @@ export class Harvest extends SharedContext {
       fullUrl = url + encodeObj(payload.body, agentRuntime.maxBytes)
     }
 
-    var result = method(fullUrl, body)
+    /* Since workers don't support sendBeacon right now, or Image(), they can only use XHR method.
+        Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
+        we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon. */
+    var result = method(fullUrl, body, opts.unload && isWebWorker); 
 
     if (cbFinished && method === submitData.xhr) {
       var xhr = result
@@ -147,7 +151,7 @@ export class Harvest extends SharedContext {
       }, eventListenerOpts(false))
     }
 
-    // if beacon request failed, retry with an alternative method
+    // if beacon request failed, retry with an alternative method -- will not happen for workers
     if (!result && method === submitData.beacon) {
       method = submitData.img
       result = method(url + encodeObj(payload.body, agentRuntime.maxBytes))
@@ -211,21 +215,21 @@ export function getSubmitMethod(endpoint, opts) {
   var method
   var useBody
 
-  if (opts.needResponse) {
+  if (opts.needResponse) {  // currently: only STN needs a response
     if (xhrUsable) {
       useBody = true
       method = submitData.xhr
     } else {
       return false
     }
-  } else if (opts.unload) {
+  } else if (opts.unload && isBrowserWindow) { // all the features' final harvest; neither methods work outside window context
     useBody = haveSendBeacon
-    method = haveSendBeacon ? submitData.beacon : submitData.img
+    method = haveSendBeacon ? submitData.beacon : submitData.img  // really only IE doesn't have Beacon API for web browsers
   } else {
     // `submitData.beacon` was removed, there is an upper limit to the
     // number of data allowed before it starts failing, so we save it for
     // unload data
-    if (xhrUsable) {
+    if (xhrUsable) {  // this is practically every browser-version in use today, including all workers
       useBody = true
       method = submitData.xhr
     } else if (endpoint === 'events' || endpoint === 'jserrors') {

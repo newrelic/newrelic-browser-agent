@@ -27,8 +27,8 @@ export function aggregator(build) {
   if (autorun) return initializeFeatures();
 
   async function initializeFeatures() {
-    const drain = getConfigurationValue(agentIdentifier, 'page_view_event.enabled') === false
     const features = await importFeatures(build)
+    const drain = !features.initialized.page_view_event
     // gosNREUMInitializedAgents(agentIdentifier, features, 'features')
     // once ALL the enabled features all initialized,
     // add the activated features from the setToken call to the window for testing purposes

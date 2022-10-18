@@ -128,6 +128,11 @@ class AgentInjectorTransform extends AssetTransform {
     return `window.NREUM||(NREUM={});NREUM.init=${initString};NREUM.init.ssl=false;`
   }
 
+  generateWorkerCommands(wcFromQueryString) {
+    let wcString = new Buffer(wcFromQueryString, 'base64').toString()
+    return `workerCommands=${wcString};`
+  }
+
   getDebugShim() {
     if (!this.assetServer.debugShim) return ''
 
@@ -237,12 +242,22 @@ class AgentInjectorTransform extends AssetTransform {
             }
           }
 
+          let wcContent = ''
+          if (params.workerCommands) {
+            try {
+              wcContent = this.generateWorkerCommands(params.workerCommands)
+            } catch (e) {
+              return callback(e)
+            }
+          }
+
           let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;'
 
           let rspData = rawContent
             .split('{loader}').join(tagify(disableSsl + loaderContent))
             .replace('{config}', tagify(disableSsl + configContent))
             .replace('{init}', tagify(disableSsl + initContent))
+            .replace('{worker-commands}', tagify(disableSsl + wcContent))
             .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
 
           if (runnerArgs.polyfills) {

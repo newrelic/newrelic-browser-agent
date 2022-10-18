@@ -248,6 +248,12 @@ class RouterHandle {
       })
     }
 
+    if (query.workerCommands) {
+      _extend(mergedQuery, {
+        workerCommands: new Buffer(JSON.stringify(query.workerCommands)).toString('base64')
+      })
+    }
+
     if (useRouterUrl) {
       return this.router.urlFor(relative, mergedQuery)
     }

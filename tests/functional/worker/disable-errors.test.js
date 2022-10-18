@@ -17,65 +17,46 @@ const init = {
   }
 }
 
-timedPromiseAll = (promises, ms) => Promise.race([
+var timedPromiseAll = (promises, ms) => Promise.race([
   new Promise((resolve, reject) => {
     setTimeout(() => resolve(), ms)
   }),
   Promise.all(promises)
 ])
 
-testDriver.test('classic - disabled jserrors should not generate errors', supported, function (t, browser, router) {
-  let assetURL = router.assetURL('worker/classic-worker.html', {
-    init,
-    workerCommands: [
-      () => newrelic.noticeError(new Error('test'))
-    ].map(x => x.toString())
-  })
 
-  let loadPromise = browser.get(assetURL)
-  let errPromise = router.expectErrors()
+const types = ['classic', 'module']
 
-  timedPromiseAll([errPromise, loadPromise], 6000).then((response) => {
-    if (response) { 
-      // will be null if timed out, so a payload here means it sent and error
-      t.fail(`Should not have generated "error" payload`)
-    } else {
-      // errors harvest every 5 seconds, if 6 seconds pass and Promise is not resolved, that means it was never generated
-      t.pass(`Did not generate "error" payload`)
-    }
-    t.end()
-  }).catch(fail)
-
-  function fail(err) {
-    t.error(err)
-    t.end()
-  }
+types.forEach(type => {
+  disabledJsErrorsTest(type)
 })
 
-testDriver.test('module - disabled jserrors should not generate errors', supported, function (t, browser, router) {
-  let assetURL = router.assetURL('worker/module-worker.html', {
-    init,
-    workerCommands: [
-      () => newrelic.noticeError(new Error('test'))
-    ].map(x => x.toString())
-  })
-
-  let loadPromise = browser.get(assetURL)
-  let errPromise = router.expectErrors()
-
-  timedPromiseAll([errPromise, loadPromise], 6000).then((response) => {
-    if (response) { 
-      // will be null if timed out, so a payload here means it sent and error
-      t.fail(`Should not have generated "error" payload`)
-    } else {
-      // errors harvest every 5 seconds, if 6 seconds pass and Promise is not resolved, that means it was never generated
-      t.pass(`Did not generate "error" payload`)
+function disabledJsErrorsTest(type){
+  testDriver.test(`${type} - disabled jserrors should not generate errors`, supported, function (t, browser, router) {
+    let assetURL = router.assetURL(`worker/${type}-worker.html`, {
+      init,
+      workerCommands: [
+        () => newrelic.noticeError(new Error('test'))
+      ].map(x => x.toString())
+    })
+  
+    let loadPromise = browser.get(assetURL)
+    let errPromise = router.expectErrors()
+  
+    timedPromiseAll([errPromise, loadPromise], 6000).then((response) => {
+      if (response) { 
+        // will be null if timed out, so a payload here means it sent and error
+        t.fail(`Should not have generated "error" payload`)
+      } else {
+        // errors harvest every 5 seconds, if 6 seconds pass and Promise is not resolved, that means it was never generated
+        t.pass(`Did not generate "error" payload`)
+      }
+      t.end()
+    }).catch(fail)
+  
+    function fail(err) {
+      t.error(err)
+      t.end()
     }
-    t.end()
-  }).catch(fail)
-
-  function fail(err) {
-    t.error(err)
-    t.end()
-  }
-})
+  })
+}

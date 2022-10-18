@@ -4,6 +4,7 @@ import agentIdentifier from '../../shared/agentIdentifier'
 // common modules
 import { gosCDN } from '@newrelic/browser-agent-core/common/window/nreum'
 import { setConfiguration, setInfo, setLoaderConfig, setRuntime } from '@newrelic/browser-agent-core/common/config/config'
+import { isBrowserWindow } from '@newrelic/browser-agent-core/common/window/win'
 
 let configured = false
 
@@ -23,6 +24,7 @@ export function configure() {
     
         // add api calls to the NREUM object
         setAPI(agentIdentifier)
+        if (!isBrowserWindow) nr.setCustomAttribute("worker", true)
         configured = true
         resolve(configured)
         } catch(err){

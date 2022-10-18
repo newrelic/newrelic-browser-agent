@@ -14,7 +14,6 @@
 </head>
 
 <body>
-    This is a generic page that is instrumented by the JS agent.
     <script type="text/javascript">
         const worker = new Worker("./js/classic-worker.js")
 
@@ -29,8 +28,9 @@
             }
         }
 
+        // main page
         worker.onerror = function (e) {
-            console.log("worker error -- ", e)
+            console.log("error from worker", e)
         }
     </script>
 </body>

@@ -21,7 +21,6 @@ configure().then(() => {
     if (enabledFeatures.jserrors) new InstrumentErrors(agentIdentifier) // errors
     if (enabledFeatures.ajax) new InstrumentXhr(agentIdentifier) // ajax
     if (enabledFeatures['page_action']) new InstrumentPageAction(agentIdentifier) // ins (apis)
-
     // imports the aggregator for 'lite' if no other aggregator takes precedence
     stageAggregator('worker')
 })

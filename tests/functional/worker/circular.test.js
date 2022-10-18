@@ -28,14 +28,14 @@ function circularTest(type) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
-        () => {
+        `() => {
           var ouroboros = {}
           ouroboros.ouroboros = ouroboros
           var e = new Error('asdf'); 
           e.message = ouroboros;
           throw e
-        }
-      ].map(x => x.toString())
+        }`
+      ]
     })
 
     let loadPromise = browser.get(assetURL)
@@ -47,7 +47,9 @@ function circularTest(type) {
       t.equal(actualErrors.length, 1, 'exactly one error')
 
       let actualError = actualErrors[0]
+      console.log("actualError", actualError)
       t.equal(actualError.params.message, expectedErrorForBrowser(browser), 'has the expected message')
+      t.end()
     }).catch(fail)
 
     function fail(err) {

@@ -5,6 +5,7 @@
 
 const testDriver = require('../../../tools/jil/index')
 const { getErrorsFromResponse } = require('../err/assertion-helpers')
+const {workerTypes} = require('./helpers')
 
 let supported = testDriver.Matcher.withFeature('workers')
 
@@ -17,9 +18,7 @@ const init = {
   }
 }
 
-const types = ['classic', 'module']
-
-types.forEach(type => {
+workerTypes.forEach(type => {
   circularTest(type)
 })
 

@@ -4,6 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
+const {workerTypes} = require('./helpers')
 
 let supported = testDriver.Matcher.withFeature('workers')
 
@@ -25,9 +26,7 @@ var timedPromiseAll = (promises, ms) => Promise.race([
 ])
 
 
-const types = ['classic', 'module']
-
-types.forEach(type => {
+workerTypes.forEach(type => {
   disabledJsErrorsTest(type)
 })
 

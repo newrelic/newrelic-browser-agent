@@ -124,12 +124,12 @@ class AgentInjectorTransform extends AssetTransform {
   }
 
   generateInit(initFromQueryString) {
-    let initString = new Buffer(initFromQueryString, 'base64').toString()
+    let initString = Buffer.from(initFromQueryString, 'base64').toString()
     return `window.NREUM||(NREUM={});NREUM.init=${initString};NREUM.init.ssl=false;`
   }
 
   generateWorkerCommands(wcFromQueryString) {
-    let wcString = new Buffer(wcFromQueryString, 'base64').toString()
+    let wcString = Buffer.from(wcFromQueryString, 'base64').toString()
     return `workerCommands=${wcString};`
   }
 

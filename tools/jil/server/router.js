@@ -237,20 +237,20 @@ class RouterHandle {
 
     _extend(mergedQuery, {
       loader: query.loader || 'full',
-      config: new Buffer(JSON.stringify(_extend({
+      config: Buffer.from(JSON.stringify(_extend({
         licenseKey: this.testID
       }, query.config))).toString('base64')
     })
 
     if (query.init) {
       _extend(mergedQuery, {
-        init: new Buffer(JSON.stringify(query.init)).toString('base64')
+        init: Buffer.from(JSON.stringify(query.init)).toString('base64')
       })
     }
 
     if (query.workerCommands) {
       _extend(mergedQuery, {
-        workerCommands: new Buffer(JSON.stringify(query.workerCommands)).toString('base64')
+        workerCommands: Buffer.from(JSON.stringify(query.workerCommands)).toString('base64')
       })
     }
 
@@ -267,7 +267,7 @@ class RouterHandle {
   urlForBrowserTest(file) {
     return this.router.assetServer.urlFor('/tests/assets/browser.html', {
       loader: 'full',
-      config: new Buffer(JSON.stringify({
+      config: Buffer.from(JSON.stringify({
         licenseKey: this.testID,
         assetServerPort: this.router.assetServer.port,
         assetServerSSLPort: this.router.assetServer.sslPort,

@@ -148,12 +148,15 @@ features.setImmediate = new BrowserMatcher()
   .exclude('*', '*')
   .include('ie@>=10')
 
+/** DEPRECATED */
 features.xhr = new BrowserMatcher()
   .exclude('ie@<9')
 
-features.xhrWithAddEventListener = features.xhr.and(new BrowserMatcher()
-  .exclude('phantom')
-)
+/** DEPRECATED -- just use noPhantom instead */
+features.xhrWithAddEventListener = features.xhr.and(features.noPhantom)
+
+features.noPhantom = new BrowserMatcher()
+  .exclude('phantom');
 
 // requires window.perfomance.getEntriesByType
 features.stn = new BrowserMatcher()
@@ -173,6 +176,7 @@ features.navTiming = new BrowserMatcher()
   .exclude('safari', '<8')
   .exclude('ios', '<9')
 
+/** DEPRECATED */
 features.cors = new BrowserMatcher()
   .exclude('ie@<10')
 

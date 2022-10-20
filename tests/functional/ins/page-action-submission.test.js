@@ -5,11 +5,11 @@
 
 const testDriver = require('../../../tools/jil/index')
 const {validatePageActionData, fail} = require('./ins-internal-help.cjs')
-let corsBrowsers = testDriver.Matcher.withFeature('cors')
-let reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')
-let xhrWithAddEventListener = testDriver.Matcher.withFeature('xhrWithAddEventListener')
 
-testDriver.test('PageAction submission', corsBrowsers, function (t, browser, router) {
+let reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')
+let noPhantom = testDriver.Matcher.withFeature('noPhantom')
+
+testDriver.test('PageAction submission', function (t, browser, router) {
   let url = router.assetURL('instrumented.html')
 
   let rumPromise = router.expectRum()
@@ -29,7 +29,7 @@ testDriver.test('PageAction submission', corsBrowsers, function (t, browser, rou
     .catch(fail(t))
 })
 
-testDriver.test('PageActions are retried when collector returns 429', corsBrowsers.and(xhrWithAddEventListener), function (t, browser, router) {
+testDriver.test('PageActions are retried when collector returns 429', noPhantom, function (t, browser, router) {
   let assetURL = router.assetURL('instrumented.html', {
     init: {
       ins: {
@@ -70,7 +70,7 @@ testDriver.test('PageActions are retried when collector returns 429', corsBrowse
     .catch(fail(t))
 })
 
-testDriver.test('PageAction submission on final harvest', corsBrowsers.and(reliableFinalHarvest), function (t, browser, router) {
+testDriver.test('PageAction submission on final harvest', reliableFinalHarvest, function (t, browser, router) {
   let url = router.assetURL('instrumented.html', {
     init: {
       page_view_timing: {
@@ -118,7 +118,7 @@ testDriver.test('PageAction submission on final harvest', corsBrowsers.and(relia
     .catch(fail(t))
 })
 
-testDriver.test('precedence', corsBrowsers.and(reliableFinalHarvest), function (t, browser, router) {
+testDriver.test('precedence', reliableFinalHarvest, function (t, browser, router) {
   let url = router.assetURL('instrumented.html')
 
   let loadPromise = browser.get(url)

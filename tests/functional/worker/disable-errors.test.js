@@ -4,9 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {workerTypes} = require('./helpers')
-
-let supported = testDriver.Matcher.withFeature('workers')
+const {workerTypes, typeToMatcher} = require('./helpers')
 
 const init = {
   jserrors: {
@@ -27,11 +25,11 @@ var timedPromiseAll = (promises, ms) => Promise.race([
 
 
 workerTypes.forEach(type => {
-  disabledJsErrorsTest(type)
+  disabledJsErrorsTest(type, typeToMatcher(type))
 })
 
-function disabledJsErrorsTest(type){
-  testDriver.test(`${type} - disabled jserrors should not generate errors`, supported, function (t, browser, router) {
+function disabledJsErrorsTest(type, matcher){
+  testDriver.test(`${type} - disabled jserrors should not generate errors`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [

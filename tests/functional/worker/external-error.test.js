@@ -5,9 +5,7 @@
 
 const testDriver = require('../../../tools/jil/index')
 const { getErrorsFromResponse } = require('../err/assertion-helpers')
-const { workerTypes } = require('./helpers')
-
-let supported = testDriver.Matcher.withFeature('workers')
+const { workerTypes, typeToMatcher } = require('./helpers')
 
 const init = {
   jserrors: {
@@ -19,11 +17,11 @@ const init = {
 }
 
 workerTypes.forEach(type => {
-  externalTest(type)
+  externalTest(type, typeToMatcher(type))
 })
 
-function externalTest(type) {
-  testDriver.test(`${type} - an external JS import that throws an error generates and sends an error object`, supported, function (t, browser, router) {
+function externalTest(type, matcher) {
+  testDriver.test(`${type} - an external JS import that throws an error generates and sends an error object`, matcher, function (t, browser, router) {
     const externalURL = '../../js/external-uncaught-error.js?secretParameter=secretValue'
     const importType = type === 'classic' ? 'importScripts' : 'import'
     const importStatement = `${importType}('${externalURL}')`

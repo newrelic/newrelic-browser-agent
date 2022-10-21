@@ -17,22 +17,17 @@ const init = {
 }
 
 workerTypes.forEach(type => {
-  circularTest(type, typeToMatcher(type))
+  setCustomAttributeTest(type, typeToMatcher(type))
 })
 
-function circularTest(type, matcher) {
-  testDriver.test(`${type} - a circular reference error generates and sends an error object`, matcher, function (t, browser, router) {
+function setCustomAttributeTest(type, matcher) {
+  testDriver.test(`${type} - an error has a custom attribute if setCustomAttribute() is called`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
-        `() => {
-          var ouroboros = {}
-          ouroboros.ouroboros = ouroboros
-          var e = new Error('asdf'); 
-          e.message = ouroboros;
-          throw e
-        }`
-      ]
+        () => {newrelic.setCustomAttribute('hi', 'mom')},
+        () => {throw new Error('test')}
+      ].map(x => x.toString())
     })
 
     let loadPromise = browser.get(assetURL)
@@ -44,7 +39,8 @@ function circularTest(type, matcher) {
       t.equal(actualErrors.length, 1, 'exactly one error')
 
       let actualError = actualErrors[0]
-      t.equal(actualError.params.message, expectedErrorForBrowser(browser), 'has the expected message')
+      t.equal(actualError.params.message, 'test', 'has the expected message')
+      t.deepEqual(actualError.custom, { hi: 'mom', worker: true }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
@@ -53,18 +49,4 @@ function circularTest(type, matcher) {
       t.end()
     }
   })
-}
-
-function expectedErrorForBrowser(browser) {
-  if (browser.match('ie@<11')) {
-    return 'asdf'
-  } else if (browser.match('firefox@<35')) {
-    return 'Error'
-  } else if (browser.match('chrome, firefox@>=35, ie@11, android@>=4.4, safari@>=10, edge')) {
-    return '[object Object]'
-  } else if (browser.match('android')) {
-    return 'Uncaught Error: [object Object]'
-  } else {
-    return 'Error: [object Object]'
-  }
 }

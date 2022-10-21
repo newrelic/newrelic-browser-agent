@@ -75,6 +75,10 @@ const config = (target) => {
         [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills.js')
       }),
       ...(isWorker && {
+        [`nr-loader-worker${PATH_VERSION}`]: {
+          import: path.resolve(__dirname, './agent-loader/worker.js'),
+          chunkLoading: false
+        },
         [`nr-loader-worker${PATH_VERSION}.min`]: {
           import: path.resolve(__dirname, './agent-loader/worker.js'),
           chunkLoading: false

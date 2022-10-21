@@ -4,9 +4,8 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {workerTypes} = require('./helpers')
-
-let supported = testDriver.Matcher.withFeature('workers')
+const {workerTypes, typeToMatcher} = require('./helpers')
+const {fail} = require('../err/assertion-helpers')  // shared from jserrors feat tests
 
 const init = {
   jserrors: {
@@ -18,13 +17,14 @@ const init = {
 }
 
 workerTypes.forEach(type => {
-  noticeErrorTest(type)
-  noticeErrorWithParamsTest(type)
-  multipleMatchingErrorsTest(type)
+  noticeErrorTest(type, typeToMatcher(type));
+  noticeErrorStringTest(type, typeToMatcher(type));
+  noticeErrorWithParamsTest(type, typeToMatcher(type));
+  multipleMatchingErrorsTest(type, typeToMatcher(type));
 })
 
-function noticeErrorTest(type) {
-  testDriver.test(`${type} - noticeError generates and sends an error object`, supported, function (t, browser, router) {
+function noticeErrorTest(type, supportRegOrESMWorker) {
+  testDriver.test(`${type} - noticeError generates and sends an error object`, supportRegOrESMWorker, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
@@ -40,17 +40,31 @@ function noticeErrorTest(type) {
       checkBasics(t, err)
       t.deepEqual(err[0].custom, {worker: true}, 'Should not have correct custom attributes')
       t.end()
-    }).catch(fail)
-
-    function fail(err) {
-      t.error(err)
-      t.end()
-    }
-  })
+    }).catch(fail(t));
+	})
 }
 
-function noticeErrorWithParamsTest(type) {
-  testDriver.test(`${type} - noticeError generates and sends an error object with custom params`, supported, function (t, browser, router) {
+function noticeErrorStringTest(type, supportRegOrESMWorker) {
+  testDriver.test(`${type} - noticeError works with string argument`, supportRegOrESMWorker, function (t, browser, router) {
+    let assetURL = router.assetURL(`worker/${type}-worker.html`, {
+      init,
+      workerCommands: [`newrelic.noticeError("test")`]
+    })
+
+    let loadPromise = browser.get(assetURL)
+    let errPromise = router.expectErrors()
+
+    Promise.all([errPromise, loadPromise]).then(([errResponse]) => {
+      const { err } = JSON.parse(errResponse.body)
+      checkBasics(t, err)
+      t.deepEqual(err[0].custom, {worker: true}, 'Should not have correct custom attributes')
+      t.end()
+    }).catch(fail(t));
+	})
+}
+
+function noticeErrorWithParamsTest(type, supportRegOrESMWorker) {
+  testDriver.test(`${type} - noticeError generates and sends an error object with custom params`, supportRegOrESMWorker, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
@@ -66,18 +80,13 @@ function noticeErrorWithParamsTest(type) {
       checkBasics(t, err)
       t.deepEqual(err[0].custom, { hi: 'mom', worker: true }, 'Should have correct custom attributes')
       t.end()
-    }).catch(fail)
-
-    function fail(err) {
-      t.error(err)
-      t.end()
-    }
-  })
+    }).catch(fail(t));
+	})
 }
 
 
-function multipleMatchingErrorsTest(type) {
-  testDriver.test(`${type} - multiple matching errors are aggregated`, supported, function (t, browser, router) {
+function multipleMatchingErrorsTest(type, supportRegOrESMWorker) {
+  testDriver.test(`${type} - multiple matching errors are aggregated`, supportRegOrESMWorker, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
@@ -95,13 +104,8 @@ function multipleMatchingErrorsTest(type) {
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 3, 'Should have aggregated 3 errors')
       t.end()
-    }).catch(fail)
-
-    function fail(err) {
-      t.error(err)
-      t.end()
-    }
-  })
+    }).catch(fail(t));
+	})
 }
 
 function checkBasics(t, err) {

@@ -4,9 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {workerTypes} = require('./helpers')
-
-let supported = testDriver.Matcher.withFeature('workers')
+const {workerTypes, typeToMatcher} = require('./helpers')
 
 const init = {
   jserrors: {
@@ -18,18 +16,18 @@ const init = {
 }
 
 workerTypes.forEach(type => {
-  referenceErrorTest(type)
-  thrownErrorTest(type)
-  unhandledPromiseRejectionTest(type)
-  rangeErrorTest(type)
-  syntaxErrorTest(type)
-  typeErrorTest(type)
-  uriErrorTest(type)
-  memoryLeakTest(type)
+  referenceErrorTest(type, typeToMatcher(type))
+  thrownErrorTest(type, typeToMatcher(type))
+  unhandledPromiseRejectionTest(type, typeToMatcher(type))
+  rangeErrorTest(type, typeToMatcher(type))
+  syntaxErrorTest(type, typeToMatcher(type))
+  typeErrorTest(type, typeToMatcher(type))
+  uriErrorTest(type, typeToMatcher(type))
+  memoryLeakTest(type, typeToMatcher(type))
 })
 
-function referenceErrorTest(type) {
-  testDriver.test(`${type} - a reference error generates and sends an error object`, supported, function (t, browser, router) {
+function referenceErrorTest(type, matcher) {
+  testDriver.test(`${type} - a reference error generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
@@ -59,8 +57,8 @@ function referenceErrorTest(type) {
   })
 }
 
-function unhandledPromiseRejectionTest(type) {
-  testDriver.test(`${type} - unhandledPromise generates and sends an error object`, supported, function (t, browser, router) {
+function unhandledPromiseRejectionTest(type, matcher) {
+  testDriver.test(`${type} - unhandledPromise generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
@@ -90,8 +88,8 @@ function unhandledPromiseRejectionTest(type) {
   })
 }
 
-function rangeErrorTest(type) {
-  testDriver.test(`${type} - RangeError generates and sends an error object`, supported, function (t, browser, router) {
+function rangeErrorTest(type, matcher) {
+  testDriver.test(`${type} - RangeError generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
@@ -124,8 +122,8 @@ function rangeErrorTest(type) {
   })
 }
 
-function typeErrorTest(type) {
-  testDriver.test(`${type} - TypeError generates and sends an error object`, supported, function (t, browser, router) {
+function typeErrorTest(type, matcher) {
+  testDriver.test(`${type} - TypeError generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
@@ -158,8 +156,8 @@ function typeErrorTest(type) {
   })
 }
 
-function uriErrorTest(type) {
-  testDriver.test(`${type} - URIError generates and sends an error object`, supported, function (t, browser, router) {
+function uriErrorTest(type, matcher) {
+  testDriver.test(`${type} - URIError generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
@@ -191,8 +189,8 @@ function uriErrorTest(type) {
   })
 }
 
-function memoryLeakTest(type) {
-  testDriver.test(`${type} - max call stack size generates and sends an error object`, supported, function (t, browser, router) {
+function memoryLeakTest(type, matcher) {
+  testDriver.test(`${type} - max call stack size generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
@@ -227,8 +225,8 @@ function memoryLeakTest(type) {
   })
 }
 
-function syntaxErrorTest(type) {
-  testDriver.test(`${type} - SyntaxError generates and sends an error object`, supported, function (t, browser, router) {
+function syntaxErrorTest(type, matcher) {
+  testDriver.test(`${type} - SyntaxError generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
@@ -260,8 +258,8 @@ function syntaxErrorTest(type) {
   })
 }
 
-function thrownErrorTest(type) {
-  testDriver.test(`${type} - a thrown error generates and sends an error object`, supported, function (t, browser, router) {
+function thrownErrorTest(type, matcher) {
+  testDriver.test(`${type} - a thrown error generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [

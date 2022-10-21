@@ -209,7 +209,7 @@ features.fetch = new BrowserMatcher()
 // MDN shows this function as not supported
 // https://developer.mozilla.org/en-US/docs/Web/API/Body/arrayBuffer
 features.fetchExt = features.fetch.and(new BrowserMatcher()
-  .exclude('ios')
+  .exclude('ios', '<11.0')
   .exclude('safari', '<11.1') // MDN says no support (11.1 currently latest), but 11.1 is accounted for in the tests
 )
 
@@ -256,6 +256,7 @@ features.locationDecodesUrl = new BrowserMatcher()
   .exclude('*', '*')
   .include('android', '4.0')
 
+/** DEPRECATED */
 features.tls = new BrowserMatcher()
   .exclude('ie', '<7')
 

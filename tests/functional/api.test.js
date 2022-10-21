@@ -4,23 +4,13 @@
  */
 
 const testDriver = require('../../tools/jil/index')
+const {fail, getTime} = require('./uncat-internal-help.cjs')
 const {getErrorsFromResponse} = require('./err/assertion-helpers')
 
 let withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
-let withCors = testDriver.Matcher.withFeature('cors')
-let withTls = testDriver.Matcher.withFeature('tls')
 let reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')
 
-function getTime (cm) {
-  try {
-    return cm[0].metrics.time.t
-  } catch (e) {
-    console.error(e)
-    return 0
-  }
-}
-
-testDriver.test('customTransactionName 1 arg', withTls, function (t, browser, router) {
+testDriver.test('customTransactionName 1 arg', function (t, browser, router) {
   t.plan(1)
 
   let rumPromise = router.expectRum()
@@ -42,12 +32,7 @@ testDriver.test('customTransactionName 1 arg', withTls, function (t, browser, ro
 
       t.end()
     })
-    .catch(fail)
-
-  function fail (err) {
-    t.error(err)
-    t.end()
-  }
+    .catch(fail(t));
 })
 
 testDriver.test('customTransactionName 1 arg unload', withUnload, function (t, browser, router) {
@@ -77,12 +62,7 @@ testDriver.test('customTransactionName 1 arg unload', withUnload, function (t, b
       t.ok(time > 0, 'Finished time XHR > 0 (1 arg)')
       t.end()
     })
-    .catch(fail)
-
-  function fail (err) {
-    t.error(err)
-    t.end()
-  }
+    .catch(fail(t));
 })
 
 testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser, router) {
@@ -117,12 +97,7 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
       }
       t.end()
     })
-    .catch(fail)
-
-  function fail (err) {
-    t.error(err)
-    t.end()
-  }
+    .catch(fail(t));
 })
 
 
@@ -151,15 +126,10 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
         t.equal('no free taco coupons', message, 'Params contain the right error message.')
         t.end()
       } else {
-        fail('No error data was received.')
+        fail(t)('No error data was received.')
       }
     })
-    .catch(fail)
-
-  function fail (err) {
-    t.error(err)
-    t.end()
-  }
+    .catch(fail(t));
 })
 
 testDriver.test('noticeError takes a string', withUnload, function (t, browser, router) {
@@ -187,18 +157,13 @@ testDriver.test('noticeError takes a string', withUnload, function (t, browser, 
         t.equal('too many free taco coupons', message, 'Params contain the right error message.')
         t.end()
       } else {
-        fail('No error data was received.')
+        fail(t)('No error data was received.')
       }
     })
-    .catch(fail)
-
-  function fail (err) {
-    t.error(err)
-    t.end()
-  }
+    .catch(fail(t));
 })
 
-testDriver.test('finished records a PageAction when called before RUM message', withCors.and(reliableFinalHarvest), function (t, browser, router) {
+testDriver.test('finished records a PageAction when called before RUM message', reliableFinalHarvest, function (t, browser, router) {
   let rumPromise = router.expectRum()
   let insPromise = router.expectIns()
   let loadPromise = browser.get(router.assetURL('api/finished.html', {
@@ -226,12 +191,7 @@ testDriver.test('finished records a PageAction when called before RUM message', 
       t.equal(insData[0].actionName, 'finished', 'PageAction has actionName = finished')
       t.end()
     })
-    .catch(fail)
-
-  function fail (err) {
-    t.error(err)
-    t.end()
-  }
+    .catch(fail(t));
 })
 
 testDriver.test('release api adds releases to jserrors', withUnload, function (t, browser, router) {
@@ -260,12 +220,7 @@ testDriver.test('release api adds releases to jserrors', withUnload, function (t
       t.equal(query.ri, '{"example":"123","other":"456"}', 'should have expected value for ri query param')
       t.end()
     })
-    .catch(fail)
-
-  function fail (err) {
-    t.error(err)
-    t.end()
-  }
+    .catch(fail(t));
 })
 
 testDriver.test('release api limits releases to jserrors', withUnload, function (t, browser, router) {
@@ -307,12 +262,7 @@ testDriver.test('release api limits releases to jserrors', withUnload, function 
       t.deepEqual(queryRi, ri, `${JSON.stringify(ri)} is expected but got ${JSON.stringify(queryRi)}`)
       t.end()
     })
-    .catch(fail)
-
-  function fail (err) {
-    t.error(err)
-    t.end()
-  }
+    .catch(fail(t));
 })
 
 testDriver.test('release api limits release size to jserrors', withUnload, function (t, browser, router) {
@@ -351,12 +301,7 @@ testDriver.test('release api limits release size to jserrors', withUnload, funct
       t.deepEqual(queryRi, ri, `${JSON.stringify(ri)} is expected but got ${JSON.stringify(queryRi)}`)
       t.end()
     })
-    .catch(fail)
-
-  function fail (err) {
-    t.error(err)
-    t.end()
-  }
+    .catch(fail(t));
 })
 
 testDriver.test('no query param when release is not set', withUnload, function (t, browser, router) {
@@ -385,10 +330,5 @@ testDriver.test('no query param when release is not set', withUnload, function (
       t.notOk('ri' in query, 'should not have ri query param')
       t.end()
     })
-    .catch(fail)
-
-  function fail (err) {
-    t.error(err)
-    t.end()
-  }
+    .catch(fail(t));
 })

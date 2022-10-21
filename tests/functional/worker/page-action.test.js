@@ -5,9 +5,10 @@ const { validatePageActionData, fail } = require('../ins/ins-internal-help.cjs')
 const noPhantom = testDriver.Matcher.withFeature('noPhantom')
 
 workerTypes.forEach(type => {  // runs all test for classic & module workers & use the 'workers' browser-matcher for classic and the 'workersFull' for module
-	paSubmission(type, typeToMatcher(type));
-	paRetry(type, typeToMatcher(type));
-	paPrecedence(type, typeToMatcher(type));
+	const browsersWithOrWithoutModuleSupport = typeToMatcher(type);
+	paSubmission(type, browsersWithOrWithoutModuleSupport);
+	paRetry(type, browsersWithOrWithoutModuleSupport);
+	paPrecedence(type, browsersWithOrWithoutModuleSupport);
 });
 
 // --- Tests ---

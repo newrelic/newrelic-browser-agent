@@ -79,11 +79,13 @@ export class Instrument extends FeatureBase {
         if (rules.length > 0) this.recordSupportability('Generic/Obfuscate/Detected')
         if (rules.length > 0 && !validateRules(rules)) this.recordSupportability('Generic/Obfuscate/Invalid')
 
-        // polyfilled feature detection
-        if (isBrowserWindow) this.reportPolyfillsNeeded();
+        if (isBrowserWindow) {
+            // polyfilled feature detection
+            this.reportPolyfillsNeeded();
 
-        // poll web worker support
-        if (isBrowserWindow) insertSupportMetrics(this.recordSupportability.bind(this));
+            // poll web worker support
+            if (isBrowserWindow) insertSupportMetrics(this.recordSupportability.bind(this));
+        }
     }
 
     reportPolyfillsNeeded() {

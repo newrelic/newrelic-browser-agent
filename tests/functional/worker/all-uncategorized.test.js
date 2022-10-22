@@ -155,12 +155,12 @@ function obfuscateAll (type, supportRegOrESMWorker) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
 					obfuscate: [{
-						regex: 'bam-test',
+						regex: /bam-test/g,
 						replacement: 'OBFUSCATED'
 					}, {
-						regex: 'fakeid'
+						regex: /fakeid/g
 					}, {
-						regex: 'pii',
+						regex: /pii/g,
 						replacement: 'OBFUSCATED'
 					}, {
 						regex: 'comma',

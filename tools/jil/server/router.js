@@ -242,9 +242,16 @@ class RouterHandle {
       }, query.config))).toString('base64')
     })
 
+    function replacer(k, v) {
+      if (typeof v == 'object' && v instanceof RegExp) {
+        let m = v.toString().match(/\/(.*)\/(\w*)/);
+        return `new RegExp('${m[1]}','${m[2] || ''}')`; // serialize regex in a way our test server can receive it
+      }
+      return v;
+    }
     if (query.init) {
       _extend(mergedQuery, {
-        init: Buffer.from(JSON.stringify(query.init)).toString('base64')
+        init: Buffer.from(JSON.stringify(query.init, replacer)).toString('base64')
       })
     }
 

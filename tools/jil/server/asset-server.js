@@ -51,7 +51,7 @@ class AgentInjectorTransform extends AssetTransform {
 
   parseConfigFromQueryString(params) {
     if (!params.config) return
-    let configString = new Buffer(params.config, 'base64').toString()
+    let configString = Buffer.from(params.config, 'base64').toString()
     return JSON.parse(configString)
   }
 
@@ -125,6 +125,7 @@ class AgentInjectorTransform extends AssetTransform {
 
   generateInit(initFromQueryString) {
     let initString = Buffer.from(initFromQueryString, 'base64').toString()
+    initString = initString.replaceAll(/"(new RegExp.*?)"/g, '$1');
     return `window.NREUM||(NREUM={});NREUM.init=${initString};NREUM.init.ssl=false;`
   }
 

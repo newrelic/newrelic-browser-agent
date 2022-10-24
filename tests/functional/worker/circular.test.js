@@ -60,7 +60,7 @@ function expectedErrorForBrowser(browser) {
     return 'asdf'
   } else if (browser.match('firefox@<35')) {
     return 'Error'
-  } else if (browser.match('chrome, firefox@>=35, ie@11, android@>=4.4, safari@>=10, edge')) {
+  } else if (browser.match('chrome, firefox@>=35, ie@11, android@>=4.4, safari@>=10, edge, ios')) {
     return '[object Object]'
   } else if (browser.match('android')) {
     return 'Uncaught Error: [object Object]'

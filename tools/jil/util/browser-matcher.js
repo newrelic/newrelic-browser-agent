@@ -396,6 +396,16 @@ features.es6 = new BrowserMatcher()
   .include("edge", "<=79")
   .include("safari", "<=11.3")
 
+  features.workerStackSizeGeneratesError = new BrowserMatcher()
+  .exclude("firefox")
+
+  features.unhandledPromiseRejection = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', '>49')
+  .include('edge', '>79')
+  .include('safari', '>12')
+  .include('firefox', '>69')
+
   features.workers = new BrowserMatcher([ // NOTE: module type workers have different (higher) compatibility versions
     new MatcherRule(TYPE_EXCLUDE, '*@*'),
     new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),

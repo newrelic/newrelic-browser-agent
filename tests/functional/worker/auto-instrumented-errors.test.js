@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {workerTypes, typeToMatcher} = require('./helpers')
+const { workerTypes, typeToMatcher } = require('./helpers')
 
 const init = {
   jserrors: {
@@ -18,12 +18,16 @@ const init = {
 workerTypes.forEach(type => {
   referenceErrorTest(type, typeToMatcher(type))
   thrownErrorTest(type, typeToMatcher(type))
-  unhandledPromiseRejectionTest(type, typeToMatcher(type))
+  unhandledPromiseRejectionTest(type, typeToMatcher(type)
+    .and(testDriver.Matcher.withFeature('unhandledPromiseRejection'))
+  )
   rangeErrorTest(type, typeToMatcher(type))
   syntaxErrorTest(type, typeToMatcher(type))
   typeErrorTest(type, typeToMatcher(type))
   uriErrorTest(type, typeToMatcher(type))
-  memoryLeakTest(type, typeToMatcher(type))
+  memoryLeakTest(type, typeToMatcher(type)
+    .and(testDriver.Matcher.withFeature('workerStackSizeGeneratesError'))
+  )
 })
 
 function referenceErrorTest(type, matcher) {
@@ -44,9 +48,9 @@ function referenceErrorTest(type, matcher) {
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
       t.equal(err[0].params.exceptionClass, 'ReferenceError', 'Should be ReferenceError class')
-      t.equal(err[0].params.message, 'b is not defined', 'Should have correct message')
+      t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, {worker: true}, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { worker: true }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
@@ -75,7 +79,7 @@ function unhandledPromiseRejectionTest(type, matcher) {
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
       t.equal(err[0].params.exceptionClass, 'Error', 'Should be Error class')
-      t.ok(err[0].params.message.includes("unhandledPromiseRejection"), 'Should have correct message')
+      t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
       t.deepEqual(err[0].custom, { unhandledPromiseRejection: 1, worker: true }, 'Should have custom attribute')
       t.end()
@@ -109,9 +113,9 @@ function rangeErrorTest(type, matcher) {
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
       t.equal(err[0].params.exceptionClass, 'RangeError', 'Should be RangeError class')
-      t.equal(err[0].params.message, 'Invalid array length', 'Should have correct message')
+      t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, {worker: true}, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { worker: true }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
@@ -143,9 +147,9 @@ function typeErrorTest(type, matcher) {
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
       t.equal(err[0].params.exceptionClass, 'TypeError', 'Should be TypeError class')
-      t.equal(err[0].params.message, 'num.toUpperCase is not a function', 'Should have correct message')
+      t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, {worker: true}, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { worker: true }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
@@ -176,9 +180,9 @@ function uriErrorTest(type, matcher) {
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
       t.equal(err[0].params.exceptionClass, 'URIError', 'Should be URIError class')
-      t.equal(err[0].params.message, 'URI malformed', 'Should have correct message')
+      t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, {worker: true}, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { worker: true }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
@@ -195,7 +199,9 @@ function memoryLeakTest(type, matcher) {
       init,
       workerCommands: [
         () => {
-          function foo(){
+          let i = 0
+          function foo() {
+            i += 1
             foo()
           }
           foo();
@@ -212,9 +218,9 @@ function memoryLeakTest(type, matcher) {
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
       t.equal(err[0].params.exceptionClass, 'RangeError', 'Should be RangeError class')
-      t.equal(err[0].params.message, 'Maximum call stack size exceeded', 'Should have correct message')
+      t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, {worker: true}, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { worker: true }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
@@ -245,9 +251,9 @@ function syntaxErrorTest(type, matcher) {
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
       t.equal(err[0].params.exceptionClass, 'SyntaxError', 'Should be SyntaxError class')
-      t.equal(err[0].params.message, 'Missing initializer in const declaration', 'Should have correct message')
+      t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, {worker: true}, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { worker: true }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
@@ -276,9 +282,9 @@ function thrownErrorTest(type, matcher) {
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
       t.equal(err[0].params.exceptionClass, 'Error', 'Should be Error class')
-      t.equal(err[0].params.message, 'thrown error', 'Should have correct message')
+      t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, {worker: true}, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { worker: true }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 

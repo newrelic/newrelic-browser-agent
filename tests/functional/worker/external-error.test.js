@@ -22,19 +22,13 @@ workerTypes.forEach(type => {
 
 function externalTest(type, matcher) {
   testDriver.test(`${type} - an external JS import that throws an error generates and sends an error object`, matcher, function (t, browser, router) {
+    const workerCommands = []
+    if (type === 'classic') workerCommands.push("importScripts('/tests/assets/js/external-worker-error.js?secretParameter=secretValue')")
+    else workerCommands.push("import('/tests/assets/js/external-worker-error.js?secretParameter=secretValue')")
+    workerCommands.push("setTimeout(() => externalFunction(), 1000)")
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
-      workerCommands: [
-        () => {
-          try {
-            importScripts('/tests/assets/js/external-worker-error.js?secretParameter=secretValue')
-          } catch (err) {
-            import('/tests/assets/js/external-worker-error.js?secretParameter=secretValue')
-          } finally {
-            setTimeout(() => externalFunction(), 1000)
-          }
-        }
-      ].map(x => x.toString())
+      workerCommands
     })
 
     let loadPromise = browser.get(assetURL)

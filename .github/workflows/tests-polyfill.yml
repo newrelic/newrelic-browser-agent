@@ -377,6 +377,7 @@ jobs:
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=2 --unit-only
   check-failures:
     runs-on: ubuntu-latest
+    continue-on-error: true
     container: node:14
     if: ${{ !failure() }}  # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
     needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, safari-functional, safari-unit, edge-functional, edge-unit, ios-functional, ios-unit, android-functional, android-unit, ie-functional, ie-unit]

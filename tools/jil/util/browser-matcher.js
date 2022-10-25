@@ -213,7 +213,7 @@ features.fetch = new BrowserMatcher()
 // MDN shows this function as not supported
 // https://developer.mozilla.org/en-US/docs/Web/API/Body/arrayBuffer
 features.fetchExt = features.fetch.and(new BrowserMatcher()
-  .exclude('ios', '<11.0')
+  .exclude('ios', '<11.3')
   .exclude('safari', '<11.1') // MDN says no support (11.1 currently latest), but 11.1 is accounted for in the tests
 )
 
@@ -256,10 +256,6 @@ features.blob = new BrowserMatcher()
   .exclude('android')
   .exclude('phantom')
 
-features.locationDecodesUrl = new BrowserMatcher()
-  .exclude('*', '*')
-  .include('android', '4.0')
-
 /** DEPRECATED */
 features.tls = new BrowserMatcher()
   .exclude('ie', '<7')
@@ -273,9 +269,6 @@ features.addEventListenerOptions = new BrowserMatcher()
   .exclude('edge')
   .exclude('ios')
   .exclude('ie')
-
-features.pushstate = new BrowserMatcher()
-  .exclude('ie', '<10')
 
 features.firstPaint = new BrowserMatcher()
   .exclude('*')
@@ -341,7 +334,7 @@ features.originOnlyReferer = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=89')
   .include('firefox', '>=87')
-  .include('ios', '>=10.2')
+  .include('ios', '>11.2')
   .include('android')
   .include('edge')
 
@@ -410,6 +403,8 @@ features.es6 = new BrowserMatcher()
   .include('safari', '>12')
   .include('firefox', '>69')
 
+  /* vvv--- Workers API support ---vvv
+  */
   features.workers = new BrowserMatcher([ // NOTE: module type workers have different (higher) compatibility versions
     new MatcherRule(TYPE_EXCLUDE, '*@*'),
     new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
@@ -429,6 +424,14 @@ features.es6 = new BrowserMatcher()
     new MatcherRule(TYPE_INCLUDE, 'ios@>=15.0')
   ]);
   features.workersFull = features.workers.and(features.supportESMWorkers);  // use this to filter versions that support both default & module
+  features.nestedWorkers = new BrowserMatcher([
+    new MatcherRule(TYPE_EXCLUDE, '*@*'),
+    new MatcherRule(TYPE_INCLUDE, 'chrome@>=69'),
+    new MatcherRule(TYPE_INCLUDE, 'edge@>=69'),   // specific support line for edge unclear, using chrome's since based off chromium
+    new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'),  // specific support line for ff unclear, using serviceWorker line
+    new MatcherRule(TYPE_INCLUDE, 'android@>=106')  // not sure if android supports it at all? -- testing currently disabled
+    // safari & ios does not yet support nested (dedicated) workers, current v16 *cli 10/22
+  ]);
 
   features.sharedWorkers = new BrowserMatcher([ // not avail android, or Safari below 16
     new MatcherRule(TYPE_EXCLUDE, '*@*'),

@@ -1,5 +1,6 @@
 import { defaults as nrDefaults, gosNREUMInitializedAgents } from '../../window/nreum'
 import { Configurable } from './configurable'
+import { isWebWorker } from '../../window/win'
 
 const model = {
   // preset defaults
@@ -16,7 +17,9 @@ const model = {
   account: undefined,
   product: undefined,
   extra: undefined,
-  jsAttributes: {},
+  jsAttributes: {
+    isWorker: isWebWorker
+  },
   userAttributes: undefined,
   atts: undefined,
   transactionName: undefined,

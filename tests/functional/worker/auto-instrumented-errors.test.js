@@ -15,19 +15,22 @@ const init = {
   }
 }
 
+var timedPromiseAll = (promises, ms) => Promise.race([
+  new Promise((resolve, reject) => {
+    setTimeout(() => reject(), ms)
+  }),
+  Promise.all(promises)
+])
+
 workerTypes.forEach(type => {
   referenceErrorTest(type, typeToMatcher(type))
   thrownErrorTest(type, typeToMatcher(type))
-  unhandledPromiseRejectionTest(type, typeToMatcher(type)
-    .and(testDriver.Matcher.withFeature('unhandledPromiseRejection'))
-  )
+  unhandledPromiseRejectionTest(type, typeToMatcher(type))
   rangeErrorTest(type, typeToMatcher(type))
   syntaxErrorTest(type, typeToMatcher(type))
   typeErrorTest(type, typeToMatcher(type))
   uriErrorTest(type, typeToMatcher(type))
-  memoryLeakTest(type, typeToMatcher(type)
-    .and(testDriver.Matcher.withFeature('workerStackSizeGeneratesError'))
-  )
+  memoryLeakTest(type, typeToMatcher(type))
 })
 
 function referenceErrorTest(type, matcher) {
@@ -73,7 +76,7 @@ function unhandledPromiseRejectionTest(type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([errResponse]) => {
+    timedPromiseAll([errPromise, loadPromise], 6000).then(([errResponse]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -86,7 +89,9 @@ function unhandledPromiseRejectionTest(type, matcher) {
     }).catch(fail)
 
     function fail(err) {
-      t.error(err)
+      console.log("FAIL FAIL FAIL")
+      if (browser.match('chrome@<=49, edge<=79, safari@<=12, firefox@<=69, ie, ios@<=12')) t.pass("Browser does not support unhandledPromiseRejections")
+      else t.error(err)
       t.end()
     }
   })
@@ -212,7 +217,7 @@ function memoryLeakTest(type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([errResponse]) => {
+    timedPromiseAll([errPromise, loadPromise], 6000).then(([errResponse]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -225,7 +230,8 @@ function memoryLeakTest(type, matcher) {
     }).catch(fail)
 
     function fail(err) {
-      t.error(err)
+      if (browser.match('firefox')) t.pass('This browser version does not throw errors in worker when max stack size is reached')
+      else t.error(err)
       t.end()
     }
   })

@@ -89,7 +89,6 @@ function unhandledPromiseRejectionTest(type, matcher) {
     }).catch(fail)
 
     function fail(err) {
-      console.log("FAIL FAIL FAIL")
       if (browser.match('chrome@<=49, edge<=79, safari@<=12, firefox@<=69, ie, ios@<=12')) t.pass("Browser does not support unhandledPromiseRejections")
       else t.error(err)
       t.end()

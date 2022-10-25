@@ -9,6 +9,7 @@ const { setAPI } = require('../../../cdn/agent-loader/utils/api')
 export function setup(agentIdentifier = (Math.random() + 1).toString(36).substring(7)) {
     const nr = gosCDN()
 
+    nr.info.jsAttributes = {};  // duck all the browser tests' checking of default custom attributes
     setInfo(agentIdentifier, nr.info)
     setConfiguration(agentIdentifier, nr.init)
     setLoaderConfig(agentIdentifier, nr.loader_config)

@@ -40,7 +40,7 @@ function setCustomAttributeTest(type, matcher) {
 
       let actualError = actualErrors[0]
       t.equal(actualError.params.message, 'test', 'has the expected message')
-      t.deepEqual(actualError.custom, { hi: 'mom', worker: true }, 'Should have correct custom attributes')
+      t.deepEqual(actualError.custom, { hi: 'mom', isWorker: true }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 

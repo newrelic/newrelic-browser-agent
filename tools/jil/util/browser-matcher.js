@@ -152,11 +152,11 @@ features.setImmediate = new BrowserMatcher()
 features.xhr = new BrowserMatcher()
   .exclude('ie@<9')
 
+features.noPhantom = new BrowserMatcher()
+.exclude('phantom');
+
 /** DEPRECATED -- just use noPhantom instead */
 features.xhrWithAddEventListener = features.xhr.and(features.noPhantom)
-
-features.noPhantom = new BrowserMatcher()
-  .exclude('phantom');
 
 // requires window.perfomance.getEntriesByType
 features.stn = new BrowserMatcher()

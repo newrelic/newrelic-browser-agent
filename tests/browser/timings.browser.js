@@ -248,6 +248,7 @@ function waitForWindowLoad (fn) {
 }
 
 const {setup} = require('./utils/setup')
+const {setInfo} = require("../../packages/browser-agent-core/common/config/config")
 const {Aggregate: PvtAggregate} = require('../../packages/browser-agent-core/features/page-view-timing/aggregate/index')
 
 const {agentIdentifier, aggregator} = setup()
@@ -260,6 +261,7 @@ jil.browserTest('page-view-timing serializer default attributes', function (t) {
   waitForWindowLoad(startTest)
 
   function startTest () {
+    setInfo(agentIdentifier, { jsAttributes: {} })
 
     testCases.forEach(testCase => {
       var expectedPayload = qp.encode(testCase.input, schema)
@@ -272,8 +274,6 @@ jil.browserTest('page-view-timing serializer default attributes', function (t) {
 })
 
 jil.browserTest('page-view-timing serializer handles custom attributes', function (t) {
-  const {setInfo} = require("../../packages/browser-agent-core/common/config/config")
-
   const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
 
   waitForWindowLoad(startTest)

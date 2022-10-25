@@ -38,7 +38,7 @@ function noticeErrorTest(type, supportRegOrESMWorker) {
     Promise.all([errPromise, loadPromise]).then(([errResponse]) => {
       const { err } = JSON.parse(errResponse.body)
       checkBasics(t, err)
-      t.deepEqual(err[0].custom, {worker: true}, 'Should not have correct custom attributes')
+      t.deepEqual(err[0].custom, {isWorker: true}, 'Should not have correct custom attributes')
       t.end()
     }).catch(fail(t));
 	})
@@ -57,7 +57,7 @@ function noticeErrorStringTest(type, supportRegOrESMWorker) {
     Promise.all([errPromise, loadPromise]).then(([errResponse]) => {
       const { err } = JSON.parse(errResponse.body)
       checkBasics(t, err)
-      t.deepEqual(err[0].custom, {worker: true}, 'Should not have correct custom attributes')
+      t.deepEqual(err[0].custom, {isWorker: true}, 'Should not have correct custom attributes')
       t.end()
     }).catch(fail(t));
 	})
@@ -78,7 +78,7 @@ function noticeErrorWithParamsTest(type, supportRegOrESMWorker) {
     Promise.all([errPromise, loadPromise]).then(([errResponse]) => {
       const { err } = JSON.parse(errResponse.body)
       checkBasics(t, err)
-      t.deepEqual(err[0].custom, { hi: 'mom', worker: true }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { hi: 'mom', isWorker: true }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail(t));
 	})

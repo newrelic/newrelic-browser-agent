@@ -21,20 +21,19 @@ import { getEnabledFeatures } from '@newrelic/browser-agent-core/common/util/ena
 import { configure } from './utils/configure'
 
 // set up the NREUM, api, and internal configs
-configure().then(() => {
-    const enabledFeatures = getEnabledFeatures(agentIdentifier)
-    // lite features
-    if (enabledFeatures['page_view_event']) new InstrumentPageViewEvent(agentIdentifier) // document load (page view event + metrics)
-    if (enabledFeatures['page_view_timing']) new InstrumentPageViewTiming(agentIdentifier) // page view timings instrumentation (/loader/timings.js)
-    if (enabledFeatures.metrics) new InstrumentMetrics(agentIdentifier, PolyfillFeatures)   // supportability & custom metrics
-    // pro features
-    if (enabledFeatures.jserrors) new InstrumentErrors(agentIdentifier) // errors
-    if (enabledFeatures.ajax) new InstrumentXhr(agentIdentifier) // ajax
-    if (enabledFeatures['session_trace']) new InstrumentSessionTrace(agentIdentifier) // session traces
-    if (enabledFeatures['page_action']) new InstrumentPageAction(agentIdentifier) // ins (apis)
-    // instantiate auto-instrumentation specific to this loader...
-    if (enabledFeatures.spa) new InstrumentSpa(agentIdentifier) // spa
+configure()
+const enabledFeatures = getEnabledFeatures(agentIdentifier)
+// lite features
+if (enabledFeatures['page_view_event']) new InstrumentPageViewEvent(agentIdentifier) // document load (page view event + metrics)
+if (enabledFeatures['page_view_timing']) new InstrumentPageViewTiming(agentIdentifier) // page view timings instrumentation (/loader/timings.js)
+if (enabledFeatures.metrics) new InstrumentMetrics(agentIdentifier, PolyfillFeatures)   // supportability & custom metrics
+// pro features
+if (enabledFeatures.jserrors) new InstrumentErrors(agentIdentifier) // errors
+if (enabledFeatures.ajax) new InstrumentXhr(agentIdentifier) // ajax
+if (enabledFeatures['session_trace']) new InstrumentSessionTrace(agentIdentifier) // session traces
+if (enabledFeatures['page_action']) new InstrumentPageAction(agentIdentifier) // ins (apis)
+// instantiate auto-instrumentation specific to this loader...
+if (enabledFeatures.spa) new InstrumentSpa(agentIdentifier) // spa
 
-    // imports the aggregator for 'lite' if no other aggregator takes precedence
-    stageAggregator('spa')
-})
+// imports the aggregator for 'lite' if no other aggregator takes precedence
+stageAggregator('spa')

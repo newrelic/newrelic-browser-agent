@@ -15,13 +15,13 @@ import { Instrument as InstrumentPageAction } from '@newrelic/browser-agent-core
 import { getEnabledFeatures } from '@newrelic/browser-agent-core/common/util/enabled-features'
 
 // set up the NREUM, api, and internal configs
-configure().then(() => {
-    const enabledFeatures = getEnabledFeatures(agentIdentifier)
-    if (enabledFeatures.metrics) new InstrumentMetrics(agentIdentifier, PolyfillFeatures)   // supportability & custom metrics
-    if (enabledFeatures.jserrors) new InstrumentErrors(agentIdentifier) // errors
-    if (enabledFeatures.ajax) new InstrumentXhr(agentIdentifier) // ajax
-    if (enabledFeatures['page_action']) new InstrumentPageAction(agentIdentifier) // ins (apis)
+configure()
+const enabledFeatures = getEnabledFeatures(agentIdentifier)
+if (enabledFeatures.metrics) new InstrumentMetrics(agentIdentifier)   // supportability & custom metrics
+if (enabledFeatures.jserrors) new InstrumentErrors(agentIdentifier) // errors
+if (enabledFeatures.ajax) new InstrumentXhr(agentIdentifier) // ajax
+if (enabledFeatures['page_action']) new InstrumentPageAction(agentIdentifier) // ins (apis)
+// imports the aggregator for 'lite' if no other aggregator takes precedence
+stageAggregator('worker')
 
-    // imports the aggregator for 'lite' if no other aggregator takes precedence
-    stageAggregator('worker')
-})
+

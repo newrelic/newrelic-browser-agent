@@ -27,6 +27,7 @@ var runnerArgs = require('../runner/args')
 mime.types['es6'] = 'application/javascript'
 
 const assetsDir = path.resolve(__dirname, '../../..')
+const REGEXP_REPLACEMENT_REGEX = /"new RegExp\('(.*?)','(.*?)'\)"/g;
 
 class AssetTransform {
   test(params) {
@@ -125,7 +126,8 @@ class AgentInjectorTransform extends AssetTransform {
 
   generateInit(initFromQueryString) {
     let initString = Buffer.from(initFromQueryString, 'base64').toString()
-    initString = initString.replaceAll(/"(new RegExp.*?)"/g, '$1');
+    if (initString.includes('new RegExp'))  // de-serialize RegExp obj from router
+      initString = initString.replace(REGEXP_REPLACEMENT_REGEX, '/$1/$2');
     return `window.NREUM||(NREUM={});NREUM.init=${initString};NREUM.init.ssl=false;`
   }
 

@@ -261,8 +261,6 @@ jil.browserTest('page-view-timing serializer default attributes', function (t) {
   waitForWindowLoad(startTest)
 
   function startTest () {
-    setInfo(agentIdentifier, { jsAttributes: {} })
-
     testCases.forEach(testCase => {
       var expectedPayload = qp.encode(testCase.input, schema)
       var payload = pvtAgg.getPayload(getAgentInternalFormat(testCase.input))

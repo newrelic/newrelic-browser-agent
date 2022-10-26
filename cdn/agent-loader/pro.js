@@ -20,18 +20,24 @@ import { Instrument as InstrumentPageAction } from '@newrelic/browser-agent-core
 import { getEnabledFeatures } from '@newrelic/browser-agent-core/common/util/enabled-features'
 
 // set up the NREUM, api, and internal configs
-configure()
+try {
+    configure()
 
-const enabledFeatures = getEnabledFeatures(agentIdentifier)
-// lite features
-if (enabledFeatures['page_view_event']) new InstrumentPageViewEvent(agentIdentifier) // document load (page view event + metrics)
-if (enabledFeatures['page_view_timing']) new InstrumentPageViewTiming(agentIdentifier) // page view timings instrumentation (/loader/timings.js)
-if (enabledFeatures.metrics) new InstrumentMetrics(agentIdentifier, PolyfillFeatures)   // supportability & custom metrics
-// instantiate auto-instrumentation specific to this loader...
-if (enabledFeatures.jserrors) new InstrumentErrors(agentIdentifier) // errors
-if (enabledFeatures.ajax) new InstrumentXhr(agentIdentifier) // ajax
-if (enabledFeatures['session_trace']) new InstrumentSessionTrace(agentIdentifier) // session traces
-if (enabledFeatures['page_action']) new InstrumentPageAction(agentIdentifier) // ins (apis)
+    const enabledFeatures = getEnabledFeatures(agentIdentifier)
+    // lite features
+    if (enabledFeatures['page_view_event']) new InstrumentPageViewEvent(agentIdentifier) // document load (page view event + metrics)
+    if (enabledFeatures['page_view_timing']) new InstrumentPageViewTiming(agentIdentifier) // page view timings instrumentation (/loader/timings.js)
+    if (enabledFeatures.metrics) new InstrumentMetrics(agentIdentifier, PolyfillFeatures)   // supportability & custom metrics
+    // instantiate auto-instrumentation specific to this loader...
+    if (enabledFeatures.jserrors) new InstrumentErrors(agentIdentifier) // errors
+    if (enabledFeatures.ajax) new InstrumentXhr(agentIdentifier) // ajax
+    if (enabledFeatures['session_trace']) new InstrumentSessionTrace(agentIdentifier) // session traces
+    if (enabledFeatures['page_action']) new InstrumentPageAction(agentIdentifier) // ins (apis)
 
-// imports the aggregator for 'lite' if no other aggregator takes precedence
-stageAggregator('pro')
+    // imports the aggregator for 'lite' if no other aggregator takes precedence
+    stageAggregator('pro')
+} catch (err) {
+    if (self?.newrelic?.ee?.abort) self.newrelic.ee.abort()
+    // todo
+    // send supportability metric that the agent failed to load its features
+}

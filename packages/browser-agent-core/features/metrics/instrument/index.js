@@ -7,7 +7,7 @@ import { getRules, validateRules } from '../../../common/util/obfuscate'
 import { VERSION } from '../../../common/constants/environment-variables'
 import { onDOMContentLoaded } from '../../../common/window/load'
 import { isBrowserWindow } from '../../../common/window/win'
-import * as WorkersHelper from './workers-helper'
+import { insertSupportMetrics } from './workers-helper'
 
 var SUPPORTABILITY_METRIC = 'sm'
 var CUSTOM_METRIC = 'cm'
@@ -15,9 +15,9 @@ var CUSTOM_METRIC = 'cm'
 export class Instrument extends FeatureBase {
     constructor(agentIdentifier, PfFeatStatusEnum = {}) {
         super(agentIdentifier)
+        this.PfFeatStatusEnum = PfFeatStatusEnum
         // checks that are run only one time, at script load
-        this.reportPolyfillsNeeded(PfFeatStatusEnum);
-        this.singleChecks();
+        this.singleChecks()
         // listen for messages from features and capture them
         registerHandler('record-supportability', (...args) => this.recordSupportability(...args), undefined, this.ee)
         registerHandler('record-custom', (...args) => this.recordCustom(...args), undefined, this.ee)
@@ -79,15 +79,18 @@ export class Instrument extends FeatureBase {
         if (rules.length > 0) this.recordSupportability('Generic/Obfuscate/Detected')
         if (rules.length > 0 && !validateRules(rules)) this.recordSupportability('Generic/Obfuscate/Invalid')
 
+        // polyfilled feature detection
+        if (isBrowserWindow) this.reportPolyfillsNeeded();
+
         // poll web worker support
-        WorkersHelper.insertSupportMetrics(this.recordSupportability.bind(this));
+        insertSupportMetrics(this.recordSupportability.bind(this));
     }
 
-    reportPolyfillsNeeded(PfFeatStatusEnum) {
-        this.recordSupportability(`Generic/Polyfill/Promise/${PfFeatStatusEnum.PROMISE}`);
-        this.recordSupportability(`Generic/Polyfill/ArrayIncludes/${PfFeatStatusEnum.ARRAY_INCLUDES}`);
-        this.recordSupportability(`Generic/Polyfill/ObjectAssign/${PfFeatStatusEnum.OBJECT_ASSIGN}`);
-        this.recordSupportability(`Generic/Polyfill/ObjectEntries/${PfFeatStatusEnum.OBJECT_ENTRIES}`);
+    reportPolyfillsNeeded() {
+        this.recordSupportability(`Generic/Polyfill/Promise/${this.PfFeatStatusEnum.PROMISE}`);
+        this.recordSupportability(`Generic/Polyfill/ArrayIncludes/${this.PfFeatStatusEnum.ARRAY_INCLUDES}`);
+        this.recordSupportability(`Generic/Polyfill/ObjectAssign/${this.PfFeatStatusEnum.OBJECT_ASSIGN}`);
+        this.recordSupportability(`Generic/Polyfill/ObjectEntries/${this.PfFeatStatusEnum.OBJECT_ENTRIES}`);
     }
 }
 

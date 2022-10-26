@@ -1,8 +1,10 @@
 name: Polyfill Tests
 
 on:
-  pull_request_target:
-    types: [labeled]
+  push:
+    branches:
+      - main
+      - dev 
   workflow_dispatch:
 
 env:
@@ -10,7 +12,6 @@ env:
 
 jobs:
   chrome-functional:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -24,8 +25,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -36,7 +35,6 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b chrome@* -s -t 85000 --concurrent=2 --functional-only
   chrome-unit:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -50,8 +48,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -62,7 +58,6 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b chrome@* -s -t 85000 --concurrent=2 --unit-only
   firefox-functional:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -76,8 +71,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -88,7 +81,6 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b firefox@* -s -t 85000 --concurrent=2 --functional-only
   firefox-unit:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -102,8 +94,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -114,7 +104,6 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b firefox@* -s -t 85000 --concurrent=2 --unit-only
   edge-functional:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -128,8 +117,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -140,7 +127,6 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b edge@* -s -t 85000 --concurrent=2 --functional-only
   edge-unit:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -154,8 +140,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -166,7 +150,6 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b edge@* -s -t 85000 --concurrent=2 --unit-only
   safari-functional:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -180,8 +163,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -192,7 +173,6 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b safari@* -s -t 85000 --concurrent=2 --functional-only
   safari-unit:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -206,8 +186,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -218,7 +196,6 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b safari@* -s -t 85000 --concurrent=2 --unit-only
   ios-functional:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -232,8 +209,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -244,7 +219,6 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ios@* -s -t 85000 --concurrent=2 --functional-only
   ios-unit:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -258,8 +232,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -270,7 +242,6 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ios@* -s -t 85000 --concurrent=2 --unit-only
   android-functional:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -284,8 +255,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -297,7 +266,6 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b android@* -s -t 85000 --concurrent=2 --functional-only
   android-unit:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -311,8 +279,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -324,7 +290,6 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b android@* -s -t 85000 --concurrent=2 --unit-only
   ie-functional:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -338,8 +303,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -350,7 +313,6 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=2 --functional-only
   ie-unit:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -364,8 +326,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm
@@ -377,6 +337,7 @@ jobs:
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=2 --unit-only
   check-failures:
     runs-on: ubuntu-latest
+    continue-on-error: true
     container: node:14
     if: ${{ !failure() }}  # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
     needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, safari-functional, safari-unit, edge-functional, edge-unit, ios-functional, ios-unit, android-functional, android-unit, ie-functional, ie-unit]
@@ -385,8 +346,6 @@ jobs:
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
         run: npm ci --cache ./.npm

@@ -257,7 +257,7 @@ jobs:
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 --unit-only
   ios-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
+    timeout-minutes: 45
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
@@ -283,7 +283,7 @@ jobs:
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --functional-only
   ios-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
+    timeout-minutes: 45
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14

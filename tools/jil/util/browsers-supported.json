@@ -41,36 +41,36 @@
       "browserName": "MicrosoftEdge",
       "platform": "Windows 10",
       "platformName": "Windows 10",
-      "version": "105",
-      "browserVersion": "105"
+      "version": "106",
+      "browserVersion": "106"
     },
     {
       "browserName": "MicrosoftEdge",
       "platform": "Windows 11",
       "platformName": "Windows 11",
-      "version": "103",
-      "browserVersion": "103"
-    },
-    {
-      "browserName": "MicrosoftEdge",
-      "platform": "Windows 10",
-      "platformName": "Windows 10",
-      "version": "101",
-      "browserVersion": "101"
+      "version": "104",
+      "browserVersion": "104"
     },
     {
       "browserName": "MicrosoftEdge",
       "platform": "Windows 11",
       "platformName": "Windows 11",
-      "version": "99",
-      "browserVersion": "99"
+      "version": "102",
+      "browserVersion": "102"
     },
     {
       "browserName": "MicrosoftEdge",
       "platform": "Windows 11",
       "platformName": "Windows 11",
-      "version": "96",
-      "browserVersion": "96"
+      "version": "100",
+      "browserVersion": "100"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
+      "version": "97",
+      "browserVersion": "97"
     }
   ],
   "safari": [
@@ -109,27 +109,27 @@
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "105"
+      "version": "106"
     },
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "103"
+      "version": "104"
     },
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "101"
+      "version": "102"
     },
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "99"
+      "version": "100"
     },
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "96"
+      "version": "97"
     }
   ],
   "ios": [
@@ -194,8 +194,8 @@
       "platform": "iOS",
       "platformName": "iOS",
       "version": "14.4",
-      "device": "iPhone 7",
-      "appium:deviceName": "iPhone 7 Simulator",
+      "device": "iPhone Simulator",
+      "appium:deviceName": "iPhone Simulator",
       "appium:platformVersion": "14.4",
       "appium:automationName": "XCUITest",
       "sauce:options": {

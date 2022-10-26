@@ -27,6 +27,7 @@ var runnerArgs = require('../runner/args')
 mime.types['es6'] = 'application/javascript'
 
 const assetsDir = path.resolve(__dirname, '../../..')
+const REGEXP_REPLACEMENT_REGEX = /"new RegExp\('(.*?)','(.*?)'\)"/g;
 
 class AssetTransform {
   test(params) {
@@ -51,7 +52,7 @@ class AgentInjectorTransform extends AssetTransform {
 
   parseConfigFromQueryString(params) {
     if (!params.config) return
-    let configString = new Buffer(params.config, 'base64').toString()
+    let configString = Buffer.from(params.config, 'base64').toString()
     return JSON.parse(configString)
   }
 
@@ -124,8 +125,15 @@ class AgentInjectorTransform extends AssetTransform {
   }
 
   generateInit(initFromQueryString) {
-    let initString = new Buffer(initFromQueryString, 'base64').toString()
+    let initString = Buffer.from(initFromQueryString, 'base64').toString()
+    if (initString.includes('new RegExp'))  // de-serialize RegExp obj from router
+      initString = initString.replace(REGEXP_REPLACEMENT_REGEX, '/$1/$2');
     return `window.NREUM||(NREUM={});NREUM.init=${initString};NREUM.init.ssl=false;`
+  }
+
+  generateWorkerCommands(wcFromQueryString) {
+    let wcString = Buffer.from(wcFromQueryString, 'base64').toString()
+    return `workerCommands=${wcString};`
   }
 
   getDebugShim() {
@@ -237,12 +245,22 @@ class AgentInjectorTransform extends AssetTransform {
             }
           }
 
+          let wcContent = ''
+          if (params.workerCommands) {
+            try {
+              wcContent = this.generateWorkerCommands(params.workerCommands)
+            } catch (e) {
+              return callback(e)
+            }
+          }
+
           let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;'
 
           let rspData = rawContent
             .split('{loader}').join(tagify(disableSsl + loaderContent))
             .replace('{config}', tagify(disableSsl + configContent))
             .replace('{init}', tagify(disableSsl + initContent))
+            .replace('{worker-commands}', tagify(disableSsl + wcContent))
             .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
 
           if (runnerArgs.polyfills) {

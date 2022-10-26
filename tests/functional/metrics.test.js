@@ -4,34 +4,13 @@
  */
 
 const testDriver = require('../../tools/jil/index')
-const { getErrorsFromResponse, getMetricsFromResponse } = require('./err/assertion-helpers')
+const {asyncApiFns, failWithEndTimeout, extractWorkerSM, getMetricsFromResponse} = require('./uncat-internal-help.cjs')
 
 const withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 const fetchBrowsers = testDriver.Matcher.withFeature('fetchExt')
-const NUM_POLYFILL_SM_FEATS = 4;
 
-const smLabel = (fn) => `API/${fn}/called`
-
-const asyncApiFns = [
-  'noticeError',
-  'setPageViewName',
-  'setCustomAttribute',
-  'setErrorHandler',
-  'finished',
-  'addToTrace',
-  'addRelease'
-].map(smLabel)
-
-const multipleApiCalls = smLabel('setPageViewName') // page should trigger 5 calls of this fn
-
-function fail(t, err) {
-  return (err) => {
-    t.error(err);
-    setTimeout(() => {
-      t.end()
-    }, 8000);
-  };
-}
+const NUM_POLYFILL_SM_FEATS = 4;  // disabled in workers
+const multipleApiCalls = asyncApiFns[1]; // page should trigger 5 calls of 'setPageViewName'
 
 testDriver.test('Calling a newrelic[api] fn creates a supportability metric', withUnload, function (t, browser, router) {
   t.plan((asyncApiFns.length) + 5 + NUM_POLYFILL_SM_FEATS)
@@ -73,7 +52,7 @@ testDriver.test('Calling a newrelic[api] fn creates a supportability metric', wi
       t.ok(customMetrics[0].params.name === 'finished', 'a `Finished` Custom Metric (cm) was also generated')
       t.end()
     })
-    .catch(fail(t))
+    .catch(failWithEndTimeout(t))
 })
 
 testDriver.test('a valid obfuscationRule creates detected supportability metric', fetchBrowsers, function (t, browser, router) {
@@ -96,7 +75,7 @@ testDriver.test('a valid obfuscationRule creates detected supportability metric'
       })
       t.end()
     })
-    .catch(fail(t))
+    .catch(failWithEndTimeout(t))
 })
 
 testDriver.test('an invalid obfuscation regex type creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
@@ -122,7 +101,7 @@ testDriver.test('an invalid obfuscation regex type creates invalid supportabilit
       t.ok(invalidDetected, 'invalid regex rule detected')
       t.end()
     })
-    .catch(fail(t))
+    .catch(failWithEndTimeout(t))
 })
 
 testDriver.test('an invalid obfuscation regex undefined creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
@@ -148,7 +127,7 @@ testDriver.test('an invalid obfuscation regex undefined creates invalid supporta
       t.ok(invalidDetected, 'invalid regex rule detected')
       t.end()
     })
-    .catch(fail(t))
+    .catch(failWithEndTimeout(t))
 })
 
 testDriver.test('an invalid obfuscation replacement type creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
@@ -174,14 +153,14 @@ testDriver.test('an invalid obfuscation replacement type creates invalid support
       t.ok(invalidDetected, 'invalid regex rule detected')
       t.end()
     })
-    .catch(fail(t))
+    .catch(failWithEndTimeout(t))
 })
 
 /**
  * When workers constructors are called, they should generate supportability metric for each instance. Environments in which (certain) workers are
  * not supported should also report a sm once per life of page.
  */
-testDriver.test('workers creation generates sm', fetchBrowsers, function (t, browser, router) {
+testDriver.test('workers creation generates sm', function (t, browser, router) {
   let rumPromise = router.expectRumAndErrors()
   const loadPromise = browser.safeGet(router.assetURL('instrumented-worker.html', {
     loader: 'spa',
@@ -196,62 +175,37 @@ testDriver.test('workers creation generates sm', fetchBrowsers, function (t, bro
     .then(([data]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, `${supportabilityMetrics.length} SupportabilityMetrics object(s) were generated`);
-      let classicWorker = moduleWorker = classicShared = moduleShared = classicService = moduleService = false;
-      let sharedUnavail = serviceUnavail = false;
-      let workerImplFail = sharedImplFail = serviceImplFail = false;
 
-      // Comb through for specific worker SM tags we want to see.
-      for (const sm of supportabilityMetrics) {
-        switch (sm.params.name) {
-          case 'Workers/Dedicated/Classic':
-            classicWorker = true; break;
-          case 'Workers/Dedicated/Module':
-            moduleWorker = true; break;
-          case 'Workers/Dedicated/SM/Unsupported':
-            workerImplFail = true; break;
-          case 'Workers/Shared/Classic':
-            classicShared = true; break;
-          case 'Workers/Shared/Module':
-            moduleShared = true; break;
-          case 'Workers/Shared/SM/Unsupported':
-            sharedImplFail = true; break;
-          case 'Workers/Shared/Unavailable':
-            sharedUnavail = true; break;
-          case 'Workers/Service/Classic':
-            classicService = true; break;
-          case 'Workers/Service/Module':
-            moduleService = true; break;
-          case 'Workers/Service/SM/Unsupported':
-            serviceImplFail = true; break;
-          case 'Workers/Service/Unavailable':
-            serviceUnavail = true; break;
-        }
-      }
+      const wsm = extractWorkerSM(supportabilityMetrics);
 
       // Just assume that all the browsers & versions we test will support workers because it's been long supported; don't bother test 'Workers/All/Unavailable'.
       let workerShouldExistOnThisBrowser = testDriver.Matcher.withFeature('workers').match(browser.browserSpec);
-      if (workerShouldExistOnThisBrowser && !workerImplFail) {  // worker may be avail in Chrome v4, but our SM implementation may not be supported until v60, etc.
-        t.ok(classicWorker, 'classic worker is expected and used');
-        t.ok(moduleWorker, 'module worker is expected and used');
+      if (workerShouldExistOnThisBrowser && !wsm.workerImplFail) {  // worker may be avail in Chrome v4, but our SM implementation may not be supported until v60, etc.
+        t.ok(wsm.classicWorker, 'classic worker is expected and used');
+
+        /* Also note that though Firefox & older Safari don't actually support module workers, their call to the constructor still succeeds hence
+          generating a false positive sm. For simplicity, we'll just accept it as-is, so there's no add'l check here for 'workersFull' match. 
+          ... Actually, if you compare Safari v14 vs. Edge v79, in both of which module workers are n/a, only the latter errors out while the former silently ignores. */
+        t.ok(wsm.moduleWorker, 'module worker is expected and used');
       }
 
       // Shared & Service workers below are more niche.
       workerShouldExistOnThisBrowser = testDriver.Matcher.withFeature('sharedWorkers').match(browser.browserSpec);
-      if (workerShouldExistOnThisBrowser && !sharedImplFail) {
-        t.ok(classicShared, 'classic sharedworker is expected and used');
-        t.ok(moduleShared, 'module sharedworker is expected and used');
+      if (workerShouldExistOnThisBrowser && !wsm.sharedImplFail) {
+        t.ok(wsm.classicShared, 'classic sharedworker is expected and used');
+        t.ok(wsm.moduleShared, 'module sharedworker is expected and used');
       } else {
-        t.ok(sharedUnavail || sharedImplFail, 'sharedworker API or SM should be unavailable on this browser version');
+        t.ok(wsm.sharedUnavail || wsm.sharedImplFail, 'sharedworker API or SM should be unavailable on this browser version');
       }
 
       // Service Workers won't be available in tests until JIL local asset server runs on HTTPS or changes to localhost/127.#.#.# url
       workerShouldExistOnThisBrowser = testDriver.Matcher.withFeature('serviceWorkers').match(browser.browserSpec);
       if (workerShouldExistOnThisBrowser) {
-        t.notOk(classicService || moduleService, 'classic or module serviceworker is NOT expected or used');
-        t.ok(serviceUnavail || serviceImplFail, 'serviceworker API should be unavailable on all');
+        t.notOk(wsm.classicService || wsm.moduleService, 'classic or module serviceworker is NOT expected or used');
+        t.ok(wsm.serviceUnavail || wsm.serviceImplFail, 'serviceworker API should be unavailable on all');
       }
 
       t.end()
     })
-    .catch(fail(t));
+    .catch(failWithEndTimeout(t))
 })

@@ -1,4 +1,5 @@
-export { insertSupportMetrics };    // export list
+import {isWebWorker} from '../../../common/window/win'
+export {insertSupportMetrics};    // export list
 
 /**
  * True for each Worker type supported in browser's execution context. Not all browser versions may support certain Workers or options however.
@@ -87,6 +88,8 @@ function insertSupportMetrics(report) {
 
     // Internal helpers - Reporting & logging
     function reportUnavailable(workerType) {
+        if (isWebWorker) return;    // assume that the main browser window has already reported unsupported worker APIs (once per page life);
+            // on top of that, not all workers are available inside a certain worker per se--e.g. no sharedWorker() inside Worker
         report(`Workers/${workerType}/Unavailable`);
     }
     function reportWorkerCreationAttempt(workerType, optionType) {
@@ -96,8 +99,8 @@ function insertSupportMetrics(report) {
             report(`Workers/${workerType}/Classic`);
         }
     }
-    function handleInsertionError(e, workerType) {
-        report(`Workers/${workerType}/SM/Unsupported`); // indicates the browser version doesn't support how code is injected, such as Proxy API
+    function handleInsertionError(e, workerType) {  // indicates the browser version doesn't support how code is injected, such as Proxy API
+        report(`Workers/${workerType}/SM/Unsupported`); // expected to be niche & for older borderline-ES6 browser versions
         console.warn(`NR Agent: Unable to capture ${workerType} workers.`, e);
     }
 }

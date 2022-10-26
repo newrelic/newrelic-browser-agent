@@ -1,6 +1,7 @@
 import { getRuntime, setInfo, getInfo, getConfigurationValue } from '@newrelic/browser-agent-core/common/config/config'
 import { importFeatures } from './util/features'
 import { activateFeatures, activatedFeatures, drainAll } from '@newrelic/browser-agent-core/common/util/feature-flags'
+import { isBrowserWindow } from '@newrelic/browser-agent-core/common/window/win'
 import { addToNREUM, gosCDN } from '@newrelic/browser-agent-core/common/window/nreum'
 import agentIdentifier from '../shared/agentIdentifier'
 import { initializeAPI } from './util/api'
@@ -21,20 +22,19 @@ export function aggregator(build) {
   initializeAPI(agentIdentifier)
 
   // Features are activated using the legacy setToken function name via JSONP
-  addToNREUM('setToken', (flags) => activateFeatures(flags, agentIdentifier))
+  if (isBrowserWindow) addToNREUM('setToken', (flags) => activateFeatures(flags, agentIdentifier))
 
   // import relevant feature aggregators
   if (autorun) return initializeFeatures();
 
   async function initializeFeatures() {
-    const drain = getConfigurationValue(agentIdentifier, 'page_view_event.enabled') === false
     const features = await importFeatures(build)
     // gosNREUMInitializedAgents(agentIdentifier, features, 'features')
     // once ALL the enabled features all initialized,
     // add the activated features from the setToken call to the window for testing purposes
     // and activatedFeatures will drain all the buffers
     addToNREUM('activatedFeatures', activatedFeatures)
-    if (drain) drainAll(agentIdentifier)
+    if (!isBrowserWindow) drainAll(agentIdentifier)
   }
 }
 

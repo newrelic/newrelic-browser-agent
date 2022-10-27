@@ -113,6 +113,10 @@ class AgentInjectorTransform extends AssetTransform {
     return updatedConfig
   }
 
+  getAjaxDenyListString(){
+    return runnerArgs.denyListBam ? `window.NREUM||(NREUM={init:{}});NREUM.init.ajax=NREUM.init.ajax||{};NREUM.init.ajax.deny_list=NREUM.init.ajax.deny_list||[];NREUM.init.ajax.deny_list.push('bam-test-1.nr-local.net');` : ''
+  }
+
   generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig) {
     let config = this.generateConfig(loaderName, params, ssl, injectUpdatedLoaderConfig)
     let infoJSON = JSON.stringify(config.info)
@@ -259,7 +263,7 @@ class AgentInjectorTransform extends AssetTransform {
           let rspData = rawContent
             .split('{loader}').join(tagify(disableSsl + loaderContent))
             .replace('{config}', tagify(disableSsl + configContent))
-            .replace('{init}', tagify(disableSsl + initContent))
+            .replace('{init}', tagify(disableSsl + initContent + this.getAjaxDenyListString()))
             .replace('{worker-commands}', tagify(disableSsl + wcContent))
             .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
 

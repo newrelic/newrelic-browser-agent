@@ -15,8 +15,9 @@ import { Instrument as InstrumentMetrics } from '@newrelic/browser-agent-core/fe
 // common modules
 import { getEnabledFeatures } from '@newrelic/browser-agent-core/common/util/enabled-features'
 
-// set up the NREUM, api, and internal configs
-configure().then(() => {
+try {
+    // set up the NREUM, api, and internal configs
+    configure()
     const enabledFeatures = getEnabledFeatures(agentIdentifier)
     // instantiate auto-instrumentation specific to this loader...
     if (enabledFeatures['page_view_event']) new InstrumentPageViewEvent(agentIdentifier) // document load (page view event + metrics)
@@ -25,4 +26,9 @@ configure().then(() => {
 
     // lazy-loads the aggregator features for 'lite' if no other aggregator takes precedence
     stageAggregator('lite')
-})
+} catch (err) {
+    if (self?.newrelic?.ee?.abort) self.newrelic.ee.abort()
+    // todo
+    // send supportability metric that the agent failed to load its features
+}
+

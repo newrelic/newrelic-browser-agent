@@ -90,9 +90,9 @@ export class Aggregate extends FeatureBase {
 
       if (!shouldCollectEvent(params)) {
         if (params.hostname === getInfo(agentIdentifier).errorBeacon) {
-          handle('record-supportability', ['Ajax/Events/Excluded/Agent'])
+          handle('record-supportability', ['Ajax/Events/Excluded/Agent'], undefined, undefined, ee)
         } else {
-          handle('record-supportability', ['Ajax/Events/Excluded/App'])
+          handle('record-supportability', ['Ajax/Events/Excluded/App'], undefined, undefined, ee)
         }
         return
       }

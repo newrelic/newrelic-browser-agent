@@ -20,7 +20,8 @@ import { Instrument as InstrumentPageAction } from '@newrelic/browser-agent-core
 import { getEnabledFeatures } from '@newrelic/browser-agent-core/common/util/enabled-features'
 
 // set up the NREUM, api, and internal configs
-configure().then(() => {
+try {
+    configure()
 
     const enabledFeatures = getEnabledFeatures(agentIdentifier)
     // lite features
@@ -35,4 +36,8 @@ configure().then(() => {
 
     // imports the aggregator for 'lite' if no other aggregator takes precedence
     stageAggregator('pro')
-})
+} catch (err) {
+    if (self?.newrelic?.ee?.abort) self.newrelic.ee.abort()
+    // todo
+    // send supportability metric that the agent failed to load its features
+}

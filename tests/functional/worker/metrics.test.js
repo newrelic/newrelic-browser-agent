@@ -192,20 +192,20 @@ function metricsWorkersCreateSM (type, browserVersionMatcher) {
 				
 				const wsm = extractWorkerSM(supportabilityMetrics);
 
-				// Since this test is supposed to run inside a worker, there's no need to check if we're in a worker compat browser & version...
-				if (!wsm.workerImplFail) {  // worker may be avail in Chrome v4, but our SM implementation may not be supported until v60, etc.
-					t.ok(wsm.classicWorker, 'classic worker is expected and used');
-					t.ok(wsm.moduleWorker, 'module worker is expected and used');	// see note on this from original metrics.test.js test
+				if (type == workerTypes[2]) {		// for shared workers, nested workers aren't avail like it is for reg workers
+					t.notOk(wsm.classicWorker || wsm.moduleWorker, 'nested classic or module (dedicated) worker is not avail');
+				}
+				else if (!wsm.workerImplFail) {	// since this test is supposed to run inside a worker, there's no need to check if we're in a worker compat browser & version...
+					t.ok(wsm.classicWorker, 'nested classic worker is available');
+					t.ok(wsm.moduleWorker, 'nested module worker is available');	// see note on this from original metrics.test.js test
 				}
 
-				// NOTE: we're only testing (default|module) *dedicated* workers right now, not shared or service
 				// The sharedWorker class is actually n/a inside of workers...
-				t.notOk(wsm.classicShared, 'classic sharedworker is NOT expected but used');
-				t.notOk(wsm.moduleShared, 'module sharedworker is NOT expected but used');
+				t.notOk(wsm.classicShared || wsm.moduleShared, 'nested classic or module sharedworker is not avail');
 				t.notOk(wsm.sharedUnavail || wsm.sharedImplFail, 'sharedworker supportability should not be emitted by or within a worker');
 
 				// Don't think the serviceWorker class is or will be available inside of workers either...
-				t.notOk(wsm.classicService || wsm.moduleService, 'classic or module serviceworker is NOT expected or used');
+				t.notOk(wsm.classicService || wsm.moduleService, 'nested classic or module serviceworker is not avail');
 				t.notOk(wsm.serviceUnavail || wsm.serviceImplFail, 'serviceworker supportability should not be emitted by or within a worker');
 
 				t.end()

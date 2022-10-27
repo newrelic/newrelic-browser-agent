@@ -1,6 +1,6 @@
 const browserMatcher = require('../../../tools/jil/index').Matcher
 
-const workerTypes = ['classic', 'module']
+const workerTypes = ['classic', 'module', 'shared']
 /**
  * @param {string} type - one of the workerTypes
  * @returns BrowserMatcher for the versions that support the type of worker
@@ -11,6 +11,8 @@ const typeToMatcher = (type) => {
 			return browserMatcher.withFeature('workers');
 		case 'module':
 			return browserMatcher.withFeature('workersFull');
+		case 'shared':
+			return browserMatcher.withFeature('sharedWorkersFull');
 	}
 }
 

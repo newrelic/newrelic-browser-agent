@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const { getErrorsFromResponse } = require('../err/assertion-helpers')
+const { fail, getErrorsFromResponse } = require('../err/assertion-helpers')
 const { workerTypes, typeToMatcher } = require('./helpers')
 
 const init = {
@@ -25,11 +25,9 @@ function eventListenerTest(type, matcher) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
-        () => {
-          self.addEventListener('message', () => {
+        `${type == workerTypes[2]? 'port':'self'}.addEventListener('message', () => {
             throw new Error('test')
-          })
-        },
+        })`,
         () => { console.log("sent another message so that the eventListener would trigger") }
       ].map(x => x.toString())
     })
@@ -49,11 +47,6 @@ function eventListenerTest(type, matcher) {
       t.equal(actualError.params.message, 'test', 'Should have correct message')
       t.ok(actualError.params.stack_trace, 'Should have a stack trace')
       t.end()
-    }).catch(fail)
-
-    function fail(err) {
-      t.error(err)
-      t.end()
-    }
+    }).catch(fail(t));
   })
 }

@@ -113,7 +113,7 @@ class AgentInjectorTransform extends AssetTransform {
   }
 
   getAjaxDenyListString(){
-    return runnerArgs.denyListBam ? `window.NREUM||(NREUM={init:{}});NREUM.init.ajax=NREUM.init.ajax||{};NREUM.init.ajax.deny_list=NREUM.init.ajax.deny_list||[];NREUM.init.ajax.deny_list.push('bam-test-1.nr-local.net')` : ''
+    return runnerArgs.denyListBam ? `window.NREUM||(NREUM={init:{}});NREUM.init.ajax=NREUM.init.ajax||{};NREUM.init.ajax.deny_list=NREUM.init.ajax.deny_list||[];NREUM.init.ajax.deny_list.push('bam-test-1.nr-local.net');` : ''
   }
 
   generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig) {

@@ -50,7 +50,6 @@ function finalHarvest (type, browserVersionMatcher) {
 				t.equal(errResponse.req.method, 'POST', 'jserrors harvest is a POST');
 
 				body = ajaxResponse.body;
-				console.log(body);
 				if (browser.match('safari'))
 					t.ok(body.startsWith('bel.'), 'ajax event is sent on close');		// safari's ajax payload is slightly different from other browsers for some reason
 				else

@@ -4,12 +4,12 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-let corsBrowsers = testDriver.Matcher.withFeature('cors')
-let reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')
-let xhrWithAddEventListener = testDriver.Matcher.withFeature('xhrWithAddEventListener')
-const now = require('../../lib/now.js')
+const {validatePageActionData, fail} = require('./ins-internal-help.cjs')
 
-testDriver.test('PageAction submission', corsBrowsers, function (t, browser, router) {
+let reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')
+let noPhantom = testDriver.Matcher.withFeature('noPhantom')
+
+testDriver.test('PageAction submission', function (t, browser, router) {
   let url = router.assetURL('instrumented.html')
 
   let rumPromise = router.expectRum()
@@ -26,15 +26,10 @@ testDriver.test('PageAction submission', corsBrowsers, function (t, browser, rou
       validatePageActionData(t, JSON.parse(body).ins, query)
       t.end()
     })
-    .catch(fail)
-
-  function fail (e) {
-    t.error(e)
-    t.end()
-  }
+    .catch(fail(t))
 })
 
-testDriver.test('PageActions are retried when collector returns 429', corsBrowsers.and(xhrWithAddEventListener), function (t, browser, router) {
+testDriver.test('PageActions are retried when collector returns 429', noPhantom, function (t, browser, router) {
   let assetURL = router.assetURL('instrumented.html', {
     init: {
       ins: {
@@ -72,15 +67,10 @@ testDriver.test('PageActions are retried when collector returns 429', corsBrowse
 
       t.end()
     })
-    .catch(fail)
-
-  function fail (e) {
-    t.error(e)
-    t.end()
-  }
+    .catch(fail(t))
 })
 
-testDriver.test('PageAction submission on final harvest', corsBrowsers.and(reliableFinalHarvest), function (t, browser, router) {
+testDriver.test('PageAction submission on final harvest', reliableFinalHarvest, function (t, browser, router) {
   let url = router.assetURL('instrumented.html', {
     init: {
       page_view_timing: {
@@ -125,33 +115,10 @@ testDriver.test('PageAction submission on final harvest', corsBrowsers.and(relia
 
       t.end()
     })
-    .catch(fail)
-
-  function fail (e) {
-    t.error(e)
-    t.end()
-  }
+    .catch(fail(t))
 })
 
-function validatePageActionData (t, pageActionData, query) {
-  let receiptTime = now()
-
-  t.equal(pageActionData.length, 1, 'should have 1 event')
-
-  let event = pageActionData[0]
-  t.equal(event.actionName, 'DummyEvent', 'event has correct action name')
-  t.equal(event.free, 'tacos', 'event has free tacos')
-
-  let relativeHarvestTime = query.rst
-  let estimatedPageLoad = receiptTime - relativeHarvestTime
-  let eventTimeSinceLoad = event.timeSinceLoad * 1000
-  let estimatedEventTime = eventTimeSinceLoad + estimatedPageLoad
-
-  t.ok(relativeHarvestTime > eventTimeSinceLoad, 'harvest time (' + relativeHarvestTime + ') should always be bigger than event time (' + eventTimeSinceLoad + ')')
-  t.ok(estimatedEventTime < receiptTime, 'estimated event time (' + estimatedEventTime + ') < receipt time (' + receiptTime + ')')
-}
-
-testDriver.test('precedence', corsBrowsers.and(reliableFinalHarvest), function (t, browser, router) {
+testDriver.test('precedence', reliableFinalHarvest, function (t, browser, router) {
   let url = router.assetURL('instrumented.html')
 
   let loadPromise = browser.get(url)
@@ -162,14 +129,14 @@ testDriver.test('precedence', corsBrowsers.and(reliableFinalHarvest), function (
       return browser.safeEval('newrelic.setCustomAttribute("browserHeight", 705)')
     })
     .then(() => {
-      browser.safeEval('newrelic.addPageAction("MyEvent", { referrerUrl: "http://test.com", foo: {bar: "baz"} })').catch(fail)
+      browser.safeEval('newrelic.addPageAction("MyEvent", { referrerUrl: "http://test.com", foo: {bar: "baz"} })').catch(fail(t))
       return router.expectIns()
     })
     .then(({req, query, body}) => {
       validatePageActionData(JSON.parse(body).ins, query)
       t.end()
     })
-    .catch(fail)
+    .catch(fail(t))
 
   function validatePageActionData (pageActionData, query) {
     t.equal(pageActionData.length, 1, 'should have 1 event')
@@ -180,10 +147,5 @@ testDriver.test('precedence', corsBrowsers.and(reliableFinalHarvest), function (
     t.equal(event.browserHeight, 705, 'att has correct precedence')
     t.equal(event.referrerUrl, 'http://test.com', 'attributes has correct precedence')
     t.equal(event.foo, '{"bar":"baz"}', 'custom member of attributes passed through')
-  }
-
-  function fail (e) {
-    t.error(e)
-    t.end()
   }
 })

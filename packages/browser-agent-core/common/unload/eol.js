@@ -9,6 +9,14 @@ import { isBrowserWindow, isWebWorker } from '../window/win'
 
 if (isWebWorker) {
   self.cleanupTasks = []; // create new list on WorkerGlobalScope to track funcs to run before exiting thread
+
+  const origClose = self.close;
+  self.close = () => {  // on worker's EoL signal, execute all "listeners", e.g. final harvests
+    for (let task of self.cleanupTasks) {
+      task();
+    }
+    origClose();
+  }
 }
 
 /**
@@ -40,7 +48,7 @@ export function subscribeToEOL (cb) {
     addE('unload', oneCall)
   }
   else if (isWebWorker) {
-    self.cleanupTasks.push(cb); // TO DO: the worker feature itself should handle wrapping around close() to run these tasks
+    self.cleanupTasks.push(cb); // close() should run these tasks before quitting thread
   }
   // By default (for other env), this fn has no effect.
 }

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import pkg from '../../package.json'
 
 // <WEBPACK_*> tag is replaced during webpack build with environment vars supplied at build time

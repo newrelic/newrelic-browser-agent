@@ -15,4 +15,5 @@ export function resetWindowOrWorkerGlobScope() {
 }
 
 export const isBrowserWindow = Boolean(typeof window === 'object' && self.document);
+// eslint-disable-next-line
 export const isWebWorker = Boolean(typeof WorkerGlobalScope !== 'undefined' && self.navigator instanceof WorkerNavigator);

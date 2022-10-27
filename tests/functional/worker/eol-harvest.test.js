@@ -2,9 +2,11 @@ const testDriver = require('../../../tools/jil/index')
 const {workerTypes, typeToMatcher} = require('./helpers')
 const {fail} = require('../uncat-internal-help.cjs')
 
+const withFetch = testDriver.Matcher.withFeature('fetch');
+
 workerTypes.forEach(type => {  // runs all test for classic & module workers & use the 'workers' browser-matcher for classic and the 'workersFull' for module
 	const browsersWithOrWithoutModuleSupport = typeToMatcher(type);
-	finalHarvest(type, browsersWithOrWithoutModuleSupport);
+	finalHarvest(type, browsersWithOrWithoutModuleSupport.and(withFetch));
 });
 
 // --- Tests ---

@@ -12,7 +12,7 @@ const typeToMatcher = (type) => {
 		case 'module':
 			return browserMatcher.withFeature('workersFull');
 		case 'shared':
-			return browserMatcher.withFeature('sharedWorkersFull');
+			return browserMatcher.withFeature('sharedWorkers');
 	}
 }
 

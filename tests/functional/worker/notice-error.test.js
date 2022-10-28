@@ -4,8 +4,8 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {workerTypes, typeToMatcher} = require('./helpers')
-const {fail} = require('../err/assertion-helpers')  // shared from jserrors feat tests
+const { workerTypes, typeToMatcher, workerCustomAttrs } = require('./helpers')
+const { fail } = require('../err/assertion-helpers')  // shared from jserrors feat tests
 
 const init = {
   jserrors: {
@@ -38,10 +38,10 @@ function noticeErrorTest(type, supportRegOrESMWorker) {
     Promise.all([errPromise, loadPromise]).then(([errResponse]) => {
       const { err } = JSON.parse(errResponse.body)
       checkBasics(t, err)
-      t.deepEqual(err[0].custom, {isWorker: true}, 'Should not have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should not have correct custom attributes')
       t.end()
     }).catch(fail(t));
-	})
+  })
 }
 
 function noticeErrorStringTest(type, supportRegOrESMWorker) {
@@ -57,10 +57,10 @@ function noticeErrorStringTest(type, supportRegOrESMWorker) {
     Promise.all([errPromise, loadPromise]).then(([errResponse]) => {
       const { err } = JSON.parse(errResponse.body)
       checkBasics(t, err)
-      t.deepEqual(err[0].custom, {isWorker: true}, 'Should not have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should not have correct custom attributes')
       t.end()
     }).catch(fail(t));
-	})
+  })
 }
 
 function noticeErrorWithParamsTest(type, supportRegOrESMWorker) {
@@ -78,10 +78,10 @@ function noticeErrorWithParamsTest(type, supportRegOrESMWorker) {
     Promise.all([errPromise, loadPromise]).then(([errResponse]) => {
       const { err } = JSON.parse(errResponse.body)
       checkBasics(t, err)
-      t.deepEqual(err[0].custom, { hi: 'mom', isWorker: true }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { hi: 'mom', ...workerCustomAttrs }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail(t));
-	})
+  })
 }
 
 
@@ -105,7 +105,7 @@ function multipleMatchingErrorsTest(type, supportRegOrESMWorker) {
       t.equal(err[0].metrics.count, 3, 'Should have aggregated 3 errors')
       t.end()
     }).catch(fail(t));
-	})
+  })
 }
 
 function checkBasics(t, err) {

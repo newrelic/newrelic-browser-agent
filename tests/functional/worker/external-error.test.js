@@ -5,7 +5,7 @@
 
 const testDriver = require('../../../tools/jil/index')
 const { getErrorsFromResponse } = require('../err/assertion-helpers')
-const { workerTypes, typeToMatcher } = require('./helpers')
+const { workerTypes, typeToMatcher, workerCustomAttrs } = require('./helpers')
 
 const init = {
   jserrors: {
@@ -42,7 +42,7 @@ function externalTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'Error', 'Should be Error class')
       t.equal(err[0].params.message, 'worker error', 'Should have correct message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { isWorker: true }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 

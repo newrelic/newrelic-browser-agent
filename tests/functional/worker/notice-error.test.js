@@ -108,6 +108,12 @@ function multipleMatchingErrorsTest(type, supportRegOrESMWorker) {
   })
 }
 
+// TODO
+/* See above (multipleMatchingErrorsTest)
+* This behavior persists even in mismatched errors if they are on the same row number, because column numbers are currently ignored.
+* A new test should be added once that issue is addressed, to check that mismatched errors within the same row are NOT aggregated
+*/
+
 function checkBasics(t, err) {
   t.equal(err.length, 1, 'Should have 1 error obj')
   t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')

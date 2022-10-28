@@ -52,17 +52,3 @@ function externalTest(type, matcher) {
     }
   })
 }
-
-function expectedErrorForBrowser(browser) {
-  if (browser.match('ie@<11')) {
-    return 'asdf'
-  } else if (browser.match('firefox@<35')) {
-    return 'Error'
-  } else if (browser.match('chrome, firefox@>=35, ie@11, android@>=4.4, safari@>=10, edge')) {
-    return '[object Object]'
-  } else if (browser.match('android')) {
-    return 'Uncaught Error: [object Object]'
-  } else {
-    return 'Error: [object Object]'
-  }
-}

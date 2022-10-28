@@ -422,7 +422,7 @@ features.es6 = new BrowserMatcher()
     new MatcherRule(TYPE_INCLUDE, 'chrome@>=80'),
     new MatcherRule(TYPE_INCLUDE, 'edge@>=80'),
     new MatcherRule(TYPE_INCLUDE, 'safari@>=15'),
-    new MatcherRule(TYPE_INCLUDE, 'android@>=106'),
+    new MatcherRule(TYPE_INCLUDE, 'android@>=9.0'),
     new MatcherRule(TYPE_INCLUDE, 'ios@>=15.0')
   ]);
   features.workersFull = features.workers.and(features.supportESMWorkers);  // use this to filter versions that support both default & module
@@ -431,7 +431,7 @@ features.es6 = new BrowserMatcher()
     new MatcherRule(TYPE_INCLUDE, 'chrome@>=69'),
     new MatcherRule(TYPE_INCLUDE, 'edge@>=69'),   // specific support line for edge unclear, using chrome's since based off chromium
     new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'),  // specific support line for ff unclear, using serviceWorker line
-    new MatcherRule(TYPE_INCLUDE, 'android@>=106')  // not sure if android supports it at all? -- testing currently disabled
+    new MatcherRule(TYPE_INCLUDE, 'android@>=9.0')  // not sure if android supports it at all? -- testing currently disabled
     // safari & ios does not yet support nested (dedicated) workers, current v16 *cli 10/22
   ]);
 
@@ -451,6 +451,6 @@ features.es6 = new BrowserMatcher()
     new MatcherRule(TYPE_INCLUDE, 'edge@>=17'),
     new MatcherRule(TYPE_INCLUDE, 'safari@>=11.1'),
     new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'),
-    new MatcherRule(TYPE_INCLUDE, 'android@>=106'),
+    new MatcherRule(TYPE_INCLUDE, 'android@>=9.0'),
     new MatcherRule(TYPE_INCLUDE, 'ios@>=11.3')
   ]);

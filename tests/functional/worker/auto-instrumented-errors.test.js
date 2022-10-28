@@ -89,7 +89,7 @@ function unhandledPromiseRejectionTest(type, matcher) {
     }).catch(fail)
 
     function fail(err) {
-      if (browser.match('chrome@<=49, edge<=79, safari@<=12, firefox@<=69, ie, ios@<=12')) t.pass("Browser does not support unhandledPromiseRejections")
+      if (!browser.hasFeature('unhandledPromiseRejection')) t.pass("Browser does not support unhandledPromiseRejections")
       else t.error(err)
       t.end()
     }
@@ -229,7 +229,7 @@ function memoryLeakTest(type, matcher) {
     }).catch(fail)
 
     function fail(err) {
-      if (browser.match('firefox')) t.pass('This browser version does not throw errors in worker when max stack size is reached')
+      if (browser.hasFeature('workerStackSizeGeneratesError')) t.pass('This browser version does not throw errors in worker when max stack size is reached')
       else t.error(err)
       t.end()
     }

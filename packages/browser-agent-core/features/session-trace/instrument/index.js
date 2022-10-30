@@ -9,6 +9,7 @@ import { eventListenerOpts } from '../../../common/event-listener/event-listener
 import { originals, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { FeatureBase } from '../../../common/util/feature-base'
+import { isBrowserWindow } from '../../../common/window/win'
 
 var learResourceTimings = 'learResourceTimings'
 var ADD_EVENT_LISTENER = 'addEventListener'
@@ -27,6 +28,7 @@ var origEvent = originals.EV
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
     super(agentIdentifier)
+    if (!isBrowserWindow) return; // session traces not supported outside web env
 
     if (!(window.performance &&
       window.performance.timing &&

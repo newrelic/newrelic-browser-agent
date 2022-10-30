@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+
+<head>
+    <title>RUM Unit Test</title>
+    <link rel="modulepreload" href="./js/module-worker.js" type="text/javascript">
+    {init}
+    {config}
+    {worker-commands}
+</head>
+
+<body>
+    <script type="text/javascript">
+        const worker = new Worker("./js/module-worker.js", { type: "module" })
+
+        const opts = NREUM
+
+        worker.postMessage({ type: 'startAgent', payload: opts })
+
+        worker.onmessage = function ({ data: { type } }) {
+            if (type === 'ready') {
+                workerCommands = window.workerCommands || []
+                workerCommands.forEach(command => worker.postMessage({ type: 'command', fn: command }))
+            }
+        }
+
+        worker.onerror = function (e) {
+            console.log("worker error -- ", e)
+        }
+    </script>
+</body>
+
+</html>

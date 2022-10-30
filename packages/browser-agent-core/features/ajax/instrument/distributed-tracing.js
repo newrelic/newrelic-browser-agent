@@ -75,7 +75,7 @@ export class DT {
   }
 
   generateTraceHeader (spanId, traceId, timestamp, accountId, appId, trustKey) {
-    var hasBtoa = ('btoa' in window && typeof window.btoa === 'function')
+    var hasBtoa = (typeof self.btoa === 'function')
     if (!hasBtoa) {
       return null
     }

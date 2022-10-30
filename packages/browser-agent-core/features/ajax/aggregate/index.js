@@ -8,7 +8,6 @@ import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../
 import { handle } from '../../../common/event-emitter/handle'
 import { getConfigurationValue, getInfo } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { subscribeToUnload } from '../../../common/unload/unload'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { FeatureBase } from '../../../common/util/feature-base'
 
@@ -66,7 +65,7 @@ export class Aggregate extends FeatureBase {
       })
       scheduler.startTimer(harvestTimeSeconds)
 
-      subscribeToUnload(() => scheduler.runHarvest({ unload: true }))
+      scheduler.opts.onUnload = () => scheduler.runHarvest({ unload: true });
     }
 
     function storeXhr(params, metrics, startTime, endTime, type) {
@@ -91,9 +90,9 @@ export class Aggregate extends FeatureBase {
 
       if (!shouldCollectEvent(params)) {
         if (params.hostname === getInfo(agentIdentifier).errorBeacon) {
-          handle('record-supportability', ['Ajax/Events/Excluded/Agent'])
+          handle('record-supportability', ['Ajax/Events/Excluded/Agent'], undefined, undefined, ee)
         } else {
-          handle('record-supportability', ['Ajax/Events/Excluded/App'])
+          handle('record-supportability', ['Ajax/Events/Excluded/App'], undefined, undefined, ee)
         }
         return
       }

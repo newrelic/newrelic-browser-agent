@@ -237,14 +237,27 @@ class RouterHandle {
 
     _extend(mergedQuery, {
       loader: query.loader || 'full',
-      config: new Buffer(JSON.stringify(_extend({
+      config: Buffer.from(JSON.stringify(_extend({
         licenseKey: this.testID
       }, query.config))).toString('base64')
     })
 
+    function replacer(k, v) {
+      if (typeof v == 'object' && v instanceof RegExp) {
+        let m = v.toString().match(/\/(.*)\/(\w*)/);
+        return `new RegExp('${m[1]}','${m[2] || ''}')`; // serialize regex in a way our test server can receive it
+      }
+      return v;
+    }
     if (query.init) {
       _extend(mergedQuery, {
-        init: new Buffer(JSON.stringify(query.init)).toString('base64')
+        init: Buffer.from(JSON.stringify(query.init, replacer)).toString('base64')
+      })
+    }
+
+    if (query.workerCommands) {
+      _extend(mergedQuery, {
+        workerCommands: Buffer.from(JSON.stringify(query.workerCommands)).toString('base64')
       })
     }
 
@@ -261,7 +274,7 @@ class RouterHandle {
   urlForBrowserTest(file) {
     return this.router.assetServer.urlFor('/tests/assets/browser.html', {
       loader: 'full',
-      config: new Buffer(JSON.stringify({
+      config: Buffer.from(JSON.stringify({
         licenseKey: this.testID,
         assetServerPort: this.router.assetServer.port,
         assetServerSSLPort: this.router.assetServer.sslPort,

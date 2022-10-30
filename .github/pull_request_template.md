@@ -5,8 +5,8 @@ _Thank you for submitting a pull request. This code is leveraged to monitor crit
 ### Overview
 Please describe the changes present in the pull request and if applicable, describe why the changes are needed.
 
-### Related Github Issue
-Please include a link to the related GitHub issue, if applicable
+### Related Github and/or JIRA Issue(s)
+Please include a link to the related GitHub issue(s), if applicable. For JIRA, append "NR-XXXX" or "NR-XXXX" in the pull request title.
 
 ### Testing
 The browser agent includes a suite of tests which should be used to

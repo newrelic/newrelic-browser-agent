@@ -6,12 +6,13 @@
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
+import { isBrowserWindow } from '../window/win'
 
 const wrapped = {}
 
 export function wrapJsonP(sharedEE){
   const ee = scopedEE(sharedEE)
-  if (wrapped[ee.debugId]) return ee
+  if (wrapped[ee.debugId] || !isBrowserWindow) return ee; // JSONP deals with DOM tags
   wrapped[ee.debugId] = true
   var wrapFn = wfn(ee)
   

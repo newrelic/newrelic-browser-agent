@@ -1,3 +1,5 @@
+import { isBrowserWindow } from '../window/win';
+
 var FRAMEWORKS = {
   REACT: 'React',
   ANGULAR: 'Angular',
@@ -11,6 +13,8 @@ var FRAMEWORKS = {
 }
 
 export function getFrameworks() {
+  if (!isBrowserWindow) return [];  // don't bother detecting frameworks if not in the main window context
+
   var frameworks = []
   try {
     if (detectReact()) frameworks.push(FRAMEWORKS.REACT)

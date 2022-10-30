@@ -6,7 +6,7 @@
   "main": "src/spa.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "webpack": "npx webpack --progress --config ./webpack.config.js",
+    "webpack": "rm -rf ../build && npx webpack --progress --config ./webpack.config.js",
     "build": "npm run build:prod",
     "build:local": "npm run webpack && npm run cleanup",
     "build:extension": "PUBLISH=EXTENSION npm run webpack && npm run cleanup",

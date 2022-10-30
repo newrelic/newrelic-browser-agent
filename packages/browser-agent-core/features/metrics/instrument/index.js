@@ -6,13 +6,16 @@ import { protocol } from '../../../common/url/protocol'
 import { getRules, validateRules } from '../../../common/util/obfuscate'
 import { VERSION } from '../../../common/constants/environment-variables'
 import { onDOMContentLoaded } from '../../../common/window/load'
+import { isBrowserWindow } from '../../../common/window/win'
+import { insertSupportMetrics } from './workers-helper'
 
 var SUPPORTABILITY_METRIC = 'sm'
 var CUSTOM_METRIC = 'cm'
 
 export class Instrument extends FeatureBase {
-    constructor(agentIdentifier) {
+    constructor(agentIdentifier, PfFeatStatusEnum = {}) {
         super(agentIdentifier)
+        this.PfFeatStatusEnum = PfFeatStatusEnum
         // checks that are run only one time, at script load
         this.singleChecks()
         // listen for messages from features and capture them
@@ -59,11 +62,11 @@ export class Instrument extends FeatureBase {
         this.recordSupportability(`Generic/Version/${VERSION}/Detected`)
 
         // frameworks on page
-        onDOMContentLoaded(() => {
+        if(isBrowserWindow) onDOMContentLoaded(() => {
             getFrameworks().forEach(framework => {
                 this.recordSupportability('Framework/' + framework + '/Detected')
             })
-        })
+        });
 
         // file protocol detection
         if (protocol.isFileProtocol()) {
@@ -75,6 +78,19 @@ export class Instrument extends FeatureBase {
         const rules = getRules(this.agentIdentifier)
         if (rules.length > 0) this.recordSupportability('Generic/Obfuscate/Detected')
         if (rules.length > 0 && !validateRules(rules)) this.recordSupportability('Generic/Obfuscate/Invalid')
+
+        // polyfilled feature detection
+        if (isBrowserWindow) this.reportPolyfillsNeeded();
+
+        // poll web worker support
+        insertSupportMetrics(this.recordSupportability.bind(this));
+    }
+
+    reportPolyfillsNeeded() {
+        this.recordSupportability(`Generic/Polyfill/Promise/${this.PfFeatStatusEnum.PROMISE}`);
+        this.recordSupportability(`Generic/Polyfill/ArrayIncludes/${this.PfFeatStatusEnum.ARRAY_INCLUDES}`);
+        this.recordSupportability(`Generic/Polyfill/ObjectAssign/${this.PfFeatStatusEnum.OBJECT_ASSIGN}`);
+        this.recordSupportability(`Generic/Polyfill/ObjectEntries/${this.PfFeatStatusEnum.OBJECT_ENTRIES}`);
     }
 }
 

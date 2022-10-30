@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Start assigning ids at 1 so 0 can always be used for window, without
+// Start assigning ids at 1 so 0 can always be used for WindowOrWorkerGlobalScope, without
 // actually setting it (which would create a global variable).
 import { getOrSet } from '../util/get-or-set'
 var index = 1
@@ -15,7 +15,7 @@ export function id (obj) {
   // We can only tag objects, functions, and arrays with ids.
   // For all primitive values we instead return -1.
   if (!obj || !(type === 'object' || type === 'function')) return -1
-  if (obj === window) return 0
+  if (obj === self) return 0
 
   return getOrSet(obj, prop, function () { return index++ })
 }

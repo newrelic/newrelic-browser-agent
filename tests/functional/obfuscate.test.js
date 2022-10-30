@@ -4,6 +4,7 @@
  */
 
 const testDriver = require('../../tools/jil/index')
+const {fail, checkPayload} = require('./uncat-internal-help.cjs')
 
 const browsers = testDriver.Matcher.withFeature('fetchExt')
 
@@ -50,18 +51,6 @@ testDriver.test('Obfuscate All Events', browsers, function (t, browser, router) 
     }
   }))
 
-  // accepts an object payload, fails test if stringified payload contains data that should be obfuscated
-  function checkPayload(payload, name) {
-    t.ok(payload, `${name} payload exists`)
-
-    var strPayload = JSON.stringify(payload)
-    var failed = strPayload.includes('bam-test') || strPayload.includes('fakeid') || strPayload.includes('pii')
-
-    t.ok(!strPayload.includes('pii'), `${name} -- pii was obfuscated`)
-    t.ok(!strPayload.includes('bam-test'), `${name} -- bam-test was obfuscated`)
-    t.ok(!strPayload.includes('fakeid'), `${name} -- fakeid was obfuscated`)
-  }
-
   Promise.all([
     ajaxPromise,
     errorsPromise,
@@ -82,22 +71,19 @@ testDriver.test('Obfuscate All Events', browsers, function (t, browser, router) 
       rumResponse,
       loadPromise
     ]) => {
-      checkPayload(ajaxResponse.body, 'AJAX')
-      checkPayload(errorsResponse.body, 'Errors')
-      checkPayload(insResponse.body, 'INS body')
-      checkPayload(resourceResponse.body, 'Resource')
-      checkPayload(spaResponse.body, 'SPA')
-      checkPayload(timingsResponse.body, 'Timings')
-      checkPayload(rumResponse.query, 'RUM') // see harvest.sendRum
+      checkPayload(t, ajaxResponse.body, 'AJAX')
+      checkPayload(t, errorsResponse.body, 'Errors')
+      checkPayload(t, insResponse.body, 'INS body')
+      checkPayload(t, resourceResponse.body, 'Resource')
+      checkPayload(t, spaResponse.body, 'SPA')
+      checkPayload(t, timingsResponse.body, 'Timings')
+      checkPayload(t, rumResponse.query, 'RUM') // see harvest.sendRum
       // See harvest.baseQueryString
-      checkPayload(errorsResponse.query, 'Errors query')
-      checkPayload(insResponse.query, 'INS query')
-      checkPayload(resourceResponse.query, 'Resource query')
-      checkPayload(spaResponse.query, 'SPA query')
-      checkPayload(timingsResponse.query, 'Timings query')
+      checkPayload(t, errorsResponse.query, 'Errors query')
+      checkPayload(t, insResponse.query, 'INS query')
+      checkPayload(t, resourceResponse.query, 'Resource query')
+      checkPayload(t, spaResponse.query, 'SPA query')
+      checkPayload(t, timingsResponse.query, 'Timings query')
       t.end()
-    }).catch(err => {
-      t.error(err)
-      t.end()
-    })
+    }).catch(fail(t));
 })

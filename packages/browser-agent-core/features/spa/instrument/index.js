@@ -7,6 +7,7 @@ import { eventListenerOpts } from '../../../common/event-listener/event-listener
 import { FeatureBase } from '../../../common/util/feature-base'
 import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
+import { isBrowserWindow } from '../../../common/window/win'
 
 var START = '-start'
 var END = '-end'
@@ -19,12 +20,14 @@ var JS_TIME = 'jsTime'
 var FETCH = 'fetch'
 var ADD_EVENT_LISTENER = 'addEventListener'
 
-var win = window
+var win = self
 var location = win.location
 
 export class Instrument extends FeatureBase {
     constructor(agentIdentifier) {
         super(agentIdentifier)
+        if (!isBrowserWindow) return; // SPA not supported outside web env
+
         const agentRuntime = getRuntime(this.agentIdentifier);
         // loader.xhrWrappable will be false in chrome for ios, but addEventListener is still available.
         // sauce does not have a browser to test this case against, so be careful when modifying this check

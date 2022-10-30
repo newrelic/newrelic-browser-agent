@@ -8,13 +8,14 @@ import { submitData } from '../../../common/util/submit-data'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FeatureBase } from '../../../common/util/feature-base'
+import { isBrowserWindow } from '../../../common/window/win'
 
 const jsonp = 'NREUM.setToken'
 
 export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator)
-    this.sendRum()
+    if (isBrowserWindow) this.sendRum();  // initial RUM payload is only sent in web env, TO DO: can remove once aggregate is chained to instrument
   }
 
   getScheme() { 

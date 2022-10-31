@@ -44,11 +44,21 @@ jobs:
       - name: check files exist
         if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
         run: node tools/scripts/check-version.js -e yes --pr PR${{ github.event.number}}
-      - name: publish internal loader
+      - name: publish internal loader with PR
+        if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
         run: |
           node ./tools/scripts/upload-ab-to-s3.js \
             --env=dev \
             --config=${{ secrets.INTERNAL_DEV_CONFIG }} \
             --files=https://js-agent.newrelic.com/nr-loader-spa-current.min.js,https://js-agent.newrelic.com/pr/PR${{ github.event.number }} \
+            --bucket=${{ secrets.AWS_BUCKET }} \
+            --role=${{ secrets.AWS_ROLE_ARN }}
+      - name: publish internal loader without PR
+        if: github.event.inputs.pr_build == 'clear' || github.event.action == 'closed'
+        run: |
+          node ./tools/scripts/upload-ab-to-s3.js \
+            --env=dev \
+            --config=${{ secrets.INTERNAL_DEV_CONFIG }} \
+            --files=https://js-agent.newrelic.com/nr-loader-spa-current.min.js \
             --bucket=${{ secrets.AWS_BUCKET }} \
             --role=${{ secrets.AWS_ROLE_ARN }}

@@ -117,6 +117,7 @@ features.unreliableImgCallInUnload = new BrowserMatcher()
   .include('safari', '10.1')
   .include('safari', '11.0')
 
+/** DEPRECATED */
 features.addEventListener = new BrowserMatcher()
   .exclude('ie', '<9')
 
@@ -233,19 +234,20 @@ features.sendBeacon = new BrowserMatcher()
   .include('android', '>=6')
   .include('safari', '>=11.1')
 
-// Safari 11.1 & 12.0 has a bug in the sendBeacon API, the agent falls back to using image
+// Safari on macOS 11.1 - 12.2 have a bug in the sendBeacon API during pgehide event listener -- fixed in ios 12.3
+// The agent falls back to using image
 // https://bugs.webkit.org/show_bug.cgi?id=188329
 features.brokenSendBeacon = new BrowserMatcher()
   .exclude('*')
-  .include('safari', '<=11.1')
-  .include('safari', '12.0') // somehow this got removed, this is still broken
+  .include('safari', '<=12.2')
 
 features.workingSendBeacon = features.sendBeacon.and(features.brokenSendBeacon.inverse())
 
-features.reliableFinalHarvest = features.workingSendBeacon
-  .or(features.sendBeacon.inverse()
+features.reliableFinalHarvest = features.workingSendBeacon.or(
+  features.sendBeacon.inverse()
     .and(features.reliableUnloadEvent)
-    .and(features.unreliableImgCallInUnload.inverse()))
+    .and(features.unreliableImgCallInUnload.inverse())
+)
 
 features.blob = new BrowserMatcher()
   .exclude('ie', '<10')
@@ -420,7 +422,7 @@ features.es6 = new BrowserMatcher()
     new MatcherRule(TYPE_INCLUDE, 'chrome@>=80'),
     new MatcherRule(TYPE_INCLUDE, 'edge@>=80'),
     new MatcherRule(TYPE_INCLUDE, 'safari@>=15'),
-    new MatcherRule(TYPE_INCLUDE, 'android@>=106'),
+    new MatcherRule(TYPE_INCLUDE, 'android@>=9.0'),
     new MatcherRule(TYPE_INCLUDE, 'ios@>=15.0')
   ]);
   features.workersFull = features.workers.and(features.supportESMWorkers);  // use this to filter versions that support both default & module
@@ -429,7 +431,7 @@ features.es6 = new BrowserMatcher()
     new MatcherRule(TYPE_INCLUDE, 'chrome@>=69'),
     new MatcherRule(TYPE_INCLUDE, 'edge@>=69'),   // specific support line for edge unclear, using chrome's since based off chromium
     new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'),  // specific support line for ff unclear, using serviceWorker line
-    new MatcherRule(TYPE_INCLUDE, 'android@>=106')  // not sure if android supports it at all? -- testing currently disabled
+    new MatcherRule(TYPE_INCLUDE, 'android@>=9.0')  // not sure if android supports it at all? -- testing currently disabled
     // safari & ios does not yet support nested (dedicated) workers, current v16 *cli 10/22
   ]);
 
@@ -449,6 +451,6 @@ features.es6 = new BrowserMatcher()
     new MatcherRule(TYPE_INCLUDE, 'edge@>=17'),
     new MatcherRule(TYPE_INCLUDE, 'safari@>=11.1'),
     new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'),
-    new MatcherRule(TYPE_INCLUDE, 'android@>=106'),
+    new MatcherRule(TYPE_INCLUDE, 'android@>=9.0'),
     new MatcherRule(TYPE_INCLUDE, 'ios@>=11.3')
   ]);

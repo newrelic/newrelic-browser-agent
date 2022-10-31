@@ -5,7 +5,7 @@
 
 const testDriver = require('../../../tools/jil/index')
 const { getErrorsFromResponse } = require('../err/assertion-helpers')
-const {workerTypes, typeToMatcher} = require('./helpers')
+const { workerTypes, typeToMatcher, workerCustomAttrs } = require('./helpers')
 
 const init = {
   jserrors: {
@@ -25,8 +25,8 @@ function setCustomAttributeTest(type, matcher) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
-        () => {newrelic.setCustomAttribute('hi', 'mom')},
-        () => {throw new Error('test')}
+        () => { newrelic.setCustomAttribute('hi', 'mom') },
+        () => { throw new Error('test') }
       ].map(x => x.toString())
     })
 
@@ -40,7 +40,7 @@ function setCustomAttributeTest(type, matcher) {
 
       let actualError = actualErrors[0]
       t.equal(actualError.params.message, 'test', 'has the expected message')
-      t.deepEqual(actualError.custom, { hi: 'mom', isWorker: true }, 'Should have correct custom attributes')
+      t.deepEqual(actualError.custom, { ...workerCustomAttrs, hi: 'mom' }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 

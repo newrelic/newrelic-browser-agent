@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const { workerTypes, typeToMatcher } = require('./helpers')
+const { workerTypes, typeToMatcher, workerCustomAttrs } = require('./helpers')
 
 const init = {
   jserrors: {
@@ -53,7 +53,7 @@ function referenceErrorTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'ReferenceError', 'Should be ReferenceError class')
       t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { isWorker: true }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
@@ -84,12 +84,12 @@ function unhandledPromiseRejectionTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'Error', 'Should be Error class')
       t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { unhandledPromiseRejection: 1, isWorker: true }, 'Should have custom attribute')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs, unhandledPromiseRejection: 1 }, 'Should have custom attribute')
       t.end()
     }).catch(fail)
 
     function fail(err) {
-      if (browser.match('chrome@<=49, edge<=79, safari@<=12, firefox@<=69, ie, ios@<=12')) t.pass("Browser does not support unhandledPromiseRejections")
+      if (!browser.hasFeature('unhandledPromiseRejection')) t.pass("Browser does not support unhandledPromiseRejections")
       else t.error(err)
       t.end()
     }
@@ -119,7 +119,7 @@ function rangeErrorTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'RangeError', 'Should be RangeError class')
       t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { isWorker: true }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs, }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
@@ -153,7 +153,7 @@ function typeErrorTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'TypeError', 'Should be TypeError class')
       t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { isWorker: true }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs, }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
@@ -186,7 +186,7 @@ function uriErrorTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'URIError', 'Should be URIError class')
       t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { isWorker: true }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs, }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
@@ -224,12 +224,12 @@ function memoryLeakTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'RangeError', 'Should be RangeError class')
       t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { isWorker: true }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs, }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
     function fail(err) {
-      if (browser.match('firefox')) t.pass('This browser version does not throw errors in worker when max stack size is reached')
+      if (browser.hasFeature('workerStackSizeGeneratesError')) t.pass('This browser version does not throw errors in worker when max stack size is reached')
       else t.error(err)
       t.end()
     }
@@ -258,7 +258,7 @@ function syntaxErrorTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'SyntaxError', 'Should be SyntaxError class')
       t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { isWorker: true }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs, }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
@@ -289,7 +289,7 @@ function thrownErrorTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'Error', 'Should be Error class')
       t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { isWorker: true }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs, }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 

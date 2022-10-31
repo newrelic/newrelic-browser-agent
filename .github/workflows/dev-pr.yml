@@ -21,7 +21,7 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      PR_NAME: PR${{ github.event.number }}
+      PR_NAME: PR${{ github.event.pull_request.number }}
     steps:
       - uses: actions/checkout@v2
       - name: install
@@ -30,7 +30,7 @@ jobs:
         run: node tools/scripts/delete-s3-dir.js \
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }} \
-            --pr PR${{ github.event.number }}
+            --pr PR${{ github.event.pull_request.number }}
       - name: build
         if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
         run: npm run cdn:build:pr
@@ -40,25 +40,15 @@ jobs:
           node tools/scripts/upload-to-s3.js \
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }} \
-            --pr PR${{ github.event.number }}/
+            --pr PR${{ github.event.pull_request.number }}/
       - name: check files exist
         if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
         run: node tools/scripts/check-version.js -e yes --pr PR${{ github.event.number}}
-      - name: publish internal loader with PR
+      - name: re-publish internal loader
         if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
         run: |
           node ./tools/scripts/upload-ab-to-s3.js \
             --env=dev \
             --config=${{ secrets.INTERNAL_DEV_CONFIG }} \
-            --files=https://js-agent.newrelic.com/nr-loader-spa-current.min.js,https://js-agent.newrelic.com/pr/PR${{ github.event.number }} \
-            --bucket=${{ secrets.AWS_BUCKET }} \
-            --role=${{ secrets.AWS_ROLE_ARN }}
-      - name: publish internal loader without PR
-        if: github.event.inputs.pr_build == 'clear' || github.event.action == 'closed'
-        run: |
-          node ./tools/scripts/upload-ab-to-s3.js \
-            --env=dev \
-            --config=${{ secrets.INTERNAL_DEV_CONFIG }} \
-            --files=https://js-agent.newrelic.com/nr-loader-spa-current.min.js \
             --bucket=${{ secrets.AWS_BUCKET }} \
             --role=${{ secrets.AWS_ROLE_ARN }}

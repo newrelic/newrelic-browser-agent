@@ -6,7 +6,7 @@ on:
       pr_build:
         description: 'PR build'
         required: true
-        type: boolean
+        type: choice
         options:
           - clear
           - build
@@ -32,17 +32,23 @@ jobs:
             --role ${{ secrets.AWS_ROLE_ARN }} \
             --pr PR${{ github.event.number }}
       - name: build
-        id: build
         if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
         run: npm run cdn:build:pr
       - name: upload artifacts to S3
-        needs: build
-        id: upload
+        if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
         run: |
           node tools/scripts/upload-to-s3.js \
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }} \
             --pr PR${{ github.event.number }}/
       - name: check files exist
-        needs: upload
-        run: node tools/scripts/check-version.js -e yes -d
+        if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
+        run: node tools/scripts/check-version.js -e yes --pr PR${{ github.event.number}}
+      - name: publish internal loader
+        run: |
+          node ./tools/scripts/upload-ab-to-s3.js \
+            --env=dev \
+            --config=${{ secrets.INTERNAL_DEV_CONFIG }} \
+            --files=https://js-agent.newrelic.com/nr-loader-spa-current.min.js,https://js-agent.newrelic.com/pr/PR${{ github.event.number }} \
+            --bucket=${{ secrets.AWS_BUCKET }} \
+            --role=${{ secrets.AWS_ROLE_ARN }}

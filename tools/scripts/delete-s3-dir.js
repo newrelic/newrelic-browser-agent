@@ -24,6 +24,19 @@ var argv = yargs
 
 const { bucket, pr, dry, role } = argv
 
+if (!bucket) {
+    console.log("bucket field is empty!")
+    process.exit(1)
+}
+if (!role) {
+    console.log("role field is empty!")
+    process.exit(1)
+}
+if (!pr) {
+    console.log("PR field is empty!")
+    process.exit(1)
+}
+
 connectToS3(role, dry).then(() => {
     emptyS3Directory(bucket, pr, dry)
 })

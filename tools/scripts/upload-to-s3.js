@@ -27,7 +27,9 @@ var argv = yargs
     .alias('D', 'dev')
 
     .string('pr')
-    .describe('pr', 'PR name for PR Dev builds')
+    .alias('pr', 'pr-name')
+    .describe('pr', 'PR name (bucket name)')
+    .default('')
 
     .help('h')
     .alias('h', 'help')

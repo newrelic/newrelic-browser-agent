@@ -4,8 +4,11 @@
  */
 
 const Matcher = require('../../../tools/jil/util/browser-matcher')
+const querypack = require('@newrelic/nr-querypack')
 
 const sendBeaconBrowsers = Matcher.withFeature('workingSendBeacon')
+
+const condition = (e) => e.type === 'ajax' && e.path === '/json'
 
 function getXhrFromResponse(response, browser) {
   if (sendBeaconBrowsers.match(browser)) {
@@ -15,4 +18,11 @@ function getXhrFromResponse(response, browser) {
   }
 }
 
-module.exports = { getXhrFromResponse }
+function fail(t, addlMsg = undefined) {
+	return (err) => {
+    t.error(err, addlMsg);
+    t.end();
+	}
+}
+
+module.exports = { getXhrFromResponse, fail, condition, querypack }

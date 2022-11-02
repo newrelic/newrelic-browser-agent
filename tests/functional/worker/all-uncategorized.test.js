@@ -207,7 +207,6 @@ function harvestSessionIsNullWhenEnabled (type, browserVersionMatcher) {
 function obfuscateAll (type, browserVersionMatcher) {
 	testDriver.test(`${type} - Obfuscate All Events`, browserVersionMatcher, 
 		function (t, browser, router) {
-			// CAUTION: RegExp objs must be explicitly stringified to be transferred, and atm our code reads it as a RegExp rather than a string
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
 					obfuscate: [{

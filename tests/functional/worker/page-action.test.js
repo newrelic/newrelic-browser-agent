@@ -2,8 +2,6 @@ const testDriver = require('../../../tools/jil/index')
 const { workerTypes, typeToMatcher } = require('./helpers')
 const { validatePageActionData, fail } = require('../ins/ins-internal-help.cjs')	// shared helpers
 
-const noPhantom = testDriver.Matcher.withFeature('noPhantom')
-
 workerTypes.forEach(type => {  // runs all test for classic & module workers & use the 'workers' browser-matcher for classic and the 'workersFull' for module
 	const browsersWithOrWithoutModuleSupport = typeToMatcher(type);
 	paSubmission(type, browsersWithOrWithoutModuleSupport);
@@ -35,7 +33,7 @@ function paSubmission (type, supportRegOrESMWorker) {
 }
 
 function paRetry (type, supportRegOrESMWorker) {
-	testDriver.test(`${type} - PageActions are retried when collector returns 429`, noPhantom.and(supportRegOrESMWorker), function (t, browser, router) {
+	testDriver.test(`${type} - PageActions are retried when collector returns 429`, supportRegOrESMWorker, function (t, browser, router) {
 		let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 			init: {
 				ins: { harvestTimeSeconds: 2 },
@@ -70,7 +68,7 @@ function paRetry (type, supportRegOrESMWorker) {
 }
 
 function paPrecedence (type, supportRegOrESMWorker) {
-	testDriver.test(`${type} - addPageAction has precedence over custom attributes`, noPhantom.and(supportRegOrESMWorker), function (t, browser, router) {
+	testDriver.test(`${type} - addPageAction has precedence over custom attributes`, supportRegOrESMWorker, function (t, browser, router) {
 		let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 			init: {
 				ins: { harvestTimeSeconds: 5 }

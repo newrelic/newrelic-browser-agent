@@ -2,18 +2,15 @@ const testDriver = require('../../../tools/jil/index')
 const {workerTypes, typeToMatcher} = require('./helpers')
 const {fail, checkPayload, url} = require('../uncat-internal-help.cjs')
 
-const reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')
-const withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 const fetchExt = testDriver.Matcher.withFeature('fetchExt')
-
 const FAIL_MSG = 'unexpected error';
 
 workerTypes.forEach(type => {  // runs all test for classic & module workers & use the 'workers' browser-matcher for classic and the 'workersFull' for module
 	const browsersWithOrWithoutModuleSupport = typeToMatcher(type);
-	apiFinished(type, browsersWithOrWithoutModuleSupport.and(reliableFinalHarvest));
-	apiAddReleaseTooMany(type, browsersWithOrWithoutModuleSupport.and(withUnload));
-	apiAddReleaseTooLong(type, browsersWithOrWithoutModuleSupport.and(withUnload));
-	apiAddReleaseNotUsed(type, browsersWithOrWithoutModuleSupport.and(withUnload));
+	apiFinished(type, browsersWithOrWithoutModuleSupport);
+	apiAddReleaseTooMany(type, browsersWithOrWithoutModuleSupport);
+	apiAddReleaseTooLong(type, browsersWithOrWithoutModuleSupport);
+	apiAddReleaseNotUsed(type, browsersWithOrWithoutModuleSupport);
 
 	harvestReferrerSent(type, browsersWithOrWithoutModuleSupport);
 	harvestSessionIsNullWhenEnabled(type, browsersWithOrWithoutModuleSupport);

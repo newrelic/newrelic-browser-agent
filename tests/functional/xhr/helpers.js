@@ -9,11 +9,10 @@ const querypack = require('@newrelic/nr-querypack')
 const condition = (e) => e.type === 'ajax' && e.path === '/json'
 
 function getXhrFromResponse(response, browser) {
-  const bodyXhr = typeof response.body === 'string' ? JSON.parse(response.body).xhr : response.body.xhr
-  if (bodyXhr) return bodyXhr
-  const queryXhr = typeof response.query === 'string' ? JSON.parse(response.query).xhr : response.query.xhr
-  if (queryXhr) return queryXhr
-  return null
+  const target = response?.body || response?.query || null
+  if (!target) return null
+  const parsed = typeof target === 'string' ? JSON.parse(target).xhr : target.xhr
+  return typeof parsed === 'string' ? JSON.parse(parsed) : parsed
 }
 
 function fail(t, addlMsg = undefined) {
@@ -22,7 +21,6 @@ function fail(t, addlMsg = undefined) {
     t.end();
 	}
 }
-
 // DT-header test helpers
 
 // test cases representing different configurations for same or cross origin calls

@@ -2,8 +2,6 @@ const testDriver = require('../../../tools/jil/index')
 const {workerTypes, typeToMatcher} = require('./helpers')
 const {fail, querypack, getXhrFromResponse} = require('../xhr/helpers')
 
-const sendBeaconBrowsers = testDriver.Matcher.withFeature('workingSendBeacon');
-
 workerTypes.forEach(type => {
 	const browsersWithOrWithoutModuleSupport = typeToMatcher(type);
 	addEventListenerPatched(type, browsersWithOrWithoutModuleSupport);
@@ -61,12 +59,8 @@ function addEventListenerPatched (type, browserVersionMatcher) {
 			const jserrPromise = router.expectErrors();
 
 			Promise.all([loadPromise, jserrPromise])
-			.then(( [, {query, body}] ) => {
-				if (sendBeaconBrowsers.match(browser)) {
-					t.ok(JSON.parse(body).xhr, 'got XHR data')
-				} else {
-					t.ok(query.xhr, 'got XHR data')
-				}
+			.then(( [, response] ) => {
+				t.ok(!!getXhrFromResponse(response), 'got XHR data')
       	t.end()
 			})
 			.catch(fail(t, 'unexpected problem reading payload'));
@@ -103,12 +97,8 @@ function constructorMonkeyPatched (type, browserVersionMatcher) {
 			const jserrPromise = router.expectErrors();
 
 			Promise.all([loadPromise, jserrPromise])
-			.then(( [, {query, body}] ) => {
-				if (sendBeaconBrowsers.match(browser)) {
-					t.ok(JSON.parse(body).xhr, 'got XHR data')
-				} else {
-					t.ok(query.xhr, 'got XHR data')
-				}
+			.then(( [, response] ) => {
+				t.ok(!!getXhrFromResponse(response), 'got XHR data')
       	t.end()
 			})
 			.catch(fail(t, 'unexpected problem reading payload'));

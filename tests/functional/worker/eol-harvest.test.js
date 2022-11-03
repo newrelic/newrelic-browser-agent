@@ -13,7 +13,6 @@ workerTypes.forEach(type => {  // runs all test for classic & module workers & u
 function finalHarvest (type, browserVersionMatcher) {
 	testDriver.test(`${type} - buffered events are sent at end-of-life aka worker closing`, browserVersionMatcher, 
 		function (t, browser, router) {
-			// CAUTION: RegExp objs must be explicitly stringified to be transferred, and atm our code reads it as a RegExp rather than a string
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
 					ajax: { harvestTimeSeconds: 81 },

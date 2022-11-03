@@ -4,14 +4,11 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const querypack = require('@newrelic/nr-querypack')
+const {fail, querypack} = require('./helpers')
 
-// we use XHR for harvest calls only if browser support XHR
-const cors = testDriver.Matcher.withFeature('cors')
-const xhrWithAddEventListener = testDriver.Matcher.withFeature('xhrWithAddEventListener')
-const xhrHarvestSupported = cors.and(xhrWithAddEventListener)
+const noPhantom = testDriver.Matcher.withFeature('noPhantom')
 
-testDriver.test('ajax events harvests are retried when collector returns 429', xhrHarvestSupported, function (t, browser, router) {
+testDriver.test('ajax events harvests are retried when collector returns 429', noPhantom, function (t, browser, router) {
   let assetURL = router.assetURL('xhr-outside-interaction.html', {
     loader: 'full',
     init: {
@@ -60,12 +57,7 @@ testDriver.test('ajax events harvests are retried when collector returns 429', x
     t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
 
     t.end()
-  }).catch(fail)
-
-  function fail (err) {
-    t.error(err)
-    t.end()
-  }
+  }).catch(fail(t))
 })
 
 // NOTE: we do not test 408 response in a functional test because some browsers automatically retry

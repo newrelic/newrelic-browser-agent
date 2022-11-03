@@ -106,7 +106,7 @@ features.reliableUnloadEvent = new BrowserMatcher()
   // is likely identical in behavior to OS X safari, we can assume that any issues
   // will be caught there and skip testing iOS.
   .exclude('ios')
-  .exclude('ie', '<8')
+  .exclude('ie', '<9')
   .exclude('firefox', '<32')
 
 // For browsers that do not support the sendBeacon API, we fall back to using an image

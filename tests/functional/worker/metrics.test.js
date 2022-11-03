@@ -2,13 +2,12 @@ const testDriver = require('../../../tools/jil/index')
 const {workerTypes, typeToMatcher} = require('./helpers')
 const {failWithEndTimeout, asyncApiFns, extractWorkerSM, getMetricsFromResponse} = require('../uncat-internal-help.cjs')
 
-const withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 const fetchExt = testDriver.Matcher.withFeature('fetchExt')
 const nestedWorkerSupport = testDriver.Matcher.withFeature('nestedWorkers')
 
 workerTypes.forEach(type => {  // runs all test for classic & module workers & use the 'workers' browser-matcher for classic and the 'workersFull' for module
 	const browsersWithOrWithoutModuleSupport = typeToMatcher(type);
-	metricsApiCreatesSM(type, browsersWithOrWithoutModuleSupport.and(withUnload));
+	metricsApiCreatesSM(type, browsersWithOrWithoutModuleSupport);
 	metricsValidObfuscationCreatesSM(type, browsersWithOrWithoutModuleSupport.and(fetchExt));
 	metricsInvalidObfuscationCreatesSM(type, browsersWithOrWithoutModuleSupport.and(fetchExt));
 	metricsWorkersCreateSM(type, browsersWithOrWithoutModuleSupport.and(nestedWorkerSupport));

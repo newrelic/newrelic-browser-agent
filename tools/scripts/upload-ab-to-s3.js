@@ -116,7 +116,7 @@ function getOpenPrNums() {
     uri: 'https://api.github.com/repos/newrelic/newrelic-browser-agent/pulls?state=open',
     method: 'GET',
     headers: {
-      'User-Agent': 'metal-messiah'
+      'User-Agent': 'newrelic-browser-agent'
     }
   }
 

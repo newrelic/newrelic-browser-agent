@@ -1,8 +1,0 @@
-{
-  "packages": [
-    "packages/*",
-    "tools/test-builds/build-time-mfe/*",
-    "cdn"
-  ],
-  "version": "0.0.9"
-}

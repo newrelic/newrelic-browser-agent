@@ -1,0 +1,15 @@
+/agent/
+/cdn/
+/contextual-ee/
+/feature/
+/lib/
+/loader/
+/map-own/
+/performance-check/
+/plugins/
+/reduce/
+/tests/
+/tools/
+/wrap-functions/
+
+/packages/package.json

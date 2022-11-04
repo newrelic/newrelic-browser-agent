@@ -1,0 +1,13 @@
+{
+  "name": "browser-agent-core",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/browser-agent-core/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:noop",
+      "options": {}
+    }
+  },
+  "tags": []
+}

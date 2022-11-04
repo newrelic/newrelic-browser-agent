@@ -1,6 +1,9 @@
 {
   "extends": "./tsconfig.common.json",
   "compilerOptions": {
-    "declaration": false
+    "declaration": false,
+    "paths": {
+      "@newrelic/browser-agent-core/*": ["../browser-agent-core/*"]
+    }
   }
 }

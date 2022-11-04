@@ -96,6 +96,11 @@ const config = (target) => {
       },
       clean: false
     },
+    resolve: {
+      alias: {
+        '@newrelic/browser-agent-core': path.resolve(__dirname, '../packages/browser-agent-core')
+      }
+    },
 
     optimization: {
       minimize: true,

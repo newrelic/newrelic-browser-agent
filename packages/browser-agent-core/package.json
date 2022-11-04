@@ -9,10 +9,6 @@
   "dependencies": {
     "lodash._slice": "^2.4.1"
   },
-  "scripts": {
-    "build": "echo browser-agent-core does not need building",
-    "test": "echo browser-agent-core unit tests do not exist yet"
-  },
   "sideEffects": false,
   "publishConfig": {
     "access": "public"

@@ -1,0 +1,33 @@
+{
+  "name": "browser-agent",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/browser-agent/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p ./tsconfig.build.cjs.json",
+          "tsc -p ./tsconfig.build.es.lazy.json",
+          "tsc -p ./tsconfig.build.umd.json",
+          "npx webpack --config ./webpack.config.es6.js",
+          "npx webpack --config ./webpack.config.es5.js"
+        ],
+        "cwd": "packages/browser-agent",
+        "parallel": false
+      }
+    },
+    "build-cjs": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "packages/browser-agent/dist/cjs",
+        "main": "packages/browser-agent/src/*",
+        "tsConfig": "packages/browser-agent/tsconfig.lib.json",
+        "assets": ["packages/browser-agent/*.md"]
+      }
+    }
+  },
+  "tags": []
+}

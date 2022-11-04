@@ -4,7 +4,7 @@ const webpack = require('webpack')
 const pkg = require('./package.json')
 
 module.exports = {
-  entry: './dist/bundled/es6/index.js',
+  entry: path.join(__dirname, 'dist/bundled/es6/index.js'),
   target: ['web', 'es5'],
   module: {
     rules: [

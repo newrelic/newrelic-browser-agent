@@ -5,18 +5,28 @@ const pkg = require('./package.json')
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 module.exports = {
-  entry: './src/index.ts',
+  entry: path.resolve(__dirname, 'src/index.ts'),
   module: {
     rules: [
       {
         test: /\.ts?$/,
-        use: 'ts-loader',
-        exclude: /node_modules/
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'ts-loader',
+            options: {
+              transpileOnly: true
+            }
+          }
+        ]
       }
     ]
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js'],
+    alias: {
+      '@newrelic/browser-agent-core': path.resolve(__dirname, '../browser-agent-core')
+    }
   },
   output: {
     path: path.resolve(__dirname, 'dist/bundled/es6'),

@@ -2,5 +2,14 @@
   "parserOptions": {
     "sourceType": "module",
     "ecmaVersion": 2020
+  },
+  "settings": {
+    "import/resolver": {
+      "alias": {
+        "map": [
+          ["@newrelic/browser-agent-core", "./packages/browser-agent-core"]
+        ]
+      }
+    }
   }
-  }
+}

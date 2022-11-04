@@ -322,7 +322,15 @@ class BrowserifyTransform extends AssetTransform {
             }
           }]
         ],
-        plugins: ["@babel/plugin-syntax-dynamic-import", '@babel/plugin-transform-modules-commonjs'],
+        plugins: [
+          "@babel/plugin-syntax-dynamic-import",
+          '@babel/plugin-transform-modules-commonjs',
+          ["module-resolver", {
+            "alias": {
+              "@newrelic/browser-agent-core": './packages/browser-agent-core'
+            }
+          }]
+        ],
         global: true
       })
       .transform(preprocessify())
@@ -613,7 +621,7 @@ class AssetServer extends BaseServer {
   }
 
   writeError(rsp, errorMessage) {
-    console.log('WRITE ERROR!')
+    console.log('WRITE ERROR!', errorMessage)
     rsp.writeHead(500)
     rsp.end(errorMessage)
   }

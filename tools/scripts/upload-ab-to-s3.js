@@ -49,6 +49,8 @@ if (!env || !config || !bucket || !role) {
 
   Promise.all(filePaths.map(fp => getFile(fp))).then((contents) => {
     contents = contents.filter(([url, res])=> res.statusCode === 200)
+    if (!contents.length) throw new Error('Contents are empty')
+    
     console.log(`found ${contents.length} valid PR builds in CDN`)
     let output = `window.NREUM=${config};`
     contents.forEach(([url, res, body]) => { output += wrapAgent(body) })
@@ -84,8 +86,8 @@ function randomExecutor(fnCount) {
         (function (){
             var r = Math.random();
     `
-  for (var i = 0; i < fnCount; i++) {
-    output += `if (r < ${((i + 1) / fnCount) + 0.00001}) return agent${i}();\n`
+  for (var i = 1; i <= fnCount; i++) {
+    output += `if (r <= ${i / fnCount}) return agent${i}();\n`
   }
   output += '})()'
   return output

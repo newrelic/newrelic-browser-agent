@@ -96,9 +96,9 @@ function validateResponse(url, res, body) {
 
 export function getFile(filename) {
   var url = 'https://js-agent.newrelic.com/'
-  if (config.d) url = url + 'dev'
-  else if (config.pr) url = url + 'pr/' + config.pr
-  url = url + '/' + filename
+  if (config.d) url += 'dev'
+  else if (config.pr) url += 'pr/' + config.pr
+  url += '/' + filename
   var opts = {
     uri: url,
     method: 'GET',

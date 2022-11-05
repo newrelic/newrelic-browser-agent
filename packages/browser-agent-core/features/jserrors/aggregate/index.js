@@ -17,15 +17,12 @@ import { mapOwn } from '../../../common/util/map-own'
 import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 
-import { FeatureBase } from '../../../common/util/feature-base'
+import { AggregateBase } from '../../../common/util/feature-base'
+import { FEATURE_NAME } from '../constants'
 
-export class Aggregate extends FeatureBase {
+export class Aggregate extends AggregateBase {
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator)
-
-    const agentRuntime = getRuntime(this.agentIdentifier)
-    // bail if not instrumented
-    if (!agentRuntime.features.err) return
+    super(agentIdentifier, aggregator, FEATURE_NAME)
 
     this.stackReported = {}
     this.pageviewReported = {}
@@ -40,6 +37,7 @@ export class Aggregate extends FeatureBase {
     // this will need to change to match whatever ee we use in the instrument
     this.ee.on('interactionDiscarded', (interaction) => this.onInteractionDiscarded(interaction))
 
+    console.log("register 'err'", this.agentIdentifier)
     register('err', (...args) => this.storeError(...args), undefined, this.ee)
     register('ierr', (...args) => this.storeError(...args), undefined, this.ee)
 
@@ -145,6 +143,7 @@ export class Aggregate extends FeatureBase {
   }
 
   storeError(err, time, internal, customAttributes) {
+    console.log("storeError!")
     // are we in an interaction
     time = time || now()
     if (!internal && getRuntime(this.agentIdentifier).onerror && getRuntime(this.agentIdentifier).onerror(err)) return

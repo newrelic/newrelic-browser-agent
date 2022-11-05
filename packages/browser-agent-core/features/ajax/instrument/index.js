@@ -13,7 +13,8 @@ import { wrapFetch, wrapXhr } from '../../../common/wrap'
 import { parseUrl } from '../../../common/url/parse-url'
 import { DT } from './distributed-tracing'
 import { responseSizeFromXhr } from './response-size'
-import { FeatureBase } from '../../../common/util/feature-base'
+import { InstrumentBase } from '../../../common/util/feature-base'
+import { FEATURE_NAME } from '../constants'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -21,9 +22,9 @@ var handlersLen = handlers.length
 var origRequest = originals.REQ
 var origXHR = self.XMLHttpRequest
 
-export class Instrument extends FeatureBase {
-  constructor(agentIdentifier) {
-    super(agentIdentifier)
+export class Instrument extends InstrumentBase {
+  constructor(agentIdentifier, aggregator) {
+    super(agentIdentifier, aggregator, FEATURE_NAME)
     const agentRuntime = getRuntime(this.agentIdentifier);
 
     // Don't instrument Chrome for iOS, it is buggy and acts like there are URL verification issues
@@ -37,6 +38,8 @@ export class Instrument extends FeatureBase {
     this.wrappedFetch = getWrappedFetch(this.ee)
     wrapXhr(this.ee)
     subscribeToEvents(this.agentIdentifier, this.ee, this.handler, this.dt)
+    
+    this.importAggregator()
   }
 }
 

@@ -6,28 +6,20 @@ import { handle } from '../../../common/event-emitter/handle'
 import { wrapHistory, wrapEvents, wrapTimer, wrapRaf } from '../../../common/wrap'
 import { supportsPerformanceObserver } from '../../../common/window/supports-performance-observer'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
-import { originals, getRuntime } from '../../../common/config/config'
+import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
-import { FeatureBase } from '../../../common/util/feature-base'
+import { InstrumentBase } from '../../../common/util/feature-base'
 import { isBrowserWindow } from '../../../common/window/win'
+import * as CONSTANTS from '../constants'
 
-var learResourceTimings = 'learResourceTimings'
-var ADD_EVENT_LISTENER = 'addEventListener'
-var REMOVE_EVENT_LISTENER = 'removeEventListener'
-var RESOURCE_TIMING_BUFFER_FULL = 'resourcetimingbufferfull'
-var BST_RESOURCE = 'bstResource'
-var RESOURCE = 'resource'
-var START = '-start'
-var END = '-end'
-var FN_START = 'fn' + START
-var FN_END = 'fn' + END
-var BST_TIMER = 'bstTimer'
-var PUSH_STATE = 'pushState'
+const {
+  ADD_EVENT_LISTENER, BST_RESOURCE, BST_TIMER, END, FEATURE_NAME, FN_END, FN_START, learResourceTimings,
+  PUSH_STATE, REMOVE_EVENT_LISTENER, RESOURCE, RESOURCE_TIMING_BUFFER_FULL, START, ORIG_EVENT: origEvent
+} = CONSTANTS
 
-var origEvent = originals.EV
-export class Instrument extends FeatureBase {
-  constructor(agentIdentifier) {
-    super(agentIdentifier)
+export class Instrument extends InstrumentBase {
+  constructor(agentIdentifier, aggregator) {
+    super(agentIdentifier, aggregator, FEATURE_NAME)
     if (!isBrowserWindow) return; // session traces not supported outside web env
 
     if (!(window.performance &&
@@ -53,7 +45,7 @@ export class Instrument extends FeatureBase {
 
     this.ee.on(FN_END, function (args, target) {
       var evt = args[0]
-      if (evt instanceof origEvent) {        
+      if (evt instanceof origEvent) {
 
         // ISSUE: when target is XMLHttpRequest, nr@context should have params so we can calculate event origin
         // When ajax is disabled, this may fail without making ajax a dependency of session-trace
@@ -108,18 +100,18 @@ export class Instrument extends FeatureBase {
 
         handle(BST_RESOURCE, [entries], undefined, undefined, ee)
       })
-  
+
       try {
         observer.observe({ entryTypes: ['resource'] })
       } catch (e) {
         // do nothing
       }
     }
-  
+
     function onResourceTimingBufferFull(e) {
 
       handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)], undefined, undefined, ee)
-  
+
       // stop recording once buffer is full
       if (window.performance['c' + learResourceTimings]) {
         try {
@@ -139,6 +131,8 @@ export class Instrument extends FeatureBase {
     document[ADD_EVENT_LISTENER]('scroll', this.noOp, eventListenerOpts(false))
     document[ADD_EVENT_LISTENER]('keypress', this.noOp, eventListenerOpts(false))
     document[ADD_EVENT_LISTENER]('click', this.noOp, eventListenerOpts(false))
+
+    this.importAggregator()
   }
 
   noOp(e) { /* no-op */ }

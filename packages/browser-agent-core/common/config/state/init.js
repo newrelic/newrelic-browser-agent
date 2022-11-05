@@ -4,7 +4,7 @@ import { Configurable } from './configurable'
 
 const model = {
   privacy: { cookies_enabled: true }, // *cli - per discussion, default should be true
-  ajax: { deny_list: undefined, enabled: true },
+  ajax: { deny_list: undefined, enabled: true, auto: true, harvestTimeSeconds: 10 },
   distributed_tracing: {
     enabled: undefined,
     exclude_newrelic_header: undefined,
@@ -14,13 +14,13 @@ const model = {
   },
   ssl: undefined,
   obfuscate: undefined,
-  jserrors: {enabled: true},
-  metrics: {enabled: true},
-  page_action: {enabled: true},
-  page_view_event: {enabled: true},
-  page_view_timing: {enabled: true},
-  session_trace: {enabled: true},
-  spa: {enabled: true}
+  jserrors: {enabled: true, auto: true, harvestTimeSeconds: 10},
+  metrics: {enabled: true, auto: true},
+  page_action: {enabled: true, auto: false, harvestTimeSeconds: 30},
+  page_view_event: {enabled: true, auto: true},
+  page_view_timing: {enabled: true, auto: true, harvestTimeSeconds: 30},
+  session_trace: {enabled: true, auto: true, harvestTimeSeconds: 10},
+  spa: {enabled: true, auto: true, harvestTimeSeconds: 10}
 }
 
 const _cache = {}

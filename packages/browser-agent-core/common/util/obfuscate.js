@@ -6,9 +6,6 @@ var fileProtocolRule = {
   regex: /^file:\/\/(.*)/,
   replacement: 'file://OBFUSCATED'
 }
-
-let recordedSupportability = false
-
 export class Obfuscator extends SharedContext {
   constructor(parent) {
     super(parent) // gets any allowed properties from the parent and stores them in `sharedContext`
@@ -55,17 +52,17 @@ export function validateRules(rules) {
   var invalidRegexDetected = false
   for (var i = 0; i < rules.length; i++) {
     if (!('regex' in rules[i])) {
-      if (console && console.warn) console.warn('An obfuscation replacement rule was detected missing a "regex" value.')
+      if (console && console.warn) console.warn('New Relic: An obfuscation replacement rule was detected missing a "regex" value.')
       invalidRegexDetected = true
     } else if (typeof rules[i].regex !== 'string' && !(rules[i].regex.constructor === RegExp)) {
-      if (console && console.warn) console.warn('An obfuscation replacement rule contains a "regex" value with an invalid type (must be a string or RegExp)')
+      if (console && console.warn) console.warn('New Relic: An obfuscation replacement rule contains a "regex" value with an invalid type (must be a string or RegExp)')
       invalidRegexDetected = true
     }
 
     var replacement = rules[i].replacement
     if (replacement) {
       if (typeof replacement !== 'string') {
-        if (console && console.warn) console.warn('An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string)')
+        if (console && console.warn) console.warn('New Relic: An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string)')
         invalidReplacementDetected = true
       }
     }

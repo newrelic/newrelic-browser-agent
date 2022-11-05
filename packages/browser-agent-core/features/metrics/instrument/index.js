@@ -1,6 +1,6 @@
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { FeatureBase } from '../../../common/util/feature-base'
+import { InstrumentBase } from '../../../common/util/feature-base'
 import { getFrameworks } from '../../../common/metrics/framework-detection'
 import { protocol } from '../../../common/url/protocol'
 import { getRules, validateRules } from '../../../common/util/obfuscate'
@@ -8,19 +8,22 @@ import { VERSION } from '../../../common/constants/environment-variables'
 import { onDOMContentLoaded } from '../../../common/window/load'
 import { isBrowserWindow } from '../../../common/window/win'
 import { insertSupportMetrics } from './workers-helper'
+import { FEATURE_NAME } from '../constants'
 
 var SUPPORTABILITY_METRIC = 'sm'
 var CUSTOM_METRIC = 'cm'
 
-export class Instrument extends FeatureBase {
-    constructor(agentIdentifier, PfFeatStatusEnum = {}) {
-        super(agentIdentifier)
+export class Instrument extends InstrumentBase {
+    constructor(agentIdentifier, aggregator, PfFeatStatusEnum = {}) {
+        super(agentIdentifier, aggregator, FEATURE_NAME)
         this.PfFeatStatusEnum = PfFeatStatusEnum
         // checks that are run only one time, at script load
         this.singleChecks()
         // listen for messages from features and capture them
         registerHandler('record-supportability', (...args) => this.recordSupportability(...args), undefined, this.ee)
         registerHandler('record-custom', (...args) => this.recordCustom(...args), undefined, this.ee)
+
+        this.importAggregator()
     }
 
     /**

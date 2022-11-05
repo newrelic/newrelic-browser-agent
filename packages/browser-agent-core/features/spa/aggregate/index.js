@@ -11,42 +11,22 @@ import { navTimingValues as navTiming } from '../../../common/timing/nav-timing'
 import { generateUuid } from '../../../common/ids/unique-id'
 import { paintMetrics } from '../../../common/metrics/paint-metrics'
 import { Interaction } from './interaction'
-import { getConfigurationValue, originals, getRuntime } from '../../../common/config/config'
+import { getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
-import { FeatureBase } from '../../../common/util/feature-base'
+import { AggregateBase } from '../../../common/util/feature-base'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { Serializer } from './serializer'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import { isBrowserWindow } from '../../../common/window/win'
+import * as CONSTANTS from '../constants'
 
-var INTERACTION_EVENTS = [
-  'click',
-  'submit',
-  'keypress',
-  'keydown',
-  'keyup',
-  'change'
-]
-
-var MAX_TIMER_BUDGET = 999
-var FN_START = 'fn-start'
-var FN_END = 'fn-end'
-var CB_START = 'cb-start'
-var INTERACTION_API = 'api-ixn-'
-var REMAINING = 'remaining'
-var INTERACTION = 'interaction'
-var SPA_NODE = 'spaNode'
-var JSONP_NODE = 'jsonpNode'
-var FETCH_START = 'fetch-start'
-var FETCH_DONE = 'fetch-done'
-var FETCH_BODY = 'fetch-body-'
-var JSONP_END = 'jsonp-end'
-
-var originalSetTimeout = originals.ST
-
-export class Aggregate extends FeatureBase {
+const {
+  FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING, 
+  INTERACTION, SPA_NODE, JSONP_NODE, FETCH_START, FETCH_DONE, FETCH_BODY, JSONP_END, originalSetTimeout
+} = CONSTANTS
+export class Aggregate extends AggregateBase {
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator)
+    super(agentIdentifier, aggregator, FEATURE_NAME)
     if (!isBrowserWindow) return; // TO DO: can remove once aggregate is chained to instrument
 
     this.state = {

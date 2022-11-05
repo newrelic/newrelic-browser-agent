@@ -25,6 +25,15 @@ const model = {
 
 const _cache = {}
 
+export function isValid(id){
+  try {
+    const info = getInfo(id)
+    return (!!info.licenseKey && !!info.errorBeacon && !!info.applicationID)
+  } catch (err) {
+    return false
+  }
+}
+
 export function getInfo(id) {
   if (!id) throw new Error('All info objects require an agent identifier!')
   if (!_cache[id]) throw new Error(`Info for ${id} was never set`)

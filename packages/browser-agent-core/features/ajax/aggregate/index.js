@@ -9,11 +9,12 @@ import { handle } from '../../../common/event-emitter/handle'
 import { getConfigurationValue, getInfo } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
-import { FeatureBase } from '../../../common/util/feature-base'
+import { AggregateBase } from '../../../common/util/feature-base'
+import { FEATURE_NAME } from '../constants'
 
-export class Aggregate extends FeatureBase {
+export class Aggregate extends AggregateBase {
   constructor(agentIdentifier, aggregator, externalFeatures = []) {
-    super(agentIdentifier, aggregator, externalFeatures)
+    super(agentIdentifier, aggregator, FEATURE_NAME, externalFeatures)
     let ajaxEvents = []
     let spaAjaxEvents = {}
     let sentAjaxEvents = []

@@ -11,12 +11,13 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { handle } from '../../../common/event-emitter/handle'
 import { getInfo, getConfigurationValue } from '../../../common/config/config'
-import { FeatureBase } from '../../../common/util/feature-base'
+import { AggregateBase } from '../../../common/util/feature-base'
 import { isBrowserWindow } from '../../../common/window/win'
+import { FEATURE_NAME } from '../constants'
 
-export class Aggregate extends FeatureBase {
+export class Aggregate extends AggregateBase {
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator)
+    super(agentIdentifier, aggregator, FEATURE_NAME)
     if (!isBrowserWindow) return; // TO DO: can remove once aggregate is chained to instrument
 
     this.timings = []

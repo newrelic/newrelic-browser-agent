@@ -1,0 +1,1 @@
+export const FEATURE_NAME = 'page-view-event'

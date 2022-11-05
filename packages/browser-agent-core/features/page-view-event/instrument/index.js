@@ -3,19 +3,20 @@ import { handle } from '../../../common/event-emitter/handle'
 import { now, getOffset, getLastTimestamp } from '../../../common/timing/now'
 import { mark } from '../../../common/timing/stopwatch'
 import { findStartTime } from '../../../common/timing/start-time'
-import { FeatureBase } from '../../../common/util/feature-base'
+import { InstrumentBase } from '../../../common/util/feature-base'
 import { onDOMContentLoaded, onWindowLoad } from '../../../common/window/load'
 import { isBrowserWindow } from '../../../common/window/win'
+import { FEATURE_NAME } from '../constants'
 
-export class Instrument extends FeatureBase {
-  constructor(agentIdentifier) {
-    super(agentIdentifier)
+export class Instrument extends InstrumentBase {
+  constructor(agentIdentifier, aggregator) {
+    super(agentIdentifier, aggregator, FEATURE_NAME)
     if (!isBrowserWindow) return; // initial page view times non applicable outside web env
 
     findStartTime(agentIdentifier)
     mark(agentIdentifier, 'firstbyte', getLastTimestamp())
 
-    onWindowLoad(() => this.measureWindowLoaded())
+    onWindowLoad(() => { this.measureWindowLoaded(); this.importAggregator() })
     onDOMContentLoaded(() => this.measureDomContentLoaded())
   }
 

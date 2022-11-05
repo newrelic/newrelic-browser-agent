@@ -1,21 +1,29 @@
-import {BrowserAgent} from '@newrelic/browser-agent'
-// 
+import BrowserAgent from '@newrelic/browser-agent'
 
-const nrConfig = {
-  ...NREUM.init,
-   ...NREUM.info, 
-   ...NREUM.loader_config, 
-  // licenseKey: 'asdf',
-  applicationID: 1
-}
+const info = {
+     ...NREUM.info, 
+    applicationID: 1
+  }
+  const init = {
+    ...NREUM.init,
+    page_view_event: {enabled: false},
+    ajax: {enabled: false},
+    page_view_timing: {enabled: false},
+    session_trace: {enabled: false},
+    spa: {enabled: false},
+    jserrors: {auto: false}
+  }
+  const loader_config = {
+     ...NREUM.loader_config, 
+  }
 
+  // this should notice global errors
+const nr = new BrowserAgent()
+// nr.features.errors.auto = false // Only capture errors through noticeError()
 
-const nr = new BrowserAgent() // Create a new instance of the Browser Agent
-nr.features.errors.auto = false // Only capture errors through noticeError()
+nr.start({info, init, loader_config, exposed: false})
 
-nr.start(nrConfig).then(() => {
-  console.debug("agent initialized! -- Puppies Component", nrConfig)
-})
+console.log("component 1 ", nr)
 
 
 class PuppyComponent extends HTMLElement {

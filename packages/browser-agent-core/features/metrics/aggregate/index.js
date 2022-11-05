@@ -1,11 +1,12 @@
 import { getConfigurationValue } from "../../../common/config/config";
 import { registerHandler } from "../../../common/event-emitter/register-handler";
 import { HarvestScheduler } from "../../../common/harvest/harvest-scheduler";
-import { FeatureBase } from "../../../common/util/feature-base";
+import { AggregateBase } from "../../../common/util/feature-base";
+import { FEATURE_NAME } from "../constants";
 
-export class Aggregate extends FeatureBase {
+export class Aggregate extends AggregateBase {
     constructor(agentIdentifier, aggregator) {
-        super(agentIdentifier, aggregator)
+        super(agentIdentifier, aggregator, FEATURE_NAME)
 
         registerHandler('storeMetric', (...args) => this.storeMetric(...args), undefined, this.ee)
         registerHandler('storeEventMetrics', (...args) => this.storeEventMetrics(...args), undefined, this.ee)

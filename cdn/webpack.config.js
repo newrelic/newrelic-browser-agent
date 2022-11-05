@@ -60,18 +60,14 @@ const config = (target) => {
   return {
     entry: {
       ...(!isWorker && {
-        [`nr-loader-rum${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/lite.js'),
-        [`nr-loader-rum${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/lite.js'),
-        [`nr-loader-full${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/pro.js'),
-        [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/pro.js'),
-        [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/spa.js'),
-        [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/spa.js'),
-        [`nr-loader-rum-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/lite.js'),
-        [`nr-loader-rum-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/lite.js'),
-        [`nr-loader-full-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
-        [`nr-loader-full-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
-        [`nr-loader-spa-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
-        [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
+        [`nr-loader-full${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/sync-loader.js'),
+        [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/sync-loader.js'),
+        [`nr-loader-full-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/sync-loader.js'),
+        [`nr-loader-full-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/sync-loader.js'),
+        [`nr-loader-async${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/async-loader.js'),
+        [`nr-loader-async${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/async-loader.js'),
+        [`nr-loader-async-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/async-loader.js'),
+        [`nr-loader-async-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/async-loader.js'),
         [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills.js')
       }),
       ...(isWorker && {

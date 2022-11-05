@@ -14,12 +14,6 @@ export function activateFeatures (flags, agentIdentifier) {
     sharedEE.emit('feat-' + flag, [])
     activatedFeatures[flag] = true
   })
-  drainAll(agentIdentifier)
-}
-
-export function drainAll(agentIdentifier) {
-  drain(agentIdentifier, 'api')
-  drain(agentIdentifier, 'feature')
 }
 
 export const activatedFeatures = {}

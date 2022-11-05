@@ -1,6 +1,6 @@
 import { getConfigurationValue, getRuntime } from '../config/config'
 
-const featureNames = [
+export const featureNames = [
   "ajax",
   "jserrors",
   "metrics",
@@ -13,6 +13,10 @@ const featureNames = [
 
 function isEnabled(name, agentIdentifier) {
   return getRuntime(agentIdentifier).disabled !== true && getConfigurationValue(agentIdentifier, `${name}.enabled`) !== false
+}
+
+export function isAuto(name, agentIdentifier) {
+  return getConfigurationValue(agentIdentifier, `${name}.auto`) !== false
 }
 
 export function getEnabledFeatures(agentIdentifier) {

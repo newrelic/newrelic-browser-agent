@@ -4,28 +4,20 @@
 */
 import { wrapMutation, wrapPromise, wrapHistory, wrapEvents, wrapTimer, wrapFetch, wrapXhr, wrapJson } from '../../../common/wrap'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
-import { FeatureBase } from '../../../common/util/feature-base'
+import { InstrumentBase } from '../../../common/util/feature-base'
 import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { isBrowserWindow } from '../../../common/window/win'
+import * as CONSTANTS from '../constants'
 
-var START = '-start'
-var END = '-end'
-var BODY = '-body'
-var FN_START = 'fn' + START
-var FN_END = 'fn' + END
-var CB_START = 'cb' + START
-var CB_END = 'cb' + END
-var JS_TIME = 'jsTime'
-var FETCH = 'fetch'
-var ADD_EVENT_LISTENER = 'addEventListener'
+const {
+    FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, ADD_EVENT_LISTENER, 
+    WIN: win, LOCATION: location, FN_START, CB_START, FN_END
+} = CONSTANTS
 
-var win = self
-var location = win.location
-
-export class Instrument extends FeatureBase {
-    constructor(agentIdentifier) {
-        super(agentIdentifier)
+export class Instrument extends InstrumentBase {
+    constructor(agentIdentifier, aggregator) {
+        super(agentIdentifier, aggregator, FEATURE_NAME)
         if (!isBrowserWindow) return; // SPA not supported outside web env
 
         const agentRuntime = getRuntime(this.agentIdentifier);
@@ -84,28 +76,30 @@ export class Instrument extends FeatureBase {
         function trackURLChange(unusedArgs, hashChangedDuringCb) {
             historyEE.emit('newURL', ['' + location, hashChangedDuringCb])
         }
-    
+
         function startTimestamp() {
             depth++
             startHash = location.hash
             this[FN_START] = now()
         }
-    
+
         function endTimestamp() {
             depth--
             if (location.hash !== startHash) {
                 trackURLChange(0, true)
             }
-    
+
             var time = now()
             this[JS_TIME] = (~~this[JS_TIME]) + time - this[FN_START]
             this[FN_END] = time
         }
-    
+
         function timestamp(ee, type) {
             ee.on(type, function () {
                 this[type] = now()
             })
         }
+
+        this.importAggregator()
     }
 }

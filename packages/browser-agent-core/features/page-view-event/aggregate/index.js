@@ -7,14 +7,15 @@ import { addMetric as addPaintMetric } from '../../../common/metrics/paint-metri
 import { submitData } from '../../../common/util/submit-data'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { FeatureBase } from '../../../common/util/feature-base'
+import { AggregateBase } from '../../../common/util/feature-base'
 import { isBrowserWindow } from '../../../common/window/win'
+import { FEATURE_NAME } from '../constants'
 
 const jsonp = 'NREUM.setToken'
 
-export class Aggregate extends FeatureBase {
+export class Aggregate extends AggregateBase {
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator)
+    super(agentIdentifier, aggregator, FEATURE_NAME)
     if (isBrowserWindow) this.sendRum();  // initial RUM payload is only sent in web env, TO DO: can remove once aggregate is chained to instrument
   }
 
@@ -23,6 +24,7 @@ export class Aggregate extends FeatureBase {
   }
 
   sendRum() {
+    console.log("sendRum!")
     const info = getInfo(this.agentIdentifier)
     if (!info.beacon) return
     if (info.queueTime) this.aggregator.store('measures', 'qt', { value: info.queueTime })

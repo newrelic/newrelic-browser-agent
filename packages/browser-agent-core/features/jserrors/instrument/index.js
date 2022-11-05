@@ -10,13 +10,12 @@ import { getOrSet } from '../../../common/util/get-or-set'
 import { wrapRaf, wrapTimer, wrapEvents, wrapXhr } from '../../../common/wrap'
 import slice from 'lodash._slice'
 import './debug'
-import { FeatureBase } from '../../../common/util/feature-base'
+import { InstrumentBase } from '../../../common/util/feature-base'
+import { FEATURE_NAME, NR_ERR_PROP } from '../constants'
 
-var NR_ERR_PROP = 'nr@seenError'
-
-export class Instrument extends FeatureBase {
-  constructor(agentIdentifier) {
-    super(agentIdentifier)
+export class Instrument extends InstrumentBase {
+  constructor(agentIdentifier, aggregator) {
+    super(agentIdentifier, aggregator, FEATURE_NAME)
     // skipNext counter to keep track of uncaught
     // errors that will be the same as caught errors.
     this.skipNext = 0
@@ -87,6 +86,8 @@ export class Instrument extends FeatureBase {
         state.handleErrors = true
       }
     }
+
+    this.importAggregator()
   }
 
   // FF and Android browsers do not provide error info to the 'error' event callback,

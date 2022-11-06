@@ -188,8 +188,8 @@ class AgentInjectorTransform extends AssetTransform {
     `
   }
 
-  getLoaderContent(loaderName, dir, callback) {
-    let loaderFilename = `nr-loader-${loaderName}${runnerArgs.polyfills ? '-polyfills' : ''}.min.js`
+  getLoaderContent(dir, callback) {
+    let loaderFilename = `nr-loader${runnerArgs.polyfills ? '-polyfills' : ''}.min.js`
     let loaderPath = path.join(dir, loaderFilename)
     fs.readFile(loaderPath, callback)
   }
@@ -228,7 +228,6 @@ class AgentInjectorTransform extends AssetTransform {
 
 
       this.getLoaderContent(
-        loaderName,
         this.buildDir,
         (err, loaderContent) => {
           if (err) return callback(err)

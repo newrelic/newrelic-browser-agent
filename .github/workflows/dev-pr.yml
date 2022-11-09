@@ -1,0 +1,54 @@
+name: Build and Deploy PR to NR Dev
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_build:
+        description: 'PR build'
+        required: true
+        type: choice
+        options:
+          - clear
+          - build
+  pull_request_target:
+    types: [labeled, closed]
+
+jobs:
+  pr-dev-build:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'deploy to dev')
+    runs-on: ubuntu-latest
+    container: node:14
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      PR_NAME: PR${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: install
+        run: npm ci
+      - name: clear S3
+        run: node tools/scripts/delete-s3-dir.js \
+            --bucket ${{ secrets.AWS_BUCKET }} \
+            --role ${{ secrets.AWS_ROLE_ARN }} \
+            --pr PR${{ github.event.pull_request.number }}
+      - name: build
+        if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
+        run: npm run cdn:build:pr
+      - name: upload artifacts to S3
+        if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
+        run: |
+          node tools/scripts/upload-to-s3.js \
+            --bucket ${{ secrets.AWS_BUCKET }} \
+            --role ${{ secrets.AWS_ROLE_ARN }} \
+            --pr PR${{ github.event.pull_request.number }}/
+      - name: check files exist
+        if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
+        run: node tools/scripts/check-version.js -e yes --pr PR${{ github.event.number}}
+      - name: re-publish internal loader
+        if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
+        run: |
+          node ./tools/scripts/upload-ab-to-s3.js \
+            --env=dev \
+            --config=${{ secrets.INTERNAL_DEV_CONFIG }} \
+            --bucket=${{ secrets.AWS_BUCKET }} \
+            --role=${{ secrets.AWS_ROLE_ARN }}

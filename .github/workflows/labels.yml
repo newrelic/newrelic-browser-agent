@@ -10,4 +10,4 @@ jobs:
       - name: remove labels
         uses: newrelic/labeler@master
         with:
-          remove-labels: "safe to test"          
+          remove-labels: "safe to test, deploy to dev"

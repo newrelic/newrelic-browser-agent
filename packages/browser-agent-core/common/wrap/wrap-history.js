@@ -6,12 +6,13 @@
 // History pushState wrapper
 import {ee as baseEE} from '../event-emitter/contextual-ee'
 import {createWrapperWithEmitter as wfn} from './wrap-function'
+import { isBrowserWindow } from '../window/win'
 
 const wrapped = {}
 
 export function wrapHistory(sharedEE){
   const ee = scopedEE(sharedEE)
-  if (wrapped[ee.debugId]) return ee
+  if (wrapped[ee.debugId] || !isBrowserWindow) return ee; // History API is only relevant within web env
   wrapped[ee.debugId] = true
   var wrapFn = wfn(ee)
   

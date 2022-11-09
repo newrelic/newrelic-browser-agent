@@ -31,9 +31,9 @@ export function wrapXhr (sharedEE) {
   var handlers = ['onload', 'onerror', 'onabort', 'onloadstart', 'onloadend', 'onprogress', 'ontimeout']
   var pendingXhrs = []
 
-  var activeListeners = window.XMLHttpRequest.listeners
+  var activeListeners = self.XMLHttpRequest.listeners
   
-  var XHR = window.XMLHttpRequest = newXHR
+  var XHR = self.XMLHttpRequest = newXHR
   
   function newXHR (opts) {
     var xhr = new OrigXHR(opts)
@@ -140,7 +140,7 @@ export function wrapXhr (sharedEE) {
       var dummyNode = document.createTextNode(toggle)
       new MutationObserver(drainPendingXhrs).observe(dummyNode, { characterData: true })
     }
-  } else {
+  } else {  // this below case applies to web workers too
     baseEE.on('fn-end', function (args) {
       // We don't want to try to wrap onreadystatechange from within a
       // readystatechange callback.

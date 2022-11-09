@@ -51,4 +51,8 @@ jobs:
             --env=dev \
             --config=${{ secrets.INTERNAL_DEV_CONFIG }} \
             --bucket=${{ secrets.AWS_BUCKET }} \
+<<<<<<< HEAD
             --role=${{ secrets.AWS_ROLE_ARN }}
+=======
+            --role=${{ secrets.AWS_ROLE_ARN }}
+>>>>>>> dfb4b3f68cde9d4005904a711f83abd9c074ae89

@@ -125,4 +125,11 @@ function getMetricsFromResponse(response, isSupportability) {
   return null
 }
 
-module.exports = {assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse, getMetricsFromResponse, getAppIdFromResponse}
+function fail(t) {
+	return (err) => {
+    t.error(err);
+    t.end();
+	}
+}
+
+module.exports = {fail, assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse, getMetricsFromResponse, getAppIdFromResponse}

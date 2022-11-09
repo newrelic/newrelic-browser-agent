@@ -7,6 +7,8 @@ console.log("NRQL_API_KEY", NRQL_API_KEY)
 
 if (!BUILD_NUMBER) process.exit(1)
 
+let allFinished = true
+
 const queryNR = async () => {
     console.log("---- FETCHING --", BUILD_NUMBER, " ----")
     const latest = getGQLResults(await getDataFromNRQL(`{
@@ -21,7 +23,8 @@ const queryNR = async () => {
     if (latest.some(x => !!x['latest.remaining'])) {
         console.log("all tests did not finish....")
         console.log(latest)
-        process.exit(1)
+        allFinished = false
+        // process.exit(1)
     }
     const failures = await getDataFromNRQL(`{
         actor {
@@ -69,7 +72,7 @@ const queryNR = async () => {
     })
     console.log("---- LOCAL COMMAND ----")
     console.log(out)
-    if (!isValid) process.exit(1)
+    if (!isValid || !allFinished) process.exit(1)
     else process.exit(0)
 }
 

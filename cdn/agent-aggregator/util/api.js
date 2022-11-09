@@ -10,6 +10,7 @@ import { mapOwn } from '@newrelic/browser-agent-core/common/util/map-own'
 import { handle } from '@newrelic/browser-agent-core/common/event-emitter/handle'
 import { getConfigurationValue, getInfo, getRuntime } from '@newrelic/browser-agent-core/common/config/config'
 import { ee } from '@newrelic/browser-agent-core/common/event-emitter/contextual-ee'
+import { isBrowserWindow } from '@newrelic/browser-agent-core/common/window/win'
 
 export function initializeAPI(agentIdentifier) {
     var sharedEE = ee.get(agentIdentifier)
@@ -64,9 +65,10 @@ export function initializeAPI(agentIdentifier) {
     // dom_time - the time spent processing the result of the service call (or user defined)
     // fe_time - the time spent rendering the result of the service call (or user defined)
     function inlineHit(t, request_name, queue_time, app_time, total_be_time, dom_time, fe_time) {
-        request_name = window.encodeURIComponent(request_name)
-        cycle += 1
+        if (!isBrowserWindow) return;   // this API not avail without DOM due to .img prot
 
+        request_name = self.encodeURIComponent(request_name)
+        cycle += 1
 
         const agentInfo = getInfo(agentIdentifier);
         if (!agentInfo.beacon) return

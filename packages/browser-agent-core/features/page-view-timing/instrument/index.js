@@ -8,17 +8,18 @@ import { eventListenerOpts } from '../../../common/event-listener/event-listener
 import { getOffset, now } from '../../../common/timing/now'
 import { getConfigurationValue, originals } from '../../../common/config/config'
 import { FeatureBase } from '../../../common/util/feature-base'
+import { isBrowserWindow } from '../../../common/window/win'
 
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
     super(agentIdentifier)
+    if (!this.isEnabled() || !isBrowserWindow) return;  // CWV is irrelevant outside web context
+
     this.pageHiddenTime = initializeHiddenTime()  // synonymous with initial visibilityState
     this.performanceObserver
     this.lcpPerformanceObserver
     this.clsPerformanceObserver
     this.fiRecorded = false
-
-    if (!this.isEnabled()) return
 
     if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {
       // passing in an unknown entry type to observer could throw an exception
@@ -100,7 +101,7 @@ export class Instrument extends FeatureBase {
 
   // takes an attributes object and appends connection attributes if available
   addConnectionAttributes(attributes) {
-    var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection
+    var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection; // to date, both window & worker shares the same support for connection
     if (!connection) return
 
     if (connection.type) attributes['net-type'] = connection.type

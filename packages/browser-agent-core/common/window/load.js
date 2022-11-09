@@ -1,23 +1,21 @@
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
+import { isBrowserWindow } from './win'
 
-const win = window
-const doc = win.document
+const win = isBrowserWindow && window
+const doc = win && win.document
 const ADD_EVENT_LISTENER = 'addEventListener'
-const ATTACH_EVENT = 'attachEvent'
 
 function checkState (cb) {
-  if (doc.readyState === 'complete') cb()
+  if (!doc || doc.readyState === 'complete') return cb() || true
 }
 
 export function onWindowLoad(cb) {
-  checkState(cb)
-  if (doc[ADD_EVENT_LISTENER]) win[ADD_EVENT_LISTENER]('load', cb, eventListenerOpts(false))
-  else win[ATTACH_EVENT]('onload', cb)
+  if (checkState(cb)) return
+  win[ADD_EVENT_LISTENER]('load', cb, eventListenerOpts(false));
 }
 
 export function onDOMContentLoaded(cb) {
-  checkState(cb)
-  if (doc[ADD_EVENT_LISTENER]) doc[ADD_EVENT_LISTENER]('DOMContentLoaded', cb, eventListenerOpts(false))
-  else doc[ATTACH_EVENT]('onreadystatechange', checkState)
+  if (checkState(cb)) return
+  doc[ADD_EVENT_LISTENER]('DOMContentLoaded', cb, eventListenerOpts(false));
 }
 

@@ -3,7 +3,8 @@ name: Build and publish DEV to CDN
 on:
   push:
     branches:
-      - main 
+      - main
+      - dev 
   workflow_dispatch:
 
 jobs:

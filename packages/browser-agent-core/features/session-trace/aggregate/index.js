@@ -24,7 +24,7 @@ export class Aggregate extends FeatureBase {
 
     if (!xhrUsable) return
     // bail if not instrumented
-    if (!agentRuntime.features.stn || !agentRuntime.xhrWrappable) return
+    if (!agentRuntime.features.stn || !agentRuntime.xhrWrappable) return  // TO DO: can remove once aggregate is chained to instrument
 
     this.ptid = ''
     this.ignoredEvents = {

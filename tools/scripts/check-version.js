@@ -23,6 +23,11 @@ var config = require('yargs')
   .describe('d', 'Instructs to check the dev folder instead of the root folder')
   .default('d', false)
 
+  .string('pr')
+  .alias('pr', 'pr-name')
+  .describe('pr', 'PR name (bucket name) to search')
+  .default('')
+
   .boolean('m')
   .alias('m', 'maps')
   .describe('m', 'Check for map files')
@@ -89,8 +94,11 @@ function validateResponse(url, res, body) {
   }
 }
 
-function getFile(filename) {
-  var url = 'https://js-agent.newrelic.com/' + (config.d ? 'dev/' : '') + filename
+export function getFile(filename) {
+  var url = 'https://js-agent.newrelic.com/'
+  if (config.d) url += 'dev'
+  else if (config.pr) url += 'pr/' + config.pr
+  url += '/' + filename
   var opts = {
     uri: url,
     method: 'GET',

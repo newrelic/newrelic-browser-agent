@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { isBrowserWindow } from "../window/win"
+
 var stringsToParsedUrls = {}
 
 export function parseUrl (url) {
@@ -17,12 +19,21 @@ export function parseUrl (url) {
     }
   }
 
-  var urlEl = document.createElement('a')
-  var location = window.location
+  let urlEl;
+  var location = self.location
   var ret = {}
 
-  // Use an anchor dom element to resolve the url natively.
-  urlEl.href = url
+  if (isBrowserWindow) {
+    // Use an anchor dom element to resolve the url natively.
+    urlEl = document.createElement('a');
+    urlEl.href = url;
+  } else {
+    try {
+      urlEl = new URL(url, location.href);
+    } catch {
+      return ret; // IE doesn't support URL(), so for IE non-web env (e.g. workers), this func will break and return {}
+    }
+  }
 
   ret.port = urlEl.port
 
@@ -45,7 +56,7 @@ export function parseUrl (url) {
 
   // urlEl.protocol is ':' in old ie when protocol is not specified
   var sameProtocol = !urlEl.protocol || urlEl.protocol === ':' || urlEl.protocol === location.protocol
-  var sameDomain = urlEl.hostname === document.domain && urlEl.port === location.port
+  var sameDomain = urlEl.hostname === location.hostname && urlEl.port === location.port
 
   // urlEl.hostname is not provided by IE for relative urls, but relative urls are also same-origin
   ret.sameOrigin = sameProtocol && (!urlEl.hostname || sameDomain)

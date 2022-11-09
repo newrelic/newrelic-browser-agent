@@ -8,6 +8,7 @@ import { SharedContext } from '../context/shared-context'
 import { Harvest, getSubmitMethod } from './harvest'
 import { subscribeToEOL } from '../unload/eol'
 import { conditionallySet } from '../cookie/nav-cookie'
+import { getConfigurationValue } from '../config/config'
 
 /**
  * Periodically invokes harvest calls and handles retries
@@ -28,7 +29,7 @@ export class HarvestScheduler extends SharedContext {
       if (this.opts.onUnload) this.opts.onUnload()
       this.harvest.sendFinal()
       conditionallySet(this.sharedContext.agentIdentifier)
-    })
+    }, getConfigurationValue(this.sharedContext.agentIdentifier, 'allow_bfcache'));
   }
 
   startTimer(interval, initialDelay) {

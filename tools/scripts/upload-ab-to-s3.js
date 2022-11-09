@@ -8,6 +8,7 @@ var argv = require('yargs')
   .alias('env', 'environment')
   .describe('env', 'NR Internal Environment')
   .default('env', 'dev')
+  .choices('env', ['dev', 'staging', 'prod', 'eu-prod'])
 
   .string('current')
   .describe('current', 'current/stable build (defaults to -current)')
@@ -17,8 +18,11 @@ var argv = require('yargs')
   .describe('next', 'next version to compare to stable version (defaults to /dev)')
   .default('next', 'https://js-agent.newrelic.com/dev/nr-loader-spa.min.js')
 
-  .string('config')
-  .describe('config', 'NR internal config block')
+  .string('licenseKey')
+  .describe('licenseKey', 'NR internal licenseKey')
+
+  .string('appId')
+  .describe('appId', 'NR internal appId')
 
   .string('bucket')
   .describe('bucket', 'S3 bucket name')
@@ -31,20 +35,52 @@ var argv = require('yargs')
   .argv
 
 
-const { env, config, bucket, role, current, next, dry } = argv
+const { env, appId, licenseKey, bucket, role, current, next, dry } = argv
 
-let counter = 0
+let counter = 1
 
-if (!env || !config || !bucket || !role) {
+if (!env || !appId || !licenseKey || !bucket || !role) {
   console.log("missing required param")
   process.exit(1)
 }
+
+const config = {
+  init: {
+    distributed_tracing: {
+      enabled: true,
+    },
+    ajax: {
+      deny_list: [
+        'nr-data.net',
+        'bam.nr-data.net',
+        'staging-bam.nr-data.net',
+        'bam-cell.nr-data.net'
+      ]
+    }
+  },
+
+  loader_config: {
+    accountID: '1',
+    trustKey: '1',
+    agentID: `${appId}`,
+    licenseKey: '0986481b53',
+    applicationID: `${appId}`,
+  },
+
+  info: {
+    beacon: 'staging-bam.nr-data.net',
+    errorBeacon: 'staging-bam.nr-data.net',
+    licenseKey: `${licenseKey}`,
+    applicationID: `${appId}`,
+    sa: 1
+  },
+};
 
 (async function () {
   const filePaths = [
     current,
     next,
-    ...(env === 'dev' && await getOpenPrNums()).map(num => `https://js-agent.newrelic.com/pr/PR${num}`),
+    ...(env === 'dev' && await getOpenPrNums()).map(num => `https://js-agent.newrelic.com/pr/PR-${num}/nr-loader-spa.min.js`),
   ]
 
   Promise.all(filePaths.map(fp => getFile(fp))).then((contents) => {
@@ -52,14 +88,14 @@ if (!env || !config || !bucket || !role) {
     if (!contents.length) throw new Error('Contents are empty')
     
     console.log(`found ${contents.length} valid PR builds in CDN`)
-    let output = `window.NREUM=${config};`
+    let output = `window.NREUM=${JSON.stringify(config)};`
     contents.forEach(([url, res, body]) => { output += wrapAgent(body) })
     output += randomExecutor(contents.length)
 
     const filename = `internal/${env}.js`
 
     connectToS3(role, dry).then(async () => {
-      const uploads = await uploadToS3(filename, output, bucket, dry)
+      const uploads = await uploadToS3(filename, output, bucket, dry, 300)
       console.log(`Successfully uploaded ${filename} to S3`)
       process.exit(0)
     }).catch(err => {

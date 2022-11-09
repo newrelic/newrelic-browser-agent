@@ -3,13 +3,16 @@ name: Build and Deploy PR to NR Dev
 on:
   workflow_dispatch:
     inputs:
+      pr_number:
+        description: 'PR number'
+        required: true
       pr_build:
         description: 'PR build'
         required: true
         type: choice
         options:
-          - clear
           - build
+          - clear
   pull_request_target:
     types: [labeled, closed]
 
@@ -18,41 +21,49 @@ jobs:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'deploy to dev')
     runs-on: ubuntu-latest
     container: node:14
+    permissions:
+        pull-requests: write
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      PR_NAME: PR${{ github.event.pull_request.number }}
+      PR_NAME: PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}
+      VERSION_OVERRIDE: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: install
         run: npm ci
       - name: clear S3
-        run: node tools/scripts/delete-s3-dir.js \
+        run: |
+          node ./tools/scripts/delete-s3-dir.js \
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }} \
-            --pr PR${{ github.event.pull_request.number }}
+            --pr PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}
       - name: build
         if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
         run: npm run cdn:build:pr
       - name: upload artifacts to S3
         if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
         run: |
-          node tools/scripts/upload-to-s3.js \
+          node ./tools/scripts/upload-to-s3.js \
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }} \
-            --pr PR${{ github.event.pull_request.number }}/
-      - name: check files exist
-        if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
-        run: node tools/scripts/check-version.js -e yes --pr PR${{ github.event.number}}
+            --pr PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}
       - name: re-publish internal loader
-        if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
         run: |
           node ./tools/scripts/upload-ab-to-s3.js \
-            --env=dev \
-            --config=${{ secrets.INTERNAL_DEV_CONFIG }} \
-            --bucket=${{ secrets.AWS_BUCKET }} \
-<<<<<<< HEAD
-            --role=${{ secrets.AWS_ROLE_ARN }}
-=======
-            --role=${{ secrets.AWS_ROLE_ARN }}
->>>>>>> dfb4b3f68cde9d4005904a711f83abd9c074ae89
+            --env dev \
+            --appId ${{ secrets.INTERNAL_DEV_APPLICATION_ID }} \
+            --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
+            --bucket ${{ secrets.AWS_BUCKET }} \
+            --role ${{ secrets.AWS_ROLE_ARN }}
+      - name: purge fastly cache url
+        run: |
+          node ./tools/scripts/fastly.js \
+            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
+            --env dev \
+            --purge-internal
+      - uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            PR Build has been shipped to NR Internal
+            https://staging.onenr.io/08dQeoVBdRe

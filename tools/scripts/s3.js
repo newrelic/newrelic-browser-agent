@@ -57,14 +57,14 @@ module.exports = {
         if (listedObjects.IsTruncated) await emptyS3Directory(bucket, dir);
     },
 
-    uploadToS3: function uploadToS3(fileName, content, bucket, dry) {
+    uploadToS3: function uploadToS3(fileName, content, bucket, dry=false, maxAge=3600) {
         return new Promise((resolve, reject) => {
 
             var params = {
                 Body: content,
                 Bucket: bucket, // argv.bucket,
                 ContentType: 'application/javascript',
-                CacheControl: 'public, max-age=3600',
+                CacheControl: `public, max-age=${maxAge}`,
                 Key: fileName
             }
 

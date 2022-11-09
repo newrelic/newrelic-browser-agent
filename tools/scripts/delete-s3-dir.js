@@ -24,6 +24,8 @@ var argv = yargs
 
 const { bucket, pr, dry, role } = argv
 
+console.log("argv", argv)
+
 if (!bucket) {
     console.log("bucket field is empty!")
     process.exit(1)

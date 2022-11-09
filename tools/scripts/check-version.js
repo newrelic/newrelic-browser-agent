@@ -24,7 +24,6 @@ var config = require('yargs')
   .default('d', false)
 
   .string('pr')
-  .alias('pr', 'pr-name')
   .describe('pr', 'PR name (bucket name) to search')
   .default('')
 
@@ -94,7 +93,7 @@ function validateResponse(url, res, body) {
   }
 }
 
-export function getFile(filename) {
+function getFile(filename) {
   var url = 'https://js-agent.newrelic.com/'
   if (config.d) url += 'dev'
   else if (config.pr) url += 'pr/' + config.pr

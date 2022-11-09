@@ -6,9 +6,9 @@ const pkg = require('./package.json')
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
+const {PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE} = process.env
 // this will change to package.json.version when it is aligned between all the packages
-const VERSION = fs.readFileSync('../VERSION', 'utf-8')
-const {PUBLISH, SOURCEMAPS = true, PR_NAME} = process.env
+const VERSION = VERSION_OVERRIDE || fs.readFileSync('../VERSION', 'utf-8')
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
 
 switch (PUBLISH) {
@@ -32,7 +32,7 @@ switch (PUBLISH) {
     break
   case 'PR':
     PATH_VERSION = ``
-    SUBVERSION = `${PR_NAME}`
+    SUBVERSION = `PR`
     PUBLIC_PATH = `https://js-agent.newrelic.com/pr/${PR_NAME}/`
     MAP_PATH = `\n//# sourceMappingURL=https://js-agent.newrelic.com/pr/${PR_NAME}/[url]`
     break

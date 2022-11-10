@@ -169,4 +169,4 @@ const config = (target) => {
   }
 }
 
-module.exports = [config('browserslist'), config('webworker')]
+module.exports = [config('browserslist')]

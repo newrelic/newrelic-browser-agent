@@ -25,6 +25,7 @@
     "cdn:build:dev": "npm --prefix cdn run build:dev",
     "cdn:build:current": "npm --prefix cdn run build:current",
     "cdn:build:nr": "npm --prefix cdn run build:nr",
+    "cdn:build:pr": "npm --prefix cdn run build:pr",
     "cdn:watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests|cdn' --run -- npm run cdn:build:local",
     "cdn:watch:extension": "jung -D '\\.npm|.git|node_modules|build|tools|tests|cdn' --run -- npm run cdn:build:extension",
     "packages:build": "npm --prefix ./packages run build",

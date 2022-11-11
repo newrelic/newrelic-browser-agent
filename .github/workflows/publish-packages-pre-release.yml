@@ -9,32 +9,40 @@ on:
 jobs:
   publish-all-packages:
     runs-on: ubuntu-latest
-    
+
     env:
       GH_TOKEN: ${{ secrets.PAT_GITHUB }}
       GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
       NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
       NODE_AUTH_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
-    
+
     steps:
       - uses: actions/checkout@v3
-        with: 
+        with:
           token: ${{ secrets.PAT_GITHUB }}
 
-      - name: "Install and Build"
-        run: npx lerna bootstrap && npm run packages:build
-        
-      - name: "Identity"
+      - name: login
         run: |
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git remote set-url origin https://${{github.actor}}:${GH_TOKEN}@github.com/$GITHUB_REPOSITORY
           npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
 
-      - name: "Version"
+      - name: install
+        run: npm ci
+
+      - name: version
+        run: node tools/scripts/version.mjs prerelease --no-git-tag-version --force
+
+      - name: tag
         run: |
-          npx lerna version --conventional-prerelease --conventional-commits --preid beta --yes
-          
-      - name: "Publish"
+          export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./packages/browser-agent/package.json').version) })()")
+          git add packages/**/package.json
+          git commit -a -m "Pre-Release Versioning"
+          git tag -a ${PACKAGE_VERSION}
+          git push
+          git push origin refs/tags/${PACKAGE_VERSION}
+
+      - name: publish
         run: |
-          npx lerna publish from-package --no-verify-access --yes
+          node tools/scripts/version.mjs beta

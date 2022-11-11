@@ -12,8 +12,8 @@
     "prepush": "npm run lint && node -e 'process.exit((process.argv[1] === \"master\") ? 1 : 0)' `git rev-parse --abbrev-ref HEAD`",
     "postinstall": "npm --prefix tools/jil ci && rm -f node_modules/jil && ln -s ../tools/jil node_modules/jil",
     "phantomjs": "phantomjs",
-    "lint": "eslint --ext .js .",
-    "lint:fix": "eslint --ext .js . --fix",
+    "lint": "eslint --ext .js -c .eslintrc .",
+    "lint:fix": "eslint --ext .js -c .eslintrc . --fix",
     "test-all": "tools/jil/bin/cli.js -b *@*",
     "ci-build": "npm ci --cache ./.npm",
     "build-tar": "npm run ci-build && tar czf ./build/browser-agent.tar.gz --exclude=.git --exclude=.npm --exclude=build/browser-agent.tar.gz .",
@@ -35,9 +35,7 @@
     "test-server": "node ./tools/jil/bin/server",
     "sauce:connect": "node ./tools/jil/bin/sauce",
     "sauce:get-browsers": "node ./tools/jil/util/sauce-browsers",
-    "tools:test-builds": "npm --prefix ./tools/test-builds/build-time-mfe run build",
-    "lerna:bootstrap": "npx lerna bootstrap",
-    "lerna:test": "npx lerna run test"
+    "tools:test-builds": "npm --prefix ./tools/test-builds/build-time-mfe run build"
   },
   "config": {
     "unsafe-perm": true
@@ -65,6 +63,7 @@
     "@babel/preset-env": "^7.18.2",
     "@newrelic/nr-querypack": "https://git@github.com/newrelic/nr-querypack",
     "@nrwl/cli": "^15.0.9",
+    "@nrwl/devkit": "^15.0.13",
     "@nrwl/eslint-plugin-nx": "^15.0.13",
     "@nrwl/jest": "15.0.10",
     "@nrwl/js": "^15.0.9",
@@ -79,6 +78,7 @@
     "babelify": "^10.0.0",
     "browserify": "^17.0.0",
     "bundle-collapser": "^1.2.1",
+    "chalk": "^5.1.2",
     "charm": "^1.0.1",
     "cors": "^2.7.1",
     "create-polyfill-service-url": "^2.2.6",

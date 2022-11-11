@@ -1,13 +1,13 @@
-import { setRuntime, setConfiguration, getConfiguration, setInfo, getInfo, setLoaderConfig, getLoaderConfig } from '@newrelic/browser-agent-core/common/config/config'
+import { setRuntime, setConfiguration, getConfiguration, setInfo, getInfo, setLoaderConfig, getLoaderConfig } from '@newrelic/browser-agent-core/src/common/config/config'
 import { NrInfo, NrConfig, NrLoaderConfig, NrOptions } from './types'
 import { Api } from './utils/api/api'
 import { buildConfigs } from './utils/config/build-configs'
 import { Features } from './utils/features/features'
 import { initializeFeatures } from './utils/features/initialize'
-import { gosNREUMInitializedAgents } from '@newrelic/browser-agent-core/common/window/nreum'
-import { generateRandomHexString } from '@newrelic/browser-agent-core/common/ids/unique-id'
-import { Aggregator } from '@newrelic/browser-agent-core/common/aggregate/aggregator'
-import { drain } from '@newrelic/browser-agent-core/common/drain/drain'
+import { gosNREUMInitializedAgents } from '@newrelic/browser-agent-core/src/common/window/nreum'
+import { generateRandomHexString } from '@newrelic/browser-agent-core/src/common/ids/unique-id'
+import { Aggregator } from '@newrelic/browser-agent-core/src/common/aggregate/aggregator'
+import { drain } from '@newrelic/browser-agent-core/src/common/drain/drain'
 
 
 export class BrowserAgent {

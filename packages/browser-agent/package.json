@@ -1,43 +1,11 @@
 {
   "name": "@newrelic/browser-agent",
   "version": "0.0.9",
-  "author": "New Relic Browser agent team <browser-agent@newrelic.com>",
+  "description": "New Relic Browser Agent",
+  "author": "New Relic: Browser Agent Team",
   "license": "Apache-2.0",
-  "contributors": [
-    {
-      "name": "Jordan Porter",
-      "email": "jporter@newrelic.com",
-      "web": "http://newrelic.com"
-    },
-    {
-      "name": "Aubrey Masten",
-      "email": "amasten@newrelic.com",
-      "web": "http://newrelic.com"
-    }
-  ],
-  "homepage": "https://github.com/newrelic/newrelic-browser-agent",
+  "homepage": "https://docs.newrelic.com/docs/browser/browser-monitoring",
   "repository": "github:newrelic/newrelic-browser-agent",
-  "main": "dist/umd/index.js",
-  "module": "dist/es/index.js",
-  "types": "dist/es/index.d.ts",
-  "exports": {
-    "./bundled": "./dist/bundled/es6/index.js",
-    "./cjs": "./dist/cjs/index.js",
-    "./es": "./dist/es/index.js",
-    "./umd": "./dist/umd/index.js",
-    ".": {
-      "import": "./dist/es/index.js",
-      "require": "./dist/cjs/index.js",
-      "types": "./dist/es/index.d.ts"
-    }
-  },
-  "description": "",
-  "files": [
-    "dist/"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
   "keywords": [
     "new relic",
     "browser",

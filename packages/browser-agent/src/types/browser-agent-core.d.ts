@@ -1,4 +1,4 @@
-declare module "@newrelic/browser-agent-core/common/config/config" {
+declare module "@newrelic/browser-agent-core/src/common/config/config" {
     export const setRuntime: any;
     export const setConfiguration: any;
     export const getConfiguration: any;
@@ -8,23 +8,23 @@ declare module "@newrelic/browser-agent-core/common/config/config" {
     export const getLoaderConfig: any;
 }
 
-declare module "@newrelic/browser-agent-core/common/window/nreum" {
+declare module "@newrelic/browser-agent-core/src/common/window/nreum" {
     export const gosNREUMInitializedAgents: any;
 }
 
-declare module "@newrelic/browser-agent-core/common/ids/unique-id" {
+declare module "@newrelic/browser-agent-core/src/common/ids/unique-id" {
     export const generateRandomHexString: any;
 }
 
-declare module "@newrelic/browser-agent-core/common/aggregate/aggregator" {
+declare module "@newrelic/browser-agent-core/src/common/aggregate/aggregator" {
     export const Aggregator: any;
     export type Aggregator = any;
 }
 
-declare module "@newrelic/browser-agent-core/common/drain/drain" {
+declare module "@newrelic/browser-agent-core/src/common/drain/drain" {
     export const drain: any;
 }
 
-declare module "@newrelic/browser-agent-core/common/timing/now" {
+declare module "@newrelic/browser-agent-core/src/common/timing/now" {
     export const now: any;
 }

@@ -98,7 +98,7 @@ const config = (target) => {
     },
     resolve: {
       alias: {
-        '@newrelic/browser-agent-core': path.resolve(__dirname, '../packages/browser-agent-core')
+        '@newrelic/browser-agent-core': path.resolve(__dirname, '../packages/browser-agent-core/src')
       }
     },
 

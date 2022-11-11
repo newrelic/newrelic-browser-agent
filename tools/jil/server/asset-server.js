@@ -327,7 +327,7 @@ class BrowserifyTransform extends AssetTransform {
           '@babel/plugin-transform-modules-commonjs',
           ["module-resolver", {
             "alias": {
-              "@newrelic/browser-agent-core": './packages/browser-agent-core'
+              "@newrelic/browser-agent-core": './packages/browser-agent-core/src'
             }
           }]
         ],

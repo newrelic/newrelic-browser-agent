@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { ffVersion } from '../browser-version/firefox-version'
+import { windowAddEventListener } from '../event-listener/event-listener-opts';
 import { single } from '../util/single'
 import { isBrowserWindow, isWebWorker } from '../window/win'
 import { subscribeToVisibilityChange } from '../window/page-visibility';
@@ -31,7 +32,7 @@ export function subscribeToEOL (cb, allowBFCache) {
 
     if (allowBFCache) {
       subscribeToVisibilityChange(oneCall, true); // when user switches tab or hides window, esp. mobile scenario
-      window.addEventListener('pagehide', oneCall); // when user navigates away, and because safari v14.5- doesn't support vis change
+      windowAddEventListener('pagehide', oneCall);  // when user navigates away, and because safari v14.5- doesn't support vis change
     } else {
       // Firefox has a bug wherein a slow-loading resource loaded from the 'pagehide'
       // or 'unload' event will delay the 'load' event firing on the next page load.
@@ -47,11 +48,11 @@ export function subscribeToEOL (cb, allowBFCache) {
       // attempting to submit from pagehide to ensure that we don't slow down loading
       // of the next page.
       if (!ffVersion || navigator.sendBeacon) {
-        window.addEventListener('pagehide', oneCall)
+        windowAddEventListener('pagehide', oneCall)
       } else {
-        window.addEventListener('beforeunload', oneCall)
+        windowAddEventListener('beforeunload', oneCall)
       }
-      window.addEventListener('unload', oneCall)
+      windowAddEventListener('unload', oneCall)
     }
   }
   else if (isWebWorker) {

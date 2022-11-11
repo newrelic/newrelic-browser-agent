@@ -15,3 +15,8 @@ try {
 export function eventListenerOpts(useCapture) {
   return supportsPassive ? {passive: true, capture: !!useCapture} : !!useCapture
 }
+
+/** Do not use this within the worker context. */
+export function windowAddEventListener(event, listener) {
+  window.addEventListener(event, listener, eventListenerOpts(false));
+}

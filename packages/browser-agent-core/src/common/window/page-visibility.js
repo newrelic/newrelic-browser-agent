@@ -16,7 +16,7 @@ export function subscribeToVisibilityChange(cb, toHiddenOnly = false) {
 
   function handleVisibilityChange() {
     if (toHiddenOnly) { // trigger cb on change to hidden state only
-      if (document.hidden) cb();  // INFO: this includes the "prerender" visibilityState, which is visible, but that should be ok in context
+      if (document.visibilityState == 'hidden') cb();
       else return;
     }
     cb(document.visibilityState);

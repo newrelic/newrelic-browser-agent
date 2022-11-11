@@ -302,7 +302,7 @@ features.notInternetExplorer = new BrowserMatcher()
 
 features.testPageHide = new BrowserMatcher()
   .exclude('*')
-  .include('chrome', 'latest')
+  .include('chrome')
 
 // Some old browsers have absolute unix timestamps instead of relative to navigation start in the Event web API
 // (addEventListener argument). We use the EventTarget.timeStamp value to calculate FID.

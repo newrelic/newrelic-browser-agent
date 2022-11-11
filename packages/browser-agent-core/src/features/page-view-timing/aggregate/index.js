@@ -26,7 +26,7 @@ export class Aggregate extends FeatureBase {
     this.clsSupported = false
     this.cls = 0
     this.clsSession = {value: 0, firstEntryTime: 0, lastEntryTime: 0}
-    this.pageHideRecorded = false
+    this.userSessionEnded = false
 
     try {
       this.clsSupported = PerformanceObserver.supportedEntryTypes.includes('layout-shift')
@@ -47,7 +47,7 @@ export class Aggregate extends FeatureBase {
     registerHandler('timing', (...args) => this.processTiming(...args), undefined, this.ee)
     registerHandler('lcp', (...args) => this.updateLatestLcp(...args), undefined, this.ee)
     registerHandler('cls', (...args) => this.updateClsScore(...args), undefined, this.ee)
-    registerHandler('pageHide', (...args) => this.updatePageHide(...args), undefined, this.ee)
+    registerHandler('pageHide', (...args) => this.updateSessionEnd(...args), undefined, this.ee)
 
     // After 1 minute has passed, record LCP value if no user interaction has occurred first
     setTimeout(() => {
@@ -121,16 +121,29 @@ export class Aggregate extends FeatureBase {
     if (this.cls < this.clsSession.value) this.cls = this.clsSession.value
   }
 
-  updatePageHide(timestamp) {
-    if (!this.pageHideRecorded) {
+  /**
+   * Add the time of _document visibilitychange to hidden_ to the next PVT harvest.
+   * @param {number} timestamp
+   */
+  updateSessionEnd(timestamp) {
+    if (!this.userSessionEnded) { // TO DO: stage 2 - we don't want to capture this timing twice on page navigating away, but it should run again if we return to page and away *again*
       this.addTiming('pageHide', timestamp, null, true)
-      this.pageHideRecorded = true
+      this.userSessionEnded = true
     }
   }
 
-  recordUnload() {
-    this.updatePageHide(now())
-    this.addTiming('unload', now(), null, true)
+  /**
+   * Add the time of _window pagehide even_ firing to the next PVT harvest.
+   */
+  recordPageUnload() {
+    const timeNow = now();
+    this.updateSessionEnd(timeNow)  // visibilitychange fires after window's pagehide event so if this isn't here, our 'pageHide' timing won't get captured in final harvest
+    this.addTiming('unload', timeNow, null, true)
+  }
+
+  finalHarvest() {
+    this.recordLcp()
+    this.recordPageUnload()
   }
 
   addTiming(name, value, attrs, addCls) {
@@ -166,13 +179,6 @@ export class Aggregate extends FeatureBase {
       }
       this.timingsSent = []
     }
-  }
-
-  finalHarvest() {
-    this.recordLcp()
-    this.recordUnload()
-    var payload = this.prepareHarvest({ retry: false })
-    this.scheduler.harvest.send('events', payload, { unload: true })
   }
 
   appendGlobalCustomAttributes(timing) {

@@ -24,12 +24,11 @@ export class HarvestScheduler extends SharedContext {
     this.harvest = new Harvest(this.sharedContext)
 
     subscribeToEOL(() => {
-      // if opts.onUnload is defined, these are special actions that are meant
-      // to execute before attempting to send the final payload
-      if (this.opts.onUnload) this.opts.onUnload()
-      this.harvest.sendFinal()
+      // If opts.onUnload is defined, these are special actions to execute before attempting to send the final payload.
+      if (this.opts.onUnload) this.opts.onUnload();
+      this.runHarvest({unload: true});
       conditionallySet(this.sharedContext.agentIdentifier)
-    }, getConfigurationValue(this.sharedContext.agentIdentifier, 'allow_bfcache'));
+    }, getConfigurationValue(this.sharedContext.agentIdentifier, 'allow_bfcache')); // TO DO: remove feature flag after rls stable
   }
 
   startTimer(interval, initialDelay) {
@@ -70,16 +69,18 @@ export class HarvestScheduler extends SharedContext {
       if (payload) {
         payload = Object.prototype.toString.call(payload) === '[object Array]' ? payload : [payload]
         for (var i = 0; i < payload.length; i++) {
-          this.harvest.send(this.endpoint, payload[i], opts, submitMethod, onHarvestFinished, this.sharedContext.agentIdentifier)
+          this.harvest.send(this.endpoint, payload[i], opts, submitMethod, onHarvestFinished)
         }
       }
     } else {
-      this.harvest.sendX(this.endpoint, opts, onHarvestFinished, this.sharedContext.agentIdentifier)
+      const runAfterSending = opts?.unload ? undefined : onHarvestFinished; // don't bother running onFinish handler if this is the final harvest
+      this.harvest.sendX(this.endpoint, opts, runAfterSending);
     }
 
     if (this.started) {
       this.scheduleHarvest()
     }
+    return;
 
     function onHarvestFinished(result) {
       scheduler.onHarvestFinished(opts, result)

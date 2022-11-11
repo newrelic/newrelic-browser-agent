@@ -58,14 +58,12 @@ export class Aggregate extends FeatureBase {
 
       externalFeatures.forEach(feat => {
         externalHarvestKeys.forEach(key => {
-          feat?.scheduler?.harvest?.on(key, () => {
+          feat?.scheduler?.harvest?.on(key, () => {   // this is some bad practice
             return { body: aggregator.take(['xhr']) }
           })
         })
       })
       scheduler.startTimer(harvestTimeSeconds)
-
-      scheduler.opts.onUnload = () => scheduler.runHarvest({ unload: true });
     }
 
     function storeXhr(params, metrics, startTime, endTime, type) {

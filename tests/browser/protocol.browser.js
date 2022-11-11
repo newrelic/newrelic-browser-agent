@@ -4,8 +4,8 @@
  */
 
 var jil = require('jil')
-import * as win from '../../packages/browser-agent-core/common/window/win'
-import { protocol } from '../../packages/browser-agent-core/common/url/protocol'
+import * as win from '../../dist/packages/browser-agent-core/src/common/window/win'
+import { protocol } from '../../dist/packages/browser-agent-core/src/common/url/protocol'
 
 var fileLocation = {
   hash: '',

@@ -6,7 +6,7 @@
 const jil = require('jil')
 
 const {setup} = require('./utils/setup')
-const {wrapEvents} = require('../../packages/browser-agent-core/common/wrap/wrap-events')
+const {wrapEvents} = require('../../dist/packages/browser-agent-core/src/common/wrap/wrap-events')
 const {baseEE} = setup()
 
 function removeListener (type, fn) {

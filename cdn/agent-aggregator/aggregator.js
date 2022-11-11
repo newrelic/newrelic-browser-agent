@@ -1,8 +1,8 @@
-import { getRuntime, setInfo, getInfo, getConfigurationValue } from '@newrelic/browser-agent-core/common/config/config'
+import { getRuntime, setInfo, getInfo, getConfigurationValue } from '@newrelic/browser-agent-core/src/common/config/config'
 import { importFeatures } from './util/features'
-import { activateFeatures, activatedFeatures, drainAll } from '@newrelic/browser-agent-core/common/util/feature-flags'
-import { isBrowserWindow } from '@newrelic/browser-agent-core/common/window/win'
-import { addToNREUM, gosCDN } from '@newrelic/browser-agent-core/common/window/nreum'
+import { activateFeatures, activatedFeatures, drainAll } from '@newrelic/browser-agent-core/src/common/util/feature-flags'
+import { isBrowserWindow } from '@newrelic/browser-agent-core/src/common/window/win'
+import { addToNREUM, gosCDN } from '@newrelic/browser-agent-core/src/common/window/nreum'
 import agentIdentifier from '../shared/agentIdentifier'
 import { initializeAPI } from './util/api'
 
@@ -11,7 +11,7 @@ const requiredKeys = ['applicationID', 'errorBeacon', 'beacon', 'licenseKey']
 export function aggregator(build) {
   const loaderInfo = getInfo(agentIdentifier)
   if (!requiredKeys.every(key => !!loaderInfo[key])) {
-    // do this again in case they are using a custom build that has 
+    // do this again in case they are using a custom build that has
     // nr.info below the main agent script in some way
     const nr = gosCDN()
     setInfo(agentIdentifier, nr.info)

@@ -40,12 +40,13 @@ class AssetTransform {
 }
 
 class AgentInjectorTransform extends AssetTransform {
-  constructor(buildDir, assetServer, router) {
+  constructor(buildDir, assetServer, router, browserifyTransformer) {
     super()
     this.buildDir = buildDir
     this.defaultAgentConfig = {}
     this.assetServer = assetServer
     this.router = router
+    this.browserifyTransformer = browserifyTransformer
 
     this.polyfills = fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`)
   }
@@ -221,11 +222,9 @@ class AgentInjectorTransform extends AssetTransform {
       let loaderName = params.loader || this.assetServer.defaultLoader
       let injectUpdatedLoaderConfig = (params.injectUpdatedLoaderConfig === 'true')
 
-      const htmlPackageTags = [...rawContent.matchAll(/{packages\/.*}/g)].map(x => x[0])
+      const htmlPackageTags = [...rawContent.matchAll(/{tests\/assets\/js\/internal\/.*}/g)].map(x => x[0])
       const packagePaths = htmlPackageTags.map(x => x.replace(/[{}]/g, ''))
       const packageFiles = await this.getBuiltPackages(packagePaths)
-
-
 
       this.getLoaderContent(
         loaderName,
@@ -327,7 +326,7 @@ class BrowserifyTransform extends AssetTransform {
           '@babel/plugin-transform-modules-commonjs',
           ["module-resolver", {
             "alias": {
-              "@newrelic/browser-agent-core": './packages/browser-agent-core/src'
+              "@newrelic/browser-agent-core/src": './dist/packages/browser-agent-core/src'
             }
           }]
         ],
@@ -544,7 +543,8 @@ class AssetServer extends BaseServer {
     this.unitTestDir = path.resolve(__dirname, '../../../tests/browser')
     this.addHandler(this.serviceRequest.bind(this))
     this.router = new Router(this, testConfig, output)
-    this.agentTransform = new AgentInjectorTransform(this.buildDir, this, this.router)
+    this.browserifyTransform = new BrowserifyTransform(testConfig)
+    this.agentTransform = new AgentInjectorTransform(this.buildDir, this, this.router, this.browserifyTransform)
     this.agentTransform.defaultAgentConfig = defaultAgentConfig
     this.browserTests = browserTests
     this.renderIndex = renderIndex
@@ -553,7 +553,7 @@ class AssetServer extends BaseServer {
 
     this.transformMap = {
       'text/html': this.agentTransform,
-      'application/javascript': new BrowserifyTransform(testConfig)
+      'application/javascript': this.browserifyTransform
     }
     this.tag = 'asset'
     this.logRequests = !!testConfig.logRequests

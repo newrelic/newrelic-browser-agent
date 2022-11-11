@@ -4,7 +4,7 @@
  */
 
 import test from '../../tools/jil/browser-test'
-import { mapOwn } from '../../packages/browser-agent-core/common/util/map-own'
+import { mapOwn } from '../../dist/packages/browser-agent-core/src/common/util/map-own'
 
 test('map-own', function (t) {
   var obj = {a: 10}

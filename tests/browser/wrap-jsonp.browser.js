@@ -6,7 +6,7 @@
 const jil = require('jil')
 
 const {setup} = require('./utils/setup')
-const {wrapJsonP} = require('../../packages/browser-agent-core/common/wrap/wrap-jsonp')
+const {wrapJsonP} = require('../../dist/packages/browser-agent-core/src/common/wrap/wrap-jsonp')
 const {baseEE} = setup()
 
 function removeListener (type, fn) {
@@ -66,7 +66,7 @@ function shouldNotWork (url) {
     t.plan(1)
 
     const jsonpEE = wrapJsonP(baseEE)
-    
+
     jsonpEE.removeListener = removeListener
 
     var listener = function () {

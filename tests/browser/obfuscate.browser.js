@@ -5,11 +5,11 @@
 
 const jil = require('jil')
 import { setup } from './utils/setup'
-import { setConfiguration } from '../../packages/browser-agent-core/common/config/config'
-import { Instrument as MetricsInstrum } from '../../packages/browser-agent-core/features/metrics/instrument/index'
-import { Aggregate as MetricsAggreg } from '../../packages/browser-agent-core/features/metrics/aggregate/index'
-import * as obfuscate from '../../packages/browser-agent-core/common/util/obfuscate'
-import * as win from '../../packages/browser-agent-core/common/window/win'
+import { setConfiguration } from '../../dist/packages/browser-agent-core/src/common/config/config'
+import { Instrument as MetricsInstrum } from '../../dist/packages/browser-agent-core/src/features/metrics/instrument/index'
+import { Aggregate as MetricsAggreg } from '../../dist/packages/browser-agent-core/src/features/metrics/aggregate/index'
+import * as obfuscate from '../../dist/packages/browser-agent-core/src/common/util/obfuscate'
+import * as win from '../../dist/packages/browser-agent-core/src/common/window/win'
 
 const { aggregator, agentIdentifier } = setup();
 new MetricsInstrum(agentIdentifier);

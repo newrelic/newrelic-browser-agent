@@ -5,18 +5,18 @@
 
 const test = require('../../tools/jil/browser-test')
 const {setup} = require('./utils/setup')
-const {activateFeatures} = require('../../packages/browser-agent-core/common/util/feature-flags') // main test file #1
+const {activateFeatures} = require('../../dist/packages/browser-agent-core/src/common/util/feature-flags') // main test file #1
 import {modules as featName, buildToFeatsList, stageFeatures, aggChecklist} from '../../cdn/agent-aggregator/util/features'  // main test file #2
-import {getEnabledFeatures} from '../../packages/browser-agent-core/common/util/enabled-features' // helper for #2
+import {getEnabledFeatures} from '../../dist/packages/browser-agent-core/src/common/util/enabled-features' // helper for #2
 import agentIdentifier from '../../cdn/shared/agentIdentifier'  // required import from #2 setup
-import * as pageViewEventM from '../../packages/browser-agent-core/features/page-view-event/aggregate'
-import * as pageViewTimingM from '../../packages/browser-agent-core/features/page-view-timing/aggregate'
-import * as metricsM from '../../packages/browser-agent-core/features/metrics/aggregate'
-import * as jsErrorsM from '../../packages/browser-agent-core/features/jserrors/aggregate'
-import * as ajaxM from '../../packages/browser-agent-core/features/ajax/aggregate'
-import * as pageActionM from '../../packages/browser-agent-core/features/page-action/aggregate'
-import * as sessionTraceM from '../../packages/browser-agent-core/features/session-trace/aggregate'
-import * as spaM from '../../packages/browser-agent-core/features/spa/aggregate'
+import * as pageViewEventM from '../../dist/packages/browser-agent-core/src/features/page-view-event/aggregate'
+import * as pageViewTimingM from '../../dist/packages/browser-agent-core/src/features/page-view-timing/aggregate'
+import * as metricsM from '../../dist/packages/browser-agent-core/src/features/metrics/aggregate'
+import * as jsErrorsM from '../../dist/packages/browser-agent-core/src/features/jserrors/aggregate'
+import * as ajaxM from '../../dist/packages/browser-agent-core/src/features/ajax/aggregate'
+import * as pageActionM from '../../dist/packages/browser-agent-core/src/features/page-action/aggregate'
+import * as sessionTraceM from '../../dist/packages/browser-agent-core/src/features/session-trace/aggregate'
+import * as spaM from '../../dist/packages/browser-agent-core/src/features/spa/aggregate'
 
 const {baseEE} = setup(agentIdentifier);
 const modules = {
@@ -59,8 +59,8 @@ function mockImportFeatures(build) {
 }
 /**
  * Helper function for the features test below
- * @param {aggregator Object} aggChecklist 
- * @param {*} t 
+ * @param {aggregator Object} aggChecklist
+ * @param {*} t
  */
 function checkEverythingInitialized(aggChecklist, t) {
   let notInitLen = Object.keys(aggChecklist.notInitialized).length, stagedLen = Object.keys(aggChecklist.staged).length;

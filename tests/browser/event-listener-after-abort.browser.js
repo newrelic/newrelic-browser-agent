@@ -7,7 +7,7 @@ const jil = require('jil')
 
 jil.browserTest('eventListener methods work as expected after abort', function (t) {
   const {setup} = require('./utils/setup')
-  const {wrapEvents} = require('../../packages/browser-agent-core/common/wrap/wrap-events.js')
+  const {wrapEvents} = require('../../dist/packages/browser-agent-core/src/common/wrap/wrap-events.js')
 
   const {baseEE} = setup()
   wrapEvents(baseEE)

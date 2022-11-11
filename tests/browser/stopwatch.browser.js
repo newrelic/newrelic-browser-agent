@@ -5,7 +5,7 @@
 
 import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
-import * as stopwatch from '../../packages/browser-agent-core/common/timing/stopwatch'
+import * as stopwatch from '../../dist/packages/browser-agent-core/src/common/timing/stopwatch'
 
 const { aggregator: agg, agentIdentifier } = setup();
 

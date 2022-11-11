@@ -4,7 +4,7 @@
  */
 
 import test from '../../tools/jil/browser-test'
-import * as encode from '../../packages/browser-agent-core/common/url/encode'
+import * as encode from '../../dist/packages/browser-agent-core/src/common/url/encode'
 
 test('encode.qs', function (t) {
   t.equal(encode.qs('Asdf:, :, /@$;'), 'Asdf:,%20:,%20/@$;', 'Escapes and unescapes')

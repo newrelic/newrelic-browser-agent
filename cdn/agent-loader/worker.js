@@ -7,12 +7,12 @@ import agentIdentifier from '../shared/agentIdentifier'
 import { stageAggregator } from './utils/importAggregator'
 import { configure } from './utils/configure'
 // feature modules
-import { Instrument as InstrumentMetrics } from '@newrelic/browser-agent-core/features/metrics/instrument'
-import { Instrument as InstrumentErrors } from '@newrelic/browser-agent-core/features/jserrors/instrument'
-import { Instrument as InstrumentXhr } from '@newrelic/browser-agent-core/features/ajax/instrument'
-import { Instrument as InstrumentPageAction } from '@newrelic/browser-agent-core/features/page-action/instrument'
+import { Instrument as InstrumentMetrics } from '@newrelic/browser-agent-core/src/features/metrics/instrument'
+import { Instrument as InstrumentErrors } from '@newrelic/browser-agent-core/src/features/jserrors/instrument'
+import { Instrument as InstrumentXhr } from '@newrelic/browser-agent-core/src/features/ajax/instrument'
+import { Instrument as InstrumentPageAction } from '@newrelic/browser-agent-core/src/features/page-action/instrument'
 // common modules
-import { getEnabledFeatures } from '@newrelic/browser-agent-core/common/util/enabled-features'
+import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/common/util/enabled-features'
 
 // set up the NREUM, api, and internal configs
 try {

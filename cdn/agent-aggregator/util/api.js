@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { registerHandler } from '@newrelic/browser-agent-core/common/event-emitter/register-handler'
-import { single } from '@newrelic/browser-agent-core/common/util/single'
-import { submitData } from '@newrelic/browser-agent-core/common/util/submit-data'
-import { mapOwn } from '@newrelic/browser-agent-core/common/util/map-own'
-import { handle } from '@newrelic/browser-agent-core/common/event-emitter/handle'
-import { getConfigurationValue, getInfo, getRuntime } from '@newrelic/browser-agent-core/common/config/config'
-import { ee } from '@newrelic/browser-agent-core/common/event-emitter/contextual-ee'
-import { isBrowserWindow } from '@newrelic/browser-agent-core/common/window/win'
+import { registerHandler } from '@newrelic/browser-agent-core/src/common/event-emitter/register-handler'
+import { single } from '@newrelic/browser-agent-core/src/common/util/single'
+import { submitData } from '@newrelic/browser-agent-core/src/common/util/submit-data'
+import { mapOwn } from '@newrelic/browser-agent-core/src/common/util/map-own'
+import { handle } from '@newrelic/browser-agent-core/src/common/event-emitter/handle'
+import { getConfigurationValue, getInfo, getRuntime } from '@newrelic/browser-agent-core/src/common/config/config'
+import { ee } from '@newrelic/browser-agent-core/src/common/event-emitter/contextual-ee'
+import { isBrowserWindow } from '@newrelic/browser-agent-core/src/common/window/win'
 
 export function initializeAPI(agentIdentifier) {
     var sharedEE = ee.get(agentIdentifier)

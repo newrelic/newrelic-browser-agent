@@ -7,8 +7,8 @@ const jil = require('jil')
 const {setup} = require('../utils/setup')
 
 jil.browserTest('parameters not modified', async function (t) {
-  const {drain} =  require('../../../packages/browser-agent-core/common/drain/drain')
-  const {Aggregate} = require('../../../packages/browser-agent-core/features/page-action/aggregate/index')
+  const {drain} =  require('@newrelic/browser-agent-core/src/common/drain/drain')
+  const {Aggregate} = require('@newrelic/browser-agent-core/src/features/page-action/aggregate/index')
 
   const {agentIdentifier, baseEE, aggregator} = setup()
 

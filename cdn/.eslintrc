@@ -7,7 +7,7 @@
     "import/resolver": {
       "alias": {
         "map": [
-          ["@newrelic/browser-agent-core", "./packages/browser-agent-core"]
+          ["@newrelic/browser-agent-core/src", "./packages/browser-agent-core"]
         ]
       }
     }

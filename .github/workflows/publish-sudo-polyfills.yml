@@ -19,8 +19,6 @@ jobs:
       - uses: actions/checkout@v2
       - name: install
         run: npm ci
-      - name: build:nr
-        run: npm run cdn:build:nr
       - name: upload artifacts to NR
         run: |
           node tools/scripts/upload-polyfills-to-nr.js \

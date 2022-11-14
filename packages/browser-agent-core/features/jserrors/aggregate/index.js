@@ -153,7 +153,7 @@ export class Aggregate extends FeatureBase {
     var canonicalStack = this.buildCanonicalStackString(stackInfo)
 
     var params = {
-      stackHash: stringHashCode(canonicalStack),
+      stackHash: stringHashCode(`${stackInfo.name}_${stackInfo.message}_${canonicalStack}`),
       exceptionClass: stackInfo.name,
       request_uri: self.location.pathname
     }

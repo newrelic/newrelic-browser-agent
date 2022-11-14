@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1221
+
+### Update JS error bucketing algorithm
+The Agent will now take into account the error object type and message when deciding on whether multiple JS errors should be bucketed together.
+
 ## v1220
 
 * Internal NR Platform release date: 10/5/2022

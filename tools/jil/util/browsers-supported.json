@@ -60,8 +60,8 @@
     },
     {
       "browserName": "MicrosoftEdge",
-      "platform": "Windows 11",
-      "platformName": "Windows 11",
+      "platform": "Windows 10",
+      "platformName": "Windows 10",
       "version": "100",
       "browserVersion": "100"
     },

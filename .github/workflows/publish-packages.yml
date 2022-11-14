@@ -41,6 +41,9 @@ jobs:
       - name: version
         run: node tools/scripts/version.mjs ${{ github.event.inputs.release_type }} --no-git-tag-version --force
 
+      - name: build
+        run: npx nx run-many --target=build
+
       - name: tag
         run: |
           export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./packages/browser-agent/package.json').version) })()")
@@ -52,4 +55,4 @@ jobs:
 
       - name: publish
         run: |
-          node tools/scripts/version.mjs beta
+          node tools/scripts/publish.mjs latest

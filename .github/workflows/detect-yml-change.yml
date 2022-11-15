@@ -1,7 +1,6 @@
 name: Detect GH Actions Changes
 on:
   pull_request:
-    types: [synchronize, reopened]
 
 jobs:
   check:

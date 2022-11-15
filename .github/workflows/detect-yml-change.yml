@@ -13,14 +13,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: detect Changed files
+      - name: Detect Changed .yml Files
         uses: tj-actions/verify-changed-files
         id: verify-changed-files
         with:
           files: |
               **/*.yml
 
-      - name: Run step only when any of the above files change.
+      - name: Warn
         if: steps.verify-changed-files.outputs.files_changed == 'true'
         uses: mshick/add-pr-comment@v2
             with:

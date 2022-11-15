@@ -76,21 +76,30 @@ const config = {
   },
 };
 
+function getIdFromUrl(url) {
+  if (url.includes("PR-")) return 'PR-' + url.split('/').find(x => x.includes("PR-")).split("-")[1]
+  if (url.includes("/dev/")) return "dev"
+  if (url.includes("-current")) return "current"
+}
+
 (async function () {
   const filePaths = [
-    current, // defaults to current build
-    ...(env !== 'dev' && [next]), // defaults to dev build
+    ...(env !== 'dev' ? [current] : []), // defaults to current build
+    next, // defaults to dev build
     ...(env === 'dev' && await getOpenPrNums()).map(num => `https://js-agent.newrelic.com/pr/PR-${num}/nr-loader-spa.min.js`),
   ]
 
   Promise.all(filePaths.map(fp => getFile(fp))).then((contents) => {
-    contents = contents.filter(([url, res])=> res.statusCode === 200)
+    contents = contents.filter(([url, res]) => res.statusCode === 200)
     if (!contents.length) throw new Error('Contents are empty')
-    
+
     console.log(`found ${contents.length} valid PR builds in CDN`)
     let output = `window.NREUM=${JSON.stringify(config)};`
-    contents.forEach(([url, res, body]) => { output += wrapAgent(body) })
-    output += randomExecutor(contents.length)
+    output += `
+      const ids = {};
+    `
+    contents.forEach(([url, res, body]) => { output += wrapAgent(body, getIdFromUrl(url)) })
+    output += randomExecutor(contents.map(([url]) => getIdFromUrl(url)))
 
     const filename = `internal/${env}.js`
 
@@ -108,23 +117,30 @@ const config = {
 
 })()
 
-function wrapAgent(agent) {
-  const agentNo = counter++
+function wrapAgent(agent, id) {
   return `
-        function agent${agentNo}(){
+        ids['${id}'] = function (){
             ${agent}
+            newrelic.setCustomAttribute('buildID', '${id}')
         }
     `
 }
 
-function randomExecutor(fnCount) {
+function randomExecutor(ids) {
   let output = `
         (function (){
-            var r = Math.random();
+          const params = new Proxy(new URLSearchParams(window.location.search), {
+            get: (searchParams, prop) => searchParams.get(prop),
+          });
+          let fn;
+          if (params.nrbaloader) fn = ids[params.nrbaloader];
+          if (fn) return fn();
+          var r = Math.random();
     `
-  for (var i = 1; i <= fnCount; i++) {
-    output += `if (r <= ${i / fnCount}) return agent${i}();\n`
-  }
+  ids.forEach((id, i) => {
+    output += `if (!fn && r <= ${(i + 1) / ids.length}) fn = ids['${id}'];\n`
+  })
+  output += 'fn();\n'
   output += '})()'
   return output
 }

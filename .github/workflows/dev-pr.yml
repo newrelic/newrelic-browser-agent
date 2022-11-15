@@ -64,5 +64,5 @@ jobs:
       - uses: mshick/add-pr-comment@v2
         with:
           message: |
-            PR Build has been shipped to NR Internal
+            PR Build (PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}) has been shipped to NR Internal
             https://staging.onenr.io/0M8jq5NPOjl

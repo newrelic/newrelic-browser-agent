@@ -78,8 +78,8 @@ const config = {
 
 (async function () {
   const filePaths = [
-    current,
-    next,
+    current, // defaults to current build
+    ...(env !== 'dev' && [next]), // defaults to dev build
     ...(env === 'dev' && await getOpenPrNums()).map(num => `https://js-agent.newrelic.com/pr/PR-${num}/nr-loader-spa.min.js`),
   ]
 

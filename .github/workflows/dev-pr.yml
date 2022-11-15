@@ -27,7 +27,6 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       PR_NAME: PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}
-      VERSION_OVERRIDE: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
     steps:
       - uses: actions/checkout@v3
       - name: install

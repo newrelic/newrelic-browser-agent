@@ -1,6 +1,5 @@
 const request = require('request')
 const { connectToS3, uploadToS3 } = require('./s3')
-const fs= require('fs')
 
 var argv = require('yargs')
   .usage('$0 [options]')
@@ -42,7 +41,7 @@ let counter = 1
 
 if (!env || !appId || !licenseKey || !bucket || !role) {
   console.log("missing required param")
-  // process.exit(1)
+  process.exit(1)
 }
 
 const config = {
@@ -104,15 +103,14 @@ function getIdFromUrl(url) {
 
     const filename = `internal/${env}.js`
 
-    fs.writeFileSync('dev.js', output)
-    // connectToS3(role, dry).then(async () => {
-    //   const uploads = await uploadToS3(filename, output, bucket, dry, 300)
-    //   console.log(`Successfully uploaded ${filename} to S3`)
-    //   process.exit(0)
-    // }).catch(err => {
-    //   console.log(err)
-    //   process.exit(1)
-    // })
+    connectToS3(role, dry).then(async () => {
+      const uploads = await uploadToS3(filename, output, bucket, dry, 300)
+      console.log(`Successfully uploaded ${filename} to S3`)
+      process.exit(0)
+    }).catch(err => {
+      console.log(err)
+      process.exit(1)
+    })
   }).catch(err => {
     console.log("error getting all files... ", err)
   })

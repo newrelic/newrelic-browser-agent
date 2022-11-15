@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1221
+
+### Detect Workflow Changes
+* PRs will run an action to detect workflow changes for a warning layer against vulnerability.
+
 ## v1220
 
 * Internal NR Platform release date: 10/5/2022

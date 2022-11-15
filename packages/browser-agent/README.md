@@ -20,24 +20,6 @@ or [yarn](https://yarnpkg.com/)
 yarn add @newrelic/browser-agent
 ```
 
-### Directly in HTML/JS
-
-Using [unpkg](https://unpkg.com/)
-
-See [Using Unpkg](#using-unpkg) for implementation details
-
-ES6 compatible bundle
-
-```html
-<script src="https://unpkg.com/@newrelic/browser-agent/dist/bundled/es6/index.js"></script>
-```
-
-ES5 compatible bundle
-
-```html
-<script src="https://unpkg.com/@newrelic/browser-agent/dist/bundled/es5/index.js"></script>
-```
-
 ## Usage Examples
 
 ### Basic Setup
@@ -56,25 +38,6 @@ const nr = new NR()
 nr.start(options).then(() => {
     console.log("Browser Agent Initialized!")
 })
-```
-
-### Setup Using unpkg
-
-```html
-<head>
-    <!-- Download and initialize as soon as possible to avoid missing early events -->
-    <script src="https://unpkg.com/@newrelic/browser-agent/bundled"></script>
-    <script>
-        const { BrowserAgent } = NRBA;
-        const options = {
-            // See 'Configuring your application'
-        }
-        const agent = new BrowserAgent()
-        agent.start(options).then(() => {
-            console.log("Browser Agent Initialized!")
-        })
-    </script>
-</head>
 ```
 
 ### Notice Errors after Setup

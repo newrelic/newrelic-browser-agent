@@ -4,7 +4,7 @@
  */
 
 import test from '../../tools/jil/browser-test'
-import { id } from '../../dist/packages/browser-agent-core/src/common/ids/id'
+import { id } from '@newrelic/browser-agent-core/src/common/ids/id'
 var win = window
 
 test('id', function (t) {

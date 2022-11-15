@@ -6,7 +6,7 @@
 const jil = require('jil')
 
 const {setup} = require('./utils/setup')
-const {wrapJsonP} = require('../../dist/packages/browser-agent-core/src/common/wrap/wrap-jsonp')
+const {wrapJsonP} = require('@newrelic/browser-agent-core/src/common/wrap/wrap-jsonp')
 const {baseEE} = setup()
 
 jil.browserTest('functions are wrapped', function (t) {

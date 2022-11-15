@@ -4,7 +4,7 @@
  */
 
 import test from '../../tools/jil/browser-test'
-import { stringify } from '../../dist/packages/browser-agent-core/src/common/util/stringify.js'
+import { stringify } from '@newrelic/browser-agent-core/src/common/util/stringify.js'
 
 test('fake stringify', function (t) {
   var arr = [0, 1, 'asdf', undefined, null, 'weee']

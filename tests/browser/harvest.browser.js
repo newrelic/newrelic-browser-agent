@@ -5,14 +5,14 @@
 
 import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
-import { getRuntime, setRuntime, setInfo } from '../../dist/packages/browser-agent-core/src/common/config/config'
-import { submitData } from '../../dist/packages/browser-agent-core/src/common/util/submit-data'
-import * as harvest from '../../dist/packages/browser-agent-core/src/common/harvest/harvest'
+import { getRuntime, setRuntime, setInfo } from '@newrelic/browser-agent-core/src/common/config/config'
+import { submitData } from '@newrelic/browser-agent-core/src/common/util/submit-data'
+import * as harvest from '@newrelic/browser-agent-core/src/common/harvest/harvest'
 import * as sinon from 'sinon'
-import * as encode from '../../dist/packages/browser-agent-core/src/common/url/encode'
-import * as locationUtil  from '../../dist/packages/browser-agent-core/src/common/url/location'
-import { stringify } from '../../dist/packages/browser-agent-core/src/common/util/stringify'
-import { VERSION } from '../../dist/packages/browser-agent-core/src/common/constants/environment-variables'
+import * as encode from '@newrelic/browser-agent-core/src/common/url/encode'
+import * as locationUtil  from '@newrelic/browser-agent-core/src/common/url/location'
+import { stringify } from '@newrelic/browser-agent-core/src/common/util/stringify'
+import { VERSION } from '@newrelic/browser-agent-core/src/common/constants/environment-variables'
 
 const { agentIdentifier } = setup();
 const harvesterInst = new harvest.Harvest({agentIdentifier});

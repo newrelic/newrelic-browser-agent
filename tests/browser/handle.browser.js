@@ -4,9 +4,9 @@
  */
 
 const test = require('../../tools/jil/browser-test.js')
-const {handle, handleEE} = require('../../dist/packages/browser-agent-core/src/common/event-emitter/handle')
-const {registerHandler} = require('../../dist/packages/browser-agent-core/src/common/event-emitter/register-handler')
-const {drain} = require('../../dist/packages/browser-agent-core/src/common/drain/drain')
+const {handle, handleEE} = require('@newrelic/browser-agent-core/src/common/event-emitter/handle')
+const {registerHandler} = require('@newrelic/browser-agent-core/src/common/event-emitter/register-handler')
+const {drain} = require('@newrelic/browser-agent-core/src/common/drain/drain')
 
 test('Handler', function (t) {
   var count = 0

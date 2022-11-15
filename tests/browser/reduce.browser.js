@@ -4,7 +4,7 @@
  */
 
 import test from '../../tools/jil/browser-test'
-import { reduce } from '../../dist/packages/browser-agent-core/src/common/util/reduce.js'
+import { reduce } from '@newrelic/browser-agent-core/src/common/util/reduce.js'
 
 test('reduce', function (t) {
   var nums = [ 1, 5, 10 ]

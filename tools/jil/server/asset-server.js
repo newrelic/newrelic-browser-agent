@@ -40,13 +40,12 @@ class AssetTransform {
 }
 
 class AgentInjectorTransform extends AssetTransform {
-  constructor(buildDir, assetServer, router, browserifyTransformer) {
+  constructor(buildDir, assetServer, router) {
     super()
     this.buildDir = buildDir
     this.defaultAgentConfig = {}
     this.assetServer = assetServer
     this.router = router
-    this.browserifyTransformer = browserifyTransformer
 
     this.polyfills = fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`)
   }
@@ -543,8 +542,7 @@ class AssetServer extends BaseServer {
     this.unitTestDir = path.resolve(__dirname, '../../../tests/browser')
     this.addHandler(this.serviceRequest.bind(this))
     this.router = new Router(this, testConfig, output)
-    this.browserifyTransform = new BrowserifyTransform(testConfig)
-    this.agentTransform = new AgentInjectorTransform(this.buildDir, this, this.router, this.browserifyTransform)
+    this.agentTransform = new AgentInjectorTransform(this.buildDir, this, this.router)
     this.agentTransform.defaultAgentConfig = defaultAgentConfig
     this.browserTests = browserTests
     this.renderIndex = renderIndex
@@ -553,7 +551,7 @@ class AssetServer extends BaseServer {
 
     this.transformMap = {
       'text/html': this.agentTransform,
-      'application/javascript': this.browserifyTransform
+      'application/javascript': new BrowserifyTransform(testConfig)
     }
     this.tag = 'asset'
     this.logRequests = !!testConfig.logRequests

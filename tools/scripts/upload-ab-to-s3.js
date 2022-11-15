@@ -1,5 +1,6 @@
 const request = require('request')
 const { connectToS3, uploadToS3 } = require('./s3')
+const fs= require('fs')
 
 var argv = require('yargs')
   .usage('$0 [options]')
@@ -41,7 +42,7 @@ let counter = 1
 
 if (!env || !appId || !licenseKey || !bucket || !role) {
   console.log("missing required param")
-  process.exit(1)
+  // process.exit(1)
 }
 
 const config = {
@@ -103,14 +104,15 @@ function getIdFromUrl(url) {
 
     const filename = `internal/${env}.js`
 
-    connectToS3(role, dry).then(async () => {
-      const uploads = await uploadToS3(filename, output, bucket, dry, 300)
-      console.log(`Successfully uploaded ${filename} to S3`)
-      process.exit(0)
-    }).catch(err => {
-      console.log(err)
-      process.exit(1)
-    })
+    fs.writeFileSync('dev.js', output)
+    // connectToS3(role, dry).then(async () => {
+    //   const uploads = await uploadToS3(filename, output, bucket, dry, 300)
+    //   console.log(`Successfully uploaded ${filename} to S3`)
+    //   process.exit(0)
+    // }).catch(err => {
+    //   console.log(err)
+    //   process.exit(1)
+    // })
   }).catch(err => {
     console.log("error getting all files... ", err)
   })
@@ -119,7 +121,7 @@ function getIdFromUrl(url) {
 
 function wrapAgent(agent, id) {
   return `
-        ids['${id}'] = function (){
+        ids['${id}'] = () => {
             ${agent}
             newrelic.setCustomAttribute('buildID', '${id}')
         }
@@ -132,15 +134,12 @@ function randomExecutor(ids) {
           const params = new Proxy(new URLSearchParams(window.location.search), {
             get: (searchParams, prop) => searchParams.get(prop),
           });
-          let fn;
-          if (params.nrbaloader) fn = ids[params.nrbaloader];
-          if (fn) return fn();
+          if (params.nrbaloader) return ids[params.nrbaloader]();
           var r = Math.random();
     `
   ids.forEach((id, i) => {
-    output += `if (!fn && r <= ${(i + 1) / ids.length}) fn = ids['${id}'];\n`
+    output += `if (r <= ${(i + 1) / ids.length}) return ids['${id}']();\n`
   })
-  output += 'fn();\n'
   output += '})()'
   return output
 }

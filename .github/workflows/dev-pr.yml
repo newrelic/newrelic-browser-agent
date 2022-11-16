@@ -61,10 +61,11 @@ jobs:
             --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
             --env dev \
             --purge-internal
-      - name: Set timestamp as env variable
-        run: echo "NOW::$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
+      - name: Get current time
+        uses: josStorer/get-current-time@v2.0.2
+        id: current-time
       - uses: mshick/add-pr-comment@v2
         with:
           message: |
-            $${{ env.NOW }} - PR Build (PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}) has been shipped to NR Internal
+            $${{ steps.current-time.outputs.readableTime }} - PR Build (PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}) has been shipped to NR Internal
             https://staging.onenr.io/0M8jq5NPOjl

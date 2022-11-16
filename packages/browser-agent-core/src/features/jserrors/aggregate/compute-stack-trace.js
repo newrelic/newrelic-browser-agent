@@ -139,6 +139,7 @@ function computeStackTraceFromStackProp (ex) {
 }
 
 function parseStackProp (info, line) {
+  console.log(line)
   var element = getElement(line)
 
   if (!element) {
@@ -158,6 +159,7 @@ function getElement (line) {
   if (!parts) parts = line.match(chrome)
 
   if (parts) {
+    console.log(parts[1])
     return ({
       'url': parts[2],
       'func': (parts[1] !== 'Anonymous function' && parts[1] !== 'global code' && parts[1]) || null,

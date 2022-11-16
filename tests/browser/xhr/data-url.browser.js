@@ -5,7 +5,7 @@
 
 import test from '../../../tools/jil/browser-test'
 import { setup } from '../utils/setup'
-import { Instrument as AjaxInstrum } from '../../../packages/browser-agent-core/features/ajax/instrument/index'
+import { Instrument as AjaxInstrum } from '@newrelic/browser-agent-core/src/features/ajax/instrument/index'
 
 const { baseEE, agentIdentifier } = setup();
 const ajaxTestInstr = new AjaxInstrum(agentIdentifier); // attach instrumentation event handlers to agent's events (baseEE)

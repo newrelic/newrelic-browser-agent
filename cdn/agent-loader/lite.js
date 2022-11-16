@@ -9,11 +9,11 @@ import agentIdentifier from '../shared/agentIdentifier'
 import { stageAggregator } from './utils/importAggregator'
 import { configure } from './utils/configure'
 // feature modules
-import { Instrument as InstrumentPageViewEvent } from '@newrelic/browser-agent-core/features/page-view-event/instrument'
-import { Instrument as InstrumentPageViewTiming } from '@newrelic/browser-agent-core/features/page-view-timing/instrument'
-import { Instrument as InstrumentMetrics } from '@newrelic/browser-agent-core/features/metrics/instrument'
+import { Instrument as InstrumentPageViewEvent } from '@newrelic/browser-agent-core/src/features/page-view-event/instrument'
+import { Instrument as InstrumentPageViewTiming } from '@newrelic/browser-agent-core/src/features/page-view-timing/instrument'
+import { Instrument as InstrumentMetrics } from '@newrelic/browser-agent-core/src/features/metrics/instrument'
 // common modules
-import { getEnabledFeatures } from '@newrelic/browser-agent-core/common/util/enabled-features'
+import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/common/util/enabled-features'
 
 try {
     // set up the NREUM, api, and internal configs

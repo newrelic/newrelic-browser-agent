@@ -1,5 +1,5 @@
 import { NrFeatures, NrStoreError } from "../../types"
-import { now } from '@newrelic/browser-agent-core/common/timing/now'
+import { now } from '@newrelic/browser-agent-core/src/common/timing/now'
 
 export class Api {
   importedMethods: { storeError: NrStoreError | null } = {
@@ -14,7 +14,7 @@ export class Api {
   }
 
   noticeError(err: Error | String, customAttributes?: Object) {
-    
+
     if (this._initialized && !!this.importedMethods.storeError) {
       if (typeof err !== 'string' && !(err instanceof Error)) return invalidCall('noticeError', err, 'Error | String')
 

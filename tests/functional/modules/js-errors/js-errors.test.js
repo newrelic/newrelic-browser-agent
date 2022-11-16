@@ -11,7 +11,7 @@ const supported = testDriver.Matcher.withFeature('mfe')
 const opts = {
   init: {
     jserrors: {
-      harvestTimeSeconds: 2
+      harvestTimeSeconds: 5
     }
   }
 }
@@ -383,7 +383,7 @@ testDriver.test('reporting errors from XHR callbacks', supported, function (t, b
 
 
 testDriver.test('Errors are not sent if agent is not initialized', supported, function (t, browser, router) {
-  setRouterTimeout(5000)
+  setRouterTimeout(10000)
   t.plan(1)
 
   let loadPromise = browser.setAsyncScriptTimeout(5000).safeGet(router.assetURL('modular/js-errors/invalid-not-initialized.html', opts))
@@ -409,7 +409,7 @@ testDriver.test('Errors are not sent if agent is not initialized', supported, fu
 
 
 testDriver.test('Errors are not sent if feature is disabled', supported, function (t, browser, router) {
-  setRouterTimeout(5000)
+  setRouterTimeout(10000)
   t.plan(1)
 
   let loadPromise = browser.setAsyncScriptTimeout(5000).safeGet(router.assetURL('modular/js-errors/disabled.html', opts))

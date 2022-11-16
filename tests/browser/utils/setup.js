@@ -1,9 +1,9 @@
 
-const { setInfo, setLoaderConfig, setConfiguration, setRuntime } =  require('../../../packages/browser-agent-core/common/config/config')
-const { gosCDN, addToNREUM } = require('../../../packages/browser-agent-core/common/window/nreum')
-const { ee } = require('../../../packages/browser-agent-core/common/event-emitter/contextual-ee')
-const {Aggregator} = require('../../../packages/browser-agent-core/common/aggregate/aggregator')
-const {activateFeatures} = require('../../../packages/browser-agent-core/common/util/feature-flags')
+const { setInfo, setLoaderConfig, setConfiguration, setRuntime } =  require('@newrelic/browser-agent-core/src/common/config/config')
+const { gosCDN, addToNREUM } = require('@newrelic/browser-agent-core/src/common/window/nreum')
+const { ee } = require('@newrelic/browser-agent-core/src/common/event-emitter/contextual-ee')
+const {Aggregator} = require('@newrelic/browser-agent-core/src/common/aggregate/aggregator')
+const {activateFeatures} = require('@newrelic/browser-agent-core/src/common/util/feature-flags')
 const { setAPI } = require('../../../cdn/agent-loader/utils/api')
 
 export function setup(agentIdentifier = (Math.random() + 1).toString(36).substring(7)) {

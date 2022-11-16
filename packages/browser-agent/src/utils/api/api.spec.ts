@@ -1,8 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import 'babel-polyfill'
-import { setInfo, setConfiguration, setLoaderConfig, setRuntime } from '@newrelic/browser-agent-core/common/config/config'
+import { setInfo, setConfiguration, setLoaderConfig, setRuntime } from '@newrelic/browser-agent-core/src/common/config/config'
 
 const id = '1234'
 
@@ -14,7 +13,7 @@ describe('API', () => {
   })
 
   it('should set the exposed API method to the imported API method', async function () {
-    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/src/common/config/config')
     setInfo(id, {})
     setConfiguration(id, {})
     setLoaderConfig(id, {})
@@ -22,15 +21,15 @@ describe('API', () => {
     const { Api } = await import('./api')
     const { initializeFeatures } = await import('../features/initialize')
     const { Features } = await import('../features/features')
-    const { Aggregator } = await import('@newrelic/browser-agent-core/common/aggregate/aggregator')
-    jest.mock('@newrelic/browser-agent-core/features/jserrors/aggregate', () => {
+    const { Aggregator } = await import('@newrelic/browser-agent-core/src/common/aggregate/aggregator')
+    jest.mock('@newrelic/browser-agent-core/src/features/jserrors/aggregate', () => {
       return {
         Aggregate: jest.fn().mockImplementation(() => {
           return { storeError: jest.fn() }
         })
       }
     })
-    jest.mock('@newrelic/browser-agent-core/features/jserrors/instrument', () => {
+    jest.mock('@newrelic/browser-agent-core/src/features/jserrors/instrument', () => {
       return {
         Instrument: jest.fn().mockImplementation(() => {
           return {}
@@ -46,7 +45,7 @@ describe('API', () => {
   })
 
   it('should warn if feature is disabled', async function () {
-    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/src/common/config/config')
     setInfo(id, {})
     setConfiguration(id, {})
     setLoaderConfig(id, {})
@@ -60,7 +59,7 @@ describe('API', () => {
   })
 
   it('should warn if error is invalid', async function () {
-    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/src/common/config/config')
     setInfo(id, {})
     setConfiguration(id, {})
     setLoaderConfig(id, {})
@@ -76,7 +75,7 @@ describe('API', () => {
   })
 
   it('should warn if parent is not initialized', async function () {
-    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/src/common/config/config')
     setInfo(id, {})
     setConfiguration(id, {})
     setLoaderConfig(id, {})
@@ -92,7 +91,7 @@ describe('API', () => {
   })
 
   it('should not warn if initialized, not disabled, and has valid error', async function () {
-    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/src/common/config/config')
     setInfo(id, {})
     setConfiguration(id, {})
     setLoaderConfig(id, {})
@@ -107,7 +106,7 @@ describe('API', () => {
   })
 
   it('should pass Error Object and custom attr args successfully to jsErrors.storeError', async function () {
-    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/src/common/config/config')
     setInfo(id, {})
     setConfiguration(id, {})
     setLoaderConfig(id, {})
@@ -125,7 +124,7 @@ describe('API', () => {
   })
 
   it('should convert string to Error() and pass custom attr args successfully to jsErrors.storeError', async function () {
-    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/src/common/config/config')
     setInfo(id, {})
     setConfiguration(id, {})
     setLoaderConfig(id, {})
@@ -143,7 +142,7 @@ describe('API', () => {
   })
 
   it('should not pass invalid error args to jsErrors.storeError', async function () {
-    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/common/config/config')
+    const { setInfo, setConfiguration, setLoaderConfig, setRuntime } = await import('@newrelic/browser-agent-core/src/common/config/config')
     setInfo(id, {})
     setConfiguration(id, {})
     setLoaderConfig(id, {})

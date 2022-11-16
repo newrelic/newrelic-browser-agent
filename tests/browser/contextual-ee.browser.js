@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const {ee} = require('../../packages/browser-agent-core/common/event-emitter/contextual-ee')
+const {ee} = require('@newrelic/browser-agent-core/src/common/event-emitter/contextual-ee')
 var test = require('../../tools/jil/browser-test.js')
 
 test('Contextual EE', function (t) {

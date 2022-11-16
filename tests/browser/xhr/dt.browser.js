@@ -5,8 +5,8 @@
 
 import test from '../../../tools/jil/browser-test'
 import { setup } from '../utils/setup'
-import { DT } from '../../../packages/browser-agent-core/features/ajax/instrument/distributed-tracing'
-import { setLoaderConfig, getLoaderConfig, setConfiguration } from '../../../packages/browser-agent-core/common/config/config'
+import { DT } from '@newrelic/browser-agent-core/src/features/ajax/instrument/distributed-tracing'
+import { setLoaderConfig, getLoaderConfig, setConfiguration } from '@newrelic/browser-agent-core/src/common/config/config'
 
 const { agentIdentifier } = setup();
 const distributedTracing = new DT(agentIdentifier);

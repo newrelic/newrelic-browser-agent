@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import slice from 'lodash._slice'
-import { gosNREUM } from '@newrelic/browser-agent-core/common/window/nreum'
-import { getRuntime, setInfo, getInfo } from '@newrelic/browser-agent-core/common/config/config'
-import { handle } from '@newrelic/browser-agent-core/common/event-emitter/handle'
-import { mapOwn } from '@newrelic/browser-agent-core/common/util/map-own'
-import { ee } from '@newrelic/browser-agent-core/common/event-emitter/contextual-ee'
-import { now } from '@newrelic/browser-agent-core/common/timing/now'
+import { gosNREUM } from '@newrelic/browser-agent-core/src/common/window/nreum'
+import { getRuntime, setInfo, getInfo } from '@newrelic/browser-agent-core/src/common/config/config'
+import { handle } from '@newrelic/browser-agent-core/src/common/event-emitter/handle'
+import { mapOwn } from '@newrelic/browser-agent-core/src/common/util/map-own'
+import { ee } from '@newrelic/browser-agent-core/src/common/event-emitter/contextual-ee'
+import { now } from '@newrelic/browser-agent-core/src/common/timing/now'
 
 export function setAPI(agentIdentifier) {
   var nr = gosNREUM()

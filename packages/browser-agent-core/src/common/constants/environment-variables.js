@@ -1,5 +1,5 @@
 /* eslint-disable */
-import pkg from '../../package.json'
+import * as pkg from '../../../package.json'
 
 // <WEBPACK_*> tag is replaced during webpack build with environment vars supplied at build time
 // This will get replaced with just the pkg version once all packages are on semver

@@ -1,7 +1,7 @@
 
-import { onWindowLoad } from '@newrelic/browser-agent-core/common/window/load'
-import { isBrowserWindow } from '@newrelic/browser-agent-core/common/window/win'
-import { ee } from '@newrelic/browser-agent-core/common/event-emitter/contextual-ee'
+import { onWindowLoad } from '@newrelic/browser-agent-core/src/common/window/load'
+import { isBrowserWindow } from '@newrelic/browser-agent-core/src/common/window/win'
+import { ee } from '@newrelic/browser-agent-core/src/common/event-emitter/contextual-ee'
 
 let loadFired = 0
 

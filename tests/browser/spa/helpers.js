@@ -9,16 +9,16 @@ const { setup } = require('../utils/setup')
 const setupData = setup()
 const { baseEE, agentIdentifier, aggregator, nr } = setupData
 
-const { Instrument: AjaxInstrument } = require('../../../packages/browser-agent-core/features/ajax/instrument/index')
-const { Instrument: SpaInstrument } = require('../../../packages/browser-agent-core/features/spa/instrument/index')
-const { Aggregate: SpaAggregate } = require('../../../packages/browser-agent-core/features/spa/aggregate/index')
+const { Instrument: AjaxInstrument } = require('@newrelic/browser-agent-core/src/features/ajax/instrument/index')
+const { Instrument: SpaInstrument } = require('@newrelic/browser-agent-core/src/features/spa/instrument/index')
+const { Aggregate: SpaAggregate } = require('@newrelic/browser-agent-core/src/features/spa/aggregate/index')
 new AjaxInstrument(agentIdentifier)
 new SpaInstrument(agentIdentifier)
 let spaAgg
-const { wrapTimer } = require("../../../packages/browser-agent-core/common/wrap/index")
+const { wrapTimer } = require("@newrelic/browser-agent-core/src/common/wrap/index")
 const timerEE = wrapTimer(baseEE)
-const { drain } = require('../../../packages/browser-agent-core/common/drain/drain')
-const { mapOwn } = require('../../../packages/browser-agent-core/common/util/map-own')
+const { drain } = require('@newrelic/browser-agent-core/src/common/drain/drain')
+const { mapOwn } = require('@newrelic/browser-agent-core/src/common/util/map-own')
 
 
 var currentNodeId = () => {
@@ -33,7 +33,7 @@ var afterLoad = false
 jil.onWindowLoaded(function () {
   afterLoad = true
   originalSetTimeout(function () {
-    const { Aggregate: InsAggregate } = require('../../../packages/browser-agent-core/features/page-action/aggregate/index')
+    const { Aggregate: InsAggregate } = require('@newrelic/browser-agent-core/src/features/page-action/aggregate/index')
     new InsAggregate(agentIdentifier)
     if (!spaAgg) spaAgg = new SpaAggregate(agentIdentifier, aggregator)
     drain(agentIdentifier, 'api')

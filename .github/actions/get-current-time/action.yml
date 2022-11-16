@@ -1,0 +1,10 @@
+name: 'Get Current Time Stamp'
+description: 'Get the current time stamp'
+
+outputs:
+  timestamp:
+    description: "new Date().toString()"
+
+runs:
+  using: 'node14'
+  main: 'index.js'

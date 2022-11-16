@@ -54,6 +54,7 @@
     "url": "https://github.com/newrelic/newrelic-browser-agent.git"
   },
   "dependencies": {
+    "@actions/core": "^1.10.0",
     "lodash._slice": "^2.4.1"
   },
   "devDependencies": {

@@ -41,4 +41,5 @@ connectToS3(role, dry).then(() => {
     emptyS3Directory(bucket, pr, dry)
 }).catch(err => {
     console.log("err...", err)
+    process.exit(1)
 })

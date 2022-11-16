@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-  displayName: 'browser-agent',
+  displayName: 'browser-agent-core',
   preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {

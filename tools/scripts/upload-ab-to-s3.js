@@ -135,7 +135,11 @@ function randomExecutor(ids) {
           const params = new Proxy(new URLSearchParams(window.location.search), {
             get: (searchParams, prop) => searchParams.get(prop),
           });
-          if (params.nrbaloader) return ids[params.nrbaloader]();
+          if (params.nrbaloader && ids[params.nrbaloader]) return ids[params.nrbaloader]();
+
+          const ls = localStorage.getItem("nrbaloader")
+          if (ls && ids[ls]) return ids[ls]();
+          
           var r = Math.random();
     `
   ids.forEach((id, i) => {

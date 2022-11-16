@@ -61,6 +61,7 @@ module.exports = {
     uploadToS3: function uploadToS3(fileName, content, bucket, dry=false, maxAge=3600, expires) {
         return new Promise((resolve, reject) => {
 
+            console.log("expires?", expires)
             var params = {
                 Body: content,
                 Bucket: bucket, // argv.bucket,

@@ -54,6 +54,7 @@ module.exports = {
         if (!dry) await s3.deleteObjects(deleteParams).promise();
         else console.log("would have deleted", deleteParams)
 
+        console.log("deleted". deleteParams, "recurse?", listedObjects.IsTruncated)
         if (listedObjects.IsTruncated) await emptyS3Directory(bucket, dir);
     },
 

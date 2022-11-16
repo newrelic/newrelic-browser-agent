@@ -1,0 +1,27 @@
+name: Detect GH Actions Changes
+on:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Detect Changed .yml Files
+        uses: tj-actions/verify-changed-files
+        id: verify-changed-files
+        with:
+          files: |
+              **/*.yml
+
+      - name: Warn
+        if: steps.verify-changed-files.outputs.files_changed == 'true'
+        uses: mshick/add-pr-comment@v2
+            with:
+              message: |
+                ⚠️ Warning! This PR contains a change to a workflow .yml file! Review carefully before running other actions

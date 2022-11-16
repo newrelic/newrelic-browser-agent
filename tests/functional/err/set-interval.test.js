@@ -27,6 +27,7 @@ testDriver.test('reporting errors from setInterval callbacks', supported, functi
     assertErrorAttributes(t, response.query)
     const actualErrors = getErrorsFromResponse(response, browser)
     let expectedErrors = [{
+      name: 'Error',
       message: 'interval callback',
       stack: [{
         u: router.assetURL('js/set-interval-error.js').split('?')[0],

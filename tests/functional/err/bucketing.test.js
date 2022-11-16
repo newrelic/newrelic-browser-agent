@@ -1,0 +1,54 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+const testDriver = require('jil')
+const {assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse} = require('./assertion-helpers')
+
+let supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
+const init = {
+    page_view_timing: {
+        enabled: false
+    },
+    metrics: {
+        enabled: false
+    },
+    jserrors: {
+        enabled: true,
+        harvestTimeSeconds: 5
+    }
+}
+
+testDriver.test('NR-40043: Multiple errors with noticeError and unique messages should not bucket', supported, function (t, browser, router) {
+    const assetURL = router.assetURL('js-errors-noticeerror-bucketing.html', { loader: 'full', init })
+    const rumPromise = router.expectRum()
+    const loadPromise = browser.get(assetURL)
+    const errPromise = router.expectErrors()
+
+    Promise.all([errPromise, rumPromise, loadPromise]).then(([errors]) => {
+        assertErrorAttributes(t, errors.query, 'has errors')
+
+        const actualErrors = getErrorsFromResponse(errors, browser)
+
+        let expectedErrors = [...Array(8)].map((_, i) => ({
+            name: 'Error',
+            message: `Error message ${i + 1}`,
+            stack: [{
+                u: '<inline>',
+                l: 36
+            }, {
+                u: '<inline>',
+                l: 35
+            }]
+        }));
+
+        assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL)
+        t.end()
+    }).catch(fail)
+
+    function fail (err) {
+        t.error(err)
+        t.end()
+    }
+})

@@ -5,8 +5,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## v1221
 
+### Update JS error bucketing algorithm
+The Agent will now take into account the error object type and message when deciding on whether multiple JS errors should be bucketed together.
+
 ### Detect Workflow Changes
-* PRs will run an action to detect workflow changes for a warning layer against vulnerability.
+PRs will run an action to detect workflow changes for a warning layer against vulnerability.
 
 ## v1220
 

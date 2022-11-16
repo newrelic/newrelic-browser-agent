@@ -6,19 +6,9 @@ on:
       pr_number:
         description: 'PR number'
         required: true
-      pr_build:
-        description: 'PR build'
-        required: true
-        type: choice
-        options:
-          - build
-          - clear
-  pull_request:
-    types: [labeled, closed]
 
 jobs:
   pr-dev-build:
-    # if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'deploy to dev')
     runs-on: ubuntu-latest
     container: node:14
     permissions:
@@ -31,17 +21,9 @@ jobs:
       - uses: actions/checkout@v3
       - name: install
         run: npm ci
-      - name: clear S3
-        run: |
-          node ./tools/scripts/delete-s3-dir.js \
-            --bucket ${{ secrets.AWS_BUCKET }} \
-            --role ${{ secrets.AWS_ROLE_ARN }} \
-            --pr PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}
       - name: build
-        if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
         run: npm run cdn:build:pr
       - name: upload artifacts to S3
-        if: github.event.inputs.pr_build == 'build' || github.event.action != 'closed'
         run: |
           node ./tools/scripts/upload-to-s3.js \
             --bucket ${{ secrets.AWS_BUCKET }} \

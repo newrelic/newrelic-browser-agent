@@ -104,7 +104,10 @@ function getIdFromUrl(url) {
     const filename = `internal/${env}.js`
 
     connectToS3(role, dry).then(async () => {
-      const uploads = await uploadToS3(filename, output, bucket, dry, 300)
+      const expires = new Date()
+      expires.setMonth(expires.getMonth() + 1)
+
+      const uploads = await uploadToS3(filename, output, bucket, dry, 300, expires.toUTCString())
       console.log(`Successfully uploaded ${filename} to S3`)
       process.exit(0)
     }).catch(err => {

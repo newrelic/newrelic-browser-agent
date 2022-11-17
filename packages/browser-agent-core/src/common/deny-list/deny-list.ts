@@ -8,7 +8,7 @@ import type { XhrParams } from "./deny-list.interfaces"
 
  /**
   * Evaluates whether an XHR event should be included for collection based on the {@link denyList|AjaxRequest deny list}.
-  * @param {{method: string, hostname: string, port: string, protocol: string, host: string, pathname: string, status: number}} params - object with properties of the XHR event
+  * @param {XhrParams} params - object with properties of the XHR event
   * @returns {boolean} `true` if request does not match any entries of {@link denyList|deny list}; else `false`
   */
 export function shouldCollectEvent(params: XhrParams): boolean {

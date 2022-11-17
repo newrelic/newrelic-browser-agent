@@ -16,6 +16,10 @@ export function shouldCollectEvent(params: XhrParams): boolean {
     return true
   }
 
+  if (params.hostname === undefined) {
+    return false
+  }
+
   for (var i = 0; i < denyList.length; i++) {
     var parsed = denyList[i]
     if (parsed.hostname === '*') {

@@ -46,6 +46,21 @@ switch (PUBLISH) {
 }
 
 const IS_LOCAL = SUBVERSION === 'LOCAL'
+const babelPresetEnv = ['@babel/preset-env', {
+  useBuiltIns: 'entry',
+  corejs: { version: 3.23, proposals: true },
+  loose: true,
+  targets: {
+    browsers: [
+      "chrome >= 60",
+      "safari >= 11",
+      "firefox >= 56",
+      "ios >= 10.3",
+      "ie >= 11",
+      "edge >= 60"
+    ]
+  }
+}]
 
 console.log("VERSION", VERSION)
 console.log("SOURCEMAPS", SOURCEMAPS)
@@ -92,11 +107,12 @@ const config = (target) => {
       publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
       library: {
         name: 'NRBA',
-        type: 'umd'
+        type: 'self'
       },
       clean: false
     },
     resolve: {
+      extensions: [".js", ".json", ".ts"],
       alias: {
         '@newrelic/browser-agent-core/src': path.resolve(__dirname, '../packages/browser-agent-core/src')
       }
@@ -137,27 +153,26 @@ const config = (target) => {
     module: {
       rules: [
         {
+          test: /\.ts$/,
+          exclude: /(node_modules)/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              presets: [
+                '@babel/preset-typescript',
+                babelPresetEnv
+              ]
+            }
+          }
+        },
+        {
           test: /\.js$/,
           exclude: /(node_modules)/,
           use: {
             loader: 'babel-loader',
             options: {
               presets: [
-                ['@babel/preset-env', {
-                  useBuiltIns: 'entry',
-                  corejs: { version: 3.23, proposals: true },
-                  loose: true,
-                  targets: {
-                    browsers: [
-                      "chrome >= 60",
-                      "safari >= 11",
-                      "firefox >= 56",
-                      "ios >= 10.3",
-                      "ie >= 11",
-                      "edge >= 60"
-                    ]
-                  }
-                }]
+                babelPresetEnv
               ]
             }
           }

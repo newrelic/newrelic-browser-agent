@@ -12,4 +12,9 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/packages/browser-agent',
+  collectCoverageFrom: [
+    'src/**/*.{ts,js}',
+    '*.d.ts',
+    '*.interface[s]?.ts',
+  ],
 };

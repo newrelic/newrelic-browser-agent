@@ -36,10 +36,12 @@ testDriver.test('NR-40043: Multiple errors with noticeError and unique messages 
             message: `Error message ${i + 1}`,
             stack: [{
                 u: '<inline>',
-                l: 36
+                l: 36,
+                c: 31
             }, {
                 u: '<inline>',
-                l: 35
+                l: 35,
+                c: 33
             }]
         }));
 

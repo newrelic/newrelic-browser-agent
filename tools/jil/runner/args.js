@@ -94,9 +94,8 @@ module.exports = yargs
   .alias('c', 'cache')
   .describe('c', 'cache browserified files')
 
-  .boolean('p')
-  .default('p', 0)
   .alias('p', 'port')
+  .default('p', 0)
   .describe('p', 'asset server port')
 
   .boolean('u')

@@ -10,6 +10,21 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 const VERSION = fs.readFileSync('../VERSION', 'utf-8')
 const { PUBLISH, SOURCEMAPS = true } = process.env
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
+const babelPresetEnv = ['@babel/preset-env', {
+  useBuiltIns: 'entry',
+  corejs: { version: 3.23, proposals: true },
+  loose: true,
+  targets: {
+    browsers: [
+      "chrome >= 60",
+      "safari >= 11",
+      "firefox >= 56",
+      "ios >= 10.3",
+      "ie >= 11",
+      "edge >= 60"
+    ]
+  }
+}]
 
 switch (PUBLISH) {
   case 'PROD':
@@ -97,8 +112,9 @@ const config = (target) => {
       clean: false
     },
     resolve: {
+      extensions: [".js", ".json", ".ts"],
       alias: {
-        '@newrelic/browser-agent-core/src': path.resolve(__dirname, '../dist/packages/browser-agent-core/src')
+        '@newrelic/browser-agent-core/src': path.resolve(__dirname, '../packages/browser-agent-core/src')
       }
     },
 
@@ -137,27 +153,23 @@ const config = (target) => {
     module: {
       rules: [
         {
+          test: /\.ts$/,
+          exclude: /(node_modules)/,
+          use: {
+            loader: "babel-loader",
+            options: {
+              presets: ["@babel/preset-typescript", babelPresetEnv]
+            }
+          }
+        },
+        {
           test: /\.js$/,
           exclude: /(node_modules)/,
           use: {
             loader: 'babel-loader',
             options: {
               presets: [
-                ['@babel/preset-env', {
-                  useBuiltIns: 'entry',
-                  corejs: { version: 3.23, proposals: true },
-                  loose: true,
-                  targets: {
-                    browsers: [
-                      "chrome >= 60",
-                      "safari >= 11",
-                      "firefox >= 56",
-                      "ios >= 10.3",
-                      "ie >= 11",
-                      "edge >= 60"
-                    ]
-                  }
-                }]
+                babelPresetEnv
               ]
             }
           }
@@ -167,4 +179,4 @@ const config = (target) => {
   }
 }
 
-module.exports = [config('browserslist'), config('webworker')]
+module.exports = [config("browserslist"), config("webworker")];

@@ -9,11 +9,18 @@
     "target": "es2020",
     "module": "esnext",
     "lib": ["es2015", "dom"],
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitAny": false,
     "paths": {
       "@newrelic/browser-agent": ["packages/browser-agent/src/index.ts"],
-      "@newrelic/browser-agent-core/src/*": ["packages/browser-agent-core/src/*"]
+      "@newrelic/browser-agent-core/src/*": [
+        "packages/browser-agent-core/src/*"
+      ],
+      "@newrelic/browser-agent-test-data/*": [
+        "packages/browser-agent-test-data/src/*"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]

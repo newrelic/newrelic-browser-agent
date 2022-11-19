@@ -13,6 +13,7 @@ function computeExpectedCanonicalStack (expectedStack) {
     if (frame.f) line += `${canonicalFunctionName(frame.f)}@`
     if (frame.u) line += frame.u
     if (frame.l) line += `:${frame.l}`
+    if (frame.c) line += `:${frame.c}`
     return line
   }).join('\n')
 
@@ -74,10 +75,10 @@ function assertExpectedErrors (t, browser, actualErrors, expectedErrors, assetUR
     t.equal(actualError.params.stackHash, expectedStackHash, 'Stack hash for error ' + expectedError.message)
 
     if (actualError.params.stackHash !== expectedStackHash && actualError.params.canonicalStack) {
-      console.log('Actual stack from browser:\n' + actualError.params.origStack)
-      console.log('\nActual canonical stack from browser:\n' + actualError.params.canonicalStack)
-      console.log('\nExpected canonical stack:\n' + expectedCanonicalStack + '\n')
-      console.log(actualError.params.origStackInfo)
+      t.comment('Actual stack from browser:\n' + actualError.params.origStack)
+      t.comment('\nActual canonical stack from browser:\n' + actualError.params.canonicalStack)
+      t.comment('\nExpected canonical stack:\n' + expectedCanonicalStack + '\n')
+      t.comment(actualError.params.origStackInfo)
     }
 
     t.equal(actualError.params['request_uri'], expectedPath, 'has correct request_uri attribute')

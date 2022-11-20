@@ -74,7 +74,6 @@ var getEnvOptions = {
 }
 const env = Array.isArray(config.env) ? config.env : config.env.split(",")
 console.log(chalk.yellow("Will set configs for "), env)
-lineBreak('start')
 
 function lineBreak(message) {
     console.log(chalk.yellow(`--------------------------------- ${message} ---------------------------------`))
@@ -82,10 +81,11 @@ function lineBreak(message) {
 
 const run = async () => {
     try {
+        lineBreak('start')
         const tasks = await Promise.all(env.map(e => import(`../util/deploy/${e}.mjs`)))
         const results = await Promise.allSettled(tasks.map(({ settings }, i) => {
-            if (!config.verbose) return settings.payload.map(payload => getValue(env[i], payload))
-            else return settings.payloadWithComments.map(payload => getValue(env[i], payload))
+            const payload = config.verbose ? settings.payloadWithComments : settings.payload
+            return payload.map(payload => getAndSetValue(env[i], payload))
         }).flat())
         const { successes, failures } = results.reduce((prev, next) => {
             if (next.status === 'rejected') prev.failures.push(next)
@@ -106,6 +106,7 @@ const run = async () => {
         else process.exit(0)
     } catch (err) {
         console.log(chalk.red('Error...'), err)
+        process.exit(1)
     }
 }
 
@@ -131,7 +132,7 @@ const setValue = async (env, setting) => {
     })
 }
 
-const getValue = async (env, setting) => {
+const getAndSetValue = async (env, setting) => {
     const getAPI = getEnvOptions[env]
 
     var getOptions = {

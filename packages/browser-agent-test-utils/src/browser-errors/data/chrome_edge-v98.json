@@ -1,0 +1,77 @@
+[
+  {
+    "toString": "SecurityError: Blocked a frame with origin \"http://bam-test-1.nr-local.net:3334\" from accessing a cross-origin frame.",
+    "name": "SecurityError",
+    "constructor": "function DOMException() { [native code] }",
+    "message": "Blocked a frame with origin \"http://bam-test-1.nr-local.net:3334\" from accessing a cross-origin frame.",
+    "stack": "Error: Blocked a frame with origin \"http://bam-test-1.nr-local.net:3334\" from accessing a cross-origin frame.\n    at errorTest (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:60:17)\n    at captureError (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:9)\n    at onload (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:57:5)",
+    "code": 18,
+    "expectedHash": -1716147718
+  },
+  {
+    "toString": "RangeError: Maximum call stack size exceeded",
+    "name": "RangeError",
+    "constructor": "function RangeError() { [native code] }",
+    "message": "Maximum call stack size exceeded",
+    "stack": "RangeError: Maximum call stack size exceeded\n    at loop (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:13)\n    at loop (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:13)\n    at loop (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:13)\n    at loop (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:13)\n    at loop (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:13)\n    at loop (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:13)\n    at loop (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:13)\n    at loop (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:13)\n    at loop (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:13)\n    at loop (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:13)",
+    "expectedHash": -866558967
+  },
+  {
+    "toString": "RangeError: Invalid array length",
+    "name": "RangeError",
+    "constructor": "function RangeError() { [native code] }",
+    "message": "Invalid array length",
+    "stack": "RangeError: Invalid array length\n    at errorTest (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:74:16)\n    at captureError (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:9)\n    at onload (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:70:5)",
+    "expectedHash": 11559126
+  },
+  {
+    "toString": "SyntaxError: Unexpected token ] in JSON at position 12",
+    "name": "SyntaxError",
+    "constructor": "function SyntaxError() { [native code] }",
+    "message": "Unexpected token ] in JSON at position 12",
+    "stack": "SyntaxError: Unexpected token ] in JSON at position 12\n    at JSON.parse (<anonymous>)\n    at errorTest (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:79:12)\n    at captureError (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:9)\n    at onload (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:76:5)",
+    "expectedHash": -323344298
+  },
+  {
+    "toString": "TypeError: x is not a function",
+    "name": "TypeError",
+    "constructor": "function TypeError() { [native code] }",
+    "message": "x is not a function",
+    "stack": "TypeError: x is not a function\n    at errorTest (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:85:7)\n    at captureError (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:9)\n    at onload (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:81:5)",
+    "expectedHash": -1810761983
+  },
+  {
+    "toString": "URIError: URI malformed",
+    "name": "URIError",
+    "constructor": "function URIError() { [native code] }",
+    "message": "URI malformed",
+    "stack": "URIError: URI malformed\n    at encodeURI (<anonymous>)\n    at errorTest (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:90:7)\n    at captureError (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:9)\n    at onload (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:87:5)",
+    "expectedHash": 735535012
+  },
+  {
+    "toString": "ReferenceError: undefinedVariable is not defined",
+    "name": "ReferenceError",
+    "constructor": "function ReferenceError() { [native code] }",
+    "message": "undefinedVariable is not defined",
+    "stack": "ReferenceError: undefinedVariable is not defined\n    at errorTest (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:95:15)\n    at captureError (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:9)\n    at onload (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:92:5)",
+    "expectedHash": -211090844
+  },
+  {
+    "toString": "Error: This is a test",
+    "name": "Error",
+    "constructor": "function Error() { [native code] }",
+    "message": "This is a test",
+    "stack": "Error: This is a test\n    at http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:102:19\n    at http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:103:13\n    at http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:104:11\n    at errorTest (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:105:9)\n    at captureError (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:9)\n    at onload (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:97:5)",
+    "expectedHash": -1040522829
+  },
+  {
+    "toString": "This is a test error string",
+    "constructor": "function String() { [native code] }",
+    "expectedHash": 1976809675
+  },
+  {
+    "toString": "0",
+    "constructor": "function Number() { [native code] }",
+    "expectedHash": -1745775609
+  }
+]

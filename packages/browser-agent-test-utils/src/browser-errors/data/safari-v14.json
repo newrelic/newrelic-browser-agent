@@ -1,0 +1,93 @@
+[
+  {
+    "toString": "SecurityError: Blocked a frame with origin \"http://bam-test-1.nr-local.net:3334\" from accessing a cross-origin frame. Protocols, domains, and ports must match.",
+    "name": "SecurityError",
+    "constructor": "function DOMException() {\n    [native code]\n}",
+    "message": "Blocked a frame with origin \"http://bam-test-1.nr-local.net:3334\" from accessing a cross-origin frame. Protocols, domains, and ports must match.",
+    "line": 60,
+    "column": 16,
+    "stack": "errorTest@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:60:16\ncaptureError@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:11\nonload@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:57:17",
+    "code": 18,
+    "expectedHash": 1145032430
+  },
+  {
+    "toString": "RangeError: Maximum call stack size exceeded.",
+    "name": "RangeError",
+    "constructor": "function RangeError() {\n    [native code]\n}",
+    "message": "Maximum call stack size exceeded.",
+    "line": 66,
+    "column": 17,
+    "stack": "loop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17",
+    "expectedHash": -686114223
+  },
+  {
+    "toString": "RangeError: Invalid array length",
+    "name": "RangeError",
+    "constructor": "function RangeError() {\n    [native code]\n}",
+    "message": "Invalid array length",
+    "line": 74,
+    "column": 8,
+    "stack": "errorTest@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:74:8\ncaptureError@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:11\nonload@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:70:17",
+    "expectedHash": -2116498809
+  },
+  {
+    "toString": "SyntaxError: JSON Parse error: Unexpected comma at the end of array expression",
+    "name": "SyntaxError",
+    "constructor": "function SyntaxError() {\n    [native code]\n}",
+    "message": "JSON Parse error: Unexpected comma at the end of array expression",
+    "line": 79,
+    "column": 17,
+    "stack": "parse@[native code]\nerrorTest@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:79:17\ncaptureError@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:11\nonload@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:76:17",
+    "expectedHash": 1910070644
+  },
+  {
+    "toString": "TypeError: x is not a function. (In 'x('foo')', 'x' is 0)",
+    "name": "TypeError",
+    "constructor": "function TypeError() {\n    [native code]\n}",
+    "message": "x is not a function. (In 'x('foo')', 'x' is 0)",
+    "line": 85,
+    "column": 8,
+    "stack": "errorTest@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:85:8\ncaptureError@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:11\nonload@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:81:17",
+    "expectedHash": -121656935
+  },
+  {
+    "toString": "URIError: String contained an illegal UTF-16 sequence.",
+    "name": "URIError",
+    "constructor": "function URIError() {\n    [native code]\n}",
+    "message": "String contained an illegal UTF-16 sequence.",
+    "line": 90,
+    "column": 16,
+    "stack": "encodeURI@[native code]\nerrorTest@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:90:16\ncaptureError@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:11\nonload@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:87:17",
+    "expectedHash": 2115596416
+  },
+  {
+    "toString": "ReferenceError: Can't find variable: undefinedVariable",
+    "name": "ReferenceError",
+    "constructor": "function ReferenceError() {\n    [native code]\n}",
+    "message": "Can't find variable: undefinedVariable",
+    "line": 95,
+    "column": 32,
+    "stack": "errorTest@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:95:32\ncaptureError@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:11\nonload@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:92:17",
+    "expectedHash": 66492879
+  },
+  {
+    "toString": "Error: This is a test",
+    "name": "Error",
+    "constructor": "function Error() {\n    [native code]\n}",
+    "message": "This is a test",
+    "line": 102,
+    "column": 28,
+    "stack": "http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:102:28\nhttp://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:103:13\nhttp://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:104:11\nerrorTest@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:105:9\ncaptureError@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:11\nonload@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:97:17",
+    "expectedHash": 2018910055
+  },
+  {
+    "toString": "This is a test error string",
+    "constructor": "function String() {\n    [native code]\n}",
+    "expectedHash": 1976809675
+  },
+  {
+    "toString": "0",
+    "constructor": "function Number() {\n    [native code]\n}",
+    "expectedHash": -1745775609
+  }
+]

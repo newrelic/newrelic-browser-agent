@@ -14,7 +14,7 @@ export default {
   coverageDirectory: '../../coverage/packages/browser-agent',
   collectCoverageFrom: [
     'src/**/*.{ts,js}',
-    '*.d.ts',
-    '*.interface[s]?.ts',
+    '!*.d.ts',
+    '!*.interface[s]?.ts',
   ],
 };

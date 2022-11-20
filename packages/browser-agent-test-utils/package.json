@@ -1,0 +1,6 @@
+{
+  "name": "@newrelic/browser-agent-test-utils",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "private": true
+}

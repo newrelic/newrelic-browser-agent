@@ -1,0 +1,75 @@
+[
+  {
+    "toString": "TypeError: Permission denied",
+    "name": "TypeError",
+    "constructor": "\nfunction TypeError() {\n    [native code]\n}\n",
+    "message": "Permission denied",
+    "expectedHash": -1668418810
+  },
+  {
+    "toString": "Error: Out of stack space",
+    "name": "Error",
+    "constructor": "\nfunction Error() {\n    [native code]\n}\n",
+    "message": "Out of stack space",
+    "stack": "Error: Out of stack space\n   at loop (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:66:13)\n   at loop (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:66:13)\n   at loop (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:66:13)\n   at loop (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:66:13)\n   at loop (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:66:13)\n   at loop (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:66:13)\n   at loop (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:66:13)\n   at loop (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:66:13)\n   at loop (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:66:13)\n   at loop (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:66:13)",
+    "expectedHash": -1421184507
+  },
+  {
+    "toString": "RangeError: Array length must be assigned a finite positive number",
+    "name": "RangeError",
+    "constructor": "\nfunction RangeError() {\n    [native code]\n}\n",
+    "message": "Array length must be assigned a finite positive number",
+    "stack": "RangeError: Array length must be assigned a finite positive number\n   at errorTest (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:74:7)\n   at captureError (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:17:9)\n   at onload (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:70:5)",
+    "expectedHash": 1617884738
+  },
+  {
+    "toString": "SyntaxError: Invalid character",
+    "name": "SyntaxError",
+    "constructor": "\nfunction SyntaxError() {\n    [native code]\n}\n",
+    "message": "Invalid character",
+    "stack": "SyntaxError: Invalid character\n   at errorTest (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:79:7)\n   at captureError (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:17:9)\n   at onload (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:76:5)",
+    "expectedHash": 74954856
+  },
+  {
+    "toString": "TypeError: Function expected",
+    "name": "TypeError",
+    "constructor": "\nfunction TypeError() {\n    [native code]\n}\n",
+    "message": "Function expected",
+    "stack": "TypeError: Function expected\n   at errorTest (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:85:7)\n   at captureError (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:17:9)\n   at onload (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:81:5)",
+    "expectedHash": -1369299098
+  },
+  {
+    "toString": "URIError: The URI to be encoded contains an invalid character",
+    "name": "URIError",
+    "constructor": "\nfunction URIError() {\n    [native code]\n}\n",
+    "message": "The URI to be encoded contains an invalid character",
+    "stack": "URIError: The URI to be encoded contains an invalid character\n   at errorTest (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:90:7)\n   at captureError (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:17:9)\n   at onload (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:87:5)",
+    "expectedHash": 1665057237
+  },
+  {
+    "toString": "ReferenceError: 'undefinedVariable' is undefined",
+    "name": "ReferenceError",
+    "constructor": "\nfunction ReferenceError() {\n    [native code]\n}\n",
+    "message": "'undefinedVariable' is undefined",
+    "stack": "ReferenceError: 'undefinedVariable' is undefined\n   at errorTest (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:95:7)\n   at captureError (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:17:9)\n   at onload (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:92:5)",
+    "expectedHash": -2127331536
+  },
+  {
+    "toString": "Error: This is a test",
+    "name": "Error",
+    "constructor": "\nfunction Error() {\n    [native code]\n}\n",
+    "message": "This is a test",
+    "stack": "Error: This is a test\n   at Anonymous function (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:102:13)\n   at Anonymous function (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:101:12)\n   at Anonymous function (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:100:10)\n   at errorTest (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:99:8)\n   at captureError (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:17:9)\n   at onload (http://localhost:3334/tests/assets/instrumented.html?loader=spa&polyfills=true:97:5)",
+    "expectedHash": -2069567960
+  },
+  {
+    "toString": "This is a test error string",
+    "constructor": "\nfunction String() {\n    [native code]\n}\n",
+    "expectedHash": 1976809675
+  },
+  {
+    "toString": "0",
+    "constructor": "\nfunction Number() {\n    [native code]\n}\n",
+    "expectedHash": -1745775609
+  }
+]

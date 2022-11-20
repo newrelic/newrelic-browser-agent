@@ -60,7 +60,7 @@ export function parseError(
     // console.log(canonicalStack)
 
     return parsedError;
-  } catch (ex) {
+  } catch (ex) /* istanbul ignore next */ {
     eventEmitter.emit("internal-error", [ex]);
     return {};
   }
@@ -87,7 +87,7 @@ function parseClassName(eventEmitter: any, error: any): string {
     }
 
     return "unknown";
-  } catch (ex) {
+  } catch (ex) /* istanbul ignore next */ {
     eventEmitter.emit("internal-error", [ex]);
     return "unknown";
   }
@@ -110,7 +110,7 @@ function parseErrorMessage(eventEmitter: any, error: any): string {
     }
 
     return error.toString();
-  } catch (ex) {
+  } catch (ex) /* istanbul ignore next */ {
     eventEmitter.emit("internal-error", [ex]);
     return "";
   }
@@ -134,7 +134,7 @@ export function parseStackTrace(
 
     // If the error contains a stack trace, parse and return it
     if (typeof error.stack === "string") {
-      const splitStack = ((error as Error).stack || "").split("\n");
+      const splitStack = ((error as Error).stack as string).split("\n");
       const stackLines: string[] = [];
       const canonicalStackLines: string[] = [];
       for (let i = 0; i < splitStack.length; i++) {
@@ -213,10 +213,13 @@ export function parseStackTrace(
     if (typeof error.column === "number") {
       stack += `:${error.column}`;
       canonicalStack += `:${error.column}`;
+    } else if (typeof error.columnNumber === "number") {
+      stack += `:${error.columnNumber}`;
+      canonicalStack += `:${error.columnNumber}`;
     }
 
     return { stack, canonicalStack };
-  } catch (ex) {
+  } catch (ex) /* istanbul ignore next */ {
     eventEmitter.emit("internal-error", [ex]);
     return { stack: "" };
   }
@@ -278,14 +281,7 @@ function isStackNrWrapper(stackFrame: NrErrorStackTraceFrame): boolean {
  * to the current page origin. If these match, the script that threw the error
  * was inlined into the HTML and we will return "<inline>".
  */
-function canonicalizeURL(
-  scriptUrl?: string | null,
-  originUrl?: string | null
-): string {
-  if (typeof scriptUrl !== "string" || typeof originUrl !== "string") {
-    return "";
-  }
-
+function canonicalizeURL(scriptUrl?: string, originUrl?: string): string {
   const cleanedUrl = cleanURL(scriptUrl);
   if (cleanedUrl === originUrl) {
     return "<inline>";

@@ -1,0 +1,26 @@
+{
+  "name": "browser-agent-test-utils",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/browser-agent-test-utils/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "packages/browser-agent-test-utils/dist",
+        "main": "packages/browser-agent-test-utils/src/index.ts",
+        "tsConfig": "packages/browser-agent-test-utils/tsconfig.lib.json",
+        "assets": ["packages/browser-agent-test-utils/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/browser-agent-test-utils/**/*.ts"]
+      }
+    }
+  },
+  "tags": []
+}

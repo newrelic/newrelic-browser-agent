@@ -54,3 +54,25 @@ testDriver.test('NR-40043: Multiple errors with noticeError and unique messages 
         t.end()
     }
 })
+
+testDriver.test('NEWRELIC-3788: Multiple identical errors from the same line but different columns should not be bucketed', supported, function (t, browser, router) {
+  const assetURL = router.assetURL('js-errors-column-bucketing.html', { loader: 'full', init })
+  const rumPromise = router.expectRum()
+  const loadPromise = browser.get(assetURL)
+  const errPromise = router.expectErrors()
+
+  Promise.all([errPromise, rumPromise, loadPromise]).then(([errors]) => {
+    assertErrorAttributes(t, errors.query, 'has errors')
+
+    const actualErrors = getErrorsFromResponse(errors, browser)
+    t.ok(actualErrors.length === 2, "two errors reported")
+    t.ok(typeof actualErrors[1].stack_trace === "string", "second error has stack trace")
+
+    t.end()
+  }).catch(fail)
+
+  function fail (err) {
+    t.error(err)
+    t.end()
+  }
+})

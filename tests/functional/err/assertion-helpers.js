@@ -72,13 +72,9 @@ function assertExpectedErrors (t, browser, actualErrors, expectedErrors, assetUR
     var expectedCanonicalStack = computeExpectedCanonicalStack(expectedStack)
     var expectedStackHash = stringHashCode(`${expectedError.name}_${expectedError.message}_${expectedCanonicalStack}`)
 
-    t.equal(actualError.params.stackHash, expectedStackHash, 'Stack hash for error ' + expectedError.message)
-
-    if (actualError.params.stackHash !== expectedStackHash && actualError.params.canonicalStack) {
-      t.comment('Actual stack from browser:\n' + actualError.params.origStack)
-      t.comment('\nActual canonical stack from browser:\n' + actualError.params.canonicalStack)
-      t.comment('\nExpected canonical stack:\n' + expectedCanonicalStack + '\n')
-      t.comment(actualError.params.origStackInfo)
+    if (browser.match("chrome")) {
+      // We cannot assume all browsers will report column numbers the same
+      t.equal(actualError.params.stackHash, expectedStackHash, 'Stack hash for error ' + expectedError.message)
     }
 
     t.equal(actualError.params['request_uri'], expectedPath, 'has correct request_uri attribute')

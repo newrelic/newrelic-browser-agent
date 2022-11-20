@@ -1,0 +1,26 @@
+name: Upload Deploy Settings
+
+on:
+  push:
+    branches:
+      - main 
+  workflow_dispatch:
+
+jobs:
+  publish-to-s3:
+    runs-on: ubuntu-latest
+    container: node:14
+    steps:
+      - uses: actions/checkout@v2
+      - name: install
+        run: npm ci
+      - name: upload settings
+        run: |
+          tools/scripts/set-rpm-admin.mjs \
+            --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
+            --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
+            --eu-api-key=${{ secrets.NR_API_KEY_EU }} \
+            --env staging \
+            --env production \
+            --env eu \
+            -v

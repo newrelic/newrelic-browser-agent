@@ -1,4 +1,4 @@
-import { CONSTANTS, Settings, Setting, SettingValue, LoaderExcludeAccounts, LoaderPolyfillAccounts, LoaderUpdateAccounts, LoaderUpdatePercent, LoaderUpdateVersion, LoaderVersion } from "./settings.mjs";
+import { CONSTANTS, Settings, Setting, SettingValue, LoaderExcludeAccounts, LoaderPolyfillAccounts, LoaderUpdateAccounts, LoaderUpdatePercent, LoaderUpdateVersion, LoaderVersion } from "../settings.mjs";
 
 const {KEYS} = CONSTANTS
 

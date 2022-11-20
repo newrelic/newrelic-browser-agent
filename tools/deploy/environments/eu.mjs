@@ -1,4 +1,4 @@
-import { Settings, SettingValue, LoaderExcludeAccounts, LoaderPolyfillAccounts, LoaderUpdateAccounts, LoaderUpdatePercent, LoaderUpdateVersion, LoaderVersion } from "./settings.mjs";
+import { Settings, SettingValue, LoaderExcludeAccounts, LoaderPolyfillAccounts, LoaderUpdateAccounts, LoaderUpdatePercent, LoaderUpdateVersion, LoaderVersion } from "../settings.mjs";
 
 export const settings = new Settings([
     // common settings have their own shortcut classes

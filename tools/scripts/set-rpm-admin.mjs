@@ -85,7 +85,7 @@ const run = async () => {
     try {
         lineBreak('start')
         // import some or all deploy env files based on args
-        const tasks = await Promise.all(env.map(e => import(`../util/deploy/${e}.mjs`)))
+        const tasks = await Promise.all(env.map(e => import(`../deploy/environments/${e}.mjs`)))
 
         // wait for all tasks to finish (fail or success)
         // tasks will read the current value from the API for record keeping + comparisons

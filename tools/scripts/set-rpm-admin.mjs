@@ -1,4 +1,3 @@
-/* eslint-disable */
 import request from 'request'
 import yargs from 'yargs'
 import chalk from 'chalk'
@@ -31,6 +30,7 @@ const config = yargs
     .wrap(Math.min(110, yargs.terminalWidth()))
     .argv
 
+// env specific API endpoints for updating data (POST)
 var postEnvOptions = {
     staging: {
         url: 'https://staging-api.newrelic.com/v2/system_configuration.json',
@@ -52,6 +52,7 @@ var postEnvOptions = {
     }
 }
 
+// env specific API endpoints for reading data (GET)
 var getEnvOptions = {
     staging: {
         url: 'https://staging-api.newrelic.com/v2/system_configuration/show.json',
@@ -72,6 +73,7 @@ var getEnvOptions = {
         }
     }
 }
+
 const env = Array.isArray(config.env) ? config.env : config.env.split(",")
 console.log(chalk.yellow("Will set configs for "), env)
 
@@ -82,26 +84,37 @@ function lineBreak(message) {
 const run = async () => {
     try {
         lineBreak('start')
+        // import some or all deploy env files based on args
         const tasks = await Promise.all(env.map(e => import(`../util/deploy/${e}.mjs`)))
+
+        // wait for all tasks to finish (fail or success)
+        // tasks will read the current value from the API for record keeping + comparisons
+        // then they will update the value to what is supplied in the env setting file
         const results = await Promise.allSettled(tasks.map(({ settings }, i) => {
             const payload = config.verbose ? settings.payloadWithComments : settings.payload
             return payload.map(payload => getAndSetValue(env[i], payload))
         }).flat())
+
+        // separate successes from failures for logging purposes
         const { successes, failures } = results.reduce((prev, next) => {
             if (next.status === 'rejected') prev.failures.push(next)
             else prev.successes.push(next)
             return prev
         }, { successes: [], failures: [] })
+
         lineBreak('done')
         console.log(chalk.green(`${successes.length} API updates succeeded`))
         console.log(chalk.red(`${failures.length} API updates failed`))
+
         if (config.verbose) {
+            // extra logging/messaging if needed
             lineBreak('verbose - success')
             successes.forEach(f => console.log(chalk.yellow('success:'), chalk.green(JSON.stringify(f.value, undefined, 4))))
             lineBreak('verbose - failure')
             failures.forEach(f => console.log(chalk.yellow('failure:'), chalk.red(f.reason)))
         }
 
+        // all API calls should succeed or the action should fail
         if (failures.length) process.exit(1)
         else process.exit(0)
     } catch (err) {
@@ -110,9 +123,16 @@ const run = async () => {
     }
 }
 
+/**
+ * sets a new RPM Admin value via API call
+ * @param {String} env 
+ * @param {{key: string, value: string, comments: string}} setting 
+ * @returns {Promise<{env: string, setting: {key: string, value: string, comments: string[]}}|Error>}
+ */
 const setValue = async (env, setting) => {
     const postAPI = postEnvOptions[env]
 
+    // SET API expects a json body payload like this
     var postOptions = {
         method: 'POST',
         followAllRedirects: true,
@@ -123,6 +143,7 @@ const setValue = async (env, setting) => {
         }
     }
 
+    // call SET API with new value
     return new Promise((resolve, reject) => {
         request({ ...postAPI, ...postOptions }, (err, res) => {
             const errors = getErrors(err, res)
@@ -132,15 +153,23 @@ const setValue = async (env, setting) => {
     })
 }
 
+/**
+ * gets old value and sets a new RPM Admin value via API call
+ * @param {String} env 
+ * @param {{key: string, value: string, comments: string}} setting 
+ * @returns {Promise<{env: string, setting: {key: string, value: string, comments: string[], previous: string}}|Error>}
+ */
 const getAndSetValue = async (env, setting) => {
     const getAPI = getEnvOptions[env]
 
+    // GET API expects a query string with the key
     var getOptions = {
         method: 'GET',
         followAllRedirects: true,
         qs: { key: setting.key }
     }
 
+    // call GET API with key
     return new Promise((resolve, reject) => {
         request({ ...getAPI, ...getOptions }, (err, res, body) => {
             const prevVal = JSON.parse(body)?.system_configuration?.value
@@ -162,6 +191,12 @@ const getAndSetValue = async (env, setting) => {
     })
 }
 
+/**
+ * Creates a list of request errors if present
+ * @param {*} err - An error thrown during call to API
+ * @param {*} res - Response object from call to API
+ * @returns {String[]}
+ */
 const getErrors = (err, res) => {
     const errors = []
     if (err) errors.push(err)
@@ -169,4 +204,5 @@ const getErrors = (err, res) => {
     if (!String(res.statusCode).startsWith('2')) errors.push(`Invalid status ${res.statusCode}`)
     return errors
 }
+
 run()

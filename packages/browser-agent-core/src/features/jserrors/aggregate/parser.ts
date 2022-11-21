@@ -40,6 +40,7 @@ export function parseError(
       name: parseClassName(eventEmitter, error),
       message: parseErrorMessage(eventEmitter, error),
       stack,
+      hash: stringHashCode(canonicalStack as string)
     };
 
     if (
@@ -49,10 +50,6 @@ export function parseError(
     ) {
       parsedError.message = (parsedError.message as any).toString();
     }
-
-    parsedError.hash = stringHashCode(
-      `${parsedError.name}_${parsedError.message}_${canonicalStack}`
-    );
 
     // Uncomment the below lines to debug tests cases
     // The column number may regularly change with code changes to the agent
@@ -212,10 +209,8 @@ export function parseStackTrace(
 
     if (typeof error.column === "number") {
       stack += `:${error.column}`;
-      canonicalStack += `:${error.column}`;
     } else if (typeof error.columnNumber === "number") {
       stack += `:${error.columnNumber}`;
-      canonicalStack += `:${error.columnNumber}`;
     }
 
     return { stack, canonicalStack };
@@ -308,9 +303,6 @@ function canonicalizeStackFrame(stackFrame: NrErrorStackTraceFrame): string {
   }
   if (typeof stackFrame.line === "number") {
     stringBuilder += `:${stackFrame.line}`;
-  }
-  if (typeof stackFrame.column === "number") {
-    stringBuilder += `:${stackFrame.column}`;
   }
 
   return stringBuilder;

@@ -8,7 +8,7 @@
     "column": 16,
     "stack": "errorTest@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:60:16\ncaptureError@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:11\nonload@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:57:17",
     "code": 18,
-    "expectedHash": 1145032430
+    "expectedHash": 89984716
   },
   {
     "toString": "RangeError: Maximum call stack size exceeded.",
@@ -18,7 +18,7 @@
     "line": 66,
     "column": 17,
     "stack": "loop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17\nloop@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:66:17",
-    "expectedHash": -686114223
+    "expectedHash": -166003830
   },
   {
     "toString": "RangeError: Invalid array length",
@@ -28,7 +28,7 @@
     "line": 74,
     "column": 8,
     "stack": "errorTest@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:74:8\ncaptureError@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:11\nonload@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:70:17",
-    "expectedHash": -2116498809
+    "expectedHash": -1112108250
   },
   {
     "toString": "SyntaxError: JSON Parse error: Unexpected comma at the end of array expression",
@@ -38,7 +38,7 @@
     "line": 79,
     "column": 17,
     "stack": "parse@[native code]\nerrorTest@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:79:17\ncaptureError@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:11\nonload@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:76:17",
-    "expectedHash": 1910070644
+    "expectedHash": -1897402575
   },
   {
     "toString": "TypeError: x is not a function. (In 'x('foo')', 'x' is 0)",
@@ -48,7 +48,7 @@
     "line": 85,
     "column": 8,
     "stack": "errorTest@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:85:8\ncaptureError@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:11\nonload@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:81:17",
-    "expectedHash": -121656935
+    "expectedHash": -125037722
   },
   {
     "toString": "URIError: String contained an illegal UTF-16 sequence.",
@@ -58,7 +58,7 @@
     "line": 90,
     "column": 16,
     "stack": "encodeURI@[native code]\nerrorTest@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:90:16\ncaptureError@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:11\nonload@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:87:17",
-    "expectedHash": 2115596416
+    "expectedHash": 945392518
   },
   {
     "toString": "ReferenceError: Can't find variable: undefinedVariable",
@@ -68,7 +68,7 @@
     "line": 95,
     "column": 32,
     "stack": "errorTest@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:95:32\ncaptureError@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:11\nonload@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:92:17",
-    "expectedHash": 66492879
+    "expectedHash": 160098213
   },
   {
     "toString": "Error: This is a test",
@@ -78,16 +78,16 @@
     "line": 102,
     "column": 28,
     "stack": "@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:102:28\n@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:103:13\n@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:104:11\nerrorTest@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:105:9\ncaptureError@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:11\nonload@http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:97:17",
-    "expectedHash": 2018910055
+    "expectedHash": 782547917
   },
   {
     "toString": "This is a test error string",
     "constructor": "function String() {\n    [native code]\n}",
-    "expectedHash": 1976809675
+    "expectedHash": 950227458
   },
   {
     "toString": "0",
     "constructor": "function Number() {\n    [native code]\n}",
-    "expectedHash": -1745775609
+    "expectedHash": 950227458
   }
 ]

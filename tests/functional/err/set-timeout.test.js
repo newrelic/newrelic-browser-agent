@@ -31,10 +31,9 @@ testDriver.test('reporting errors from setTimeout callbacks', supported, functio
       message: 'timeout callback',
       stack: [{
         u: router.assetURL('js/set-timeout-error.js').split('?')[0],
-        l: 9,
-        c: 11
+        l: 9
       },{
-        f: 'u', u: '<inline>', l: 12, c: 42290
+        f: 'u', u: '<inline>', l: 12
       }]
     }]
 

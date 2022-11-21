@@ -166,25 +166,25 @@ export class Aggregate extends FeatureBase {
       releaseIds: stringify(getRuntime(this.agentIdentifier).releaseIds),
     };
 
+    const bucketingHash = stringHashCode(`${parsedError.name}_${parsedError.message}_${parsedError.stack}`);
+
     /**
      * If the error is identical to one reported in a previous harvest, send
      * browser_stack_hash instead of stack_trace and pageview.
      */
-    if (this.stackReported.has(errorParams.stackHash as number)) {
-      errorParams.browser_stack_hash = stringHashCode(
-        this.truncateSize(parsedError.stack)
-      );
+    if (this.stackReported.has(bucketingHash)) {
+      errorParams.browser_stack_hash = stringHashCode(parsedError.stack as string)
     } else if (errorParams.stackHash) {
       errorParams.stack_trace = this.truncateSize(parsedError.stack);
       errorParams.pageview = 1;
-      this.stackReported.add(errorParams.stackHash);
+      this.stackReported.add(bucketingHash);
     }
 
     // stn and spa aggregators listen to this event - stn sends the error in its payload,
     // and spa annotates the error with interaction info
     handle(
       "errorAgg",
-      [type, parsedError.hash, errorParams, errorMetrics],
+      [type, bucketingHash, errorParams, errorMetrics],
       undefined,
       undefined,
       this.ee
@@ -199,7 +199,7 @@ export class Aggregate extends FeatureBase {
 
       (this.errorCache.get(errorParams._interactionId) || []).push([
         type,
-        parsedError.hash as number,
+        bucketingHash,
         errorParams as NrErrorParams,
         errorMetrics,
         customAttributes,
@@ -223,7 +223,7 @@ export class Aggregate extends FeatureBase {
       }
 
       const jsAttributesHash = stringHashCode(stringify(customParams));
-      const aggregateHash = parsedError.hash + ":" + jsAttributesHash;
+      const aggregateHash = bucketingHash + ":" + jsAttributesHash;
       this.aggregator.store(
         type,
         aggregateHash,

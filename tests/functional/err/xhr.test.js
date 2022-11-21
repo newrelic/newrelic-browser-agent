@@ -33,8 +33,8 @@ testDriver.test('reporting errors from XHR callbacks', supported, function (t, b
       name: 'Error',
       message: 'xhr onload',
       stack: [
-        {f: 'XMLHttpRequest.goodxhr', u: xhrJSURL, l: 9, c: 9},
-        {f: 'XMLHttpRequest.u', u: "<inline>", l: 12, c: 42290}
+        {f: 'XMLHttpRequest.goodxhr', u: xhrJSURL, l: 9},
+        {f: 'XMLHttpRequest.u', u: "<inline>", l: 12}
       ]
     }]
 

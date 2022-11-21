@@ -271,7 +271,7 @@ test("given error with stack, and stack doesnt contain column numbers, then stac
   });
   const parsedError = parseError(eventEmitter, agentRuntime, error);
 
-  expect(parsedError.hash).toEqual(7046368);
+  expect(parsedError.hash).toEqual(89984716);
   expect(eventEmitter.emit).not.toHaveBeenCalled();
 });
 
@@ -283,7 +283,7 @@ test("given error with stack, and stack contains chrome eval, then stack should 
   });
   const parsedError = parseError(eventEmitter, agentRuntime, error);
 
-  expect(parsedError.hash).toEqual(-1933345017);
+  expect(parsedError.hash).toEqual(94834675);
   expect(parsedError.stack).toContain("eval");
   expect(eventEmitter.emit).not.toHaveBeenCalled();
 });
@@ -295,7 +295,7 @@ test("given error with stack, and stack contains ie eval, then stack should pars
   });
   const parsedError = parseError(eventEmitter, agentRuntime, error);
 
-  expect(parsedError.hash).toEqual(-1933345017);
+  expect(parsedError.hash).toEqual(94834675);
   expect(parsedError.stack).toContain("Function code");
   expect(eventEmitter.emit).not.toHaveBeenCalled();
 });
@@ -307,7 +307,7 @@ test("given error with stack, and stack anonymous function name, then stack shou
   });
   const parsedError = parseError(eventEmitter, agentRuntime, error);
 
-  expect(parsedError.hash).toEqual(-1933345017);
+  expect(parsedError.hash).toEqual(94834675);
   expect(parsedError.stack).toContain("Function code");
   expect(eventEmitter.emit).not.toHaveBeenCalled();
 });
@@ -319,7 +319,7 @@ test("given error with stack, and stack anonymous function name, then stack shou
   });
   const parsedError = parseError(eventEmitter, agentRuntime, error);
 
-  expect(parsedError.hash).toEqual(-1933345017);
+  expect(parsedError.hash).toEqual(94834675);
   expect(parsedError.stack).toContain("anonymous");
   expect(eventEmitter.emit).not.toHaveBeenCalled();
 });
@@ -332,6 +332,6 @@ test("given error with null sourceUrl, and no stack, and agentRuntime with null 
   });
   const parsedError = parseError(eventEmitter, agentRuntime, error);
 
-  expect(parsedError.hash).toEqual(-1033878164);
+  expect(parsedError.hash).toEqual(57403);
   expect(eventEmitter.emit).not.toHaveBeenCalled();
 });

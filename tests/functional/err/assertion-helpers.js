@@ -13,7 +13,6 @@ function computeExpectedCanonicalStack (expectedStack) {
     if (frame.f) line += `${canonicalFunctionName(frame.f)}@`
     if (frame.u) line += frame.u
     if (frame.l) line += `:${frame.l}`
-    if (frame.c) line += `:${frame.c}`
     return line
   }).join('\n')
 
@@ -70,12 +69,9 @@ function assertExpectedErrors (t, browser, actualErrors, expectedErrors, assetUR
     }
 
     var expectedCanonicalStack = computeExpectedCanonicalStack(expectedStack)
-    var expectedStackHash = stringHashCode(`${expectedError.name}_${expectedError.message}_${expectedCanonicalStack}`)
+    var expectedStackHash = stringHashCode(expectedCanonicalStack)
 
-    if (browser.match("chrome")) {
-      // We cannot assume all browsers will report column numbers the same
-      t.equal(actualError.params.stackHash, expectedStackHash, 'Stack hash for error ' + expectedError.message)
-    }
+    t.equal(actualError.params.stackHash, expectedStackHash, 'Stack hash for error ' + expectedError.message)
 
     t.equal(actualError.params['request_uri'], expectedPath, 'has correct request_uri attribute')
   }

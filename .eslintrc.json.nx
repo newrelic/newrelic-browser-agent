@@ -4,7 +4,7 @@
   "plugins": ["@nrwl/nx"],
   "overrides": [
     {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "files": ["*.ts", "*.js"],
       "rules": {
         "@nrwl/nx/enforce-module-boundaries": [
           "error",
@@ -22,21 +22,28 @@
       }
     },
     {
-      "files": ["*.ts", "*.tsx"],
+      "files": ["*.ts"],
       "extends": ["plugin:@nrwl/nx/typescript"],
       "rules": {}
     },
     {
-      "files": ["*.js", "*.jsx"],
+      "files": ["*.js"],
       "extends": ["plugin:@nrwl/nx/javascript"],
       "rules": {}
     },
     {
-      "files": ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx"],
+      "files": ["*.spec.ts", "*.spec.js", "**/__mocks__/**/*", "**/__tests__/**/*"],
       "env": {
         "jest": true
       },
-      "rules": {}
+      "rules": {
+        "@nrwl/nx/enforce-module-boundaries": [
+          "error",
+          {
+            "enforceBuildableLibDependency": false
+          }
+        ]
+      }
     },
     {
       "files": "*.json",

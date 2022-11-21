@@ -7,20 +7,12 @@ const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
 const { getErrorsFromResponse } = require('../err/assertion-helpers')
 
-// browsers without addEventListener do not support SPA
-// browsers without Error stack are not captured (IE < 10)
-let supported = testDriver.Matcher.withFeature('wrappableAddEventListener')
-  .and(testDriver.Matcher.withFeature('errorStack'))
+let supported = testDriver.Matcher.withFeature('noPhantom')
 
 testDriver.test('error on the initial page load', supported, function (t, browser, router) {
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-initial-page-load.html')
     .then(([rumData, eventData, domData]) => {
-      var p
-      if (browser.hasFeature('reliableFinalHarvest')) {
-        p = clickAndRedirect(browser, router)
-      } else {
-        p = browser.elementByCssSelector('body').click()
-      }
+      var p = clickAndRedirect(browser, router)
 
       return Promise.all([
         Promise.resolve(eventData),
@@ -213,12 +205,7 @@ testDriver.test('string error in custom tracer', supported, function (t, browser
 testDriver.test('errors in discarded SPA interactions', supported, function (t, browser, router) {
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/discarded-interaction.html')
     .then(() => {
-      var p
-      if (browser.hasFeature('reliableFinalHarvest')) {
-        p = clickAndRedirect(browser, router, 200) // wait 200ms because the test page itself waits 100ms before throwing error
-      } else {
-        p = browser.elementByCssSelector('body').click()
-      }
+      var p = clickAndRedirect(browser, router, 200) // wait 200ms because the test page itself waits 100ms before throwing error
       return Promise.all([p, router.expectErrors()])
     })
     .then(([domData, errorData]) => {
@@ -245,12 +232,7 @@ testDriver.test('errors in discarded SPA interactions', supported, function (t, 
 testDriver.test('errors outside of interaction', supported, function (t, browser, router) {
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-nointeraction.html')
     .then(() => {
-      var p
-      if (browser.hasFeature('reliableFinalHarvest')) {
-        p = clickAndRedirect(browser, router, 200) // wait 200ms because the test page itself waits 100ms before throwing error
-      } else {
-        p = browser.elementByCssSelector('body').click()
-      }
+      var p = clickAndRedirect(browser, router, 200) // wait 200ms because the test page itself waits 100ms before throwing error
       return Promise.all([p, router.expectErrors()])
     })
     .then(([domData, errorData]) => {
@@ -294,17 +276,13 @@ testDriver.test('same error in multiple interactions', supported, function (t, b
     })
     .then(result => {
       event2 = result[1]
-      if (browser.hasFeature('reliableFinalHarvest')) {
-        return Promise.all([
-          leavePage(browser, router),
-          router.expectErrors()
-        ])
-          .then(result => {
-            return result[1]
-          })
-      } else {
-        return router.expectErrors()
-      }
+      return Promise.all([
+        leavePage(browser, router),
+        router.expectErrors()
+      ])
+      .then(result => {
+        return result[1]
+      })
     })
     .then(errorData => {
       let interaction1 = querypack.decode(
@@ -354,25 +332,17 @@ function waitForPageLoadAnInitialCalls(browser, router, urlPath) {
 }
 
 function clickPageAndWaitForEventsAndErrors(t, browser, router) {
-  var useRedirect = browser.hasFeature('reliableFinalHarvest')
   return clickPageAndWaitForEvents(t, browser, router)
     .then(eventData => {
-      if (useRedirect) {
-        return Promise.all([
-          // leave page to force final harvest (faster than waiting 60s for errors
-          // to be harvested)
-          leavePage(browser, router),
-          router.expectErrors()
-        ])
-          .then(([domData, errorData]) => {
-            return Promise.resolve([eventData, errorData])
-          })
-      } else {
-        return Promise.all([
-          Promise.resolve(eventData),
-          router.expectErrors()
-        ])
-      }
+      return Promise.all([
+        // leave page to force final harvest (faster than waiting 60s for errors
+        // to be harvested)
+        leavePage(browser, router),
+        router.expectErrors()
+      ])
+      .then(([domData, errorData]) => {
+        return Promise.resolve([eventData, errorData])
+      })
     })
 }
 

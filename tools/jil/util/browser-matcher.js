@@ -109,18 +109,11 @@ features.reliableUnloadEvent = new BrowserMatcher()
   .exclude('ie', '<9')
   .exclude('firefox', '<32')
 
-// For browsers that do not support the sendBeacon API, we fall back to using an image
-// for final harvest. However, some browsers do not make the image source request reliable
-// from the unload event handler.
-features.unreliableImgCallInUnload = new BrowserMatcher()
-  .exclude('*')
-  .include('safari', '10.1')
-  .include('safari', '11.0')
-
 /** DEPRECATED */
 features.addEventListener = new BrowserMatcher()
   .exclude('ie', '<9')
 
+/** DEPRECATED - use noPhantom instead */
 features.wrappableAddEventListener = features.addEventListener
   // Our addEventListener wrapping doesn't work with older versions of Firefox,
   // because in those versions, each descendent of Element gets its own unique
@@ -139,9 +132,6 @@ features.uncaughtErrorObject = new BrowserMatcher()
   .exclude('ie', '<11')
   .exclude('safari', '<10')
   .exclude('edge')
-
-features.errorStack = new BrowserMatcher()
-  .exclude('ie', '<10')
 
 features.setImmediate = new BrowserMatcher()
   .exclude('*', '*')
@@ -231,14 +221,9 @@ features.sendBeacon = new BrowserMatcher()
 features.brokenSendBeacon = new BrowserMatcher()
   .exclude('*')
   .include('safari', '<=12.2')
+  .include('ios', '<13.0')
 
 features.workingSendBeacon = features.sendBeacon.and(features.brokenSendBeacon.inverse())
-
-features.reliableFinalHarvest = features.workingSendBeacon.or(
-  features.sendBeacon.inverse()
-    .and(features.reliableUnloadEvent)
-    .and(features.unreliableImgCallInUnload.inverse())
-)
 
 features.blob = new BrowserMatcher()
   .exclude('ie', '<10')

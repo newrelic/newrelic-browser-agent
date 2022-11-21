@@ -9,8 +9,7 @@ const { fail, getXhrFromResponse } = require('./helpers')
 let reliableUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 let xhrBrowsers = testDriver.Matcher.withFeature('xhr')
 let fetchBrowsers = testDriver.Matcher.withFeature('fetch')
-let sendBeaconBrowsers = testDriver.Matcher.withFeature('sendBeacon')
-let brokenBeaconBrowsers = testDriver.Matcher.withFeature('brokenSendBeacon')
+let workingSendBeacon = testDriver.Matcher.withFeature('workingSendBeacon')
 let xhrSupported = xhrBrowsers.intersect(reliableUnload)
 let fetchSupported = fetchBrowsers.intersect(reliableUnload)
 
@@ -29,7 +28,7 @@ testDriver.test('capturing XHR metrics', xhrSupported, function (t, browser, rou
 
   Promise.all([rumPromise, loadPromise])
     .then(([response]) => {
-      if (sendBeaconBrowsers.match(browser) && !brokenBeaconBrowsers.match(browser)) {
+      if (workingSendBeacon.match(browser)) {
         t.equal(response.req.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
         t.ok(response.body, 'request body should not be empty')
       } else {
@@ -62,7 +61,7 @@ testDriver.test('capturing fetch metrics', fetchSupported, function (t, browser,
 
   Promise.all([rumPromise, loadPromise])
     .then(([response]) => {
-      if (sendBeaconBrowsers.match(browser) && !brokenBeaconBrowsers.match(browser)) {
+      if (workingSendBeacon.match(browser)) {
         t.equal(response.req.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
         t.ok(response.body, 'request body should not be empty')
       } else {

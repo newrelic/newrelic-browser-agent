@@ -7,14 +7,9 @@ const testDriver = require('../../../tools/jil/index')
 const { getErrorsFromResponse } = require('./assertion-helpers')
 
 let notSafariWithSeleniumBug = testDriver.Matcher.withFeature('notSafariWithSeleniumBug')
-let reliableFinalHarvestFeature = testDriver.Matcher.withFeature('reliableFinalHarvest')
-  .and(notSafariWithSeleniumBug)
-let eventListenerFeature = testDriver.Matcher.withFeature('addEventListener')
-let errorStackFeature = testDriver.Matcher.withFeature('errorStack')
-let supportedWithSpa = reliableFinalHarvestFeature.and(eventListenerFeature).and(errorStackFeature)
 
-runTests('full', reliableFinalHarvestFeature)
-runTests('spa', supportedWithSpa)
+runTests('full', notSafariWithSeleniumBug)
+runTests('spa', notSafariWithSeleniumBug)
 
 const init = {
   metrics: {
@@ -240,7 +235,7 @@ function runTests(loader, supported) {
   })
 }
 
-testDriver.test('initial load interaction: simple case - single error', supportedWithSpa, function (t, browser, router) {
+testDriver.test('initial load interaction: simple case - single error', notSafariWithSeleniumBug, function (t, browser, router) {
   let url = router.assetURL('js-error-set-attribute-before-load.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
@@ -268,7 +263,7 @@ testDriver.test('initial load interaction: simple case - single error', supporte
   }
 })
 
-testDriver.test('initial load interaction: muliple errors - different attribute values', supportedWithSpa, function (t, browser, router) {
+testDriver.test('initial load interaction: muliple errors - different attribute values', notSafariWithSeleniumBug, function (t, browser, router) {
   let url = router.assetURL('js-error-multiple-set-attribute-before-load.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
@@ -298,7 +293,7 @@ testDriver.test('initial load interaction: muliple errors - different attribute 
   }
 })
 
-testDriver.test('click interaction: simple case - single error', supportedWithSpa, function (t, browser, router) {
+testDriver.test('click interaction: simple case - single error', notSafariWithSeleniumBug, function (t, browser, router) {
   let url = router.assetURL('js-error-set-attribute-on-click.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
@@ -329,7 +324,7 @@ testDriver.test('click interaction: simple case - single error', supportedWithSp
   }
 })
 
-testDriver.test('click interaction: multiple errors - different attribute values', supportedWithSpa, function (t, browser, router) {
+testDriver.test('click interaction: multiple errors - different attribute values', notSafariWithSeleniumBug, function (t, browser, router) {
   let url = router.assetURL('js-error-multiple-set-attribute-on-click.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
@@ -362,7 +357,7 @@ testDriver.test('click interaction: multiple errors - different attribute values
   }
 })
 
-testDriver.test('click interaction: attributes captured in discarded interaction are still collected', supportedWithSpa, function (t, browser, router) {
+testDriver.test('click interaction: attributes captured in discarded interaction are still collected', notSafariWithSeleniumBug, function (t, browser, router) {
   let url = router.assetURL('js-error-set-attribute-on-discarded.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
@@ -393,7 +388,7 @@ testDriver.test('click interaction: attributes captured in discarded interaction
   }
 })
 
-testDriver.test('global and interaction attributes on same error', supportedWithSpa, function (t, browser, router) {
+testDriver.test('global and interaction attributes on same error', notSafariWithSeleniumBug, function (t, browser, router) {
   let url = router.assetURL('js-error-global-and-interaction-attributes-on-same-error.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
@@ -422,7 +417,7 @@ testDriver.test('global and interaction attributes on same error', supportedWith
   }
 })
 
-testDriver.test('setAttribute takes precedence over setCustomAttribute', supportedWithSpa, function (t, browser, router) {
+testDriver.test('setAttribute takes precedence over setCustomAttribute', notSafariWithSeleniumBug, function (t, browser, router) {
   let url = router.assetURL('js-error-attribute-precedence.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
@@ -450,7 +445,7 @@ testDriver.test('setAttribute takes precedence over setCustomAttribute', support
   }
 })
 
-testDriver.test('noticeError takes precedence over setAttribute', supportedWithSpa, function (t, browser, router) {
+testDriver.test('noticeError takes precedence over setAttribute', notSafariWithSeleniumBug, function (t, browser, router) {
   let url = router.assetURL('js-error-noticeerror-precedence.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)
@@ -478,7 +473,7 @@ testDriver.test('noticeError takes precedence over setAttribute', supportedWithS
   }
 })
 
-testDriver.test('noticeError takes precedence over setAttribute in discarded interactions', supportedWithSpa, function (t, browser, router) {
+testDriver.test('noticeError takes precedence over setAttribute in discarded interactions', notSafariWithSeleniumBug, function (t, browser, router) {
   let url = router.assetURL('js-error-noticeerror-precedence-discarded.html', { init, loader: 'spa' })
 
   let loadPromise = browser.get(url)

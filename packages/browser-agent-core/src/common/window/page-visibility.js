@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {eventListenerOpts} from '../event-listener/event-listener-opts'
+import {documentAddEventListener} from '../event-listener/event-listener-opts'
 
 /**
  * @param {function} cb - called when a visibility change occurs with the vis state at that time
@@ -11,7 +11,7 @@ import {eventListenerOpts} from '../event-listener/event-listener-opts'
  * @returns void
  */
 export function subscribeToVisibilityChange(cb, toHiddenOnly = false) {
-  document.addEventListener('visibilitychange', handleVisibilityChange, eventListenerOpts(false));
+  documentAddEventListener('visibilitychange', handleVisibilityChange);
   return;
 
   function handleVisibilityChange() {

@@ -1,21 +1,16 @@
-import { eventListenerOpts } from '../event-listener/event-listener-opts'
-import { isBrowserWindow } from './win'
-
-const win = isBrowserWindow && window
-const doc = win && win.document
-const ADD_EVENT_LISTENER = 'addEventListener'
+import { windowAddEventListener, documentAddEventListener } from '../event-listener/event-listener-opts'
 
 function checkState (cb) {
-  if (!doc || doc.readyState === 'complete') return cb() || true
+  if (!document || document.readyState === 'complete') return cb() || true
 }
 
 export function onWindowLoad(cb) {
   if (checkState(cb)) return
-  win[ADD_EVENT_LISTENER]('load', cb, eventListenerOpts(false));
+  windowAddEventListener('load', cb);
 }
 
 export function onDOMContentLoaded(cb) {
   if (checkState(cb)) return
-  doc[ADD_EVENT_LISTENER]('DOMContentLoaded', cb, eventListenerOpts(false));
+  documentAddEventListener('DOMContentLoaded', cb);
 }
 

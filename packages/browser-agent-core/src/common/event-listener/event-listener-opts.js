@@ -20,3 +20,7 @@ export function eventListenerOpts(useCapture) {
 export function windowAddEventListener(event, listener) {
   window.addEventListener(event, listener, eventListenerOpts(false));
 }
+/** Do not use this within the worker context. */
+export function documentAddEventListener(event, listener) {
+  document.addEventListener(event, listener, eventListenerOpts(false));
+}

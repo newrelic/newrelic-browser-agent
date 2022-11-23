@@ -6,8 +6,6 @@
 const testDriver = require('../../../tools/jil/index')
 const {validatePageActionData, fail} = require('./ins-internal-help.cjs')
 
-let workingSendBeacon = testDriver.Matcher.withFeature('workingSendBeacon')
-
 testDriver.test('PageAction submission', function (t, browser, router) {
   let url = router.assetURL('instrumented.html')
 
@@ -96,17 +94,11 @@ testDriver.test('PageAction submission on final harvest', function (t, browser, 
     .then(({req, query, body}) => {
       let insData
 
-      if (workingSendBeacon.match(browser)) {
-        t.ok(body, 'second PageAction POST has non-empty body')
-        insData = JSON.parse(body).ins
-        t.equal(req.method, 'POST', 'final PageAction submission should be a POST')
-        t.notOk(query.ins, 'query string does not include ins parameter')
-        t.ok(insData, 'POST body is not empty')
-      } else {
-        insData = JSON.parse(query.ins)
-        t.equal(req.method, 'GET', 'final PageAction submission should be a GET')
-        t.ok(insData, 'has ins query string parameter')
-      }
+      t.ok(body, 'second PageAction POST has non-empty body')
+      insData = JSON.parse(body).ins
+      t.equal(req.method, 'POST', 'final PageAction submission should be a POST')
+      t.notOk(query.ins, 'query string does not include ins parameter')
+      t.ok(insData, 'POST body is not empty')
 
       validatePageActionData(t, insData, query)
 

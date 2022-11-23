@@ -10,7 +10,6 @@ const BrowserMatcher = testDriver.Matcher
 let stnSupported = testDriver.Matcher.withFeature('stn')
 
 let notSafariWithSeleniumBug = testDriver.Matcher.withFeature('notSafariWithSeleniumBug')
-
 let workingSendBeacon = testDriver.Matcher.withFeature('workingSendBeacon')
   .and(notSafariWithSeleniumBug)
 
@@ -23,8 +22,98 @@ let excludeUnreliableResourcesHarvest = new BrowserMatcher()
 
 let doNotSupportWaitForConditionInBrowser = new BrowserMatcher()
   .exclude('safari', '<=10.0')
-
 let reliableResourcesHarvest = workingSendBeacon.and(excludeUnreliableResourcesHarvest)
+let reliablePageUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
+
+/** iOS is still shaky while on 'pagehide' callback. "reliablePageUnload" may be needed if it fails this test file too often.
+ *  In the future, removing 'pagehide' listener and relying on visibilitychange alone may yield higher success.
+ */
+testDriver.test('final harvest happens on page unload -- new unload BFC work', function (t, browser, router) {
+  let url = router.assetURL('final-harvest.html', {
+    init: {
+      allow_bfcache: true,
+      page_view_timing: {
+        enabled: false
+      },
+      metrics: {
+        enabled: false
+      }
+    }
+  })
+
+  let loadPromise = browser.safeGet(url).catch(fail(t))
+  let rumPromise = router.expectRum()
+
+  Promise.all([rumPromise, loadPromise])
+    .then(() => {
+      t.equal(router.seenRequests.ins, 0, 'no ins harvest yet')
+      t.equal(router.seenRequests.errors, 0, 'no err harvest yet')
+
+      let insPromise = router.expectIns()
+      let errPromise = router.expectErrors()
+      let loadPromise2 = browser
+        .safeEval('newrelic.addPageAction("hello", { a: 1 })')
+        .safeEval('newrelic.noticeError("test")')
+        .get(router.assetURL('/')); // test that navigation away aka redirect triggers final harvest
+
+      return Promise.all([insPromise, errPromise, loadPromise2]).then((respArr) => {
+        return respArr
+      })
+    })
+    .then(() => {
+      t.equal(router.seenRequests.ins, 1, 'received one ins harvest')
+      t.equal(router.seenRequests.errors, 1, 'received one err harvest')
+      t.end();
+    })
+    .catch(fail(t))
+})
+/** iOS or mobile doesn't like the way the (wd) new tab is driven, so this test almost always timeout for iOS. Can reassess with webdriveio later. */
+testDriver.test('final harvest happens on doc hide -- new unload BFC work', reliablePageUnload, function (t, browser, router) {
+  let url = router.assetURL('final-harvest.html', {
+    init: {
+      allow_bfcache: true,
+      page_view_timing: {
+        enabled: false
+      },
+      metrics: {
+        enabled: false
+      }
+    }
+  })
+
+  let loadPromise = browser.safeGet(url).catch(fail(t))
+  let rumPromise = router.expectRum()
+
+  Promise.all([rumPromise, loadPromise])
+    .then(() => {
+      t.equal(router.seenRequests.ins, 0, 'no ins harvest yet')
+      t.equal(router.seenRequests.errors, 0, 'no err harvest yet')
+
+      let insPromise = router.expectIns()
+      let errPromise = router.expectErrors()
+      let loadPromise2 = browser
+        .safeEval('newrelic.addPageAction("hello", { a: 1 })')
+        .safeEval('newrelic.noticeError("test")')
+        .newWindow(router.assetURL('/'), 'newTab'); // test that opening new tab aka page becoming hidden triggers final harvest too
+
+      return Promise.all([insPromise, errPromise, loadPromise2]).then((respArr) => {
+        return respArr
+      })
+    })
+    .then(() => {
+      t.equal(router.seenRequests.ins, 1, 'received one ins harvest')
+      t.equal(router.seenRequests.errors, 1, 'received one err harvest')
+      t.end();
+    })
+    .catch(fail(t))
+})
+
+function fail(t, err) {
+  return (err) => {
+    t.error(err)
+    t.end()
+  }
+}
 
 testDriver.test('final harvest sends page action', workingSendBeacon, function (t, browser, router) {
   let url = router.assetURL('final-harvest.html', {
@@ -35,7 +124,7 @@ testDriver.test('final harvest sends page action', workingSendBeacon, function (
     }
   })
 
-  let loadPromise = browser.safeGet(url).catch(fail)
+  let loadPromise = browser.safeGet(url).catch(fail(t))
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise])
@@ -56,12 +145,7 @@ testDriver.test('final harvest sends page action', workingSendBeacon, function (
       t.equal(router.seenRequests.ins, 1, 'received one ins harvest')
       t.end()
     })
-    .catch(fail)
-
-  function fail(err) {
-    t.error(err)
-    t.end()
-  }
+    .catch(fail(t))
 })
 
 testDriver.test('final harvest sends pageHide if not already recorded', workingSendBeacon, function (t, browser, router) {

@@ -32,7 +32,8 @@ export function subscribeToEOL (cb, allowBFCache) {
 
     if (allowBFCache) {
       subscribeToVisibilityChange(oneCall, true); // when user switches tab or hides window, esp. mobile scenario
-      windowAddEventListener('pagehide', oneCall);  // when user navigates away, and because safari v14.5- doesn't support vis change
+      windowAddEventListener('pagehide', oneCall);  // when user navigates away, and because safari iOS v14.4- doesn't fully support vis change
+                                                    // --this ought to be removed once support for version below 14.5 phases out 
     } else {
       // Firefox has a bug wherein a slow-loading resource loaded from the 'pagehide'
       // or 'unload' event will delay the 'load' event firing on the next page load.

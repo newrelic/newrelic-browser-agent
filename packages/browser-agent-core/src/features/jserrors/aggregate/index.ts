@@ -10,6 +10,7 @@ import { handle } from "../../../common/event-emitter/handle";
 import { getInfo } from "../../../common/config/state/info";
 import {
   NrErrorBody,
+  NrErrorCacheItem,
   NrErrorMetrics,
   NrErrorParams,
 } from "./aggregate-interfaces";
@@ -24,16 +25,7 @@ export class Aggregate extends FeatureBase {
    * for processing once the interaction completes (onInteractionSaved) or
    * fails (onInteractionDiscarded).
    */
-  private readonly errorCache = new Map<
-    number,
-    [
-      "err" | "ierr",
-      number,
-      NrErrorParams,
-      NrErrorMetrics,
-      Record<string, unknown>
-    ][]
-  >();
+  private readonly errorCache = new Map<number, NrErrorCacheItem[]>();
 
   /**
    * Instance level cache to hold the hash of errors already seen on the current
@@ -89,7 +81,10 @@ export class Aggregate extends FeatureBase {
   }
 
   private onHarvestStarted(options: any) {
-    const body = this.aggregator.take(["err", "ierr"]);
+    const body: {
+      err: NrErrorBody[];
+      ierr: NrErrorBody[];
+    } = this.aggregator.take(["err", "ierr"]);
 
     if (options.retry) {
       this.currentBody = body;
@@ -166,14 +161,18 @@ export class Aggregate extends FeatureBase {
       releaseIds: stringify(getRuntime(this.agentIdentifier).releaseIds),
     };
 
-    const bucketingHash = stringHashCode(`${parsedError.name}_${parsedError.message}_${parsedError.stack}`);
+    const bucketingHash = stringHashCode(
+      `${parsedError.name}_${parsedError.message}_${parsedError.stack}`
+    );
 
     /**
      * If the error is identical to one reported in a previous harvest, send
      * browser_stack_hash instead of stack_trace and pageview.
      */
     if (this.stackReported.has(bucketingHash)) {
-      errorParams.browser_stack_hash = stringHashCode(parsedError.stack as string)
+      errorParams.browser_stack_hash = stringHashCode(
+        parsedError.stack as string
+      );
     } else if (errorParams.stackHash) {
       errorParams.stack_trace = this.truncateSize(parsedError.stack);
       errorParams.pageview = 1;
@@ -197,7 +196,9 @@ export class Aggregate extends FeatureBase {
         this.errorCache.set(errorParams._interactionId, []);
       }
 
-      (this.errorCache.get(errorParams._interactionId) || []).push([
+      (
+        this.errorCache.get(errorParams._interactionId) as NrErrorCacheItem[]
+      ).push([
         type,
         bucketingHash,
         errorParams as NrErrorParams,
@@ -239,45 +240,47 @@ export class Aggregate extends FeatureBase {
       return;
     }
 
-    (this.errorCache.get(interaction.id) || []).forEach((item) => {
-      const customParams = {};
-      const localCustomParams = item[4];
+    (this.errorCache.get(interaction.id) as NrErrorCacheItem[]).forEach(
+      (item) => {
+        const customParams = {};
+        const localCustomParams = item[4];
 
-      Object.keys(interaction.root.attrs.custom).forEach((key) => {
-        const val = interaction.root.attrs.custom[key];
-        customParams[key] =
-          val && typeof val === "object" ? stringify(val) : val;
-      });
-
-      if (localCustomParams) {
-        Object.keys(localCustomParams).forEach((key) => {
-          const val = localCustomParams[key];
+        Object.keys(interaction.root.attrs.custom).forEach((key) => {
+          const val = interaction.root.attrs.custom[key];
           customParams[key] =
             val && typeof val === "object" ? stringify(val) : val;
         });
+
+        if (localCustomParams) {
+          Object.keys(localCustomParams).forEach((key) => {
+            const val = localCustomParams[key];
+            customParams[key] =
+              val && typeof val === "object" ? stringify(val) : val;
+          });
+        }
+
+        const params = item[2];
+        params.browserInteractionId = interaction.root.attrs.id;
+        params._interactionId = undefined;
+
+        if (params._interactionNodeId) {
+          params.parentNodeId = params._interactionNodeId.toString();
+          params._interactionNodeId = undefined;
+        }
+
+        const hash = item[1] + interaction.root.attrs.id;
+        const jsAttributesHash = stringHashCode(stringify(customParams));
+        const aggregateHash = hash + ":" + jsAttributesHash;
+
+        this.aggregator.store(
+          item[0],
+          aggregateHash,
+          params,
+          item[3],
+          customParams
+        );
       }
-
-      const params = item[2];
-      params.browserInteractionId = interaction.root.attrs.id;
-      params._interactionId = undefined;
-
-      if (params._interactionNodeId) {
-        params.parentNodeId = params._interactionNodeId.toString();
-        params._interactionNodeId = undefined;
-      }
-
-      const hash = item[1] + interaction.root.attrs.id;
-      const jsAttributesHash = stringHashCode(stringify(customParams));
-      const aggregateHash = hash + ":" + jsAttributesHash;
-
-      this.aggregator.store(
-        item[0],
-        aggregateHash,
-        params,
-        item[3],
-        customParams
-      );
-    });
+    );
 
     this.errorCache.delete(interaction.id);
   }
@@ -287,40 +290,42 @@ export class Aggregate extends FeatureBase {
       return;
     }
 
-    (this.errorCache.get(interaction.id) || []).forEach((item) => {
-      const customParams = {};
-      const localCustomParams = item[4];
+    (this.errorCache.get(interaction.id) as NrErrorCacheItem[]).forEach(
+      (item) => {
+        const customParams = {};
+        const localCustomParams = item[4];
 
-      Object.keys(interaction.root.attrs.custom).forEach((key) => {
-        const val = interaction.root.attrs.custom[key];
-        customParams[key] =
-          val && typeof val === "object" ? stringify(val) : val;
-      });
-
-      if (localCustomParams) {
-        Object.keys(localCustomParams).forEach((key) => {
-          const val = localCustomParams[key];
+        Object.keys(interaction.root.attrs.custom).forEach((key) => {
+          const val = interaction.root.attrs.custom[key];
           customParams[key] =
             val && typeof val === "object" ? stringify(val) : val;
         });
+
+        if (localCustomParams) {
+          Object.keys(localCustomParams).forEach((key) => {
+            const val = localCustomParams[key];
+            customParams[key] =
+              val && typeof val === "object" ? stringify(val) : val;
+          });
+        }
+
+        const params = item[2];
+        params._interactionId = undefined;
+        params._interactionNodeId = undefined;
+
+        const hash = item[1];
+        const jsAttributesHash = stringHashCode(stringify(customParams));
+        const aggregateHash = hash + ":" + jsAttributesHash;
+
+        this.aggregator.store(
+          item[0],
+          aggregateHash,
+          item[2],
+          item[3],
+          customParams
+        );
       }
-
-      const params = item[2];
-      params._interactionId = undefined;
-      params._interactionNodeId = undefined;
-
-      const hash = item[1];
-      const jsAttributesHash = stringHashCode(stringify(customParams));
-      const aggregateHash = hash + ":" + jsAttributesHash;
-
-      this.aggregator.store(
-        item[0],
-        aggregateHash,
-        item[2],
-        item[3],
-        customParams
-      );
-    });
+    );
 
     this.errorCache.delete(interaction.id);
   }

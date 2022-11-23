@@ -1,0 +1,12 @@
+[
+  {
+    "toString": "RangeError: Maximum call stack size exceeded.",
+    "name": "RangeError",
+    "constructor": "function RangeError() {\n    [native code]\n}",
+    "message": "Maximum call stack size exceeded.",
+    "line": 5,
+    "column": 16,
+    "stack": "foo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@\nfoo@",
+    "expectedHash": -1659445059
+  }
+]

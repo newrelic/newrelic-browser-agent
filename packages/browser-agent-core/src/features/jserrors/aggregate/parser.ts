@@ -40,7 +40,7 @@ export function parseError(
       name: parseClassName(eventEmitter, error),
       message: parseErrorMessage(eventEmitter, error),
       stack,
-      hash: stringHashCode(canonicalStack as string)
+      hash: stringHashCode(canonicalStack as string),
     };
 
     if (
@@ -168,10 +168,12 @@ export function parseStackTrace(
         canonicalStackLines.push(canonicalizeStackFrame(parsedStackLine));
       }
 
-      return {
-        stack: stackLines.join("\n"),
-        canonicalStack: canonicalStackLines.join("\n"),
-      };
+      if (canonicalStackLines.length > 0) {
+        return {
+          stack: stackLines.join("\n"),
+          canonicalStack: canonicalStackLines.join("\n"),
+        };
+      }
     }
 
     // If the error does not contain a stack trace, try other methods of parsing

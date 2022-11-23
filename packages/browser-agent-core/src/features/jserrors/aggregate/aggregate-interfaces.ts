@@ -88,3 +88,11 @@ export interface NrErrorBody {
   metrics?: Record<string, any>;
   params: NrErrorParams;
 }
+
+export type NrErrorCacheItem = [
+  "err" | "ierr",
+  number,
+  NrErrorParams,
+  NrErrorMetrics,
+  Record<string, unknown>
+];

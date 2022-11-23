@@ -37,6 +37,7 @@
         "jest": true
       },
       "rules": {
+        "@typescript-eslint/no-var-requires": "off",
         "@nrwl/nx/enforce-module-boundaries": [
           "error",
           {

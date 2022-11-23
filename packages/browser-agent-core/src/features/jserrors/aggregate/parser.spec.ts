@@ -6,6 +6,7 @@ import * as ie11Errors from "@newrelic/browser-agent-test-utils/src/browser-erro
 import * as safari14Errors from "@newrelic/browser-agent-test-utils/src/browser-errors/data/safari-v14.json";
 import * as safari15Errors from "@newrelic/browser-agent-test-utils/src/browser-errors/data/safari-v15.json";
 import * as safari16Errors from "@newrelic/browser-agent-test-utils/src/browser-errors/data/safari-v16.json";
+import * as safari16WorkerErrors from "@newrelic/browser-agent-test-utils/src/browser-errors/data/safari-v16-worker.json";
 import { constructError } from "@newrelic/browser-agent-test-utils/src/browser-errors/error-constructor";
 import { parseError } from "./parser";
 import { faker } from "@faker-js/faker";
@@ -110,6 +111,17 @@ test.each(safari16Errors.map((err, index) => [index, err]))(
   }
 );
 
+test.each(safari16WorkerErrors.map((err, index) => [index, err]))(
+  "given safari v16 worker error (index: %d), then parser should properly produce hash",
+  (_, browserError: Record<string, string | number | undefined>) => {
+    const error = constructError(browserError);
+    const parsedError = parseError(eventEmitter, agentRuntime, error);
+
+    expect(parsedError.hash).toEqual(browserError["expectedHash"]);
+    expect(eventEmitter.emit).not.toHaveBeenCalled();
+  }
+);
+
 test("given error without name or constructor, then parsed name should be unknown", () => {
   const error = constructError({
     ...chromeEdge98Errors[0],
@@ -180,11 +192,7 @@ test('given error without stack, and without sourceUrl, then parsed stack should
 });
 
 test("given error without stack, and containing line, then parsed stack should contain line number", () => {
-  const lineNumber = faker.datatype.number({
-    min: 100,
-    max: 1000,
-    precision: 0,
-  });
+  const lineNumber = faker.datatype.number();
   const error = constructError({
     line: lineNumber,
     toString: "0",
@@ -197,11 +205,7 @@ test("given error without stack, and containing line, then parsed stack should c
 });
 
 test("given error without stack, and containing lineNumber, then parsed stack should contain line number", () => {
-  const lineNumber = faker.datatype.number({
-    min: 100,
-    max: 1000,
-    precision: 0,
-  });
+  const lineNumber = faker.datatype.number();
   const error = constructError({
     lineNumber,
     toString: "0",
@@ -214,11 +218,7 @@ test("given error without stack, and containing lineNumber, then parsed stack sh
 });
 
 test("given error without stack, and containing column, then parsed stack should contain column number", () => {
-  const columnNumber = faker.datatype.number({
-    min: 100,
-    max: 1000,
-    precision: 0,
-  });
+  const columnNumber = faker.datatype.number();
   const error = constructError({
     column: columnNumber,
     toString: "0",
@@ -231,11 +231,7 @@ test("given error without stack, and containing column, then parsed stack should
 });
 
 test("given error without stack, and containing columnNumber, then parsed stack should contain column number", () => {
-  const columnNumber = faker.datatype.number({
-    min: 100,
-    max: 1000,
-    precision: 0,
-  });
+  const columnNumber = faker.datatype.number();
   const error = constructError({
     columnNumber,
     toString: "0",

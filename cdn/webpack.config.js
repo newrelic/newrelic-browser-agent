@@ -64,6 +64,28 @@ console.log("MAP_PATH", MAP_PATH)
 console.log("IS_LOCAL", IS_LOCAL)
 if (PR_NAME) console.log("PR_NAME", PR_NAME)
 
+
+const standardBabelPreset = ['@babel/preset-env', {
+  targets: {
+    browsers: [
+      "last 10 Chrome versions",
+      "last 10 Safari versions",
+      "last 10 Firefox versions",
+      "last 10 Edge versions"
+    ]
+  }
+}];
+const polyfillBabelPreset = ['@babel/preset-env', {
+  useBuiltIns: 'entry',
+  corejs: { version: 3.23, proposals: true },
+  loose: true,
+  targets: {
+    browsers: [
+      "ie >= 11" // Does not affect webpack's own runtime output; see `target` webpack config property.
+    ]
+  }
+}];
+
 /**
  * Helper for configuring a source map plugin instance with some common properties.
  * @param {string} [filename] - Overrides the standard filename configuration.
@@ -122,9 +144,10 @@ const commonConfig = {
       'WEBPACK_MINOR_VERSION': JSON.stringify(SUBVERSION || ''),
       'WEBPACK_MAJOR_VERSION': JSON.stringify(VERSION || ''),
       'WEBPACK_DEBUG': JSON.stringify(IS_LOCAL || false)
-    })    
+    })
   ],
   resolve: {
+    extensions: [".js", ".json", ".ts"],
     alias: {
       '@newrelic/browser-agent-core/src': path.resolve(__dirname, '../packages/browser-agent-core/src')
     }
@@ -149,18 +172,17 @@ const standardConfig = merge(commonConfig, {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: [
-              ['@babel/preset-env', {
-                targets: {
-                  browsers: [
-                    "last 10 Chrome versions",
-                    "last 10 Safari versions",
-                    "last 10 Firefox versions",
-                    "last 10 Edge versions"
-                  ]
-                }
-              }]
-            ]
+            presets: [standardBabelPreset]
+          }
+        }
+      },
+      {
+        test: /\.ts$/,
+        exclude: /(node_modules)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-typescript', standardBabelPreset]
           }
         }
       }
@@ -193,18 +215,17 @@ const polyfillsConfig = merge(commonConfig, {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: [
-              ['@babel/preset-env', {
-                useBuiltIns: 'entry',
-                corejs: { version: 3.23, proposals: true },
-                loose: true,
-                targets: {
-                  browsers: [
-                    "ie >= 11" // Does not affect webpack's own runtime output; see `target` webpack config property.
-                  ]
-                }
-              }]
-            ]
+            presets: [polyfillBabelPreset]
+          }
+        }
+      },
+      {
+        test: /\.ts$/,
+        exclude: /(node_modules)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-typescript', polyfillBabelPreset]
           }
         }
       }

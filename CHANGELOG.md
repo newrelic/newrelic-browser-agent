@@ -5,6 +5,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## v1221
 
+### Expose webpack library as output type "self" vs. "umd"
+To address "mismatched anonymous define" errors thrown by RequireJS, the agent's webpack library output will no longer include UMD checks for CommonJS and AMD module environments, and will instead be exposed globally via `self`.
+
 ### Update JS error bucketing algorithm
 The Agent will now take into account the error object type and message when deciding on whether multiple JS errors should be bucketed together.
 

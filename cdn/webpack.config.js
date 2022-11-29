@@ -92,7 +92,7 @@ const config = (target) => {
       publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
       library: {
         name: 'NRBA',
-        type: 'umd'
+        type: 'self'
       },
       clean: false
     },

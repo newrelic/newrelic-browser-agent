@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1221
+
+### Ship automated PR builds to internal dev components for comparison with stable build
+Pull requests will now generate and ship a build which gets consumed by NR1 `dev` components
+
 ## v1220
 
 * Internal NR Platform release date: 10/5/2022

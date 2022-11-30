@@ -25,6 +25,7 @@
     "cdn:build:dev": "npm --prefix cdn run build:dev",
     "cdn:build:current": "npm --prefix cdn run build:current",
     "cdn:build:nr": "npm --prefix cdn run build:nr",
+    "cdn:build:pr": "npm --prefix cdn run build:pr",
     "cdn:watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests|cdn' --run -- npm run cdn:build:local",
     "cdn:watch:extension": "jung -D '\\.npm|.git|node_modules|build|tools|tests|cdn' --run -- npm run cdn:build:extension",
     "packages:build": "npm --prefix ./packages run build",
@@ -53,6 +54,7 @@
     "url": "https://github.com/newrelic/newrelic-browser-agent.git"
   },
   "dependencies": {
+    "@actions/core": "^1.10.0",
     "lodash._slice": "^2.4.1"
   },
   "devDependencies": {

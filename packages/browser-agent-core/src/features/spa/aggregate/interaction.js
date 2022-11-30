@@ -45,8 +45,8 @@ var InteractionPrototype = Interaction.prototype
 
 InteractionPrototype.checkFinish = function checkFinish() {
   var interaction = this
- 
-  if (interaction.remaining) {
+
+  if (interaction.remaining > 0) {
     interaction._resetFinishCheck()
     return
   }
@@ -64,7 +64,7 @@ InteractionPrototype.checkFinish = function checkFinish() {
     interaction.checkingFinish = false
     interaction.finishTimer = originalSetTimeout(() => {
       interaction.finishTimer = null
-      if (!interaction.remaining) interaction.finish()
+      if (interaction.remaining <= 0) interaction.finish()
     }, 1)
   }, 0)
 }

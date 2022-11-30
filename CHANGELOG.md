@@ -11,6 +11,9 @@ The Agent will now take into account the error object type and message when deci
 ### Detect Workflow Changes
 PRs will run an action to detect workflow changes for a warning layer against vulnerability.
 
+### Fix initial page load interaction reporting with Nuxt
+Fixed an issue where when using the SPA loader with Nuxt, the initial page load interaction was never being completed. This resulted in events like errors being retained in memory and never harvested because they were tied to an incomplete interaction.
+
 ## v1220
 
 * Internal NR Platform release date: 10/5/2022

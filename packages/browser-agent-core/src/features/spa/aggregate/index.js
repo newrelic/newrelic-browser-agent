@@ -187,7 +187,11 @@ export class Aggregate extends FeatureBase {
         this.prevNode = state.currentNode = null
         if (state.initialPageLoad) {
           eventNode = state.initialPageLoad.root
-          state.initialPageLoad[REMAINING]--
+
+          // Even if initialPageLoad has remaining callbacks, force the initialPageLoad
+          // interaction to complete when the page load event occurs.
+          state.initialPageLoad[REMAINING] = 0
+
           originalSetTimeout(function () {
             INTERACTION_EVENTS.push('popstate')
           })

@@ -702,7 +702,7 @@ class AssetServer extends BaseServer {
     function unitTestTarget(file) {
       let script = `/${path.relative(server.assetsDir, file)}?browserify=true`
       return server.urlFor('/tests/assets/browser.html', {
-        config: new Buffer(JSON.stringify({
+        config: Buffer.from(JSON.stringify({
           assetServerPort: server.router.assetServer.port,
           assetServerSSLPort: server.router.assetServer.sslPort,
           corsServerPort: server.corsServer.port

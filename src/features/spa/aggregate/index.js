@@ -412,12 +412,25 @@ export class Aggregate extends AggregateBase {
     register('newURL', function (url, hashChangedDuringCb) {
       if (state.currentNode) {
         state.currentNode[INTERACTION].setNewURL(url)
-        if (state.lastSeenUrl !== url) {
-          state.currentNode[INTERACTION].routeChange = true
-        }
-        if (hashChangedDuringCb) {
-          state.nodeOnLastHashUpdate = state.currentNode
-        }
+      } else if (state.prevInteraction && !state.prevInteraction.ignored && state.prevInteraction.eventName !== 'api') {
+        /*
+         * The previous interaction was discarded before the route was changed. This can happen in SPA
+         * frameworks when using lazy loading. We have also seen this in version 11+ of Nextjs where
+         * some route changes re-use cached resolved promises.
+         */
+        const interaction = state.prevInteraction
+        state.prevInteraction = null
+        interaction.setNewURL(url)
+        interaction.root.end = null
+
+        setCurrentNode(interaction.root)
+      }
+
+      if (state.lastSeenUrl !== url) {
+        state.currentNode[INTERACTION].routeChange = true
+      }
+      if (hashChangedDuringCb) {
+        state.nodeOnLastHashUpdate = state.currentNode
       }
 
       state.lastSeenUrl = url
@@ -600,6 +613,7 @@ export class Aggregate extends AggregateBase {
     function setCurrentNode(newNode) {
       if (!state.pageLoaded && !newNode && state.initialPageLoad) newNode = state.initialPageLoad.root
       if (state.currentNode) {
+        state.prevInteraction = state.currentNode[INTERACTION]
         state.currentNode[INTERACTION].checkFinish()
       }
 
@@ -680,7 +694,6 @@ export class Aggregate extends AggregateBase {
       baseEE.emit('interactionSaved', [interaction])
       state.interactionsToHarvest.push(interaction)
       scheduler.scheduleHarvest(0)
-
     }
 
     function isEnabled() {

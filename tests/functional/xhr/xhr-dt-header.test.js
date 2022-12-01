@@ -58,7 +58,7 @@ testDriver.test('XHR request on same origin has DT headers', supported, function
       t.ok(headers['newrelic'], 'newrelic header should be present')
 
       // newrelic header
-      let buffer = new Buffer(headers['newrelic'], 'base64')
+      let buffer = Buffer.from(headers['newrelic'], 'base64')
       let text = buffer.toString('ascii')
       let dtPayload = JSON.parse(text)
 

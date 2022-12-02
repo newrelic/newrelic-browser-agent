@@ -9,7 +9,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 To address "mismatched anonymous define" errors thrown by RequireJS, the agent's webpack library output will no longer include UMD checks for CommonJS and AMD module environments, and will instead be exposed globally via `self`.
 
 ### Update JS error bucketing algorithm
-The Agent will now take into account the error object type and message when deciding on whether multiple JS errors should be bucketed together.
+The Agent will now take into account the error object type, message, and original stack trace when deciding on whether multiple JS errors should be bucketed together.
 
 ### Detect Workflow Changes
 PRs will run an action to detect workflow changes for a warning layer against vulnerability.

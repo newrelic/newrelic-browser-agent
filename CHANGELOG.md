@@ -26,6 +26,8 @@ A new release of the Browser Agent will automatically raise a PR to the docs-sit
 ### Preserve unhandledPromiseRejection reasons as human-readable strings in error payloads
 The agent will attempt to preserve unhandledPromiseRejection reasons as human-readable messages on the Error payload that gets harvested. The previous strategy did not always work, because Promise.reject can pass any value, not just strings.
 
+### Fix missing interactions for dynamic routes in Next/React
+Fixed an issue where when using the SPA loader with Next/React, route changes that lazy loaded components would not be captured. While the issue specifically called out Next/React, this should apply to Nuxt/Vue and Angular.
 
 ## v1223
 

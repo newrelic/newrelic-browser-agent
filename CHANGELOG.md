@@ -17,6 +17,11 @@ PRs will run an action to detect workflow changes for a warning layer against vu
 ### Fix initial page load interaction reporting with Nuxt
 Fixed an issue where when using the SPA loader with Nuxt, the initial page load interaction was never being completed. This resulted in events like errors being retained in memory and never harvested because they were tied to an incomplete interaction.
 
+### Fix error with jsPDF library and SPA agent
+Fixed an issue with the jsPDF library where it was not correctly detecting browser native support for Promises due to our wrapper. This resulted in an exception and jsPDF not generating the PDF. This issue is not present with the pro or lite agent.
+
+**Note**: This issue does not affect the pro or lite agent. This change allows the jsPDF library to function correctly when the spa agent is used. However, it does cause an internal error within the agent to be generated. This error does not break the agent, jsPDF, or other functionality. The issue is planned to be addressed in a future update.
+
 ## v1220
 
 * Internal NR Platform release date: 10/5/2022

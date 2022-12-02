@@ -85,6 +85,9 @@ Fixed an issue with the jsPDF library where it was not correctly detecting brows
 ### Ship automated PR builds to internal dev components for comparison with stable build
 Pull requests will now generate and ship a build which gets consumed by NR1 `dev` components
 
+### Fix interactions missing API calls in Angular
+Fixed an issue where when using the SPA loader with Angular, route changes that contained API calls, via Angular resolver, would not capture the xhr/fetch on the interaction. This works with eager and lazy routes in an Angular SPA.
+
 ## v1220
 
 * Internal NR Platform release date: 10/5/2022

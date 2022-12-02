@@ -23,6 +23,9 @@ export function wrapPromise(sharedEE){
   
   function wrap() {
     self.Promise = WrappedPromise
+    Object.defineProperty(self.Promise, 'name', {
+      value: 'Promise'
+    })
   
     ;['all', 'race'].forEach(function (method) {
       var original = OriginalPromise[method]

@@ -15,6 +15,9 @@ module.exports = promiseEE
 if (!OriginalPromise) return
 
 window.Promise = WrappedPromise
+Object.defineProperty(self.Promise, 'name', {
+  value: 'Promise'
+})
 
 ;['all', 'race'].forEach(function (method) {
   var original = OriginalPromise[method]

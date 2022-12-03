@@ -24,7 +24,7 @@
     "multiparty": "^4.1.2",
     "newrelic": "^4.11.0",
     "node-fetch": "^3.2.10",
-    "object-inspect": "^1.5.0",
+    "object-inspect": "^1.12.2",
     "phantomjs-prebuilt": "^2.1.11",
     "preprocessify": "0.0.6",
     "sauce-connect-launcher": "^1.2.4",

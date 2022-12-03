@@ -2,3 +2,19 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 npm run sauce:get-browsers
+git add tools/jil/util/browsers-supported.json
+
+STAGED_FILES=$(git diff-index --cached --name-only HEAD)
+for FILE in $STAGED_FILES
+do
+  if [ $FILE == "package.json" ] || [ $FILE == "package-lock.json" ]; then
+    RUN_THIRD_PARTY=1
+    break
+  fi
+done
+
+if [ -n "$RUN_THIRD_PARTY" ]; then
+  echo "NPM package json or lock file changed, regenerating oss manifest and notices"
+  npm run third-party-updates
+  git add third_party_manifest.json THIRD_PARTY_NOTICES.md
+fi

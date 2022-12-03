@@ -34,6 +34,7 @@
     "sauce:connect": "node ./tools/jil/bin/sauce",
     "sauce:get-browsers": "node ./tools/jil/util/sauce-browsers",
     "tools:test-builds": "npm --prefix ./tools/test-builds/build-time-mfe run build",
+    "third-party-updates": "oss third-party manifest --includeOptDeps && oss third-party notices --includeOptDeps",
     "prepare": "husky install"
   },
   "config": {
@@ -50,7 +51,6 @@
   },
   "dependencies": {
     "core-js": "^3.26.0",
-    "eslint-import-resolver-alias": "^1.1.2",
     "lodash._slice": "^2.4.1"
   },
   "devDependencies": {
@@ -58,6 +58,7 @@
     "@babel/plugin-syntax-dynamic-import": "^7.8.3",
     "@babel/plugin-transform-modules-commonjs": "^7.18.2",
     "@babel/preset-env": "^7.18.2",
+    "@newrelic/newrelic-oss-cli": "^0.1.2",
     "@newrelic/nr-querypack": "https://git@github.com/newrelic/nr-querypack",
     "@nrwl/cli": "^15.0.9",
     "@nrwl/devkit": "^15.0.13",
@@ -80,8 +81,8 @@
     "cors": "^2.7.1",
     "create-polyfill-service-url": "^2.2.6",
     "dotenv-webpack": "^8.0.1",
-    "eslint": "8.8",
-    "eslint-import-resolver-webpack": "^0.13.2",
+    "eslint": "^8.29.0",
+    "eslint-import-resolver-alias": "^1.1.2",
     "eslint-plugin-import": "^2.26.0",
     "glob": "^7.0.5",
     "husky": "^8.0.0",
@@ -115,6 +116,6 @@
     "webpack": "^5.74.0",
     "webpack-bundle-analyzer": "^4.7.0",
     "webpack-cli": "^4.10.0",
-    "yargs": "^3.32.0"
+    "yargs": "^17.6.2"
   }
 }

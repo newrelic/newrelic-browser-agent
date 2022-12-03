@@ -33,7 +33,6 @@
     "no-warning-comments": 0,
     "no-prototype-builtins": "off",
     "getter-return": "warn",
-    "comma-dangle": "error",
     "import/no-unresolved": [
       "error",
       {

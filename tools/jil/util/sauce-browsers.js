@@ -13,9 +13,6 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
     console.log(`fetched ${json.length} browsers from saucelabs`)
     fs.writeFileSync('./tools/jil/util/browsers-supported.json', JSON.stringify(getBrowsers(json), null, 2))
     console.log(`saved saucelabs browsers to browsers-supported.json`)
-    console.log(`-----------------------------------------------`)
-    console.log(`-----------------------------------------------`)
-    console.log('\x1b[43m%s\x1b[0m', 'If browsers-supported.json has updated, please make another commit.');  //yellow
 
 })()
 
@@ -99,7 +96,7 @@ function getBrowsers(sauceBrowsers) {
         }
         if (numOfLatestVersionsSupported(name) == 10)   // in all cases, we only test 5 versions, so trim the array
             latest = getDistributionOfArr(latest, Math.round(latest.length / 2));   // just pick every other version from the list
-        
+
         latest.forEach(b => {
             const metadata = {
                 browserName: mBrowserName(b),

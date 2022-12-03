@@ -13,7 +13,7 @@
     "charm": "^1.0.1",
     "concat-stream": "^1.5.1",
     "cors": "^2.7.1",
-    "defined": "^1.0.0",
+    "defined": "^1.0.1",
     "function-bind": "^1.1.1",
     "has": "^1.0.1",
     "jquery": "1.11.3",

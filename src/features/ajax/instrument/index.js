@@ -156,7 +156,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
         if (evt.type === 'abort' && !(context.loadCaptureCalled)) {
           context.params.aborted = true
         }
-        if (evt.type !== 'load' || (context.called === context.totalCbs) && (context.onloadCalled || typeof (xhr.onload) !== 'function')) context.end(xhr)
+        if (evt.type !== 'load' || (context.called === context.totalCbs) && (context.onloadCalled || typeof (xhr.onload) !== 'function') && typeof context.end === 'function') context.end(xhr)
       } catch (e) {
         try {
           ee.emit('internal-error', [e])
@@ -175,7 +175,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     this.cbTime += time
     if (onload) this.onloadCalled = true
     else this.called += 1
-    if ((this.called === this.totalCbs) && (this.onloadCalled || typeof (xhr.onload) !== 'function')) this.end(xhr)
+    if ((this.called === this.totalCbs) && (this.onloadCalled || typeof (xhr.onload) !== 'function') && typeof this.end === 'function') this.end(xhr)
   }
 
   function onXhrLoadAdded(cb, useCapture) {

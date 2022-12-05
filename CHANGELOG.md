@@ -57,6 +57,9 @@ Fixing an issue where external code redefining the `self` global variable causes
 ### Fix check for sessionStorage object
 Ensure the agent does not crash when sessionStorage is not available or when the quota has been exceeded or set to 0. Safari has been known to set the sessionStorage quota to 0 in private browsing windows.
 
+### Fix interactions missing API calls in Angular
+Fixed an issue where when using the SPA loader with Angular, route changes that contained API calls, via Angular resolver, would not capture the xhr/fetch on the interaction. This works with eager and lazy routes in an Angular SPA.
+
 ## v1221
 
 ### Add infrastructure to run on web workers
@@ -84,9 +87,6 @@ Fixed an issue with the jsPDF library where it was not correctly detecting brows
 
 ### Ship automated PR builds to internal dev components for comparison with stable build
 Pull requests will now generate and ship a build which gets consumed by NR1 `dev` components
-
-### Fix interactions missing API calls in Angular
-Fixed an issue where when using the SPA loader with Angular, route changes that contained API calls, via Angular resolver, would not capture the xhr/fetch on the interaction. This works with eager and lazy routes in an Angular SPA.
 
 ## v1220
 

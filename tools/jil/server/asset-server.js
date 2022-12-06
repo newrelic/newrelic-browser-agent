@@ -47,7 +47,7 @@ class AgentInjectorTransform extends AssetTransform {
     this.assetServer = assetServer
     this.router = router
 
-    this.polyfills = fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`)
+    this.polyfills = runnerArgs.polyfills ? fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`) : ''
   }
 
   parseConfigFromQueryString(params) {

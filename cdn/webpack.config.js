@@ -55,85 +55,113 @@ console.log("PUBLIC_PATH", PUBLIC_PATH)
 console.log("MAP_PATH", MAP_PATH)
 console.log("IS_LOCAL", IS_LOCAL)
 
-const config = (target) => {
-  const isWorker = target === 'webworker'
-  return {
+// The exported configs (standard, polyfill, webworker) compose from this common config.
+const commonConfig = {
+  devtool: false, // defer to SourceMapDevToolPlugin
+  mode: !IS_LOCAL ? 'production' : 'development',
+  optimization: {
+    minimize: true,
+    minimizer: [new TerserPlugin({
+      include: [/\.min\.js$/, /^(?:[0-9])/],
+      terserOptions: {
+        mangle: true
+      }
+    })],
+    flagIncludedChunks: true,
+    mergeDuplicateChunks: true
+  },
+  output: {
+    filename: `[name].js`,
+    chunkFilename: SUBVERSION === 'PROD' ? `[name].[hash:8]${PATH_VERSION}.js` : `[name]${PATH_VERSION}.js`,
+    path: path.resolve(__dirname, '../build'),
+    publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
+    library: {
+      name: 'NRBA',
+      type: 'self'
+    },
+    clean: false
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      'WEBPACK_MINOR_VERSION': JSON.stringify(SUBVERSION || ''),
+      'WEBPACK_MAJOR_VERSION': JSON.stringify(VERSION || ''),
+      'WEBPACK_DEBUG': JSON.stringify(IS_LOCAL || false)
+    }),
+    new webpack.SourceMapDevToolPlugin({
+      append: MAP_PATH, // sourceMappingURL CDN route vs local route (for sourceMappingURL)
+      filename: SUBVERSION === 'PROD' ? `[name].[hash:8].map` : `[name].map`,
+      ...(JSON.parse(SOURCEMAPS) === false && { exclude: new RegExp(".*") }) // exclude all files if disabled
+    }),
+    new BundleAnalyzerPlugin({
+      analyzerMode: 'static',
+      openAnalyzer: false,
+      defaultSizes: 'stat',
+      reportFilename: path.resolve(__dirname, './webpack-analysis.html')
+    })
+  ],
+  resolve: {
+    alias: {
+      '@newrelic/browser-agent-core/src': path.resolve(__dirname, '../packages/browser-agent-core/src')
+    }
+  }
+}
+
+// Targets modern browsers (ES6).
+const standardConfig = {
+  ...commonConfig,
+  ...{
     entry: {
-      ...(!isWorker && {
         [`nr-loader-rum${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/lite.js'),
         [`nr-loader-rum${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/lite.js'),
         [`nr-loader-full${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/pro.js'),
         [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/pro.js'),
         [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/spa.js'),
         [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/spa.js'),
-        [`nr-loader-rum-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/lite.js'),
-        [`nr-loader-rum-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/lite.js'),
-        [`nr-loader-full-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
-        [`nr-loader-full-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
-        [`nr-loader-spa-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
-        [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
-        [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills.js')
-      }),
-      ...(isWorker && {
-        [`nr-loader-worker${PATH_VERSION}`]: {
-          import: path.resolve(__dirname, './agent-loader/worker.js'),
-          chunkLoading: false
-        },
-        [`nr-loader-worker${PATH_VERSION}.min`]: {
-          import: path.resolve(__dirname, './agent-loader/worker.js'),
-          chunkLoading: false
+    },
+    target: 'web',
+    module: {
+      rules: [
+        {
+          test: /\.js$/,
+          exclude: /(node_modules)/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              presets: [
+                ['@babel/preset-env', {
+                  targets: {
+                    browsers: [
+                      "last 10 Chrome versions",
+                      "last 10 Safari versions",
+                      "last 10 Firefox versions",
+                      "last 10 Edge versions"
+                    ]
+                  }
+                }]
+              ]
+            }
+          }
         }
-      })
-    },
-    output: {
-      filename: `[name].js`,
-      chunkFilename: SUBVERSION === 'PROD' ? `[name].[hash:8]${PATH_VERSION}.js` : `[name]${PATH_VERSION}.js`,
-      path: path.resolve(__dirname, '../build'),
-      publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
-      library: {
-        name: 'NRBA',
-        type: 'self'
-      },
-      clean: false
-    },
-    resolve: {
-      alias: {
-        '@newrelic/browser-agent-core/src': path.resolve(__dirname, '../packages/browser-agent-core/src')
-      }
-    },
+      ]
+    }
+  }
+}
 
-    optimization: {
-      minimize: true,
-      minimizer: [new TerserPlugin({
-        include: [/\.min\.js$/, /^(?:[0-9])/],
-        terserOptions: {
-          mangle: true
-        }
-      })],
-      flagIncludedChunks: true,
-      mergeDuplicateChunks: true
+// Targets Internet Explorer 11 (ES5).
+const polyfillConfig = {
+  ...commonConfig,
+  ...{
+    entry: {
+      [`nr-loader-rum-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/lite.js'),
+      [`nr-loader-rum-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/lite.js'),
+      [`nr-loader-full-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
+      [`nr-loader-full-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
+      [`nr-loader-spa-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
+      [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
+      [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
+      [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills.js'),
     },
-    plugins: [
-      new webpack.DefinePlugin({
-        'WEBPACK_MINOR_VERSION': JSON.stringify(SUBVERSION || ''),
-        'WEBPACK_MAJOR_VERSION': JSON.stringify(VERSION || ''),
-        'WEBPACK_DEBUG': JSON.stringify(IS_LOCAL || false)
-      }),
-      new webpack.SourceMapDevToolPlugin({
-        append: MAP_PATH, // CDN route vs local route
-        filename: SUBVERSION === 'PROD' ? `[name].[hash:8].map` : `[name].map`,
-        ...(JSON.parse(SOURCEMAPS) === false && { exclude: new RegExp(".*") }) // exclude all files if disabled
-      }),
-      new BundleAnalyzerPlugin({
-        analyzerMode: 'static',
-        openAnalyzer: false,
-        defaultSizes: 'stat',
-        reportFilename: path.resolve(__dirname, './webpack-analysis.html')
-      })
-    ],
-    mode: !IS_LOCAL ? 'production' : 'development',
-    devtool: false,
-    target, // include this!!
+    target: 'browserslist',
     module: {
       rules: [
         {
@@ -149,12 +177,7 @@ const config = (target) => {
                   loose: true,
                   targets: {
                     browsers: [
-                      "chrome >= 60",
-                      "safari >= 11",
-                      "firefox >= 56",
-                      "ios >= 10.3",
-                      "ie >= 11",
-                      "edge >= 60"
+                      "ie >= 11"
                     ]
                   }
                 }]
@@ -163,8 +186,46 @@ const config = (target) => {
           }
         }
       ]
-    }
+    },
+    output: {
+      ...commonConfig.output,
+      ...{
+        // Because the ./agent-aggregator/aggregator.js dependency is async loaded, the output filename for that chunk will be the
+        // same across all bundles in non-production builds (where filenames aren't hashed) and will thus overwrite with either an
+        // ES5 or ES6 target. For differentiated transpilation of dynamically loaded dependencies in non-production builds, we can
+        // tag output filenames for chunks of the polyfills bundle with `-es5`.
+        chunkFilename: SUBVERSION === 'PROD' ? `[name].[hash:8]${PATH_VERSION}.js` : `[name]-es5${PATH_VERSION}.js`,
+      }
+    },
+    plugins: [
+      commonConfig.plugins[0],
+      new webpack.SourceMapDevToolPlugin({
+        append: MAP_PATH, // sourceMappingURL CDN route vs local route (for sourceMappingURL)
+        filename: SUBVERSION === 'PROD' ? `[name].[hash:8].map` : `[name]-es5.map`, // tag in non-production to prevent filename collisions
+        ...(JSON.parse(SOURCEMAPS) === false && { exclude: new RegExp(".*") }) // exclude all files if disabled
+      }),
+      commonConfig.plugins[2]
+    ]
   }
 }
 
-module.exports = [config('browserslist'), config('webworker')]
+// Targets same modern browsers as standard configuration.
+const webworkerConfig = {
+  ...commonConfig,
+  ...{
+    entry: {
+      [`nr-loader-worker${PATH_VERSION}`]: {
+        import: path.resolve(__dirname, './agent-loader/worker.js'),
+        chunkLoading: false
+      },
+      [`nr-loader-worker${PATH_VERSION}.min`]: {
+        import: path.resolve(__dirname, './agent-loader/worker.js'),
+        chunkLoading: false
+      }
+    },
+    target: 'webworker',
+    module: standardConfig.module
+  }
+}
+
+module.exports = [polyfillConfig, standardConfig, webworkerConfig]

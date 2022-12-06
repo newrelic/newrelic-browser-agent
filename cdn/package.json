@@ -36,11 +36,6 @@
     "core-js": "^3.23.3"
   },
   "browserslist": [
-    "chrome >= 60",
-    "safari >= 11",
-    "firefox >= 56",
-    "ios >= 10.3",
-    "ie >= 11",
-    "edge >= 60"
+    "ie >= 11"
   ]
 }

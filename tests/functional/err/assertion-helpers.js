@@ -69,7 +69,7 @@ function assertExpectedErrors (t, browser, actualErrors, expectedErrors, assetUR
     }
 
     var expectedCanonicalStack = computeExpectedCanonicalStack(expectedStack)
-    var expectedStackHash = stringHashCode(`${expectedError.name}_${expectedError.message}_${expectedCanonicalStack}`)
+    var expectedStackHash = stringHashCode(expectedCanonicalStack)
 
     t.equal(actualError.params.stackHash, expectedStackHash, 'Stack hash for error ' + expectedError.message)
 

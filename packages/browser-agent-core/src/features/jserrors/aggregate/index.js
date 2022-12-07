@@ -85,7 +85,7 @@ export class Aggregate extends FeatureBase {
   }
 
   nameHash(params) {
-    return stringHashCode(params.exceptionClass) ^ params.stackHash
+    return stringHashCode(`${params.exceptionClass}_${params.message}_${params.stack_trace || params.browser_stack_hash}`)
   }
 
   getBucketName(params, customParams) {
@@ -153,7 +153,7 @@ export class Aggregate extends FeatureBase {
     var canonicalStack = this.buildCanonicalStackString(stackInfo)
 
     var params = {
-      stackHash: stringHashCode(`${stackInfo.name}_${stackInfo.message}_${canonicalStack}`),
+      stackHash: stringHashCode(canonicalStack),
       exceptionClass: stackInfo.name,
       request_uri: self.location.pathname
     }
@@ -161,8 +161,16 @@ export class Aggregate extends FeatureBase {
       params.message = '' + stackInfo.message
     }
 
-    if (!this.stackReported[params.stackHash]) {
-      this.stackReported[params.stackHash] = true
+    /**
+     * The bucketHash is different from the params.stackHash because the params.stackHash is based on the canonicalized
+     * stack trace and is used downstream in NR1 to attempt to group the same errors across different browsers. However,
+     * the canonical stack trace excludes items like the column number increasing the hit-rate of different errors potentially
+     * bucketing and ultimately resulting in the loss of data in NR1.
+     */
+    var bucketHash = stringHashCode(`${stackInfo.name}_${stackInfo.message}_${stackInfo.stackString}`)
+
+    if (!this.stackReported[bucketHash]) {
+      this.stackReported[bucketHash] = true
       params.stack_trace = truncateSize(stackInfo.stackString)
     } else {
       params.browser_stack_hash = stringHashCode(stackInfo.stackString)
@@ -174,11 +182,9 @@ export class Aggregate extends FeatureBase {
     // params.origStack = err.stack
     // params.canonicalStack = canonicalStack
 
-    var hash = this.nameHash(params)
-
-    if (!this.pageviewReported[hash]) {
+    if (!this.pageviewReported[bucketHash]) {
       params.pageview = 1
-      this.pageviewReported[hash] = true
+      this.pageviewReported[bucketHash] = true
     }
 
     var type = internal ? 'ierr' : 'err'
@@ -186,12 +192,12 @@ export class Aggregate extends FeatureBase {
 
     // stn and spa aggregators listen to this event - stn sends the error in its payload,
     // and spa annotates the error with interaction info
-    handle('errorAgg', [type, hash, params, newMetrics], undefined, undefined, this.ee)
+    handle('errorAgg', [type, bucketHash, params, newMetrics], undefined, undefined, this.ee)
 
     if (params._interactionId != null) {
       // hold on to the error until the interaction finishes
       this.errorCache[params._interactionId] = this.errorCache[params._interactionId] || []
-      this.errorCache[params._interactionId].push([type, hash, params, newMetrics, att, customAttributes])
+      this.errorCache[params._interactionId].push([type, bucketHash, params, newMetrics, att, customAttributes])
     } else {
       // store custom attributes
       var customParams = {}
@@ -202,7 +208,7 @@ export class Aggregate extends FeatureBase {
       }
 
       var jsAttributesHash = stringHashCode(stringify(customParams))
-      var aggregateHash = hash + ':' + jsAttributesHash
+      var aggregateHash = bucketHash + ':' + jsAttributesHash
       this.aggregator.store(type, aggregateHash, params, newMetrics, customParams)
     }
 

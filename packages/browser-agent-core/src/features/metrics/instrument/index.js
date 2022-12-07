@@ -96,6 +96,8 @@ export class Instrument extends FeatureBase {
     }
 
     eachSessionChecks() {
+        if (!isBrowserWindow) return;
+        
         // [Temporary] Report restores from BFCache to NR1 while feature flag is in place in lieu of sending pageshow events.
         windowAddEventListener('pageshow', (evt) => {
             if (evt.persisted)

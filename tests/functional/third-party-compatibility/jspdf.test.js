@@ -31,7 +31,7 @@ var timedPromiseAll = (promises, ms) => Promise.race([
   new Promise((resolve) => {
     setTimeout(() => resolve(), ms)
   }),
-  Promise.any(promises)
+  Promise.all(promises)
 ])
 
 testDriver.test('jspdf generation should not cause error', function (t, browser, router) {
@@ -50,7 +50,7 @@ testDriver.test('jspdf generation should not cause error', function (t, browser,
       return timedPromiseAll([errPromise], 6000)
     })
     .then((response) => {
-      if (response) { 
+      if (response) {
         // will be null if timed out, so a payload here means it sent and error
         t.fail(`Should not have generated "error" payload`)
       } else {

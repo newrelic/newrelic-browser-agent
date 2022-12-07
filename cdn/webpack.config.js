@@ -169,7 +169,6 @@ const polyfillConfig = {
       [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
       [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills.js'),
     },
-    target: 'browserslist',
     module: {
       rules: [
         {

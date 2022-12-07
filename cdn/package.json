@@ -34,8 +34,5 @@
     "@newrelic/browser-agent": "^0.0.9",
     "@newrelic/browser-agent-core/src": "^0.0.9",
     "core-js": "^3.23.3"
-  },
-  "browserslist": [
-    "ie >= 11"
-  ]
+  }
 }

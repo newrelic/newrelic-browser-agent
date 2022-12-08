@@ -25,7 +25,7 @@ var config = require('yargs')
 
   .string('pr')
   .describe('pr', 'PR name (bucket name) to search')
-  .default('')
+  .default('pr', '')
 
   .boolean('m')
   .alias('m', 'maps')
@@ -95,9 +95,9 @@ function validateResponse(url, res, body) {
 
 function getFile(filename) {
   var url = 'https://js-agent.newrelic.com/'
-  if (config.d) url += 'dev'
-  else if (config.pr) url += 'pr/' + config.pr
-  url += '/' + filename
+  if (config.d) url += 'dev/'
+  else if (config.pr) url += 'pr/' + config.pr + '/'
+  url += filename
   var opts = {
     uri: url,
     method: 'GET',

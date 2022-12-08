@@ -1,8 +1,8 @@
 {
   "ignorePatterns": ["packages/**/*"],
   "parserOptions": {
-    "ecmaVersion": 5,
-    "sourceType": "script",
+    "ecmaVersion": 2020,
+    "sourceType": "module",
     "ecmaFeatures": {
       "globalReturn": true
     }
@@ -33,6 +33,12 @@
     "no-warning-comments": 0,
     "no-prototype-builtins": "off",
     "getter-return": "warn",
-    "comma-dangle": "error"
+    "comma-dangle": "error",
+    "import/no-unresolved": [
+      "error",
+      {
+        "ignore": ["@newrelic/browser-agent-core"]
+      }
+    ]
   }
 }

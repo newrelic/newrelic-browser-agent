@@ -1,6 +1,6 @@
 const { getMetricsFromResponse } = require('./err/assertion-helpers');  // used by metrics tests
 const url = require('url');   // used by harvest tests
-const cleanURL = require('../../agent/clean-url.js')  // used by harvest test
+const cleanURL = require('../lib/clean-url.js')  // used by harvest test
 
 function fail(t, addlMsg = undefined) {
 	return (err) => {

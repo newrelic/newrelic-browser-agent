@@ -18,5 +18,5 @@ node_modules
 **/local-install
 tests/assets/test-builds/**/*
 packages/browser-agent-core/cjs
-**/webpack-analysis.html
+**/webpack-analysis*.html
 /cdn/build

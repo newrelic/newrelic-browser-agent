@@ -2,6 +2,7 @@ const path = require('path')
 const TerserPlugin = require('terser-webpack-plugin')
 const webpack = require('webpack')
 const fs = require('fs')
+const { merge } = require('webpack-merge');
 const pkg = require('./package.json')
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
@@ -63,9 +64,36 @@ console.log("MAP_PATH", MAP_PATH)
 console.log("IS_LOCAL", IS_LOCAL)
 if (PR_NAME) console.log("PR_NAME", PR_NAME)
 
-// The exported configs (standard, polyfill, webworker) compose from this common config.
+/**
+ * Helper for configuring a source map plugin instance with some common properties.
+ * @param {string} [filename] - Overrides the standard filename configuration.
+ * @returns {SourceMapDevToolPlugin} Instance of SourceMapDevToolPlugin with default configurations.
+ */
+const instantiateSourceMapPlugin = (filename) => {
+  return new webpack.SourceMapDevToolPlugin({
+    append: MAP_PATH, // sourceMappingURL CDN route vs local route (for sourceMappingURL)
+    filename: filename || (SUBVERSION === 'PROD' ? `[name].[hash:8].map` : `[name].map`),
+    ...(JSON.parse(SOURCEMAPS) === false && { exclude: new RegExp(".*") }) // Exclude all files if disabled.
+  })
+}
+
+/**
+ * Helper for instantiating a bundle analyzer plugin with some common properties.
+ * @param {string} build - Tags the HTML output filename (i.e.: webpack-analysis-[build].html)
+ * @returns {BundleAnalyzerPlugin} Instance of BundleAnalyzerPlugin with default configurations.
+ */
+const instantiateBundleAnalyzerPlugin = (build) => {
+  return new BundleAnalyzerPlugin({
+    analyzerMode: 'static',
+    openAnalyzer: false,
+    defaultSizes: 'stat',
+    reportFilename: path.resolve(__dirname, `./webpack-analysis-${build}.html`)
+  })
+}
+
+// The exported configs (standard, polyfill, webworker) build on this common config.
 const commonConfig = {
-  devtool: false, // defer to SourceMapDevToolPlugin
+  devtool: false, // Defer to SourceMapDevToolPlugin.
   mode: !IS_LOCAL ? 'production' : 'development',
   optimization: {
     minimize: true,
@@ -94,18 +122,7 @@ const commonConfig = {
       'WEBPACK_MINOR_VERSION': JSON.stringify(SUBVERSION || ''),
       'WEBPACK_MAJOR_VERSION': JSON.stringify(VERSION || ''),
       'WEBPACK_DEBUG': JSON.stringify(IS_LOCAL || false)
-    }),
-    new webpack.SourceMapDevToolPlugin({
-      append: MAP_PATH, // sourceMappingURL CDN route vs local route (for sourceMappingURL)
-      filename: SUBVERSION === 'PROD' ? `[name].[hash:8].map` : `[name].map`,
-      ...(JSON.parse(SOURCEMAPS) === false && { exclude: new RegExp(".*") }) // exclude all files if disabled
-    }),
-    new BundleAnalyzerPlugin({
-      analyzerMode: 'static',
-      openAnalyzer: false,
-      defaultSizes: 'stat',
-      reportFilename: path.resolve(__dirname, './webpack-analysis.html')
-    })
+    })    
   ],
   resolve: {
     alias: {
@@ -115,124 +132,119 @@ const commonConfig = {
 }
 
 // Targets modern browsers (ES6).
-const standardConfig = {
-  ...commonConfig,
-  ...{
-    entry: {
-        [`nr-loader-rum${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/lite.js'),
-        [`nr-loader-rum${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/lite.js'),
-        [`nr-loader-full${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/pro.js'),
-        [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/pro.js'),
-        [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/spa.js'),
-        [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/spa.js'),
-    },
-    target: 'web',
-    module: {
-      rules: [
-        {
-          test: /\.js$/,
-          exclude: /(node_modules)/,
-          use: {
-            loader: 'babel-loader',
-            options: {
-              presets: [
-                ['@babel/preset-env', {
-                  targets: {
-                    browsers: [
-                      "last 10 Chrome versions",
-                      "last 10 Safari versions",
-                      "last 10 Firefox versions",
-                      "last 10 Edge versions"
-                    ]
-                  }
-                }]
-              ]
-            }
+const standardConfig = merge(commonConfig, {
+  entry: {
+      [`nr-loader-rum${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/lite.js'),
+      [`nr-loader-rum${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/lite.js'),
+      [`nr-loader-full${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/pro.js'),
+      [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/pro.js'),
+      [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/spa.js'),
+      [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/spa.js'),
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /(node_modules)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-env', {
+                targets: {
+                  browsers: [
+                    "last 10 Chrome versions",
+                    "last 10 Safari versions",
+                    "last 10 Firefox versions",
+                    "last 10 Edge versions"
+                  ]
+                }
+              }]
+            ]
           }
         }
-      ]
-    }
-  }
-}
+      }
+    ]
+  },
+  plugins: [
+    instantiateBundleAnalyzerPlugin('standard'),
+    instantiateSourceMapPlugin()
+  ],
+  target: 'web'
+})
 
 // Targets Internet Explorer 11 (ES5).
-const polyfillConfig = {
-  ...commonConfig,
-  ...{
-    entry: {
-      [`nr-loader-rum-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/lite.js'),
-      [`nr-loader-rum-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/lite.js'),
-      [`nr-loader-full-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
-      [`nr-loader-full-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
-      [`nr-loader-spa-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
-      [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
-      [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
-      [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills.js'),
-    },
-    module: {
-      rules: [
-        {
-          test: /\.js$/,
-          exclude: /(node_modules)/,
-          use: {
-            loader: 'babel-loader',
-            options: {
-              presets: [
-                ['@babel/preset-env', {
-                  useBuiltIns: 'entry',
-                  corejs: { version: 3.23, proposals: true },
-                  loose: true,
-                  targets: {
-                    browsers: [
-                      "ie >= 11"
-                    ]
-                  }
-                }]
-              ]
-            }
+const polyfillsConfig = merge(commonConfig, {
+  entry: {
+    [`nr-loader-rum-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/lite.js'),
+    [`nr-loader-rum-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/lite.js'),
+    [`nr-loader-full-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
+    [`nr-loader-full-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/pro.js'),
+    [`nr-loader-spa-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
+    [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
+    [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
+    [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills.js'),
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /(node_modules)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-env', {
+                useBuiltIns: 'entry',
+                corejs: { version: 3.23, proposals: true },
+                loose: true,
+                targets: {
+                  browsers: [
+                    "ie >= 11" // Does not affect webpack's own runtime output; see `target` webpack config property.
+                  ]
+                }
+              }]
+            ]
           }
         }
-      ]
-    },
-    output: {
-      ...commonConfig.output,
-      ...{
-        // Because the ./agent-aggregator/aggregator.js dependency is async loaded, the output filename for that chunk will be the
-        // same across all bundles in non-production builds (where filenames aren't hashed) and will thus overwrite with either an
-        // ES5 or ES6 target. For differentiated transpilation of dynamically loaded dependencies in non-production builds, we can
-        // tag output filenames for chunks of the polyfills bundle with `-es5`.
-        chunkFilename: SUBVERSION === 'PROD' ? `[name].[hash:8]${PATH_VERSION}.js` : `[name]-es5${PATH_VERSION}.js`,
       }
-    },
-    plugins: [
-      commonConfig.plugins[0],
-      new webpack.SourceMapDevToolPlugin({
-        append: MAP_PATH, // sourceMappingURL CDN route vs local route (for sourceMappingURL)
-        filename: SUBVERSION === 'PROD' ? `[name].[hash:8].map` : `[name]-es5.map`, // tag in non-production to prevent filename collisions
-        ...(JSON.parse(SOURCEMAPS) === false && { exclude: new RegExp(".*") }) // exclude all files if disabled
-      }),
-      commonConfig.plugins[2]
     ]
-  }
-}
+  },
+  output: {
+    /**
+     * Because the ./agent-aggregator/aggregator.js dependency is async loaded, the output filename for that chunk will
+     * be the same across all bundles in non-production builds (where dependency filenames aren't hashed) and will thus
+     * overwrite with either an ES5 or ES6 target. For differentiated transpilation of dynamically loaded dependencies
+     * in non-production builds, we can tag output filenames for chunks of the polyfills bundle with `-es5`.
+     */
+    chunkFilename: SUBVERSION === 'PROD' ? `[name].[hash:8]${PATH_VERSION}.js` : `[name]-es5${PATH_VERSION}.js`,
+  },
+  plugins: [
+    instantiateBundleAnalyzerPlugin('polyfills'),
+    // Source map outputs must also must be tagged to prevent standard/polyfill filename collisions in non-production.
+    instantiateSourceMapPlugin(SUBVERSION === 'PROD' ? `[name].[hash:8].map` : `[name]-es5.map`)
+  ],
+  target: 'browserslist:ie >= 11' // Applies to webpack's own runtime output; babel-loader only impacts bundled modules.
+});
 
 // Targets same modern browsers as standard configuration.
-const webworkerConfig = {
-  ...commonConfig,
-  ...{
-    entry: {
-      [`nr-loader-worker${PATH_VERSION}`]: {
-        import: path.resolve(__dirname, './agent-loader/worker.js'),
-        chunkLoading: false
-      },
-      [`nr-loader-worker${PATH_VERSION}.min`]: {
-        import: path.resolve(__dirname, './agent-loader/worker.js'),
-        chunkLoading: false
-      }
+const workerConfig = merge(commonConfig, {
+  entry: {
+    [`nr-loader-worker${PATH_VERSION}`]: {
+      import: path.resolve(__dirname, './agent-loader/worker.js'),
+      chunkLoading: false
     },
-    target: 'webworker',
-    module: standardConfig.module
-  }
-}
+    [`nr-loader-worker${PATH_VERSION}.min`]: {
+      import: path.resolve(__dirname, './agent-loader/worker.js'),
+      chunkLoading: false
+    }
+  },
+  module: standardConfig.module,
+  plugins: [
+    instantiateBundleAnalyzerPlugin('worker'),
+    instantiateSourceMapPlugin()
+  ],
+  target: 'webworker'
+});
 
-module.exports = [polyfillConfig, standardConfig, webworkerConfig]
+module.exports = [standardConfig, polyfillsConfig, workerConfig]

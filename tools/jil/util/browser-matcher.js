@@ -308,6 +308,9 @@ features.btoa = new BrowserMatcher()
 features.notSafariWithSeleniumBug = new BrowserMatcher()
   .exclude('safari', '>=13')
 
+features.notInternetExplorer = new BrowserMatcher()
+  .exclude('ie')
+
 features.testPageHide = new BrowserMatcher()
   .exclude('*')
   .include('chrome', 'latest')
@@ -378,7 +381,7 @@ features.es6 = new BrowserMatcher()
   .include('chrome', '>=67')
   .include('firefox', '>=63')
   .include('edge', '>=79')
-  
+
   features.latestSmoke = new BrowserMatcher()
   .exclude('*')
   .include('chrome', 'latest')

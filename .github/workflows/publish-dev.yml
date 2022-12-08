@@ -28,3 +28,17 @@ jobs:
             --dev
       - name: check files exist
         run: node tools/scripts/check-version.js -e yes -d
+      - name: re-publish internal loader
+        run: |
+          node ./tools/scripts/upload-ab-to-s3.js \
+            --env staging \
+            --appId ${{ secrets.INTERNAL_DEV_APPLICATION_ID }} \
+            --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
+            --bucket ${{ secrets.AWS_BUCKET }} \
+            --role ${{ secrets.AWS_ROLE_ARN }}
+      - name: purge fastly cache url
+        run: |
+          node ./tools/scripts/fastly.js \
+            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
+            --env staging \
+            --purge-internal

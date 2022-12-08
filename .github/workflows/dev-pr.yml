@@ -1,0 +1,47 @@
+name: Build and Deploy PR to NR Dev
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number'
+        required: true
+
+jobs:
+  pr-dev-build:
+    runs-on: ubuntu-latest
+    container: node:14
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      PR_NAME: PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: install
+        run: npm ci
+      - name: build
+        run: npm run cdn:build:pr
+      - name: upload artifacts to S3
+        run: |
+          node ./tools/scripts/upload-to-s3.js \
+            --bucket ${{ secrets.AWS_BUCKET }} \
+            --role ${{ secrets.AWS_ROLE_ARN }} \
+            --pr PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}
+      - name: re-publish internal loader
+        run: |
+          node ./tools/scripts/upload-ab-to-s3.js \
+            --env dev \
+            --appId ${{ secrets.INTERNAL_DEV_APPLICATION_ID }} \
+            --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
+            --bucket ${{ secrets.AWS_BUCKET }} \
+            --role ${{ secrets.AWS_ROLE_ARN }}
+      - name: purge fastly cache url
+        run: |
+          node ./tools/scripts/fastly.js \
+            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
+            --env dev \
+            --purge-internal
+      - name: Notify
+        run: |
+          curl -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/newrelic/newrelic-browser-agent/issues/${{ github.event.pull_request.number || github.event.inputs.pr_number }}/comments -d '{"body": "A new build of PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }} has been shipped to NR Internal - https://staging.onenr.io/0M8jq5NPOjl"}'
+

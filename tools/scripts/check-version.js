@@ -25,7 +25,7 @@ var config = require('yargs')
 
   .string('pr')
   .describe('pr', 'PR name (bucket name) to search')
-  .default('')
+  .default('pr', '')
 
   .boolean('m')
   .alias('m', 'maps')

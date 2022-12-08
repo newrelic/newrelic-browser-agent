@@ -27,6 +27,7 @@ var runnerArgs = require('../runner/args')
 mime.types['es6'] = 'application/javascript'
 
 const assetsDir = path.resolve(__dirname, '../../..')
+const REGEXP_REPLACEMENT_REGEX = /"new RegExp\('(.*?)','(.*?)'\)"/g;
 
 class AssetTransform {
   test(params) {
@@ -51,7 +52,7 @@ class AgentInjectorTransform extends AssetTransform {
 
   parseConfigFromQueryString(params) {
     if (!params.config) return
-    let configString = new Buffer(params.config, 'base64').toString()
+    let configString = Buffer.from(params.config, 'base64').toString()
     return JSON.parse(configString)
   }
 
@@ -112,6 +113,10 @@ class AgentInjectorTransform extends AssetTransform {
     return updatedConfig
   }
 
+  getAjaxDenyListString(){
+    return runnerArgs.denyListBam ? `window.NREUM||(NREUM={init:{}});NREUM.init.ajax=NREUM.init.ajax||{};NREUM.init.ajax.deny_list=NREUM.init.ajax.deny_list||[];NREUM.init.ajax.deny_list.push('bam-test-1.nr-local.net');` : ''
+  }
+
   generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig) {
     let config = this.generateConfig(loaderName, params, ssl, injectUpdatedLoaderConfig)
     let infoJSON = JSON.stringify(config.info)
@@ -124,8 +129,15 @@ class AgentInjectorTransform extends AssetTransform {
   }
 
   generateInit(initFromQueryString) {
-    let initString = new Buffer(initFromQueryString, 'base64').toString()
+    let initString = Buffer.from(initFromQueryString, 'base64').toString()
+    if (initString.includes('new RegExp'))  // de-serialize RegExp obj from router
+      initString = initString.replace(REGEXP_REPLACEMENT_REGEX, '/$1/$2');
     return `window.NREUM||(NREUM={});NREUM.init=${initString};NREUM.init.ssl=false;`
+  }
+
+  generateWorkerCommands(wcFromQueryString) {
+    let wcString = Buffer.from(wcFromQueryString, 'base64').toString()
+    return `workerCommands=${wcString};`
   }
 
   getDebugShim() {
@@ -209,11 +221,9 @@ class AgentInjectorTransform extends AssetTransform {
       let loaderName = params.loader || this.assetServer.defaultLoader
       let injectUpdatedLoaderConfig = (params.injectUpdatedLoaderConfig === 'true')
 
-      const htmlPackageTags = [...rawContent.matchAll(/{packages\/.*}/g)].map(x => x[0])
+      const htmlPackageTags = [...rawContent.matchAll(/{tests\/assets\/js\/internal\/.*}/g)].map(x => x[0])
       const packagePaths = htmlPackageTags.map(x => x.replace(/[{}]/g, ''))
       const packageFiles = await this.getBuiltPackages(packagePaths)
-
-
 
       this.getLoaderContent(
         loaderName,
@@ -237,12 +247,22 @@ class AgentInjectorTransform extends AssetTransform {
             }
           }
 
+          let wcContent = ''
+          if (params.workerCommands) {
+            try {
+              wcContent = this.generateWorkerCommands(params.workerCommands)
+            } catch (e) {
+              return callback(e)
+            }
+          }
+
           let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;'
 
           let rspData = rawContent
             .split('{loader}').join(tagify(disableSsl + loaderContent))
             .replace('{config}', tagify(disableSsl + configContent))
-            .replace('{init}', tagify(disableSsl + initContent))
+            .replace('{init}', tagify(disableSsl + initContent + this.getAjaxDenyListString()))
+            .replace('{worker-commands}', tagify(disableSsl + wcContent))
             .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
 
           if (runnerArgs.polyfills) {
@@ -300,7 +320,15 @@ class BrowserifyTransform extends AssetTransform {
             }
           }]
         ],
-        plugins: ["@babel/plugin-syntax-dynamic-import", '@babel/plugin-transform-modules-commonjs'],
+        plugins: [
+          "@babel/plugin-syntax-dynamic-import",
+          '@babel/plugin-transform-modules-commonjs',
+          ["module-resolver", {
+            "alias": {
+              "@newrelic/browser-agent-core/src": './dist/packages/browser-agent-core/src'
+            }
+          }]
+        ],
         global: true
       })
       .transform(preprocessify())
@@ -458,6 +486,13 @@ const testRoutes = [
       'Transfer-Encoding': 'chunked'
     })
     res.end('x'.repeat(10000))
+  }),
+  new Route('GET', '/web-worker-agent', (req, res) => {
+    fs.readFile( path.resolve(__dirname, '../../../build/nr-loader-worker.min.js'), 'utf-8', (err, data) => {
+      res.writeHead(200, {"Content-Type": "text/javascript"}) //Solution!
+      res.write(data)
+      res.end()
+    })
   })
 ]
 
@@ -584,7 +619,7 @@ class AssetServer extends BaseServer {
   }
 
   writeError(rsp, errorMessage) {
-    console.log('WRITE ERROR!')
+    console.log('WRITE ERROR!', errorMessage)
     rsp.writeHead(500)
     rsp.end(errorMessage)
   }
@@ -599,7 +634,7 @@ class AssetServer extends BaseServer {
 
       if (!transform || !transform.test(params)) {
         rsp.writeHead(200, {
-          'Content-Type': 'text/html'
+          'Content-Type': mimeType || 'text/html'
         })
         return fs.createReadStream(assetPath).pipe(rsp)
       }
@@ -667,7 +702,7 @@ class AssetServer extends BaseServer {
     function unitTestTarget(file) {
       let script = `/${path.relative(server.assetsDir, file)}?browserify=true`
       return server.urlFor('/tests/assets/browser.html', {
-        config: new Buffer(JSON.stringify({
+        config: Buffer.from(JSON.stringify({
           assetServerPort: server.router.assetServer.port,
           assetServerSSLPort: server.router.assetServer.sslPort,
           corsServerPort: server.corsServer.port

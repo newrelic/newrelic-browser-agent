@@ -1,10 +1,10 @@
 const test = require('../../tools/jil/browser-test')
 const {setup} = require('./utils/setup')
-import {ee} from '../../packages/browser-agent-core/common/event-emitter/contextual-ee'
-import { onWindowLoad } from '../../packages/browser-agent-core/common/window/load'
+import {ee} from '@newrelic/browser-agent-core/src/common/event-emitter/contextual-ee'
+import { onWindowLoad } from '@newrelic/browser-agent-core/src/common/window/load'
 import {stageAggregator} from '../../cdn/agent-loader/utils/importAggregator'
 import * as testAggregatorM from '../../cdn/agent-aggregator/aggregator'
-import {Instrument} from '../../packages/browser-agent-core/features/page-view-event/instrument/index'
+import {Instrument} from '@newrelic/browser-agent-core/src/features/page-view-event/instrument/index'
 
 const {agentIdentifier} = setup();
 new Instrument(agentIdentifier);

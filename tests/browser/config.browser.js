@@ -5,7 +5,7 @@
 
 import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
-import { setConfiguration, getConfigurationValue } from '../../packages/browser-agent-core/common/config/config'
+import { setConfiguration, getConfigurationValue } from '@newrelic/browser-agent-core/src/common/config/config'
 
 const { agentIdentifier } = setup();
 

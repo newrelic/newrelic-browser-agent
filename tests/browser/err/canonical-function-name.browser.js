@@ -4,7 +4,7 @@
  */
 
 import test from '../../../tools/jil/browser-test'
-import { canonicalFunctionName } from '../../../packages/browser-agent-core/features/jserrors/aggregate/canonical-function-name'
+import { canonicalFunctionName } from '@newrelic/browser-agent-core/src/features/jserrors/aggregate/canonical-function-name'
 
 test('canonicalFunctionName', function (t) {
   var testcases = [

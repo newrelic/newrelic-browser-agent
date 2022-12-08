@@ -6,7 +6,7 @@
 const jil = require('jil')
 
 const {setup} = require('./utils/setup')
-const {wrapEvents} = require('../../packages/browser-agent-core/common/wrap/wrap-events')
+const {wrapEvents} = require('@newrelic/browser-agent-core/src/common/wrap/wrap-events')
 const {baseEE} = setup()
 
 jil.browserTest('AEL on window should call through to AEL on EventTarget', function (t) {

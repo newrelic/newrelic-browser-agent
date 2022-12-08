@@ -106,7 +106,7 @@ features.reliableUnloadEvent = new BrowserMatcher()
   // is likely identical in behavior to OS X safari, we can assume that any issues
   // will be caught there and skip testing iOS.
   .exclude('ios')
-  .exclude('ie', '<8')
+  .exclude('ie', '<9')
   .exclude('firefox', '<32')
 
 // For browsers that do not support the sendBeacon API, we fall back to using an image
@@ -117,6 +117,7 @@ features.unreliableImgCallInUnload = new BrowserMatcher()
   .include('safari', '10.1')
   .include('safari', '11.0')
 
+/** DEPRECATED */
 features.addEventListener = new BrowserMatcher()
   .exclude('ie', '<9')
 
@@ -148,12 +149,15 @@ features.setImmediate = new BrowserMatcher()
   .exclude('*', '*')
   .include('ie@>=10')
 
+/** DEPRECATED */
 features.xhr = new BrowserMatcher()
   .exclude('ie@<9')
 
-features.xhrWithAddEventListener = features.xhr.and(new BrowserMatcher()
-  .exclude('phantom')
-)
+features.noPhantom = new BrowserMatcher()
+.exclude('phantom');
+
+/** DEPRECATED -- just use noPhantom instead */
+features.xhrWithAddEventListener = features.xhr.and(features.noPhantom)
 
 // requires window.perfomance.getEntriesByType
 features.stn = new BrowserMatcher()
@@ -173,6 +177,7 @@ features.navTiming = new BrowserMatcher()
   .exclude('safari', '<8')
   .exclude('ios', '<9')
 
+/** DEPRECATED */
 features.cors = new BrowserMatcher()
   .exclude('ie@<10')
 
@@ -209,7 +214,7 @@ features.fetch = new BrowserMatcher()
 // MDN shows this function as not supported
 // https://developer.mozilla.org/en-US/docs/Web/API/Body/arrayBuffer
 features.fetchExt = features.fetch.and(new BrowserMatcher()
-  .exclude('ios')
+  .exclude('ios', '<11.3')
   .exclude('safari', '<11.1') // MDN says no support (11.1 currently latest), but 11.1 is accounted for in the tests
 )
 
@@ -229,19 +234,20 @@ features.sendBeacon = new BrowserMatcher()
   .include('android', '>=6')
   .include('safari', '>=11.1')
 
-// Safari 11.1 & 12.0 has a bug in the sendBeacon API, the agent falls back to using image
+// Safari on macOS 11.1 - 12.2 have a bug in the sendBeacon API during pgehide event listener -- fixed in ios 12.3
+// The agent falls back to using image
 // https://bugs.webkit.org/show_bug.cgi?id=188329
 features.brokenSendBeacon = new BrowserMatcher()
   .exclude('*')
-  .include('safari', '<=11.1')
-  .include('safari', '12.0') // somehow this got removed, this is still broken
+  .include('safari', '<=12.2')
 
 features.workingSendBeacon = features.sendBeacon.and(features.brokenSendBeacon.inverse())
 
-features.reliableFinalHarvest = features.workingSendBeacon
-  .or(features.sendBeacon.inverse()
+features.reliableFinalHarvest = features.workingSendBeacon.or(
+  features.sendBeacon.inverse()
     .and(features.reliableUnloadEvent)
-    .and(features.unreliableImgCallInUnload.inverse()))
+    .and(features.unreliableImgCallInUnload.inverse())
+)
 
 features.blob = new BrowserMatcher()
   .exclude('ie', '<10')
@@ -252,10 +258,7 @@ features.blob = new BrowserMatcher()
   .exclude('android')
   .exclude('phantom')
 
-features.locationDecodesUrl = new BrowserMatcher()
-  .exclude('*', '*')
-  .include('android', '4.0')
-
+/** DEPRECATED */
 features.tls = new BrowserMatcher()
   .exclude('ie', '<7')
 
@@ -268,9 +271,6 @@ features.addEventListenerOptions = new BrowserMatcher()
   .exclude('edge')
   .exclude('ios')
   .exclude('ie')
-
-features.pushstate = new BrowserMatcher()
-  .exclude('ie', '<10')
 
 features.firstPaint = new BrowserMatcher()
   .exclude('*')
@@ -308,6 +308,9 @@ features.btoa = new BrowserMatcher()
 features.notSafariWithSeleniumBug = new BrowserMatcher()
   .exclude('safari', '>=13')
 
+features.notInternetExplorer = new BrowserMatcher()
+  .exclude('ie')
+
 features.testPageHide = new BrowserMatcher()
   .exclude('*')
   .include('chrome', 'latest')
@@ -336,7 +339,7 @@ features.originOnlyReferer = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=89')
   .include('firefox', '>=87')
-  .include('ios', '>=10.2')
+  .include('ios', '>11.2')
   .include('android')
   .include('edge')
 
@@ -378,7 +381,7 @@ features.es6 = new BrowserMatcher()
   .include('chrome', '>=67')
   .include('firefox', '>=63')
   .include('edge', '>=79')
-  
+
   features.latestSmoke = new BrowserMatcher()
   .exclude('*')
   .include('chrome', 'latest')
@@ -394,3 +397,62 @@ features.es6 = new BrowserMatcher()
   .include("firefox", "<=67")
   .include("edge", "<=79")
   .include("safari", "<=11.3")
+
+  features.workerStackSizeGeneratesError = new BrowserMatcher()
+  .exclude("firefox")
+
+  features.unhandledPromiseRejection = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', '>49')
+  .include('edge', '>79')
+  .include('safari', '>12')
+  .include('firefox', '>69')
+
+  /* vvv--- Workers API support ---vvv
+  */
+  features.workers = new BrowserMatcher([ // NOTE: module type workers have different (higher) compatibility versions, excluding IE11
+    new MatcherRule(TYPE_EXCLUDE, '*@*'),
+    new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
+    new MatcherRule(TYPE_INCLUDE, 'edge@>=12'),
+    new MatcherRule(TYPE_INCLUDE, 'safari@>=4'),
+    new MatcherRule(TYPE_INCLUDE, 'firefox@>=3.5'),
+    new MatcherRule(TYPE_INCLUDE, 'android@>=4.4'),
+    new MatcherRule(TYPE_INCLUDE, 'ios@>=5')
+  ]);
+  features.supportESMWorkers = new BrowserMatcher([ // not avail in Firefox browsers, or Safari below 15
+    new MatcherRule(TYPE_EXCLUDE, '*@*'),
+    new MatcherRule(TYPE_INCLUDE, 'chrome@>=80'),
+    new MatcherRule(TYPE_INCLUDE, 'edge@>=80'),
+    new MatcherRule(TYPE_INCLUDE, 'safari@>=15'),
+    new MatcherRule(TYPE_INCLUDE, 'android@>=9.0'),
+    new MatcherRule(TYPE_INCLUDE, 'ios@>=15.0')
+  ]);
+  features.workersFull = features.workers.and(features.supportESMWorkers);  // use this to filter versions that support both default & module
+  features.nestedWorkers = new BrowserMatcher([
+    new MatcherRule(TYPE_EXCLUDE, '*@*'),
+    new MatcherRule(TYPE_INCLUDE, 'chrome@>=69'),
+    new MatcherRule(TYPE_INCLUDE, 'edge@>=69'),   // specific support line for edge unclear, using chrome's since based off chromium
+    new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'),  // specific support line for ff unclear, using serviceWorker line
+    new MatcherRule(TYPE_INCLUDE, 'android@>=9.0')  // not sure if android supports it at all? -- testing currently disabled
+    // safari & ios does not yet support nested (dedicated) workers, current v16 *cli 10/22
+  ]);
+
+  features.sharedWorkers = new BrowserMatcher([ // not avail android, or Safari below 16
+    new MatcherRule(TYPE_EXCLUDE, '*@*'),
+    new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
+    new MatcherRule(TYPE_INCLUDE, 'edge@>=79'),
+    new MatcherRule(TYPE_INCLUDE, 'safari@>=16.0'),
+    new MatcherRule(TYPE_INCLUDE, 'firefox@>=29'),
+    new MatcherRule(TYPE_INCLUDE, 'ios@>=16.0')
+  ]);
+  features.sharedWorkersFull = features.sharedWorkers.and(features.supportESMWorkers);
+
+  features.serviceWorkers = new BrowserMatcher([
+    new MatcherRule(TYPE_EXCLUDE, '*@*'),
+    new MatcherRule(TYPE_INCLUDE, 'chrome@>60'),  // v60 has unexpected behavior of working on unsecured HTTP tests
+    new MatcherRule(TYPE_INCLUDE, 'edge@>=17'),
+    new MatcherRule(TYPE_INCLUDE, 'safari@>=11.1'),
+    new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'),
+    new MatcherRule(TYPE_INCLUDE, 'android@>=9.0'),
+    new MatcherRule(TYPE_INCLUDE, 'ios@>=11.3')
+  ]);

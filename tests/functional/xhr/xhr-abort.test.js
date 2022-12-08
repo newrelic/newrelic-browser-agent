@@ -4,11 +4,10 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {getXhrFromResponse} = require('./helpers')
+const {fail, getXhrFromResponse} = require('./helpers')
 
 var supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
   .exclude('phantom') // abort calls on phantom always consider XHR requests unsuccessful
-  .exclude('ie@<9') // need XMLHttpRequest.prototype.addEventListener for XHR instrumentation
 
 testDriver.test('no abort call in xhr request', supported, function (t, browser, router) {
   t.plan(12)
@@ -45,12 +44,7 @@ testDriver.test('no abort call in xhr request', supported, function (t, browser,
         t.ok(parsedXhr.metrics.time && parsedXhr.metrics.time.t >= 0, 'has time >= 0')
       }
     }
-  }).catch(fail)
-
-  function fail (err) {
-    t.error(err, 'unexpected error')
-    t.end()
-  }
+  }).catch(fail(t, 'unexpected error'))
 })
 
 testDriver.test('xhr.abort() called in load callback', supported, function (t, browser, router) {
@@ -89,10 +83,5 @@ testDriver.test('xhr.abort() called in load callback', supported, function (t, b
         t.ok(parsedXhr.metrics.time && parsedXhr.metrics.time.t >= 0, 'has time >= 0')
       }
     }
-  }).catch(fail)
-
-  function fail (err) {
-    t.error(err, 'unexpected error')
-    t.end()
-  }
+  }).catch(fail(t, 'unexpected error'))
 })

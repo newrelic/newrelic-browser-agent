@@ -248,7 +248,8 @@ function waitForWindowLoad (fn) {
 }
 
 const {setup} = require('./utils/setup')
-const {Aggregate: PvtAggregate} = require('../../packages/browser-agent-core/features/page-view-timing/aggregate/index')
+const {setInfo} = require("@newrelic/browser-agent-core/src/common/config/config")
+const {Aggregate: PvtAggregate} = require('@newrelic/browser-agent-core/src/features/page-view-timing/aggregate/index')
 
 const {agentIdentifier, aggregator} = setup()
 
@@ -260,7 +261,6 @@ jil.browserTest('page-view-timing serializer default attributes', function (t) {
   waitForWindowLoad(startTest)
 
   function startTest () {
-
     testCases.forEach(testCase => {
       var expectedPayload = qp.encode(testCase.input, schema)
       var payload = pvtAgg.getPayload(getAgentInternalFormat(testCase.input))
@@ -272,8 +272,6 @@ jil.browserTest('page-view-timing serializer default attributes', function (t) {
 })
 
 jil.browserTest('page-view-timing serializer handles custom attributes', function (t) {
-  const {setInfo} = require("../../packages/browser-agent-core/common/config/config")
-
   const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
 
   waitForWindowLoad(startTest)

@@ -5,8 +5,8 @@
 
 import test from '../../../tools/jil/browser-test'
 import { setup } from '../utils/setup'
-import { getRuntime, setInfo, setConfiguration } from '../../../packages/browser-agent-core/common/config/config'
-import { Aggregate as AjaxAggreg } from '../../../packages/browser-agent-core/features/ajax/aggregate/index'
+import { getRuntime, setInfo, setConfiguration } from '@newrelic/browser-agent-core/src/common/config/config'
+import { Aggregate as AjaxAggreg } from '@newrelic/browser-agent-core/src/features/ajax/aggregate/index'
 const qp = require('@newrelic/nr-querypack')
 
 const { baseEE, agentIdentifier, aggregator } = setup();

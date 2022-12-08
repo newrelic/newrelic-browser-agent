@@ -96,6 +96,86 @@ function runTests(loader, supported) {
     }
   })
 
+  testDriver.test(`set custom attribute before page load after loader before info (${loader})`, supported, function (t, browser, router) {
+    let url = router.assetURL('custom-attribute-race-condition.html', opts)
+
+    let loadPromise = browser.get(url)
+    let rumPromise = router.expectRum()
+
+    Promise.all([rumPromise, loadPromise])
+      .then(() => {
+        var errorsPromise = router.expectErrors()
+        var domPromise = browser.get(url) // forces harvest
+        return Promise.all([errorsPromise, domPromise])
+      })
+      .then(([response]) => {
+        const errorsFromPayload = getErrorsFromResponse(response, browser)
+        t.equal(errorsFromPayload[0].custom.customParamKey, 0, 'first error should have a custom parameter set with the expected value')
+
+        t.end()
+      })
+      .catch(fail)
+
+    function fail(e) {
+      t.error(e)
+      t.end()
+    }
+  })
+
+
+  testDriver.test(`set custom attribute with pre-existing attributes before page load after loader before info (${loader})`, supported, function (t, browser, router) {
+    let url = router.assetURL('pre-existing-custom-attribute-race-condition.html', opts)
+
+    let loadPromise = browser.get(url)
+    let rumPromise = router.expectRum()
+
+    Promise.all([rumPromise, loadPromise])
+      .then(() => {
+        var errorsPromise = router.expectErrors()
+        var domPromise = browser.get(url) // forces harvest
+        return Promise.all([errorsPromise, domPromise])
+      })
+      .then(([response]) => {
+        const errorsFromPayload = getErrorsFromResponse(response, browser)
+        t.equal(errorsFromPayload[0].custom.customParamKey, 0, 'first error should have a custom parameter set with the expected value')
+        t.equal(errorsFromPayload[0].custom['hi'], 'mom', 'first error should have a custom parameter set with the expected value')
+
+        t.end()
+      })
+      .catch(fail)
+
+    function fail(e) {
+      t.error(e)
+      t.end()
+    }
+  })
+
+  testDriver.test(`set custom attribute with pre-existing attributes before page load after loader before info precedence check (${loader})`, supported, function (t, browser, router) {
+    let url = router.assetURL('pre-existing-custom-attribute-race-condition-precedence.html', opts)
+
+    let loadPromise = browser.get(url)
+    let rumPromise = router.expectRum()
+
+    Promise.all([rumPromise, loadPromise])
+      .then(() => {
+        var errorsPromise = router.expectErrors()
+        var domPromise = browser.get(url) // forces harvest
+        return Promise.all([errorsPromise, domPromise])
+      })
+      .then(([response]) => {
+        const errorsFromPayload = getErrorsFromResponse(response, browser)
+        t.equal(errorsFromPayload[0].custom.customParamKey, 0, 'first error should have a custom parameter set with the expected value')
+
+        t.end()
+      })
+      .catch(fail)
+
+    function fail(e) {
+      t.error(e)
+      t.end()
+    }
+  })
+
   testDriver.test(`set multiple custom attributes before page load with multiple JS errors occurring after page load (${loader})`, supported, function (t, browser, router) {
     let url = router.assetURL('js-error-with-error-after-page-load.html', opts)
 

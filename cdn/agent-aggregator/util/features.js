@@ -1,7 +1,7 @@
 import { getFeatureDependencyNames } from './featureDependencies'
 import agentIdentifier from '../../shared/agentIdentifier'
-import { getEnabledFeatures } from '@newrelic/browser-agent-core/common/util/enabled-features'
-import { Aggregator } from '@newrelic/browser-agent-core/common/aggregate/aggregator'
+import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/common/util/enabled-features'
+import { Aggregator } from '@newrelic/browser-agent-core/src/common/aggregate/aggregator'
 
 export const modules = {
   pageViewEvent: 'page-view-event',
@@ -17,8 +17,9 @@ export const modules = {
 const lite = [modules.pageViewEvent, modules.pageViewTiming, modules.metrics]
 const pro = [...lite, modules.jsErrors, modules.ajax, modules.pageAction, modules.sessionTrace]
 const spa = [...pro, modules.spa]
+const worker = [ modules.metrics, modules.jsErrors, modules.ajax, modules.pageAction]
 
-const features = { lite, pro, spa }
+const features = { lite, pro, spa, worker }
 
 const sharedAggregator = new Aggregator({agentIdentifier})
 
@@ -33,7 +34,7 @@ export async function importFeatures(build) {
   try {
     await Promise.all(features[build].map(async featureName => {
       if (enabledFeatures[featureName.replace(/-/g, '_')]) {
-        const { Aggregate } = await import(`@newrelic/browser-agent-core/features/${featureName}/aggregate`) // AJAX -- load a small bundle specific to that feature agg
+        const { Aggregate } = await import(`@newrelic/browser-agent-core/src/features/${featureName}/aggregate`) // AJAX -- load a small bundle specific to that feature agg
         aggregators.notInitialized[featureName] = Aggregate
       }
     }))

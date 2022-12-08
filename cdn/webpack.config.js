@@ -100,9 +100,14 @@ const config = (target) => {
       publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
       library: {
         name: 'NRBA',
-        type: 'umd'
+        type: 'self'
       },
       clean: false
+    },
+    resolve: {
+      alias: {
+        '@newrelic/browser-agent-core/src': path.resolve(__dirname, '../packages/browser-agent-core/src')
+      }
     },
 
     optimization: {
@@ -170,4 +175,4 @@ const config = (target) => {
   }
 }
 
-module.exports = [config('browserslist')]
+module.exports = [config('browserslist'), config('webworker')]

@@ -35,11 +35,13 @@ jil.browserTest('initial page load timing', function (t) {
   }
 
   function afterInteractionDone (interaction) {
+    setTimeout(() => {
     t.ok(interaction.root.attrs.trigger === 'initialPageLoad', 'event should be initial page load')
     t.ok(interaction.root.end, 'interaction should have an end time')
     t.ok(interaction.root.attrs.id, 'interaction should have assigned uid')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
     t.end()
+    }, 0)
   }
 })

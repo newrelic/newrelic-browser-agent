@@ -1,13 +1,9 @@
 const testDriver = require('../../../tools/jil/index')
-const querypack = require('@newrelic/nr-querypack')
-const expectSpecificEvents = require('./helpers').expectSpecificEvents
+const {fail, condition} = require('./helpers')
 
-const xhrBrowsers = testDriver.Matcher.withFeature('xhr')
 const fetchBrowsers = testDriver.Matcher.withFeature('fetch')
 
-const condition = (e) => e.type === 'ajax' && e.path === '/json'
-
-testDriver.test('Disabled ajax events', xhrBrowsers, function (t, browser, router) {
+testDriver.test('Disabled ajax events', function (t, browser, router) {
   router.timeout = router.router.timeout = 5000
   const ajaxPromise = router.expectAjaxEvents()
   const rumPromise = router.expectRum()
@@ -35,7 +31,7 @@ testDriver.test('Disabled ajax events', xhrBrowsers, function (t, browser, route
   }
 })
 
-testDriver.test('capturing XHR ajax events', xhrBrowsers, function (t, browser, router) {
+testDriver.test('capturing XHR ajax events', function (t, browser, router) {
   const ajaxPromise = router.expectSpecificEvents({ condition })
   const rumPromise = router.expectRum()
   const loadPromise = browser.safeGet(router.assetURL('xhr-outside-interaction.html', {
@@ -53,17 +49,10 @@ testDriver.test('capturing XHR ajax events', xhrBrowsers, function (t, browser, 
       t.ok(response.length, 'XMLHttpRequest ajax event was harvested')
 
       t.end()
-    }).catch(fail)
-
-
-
-  function fail(err) {
-    t.error(err)
-    t.end()
-  }
+    }).catch(fail(t));
 })
 
-testDriver.test('capturing large payload of XHR ajax events', xhrBrowsers, function (t, browser, router) {
+testDriver.test('capturing large payload of XHR ajax events', function (t, browser, router) {
   const ajaxPromises = Promise.all([
     router.expectSpecificEvents({ condition }),
     router.expectSpecificEvents({ condition })
@@ -84,12 +73,7 @@ testDriver.test('capturing large payload of XHR ajax events', xhrBrowsers, funct
     .then(([responses]) => {
       t.ok(responses)
       t.end()
-    }).catch(fail)
-
-  function fail(err) {
-    t.error(err)
-    t.end()
-  }
+    }).catch(fail(t));
 })
 
 testDriver.test('capturing Fetch ajax events', fetchBrowsers, function (t, browser, router) {
@@ -110,15 +94,10 @@ testDriver.test('capturing Fetch ajax events', fetchBrowsers, function (t, brows
       t.ok(response.length, 'Fetch ajax event was harvested')
 
       t.end()
-    }).catch(fail)
-
-  function fail(err) {
-    t.error(err)
-    t.end()
-  }
+    }).catch(fail(t));
 })
 
-testDriver.test('Distributed Tracing info is added to XHR ajax events', xhrBrowsers, function (t, browser, router) {
+testDriver.test('Distributed Tracing info is added to XHR ajax events', function (t, browser, router) {
   const config = {
     accountID: '1234',
     agentID: '1',
@@ -152,12 +131,7 @@ testDriver.test('Distributed Tracing info is added to XHR ajax events', xhrBrows
       })
 
       t.end()
-    }).catch(fail)
-
-  function fail(err) {
-    t.error(err)
-    t.end()
-  }
+    }).catch(fail(t));
 })
 
 testDriver.test('Distributed Tracing info is added to Fetch ajax events', fetchBrowsers, function (t, browser, router) {
@@ -194,10 +168,5 @@ testDriver.test('Distributed Tracing info is added to Fetch ajax events', fetchB
       })
 
       t.end()
-    }).catch(fail)
-
-  function fail(err) {
-    t.error(err)
-    t.end()
-  }
+    }).catch(fail(t))
 })

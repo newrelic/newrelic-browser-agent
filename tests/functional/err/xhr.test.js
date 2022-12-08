@@ -30,10 +30,11 @@ testDriver.test('reporting errors from XHR callbacks', supported, function (t, b
     const actualErrors = getErrorsFromResponse(response, browser)
     let xhrJSURL = router.assetURL('js/xhr-error.js').split('?')[0]
     let expectedErrors = [{
+      name: 'Error',
       message: 'xhr onload',
       stack: [
         {f: 'XMLHttpRequest.goodxhr', u: xhrJSURL, l: 9},
-        {f: 'XMLHttpRequest.u', u: "<inline>", l: 12},
+        {f: 'XMLHttpRequest.u', u: "<inline>", l: 12}
       ]
     }]
 

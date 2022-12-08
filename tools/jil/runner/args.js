@@ -114,6 +114,10 @@ module.exports = yargs
   .alias('P', 'polyfills')
   .describe('P', 'Add Polyfills script to top of page')
 
+  .boolean('deny-list-bam')
+  .default('deny-list-bam', false)
+  .describe('P', 'Add bam-test-1.nr-local.net to ajax.deny_list')
+
   .help('h')
   .alias('h', 'help')
   .strict()

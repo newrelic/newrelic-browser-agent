@@ -10,10 +10,10 @@ const setupData = setup()
 const {agentIdentifier, aggregator} = setupData
 
 jil.browserTest('stn aggregator does nothing in ie compatability mode', function (t) {
-  require('../../../packages/browser-agent-core/common/browser-version/ie-version')
-  var {Aggregate: StnAggregate} = require('../../../packages/browser-agent-core/features/session-trace/aggregate/index')
+  require('@newrelic/browser-agent-core/src/common/browser-version/ie-version')
+  var {Aggregate: StnAggregate} = require('@newrelic/browser-agent-core/src/features/session-trace/aggregate/index')
   var stnAgg = new StnAggregate(agentIdentifier, aggregator)
-  var {drain} = require('../../../packages/browser-agent-core/common/drain/drain')
+  var {drain} = require('@newrelic/browser-agent-core/src/common/drain/drain')
 
   drain(agentIdentifier, 'feature')
 

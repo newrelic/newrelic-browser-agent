@@ -4,7 +4,7 @@
  */
 
 import test from '../../../tools/jil/browser-test'
-import { responseSizeFromXhr } from '../../../packages/browser-agent-core/features/ajax/instrument/response-size'
+import { responseSizeFromXhr } from '@newrelic/browser-agent-core/src/features/ajax/instrument/response-size'
 
 test('ms-stream has undefined size', function(t) {
   var xhrRequest = {

@@ -7,13 +7,13 @@
 // Name prefixed with zz- to be the last file
 // included in the unit test bundle.
 import test from '../../../tools/jil/browser-test'
-import {addE} from '../../../packages/browser-agent-core/common/event-listener/add-e'
-import { ffVersion } from '../../../packages/browser-agent-core/common/browser-version/firefox-version'
+import {addE} from '@newrelic/browser-agent-core/src/common/event-listener/add-e'
+import { ffVersion } from '@newrelic/browser-agent-core/src/common/browser-version/firefox-version'
 import { setup } from '../utils/setup'
 // Should be loaded first
-import { Instrument as StnInstrument } from '../../../packages/browser-agent-core/features/session-trace/instrument/index'
-import { Instrument as JserrorsInstrument } from '../../../packages/browser-agent-core/features/jserrors/instrument/index'
-import { Aggregate as JserrorsAggregate } from '../../../packages/browser-agent-core/features/jserrors/aggregate/index'
+import { Instrument as StnInstrument } from '@newrelic/browser-agent-core/src/features/session-trace/instrument/index'
+import { Instrument as JserrorsInstrument } from '@newrelic/browser-agent-core/src/features/jserrors/instrument/index'
+import { Aggregate as JserrorsAggregate } from '@newrelic/browser-agent-core/src/features/jserrors/aggregate/index'
 
 const {agentIdentifier, aggregator, baseEE} = setup()
 

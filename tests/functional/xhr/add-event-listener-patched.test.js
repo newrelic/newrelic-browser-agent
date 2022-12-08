@@ -4,10 +4,10 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
+const {fail} = require('./helpers')
 
-var supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
-  .exclude('ie@<9')
-let sendBeaconBrowsers = testDriver.Matcher.withFeature('workingSendBeacon')
+const supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
+const sendBeaconBrowsers = testDriver.Matcher.withFeature('workingSendBeacon')
 
 testDriver.test('xhr instrumentation works with EventTarget.prototype.addEventListener patched', supported, function (t, browser, router) {
   t.plan(1)
@@ -30,10 +30,5 @@ testDriver.test('xhr instrumentation works with EventTarget.prototype.addEventLi
     } else {
       t.ok(query.xhr, 'got XHR data')
     }
-  }).catch(fail)
-
-  function fail (err) {
-    t.error(err, 'unexpected error')
-    t.end()
-  }
+  }).catch(fail(t, 'unexpected error'))
 })

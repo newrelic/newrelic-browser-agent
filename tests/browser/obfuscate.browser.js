@@ -5,11 +5,11 @@
 
 const jil = require('jil')
 import { setup } from './utils/setup'
-import { setConfiguration } from '../../packages/browser-agent-core/common/config/config'
-import { Instrument as MetricsInstrum } from '../../packages/browser-agent-core/features/metrics/instrument/index'
-import { Aggregate as MetricsAggreg } from '../../packages/browser-agent-core/features/metrics/aggregate/index'
-import * as obfuscate from '../../packages/browser-agent-core/common/util/obfuscate'
-import * as win from '../../packages/browser-agent-core/common/window/win'
+import { setConfiguration } from '@newrelic/browser-agent-core/src/common/config/config'
+import { Instrument as MetricsInstrum } from '@newrelic/browser-agent-core/src/features/metrics/instrument/index'
+import { Aggregate as MetricsAggreg } from '@newrelic/browser-agent-core/src/features/metrics/aggregate/index'
+import * as obfuscate from '@newrelic/browser-agent-core/src/common/util/obfuscate'
+import * as win from '@newrelic/browser-agent-core/src/common/window/win'
 
 const { aggregator, agentIdentifier } = setup();
 new MetricsInstrum(agentIdentifier);
@@ -94,7 +94,7 @@ jil.browserTest('Should Obfuscate', function (t) {
 
   t.ok(obfuscatorInst.shouldObfuscate(), 'When init.obfuscate is defined, shouldObfuscate is true')
 
-  //delete win.getWindow().NREUM.init.obfuscate
+  //delete win.getWindowOrWorkerGlobScope().NREUM.init.obfuscate
   setConfiguration(agentIdentifier, {});  // note this'll reset the *whole* config to the default values
   t.ok(!obfuscatorInst.shouldObfuscate(), 'When init.obfuscate is NOT defined, shouldObfuscate is false')
   t.end()
@@ -107,14 +107,14 @@ jil.browserTest('Get Rules', function (t) {
 
   t.ok(!!obfuscate.getRules(agentIdentifier).length, 'getRules should generate a list of rules from init.obfuscate')
 
-  //delete win.getWindow().NREUM.init.obfuscate
+  //delete win.getWindowOrWorkerGlobScope().NREUM.init.obfuscate
   setConfiguration(agentIdentifier, {});  // note this'll reset the *whole* config to the default values
   t.ok(!obfuscate.getRules(agentIdentifier).length, 'getRules should generate an empty list if init.obfuscate is undefined')
 
-  win.setWindow({ ...win.getWindow(), location: { ...fileLocation } })
+  win.setWindowOrWorkerGlobScope({ ...win.getWindowOrWorkerGlobScope(), location: { ...fileLocation } })
   t.ok(!!obfuscate.getRules(agentIdentifier).filter(x => x.regex.source.includes('file')).length, 'getRules should generate a rule for file obfuscation if file protocol is detected')
 
-  win.resetWindow()
+  win.resetWindowOrWorkerGlobScope()
   t.end()
 })
 
@@ -127,11 +127,11 @@ jil.browserTest('Obfuscate String Method', function (t) {
   t.ok(!obfuscatorInst.obfuscateString('http://example.com/pii/123').includes('pii'), 'Successfully obfuscates string')
   t.ok(!obfuscatorInst.obfuscateString('http://example.com/abcdefghijklmnopqrstuvwxyz/123').includes('i'), 'Successfully obfuscates regex')
 
-  win.setWindow({ ...win.getWindow(), location: { ...fileLocation } })
-  //delete win.getWindow().NREUM.init.obfuscate
+  win.setWindowOrWorkerGlobScope({ ...win.getWindowOrWorkerGlobScope(), location: { ...fileLocation } })
+  //delete win.getWindowOrWorkerGlobScope().NREUM.init.obfuscate
   setConfiguration(agentIdentifier, {});  // note this'll reset the *whole* config to the default values
   t.ok(obfuscatorInst.obfuscateString('file:///Users/jporter/Documents/Code/scratch/noticeErrorTest.html') === 'file://OBFUSCATED', 'Successfully obfuscates file protocol')
 
-  win.resetWindow()
+  win.resetWindowOrWorkerGlobScope()
   t.end()
 })

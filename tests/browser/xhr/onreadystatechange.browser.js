@@ -9,8 +9,8 @@ import { setup } from '../utils/setup'
 const { agentIdentifier } = setup();
 
 jil.browserTest('xhr with onreadystatechange assigned after send', async function (t) {
-  const ffVersion = await import('../../../packages/browser-agent-core/common/browser-version/firefox-version');
-  const { Instrument: AjaxInstrum } = await import('../../../packages/browser-agent-core/features/ajax/instrument/index');
+  const ffVersion = await import('@newrelic/browser-agent-core/src/common/browser-version/firefox-version');
+  const { Instrument: AjaxInstrum } = await import('@newrelic/browser-agent-core/src/features/ajax/instrument/index');
   const ajaxTestInstr = new AjaxInstrum(agentIdentifier);
 
   setTimeout(() => {
@@ -43,8 +43,8 @@ jil.browserTest('xhr with onreadystatechange assigned after send', async functio
 })
 
 jil.browserTest('multiple XHRs with onreadystatechange assigned after send', async function (t) {
-  const ffVersion = await import('../../../packages/browser-agent-core/common/browser-version/firefox-version');
-  const { Instrument: AjaxInstrum } = await import('../../../packages/browser-agent-core/features/ajax/instrument/index');
+  const ffVersion = await import('@newrelic/browser-agent-core/src/common/browser-version/firefox-version');
+  const { Instrument: AjaxInstrum } = await import('@newrelic/browser-agent-core/src/features/ajax/instrument/index');
   const ajaxTestInstr = new AjaxInstrum(agentIdentifier);
 
   setTimeout(() => {

@@ -5,8 +5,14 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## v1221
 
+### Add infrastructure to run on web workers
+The agent's infrastructure will now allow for the agent to be built to run on web workers for future projects.
+
 ### Expose webpack library as output type "self" vs. "umd"
 To address "mismatched anonymous define" errors thrown by RequireJS, the agent's webpack library output will no longer include UMD checks for CommonJS and AMD module environments, and will instead be exposed globally via `self`.
+
+### Fix custom attribute handling in cases where the info block is loaded after initialization
+Fixed an issue where custom attributes could be cleared and reset if the info block was included on the page below the loader script. Our guidance still remains that **all configurations should be included on the page above the loader code**, however this is an attempt to do no harm when feasible for backwards compatibility.
 
 ### Update JS error bucketing algorithm
 The Agent will now take into account the error object type, message, and original stack trace when deciding on whether multiple JS errors should be bucketed together.

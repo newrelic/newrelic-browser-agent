@@ -4,17 +4,26 @@ on:
   workflow_dispatch:
 
 jobs:
-  publish-to-s3:
+  publish-current-to-s3:
     runs-on: ubuntu-latest
     container: node:14
     env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+      BUILD_NUMBER: Release${{ github.event.number }}-${{ github.run_number }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v2
       - name: install
         run: npm ci
-      - name: build
+      - name: build:all
+        run: npm run build:all
+      - name: run tests
+        run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=4
+      - name: build:current
         run: npm run cdn:build:current
       - name: upload artifacts to S3
         run: |
@@ -22,4 +31,4 @@ jobs:
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }}
       - name: check files exist
-        run: node tools/scripts/check-version.js -e yes
+        run: node tools/scripts/check-version.js -e yes -m

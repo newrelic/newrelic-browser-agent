@@ -410,13 +410,12 @@ features.es6 = new BrowserMatcher()
 
   /* vvv--- Workers API support ---vvv
   */
-  features.workers = new BrowserMatcher([ // NOTE: module type workers have different (higher) compatibility versions
+  features.workers = new BrowserMatcher([ // NOTE: module type workers have different (higher) compatibility versions, excluding IE11
     new MatcherRule(TYPE_EXCLUDE, '*@*'),
     new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
     new MatcherRule(TYPE_INCLUDE, 'edge@>=12'),
     new MatcherRule(TYPE_INCLUDE, 'safari@>=4'),
     new MatcherRule(TYPE_INCLUDE, 'firefox@>=3.5'),
-    new MatcherRule(TYPE_INCLUDE, 'ie@>=10'),
     new MatcherRule(TYPE_INCLUDE, 'android@>=4.4'),
     new MatcherRule(TYPE_INCLUDE, 'ios@>=5')
   ]);

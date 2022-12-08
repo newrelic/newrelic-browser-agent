@@ -5,6 +5,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## v1221
 
+### Add infrastructure to run on web workers
+The agent's infrastructure will now allow for the agent to be built to run on web workers for future projects.
+
 ### Expose webpack library as output type "self" vs. "umd"
 To address "mismatched anonymous define" errors thrown by RequireJS, the agent's webpack library output will no longer include UMD checks for CommonJS and AMD module environments, and will instead be exposed globally via `self`.
 

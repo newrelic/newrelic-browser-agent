@@ -6,6 +6,7 @@
 const testDriver = require('../../../tools/jil/index')
 const {fail} = require('../uncat-internal-help.cjs')
 
+let supported = testDriver.Matcher.withFeature('notInternetExplorer')
 const init = {
   spa: {
     harvestTimeSeconds: 5
@@ -34,7 +35,7 @@ var timedPromiseAll = (promises, ms) => Promise.race([
   Promise.all(promises)
 ])
 
-testDriver.test('jspdf generation should not cause error', function (t, browser, router) {
+testDriver.test('jspdf generation should not cause error', supported, function (t, browser, router) {
   // t.plan(1)
 
   // This only works with the full loader. With the SPA loader, an internal error is still generated but the PDF is now generating.

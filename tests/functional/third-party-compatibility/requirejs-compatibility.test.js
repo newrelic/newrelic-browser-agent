@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require('../../tools/jil/index')
+const testDriver = require('jil')
 
 let matcher = testDriver.Matcher.withFeature('frameworks')
 
@@ -18,7 +18,7 @@ const init = {
 
 testDriver.test(`Loading RequireJS does not cause errors.`, matcher, function (t, browser, router) {
   t.plan(1)
-  
+
   let rumPromise = router.expectRum()
   let assetUrl = router.assetURL('requirejs-compatibility.html', {
     init: {

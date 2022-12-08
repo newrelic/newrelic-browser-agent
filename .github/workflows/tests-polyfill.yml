@@ -1,300 +1,18 @@
 name: Polyfill Tests
 
 on:
-  push:
-    branches:
-      - main
-      - dev 
   workflow_dispatch:
 
 env:
   BUILD_NUMBER: PR${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
 
 jobs:
-  chrome-functional:
-    timeout-minutes: 90
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    container: node:14
-    
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
-
-      - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b chrome@* -s -t 85000 --concurrent=2 --functional-only
-  chrome-unit:
-    timeout-minutes: 90
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    container: node:14
-    
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
-
-      - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b chrome@* -s -t 85000 --concurrent=2 --unit-only
-  firefox-functional:
-    timeout-minutes: 90
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    container: node:14
-    
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
-
-      - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b firefox@* -s -t 85000 --concurrent=2 --functional-only
-  firefox-unit:
-    timeout-minutes: 90
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    container: node:14
-    
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
-
-      - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b firefox@* -s -t 85000 --concurrent=2 --unit-only
-  edge-functional:
-    timeout-minutes: 90
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    container: node:14
-    
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
-
-      - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b edge@* -s -t 85000 --concurrent=2 --functional-only
-  edge-unit:
-    timeout-minutes: 90
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    container: node:14
-    
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
-
-      - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b edge@* -s -t 85000 --concurrent=2 --unit-only
-  safari-functional:
-    timeout-minutes: 90
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    container: node:14
-    
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
-
-      - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b safari@* -s -t 85000 --concurrent=2 --functional-only
-  safari-unit:
-    timeout-minutes: 90
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    container: node:14
-    
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
-
-      - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b safari@* -s -t 85000 --concurrent=2 --unit-only
-  ios-functional:
-    timeout-minutes: 90
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    container: node:14
-    
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
-
-      - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ios@* -s -t 85000 --concurrent=2 --functional-only
-  ios-unit:
-    timeout-minutes: 90
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    container: node:14
-    
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
-
-      - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ios@* -s -t 85000 --concurrent=2 --unit-only
-  android-functional:
-    timeout-minutes: 90
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    container: node:14
-    
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      
-      - name: build
-        run: npm run build:all
-
-      - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b android@* -s -t 85000 --concurrent=2 --functional-only
-  android-unit:
-    timeout-minutes: 90
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    container: node:14
-    
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      
-      - name: build
-        run: npm run build:all
-
-      - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b android@* -s -t 85000 --concurrent=2 --unit-only
   ie-functional:
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -317,7 +35,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -335,12 +53,12 @@ jobs:
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=2 --unit-only
-  check-failures:
+  polyfill-check-failures:
     runs-on: ubuntu-latest
     continue-on-error: true
     container: node:14
     if: ${{ !failure() }}  # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
-    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, safari-functional, safari-unit, edge-functional, edge-unit, ios-functional, ios-unit, android-functional, android-unit, ie-functional, ie-unit]
+    needs: [ie-functional, ie-unit]
     env:
 
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
@@ -352,6 +70,5 @@ jobs:
 
       - name: check failed tests
         run: node --max-old-space-size=8192 ./tools/jil/util/get-failed-tests.js
-        
-  
-        
+
+

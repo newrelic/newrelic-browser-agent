@@ -6,7 +6,7 @@
 const testDriver = require('jil')
 const {assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse} = require('./assertion-helpers')
 
-let supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
+let supported = testDriver.Matcher.withFeature('notInternetExplorer')
 const init = {
     page_view_timing: {
         enabled: false

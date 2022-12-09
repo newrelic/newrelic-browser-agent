@@ -1,5 +1,6 @@
 const testDriver = require('../../../tools/jil/index')
 
+// Used to initialize the agent in the asset page.
 const init = {
   metrics: {
     enabled: false
@@ -8,11 +9,19 @@ const init = {
     enabled: false
   },
   ajax: {
-    harvestTimeSeconds: 1,
+    harvestTimeSeconds: 1, // Speed up harvest.
     enabled: true
   }
 }
 
+/**
+ * Takes an iterable (e.g., array) of promises and returns a single promise that fulfills when all
+ * the input's promises fulfill; or if the specified milliseconds have elapsed first, returns a
+ * single promise that fulfills with a value of `undefined`.
+ * @param {Promise[]} promises - iterable (e.g. array) of promises to be resolved.
+ * @param {number} ms - milliseconds before resolving with undefined.
+ * @returns 
+ */
 var timedPromiseAll = (promises, ms) => Promise.race([
   new Promise((resolve) => {
     setTimeout(() => resolve(), ms)

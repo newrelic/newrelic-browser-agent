@@ -102,6 +102,7 @@
     "nx": "^15.0.9",
     "pre-commit": "^1.2.2",
     "preprocessify": "0.0.6",
+    "prettier": "^2.8.1",
     "request": "2.74.0",
     "sauce-connect-launcher": "^1.2.4",
     "server-destroy": "^1.0.1",

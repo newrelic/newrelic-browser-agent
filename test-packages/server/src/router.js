@@ -13,7 +13,7 @@ const { _extend } = require('util')
 const { asserters } = require('wd')
 const querypack = require('@newrelic/nr-querypack')
 
-let rootDir = path.resolve(__dirname, '../../../')
+let rootDir = path.resolve(__dirname, '../../../../')
 
 class Router extends BaseServer {
   constructor(assetServer, config, output) {
@@ -177,8 +177,8 @@ class RouterHandle {
   }
 
   async expectSpecificEvents({
-    appID, 
-    condition=(e) => e.type === 'ajax', 
+    appID,
+    condition=(e) => e.type === 'ajax',
     expecter='expectAjaxEvents'
   }){
     const {body, query} = await this[expecter](appID)
@@ -186,7 +186,7 @@ class RouterHandle {
     let matches = ajaxEvents.filter(condition)
     if (!matches.length) matches = this.expectSpecificEvents({expecter, condition})
     return matches
-  }  
+  }
 
   expectErrors(appID) {
     // errors harvest at 60s

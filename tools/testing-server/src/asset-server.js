@@ -20,9 +20,9 @@ const concat = require('concat-stream')
 const multiparty = require('multiparty')
 const assert = require('assert')
 const preprocessify = require('preprocessify')
-const loaders = require('../util/loaders')
+const loaders = require('../../../tools/jil//util/loaders')
 const UglifyJS = require('uglify-js')
-var runnerArgs = require('../runner/args')
+var runnerArgs = require('../../../tools/jil/runner/args')
 
 mime.types['es6'] = 'application/javascript'
 
@@ -539,7 +539,7 @@ class AssetServer extends BaseServer {
     this.defaultLoader = testConfig.loader
     this.debugShim = testConfig.debugShim
     this.buildDir = path.resolve(__dirname, '../../../build')
-    this.assetsDir = path.resolve(__dirname, '../../..')
+    this.assetsDir = path.resolve(__dirname, '../../../')
     this.unitTestDir = path.resolve(__dirname, '../../../tests/browser')
     this.addHandler(this.serviceRequest.bind(this))
     this.router = new Router(this, testConfig, output)

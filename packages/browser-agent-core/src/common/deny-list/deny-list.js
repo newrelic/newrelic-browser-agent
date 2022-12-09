@@ -4,7 +4,8 @@ export function shouldCollectEvent(params) {
   if (denyList.length === 0) {
     return true
   }
-
+  
+  // XHR requests with an undefined hostname (e.g., data URLs) should not be collected.
   if (params.hostname === undefined) {
     return false
   }

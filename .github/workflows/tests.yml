@@ -13,7 +13,7 @@ jobs:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    container: node:14
+    container: node:16
     
     steps:
       - uses: actions/checkout@v3
@@ -32,7 +32,7 @@ jobs:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    container: node:14
+    container: node:16
     
     steps:
       - uses: actions/checkout@v3
@@ -52,7 +52,7 @@ jobs:
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container: node:16
     
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -78,7 +78,7 @@ jobs:
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container: node:16
     
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -104,7 +104,7 @@ jobs:
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container: node:16
     
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -130,7 +130,7 @@ jobs:
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container: node:16
     
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -156,7 +156,7 @@ jobs:
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container: node:16
     
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -182,7 +182,7 @@ jobs:
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container: node:16
     
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -208,7 +208,7 @@ jobs:
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container: node:16
     
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -234,7 +234,7 @@ jobs:
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container: node:16
     
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -260,7 +260,7 @@ jobs:
     timeout-minutes: 45
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container: node:16
     
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -286,7 +286,7 @@ jobs:
     timeout-minutes: 45
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container: node:16
     
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -312,7 +312,7 @@ jobs:
   #   timeout-minutes: 30
   #   continue-on-error: true
   #   runs-on: ubuntu-latest
-  #   container: node:14
+  #   container: node:16
   #   
   #   env:
   #     NEWRELIC_ENVIRONMENT: ci
@@ -339,7 +339,7 @@ jobs:
   #   timeout-minutes: 30
   #   continue-on-error: true
   #   runs-on: ubuntu-latest
-  #   container: node:14
+  #   container: node:16
   #   
   #   env:
   #     NEWRELIC_ENVIRONMENT: ci
@@ -363,7 +363,7 @@ jobs:
   #       run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 --unit-only
   check-failures:
     runs-on: ubuntu-latest
-    container: node:14
+    container: node:16
     if: contains(github.event.pull_request.labels.*.name, 'safe to test') && ${{ !failure() }}  # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
     needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, safari-functional, safari-unit, edge-functional, edge-unit, ios-functional, ios-unit]
     env:

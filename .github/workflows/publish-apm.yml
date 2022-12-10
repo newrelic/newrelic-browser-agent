@@ -2,6 +2,15 @@ name: Build and publish PROD to APM DB
 
 on:
   workflow_dispatch:
+    inputs:
+      db_env:
+        description: 'DB Environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+          - eu
 
 jobs:
   publish-to-s3:
@@ -30,4 +39,5 @@ jobs:
           node tools/scripts/upload-to-nr.js \
             --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
             --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
-            --eu-api-key=${{ secrets.NR_API_KEY_EU }}
+            --eu-api-key=${{ secrets.NR_API_KEY_EU }} \
+            --environments=${{ github.event.inputs.db_env }}

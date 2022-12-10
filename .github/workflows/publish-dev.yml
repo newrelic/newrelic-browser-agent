@@ -32,7 +32,7 @@ jobs:
         run: |
           node ./tools/scripts/upload-ab-to-s3.js \
             --env staging \
-            --appId ${{ secrets.INTERNAL_DEV_APPLICATION_ID }} \
+            --appId ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }}

@@ -1,6 +1,8 @@
 name: Build and Deploy PR to NR Dev
 
 on:
+  pull_request_target:
+    types: [labeled]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -9,6 +11,7 @@ on:
 
 jobs:
   pr-dev-build:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     runs-on: ubuntu-latest
     container: node:14
     env:

@@ -72,7 +72,8 @@ const config = {
     errorBeacon: 'staging-bam.nr-data.net',
     licenseKey: `${licenseKey}`,
     applicationID: `${appId}`,
-    sa: 1
+    sa: 1,
+    agent: `https://js-agent.newrelic.com/nr-spa-1216.min.js` // legacy remnant for backwards compat
   },
 };
 
@@ -86,7 +87,7 @@ function getIdFromUrl(url) {
   const filePaths = [
     ...(env !== 'dev' ? [current] : []), // defaults to current build
     next, // defaults to dev build
-    ...(env === 'dev' && await getOpenPrNums()).map(num => `https://js-agent.newrelic.com/pr/PR-${num}/nr-loader-spa.min.js`),
+    ...(env === 'dev' && await getOpenPrNums() || []).map(num => `https://js-agent.newrelic.com/pr/PR-${num}/nr-loader-spa.min.js`),
   ]
 
   Promise.all(filePaths.map(fp => getFile(fp))).then((contents) => {

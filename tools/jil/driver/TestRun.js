@@ -204,7 +204,8 @@ class TestRun extends EventEmitter {
       .catch((err) => {
         retry++
         if (retry > numberOfRetries) {
-          throw err
+          console.error(err)
+          process.exit(1)
         }
 
         return this._initializeBrowser(

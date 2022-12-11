@@ -58,6 +58,7 @@
     "phantom": "^6.3.0"
   },
   "devDependencies": {
+    "@actions/core": "^1.10.0",
     "@babel/core": "^7.18.5",
     "@babel/plugin-syntax-dynamic-import": "^7.8.3",
     "@babel/plugin-transform-modules-commonjs": "^7.18.2",

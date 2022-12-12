@@ -5,8 +5,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var fs = require('fs')
-var path = require('path')
 var request = require('request')
 var util = require('util')
 var yargs = require('yargs')
@@ -36,6 +34,10 @@ var argv = yargs
 
   .argv
 
+/**
+ * An async wrapper around the execution logic
+ * @returns
+ */
 async function run() {
   var loaders = await loaderFilenames()
   var targetEnvironments = argv.environments.split(',')
@@ -74,7 +76,12 @@ async function run() {
     }
   })
 
-
+/**
+ * Iterate over each environment to upload loaders
+ * @param {string} environment 
+ * @param {Function} cb 
+ * @returns {void}
+ */
   function uploadAllLoadersToDB(environment, cb) {
     asyncForEach(loaders, function (data, next) {
       const filename = Object.keys(data)[0]
@@ -83,6 +90,12 @@ async function run() {
     }, cb, uploadErrorCallback)
   }
 
+  /**
+   * Download a file
+   * @param {string} path 
+   * @param {string} fileName 
+   * @returns {Promise<[string, string, string]>}
+   */
   function getFile(path, fileName) {
     var opts = {
       uri: path,
@@ -103,6 +116,13 @@ async function run() {
     })
   }
 
+  /**
+   * Upload a loader to NRDB
+   * @param {string} filename 
+   * @param {string} loader 
+   * @param {string} environment 
+   * @param {Function} cb 
+   */
   function uploadLoaderToDB(filename, loader, environment, cb) {
     var baseOptions = {
       method: 'PUT',
@@ -151,18 +171,29 @@ async function run() {
     })
   }
 
+  /**
+   * Fetches an array of loader filenames and contents from the CDN
+   * @returns {Promise<{[fileName]: string}[]>} Promise contains an array of objects {[filename]: body} --> {'nr-loader-spa-1221.min.js': ...scriptContents}
+   */
   async function loaderFilenames() {
     const loaderTypes = ['rum', 'full', 'spa']
     const version = argv['version']
-    const fileNames = loaderTypes.map(type => [`nr-loader-${type}-${version}.min.js`, `nr-loader-${type}-polyfills-${version}.min.js`]).flat()
+    const fileNames = loaderTypes.map(type => [
+      `nr-loader-${type}-${version}.min.js`, 
+      `nr-loader-${type}-polyfills-${version}.min.js`,
+      `nr-loader-${type}-${version}.js`, 
+      `nr-loader-${type}-polyfills-${version}.js`,
+    ]).flat()
     const loaders = (await Promise.all(fileNames.map(fileName => getFile(`https://js-agent.newrelic.com/${fileName}`, fileName)))).map(([url, fileName, body]) => ({ [fileName]: body }))
     return loaders
   }
 
-  // errorCallback is optional
-  // If not specified, processing will terminate on the first error.
-  // If specified, the errorCallback will be invoked once for each error error,
-  // and the done callback will be invoked once each item has been processed.
+  /**
+   * @param {Array<Function>} list - Array of functions to execute
+   * @param {Function} op - operator cb
+   * @param {Function} done - terminal cb
+   * @param {Function=} errorCallback - If not specified, processing will terminate on the first error. If specified, the errorCallback will be invoked once for each error error, and the done callback will be invoked once each item has been processed.
+  */
   function asyncForEach(list, op, done, errorCallback) {
     var index = 0
 

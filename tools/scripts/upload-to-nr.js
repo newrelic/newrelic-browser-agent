@@ -158,7 +158,10 @@ async function run() {
     }
 
     console.log('Uploading loader ' + filename + ' to ' + environment + '...')
-    var options = util._extend(envOptions[environment], baseOptions)
+    var options = {
+      ...envOptions[environment],
+      ...baseOptions
+    }
 
     request(options, function (err, res, body) {
       if (err) return cb(err)

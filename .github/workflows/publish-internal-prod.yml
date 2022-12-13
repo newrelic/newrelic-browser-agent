@@ -40,8 +40,8 @@ jobs:
         run: |
           node ./tools/scripts/upload-ab-to-s3.js \
             --env eu-prod \
-            --current https://js-agent.newrelic.com/nr-loader-spa-${{ github.event.inputs.current }}.min.js
-            --next https://js-agent.newrelic.com/nr-loader-spa-${{ github.event.inputs.next }}.min.js
+            --current https://js-agent.newrelic.com/nr-loader-spa-${{ github.event.inputs.current }}.min.js \
+            --next https://js-agent.newrelic.com/nr-loader-spa-${{ github.event.inputs.next }}.min.js \
             --appId ${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \

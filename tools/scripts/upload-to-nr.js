@@ -6,7 +6,6 @@
  */
 
 var request = require('request')
-var util = require('util')
 var yargs = require('yargs')
 
 var argv = yargs

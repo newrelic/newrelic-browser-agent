@@ -50,8 +50,6 @@ async function run() {
     }
   }
 
-  var fileData = {}
-
   var steps = []
 
   targetEnvironments.forEach(function (env) {

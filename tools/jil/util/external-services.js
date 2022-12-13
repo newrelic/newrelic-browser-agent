@@ -7,8 +7,22 @@ const sauceConnectLauncher = require('sauce-connect-launcher')
 const os = require('os')
 const childProcess = require('child_process')
 const phantomjs = require('phantomjs-prebuilt')
+const uuid = require('uuid');
 
 let externalServices = new Set()
+let sauceLabsTunnelIdentifier;
+
+function getSauceLabsTunnelIdentifier() {
+  if (!sauceLabsTunnelIdentifier) {
+    if (process.env.CI) {
+      sauceLabsTunnelIdentifier = uuid.v4() + '@' + os.hostname()
+    } else {
+      sauceLabsTunnelIdentifier = process.env.USER + '@' + os.hostname()
+    }
+  }
+
+  return sauceLabsTunnelIdentifier
+}
 
 function getSauceLabsCreds () {
   let sauceLabsUsername = process.env.JIL_SAUCE_LABS_USERNAME
@@ -35,9 +49,9 @@ function startExternalServices (browsers, config, cb) {
   if (needPhantom) startPhantom(checkDone)
   if (needSauce) startSauce(config, checkDone)
 
-  function checkDone () {
+  function checkDone (error) {
     if (--remaining) return
-    cb()
+    cb(error)
   }
 }
 
@@ -75,7 +89,7 @@ function startPhantom (cb) {
 }
 
 function startSauce (config, cb) {
-  var tunnelIdentifier = process.env.USER + '@' + os.hostname()
+  var tunnelIdentifier = getSauceLabsTunnelIdentifier()
   var sauceCreds = getSauceLabsCreds()
 
   var opts = {
@@ -85,7 +99,7 @@ function startSauce (config, cb) {
     noSslBumpDomains: 'all'
   }
 
-  if (config.verbose) {
+  if (config.verbose || process.env.CI) {
     opts.verbose = true
     opts.verboseDebugging = true
     console.log('starting sauce-connect with tunnel ID = ' + tunnelIdentifier)
@@ -112,4 +126,4 @@ function isSauceConnected() {
   return false
 }
 
-module.exports = {getSauceLabsCreds, startExternalServices, stopExternalServices, startSauce, isSauceConnected}
+module.exports = {getSauceLabsCreds, getSauceLabsTunnelIdentifier, startExternalServices, stopExternalServices, startSauce, isSauceConnected}

@@ -13,87 +13,74 @@ jobs:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     runs-on: ubuntu-latest
     container: node:14
-    
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
-
+      - name: install dependencies
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
       - name: lint
-        run: npm run lint
-  package-tests:
+        run: |
+          npm run lint
+          npx nx run-many --target=lint
+
+  unit-tests:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     runs-on: ubuntu-latest
     container: node:14
-    
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+      - name: install dependencies
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
+      - name: unit-tests
+        run: |
+          npx nx run-many --target=test
 
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
-
-      - name: test
-        run: npm run packages:test
-
-  
-  get-browsers:
+  generate-test-matrix:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     runs-on: ubuntu-latest
     outputs:
       browsers: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - id: set-matrix
+      - name: install dependencies
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
+      - name: generate test matrix
+        id: set-matrix
         run: node ./tools/scripts/read-browsers-list.js
 
-  test:
-    needs: get-browsers
+  jil-tests:
     runs-on: ubuntu-latest
     container: node:14
+    needs: [generate-test-matrix]
     timeout-minutes: 30
     continue-on-error: true
-
     strategy:
       fail-fast: true
+      max-parallel: 10
       matrix:
-        browser: ${{ fromJson(needs.get-browsers.outputs.browsers) }}
-
+        browser: ${{ fromJson(needs.generate-test-matrix.outputs.browsers) }}
+        test-type: ['functional', 'unit']
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
       JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
+      - name: install dependencies
+        run: npm ci --silent --no-fund --no-audit --no-progress # Cannot ignore scripts here
       - name: build
         run: npm run build:all
-
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ${{ matrix.browser }} -s -t 85000 --concurrent=4
-      
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ${{ matrix.browser }} -s -t 85000 --concurrent=4 --${{ matrix.test-type }}-only
+
       # - uses: newrelic-forks/retry@master
       #   with:
       #     timeout_minutes: 30
@@ -103,16 +90,14 @@ jobs:
   check-failures:
     runs-on: ubuntu-latest
     container: node:14
-    needs: [test]
+    needs: [jil-tests]
     env:
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
+      - name: install dependencies
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
       - name: check failed tests
         run: node --max-old-space-size=8192 ./tools/jil/util/get-failed-tests.js

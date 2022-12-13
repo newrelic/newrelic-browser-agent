@@ -13,7 +13,7 @@ const os = require('os')
 const glob = require('glob')
 const Driver = require('../driver')
 const loadBrowser = require('../loader/loadBrowser')
-const { getSauceLabsCreds, startExternalServices, stopExternalServices } = require('../util/external-services')
+const { getSauceLabsCreds, getSauceLabsTunnelIdentifier, startExternalServices, stopExternalServices } = require('../util/external-services')
 
 const buildIdentifier = getBuildIdentifier()
 const output = new Output(config)
@@ -29,8 +29,6 @@ process.on('unhandledRejection', (reason, p) => {
   console.log('Unhandled Rejection:')
   console.log(reason)
 })
-
-let tunnelIdentifier = process.env.USER + '@' + os.hostname()
 
 let commandLineTestFiles = config._
 
@@ -125,7 +123,7 @@ function loadBrowsersAndRunTests() {
     let connectionInfo = {}
 
     if (!browser.isPhantom()) {
-      desired['tunnel-identifier'] = tunnelIdentifier
+      desired['tunnel-identifier'] = getSauceLabsTunnelIdentifier()
 
       if (config.seleniumServer) {
         connectionInfo = `http://${config.seleniumServer}/wd/hub`

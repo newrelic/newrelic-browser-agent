@@ -6,9 +6,7 @@
 const testDriver = require('../../../tools/jil/index')
 const {fail, querypack} = require('./helpers')
 
-const noPhantom = testDriver.Matcher.withFeature('noPhantom')
-
-testDriver.test('ajax events harvests are retried when collector returns 429', noPhantom, function (t, browser, router) {
+testDriver.test('ajax events harvests are retried when collector returns 429', function (t, browser, router) {
   let assetURL = router.assetURL('xhr-outside-interaction.html', {
     loader: 'full',
     init: {

@@ -5,6 +5,5 @@ It is based on the following technologies:
 
 * tape
 * SauceLabs
-* PhantomJS
 
 Please see the [Browser Agent README](https://github.com/newrelic/newrelic-browser-agent/blob/main/README.md#testing) for more information on using JIL for local testing.

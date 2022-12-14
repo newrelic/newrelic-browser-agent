@@ -126,7 +126,6 @@ features.wrappableAddEventListener = features.addEventListener
   // because in those versions, each descendent of Element gets its own unique
   // copy of addEventListener, rather than inheriting via the prototype chain.
   .exclude('firefox', '<25')
-  .exclude('phantom')
 
 features.hasInnerText = features.addEventListener
   // https://developer.mozilla.org/en-US/docs/Web/API/Node/innerText
@@ -139,7 +138,6 @@ features.uncaughtErrorObject = new BrowserMatcher()
   .exclude('android', '<4.4')
   .exclude('ie', '<11')
   .exclude('safari', '<10')
-  .exclude('phantom')
   .exclude('edge')
 
 features.errorStack = new BrowserMatcher()
@@ -153,11 +151,8 @@ features.setImmediate = new BrowserMatcher()
 features.xhr = new BrowserMatcher()
   .exclude('ie@<9')
 
-features.noPhantom = new BrowserMatcher()
-.exclude('phantom');
-
-/** DEPRECATED -- just use noPhantom instead */
-features.xhrWithAddEventListener = features.xhr.and(features.noPhantom)
+/** DEPRECATED -- just use xhr instead */
+features.xhrWithAddEventListener = features.xhr
 
 // requires window.perfomance.getEntriesByType
 features.stn = new BrowserMatcher()
@@ -167,7 +162,6 @@ features.stn = new BrowserMatcher()
   .exclude('ie', '<10')
   .exclude('safari', '<=10.1')
   .exclude('ios', '<=10.3') // because of https://developer.mozilla.org/en-US/docs/Web/API/Performance/getEntriesByType
-  .exclude('phantom')
 
 features.navTiming = new BrowserMatcher()
   .exclude('chrome', '<6')
@@ -188,7 +182,6 @@ features.promise = new BrowserMatcher()
   .exclude('safari', '<7.1')
   .exclude('ios', '<8')
   .exclude('android', '<4.4.4')
-  .exclude('phantom')
 
 features.mutation = new BrowserMatcher()
   .exclude('ie', '<=11')
@@ -197,7 +190,6 @@ features.mutation = new BrowserMatcher()
   .exclude('safari', '<6.1')
   .exclude('ios', '<7.1')
   .exclude('android', '<4.4')
-  .exclude('phantom')
 
 features.fetch = new BrowserMatcher()
   .exclude('ie', '<=11')
@@ -207,7 +199,6 @@ features.fetch = new BrowserMatcher()
   .exclude('safari', '<10.1') // MDN says 10, but per tests 10.1 (also noted here https://en.wikipedia.org/wiki/Safari_version_history)
   .exclude('ios', '<=10.2') // https://github.com/github/fetch/issues/401
   .exclude('android', '<=4.4')
-  .exclude('phantom')
 
 // some browsers support basic fetch API, but not all supporting functions,
 // e.g. arrayBuffer on ios@10 generates an error when used with FormData instance
@@ -256,7 +247,6 @@ features.blob = new BrowserMatcher()
   .exclude('safari', '<6')
   .exclude('ios', '<7.1')
   .exclude('android')
-  .exclude('phantom')
 
 /** DEPRECATED */
 features.tls = new BrowserMatcher()
@@ -266,7 +256,6 @@ features.addEventListenerOptions = new BrowserMatcher()
   .exclude('firefox', '<49')
   .exclude('chrome', '<49')
   .exclude('android')
-  .exclude('phantom')
   .exclude('safari', '<10')
   .exclude('edge')
   .exclude('ios')

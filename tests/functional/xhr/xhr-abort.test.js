@@ -7,7 +7,6 @@ const testDriver = require('../../../tools/jil/index')
 const {fail, getXhrFromResponse} = require('./helpers')
 
 var supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
-  .exclude('phantom') // abort calls on phantom always consider XHR requests unsuccessful
 
 testDriver.test('no abort call in xhr request', supported, function (t, browser, router) {
   t.plan(12)

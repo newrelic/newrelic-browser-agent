@@ -18,10 +18,6 @@ class BrowserSpec {
     this.desired = desired
   }
 
-  isPhantom() {
-    return this.desired.browserName === 'phantom'
-  }
-
   allowsExtendedDebugging() {
     return ['chrome', 'firefox'].includes(this.desired.browserName) && this.version === 'latest'
   }
@@ -87,7 +83,7 @@ function resetBrowserList() {
   allowedBrowsers = browsers
 }
 
-function browserList(pattern = 'phantom@latest') {
+function browserList(pattern = 'chrome@latest') {
   let requested = pattern.trim().split(/\s*,\s*/)
     .map(parse)
     .reduce((a, b) => a.concat(b), [])
@@ -106,7 +102,7 @@ function browserList(pattern = 'phantom@latest') {
 
 function parse(pattern) {
   let [browser, range] = pattern.split('@')
-  return getBrowsersFor(browser || 'phantom', range)
+  return getBrowsersFor(browser || 'chrome', range)
 }
 
 function getBrowsersFor(browser, range) {

@@ -20,13 +20,13 @@ const concat = require('concat-stream')
 const multiparty = require('multiparty')
 const assert = require('assert')
 const preprocessify = require('preprocessify')
-const loaders = require('../../../tools/jil//util/loaders')
+const loaders = require('../jil/util/loaders')
 const UglifyJS = require('uglify-js')
-var runnerArgs = require('../../../tools/jil/runner/args')
+var runnerArgs = require('../jil/runner/args')
 
 mime.types['es6'] = 'application/javascript'
 
-const assetsDir = path.resolve(__dirname, '../../..')
+const assetsDir = path.resolve(__dirname, '../../')
 const REGEXP_REPLACEMENT_REGEX = /"new RegExp\('(.*?)','(.*?)'\)"/g;
 
 class AssetTransform {
@@ -200,7 +200,7 @@ class AgentInjectorTransform extends AssetTransform {
       const proms = []
       for (let i = 0; i < pkgPaths.length; i++) {
         const pkgPath = pkgPaths[i]
-        const distPath = path.resolve(__dirname, `../../../${pkgPath}`)
+        const distPath = path.resolve(__dirname, `../../${pkgPath}`)
         proms.push(fs.promises.readFile(distPath, 'utf-8'))
       }
       Promise.all(proms).then(data => {
@@ -491,7 +491,7 @@ const testRoutes = [
     res.end('x'.repeat(10000))
   }),
   new Route('GET', '/web-worker-agent', (req, res) => {
-    fs.readFile( path.resolve(__dirname, '../../../build/nr-loader-worker.min.js'), 'utf-8', (err, data) => {
+    fs.readFile( path.resolve(__dirname, '../../build/nr-loader-worker.min.js'), 'utf-8', (err, data) => {
       res.writeHead(200, {"Content-Type": "text/javascript"}) //Solution!
       res.write(data)
       res.end()
@@ -540,9 +540,9 @@ class AssetServer extends BaseServer {
     this.timeout = testConfig.timeout
     this.defaultLoader = testConfig.loader
     this.debugShim = testConfig.debugShim
-    this.buildDir = path.resolve(__dirname, '../../../build')
-    this.assetsDir = path.resolve(__dirname, '../../../')
-    this.unitTestDir = path.resolve(__dirname, '../../../tests/browser')
+    this.buildDir = path.resolve(__dirname, '../../build')
+    this.assetsDir = path.resolve(__dirname, '../../')
+    this.unitTestDir = path.resolve(__dirname, '../../tests/browser')
     this.addHandler(this.serviceRequest.bind(this))
     this.router = new Router(this, testConfig, output)
     this.agentTransform = new AgentInjectorTransform(this.buildDir, this, this.router)

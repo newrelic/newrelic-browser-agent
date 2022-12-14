@@ -1,5 +1,5 @@
 {
-  "ignorePatterns": ["packages/**/*"],
+  "ignorePatterns": ["packages/**/*", "test-packages/**/*"],
   "parserOptions": {
     "ecmaVersion": 2020,
     "sourceType": "module",

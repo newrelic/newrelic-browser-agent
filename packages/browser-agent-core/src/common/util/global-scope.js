@@ -32,16 +32,17 @@ export function setScope(obj) {
 }
 export function resetScope() {
   if (isBrowserScope) {
-    return window;
+    globalScope = window;
   } else if (isWorkerScope) {
     if (typeof globalThis !== 'undefined' && globalThis instanceof WorkerGlobalScope) {
-      return globalThis;
+      globalScope = globalThis;
     } else if (self instanceof WorkerGlobalScope) {
-      return self;
+      globalScope = self;
     }
   }
-
-  throw new Error('New Relic browser agent shutting down due to error: Unable to locate global scope. This is possibly due to code redefining browser global variables like `self` and `window`.');
+  else {
+    throw new Error('New Relic browser agent shutting down due to error: Unable to locate global scope. This is possibly due to code redefining browser global variables like `self` and `window`.');
+  }
 }
 export function getGlobalScope() {
   return globalScope;

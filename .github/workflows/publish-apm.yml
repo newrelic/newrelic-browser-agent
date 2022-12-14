@@ -2,6 +2,10 @@ name: Build and publish PROD to APM DB
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Browser Agent version number to publish (ex. 1221)'
+        required: true
 
 jobs:
   publish-to-s3:
@@ -30,4 +34,5 @@ jobs:
           node tools/scripts/upload-to-nr.js \
             --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
             --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
-            --eu-api-key=${{ secrets.NR_API_KEY_EU }}
+            --eu-api-key=${{ secrets.NR_API_KEY_EU }} \
+            --version=${{ github.event.inputs.version }}

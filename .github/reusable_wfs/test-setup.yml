@@ -6,7 +6,7 @@ on:
 jobs:
   setting_up:
     runs-on: ubuntu-latest
-    container: node:14
+    container: node:16
     
     steps:
       - name: check event type

@@ -20,7 +20,7 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
-      - uses: ./.github/reusable_wfs/setup.yml
+      - uses: ./.github/reusable_wfs/test-setup.yml
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=2 --functional-only
@@ -37,7 +37,7 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
-      - uses: ./.github/reusable_wfs/setup.yml
+      - uses: ./.github/reusable_wfs/test-setup.yml
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=2 --unit-only
@@ -51,7 +51,7 @@ jobs:
 
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
     steps:
-      - uses: ./.github/reusable_wfs/setup.yml
+      - uses: ./.github/reusable_wfs/test-setup.yml
 
       - name: check failed tests
         run: node --max-old-space-size=8192 ./tools/jil/util/get-failed-tests.js

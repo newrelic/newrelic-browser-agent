@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
-        name: setup
+        name: checkout and build
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=2 --functional-only
@@ -39,7 +39,7 @@ jobs:
 
     steps:
       - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
-        name: setup
+        name: checkout and build
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=2 --unit-only
@@ -54,7 +54,7 @@ jobs:
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
     steps:
       - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
-        name: setup
+        name: checkout and build
 
       - name: check failed tests
         run: node --max-old-space-size=8192 ./tools/jil/util/get-failed-tests.js

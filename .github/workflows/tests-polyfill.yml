@@ -12,7 +12,6 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    uses: ./.github/workflows/test-setup.yml
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -21,6 +20,9 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: setup
+
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=2 --functional-only
   ie-unit:
@@ -28,7 +30,6 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    uses: ./.github/workflows/test-setup.yml
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -37,6 +38,9 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: setup
+
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=2 --unit-only
   polyfill-check-failures:
@@ -45,11 +49,14 @@ jobs:
     container: node:14
     if: ${{ !failure() }}  # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
     needs: [ie-functional, ie-unit]
-    uses: ./.github/workflows/test-setup.yml
-
     env:
-      NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
 
+      NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
     steps:
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: setup
+
       - name: check failed tests
         run: node --max-old-space-size=8192 ./tools/jil/util/get-failed-tests.js
+
+

@@ -113,7 +113,7 @@ features.reliableUnloadEvent = new BrowserMatcher()
 features.addEventListener = new BrowserMatcher()
   .exclude('ie', '<9')
 
-/** DEPRECATED - use noPhantom instead */
+/** DEPRECATED */
 features.wrappableAddEventListener = features.addEventListener
   // Our addEventListener wrapping doesn't work with older versions of Firefox,
   // because in those versions, each descendent of Element gets its own unique

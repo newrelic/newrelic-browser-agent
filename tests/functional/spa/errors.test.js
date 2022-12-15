@@ -7,9 +7,7 @@ const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
 const { getErrorsFromResponse } = require('../err/assertion-helpers')
 
-let supported = testDriver.Matcher.withFeature('noPhantom')
-
-testDriver.test('error on the initial page load', supported, function (t, browser, router) {
+testDriver.test('error on the initial page load', function (t, browser, router) {
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-initial-page-load.html')
     .then(([rumData, eventData, domData]) => {
       var p = clickAndRedirect(browser, router)
@@ -59,7 +57,7 @@ testDriver.test('error on the initial page load', supported, function (t, browse
   }
 })
 
-testDriver.test('error in root node', supported, function (t, browser, router) {
+testDriver.test('error in root node', function (t, browser, router) {
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-root.html')
     .then(() => {
       return clickPageAndWaitForEventsAndErrors(t, browser, router)
@@ -91,7 +89,7 @@ testDriver.test('error in root node', supported, function (t, browser, router) {
   }
 })
 
-testDriver.test('error in xhr', supported, function (t, browser, router) {
+testDriver.test('error in xhr', function (t, browser, router) {
   t.plan(7)
 
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-xhr.html')
@@ -128,7 +126,7 @@ testDriver.test('error in xhr', supported, function (t, browser, router) {
   }
 })
 
-testDriver.test('error in custom tracer', supported, function (t, browser, router) {
+testDriver.test('error in custom tracer', function (t, browser, router) {
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-custom.html')
     .then(() => {
       return clickPageAndWaitForEventsAndErrors(t, browser, router)
@@ -163,7 +161,7 @@ testDriver.test('error in custom tracer', supported, function (t, browser, route
   }
 })
 
-testDriver.test('string error in custom tracer', supported, function (t, browser, router) {
+testDriver.test('string error in custom tracer', function (t, browser, router) {
   // This tests throwing a string inside a custom tracer.  It shows that in a specific case, the
   // agent will double count the error because the error is first caught in the custom node, re-thrown, and caught again in the click event listener.
   // This behavior only happens in ie11, other browsers ignore the string error and only generate 1 error.
@@ -202,7 +200,7 @@ testDriver.test('string error in custom tracer', supported, function (t, browser
   }
 })
 
-testDriver.test('errors in discarded SPA interactions', supported, function (t, browser, router) {
+testDriver.test('errors in discarded SPA interactions', function (t, browser, router) {
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/discarded-interaction.html')
     .then(() => {
       var p = clickAndRedirect(browser, router, 200) // wait 200ms because the test page itself waits 100ms before throwing error
@@ -229,7 +227,7 @@ testDriver.test('errors in discarded SPA interactions', supported, function (t, 
   }
 })
 
-testDriver.test('errors outside of interaction', supported, function (t, browser, router) {
+testDriver.test('errors outside of interaction', function (t, browser, router) {
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-nointeraction.html')
     .then(() => {
       var p = clickAndRedirect(browser, router, 200) // wait 200ms because the test page itself waits 100ms before throwing error
@@ -256,7 +254,7 @@ testDriver.test('errors outside of interaction', supported, function (t, browser
   }
 })
 
-testDriver.test('same error in multiple interactions', supported, function (t, browser, router) {
+testDriver.test('same error in multiple interactions', function (t, browser, router) {
   var event1
   var event2
 

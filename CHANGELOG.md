@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1222
+
+### Unblock instrumented pages from the back/forward cache (w/ feature flag)
+B/f cache eligibility was hampered by the agent's `unload` listener, which will be removed when a flag is on. With the `allow_bfcache` enabled in the `info` config, how the agent interprets the end of an user session will change and also allow an otherwise eligible page to persist.
+
 ## v1221
 
 ### Add infrastructure to run on web workers

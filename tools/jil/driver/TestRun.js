@@ -182,7 +182,7 @@ class TestRun extends EventEmitter {
 
     self.harness.close()
 
-    if (isSauceConnected() && !this.browser.browserSpec.isPhantom()) {
+    if (isSauceConnected()) {
       self.browser.sauceJobStatus(self.allOk)
     }
     self.browser.quit(() => {

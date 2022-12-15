@@ -10,7 +10,6 @@
     "build:all": "npx nx run-many --target=build && npm run packages:bundle && npm run cdn:build:local",
     "build-mac": "gulp && osascript -e 'display notification \"The agent has been built.\" with title \"Build Complete\"'",
     "postinstall": "npm --prefix tools/jil ci && rm -f node_modules/jil && ln -s ../tools/jil node_modules/jil",
-    "phantomjs": "phantomjs",
     "lint": "eslint --ext .js -c .eslintrc .",
     "lint:fix": "eslint --ext .js -c .eslintrc . --fix",
     "test-all": "tools/jil/bin/cli.js -b *@*",
@@ -54,8 +53,7 @@
   "dependencies": {
     "core-js": "^3.26.0",
     "eslint-import-resolver-alias": "^1.1.2",
-    "lodash._slice": "^2.4.1",
-    "phantom": "^6.3.0"
+    "lodash._slice": "^2.4.1"
   },
   "devDependencies": {
     "@babel/core": "^7.18.5",

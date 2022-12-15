@@ -82,11 +82,6 @@ tests (located in `/tools/jil`).
 _Before running tests locally, be sure to [install and build](#building) from the root directory to ensure all dependencies are loaded and the application is properly built._
 
 ### Running the test suite
-To run all applicable tests against [PhantomJS](http://phantomjs.org/), just type the following command with no additional arguments:
-
-```
-npm run test
-```
 
 To run all tests on a specific browser/platform, you can either run on Saucelabs or point the testing framework to your own Selenium server.
 
@@ -139,9 +134,6 @@ http://localhost:3333/tests/assets/spa/fetch.html?loader=spa
 | Lite       | rum              |
 | Pro        | full             |
 | Pro + SPA  | spa              |
-
-
-Open a PR to run your tests on browsers other than PhantomJS.
 
 ### PR Testing
 

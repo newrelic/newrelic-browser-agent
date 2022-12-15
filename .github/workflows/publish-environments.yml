@@ -1,0 +1,52 @@
+name: Test publishing using environments
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Browser Agent version number to publish (ex. 1221)'
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: node:16
+    steps:
+      - uses: actions/checkout@v2
+      - name: install
+        run: npm ci
+      - name: build:all
+        run: npm run build:all
+      - name: run tests
+        run: |
+          echo 'We would normally run tests here'
+  publish-to-s3:
+    runs-on: ubuntu-latest
+    needs: [test]
+    environment: nr-cdn
+    container: node:16
+    steps:
+      - uses: actions/checkout@v3
+      - name: install
+        run: npm ci
+      - name: build:nr
+        run: npm run cdn:build:nr
+      - name: upload artifacts to NR
+        run: |
+          echo 'We would normally upload to CDN here'
+  publish-to-apm:
+    runs-on: ubuntu-latest
+    needs: [publish-to-s3]
+    environment: nr-db
+    container: node:16
+    steps:
+      - uses: actions/checkout@v3
+      - name: install
+        run: npm ci
+      - name: build:all
+        run: npm run build:all
+      - name: build:nr
+        run: npm run cdn:build:nr
+      - name: upload artifacts to NR
+        run: |
+          echo 'We would normally upload to DB here'

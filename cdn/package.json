@@ -6,15 +6,17 @@
   "main": "src/spa.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "webpack": "rm -rf ../build && npx webpack --progress --config ./webpack.config.js",
+    "webpack": "npx webpack --progress --config ./webpack.config.js",
     "build": "npm run build:prod",
     "build:local": "npm run webpack && npm run cleanup",
-    "build:extension": "PUBLISH=EXTENSION npm run webpack && npm run cleanup",
-    "build:current": "PUBLISH=CURRENT npm run webpack && npm run cleanup",
-    "build:dev": "PUBLISH=DEV npm run webpack && npm run cleanup",
-    "build:prod": "PUBLISH=PROD npm run webpack && npm run cleanup",
-    "build:nr": "PUBLISH=PROD SOURCEMAPS=false npm run webpack && npm run cleanup",
-    "cleanup": "node ../tools/scripts/post-build-cleanup"
+    "build:extension": "PUBLISH=EXTENSION rm -rf ../build && npm run webpack && npm run cleanup",
+    "build:current": "npm run fresh-build && PUBLISH=CURRENT npm run webpack && npm run cleanup",
+    "build:dev": "npm run fresh-build && PUBLISH=DEV npm run webpack && npm run cleanup",
+    "build:pr": "npm run fresh-build && PUBLISH=PR npm run webpack && npm run cleanup",
+    "build:prod": "npm run fresh-build && PUBLISH=PROD npm run webpack && npm run cleanup",
+    "build:nr": "npm run fresh-build && PUBLISH=PROD SOURCEMAPS=false npm run webpack && npm run cleanup",
+    "cleanup": "node ../tools/scripts/post-build-cleanup",
+    "fresh-build": "rm -rf ../build"
   },
   "author": "",
   "license": "ISC",
@@ -30,7 +32,7 @@
   },
   "dependencies": {
     "@newrelic/browser-agent": "^0.0.9",
-    "@newrelic/browser-agent-core": "^0.0.9",
+    "@newrelic/browser-agent-core/src": "^0.0.9",
     "core-js": "^3.23.3"
   },
   "browserslist": [

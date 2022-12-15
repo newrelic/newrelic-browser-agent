@@ -4,7 +4,7 @@
  */
 
 import test from '../../tools/jil/browser-test'
-import { cleanURL } from '../../packages/browser-agent-core/common/url/clean-url'
+import { cleanURL } from '@newrelic/browser-agent-core/src/common/url/clean-url'
 
 var testcases = [
   ['http://domain.com/path?query=5', 'http://domain.com/path', 'http://domain.com/path'],

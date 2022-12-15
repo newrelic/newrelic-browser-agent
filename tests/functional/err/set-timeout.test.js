@@ -27,6 +27,7 @@ testDriver.test('reporting errors from setTimeout callbacks', supported, functio
     assertErrorAttributes(t, response.query)
     const actualErrors = getErrorsFromResponse(response, browser)
     let expectedErrors = [{
+      name: 'Error',
       message: 'timeout callback',
       stack: [{
         u: router.assetURL('js/set-timeout-error.js').split('?')[0],

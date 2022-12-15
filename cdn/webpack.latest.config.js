@@ -23,7 +23,7 @@ module.exports = {
     publicPath: isProd ? 'https://js-agent.newrelic.com/' : '/build/', // CDN route vs local route (for linking chunked assets)
     library: {
       name: 'NRBA',
-      type: 'umd'
+      type: 'self'
     },
     clean: false
   },

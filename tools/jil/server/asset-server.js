@@ -221,11 +221,9 @@ class AgentInjectorTransform extends AssetTransform {
       let loaderName = params.loader || this.assetServer.defaultLoader
       let injectUpdatedLoaderConfig = (params.injectUpdatedLoaderConfig === 'true')
 
-      const htmlPackageTags = [...rawContent.matchAll(/{packages\/.*}/g)].map(x => x[0])
+      const htmlPackageTags = [...rawContent.matchAll(/{tests\/assets\/js\/internal\/.*}/g)].map(x => x[0])
       const packagePaths = htmlPackageTags.map(x => x.replace(/[{}]/g, ''))
       const packageFiles = await this.getBuiltPackages(packagePaths)
-
-
 
       this.getLoaderContent(
         this.buildDir,
@@ -321,7 +319,15 @@ class BrowserifyTransform extends AssetTransform {
             }
           }]
         ],
-        plugins: ["@babel/plugin-syntax-dynamic-import", '@babel/plugin-transform-modules-commonjs'],
+        plugins: [
+          "@babel/plugin-syntax-dynamic-import",
+          '@babel/plugin-transform-modules-commonjs',
+          ["module-resolver", {
+            "alias": {
+              "@newrelic/browser-agent-core/src": './dist/packages/browser-agent-core/src'
+            }
+          }]
+        ],
         global: true
       })
       .transform(preprocessify())
@@ -612,7 +618,7 @@ class AssetServer extends BaseServer {
   }
 
   writeError(rsp, errorMessage) {
-    console.log('WRITE ERROR!')
+    console.log('WRITE ERROR!', errorMessage)
     rsp.writeHead(500)
     rsp.end(errorMessage)
   }
@@ -695,7 +701,7 @@ class AssetServer extends BaseServer {
     function unitTestTarget(file) {
       let script = `/${path.relative(server.assetsDir, file)}?browserify=true`
       return server.urlFor('/tests/assets/browser.html', {
-        config: new Buffer(JSON.stringify({
+        config: Buffer.from(JSON.stringify({
           assetServerPort: server.router.assetServer.port,
           assetServerSSLPort: server.router.assetServer.sslPort,
           corsServerPort: server.corsServer.port

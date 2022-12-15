@@ -6,9 +6,9 @@ const pkg = require('./package.json')
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
+const {PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE} = process.env
 // this will change to package.json.version when it is aligned between all the packages
-const VERSION = fs.readFileSync('../VERSION', 'utf-8')
-const { PUBLISH, SOURCEMAPS = true } = process.env
+let VERSION = VERSION_OVERRIDE || fs.readFileSync('../VERSION', 'utf-8')
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
 
 switch (PUBLISH) {
@@ -29,6 +29,13 @@ switch (PUBLISH) {
     SUBVERSION = 'DEV'
     PUBLIC_PATH = 'https://js-agent.newrelic.com/dev/'
     MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/dev/[url]'
+    break
+  case 'PR':
+    PATH_VERSION = ``
+    SUBVERSION = `${PR_NAME}`
+    PUBLIC_PATH = `https://js-agent.newrelic.com/pr/${PR_NAME}/`
+    MAP_PATH = `\n//# sourceMappingURL=https://js-agent.newrelic.com/pr/${PR_NAME}/[url]`
+    VERSION = (Number(VERSION)+1).toString()
     break
   case 'EXTENSION':
     // build for extension injection
@@ -54,6 +61,7 @@ console.log("SUBVERSION", SUBVERSION)
 console.log("PUBLIC_PATH", PUBLIC_PATH)
 console.log("MAP_PATH", MAP_PATH)
 console.log("IS_LOCAL", IS_LOCAL)
+if (PR_NAME) console.log("PR_NAME", PR_NAME)
 
 const config = (target) => {
   const isWorker = target === 'webworker'
@@ -88,9 +96,14 @@ const config = (target) => {
       publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
       library: {
         name: 'NRBA',
-        type: 'umd'
+        type: 'self'
       },
       clean: false
+    },
+    resolve: {
+      alias: {
+        '@newrelic/browser-agent-core/src': path.resolve(__dirname, '../packages/browser-agent-core/src')
+      }
     },
 
     optimization: {

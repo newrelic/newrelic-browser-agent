@@ -4,15 +4,15 @@
  */
 
 const test = require('../../../tools/jil/browser-test.js')
-const {setup} = require('../utils/setup') 
+const {setup} = require('../utils/setup')
 
-const {Instrument: StnInstrument} = require('../../../packages/browser-agent-core/features/session-trace/instrument/index')
-const {Instrument: AjaxInstrument} = require('../../../packages/browser-agent-core/features/ajax/instrument/index')
-const {Aggregate: AjaxAggregate} = require('../../../packages/browser-agent-core/features/ajax/aggregate/index')
-const {Instrument: JsErrorsInstrument} = require('../../../packages/browser-agent-core/features/jserrors/instrument/index')
-const {Aggregate: JsErrorsAggregate} = require('../../../packages/browser-agent-core/features/jserrors/aggregate/index')
+const {Instrument: StnInstrument} = require('@newrelic/browser-agent-core/src/features/session-trace/instrument/index')
+const {Instrument: AjaxInstrument} = require('@newrelic/browser-agent-core/src/features/ajax/instrument/index')
+const {Aggregate: AjaxAggregate} = require('@newrelic/browser-agent-core/src/features/ajax/aggregate/index')
+const {Instrument: JsErrorsInstrument} = require('@newrelic/browser-agent-core/src/features/jserrors/instrument/index')
+const {Aggregate: JsErrorsAggregate} = require('@newrelic/browser-agent-core/src/features/jserrors/aggregate/index')
 
-const {drain} = require('../../../packages/browser-agent-core/common/drain/drain')
+const {drain} = require('@newrelic/browser-agent-core/src/common/drain/drain')
 
 const {agentIdentifier, baseEE, aggregator} = setup()
 
@@ -65,9 +65,9 @@ function runTests () {
   })
 
   test('session trace nodes', function (t) {
-    const {Aggregate: StnAggregate} = require('../../../packages/browser-agent-core/features/session-trace/aggregate/index')
+    const {Aggregate: StnAggregate} = require('@newrelic/browser-agent-core/src/features/session-trace/aggregate/index')
     const stnAgg = new StnAggregate(agentIdentifier, aggregator)
-    const {Aggregate: PvtAggregate} = require('../../../packages/browser-agent-core/features/page-view-timing/aggregate/index')
+    const {Aggregate: PvtAggregate} = require('@newrelic/browser-agent-core/src/features/page-view-timing/aggregate/index')
     const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
 
     let fiVal = 30

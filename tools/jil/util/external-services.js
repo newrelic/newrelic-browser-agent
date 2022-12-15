@@ -51,8 +51,10 @@ function startSauce (config, cb) {
   var opts = {
     username: sauceCreds.username,
     accessKey: sauceCreds.accessKey,
-    tunnelIdentifier: tunnelIdentifier,
-    noSslBumpDomains: 'all'
+    tunnelName: tunnelIdentifier,
+    noSslBumpDomains: 'all',
+    logger: console.log,
+    tunnelDomains: config.host || 'bam-test-1.nr-local.net'
   }
 
   if (config.verbose) {

@@ -152,7 +152,7 @@ class AgentInjectorTransform extends AssetTransform {
           if (typeof msg === 'object') {
             msg = JSON.stringify(msg)
           }
-          var url = 'http://' + NREUM.info.beacon + '/debug?m=' + escape(msg) + '&testId=' + NREUM.info.licenseKey + '&r=' + Math.random() + '&ix=' + count
+          var url = 'http://' + NREUM.info.beacon + '/debug?m=' + escape(msg) + '&l=' + window.location.href + '&testId=' + NREUM.info.licenseKey + '&r=' + Math.random() + '&ix=' + count
           if (!sync) {
             var img = new window.Image()
             img.src = url

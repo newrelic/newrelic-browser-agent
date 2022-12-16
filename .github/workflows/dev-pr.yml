@@ -11,7 +11,7 @@ on:
 
 jobs:
   pr-dev-build:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || ( contains(github.event.pull_request.labels.*.name, 'safe to test') && ( contains(github.event.pull_request.labels.*.name, 'standalone') || contains(github.event.pull_request.labels.*.name, 'mmf') || contains(github.event.pull_request.labels.*.name, 'bug') || contains(github.event.pull_request.labels.*.name, 'enhancement') ) )
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || ( contains(github.event.pull_request.labels.*.name, 'safe to test') && ( contains(github.event.pull_request.labels.*.name, 'standalone') || contains(github.event.pull_request.labels.*.name, 'MMF') || contains(github.event.pull_request.labels.*.name, 'bug') || contains(github.event.pull_request.labels.*.name, 'enhancement') ) )
     runs-on: ubuntu-latest
     container: node:14
     env:

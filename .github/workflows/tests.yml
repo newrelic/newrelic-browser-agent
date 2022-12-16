@@ -16,15 +16,8 @@ jobs:
     container: node:14
     
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: checkout and build
 
       - name: lint
         run: npm run lint
@@ -35,15 +28,8 @@ jobs:
     container: node:14
     
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: checkout and build
 
       - name: test
         run: npm run packages:test
@@ -61,15 +47,8 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: checkout and build
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 --functional-only
@@ -87,15 +66,8 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: checkout and build
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 --unit-only
@@ -113,15 +85,8 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: checkout and build
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 --functional-only
@@ -139,15 +104,8 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: checkout and build
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 --unit-only
@@ -165,15 +123,8 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: checkout and build
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 --functional-only
@@ -191,15 +142,8 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: checkout and build
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 --unit-only
@@ -217,15 +161,8 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: checkout and build
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 --functional-only
@@ -243,15 +180,8 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: checkout and build
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 --unit-only
@@ -269,15 +199,8 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: checkout and build
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --functional-only
@@ -295,15 +218,8 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: checkout and build
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --unit-only
@@ -369,12 +285,8 @@ jobs:
     env:
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
     steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install
-        run: npm ci --cache ./.npm
+      - uses: newrelic/newrelic-browser-agent/.github/reusable_wfs/test-setup.yml@main
+        name: checkout and build
 
       - name: check failed tests
         run: node --max-old-space-size=8192 ./tools/jil/util/get-failed-tests.js

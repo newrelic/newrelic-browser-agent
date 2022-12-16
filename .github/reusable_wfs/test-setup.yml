@@ -1,0 +1,30 @@
+name: Checkout commit and build for tests
+
+on:
+  workflow_call:
+
+jobs:
+  setting_up:
+    runs-on: ubuntu-latest
+    container: node:16
+    
+    steps:
+      - name: check event type
+        id: evt
+        run: |
+          if [ ${{ github.event_name }} == 'pull_request_target' ]; then
+            echo "::set-output name=ref::refs/pull/${{ github.event.number }}/merge"
+          elif [ ${{ github.event_name }} == 'workflow_dispatch' ]; then
+            echo "::set-output name=ref::${{ github.event.ref }}"
+          fi
+        shell: bash
+
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.evt.outputs.ref }}
+
+      - name: install
+        run: npm ci --cache ./.npm
+
+      - name: build
+        run: npm run build:all

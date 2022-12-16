@@ -3,6 +3,9 @@ import agentIdentifier from '../../shared/agentIdentifier'
 import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/common/util/enabled-features'
 import { Aggregator } from '@newrelic/browser-agent-core/src/common/aggregate/aggregator'
 
+/**
+ * A mapping of the agent features from camelCase to kabob, which is used in the directory names
+ */
 export const modules = {
   pageViewEvent: 'page-view-event',
   pageViewTiming: 'page-view-timing',
@@ -14,7 +17,7 @@ export const modules = {
   metrics: 'metrics'
 }
 
-const lite = [modules.pageViewEvent, modules.pageViewTiming, modules.metrics]
+const lite = [modules.pageViewEvent, modules.pageViewTiming] // lite agent cannot currently use metrics endpoint, because legacy lite customers are not provisioned access to that endpoint
 const pro = [...lite, modules.jsErrors, modules.ajax, modules.pageAction, modules.sessionTrace]
 const spa = [...pro, modules.spa]
 const worker = [ modules.metrics, modules.jsErrors, modules.ajax, modules.pageAction]
@@ -23,12 +26,20 @@ const features = { lite, pro, spa, worker }
 
 const sharedAggregator = new Aggregator({agentIdentifier})
 
+/**
+ * Aggregator imports can happen in stages, which is utilized to ensure that dependencies are initialized first
+ */
 const aggregators = {
   notInitialized: {},
   staged: {},
   initialized: {}
 }
 
+/**
+ * Import feature aggregators into the page, based on "build" type
+ * @param {string} build - A property of "features" which contains an array of feature names to be used for importing
+ * @returns {object} - Chained calls eventually return the aggregators variable, which attempts to bucket the imports into stages
+ */
 export async function importFeatures(build) {
   const enabledFeatures = getEnabledFeatures(agentIdentifier) // determines if enabled from config --> ajax.enabled = false
   try {
@@ -45,6 +56,10 @@ export async function importFeatures(build) {
   return stageFeatures()
 }
 
+/**
+ * Checks if a chunked import class is ready to be initialized, or if it needs to wait for its dependencies to be imported first
+ * @returns {object} - Chained calls eventually return the aggregators variable, which attempts to bucket the imports into stages
+ */
 function stageFeatures() {
   Object.entries(aggregators.notInitialized).forEach(([featureName, AggregateFeature]) => {
     const externalHarvests = getFeatureDependencyNames(featureName) // determine if there are external dependencies -->  (ajax --> ['jserrors'])
@@ -59,6 +74,11 @@ function stageFeatures() {
   return initializeStagedFeatures()
 }
 
+/**
+ * Finally attempts to initialize each feature aggregator class that has been staged for initialization
+ * @param {number=0} passes 
+ * @returns {object} - the aggregators variable, which attempts to bucket the imports into stages
+ */
 function initializeStagedFeatures(passes = 0) {
   Object.entries(aggregators.staged).forEach(([featureName, AggregateFeature]) => {
     const featureDependencyNames = getFeatureDependencyNames(featureName)

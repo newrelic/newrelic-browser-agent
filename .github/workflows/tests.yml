@@ -21,7 +21,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
-        run: npm ci --cache ./.npm
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
       - name: build
         run: npm run build:all
@@ -40,7 +40,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
-        run: npm ci --cache ./.npm
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
       - name: build
         run: npm run build:all
@@ -66,7 +66,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
-        run: npm ci --cache ./.npm
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
       - name: build
         run: npm run build:all
@@ -92,7 +92,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
-        run: npm ci --cache ./.npm
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
       - name: build
         run: npm run build:all
@@ -118,7 +118,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
-        run: npm ci --cache ./.npm
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
       - name: build
         run: npm run build:all
@@ -144,7 +144,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
-        run: npm ci --cache ./.npm
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
       - name: build
         run: npm run build:all
@@ -170,7 +170,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
-        run: npm ci --cache ./.npm
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
       - name: build
         run: npm run build:all
@@ -196,7 +196,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
-        run: npm ci --cache ./.npm
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
       - name: build
         run: npm run build:all
@@ -222,7 +222,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
-        run: npm ci --cache ./.npm
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
       - name: build
         run: npm run build:all
@@ -248,7 +248,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
-        run: npm ci --cache ./.npm
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
       - name: build
         run: npm run build:all
@@ -274,7 +274,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
-        run: npm ci --cache ./.npm
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
       - name: build
         run: npm run build:all
@@ -300,7 +300,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
-        run: npm ci --cache ./.npm
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
       - name: build
         run: npm run build:all
@@ -326,7 +326,7 @@ jobs:
   #         ref: ${{ github.event.pull_request.head.sha }}
 
   #     - name: install
-  #       run: npm ci --cache ./.npm
+  #       run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
   #     
       # - name: build
@@ -353,7 +353,7 @@ jobs:
   #         ref: ${{ github.event.pull_request.head.sha }}
 
   #     - name: install
-  #       run: npm ci --cache ./.npm
+  #       run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
   #     
       # - name: build
@@ -374,7 +374,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: install
-        run: npm ci --cache ./.npm
+        run: npm ci --ignore-scripts --silent --no-fund --no-audit --no-progress
 
       - name: check failed tests
         run: node --max-old-space-size=8192 ./tools/jil/util/get-failed-tests.js

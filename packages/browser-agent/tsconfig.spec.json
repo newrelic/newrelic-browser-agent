@@ -6,5 +6,5 @@
     "allowJs": true,
     "types": ["jest", "node"]
   },
-  "include": ["jest.config.ts", "**/*.test.ts", "**/*.spec.ts", "**/*.d.ts", "../browser-agent-core/common/**/*.js", "../browser-agent-core/features/**/*.js"]
+  "include": ["jest.config.ts", "**/*.test.ts", "**/*.spec.ts", "**/*.d.ts", "../browser-agent-core/src/common/**/*.js", "../browser-agent-core/features/**/*.js"]
 }

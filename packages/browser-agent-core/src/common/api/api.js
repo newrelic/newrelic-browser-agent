@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import slice from 'lodash._slice'
-import { gosNREUM } from '../window/nreum'
 import { getRuntime, setInfo, getInfo, getConfigurationValue } from '../config/config'
 import { handle } from '../event-emitter/handle'
 import { mapOwn } from '../util/map-own'
@@ -14,8 +13,7 @@ import { registerHandler } from '../event-emitter/register-handler'
 import { submitData } from '../util/submit-data'
 import { isBrowserWindow } from '../window/win'
 
-function setTopLevelCallers() {
-  const nr = gosNREUM()
+function setTopLevelCallers(nr) {
   const funcs = [
     'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
     'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
@@ -32,8 +30,8 @@ function setTopLevelCallers() {
   }
 }
 
-export function setAPI(agentIdentifier, nr = gosNREUM()) {
-  setTopLevelCallers()
+export function setAPI(agentIdentifier, nr) {
+  setTopLevelCallers(nr)
   var instanceEE = ee.get(agentIdentifier)
   var tracerEE = instanceEE.get('tracer')
 
@@ -111,7 +109,6 @@ export function setAPI(agentIdentifier, nr = gosNREUM()) {
   }
 
   nr.noticeError = function (err, customAttributes) {
-    console.log("noticeError...", agentIdentifier)
     if (typeof err === 'string') err = new Error(err)
     handle('record-supportability', ['API/noticeError/called'], undefined, undefined, instanceEE)
     handle('err', [err, now(), false, customAttributes], undefined, undefined, instanceEE)

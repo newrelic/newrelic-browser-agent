@@ -57,7 +57,7 @@ class AgentInjectorTransform extends AssetTransform {
   }
 
   generateConfig(loaderName, params, ssl, injectUpdatedLoaderConfig) {
-    let loaderSpec = loaders.find((spec) => spec.name === loaderName)
+    let loaderSpec = [...loaders, ...[{name: 'mfe'}, {name: 'prebuilt'}]].find((spec) => spec.name === loaderName)
     let payloadSuffix = loaderSpec.payload
     let payloadFilename = payloadSuffix ? `nr-${payloadSuffix}.js` : 'nr.js'
 
@@ -188,8 +188,8 @@ class AgentInjectorTransform extends AssetTransform {
     `
   }
 
-  getLoaderContent(dir, callback) {
-    let loaderFilename = `nr-loader${runnerArgs.polyfills ? '-polyfills' : ''}.min.js`
+  getLoaderContent(loader, dir, callback) {
+    let loaderFilename = `nr-loader-${loader}${runnerArgs.polyfills ? '-polyfills' : ''}.min.js`
     let loaderPath = path.join(dir, loaderFilename)
     fs.readFile(loaderPath, callback)
   }
@@ -226,6 +226,7 @@ class AgentInjectorTransform extends AssetTransform {
       const packageFiles = await this.getBuiltPackages(packagePaths)
 
       this.getLoaderContent(
+        loaderName,
         this.buildDir,
         (err, loaderContent) => {
           if (err) return callback(err)

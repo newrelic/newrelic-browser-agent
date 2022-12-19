@@ -14,6 +14,7 @@ var SUPPORTABILITY_METRIC = 'sm'
 var CUSTOM_METRIC = 'cm'
 
 export class Instrument extends InstrumentBase {
+    static featureName = FEATURE_NAME
     constructor(agentIdentifier, aggregator, PfFeatStatusEnum = {}) {
         super(agentIdentifier, aggregator, FEATURE_NAME)
         this.PfFeatStatusEnum = PfFeatStatusEnum

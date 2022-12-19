@@ -1,4 +1,4 @@
-import { isConfigured } from '../config/config'
+import { getInfo, isConfigured } from '../config/config'
 import { ee } from '../event-emitter/contextual-ee'
 import { configure } from '../loader/configure'
 import { gosCDN } from '../window/nreum'
@@ -23,7 +23,8 @@ export class InstrumentBase extends FeatureBase {
 
   async importAggregator() {
     // try to support backwards compat with patter of some loader configs present after loader
-    if (!isConfigured(this.agentIdentifier)) configure(this.agentIdentifier, gosCDN())
+    // would need the same jsAttributes handling as the main branch
+    if (!isConfigured(this.agentIdentifier)) configure(this.agentIdentifier, {...gosCDN(), info: {...gosCDN().info, jsAttributes:{...getInfo(this.agentIdentifier).jsAttributes}, ...gosCDN().info?.jsAttributes }})
     try {
       const { Aggregate } = await import(`../../features/${this.featureName}/aggregate`)
       new Aggregate(this.agentIdentifier, this.aggregator)

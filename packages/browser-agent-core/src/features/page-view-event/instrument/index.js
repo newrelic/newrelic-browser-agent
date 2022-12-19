@@ -9,6 +9,7 @@ import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
 
 export class Instrument extends InstrumentBase {
+  static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     if (!isBrowserWindow) return; // initial page view times non applicable outside web env

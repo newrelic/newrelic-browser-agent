@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "description": "This is a package that is deployed as a bundle to CDN. It is downloaded by the `agent-loader` package. These two packages are intended to work together.",
-  "main": "src/spa.js",
+  "main": "agent-loader/sync-loader.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "webpack": "npx webpack --progress --config ./webpack.config.js",
@@ -31,7 +31,7 @@
     "webpack-cli": "^4.9.1"
   },
   "dependencies": {
-    "@newrelic/browser-agent": "^0.0.9",
+    "@newrelic/browser-agent/src": "^0.0.9",
     "@newrelic/browser-agent-core/src": "^0.0.9",
     "core-js": "^3.23.3"
   },

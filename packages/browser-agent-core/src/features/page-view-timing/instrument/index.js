@@ -12,6 +12,7 @@ import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
 
 export class Instrument extends InstrumentBase {
+  static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     if (!this.isEnabled() || !isBrowserWindow) return;  // CWV is irrelevant outside web context

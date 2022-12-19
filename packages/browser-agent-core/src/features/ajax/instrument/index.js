@@ -23,6 +23,7 @@ var origRequest = originals.REQ
 var origXHR = self.XMLHttpRequest
 
 export class Instrument extends InstrumentBase {
+  static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     const agentRuntime = getRuntime(this.agentIdentifier);

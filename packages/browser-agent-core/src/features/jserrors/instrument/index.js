@@ -14,6 +14,7 @@ import { InstrumentBase } from '../../../common/util/feature-base'
 import { FEATURE_NAME, NR_ERR_PROP } from '../constants'
 
 export class Instrument extends InstrumentBase {
+  static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     // skipNext counter to keep track of uncaught

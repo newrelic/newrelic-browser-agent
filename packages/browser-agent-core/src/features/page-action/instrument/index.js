@@ -8,6 +8,7 @@ import { InstrumentBase } from '../../../common/util/feature-base'
 import { FEATURE_NAME } from '../constants'
 
 export class Instrument extends InstrumentBase {
+  static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     const agentRuntime = getRuntime(this.agentIdentifier)

@@ -1,0 +1,26 @@
+<html>
+
+<head>
+    <script>
+        if (!new URL(window.location).searchParams.get('loader')) window.location = window.location + '?loader=mfe'
+    </script>
+    {loader}
+    <script>
+        console.log("trigger agent1")
+        agent.noticeError(new Error("test"))
+        agent.addPageAction('test1')
+    </script>
+</head>
+
+<body>
+    this is a generic page that is instrumented by the JS agent
+    <script>
+        setTimeout(() => {
+            console.log("trigger agent2")
+            agent2.noticeError(new Error("test2"))
+            agent2.addPageAction('test2')
+        }, 1000)
+    </script>
+</body>
+
+</html>

@@ -24,5 +24,6 @@ export function getEnabledFeatures(agentIdentifier) {
   featureNames.forEach(featureName => {
     enabledFeatures[featureName] = isEnabled(featureName, agentIdentifier)
   })
+  console.log(enabledFeatures)
   return enabledFeatures
 }

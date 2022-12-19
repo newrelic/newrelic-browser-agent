@@ -6,7 +6,7 @@ const pkg = require('./package.json')
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
-const {PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE} = process.env
+const { PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE } = process.env
 // this will change to package.json.version when it is aligned between all the packages
 let VERSION = VERSION_OVERRIDE || fs.readFileSync('../VERSION', 'utf-8')
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
@@ -35,7 +35,7 @@ switch (PUBLISH) {
     SUBVERSION = `${PR_NAME}`
     PUBLIC_PATH = `https://js-agent.newrelic.com/pr/${PR_NAME}/`
     MAP_PATH = `\n//# sourceMappingURL=https://js-agent.newrelic.com/pr/${PR_NAME}/[url]`
-    VERSION = (Number(VERSION)+1).toString()
+    VERSION = (Number(VERSION) + 1).toString()
     break
   case 'EXTENSION':
     // build for extension injection
@@ -68,14 +68,16 @@ const config = (target) => {
   return {
     entry: {
       ...(!isWorker && {
-        [`nr-loader${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/sync-loader.js'),
-        [`nr-loader${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/sync-loader.js'),
-        [`nr-loader-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/sync-loader.js'),
-        [`nr-loader-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/sync-loader.js'),
-        [`nr-loader-async${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/async-loader.js'),
-        [`nr-loader-async${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/async-loader.js'),
-        [`nr-loader-async-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/async-loader.js'),
-        [`nr-loader-async-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/async-loader.js'),
+        [`nr-loader-rum${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/lite.js'),
+        [`nr-loader-rum${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/lite.js'),
+        [`nr-loader-full${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/pro.js'),
+        [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/pro.js'),
+        [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/spa.js'),
+        [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/spa.js'),
+        [`nr-loader-prebuilt${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/prebuilt.js'),
+        [`nr-loader-prebuilt${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/prebuilt.js'),
+        [`nr-loader-mfe${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/microfrontend.js'),
+        [`nr-loader-mfe${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/microfrontend.js'),
         [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills.js')
       }),
       ...(isWorker && {
@@ -102,7 +104,8 @@ const config = (target) => {
     },
     resolve: {
       alias: {
-        '@newrelic/browser-agent-core/src': path.resolve(__dirname, '../packages/browser-agent-core/src')
+        '@newrelic/browser-agent-core/src': path.resolve(__dirname, '../packages/browser-agent-core/src'),
+        '@newrelic/browser-agent/src': path.resolve(__dirname, '../packages/browser-agent/src')
       }
     },
 
@@ -138,37 +141,10 @@ const config = (target) => {
     mode: !IS_LOCAL ? 'production' : 'development',
     devtool: false,
     target, // include this!!
-    module: {
-      rules: [
-        {
-          test: /\.js$/,
-          exclude: /(node_modules)/,
-          use: {
-            loader: 'babel-loader',
-            options: {
-              presets: [
-                ['@babel/preset-env', {
-                  useBuiltIns: 'entry',
-                  corejs: { version: 3.23, proposals: true },
-                  loose: true,
-                  targets: {
-                    browsers: [
-                      "chrome >= 60",
-                      "safari >= 11",
-                      "firefox >= 56",
-                      "ios >= 10.3",
-                      "ie >= 11",
-                      "edge >= 60"
-                    ]
-                  }
-                }]
-              ]
-            }
-          }
-        }
-      ]
-    }
   }
 }
 
-module.exports = [config('browserslist'), config('webworker')]
+module.exports = [
+  config('browserslist'),
+  config('webworker')
+]

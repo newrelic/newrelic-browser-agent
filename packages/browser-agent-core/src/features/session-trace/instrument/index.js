@@ -18,6 +18,7 @@ const {
 } = CONSTANTS
 
 export class Instrument extends InstrumentBase {
+  static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     if (!isBrowserWindow) return; // session traces not supported outside web env

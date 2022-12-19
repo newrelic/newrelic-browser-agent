@@ -7,7 +7,6 @@ const testDriver = require('../../../tools/jil/index')
 const {validatePageActionData, fail} = require('./ins-internal-help.cjs')
 
 let reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')
-let noPhantom = testDriver.Matcher.withFeature('noPhantom')
 
 testDriver.test('PageAction submission', function (t, browser, router) {
   let url = router.assetURL('instrumented.html')
@@ -29,7 +28,7 @@ testDriver.test('PageAction submission', function (t, browser, router) {
     .catch(fail(t))
 })
 
-testDriver.test('PageActions are retried when collector returns 429', noPhantom, function (t, browser, router) {
+testDriver.test('PageActions are retried when collector returns 429', function (t, browser, router) {
   let assetURL = router.assetURL('instrumented.html', {
     init: {
       ins: {

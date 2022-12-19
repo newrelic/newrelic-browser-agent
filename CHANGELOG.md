@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+
+## v1222
+
+### Do not collect XHR events for data URLs
+AJAX events for data URLs have not historically been collected due to errors in the agent when handling URLs without hostnames. Going forward, XHR calls to data URLs will not cause agent errors and will continue to be excluded from collection.
+
 ## v1221
 
 ### Add infrastructure to run on web workers

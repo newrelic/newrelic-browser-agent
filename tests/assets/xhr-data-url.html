@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    <script type="text/javascript">
+      // Setting a deny list is necessary or `shouldCollectEvent` is never invoked.
+      NREUM.init||(NREUM.init = {});
+      NREUM.init.ajax||(NREUM.init.ajax = {});
+      NREUM.init.ajax.deny_list = ["example.com"];
+    </script>
+    {config}
+    {loader}
+      
+    <script type="text/javascript">
+      const xhr = new XMLHttpRequest();
+      xhr.addEventListener('load', function() {
+        console.log(this.responseText);
+      })
+      xhr.open('GET', 'data:,Hello%2C%20World%21');
+      xhr.send();
+    </script>
+  </head>
+  <body>
+    This page makes an XHR call to a data URL, which has no hostname. Such a request should not cause the agent to error and should not be sent for collection.
+  </body>
+</html>

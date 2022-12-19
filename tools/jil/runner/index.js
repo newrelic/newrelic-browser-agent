@@ -124,18 +124,16 @@ function loadBrowsersAndRunTests() {
     let desired = browser.desired
     let connectionInfo = {}
 
-    if (!browser.isPhantom()) {
-      desired['tunnel-identifier'] = tunnelIdentifier
+    desired['tunnel-identifier'] = tunnelIdentifier
 
-      if (config.seleniumServer) {
-        connectionInfo = `http://${config.seleniumServer}/wd/hub`
-      } else {
-        let sauceCreds = getSauceLabsCreds()
-        connectionInfo = `http://${sauceCreds.username}:${sauceCreds.accessKey}@ondemand.saucelabs.com/wd/hub`
-      }
-
-      if (browser.allowsExtendedDebugging()) desired.extendedDebugging = true;  // turn on JS console logs & HAR files in SauceLabs
+    if (config.seleniumServer) {
+      connectionInfo = `http://${config.seleniumServer}/wd/hub`
+    } else {
+      let sauceCreds = getSauceLabsCreds()
+      connectionInfo = `http://${sauceCreds.username}:${sauceCreds.accessKey}@ondemand.saucelabs.com/wd/hub`
     }
+
+    if (browser.allowsExtendedDebugging()) desired.extendedDebugging = true;  // turn on JS console logs & HAR files in SauceLabs
 
     desired.build = buildIdentifier
     desired.name = `${buildIdentifier}-${browser.toString()}`

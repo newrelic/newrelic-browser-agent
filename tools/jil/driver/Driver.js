@@ -42,7 +42,7 @@ class Driver {
   }
 
   closeBrowser (ok, browser, done) {
-    if (isSauceConnected() && !browser.browserSpec.isPhantom()) {
+    if (isSauceConnected()) {
       browser.sauceJobStatus(ok)
     }
     browser.quit(() => {

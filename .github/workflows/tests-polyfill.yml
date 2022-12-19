@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:16
+    container: node:14
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -34,7 +34,7 @@ jobs:
     timeout-minutes: 90
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:16
+    container: node:14
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -56,7 +56,7 @@ jobs:
   polyfill-check-failures:
     runs-on: ubuntu-latest
     continue-on-error: true
-    container: node:16
+    container: node:14
     if: ${{ !failure() }}  # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
     needs: [ie-functional, ie-unit]
     env:

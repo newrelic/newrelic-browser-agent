@@ -23,12 +23,6 @@ jobs:
       - uses: actions/checkout@v2
       - name: install
         run: npm ci
-      - name: build:all
-        run: npm run build:all
-      - name: run tests
-        run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=4
-      - name: build:nr
-        run: npm run cdn:build:nr
       - name: upload artifacts to NR
         run: |
           node tools/scripts/upload-to-nr.js \

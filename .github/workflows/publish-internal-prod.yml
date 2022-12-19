@@ -32,7 +32,7 @@ jobs:
             --env prod \
             --current https://js-agent.newrelic.com/nr-loader-spa-${{ github.event.inputs.current }}.min.js
             --next https://js-agent.newrelic.com/nr-loader-spa-${{ github.event.inputs.next }}.min.js
-            --appId ${{ secrets.INTERNAL_DEV_APPLICATION_ID }} \
+            --appId ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }}
@@ -42,7 +42,19 @@ jobs:
             --env eu-prod \
             --current https://js-agent.newrelic.com/nr-loader-spa-${{ github.event.inputs.current }}.min.js
             --next https://js-agent.newrelic.com/nr-loader-spa-${{ github.event.inputs.next }}.min.js
-            --appId ${{ secrets.INTERNAL_DEV_APPLICATION_ID }} \
+            --appId ${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }}
+      - name: purge fastly cache url
+        run: |
+          node ./tools/scripts/fastly.js \
+            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
+            --env prod \
+            --purge-internal
+      - name: purge fastly cache url
+        run: |
+          node ./tools/scripts/fastly.js \
+            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
+            --env eu-prod \
+            --purge-internal

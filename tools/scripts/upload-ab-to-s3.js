@@ -41,6 +41,11 @@ let counter = 1
 
 if (!env || !appId || !licenseKey || !bucket || !role) {
   console.log("missing required param")
+  if (!env) console.log("env")
+  if (!appId) console.log("appId")
+  if (!licenseKey) console.log("licenseKey")
+  if (!bucket) console.log("bucket")
+  if (!role) console.log("role")
   process.exit(1)
 }
 

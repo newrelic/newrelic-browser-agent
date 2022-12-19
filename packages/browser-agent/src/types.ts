@@ -149,7 +149,7 @@ interface BrowserInteraction {
      * @see https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api/spa-get-context
      */
     // tslint:disable-next-line:no-unnecessary-generics
-    getContext<T extends ContextObject = ContextObject>(callback: GetContextCallback<T>): this;
+    getContext<T extends Record<string, any>>(callback: GetContextCallback<T>): this;
 
     /**
      * Overrides other SPA save() calls; ignores an interaction so it is not saved or sent to New Relic.
@@ -168,7 +168,7 @@ interface BrowserInteraction {
      * @see https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api/spa-on-end
      */
     // tslint:disable-next-line:no-unnecessary-generics
-    onEnd<T extends ContextObject = ContextObject>(callback: GetContextCallback<T>): this;
+    onEnd<T extends Record<string, any>>(callback: GetContextCallback<T>): this;
 
     /**
      * Ensures a SPA browser interaction will be saved when it ends.
@@ -201,8 +201,6 @@ interface BrowserInteraction {
     setName(name: string, trigger?: string): this;
 }
 
-interface ContextObject extends Record<string, any> {}
-
 interface Callback {
     (): void;
 }
@@ -211,7 +209,7 @@ interface ErrorHandler {
     (err: any): boolean;
 }
 
-interface GetContextCallback<T extends ContextObject = ContextObject> {
+interface GetContextCallback<T extends Record<string, any>> {
     (contextObject: T): void;
 }
 

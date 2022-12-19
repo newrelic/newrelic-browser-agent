@@ -6,7 +6,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: node:16
+    container: node:14
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -25,7 +25,7 @@ jobs:
         run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=4
   publish-to-s3:
     runs-on: ubuntu-latest
-    container: node:16
+    container: node:14
     needs: [test]
     env:
       NEWRELIC_ENVIRONMENT: ci

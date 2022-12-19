@@ -6,7 +6,7 @@ on:
 jobs:
   publish-to-s3:
     runs-on: ubuntu-latest
-    container: node:16
+    container: node:14
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}

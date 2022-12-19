@@ -47,7 +47,7 @@ class AgentInjectorTransform extends AssetTransform {
     this.assetServer = assetServer
     this.router = router
 
-    this.polyfills = fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`)
+    this.polyfills = runnerArgs.polyfills ? fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`) : ''
   }
 
   parseConfigFromQueryString(params) {
@@ -309,13 +309,13 @@ class BrowserifyTransform extends AssetTransform {
           ["@babel/preset-env", {
             loose: true,
             targets: {
-              browsers: [
-                "chrome >= 60",
-                "safari >= 11",
-                "firefox >= 56",
-                "ios >= 10.3",
-                "ie >= 11",
-                "edge >= 60"
+              browsers: runnerArgs.polyfills ? [
+                "ie >= 11"
+              ] : [
+                "last 10 Chrome versions",
+                "last 10 Safari versions",
+                "last 10 Firefox versions",
+                "last 10 Edge versions"
               ]
             }
           }]
@@ -323,6 +323,7 @@ class BrowserifyTransform extends AssetTransform {
         plugins: [
           "@babel/plugin-syntax-dynamic-import",
           '@babel/plugin-transform-modules-commonjs',
+          "@babel/plugin-proposal-optional-chaining",
           ["module-resolver", {
             "alias": {
               "@newrelic/browser-agent-core/src": './dist/packages/browser-agent-core/src'

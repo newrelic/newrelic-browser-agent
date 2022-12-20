@@ -212,7 +212,7 @@ features.sendBeacon = new BrowserMatcher()
   .include('firefox', '>=31')
   .include('android', '>=6')
   .include('safari', '>=11.1')
-  // this excludes iOS... why?
+  .include('ios', '>=11.3')
 
 // Safari on macOS 11.1 - 12.2 have a bug in the sendBeacon API during pgehide event listener -- fixed in ios 12.3
 // The agent falls back to using image

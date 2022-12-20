@@ -6,7 +6,7 @@
 const testDriver = require('../../../tools/jil/index')
 const {validatePageActionData, fail} = require('./ins-internal-help.cjs')
 
-const workingSendBeacon = testDriver.Matcher.withFeature('workingSendBeacon').and(testDriver.Matcher.withFeature('reliableUnloadEvent'));
+const workingSendBeacon = testDriver.Matcher.withFeature('workingSendBeacon');
 
 
 testDriver.test('PageAction submission', function (t, browser, router) {

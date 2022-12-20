@@ -6,7 +6,8 @@
 const testDriver = require('../../../tools/jil/index')
 const {validatePageActionData, fail} = require('./ins-internal-help.cjs')
 
-let workingSendBeacon = testDriver.Matcher.withFeature('workingSendBeacon')
+const workingSendBeacon = testDriver.Matcher.withFeature('workingSendBeacon').and(testDriver.Matcher.withFeature('reliableUnloadEvent'));
+
 
 testDriver.test('PageAction submission', function (t, browser, router) {
   let url = router.assetURL('instrumented.html')

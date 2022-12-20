@@ -106,8 +106,6 @@ features.reliableUnloadEvent = new BrowserMatcher()
   // is likely identical in behavior to OS X safari, we can assume that any issues
   // will be caught there and skip testing iOS.
   .exclude('ios')
-  .exclude('ie', '<9')
-  .exclude('firefox', '<32')
 
 /** DEPRECATED */
 features.addEventListener = new BrowserMatcher()

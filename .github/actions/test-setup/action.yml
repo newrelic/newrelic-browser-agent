@@ -11,7 +11,7 @@ runs:
     # For workflow_dispatch, it's assume that the dispatch branch is already checked out.
 
     - name: install
-      run: npm ci --cache ./.npm
+      run: npm ci --no-fund --no-audit --no-progress
       shell: bash
 
     - name: build

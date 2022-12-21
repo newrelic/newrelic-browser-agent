@@ -11,7 +11,7 @@ class DefaultDriver extends Driver {
   run (done) {
     let testRuns = []
     for (let testEnv of this.testEnvs) {
-      let testRun = new TestRun(testEnv, this.router, this.config)
+      let testRun = new TestRun(testEnv, this)
       this.output.addChild(testRun.browserSpec.toString(), testRun.stream)
       testRuns.push(testRun)
     }

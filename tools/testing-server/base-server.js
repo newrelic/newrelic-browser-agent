@@ -59,14 +59,10 @@ class BaseServer {
     }
   }
 
-  start (port = null, sslPort = null, done) {
-    if (port >= 0) {
-      this.server.listen(port)
-    }
-    if (sslPort >= 0) {
-      this.sslPort = sslPort
-      this.sslServer.listen(sslPort, done)
-    }
+  start (port = 0, done) {
+    return new Promise(resolve => {
+      this.server.listen(port, '0.0.0.0', resolve)
+    }).then(done)
   }
 
   stop () {

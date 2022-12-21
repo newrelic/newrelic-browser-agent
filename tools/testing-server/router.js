@@ -268,7 +268,7 @@ class RouterHandle {
   }
 
   beaconURL() {
-    return `${'http'}://${this.router.assetServer.host}:${this.router.port}`
+    return `http://${this.router.assetServer.host}:${this.router.port}`
   }
 
   urlForBrowserTest(file) {
@@ -330,7 +330,7 @@ class RouterHandle {
       handle: onRequest,
       timer: setTimeout(() => {
         this.pendingExpects.delete(expected)
-        reject(new Error(`fake router did not receive ${methods} ${pathname} within ${duration} ms`))
+        reject(new Error(`fake router did not receive ${methods} ${expectedPath} within ${duration} ms`))
       }, duration)
     }
     // loop over pendind reqs
@@ -412,3 +412,4 @@ class RouterHandle {
 }
 
 module.exports = Router
+module.exports.RouterHandle = RouterHandle

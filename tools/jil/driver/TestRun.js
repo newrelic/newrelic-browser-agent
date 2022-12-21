@@ -19,12 +19,13 @@ class TestRun extends EventEmitter {
    * @param {string}  Selenium server URL
    * @param {Object}  Object representing the browser and platform
    */
-  constructor (env, router, config) {
+  constructor (env, driver) {
     super()
 
     this.env = env
-    this.router = router
-    this.config = config
+    this.driver = driver
+    this.router = driver.router
+    this.config = driver.config
     this.connectionInfo = env.connectionInfo
     this.browserSpec = env.browserSpec
     this.stream = through()
@@ -199,6 +200,7 @@ class TestRun extends EventEmitter {
     return wd
       .promiseChainRemote(connectionInfo)
       .init(browserSpec.desired)
+      .resolve(this.driver.ready())
       .initNewSession(browserSpec, this)
       .get(rootURL)
       .catch((err) => {

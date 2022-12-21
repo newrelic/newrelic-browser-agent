@@ -27,14 +27,23 @@ class Driver {
 
     let agentConfig = {licenseKey: 'asdf', applicationID: 42, accountID: 123, agentID: 456, trustKey: 789}
     this.browserTests = []
-    this.assetServer = new AssetServer(config, agentConfig, this.browserTests, output)
-    this.assetServer.start(config.port)
+    this.assetServer = new AssetServer(config, agentConfig, output)
+    this.serverStartPromise = this.assetServer.start(config.port);
     this.router = this.assetServer.router
     this.timeout = config.timeout = config.timeout || 32000
     this.output = output
     this.concurrent = config.concurrent
     this.config = config
     this.asserters = asserters
+  }
+
+  ready(cb) {
+    // Ensure the servers are up before starting the tests
+    return this.serverStartPromise.then(() => {
+      if (typeof cb === 'function') {
+        cb();
+      }
+    });
   }
 
   addBrowser (connectionInfo, desired) {
@@ -320,12 +329,14 @@ class Driver {
     var running = new Set()
     for (let testEnv of testEnvs) {
       let browserSpec = testEnv.browserSpec
-      let testRun = new TestRun(testEnv, this.router, this.config)
+      let testRun = new TestRun(testEnv, this)
       this.output.addChild(browserSpec.toString(), testRun.stream)
 
       let testsToRun = findTests(tests, browserSpec)
       driver.output.log(`# retrying ${testsToRun.length} tests for ${browserSpec.toString()}`)
-      this.runTestRun(testRun, testsToRun, true, onBrowserFinished)
+      this.ready(() => {
+        this.runTestRun(testRun, testsToRun, true, onBrowserFinished)
+      });
       running.add(testRun)
     }
 

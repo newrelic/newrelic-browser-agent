@@ -17,7 +17,10 @@ export class Instrument extends InstrumentBase {
     findStartTime(agentIdentifier)
     mark(agentIdentifier, 'firstbyte', getLastTimestamp())
 
-    onWindowLoad(() => { this.measureWindowLoaded(); this.importAggregator() })
+    onWindowLoad(() => { 
+      this.measureWindowLoaded(); 
+      if (isBrowserWindow) this.importAggregator() 
+    })
     onDOMContentLoaded(() => this.measureDomContentLoaded())
   }
 

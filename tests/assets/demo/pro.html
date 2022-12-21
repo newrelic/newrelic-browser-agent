@@ -1,13 +1,22 @@
 <html>
-    <head>
-        <script>
-            if (!new URL(window.location).searchParams.get('loader')) window.location = window.location + '?loader=pro'
-        </script>
-        {init}
-        {config}
-        {loader}
-    </head>
-    <body>
-        
-    </body>
+
+<head>
+    <script>
+        const loader = 'full'
+        const url = new URL(window.location)
+        const params = url.searchParams
+        if (params.get('loader') !== loader) {
+            params.set('loader', loader)
+            window.location = `${url.origin}${url.pathname}?${params.toString()}`
+        }
+    </script>
+    {init}
+    {config}
+    {loader}
+</head>
+
+<body>
+
+</body>
+
 </html>

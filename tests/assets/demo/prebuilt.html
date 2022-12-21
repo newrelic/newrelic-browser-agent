@@ -2,7 +2,13 @@
 
 <head>
     <script>
-        if (!new URL(window.location).searchParams.get('loader')) window.location = window.location + '?loader=prebuilt'
+        const loader = 'prebuilt'
+        const url = new URL(window.location)
+        const params = url.searchParams
+        if (params.get('loader') !== loader) {
+            params.set('loader', loader)
+            window.location = `${url.origin}${url.pathname}?${params.toString()}`
+        }
     </script>
     {init}
     {config}

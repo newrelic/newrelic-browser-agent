@@ -37,7 +37,6 @@ export class Aggregate extends AggregateBase {
     // this will need to change to match whatever ee we use in the instrument
     this.ee.on('interactionDiscarded', (interaction) => this.onInteractionDiscarded(interaction))
 
-    console.log("register 'err'", this.agentIdentifier)
     register('err', (...args) => this.storeError(...args), undefined, this.ee)
     register('ierr', (...args) => this.storeError(...args), undefined, this.ee)
 

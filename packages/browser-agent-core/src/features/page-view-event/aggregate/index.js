@@ -24,7 +24,6 @@ export class Aggregate extends AggregateBase {
   }
 
   sendRum() {
-    console.log("sendRum!")
     const info = getInfo(this.agentIdentifier)
     if (!info.beacon) return
     if (info.queueTime) this.aggregator.store('measures', 'qt', { value: info.queueTime })

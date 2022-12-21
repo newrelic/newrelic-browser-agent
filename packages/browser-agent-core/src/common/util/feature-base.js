@@ -26,6 +26,7 @@ export class InstrumentBase extends FeatureBase {
     // would need the same jsAttributes handling as the main branch
     if (!isConfigured(this.agentIdentifier)) configure(this.agentIdentifier, {...gosCDN(), info: {...gosCDN().info, jsAttributes:{...getInfo(this.agentIdentifier).jsAttributes}, ...gosCDN().info?.jsAttributes }})
     try {
+      console.log(`%c importing aggregator file - ${this.featureName}`, 'color:#00ff00')
       const { Aggregate } = await import(`../../features/${this.featureName}/aggregate`)
       new Aggregate(this.agentIdentifier, this.aggregator)
       this.resolve()

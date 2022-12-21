@@ -1,4 +1,4 @@
-import { getEnabledFeatures, isAuto } from '@newrelic/browser-agent-core/src/common/loader/enabled-features'
+import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/common/loader/enabled-features'
 import { configure } from '@newrelic/browser-agent-core/src/common/loader/configure'
 import { Aggregator } from '@newrelic/browser-agent-core/src/common/aggregate/aggregator'
 import { gosNREUMInitializedAgents } from '@newrelic/browser-agent-core/src/common/window/nreum'
@@ -9,6 +9,7 @@ import { getFeatureDependencyNames } from '@newrelic/browser-agent-core/src/comm
 
 export class BrowserAgent {
     constructor(options, agentIdentifier = generateRandomHexString(16)) {
+        console.log(`%c initialize BrowserAgent class`,'color:#ffa500')
         this.agentIdentifier = agentIdentifier
         this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
         this.features = {}
@@ -34,22 +35,22 @@ export class BrowserAgent {
             const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
             const completed = []
             this.desiredFeatures.forEach(f => {
-                console.log(f.featureName)
-                console.log(f)
                 if (enabledFeatures[f.featureName.replace(/-/g, '_')]) {
+
+                    console.log(`%c importing instrumentation file - ${f.featureName}`, 'color:#ffff00')
                     const dependencies = getFeatureDependencyNames(f.featureName.replace(/_/g, '-'))
                     const hasAllDeps = dependencies.every(x => enabledFeatures[x.replace(/-/g, '_')])
 
                     if (!hasAllDeps) console.warn(`New Relic: ${f} is enabled but one or more dependent features has been disabled (${JSON.stringify(dependencies)}). This may cause unintended consequences or missing data...`)
-                    
+
                     this.features[f.featureName] = new f(this.agentIdentifier, this.sharedAggregator)
                     completed.push(this.features[f.featureName].completed)
 
                 }
             })
-            console.log(completed)
+            console.log(`%c wait for ${completed.length} feature promises to finish before draining...`, 'color:#ffa500')
             Promise.all(completed).then(() => {
-                console.log("all promises complete, drainAll!")
+                console.log("%c all promises complete, drainAll!", 'color:#ffa500')
                 drainAll(this.agentIdentifier)
                 gosNREUMInitializedAgents(this.agentIdentifier, this.features, 'features')
             })

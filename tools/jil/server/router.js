@@ -36,7 +36,7 @@ class Router extends BaseServer {
     let parsed = url.parse(req.url, true)
     if (parsed.pathname.match(/^\/debug/)) {
       let ix = parseInt(parsed.query.ix)
-      this.log(parsed.query.testId, `DEBUG [${ix}]: ${parsed.query.m}`)
+      this.log(parsed.query.testId, `DEBUG [${ix}](${parsed.query.l}): ${parsed.query.m}`)
       res.end()
       return
     }
@@ -177,8 +177,8 @@ class RouterHandle {
   }
 
   async expectSpecificEvents({
-    appID, 
-    condition=(e) => e.type === 'ajax', 
+    appID,
+    condition=(e) => e.type === 'ajax',
     expecter='expectAjaxEvents'
   }){
     const {body, query} = await this[expecter](appID)
@@ -186,7 +186,7 @@ class RouterHandle {
     let matches = ajaxEvents.filter(condition)
     if (!matches.length) matches = this.expectSpecificEvents({expecter, condition})
     return matches
-  }  
+  }
 
   expectErrors(appID) {
     // errors harvest at 60s

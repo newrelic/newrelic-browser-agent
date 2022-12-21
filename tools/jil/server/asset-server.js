@@ -20,7 +20,7 @@ const concat = require('concat-stream')
 const multiparty = require('multiparty')
 const assert = require('assert')
 const preprocessify = require('preprocessify')
-const loaders = require('../../../loaders')
+const loaders = require('../util/loaders')
 const UglifyJS = require('uglify-js')
 var runnerArgs = require('../runner/args')
 

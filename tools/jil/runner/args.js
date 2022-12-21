@@ -6,7 +6,7 @@
 if (findIndexWithRegex(process.argv, /^--$/) >= 0) process.argv.splice(process.argv.indexOf('--'), 1)
 
 const yargs = require('yargs')
-const loaders = require('../../../loaders')
+const loaders = require('../util/loaders')
 
 module.exports = yargs
   .usage('$0 file1[, filen] [options]')

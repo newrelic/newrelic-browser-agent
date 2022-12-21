@@ -69,7 +69,7 @@ const minVersion = name => {
         case "safari":
         case 'ios':
         case 'iphone':
-            return 12
+            return 14
     }
 }
 const maxVersion = name => {

@@ -10,7 +10,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 AJAX events for data URLs have not historically been collected due to errors in the agent when handling URLs without hostnames. Going forward, XHR calls to data URLs will not cause agent errors and will continue to be excluded from collection.
 
 ### Reduce size of builds for modern browser targets
-The agent will now transpile outputs for browsers with ES6 support separately from IE11, reducing loader size for these browsers by 20% or more. For the standard build, babel will now target the last ten versions of Chrome, Edge, Safari, and Firefox. See [browser agent EOL policy](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/browser-agent-eol-policy/).
+The agent is now compatible with _only modern web syntax (ES6+)_; **this reduces loader size for these browsers by 20% or more**. We target and test support for just the last ten versions of Chrome, Edge, Safari, and Firefox -- see [browser agent EOL policy](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/browser-agent-eol-policy/) for more details.
 
 ## v1221
 

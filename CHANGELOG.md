@@ -6,7 +6,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## v1222
 
 ### Unblock instrumented pages from the back/forward cache (w/ feature flag)
-B/f cache eligibility was hampered by the agent's `unload` listener, which will be removed when a flag is on. With the `allow_bfcache` enabled in the `info` config, how the agent interprets the end of an user session will change and also allow an otherwise eligible page to persist.
+An instrumented page's back-forward cache eligibility was hampered by the agent's `unload` listener, which will be _removed_ when a feature flag is on. With the `allow_bfcache` enabled in the `init` config, the agent's definition of (the end of) an user's session is more refined, and it will no longer be blocking the browser from utilizing its respective b/f cache.
 
 ### Do not collect XHR events for data URLs
 AJAX events for data URLs have not historically been collected due to errors in the agent when handling URLs without hostnames. Going forward, XHR calls to data URLs will not cause agent errors and will continue to be excluded from collection.

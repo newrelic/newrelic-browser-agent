@@ -139,7 +139,7 @@ const standardConfig = merge(commonConfig, {
       [`nr-loader-full${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/pro.js'),
       [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/pro.js'),
       [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/spa.js'),
-      [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/spa.js'),
+      [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/spa.js')
   },
   module: {
     rules: [
@@ -183,7 +183,7 @@ const polyfillsConfig = merge(commonConfig, {
     [`nr-loader-spa-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
     [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
     [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills/spa.js'),
-    [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills.js'),
+    [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/polyfills.js')
   },
   module: {
     rules: [
@@ -217,7 +217,7 @@ const polyfillsConfig = merge(commonConfig, {
      * overwrite with either an ES5 or ES6 target. For differentiated transpilation of dynamically loaded dependencies
      * in non-production builds, we can tag output filenames for chunks of the polyfills bundle with `-es5`.
      */
-    chunkFilename: SUBVERSION === 'PROD' ? `[name].[hash:8]${PATH_VERSION}.js` : `[name]-es5${PATH_VERSION}.js`,
+    chunkFilename: SUBVERSION === 'PROD' ? `[name].[hash:8]${PATH_VERSION}.js` : `[name]-es5${PATH_VERSION}.js`
   },
   plugins: [
     instantiateBundleAnalyzerPlugin('polyfills'),

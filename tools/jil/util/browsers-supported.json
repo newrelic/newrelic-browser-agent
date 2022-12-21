@@ -91,18 +91,6 @@
       "platform": "Mac 11",
       "version": "14",
       "acceptInsecureCerts": false
-    },
-    {
-      "browserName": "safari",
-      "platform": "Mac 10.13",
-      "version": "13",
-      "acceptInsecureCerts": false
-    },
-    {
-      "browserName": "safari",
-      "platform": "Mac 10.14",
-      "version": "12",
-      "acceptInsecureCerts": false
     }
   ],
   "firefox": [

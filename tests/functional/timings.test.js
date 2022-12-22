@@ -11,7 +11,6 @@ const supportedFirstContentfulPaint = testDriver.Matcher.withFeature('firstConte
 const supportedLcp = testDriver.Matcher.withFeature('largestContentfulPaint')
 const supportedCls = testDriver.Matcher.withFeature('cumulativeLayoutShift')
 const unsupportedCls = testDriver.Matcher.withFeature('unsupportedCumulativeLayoutShift')
-const reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')
 const testPageHide = testDriver.Matcher.withFeature('testPageHide')
 const badEvtTimestamp = testDriver.Matcher.withFeature('badEvtTimestamp')
 const unreliableEvtTimestamp = testDriver.Matcher.withFeature('unreliableEvtTimestamp')
@@ -39,7 +38,7 @@ runLcpTests('rum')
 runLcpTests('spa')
 runPvtInStnTests('spa')
 
-testDriver.test('Disabled timings feature', reliableFinalHarvest, function (t, browser, router) {
+testDriver.test('Disabled timings feature', function (t, browser, router) {
   let url = router.assetURL('final-harvest-page-view-timings-disabled.html', { loader: 'rum' })
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
@@ -116,7 +115,7 @@ function runPaintTimingsTests(loader) {
 }
 
 function runFirstInteractionTests(loader) {
-  testDriver.test(`First interaction and first input delay for ${loader} agent`, supportsFirstInteraction.and(reliableFinalHarvest), function (t, browser, router) {
+  testDriver.test(`First interaction and first input delay for ${loader} agent`, supportsFirstInteraction, function (t, browser, router) {
     const rumPromise = router.expectRum()
     const loadPromise = browser.safeGet(router.assetURL('basic-click-tracking.html', { loader: loader }))
 
@@ -213,7 +212,7 @@ function runLargestContentfulPaintFromInteractionTests(loader) {
 }
 
 function runWindowLoadTests(loader) {
-  testDriver.test(`window load timing for ${loader} agent`, reliableFinalHarvest, function (t, browser, router) {
+  testDriver.test(`window load timing for ${loader} agent`, function (t, browser, router) {
     t.plan(4)
 
     let start = Date.now()
@@ -251,7 +250,7 @@ function runWindowLoadTests(loader) {
 }
 
 function runWindowUnloadTests(loader) {
-  testDriver.test(`unload timing for ${loader} agent`, reliableFinalHarvest, function (t, browser, router) {
+  testDriver.test(`unload timing for ${loader} agent`, function (t, browser, router) {
     t.plan(4)
 
     let start = Date.now()
@@ -463,7 +462,7 @@ function runClsTests(loader) {
     }
   })
 
-  testDriver.test(`${loader} agent does not collect cls attribute on unsupported browser`, unsupportedCls.and(reliableFinalHarvest), function (t, browser, router) {
+  testDriver.test(`${loader} agent does not collect cls attribute on unsupported browser`, unsupportedCls, function (t, browser, router) {
     t.plan(2)
 
     const rumPromise = router.expectRum()
@@ -673,7 +672,7 @@ function runClsTests(loader) {
 }
 
 function runCustomAttributeTests(loader) {
-  testDriver.test(`window load timing for ${loader} agent includes custom attributes`, reliableFinalHarvest, function (t, browser, router) {
+  testDriver.test(`window load timing for ${loader} agent includes custom attributes`, function (t, browser, router) {
     t.plan(5)
 
     let url = router.assetURL('instrumented-with-custom-attributes.html', { loader: loader })

@@ -36,13 +36,6 @@ export class Harvest extends SharedContext {
     this._events = {}
   }
 
-  sendFinal() {
-    var sents = mapOwn(this._events, (endpoint) => {
-      return this.sendX(endpoint, { unload: true })
-    })
-    return reduce(sents, or)
-  }
-
   /**
    * Initiate a harvest from multiple sources. An event that corresponds to the endpoint
    * name is emitted, which gives any listeners the opportunity to provide payload data.
@@ -100,7 +93,7 @@ export class Harvest extends SharedContext {
 
     var agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
 
-    if (!payload.body) {
+    if (!payload.body) {  // no payload body? nothing to send, just run onfinish stuff and return
       if (cbFinished) {
         cbFinished({ sent: false })
       }

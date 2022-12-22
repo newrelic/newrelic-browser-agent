@@ -17,10 +17,10 @@ export function eventListenerOpts(useCapture) {
 }
 
 /** Do not use this within the worker context. */
-export function windowAddEventListener(event, listener) {
-  window.addEventListener(event, listener, eventListenerOpts(false));
+export function windowAddEventListener(event, listener, capture = false) {
+  window.addEventListener(event, listener, eventListenerOpts(capture));
 }
 /** Do not use this within the worker context. */
-export function documentAddEventListener(event, listener) {
-  document.addEventListener(event, listener, eventListenerOpts(false));
+export function documentAddEventListener(event, listener, capture = false) {
+  document.addEventListener(event, listener, eventListenerOpts(capture));
 }

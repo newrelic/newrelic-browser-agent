@@ -1,6 +1,7 @@
 import { originals } from "../../common/config/config"
+import { FEATURE_NAMES } from "../../common/loader/features"
 
-export const FEATURE_NAME = 'session-trace'
+export const FEATURE_NAME = FEATURE_NAMES.sessionTrace
 export const learResourceTimings = 'learResourceTimings'
 export const ADD_EVENT_LISTENER = 'addEventListener'
 export const REMOVE_EVENT_LISTENER = 'removeEventListener'

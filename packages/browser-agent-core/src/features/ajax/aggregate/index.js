@@ -13,15 +13,15 @@ import { AggregateBase } from '../../../common/util/feature-base'
 import { FEATURE_NAME } from '../constants'
 
 export class Aggregate extends AggregateBase {
-  constructor(agentIdentifier, aggregator, externalFeatures = []) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, externalFeatures)
+  static featureName = FEATURE_NAME
+  constructor(agentIdentifier, aggregator) {
+    super(agentIdentifier, aggregator)
     let ajaxEvents = []
     let spaAjaxEvents = {}
     let sentAjaxEvents = []
     let scheduler
 
     const ee = this.ee
-    const externalHarvestKeys = ['jserrors']
 
     const harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'ajax.harvestTimeSeconds') || 10
     const MAX_PAYLOAD_SIZE = getConfigurationValue(agentIdentifier, 'ajax.maxPayloadSize') || 1000000
@@ -29,7 +29,7 @@ export class Aggregate extends AggregateBase {
     // Exposes these methods to browser test files -- future TO DO: can be removed once these fns are extracted from the constructor into class func
     this.storeXhr = storeXhr;
     this.prepareHarvest = prepareHarvest;
-    this.getStoredEvents = function() { return { ajaxEvents, spaAjaxEvents } };
+    this.getStoredEvents = function () { return { ajaxEvents, spaAjaxEvents } };
 
     ee.on('interactionSaved', (interaction) => {
       if (!spaAjaxEvents[interaction.id]) return
@@ -57,13 +57,6 @@ export class Aggregate extends AggregateBase {
         getPayload: prepareHarvest
       }, this)
 
-      externalFeatures.forEach(feat => {
-        externalHarvestKeys.forEach(key => {
-          feat?.scheduler?.harvest?.on(key, () => {
-            return { body: aggregator.take(['xhr']) }
-          })
-        })
-      })
       scheduler.startTimer(harvestTimeSeconds)
 
       scheduler.opts.onUnload = () => scheduler.runHarvest({ unload: true });

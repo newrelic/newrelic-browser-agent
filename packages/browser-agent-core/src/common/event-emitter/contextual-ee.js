@@ -41,7 +41,8 @@ function ee (old, debugId) {
     aborted: false,
     isBuffering: isBuffering,
     debugId,
-    backlog: {} // why pass on the backlog like this? --> old && old.backlog ? old.backlog : {}
+    backlog: {} 
+    // backlog: old && typeof old.backlog === 'object' ? old.backlog : {} // why pass on the backlog like this?
   }
 
   return emitter

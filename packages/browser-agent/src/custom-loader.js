@@ -9,7 +9,7 @@ import { getFeatureDependencyNames } from '@newrelic/browser-agent-core/src/comm
 
 export class BrowserAgent {
     constructor(options, agentIdentifier = generateRandomHexString(16)) {
-        console.log(`%c initialize BrowserAgent class`,'color:#ffa500')
+        console.log(`%c initialize BrowserAgent class`, 'color:#ffa500')
         this.agentIdentifier = agentIdentifier
         this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
         this.features = {}
@@ -35,13 +35,16 @@ export class BrowserAgent {
             const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
             const completed = []
             this.desiredFeatures.forEach(f => {
-                if (enabledFeatures[f.featureName.replace(/-/g, '_')]) {
+                if (enabledFeatures[f.featureName]) {
 
-                    console.log(`%c importing instrumentation file - ${f.featureName}`, 'color:#ffff00')
-                    const dependencies = getFeatureDependencyNames(f.featureName.replace(/_/g, '-'))
-                    const hasAllDeps = dependencies.every(x => enabledFeatures[x.replace(/-/g, '_')])
+                    console.log(`%c initializing instrumentation file - ${f.featureName}`, 'color:#ffff00')
+                    const dependencies = getFeatureDependencyNames(f.featureName)
+                    const hasAllDeps = dependencies.every(x => enabledFeatures[x])
 
-                    if (!hasAllDeps) console.warn(`New Relic: ${f} is enabled but one or more dependent features has been disabled (${JSON.stringify(dependencies)}). This may cause unintended consequences or missing data...`)
+                    console.log(f.featureName, "dependencies...", dependencies)
+                    console.log("hasAllDeps", hasAllDeps)
+
+                    if (!hasAllDeps) console.warn(`New Relic: ${f.featureName} is enabled but one or more dependent features has been disabled (${JSON.stringify(dependencies)}). This may cause unintended consequences or missing data...`)
 
                     this.features[f.featureName] = new f(this.agentIdentifier, this.sharedAggregator)
                     completed.push(this.features[f.featureName].completed)

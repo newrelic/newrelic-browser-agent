@@ -1,6 +1,7 @@
 import { originals } from "../../common/config/config"
+import { FEATURE_NAMES } from "../../common/loader/features"
 
-export const FEATURE_NAME = 'spa'
+export const FEATURE_NAME = FEATURE_NAMES.spa
 export const INTERACTION_EVENTS = [
   'click',
   'submit',

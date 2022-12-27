@@ -14,8 +14,9 @@ import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
 
 export class Aggregate extends AggregateBase {
+  static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+    super(agentIdentifier, aggregator)
     this.eventsPerMinute = 240
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'ins.harvestTimeSeconds') || 30
     this.eventsPerHarvest = this.eventsPerMinute * this.harvestTimeSeconds / 60

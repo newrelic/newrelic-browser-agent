@@ -42,13 +42,13 @@ export class BrowserAgent {
             autoFeatures.forEach(f => {
                 if (enabledFeatures[f]) {
                     this.features[f] = null
-                    completed.push(import(`@newrelic/browser-agent-core/src/features/${f.replace(/_/g, '-')}/instrument`))
+                    completed.push(import(`@newrelic/browser-agent-core/src/features/${f}/instrument`))
                 }
             })
             nonAutoFeatures.forEach(f => {
                 if (enabledFeatures[f]) {
                     this.features[f] = null
-                    completed.push(import(`@newrelic/browser-agent-core/src/features/${f.replace(/_/g, '-')}/aggregate`))
+                    completed.push(import(`@newrelic/browser-agent-core/src/features/${f}/aggregate`))
                 }
             })
             Promise.all(completed).then((imports) => {

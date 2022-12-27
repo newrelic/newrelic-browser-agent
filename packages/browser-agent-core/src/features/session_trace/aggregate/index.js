@@ -18,8 +18,9 @@ import { AggregateBase } from '../../../common/util/feature-base'
 import { FEATURE_NAME } from '../constants'
 
 export class Aggregate extends AggregateBase {
+  static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+    super(agentIdentifier, aggregator)
 
     const agentRuntime = getRuntime(agentIdentifier)
 

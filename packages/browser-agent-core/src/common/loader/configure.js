@@ -4,10 +4,10 @@ import { setAPI } from '../api/api'
 import { activateFeatures } from '../util/feature-flags'
 import { isBrowserWindow } from '../window/win'
 
-export function configure(agentIdentifier, { init={}, info={}, loader_config={}, exposed = true, topLevelConfigs = false }) {
+export function configure(agentIdentifier, { init, info, loader_config, exposed = true }) {
     const nr = gosCDN()
     let api = {}
-    if (topLevelConfigs) {
+    if (!info) {
         init = nr.init
         info = nr.info
         loader_config = nr.loader_config
@@ -15,8 +15,8 @@ export function configure(agentIdentifier, { init={}, info={}, loader_config={},
     }
 
     setInfo(agentIdentifier, info)
-    setConfiguration(agentIdentifier, init)
-    setLoaderConfig(agentIdentifier, loader_config)
+    setConfiguration(agentIdentifier, init || {})
+    setLoaderConfig(agentIdentifier, loader_config || {})
     setRuntime(agentIdentifier, {})
 
     setAPI(agentIdentifier, api)

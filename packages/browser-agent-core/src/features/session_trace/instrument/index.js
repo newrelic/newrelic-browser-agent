@@ -49,7 +49,7 @@ export class Instrument extends InstrumentBase {
       if (evt instanceof origEvent) {
 
         // ISSUE: when target is XMLHttpRequest, nr@context should have params so we can calculate event origin
-        // When ajax is disabled, this may fail without making ajax a dependency of session-trace
+        // When ajax is disabled, this may fail without making ajax a dependency of session_trace
         handle('bst', [evt, target, this.bstStart, now()], undefined, undefined, ee)
       }
     })

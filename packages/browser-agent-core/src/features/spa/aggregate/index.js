@@ -25,8 +25,9 @@ const {
   INTERACTION, SPA_NODE, JSONP_NODE, FETCH_START, FETCH_DONE, FETCH_BODY, JSONP_END, originalSetTimeout
 } = CONSTANTS
 export class Aggregate extends AggregateBase {
+  static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+    super(agentIdentifier, aggregator)
     if (!isBrowserWindow) return; // TO DO: can remove once aggregate is chained to instrument
 
     this.state = {

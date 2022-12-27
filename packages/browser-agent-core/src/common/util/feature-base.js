@@ -10,11 +10,36 @@ class FeatureBase {
     this.ee = ee.get(agentIdentifier)
     this.externalFeatures = externalFeatures
     this.featureName = featureName
+
+    this.checkConfiguration()
+  }
+
+  checkConfiguration() {
+    // try to support backwards compat with patter of some loader configs present after loader
+    // would need the same jsAttributes handling as the main branch
+    if (!isConfigured(this.agentIdentifier)) {
+      let jsAttributes = { ...gosCDN().info?.jsAttributes }
+      try {
+        jsAttributes = {
+          ...jsAttributes,
+          ...getInfo(this.agentIdentifier)?.jsAttributes
+        }
+      } catch (err) {
+        // do nothing
+      }
+      configure(this.agentIdentifier, {
+        ...gosCDN(),
+        info: {
+          ...gosCDN().info,
+          jsAttributes
+        }
+      })
+    }
   }
 }
 export class InstrumentBase extends FeatureBase {
-  constructor(agentIdentifier, aggregator, featureName, externalFeatures = []) {
-    super(agentIdentifier, aggregator, featureName, externalFeatures)
+  constructor(agentIdentifier, aggregator, featureName) {
+    super(agentIdentifier, aggregator, featureName)
     this.completed = new Promise((resolve, reject) => {
       this.resolve = resolve
       this.reject = reject
@@ -22,11 +47,8 @@ export class InstrumentBase extends FeatureBase {
   }
 
   async importAggregator() {
-    // try to support backwards compat with patter of some loader configs present after loader
-    // would need the same jsAttributes handling as the main branch
-    if (!isConfigured(this.agentIdentifier)) configure(this.agentIdentifier, {...gosCDN(), info: {...gosCDN().info, jsAttributes:{...getInfo(this.agentIdentifier).jsAttributes}, ...gosCDN().info?.jsAttributes }})
     try {
-      console.log(`%c importing aggregator file - ${this.featureName}`, 'color:#00ff00')
+      console.log(`%c lazy-loading aggregator file - ${this.featureName}`, 'color:#00ff00')
       const { Aggregate } = await import(`../../features/${this.featureName}/aggregate`)
       new Aggregate(this.agentIdentifier, this.aggregator)
       this.resolve()

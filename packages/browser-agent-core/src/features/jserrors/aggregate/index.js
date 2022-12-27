@@ -21,8 +21,9 @@ import { AggregateBase } from '../../../common/util/feature-base'
 import { FEATURE_NAME } from '../constants'
 
 export class Aggregate extends AggregateBase {
+  static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+    super(agentIdentifier, aggregator)
 
     this.stackReported = {}
     this.pageviewReported = {}
@@ -48,7 +49,8 @@ export class Aggregate extends AggregateBase {
   }
 
   onHarvestStarted(options) {
-    var body = this.aggregator.take(['err', 'ierr'])
+    // this gets rid of dependency in AJAX module
+    var body = this.aggregator.take(['err', 'ierr', 'xhr'])
 
     if (options.retry) {
       this.currentBody = body

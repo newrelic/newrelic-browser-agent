@@ -14,8 +14,9 @@ import { FEATURE_NAME } from '../constants'
 const jsonp = 'NREUM.setToken'
 
 export class Aggregate extends AggregateBase {
+  static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+    super(agentIdentifier, aggregator)
     if (isBrowserWindow) this.sendRum();  // initial RUM payload is only sent in web env, TO DO: can remove once aggregate is chained to instrument
   }
 
@@ -48,7 +49,7 @@ export class Aggregate extends AggregateBase {
     // in the future we may add more
     var protocol = '1'
 
-    var scheduler = new HarvestScheduler('page-view-event', {}, this)
+    var scheduler = new HarvestScheduler('page_view_event', {}, this)
 
     var chunksForQueryString = [scheduler.harvest.baseQueryString()]
 

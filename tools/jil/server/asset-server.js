@@ -20,7 +20,7 @@ const concat = require('concat-stream')
 const multiparty = require('multiparty')
 const assert = require('assert')
 const preprocessify = require('preprocessify')
-const loaders = require('../../../loaders')
+const loaders = require('../util/loaders')
 const UglifyJS = require('uglify-js')
 var runnerArgs = require('../runner/args')
 
@@ -47,7 +47,7 @@ class AgentInjectorTransform extends AssetTransform {
     this.assetServer = assetServer
     this.router = router
 
-    this.polyfills = fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`)
+    this.polyfills = runnerArgs.polyfills ? fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`) : ''
   }
 
   parseConfigFromQueryString(params) {
@@ -152,7 +152,7 @@ class AgentInjectorTransform extends AssetTransform {
           if (typeof msg === 'object') {
             msg = JSON.stringify(msg)
           }
-          var url = 'http://' + NREUM.info.beacon + '/debug?m=' + escape(msg) + '&testId=' + NREUM.info.licenseKey + '&r=' + Math.random() + '&ix=' + count
+          var url = 'http://' + NREUM.info.beacon + '/debug?m=' + escape(msg) + '&l=' + window.location.href + '&testId=' + NREUM.info.licenseKey + '&r=' + Math.random() + '&ix=' + count
           if (!sync) {
             var img = new window.Image()
             img.src = url
@@ -309,13 +309,13 @@ class BrowserifyTransform extends AssetTransform {
           ["@babel/preset-env", {
             loose: true,
             targets: {
-              browsers: [
-                "chrome >= 60",
-                "safari >= 11",
-                "firefox >= 56",
-                "ios >= 10.3",
-                "ie >= 11",
-                "edge >= 60"
+              browsers: runnerArgs.polyfills ? [
+                "ie >= 11"
+              ] : [
+                "last 10 Chrome versions",
+                "last 10 Safari versions",
+                "last 10 Firefox versions",
+                "last 10 Edge versions"
               ]
             }
           }]
@@ -323,6 +323,7 @@ class BrowserifyTransform extends AssetTransform {
         plugins: [
           "@babel/plugin-syntax-dynamic-import",
           '@babel/plugin-transform-modules-commonjs',
+          "@babel/plugin-proposal-optional-chaining",
           ["module-resolver", {
             "alias": {
               "@newrelic/browser-agent-core/src": './dist/packages/browser-agent-core/src'

@@ -12,7 +12,7 @@
 var AWS = require('aws-sdk')
 var request = require('request')
 var yargs = require('yargs')
-var loaders = require('../../loaders.js')
+var loaders = require('jil/util/loaders.js')
 
 var argv = yargs
   .string('build-number')

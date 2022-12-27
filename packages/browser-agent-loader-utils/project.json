@@ -1,5 +1,5 @@
 {
-  "name": "browser-agent-loader",
+  "name": "browser-agent-loader-utils",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/browser-agent-loader-utils/src",
   "projectType": "library",

@@ -11,6 +11,5 @@ tools/test-builds/*
 tests/assets/test-builds/**/*.js
 tests/*
 
-cdn/
 tools/jil/
 jest.preset.js

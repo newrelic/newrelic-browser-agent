@@ -20,13 +20,9 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
+      - uses: actions/checkout@v3
+      - name: checkout and build
+        uses: ./.github/actions/test-setup
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=2 --functional-only
@@ -43,13 +39,9 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
-
-      - name: build
-        run: npm run build:all
+      - uses: actions/checkout@v3
+      - name: checkout and build
+        uses: ./.github/actions/test-setup
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=2 --unit-only
@@ -63,12 +55,9 @@ jobs:
 
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
     steps:
-      - uses: actions/checkout@v2
-
-      - name: install
-        run: npm ci --cache ./.npm
+      - uses: actions/checkout@v3
+      - name: checkout and build
+        uses: ./.github/actions/test-setup
 
       - name: check failed tests
         run: node --max-old-space-size=8192 ./tools/jil/util/get-failed-tests.js
-
-

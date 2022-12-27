@@ -58,8 +58,6 @@ export class Aggregate extends AggregateBase {
       }, this)
 
       scheduler.startTimer(harvestTimeSeconds)
-
-      scheduler.opts.onUnload = () => scheduler.runHarvest({ unload: true });
     }
 
     function storeXhr(params, metrics, startTime, endTime, type) {

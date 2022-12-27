@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../../common/event-emitter/handle'
-import { subscribeToVisibilityChange, initializeHiddenTime } from '../../../common/window/visibility'
+import { subscribeToVisibilityChange, initializeHiddenTime } from '../../../common/window/page-visibility'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { getOffset, now } from '../../../common/timing/now'
 import { getConfigurationValue, originals } from '../../../common/config/config'
@@ -48,17 +48,15 @@ export class Instrument extends InstrumentBase {
     }
 
     // first interaction and first input delay
-    if ('addEventListener' in document) {
-      this.fiRecorded = false
-      var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart']
-      allowedEventTypes.forEach((e) => {
-        document.addEventListener(e, (...args) => this.captureInteraction(...args), eventListenerOpts(false))
-      })
-    }
-    // page visibility events
-    subscribeToVisibilityChange((...args) => this.captureVisibilityChange(...args))
+    this.fiRecorded = false
+    var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart']
+    allowedEventTypes.forEach((e) => {
+      document.addEventListener(e, (...args) => this.captureInteraction(...args), eventListenerOpts(false))
+    })
 
+    // page visibility events
     this.importAggregator()
+    subscribeToVisibilityChange(() => this.onDocHide(), true);
   }
 
   isEnabled() {
@@ -142,11 +140,9 @@ export class Instrument extends InstrumentBase {
     }
   }
 
-  captureVisibilityChange(newState) {
-    if (newState === 'hidden') {
-      // time is only recorded to be used for short-circuit logic in the observer callbacks
-      this.pageHiddenTime = now()
-      handle('pageHide', [this.pageHiddenTime], undefined, undefined, this.ee)
-    }
+  onDocHide() {
+    // time is only recorded to be used for short-circuit logic in the observer callbacks
+    this.pageHiddenTime = now()
+    handle('pageHide', [this.pageHiddenTime], undefined, undefined, this.ee)
   }
 }

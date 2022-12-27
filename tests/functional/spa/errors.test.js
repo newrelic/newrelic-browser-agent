@@ -7,20 +7,10 @@ const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
 const { getErrorsFromResponse } = require('../err/assertion-helpers')
 
-// browsers without addEventListener do not support SPA
-// browsers without Error stack are not captured (IE < 10)
-let supported = testDriver.Matcher.withFeature('wrappableAddEventListener')
-  .and(testDriver.Matcher.withFeature('errorStack'))
-
-testDriver.test('error on the initial page load', supported, function (t, browser, router) {
+testDriver.test('error on the initial page load', function (t, browser, router) {
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-initial-page-load.html')
     .then(([rumData, eventData, domData]) => {
-      var p
-      if (browser.hasFeature('reliableFinalHarvest')) {
-        p = clickAndRedirect(browser, router)
-      } else {
-        p = browser.elementByCssSelector('body').click()
-      }
+      var p = clickAndRedirect(browser, router)
 
       return Promise.all([
         Promise.resolve(eventData),
@@ -67,7 +57,7 @@ testDriver.test('error on the initial page load', supported, function (t, browse
   }
 })
 
-testDriver.test('error in root node', supported, function (t, browser, router) {
+testDriver.test('error in root node', function (t, browser, router) {
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-root.html')
     .then(() => {
       return clickPageAndWaitForEventsAndErrors(t, browser, router)
@@ -99,7 +89,7 @@ testDriver.test('error in root node', supported, function (t, browser, router) {
   }
 })
 
-testDriver.test('error in xhr', supported, function (t, browser, router) {
+testDriver.test('error in xhr', function (t, browser, router) {
   t.plan(7)
 
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-xhr.html')
@@ -136,7 +126,7 @@ testDriver.test('error in xhr', supported, function (t, browser, router) {
   }
 })
 
-testDriver.test('error in custom tracer', supported, function (t, browser, router) {
+testDriver.test('error in custom tracer', function (t, browser, router) {
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-custom.html')
     .then(() => {
       return clickPageAndWaitForEventsAndErrors(t, browser, router)
@@ -171,7 +161,7 @@ testDriver.test('error in custom tracer', supported, function (t, browser, route
   }
 })
 
-testDriver.test('string error in custom tracer', supported, function (t, browser, router) {
+testDriver.test('string error in custom tracer', function (t, browser, router) {
   // This tests throwing a string inside a custom tracer.  It shows that in a specific case, the
   // agent will double count the error because the error is first caught in the custom node, re-thrown, and caught again in the click event listener.
   // This behavior only happens in ie11, other browsers ignore the string error and only generate 1 error.
@@ -210,15 +200,10 @@ testDriver.test('string error in custom tracer', supported, function (t, browser
   }
 })
 
-testDriver.test('errors in discarded SPA interactions', supported, function (t, browser, router) {
+testDriver.test('errors in discarded SPA interactions', function (t, browser, router) {
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/discarded-interaction.html')
     .then(() => {
-      var p
-      if (browser.hasFeature('reliableFinalHarvest')) {
-        p = clickAndRedirect(browser, router, 200) // wait 200ms because the test page itself waits 100ms before throwing error
-      } else {
-        p = browser.elementByCssSelector('body').click()
-      }
+      var p = clickAndRedirect(browser, router, 200) // wait 200ms because the test page itself waits 100ms before throwing error
       return Promise.all([p, router.expectErrors()])
     })
     .then(([domData, errorData]) => {
@@ -242,15 +227,10 @@ testDriver.test('errors in discarded SPA interactions', supported, function (t, 
   }
 })
 
-testDriver.test('errors outside of interaction', supported, function (t, browser, router) {
+testDriver.test('errors outside of interaction', function (t, browser, router) {
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-nointeraction.html')
     .then(() => {
-      var p
-      if (browser.hasFeature('reliableFinalHarvest')) {
-        p = clickAndRedirect(browser, router, 200) // wait 200ms because the test page itself waits 100ms before throwing error
-      } else {
-        p = browser.elementByCssSelector('body').click()
-      }
+      var p = clickAndRedirect(browser, router, 200) // wait 200ms because the test page itself waits 100ms before throwing error
       return Promise.all([p, router.expectErrors()])
     })
     .then(([domData, errorData]) => {
@@ -274,7 +254,7 @@ testDriver.test('errors outside of interaction', supported, function (t, browser
   }
 })
 
-testDriver.test('same error in multiple interactions', supported, function (t, browser, router) {
+testDriver.test('same error in multiple interactions', function (t, browser, router) {
   var event1
   var event2
 
@@ -294,17 +274,13 @@ testDriver.test('same error in multiple interactions', supported, function (t, b
     })
     .then(result => {
       event2 = result[1]
-      if (browser.hasFeature('reliableFinalHarvest')) {
-        return Promise.all([
-          leavePage(browser, router),
-          router.expectErrors()
-        ])
-          .then(result => {
-            return result[1]
-          })
-      } else {
-        return router.expectErrors()
-      }
+      return Promise.all([
+        leavePage(browser, router),
+        router.expectErrors()
+      ])
+      .then(result => {
+        return result[1]
+      })
     })
     .then(errorData => {
       let interaction1 = querypack.decode(
@@ -354,25 +330,17 @@ function waitForPageLoadAnInitialCalls(browser, router, urlPath) {
 }
 
 function clickPageAndWaitForEventsAndErrors(t, browser, router) {
-  var useRedirect = browser.hasFeature('reliableFinalHarvest')
   return clickPageAndWaitForEvents(t, browser, router)
     .then(eventData => {
-      if (useRedirect) {
-        return Promise.all([
-          // leave page to force final harvest (faster than waiting 60s for errors
-          // to be harvested)
-          leavePage(browser, router),
-          router.expectErrors()
-        ])
-          .then(([domData, errorData]) => {
-            return Promise.resolve([eventData, errorData])
-          })
-      } else {
-        return Promise.all([
-          Promise.resolve(eventData),
-          router.expectErrors()
-        ])
-      }
+      return Promise.all([
+        // leave page to force final harvest (faster than waiting 60s for errors
+        // to be harvested)
+        leavePage(browser, router),
+        router.expectErrors()
+      ])
+      .then(([domData, errorData]) => {
+        return Promise.resolve([eventData, errorData])
+      })
     })
 }
 

@@ -1,13 +1,18 @@
 {
-  "ignorePatterns": ["packages/**/*"],
+  "ignorePatterns": [
+    "packages/**/*"
+  ],
   "parserOptions": {
-    "ecmaVersion": 5,
-    "sourceType": "script",
+    "ecmaVersion": 2020,
+    "sourceType": "module",
     "ecmaFeatures": {
       "globalReturn": true
     }
   },
-  "extends": ["eslint:recommended", "plugin:import/recommended"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:import/recommended"
+  ],
   "env": {
     "browser": true,
     "node": true,
@@ -20,12 +25,18 @@
     "attachEvent": true
   },
   "rules": {
-    "space-before-function-paren": ["off"],
+    "space-before-function-paren": [
+      "off"
+    ],
     "no-extend-native": 0,
     "no-wrap-func": 0,
     "camelcase": 0,
-    "no-restricted-syntax": ["error"],
-    "no-restricted-imports": ["error"],
+    "no-restricted-syntax": [
+      "error"
+    ],
+    "no-restricted-imports": [
+      "error"
+    ],
     "no-undef": "off",
     "no-empty": "off",
     "no-setter-return": "off",
@@ -33,6 +44,19 @@
     "no-warning-comments": 0,
     "no-prototype-builtins": "off",
     "getter-return": "warn",
-    "comma-dangle": "error"
+    "comma-dangle": "error",
+    "import/no-unresolved": [
+      "error",
+      {
+        "ignore": [
+          "@newrelic/browser-agent-core",
+          "@newrelic/browser-agent-core/src",
+          "@newrelic/browser-agent-custom",
+          "@newrelic/browser-agent-loader-utils/src",
+          "@newrelic/browser-agent-microfrontend",
+          "@newrelic/browser-agent"
+        ]
+      }
+    ]
   }
 }

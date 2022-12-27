@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var ids = require('../../loader/unique-id')
+var ids = require('@newrelic/browser-agent-core/src/common/ids/unique-id')
 var test = require('../../tools/jil/browser-test.js')
 
 test('generateId', function (t) {

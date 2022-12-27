@@ -1,0 +1,19 @@
+name: Testing setup
+descriptions: Checkout the appropriate commit and build it before testing
+
+runs:
+  using: "composite"
+  steps:
+    - if: github.event_name == 'pull_request_target'  # checkout the would-be merge instead of PR branch head
+      uses: actions/checkout@v3
+      with:
+        ref: refs/pull/${{ github.event.number }}/merge
+    # For workflow_dispatch, it's assume that the dispatch branch is already checked out.
+
+    - name: install
+      run: npm ci --no-fund --no-audit --no-progress
+      shell: bash
+
+    - name: build
+      run: npm run build:all
+      shell: bash

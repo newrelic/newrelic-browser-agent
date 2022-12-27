@@ -8,7 +8,6 @@ const {fail, getTime} = require('./uncat-internal-help.cjs')
 const {getErrorsFromResponse} = require('./err/assertion-helpers')
 
 let withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
-let reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')
 
 testDriver.test('customTransactionName 1 arg', function (t, browser, router) {
   t.plan(1)
@@ -163,7 +162,7 @@ testDriver.test('noticeError takes a string', withUnload, function (t, browser, 
     .catch(fail(t));
 })
 
-testDriver.test('finished records a PageAction when called before RUM message', reliableFinalHarvest, function (t, browser, router) {
+testDriver.test('finished records a PageAction when called before RUM message', function (t, browser, router) {
   let rumPromise = router.expectRum()
   let insPromise = router.expectIns()
   let loadPromise = browser.get(router.assetURL('api/finished.html', {

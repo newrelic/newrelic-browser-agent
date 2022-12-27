@@ -4,8 +4,8 @@
  */
 
 const url = require('url')
-const canonicalFunctionName = require('../../../feature/err/aggregate/canonical-function-name')
-const stringHashCode = require('../../../feature/err/aggregate/string-hash-code')
+const canonicalFunctionName = require('../../lib/canonical-function-name')
+const stringHashCode = require('../../lib/string-hash-code')
 
 function computeExpectedCanonicalStack (expectedStack) {
   let canonicalStack = expectedStack.map((frame) => {

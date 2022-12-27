@@ -1,5 +1,5 @@
 {
-  "name": "@newrelic/browser-agent-loader",
+  "name": "@newrelic/browser-agent-loader-utils",
   "version": "0.0.9",
   "description": "New Relic Browser Agent SDK",
   "author": "New Relic: Browser Agent Team",

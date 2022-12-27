@@ -106,27 +106,17 @@ features.reliableUnloadEvent = new BrowserMatcher()
   // is likely identical in behavior to OS X safari, we can assume that any issues
   // will be caught there and skip testing iOS.
   .exclude('ios')
-  .exclude('ie', '<9')
-  .exclude('firefox', '<32')
-
-// For browsers that do not support the sendBeacon API, we fall back to using an image
-// for final harvest. However, some browsers do not make the image source request reliable
-// from the unload event handler.
-features.unreliableImgCallInUnload = new BrowserMatcher()
-  .exclude('*')
-  .include('safari', '10.1')
-  .include('safari', '11.0')
 
 /** DEPRECATED */
 features.addEventListener = new BrowserMatcher()
   .exclude('ie', '<9')
 
+/** DEPRECATED */
 features.wrappableAddEventListener = features.addEventListener
   // Our addEventListener wrapping doesn't work with older versions of Firefox,
   // because in those versions, each descendent of Element gets its own unique
   // copy of addEventListener, rather than inheriting via the prototype chain.
   .exclude('firefox', '<25')
-  .exclude('phantom')
 
 features.hasInnerText = features.addEventListener
   // https://developer.mozilla.org/en-US/docs/Web/API/Node/innerText
@@ -139,11 +129,7 @@ features.uncaughtErrorObject = new BrowserMatcher()
   .exclude('android', '<4.4')
   .exclude('ie', '<11')
   .exclude('safari', '<10')
-  .exclude('phantom')
   .exclude('edge')
-
-features.errorStack = new BrowserMatcher()
-  .exclude('ie', '<10')
 
 features.setImmediate = new BrowserMatcher()
   .exclude('*', '*')
@@ -153,11 +139,8 @@ features.setImmediate = new BrowserMatcher()
 features.xhr = new BrowserMatcher()
   .exclude('ie@<9')
 
-features.noPhantom = new BrowserMatcher()
-.exclude('phantom');
-
-/** DEPRECATED -- just use noPhantom instead */
-features.xhrWithAddEventListener = features.xhr.and(features.noPhantom)
+/** DEPRECATED -- just use xhr instead */
+features.xhrWithAddEventListener = features.xhr
 
 // requires window.perfomance.getEntriesByType
 features.stn = new BrowserMatcher()
@@ -167,7 +150,6 @@ features.stn = new BrowserMatcher()
   .exclude('ie', '<10')
   .exclude('safari', '<=10.1')
   .exclude('ios', '<=10.3') // because of https://developer.mozilla.org/en-US/docs/Web/API/Performance/getEntriesByType
-  .exclude('phantom')
 
 features.navTiming = new BrowserMatcher()
   .exclude('chrome', '<6')
@@ -188,7 +170,6 @@ features.promise = new BrowserMatcher()
   .exclude('safari', '<7.1')
   .exclude('ios', '<8')
   .exclude('android', '<4.4.4')
-  .exclude('phantom')
 
 features.mutation = new BrowserMatcher()
   .exclude('ie', '<=11')
@@ -197,7 +178,6 @@ features.mutation = new BrowserMatcher()
   .exclude('safari', '<6.1')
   .exclude('ios', '<7.1')
   .exclude('android', '<4.4')
-  .exclude('phantom')
 
 features.fetch = new BrowserMatcher()
   .exclude('ie', '<=11')
@@ -207,7 +187,6 @@ features.fetch = new BrowserMatcher()
   .exclude('safari', '<10.1') // MDN says 10, but per tests 10.1 (also noted here https://en.wikipedia.org/wiki/Safari_version_history)
   .exclude('ios', '<=10.2') // https://github.com/github/fetch/issues/401
   .exclude('android', '<=4.4')
-  .exclude('phantom')
 
 // some browsers support basic fetch API, but not all supporting functions,
 // e.g. arrayBuffer on ios@10 generates an error when used with FormData instance
@@ -233,21 +212,17 @@ features.sendBeacon = new BrowserMatcher()
   .include('firefox', '>=31')
   .include('android', '>=6')
   .include('safari', '>=11.1')
+  .include('ios', '>=11.3')
 
 // Safari on macOS 11.1 - 12.2 have a bug in the sendBeacon API during pgehide event listener -- fixed in ios 12.3
 // The agent falls back to using image
 // https://bugs.webkit.org/show_bug.cgi?id=188329
 features.brokenSendBeacon = new BrowserMatcher()
   .exclude('*')
-  .include('safari', '<=12.2')
+  .include('safari', '<12.3')
+  .include('ios', '<13.0')
 
 features.workingSendBeacon = features.sendBeacon.and(features.brokenSendBeacon.inverse())
-
-features.reliableFinalHarvest = features.workingSendBeacon.or(
-  features.sendBeacon.inverse()
-    .and(features.reliableUnloadEvent)
-    .and(features.unreliableImgCallInUnload.inverse())
-)
 
 features.blob = new BrowserMatcher()
   .exclude('ie', '<10')
@@ -256,7 +231,6 @@ features.blob = new BrowserMatcher()
   .exclude('safari', '<6')
   .exclude('ios', '<7.1')
   .exclude('android')
-  .exclude('phantom')
 
 /** DEPRECATED */
 features.tls = new BrowserMatcher()
@@ -266,7 +240,6 @@ features.addEventListenerOptions = new BrowserMatcher()
   .exclude('firefox', '<49')
   .exclude('chrome', '<49')
   .exclude('android')
-  .exclude('phantom')
   .exclude('safari', '<10')
   .exclude('edge')
   .exclude('ios')
@@ -313,7 +286,7 @@ features.notInternetExplorer = new BrowserMatcher()
 
 features.testPageHide = new BrowserMatcher()
   .exclude('*')
-  .include('chrome', 'latest')
+  .include('chrome')
 
 // Some old browsers have absolute unix timestamps instead of relative to navigation start in the Event web API
 // (addEventListener argument). We use the EventTarget.timeStamp value to calculate FID.
@@ -407,6 +380,15 @@ features.es6 = new BrowserMatcher()
   .include('edge', '>79')
   .include('safari', '>12')
   .include('firefox', '>69')
+
+  features.bfcache = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', '>=96')
+  .include('edge', '>=89')
+  .include('firefox', '>=75')
+  .include('safari', '>=10.10')
+  .include('ios', '>=10.10')
+  .include('android', '>=9.0')
 
   /* vvv--- Workers API support ---vvv
   */

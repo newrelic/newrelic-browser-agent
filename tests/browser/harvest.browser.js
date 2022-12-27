@@ -493,7 +493,9 @@ test('uses correct submission mechanisms on unload', function (t) {
   }))
 
   setupFakeNr();
-  harvesterInst.sendFinal();
+  ['ins', 'resources', 'jserrors', 'events'].forEach((evt) => {
+    harvesterInst.sendX(evt, {unload: true});
+  });
 
   t.equal(submitData.xhr.callCount, 0, 'did not send any final submissions via XHR')
 
@@ -568,7 +570,7 @@ test('when sendBeacon returns false', function(t) {
     harvesterInst.on('jserrors', once(dummyPayload('jserrors')))
 
     setupFakeNr();
-    harvesterInst.sendFinal();
+    harvesterInst.sendX('jserrors', {unload: true});
 
     t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (jserrors)')
     let call = submitData.img.getCall(0)
@@ -589,7 +591,7 @@ test('when sendBeacon returns false', function(t) {
     harvesterInst.on('ins', once(dummyPayload('ins')))
 
     setupFakeNr();
-    harvesterInst.sendFinal();
+    harvesterInst.sendX('ins', {unload: true});
 
     t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (ins)')
     let call = submitData.img.getCall(0)
@@ -610,7 +612,7 @@ test('when sendBeacon returns false', function(t) {
     harvesterInst.on('resources', once(dummyPayload('resources')))
 
     setupFakeNr();
-    harvesterInst.sendFinal();
+    harvesterInst.sendX('resources', {unload: true});
 
     t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (resources)')
     let call = submitData.img.getCall(0)
@@ -631,7 +633,7 @@ test('when sendBeacon returns false', function(t) {
     harvesterInst.on('events', once(dummyPayload('events')))
 
     setupFakeNr();
-    harvesterInst.sendFinal();
+    harvesterInst.sendX('events', {unload: true});
 
     t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (events)')
     let call = submitData.img.getCall(0)

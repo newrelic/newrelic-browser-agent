@@ -6,8 +6,8 @@
 const testDriver = require('../../../tools/jil/index')
 const {validatePageActionData, fail} = require('./ins-internal-help.cjs')
 
-let reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')
-let noPhantom = testDriver.Matcher.withFeature('noPhantom')
+const workingSendBeacon = testDriver.Matcher.withFeature('workingSendBeacon');
+
 
 testDriver.test('PageAction submission', function (t, browser, router) {
   let url = router.assetURL('instrumented.html')
@@ -29,7 +29,7 @@ testDriver.test('PageAction submission', function (t, browser, router) {
     .catch(fail(t))
 })
 
-testDriver.test('PageActions are retried when collector returns 429', noPhantom, function (t, browser, router) {
+testDriver.test('PageActions are retried when collector returns 429', function (t, browser, router) {
   let assetURL = router.assetURL('instrumented.html', {
     init: {
       ins: {
@@ -70,7 +70,7 @@ testDriver.test('PageActions are retried when collector returns 429', noPhantom,
     .catch(fail(t))
 })
 
-testDriver.test('PageAction submission on final harvest', reliableFinalHarvest, function (t, browser, router) {
+testDriver.test('PageAction submission on final harvest', function (t, browser, router) {
   let url = router.assetURL('instrumented.html', {
     init: {
       page_view_timing: {
@@ -96,10 +96,8 @@ testDriver.test('PageAction submission on final harvest', reliableFinalHarvest, 
     })
     .then(({req, query, body}) => {
       let insData
-      let sendBeaconBrowsers = testDriver.Matcher.withFeature('sendBeacon')
-      let brokenBeaconBrowsers = testDriver.Matcher.withFeature('brokenSendBeacon')
 
-      if ((sendBeaconBrowsers.match(browser) && !brokenBeaconBrowsers.match(browser))) {
+      if (workingSendBeacon.match(browser)) {
         t.ok(body, 'second PageAction POST has non-empty body')
         insData = JSON.parse(body).ins
         t.equal(req.method, 'POST', 'final PageAction submission should be a POST')
@@ -118,7 +116,7 @@ testDriver.test('PageAction submission on final harvest', reliableFinalHarvest, 
     .catch(fail(t))
 })
 
-testDriver.test('precedence', reliableFinalHarvest, function (t, browser, router) {
+testDriver.test('precedence', function (t, browser, router) {
   let url = router.assetURL('instrumented.html')
 
   let loadPromise = browser.get(url)

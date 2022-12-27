@@ -31,16 +31,8 @@
     "webpack-cli": "^4.9.1"
   },
   "dependencies": {
-    "@newrelic/browser-agent/src": "^0.0.9",
-    "@newrelic/browser-agent-core/src": "^0.0.9",
+    "@newrelic/browser-agent": "^0.0.9",
+    "@newrelic/browser-agent-core": "^0.0.9",
     "core-js": "^3.23.3"
-  },
-  "browserslist": [
-    "chrome >= 60",
-    "safari >= 11",
-    "firefox >= 56",
-    "ios >= 10.3",
-    "ie >= 11",
-    "edge >= 60"
-  ]
+  }
 }

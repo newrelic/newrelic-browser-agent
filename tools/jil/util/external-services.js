@@ -6,7 +6,6 @@
 const sauceConnectLauncher = require('sauce-connect-launcher')
 const os = require('os')
 const childProcess = require('child_process')
-const phantomjs = require('phantomjs-prebuilt')
 
 let externalServices = new Set()
 
@@ -25,14 +24,12 @@ function getSauceLabsCreds () {
 }
 
 function startExternalServices (browsers, config, cb) {
-  let needPhantom = Array.from(browsers).filter((b) => b.isPhantom()).length
   let needSauce = !!config.sauce
 
-  if (!needPhantom && !needSauce) return cb()
+  if (!needSauce) return cb()
 
-  let remaining = [needPhantom, needSauce].filter(Boolean).length
+  let remaining = [needSauce].filter(Boolean).length
 
-  if (needPhantom) startPhantom(checkDone)
   if (needSauce) startSauce(config, checkDone)
 
   function checkDone () {
@@ -47,33 +44,6 @@ function stopExternalServices () {
   }
 }
 
-function startPhantom (cb) {
-  let args = ['--webdriver=4444', '--ignore-ssl-errors=true']
-  let child = childProcess.execFile(phantomjs.path, args)
-
-  let timeout = setTimeout(() => {
-    child.kill()
-    cb(new Error('phantom did not start correctly'))
-  }, 3000)
-
-  child.stdout.on('data', (data) => {
-    if (data.indexOf('running on port') !== -1) {
-      clearTimeout(timeout)
-      child.stdout.removeAllListeners()
-      cb()
-      cb = function noop () {}
-    }
-  })
-
-  child.stderr.pipe(process.stderr)
-  process.on('exit', () => child.kill())
-
-  externalServices.add(child)
-  child.on('exit', () => externalServices.delete(child))
-
-  return child
-}
-
 function startSauce (config, cb) {
   var tunnelIdentifier = process.env.USER + '@' + os.hostname()
   var sauceCreds = getSauceLabsCreds()
@@ -81,8 +51,10 @@ function startSauce (config, cb) {
   var opts = {
     username: sauceCreds.username,
     accessKey: sauceCreds.accessKey,
-    tunnelIdentifier: tunnelIdentifier,
-    noSslBumpDomains: 'all'
+    tunnelName: tunnelIdentifier,
+    noSslBumpDomains: 'all',
+    logger: console.log,
+    tunnelDomains: config.host || 'bam-test-1.nr-local.net'
   }
 
   if (config.verbose) {

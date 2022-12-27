@@ -5,11 +5,7 @@
 
 const testDriver = require('../../tools/jil/index')
 
-let notSafariWithSeleniumBug = testDriver.Matcher.withFeature('notSafariWithSeleniumBug')
-let reliableFinalHarvest = testDriver.Matcher.withFeature('reliableFinalHarvest')
-  .and(notSafariWithSeleniumBug)
-
-testDriver.test('agent set nav cookie when page is unloading', reliableFinalHarvest, function (t, browser, router) {
+testDriver.test('agent set nav cookie when page is unloading', function (t, browser, router) {
   let url = router.assetURL('final-harvest.html', {
     init: {
       page_view_timing: {

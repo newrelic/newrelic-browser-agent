@@ -1,5 +1,5 @@
 {
-  "name": "browser-agent",
+  "name": "browser-agent-custom",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/browser-agent-custom/src",
   "projectType": "library",

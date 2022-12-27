@@ -1,0 +1,17 @@
+{
+  "name": "@newrelic/browser-agent-microfrontend",
+  "version": "0.0.9",
+  "description": "A mini, manual, New Relic Browser Agent for use in micro-frontends",
+  "author": "New Relic: Browser Agent Team",
+  "license": "Apache-2.0",
+  "homepage": "https://docs.newrelic.com/docs/browser/browser-monitoring",
+  "repository": "github:newrelic/newrelic-browser-agent",
+  "keywords": [
+    "new relic",
+    "browser",
+    "instrumentation",
+    "errors",
+    "micro front ends",
+    "browser agent"
+  ]
+}

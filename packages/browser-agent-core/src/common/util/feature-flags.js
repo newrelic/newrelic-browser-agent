@@ -4,9 +4,10 @@
  */
 import { mapOwn } from './map-own'
 import { ee } from '../event-emitter/contextual-ee'
-import { drain } from '../drain/drain'
+import { gosNREUM } from '../window/nreum'
 
 export function activateFeatures (flags, agentIdentifier) {
+  const nr = gosNREUM()
   var sharedEE = ee.get(agentIdentifier)
   if (!(flags && typeof flags === 'object')) return
   mapOwn(flags, function (flag, val) {

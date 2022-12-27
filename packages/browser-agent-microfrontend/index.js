@@ -1,5 +1,7 @@
-import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/common/loader/enabled-features'
-import { configure } from '@newrelic/browser-agent-core/src/common/loader/configure'
+// loader files
+import { getEnabledFeatures } from '@newrelic/browser-agent-loader-utils/src/enabled-features'
+import { configure } from '@newrelic/browser-agent-loader-utils/src/configure'
+// core files
 import { Aggregator } from '@newrelic/browser-agent-core/src/common/aggregate/aggregator'
 import { gosNREUMInitializedAgents } from '@newrelic/browser-agent-core/src/common/window/nreum'
 import { generateRandomHexString } from '@newrelic/browser-agent-core/src/common/ids/unique-id'

@@ -1,12 +1,14 @@
-import { getEnabledFeatures, isAuto } from '@newrelic/browser-agent-core/src/common/loader/enabled-features'
-import { syncFeatures, asyncFeatures } from '@newrelic/browser-agent-core/src/common/loader/features'
-import { configure } from '@newrelic/browser-agent-core/src/common/loader/configure'
+// loader files
+import { getEnabledFeatures, isAuto } from '@newrelic/browser-agent-loader-utils/src/enabled-features'
+import { syncFeatures, asyncFeatures } from '@newrelic/browser-agent-loader-utils/src/features'
+import { getFeatureDependencyNames } from '@newrelic/browser-agent-loader-utils/src/featureDependencies'
+// core files
+import { configure } from '@newrelic/browser-agent-loader-utils/src/configure'
 import { Aggregator } from '@newrelic/browser-agent-core/src/common/aggregate/aggregator'
 import { gosNREUMInitializedAgents } from '@newrelic/browser-agent-core/src/common/window/nreum'
 import { generateRandomHexString } from '@newrelic/browser-agent-core/src/common/ids/unique-id'
 import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '@newrelic/browser-agent-core/src/common/config/config'
 import { drain } from '@newrelic/browser-agent-core/src/common/drain/drain'
-import { getFeatureDependencyNames } from '@newrelic/browser-agent-core/src/common/loader/featureDependencies'
 
 import { Instrument as InstrumentPageViewEvent } from '@newrelic/browser-agent-core/src/features/page_view_event/instrument'
 import { Instrument as InstrumentPageViewTiming } from '@newrelic/browser-agent-core/src/features/page_view_timing/instrument'

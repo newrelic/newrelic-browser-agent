@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import slice from 'lodash._slice'
-import { getRuntime, setInfo, getInfo, getConfigurationValue } from '../config/config'
-import { handle } from '../event-emitter/handle'
-import { mapOwn } from '../util/map-own'
-import { ee } from '../event-emitter/contextual-ee'
-import { now } from '../timing/now'
-import { single } from '../util/single'
-import { registerHandler } from '../event-emitter/register-handler'
-import { submitData } from '../util/submit-data'
-import { isBrowserWindow } from '../window/win'
+import { getRuntime, setInfo, getInfo, getConfigurationValue } from '@newrelic/browser-agent-core/src/common/config/config'
+import { handle } from '@newrelic/browser-agent-core/src/common/event-emitter/handle'
+import { mapOwn } from '@newrelic/browser-agent-core/src/common/util/map-own'
+import { ee } from '@newrelic/browser-agent-core/src/common/event-emitter/contextual-ee'
+import { now } from '@newrelic/browser-agent-core/src/common/timing/now'
+import { single } from '@newrelic/browser-agent-core/src/common/util/single'
+import { registerHandler } from '@newrelic/browser-agent-core/src/common/event-emitter/register-handler'
+import { submitData } from '@newrelic/browser-agent-core/src/common/util/submit-data'
+import { isBrowserWindow } from '@newrelic/browser-agent-core/src/common/window/win'
 
 function setTopLevelCallers(nr) {
   const funcs = [

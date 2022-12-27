@@ -1,11 +1,13 @@
-import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/common/loader/enabled-features'
-import { configure } from '@newrelic/browser-agent-core/src/common/loader/configure'
+// loader files
+import { getEnabledFeatures } from '@newrelic/browser-agent-loader-utils/src/enabled-features'
+import { configure } from '@newrelic/browser-agent-loader-utils/src/configure'
+import { getFeatureDependencyNames } from '@newrelic/browser-agent-loader-utils/src/featureDependencies'
+// core files
 import { Aggregator } from '@newrelic/browser-agent-core/src/common/aggregate/aggregator'
 import { gosNREUMInitializedAgents } from '@newrelic/browser-agent-core/src/common/window/nreum'
 import { generateRandomHexString } from '@newrelic/browser-agent-core/src/common/ids/unique-id'
 import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '@newrelic/browser-agent-core/src/common/config/config'
 import { drain } from '@newrelic/browser-agent-core/src/common/drain/drain'
-import { getFeatureDependencyNames } from '@newrelic/browser-agent-core/src/common/loader/featureDependencies'
 
 export class BrowserAgent {
     constructor(options, agentIdentifier = generateRandomHexString(16)) {
@@ -40,9 +42,6 @@ export class BrowserAgent {
                     console.log(`%c initializing instrumentation file - ${f.featureName}`, 'color:#ffff00')
                     const dependencies = getFeatureDependencyNames(f.featureName)
                     const hasAllDeps = dependencies.every(x => enabledFeatures[x])
-
-                    console.log(f.featureName, "dependencies...", dependencies)
-                    console.log("hasAllDeps", hasAllDeps)
 
                     if (!hasAllDeps) console.warn(`New Relic: ${f.featureName} is enabled but one or more dependent features has been disabled (${JSON.stringify(dependencies)}). This may cause unintended consequences or missing data...`)
 

@@ -1,4 +1,4 @@
-import { BrowserAgent } from "@newrelic/browser-agent/src/microfrontend-loader";
+import { BrowserAgent } from "@newrelic/browser-agent-microfrontend";
 import { gosCDN } from '@newrelic/browser-agent-core/src/common/window/nreum'
 
 const nr = gosCDN()

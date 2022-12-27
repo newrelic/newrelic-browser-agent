@@ -1,4 +1,4 @@
-import {BrowserAgent} from "@newrelic/browser-agent/src/custom-loader";
+import {BrowserAgent} from "@newrelic/browser-agent-custom";
 
 import { Instrument as InstrumentMetrics } from '@newrelic/browser-agent-core/src/features/metrics/instrument'
 import { Instrument as InstrumentErrors } from '@newrelic/browser-agent-core/src/features/jserrors/instrument'

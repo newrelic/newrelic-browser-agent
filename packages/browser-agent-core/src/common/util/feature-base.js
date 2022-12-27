@@ -1,6 +1,6 @@
 import { getInfo, isConfigured } from '../config/config'
 import { ee } from '../event-emitter/contextual-ee'
-import { configure } from '../loader/configure'
+import { configure } from '@newrelic/browser-agent-loader-utils/src/configure'
 import { gosCDN } from '../window/nreum'
 
 class FeatureBase {

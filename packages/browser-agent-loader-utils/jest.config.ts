@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-  displayName: 'browser-agent-core',
+  displayName: 'browser-agent-loader',
   preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
@@ -11,5 +11,5 @@ export default {
     '^.+\\.[tj]s$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/packages/browser-agent-core',
+  coverageDirectory: '../../coverage/packages/browser-agent-loader',
 };

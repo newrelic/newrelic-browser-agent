@@ -1,4 +1,4 @@
-import { BrowserAgent } from "@newrelic/browser-agent/src/loader";
+import { BrowserAgent } from "@newrelic/browser-agent";
 
 const configs = {
     init: { ajax: { enabled: false }, jserrors: {auto: false, enabled: true} },

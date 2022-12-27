@@ -1,4 +1,4 @@
-import { getFrozenAttributes } from "../../loader/featureDependencies"
+import { getFrozenAttributes } from "@newrelic/browser-agent-loader-utils/src/featureDependencies"
 
 export class Configurable {
   constructor(obj, model) {

@@ -16,11 +16,12 @@ import { findStartTime } from '../../../common/timing/start-time'
 import { now } from '../../../common/timing/now'
 import { AggregateBase } from '../../../common/util/feature-base'
 import { FEATURE_NAME } from '../constants'
+import { drain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator)
+    super(agentIdentifier, aggregator, FEATURE_NAME)
 
     const agentRuntime = getRuntime(agentIdentifier)
 
@@ -117,14 +118,16 @@ export class Aggregate extends AggregateBase {
         return this.takeSTNs(options.retry)
       }
 
-      registerHandler('bst', (...args) => this.storeEvent(...args), undefined, this.ee)
-      registerHandler('bstTimer', (...args) => this.storeTimer(...args), undefined, this.ee)
-      registerHandler('bstResource', (...args) => this.storeResources(...args), undefined, this.ee)
-      registerHandler('bstHist', (...args) => this.storeHist(...args), undefined, this.ee)
-      registerHandler('bstXhrAgg', (...args) => this.storeXhrAgg(...args), undefined, this.ee)
-      registerHandler('bstApi', (...args) => this.storeSTN(...args), undefined, this.ee)
-      registerHandler('errorAgg', (...args) => this.storeErrorAgg(...args), undefined, this.ee)
-      registerHandler('pvtAdded', (...args) => this.processPVT(...args), undefined, this.ee)
+      registerHandler('bst', (...args) => this.storeEvent(...args),  this.featureName, this.ee)
+      registerHandler('bstTimer', (...args) => this.storeTimer(...args),  this.featureName, this.ee)
+      registerHandler('bstResource', (...args) => this.storeResources(...args),  this.featureName, this.ee)
+      registerHandler('bstHist', (...args) => this.storeHist(...args),  this.featureName, this.ee)
+      registerHandler('bstXhrAgg', (...args) => this.storeXhrAgg(...args),  this.featureName, this.ee)
+      registerHandler('bstApi', (...args) => this.storeSTN(...args),  this.featureName, this.ee)
+      registerHandler('errorAgg', (...args) => this.storeErrorAgg(...args),  this.featureName, this.ee)
+      registerHandler('pvtAdded', (...args) => this.processPVT(...args),  this.featureName, this.ee)
+
+      drain(this.agentIdentifier, this.featureName)
     })
   }
 

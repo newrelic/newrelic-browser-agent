@@ -19,11 +19,13 @@ import { now } from '../../../common/timing/now'
 
 import { AggregateBase } from '../../../common/util/feature-base'
 import { FEATURE_NAME } from '../constants'
+import { drain } from '../../../common/drain/drain'
+import { FEATURE_NAMES } from '../../../loader/features'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator)
+    super(agentIdentifier, aggregator, FEATURE_NAME)
 
     this.stackReported = {}
     this.pageviewReported = {}
@@ -38,14 +40,16 @@ export class Aggregate extends AggregateBase {
     // this will need to change to match whatever ee we use in the instrument
     this.ee.on('interactionDiscarded', (interaction) => this.onInteractionDiscarded(interaction))
 
-    register('err', (...args) => this.storeError(...args), undefined, this.ee)
-    register('ierr', (...args) => this.storeError(...args), undefined, this.ee)
+    register('err', (...args) => this.storeError(...args), this.featureName, this.ee)
+    register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee)
 
     var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'jserrors.harvestTimeSeconds') || 10
 
     this.scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
     this.scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
     this.scheduler.startTimer(harvestTimeSeconds)
+
+    drain(this.agentIdentifier, this.featureName)
   }
 
   onHarvestStarted(options) {
@@ -125,7 +129,7 @@ export class Aggregate extends AggregateBase {
   // Any URLs that are equivalent to the cleaned version of the origin will also
   // be replaced with the string '<inline>'.
   //
-  canonicalizeStackURLs (stackInfo) {
+  canonicalizeStackURLs(stackInfo) {
     // Currently, loader.origin might contain a fragment, but we don't want to use it
     // for comparing with frame URLs.
     var cleanedOrigin = cleanURL(getRuntime(this.agentIdentifier).origin)
@@ -144,7 +148,6 @@ export class Aggregate extends AggregateBase {
   }
 
   storeError(err, time, internal, customAttributes) {
-    console.log("storeError!")
     // are we in an interaction
     time = time || now()
     if (!internal && getRuntime(this.agentIdentifier).onerror && getRuntime(this.agentIdentifier).onerror(err)) return
@@ -192,7 +195,8 @@ export class Aggregate extends AggregateBase {
 
     // stn and spa aggregators listen to this event - stn sends the error in its payload,
     // and spa annotates the error with interaction info
-    handle('errorAgg', [type, bucketHash, params, newMetrics], undefined, undefined, this.ee)
+    handle('errorAgg', [type, bucketHash, params, newMetrics], undefined, FEATURE_NAMES.sessionTrace, this.ee)
+    handle('errorAgg', [type, bucketHash, params, newMetrics], undefined, FEATURE_NAMES.spa, this.ee)
 
     if (params._interactionId != null) {
       // hold on to the error until the interaction finishes
@@ -212,15 +216,15 @@ export class Aggregate extends AggregateBase {
       this.aggregator.store(type, aggregateHash, params, newMetrics, customParams)
     }
 
-    function setCustom (key, val) {
+    function setCustom(key, val) {
       customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
   }
 
-  onInteractionSaved (interaction) {
+  onInteractionSaved(interaction) {
     if (!this.errorCache[interaction.id]) return
 
-    this.errorCache[interaction.id].forEach( (item) => {
+    this.errorCache[interaction.id].forEach((item) => {
       var customParams = {}
       var globalCustomParams = item[4]
       var localCustomParams = item[5]
@@ -251,10 +255,10 @@ export class Aggregate extends AggregateBase {
     delete this.errorCache[interaction.id]
   }
 
-  onInteractionDiscarded (interaction) {
+  onInteractionDiscarded(interaction) {
     if (!this.errorCache || !this.errorCache[interaction.id]) return
 
-    this.errorCache[interaction.id].forEach( (item) => {
+    this.errorCache[interaction.id].forEach((item) => {
       var customParams = {}
       var globalCustomParams = item[4]
       var localCustomParams = item[5]
@@ -273,7 +277,7 @@ export class Aggregate extends AggregateBase {
 
       this.aggregator.store(item[0], aggregateHash, item[2], item[3], customParams)
 
-      function setCustom (key, val) {
+      function setCustom(key, val) {
         customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)
       }
     })

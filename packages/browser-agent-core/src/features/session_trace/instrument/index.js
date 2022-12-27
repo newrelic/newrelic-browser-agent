@@ -11,6 +11,7 @@ import { now } from '../../../common/timing/now'
 import { InstrumentBase } from '../../../common/util/feature-base'
 import { isBrowserWindow } from '../../../common/window/win'
 import * as CONSTANTS from '../constants'
+import { FEATURE_NAMES } from '../../../loader/features'
 
 const {
   ADD_EVENT_LISTENER, BST_RESOURCE, BST_TIMER, END, FEATURE_NAME, FN_END, FN_START, learResourceTimings,
@@ -50,7 +51,7 @@ export class Instrument extends InstrumentBase {
 
         // ISSUE: when target is XMLHttpRequest, nr@context should have params so we can calculate event origin
         // When ajax is disabled, this may fail without making ajax a dependency of session_trace
-        handle('bst', [evt, target, this.bstStart, now()], undefined, undefined, ee)
+        handle('bst', [evt, target, this.bstStart, now()], undefined, FEATURE_NAMES.sessionTrace, ee)
       }
     })
 
@@ -60,7 +61,7 @@ export class Instrument extends InstrumentBase {
     })
 
     this.timerEE.on(FN_END, function (args, target) {
-      handle(BST_TIMER, [target, this.bstStart, now(), this.bstType], undefined, undefined, ee)
+      handle(BST_TIMER, [target, this.bstStart, now(), this.bstType], undefined, FEATURE_NAMES.sessionTrace, ee)
     })
 
     this.rafEE.on(FN_START, function () {
@@ -68,7 +69,7 @@ export class Instrument extends InstrumentBase {
     })
 
     this.rafEE.on(FN_END, function (args, target) {
-      handle(BST_TIMER, [target, this.bstStart, now(), 'requestAnimationFrame'], undefined, undefined, ee)
+      handle(BST_TIMER, [target, this.bstStart, now(), 'requestAnimationFrame'], undefined, FEATURE_NAMES.sessionTrace, ee)
     })
 
     this.ee.on(PUSH_STATE + START, function (args) {
@@ -76,12 +77,12 @@ export class Instrument extends InstrumentBase {
       this.startPath = location.pathname + location.hash
     })
     this.ee.on(PUSH_STATE + END, function (args) {
-      handle('bstHist', [location.pathname + location.hash, this.startPath, this.time], undefined, undefined, ee)
+      handle('bstHist', [location.pathname + location.hash, this.startPath, this.time], undefined, FEATURE_NAMES.sessionTrace, ee)
     })
 
     if (supportsPerformanceObserver()) {
       // capture initial resources, in case our observer missed anything
-      handle(BST_RESOURCE, [window.performance.getEntriesByType('resource')], undefined, undefined, ee)
+      handle(BST_RESOURCE, [window.performance.getEntriesByType('resource')], undefined, FEATURE_NAMES.sessionTrace, ee)
 
       observeResourceTimings()
     } else {
@@ -99,7 +100,7 @@ export class Instrument extends InstrumentBase {
       var observer = new PerformanceObserver((list, observer) => { // eslint-disable-line no-undef
         var entries = list.getEntries()
 
-        handle(BST_RESOURCE, [entries], undefined, undefined, ee)
+        handle(BST_RESOURCE, [entries], undefined, FEATURE_NAMES.sessionTrace, ee)
       })
 
       try {
@@ -111,7 +112,7 @@ export class Instrument extends InstrumentBase {
 
     function onResourceTimingBufferFull(e) {
 
-      handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)], undefined, undefined, ee)
+      handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)], undefined, FEATURE_NAMES.jserrors, ee)
 
       // stop recording once buffer is full
       if (window.performance['c' + learResourceTimings]) {

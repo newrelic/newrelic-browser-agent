@@ -22,7 +22,7 @@ jobs:
       - name: build:all
         run: npm run build:all
       - name: run tests
-        run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=4
+        run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=20
   publish-to-s3:
     runs-on: ubuntu-latest
     container: node:14

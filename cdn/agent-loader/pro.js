@@ -12,10 +12,10 @@ new BrowserAgent({
     features: [
         InstrumentPageViewEvent,
         InstrumentPageViewTiming,
-        InstrumentMetrics,
-        InstrumentErrors,
-        InstrumentXhr,
         InstrumentSessionTrace,
-        InstrumentPageAction
+        InstrumentXhr,
+        InstrumentMetrics,
+        InstrumentPageAction,
+        InstrumentErrors
     ]
 })

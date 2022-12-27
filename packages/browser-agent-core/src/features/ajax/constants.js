@@ -1,3 +1,3 @@
-import { FEATURE_NAMES } from "@newrelic/browser-agent-loader-utils/src/features";
+import { FEATURE_NAMES } from "../../loader/features";
 
 export const FEATURE_NAME = FEATURE_NAMES.ajax

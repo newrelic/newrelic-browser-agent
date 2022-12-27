@@ -31,7 +31,7 @@ export function drain(agentIdentifier, group = 'feature') {
   }
 
   delete handlers[group]
-    // Keep the group as a property so we know it was created and drained
+  // Keep the group as a property so we know it was created and drained
   baseEE.backlog[group] = null
 }
 

@@ -33,7 +33,6 @@
             uniqueErrorMessages.forEach(message => {
                 const error = new Error(message);
                 newrelic.noticeError(error);
-                console.log(`called: newrelic.noticeError(${error});`);
             });
         </script>
     </body>

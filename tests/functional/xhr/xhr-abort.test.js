@@ -11,7 +11,8 @@ var supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 testDriver.test('no abort call in xhr request', supported, function (t, browser, router) {
   t.plan(12)
 
-  let rumPromise = router.expectRumAndConditionAndErrors('window.xhrDone')
+  let rumPromise = router.expectRumAndCondition('window.xhrDone')
+  let xhrMetricsPromise = router.expectXHRMetrics()
   let loadPromise = browser.get(router.assetURL('xhr.html', {
     init: {
       page_view_timing: {
@@ -23,7 +24,7 @@ testDriver.test('no abort call in xhr request', supported, function (t, browser,
     }
   }))
 
-  Promise.all([rumPromise, loadPromise]).then(([response]) => {
+  Promise.all([xhrMetricsPromise, rumPromise, loadPromise]).then(([response]) => {
     const parsedXhrs = getXhrFromResponse(response, browser)
     t.ok(parsedXhrs, 'got XHR data')
     t.ok(parsedXhrs.length >= 1, 'has at least one XHR record')
@@ -49,7 +50,8 @@ testDriver.test('no abort call in xhr request', supported, function (t, browser,
 testDriver.test('xhr.abort() called in load callback', supported, function (t, browser, router) {
   t.plan(13)
 
-  let rumPromise = router.expectRumAndConditionAndErrors('window.xhrDone')
+  let rumPromise = router.expectRumAndCondition('window.xhrDone')
+  let xhrMetricsPromise = router.expectXHRMetrics()
   let loadPromise = browser.get(router.assetURL('xhr-abort-onload.html', {
     init: {
       page_view_timing: {
@@ -61,7 +63,7 @@ testDriver.test('xhr.abort() called in load callback', supported, function (t, b
     }
   }))
 
-  Promise.all([rumPromise, loadPromise]).then(([response]) => {
+  Promise.all([xhrMetricsPromise, rumPromise, loadPromise]).then(([response]) => {
     const parsedXhrs = getXhrFromResponse(response, browser)
     t.ok(parsedXhrs, 'got XHR data')
     t.ok(parsedXhrs.length >= 1, 'has at least one XHR record')

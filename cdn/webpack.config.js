@@ -100,7 +100,9 @@ const commonConfig = {
     minimizer: [new TerserPlugin({
       include: [/\.min\.js$/, /^(?:[0-9])/],
       terserOptions: {
-        mangle: true
+        mangle: {
+          keep_fnames: /nrWrapper/
+        }
       }
     })],
     flagIncludedChunks: true,
@@ -128,7 +130,6 @@ const commonConfig = {
     alias: {
       '@newrelic/browser-agent-core': path.resolve(__dirname, '../packages/browser-agent-core'),
       '@newrelic/browser-agent': path.resolve(__dirname, '../packages/browser-agent'),
-      '@newrelic/browser-agent-loader-utils': path.resolve(__dirname, '../packages/browser-agent-loader-utils'),
       '@newrelic/browser-agent-custom': path.resolve(__dirname, '../packages/browser-agent-custom'),
       '@newrelic/browser-agent-microfrontend': path.resolve(__dirname, '../packages/browser-agent-microfrontend')
     }

@@ -19,8 +19,8 @@ export function getFrozenAttributes(feature) {
         // page_action is always "off" (no instr)
         // as new API/manual implementation methods are added, this list can likely be pruned
         case FEATURE_NAMES.jserrors:
-            return ['harvestTimeSeconds']
+            return []
         default:
-            return ['auto', 'harvestTimeSeconds']
+            return ['auto']
     }
 }

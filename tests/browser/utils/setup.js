@@ -4,7 +4,7 @@ const { gosCDN, addToNREUM } = require('@newrelic/browser-agent-core/src/common/
 const { ee } = require('@newrelic/browser-agent-core/src/common/event-emitter/contextual-ee')
 const {Aggregator} = require('@newrelic/browser-agent-core/src/common/aggregate/aggregator')
 const {activateFeatures} = require('@newrelic/browser-agent-core/src/common/util/feature-flags')
-const { setAPI } = require('../../../cdn/agent-loader/utils/api')
+const { setAPI } = require('@newrelic/browser-agent-core/src/loader/api')
 
 export function setup(agentIdentifier = (Math.random() + 1).toString(36).substring(7)) {
     const nr = gosCDN()

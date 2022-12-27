@@ -12,11 +12,12 @@ import { getConfigurationValue, getInfo, getRuntime } from '../../../common/conf
 import { AggregateBase } from '../../../common/util/feature-base'
 import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
+import { drain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator)
+    super(agentIdentifier, aggregator, FEATURE_NAME)
     this.eventsPerMinute = 240
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'ins.harvestTimeSeconds') || 30
     this.eventsPerHarvest = this.eventsPerMinute * this.harvestTimeSeconds / 60
@@ -29,11 +30,13 @@ export class Aggregate extends AggregateBase {
 
     if (isBrowserWindow && document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
-    register('api-addPageAction', (...args) => this.addPageAction(...args), undefined, this.ee)
+    register('api-addPageAction', (...args) => this.addPageAction(...args), this.featureName, this.ee)
 
     var scheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
     scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
     scheduler.startTimer(this.harvestTimeSeconds, 0)
+
+    drain(this.agentIdentifier, this.featureName)
   }
 
   onHarvestStarted(options) {

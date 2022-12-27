@@ -37,21 +37,19 @@ testDriver.test('customTransactionName 1 arg', function (t, browser, router) {
 testDriver.test('customTransactionName 1 arg unload', withUnload, function (t, browser, router) {
   t.plan(3)
 
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectMetrics()
   let loadPromise = browser.get(router.assetURL('api.html', {
     init: {
       page_view_timing: {
-        enabled: false
-      },
-      jserrors: {
         enabled: false
       }
     }
   }))
 
-  Promise.all([rumPromise, loadPromise])
+  Promise.all([metricsPromise, rumPromise, loadPromise])
     .then(([{body, query}]) => {
-      const time = getTime(body ? JSON.parse(body).cm : JSON.parse(query.cm))
+      const time = getTime(body ? JSON.parse(body)?.cm : JSON.parse(query.cm))
       t.equal(
         query.ct,
         'http://custom.transaction/foo',
@@ -67,7 +65,8 @@ testDriver.test('customTransactionName 1 arg unload', withUnload, function (t, b
 testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser, router) {
   t.plan(3)
 
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectMetrics()
   let loadPromise = browser.get(router.assetURL('api2.html', {
     init: {
       page_view_timing: {
@@ -79,7 +78,7 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
     }
   }))
 
-  Promise.all([rumPromise, loadPromise])
+  Promise.all([metricsPromise, rumPromise, loadPromise])
     .then(([{body, query}]) => {
       const time = getTime(body ? JSON.parse(body).cm : JSON.parse(query.cm))
       t.equal(

@@ -4,7 +4,7 @@ const webpack = require('webpack')
 const pkg = require('../../dist/packages/browser-agent/package.json')
 
 module.exports = {
-  entry: path.join(__dirname, "../../dist/packages/browser-agent/src/index.js"),
+  entry: path.join(__dirname, "../../dist/packages/browser-agent/index.js"),
   module: {
     rules: [
       {
@@ -32,7 +32,10 @@ module.exports = {
   },
   resolve: {
     alias: {
-      '@newrelic/browser-agent-core/src': path.resolve(__dirname, '../../dist/packages/browser-agent-core/src')
+      '@newrelic/browser-agent-core': path.resolve(__dirname, '../../packages/browser-agent-core'),
+      '@newrelic/browser-agent': path.resolve(__dirname, '../../packages/browser-agent'),
+      '@newrelic/browser-agent-custom': path.resolve(__dirname, '../../packages/browser-agent-custom'),
+      '@newrelic/browser-agent-microfrontends': path.resolve(__dirname, '../../packages/browser-agent-microfrontends'),
     }
   },
   plugins: [

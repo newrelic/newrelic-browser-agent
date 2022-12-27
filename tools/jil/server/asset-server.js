@@ -324,11 +324,6 @@ class BrowserifyTransform extends AssetTransform {
           "@babel/plugin-syntax-dynamic-import",
           '@babel/plugin-transform-modules-commonjs',
           "@babel/plugin-proposal-optional-chaining",
-          ["module-resolver", {
-            "alias": {
-              "@newrelic/browser-agent-core/src": './dist/packages/browser-agent-core/src'
-            }
-          }]
         ],
         global: true
       })

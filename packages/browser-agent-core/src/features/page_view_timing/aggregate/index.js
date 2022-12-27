@@ -14,11 +14,13 @@ import { getInfo, getConfigurationValue } from '../../../common/config/config'
 import { AggregateBase } from '../../../common/util/feature-base'
 import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
+import { drain } from '../../../common/drain/drain'
+import { FEATURE_NAMES } from '../../../loader/features'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator)
+    super(agentIdentifier, aggregator, FEATURE_NAME)
     if (!isBrowserWindow) return; // TO DO: can remove once aggregate is chained to instrument
 
     this.timings = []
@@ -46,10 +48,10 @@ export class Aggregate extends AggregateBase {
       onUnload: () => this.finalHarvest()
     }, this)
 
-    registerHandler('timing', (...args) => this.processTiming(...args), undefined, this.ee)
-    registerHandler('lcp', (...args) => this.updateLatestLcp(...args), undefined, this.ee)
-    registerHandler('cls', (...args) => this.updateClsScore(...args), undefined, this.ee)
-    registerHandler('pageHide', (...args) => this.updateSessionEnd(...args), undefined, this.ee)
+    registerHandler('timing', (...args) => this.processTiming(...args),  this.featureName, this.ee)
+    registerHandler('lcp', (...args) => this.updateLatestLcp(...args),  this.featureName, this.ee)
+    registerHandler('cls', (...args) => this.updateClsScore(...args),  this.featureName, this.ee)
+    registerHandler('pageHide', (...args) => this.updateSessionEnd(...args),  this.featureName, this.ee)
 
     // After 1 minute has passed, record LCP value if no user interaction has occurred first
     setTimeout(() => {
@@ -59,6 +61,8 @@ export class Aggregate extends AggregateBase {
 
     // send initial data sooner, then start regular
     this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)
+
+    drain(this.agentIdentifier, this.featureName)
   }
 
   recordLcp() {
@@ -161,7 +165,7 @@ export class Aggregate extends AggregateBase {
       attrs: attrs
     })
 
-    handle('pvtAdded', [name, value, attrs], undefined, undefined, this.ee)
+    handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)
   }
 
   processTiming(name, value, attrs) {

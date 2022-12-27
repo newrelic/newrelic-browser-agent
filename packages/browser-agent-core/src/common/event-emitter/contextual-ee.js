@@ -6,6 +6,7 @@
 import { gosNREUM } from '../window/nreum'
 import { getOrSet } from '../util/get-or-set'
 import { mapOwn } from '../util/map-own'
+import { isWebWorker } from '../window/win'
 
 var ctxId = 'nr@context'
 
@@ -21,9 +22,9 @@ if (nr.ee) {
 
 export { globalInstance as ee }
 
-function EventContext () {}
+function EventContext() { }
 
-function ee (old, debugId) {
+function ee(old, debugId) {
   var handlers = {}
   var bufferGroupMap = {}
   var emitters = {}
@@ -41,13 +42,15 @@ function ee (old, debugId) {
     aborted: false,
     isBuffering: isBuffering,
     debugId,
-    backlog: {} 
-    // backlog: old && typeof old.backlog === 'object' ? old.backlog : {} // why pass on the backlog like this?
+    // backlog: {} 
+    // backlog: isWebWorker ? {} : old && typeof old.backlog === 'object' ? old.backlog : {} // why pass on the backlog like this?
+    backlog: old && typeof old.backlog === 'object' ? old.backlog : {} // why pass on the backlog like this?
+
   }
 
   return emitter
 
-  function context (contextOrStore) {
+  function context(contextOrStore) {
     if (contextOrStore && contextOrStore instanceof EventContext) {
       return contextOrStore
     } else if (contextOrStore) {
@@ -57,18 +60,18 @@ function ee (old, debugId) {
     }
   }
 
-  function emit (type, args, contextOrStore, force, bubble) {
+  function emit(type, args, contextOrStore, force, bubble) {
     if (bubble !== false) bubble = true
     if (globalInstance.aborted && !force) { return }
     if (old && bubble) old.emit(type, args, contextOrStore)
-    
+
     var ctx = context(contextOrStore)
     var handlersArray = listeners(type)
     var len = handlersArray.length
 
     // Apply each handler function in the order they were added
     // to the context with the arguments
-    
+
     for (var i = 0; i < len; i++) handlersArray[i].apply(ctx, args)
 
     // Buffer after emitting for consistent ordering
@@ -81,12 +84,12 @@ function ee (old, debugId) {
     return ctx
   }
 
-  function addEventListener (type, fn) {
+  function addEventListener(type, fn) {
     // Retrieve type from handlers, if it doesn't exist assign the default and retrieve it.
     handlers[type] = listeners(type).concat(fn)
   }
 
-  function removeEventListener (type, fn) {
+  function removeEventListener(type, fn) {
     var listeners = handlers[type]
     if (!listeners) return
     for (var i = 0; i < listeners.length; i++) {
@@ -96,15 +99,15 @@ function ee (old, debugId) {
     }
   }
 
-  function listeners (type) {
+  function listeners(type) {
     return handlers[type] || []
   }
 
-  function getOrCreate (name) {
+  function getOrCreate(name) {
     return (emitters[name] = emitters[name] || ee(emitter, name))
   }
 
-  function bufferEventsByGroup (types, group) {
+  function bufferEventsByGroup(types, group) {
     var eventBuffer = getBuffer()
 
     // do not buffer events if agent has been aborted
@@ -135,14 +138,14 @@ export function getOrSetContext(obj) {
   return getOrSet(obj, ctxId, getNewContext)
 }
 
-function getNewContext () {
+function getNewContext() {
   return new EventContext()
 }
 
 // abort should be called 30 seconds after the page has started running
 // We should drop our data and stop collecting if we still have a backlog, which
 // signifies the rest of the agent wasn't loaded
-function abortIfNotLoaded () {
+function abortIfNotLoaded() {
   if (globalInstance.backlog.api || globalInstance.backlog.feature) {
     globalInstance.aborted = true
     globalInstance.backlog = {}

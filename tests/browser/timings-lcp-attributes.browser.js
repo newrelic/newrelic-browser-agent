@@ -10,6 +10,7 @@ const {drain} = require('@newrelic/browser-agent-core/src/common/drain/drain')
 const {handle} = require('@newrelic/browser-agent-core/src/common/event-emitter/handle')
 const {setConfiguration} = require("@newrelic/browser-agent-core/src/common/config/state/init")
 const {Aggregate: PvtAggregate} = require('@newrelic/browser-agent-core/src/features/page-view-timing/aggregate/index')
+const {FEATURE_NAMES} = require('@newrelic/browser-agent-core/src/loader/features')
 
 const {agentIdentifier, aggregator} = setup()
 
@@ -50,7 +51,7 @@ jil.browserTest('sends expected attributes when available', function(t) {
   }
 
   // simulate LCP observed
-  handle('lcp', [lcpEntry, networkInfo], undefined, undefined, pvtAgg.ee)
+  handle('lcp', [lcpEntry, networkInfo], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
 
   setTimeout(function() {
     t.equals(pvtAgg.timings.length, 1, 'there should be only 2 timings (pageHide and unload)')

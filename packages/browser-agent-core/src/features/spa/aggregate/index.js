@@ -19,6 +19,8 @@ import { Serializer } from './serializer'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import { isBrowserWindow } from '../../../common/window/win'
 import * as CONSTANTS from '../constants'
+import { drain } from '../../../common/drain/drain'
+import { FEATURE_NAMES } from '@newrelic/browser-agent-core/src/loader/features'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING, 
@@ -27,7 +29,7 @@ const {
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator)
+    super(agentIdentifier, aggregator, FEATURE_NAME)
     if (!isBrowserWindow) return; // TO DO: can remove once aggregate is chained to instrument
 
     this.state = {
@@ -110,8 +112,8 @@ export class Aggregate extends AggregateBase {
     // ensure that checkFinish calls are safe during initialPageLoad
     state.initialPageLoad[REMAINING]++
 
-    register(FN_START, callbackStart, undefined, baseEE)
-    register(CB_START, callbackStart, undefined, promiseEE)
+    register(FN_START, callbackStart, this.featureName, baseEE)
+    register(CB_START, callbackStart,  this.featureName, promiseEE)
 
     // register plugins
     var pluginApi = {
@@ -123,7 +125,7 @@ export class Aggregate extends AggregateBase {
       if (typeof init === 'function') {
         init(pluginApi)
       }
-    }, undefined, baseEE)
+    }, FEATURE_NAMES.spa, baseEE)
 
     function callbackStart() {
       state.depth++
@@ -133,8 +135,8 @@ export class Aggregate extends AggregateBase {
       state.timerBudget = MAX_TIMER_BUDGET
     }
 
-    register(FN_END, callbackEnd, undefined, baseEE)
-    register('cb-end', callbackEnd, undefined, promiseEE)
+    register(FN_END, callbackEnd,  this.featureName, baseEE)
+    register('cb-end', callbackEnd,  this.featureName, promiseEE)
 
 
     function callbackEnd() {
@@ -209,7 +211,7 @@ export class Aggregate extends AggregateBase {
       }
 
       ev.__nrNode = state.currentNode
-    }, undefined, eventsEE)
+    },  this.featureName, eventsEE)
 
     /**
      * *** TIMERS ***
@@ -226,7 +228,7 @@ export class Aggregate extends AggregateBase {
       this.timerId = timerId
       state.timerMap[timerId] = state.currentNode
       this.timerBudget = state.timerBudget - 50
-    }, undefined, timerEE)
+    },  this.featureName, timerEE)
 
     register('clearTimeout-start', function clear(args) {
       var timerId = args[0]
@@ -237,7 +239,7 @@ export class Aggregate extends AggregateBase {
         interaction.checkFinish()
         delete state.timerMap[timerId]
       }
-    }, undefined, timerEE)
+    },  this.featureName, timerEE)
 
     register(FN_START, function () {
       state.timerBudget = this.timerBudget || MAX_TIMER_BUDGET
@@ -246,7 +248,7 @@ export class Aggregate extends AggregateBase {
       setCurrentNode(node)
       delete state.timerMap[id]
       if (node) node[INTERACTION][REMAINING]--
-    }, undefined, timerEE)
+    },  this.featureName, timerEE)
 
     /**
      * *** XHR ***
@@ -265,7 +267,7 @@ export class Aggregate extends AggregateBase {
     // context is shared with new-xhr event, and is stored on the xhr iteself.
     register(FN_START, function () {
       setCurrentNode(this[SPA_NODE])
-    }, undefined, xhrEE)
+    },  this.featureName, xhrEE)
 
     // context is stored on the xhr and is shared with all callbacks associated
     // with the new xhr
@@ -273,7 +275,7 @@ export class Aggregate extends AggregateBase {
       if (state.currentNode) {
         this[SPA_NODE] = state.currentNode.child('ajax', null, null, true)
       }
-    }, undefined, xhrEE)
+    },  this.featureName, xhrEE)
 
     register('send-xhr-start', function () {
       var node = this[SPA_NODE]
@@ -283,7 +285,7 @@ export class Aggregate extends AggregateBase {
         node.jsEnd = node.start = this.startTime
         node[INTERACTION][REMAINING]++
       }
-    }, undefined, xhrEE)
+    },  this.featureName, xhrEE)
 
     register('xhr-resolved', function () {
       var node = this[SPA_NODE]
@@ -300,7 +302,7 @@ export class Aggregate extends AggregateBase {
         node.finish(this.endTime)
         if (!!this.currentNode && !!this.currentNode.interaction) this.currentNode.interaction.checkFinish()
       }
-    }, undefined, baseEE)
+    },  this.featureName, baseEE)
 
     /**
      * *** JSONP ***
@@ -314,7 +316,7 @@ export class Aggregate extends AggregateBase {
         this.url = url
         this.status = null
       }
-    }, undefined, jsonpEE)
+    },  this.featureName, jsonpEE)
 
     register('cb-start', function (args) {
       var node = this[JSONP_NODE]
@@ -322,7 +324,7 @@ export class Aggregate extends AggregateBase {
         setCurrentNode(node)
         this.status = 200
       }
-    }, undefined, jsonpEE)
+    },  this.featureName, jsonpEE)
 
     register('jsonp-error', function () {
       var node = this[JSONP_NODE]
@@ -330,7 +332,7 @@ export class Aggregate extends AggregateBase {
         setCurrentNode(node)
         this.status = 0
       }
-    }, undefined, jsonpEE)
+    },  this.featureName, jsonpEE)
 
     register(JSONP_END, function () {
       var node = this[JSONP_NODE]
@@ -359,26 +361,26 @@ export class Aggregate extends AggregateBase {
         node.jsTime = this[CB_START] ? (this[JSONP_END] - this[CB_START]) : 0
         node.finish(node.jsEnd)
       }
-    }, undefined, jsonpEE)
+    },  this.featureName, jsonpEE)
 
     register(FETCH_START, function (fetchArguments, dtPayload) {
       if (state.currentNode && fetchArguments) {
         this[SPA_NODE] = state.currentNode.child('ajax', this[FETCH_START])
         if (dtPayload && this[SPA_NODE]) this[SPA_NODE].dt = dtPayload
       }
-    }, undefined, fetchEE)
+    },  this.featureName, fetchEE)
 
     register(FETCH_BODY + 'start', function (args) {
       if (state.currentNode) {
         this[SPA_NODE] = state.currentNode
         state.currentNode[INTERACTION][REMAINING]++
       }
-    }, undefined, fetchEE)
+    },  this.featureName, fetchEE)
 
     register(FETCH_BODY + 'end', function (args, ctx, bodyPromise) {
       var node = this[SPA_NODE]
       if (node) node[INTERACTION][REMAINING]--
-    }, undefined, fetchEE)
+    },  this.featureName, fetchEE)
 
     register(FETCH_DONE, function (err, res) {
       var node = this[SPA_NODE]
@@ -398,7 +400,7 @@ export class Aggregate extends AggregateBase {
 
         node.finish(this[FETCH_DONE])
       }
-    }, undefined, fetchEE)
+    },  this.featureName, fetchEE)
 
     register('newURL', function (url, hashChangedDuringCb) {
       if (state.currentNode) {
@@ -412,7 +414,7 @@ export class Aggregate extends AggregateBase {
       }
 
       state.lastSeenUrl = url
-    }, undefined, historyEE)
+    },  this.featureName, historyEE)
 
     /**
      * SCRIPTS
@@ -469,17 +471,17 @@ export class Aggregate extends AggregateBase {
 
     register(FN_START, function () {
       setCurrentNode(state.prevNode)
-    }, undefined, mutationEE)
+    },  this.featureName, mutationEE)
 
-    register('resolve-start', resolvePromise, undefined, promiseEE)
-    register('executor-err', resolvePromise, undefined, promiseEE)
+    register('resolve-start', resolvePromise,  this.featureName, promiseEE)
+    register('executor-err', resolvePromise,  this.featureName, promiseEE)
 
-    register('propagate', saveNode, undefined, promiseEE)
+    register('propagate', saveNode,  this.featureName, promiseEE)
 
     register(CB_START, function () {
       var ctx = this.getCtx ? this.getCtx() : this
       setCurrentNode(ctx[SPA_NODE])
-    }, undefined, promiseEE)
+    },  this.featureName, promiseEE)
 
     register(INTERACTION_API + 'get', function (t) {
       var interaction
@@ -490,23 +492,23 @@ export class Aggregate extends AggregateBase {
         interaction.checkFinish()
         if (state.depth) setCurrentNode(interaction.root)
       }
-    }, undefined, baseEE)
+    },  this.featureName, baseEE)
 
 
     register(INTERACTION_API + 'actionText', function (t, actionText) {
       var customAttrs = this.ixn.root.attrs.custom
       if (actionText) customAttrs.actionText = actionText
-    }, undefined, baseEE)
+    },  this.featureName, baseEE)
 
     register(INTERACTION_API + 'setName', function (t, name, trigger) {
       var attrs = this.ixn.root.attrs
       if (name) attrs.customName = name
       if (trigger) attrs.trigger = trigger
-    }, undefined, baseEE)
+    },  this.featureName, baseEE)
 
     register(INTERACTION_API + 'setAttribute', function (t, name, value) {
       this.ixn.root.attrs.custom[name] = value
-    }, undefined, baseEE)
+    },  this.featureName, baseEE)
 
     register(INTERACTION_API + 'end', function (timestamp) {
       var interaction = this.ixn
@@ -514,15 +516,15 @@ export class Aggregate extends AggregateBase {
       setCurrentNode(null)
       node.child('customEnd', timestamp).finish(timestamp)
       interaction.finish()
-    }, undefined, baseEE)
+    },  this.featureName, baseEE)
 
     register(INTERACTION_API + 'ignore', function (t) {
       this.ixn.ignored = true
-    }, undefined, baseEE)
+    },  this.featureName, baseEE)
 
     register(INTERACTION_API + 'save', function (t) {
       this.ixn.save = true
-    }, undefined, baseEE)
+    },  this.featureName, baseEE)
 
     register(INTERACTION_API + 'tracer', function (timestamp, name, store) {
       var interaction = this.ixn
@@ -534,10 +536,10 @@ export class Aggregate extends AggregateBase {
         return (ctx[SPA_NODE] = parent)
       }
       ctx[SPA_NODE] = parent.child('customTracer', timestamp, name)
-    }, undefined, baseEE)
+    },  this.featureName, baseEE)
 
-    register(FN_START, tracerDone, undefined, tracerEE)
-    register('no-' + FN_START, tracerDone, undefined, tracerEE)
+    register(FN_START, tracerDone,  this.featureName, tracerEE)
+    register('no-' + FN_START, tracerDone,  this.featureName, tracerEE)
 
     function tracerDone(timestamp, interactionContext, hasCb) {
       var node = this[SPA_NODE]
@@ -558,16 +560,16 @@ export class Aggregate extends AggregateBase {
       setTimeout(function () {
         cb(store)
       }, 0)
-    }, undefined, baseEE)
+    },  this.featureName, baseEE)
 
     register(INTERACTION_API + 'onEnd', function (t, cb) {
       this.ixn.handlers.push(cb)
-    }, undefined, baseEE)
+    },  this.featureName, baseEE)
 
     register('api-routeName', function (t, currentRouteName) {
       state.lastSeenRouteName = currentRouteName
       if (state.currentNode) state.currentNode[INTERACTION].setNewRoute(currentRouteName)
-    }, undefined, baseEE)
+    },  this.featureName, baseEE)
 
     function activeNodeFor(interaction) {
       return (state.currentNode && state.currentNode[INTERACTION] === interaction) ? state.currentNode : interaction.root
@@ -682,5 +684,6 @@ export class Aggregate extends AggregateBase {
       return true
     }
 
+    drain(this.agentIdentifier, this.featureName)
   }
 }

@@ -67,6 +67,9 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
             deny_list: testCase.denyList,
             enabled: true
           },
+          page_view_timing: {
+            enabled: false
+          },
           metrics: {
             enabled: false
           }

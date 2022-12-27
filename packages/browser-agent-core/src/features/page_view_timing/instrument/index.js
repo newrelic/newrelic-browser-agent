@@ -10,6 +10,7 @@ import { getConfigurationValue, originals } from '../../../common/config/config'
 import { InstrumentBase } from '../../../common/util/feature-base'
 import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
+import { FEATURE_NAMES } from '../../../loader/features'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -68,9 +69,9 @@ export class Instrument extends InstrumentBase {
     var entries = list.getEntries()
     entries.forEach((entry) => {
       if (entry.name === 'first-paint') {
-        handle('timing', ['fp', Math.floor(entry.startTime)], undefined, undefined, this.ee)
+        handle('timing', ['fp', Math.floor(entry.startTime)], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
       } else if (entry.name === 'first-contentful-paint') {
-        handle('timing', ['fcp', Math.floor(entry.startTime)], undefined, undefined, this.ee)
+        handle('timing', ['fcp', Math.floor(entry.startTime)], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
       }
     })
   }
@@ -89,14 +90,14 @@ export class Instrument extends InstrumentBase {
       var attributes = this.addConnectionAttributes({})
       if (attributes) payload.push(attributes)
 
-      handle('lcp', payload, undefined, undefined, this.ee)
+      handle('lcp', payload, undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     }
   }
 
   clsObserver(list) {
     list.getEntries().forEach((entry) => {
       if (!entry.hadRecentInput) {
-        handle('cls', [entry], undefined, undefined, this.ee)
+        handle('cls', [entry], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
       }
     })
   }
@@ -136,13 +137,13 @@ export class Instrument extends InstrumentBase {
       }
 
       this.fiRecorded = true
-      handle('timing', ['fi', fi, attributes], undefined, undefined, this.ee)
+      handle('timing', ['fi', fi, attributes], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     }
   }
 
   onDocHide() {
     // time is only recorded to be used for short-circuit logic in the observer callbacks
     this.pageHiddenTime = now()
-    handle('pageHide', [this.pageHiddenTime], undefined, undefined, this.ee)
+    handle('pageHide', [this.pageHiddenTime], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
   }
 }

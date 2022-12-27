@@ -31,8 +31,6 @@
     "webpack-cli": "^4.9.1"
   },
   "dependencies": {
-    "@newrelic/browser-agent": "^0.0.9",
-    "@newrelic/browser-agent-core": "^0.0.9",
     "core-js": "^3.23.3"
   }
 }

@@ -11,11 +11,13 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { AggregateBase } from '../../../common/util/feature-base'
 import { FEATURE_NAME } from '../constants'
+import { drain } from '../../../common/drain/drain'
+import { FEATURE_NAMES } from '../../../loader/features'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator)
+    super(agentIdentifier, aggregator, FEATURE_NAME)
     let ajaxEvents = []
     let spaAjaxEvents = {}
     let sentAjaxEvents = []
@@ -49,7 +51,7 @@ export class Aggregate extends AggregateBase {
 
     if (allAjaxIsEnabled()) setDenyList(getConfigurationValue(agentIdentifier, 'ajax.deny_list'))
 
-    register('xhr', storeXhr, undefined, this.ee)
+    register('xhr', storeXhr, this.featureName, this.ee)
 
     if (allAjaxIsEnabled()) {
       scheduler = new HarvestScheduler('events', {
@@ -71,7 +73,7 @@ export class Aggregate extends AggregateBase {
         hash = stringify([params.status, params.host, params.pathname])
       }
 
-      handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, undefined, ee)
+      handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, ee)
 
       // store as metric
       aggregator.store('xhr', hash, params, metrics)
@@ -82,9 +84,9 @@ export class Aggregate extends AggregateBase {
 
       if (!shouldCollectEvent(params)) {
         if (params.hostname === getInfo(agentIdentifier).errorBeacon) {
-          handle('record-supportability', ['Ajax/Events/Excluded/Agent'], undefined, undefined, ee)
+          handle('record-supportability', ['Ajax/Events/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, ee)
         } else {
-          handle('record-supportability', ['Ajax/Events/Excluded/App'], undefined, undefined, ee)
+          handle('record-supportability', ['Ajax/Events/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee)
         }
         return
       }
@@ -239,5 +241,7 @@ export class Aggregate extends AggregateBase {
       }
       return true
     }
+
+    drain(this.agentIdentifier, this.featureName)
   }
 }

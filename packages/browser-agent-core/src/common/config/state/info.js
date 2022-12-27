@@ -16,7 +16,9 @@ const model = {
   account: undefined,
   product: undefined,
   extra: undefined,
-  jsAttributes: {},
+  jsAttributes: {
+    
+  },
   userAttributes: undefined,
   atts: undefined,
   transactionName: undefined,

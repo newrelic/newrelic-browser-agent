@@ -1,6 +1,6 @@
 // loader files
-import { getEnabledFeatures } from '@newrelic/browser-agent-loader-utils/src/enabled-features'
-import { configure } from '@newrelic/browser-agent-loader-utils/src/configure'
+import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/loader/enabled-features'
+import { configure } from '@newrelic/browser-agent-core/src/loader/configure'
 // core files
 import { Aggregator } from '@newrelic/browser-agent-core/src/common/aggregate/aggregator'
 import { gosNREUMInitializedAgents } from '@newrelic/browser-agent-core/src/common/window/nreum'
@@ -61,22 +61,15 @@ export class BrowserAgent {
                     if (Instrument) chainedCompleted.push(this.features[key].completed)
                 })
                 Promise.all(chainedCompleted).then(() => {
-                    console.log(`${this.agentIdentifier} - all promises are done... Drain!`)
-                    drainAll(this.agentIdentifier)
+                    drain(this.agentIdentifier, 'api')
                     gosNREUMInitializedAgents(this.agentIdentifier, this.features, 'features')
                 })
             })
 
             return this
         } catch (err) {
-            console.trace()
             console.error(err)
             return false
         }
     }
-}
-
-function drainAll(agentIdentifier) {
-    drain(agentIdentifier, 'api')
-    drain(agentIdentifier, 'feature')
 }

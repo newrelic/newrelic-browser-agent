@@ -28,7 +28,7 @@ function finalHarvest (type, browserVersionMatcher) {
 			});
 
 			const loadPromise = browser.get(assetURL);
-			const metrPromise = router.expectErrors();
+			const metrPromise = router.expectMetrics();
 			const errPromise = router.expectErrors();		// CAUTION: the order of metrics (sm) and jserrors matters; metrics are always sent out FIRST
 			const ajaxPromise = router.expectAjaxEvents();
 			const insPromise = router.expectIns();

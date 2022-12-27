@@ -1,14 +1,13 @@
 import { getInfo, isConfigured } from '../config/config'
 import { ee } from '../event-emitter/contextual-ee'
-import { configure } from '@newrelic/browser-agent-loader-utils/src/configure'
+import { configure } from '../../loader/configure'
 import { gosCDN } from '../window/nreum'
 
 class FeatureBase {
-  constructor(agentIdentifier, aggregator, featureName, externalFeatures = []) {
+  constructor(agentIdentifier, aggregator, featureName) {
     this.agentIdentifier = agentIdentifier
     this.aggregator = aggregator
     this.ee = ee.get(agentIdentifier)
-    this.externalFeatures = externalFeatures
     this.featureName = featureName
 
     this.checkConfiguration()
@@ -44,11 +43,13 @@ export class InstrumentBase extends FeatureBase {
       this.resolve = resolve
       this.reject = reject
     })
+    this.hasAggregator = false
   }
 
   async importAggregator() {
     try {
-      console.log(`%c lazy-loading aggregator file - ${this.featureName}`, 'color:#00ff00')
+      if (this.hasAggregator) return 
+      this.hasAggregator = true
       const { Aggregate } = await import(`../../features/${this.featureName}/aggregate`)
       new Aggregate(this.agentIdentifier, this.aggregator)
       this.resolve()
@@ -59,7 +60,7 @@ export class InstrumentBase extends FeatureBase {
 }
 
 export class AggregateBase extends FeatureBase {
-  constructor(agentIdentifier, aggregator, featureName, externalFeatures = []) {
-    super(agentIdentifier, aggregator, featureName, externalFeatures)
+  constructor(agentIdentifier, aggregator, featureName) {
+    super(agentIdentifier, aggregator, featureName)
   }
 }

@@ -9,15 +9,15 @@ import { Instrument as InstrumentSessionTrace } from '@newrelic/browser-agent-co
 import { Instrument as InstrumentSpa } from '@newrelic/browser-agent-core/src/features/spa/instrument'
 import { Instrument as InstrumentPageAction } from '@newrelic/browser-agent-core/src/features/page_action/instrument'
 
-const agent = new BrowserAgent({
+new BrowserAgent({
     features: [
+        InstrumentXhr,
         InstrumentPageViewEvent,
         InstrumentPageViewTiming,
-        InstrumentMetrics,
-        InstrumentErrors,
-        InstrumentXhr,
         InstrumentSessionTrace,
-        InstrumentSpa,
-        InstrumentPageAction
+        InstrumentMetrics,
+        InstrumentPageAction,
+        InstrumentErrors,
+        InstrumentSpa
     ]
 })

@@ -1,5 +1,5 @@
-import { getConfigurationValue, getRuntime } from '@newrelic/browser-agent-core/src/common/config/config'
 import { asyncFeatures, syncFeatures } from './features'
+import { getConfigurationValue, getRuntime } from '../common/config/config'
 
 const featureNames = [...asyncFeatures, ...syncFeatures]
 

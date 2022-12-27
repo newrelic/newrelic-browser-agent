@@ -23,8 +23,8 @@ export class Instrument extends InstrumentBase {
         this.singleChecks() // checks that are run only one time, at script load
         this.eachSessionChecks()    // the start of every time user engages with page
         // listen for messages from features and capture them
-        registerHandler('record-supportability', (...args) => this.recordSupportability(...args), undefined, this.ee)
-        registerHandler('record-custom', (...args) => this.recordCustom(...args), undefined, this.ee)
+        registerHandler('record-supportability', (...args) => this.recordSupportability(...args),  this.featureName, this.ee)
+        registerHandler('record-custom', (...args) => this.recordCustom(...args),  this.featureName, this.ee)
 
         this.importAggregator()
     }
@@ -42,7 +42,7 @@ export class Instrument extends InstrumentBase {
             { name: name },
             value
         ]
-        handle('storeMetric', opts, null, undefined, this.ee)
+        handle('storeMetric', opts, null, this.featureName, this.ee)
         return opts
     }
     /**
@@ -59,7 +59,7 @@ export class Instrument extends InstrumentBase {
             metrics
         ]
 
-        handle('storeEventMetrics', opts, null, undefined, this.ee)
+        handle('storeEventMetrics', opts, null, this.featureName, this.ee)
         return opts
     }
 

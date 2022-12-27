@@ -323,9 +323,9 @@ testDriver.test('final harvest sends timings data', workingSendBeacon, function 
   }
 })
 
-// This test checks that the agent sends multiple types of data types on unload
-// It does not check all of them, just errors and resources.  This is sufficient for the
-// test.  Sending more than that makes the test very fragile on some platforms.
+// // This test checks that the agent sends multiple types of data types on unload
+// // It does not check all of them, just errors and resources.  This is sufficient for the
+// // test.  Sending more than that makes the test very fragile on some platforms.
 testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stnSupported), function (t, browser, router) {
   let url = router.assetURL('final-harvest-timings.html', { init: { metrics: { enabled: false } } })
   let loadPromise = browser.safeGet(url).catch(fail)
@@ -366,7 +366,7 @@ testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stn
 })
 
 testDriver.test('final harvest sends ajax events', workingSendBeacon.and(doNotSupportWaitForConditionInBrowser), function (t, browser, router) {
-  let url = router.assetURL('final-harvest-ajax.html', { loader: 'spa' })
+  let url = router.assetURL('final-harvest-ajax.html', { loader: 'spa', init: { ajax: {enabled: true} }})
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
 

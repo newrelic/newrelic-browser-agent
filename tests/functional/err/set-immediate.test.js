@@ -23,10 +23,6 @@ testDriver.test('reporting errors from setImmediate callbacks', supported, funct
       stack: [{
         u: router.assetURL('js/set-immediate-error.js').split('?')[0],
         l: 10
-      },{
-        f: 'u',
-        u: '<inline>',
-        l: 12
       }]
     }]
 

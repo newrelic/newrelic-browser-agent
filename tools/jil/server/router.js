@@ -178,19 +178,54 @@ class RouterHandle {
 
   async expectSpecificEvents({
     appID,
-    condition=(e) => e.type === 'ajax',
-    expecter='expectAjaxEvents'
-  }){
-    const {body, query} = await this[expecter](appID)
+    condition = (e) => e.type === 'ajax',
+    expecter = 'expectAjaxEvents'
+  }) {
+    const { body, query } = await this[expecter](appID)
     const ajaxEvents = querypack.decode(body && body.length ? body : query.e)
     let matches = ajaxEvents.filter(condition)
-    if (!matches.length) matches = this.expectSpecificEvents({expecter, condition})
+    if (!matches.length) matches = this.expectSpecificEvents({ expecter, condition })
     return matches
   }
 
   expectErrors(appID) {
-    // errors harvest at 60s
-    return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID)
+    return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID).then(request => {
+      let { body, query } = request
+      try {
+        if (JSON.parse(body)?.err) return request
+      } catch {
+        // do nothing
+      }
+      if (query.err) return request
+      return this.expectErrors(appID)
+    })
+  }
+
+  expectMetrics(appID) {
+    return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID).then(request => {
+      let { body, query } = request
+      try {
+        if (JSON.parse(body)?.sm) return request
+        if (JSON.parse(body)?.cm) return request
+      } catch {
+        // do nothing
+      }
+      if (query.cm || query.sm) return request
+      return this.expectMetrics(appID)
+    })
+  }
+
+  expectXHRMetrics(appID) {
+    return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID).then(request => {
+      let { body, query } = request
+      try {
+        if (JSON.parse(body)?.xhr) return request
+      } catch {
+        // do nothing
+      }
+      if (query.xhr) return request
+      return this.expectXHRMetrics(appID)
+    })
   }
 
   expectIns(appID) {
@@ -219,6 +254,15 @@ class RouterHandle {
           .safeGet(this.assetURL('/')),
         this.expectErrors(appID)
       ]).then(([feat, err]) => err)
+    })
+  }
+
+  expectRumAndCondition(condition, appID) {
+    return this.expectRum(appID).then(() => {
+      return this.browser
+        .waitFor(asserters.jsCondition(condition))
+        .safeGet(this.assetURL('/'))
+
     })
   }
 

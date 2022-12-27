@@ -10,7 +10,8 @@ let frameworks = testDriver.Matcher.withFeature('frameworks')
 
 testDriver.test('Agent detects a page built with REACT and sends a supportability metric', frameworks, function (t, browser, router) {
   t.plan(2)
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectMetrics()
   let loadPromise = browser.get(router.assetURL('frameworks/react/simple-app/index.html', {
     init: {
       page_view_timing: {
@@ -19,7 +20,7 @@ testDriver.test('Agent detects a page built with REACT and sends a supportabilit
     }
   }))
 
-  Promise.all([rumPromise, loadPromise])
+  Promise.all([metricsPromise, rumPromise, loadPromise])
     .then(([data]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics objects were generated')
@@ -39,7 +40,8 @@ testDriver.test('Agent detects a page built with REACT and sends a supportabilit
 
 testDriver.test('Agent detects a page built with ANGULAR and sends a supportability metric', frameworks, function (t, browser, router) {
   t.plan(2)
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectMetrics()
   let loadPromise = browser.get(router.assetURL('frameworks/angular/simple-app/index.html', {
     init: {
       page_view_timing: {
@@ -48,7 +50,7 @@ testDriver.test('Agent detects a page built with ANGULAR and sends a supportabil
     }
   }))
 
-  Promise.all([rumPromise, loadPromise])
+  Promise.all([metricsPromise, rumPromise, loadPromise])
     .then(([data]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics objects were generated')
@@ -68,7 +70,8 @@ testDriver.test('Agent detects a page built with ANGULAR and sends a supportabil
 
 testDriver.test('Agent detects a page built with NO FRAMEWORK and DOES NOT send a supportability metric', frameworks, function (t, browser, router) {
   t.plan(1)
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectMetrics()
   let loadPromise = browser.get(router.assetURL('frameworks/control.html', {
     init: {
       page_view_timing: {
@@ -77,7 +80,7 @@ testDriver.test('Agent detects a page built with NO FRAMEWORK and DOES NOT send 
     }
   }))
 
-  Promise.all([rumPromise, loadPromise])
+  Promise.all([metricsPromise, rumPromise, loadPromise])
     .then(([data]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       if (!supportabilityMetrics) {

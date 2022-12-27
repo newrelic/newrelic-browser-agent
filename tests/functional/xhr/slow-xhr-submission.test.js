@@ -45,7 +45,7 @@ testDriver.test('slow XHR submission should not delay next page load', supported
       } else {
         return Promise.all([
           navigatePromise,
-          router.expectErrors()
+          router.expectXHRMetrics()
         ])
           .then(([feat, err]) => err)
       }

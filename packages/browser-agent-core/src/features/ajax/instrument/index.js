@@ -15,6 +15,7 @@ import { DT } from './distributed-tracing'
 import { responseSizeFromXhr } from './response-size'
 import { InstrumentBase } from '../../../common/util/feature-base'
 import { FEATURE_NAME } from '../constants'
+import { FEATURE_NAMES } from '../../../loader/features'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -334,7 +335,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
       duration: now() - this.startTime
     }
 
-    handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this)
+    handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
   }
 
   // Create report for XHR request that has finished
@@ -360,7 +361,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     // Always send cbTime, even if no noticeable time was taken.
     metrics.cbTime = this.cbTime
 
-    handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this)
+    handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this, FEATURE_NAMES.ajax)
   }
 
   function addUrl(ctx, url) {

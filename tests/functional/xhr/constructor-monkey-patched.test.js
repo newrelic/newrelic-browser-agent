@@ -12,7 +12,8 @@ let sendBeaconBrowsers = testDriver.Matcher.withFeature('workingSendBeacon')
 testDriver.test('xhr instrumentation works with bad XHR constructor monkey-patch', supported, function (t, browser, router) {
   t.plan(1)
 
-  let rumPromise = router.expectRumAndConditionAndErrors('window.xhrDone')
+  let rumPromise = router.expectRumAndCondition('window.xhrDone')
+  let xhrMetricsPromise = router.expectXHRMetrics()
   let loadPromise = browser.get(router.assetURL('xhr-constructor-monkey-patched.html', {
     init: {
       page_view_timing: {
@@ -24,7 +25,7 @@ testDriver.test('xhr instrumentation works with bad XHR constructor monkey-patch
     }
   }))
 
-  Promise.all([rumPromise, loadPromise]).then(([{query, body}]) => {
+  Promise.all([xhrMetricsPromise, rumPromise, loadPromise]).then(([{query, body}]) => {
     if (sendBeaconBrowsers.match(browser)) {
       t.ok(JSON.parse(body).xhr, 'got XHR data')
     } else {

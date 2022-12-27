@@ -10,7 +10,6 @@
           [
             "@newrelic/browser-agent-core/src",
             "@newrelic/browser-agent-custom",
-            "@newrelic/browser-agent-loader-utils/src",
             "@newrelic/browser-agent-microfrontend",
             "@newrelic/browser-agent"
           ]

@@ -9,6 +9,7 @@ const {setup} = require('./utils/setup')
 const {drain} = require('@newrelic/browser-agent-core/src/common/drain/drain')
 const {handle} = require('@newrelic/browser-agent-core/src/common/event-emitter/handle')
 const {Aggregate: PvtAggregate} = require('@newrelic/browser-agent-core/src/features/page-view-timing/aggregate/index')
+const {FEATURE_NAMES} = require('@newrelic/browser-agent-core/src/loader/features')
 
 const {agentIdentifier, aggregator} = setup()
 
@@ -40,7 +41,7 @@ jil.browserTest('sends expected attributes when available', function(t) {
   }
 
   // simulate first interaction observed
-  handle('timing', ['fi', firstInteraction, attributes], undefined, undefined, pvtAgg.ee)
+  handle('timing', ['fi', firstInteraction, attributes], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
 
   t.equals(pvtAgg.timings.length, 1, 'there should be only 1 timing (firstInteraction)')
   t.ok(pvtAgg.timings[0].name === 'fi', 'fi should be present')

@@ -7,6 +7,7 @@ import { InstrumentBase } from '../../../common/util/feature-base'
 import { onDOMContentLoaded, onWindowLoad } from '../../../common/window/load'
 import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
+import { FEATURE_NAMES } from '../../../loader/features'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -28,7 +29,7 @@ export class Instrument extends InstrumentBase {
   measureWindowLoaded() {
     var ts = now()
     mark(this.agentIdentifier, 'onload', ts + getOffset());
-    handle('timing', ['load', ts], undefined, undefined, this.ee)
+    handle('timing', ['load', ts], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
   }
 
   // should be called on DOMContentLoaded, will not be called if agent is loaded after DOMContentLoaded

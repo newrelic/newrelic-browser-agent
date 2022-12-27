@@ -16,7 +16,7 @@ const model = {
   ssl: undefined,
   obfuscate: undefined,
   jserrors: {enabled: true, auto: true, harvestTimeSeconds: 10},
-  metrics: {enabled: true, auto: true},
+  metrics: {enabled: true, auto: true, harvestTimeSeconds: 10},
   page_action: {enabled: true, auto: false, harvestTimeSeconds: 30},
   page_view_event: {enabled: true, auto: true},
   page_view_timing: {enabled: true, auto: true, harvestTimeSeconds: 30},

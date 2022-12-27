@@ -12,6 +12,7 @@ import slice from 'lodash._slice'
 import './debug'
 import { InstrumentBase } from '../../../common/util/feature-base'
 import { FEATURE_NAME, NR_ERR_PROP } from '../constants'
+import { FEATURE_NAMES } from '../../../loader/features'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -49,7 +50,7 @@ export class Instrument extends InstrumentBase {
     })
 
     state.ee.on('internal-error', (e) => {
-      handle('ierr', [e, now(), true], undefined, undefined, state.ee)
+      handle('ierr', [e, now(), true], undefined, FEATURE_NAMES.jserrors, state.ee)
     })
 
     const prevOnError = self.onerror
@@ -62,7 +63,7 @@ export class Instrument extends InstrumentBase {
     try {
       self.addEventListener('unhandledrejection', (e) => {
         const err = new Error(`${e.reason}`)
-        handle('err', [err, now(), false, {unhandledPromiseRejection: 1}], undefined, undefined, this.ee)
+        handle('err', [err, now(), false, {unhandledPromiseRejection: 1}], undefined, FEATURE_NAMES.jserrors, this.ee)
       })
     } catch (err) {
       // do nothing -- addEventListener is not supported
@@ -99,7 +100,7 @@ export class Instrument extends InstrumentBase {
       else notice(errorObj || new UncaughtException(message, filename, lineno), true, this.ee)
     } catch (e) {
       try {
-        handle('ierr', [e, now(), true], undefined, undefined, this.ee)
+        handle('ierr', [e, now(), true], undefined, FEATURE_NAMES.jserrors, this.ee)
       } catch (err) {
         // do nothing
       }
@@ -121,5 +122,5 @@ function notice(err, doNotStamp, ee) {
   // by default add timestamp, unless specifically told not to
   // this is to preserve existing behavior
   var time = (!doNotStamp) ? now() : null
-  handle('err', [err, time], undefined, undefined, ee)
+  handle('err', [err, time], undefined, FEATURE_NAMES.jserrors, ee)
 }

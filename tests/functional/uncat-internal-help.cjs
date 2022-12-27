@@ -3,10 +3,10 @@ const url = require('url');   // used by harvest tests
 const cleanURL = require('../lib/clean-url.js')  // used by harvest test
 
 function fail(t, addlMsg = undefined) {
-	return (err) => {
+  return (err) => {
     t.error(err, addlMsg);
     t.end();
-	}
+  }
 }
 
 function failWithEndTimeout(t) {
@@ -18,7 +18,7 @@ function failWithEndTimeout(t) {
   };
 }
 
-function getTime (cm) {
+function getTime(cm) {
   try {
     return cm[0].metrics.time.t
   } catch (e) {
@@ -85,4 +85,4 @@ function checkPayload(t, payload, name) {
   t.ok(!strPayload.includes('fakeid'), `${name} -- fakeid was obfuscated`)
 }
 
-module.exports = {fail, failWithEndTimeout, getTime, asyncApiFns, extractWorkerSM, checkPayload, getMetricsFromResponse, url, cleanURL};
+module.exports = { fail, failWithEndTimeout, getTime, asyncApiFns, extractWorkerSM, checkPayload, getMetricsFromResponse, url, cleanURL };

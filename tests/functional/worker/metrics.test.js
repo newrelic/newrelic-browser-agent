@@ -40,10 +40,10 @@ function metricsApiCreatesSM (type, browserVersionMatcher) {
 				}].map(x => x.toString())
 			});
 			const loadPromise = browser.get(assetURL);
-			const errPromise = router.expectErrors();
+			const metricsPromise = router.expectMetrics();
 			const observedAPImetrics = [];
 
-			Promise.all([errPromise, loadPromise])
+			Promise.all([metricsPromise, loadPromise])
 			.then(( [data] ) => {
 				const supportabilityMetrics = getMetricsFromResponse(data, true)
 				const customMetrics = getMetricsFromResponse(data, false)
@@ -91,9 +91,9 @@ function metricsValidObfuscationCreatesSM (type, browserVersionMatcher) {
 				}].map(x => x.toString())
 			});
 			const loadPromise = browser.get(assetURL);
-			const errPromise = router.expectErrors();
+			const metricsPromise = router.expectMetrics();
 
-			Promise.all([errPromise, loadPromise])
+			Promise.all([metricsPromise, loadPromise])
 			.then(( [data] ) => {
 				const supportabilityMetrics = getMetricsFromResponse(data, true)
 				t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
@@ -137,9 +137,9 @@ function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
 				});
 
 				const loadPromise = browser.get(assetURL);
-				const errPromise = router.expectErrors();
+				const metricsPromise = router.expectMetrics();
 
-				Promise.all([errPromise, loadPromise])
+				Promise.all([metricsPromise, loadPromise])
 				.then(( [data] ) => {
 					const supportabilityMetrics = getMetricsFromResponse(data, true)
 					t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
@@ -182,9 +182,9 @@ function metricsWorkersCreateSM (type, browserVersionMatcher) {
 				}].map(x => x.toString())
 			});
 			const loadPromise = browser.get(assetURL);
-			const errPromise = router.expectErrors();
+			const metricsPromise = router.expectMetrics();
 
-			Promise.all([errPromise, loadPromise])
+			Promise.all([metricsPromise, loadPromise])
 			.then(( [data] ) => {
 				const supportabilityMetrics = getMetricsFromResponse(data, true)
 				t.ok(supportabilityMetrics && !!supportabilityMetrics.length, `${supportabilityMetrics.length} SupportabilityMetrics object(s) were generated`);

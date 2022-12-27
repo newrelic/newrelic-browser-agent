@@ -6,7 +6,6 @@ import { Instrument as InstrumentXhr } from '@newrelic/browser-agent-core/src/fe
 import { Instrument as InstrumentPageAction } from '@newrelic/browser-agent-core/src/features/page_action/instrument'
 
 const agent = new BrowserAgent({
-    topLevelConfigs: true, 
     features: [
         InstrumentMetrics,
         InstrumentErrors,

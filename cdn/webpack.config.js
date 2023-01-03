@@ -100,7 +100,9 @@ const commonConfig = {
     minimizer: [new TerserPlugin({
       include: [/\.min\.js$/, /^(?:[0-9])/],
       terserOptions: {
-        mangle: true
+        mangle: {
+          keep_fnames: /nrWrapper/
+        }
       }
     })],
     flagIncludedChunks: true,
@@ -122,7 +124,7 @@ const commonConfig = {
       'WEBPACK_MINOR_VERSION': JSON.stringify(SUBVERSION || ''),
       'WEBPACK_MAJOR_VERSION': JSON.stringify(VERSION || ''),
       'WEBPACK_DEBUG': JSON.stringify(IS_LOCAL || false)
-    })    
+    })
   ],
   resolve: {
     alias: {

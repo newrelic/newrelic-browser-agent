@@ -37,16 +37,14 @@ testDriver.test('reporting errors from event listener callbacks', supported, fun
         message: 'document addEventListener listener',
         stack: [
           {f: 'Object.handleEvent', u: eventListenersURL, l: 15},
-          {f: 'HTMLDocument.object', u: '<inline>', l: 13},
-          {f: 'HTMLDocument.u', u: '<inline>', l: 13}
+          {f: 'HTMLDocument.object', u: '<inline>', l: 13}
         ]
       },
       {
         message: 'global addEventListener listener',
         stack: [
           {f: 'Object.handleEvent', u: eventListenersURL, l: 8},
-          {f: 'object', u: '<inline>', l: 13},
-          {f: 'u', u: '<inline>', l: 13}
+          {f: 'object', u: '<inline>', l: 13}
         ]
       }
     ]

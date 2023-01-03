@@ -14,6 +14,9 @@ AJAX events for data URLs have not historically been collected due to errors in 
 ### Reduce size of builds for modern browser targets
 The agent is now compatible with _only modern web syntax (ES6+)_; **this reduces loader size for these browsers by 20% or more**. We target and test support for just the last ten versions of Chrome, Edge, Safari, and Firefox -- see [browser agent EOL policy](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/browser-agent-eol-policy/) for more details.
 
+### Fix nrWrapper exclusion in error stack traces
+Restoring previous functionality whereby the `nrWrapper` agent method should be excluded from JavaScript error stack traces.
+
 ## v1221
 
 ### Add infrastructure to run on web workers

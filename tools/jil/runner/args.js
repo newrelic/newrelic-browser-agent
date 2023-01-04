@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-if (findIndexWithRegex(process.argv, /^--$/) >= 0) process.argv.splice(process.argv.indexOf('--'), 1)
+// if (findIndexWithRegex(process.argv, /^--$/) >= 0) process.argv.splice(process.argv.indexOf('--'), 1)
 
 const yargs = require('yargs')
 const loaders = require('../util/loaders')
@@ -94,7 +94,7 @@ module.exports = yargs
   .alias('c', 'cache')
   .describe('c', 'cache browserified files')
 
-  .boolean('p')
+  .number('p')
   .default('p', 0)
   .alias('p', 'port')
   .describe('p', 'asset server port')
@@ -120,7 +120,6 @@ module.exports = yargs
 
   .help('h')
   .alias('h', 'help')
-  .strict()
   .wrap(Math.min(110, yargs.terminalWidth()))
   .argv
 

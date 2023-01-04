@@ -27,9 +27,9 @@ testDriver.test('reporting uncaught errors', supported, function (t, browser, ro
     assertErrorAttributes(t, response.query)
     const actualErrors = getErrorsFromResponse(response, browser)
     const expectedErrorMessages = [
-      { message: 'original onerror', tested: false }, 
-      { message: 'uncaught error', tested: false }, 
-      { message: 'fake', tested: false }, 
+      { message: 'original onerror', tested: false },
+      { message: 'uncaught error', tested: false },
+      { message: 'fake', tested: false },
       { message: 'original return false', tested: false }
     ]
     actualErrors.forEach(err => {

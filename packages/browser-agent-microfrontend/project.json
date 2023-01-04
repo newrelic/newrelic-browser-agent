@@ -1,7 +1,7 @@
 {
   "name": "browser-agent-microfrontend",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/browser-agent-microfrontend",
+  "sourceRoot": "packages/browser-agent-microfrontend/src",
   "projectType": "library",
   "targets": {
     "build": {
@@ -11,7 +11,7 @@
       ],
       "options": {
         "outputPath": "dist/packages/browser-agent-microfrontend",
-        "main": "packages/browser-agent-microfrontend/index.js",
+        "main": "packages/browser-agent-microfrontend/src/index.js",
         "tsConfig": "packages/browser-agent-microfrontend/tsconfig.lib.json",
         "assets": [
           "packages/browser-agent-microfrontend/*.md"

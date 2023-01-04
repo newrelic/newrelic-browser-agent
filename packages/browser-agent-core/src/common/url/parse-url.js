@@ -7,7 +7,7 @@ import { isBrowserWindow } from "../window/win"
 
 var stringsToParsedUrls = {}
 
-export function parseUrl (url) {
+export function parseUrl(url) {
   if (url in stringsToParsedUrls) {
     return stringsToParsedUrls[url]
   }
@@ -19,19 +19,20 @@ export function parseUrl (url) {
     }
   }
 
-  let urlEl;
+  let urlEl
   var location = self.location
   var ret = {}
 
   if (isBrowserWindow) {
     // Use an anchor dom element to resolve the url natively.
-    urlEl = document.createElement('a');
-    urlEl.href = url;
-  } else {
+    urlEl = document.createElement('a')
+    urlEl.href = url
+  }
+  else {
     try {
-      urlEl = new URL(url, location.href);
-    } catch {
-      return ret; // IE doesn't support URL(), so for IE non-web env (e.g. workers), this func will break and return {}
+      urlEl = new URL(url, location.href)
+    } catch (err) {
+      return ret
     }
   }
 

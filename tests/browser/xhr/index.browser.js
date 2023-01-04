@@ -15,8 +15,8 @@ import { Instrument as JsErrInstrum } from '@newrelic/browser-agent-core/src/fea
 import { Aggregate as JsErrAggreg } from '@newrelic/browser-agent-core/src/features/jserrors/aggregate/index'
 
 const { baseEE, agentIdentifier, aggregator, nr } = setup();
-const ajaxTestInstr = new AjaxInstrum(agentIdentifier);
-const jserrTestInstr = new JsErrInstrum(agentIdentifier);
+const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false);
+const jserrTestInstr = new JsErrInstrum(agentIdentifier, aggregator, false);
 const jserrTestAgg = new JsErrAggreg(agentIdentifier, aggregator);
 
 import ffVersion from '@newrelic/browser-agent-core/src/common/browser-version/firefox-version'

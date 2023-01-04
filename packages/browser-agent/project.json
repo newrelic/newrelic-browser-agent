@@ -1,7 +1,7 @@
 {
   "name": "browser-agent",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/browser-agent",
+  "sourceRoot": "packages/browser-agent/src",
   "projectType": "library",
   "targets": {
     "build": {
@@ -11,7 +11,7 @@
       ],
       "options": {
         "outputPath": "dist/packages/browser-agent",
-        "main": "packages/browser-agent/index.js",
+        "main": "packages/browser-agent/src/index.js",
         "tsConfig": "packages/browser-agent/tsconfig.lib.json",
         "assets": [
           "packages/browser-agent/*.md"

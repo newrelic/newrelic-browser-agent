@@ -13,6 +13,7 @@ const model = agentId => { return {
   customTransaction: undefined,
   disabled: false,
   features: {},
+  isolatedBacklog: false,
   maxBytes: ieVersion === 6 ? 2000 : 30000,
   offset: getLastTimestamp(),
   onerror: undefined,

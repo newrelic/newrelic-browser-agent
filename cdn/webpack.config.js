@@ -128,10 +128,10 @@ const commonConfig = {
   ],
   resolve: {
     alias: {
-      '@newrelic/browser-agent-core': path.resolve(__dirname, '../packages/browser-agent-core'),
-      '@newrelic/browser-agent': path.resolve(__dirname, '../packages/browser-agent'),
-      '@newrelic/browser-agent-custom': path.resolve(__dirname, '../packages/browser-agent-custom'),
-      '@newrelic/browser-agent-microfrontend': path.resolve(__dirname, '../packages/browser-agent-microfrontend')
+      '@newrelic/browser-agent-core/src': path.resolve(__dirname, '../packages/browser-agent-core/src'),
+      '@newrelic/browser-agent/src': path.resolve(__dirname, '../packages/browser-agent/src'),
+      '@newrelic/browser-agent-custom/src': path.resolve(__dirname, '../packages/browser-agent-custom/src'),
+      '@newrelic/browser-agent-microfrontend/src': path.resolve(__dirname, '../packages/browser-agent-microfrontend/src')
     }
   }
 }

@@ -6,7 +6,7 @@
 const test = require('../../../tools/jil/browser-test.js')
 const {setup} = require('../utils/setup')
 
-const {Instrument: StnInstrument} = require('@newrelic/browser-agent-core/src/features/session-trace/instrument/index')
+const {Instrument: StnInstrument} = require('@newrelic/browser-agent-core/src/features/session_trace/instrument/index')
 const {Instrument: AjaxInstrument} = require('@newrelic/browser-agent-core/src/features/ajax/instrument/index')
 const {Aggregate: AjaxAggregate} = require('@newrelic/browser-agent-core/src/features/ajax/aggregate/index')
 const {Instrument: JsErrorsInstrument} = require('@newrelic/browser-agent-core/src/features/jserrors/instrument/index')
@@ -16,10 +16,10 @@ const {drain} = require('@newrelic/browser-agent-core/src/common/drain/drain')
 
 const {agentIdentifier, baseEE, aggregator} = setup()
 
-new StnInstrument(agentIdentifier)
-new AjaxInstrument(agentIdentifier)
+new StnInstrument(agentIdentifier, aggregator, false)
+new AjaxInstrument(agentIdentifier, aggregator, false)
 new AjaxAggregate(agentIdentifier, aggregator)
-new JsErrorsInstrument(agentIdentifier)
+new JsErrorsInstrument(agentIdentifier, aggregator, false)
 new JsErrorsAggregate(agentIdentifier, aggregator)
 
 drain(agentIdentifier, 'api')
@@ -65,9 +65,9 @@ function runTests () {
   })
 
   test('session trace nodes', function (t) {
-    const {Aggregate: StnAggregate} = require('@newrelic/browser-agent-core/src/features/session-trace/aggregate/index')
+    const {Aggregate: StnAggregate} = require('@newrelic/browser-agent-core/src/features/session_trace/aggregate/index')
     const stnAgg = new StnAggregate(agentIdentifier, aggregator)
-    const {Aggregate: PvtAggregate} = require('@newrelic/browser-agent-core/src/features/page-view-timing/aggregate/index')
+    const {Aggregate: PvtAggregate} = require('@newrelic/browser-agent-core/src/features/page_view_timing/aggregate/index')
     const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
 
     let fiVal = 30

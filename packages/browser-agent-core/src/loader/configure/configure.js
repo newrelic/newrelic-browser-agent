@@ -1,10 +1,11 @@
-import { setAPI } from './api'
-import { addToNREUM, gosCDN, gosNREUMInitializedAgents } from '../common/window/nreum'
-import { setConfiguration, setInfo, setLoaderConfig, setRuntime } from '../common/config/config'
-import { activateFeatures, activatedFeatures } from '../common/util/feature-flags'
-import { isBrowserWindow, isWebWorker } from '../common/window/win'
+import { setAPI } from '../api/api'
+import { addToNREUM, gosCDN, gosNREUMInitializedAgents } from '../../common/window/nreum'
+import { setConfiguration, setInfo, setLoaderConfig, setRuntime } from '../../common/config/config'
+import { activateFeatures, activatedFeatures } from '../../common/util/feature-flags'
+import { isBrowserWindow, isWebWorker } from '../../common/window/win'
 
-export function configure(agentIdentifier, { init, info, loader_config, exposed = true }) {
+export function configure(agentIdentifier, opts = {}) {
+    let { init, info, loader_config, runtime = {}, exposed = true } = opts
     const nr = gosCDN()
     let api = {}
     if (!info) {
@@ -21,7 +22,7 @@ export function configure(agentIdentifier, { init, info, loader_config, exposed 
     setInfo(agentIdentifier, info)
     setConfiguration(agentIdentifier, init || {})
     setLoaderConfig(agentIdentifier, loader_config || {})
-    setRuntime(agentIdentifier, {})
+    setRuntime(agentIdentifier, runtime)
 
 
     setAPI(agentIdentifier, api)

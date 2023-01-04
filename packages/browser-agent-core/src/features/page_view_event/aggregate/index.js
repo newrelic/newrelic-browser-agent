@@ -7,7 +7,7 @@ import { addMetric as addPaintMetric } from '../../../common/metrics/paint-metri
 import { submitData } from '../../../common/util/submit-data'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { AggregateBase } from '../../../common/util/feature-base'
+import { AggregateBase } from '../../utils/aggregate-base'
 import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
 

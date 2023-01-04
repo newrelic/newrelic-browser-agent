@@ -1,5 +1,5 @@
 import { asyncFeatures, syncFeatures } from './features'
-import { getConfigurationValue, getRuntime } from '../common/config/config'
+import { getConfigurationValue, getRuntime } from '../../common/config/config'
 
 const featureNames = [...asyncFeatures, ...syncFeatures]
 

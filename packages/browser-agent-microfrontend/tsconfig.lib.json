@@ -6,6 +6,6 @@
     "allowJs": true,
     "types": ["node"]
   },
-  "include": ["**/*.ts", "index.js"],
+  "include": ["**/*.ts", "src/index.js"],
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"]
 }

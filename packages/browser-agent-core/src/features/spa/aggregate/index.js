@@ -13,14 +13,14 @@ import { paintMetrics } from '../../../common/metrics/paint-metrics'
 import { Interaction } from './interaction'
 import { getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
-import { AggregateBase } from '../../../common/util/feature-base'
+import { AggregateBase } from '../../utils/aggregate-base'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { Serializer } from './serializer'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import { isBrowserWindow } from '../../../common/window/win'
 import * as CONSTANTS from '../constants'
 import { drain } from '../../../common/drain/drain'
-import { FEATURE_NAMES } from '@newrelic/browser-agent-core/src/loader/features'
+import { FEATURE_NAMES } from '../../../loader/features/features'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING, 

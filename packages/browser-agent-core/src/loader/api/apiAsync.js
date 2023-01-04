@@ -1,12 +1,12 @@
-import { FEATURE_NAMES } from "./features"
-import { getConfigurationValue, getInfo, getRuntime } from "../common/config/config"
-import { ee } from "../common/event-emitter/contextual-ee"
-import { handle } from "../common/event-emitter/handle"
-import { registerHandler } from "../common/event-emitter/register-handler"
-import { mapOwn } from "../common/util/map-own"
-import { single } from "../common/util/single"
-import { submitData } from "../common/util/submit-data"
-import { isBrowserWindow } from "../common/window/win"
+import { FEATURE_NAMES } from "../features/features"
+import { getConfigurationValue, getInfo, getRuntime } from "../../common/config/config"
+import { ee } from "../../common/event-emitter/contextual-ee"
+import { handle } from "../../common/event-emitter/handle"
+import { registerHandler } from "../../common/event-emitter/register-handler"
+import { mapOwn } from "../../common/util/map-own"
+import { single } from "../../common/util/single"
+import { submitData } from "../../common/util/submit-data"
+import { isBrowserWindow } from "../../common/window/win"
 
 export function setAPI(agentIdentifier) {
   var instanceEE = ee.get(agentIdentifier)

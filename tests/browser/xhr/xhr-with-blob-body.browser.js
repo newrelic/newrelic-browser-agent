@@ -10,7 +10,7 @@ const { agentIdentifier, baseEE, aggregator } = setup()
 
 jil.browserTest('xhr with blob request body', async function (t) {
   const { Instrument: AjaxInstrum } = await import('@newrelic/browser-agent-core/src/features/ajax/instrument/index')
-  const ajaxTestInstr = new AjaxInstrum(agentIdentifier);
+  const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false);
   const { drain } = await import('@newrelic/browser-agent-core/src/common/drain/drain')
   const { registerHandler } = await import('@newrelic/browser-agent-core/src/common/event-emitter/register-handler')
 

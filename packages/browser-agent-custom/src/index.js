@@ -1,8 +1,8 @@
 // loader files
-import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/loader/enabled-features'
-import { configure } from '@newrelic/browser-agent-core/src/loader/configure'
-import { getFeatureDependencyNames } from '@newrelic/browser-agent-core/src/loader/featureDependencies'
-import { featurePriority } from '@newrelic/browser-agent-core/src/loader/features'
+import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/loader/features/enabled-features'
+import { configure } from '@newrelic/browser-agent-core/src/loader/configure/configure'
+import { getFeatureDependencyNames } from '@newrelic/browser-agent-core/src/loader/features/featureDependencies'
+import { featurePriority } from '@newrelic/browser-agent-core/src/loader/features/features'
 // common files
 import { Aggregator } from '@newrelic/browser-agent-core/src/common/aggregate/aggregator'
 import { gosNREUMInitializedAgents } from '@newrelic/browser-agent-core/src/common/window/nreum'
@@ -49,7 +49,6 @@ export class BrowserAgent {
             gosNREUMInitializedAgents(this.agentIdentifier, this.features, 'features')
             return this
         } catch (err) {
-            console.trace()
             console.error(err)
             return false
         }

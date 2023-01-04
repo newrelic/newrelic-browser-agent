@@ -11,14 +11,14 @@ import { ffVersion } from '@newrelic/browser-agent-core/src/common/browser-versi
 import { windowAddEventListener } from '@newrelic/browser-agent-core/src/common/event-listener/event-listener-opts'
 import { setup } from '../utils/setup'
 // Should be loaded first
-import { Instrument as StnInstrument } from '@newrelic/browser-agent-core/src/features/session-trace/instrument/index'
+import { Instrument as StnInstrument } from '@newrelic/browser-agent-core/src/features/session_trace/instrument/index'
 import { Instrument as JserrorsInstrument } from '@newrelic/browser-agent-core/src/features/jserrors/instrument/index'
 import { Aggregate as JserrorsAggregate } from '@newrelic/browser-agent-core/src/features/jserrors/aggregate/index'
 
 const {agentIdentifier, aggregator, baseEE} = setup()
 
-const stnInst = new StnInstrument(agentIdentifier)
-const jsErrorsInst = new JserrorsInstrument(agentIdentifier)
+const stnInst = new StnInstrument(agentIdentifier, aggregator, false)
+const jsErrorsInst = new JserrorsInstrument(agentIdentifier, aggregator, false)
 const jsErrorsAgg = new JserrorsAggregate(agentIdentifier, aggregator)
 
 const ee = baseEE

@@ -9,6 +9,7 @@
   "author": "",
   "license": "UNLICENSED",
   "dependencies": {
+    "@newrelic/browser-agent-core": "file:../../packages/browser-agent-core",
     "browserify": "^13.3.0",
     "charm": "^1.0.1",
     "concat-stream": "^1.5.1",

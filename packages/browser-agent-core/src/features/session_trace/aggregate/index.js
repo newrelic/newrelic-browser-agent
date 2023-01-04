@@ -14,7 +14,7 @@ import slice from 'lodash._slice'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { findStartTime } from '../../../common/timing/start-time'
 import { now } from '../../../common/timing/now'
-import { AggregateBase } from '../../../common/util/feature-base'
+import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 

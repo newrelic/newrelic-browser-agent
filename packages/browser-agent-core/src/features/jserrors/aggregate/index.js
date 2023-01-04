@@ -17,10 +17,10 @@ import { mapOwn } from '../../../common/util/map-own'
 import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 
-import { AggregateBase } from '../../../common/util/feature-base'
+import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
-import { FEATURE_NAMES } from '../../../loader/features'
+import { FEATURE_NAMES } from '../../../loader/features/features'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME

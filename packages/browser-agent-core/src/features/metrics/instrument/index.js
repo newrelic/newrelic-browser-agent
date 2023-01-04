@@ -1,6 +1,6 @@
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { InstrumentBase } from '../../../common/util/feature-base'
+import { InstrumentBase } from '../../utils/instrument-base'
 import { getFrameworks } from '../../../common/metrics/framework-detection'
 import { protocol } from '../../../common/url/protocol'
 import { getRules, validateRules } from '../../../common/util/obfuscate'
@@ -16,15 +16,15 @@ var CUSTOM_METRIC = 'cm'
 
 export class Instrument extends InstrumentBase {
     static featureName = FEATURE_NAME
-    constructor(agentIdentifier, aggregator, PfFeatStatusEnum = {}) {
-        super(agentIdentifier, aggregator, FEATURE_NAME)
+    constructor(agentIdentifier, aggregator, PfFeatStatusEnum = {}, auto = true) {
+        super(agentIdentifier, aggregator, FEATURE_NAME, auto)
         this.PfFeatStatusEnum = PfFeatStatusEnum
 
         this.singleChecks() // checks that are run only one time, at script load
         this.eachSessionChecks()    // the start of every time user engages with page
         // listen for messages from features and capture them
-        registerHandler('record-supportability', (...args) => this.recordSupportability(...args),  this.featureName, this.ee)
-        registerHandler('record-custom', (...args) => this.recordCustom(...args),  this.featureName, this.ee)
+        registerHandler('record-supportability', (...args) => this.recordSupportability(...args), this.featureName, this.ee)
+        registerHandler('record-custom', (...args) => this.recordCustom(...args), this.featureName, this.ee)
 
         this.importAggregator()
     }
@@ -68,7 +68,7 @@ export class Instrument extends InstrumentBase {
         this.recordSupportability(`Generic/Version/${VERSION}/Detected`)
 
         // frameworks on page
-        if(isBrowserWindow) onDOMContentLoaded(() => {
+        if (isBrowserWindow) onDOMContentLoaded(() => {
             getFrameworks().forEach(framework => {
                 this.recordSupportability('Framework/' + framework + '/Detected')
             })
@@ -101,7 +101,7 @@ export class Instrument extends InstrumentBase {
 
     eachSessionChecks() {
         if (!isBrowserWindow) return;
-        
+
         // [Temporary] Report restores from BFCache to NR1 while feature flag is in place in lieu of sending pageshow events.
         windowAddEventListener('pageshow', (evt) => {
             if (evt.persisted)

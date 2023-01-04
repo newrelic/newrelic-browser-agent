@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import slice from 'lodash._slice'
-import { FEATURE_NAMES } from './features'
-import { getRuntime, setInfo, getInfo } from '../common/config/config'
-import { handle } from '../common/event-emitter/handle'
-import { mapOwn } from '../common/util/map-own'
-import { ee } from '../common/event-emitter/contextual-ee'
-import { now } from '../common/timing/now'
-import { drain } from '../common/drain/drain'
+import { FEATURE_NAMES } from '../features/features'
+import { getRuntime, setInfo, getInfo } from '../../common/config/config'
+import { handle } from '../../common/event-emitter/handle'
+import { mapOwn } from '../../common/util/map-own'
+import { ee } from '../../common/event-emitter/contextual-ee'
+import { now } from '../../common/timing/now'
+import { drain } from '../../common/drain/drain'
 
 function setTopLevelCallers(nr) {
   const funcs = [

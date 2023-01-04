@@ -10,14 +10,14 @@ import { getOrSet } from '../../../common/util/get-or-set'
 import { wrapRaf, wrapTimer, wrapEvents, wrapXhr } from '../../../common/wrap'
 import slice from 'lodash._slice'
 import './debug'
-import { InstrumentBase } from '../../../common/util/feature-base'
+import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, NR_ERR_PROP } from '../constants'
-import { FEATURE_NAMES } from '../../../loader/features'
+import { FEATURE_NAMES } from '../../../loader/features/features'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor(agentIdentifier, aggregator, auto=true) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     // skipNext counter to keep track of uncaught
     // errors that will be the same as caught errors.
     this.skipNext = 0

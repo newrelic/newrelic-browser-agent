@@ -1,5 +1,5 @@
 import { originals } from "../../common/config/config"
-import { FEATURE_NAMES } from "../../loader/features"
+import { FEATURE_NAMES } from "../../loader/features/features"
 
 export const FEATURE_NAME = FEATURE_NAMES.spa
 export const INTERACTION_EVENTS = [

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Tue Jan 03 2023 22:55:29 GMT-0500 (Eastern Standard Time)",
+  "lastUpdated": "Thu Jan 05 2023 14:11:35 GMT-0500 (Eastern Standard Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -111,6 +111,18 @@
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
+    },
+    "@newrelic/browser-agent-core@0.0.9": {
+      "name": "@newrelic/browser-agent-core",
+      "version": "0.0.9",
+      "range": "file:./packages/browser-agent-core",
+      "licenses": "Apache-2.0",
+      "repoUrl": "https://github.com/newrelic/newrelic-browser-agent",
+      "versionedRepoUrl": "https://github.com/newrelic/newrelic-browser-agent/tree/v0.0.9",
+      "licenseFile": "node_modules/@newrelic/browser-agent-core/README.md",
+      "licenseUrl": "https://github.com/newrelic/newrelic-browser-agent/blob/v0.0.9/README.md",
+      "licenseTextSource": "spdx",
+      "publisher": "New Relic: Browser Agent Team"
     },
     "@newrelic/newrelic-oss-cli@0.1.2": {
       "name": "@newrelic/newrelic-oss-cli",
@@ -289,19 +301,6 @@
       "publisher": "Tommy Leunen",
       "email": "tommy.leunen@gmail.com",
       "url": "http://tommyleunen.com"
-    },
-    "babel-plugin-transform-remove-strict-mode@0.0.2": {
-      "name": "babel-plugin-transform-remove-strict-mode",
-      "version": "0.0.2",
-      "range": "^0.0.2",
-      "licenses": "MIT",
-      "repoUrl": "https://github.com/genify/babel-plugin-transform-remove-strict-mode",
-      "versionedRepoUrl": "https://github.com/genify/babel-plugin-transform-remove-strict-mode/tree/v0.0.2",
-      "licenseFile": "node_modules/babel-plugin-transform-remove-strict-mode/LICENSE",
-      "licenseUrl": "https://github.com/genify/babel-plugin-transform-remove-strict-mode/blob/v0.0.2/LICENSE",
-      "licenseTextSource": "file",
-      "publisher": "genify",
-      "email": "genify@gmail.com"
     },
     "babelify@10.0.0": {
       "name": "babelify",

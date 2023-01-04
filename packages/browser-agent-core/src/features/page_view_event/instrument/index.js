@@ -3,16 +3,16 @@ import { handle } from '../../../common/event-emitter/handle'
 import { now, getOffset, getLastTimestamp } from '../../../common/timing/now'
 import { mark } from '../../../common/timing/stopwatch'
 import { findStartTime } from '../../../common/timing/start-time'
-import { InstrumentBase } from '../../../common/util/feature-base'
+import { InstrumentBase } from '../../utils/instrument-base'
 import { onDOMContentLoaded, onWindowLoad } from '../../../common/window/load'
 import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
-import { FEATURE_NAMES } from '../../../loader/features'
+import { FEATURE_NAMES } from '../../../loader/features/features'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor(agentIdentifier, aggregator, auto=true) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     if (!isBrowserWindow) return; // initial page view times non applicable outside web env
 
     findStartTime(agentIdentifier)

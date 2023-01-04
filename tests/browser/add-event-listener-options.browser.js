@@ -4,14 +4,14 @@
  */
 
 const jil = require('jil')
-const {setup} = require('./utils/setup')
-const {wrapEvents} = require('@newrelic/browser-agent-core/src/common/wrap/wrap-events')
-// import { setup } from './utils/setup'
-// import { wrapEvents } from '@newrelic/browser-agent-core/src/common/wrap/wrap-events'
+import { setup } from './utils/setup'
+import { wrapEvents } from '@newrelic/browser-agent-core/src/common/wrap/wrap-events'
 
 const { baseEE } = setup()
 
 jil.browserTest('addEventListener options work when wrapped', function (t) {
+  console.log("baseEE", baseEE)
+
   wrapEvents(baseEE)
 
   let handlerCallCount = 0

@@ -1,4 +1,4 @@
-import { getFrozenAttributes } from "../../../loader/featureDependencies"
+import { getFrozenAttributes } from "../../../loader/features/featureDependencies"
 
 export class Configurable {
   constructor(obj, model) {
@@ -7,7 +7,7 @@ export class Configurable {
     Object.assign(this, model)
     Object.entries(obj).forEach(([key, value]) => {
       const frozenAttrs = getFrozenAttributes(key)
-      if (frozenAttrs.length && typeof value === 'object'){
+      if (frozenAttrs.length && value && typeof value === 'object'){
         frozenAttrs.forEach(attr => {
           if (attr in value) {
             console.warn(`New Relic: "${attr}" is a protected attribute and can not be changed in feature ${key}.  It will have no effect.`)

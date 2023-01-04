@@ -329,6 +329,7 @@ class BrowserifyTransform extends AssetTransform {
       })
       .transform(preprocessify())
       .bundle((err, buf) => {
+        if (err) console.log("error at ", assetPath)
         if (err) return callback(err)
 
         let content = buf.toString()

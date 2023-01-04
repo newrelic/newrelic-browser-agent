@@ -1,7 +1,7 @@
 {
   "name": "browser-agent-custom",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/browser-agent-custom",
+  "sourceRoot": "packages/browser-agent-custom/src",
   "projectType": "library",
   "targets": {
     "build": {
@@ -11,7 +11,7 @@
       ],
       "options": {
         "outputPath": "dist/packages/browser-agent-custom",
-        "main": "packages/browser-agent-custom/index.js",
+        "main": "packages/browser-agent-custom/src/index.js",
         "tsConfig": "packages/browser-agent-custom/tsconfig.lib.json",
         "assets": [
           "packages/browser-agent-custom/*.md"

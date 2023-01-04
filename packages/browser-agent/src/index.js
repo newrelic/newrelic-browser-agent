@@ -1,9 +1,9 @@
 // loader files
-import { getEnabledFeatures, isAuto } from '@newrelic/browser-agent-core/src/loader/enabled-features'
-import { syncFeatures, asyncFeatures, featurePriority } from '@newrelic/browser-agent-core/src/loader/features'
-import { getFeatureDependencyNames } from '@newrelic/browser-agent-core/src/loader/featureDependencies'
+import { getEnabledFeatures, isAuto } from '@newrelic/browser-agent-core/src/loader/features/enabled-features'
+import { syncFeatures, asyncFeatures, featurePriority } from '@newrelic/browser-agent-core/src/loader/features/features'
+import { getFeatureDependencyNames } from '@newrelic/browser-agent-core/src/loader/features/featureDependencies'
 // core files
-import { configure } from '@newrelic/browser-agent-core/src/loader/configure'
+import { configure } from '@newrelic/browser-agent-core/src/loader/configure/configure'
 import { Aggregator } from '@newrelic/browser-agent-core/src/common/aggregate/aggregator'
 import { gosNREUMInitializedAgents } from '@newrelic/browser-agent-core/src/common/window/nreum'
 import { generateRandomHexString } from '@newrelic/browser-agent-core/src/common/ids/unique-id'
@@ -63,18 +63,18 @@ export class BrowserAgent {
                     } else if (asyncFeatures.includes(f)) {
                         import(`@newrelic/browser-agent-core/src/features/${f}/instrument`).then(({ Instrument }) => {
                             this.features[f] = new Instrument(this.agentIdentifier, this.sharedAggregator)
-                        })
+                        }).catch(err => console.warn('Failed to import ', f))
                     } else {
                         import(`@newrelic/browser-agent-core/src/features/${f}/aggregate`).then(({ Aggregate }) => {
                             this.features[f] = new Aggregate(this.agentIdentifier, this.sharedAggregator)
-                        })
+                        }).catch(err => console.warn('Failed to import ', f))
                     }
                 }
             })
             gosNREUMInitializedAgents(this.agentIdentifier, this.features, 'features')
-
             return this
         } catch (err) {
+            console.error(err)
             return false
         }
     }

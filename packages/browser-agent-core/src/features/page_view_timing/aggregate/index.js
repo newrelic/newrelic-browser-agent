@@ -11,11 +11,11 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { handle } from '../../../common/event-emitter/handle'
 import { getInfo, getConfigurationValue } from '../../../common/config/config'
-import { AggregateBase } from '../../../common/util/feature-base'
+import { AggregateBase } from '../../utils/aggregate-base'
 import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
-import { FEATURE_NAMES } from '../../../loader/features'
+import { FEATURE_NAMES } from '../../../loader/features/features'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME

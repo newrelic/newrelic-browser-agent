@@ -62,6 +62,7 @@
     "@babel/preset-env": "^7.18.2",
     "@newrelic/newrelic-oss-cli": "^0.1.2",
     "@newrelic/nr-querypack": "https://git@github.com/newrelic/nr-querypack",
+    "@newrelic/browser-agent-core": "file:./packages/browser-agent-core",
     "@nrwl/cli": "^15.0.9",
     "@nrwl/devkit": "^15.0.13",
     "@nrwl/eslint-plugin-nx": "^15.0.13",
@@ -75,7 +76,6 @@
     "aws-sdk": "^2.894.0",
     "babel-loader": "^8.2.5",
     "babel-plugin-module-resolver": "^4.1.0",
-    "babel-plugin-transform-remove-strict-mode": "^0.0.2",
     "babelify": "^10.0.0",
     "browserify": "^17.0.0",
     "bundle-collapser": "^1.2.1",
@@ -120,5 +120,8 @@
     "webpack-bundle-analyzer": "^4.7.0",
     "webpack-cli": "^4.10.0",
     "yargs": "^17.6.2"
+  },
+  "browser": {
+    "jil": "./tools/jil/driver/browser.js"
   }
 }

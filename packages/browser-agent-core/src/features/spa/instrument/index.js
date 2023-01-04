@@ -4,7 +4,7 @@
 */
 import { wrapMutation, wrapPromise, wrapHistory, wrapEvents, wrapTimer, wrapFetch, wrapXhr, wrapJson } from '../../../common/wrap'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
-import { InstrumentBase } from '../../../common/util/feature-base'
+import { InstrumentBase } from '../../utils/instrument-base'
 import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { isBrowserWindow } from '../../../common/window/win'
@@ -17,8 +17,8 @@ const {
 
 export class Instrument extends InstrumentBase {
     static featureName = FEATURE_NAME
-    constructor(agentIdentifier, aggregator) {
-        super(agentIdentifier, aggregator, FEATURE_NAME)
+    constructor(agentIdentifier, aggregator, auto=true) {
+        super(agentIdentifier, aggregator, FEATURE_NAME, auto)
         if (!isBrowserWindow) return; // SPA not supported outside web env
 
         const agentRuntime = getRuntime(this.agentIdentifier);

@@ -9,7 +9,7 @@ import { registerHandler as register } from '../../../common/event-emitter/regis
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
-import { AggregateBase } from '../../../common/util/feature-base'
+import { AggregateBase } from '../../utils/aggregate-base'
 import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'

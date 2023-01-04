@@ -48,11 +48,10 @@
       "error",
       {
         "ignore": [
-          "@newrelic/browser-agent-core",
           "@newrelic/browser-agent-core/src",
-          "@newrelic/browser-agent-custom",
-          "@newrelic/browser-agent-microfrontend",
-          "@newrelic/browser-agent"
+          "@newrelic/browser-agent-custom/src",
+          "@newrelic/browser-agent-microfrontend/src",
+          "@newrelic/browser-agent/src"
         ]
       }
     ]

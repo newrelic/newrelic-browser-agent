@@ -12,8 +12,8 @@ const { baseEE, agentIdentifier, aggregator, nr } = setupData
 const { Instrument: AjaxInstrument } = require('@newrelic/browser-agent-core/src/features/ajax/instrument/index')
 const { Instrument: SpaInstrument } = require('@newrelic/browser-agent-core/src/features/spa/instrument/index')
 const { Aggregate: SpaAggregate } = require('@newrelic/browser-agent-core/src/features/spa/aggregate/index')
-new AjaxInstrument(agentIdentifier)
-new SpaInstrument(agentIdentifier)
+new AjaxInstrument(agentIdentifier, aggregator, false)
+new SpaInstrument(agentIdentifier, aggregator, false)
 let spaAgg
 const { wrapTimer } = require("@newrelic/browser-agent-core/src/common/wrap/index")
 const timerEE = wrapTimer(baseEE)
@@ -33,9 +33,9 @@ var afterLoad = false
 jil.onWindowLoaded(function () {
   afterLoad = true
   originalSetTimeout(function () {
-    const { Aggregate: InsAggregate } = require('@newrelic/browser-agent-core/src/features/page-action/aggregate/index')
-    new InsAggregate(agentIdentifier)
-    if (!spaAgg) spaAgg = new SpaAggregate(agentIdentifier, aggregator)
+    const { Aggregate: InsAggregate } = require('@newrelic/browser-agent-core/src/features/page_action/aggregate/index')
+    new InsAggregate(agentIdentifier, aggregator, false)
+    if (!spaAgg) spaAgg = new SpaAggregate(agentIdentifier, aggregator, false)
     drain(agentIdentifier, 'api')
     drain(agentIdentifier, 'feature')
 

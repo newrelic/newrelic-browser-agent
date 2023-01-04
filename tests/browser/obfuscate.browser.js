@@ -12,7 +12,7 @@ import * as obfuscate from '@newrelic/browser-agent-core/src/common/util/obfusca
 import * as win from '@newrelic/browser-agent-core/src/common/window/win'
 
 const { aggregator, agentIdentifier } = setup();
-new MetricsInstrum(agentIdentifier);
+new MetricsInstrum(agentIdentifier, aggregator, {}, false);
 new MetricsAggreg(agentIdentifier, aggregator);
 const obfuscatorInst = new obfuscate.Obfuscator({ agentIdentifier });
 

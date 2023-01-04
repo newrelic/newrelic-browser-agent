@@ -18,14 +18,14 @@
       "@newrelic/browser-agent-core/src/*": [
         "packages/browser-agent-core/src/*"
       ],
-      "@newrelic/browser-agent-custom/*": [
-        "packages/browser-agent-custom/*"
+      "@newrelic/browser-agent-custom/src/*": [
+        "packages/browser-agent-custom/src/*"
       ],
-      "@newrelic/browser-agent-microfrontend/*": [
-        "packages/browser-agent-microfrontend/*"
+      "@newrelic/browser-agent-microfrontend/src/*": [
+        "packages/browser-agent-microfrontend/src/*"
       ],
-      "@newrelic/browser-agent/*": [
-        "packages/browser-agent/*"
+      "@newrelic/browser-agent/src/*": [
+        "packages/browser-agent/src/*"
       ]
     }
   },

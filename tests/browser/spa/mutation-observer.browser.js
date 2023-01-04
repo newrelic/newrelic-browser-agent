@@ -8,12 +8,12 @@ const jil = require('jil')
 const { setup } = require('../utils/setup')
 
 const setupData = setup()
-const {agentIdentifier, nr} = setupData
+const {agentIdentifier, aggregator, nr} = setupData
 
 jil.browserTest('MutationObserver instanceof check', function (t) {
   var origMutationObserver = MutationObserver
   const {Instrument} = require('@newrelic/browser-agent-core/src/features/spa/instrument/index.js')
-  new Instrument(agentIdentifier)
+  new Instrument(agentIdentifier, aggregator, false)
 
   var observer = new MutationObserver(function () {})
 
@@ -25,7 +25,7 @@ jil.browserTest('MutationObserver instanceof check', function (t) {
 jil.browserTest('MutationObserver double-instrumentation', function (t) {
   var OrigMutationObserver = MutationObserver
   const {Instrument} = require('@newrelic/browser-agent-core/src/features/spa/instrument/index.js')
-  new Instrument(agentIdentifier)
+  new Instrument(agentIdentifier, aggregator, false)
 
   // This simulates what zone.js does when they wrap MutationObserver
   var WrappedObserver = function (cb) {
@@ -41,7 +41,7 @@ jil.browserTest('MutationObserver double-instrumentation', function (t) {
 
 jil.browserTest('MutationObserver functionality check', function (t) {
   const {Instrument} = require('@newrelic/browser-agent-core/src/features/spa/instrument/index.js')
-  new Instrument(agentIdentifier)
+  new Instrument(agentIdentifier, aggregator, false)
   let callbackInvocations = 0
 
   var observer = new MutationObserver(function () {

@@ -29,15 +29,15 @@
 <body>
     this is a generic page that is instrumented by the JS agent
     <script>
-        setTimeout(() => {
-            const configs2 = {
-                info: { applicationID: '35095249', licenseKey: '2fec6ab188', errorBeacon: 'staging-bam-cell.nr-data.net' }
-            }
-            const agent2 = new newrelic.mfeLoader(configs2)
-            console.log("trigger agent2")
-            agent2.noticeError(new Error("test2"))
-            agent2.addPageAction('test2')
-        }, 1000)
+        const configs2 = {
+            info: { applicationID: '35095249', licenseKey: '2fec6ab188', errorBeacon: 'staging-bam-cell.nr-data.net' }
+        }
+        window.agent2 = new newrelic.mfeLoader(configs2)
+
+        console.log("trigger agent2")
+        window.agent2.noticeError(new Error("test2"))
+        window.agent2.addPageAction('test2')
+
     </script>
 </body>
 

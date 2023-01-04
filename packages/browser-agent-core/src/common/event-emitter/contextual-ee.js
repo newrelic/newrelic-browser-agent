@@ -6,13 +6,14 @@
 import { gosNREUM } from '../window/nreum'
 import { getOrSet } from '../util/get-or-set'
 import { mapOwn } from '../util/map-own'
-import { isWebWorker } from '../window/win'
+import { getRuntime } from '../config/config'
 
 var ctxId = 'nr@context'
 
 // create global emitter instance that can be shared among bundles
 let nr = gosNREUM()
 var globalInstance
+
 if (nr.ee) {
   globalInstance = nr.ee
 } else {
@@ -28,6 +29,13 @@ function ee(old, debugId) {
   var handlers = {}
   var bufferGroupMap = {}
   var emitters = {}
+  // backlog must be isolated if multiple agents can run on page. MFE loader packages sets this to true. only check this for feature emitters (length = 16)
+  var isolatedBacklog = false 
+  try{
+    isolatedBacklog = debugId.length !== 16 ? false : getRuntime(debugId).isolatedBacklog 
+  } catch (err) {
+    // do nothing for now
+  }
 
   var emitter = {
     on: addEventListener,
@@ -42,9 +50,7 @@ function ee(old, debugId) {
     aborted: false,
     isBuffering: isBuffering,
     debugId,
-    // backlog: {} 
-    // backlog: isWebWorker ? {} : old && typeof old.backlog === 'object' ? old.backlog : {} // why pass on the backlog like this?
-    backlog: old && typeof old.backlog === 'object' ? old.backlog : {} // why pass on the backlog like this?
+    backlog: isolatedBacklog ? {} : old && typeof old.backlog === 'object' ? old.backlog : {}
 
   }
 

@@ -1,6 +1,6 @@
 // loader files
-import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/loader/enabled-features'
-import { configure } from '@newrelic/browser-agent-core/src/loader/configure'
+import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/loader/features/enabled-features'
+import { configure } from '@newrelic/browser-agent-core/src/loader/configure/configure'
 // core files
 import { Aggregator } from '@newrelic/browser-agent-core/src/common/aggregate/aggregator'
 import { gosNREUMInitializedAgents } from '@newrelic/browser-agent-core/src/common/window/nreum'
@@ -23,8 +23,9 @@ export class BrowserAgent {
         this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
         this.features = {}
 
-        Object.assign(this, configure(this.agentIdentifier, options))
+        Object.assign(this, configure(this.agentIdentifier, { ...options, runtime: { isolatedBacklog: true } }))
 
+        console.log(this.agentIdentifier, "configured..")
         this.start()
     }
 
@@ -39,33 +40,23 @@ export class BrowserAgent {
 
     start() {
         try {
+            console.log("start", this.agentIdentifier)
             const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
-            const completed = []
             autoFeatures.forEach(f => {
                 if (enabledFeatures[f]) {
-                    this.features[f] = null
-                    completed.push(import(`@newrelic/browser-agent-core/src/features/${f}/instrument`))
+                    import(`@newrelic/browser-agent-core/src/features/${f}/instrument`).then(({ Instrument }) => {
+                        this.features[f] = new Instrument(this.agentIdentifier, this.sharedAggregator)
+                    }).catch(err => console.warn('Failed to import ', f))
                 }
             })
             nonAutoFeatures.forEach(f => {
                 if (enabledFeatures[f]) {
-                    this.features[f] = null
-                    completed.push(import(`@newrelic/browser-agent-core/src/features/${f}/aggregate`))
+                    import(`@newrelic/browser-agent-core/src/features/${f}/aggregate`).then(({ Aggregate }) => {
+                        this.features[f] = new Aggregate(this.agentIdentifier, this.sharedAggregator)
+                    }).catch(err => console.warn('Failed to import ', f))
                 }
             })
-            Promise.all(completed).then((imports) => {
-                const chainedCompleted = []
-                imports.forEach(({ Instrument, Aggregate }, i) => {
-                    const key = Object.keys(this.features)[i]
-                    this.features[key] = new (Instrument || Aggregate)(this.agentIdentifier, this.sharedAggregator)
-                    if (Instrument) chainedCompleted.push(this.features[key].completed)
-                })
-                Promise.all(chainedCompleted).then(() => {
-                    drain(this.agentIdentifier, 'api')
-                    gosNREUMInitializedAgents(this.agentIdentifier, this.features, 'features')
-                })
-            })
-
+            gosNREUMInitializedAgents(this.agentIdentifier, this.features, 'features')
             return this
         } catch (err) {
             console.error(err)

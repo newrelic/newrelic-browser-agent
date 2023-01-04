@@ -1,4 +1,4 @@
-import {BrowserAgent} from "@newrelic/browser-agent-custom";
+import {BrowserAgent} from "@newrelic/browser-agent-custom/src";
 
 import { Instrument as InstrumentPageViewEvent } from '@newrelic/browser-agent-core/src/features/page_view_event/instrument'
 import { Instrument as InstrumentPageViewTiming } from '@newrelic/browser-agent-core/src/features/page_view_timing/instrument'

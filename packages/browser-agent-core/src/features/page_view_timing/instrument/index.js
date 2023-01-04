@@ -7,15 +7,15 @@ import { subscribeToVisibilityChange, initializeHiddenTime } from '../../../comm
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { getOffset, now } from '../../../common/timing/now'
 import { getConfigurationValue, originals } from '../../../common/config/config'
-import { InstrumentBase } from '../../../common/util/feature-base'
+import { InstrumentBase } from '../../utils/instrument-base'
 import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
-import { FEATURE_NAMES } from '../../../loader/features'
+import { FEATURE_NAMES } from '../../../loader/features/features'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor(agentIdentifier, aggregator, auto=true) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     if (!this.isEnabled() || !isBrowserWindow) return;  // CWV is irrelevant outside web context
 
     this.pageHiddenTime = initializeHiddenTime()  // synonymous with initial visibilityState

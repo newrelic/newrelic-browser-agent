@@ -3,6 +3,7 @@ const browserslist = require('browserslist')
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 (async function () {
+    // Fetch an unfiltered list of browser-platform definitions from Sauce Labs.
     console.log("contacting saucelabs API ...")
     const r = await fetch("https://api.us-west-1.saucelabs.com/rest/v1/info/platforms/all", {
         headers: {
@@ -12,9 +13,10 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
     const json = await r.json()
     console.log("Browser Types Found:", json.reduce((prev, next) => prev.add(next.api_name), new Set()))
     console.log(`fetched ${json.length} browsers from saucelabs`)
+
+    // Filter list down to a sample of supported browsers and write metadata to a file for testing.
     fs.writeFileSync('./tools/jil/util/browsers-supported.json', JSON.stringify(getBrowsers(json), null, 2))
     console.log(`saved saucelabs browsers to browsers-supported.json`)
-
 })()
 
 /**
@@ -94,7 +96,7 @@ const maxSupportedVersion = apiName => {
 }
 
 /**
- * Reduces the full array of SauceLabs browser-platform definitions to at most 5 eligible versions for each browser we support.
+ * Reduces the full array of SauceLabs browser-platform definitions to at most 4 eligible versions for each browser we support.
  * @param {[Object]} sauceBrowsers - An array of SauceLabs browser-platform definitions.
  * @returns {Object} - A set of SauceLabs browser-platform definitions eligible for testing.
  */
@@ -104,22 +106,21 @@ function getBrowsers(sauceBrowsers) {
         const versListForBrowser = sauceBrowsers.filter(platformSelector(name, minSupportedVersion(name), maxSupportedVersion(name)));
         versListForBrowser.sort((a, b) => Number(a.short_version) - Number(b.short_version));   // in ascending version order
 
-        // Grab the last X (10) versions to test, removing duplicates.
-        let latest = [], lastXVersions = 10, versionsSeen = new Set();
-        while (versListForBrowser.length && lastXVersions) {
+        // Remove duplicate version numbers.
+        let uniques = [], versionsSeen = new Set();
+        while (versListForBrowser.length) {
             let nextLatest = versListForBrowser.pop();
             if (versionsSeen.has(nextLatest.short_version))
                 continue;
-            latest.push(nextLatest);
+            uniques.push(nextLatest);
             versionsSeen.add(nextLatest.short_version);
-            lastXVersions--;
         }
         
-        // We only test 5 versions, so condense the array as needed.
-        latest = getDistributionOfArr(latest, 5)
+        // We only test 4 versions, so condense the array as needed.
+        uniques = evenlySampleArray(uniques, 4)
 
         // Compose metadata for testing each filtered supported browser.
-        latest.forEach(sauceBrowser => {
+        uniques.forEach(sauceBrowser => {
             const metadata = {
                 browserName: mobileBrowserName(sauceBrowser),
                 platform: mobilePlatformName(sauceBrowser),
@@ -182,22 +183,25 @@ function platformSelector(desiredBrowser, minVersion = 0, maxVersion = 9999) {
 
 
 /**
- * Returns a new array consisting of `n` or fewer evenly distributed elements from the input array.
+ * Returns a new array consisting of `n` or fewer evenly distributed elements from the input array, including the first and last elements.
  * @param {[]} arr - An input array.
- * @param {integer} n - The desired size of the returned array
+ * @param {integer} n - The desired size of the returned array.
  * @returns {[]} A new array of size <= `n`.
  */
-function getDistributionOfArr(arr, n = 5) {
+function evenlySampleArray(arr, n = 4) {
     if (arr.length < 2 || arr.length <= n) return arr
-    n = n < arr.length ? n : arr.length
-    var elements = [arr[0]]
-    var totalItems = arr.length - 2
-    var interval = Math.floor(totalItems / (n - 2))
-    for (var i = 1; i < n - 1; i++) {
-        elements.push(arr[i * interval])
+    if (n === 1) { return [arr[0]] }
+    if (n === 0) { return [] }
+
+    const lastIndex = arr.length - 1
+    const slicePercentage = 1 / (n - 1)
+    const samples = []
+
+    for (let i = 0; i < n; i++) {
+        samples.push(arr[Math.round(slicePercentage * i * lastIndex)])
     }
-    elements.push(arr[arr.length - 1])
-    return elements
+
+    return samples
 }
 
 /**

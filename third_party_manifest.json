@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Thu Jan 05 2023 14:11:35 GMT-0500 (Eastern Standard Time)",
+  "lastUpdated": "Thu Jan 05 2023 14:18:43 GMT-0500 (Eastern Standard Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -368,6 +368,19 @@
       "email": "mail@substack.net",
       "url": "http://substack.net"
     },
+    "concat-stream@1.6.2": {
+      "name": "concat-stream",
+      "version": "1.6.2",
+      "range": "^1.5.1",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/maxogden/concat-stream",
+      "versionedRepoUrl": "https://github.com/maxogden/concat-stream/tree/v1.6.2",
+      "licenseFile": "node_modules/concat-stream/LICENSE",
+      "licenseUrl": "https://github.com/maxogden/concat-stream/blob/v1.6.2/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Max Ogden",
+      "email": "max@maxogden.com"
+    },
     "cors@2.8.5": {
       "name": "cors",
       "version": "2.8.5",
@@ -393,6 +406,20 @@
       "licenseUrl": "https://github.com/Financial-Times/polyfill-service-url-builder/blob/v2.2.6/LICENSE.md",
       "licenseTextSource": "file",
       "publisher": "Jake Champion"
+    },
+    "defined@1.0.1": {
+      "name": "defined",
+      "version": "1.0.1",
+      "range": "^1.0.0",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/inspect-js/defined",
+      "versionedRepoUrl": "https://github.com/inspect-js/defined/tree/v1.0.1",
+      "licenseFile": "node_modules/defined/LICENSE",
+      "licenseUrl": "https://github.com/inspect-js/defined/blob/v1.0.1/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "James Halliday",
+      "email": "mail@substack.net",
+      "url": "http://substack.net"
     },
     "dotenv-webpack@8.0.1": {
       "name": "dotenv-webpack",
@@ -445,6 +472,19 @@
       "licenseTextSource": "file",
       "publisher": "Nicholas C. Zakas",
       "email": "nicholas+npm@nczconsulting.com"
+    },
+    "function-bind@1.1.1": {
+      "name": "function-bind",
+      "version": "1.1.1",
+      "range": "^1.1.1",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/Raynos/function-bind",
+      "versionedRepoUrl": "https://github.com/Raynos/function-bind/tree/v1.1.1",
+      "licenseFile": "node_modules/function-bind/LICENSE",
+      "licenseUrl": "https://github.com/Raynos/function-bind/blob/v1.1.1/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Raynos",
+      "email": "raynos2@gmail.com"
     },
     "glob@7.2.3": {
       "name": "glob",
@@ -533,6 +573,31 @@
       "publisher": "Chris Dickinson",
       "email": "chris@neversaw.us"
     },
+    "mime-types@2.1.35": {
+      "name": "mime-types",
+      "version": "2.1.35",
+      "range": "^2.1.11",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/jshttp/mime-types",
+      "versionedRepoUrl": "https://github.com/jshttp/mime-types/tree/v2.1.35",
+      "licenseFile": "node_modules/mime-types/LICENSE",
+      "licenseUrl": "https://github.com/jshttp/mime-types/blob/v2.1.35/LICENSE",
+      "licenseTextSource": "file"
+    },
+    "minimatch@3.0.5": {
+      "name": "minimatch",
+      "version": "3.0.5",
+      "range": "^3.0.3",
+      "licenses": "ISC",
+      "repoUrl": "https://github.com/isaacs/minimatch",
+      "versionedRepoUrl": "https://github.com/isaacs/minimatch/tree/v3.0.5",
+      "licenseFile": "node_modules/minimatch/LICENSE",
+      "licenseUrl": "https://github.com/isaacs/minimatch/blob/v3.0.5/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Isaac Z. Schlueter",
+      "email": "i@izs.me",
+      "url": "http://blog.izs.me"
+    },
     "multiparty@4.2.3": {
       "name": "multiparty",
       "version": "4.2.3",
@@ -597,6 +662,20 @@
       "licenseTextSource": "file",
       "publisher": "Victor Savkin"
     },
+    "object-inspect@1.12.2": {
+      "name": "object-inspect",
+      "version": "1.12.2",
+      "range": "^1.5.0",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/inspect-js/object-inspect",
+      "versionedRepoUrl": "https://github.com/inspect-js/object-inspect/tree/v1.12.2",
+      "licenseFile": "node_modules/object-inspect/LICENSE",
+      "licenseUrl": "https://github.com/inspect-js/object-inspect/blob/v1.12.2/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "James Halliday",
+      "email": "mail@substack.net",
+      "url": "http://substack.net"
+    },
     "pre-commit@1.2.2": {
       "name": "pre-commit",
       "version": "1.2.2",
@@ -647,6 +726,17 @@
       "licenseTextSource": "spdx",
       "publisher": "Bermi Ferrer",
       "email": "bermi@bermilabs.com"
+    },
+    "semver@6.3.0": {
+      "name": "semver",
+      "version": "6.3.0",
+      "range": "^5.3.0",
+      "licenses": "ISC",
+      "repoUrl": "https://github.com/npm/node-semver",
+      "versionedRepoUrl": "https://github.com/npm/node-semver/tree/v6.3.0",
+      "licenseFile": "node_modules/semver/LICENSE",
+      "licenseUrl": "https://github.com/npm/node-semver/blob/v6.3.0/LICENSE",
+      "licenseTextSource": "file"
     },
     "server-destroy@1.0.1": {
       "name": "server-destroy",

@@ -11,5 +11,7 @@ tools/test-builds/*
 tests/assets/test-builds/**/*.js
 tests/*
 cdn/webpack-analysis-polyfills.html
+newrelic.js
+
 tools/jil/
 jest.preset.js

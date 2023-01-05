@@ -14,6 +14,7 @@
     ],
     "strict": true,
     "noImplicitAny": false,
+    "skipLibCheck": true,
     "paths": {
       "@newrelic/browser-agent-core/src/*": [
         "packages/browser-agent-core/src/*"
@@ -26,7 +27,8 @@
       ],
       "@newrelic/browser-agent/src/*": [
         "packages/browser-agent/src/*"
-      ]
+      ],
+      "@newrelic-testing/server": ["test-packages/server/src/index.js"]
     }
   },
   "exclude": [

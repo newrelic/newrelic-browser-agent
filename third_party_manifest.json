@@ -33,6 +33,20 @@
       "publisher": "John-David Dalton",
       "email": "john.david.dalton@gmail.com",
       "url": "http://allyoucanleet.com/"
+    },
+    "web-vitals@3.1.0": {
+      "name": "web-vitals",
+      "version": "3.1.0",
+      "range": "^3.1.0",
+      "licenses": "Apache-2.0",
+      "repoUrl": "https://github.com/GoogleChrome/web-vitals",
+      "versionedRepoUrl": "https://github.com/GoogleChrome/web-vitals/tree/v3.1.0",
+      "licenseFile": "node_modules/web-vitals/LICENSE",
+      "licenseUrl": "https://github.com/GoogleChrome/web-vitals/blob/v3.1.0/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Philip Walton",
+      "email": "philip@philipwalton.com",
+      "url": "http://philipwalton.com"
     }
   },
   "devDependencies": {

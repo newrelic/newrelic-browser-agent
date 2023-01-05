@@ -11,6 +11,7 @@ import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { isBrowserScope } from '../../../common/util/global-scope'
+import {onINP} from 'web-vitals'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -55,6 +56,11 @@ export class Instrument extends InstrumentBase {
       documentAddEventListener(e, (...args) => this.captureInteraction(...args))
     })
 
+
+    onINP(({name, value}) => {
+      handle('timing', [name.toLowerCase(), value], undefined, undefined, this.ee);
+    })
+
     // Document visibility state becomes hidden
     subscribeToVisibilityChange(() => {
       // time is only recorded to be used for short-circuit logic in the observer callbacks
@@ -65,7 +71,6 @@ export class Instrument extends InstrumentBase {
     // Window fires its pagehide event (typically on navigation; this occurrence is a *subset* of vis change)
     windowAddEventListener('pagehide', () => handle('winPagehide', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee))
 
-    // page visibility events
     this.importAggregator()
   }
 

@@ -71,7 +71,7 @@ const minSupportedVersion = apiName => {
         case "MicrosoftEdge":
             return browserslistMinVersion('last 10 Edge versions')
         case "safari":
-            return browserslistMinVersion('last 10 Safari versions')
+            return Math.floor(browserslistMinVersion('last 10 Safari versions'))
         case 'ios':
         case 'iphone':
             return browserslistMinVersion('last 10 iOS versions')

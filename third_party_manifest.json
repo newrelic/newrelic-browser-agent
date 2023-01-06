@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Thu Jan 05 2023 14:18:43 GMT-0500 (Eastern Standard Time)",
+  "lastUpdated": "Thu Jan 05 2023 19:22:47 GMT-0500 (Eastern Standard Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -315,15 +315,15 @@
       "publisher": "Sebastian McKenzie",
       "email": "sebmck@gmail.com"
     },
-    "browserify@17.0.0": {
+    "browserify@13.3.0": {
       "name": "browserify",
-      "version": "17.0.0",
-      "range": "^17.0.0",
+      "version": "13.3.0",
+      "range": "^13.3.0",
       "licenses": "MIT",
-      "repoUrl": "https://github.com/browserify/browserify",
-      "versionedRepoUrl": "https://github.com/browserify/browserify/tree/v17.0.0",
+      "repoUrl": "https://github.com/substack/node-browserify",
+      "versionedRepoUrl": "https://github.com/substack/node-browserify/tree/v13.3.0",
       "licenseFile": "node_modules/browserify/LICENSE",
-      "licenseUrl": "https://github.com/browserify/browserify/blob/v17.0.0/LICENSE",
+      "licenseUrl": "https://github.com/substack/node-browserify/blob/v13.3.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "James Halliday",
       "email": "mail@substack.net",
@@ -560,6 +560,18 @@
       "licenseTextSource": "file",
       "publisher": "jesse keane"
     },
+    "just-debounce@1.1.0": {
+      "name": "just-debounce",
+      "version": "1.1.0",
+      "range": "^1.0.0",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/hayes/just-debounce",
+      "versionedRepoUrl": "https://github.com/hayes/just-debounce/tree/v1.1.0",
+      "licenseFile": "node_modules/just-debounce/LICENSE",
+      "licenseUrl": "https://github.com/hayes/just-debounce/blob/v1.1.0/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Michael Hayes"
+    },
     "ls-stream@1.0.0": {
       "name": "ls-stream",
       "version": "1.0.0",
@@ -701,6 +713,18 @@
       "licenseTextSource": "file",
       "publisher": "BiblioLabs LLC."
     },
+    "prettier@2.8.1": {
+      "name": "prettier",
+      "version": "2.8.1",
+      "range": "^2.8.1",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/prettier/prettier",
+      "versionedRepoUrl": "https://github.com/prettier/prettier/tree/v2.8.1",
+      "licenseFile": "node_modules/prettier/LICENSE",
+      "licenseUrl": "https://github.com/prettier/prettier/blob/v2.8.1/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "James Long"
+    },
     "request@2.74.0": {
       "name": "request",
       "version": "2.74.0",
@@ -727,15 +751,15 @@
       "publisher": "Bermi Ferrer",
       "email": "bermi@bermilabs.com"
     },
-    "semver@6.3.0": {
+    "semver@5.7.1": {
       "name": "semver",
-      "version": "6.3.0",
+      "version": "5.7.1",
       "range": "^5.3.0",
       "licenses": "ISC",
       "repoUrl": "https://github.com/npm/node-semver",
-      "versionedRepoUrl": "https://github.com/npm/node-semver/tree/v6.3.0",
+      "versionedRepoUrl": "https://github.com/npm/node-semver/tree/v5.7.1",
       "licenseFile": "node_modules/semver/LICENSE",
-      "licenseUrl": "https://github.com/npm/node-semver/blob/v6.3.0/LICENSE",
+      "licenseUrl": "https://github.com/npm/node-semver/blob/v5.7.1/LICENSE",
       "licenseTextSource": "file"
     },
     "server-destroy@1.0.1": {
@@ -872,6 +896,20 @@
       "licenseUrl": "https://github.com/Microsoft/TypeScript/blob/v4.8.4/LICENSE.txt",
       "licenseTextSource": "file",
       "publisher": "Microsoft Corp."
+    },
+    "uglify-js@3.17.4": {
+      "name": "uglify-js",
+      "version": "3.17.4",
+      "range": "^3.15.4",
+      "licenses": "BSD-2-Clause",
+      "repoUrl": "https://github.com/mishoo/UglifyJS",
+      "versionedRepoUrl": "https://github.com/mishoo/UglifyJS/tree/v3.17.4",
+      "licenseFile": "node_modules/uglify-js/LICENSE",
+      "licenseUrl": "https://github.com/mishoo/UglifyJS/blob/v3.17.4/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Mihai Bazon",
+      "email": "mihai.bazon@gmail.com",
+      "url": "http://lisperator.net/"
     },
     "vinyl-buffer@1.0.1": {
       "name": "vinyl-buffer",

@@ -145,8 +145,6 @@ const standardConfig = merge(commonConfig, {
     [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/pro.js'),
     [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/spa.js'),
     [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/spa.js'),
-    [`nr-loader-prebuilt${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/prebuilt.js'),
-    [`nr-loader-prebuilt${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/prebuilt.js'),
     [`nr-loader-mfe${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/microfrontend.js'),
     [`nr-loader-mfe${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/microfrontend.js')
   },

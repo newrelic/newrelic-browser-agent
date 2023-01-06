@@ -315,7 +315,9 @@ class BrowserifyTransform extends AssetTransform {
                 "last 10 Chrome versions",
                 "last 10 Safari versions",
                 "last 10 Firefox versions",
-                "last 10 Edge versions"
+                "last 10 Edge versions",
+                "last 10 ChromeAndroid versions",
+                "last 10 iOS versions"
               ]
             }
           }]

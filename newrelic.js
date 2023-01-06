@@ -44,7 +44,13 @@ const defaultConfig = {
 
 const envConfigs = {
   default: {
-    agent_enabled: false
+    agent_enabled: false,
+  },
+  staging: {
+    agent_enabled: true,
+    app_name: ['jil-staging'],
+    license_key: process.env.JIL_NODE_NEW_RELIC_LICENSE_KEY,
+    host: 'staging-collector.newrelic.com',
   },
   ci: {
     agent_enabled: true,

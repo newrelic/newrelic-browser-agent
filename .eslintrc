@@ -36,7 +36,10 @@
     "import/no-unresolved": [
       "error",
       {
-        "ignore": ["@newrelic/browser-agent-core"]
+        "ignore": [
+          "@wdio/cli",
+          "@newrelic/browser-agent-core"
+        ]
       }
     ]
   }

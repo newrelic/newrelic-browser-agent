@@ -27,7 +27,7 @@ const browsers = {
     edge: [],
     safari: [],
     firefox: [],
-    // android: [], // no longer works with W3C commands.... need to change JIL or do deeper dive to get this to work
+    android: [], // no longer works with W3C commands.... need to change JIL or do deeper dive to get this to work
     ios: []
 }
 
@@ -74,6 +74,12 @@ const minSupportedVersion = apiName => {
             return browserslistMinVersion('last 10 Edge versions')
         case "safari":
             return Math.floor(browserslistMinVersion('last 10 Safari versions'))
+        case "android":
+            // browserslist only ever provides the most recent ChromeAndroid version.
+            // Sauce Labs provides only a single Chrome Android version (100) on all emulators.
+            // Android version <= 9 on Sauce Labs uses the JSON Wire Protocol by default.
+            // https://changelog.saucelabs.com/en/update-to-google-chrome-version-100-on-android-emulators
+            return 9
         case 'ios':
         case 'iphone':
             return browserslistMinVersion('last 10 iOS versions')
@@ -90,6 +96,8 @@ const maxSupportedVersion = apiName => {
         case 'ios':
         case 'iphone':      // Sauce only uses Appium 2.0 for ios16 which requires W3C that we don't comply with yet
             return 15.9     // TO DO: this can be removed once that work is incorporated into JIL
+        case 'android':
+            return 9        // See min value above.
         default:
             return 9999
     }

@@ -101,6 +101,21 @@
       "version": "98"
     }
   ],
+  "android": [
+    {
+      "browserName": "Chrome",
+      "platform": "Android",
+      "platformName": "Android",
+      "version": "9.0",
+      "device": "GalaxyS9FHDGoogleAPI",
+      "appium:deviceName": "Samsung Galaxy S9 FHD GoogleAPI Emulator",
+      "appium:platformVersion": "9.0",
+      "appium:automationName": "UiAutomator2",
+      "sauce:options": {
+        "appiumVersion": "1.22.1"
+      }
+    }
+  ],
   "ios": [
     {
       "browserName": "Safari",

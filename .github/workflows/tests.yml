@@ -235,60 +235,46 @@ jobs:
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --unit-only
-  # android-functional:
-    # if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-  #   timeout-minutes: 30
-  #   continue-on-error: true
-  #   runs-on: ubuntu-latest
-  #   container: node:14
-  #   
-  #   env:
-  #     NEWRELIC_ENVIRONMENT: ci
-  #     JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-  #     JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-  #     NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+  android-functional:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
+    timeout-minutes: 30
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    container: node:14
+    
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         ref: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: checkout and build
+        uses: ./.github/actions/test-setup
 
-  #     - name: install
-  #       run: npm ci --cache ./.npm
+      - name: run tests
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 --functional-only
+  android-unit:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
+    timeout-minutes: 30
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    container: node:14
+   
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
-  #     
-      # - name: build
-      #   run: npm run build:all
+    steps:
+      - uses: actions/checkout@v3
+      - name: checkout and build
+        uses: ./.github/actions/test-setup
 
-  #     - name: run tests
-  #       run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 --functional-only
-  # android-unit:
-  #   if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-  #   timeout-minutes: 30
-  #   continue-on-error: true
-  #   runs-on: ubuntu-latest
-  #   container: node:14
-  #   
-  #   env:
-  #     NEWRELIC_ENVIRONMENT: ci
-  #     JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-  #     JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-  #     NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         ref: ${{ github.event.pull_request.head.sha }}
-
-  #     - name: install
-  #       run: npm ci --cache ./.npm
-
-  #     
-      # - name: build
-      #   run: npm run build:all
-
-  #     - name: run tests
-  #       run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 --unit-only
+      - name: run tests
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 --unit-only
   check-failures:
     runs-on: ubuntu-latest
     container: node:14

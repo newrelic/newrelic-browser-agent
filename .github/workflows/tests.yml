@@ -279,7 +279,7 @@ jobs:
     runs-on: ubuntu-latest
     container: node:14
     if: contains(github.event.pull_request.labels.*.name, 'safe to test') && ${{ !failure() }}  # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
-    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, safari-functional, safari-unit, edge-functional, edge-unit, ios-functional, ios-unit]
+    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, safari-functional, safari-unit, edge-functional, edge-unit, ios-functional, ios-unit, android-functional, android-unit]
     env:
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
     steps:

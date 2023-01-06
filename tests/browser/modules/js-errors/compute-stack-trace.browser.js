@@ -4,8 +4,8 @@
  */
 
 import test from '../../../../tools/jil/browser-test'
-import { computeStackTrace } from '@newrelic/browser-agent-core/src/features/jserrors/aggregate/compute-stack-trace'
-import { stringify } from '@newrelic/browser-agent-core/src/common/util/stringify'
+import { computeStackTrace } from '../../../../src/features/jserrors/aggregate/compute-stack-trace'
+import { stringify } from '../../../../src/common/util/stringify'
 import testcases from './stack-parse-testcases'
 
 test('computeStackTrace', function (t) {

@@ -5,7 +5,7 @@
 
 const test = require('../../tools/jil/browser-test')
 const {setup} = require('./utils/setup')
-const {activateFeatures} = require('@newrelic/browser-agent-core/src/common/util/feature-flags')
+const {activateFeatures} = require('../../src/common/util/feature-flags')
 
 const {baseEE, agentIdentifier} = setup();
 

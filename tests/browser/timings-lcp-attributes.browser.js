@@ -6,11 +6,11 @@
 const jil = require('jil')
 
 const {setup} = require('./utils/setup')
-const {drain} = require('@newrelic/browser-agent-core/src/common/drain/drain')
-const {handle} = require('@newrelic/browser-agent-core/src/common/event-emitter/handle')
-const {setConfiguration} = require("@newrelic/browser-agent-core/src/common/config/state/init")
-const {Aggregate: PvtAggregate} = require('@newrelic/browser-agent-core/src/features/page_view_timing/aggregate/index')
-const {FEATURE_NAMES} = require('@newrelic/browser-agent-core/src/loader/features/features')
+const {drain} = require('../../src/common/drain/drain')
+const {handle} = require('../../src/common/event-emitter/handle')
+const {setConfiguration} = require("'../../src/common/config/state/init")
+const {Aggregate: PvtAggregate} = require('../../src/features/page_view_timing/aggregate/index')
+const {FEATURE_NAMES} = require('../../src/loaders/features/features')
 
 const {agentIdentifier, aggregator} = setup()
 

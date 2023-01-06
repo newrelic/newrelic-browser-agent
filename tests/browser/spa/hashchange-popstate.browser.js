@@ -4,7 +4,7 @@
  */
 
 const jil = require('jil')
-let cleanUrl = require('@newrelic/browser-agent-core/src/common/url/clean-url').cleanURL
+let cleanUrl = require('../../../src/common/url/clean-url').cleanURL
 
 if (process.browser) {
   var helpers = require('./helpers')

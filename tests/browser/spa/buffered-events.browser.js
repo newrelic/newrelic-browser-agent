@@ -12,12 +12,12 @@ const {baseEE, agentIdentifier, aggregator} = setupData
 
 jil.browserTest('spa buffers all expected events', function (t) {
 
-  var {registerHandler} = require('@newrelic/browser-agent-core/src/common/event-emitter/register-handler.js')
-  var {drain} = require('@newrelic/browser-agent-core/src/common/drain/drain')
+  var {registerHandler} = require('../../../src/common/event-emitter/register-handler.js')
+  var {drain} = require('../../../src/common/drain/drain')
 
   var plan = 0
 
-  const {Instrument} = require('@newrelic/browser-agent-core/src/features/spa/instrument/index')
+  const {Instrument} = require('../../../src/features/spa/instrument/index')
   const spaIns = new Instrument(agentIdentifier, aggregator, false)
 
   var events = {

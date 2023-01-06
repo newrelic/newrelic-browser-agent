@@ -4,8 +4,8 @@
  */
 
 import test from '../../../tools/jil/browser-test'
-import { parseUrl } from '@newrelic/browser-agent-core/src/common/url/parse-url'
-import { setDenyList, shouldCollectEvent } from '@newrelic/browser-agent-core/src/common/deny-list/deny-list'
+import { parseUrl } from '../../../src/common/url/parse-url'
+import { setDenyList, shouldCollectEvent } from '../../../src/common/deny-list/deny-list'
 
 /* NOTE: This file contains pure unit tests that has no need for the agent at all.
 */

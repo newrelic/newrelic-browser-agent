@@ -1,9 +1,7 @@
 {
-  "ignorePatterns": [
-    "packages/**/*"
-  ],
+  "ignorePatterns": [],
   "parserOptions": {
-    "ecmaVersion": 2020,
+    "ecmaVersion": 2022,
     "sourceType": "module",
     "ecmaFeatures": {
       "globalReturn": true
@@ -48,10 +46,7 @@
       "error",
       {
         "ignore": [
-          "@newrelic/browser-agent-core/src",
-          "@newrelic/browser-agent-custom/src",
-          "@newrelic/browser-agent-microfrontend/src",
-          "@newrelic/browser-agent/src"
+          "./src"
         ]
       }
     ]

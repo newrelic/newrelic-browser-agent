@@ -4,8 +4,8 @@
  */
 
 var jil = require('jil')
-import * as win from '@newrelic/browser-agent-core/src/common/window/win'
-import { protocol } from '@newrelic/browser-agent-core/src/common/url/protocol'
+import * as win from '../../src/common/window/win'
+import { protocol } from '../../src/common/url/protocol'
 
 var fileLocation = {
   hash: '',

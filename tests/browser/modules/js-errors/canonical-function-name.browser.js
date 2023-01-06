@@ -4,7 +4,7 @@
  */
 
 var test = require('../../../../tools/jil/browser-test.js')
-import {canonicalFunctionName} from '@newrelic/browser-agent-core/src/features/jserrors/aggregate/canonical-function-name'
+import {canonicalFunctionName} from '../../../../src/features/jserrors/aggregate/canonical-function-name'
 
 test('canonicalFunctionName', function (t) {
   var testcases = [

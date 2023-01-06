@@ -1,7 +1,7 @@
 import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
-import { Instrument as MetricsInstrum, constants } from '@newrelic/browser-agent-core/src/features/metrics/instrument/index'
-import { Aggregate as MetricsAggreg } from '@newrelic/browser-agent-core/src/features/metrics/aggregate/index'
+import { Instrument as MetricsInstrum, constants } from '../../src/features/metrics/instrument/index'
+import { Aggregate as MetricsAggreg } from '../../src/features/metrics/aggregate/index'
 
 const metricName = 'test'
 const sLabel = constants.SUPPORTABILITY_METRIC

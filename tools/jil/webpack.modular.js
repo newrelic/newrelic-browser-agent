@@ -1,10 +1,10 @@
 const path = require('path')
 const Dotenv = require('dotenv-webpack')
 const webpack = require('webpack')
-const pkg = require('../../dist/packages/browser-agent/package.json')
+const pkg = require('../../package.json')
 
 module.exports = {
-  entry: path.join(__dirname, "../../dist/packages/browser-agent/src/index.js"),
+  entry: path.join(__dirname, "../../src/index.js"),
   module: {
     rules: [
       {
@@ -27,15 +27,7 @@ module.exports = {
     filename: 'index.js',
     library: {
       name: 'NRBA',
-      type: 'umd'
-    }
-  },
-  resolve: {
-    alias: {
-      '@newrelic/browser-agent-core/src': path.resolve(__dirname, '../../packages/browser-agent-core/src'),
-      '@newrelic/browser-agent/src': path.resolve(__dirname, '../../packages/browser-agent/src'),
-      '@newrelic/browser-agent-custom/src': path.resolve(__dirname, '../../packages/browser-agent-custom/src'),
-      '@newrelic/browser-agent-microfrontends/src': path.resolve(__dirname, '../../packages/browser-agent-microfrontends/src'),
+      type: 'self'
     }
   },
   plugins: [

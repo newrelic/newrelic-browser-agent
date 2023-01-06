@@ -6,21 +6,21 @@
 import test from '../../../tools/jil/browser-test'
 import jil from 'jil'
 import { setup } from '../utils/setup'
-import { getLoaderConfig } from '@newrelic/browser-agent-core/src/common/config/config'
-import { registerHandler } from '@newrelic/browser-agent-core/src/common/event-emitter/register-handler'
-import { drain } from '@newrelic/browser-agent-core/src/common/drain/drain'
-import { Instrument as AjaxInstrum } from '@newrelic/browser-agent-core/src/features/ajax/instrument/index'
-//import { Aggregate as AjaxAggreg } from '@newrelic/browser-agent-core/src/features/ajax/aggregate/index'
-import { Instrument as JsErrInstrum } from '@newrelic/browser-agent-core/src/features/jserrors/instrument/index'
-import { Aggregate as JsErrAggreg } from '@newrelic/browser-agent-core/src/features/jserrors/aggregate/index'
+import { getLoaderConfig } from '../../../src/common/config/config'
+import { registerHandler } from '../../../src/common/event-emitter/register-handler'
+import { drain } from '../../../src/common/drain/drain'
+import { Instrument as AjaxInstrum } from '../../../src/features/ajax/instrument/index'
+//import { Aggregate as AjaxAggreg } from '../../../src/features/ajax/aggregate/index'
+import { Instrument as JsErrInstrum } from '../../../src/features/jserrors/instrument/index'
+import { Aggregate as JsErrAggreg } from '../../../src/features/jserrors/aggregate/index'
 
 const { baseEE, agentIdentifier, aggregator, nr } = setup();
 const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false);
 const jserrTestInstr = new JsErrInstrum(agentIdentifier, aggregator, false);
 const jserrTestAgg = new JsErrAggreg(agentIdentifier, aggregator);
 
-import ffVersion from '@newrelic/browser-agent-core/src/common/browser-version/firefox-version'
-import ieVersion from '@newrelic/browser-agent-core/src/common/browser-version/ie-version'
+import ffVersion from '../../../src/common/browser-version/firefox-version'
+import ieVersion from '../../../src/common/browser-version/ie-version'
 const hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener;
 
 let onloadtime = 2
@@ -86,7 +86,7 @@ test('xhr timing', function (t) {
   t.plan(plan)
 
   registerHandler('xhr', async function (params, metrics, start) {
-    const { Aggregate: AjaxAggreg } = await import('@newrelic/browser-agent-core/src/features/ajax/aggregate/index');
+    const { Aggregate: AjaxAggreg } = await import('../../../src/features/ajax/aggregate/index');
     const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator);
     ajaxTestAgg.storeXhr(params, metrics, start);
 

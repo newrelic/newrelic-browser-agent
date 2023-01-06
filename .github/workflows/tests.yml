@@ -22,19 +22,7 @@ jobs:
 
       - name: lint
         run: npm run lint
-  package-tests:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
-    runs-on: ubuntu-latest
-    container: node:14
-    
-    steps:
-      - uses: actions/checkout@v3
-      - name: checkout and build
-        uses: ./.github/actions/test-setup
-
-      - name: test
-        run: npm run packages:test
+  
   chrome-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30

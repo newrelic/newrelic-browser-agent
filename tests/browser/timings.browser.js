@@ -248,8 +248,8 @@ function waitForWindowLoad (fn) {
 }
 
 const {setup} = require('./utils/setup')
-const {setInfo} = require("@newrelic/browser-agent-core/src/common/config/config")
-const {Aggregate: PvtAggregate} = require('@newrelic/browser-agent-core/src/features/page_view_timing/aggregate/index')
+const {setInfo} = require("'../../src/common/config/config")
+const {Aggregate: PvtAggregate} = require('../../src/features/page_view_timing/aggregate/index')
 
 const {agentIdentifier, aggregator} = setup()
 

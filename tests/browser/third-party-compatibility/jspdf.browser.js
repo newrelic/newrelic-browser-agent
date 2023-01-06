@@ -5,7 +5,7 @@
 
 import test from '../../../tools/jil/browser-test'
 import { setup } from '../utils/setup'
-import { wrapPromise } from '@newrelic/browser-agent-core/src/common/wrap/wrap-promise'
+import { wrapPromise } from '../../../src/common/wrap/wrap-promise'
 
 const { baseEE } = setup();
 wrapPromise(baseEE);

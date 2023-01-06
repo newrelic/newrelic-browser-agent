@@ -5,9 +5,9 @@
 
 import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
-import { getRuntime } from '@newrelic/browser-agent-core/src/common/config/config'
-import { Instrument as MetricsInstrum } from '@newrelic/browser-agent-core/src/features/metrics/instrument/index'
-import { Aggregate as MetricsAggreg} from '@newrelic/browser-agent-core/src/features/metrics/aggregate/index'
+import { getRuntime } from '../../src/common/config/config'
+import { Instrument as MetricsInstrum } from '../../src/features/metrics/instrument/index'
+import { Aggregate as MetricsAggreg} from '../../src/features/metrics/aggregate/index'
 
 const { aggregator: agg, agentIdentifier, nr } = setup();
 // api loads registers several event listeners, but does not have any exports

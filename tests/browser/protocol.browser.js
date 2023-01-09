@@ -4,8 +4,8 @@
  */
 
 var jil = require('jil')
-import * as win from '@newrelic/browser-agent-core/src/common/window/win'
 import { protocol } from '@newrelic/browser-agent-core/src/common/url/protocol'
+import { setScope, resetScope } from '@newrelic/browser-agent-core/src/common/util/global-scope';
 
 var fileLocation = {
   hash: '',
@@ -19,11 +19,12 @@ var fileLocation = {
 }
 
 jil.browserTest('isFileProtocol returns coorectly when detecting file protocol', function (t) {
-  win.setWindowOrWorkerGlobScope({ ...win.getWindowOrWorkerGlobScope(), location: { ...fileLocation } })
+  setScope({ location: fileLocation })
 
   t.ok(protocol.isFileProtocol(), 'Returned false when protocol is not file protocol')
   t.ok(protocol.supportabilityMetricSent, 'isFileProtocol should send supportability metric if file protocol is detected')
-  win.resetWindowOrWorkerGlobScope()
+
+  resetScope()
 
   t.ok(!protocol.isFileProtocol(), 'Returned false when protocol is not file protocol')
   t.end()

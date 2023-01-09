@@ -16,6 +16,7 @@ import { handle } from '../../../common/event-emitter/handle'
 import { mapOwn } from '../../../common/util/map-own'
 import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
+import globalScope from '../../../common/util/global-scope'
 
 import { FeatureBase } from '../../../common/util/feature-base'
 
@@ -155,7 +156,7 @@ export class Aggregate extends FeatureBase {
     var params = {
       stackHash: stringHashCode(canonicalStack),
       exceptionClass: stackInfo.name,
-      request_uri: self.location.pathname
+      request_uri: globalScope?.location.pathname
     }
     if (stackInfo.message) {
       params.message = '' + stackInfo.message

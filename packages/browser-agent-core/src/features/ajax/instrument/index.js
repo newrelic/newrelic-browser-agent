@@ -14,12 +14,13 @@ import { parseUrl } from '../../../common/url/parse-url'
 import { DT } from './distributed-tracing'
 import { responseSizeFromXhr } from './response-size'
 import { FeatureBase } from '../../../common/util/feature-base'
+import globalScope from '../../../common/util/global-scope'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
 
 var origRequest = originals.REQ
-var origXHR = self.XMLHttpRequest
+var origXHR = globalScope?.XMLHttpRequest
 
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
@@ -226,7 +227,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     } else if (args[0] && args[0].url) {
       url = args[0].url
       // argument is URL object
-    } else if (self.URL && args[0] && args[0] instanceof URL) {
+    } else if (globalScope?.URL && args[0] && args[0] instanceof URL) {
       url = args[0].href
     }
 
@@ -240,7 +241,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
       return
     }
 
-    if (typeof args[0] === 'string' || (self.URL && args[0] && args[0] instanceof URL)) {
+    if (typeof args[0] === 'string' || (globalScope?.URL && args[0] && args[0] instanceof URL)) {
       var clone = {}
 
       for (var key in opts) {
@@ -297,7 +298,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
       url = target
     } else if (typeof target === 'object' && target instanceof origRequest) {
       url = target.url
-    } else if (self.URL && typeof target === 'object' && target instanceof URL) {
+    } else if (globalScope?.URL && typeof target === 'object' && target instanceof URL) {
       url = target.href
     }
     addUrl(this, url)

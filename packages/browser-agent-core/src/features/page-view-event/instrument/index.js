@@ -5,12 +5,12 @@ import { mark } from '../../../common/timing/stopwatch'
 import { findStartTime } from '../../../common/timing/start-time'
 import { FeatureBase } from '../../../common/util/feature-base'
 import { onDOMContentLoaded, onWindowLoad } from '../../../common/window/load'
-import { isBrowserWindow } from '../../../common/window/win'
+import { isBrowserScope } from '../../../common/util/global-scope'
 
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
     super(agentIdentifier)
-    if (!isBrowserWindow) return; // initial page view times non applicable outside web env
+    if (!isBrowserScope) return; // initial page view times non applicable outside web env
 
     findStartTime(agentIdentifier)
     mark(agentIdentifier, 'firstbyte', getLastTimestamp())

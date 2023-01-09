@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import globalScope from '../util/global-scope'
+
 export function supportsPerformanceObserver () {
-  return (typeof self.PerformanceObserver === 'function');
+  return (typeof globalScope?.PerformanceObserver === 'function');
 }

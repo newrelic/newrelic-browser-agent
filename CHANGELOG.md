@@ -17,6 +17,9 @@ The agent is now compatible with _only modern web syntax (ES6+)_; **this reduces
 ### Fix nrWrapper exclusion in error stack traces
 Restoring previous functionality whereby the `nrWrapper` agent method should be excluded from JavaScript error stack traces.
 
+### Fix errors with global self redefinition
+Fixing an issue where external code redefining the `self` global variable causes the agent async loading to fail and the agent to crash.
+
 ## v1221
 
 ### Add infrastructure to run on web workers

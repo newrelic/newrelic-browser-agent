@@ -12,12 +12,12 @@ import { cleanURL } from '../../../common/url/clean-url'
 import { handle } from '../../../common/event-emitter/handle'
 import { getInfo, getConfigurationValue } from '../../../common/config/config'
 import { FeatureBase } from '../../../common/util/feature-base'
-import { isBrowserWindow } from '../../../common/window/win'
+import { isBrowserScope } from '../../../common/util/global-scope'
 
 export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator)
-    if (!isBrowserWindow) return; // TO DO: can remove once aggregate is chained to instrument
+    if (!isBrowserScope) return; // TO DO: can remove once aggregate is chained to instrument
 
     this.timings = []
     this.timingsSent = []

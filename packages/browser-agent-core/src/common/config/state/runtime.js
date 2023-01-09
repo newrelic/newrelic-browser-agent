@@ -5,8 +5,9 @@ import { Configurable } from './configurable'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { getCurrentSessionIdOrMakeNew } from '../../window/session-storage'
 import { getConfigurationValue } from '../config'
+import globalScope from '../../util/global-scope';
 
-var XHR = self.XMLHttpRequest
+var XHR = globalScope?.XMLHttpRequest
 var XHR_PROTO = XHR && XHR.prototype
 
 const model = agentId => { return {
@@ -16,7 +17,7 @@ const model = agentId => { return {
   maxBytes: ieVersion === 6 ? 2000 : 30000,
   offset: getLastTimestamp(),
   onerror: undefined,
-  origin: '' + self.location,
+  origin: '' + globalScope?.location,
   ptid: undefined,
   releaseIds: {},
   sessionId: getConfigurationValue(agentId, 'privacy.cookies_enabled') == true ?

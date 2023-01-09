@@ -10,6 +10,7 @@ import { mark } from './stopwatch'
 import { ffVersion } from '../browser-version/firefox-version'
 import { setOffset } from './now'
 import { exists as performanceCheckExists } from './performance-check'
+import globalScope from '../util/global-scope';
 
 export let navCookie = true
 
@@ -34,7 +35,7 @@ function findStartWebTiming () {
   if (performanceCheckExists) {
     // note that we don't need to use a cookie to record navigation start time
     navCookie = false
-    return self.performance.timing.navigationStart
+    return globalScope?.performance?.timing?.navigationStart
   }
 }
 /*

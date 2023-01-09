@@ -17,7 +17,7 @@ import { FeatureBase } from '../../../common/util/feature-base'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { Serializer } from './serializer'
 import { ee } from '../../../common/event-emitter/contextual-ee'
-import { isBrowserWindow } from '../../../common/window/win'
+import { isBrowserScope } from '../../../common/util/global-scope'
 
 var INTERACTION_EVENTS = [
   'click',
@@ -47,7 +47,7 @@ var originalSetTimeout = originals.ST
 export class Aggregate extends FeatureBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator)
-    if (!isBrowserWindow) return; // TO DO: can remove once aggregate is chained to instrument
+    if (!isBrowserScope) return; // TO DO: can remove once aggregate is chained to instrument
 
     this.state = {
       initialPageURL: getRuntime(agentIdentifier).origin,

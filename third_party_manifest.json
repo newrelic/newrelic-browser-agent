@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Fri Jan 06 2023 15:55:32 GMT-0500 (Eastern Standard Time)",
+  "lastUpdated": "Mon Jan 09 2023 14:55:12 GMT-0500 (Eastern Standard Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -539,20 +539,6 @@
       "licenseTextSource": "file",
       "publisher": "Andrew Kelley",
       "email": "superjoe30@gmail.com"
-    },
-    "newrelic@0.0.0": {
-      "name": "newrelic",
-      "version": "0.0.0",
-      "range": "^4.11.0",
-      "licenses": "UNLICENSED",
-      "repoUrl": "https://github.com/newrelic/newrelic-browser-agent",
-      "versionedRepoUrl": "https://github.com/newrelic/newrelic-browser-agent/tree/v0.0.0",
-      "licenseFile": "LICENSE",
-      "licenseTextSource": "file",
-      "publisher": "The New Relic Browser Team",
-      "FOR_REVIEW": [
-        "Unable to determine license url."
-      ]
     },
     "newrelic@4.13.1": {
       "name": "newrelic",

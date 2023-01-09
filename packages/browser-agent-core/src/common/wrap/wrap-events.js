@@ -6,7 +6,7 @@
 import {ee as baseEE} from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { getOrSet } from '../util/get-or-set'
-import { isBrowserWindow } from '../window/win'
+import globalScope, { isBrowserScope } from '../util/global-scope'
 
 const wrapped = {}
 
@@ -22,13 +22,13 @@ export function wrapEvents(sharedEE) {
 
   // Guard against instrumenting environments w/o necessary features
   if ('getPrototypeOf' in Object) {
-    if (isBrowserWindow)
+    if (isBrowserScope)
       findAndWrapNode(document);
-    findAndWrapNode(self);
+    findAndWrapNode(globalScope);
     findAndWrapNode(XHR.prototype)
     // eslint-disable-next-line
   } else if (XHR.prototype.hasOwnProperty(ADD_EVENT_LISTENER)) {
-    wrapNode(self)
+    wrapNode(globalScope)
     wrapNode(XHR.prototype)
   }
 

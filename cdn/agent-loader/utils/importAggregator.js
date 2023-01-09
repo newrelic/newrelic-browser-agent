@@ -1,13 +1,13 @@
 
 import { onWindowLoad } from '@newrelic/browser-agent-core/src/common/window/load'
-import { isBrowserWindow } from '@newrelic/browser-agent-core/src/common/window/win'
+import { isBrowserScope } from '@newrelic/browser-agent-core/src/common/util/global-scope'
 import { ee } from '@newrelic/browser-agent-core/src/common/event-emitter/contextual-ee'
 
 let loadFired = 0
 
 export function stageAggregator(loaderType, useTimeout, ms = 1000) {
     if (useTimeout) setTimeout(() => importAggregator(loaderType), ms) // used just for local testing injecting the script after window load...
-    else if (!isBrowserWindow) importAggregator(loaderType);    // run now if there's no window (to load)
+    else if (!isBrowserScope) importAggregator(loaderType);    // run now if there's no window (to load)
     else onWindowLoad(() => importAggregator(loaderType)) // inject the aggregator when window load event fires
 }
 

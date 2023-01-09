@@ -1,16 +1,16 @@
 /**
  * Interface for Agents' usage of the Window.sessionStorage as a replacement to third-party cookies.
  *  (All agents on a tab|window will share the same sessionStorage.)
- * 
+ *
  * @design https://newrelic.atlassian.net/wiki/spaces/INST/pages/2522513791/JSESSIONID+Cookie+Change+Design+Document
  * @environment Browser script
  */
 import { generateRandomHexString } from '../ids/unique-id'
-import { isBrowserWindow } from '../window/win'
+import { isBrowserScope } from '../util/global-scope'
 
 export { getCurrentSessionIdOrMakeNew };
 
-const ss = isBrowserWindow ? window.sessionStorage : undefined;
+const ss = isBrowserScope ? window.sessionStorage : undefined;
 const SESS_ID = "NRBA_SESSION_ID"; // prevents potential key collisions in session storage
 
 /**

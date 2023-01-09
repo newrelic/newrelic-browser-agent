@@ -9,7 +9,8 @@ import { setConfiguration } from '@newrelic/browser-agent-core/src/common/config
 import { Instrument as MetricsInstrum } from '@newrelic/browser-agent-core/src/features/metrics/instrument/index'
 import { Aggregate as MetricsAggreg } from '@newrelic/browser-agent-core/src/features/metrics/aggregate/index'
 import * as obfuscate from '@newrelic/browser-agent-core/src/common/util/obfuscate'
-import * as win from '@newrelic/browser-agent-core/src/common/window/win'
+
+import { setScope, resetScope } from '@newrelic/browser-agent-core/src/common/util/global-scope';
 
 const { aggregator, agentIdentifier } = setup();
 new MetricsInstrum(agentIdentifier);
@@ -111,10 +112,10 @@ jil.browserTest('Get Rules', function (t) {
   setConfiguration(agentIdentifier, {});  // note this'll reset the *whole* config to the default values
   t.ok(!obfuscate.getRules(agentIdentifier).length, 'getRules should generate an empty list if init.obfuscate is undefined')
 
-  win.setWindowOrWorkerGlobScope({ ...win.getWindowOrWorkerGlobScope(), location: { ...fileLocation } })
+  setScope({ location: fileLocation })
   t.ok(!!obfuscate.getRules(agentIdentifier).filter(x => x.regex.source.includes('file')).length, 'getRules should generate a rule for file obfuscation if file protocol is detected')
 
-  win.resetWindowOrWorkerGlobScope()
+  resetScope()
   t.end()
 })
 
@@ -127,11 +128,11 @@ jil.browserTest('Obfuscate String Method', function (t) {
   t.ok(!obfuscatorInst.obfuscateString('http://example.com/pii/123').includes('pii'), 'Successfully obfuscates string')
   t.ok(!obfuscatorInst.obfuscateString('http://example.com/abcdefghijklmnopqrstuvwxyz/123').includes('i'), 'Successfully obfuscates regex')
 
-  win.setWindowOrWorkerGlobScope({ ...win.getWindowOrWorkerGlobScope(), location: { ...fileLocation } })
+  setScope({ location: fileLocation })
   //delete win.getWindowOrWorkerGlobScope().NREUM.init.obfuscate
   setConfiguration(agentIdentifier, {});  // note this'll reset the *whole* config to the default values
   t.ok(obfuscatorInst.obfuscateString('file:///Users/jporter/Documents/Code/scratch/noticeErrorTest.html') === 'file://OBFUSCATED', 'Successfully obfuscates file protocol')
 
-  win.resetWindowOrWorkerGlobScope()
+  resetScope()
   t.end()
 })

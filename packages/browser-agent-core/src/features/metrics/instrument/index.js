@@ -7,7 +7,7 @@ import { getRules, validateRules } from '../../../common/util/obfuscate'
 import { VERSION } from '../../../common/constants/environment-variables'
 import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
-import { isBrowserWindow } from '../../../common/window/win'
+import { isBrowserScope } from '../../../common/util/global-scope'
 import { insertSupportMetrics } from './workers-helper'
 
 var SUPPORTABILITY_METRIC = 'sm'
@@ -64,7 +64,7 @@ export class Instrument extends FeatureBase {
         this.recordSupportability(`Generic/Version/${VERSION}/Detected`)
 
         // frameworks on page
-        if(isBrowserWindow) onDOMContentLoaded(() => {
+        if(isBrowserScope) onDOMContentLoaded(() => {
             getFrameworks().forEach(framework => {
                 this.recordSupportability('Framework/' + framework + '/Detected')
             })
@@ -82,7 +82,7 @@ export class Instrument extends FeatureBase {
         if (rules.length > 0 && !validateRules(rules)) this.recordSupportability('Generic/Obfuscate/Invalid')
 
         // polyfilled feature detection
-        if (isBrowserWindow) this.reportPolyfillsNeeded();
+        if (isBrowserScope) this.reportPolyfillsNeeded();
 
         // poll web worker support
         insertSupportMetrics(this.recordSupportability.bind(this));
@@ -96,8 +96,8 @@ export class Instrument extends FeatureBase {
     }
 
     eachSessionChecks() {
-        if (!isBrowserWindow) return;
-        
+        if (!isBrowserScope) return;
+
         // [Temporary] Report restores from BFCache to NR1 while feature flag is in place in lieu of sending pageshow events.
         windowAddEventListener('pageshow', (evt) => {
             if (evt.persisted)

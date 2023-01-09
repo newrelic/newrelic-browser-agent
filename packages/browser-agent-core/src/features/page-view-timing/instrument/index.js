@@ -8,12 +8,12 @@ import { eventListenerOpts } from '../../../common/event-listener/event-listener
 import { getOffset, now } from '../../../common/timing/now'
 import { getConfigurationValue, originals } from '../../../common/config/config'
 import { FeatureBase } from '../../../common/util/feature-base'
-import { isBrowserWindow } from '../../../common/window/win'
+import { isBrowserScope } from '../../../common/util/global-scope'
 
 export class Instrument extends FeatureBase {
   constructor(agentIdentifier) {
     super(agentIdentifier)
-    if (!this.isEnabled() || !isBrowserWindow) return;  // CWV is irrelevant outside web context
+    if (!this.isEnabled() || !isBrowserScope) return;  // CWV is irrelevant outside web context
 
     this.pageHiddenTime = initializeHiddenTime()  // synonymous with initial visibilityState
     this.performanceObserver

@@ -6,9 +6,9 @@
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import slice from 'lodash._slice'
 import { mapOwn } from '../util/map-own'
+import globalScope from '../util/global-scope'
 
-
-var win = self
+var win = globalScope
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
 var bodyMethods = ['arrayBuffer', 'blob', 'json', 'text', 'formData']
@@ -27,14 +27,14 @@ export function wrapFetch(sharedEE){
 
   if (wrapped[ee.debugId]) return ee
   wrapped[ee.debugId] = true
-  
+
   mapOwn(bodyMethods, function (i, name) {
     wrapPromiseMethod(Req[proto], name, bodyPrefix)
     wrapPromiseMethod(Res[proto], name, bodyPrefix)
   })
-  
+
   wrapPromiseMethod(win, 'fetch', prefix)
-  
+
   ee.on(prefix + 'end', function (err, res) {
     var ctx = this
     if (res) {
@@ -47,23 +47,23 @@ export function wrapFetch(sharedEE){
       ee.emit(prefix + 'done', [err], ctx)
     }
   })
-  
+
   function wrapPromiseMethod (target, name, prefix) {
     var fn = target[name]
     if (typeof fn === 'function') {
       target[name] = function () {
         var args = slice(arguments)
-  
+
         var ctx = {}
         // we are wrapping args in an array so we can preserve the reference
         ee.emit(prefix + 'before-start', [args], ctx)
         var dtPayload
         if (ctx[ctxId] && ctx[ctxId].dt) dtPayload = ctx[ctxId].dt
-  
+
         var promise = fn.apply(this, args)
-  
+
         ee.emit(prefix + 'start', [args, dtPayload], promise)
-  
+
         return promise.then(function (val) {
           ee.emit(prefix + 'end', [null, val], promise)
           return val

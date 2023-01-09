@@ -1,14 +1,14 @@
-import {isWebWorker} from '../../../common/window/win'
 export {insertSupportMetrics};    // export list
+import globalScope, { isWorkerScope } from '../../../common/util/global-scope'
 
 /**
  * True for each Worker type supported in browser's execution context. Not all browser versions may support certain Workers or options however.
  * - Warning: service workers are not available on unsecured HTTP sites
  */
 const workersApiIsSupported = {
-    dedicated: Boolean(self.Worker),
-    shared: Boolean(self.SharedWorker),
-    service: Boolean(self.navigator?.serviceWorker)
+    dedicated: Boolean(globalScope?.Worker),
+    shared: Boolean(globalScope?.SharedWorker),
+    service: Boolean(globalScope?.navigator?.serviceWorker)
 };
 
 let origWorker, origSharedWorker, origServiceWorkerCreate;
@@ -17,9 +17,9 @@ let origWorker, origSharedWorker, origServiceWorkerCreate;
  * @returns void
  */
 function resetSupportability() {
-    if (origWorker) self.Worker = origWorker;  // Worker was changed by this module
-    if (origSharedWorker) self.SharedWorker = origSharedWorker;
-    if (origServiceWorkerCreate) self.navigator.serviceWorker.register = origServiceWorkerCreate;
+    if (origWorker) globalScope.Worker = origWorker;  // Worker was changed by this module
+    if (origSharedWorker) globalScope.SharedWorker = origSharedWorker;
+    if (origServiceWorkerCreate) globalScope.navigator.serviceWorker.register = origServiceWorkerCreate;
     origWorker = origSharedWorker = origServiceWorkerCreate = undefined;
 }
 
@@ -37,22 +37,22 @@ function insertSupportMetrics(report) {
         return; // similarly, if dedicated is n/a, none of them are supported so quit
     } else {
         origWorker = Worker;
-        try { self.Worker = extendWorkerConstructor(origWorker, 'Dedicated'); }
+        try { globalScope.Worker = extendWorkerConstructor(origWorker, 'Dedicated'); }
         catch (e) { handleInsertionError(e, 'Dedicated'); }
     }
-    
+
     if (!workersApiIsSupported.shared) {
         reportUnavailable('Shared');
     } else {
         origSharedWorker = SharedWorker;
-        try { self.SharedWorker = extendWorkerConstructor(origSharedWorker, 'Shared'); }
+        try { globalScope.SharedWorker = extendWorkerConstructor(origSharedWorker, 'Shared'); }
         catch (e) { handleInsertionError(e, 'Shared'); }
     }
     if (!workersApiIsSupported.service) {
         reportUnavailable('Service');
     } else {
         origServiceWorkerCreate = navigator.serviceWorker.register;
-        try { self.navigator.serviceWorker.register = extendServiceCreation(origServiceWorkerCreate); }
+        try { globalScope.navigator.serviceWorker.register = extendServiceCreation(origServiceWorkerCreate); }
         catch (e) { handleInsertionError(e, 'Service'); }
     }
     return;
@@ -88,7 +88,7 @@ function insertSupportMetrics(report) {
 
     // Internal helpers - Reporting & logging
     function reportUnavailable(workerType) {
-        if (isWebWorker) return;    // assume that the main browser window has already reported unsupported worker APIs (once per page life);
+        if (isWorkerScope) return;    // assume that the main browser window has already reported unsupported worker APIs (once per page life);
             // on top of that, not all workers are available inside a certain worker per se--e.g. no sharedWorker() inside Worker
         report(`Workers/${workerType}/Unavailable`);
     }

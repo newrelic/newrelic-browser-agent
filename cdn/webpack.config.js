@@ -113,10 +113,6 @@ const commonConfig = {
     chunkFilename: SUBVERSION === 'PROD' ? `[name].[hash:8]${PATH_VERSION}.js` : `[name]${PATH_VERSION}.js`,
     path: path.resolve(__dirname, '../build'),
     publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
-    library: {
-      name: 'NRBA',
-      type: 'self'
-    },
     clean: false
   },
   plugins: [
@@ -142,6 +138,13 @@ const standardConfig = merge(commonConfig, {
       [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/pro.js'),
       [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './agent-loader/spa.js'),
       [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/spa.js'),
+  },
+  output: {
+    globalObject: 'window',
+    library: {
+      name: 'NRBA',
+      type: 'window'
+    }
   },
   module: {
     rules: [
@@ -215,6 +218,11 @@ const polyfillsConfig = merge(commonConfig, {
     ]
   },
   output: {
+    globalObject: 'window',
+    library: {
+      name: 'NRBA',
+      type: 'window'
+    },
     /**
      * Because the ./agent-aggregator/aggregator.js dependency is async loaded, the output filename for that chunk will
      * be the same across all bundles in non-production builds (where dependency filenames aren't hashed) and will thus
@@ -244,6 +252,13 @@ const workerConfig = merge(commonConfig, {
     }
   },
   module: standardConfig.module,
+  output: {
+    globalObject: 'self',
+    library: {
+      name: 'NRBA',
+      type: 'self'
+    },
+  },
   plugins: [
     instantiateBundleAnalyzerPlugin('worker'),
     instantiateSourceMapPlugin()

@@ -19,6 +19,7 @@ import { Instrument as InstrumentSpa } from '@newrelic/browser-agent-core/src/fe
 // common modules
 import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/common/util/enabled-features'
 import { configure } from './utils/configure'
+import globalScope from '@newrelic/browser-agent-core/src/common/util/global-scope'
 
 // set up the NREUM, api, and internal configs
 try {
@@ -39,7 +40,7 @@ try {
     // imports the aggregator for 'lite' if no other aggregator takes precedence
     stageAggregator('spa')
 } catch (err) {
-    if (self?.newrelic?.ee?.abort) self.newrelic.ee.abort()
+    if (globalScope?.newrelic?.ee?.abort) globalScope.newrelic.ee.abort()
     // todo
     // send supportability metric that the agent failed to load its features
 }

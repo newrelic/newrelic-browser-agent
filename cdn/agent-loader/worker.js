@@ -13,6 +13,7 @@ import { Instrument as InstrumentXhr } from '@newrelic/browser-agent-core/src/fe
 import { Instrument as InstrumentPageAction } from '@newrelic/browser-agent-core/src/features/page-action/instrument'
 // common modules
 import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/common/util/enabled-features'
+import globalScope from '@newrelic/browser-agent-core/src/common/util/global-scope'
 
 // set up the NREUM, api, and internal configs
 try {
@@ -25,7 +26,7 @@ try {
     // imports the aggregator for 'lite' if no other aggregator takes precedence
     stageAggregator('worker')
 } catch (err) {
-    if (self?.newrelic?.ee?.abort) self.newrelic.ee.abort()
+    if (globalScope?.newrelic?.ee?.abort) globalScope.newrelic.ee.abort()
     // todo
     // send supportability metric that the agent failed to load its features
 }

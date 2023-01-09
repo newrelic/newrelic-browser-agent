@@ -11,6 +11,7 @@ import { wrapRaf, wrapTimer, wrapEvents, wrapXhr } from '../../../common/wrap'
 import slice from 'lodash._slice'
 import './debug'
 import { FeatureBase } from '../../../common/util/feature-base'
+import globalScope from '../../../common/util/global-scope'
 
 var NR_ERR_PROP = 'nr@seenError'
 
@@ -21,8 +22,8 @@ export class Instrument extends FeatureBase {
     // errors that will be the same as caught errors.
     this.skipNext = 0
     this.handleErrors = false
-    this.origOnerror = self.onerror
-    
+    this.origOnerror = globalScope?.onerror
+
     const state = this
 
     const agentRuntime = getRuntime(this.agentIdentifier)
@@ -52,15 +53,15 @@ export class Instrument extends FeatureBase {
       handle('ierr', [e, now(), true], undefined, undefined, state.ee)
     })
 
-    const prevOnError = self.onerror
-    self.onerror = (...args) => {
+    const prevOnError = globalScope?.onerror
+    globalScope.onerror = (...args) => {
       if (prevOnError) prevOnError(...args)
       this.onerrorHandler(...args)
       return false
     }
 
     try {
-      self.addEventListener('unhandledrejection', (e) => {
+      globalScope?.addEventListener('unhandledrejection', (e) => {
         const err = new Error(`${e.reason}`)
         handle('err', [err, now(), false, {unhandledPromiseRejection: 1}], undefined, undefined, this.ee)
       })
@@ -76,7 +77,7 @@ export class Instrument extends FeatureBase {
         wrapTimer(this.ee)
         wrapRaf(this.ee)
 
-        if ('addEventListener' in self) {
+        if ('addEventListener' in globalScope) {
           wrapEvents(this.ee)
         }
 

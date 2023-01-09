@@ -4,7 +4,7 @@ import agentIdentifier from '../../shared/agentIdentifier'
 // common modules
 import { gosCDN } from '@newrelic/browser-agent-core/src/common/window/nreum'
 import { setConfiguration, setInfo, setLoaderConfig, setRuntime } from '@newrelic/browser-agent-core/src/common/config/config'
-import { isWebWorker } from '@newrelic/browser-agent-core/src/common/window/win'
+import { isWorkerScope } from '@newrelic/browser-agent-core/src/common/util/global-scope'
 
 let configured = false
 
@@ -12,7 +12,7 @@ export function configure() {
     if (configured) return
     const nr = gosCDN()
 
-    if (isWebWorker) {  // add a default attr to all worker payloads
+    if (isWorkerScope) {  // add a default attr to all worker payloads
         nr.info.jsAttributes = {...nr.info.jsAttributes, isWorker: true};
     }
 

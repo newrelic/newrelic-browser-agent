@@ -7,7 +7,7 @@ import { eventListenerOpts } from '../../../common/event-listener/event-listener
 import { FeatureBase } from '../../../common/util/feature-base'
 import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
-import { isBrowserWindow } from '../../../common/window/win'
+import globalScope, { isBrowserScope } from '../../../common/util/global-scope'
 
 var START = '-start'
 var END = '-end'
@@ -20,13 +20,13 @@ var JS_TIME = 'jsTime'
 var FETCH = 'fetch'
 var ADD_EVENT_LISTENER = 'addEventListener'
 
-var win = self
+var win = globalScope
 var location = win.location
 
 export class Instrument extends FeatureBase {
     constructor(agentIdentifier) {
         super(agentIdentifier)
-        if (!isBrowserWindow) return; // SPA not supported outside web env
+        if (!isBrowserScope) return; // SPA not supported outside web env
 
         const agentRuntime = getRuntime(this.agentIdentifier);
         // loader.xhrWrappable will be false in chrome for ios, but addEventListener is still available.
@@ -84,24 +84,24 @@ export class Instrument extends FeatureBase {
         function trackURLChange(unusedArgs, hashChangedDuringCb) {
             historyEE.emit('newURL', ['' + location, hashChangedDuringCb])
         }
-    
+
         function startTimestamp() {
             depth++
             startHash = location.hash
             this[FN_START] = now()
         }
-    
+
         function endTimestamp() {
             depth--
             if (location.hash !== startHash) {
                 trackURLChange(0, true)
             }
-    
+
             var time = now()
             this[JS_TIME] = (~~this[JS_TIME]) + time - this[FN_START]
             this[FN_END] = time
         }
-    
+
         function timestamp(ee, type) {
             ee.on(type, function () {
                 this[type] = now()

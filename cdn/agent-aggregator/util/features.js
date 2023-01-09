@@ -18,7 +18,7 @@ export const modules = {
 }
 
 const lite = [modules.pageViewEvent, modules.pageViewTiming] // lite agent cannot currently use metrics endpoint, because legacy lite customers are not provisioned access to that endpoint
-const pro = [...lite, modules.jsErrors, modules.ajax, modules.pageAction, modules.sessionTrace]
+const pro = [...lite, modules.metrics, modules.jsErrors, modules.ajax, modules.pageAction, modules.sessionTrace]
 const spa = [...pro, modules.spa]
 const worker = [ modules.metrics, modules.jsErrors, modules.ajax, modules.pageAction]
 

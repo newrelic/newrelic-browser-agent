@@ -22,8 +22,9 @@ import { configure } from './utils/configure'
 import globalScope from '@newrelic/browser-agent-core/src/common/util/global-scope'
 
 // set up the NREUM, api, and internal configs
+const loaderType = 'spa'
 try {
-    configure()
+    configure(loaderType)
     const enabledFeatures = getEnabledFeatures(agentIdentifier)
     // lite features
     if (enabledFeatures['page_view_event']) new InstrumentPageViewEvent(agentIdentifier) // document load (page view event + metrics)
@@ -38,7 +39,7 @@ try {
     if (enabledFeatures.spa) new InstrumentSpa(agentIdentifier) // spa
 
     // imports the aggregator for 'lite' if no other aggregator takes precedence
-    stageAggregator('spa')
+    stageAggregator(loaderType)
 } catch (err) {
     if (globalScope?.newrelic?.ee?.abort) globalScope.newrelic.ee.abort()
     // todo

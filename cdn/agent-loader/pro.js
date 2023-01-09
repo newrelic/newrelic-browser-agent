@@ -21,8 +21,9 @@ import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/common/util
 import globalScope from '@newrelic/browser-agent-core/src/common/util/global-scope'
 
 // set up the NREUM, api, and internal configs
+const loaderType = 'pro'
 try {
-    configure()
+    configure(loaderType)
 
     const enabledFeatures = getEnabledFeatures(agentIdentifier)
     // lite features
@@ -36,7 +37,7 @@ try {
     if (enabledFeatures['page_action']) new InstrumentPageAction(agentIdentifier) // ins (apis)
 
     // imports the aggregator for 'lite' if no other aggregator takes precedence
-    stageAggregator('pro')
+    stageAggregator(loaderType)
 } catch (err) {
     if (globalScope?.newrelic?.ee?.abort) globalScope.newrelic.ee.abort()
     // todo

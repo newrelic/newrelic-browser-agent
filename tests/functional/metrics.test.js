@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../tools/jil/index')
-const {asyncApiFns, failWithEndTimeout, extractWorkerSM, getMetricsFromResponse} = require('./uncat-internal-help.cjs')
+const { asyncApiFns, failWithEndTimeout, extractWorkerSM, getMetricsFromResponse } = require('./uncat-internal-help.cjs')
 
 const withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 const fetchBrowsers = testDriver.Matcher.withFeature('fetchExt')
@@ -12,8 +12,39 @@ const fetchBrowsers = testDriver.Matcher.withFeature('fetchExt')
 const NUM_POLYFILL_SM_FEATS = 4;  // disabled in workers
 const multipleApiCalls = asyncApiFns[1]; // page should trigger 5 calls of 'setPageViewName'
 
+// rum agent does not collect metrics
+const loaderTypes = ['full', 'spa']
+const loaderTypesMapped = {full: 'pro', spa: 'spa'}
+loaderTypes.forEach(lt => loaderTypeSupportabilityMetric(lt))
+
+function loaderTypeSupportabilityMetric(loaderType) {
+  testDriver.test(`generic agent info is captured - ${loaderType}`, fetchBrowsers, function (t, browser, router) {
+    let rumPromise = router.expectRumAndErrors()
+    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', {
+      loader: loaderType,
+      init: {
+        jserrors: {
+          enabled: false
+        }
+      }
+    }))
+
+    Promise.all([rumPromise, loadPromise])
+      .then(([data]) => {
+        console.log(data.body)
+        var supportabilityMetrics = getMetricsFromResponse(data, true)
+        const loaderTypeSM = supportabilityMetrics.find(x => x.params.name.includes('LoaderType'))
+        t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
+        t.ok(!!loaderTypeSM, `LoaderType was captured for ${loaderType}`)
+        t.ok(loaderTypeSM.params.name.includes(loaderTypesMapped[loaderType]), `LoaderType SM matches ${loaderType}`)
+        t.end()
+      })
+      .catch(failWithEndTimeout(t))
+  })
+}
+
 testDriver.test('Calling a newrelic[api] fn creates a supportability metric', withUnload, function (t, browser, router) {
-  t.plan((asyncApiFns.length) + 5 + NUM_POLYFILL_SM_FEATS)
+  t.plan((asyncApiFns.length) + 6 + NUM_POLYFILL_SM_FEATS)
   let rumPromise = router.expectRumAndErrors()
   let loadPromise = browser.get(router.assetURL('api/customMetrics.html', {
     init: {
@@ -39,11 +70,11 @@ testDriver.test('Calling a newrelic[api] fn creates a supportability metric', wi
         const match = asyncApiFns.find(x => x === sm.params.name);
         if (match) observedAPImetrics.push(match);
 
-        if (sm.params.name === multipleApiCalls) 
+        if (sm.params.name === multipleApiCalls)
           t.equal(sm.stats.c, 5, sm.params.name + ' count was incremented by 1 until reached 5');
         else if (sm.params.name.startsWith('Workers/'))
           continue; // these metrics have an unreliable count dependent & are tested separately anyways
-        else 
+        else
           t.equal(sm.stats.c, 1, sm.params.name + ' count was incremented by 1');
       }
 

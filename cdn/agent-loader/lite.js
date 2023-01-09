@@ -16,9 +16,10 @@ import { Instrument as InstrumentMetrics } from '@newrelic/browser-agent-core/sr
 import { getEnabledFeatures } from '@newrelic/browser-agent-core/src/common/util/enabled-features'
 import globalScope from '@newrelic/browser-agent-core/src/common/util/global-scope'
 
+const loaderType = 'lite'
 try {
     // set up the NREUM, api, and internal configs
-    configure()
+    configure(loaderType)
     const enabledFeatures = getEnabledFeatures(agentIdentifier)
     // instantiate auto-instrumentation specific to this loader...
     if (enabledFeatures['page_view_event']) new InstrumentPageViewEvent(agentIdentifier) // document load (page view event + metrics)
@@ -26,7 +27,7 @@ try {
     if (enabledFeatures.metrics) new InstrumentMetrics(agentIdentifier, PolyfillFeatures)   // supportability & custom metrics
 
     // lazy-loads the aggregator features for 'lite' if no other aggregator takes precedence
-    stageAggregator('lite')
+    stageAggregator(loaderType)
 } catch (err) {
     if (globalScope?.newrelic?.ee?.abort) globalScope.newrelic.ee.abort()
     // todo

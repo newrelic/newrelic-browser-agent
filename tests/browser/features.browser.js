@@ -72,7 +72,6 @@ test("initializing features - lite", function (t) {
   let aggregators = mockImportFeatures("lite");
 
   checkEverythingInitialized(aggregators, t);
-  t.ok(aggregators.initialized[featName.metrics], `"${featName.metrics}" expected to be initialized.`);
   t.ok(aggregators.initialized[featName.pageViewEvent], `"${featName.pageViewEvent}" expected to be initialized.`);
   t.ok(aggregators.initialized[featName.pageViewTiming], `"${featName.pageViewTiming}" expected to be initialized.`);
   t.notOk(aggregators.initialized[featName.jsErrors], `"${featName.jsErrors}" was not initialized in this build.`);

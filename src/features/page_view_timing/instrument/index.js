@@ -11,7 +11,8 @@ import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { isBrowserScope } from '../../../common/util/global-scope'
-import {onINP} from 'web-vitals'
+import { onINP } from 'web-vitals'
+import { onLT } from './long-tasks'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -56,10 +57,15 @@ export class Instrument extends InstrumentBase {
       documentAddEventListener(e, (...args) => this.captureInteraction(...args))
     })
 
-
+    /** Interaction-to-Next-Paint */
     onINP(({name, value}) => {
       handle('timing', [name.toLowerCase(), value], undefined, undefined, this.ee);
-    })
+    });
+
+    /** Long tasks */
+    onLT(({name, value, info}) => {
+      handle('timing', [name.toLowerCase(), value, info], undefined, undefined, this.ee); // lt context is passed as attrs in the timing node
+    });
 
     // Document visibility state becomes hidden
     subscribeToVisibilityChange(() => {

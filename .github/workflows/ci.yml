@@ -2,9 +2,9 @@ name: Browser Agent CI
 
 on:
   push:
-  workflow_dispatch:
+    branches:
+      - 'main'
   pull_request:
-    types: [ opened, reopened ]
 
 jobs:
   lint:

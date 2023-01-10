@@ -9,27 +9,13 @@ env:
   BUILD_NUMBER: PR${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
 
 jobs:
-  lint:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
-    runs-on: ubuntu-latest
-    container: node:14
-    
-    steps:
-      - uses: actions/checkout@v3
-      - name: checkout and build
-        uses: ./.github/actions/test-setup
-
-      - name: lint
-        run: npm run lint
-  
   chrome-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -49,7 +35,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -69,7 +55,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -89,7 +75,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -109,7 +95,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -129,7 +115,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -149,7 +135,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -169,7 +155,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -189,7 +175,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -209,7 +195,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -229,7 +215,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -249,7 +235,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-   
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}

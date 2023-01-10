@@ -17,6 +17,7 @@
   },
   "scripts": {
     "start": "npm-run-all --parallel cdn:watch test-server",
+    "unit": "jest",
     "test": "node tools/jil/bin/cli.js",
     "build:all": "npm run cdn:build:local && npm run build:npm",
     "build:npm": "npm run npm:build:esm && npm run npm:build:cjs",

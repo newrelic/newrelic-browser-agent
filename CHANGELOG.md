@@ -17,6 +17,9 @@ The agent is now compatible with _only modern web syntax (ES6+)_; **this reduces
 ### Fix nrWrapper exclusion in error stack traces
 Restoring previous functionality whereby the `nrWrapper` agent method should be excluded from JavaScript error stack traces.
 
+### Remove metrics feature from the "lite" agent build
+To support legacy lite accounts, internal metric collections have been removed from the "lite" agent build.
+
 ## v1221
 
 ### Add infrastructure to run on web workers

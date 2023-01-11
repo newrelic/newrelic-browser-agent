@@ -159,33 +159,3 @@ testDriver.test('ALL OTHER FEATURES - Kills feature if 403', supported, function
     t.end()
   }
 })
-
-// testDriver.test('SESSION_TRACE - Does not retry if 403', supported, function (t, browser, router) {
-//   const init = {
-//     session_trace: { enabled: true, harvestTimeSeconds: 5 }
-//   }
-//   router.scheduleResponse('resources', 403)
-
-//   const assetURL = router.assetURL('instrumented.html', { loader: 'full', init })
-//   const rumPromise = router.expectRum()
-//   const loadPromise = browser.get(assetURL)
-//   const ajaxPromise = router.expectAjaxEvents()
-
-//   Promise.all([ajaxPromise, rumPromise, loadPromise]).then(([data]) => {
-//     t.equal(data.res.statusCode, 403, 'server responded with 403')
-//     // wait 15 seconds to ensure time to retry (retry should not happen)
-//     timedPromiseAll([router.expectAjaxEvents()], 15000)
-//       .then(errors => {
-//         t.fail('should not have recieved more ajax')
-//       }).catch(() => {
-//         t.pass('did not recieve more ajax :)')
-//       }).finally(() => {
-//         t.end()
-//       })
-//   }).catch(fail)
-
-//   function fail(err) {
-//     t.error(err)
-//     t.end()
-//   }
-// })

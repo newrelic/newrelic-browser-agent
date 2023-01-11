@@ -33,7 +33,8 @@ jil.browserTest('LCP event with CLS attribute', function (t) {
   handle('cls', [{ value: 2 }], undefined, undefined, pvtAgg.ee)
 
   // invoke final harvest, which includes harvesting LCP
-  pvtAgg.finalHarvest()
+  pvtAgg.recordLcp();
+  pvtAgg.recordPageUnload(Date.now());
 
   var timing = find(pvtAgg.timings, function(t) {
     return t.name === 'lcp'

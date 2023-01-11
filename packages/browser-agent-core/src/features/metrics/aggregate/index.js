@@ -18,10 +18,12 @@ export class Aggregate extends FeatureBase {
     }
 
     storeMetric(type, name, params, value) {
+        if (this.blocked) return
         this.aggregator.storeMetric(type, name, params, value)
     }
 
     storeEventMetrics(type, name, params, metrics) {
+        if (this.blocked) return
         this.aggregator.store(type, name, params, metrics)
     }
 }

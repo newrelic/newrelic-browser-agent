@@ -195,6 +195,7 @@ export class Aggregate extends FeatureBase {
     // and spa annotates the error with interaction info
     handle('errorAgg', [type, bucketHash, params, newMetrics], undefined, undefined, this.ee)
 
+    if (this.blocked) return
     if (params._interactionId != null) {
       // hold on to the error until the interaction finishes
       this.errorCache[params._interactionId] = this.errorCache[params._interactionId] || []
@@ -219,7 +220,7 @@ export class Aggregate extends FeatureBase {
   }
 
   onInteractionSaved (interaction) {
-    if (!this.errorCache[interaction.id]) return
+    if (!this.errorCache[interaction.id] || this.blocked) return
 
     this.errorCache[interaction.id].forEach( (item) => {
       var customParams = {}
@@ -253,7 +254,7 @@ export class Aggregate extends FeatureBase {
   }
 
   onInteractionDiscarded (interaction) {
-    if (!this.errorCache || !this.errorCache[interaction.id]) return
+    if (!this.errorCache || !this.errorCache[interaction.id] || this.blocked) return
 
     this.errorCache[interaction.id].forEach( (item) => {
       var customParams = {}

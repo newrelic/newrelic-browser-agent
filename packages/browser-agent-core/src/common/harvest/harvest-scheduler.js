@@ -23,6 +23,12 @@ export class HarvestScheduler extends SharedContext {
 
     this.harvest = new Harvest(this.sharedContext)
 
+    this.onHarvestBlocked = () => {
+      // This feature got a 403... dont stage for next harvest
+      clearTimeout(this.timeoutHandle)
+      parent.blocked = true
+    }
+
     subscribeToEOL(() => {
       // If opts.onUnload is defined, these are special actions to execute before attempting to send the final payload.
       if (this.opts.onUnload) this.opts.onUnload();
@@ -83,7 +89,8 @@ export class HarvestScheduler extends SharedContext {
     return;
 
     function onHarvestFinished(result) {
-      scheduler.onHarvestFinished(opts, result)
+      if (result.blocked) scheduler.onHarvestBlocked(opts, result)
+      else scheduler.onHarvestFinished(opts, result)
     }
   }
 

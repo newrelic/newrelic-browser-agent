@@ -25,6 +25,7 @@ export class HarvestScheduler extends SharedContext {
 
     this.onHarvestBlocked = () => {
       // This feature got a 403... dont stage for next harvest
+      // parent.blocked sets FeatureBase.blocked = true, which is checked in each agg's storage methods
       clearTimeout(this.timeoutHandle)
       parent.blocked = true
     }

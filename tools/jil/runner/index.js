@@ -104,6 +104,11 @@ function getBuildIdentifier() {
 
 function loadBrowsersAndRunTests() {
   let browsers = browserList(config.browsers)
+  if (config.browsers === '*@*') {
+    browsers = browsers.filter(b => {
+      return b.desired.platform !== 'linux'
+    })
+  }
   if (!browsers || browsers.length === 0) {
     console.log('No browsers matched: ' + config.browsers)
     return process.exit(1)

@@ -101,18 +101,19 @@ function browserList(pattern = 'chrome@latest') {
 }
 
 function parse(pattern) {
-  let [browser, range] = pattern.split('@')
-  return getBrowsersFor(browser || 'chrome', range)
+  let [browserFull, platform] = pattern.split('/')
+  let [browser, range] = browserFull.split('@')
+  return getBrowsersFor(browser || 'chrome', range, platform)
 }
 
-function getBrowsersFor(browser, range) {
+function getBrowsersFor(browser, range, platform) {
   let list = []
   if (allowedBrowsers[browser]) list = allowedBrowsers[browser].slice()
   else if (browser === '*') list = Object.keys(allowedBrowsers).reduce(merge, [])
 
   list.sort(byVersion)
 
-  if (!range) {
+  if (!range && !platform) {
     return list
   } else if (range === 'beta') {
     return list.filter(findBetaVersions)
@@ -128,6 +129,9 @@ function getBrowsersFor(browser, range) {
     if (option.platformVersion === 'beta' || option.version === 'beta') {
       return false
     }
+    if (platform && option.platform.toLowerCase() !== platform.toLowerCase()) {
+      return false
+    }
     // NOTE: 'range' itself needs to be sanitized as semver will not accept "latest - 73" or even "9999 - 73"
     return semver.satisfies(cleanVersion(option.platformVersion || option.version), range)
   }
@@ -137,6 +141,9 @@ function getBrowsersFor(browser, range) {
   }
 
   function findLatestVersions(option) {
+    if (platform && option.platform.toLowerCase() !== platform.toLowerCase()) {
+      return false
+    }
     return (option.version === this.valueOf())  // 'this' should be bound to the lastest version string (object)
   }
 }

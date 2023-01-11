@@ -23,10 +23,27 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
  * A template object to be returned by {@link getBrowsers}.
  */
 const browsers = {
-    chrome: [],
-    edge: [],
+    chrome: [
+      {
+        "browserName": "chrome",
+        "platform": "linux",
+        "version": "latest"
+      }
+    ],
+    edge: [
+      {
+        "browserName": "edge",
+        "platform": "linux",
+        "version": "latest"
+      }
+    ],
     safari: [],
-    firefox: [],
+    firefox: [
+      {
+        "browserName": "firefox",
+        "platform": "linux",
+        "version": "latest"
+      }],
     android: [], // no longer works with W3C commands.... need to change JIL or do deeper dive to get this to work
     ios: []
 }
@@ -123,7 +140,7 @@ function getBrowsers(sauceBrowsers) {
             uniques.push(nextLatest);
             versionsSeen.add(nextLatest.short_version);
         }
-        
+
         // We only test 4 versions, so condense the array as needed.
         uniques = evenlySampleArray(uniques, 4)
 

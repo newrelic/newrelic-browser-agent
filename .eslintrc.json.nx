@@ -2,6 +2,10 @@
   "root": true,
   "ignorePatterns": ["**/*"],
   "plugins": ["@nrwl/nx"],
+  "env": {
+    "browser": true,
+    "es2020": true
+  },
   "overrides": [
     {
       "files": ["*.ts", "*.js"],
@@ -14,7 +18,8 @@
             "depConstraints": [
               {
                 "sourceTag": "*",
-                "onlyDependOnLibsWithTags": ["*"]
+                "onlyDependOnLibsWithTags": ["*"],
+                "notDependOnLibsWithTags": ["test"]
               }
             ]
           }
@@ -32,8 +37,9 @@
       "rules": {}
     },
     {
-      "files": ["*.spec.ts", "*.spec.js", "**/__mocks__/**/*", "**/__tests__/**/*"],
+      "files": ["*.spec.ts", "*.spec.js", "*.test.ts", "*.test.js", "**/__mocks__/**/*", "**/__tests__/**/*"],
       "env": {
+        "node": true,
         "jest": true
       },
       "rules": {

@@ -67,6 +67,7 @@ export class Aggregate extends FeatureBase {
     }
 
     function storeXhr(params, metrics, startTime, endTime, type) {
+      if (this.blocked) return
       metrics.time = startTime
 
       // send to session traces

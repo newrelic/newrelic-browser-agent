@@ -6,5 +6,6 @@ export class FeatureBase {
     this.aggregator = aggregator
     this.ee = ee.get(agentIdentifier)
     this.externalFeatures = externalFeatures
+    this.blocked = false
   }
 }

@@ -27,11 +27,11 @@ export class Aggregate extends FeatureBase {
 
     if (isBrowserScope && document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
-      register('api-addPageAction', (...args) => this.addPageAction(...args), undefined, this.ee)
+    register('api-addPageAction', (...args) => this.addPageAction(...args), undefined, this.ee)
 
-      var scheduler = new HarvestScheduler('ins', {onFinished: (...args) => this.onHarvestFinished(...args)}, this)
-      scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
-      scheduler.startTimer(this.harvestTimeSeconds, 0)
+    var scheduler = new HarvestScheduler('ins', {onFinished: (...args) => this.onHarvestFinished(...args)}, this)
+    scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
+    scheduler.startTimer(this.harvestTimeSeconds, 0)
   }
 
   onHarvestStarted (options) {
@@ -63,7 +63,7 @@ export class Aggregate extends FeatureBase {
 
   // WARNING: Insights times are in seconds. EXCEPT timestamp, which is in ms.
   addPageAction (t, name, attributes) {
-    if (this.events.length >= this.eventsPerHarvest) return
+    if (this.events.length >= this.eventsPerHarvest || this.blocked) return
     var width
     var height
     var eventAttributes = {}

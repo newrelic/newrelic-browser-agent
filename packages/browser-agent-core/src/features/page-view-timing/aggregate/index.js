@@ -147,6 +147,7 @@ export class Aggregate extends FeatureBase {
   }
 
   addTiming(name, value, attrs, addCls) {
+    if (this.blocked) return
     attrs = attrs || {}
     // collect 0 only when CLS is supported, since 0 is a valid score
     if ((this.cls > 0 || this.clsSupported) && addCls) {

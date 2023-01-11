@@ -26,7 +26,7 @@ export class Aggregate extends FeatureBase {
     this.clsSupported = false
     this.cls = 0
     this.clsSession = {value: 0, firstEntryTime: 0, lastEntryTime: 0}
-    this.userSessionEnded = false
+    this.curSessEndRecorded = false
 
     try {
       this.clsSupported = PerformanceObserver.supportedEntryTypes.includes('layout-shift')
@@ -41,13 +41,14 @@ export class Aggregate extends FeatureBase {
     this.scheduler = new HarvestScheduler('events', {
       onFinished: (...args) => this.onHarvestFinished(...args),
       getPayload: (...args) => this.prepareHarvest(...args),
-      onUnload: () => this.finalHarvest()
+      onUnload: () => this.recordLcp()  // send whatever available LCP we have, if one hasn't already been sent when current window session ends
     }, this)
 
     registerHandler('timing', (...args) => this.processTiming(...args), undefined, this.ee)
     registerHandler('lcp', (...args) => this.updateLatestLcp(...args), undefined, this.ee)
     registerHandler('cls', (...args) => this.updateClsScore(...args), undefined, this.ee)
-    registerHandler('pageHide', (...args) => this.updateSessionEnd(...args), undefined, this.ee)
+    registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), undefined, this.ee);
+    registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), undefined, this.ee);
 
     // After 1 minute has passed, record LCP value if no user interaction has occurred first
     setTimeout(() => {
@@ -122,28 +123,23 @@ export class Aggregate extends FeatureBase {
   }
 
   /**
-   * Add the time of _document visibilitychange to hidden_ to the next PVT harvest.
+   * Add the time of _document visibilitychange to hidden_ to the next PVT harvest == NRDB pageHide attr.
    * @param {number} timestamp
    */
-  updateSessionEnd(timestamp) {
-    if (!this.userSessionEnded) { // TO DO: stage 2 - we don't want to capture this timing twice on page navigating away, but it should run again if we return to page and away *again*
-      this.addTiming('pageHide', timestamp, null, true)
-      this.userSessionEnded = true
+  endCurrentSession(timestamp) {
+    if (!this.curSessEndRecorded) { // TO DO: stage 2 - we don't want to capture this timing twice on page navigating away, but it should run again if we return to page and away *again*
+      this.addTiming('pageHide', timestamp, null, true);
+      this.curSessEndRecorded = true;
     }
   }
 
   /**
-   * Add the time of _window pagehide even_ firing to the next PVT harvest.
+   * Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr.
    */
-  recordPageUnload() {
-    const timeNow = now();
-    this.updateSessionEnd(timeNow)  // visibilitychange fires after window's pagehide event so if this isn't here, our 'pageHide' timing won't get captured in final harvest
-    this.addTiming('unload', timeNow, null, true)
-  }
-
-  finalHarvest() {
-    this.recordLcp()
-    this.recordPageUnload()
+  recordPageUnload(timestamp) {
+    this.addTiming('unload', timestamp, null, true);
+    // Because window's pageHide commonly fires before vis change and the final harvest occurs on the earlier of the two, we also have to add that now or it won't make it into the last payload out.
+    this.endCurrentSession(timestamp);
   }
 
   addTiming(name, value, attrs, addCls) {

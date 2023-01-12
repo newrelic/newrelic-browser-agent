@@ -8,7 +8,7 @@ import { isWorkerScope } from '@newrelic/browser-agent-core/src/common/util/glob
 
 let configured = false
 
-export function configure() {
+export function configure(loaderType) {
     if (configured) return
     const nr = gosCDN()
 
@@ -20,7 +20,7 @@ export function configure() {
         setInfo(agentIdentifier, nr.info)
         setConfiguration(agentIdentifier, nr.init)
         setLoaderConfig(agentIdentifier, nr.loader_config)
-        setRuntime(agentIdentifier, {})
+        setRuntime(agentIdentifier, {loaderType})
 
         // add api calls to the NREUM object
         setAPI(agentIdentifier)

@@ -8,6 +8,7 @@ import { VERSION } from '../../../common/constants/environment-variables'
 import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope } from '../../../common/util/global-scope'
+import { getRuntime } from '../../../common/config/config'
 import { insertSupportMetrics } from './workers-helper'
 
 var SUPPORTABILITY_METRIC = 'sm'
@@ -60,8 +61,12 @@ export class Instrument extends FeatureBase {
     }
 
     singleChecks() {
+        // report generic info about the agent itself
         // note the browser agent version
         this.recordSupportability(`Generic/Version/${VERSION}/Detected`)
+        // report loaderType 
+        const {loaderType} = getRuntime(this.agentIdentifier)
+        if (loaderType) this.recordSupportability(`Generic/LoaderType/${loaderType}/Detected`)
 
         // frameworks on page
         if(isBrowserScope) onDOMContentLoaded(() => {

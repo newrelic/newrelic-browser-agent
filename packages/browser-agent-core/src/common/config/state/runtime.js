@@ -14,6 +14,7 @@ const model = agentId => { return {
   customTransaction: undefined,
   disabled: false,
   features: {},
+  loaderType: undefined,
   maxBytes: ieVersion === 6 ? 2000 : 30000,
   offset: getLastTimestamp(),
   onerror: undefined,

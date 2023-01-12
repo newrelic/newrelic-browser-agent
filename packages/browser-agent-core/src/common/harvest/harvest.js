@@ -33,7 +33,6 @@ export class Harvest extends SharedContext {
     this.getScheme = () => (getConfigurationValue(this.sharedContext.agentIdentifier, 'ssl') === false) ? 'http' : 'https'
 
     this._events = {}
-    this.blocked = false
   }
 
   /**

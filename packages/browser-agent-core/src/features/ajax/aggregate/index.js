@@ -67,7 +67,6 @@ export class Aggregate extends FeatureBase {
     }
 
     function storeXhr(params, metrics, startTime, endTime, type) {
-      if (this.blocked) return
       metrics.time = startTime
 
       // send to session traces
@@ -80,6 +79,7 @@ export class Aggregate extends FeatureBase {
 
       handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, undefined, ee)
 
+      if (this.blocked) return
       // store as metric
       aggregator.store('xhr', hash, params, metrics)
 

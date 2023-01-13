@@ -49,6 +49,12 @@ export class Aggregate extends FeatureBase {
     this.scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
     this.scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
     this.scheduler.startTimer(harvestTimeSeconds)
+
+    // if rum response determines that customer lacks entitlements for ins endpoint, block it
+    this.ee.on('block-err', () => {
+      this.blocked = true
+      this.scheduler.harvest.stopTimer()
+    })
   }
 
   onHarvestStarted(options) {
@@ -195,6 +201,7 @@ export class Aggregate extends FeatureBase {
     // and spa annotates the error with interaction info
     handle('errorAgg', [type, bucketHash, params, newMetrics], undefined, undefined, this.ee)
 
+    // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
     if (params._interactionId != null) {
       // hold on to the error until the interaction finishes

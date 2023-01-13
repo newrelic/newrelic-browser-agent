@@ -15,7 +15,8 @@ export class FeatureBase {
     /** @type {Feature[]} */
     this.externalFeatures = externalFeatures
     /**
-     * Blocked can be used to prevent aggregation and harvest after inititalization time of the feature.  This can currently happen with 403 harvest responses.
+     * Blocked can be used to prevent aggregation and harvest after inititalization time of the feature.
+     * This can currently happen if rum response setToken flag is 0, which is tied to ingest account entitlement info.
      * @type {boolean} 
      */
     this.blocked = false

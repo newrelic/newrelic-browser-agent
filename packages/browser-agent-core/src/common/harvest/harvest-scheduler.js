@@ -23,13 +23,6 @@ export class HarvestScheduler extends SharedContext {
 
     this.harvest = new Harvest(this.sharedContext)
 
-    this.onHarvestBlocked = () => {
-      // This feature got a 403... dont stage for next harvest
-      // parent.blocked sets FeatureBase.blocked = true, which is checked in each agg's storage methods
-      clearTimeout(this.timeoutHandle)
-      parent.blocked = true
-    }
-
     subscribeToEOL(() => {
       // If opts.onUnload is defined, these are special actions to execute before attempting to send the final payload.
       if (this.opts.onUnload) this.opts.onUnload();

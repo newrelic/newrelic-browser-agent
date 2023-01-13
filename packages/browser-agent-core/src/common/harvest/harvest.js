@@ -134,8 +134,6 @@ export class Harvest extends SharedContext {
           result.delay = this.tooManyRequestsDelay
         } else if (this.status === 408 || this.status === 500 || this.status === 503) {
           result.retry = true
-        } else if (this.status === 403) {
-          result.blocked = true
         }
 
         if (opts.needResponse) {

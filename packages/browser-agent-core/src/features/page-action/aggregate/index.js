@@ -29,12 +29,19 @@ export class Aggregate extends FeatureBase {
 
     register('api-addPageAction', (...args) => this.addPageAction(...args), undefined, this.ee)
 
-    var scheduler = new HarvestScheduler('ins', {onFinished: (...args) => this.onHarvestFinished(...args)}, this)
+
+    var scheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
     scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
     scheduler.startTimer(this.harvestTimeSeconds, 0)
+
+    // if rum response determines that customer lacks entitlements for ins endpoint, block it
+    this.ee.on('block-ins', () => {
+      this.blocked = true
+      scheduler.harvest.stopTimer()
+    })
   }
 
-  onHarvestStarted (options) {
+  onHarvestStarted(options) {
     const { userAttributes, atts } = getInfo(this.agentIdentifier)
     var payload = ({
       qs: {
@@ -54,7 +61,7 @@ export class Aggregate extends FeatureBase {
     return payload
   }
 
-  onHarvestFinished (result) {
+  onHarvestFinished(result) {
     if (result && result.sent && result.retry && this.currentEvents) {
       this.events = this.events.concat(this.currentEvents)
       this.currentEvents = null
@@ -62,7 +69,7 @@ export class Aggregate extends FeatureBase {
   }
 
   // WARNING: Insights times are in seconds. EXCEPT timestamp, which is in ms.
-  addPageAction (t, name, attributes) {
+  addPageAction(t, name, attributes) {
     if (this.events.length >= this.eventsPerHarvest || this.blocked) return
     var width
     var height
@@ -95,7 +102,7 @@ export class Aggregate extends FeatureBase {
 
     this.events.push(eventAttributes)
 
-    function set (key, val) {
+    function set(key, val) {
       eventAttributes[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
   }

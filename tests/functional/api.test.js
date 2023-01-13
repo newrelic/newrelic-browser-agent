@@ -7,6 +7,7 @@ const testDriver = require('../../tools/jil/index')
 const {fail, getTime} = require('./uncat-internal-help.cjs')
 const {getErrorsFromResponse} = require('./err/assertion-helpers')
 
+const asserters = testDriver.asserters
 let withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 
 testDriver.test('customTransactionName 1 arg', function (t, browser, router) {
@@ -327,6 +328,20 @@ testDriver.test('no query param when release is not set', withUnload, function (
     })
     .then(({query, body}) => {
       t.notOk('ri' in query, 'should not have ri query param')
+      t.end()
+    })
+    .catch(fail(t));
+})
+
+testDriver.test('api is available when sessionStorage is not', function (t, browser, router) {
+  let rumPromise = router.expectRum()
+  let loadPromise = browser.get(router.assetURL('api/session-storage-disallowed.html'));
+
+  Promise.all([loadPromise, rumPromise])
+    .then(() =>
+      browser.waitFor(asserters.jsCondition('typeof window.newrelic.addToTrace === \'function\''))
+    ).then((result) => {
+      t.ok(result)
       t.end()
     })
     .catch(fail(t));

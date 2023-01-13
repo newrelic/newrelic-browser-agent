@@ -2,17 +2,17 @@
   "chrome": [
     {
       "browserName": "chrome",
-      "platform": "Windows 10",
-      "platformName": "Windows 10",
-      "version": "108",
-      "browserVersion": "108"
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
+      "version": "109",
+      "browserVersion": "109"
     },
     {
       "browserName": "chrome",
       "platform": "Windows 11",
       "platformName": "Windows 11",
-      "version": "105",
-      "browserVersion": "105"
+      "version": "106",
+      "browserVersion": "106"
     },
     {
       "browserName": "chrome",
@@ -107,8 +107,8 @@
       "platform": "Android",
       "platformName": "Android",
       "version": "9.0",
-      "device": "GalaxyS9FHDGoogleAPI",
-      "appium:deviceName": "Samsung Galaxy S9 FHD GoogleAPI Emulator",
+      "device": "GalaxyTabS3GoogleAPI",
+      "appium:deviceName": "Samsung Galaxy Tab S3 GoogleAPI Emulator",
       "appium:platformVersion": "9.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {

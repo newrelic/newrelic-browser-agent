@@ -28,13 +28,13 @@ if (isWorkerScope) {
  */
 export function subscribeToEOL (cb, allowBFCache) {
   if (isBrowserScope) {
-    var oneCall = single(cb); // TO DO: stage 2 - allow more than one "final harvest"
-
     if (allowBFCache) {
-      subscribeToVisibilityChange(oneCall, true); // when user switches tab or hides window, esp. mobile scenario
-      windowAddEventListener('pagehide', oneCall);  // when user navigates away, and because safari iOS v14.4- doesn't fully support vis change
-                                                    // --this ought to be removed once support for version below 14.5 phases out
+      subscribeToVisibilityChange(cb, true);  // when user switches tab or hides window, esp. mobile scenario
+      windowAddEventListener('pagehide', cb); // when user navigates away, and because safari iOS v14.4- doesn't fully support vis change
+                                                // --this ought to be removed once support for version below 14.5 phases out
     } else {
+      var oneCall = single(cb);
+
       // Firefox has a bug wherein a slow-loading resource loaded from the 'pagehide'
       // or 'unload' event will delay the 'load' event firing on the next page load.
       // In Firefox versions that support sendBeacon, this doesn't matter, because

@@ -4,7 +4,7 @@
  */
 import { handle } from '../../../common/event-emitter/handle'
 import { subscribeToVisibilityChange, initializeHiddenTime } from '../../../common/window/page-visibility'
-import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
+import { documentAddEventListener, windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { getOffset, now } from '../../../common/timing/now'
 import { getConfigurationValue, originals } from '../../../common/config/config'
 import { FeatureBase } from '../../../common/util/feature-base'
@@ -49,11 +49,18 @@ export class Instrument extends FeatureBase {
     this.fiRecorded = false
     var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart']
     allowedEventTypes.forEach((e) => {
-      document.addEventListener(e, (...args) => this.captureInteraction(...args), eventListenerOpts(false))
+      documentAddEventListener(e, (...args) => this.captureInteraction(...args));
     })
 
-    // page visibility events
-    subscribeToVisibilityChange(() => this.onDocHide(), true);
+    // Document visibility state becomes hidden
+    subscribeToVisibilityChange(() => {
+      // time is only recorded to be used for short-circuit logic in the observer callbacks
+      this.pageHiddenTime = now()
+      handle('docHidden', [this.pageHiddenTime], undefined, undefined, this.ee);
+    }, true);
+
+    // Window fires its pagehide event (typically on navigation; this occurrence is a *subset* of vis change)
+    windowAddEventListener('pagehide', () => handle('winPagehide', [now()], undefined, undefined, this.ee) );
   }
 
   isEnabled() {
@@ -135,11 +142,5 @@ export class Instrument extends FeatureBase {
       this.fiRecorded = true
       handle('timing', ['fi', fi, attributes], undefined, undefined, this.ee)
     }
-  }
-
-  onDocHide() {
-    // time is only recorded to be used for short-circuit logic in the observer callbacks
-    this.pageHiddenTime = now()
-    handle('pageHide', [this.pageHiddenTime], undefined, undefined, this.ee)
   }
 }

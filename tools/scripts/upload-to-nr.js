@@ -22,8 +22,8 @@ var argv = yargs
   .string('eu-api-key')
   .describe('eu-api-key', 'API key to use for talking to EU RPM site to upload loaders')
 
-  .string('version')
-  .describe('version', 'Browser Agent version number')
+  .string('v')
+  .describe('v', 'Browser Agent version number')
 
   .boolean('skip-upload-failures')
   .describe('skip-upload-failures', "Don't bail out after the first failure, keep trying other requests")
@@ -177,7 +177,7 @@ async function run() {
    */
   async function loaderFilenames() {
     const loaderTypes = ['rum', 'full', 'spa']
-    const version = argv['version']
+    const version = argv['v']
     const fileNames = loaderTypes.map(type => [
       `nr-loader-${type}-${version}.min.js`, 
       `nr-loader-${type}-polyfills-${version}.min.js`,

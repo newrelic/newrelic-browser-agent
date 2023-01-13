@@ -79,6 +79,7 @@ export class Aggregate extends FeatureBase {
 
       handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, undefined, ee)
 
+      if (this.blocked) return
       // store as metric
       aggregator.store('xhr', hash, params, metrics)
 

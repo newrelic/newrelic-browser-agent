@@ -1,5 +1,9 @@
 [![Community Plus header](https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png)](https://opensource.newrelic.com/oss-category/#community-plus)
 
+[![Smoke Test](https://github.com/newrelic/newrelic-browser-agent/actions/workflows/smoke-test.yml/badge.svg?event=schedule)](https://github.com/newrelic/newrelic-browser-agent/actions/workflows/smoke-test.yml)
+
+[![Polyfill Tests](https://github.com/newrelic/newrelic-browser-agent/actions/workflows/tests-polyfill.yml/badge.svg?branch=main)](https://github.com/newrelic/newrelic-browser-agent/actions/workflows/tests-polyfill.yml)
+
 # New Relic Browser agent
 
 The New Relic Browser agent instruments your website and provides observability into the performance and behavior of your application.

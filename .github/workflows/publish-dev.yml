@@ -28,6 +28,12 @@ jobs:
             --dev
       - name: check files exist
         run: node tools/scripts/check-version.js -e yes -d
+      - name: purge fastly cache url
+        run: |
+          node ./tools/scripts/fastly.js \
+            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
+            --env dev \
+            --purge-internal
       - name: re-publish internal loader
         run: |
           node ./tools/scripts/upload-ab-to-s3.js \
@@ -40,5 +46,4 @@ jobs:
         run: |
           node ./tools/scripts/fastly.js \
             --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
-            --env staging \
-            --purge-internal
+            --purge-path dev/nr-loader-spa.min.js

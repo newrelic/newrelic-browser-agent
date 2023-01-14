@@ -1,16 +1,18 @@
 name: Smoke Test
 
 on:
-  pull_request_target:
-    types: [labeled]
   workflow_dispatch:
+  schedule:
+    # Runs every day at 3AM
+    - cron: '0 3 * * *'
+
 
 env:
-  BUILD_NUMBER: PR${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+  BUILD_NUMBER: event-${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
 
 jobs:
   chrome:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'smoke test')
+    if: contains(fromJson('["schedule"]'), github.event_name) || contains(fromJson('["workflow_dispatch"]'), github.event_name)
     runs-on: ubuntu-latest
     container: node:14
     
@@ -26,5 +28,19 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=30
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=10
+  check-failures:
+    runs-on: ubuntu-latest
+    container: node:14
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test') && ${{ !failure() }}  # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
+    needs: [chrome]
+    env:
+      NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: checkout and build
+        uses: ./.github/actions/test-setup
+
+      - name: check failed tests
+        run: node --max-old-space-size=8192 ./tools/jil/util/get-failed-tests.js
   

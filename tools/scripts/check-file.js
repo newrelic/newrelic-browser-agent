@@ -18,6 +18,8 @@ if (!paths) {
     process.exit(1)
 }
 
+console.log(paths)
+
 (async () => {
     try {
         const files = await Promise.all(paths.map(path => getFile(path)))

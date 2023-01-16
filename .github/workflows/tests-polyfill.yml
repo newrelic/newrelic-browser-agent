@@ -1,10 +1,9 @@
 name: Polyfill Tests
 
 on:
-  push:
-    branches:
-      - main
-      - dev 
+  schedule:
+    # Runs every day at 4AM
+    - cron: '0 4 * * *'
   workflow_dispatch:
 
 

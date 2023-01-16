@@ -98,6 +98,7 @@ jobs:
   publish-to-nrdb:
     runs-on: ubuntu-latest
     container: node:14
+    needs: [publish-to-s3]
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}

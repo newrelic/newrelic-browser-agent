@@ -225,7 +225,7 @@ function runWindowLoadTests (loader) {
         t.ok(timings.length > 0, 'there should be at least one timing metric')
 
         var timing = timings.find(t => t.name === 'load')
-        t.ok(timings, 'there should be load timing')
+        t.ok(timing, 'there should be load timing')
         t.ok(timing.value > 0, 'value should be a positive number')
         t.ok(timing.value <= duration, 'value should not be larger than time to unload')
 
@@ -263,7 +263,7 @@ function runWindowUnloadTests (loader) {
         t.ok(timings.length > 0, 'there should be at least one timing metric')
 
         var timing = timings.find(t => t.name === 'unload')
-        t.ok(timings, 'there should be unload timing')
+        t.ok(timing, 'there should be unload timing')
         t.ok(timing.value > 0, 'value should be a positive number')
         t.ok(timing.value <= duration, 'value should not be larger than time to unload')
 
@@ -300,13 +300,13 @@ function runPageHideTests(loader) {
         t.ok(timings.length > 0, 'there should be at least one timing metric')
 
         let timing = timings.find(t => t.name === 'pageHide')
-        t.ok(timings, 'there should be pageHide timing')
+        t.ok(timing, 'there should be pageHide timing')
         t.ok(timing.value > 0, 'value should be a positive number')
         t.ok(timing.value <= duration, 'value should not be larger than time since start of the test')
 
         if (supportsINP.match(browser)) {
           timing = timings.find(t => t.name === 'inp');
-          t.ok(timings, 'there should be an INP timing')
+          t.ok(timing, 'there should be an INP timing')
           t.ok(timing.value >= 8, 'value should be a positive number')  // the minimum INP value whenever any interaction occurs is 8 (ms) -- rounded up
           t.ok(timing.value <= duration, 'value should not be larger than time since start of the test')
         }
@@ -675,7 +675,7 @@ function runCustomAttributeTests (loader) {
         t.ok(timings.length > 0, 'there should be at least one timing metric')
 
         const timing = timings.find(t => t.name === 'load')
-        t.ok(timings, 'there should be load timing')
+        t.ok(timing, 'there should be load timing')
 
         // attributes are invalid if they have the 'invalid' value set via setCustomAttribute
         const containsReservedAttributes = timing.attributes.some(a => reservedTimingAttributes.includes(a.key) && a.value === 'invalid')

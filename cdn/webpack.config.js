@@ -7,7 +7,7 @@ const pkg = require('./package.json')
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
-const {PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE} = process.env
+let { PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE } = process.env
 // this will change to package.json.version when it is aligned between all the packages
 let VERSION = VERSION_OVERRIDE || fs.readFileSync('../VERSION', 'utf-8')
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
@@ -18,12 +18,14 @@ switch (PUBLISH) {
     SUBVERSION = 'PROD'
     PUBLIC_PATH = 'https://js-agent.newrelic.com/'
     MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/[url]'
+    SOURCEMAPS = false
     break
   case 'CURRENT':
     PATH_VERSION = `-current`
     SUBVERSION = 'PROD'
     PUBLIC_PATH = 'https://js-agent.newrelic.com/'
     MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/[url]'
+    SOURCEMAPS = false
     break
   case 'DEV':
     PATH_VERSION = ``
@@ -36,7 +38,7 @@ switch (PUBLISH) {
     SUBVERSION = `${PR_NAME}`
     PUBLIC_PATH = `https://js-agent.newrelic.com/pr/${PR_NAME}/`
     MAP_PATH = `\n//# sourceMappingURL=https://js-agent.newrelic.com/pr/${PR_NAME}/[url]`
-    VERSION = (Number(VERSION)+1).toString()
+    VERSION = (Number(VERSION) + 1).toString()
     break
   case 'EXTENSION':
     // build for extension injection
@@ -140,7 +142,6 @@ const standardConfig = merge(commonConfig, {
       [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/spa.js'),
   },
   output: {
-    iife: false,
     globalObject: 'window',
     library: {
       name: 'NRBA',

@@ -48,8 +48,8 @@ class TestServer {
 
   async start() {
     await Promise.all([
-      this.#assetServer.listen({ port: this.#config.port }),
-      this.#corsServer.listen(),
+      this.#assetServer.listen({ host: '0.0.0.0', port: this.#config.port }),
+      this.#corsServer.listen({ host: '0.0.0.0', port: 0 }),
       this.#collectorServer.start(),
     ]);
 

@@ -135,4 +135,9 @@ module.exports = fp(async function (fastify, opts) {
       .header("Content-Type", "application/javascript; charset=UTF-8")
       .send(contents);
   });
+  fastify.get("/empty404", async (request, reply) => {
+    reply
+      .code(404)
+      .send('');
+  });
 });

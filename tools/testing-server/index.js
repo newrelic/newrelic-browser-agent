@@ -4,13 +4,6 @@ const fastify = require("fastify");
 const { urlFor } = require("./utils/url");
 const waitOn = require("wait-on");
 
-/**
- * Test URLs:
- * http://bam-test-1.nr-local.net:3333/tests/assets/worker/classic-worker.html?workerCommands=WyIoKSA9PiB7XG5cdFx0XHRcdFx0c2V0VGltZW91dChmdW5jdGlvbiAoKSB7XG5cdFx0XHRcdFx0XHR2YXIgeGhyID0gbmV3IFhNTEh0dHBSZXF1ZXN0KClcblx0XHRcdFx0XHRcdHhoci5vcGVuKCdHRVQnLCAnL2pzb24nKVxuXHRcdFx0XHRcdFx0eGhyLnNlbmQoKVxuXHRcblx0XHRcdFx0XHR9LCAyMDAwKTtcblx0XHRcdFx0fSJd&init=eyJhamF4Ijp7ImhhcnZlc3RUaW1lU2Vjb25kcyI6MiwiZW5hYmxlZCI6ZmFsc2V9fQ%3D%3D&config=eyJsaWNlbnNlS2V5IjoibDE0NXRuYnFoN3IifQ%3D%3D&loader=full
- * http://bam-test-1.nr-local.net:3333/tests/assets/js-error-column-bucketing.html?linit=eyJwYWdlX3ZpZXdfdGltaW5nIjp7ImVuYWJsZWQiOmZhbHNlfSwibWV0cmljcyI6eyJlbmFibGVkIjpmYWxzZX0sImpzZXJyb3JzIjp7ImVuYWJsZWQiOnRydWUsImhhcnZlc3RUaW1lU2Vjb25kcyI6NX19&loader=full&config=eyJsaWNlbnNlS2V5IjoieG1yaWgybnh1biJ9
- * http://bam-test-1.nr-local.net:3333/tests/assets/browser.html?config=eyJhc3NldFNlcnZlclBvcnQiOjMzMzMsImNvcnNTZXJ2ZXJQb3J0Ijo2MDY4NH0%3D&script=%2Ftests%2Fbrowser%2Ftimings-fi-attributes.browser.js%3Fbrowserify%3Dtrue
- */
-
 class TestServer {
   #config;
   #agentConfig;

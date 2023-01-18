@@ -18,15 +18,15 @@
       "browserName": "chrome",
       "platform": "Windows 11",
       "platformName": "Windows 11",
-      "version": "102",
-      "browserVersion": "102"
+      "version": "103",
+      "browserVersion": "103"
     },
     {
       "browserName": "chrome",
-      "platform": "Windows 10",
-      "platformName": "Windows 10",
-      "version": "99",
-      "browserVersion": "99"
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
+      "version": "100",
+      "browserVersion": "100"
     }
   ],
   "edge": [
@@ -93,12 +93,12 @@
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "101"
+      "version": "102"
     },
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "98"
+      "version": "99"
     }
   ],
   "android": [

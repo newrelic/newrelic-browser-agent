@@ -29,4 +29,4 @@ jobs:
             --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
             --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
             --eu-api-key=${{ secrets.NR_API_KEY_EU }} \
-            --version=${{ github.event.inputs.version }}
+            --v=${{ github.event.inputs.version }}

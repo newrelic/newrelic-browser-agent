@@ -117,7 +117,7 @@ jobs:
             --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
             --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
             --eu-api-key=${{ secrets.NR_API_KEY_EU }} \
-            --version=$(cat VERSION)
+            --v=$(cat VERSION)
       - name: validate file
         run: |
           node tools/scripts/check-nrdb.js -v $(cat VERSION)

@@ -15,9 +15,12 @@ var argv = require('yargs')
     .describe('purge-internal', 'Purge fastly cache for internal env url')
     .default('purge-internal', false)
 
+    .string('purge-path')
+    .describe('purge-path', 'CDN Path to purge')
+
     .argv
 
-const { fastlyKey, env, purgeInternal } = argv
+const { fastlyKey, env, purgeInternal, purgePath } = argv
 
 const fastlyRoot = 'https://api.fastly.com/purge/js-agent.newrelic.com'
 
@@ -29,6 +32,7 @@ if (!fastlyKey) {
 (async () => {
     try {
         if (purgeInternal) await purge(`internal/${env}.js`)
+        if (purgePath) await purge(purgePath)
         process.exit(0)
     } catch (err) {
         console.log(err)

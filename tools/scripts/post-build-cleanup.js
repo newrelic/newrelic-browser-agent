@@ -10,7 +10,13 @@ function removeNonASCII(fileName, text) {
     if (!matches) return
     console.log(matches, "Non-ASCII chars found in", fileName)
     const newText = text.replace(nonAsciiChars, "");
-    return fs.promises.writeFile(`${ buildDir }/${fileName}`, newText)
+    return fs.promises.writeFile(`${buildDir}/${fileName}`, newText)
+}
+
+
+function prependSemicolon(fileName, text) {
+    const newText = ';' + text
+    return fs.promises.writeFile(`${buildDir}/${fileName}`, newText)
 }
 
 (async () => {
@@ -18,11 +24,24 @@ function removeNonASCII(fileName, text) {
         return fs.promises.readFile(`${buildDir}/${fileName}`, 'utf-8')
     }))
 
+    console.log("builtFileNames", builtFileNames)
+
+    const prepends = await Promise.all(files
+        .map((f, i) => {
+            if (builtFileNames[i].includes('-loader') && builtFileNames[i].endsWith('.js')) {
+                const fileName = builtFileNames[i]
+                console.log("prepend...", fileName)
+                const content = f
+                return prependSemicolon(fileName, content)
+            } else return Promise.resolve()
+        }))
+
     const removals = await Promise.all(files.map((f, i) => {
         const fileName = builtFileNames[i]
         const content = f
         return removeNonASCII(fileName, content)
     }))
-    
+
     console.log(`Removed non ascii chars from ${removals.length} files`)
+    console.log(`Prepended ; to ${prepends.length} files`)
 })()

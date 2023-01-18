@@ -107,8 +107,8 @@
       "platform": "Android",
       "platformName": "Android",
       "version": "9.0",
-      "device": "GalaxyS9FHDGoogleAPI",
-      "appium:deviceName": "Samsung Galaxy S9 FHD GoogleAPI Emulator",
+      "device": "GalaxyTabS3GoogleAPI",
+      "appium:deviceName": "Samsung Galaxy Tab S3 GoogleAPI Emulator",
       "appium:platformVersion": "9.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {

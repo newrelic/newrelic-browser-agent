@@ -142,7 +142,6 @@ const standardConfig = merge(commonConfig, {
       [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './agent-loader/spa.js'),
   },
   output: {
-    iife: false,
     globalObject: 'window',
     library: {
       name: 'NRBA',

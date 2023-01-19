@@ -230,7 +230,7 @@ class RouterHandle {
 
   expectIns(appID) {
     // insights harvest at 30s
-    return this.expectBeaconRequest(this.beaconRequests.ins, 40000, appID)
+    return this.expectBeaconRequest(this.beaconRequests.ins, undefined, appID)
   }
 
   expectResources(appID) {

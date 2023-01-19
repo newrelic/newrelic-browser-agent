@@ -110,7 +110,7 @@ export class Instrument extends InstrumentBase {
         // [Temporary] Report restores from BFCache to NR1 while feature flag is in place in lieu of sending pageshow events.
         windowAddEventListener('pageshow', (evt) => {
             if (evt.persisted)
-                this.recordCustom('Custom/BFCache/PageRestored');
+                this.recordSupportability('Generic/BFCache/PageRestored');
             return;
         });
     }

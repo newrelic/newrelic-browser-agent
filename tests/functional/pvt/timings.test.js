@@ -15,6 +15,12 @@ const supportsINP = testDriver.Matcher.withFeature('interactionToNextPaint');
 const supportsLT = testDriver.Matcher.withFeature('longTaskTiming');
 
 const isClickInteractionType = type => type === 'pointerdown' || type === 'mousedown' || type === 'click'
+function fail (t) {
+  return (err) => {
+    t.error(err);
+    t.end();
+  };
+}
 
 runPaintTimingsTests('spa')
 runPaintTimingsTests('rum')
@@ -59,12 +65,7 @@ testDriver.test('Disabled timings feature', function (t, browser, router) {
       t.ok(!results, 'no events harvest')
       t.end()
     })
-    .catch(fail)
-
-  function fail (err) {
-    t.error(err)
-    t.end()
-  }
+    .catch(fail(t))
 })
 
 function runPaintTimingsTests (loader) {
@@ -83,12 +84,7 @@ function runPaintTimingsTests (loader) {
         t.ok(timing.value > 0, 'firstPaint is a positive value')
         t.end()
       })
-      .catch(fail)
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t))
   })
 
   testDriver.test(`First contentful paint for ${loader} agent`, supportedFirstContentfulPaint, function (t, browser, router) {
@@ -106,12 +102,7 @@ function runPaintTimingsTests (loader) {
         t.ok(timing.value > 0, 'firstContentfulPaint is a positive value')
         t.end()
       })
-      .catch(fail)
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t))
   })
 }
 
@@ -147,12 +138,7 @@ function runFirstInteractionTests (loader) {
 
         t.end()
       })
-      .catch(fail)
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t))
   })
 }
 
@@ -193,12 +179,7 @@ function runLargestContentfulPaintFromInteractionTests (loader) {
 
         t.end()
       })
-      .catch(fail)
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t))
   })
 }
 
@@ -231,12 +212,7 @@ function runWindowLoadTests (loader) {
 
         t.end()
       })
-      .catch(fail)
-
-    function fail (err) {
-      t.error(err)
-      t.end()
-    }
+      .catch(fail(t))
   })
 }
 
@@ -269,12 +245,7 @@ function runWindowUnloadTests (loader) {
 
         t.end()
       })
-      .catch(fail)
-
-    function fail (err) {
-      t.error(err)
-      t.end()
-    }
+      .catch(fail(t))
   })
 }
 
@@ -313,13 +284,7 @@ function runPageHideTests(loader) {
 
         t.end()
       })
-      .catch(fail);
-    return;
-
-    function fail (err) {
-      t.error(err)
-      t.end()
-    }
+      .catch(fail(t));
   })
 }
 
@@ -349,12 +314,7 @@ function runPvtInStnTests (loader) {
         t.equal(pvtInStn.length, expectedPVTItems.length, 'Expected PVT Items are present in STN payload')
         t.end()
       })
-      .catch(fail)
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t))
   })
 }
 
@@ -386,12 +346,7 @@ function runClsTests (loader) {
         t.equal(cls.type, 'doubleAttribute', 'largestContentfulPaint attribute cls is doubleAttribute')
         t.end()
       })
-      .catch(fail)
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t))
   })
 
   testDriver.test(`windowUnload for ${loader} agent collects cls attribute`, supportedCls, function (t, browser, router) {
@@ -420,12 +375,7 @@ function runClsTests (loader) {
 
         t.end()
       })
-      .catch(fail)
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t))
   })
 
   testDriver.test(`${loader} agent collects cls attribute when cls is 0`, supportedCls, function (t, browser, router) {
@@ -454,12 +404,7 @@ function runClsTests (loader) {
 
         t.end()
       })
-      .catch(fail)
-
-    function fail (err) {
-      t.error(err)
-      t.end()
-    }
+      .catch(fail(t))
   })
 
   testDriver.test(`First interaction ${loader} agent collects cls attribute`, supportedCls, function (t, browser, router) {
@@ -486,12 +431,7 @@ function runClsTests (loader) {
 
         t.end()
       })
-      .catch(fail)
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t))
   })
 
   testDriver.test(`window load for ${loader} agent collects cls attribute`, supportedCls, function (t, browser, router) {
@@ -520,12 +460,7 @@ function runClsTests (loader) {
 
         t.end()
       })
-      .catch(fail)
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t))
   })
 
   testDriver.test(`pageHide event for ${loader} agent collects cls attribute`, supportedCls, function (t, browser, router) {
@@ -556,12 +491,7 @@ function runClsTests (loader) {
 
         t.end()
       })
-      .catch(fail)
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t))
   })
 
   testDriver.test('cls only accumulates biggest session (short CLS session followed by long)', supportedCls, function (t, browser, router) {
@@ -590,12 +520,7 @@ function runClsTests (loader) {
 
         t.end()
       })
-      .catch(fail)
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t))
   })
 
   testDriver.test('cls only accumulates biggest session (long CLS session followed by short)', supportedCls, function (t, browser, router) {
@@ -629,12 +554,7 @@ function runClsTests (loader) {
 
         t.end()
       })
-      .catch(fail)
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t))
   })
 }
 
@@ -687,12 +607,7 @@ function runCustomAttributeTests (loader) {
 
         t.end()
       })
-      .catch(fail)
-
-    function fail (err) {
-      t.error(err)
-      t.end()
-    }
+      .catch(fail(t))
   })
 }
 
@@ -730,12 +645,7 @@ function runLcpTests (loader) {
 
         t.end()
       })
-      .catch(fail)
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t))
   })
   testDriver.test(`${loader} loader: LCP is not collected on hidden page`, supportedLcp, function (t, browser, router) {
     // HTML page manually sets maxLCPTimeSeconds to 5
@@ -766,17 +676,12 @@ function runLcpTests (loader) {
 
         t.end()
       })
-      .catch(fail)
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t))
   })
 }
 
 function runLongTasksTest(loader) {
-  testDriver.test(`${loader}: emits long task timings when observed`, supportedCls, function (t, browser, router) {
+  testDriver.test(`${loader}: emits long task timings when observed`, supportsLT, function (t, browser, router) {
     const rumPromise = router.expectRum()
     const loadPromise = browser.safeGet(router.assetURL('long-tasks.html', { loader: loader }))
       .waitForConditionInBrowser('window.tasksDone === true');
@@ -791,28 +696,20 @@ function runLongTasksTest(loader) {
         const {body, query} = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 
-        if (supportsLT.match(browser)) {
-          const ltEvents = timings.filter(t => t.name === 'lt');
-          t.ok(ltEvents.length == 2, "expected number of long tasks (2) observed");
+        const ltEvents = timings.filter(t => t.name === 'lt');
+        t.ok(ltEvents.length == 2, "expected number of long tasks (2) observed");
 
-          ltEvents.forEach((lt) => {
-            t.ok(lt.value >= 59, "task duration is roughly as expected")  // defined in some-long-task.js -- duration should be at least that value +/- 1ms
-            // Attributes array should start with: [ltFrame, ltStart, ltCtr, (ltCtrSrc, ltCtrId, ltCtrName, )...]
-            t.ok(lt.attributes.length >= 3, "performancelongtasktiming properties are attached");
-            t.equal(lt.attributes[1].type, 'doubleAttribute', "entry startTime is a doubleAttribute");
-            if (lt.attributes[2].value !== 'window')
-              t.equal(lt.attributes.length >= 6, "longtask attribution properties are attached");
-          });
-        }
+        ltEvents.forEach((lt) => {
+          t.ok(lt.value >= 59, "task duration is roughly as expected")  // defined in some-long-task.js -- duration should be at least that value +/- 1ms
+          // Attributes array should start with: [ltFrame, ltStart, ltCtr, (ltCtrSrc, ltCtrId, ltCtrName, )...]
+          t.ok(lt.attributes.length >= 3, "performancelongtasktiming properties are attached");
+          t.equal(lt.attributes[1].type, 'doubleAttribute', "entry startTime is a doubleAttribute");
+          if (lt.attributes[2].value !== 'window')
+            t.equal(lt.attributes.length >= 6, "longtask attribution properties are attached");
+        });
 
         t.end()
       })
-      .catch(fail);
-    return;
-
-    function fail (e) {
-      t.error(e)
-      t.end()
-    }
+      .catch(fail(t));
   });
 }

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Mon Jan 09 2023 14:55:12 GMT-0500 (Eastern Standard Time)",
+  "lastUpdated": "Thu Jan 19 2023 22:29:07 GMT-0500 (Eastern Standard Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -36,6 +36,19 @@
     }
   },
   "devDependencies": {
+    "@babel/cli@7.20.7": {
+      "name": "@babel/cli",
+      "version": "7.20.7",
+      "range": "^7.20.7",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/babel/babel",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.20.7",
+      "licenseFile": "node_modules/@babel/cli/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.20.7/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "The Babel Team",
+      "url": "https://babel.dev/team"
+    },
     "@babel/core@7.20.2": {
       "name": "@babel/core",
       "version": "7.20.2",
@@ -218,6 +231,31 @@
       "publisher": "Tommy Leunen",
       "email": "tommy.leunen@gmail.com",
       "url": "http://tommyleunen.com"
+    },
+    "babel-plugin-search-and-replace@1.1.1": {
+      "name": "babel-plugin-search-and-replace",
+      "version": "1.1.1",
+      "range": "^1.1.1",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/the-smaug/babel-plugin-search-and-replace",
+      "versionedRepoUrl": "https://github.com/the-smaug/babel-plugin-search-and-replace/tree/v1.1.1",
+      "licenseFile": "node_modules/babel-plugin-search-and-replace/README.md",
+      "licenseUrl": "https://github.com/the-smaug/babel-plugin-search-and-replace/blob/v1.1.1/README.md",
+      "licenseTextSource": "spdx",
+      "publisher": "maxime blanc",
+      "email": "maximeblanc.dev@gmail.com"
+    },
+    "babel-plugin-transform-inline-environment-variables@0.4.4": {
+      "name": "babel-plugin-transform-inline-environment-variables",
+      "version": "0.4.4",
+      "range": "^0.4.4",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/babel/minify/tree/master/packages/babel-plugin-transform-inline-environment-variables",
+      "versionedRepoUrl": "https://github.com/babel/minify/tree/master/packages/babel-plugin-transform-inline-environment-variables/tree/v0.4.4",
+      "licenseFile": "node_modules/babel-plugin-transform-inline-environment-variables/LICENSE",
+      "licenseUrl": "https://github.com/babel/minify/tree/master/packages/babel-plugin-transform-inline-environment-variables/blob/v0.4.4/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "amasad"
     },
     "babelify@10.0.0": {
       "name": "babelify",
@@ -733,6 +771,20 @@
       "publisher": "Dominic Tarr",
       "email": "dominic.tarr@gmail.com",
       "url": "dominictarr.com"
+    },
+    "transpile-webpack-plugin@1.1.1": {
+      "name": "transpile-webpack-plugin",
+      "version": "1.1.1",
+      "range": "^1.1.1",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/licg9999/transpile-webpack-plugin",
+      "versionedRepoUrl": "https://github.com/licg9999/transpile-webpack-plugin/tree/v1.1.1",
+      "licenseFile": "node_modules/transpile-webpack-plugin/LICENSE",
+      "licenseUrl": "https://github.com/licg9999/transpile-webpack-plugin/blob/v1.1.1/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Chungen Li",
+      "email": "licg9999@gmail.com",
+      "url": "https://github.com/licg9999"
     },
     "ts-jest@28.0.5": {
       "name": "ts-jest",

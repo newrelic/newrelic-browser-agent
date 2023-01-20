@@ -19,6 +19,7 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 
 **[devDependencies](#devDependencies)**
 
+* [@babel/cli](#babelcli)
 * [@babel/core](#babelcore)
 * [@babel/plugin-proposal-optional-chaining](#babelplugin-proposal-optional-chaining)
 * [@babel/plugin-syntax-dynamic-import](#babelplugin-syntax-dynamic-import)
@@ -34,6 +35,8 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [aws-sdk](#aws-sdk)
 * [babel-loader](#babel-loader)
 * [babel-plugin-module-resolver](#babel-plugin-module-resolver)
+* [babel-plugin-search-and-replace](#babel-plugin-search-and-replace)
+* [babel-plugin-transform-inline-environment-variables](#babel-plugin-transform-inline-environment-variables)
 * [babelify](#babelify)
 * [browserify](#browserify)
 * [bundle-collapser](#bundle-collapser)
@@ -74,6 +77,7 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [tape](#tape)
 * [through2](#through2)
 * [through](#through)
+* [transpile-webpack-plugin](#transpile-webpack-plugin)
 * [ts-jest](#ts-jest)
 * [ts-loader](#ts-loader)
 * [ts-node](#ts-node)
@@ -152,6 +156,36 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 ## devDependencies
+
+### @babel/cli
+
+This product includes source derived from [@babel/cli](https://github.com/babel/babel) ([v7.20.7](https://github.com/babel/babel/tree/v7.20.7)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.20.7/LICENSE):
+
+```
+MIT License
+
+Copyright (c) 2014-present Sebastian McKenzie and other contributors
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+```
 
 ### @babel/core
 
@@ -1133,6 +1167,52 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+```
+
+### babel-plugin-search-and-replace
+
+This product includes source derived from [babel-plugin-search-and-replace](https://github.com/the-smaug/babel-plugin-search-and-replace) ([v1.1.1](https://github.com/the-smaug/babel-plugin-search-and-replace/tree/v1.1.1)), distributed under the [MIT License](https://github.com/the-smaug/babel-plugin-search-and-replace/blob/v1.1.1/README.md):
+
+```
+MIT License
+
+Copyright (c) <year> <copyright holders>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
+
+### babel-plugin-transform-inline-environment-variables
+
+This product includes source derived from [babel-plugin-transform-inline-environment-variables](https://github.com/babel/minify/tree/master/packages/babel-plugin-transform-inline-environment-variables) ([v0.4.4](https://github.com/babel/minify/tree/master/packages/babel-plugin-transform-inline-environment-variables/tree/v0.4.4)), distributed under the [MIT License](https://github.com/babel/minify/tree/master/packages/babel-plugin-transform-inline-environment-variables/blob/v0.4.4/LICENSE):
+
+```
+Copyright (c) 2015-2016 Amjad Masad <amjad.masad@gmail.com>
+
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ```
 
@@ -8446,6 +8526,35 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+```
+
+### transpile-webpack-plugin
+
+This product includes source derived from [transpile-webpack-plugin](https://github.com/licg9999/transpile-webpack-plugin) ([v1.1.1](https://github.com/licg9999/transpile-webpack-plugin/tree/v1.1.1)), distributed under the [MIT License](https://github.com/licg9999/transpile-webpack-plugin/blob/v1.1.1/LICENSE):
+
+```
+MIT License
+
+Copyright (c) 2022 React Easier
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ```
 

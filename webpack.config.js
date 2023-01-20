@@ -4,6 +4,7 @@ const webpack = require('webpack')
 const fs = require('fs')
 const { merge } = require('webpack-merge');
 const pkg = require('./package.json')
+const TranspilePlugin = require('transpile-webpack-plugin');
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
@@ -43,6 +44,13 @@ switch (PUBLISH) {
     PATH_VERSION = ``
     SUBVERSION = 'EXTENSION'
     PUBLIC_PATH = 'http://localhost:3333/build/'
+    MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]'
+    break
+  case 'NPM':
+    // build for extension injection
+    PATH_VERSION = ``
+    SUBVERSION = 'NPM'
+    PUBLIC_PATH = '/dist/'
     MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]'
     break
   default:

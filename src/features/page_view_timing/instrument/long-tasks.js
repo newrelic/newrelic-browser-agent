@@ -1,6 +1,15 @@
 import { subscribeToEOL } from "@newrelic/browser-agent-core/src/common/unload/eol";
 
-export const onLT = (onReport) => {
+/**
+ * Calls the `onReport` function for every entry reported by the PerformanceLongTaskTiming API. 
+ * The reported value is a `DOMHighResTimeStamp`.
+ * 
+ * The callback is always called when the page's visibility state changes to hidden. 
+ * As a result, the `onReport` function might be called multiple times during the same page load.
+ * 
+ * @param {Function} onReport - callback that accepts a `metric` object as the single parameter
+ */
+export const onLongTask = (onReport) => {
 	const handleEntries = (entries) => {
 		entries.forEach(entry => {
 			const metric = {
@@ -24,10 +33,10 @@ export const onLT = (onReport) => {
 		});
 	};
 
-	let po;
+	let observer;
 	try {
     if (PerformanceObserver.supportedEntryTypes.includes("longtask")) {
-      po = new PerformanceObserver((list) => {
+      observer = new PerformanceObserver((list) => {
         // Delay by a microtask to workaround a bug in Safari where the
         // callback is invoked immediately, rather than in a separate task.
         // See: https://github.com/GoogleChrome/web-vitals/issues/277
@@ -35,15 +44,15 @@ export const onLT = (onReport) => {
           handleEntries(list.getEntries());
         });
       });
-      po.observe({ type: "longtask", buffered: true });
+      observer.observe({ type: "longtask", buffered: true });
     }
   } catch (e) {
     // Do nothing.
   }
 
-	if (po) {
+	if (observer) {
 		subscribeToEOL(() => {
-			handleEntries(po.takeRecords());
+			handleEntries(observer.takeRecords());
 		}, true);	// this bool is a temp arg under staged BFCache work that runs the func under the new page session logic -- tb removed w/ the feature flag later
 
 		/* No work needed on BFCache restore for long task. */

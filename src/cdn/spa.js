@@ -19,5 +19,5 @@ new Agent({
         InstrumentPageAction,
         InstrumentErrors,
         InstrumentSpa
-    ]
+    ], loaderType: 'spa'
 })

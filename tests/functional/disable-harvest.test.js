@@ -97,7 +97,7 @@ testDriver.test('SPA - Kills feature if entitlements flag is 0', supported, func
 
 testDriver.test('PAGE ACTIONS - Kills feature if entitlements flag is 0', supported, function (t, browser, router) {
   const init = {
-    ins: {enabled: true, harvestTimeSeconds: 5}
+    page_action: {enabled: true, harvestTimeSeconds: 5}
   }
 
   const assetURL = router.assetURL('obfuscate-pii.html', { loader: 'full', init })

@@ -51,10 +51,10 @@ export class Aggregate extends AggregateBase {
     this.scheduler.startTimer(harvestTimeSeconds)
 
     drain(this.agentIdentifier, this.featureName)
-    // if rum response determines that customer lacks entitlements for ins endpoint, block it
+    // if rum response determines that customer lacks entitlements for jserrors endpoint, block it
     this.ee.on('block-err', () => {
       this.blocked = true
-      this.scheduler.harvest.stopTimer()
+      this.scheduler.stopTimer()
     })
   }
 

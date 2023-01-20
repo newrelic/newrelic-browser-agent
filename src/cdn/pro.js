@@ -17,5 +17,5 @@ new Agent({
         InstrumentMetrics,
         InstrumentPageAction,
         InstrumentErrors
-    ]
+    ], loaderType: 'pro'
 })

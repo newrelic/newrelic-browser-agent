@@ -637,7 +637,9 @@ test('when sendBeacon returns false', function(t) {
 
     t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (events)')
     let call = submitData.img.getCall(0)
+    console.log(call.args[0])
     let expectedUrl = baseUrl + encode.obj(expectedPayload)
+    console.log(expectedUrl)
     validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
     t.notOk(call.args[1], 'no body arg given to img')
 

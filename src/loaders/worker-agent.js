@@ -14,7 +14,7 @@ export class WorkerAgent extends Agent {
                 InstrumentErrors,
                 InstrumentXhr,
                 InstrumentPageAction
-            ]
+            ], loaderType: 'worker-agent'
         })
     }
 }

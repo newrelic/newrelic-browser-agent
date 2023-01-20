@@ -4,7 +4,7 @@ const webpack = require('webpack')
 const pkg = require('../../package.json')
 
 module.exports = {
-  entry: path.join(__dirname, "../../src/index.js"),
+  entry: path.join(__dirname, "../../dist/mjs/index.mjs"),
   module: {
     rules: [
       {

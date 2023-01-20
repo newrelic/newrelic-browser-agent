@@ -22,9 +22,8 @@ export class MicroAgent {
         this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
         this.features = {}
 
-        Object.assign(this, configure(this.agentIdentifier, { ...options, runtime: { isolatedBacklog: true } }))
+        Object.assign(this, configure(this.agentIdentifier, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent'))
 
-        console.log(this.agentIdentifier, "configured..")
         this.start()
     }
 

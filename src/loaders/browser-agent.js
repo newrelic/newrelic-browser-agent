@@ -21,7 +21,7 @@ export class BrowserAgent extends Agent {
                 InstrumentPageAction,
                 InstrumentErrors,
                 InstrumentSpa
-            ]
+            ], loaderType: 'browser-agent'
         })
     }
 }

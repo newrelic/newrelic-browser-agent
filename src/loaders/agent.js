@@ -19,7 +19,7 @@ export class Agent {
         this.desiredFeatures = options.features || []
         this.desiredFeatures.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
 
-        Object.assign(this, configure(this.agentIdentifier, options))
+        Object.assign(this, configure(this.agentIdentifier, options, options.loaderType || 'agent'))
 
         this.start()
     }

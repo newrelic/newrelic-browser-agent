@@ -23,7 +23,7 @@ export class Aggregate extends AggregateBase {
         // if rum response determines that customer lacks entitlements for ins endpoint, block it
         this.ee.on('block-err', () => {
             this.blocked = true
-            scheduler.harvest.stopTimer()
+            scheduler.stopTimer()
         })
     }
 

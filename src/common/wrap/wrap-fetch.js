@@ -6,7 +6,7 @@
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import slice from 'lodash._slice'
 import { mapOwn } from '../util/map-own'
-import globalScope from '../util/global-scope'
+import { globalScope } from '../util/global-scope'
 
 var win = globalScope
 var prefix = 'fetch-'

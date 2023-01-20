@@ -18,7 +18,7 @@
   "scripts": {
     "test": "node tools/jil/bin/cli.js",
     "build:all": "npm run cdn:build:local && npm run build:npm",
-    "build:npm": "export MAJOR=$(cat VERSION) && export MINOR=$(cat VERSION) && npm run npm:build:esm && npm run npm:build:cjs",
+    "build:npm": "export BUILD_VERSION=$(cat VERSION) && npm run npm:build:esm && npm run npm:build:cjs",
     "postinstall": "ln -s ../tools/jil node_modules/jil",
     "lint": "eslint --ext .js -c .eslintrc .",
     "lint:fix": "eslint --ext .js -c .eslintrc . --fix",
@@ -38,7 +38,7 @@
     "cdn:fresh-build": "rm -rf ./build",
     "cdn:watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests|cdn' --run -- npm run cdn:build:local",
     "cdn:watch:extension": "jung -D '\\.npm|.git|node_modules|build|tools|tests|cdn' --run -- npm run cdn:build:extension",
-    "cdn:webpack": "npx webpack --progress --config ./webpack.config.js",
+    "cdn:webpack": "export BUILD_VERSION=$(cat VERSION) && npx webpack --progress --config ./webpack.config.js",
     "packages:bundle": "webpack -c tools/jil/webpack.modular.js",
     "test-server": "node ./tools/jil/bin/server",
     "sauce:connect": "node ./tools/jil/bin/sauce",

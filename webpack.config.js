@@ -8,14 +8,11 @@ const TranspilePlugin = require('transpile-webpack-plugin');
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
-<<<<<<< HEAD:webpack.config.js
-const { PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE } = process.env
-=======
 let { PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE } = process.env
->>>>>>> main:cdn/webpack.config.js
 // this will change to package.json.version when it is aligned between all the packages
 let VERSION = VERSION_OVERRIDE || fs.readFileSync('./VERSION', 'utf-8')
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
+
 
 switch (PUBLISH) {
   case 'PROD':
@@ -68,6 +65,7 @@ switch (PUBLISH) {
 }
 
 const IS_LOCAL = SUBVERSION === 'LOCAL'
+process.env['BUILD_VERSION'] = `${VERSION}.${SUBVERSION}`;
 
 console.log("VERSION", VERSION)
 console.log("SOURCEMAPS", SOURCEMAPS)
@@ -131,8 +129,9 @@ const commonConfig = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      'WEBPACK_MINOR_VERSION': JSON.stringify(SUBVERSION || ''),
-      'WEBPACK_MAJOR_VERSION': JSON.stringify(VERSION || ''),
+      // 'WEBPACK_MINOR_VERSION': JSON.stringify(SUBVERSION || ''),
+      // 'WEBPACK_MAJOR_VERSION': JSON.stringify(VERSION || ''),
+      'process.env.BUILD_VERSION': `${VERSION}.${SUBVERSION}`,
       'WEBPACK_DEBUG': JSON.stringify(IS_LOCAL || false)
     })
   ]
@@ -178,6 +177,12 @@ const standardConfig = merge(commonConfig, {
                   ]
                 }
               }]
+            ], plugins: [
+              ["transform-inline-environment-variables", {
+                "include": [
+                  "BUILD_VERSION"
+                ]
+              }]
             ]
           }
         }
@@ -221,6 +226,12 @@ const polyfillsConfig = merge(commonConfig, {
                     "ie >= 11" // Does not affect webpack's own runtime output; see `target` webpack config property.
                   ]
                 }
+              }]
+            ],plugins: [
+              ["transform-inline-environment-variables", {
+                "include": [
+                  "BUILD_VERSION"
+                ]
               }]
             ]
           }

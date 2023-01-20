@@ -5,7 +5,7 @@
 import { getConfiguration, getConfigurationValue, getLoaderConfig } from '../../../common/config/config'
 import { generateSpanId, generateTraceId } from '../../../common/ids/unique-id'
 import { parseUrl } from '../../../common/url/parse-url'
-import globalScope from '../../../common/util/global-scope'
+import { globalScope } from '../../../common/util/global-scope'
 
 export class DT {
   constructor(agentIdentifier) {

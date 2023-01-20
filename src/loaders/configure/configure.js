@@ -2,7 +2,7 @@ import { setAPI } from '../api/api'
 import { addToNREUM, gosCDN, gosNREUMInitializedAgents } from '../../common/window/nreum'
 import { setConfiguration, setInfo, setLoaderConfig, setRuntime } from '../../common/config/config'
 import { activateFeatures, activatedFeatures } from '../../common/util/feature-flags'
-import { isBrowserWindow, isWebWorker } from '../../common/window/win'
+import { isBrowserScope, isWorkerScope } from '../../common/util/global-scope'
 
 export function configure(agentIdentifier, opts = {}) {
     let { init, info, loader_config, runtime = {}, exposed = true } = opts
@@ -15,7 +15,7 @@ export function configure(agentIdentifier, opts = {}) {
         api = nr
     }
 
-    if (isWebWorker) {  // add a default attr to all worker payloads
+    if (isWorkerScope) {  // add a default attr to all worker payloads
         info.jsAttributes = { ...info.jsAttributes, isWorker: true };
     }
 
@@ -28,7 +28,7 @@ export function configure(agentIdentifier, opts = {}) {
     setAPI(agentIdentifier, api)
     gosNREUMInitializedAgents(agentIdentifier, nr, 'api')
     gosNREUMInitializedAgents(agentIdentifier, exposed, 'exposed')
-    if (isBrowserWindow) {
+    if (isBrowserScope) {
         addToNREUM('activatedFeatures', activatedFeatures)
         addToNREUM('setToken', (flags) => activateFeatures(flags, agentIdentifier))
     }

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Thu Jan 19 2023 22:54:38 GMT-0500 (Eastern Standard Time)",
+  "lastUpdated": "Fri Jan 20 2023 10:43:05 GMT-0500 (Eastern Standard Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -124,6 +124,17 @@
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
+    },
+    "@faker-js/faker@7.6.0": {
+      "name": "@faker-js/faker",
+      "version": "7.6.0",
+      "range": "^7.6.0",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/faker-js/faker",
+      "versionedRepoUrl": "https://github.com/faker-js/faker/tree/v7.6.0",
+      "licenseFile": "node_modules/@faker-js/faker/LICENSE",
+      "licenseUrl": "https://github.com/faker-js/faker/blob/v7.6.0/LICENSE",
+      "licenseTextSource": "file"
     },
     "@newrelic/newrelic-oss-cli@0.1.2": {
       "name": "@newrelic/newrelic-oss-cli",
@@ -390,6 +401,18 @@
       "email": "matt@omnionline.us",
       "url": "http://omnionline.us/"
     },
+    "eslint-config-prettier@8.6.0": {
+      "name": "eslint-config-prettier",
+      "version": "8.6.0",
+      "range": "^8.5.0",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/prettier/eslint-config-prettier",
+      "versionedRepoUrl": "https://github.com/prettier/eslint-config-prettier/tree/v8.6.0",
+      "licenseFile": "node_modules/eslint-config-prettier/LICENSE",
+      "licenseUrl": "https://github.com/prettier/eslint-config-prettier/blob/v8.6.0/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Simon Lydell"
+    },
     "eslint-import-resolver-alias@1.1.2": {
       "name": "eslint-import-resolver-alias",
       "version": "1.1.2",
@@ -401,6 +424,19 @@
       "licenseUrl": "https://github.com/johvin/eslint-import-resolver-alias/blob/v1.1.2/README.md",
       "licenseTextSource": "spdx",
       "publisher": "johvin"
+    },
+    "eslint-import-resolver-webpack@0.13.2": {
+      "name": "eslint-import-resolver-webpack",
+      "version": "0.13.2",
+      "range": "^0.13.2",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/import-js/eslint-plugin-import",
+      "versionedRepoUrl": "https://github.com/import-js/eslint-plugin-import/tree/v0.13.2",
+      "licenseFile": "node_modules/eslint-import-resolver-webpack/LICENSE",
+      "licenseUrl": "https://github.com/import-js/eslint-plugin-import/blob/v0.13.2/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Ben Mosher",
+      "url": "me@benmosher.com"
     },
     "eslint-plugin-import@2.26.0": {
       "name": "eslint-plugin-import",
@@ -502,6 +538,18 @@
       "licenseTextSource": "spdx",
       "publisher": "jQuery Foundation and other contributors",
       "url": "https://github.com/jquery/jquery/blob/1.11.3/AUTHORS.txt"
+    },
+    "jsonc-eslint-parser@2.1.0": {
+      "name": "jsonc-eslint-parser",
+      "version": "2.1.0",
+      "range": "^2.1.0",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/ota-meshi/jsonc-eslint-parser",
+      "versionedRepoUrl": "https://github.com/ota-meshi/jsonc-eslint-parser/tree/v2.1.0",
+      "licenseFile": "node_modules/jsonc-eslint-parser/LICENSE",
+      "licenseUrl": "https://github.com/ota-meshi/jsonc-eslint-parser/blob/v2.1.0/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Yosuke Ota"
     },
     "jung@2.1.0": {
       "name": "jung",

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import globalScope, { isBrowserScope } from '../util/global-scope';
+import { globalScope, isBrowserScope } from '../util/global-scope';
 
 var stringsToParsedUrls = {}
 

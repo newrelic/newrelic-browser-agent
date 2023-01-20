@@ -1,5 +1,5 @@
 export {insertSupportMetrics};    // export list
-import globalScope, { isWorkerScope } from '../../../common/util/global-scope'
+import { globalScope, isWorkerScope } from '../../../common/util/global-scope'
 
 /**
  * True for each Worker type supported in browser's execution context. Not all browser versions may support certain Workers or options however.

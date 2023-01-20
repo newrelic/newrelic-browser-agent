@@ -10,7 +10,7 @@ import { mark } from './stopwatch'
 import { ffVersion } from '../browser-version/firefox-version'
 import { setOffset } from './now'
 import { exists as performanceCheckExists } from './performance-check'
-import globalScope from '../util/global-scope';
+import { globalScope } from '../util/global-scope';
 
 export let navCookie = true
 

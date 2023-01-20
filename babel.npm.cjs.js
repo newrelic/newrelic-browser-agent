@@ -1,4 +1,9 @@
-console.log(process.env.MAJOR)
+
+const pkg = require('./package.json')
+
+process.env['BUILD_VERSION'] = pkg.version
+
+console.log(process.env.BUILD_VERSION)
 
 const presets = [
   [
@@ -13,7 +18,7 @@ const presets = [
 const plugins = [
   ["transform-inline-environment-variables", {
     "include": [
-      "MAJOR", "MINOR"
+      "BUILD_VERSION"
     ]
   }]
 ]

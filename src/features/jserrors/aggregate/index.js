@@ -16,7 +16,7 @@ import { handle } from '../../../common/event-emitter/handle'
 import { mapOwn } from '../../../common/util/map-own'
 import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
-import globalScope from '../../../common/util/global-scope'
+import { globalScope } from '../../../common/util/global-scope'
 
 import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'

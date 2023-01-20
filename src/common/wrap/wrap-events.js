@@ -6,7 +6,7 @@
 import {ee as baseEE} from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { getOrSet } from '../util/get-or-set'
-import globalScope, { isBrowserScope } from '../util/global-scope'
+import { globalScope, isBrowserScope } from '../util/global-scope'
 
 const wrapped = {}
 

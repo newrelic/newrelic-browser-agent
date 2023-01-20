@@ -1,5 +1,5 @@
 import { originals } from "../../common/config/config"
-import globalScope from "../../common/util/global-scope"
+import { globalScope } from "../../common/util/global-scope"
 import { FEATURE_NAMES } from "../../loaders/features/features"
 
 export const FEATURE_NAME = FEATURE_NAMES.spa

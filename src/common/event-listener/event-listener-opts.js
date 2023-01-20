@@ -1,4 +1,4 @@
-import globalScope from '../util/global-scope';
+import { globalScope } from '../util/global-scope';
 
 var supportsPassive = false
 try {

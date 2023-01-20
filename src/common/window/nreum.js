@@ -1,6 +1,6 @@
 
 import { now } from '../timing/now'
-import globalScope from '../util/global-scope'
+import { globalScope } from '../util/global-scope'
 
 export const defaults = {
   beacon: 'bam.nr-data.net',

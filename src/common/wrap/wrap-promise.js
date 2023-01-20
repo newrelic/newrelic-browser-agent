@@ -6,7 +6,7 @@ import {createWrapperWithEmitter as wrapFn, wrapInPlace, argsToArray} from './wr
 import {ee as baseEE, getOrSetContext} from '../event-emitter/contextual-ee'
 import {mapOwn} from '../util/map-own'
 import {originals} from '../config/config'
-import globalScope from '../util/global-scope'
+import { globalScope } from '../util/global-scope'
 
 const wrapped = {}
 

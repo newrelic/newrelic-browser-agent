@@ -6,7 +6,7 @@ import { registerHandler } from "../../common/event-emitter/register-handler"
 import { mapOwn } from "../../common/util/map-own"
 import { single } from "../../common/util/single"
 import { submitData } from "../../common/util/submit-data"
-import { isBrowserWindow } from "../../common/window/win"
+import { isBrowserScope } from '../../common/util/global-scope'
 
 export function setAPI(agentIdentifier) {
   var instanceEE = ee.get(agentIdentifier)
@@ -61,7 +61,7 @@ export function setAPI(agentIdentifier) {
   // dom_time - the time spent processing the result of the service call (or user defined)
   // fe_time - the time spent rendering the result of the service call (or user defined)
   function inlineHit(t, request_name, queue_time, app_time, total_be_time, dom_time, fe_time) {
-    if (!isBrowserWindow) return
+    if (!isBrowserScope) return
 
     request_name = window.encodeURIComponent(request_name)
     cycle += 1

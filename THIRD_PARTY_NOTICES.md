@@ -26,6 +26,7 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [@babel/plugin-transform-modules-commonjs](#babelplugin-transform-modules-commonjs)
 * [@babel/plugin-transform-strict-mode](#babelplugin-transform-strict-mode)
 * [@babel/preset-env](#babelpreset-env)
+* [@faker-js/faker](#faker-jsfaker)
 * [@newrelic/newrelic-oss-cli](#newrelicnewrelic-oss-cli)
 * [@newrelic/nr-querypack](#newrelicnr-querypack)
 * [@types/jest](#typesjest)
@@ -47,7 +48,9 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [create-polyfill-service-url](#create-polyfill-service-url)
 * [defined](#defined)
 * [dotenv-webpack](#dotenv-webpack)
+* [eslint-config-prettier](#eslint-config-prettier)
 * [eslint-import-resolver-alias](#eslint-import-resolver-alias)
+* [eslint-import-resolver-webpack](#eslint-import-resolver-webpack)
 * [eslint-plugin-import](#eslint-plugin-import)
 * [eslint](#eslint)
 * [function-bind](#function-bind)
@@ -56,6 +59,7 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [jest-environment-jsdom](#jest-environment-jsdom)
 * [jest](#jest)
 * [jquery](#jquery)
+* [jsonc-eslint-parser](#jsonc-eslint-parser)
 * [jung](#jung)
 * [just-debounce](#just-debounce)
 * [ls-stream](#ls-stream)
@@ -345,6 +349,75 @@ This product includes source derived from [@babel/preset-env](https://github.com
 MIT License
 
 Copyright (c) 2014-present Sebastian McKenzie and other contributors
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+```
+
+### @faker-js/faker
+
+This product includes source derived from [@faker-js/faker](https://github.com/faker-js/faker) ([v7.6.0](https://github.com/faker-js/faker/tree/v7.6.0)), distributed under the [MIT License](https://github.com/faker-js/faker/blob/v7.6.0/LICENSE):
+
+```
+Faker - Copyright (c) 2022
+
+This software consists of voluntary contributions made by many individuals.
+For exact contribution history, see the revision history
+available at https://github.com/faker-js/faker
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+===
+
+From: https://github.com/faker-js/faker/commit/a9f98046c7d5eeaabe12fc587024c06d683800b8
+To: https://github.com/faker-js/faker/commit/29234378807c4141588861f69421bf20b5ac635e
+
+Based on faker.js, copyright Marak Squires and contributor, what follows below is the original license.
+
+===
+
+faker.js - Copyright (c) 2020
+Marak Squires
+http://github.com/marak/faker.js/
+
+faker.js was inspired by and has used data definitions from:
+
+ * https://github.com/stympy/faker/ - Copyright (c) 2007-2010 Benjamin Curtis
+ * http://search.cpan.org/~jasonk/Data-Faker-0.07/ - Copyright 2004-2005 by Jason Kohles
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -1506,6 +1579,35 @@ SOFTWARE.
 
 ```
 
+### eslint-config-prettier
+
+This product includes source derived from [eslint-config-prettier](https://github.com/prettier/eslint-config-prettier) ([v8.6.0](https://github.com/prettier/eslint-config-prettier/tree/v8.6.0)), distributed under the [MIT License](https://github.com/prettier/eslint-config-prettier/blob/v8.6.0/LICENSE):
+
+```
+The MIT License (MIT)
+
+Copyright (c) 2017, 2018, 2019, 2020, 2021, 2022, 2023 Simon Lydell and contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+```
+
 ### eslint-import-resolver-alias
 
 This product includes source derived from [eslint-import-resolver-alias](https://github.com/johvin/eslint-import-resolver-alias) ([v1.1.2](https://github.com/johvin/eslint-import-resolver-alias/tree/v1.1.2)), distributed under the [MIT License](https://github.com/johvin/eslint-import-resolver-alias/blob/v1.1.2/README.md):
@@ -1520,6 +1622,36 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
+
+### eslint-import-resolver-webpack
+
+This product includes source derived from [eslint-import-resolver-webpack](https://github.com/import-js/eslint-plugin-import) ([v0.13.2](https://github.com/import-js/eslint-plugin-import/tree/v0.13.2)), distributed under the [MIT License](https://github.com/import-js/eslint-plugin-import/blob/v0.13.2/LICENSE):
+
+```
+The MIT License (MIT)
+
+Copyright (c) 2015 Ben Mosher
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
 ```
 
 ### eslint-plugin-import
@@ -1737,6 +1869,35 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
+
+### jsonc-eslint-parser
+
+This product includes source derived from [jsonc-eslint-parser](https://github.com/ota-meshi/jsonc-eslint-parser) ([v2.1.0](https://github.com/ota-meshi/jsonc-eslint-parser/tree/v2.1.0)), distributed under the [MIT License](https://github.com/ota-meshi/jsonc-eslint-parser/blob/v2.1.0/LICENSE):
+
+```
+MIT License
+
+Copyright (c) 2020 Yosuke Ota
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
 ```
 
 ### jung

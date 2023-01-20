@@ -4,7 +4,7 @@
  */
 import { handle } from '../../../common/event-emitter/handle'
 import { subscribeToVisibilityChange, initializeHiddenTime } from '../../../common/window/page-visibility'
-import { documentAddEventListener } from '../../../common/event-listener/event-listener-opts'
+import { documentAddEventListener, windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { getOffset, now } from '../../../common/timing/now'
 import { getConfigurationValue, originals } from '../../../common/config/config'
 import { InstrumentBase } from '../../utils/instrument-base'

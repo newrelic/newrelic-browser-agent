@@ -16,7 +16,7 @@ const jsonp = 'NREUM.setToken'
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME))
+    super(agentIdentifier, aggregator, FEATURE_NAME)
     if (isBrowserScope) this.sendRum();  // initial RUM payload is only sent in web env, TO DO: can remove once aggregate is chained to instrument
   }
 

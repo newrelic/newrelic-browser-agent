@@ -5,7 +5,7 @@ import { Configurable } from './configurable'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { getCurrentSessionIdOrMakeNew } from '../../window/session-storage'
 import { getConfigurationValue } from '../config'
-import globalScope from '../../util/global-scope';
+import { globalScope } from '../../util/global-scope';
 
 var XHR = globalScope?.XMLHttpRequest
 var XHR_PROTO = XHR && XHR.prototype

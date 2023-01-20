@@ -13,7 +13,7 @@ import './debug'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, NR_ERR_PROP } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import globalScope from '../../../common/util/global-scope'
+import { globalScope } from '../../../common/util/global-scope'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME

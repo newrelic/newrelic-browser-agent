@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { browserErrorUtils } from '../../../../../../tools/testing-utils';
+import { browserErrorUtils } from '../../../../tools/testing-utils';
 import { computeStackTrace } from './compute-stack-trace';
 
 const baseMockError = {

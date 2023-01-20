@@ -20,7 +20,7 @@ export class Instrument extends InstrumentBase {
 
     onWindowLoad(() => { 
       this.measureWindowLoaded(); 
-      if (isBrowserWindow) this.importAggregator() 
+      if (isBrowserScope) this.importAggregator() 
     })
     onDOMContentLoaded(() => this.measureDomContentLoaded())
   }

@@ -5,7 +5,7 @@ const presets = [
 const plugins = [
   ["transform-inline-environment-variables", {
     "include": [
-      "MAJOR", "MINOR"
+      "BUILD_VERSION"
     ]
   }]
 ]

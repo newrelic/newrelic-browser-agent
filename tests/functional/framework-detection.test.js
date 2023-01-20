@@ -10,17 +10,18 @@ let frameworks = testDriver.Matcher.withFeature('frameworks')
 
 testDriver.test('Agent detects a page built with REACT and sends a supportability metric', frameworks, function (t, browser, router) {
   t.plan(2)
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectSupportMetrics()
   let loadPromise = browser.get(router.assetURL('frameworks/react/simple-app/index.html', {
     init: {
       page_view_timing: {
         enabled: false
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([data]) => {
+  Promise.all([metricsPromise, rumPromise, loadPromise])
+    .then(([{request: data}]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics objects were generated')
       const sm = supportabilityMetrics.find(x => x.params.name.includes('Framework'))
@@ -39,17 +40,18 @@ testDriver.test('Agent detects a page built with REACT and sends a supportabilit
 
 testDriver.test('Agent detects a page built with ANGULAR and sends a supportability metric', frameworks, function (t, browser, router) {
   t.plan(2)
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectSupportMetrics()
   let loadPromise = browser.get(router.assetURL('frameworks/angular/simple-app/index.html', {
     init: {
       page_view_timing: {
         enabled: false
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([data]) => {
+  Promise.all([metricsPromise, rumPromise, loadPromise])
+    .then(([{request: data}]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics objects were generated')
       const sm = supportabilityMetrics.find(x => x.params.name.includes('Framework'))
@@ -68,17 +70,18 @@ testDriver.test('Agent detects a page built with ANGULAR and sends a supportabil
 
 testDriver.test('Agent detects a page built with NO FRAMEWORK and DOES NOT send a supportability metric', frameworks, function (t, browser, router) {
   t.plan(1)
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectSupportMetrics()
   let loadPromise = browser.get(router.assetURL('frameworks/control.html', {
     init: {
       page_view_timing: {
         enabled: false
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([data]) => {
+  Promise.all([metricsPromise, rumPromise, loadPromise])
+    .then(([{request: data}]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       if (!supportabilityMetrics) {
         t.ok(1 === 1, 'FRAMEWORK SupportabilityMetrics object(s) were NOT generated')

@@ -9,11 +9,12 @@ const {fail} = require('./helpers')
 var supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 let sendBeaconBrowsers = testDriver.Matcher.withFeature('workingSendBeacon')
 
-testDriver.test('xhr instrumentation works with bad XHR constructor monkey-patch', supported, function (t, browser, router) {
+testDriver.test('xhr instrumentation works with bad XHR constructor runtime-patch', supported, function (t, browser, router) {
   t.plan(1)
 
-  let rumPromise = router.expectRumAndConditionAndErrors('window.xhrDone')
-  let loadPromise = browser.get(router.assetURL('xhr-constructor-monkey-patched.html', {
+  let rumPromise = router.expectRum()
+  let ajaxPromise = router.expectAjaxTimeSlices()
+  let loadPromise = browser.get(router.assetURL('xhr-constructor-runtime-patched.html', {
     init: {
       page_view_timing: {
         enabled: false
@@ -24,7 +25,7 @@ testDriver.test('xhr instrumentation works with bad XHR constructor monkey-patch
     }
   }))
 
-  Promise.all([rumPromise, loadPromise]).then(([{query, body}]) => {
+  Promise.all([ajaxPromise, rumPromise, loadPromise]).then(([{request: {query, body}}]) => {
     if (sendBeaconBrowsers.match(browser)) {
       t.ok(JSON.parse(body).xhr, 'got XHR data')
     } else {

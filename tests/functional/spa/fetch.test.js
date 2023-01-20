@@ -15,14 +15,14 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/fetch.html', { loader: 'spa' }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/fetch.html', { loader: 'spa' })).waitForFeature('loaded')
 
-  rumPromise.then(({query}) => {
+  rumPromise.then(({request: {query}}) => {
     t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa')
   })
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([eventsResult]) => {
+    .then(([{request: eventsResult}]) => {
       let {body, query} = eventsResult
 
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
@@ -40,7 +40,7 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({request: {query, body}}) => {
       let receiptTime = now()
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -94,7 +94,7 @@ testDriver.test('response size', supported, function (t, browser, router) {
 
   testCases.forEach(function (testCase) {
     t.test(testCase.name, function (t) {
-      let loadPromise = browser.safeGet(router.assetURL(testCase.asset, { loader: 'spa' }))
+      let loadPromise = browser.safeGet(router.assetURL(testCase.asset, { loader: 'spa' })).waitForFeature('loaded')
       let eventsPromise = router.expectEvents()
       let rumPromise = router.expectRum()
 
@@ -109,7 +109,7 @@ testDriver.test('response size', supported, function (t, browser, router) {
             return eventData
           })
         })
-        .then(({query, body}) => {
+        .then(({request: {query, body}}) => {
           let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
           var fetchNode = interactionTree.children.find((node) => node.type === 'ajax')
           t.equal(fetchNode.responseBodySize, testCase.responseBodySize, 'should have correct responseBodySize')

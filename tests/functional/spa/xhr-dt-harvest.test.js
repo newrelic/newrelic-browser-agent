@@ -14,7 +14,9 @@ testDriver.test('XHR request on same origin has AJAX request with DT payload', s
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/dt/xhr-dt-harvest-enabled.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+  let loadPromise = browser
+    .safeGet(router.assetURL('spa/dt/xhr-dt-harvest-enabled.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+    .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(() => {
@@ -25,7 +27,7 @@ testDriver.test('XHR request on same origin has AJAX request with DT payload', s
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({request: {query, body}}) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
@@ -48,7 +50,9 @@ testDriver.test('XHR request on different origin has no AJAX request with DT pay
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/dt/xhr-dt-harvest-enabled-different-origin.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+  let loadPromise = browser
+    .safeGet(router.assetURL('spa/dt/xhr-dt-harvest-enabled-different-origin.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+    .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(() => {
@@ -59,7 +63,7 @@ testDriver.test('XHR request on different origin has no AJAX request with DT pay
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({request: {query, body}}) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
@@ -81,7 +85,9 @@ testDriver.test('DT payload is NOT added when the feature is not enabled (defaul
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/dt/xhr-dt-harvest-disabled.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+  let loadPromise = browser
+    .safeGet(router.assetURL('spa/dt/xhr-dt-harvest-disabled.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+    .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(() => {
@@ -92,7 +98,7 @@ testDriver.test('DT payload is NOT added when the feature is not enabled (defaul
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({request: {query, body}}) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 

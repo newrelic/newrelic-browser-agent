@@ -19,7 +19,8 @@ loaderTypes.forEach(lt => loaderTypeSupportabilityMetric(lt))
 
 function loaderTypeSupportabilityMetric(loaderType) {
   testDriver.test(`generic agent info is captured - ${loaderType}`, fetchBrowsers, function (t, browser, router) {
-    let rumPromise = router.expectRumAndErrors()
+    let rumPromise = router.expectRum()
+    let metricsPromise = router.expectSupportMetrics()
     const loadPromise = browser.safeGet(router.assetURL('instrumented.html', {
       loader: loaderType,
       init: {
@@ -27,11 +28,10 @@ function loaderTypeSupportabilityMetric(loaderType) {
           enabled: false
         }
       }
-    }))
+    })).waitForFeature('loaded')
 
-    Promise.all([rumPromise, loadPromise])
-      .then(([data]) => {
-        console.log(data.body)
+    Promise.all([metricsPromise, rumPromise, loadPromise])
+      .then(([{request: data}]) => {
         var supportabilityMetrics = getMetricsFromResponse(data, true)
         const loaderTypeSM = supportabilityMetrics.find(x => x.params.name.includes('LoaderType'))
         t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
@@ -45,7 +45,8 @@ function loaderTypeSupportabilityMetric(loaderType) {
 
 testDriver.test('Calling a newrelic[api] fn creates a supportability metric', withUnload, function (t, browser, router) {
   t.plan((asyncApiFns.length) + 6 + NUM_POLYFILL_SM_FEATS)
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectMetrics()
   let loadPromise = browser.get(router.assetURL('api/customMetrics.html', {
     init: {
       page_view_timing: {
@@ -55,12 +56,12 @@ testDriver.test('Calling a newrelic[api] fn creates a supportability metric', wi
         enabled: false
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
   const observedAPImetrics = []
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([data]) => {
+  Promise.all([metricsPromise, rumPromise, loadPromise])
+    .then(([{request: data}]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       var customMetrics = getMetricsFromResponse(data, false)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
@@ -87,7 +88,8 @@ testDriver.test('Calling a newrelic[api] fn creates a supportability metric', wi
 })
 
 testDriver.test('a valid obfuscationRule creates detected supportability metric', fetchBrowsers, function (t, browser, router) {
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectSupportMetrics()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-valid.html', {
     loader: 'spa',
     init: {
@@ -95,10 +97,10 @@ testDriver.test('a valid obfuscationRule creates detected supportability metric'
         enabled: false
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([data]) => {
+  Promise.all([metricsPromise, rumPromise, loadPromise])
+    .then(([{request: data}]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
       supportabilityMetrics.forEach(sm => {
@@ -110,7 +112,8 @@ testDriver.test('a valid obfuscationRule creates detected supportability metric'
 })
 
 testDriver.test('an invalid obfuscation regex type creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectSupportMetrics()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-regex-type.html', {
     loader: 'spa',
     init: {
@@ -118,10 +121,10 @@ testDriver.test('an invalid obfuscation regex type creates invalid supportabilit
         enabled: false
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([data]) => {
+  Promise.all([metricsPromise, rumPromise, loadPromise])
+    .then(([{request: data}]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
       let invalidDetected = false
@@ -136,7 +139,8 @@ testDriver.test('an invalid obfuscation regex type creates invalid supportabilit
 })
 
 testDriver.test('an invalid obfuscation regex undefined creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectSupportMetrics()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-regex-undefined.html', {
     loader: 'spa',
     init: {
@@ -144,10 +148,10 @@ testDriver.test('an invalid obfuscation regex undefined creates invalid supporta
         enabled: false
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([data]) => {
+  Promise.all([metricsPromise, rumPromise, loadPromise])
+    .then(([{request: data}]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
       let invalidDetected = false
@@ -162,7 +166,8 @@ testDriver.test('an invalid obfuscation regex undefined creates invalid supporta
 })
 
 testDriver.test('an invalid obfuscation replacement type creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectSupportMetrics()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-replacement-type.html', {
     loader: 'spa',
     init: {
@@ -170,10 +175,10 @@ testDriver.test('an invalid obfuscation replacement type creates invalid support
         enabled: false
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([data]) => {
+  Promise.all([metricsPromise, rumPromise, loadPromise])
+    .then(([{request: data}]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
       let invalidDetected = false
@@ -192,7 +197,8 @@ testDriver.test('an invalid obfuscation replacement type creates invalid support
  * not supported should also report a sm once per life of page.
  */
 testDriver.test('workers creation generates sm', function (t, browser, router) {
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectSupportMetrics()
   const loadPromise = browser.safeGet(router.assetURL('instrumented-worker.html', {
     loader: 'spa',
     init: {
@@ -200,10 +206,10 @@ testDriver.test('workers creation generates sm', function (t, browser, router) {
         enabled: false
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([data]) => {
+  Promise.all([metricsPromise, rumPromise, loadPromise])
+    .then(([{request: data}]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, `${supportabilityMetrics.length} SupportabilityMetrics object(s) were generated`);
 
@@ -215,7 +221,7 @@ testDriver.test('workers creation generates sm', function (t, browser, router) {
         t.ok(wsm.classicWorker, 'classic worker is expected and used');
 
         /* Also note that though Firefox & older Safari don't actually support module workers, their call to the constructor still succeeds hence
-          generating a false positive sm. For simplicity, we'll just accept it as-is, so there's no add'l check here for 'workersFull' match. 
+          generating a false positive sm. For simplicity, we'll just accept it as-is, so there's no add'l check here for 'workersFull' match.
           ... Actually, if you compare Safari v14 vs. Edge v79, in both of which module workers are n/a, only the latter errors out while the former silently ignores. */
         t.ok(wsm.moduleWorker, 'module worker is expected and used');
       }

@@ -14,14 +14,14 @@ testDriver.test('', supported, function (t, browser, router) {
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(targetUrl)
+  let loadPromise = browser.safeGet(targetUrl).waitForFeature('loaded')
 
   router.timeout = 5000
 
   // This promise should never be fulfilled, because we should only get one
   // /events submission, for the initial page load.
   router.expectEvents()
-    .then((eventsResult) => {
+    .then(({request: eventsResult}) => {
       let {body, query} = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.fail('got second /events submission with interaction of type ' + interactionTree.trigger)
@@ -31,7 +31,7 @@ testDriver.test('', supported, function (t, browser, router) {
     })
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([eventsResult]) => {
+    .then(([{request: eventsResult}]) => {
       let {body, query} = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')

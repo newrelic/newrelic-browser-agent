@@ -4,12 +4,15 @@ const fp = require("fastify-plugin");
 const { PassThrough } = require("stream");
 const zlib = require("zlib");
 const assert = require("assert");
+const { paths } = require("../constants");
 
 /**
  * Fastify plugin to apply routes to the asset server that are used in various
  * test cases.
+ * @param {module:fastify.FastifyInstance} fastify the fastify server instance
+ * @param {TestServer} testServer test server instance
  */
-module.exports = fp(async function (fastify, opts) {
+module.exports = fp(async function (fastify, testServer) {
   fastify.get("/slowscript", (request, reply) => {
     const abort = parseInt(request.query.abort || 0, 10);
     const delay = parseInt(request.query.delay || 200, 10);
@@ -38,7 +41,7 @@ module.exports = fp(async function (fastify, opts) {
         .type("image/png")
         .send(
           fs.createReadStream(
-            path.join(opts.paths.testsAssetsDir, "images/square.png")
+            path.join(paths.testsAssetsDir, "images/square.png")
           )
         );
     }, delay);
@@ -98,7 +101,6 @@ module.exports = fp(async function (fastify, opts) {
       assert.deepEqual(request.body, { name: "bob", x: "5" });
       reply.send("good");
     } catch (e) {
-      console.log(e);
       reply.send("bad");
     }
   });
@@ -129,15 +131,13 @@ module.exports = fp(async function (fastify, opts) {
   });
   fastify.get("/web-worker-agent", async (request, reply) => {
     const contents = await fs.promises.readFile(
-      path.join(opts.paths.builtAssetsDir, "nr-loader-worker.min.js")
+      path.join(paths.builtAssetsDir, "nr-loader-worker.min.js")
     );
     reply
       .header("Content-Type", "application/javascript; charset=UTF-8")
       .send(contents);
   });
   fastify.get("/empty404", async (request, reply) => {
-    reply
-      .code(404)
-      .send('');
+    reply.code(404).send("");
   });
 });

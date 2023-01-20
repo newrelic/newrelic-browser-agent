@@ -23,14 +23,14 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
     }
   })
 
-  let loadPromise = browser.safeGet(assetURL)
+  let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
 
   Promise.all([resourcePromise, loadPromise, rumPromise]).then(([result]) => {
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
-    const body = result.body
+    const body = result.request.body
     const harvestBody = JSON.parse(body).res
 
     // trigger an XHR call after
@@ -44,9 +44,9 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
   })
   .then(([result]) => {
     t.equal(router.seenRequests.resources, 2, 'got two harvest requests')
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
-    const body = result.body
+    const body = result.request.body
     const harvestBody = JSON.parse(body).res
     const loadNodes = harvestBody.filter(function (node) { return node.t === 'event' && node.n === 'load' || node.n === 'readystatechange' })
     t.notOk(loadNodes.length > 0, 'XMLHttpRequest nodes not captured when ajax instrumentation is disabled')

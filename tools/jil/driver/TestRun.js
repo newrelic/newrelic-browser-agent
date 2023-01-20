@@ -10,6 +10,7 @@ const {EventEmitter} = require('events')
 const TestHarness = require('./harness')
 const {isSauceConnected} = require('../util/external-services')
 const observeTapeTest = require('./TapeTestObserver')
+const { v4: uuidV4 } = require('uuid')
 
 /**
  * Runs tests on a specific browser session (represented by TestRun instance)
@@ -165,6 +166,7 @@ class TestRun extends EventEmitter {
 
       let id = self._generateID()
       try {
+        t.comment(`testId: ${id}`);
         fn(t, browser, router.handle(id, false, browser))
       } catch (e) {
         newrelic.noticeError(e)
@@ -220,7 +222,7 @@ class TestRun extends EventEmitter {
   }
 
   _generateID () {
-    return Math.random().toString(36).slice(2)
+    return uuidV4();
   }
 }
 

@@ -21,9 +21,9 @@ testDriver.test('reporting uncaught errors from inline scripts', supported, func
     }
   }))
 
-  Promise.all([rumPromise, loadPromise]).then(([response]) => {
-    assertErrorAttributes(t, response.query)
-    const actualErrors = getErrorsFromResponse(response, browser)
+  Promise.all([rumPromise, loadPromise]).then(([{request}]) => {
+    assertErrorAttributes(t, request.query)
+    const actualErrors = getErrorsFromResponse(request, browser)
     verifyStackTraceOmits(t, actualErrors, 'secretValue')
     verifyStackTraceOmits(t, actualErrors, 'secretFragment')
 

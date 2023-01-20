@@ -20,7 +20,7 @@ workerTypes.forEach(type => {  // runs all test for classic & module workers & u
 
 // --- API tests ---
 function apiFinished (type, browserVersionMatcher) {
-	testDriver.test(`${type} - finished records a PageAction`, browserVersionMatcher, 
+	testDriver.test(`${type} - finished records a PageAction`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
@@ -33,7 +33,7 @@ function apiFinished (type, browserVersionMatcher) {
 			let insPromise = router.expectIns();
 
 			Promise.all([loadPromise, insPromise])
-			.then(( [/* loadPromise junk */, {body}] ) => {
+			.then(( [/* loadPromise junk */, {request: {body}}] ) => {
 				let insData = JSON.parse(body).ins;
 				t.equal(insData.length, 1, 'exactly 1 PageAction was submitted')
 				t.equal(insData[0].actionName, 'finished', 'PageAction has actionName = finished')
@@ -43,7 +43,7 @@ function apiFinished (type, browserVersionMatcher) {
 	);
 }
 function apiAddReleaseTooMany (type, browserVersionMatcher) {
-	testDriver.test(`${type} - release api adds tags to jserrors (with tags limit)`, browserVersionMatcher, 
+	testDriver.test(`${type} - release api adds tags to jserrors (with tags limit)`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
@@ -63,7 +63,7 @@ function apiAddReleaseTooMany (type, browserVersionMatcher) {
 			let errPromise = router.expectErrors();
 
 			Promise.all([loadPromise, errPromise])
-			.then(( [, {query}] ) => {
+			.then(( [, {request: {query}}] ) => {
 				const queryRi = JSON.parse(query.ri);
 				const ri = {};
 				for (let i = 1; i <= 10; i++) ri['num'+i] = String(i);	// 10 is the magic number (limit) defined in addRelease of api.js
@@ -75,7 +75,7 @@ function apiAddReleaseTooMany (type, browserVersionMatcher) {
 	);
 }
 function apiAddReleaseTooLong (type, browserVersionMatcher) {
-	testDriver.test(`${type} - release api limits the length of tags`, browserVersionMatcher, 
+	testDriver.test(`${type} - release api limits the length of tags`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
@@ -102,7 +102,7 @@ function apiAddReleaseTooLong (type, browserVersionMatcher) {
 			const twoHundredCharacterString = ninetyNineY + oneHundredX + 'q'
 
 			Promise.all([loadPromise, errPromise])
-			.then(( [, {query}] ) => {
+			.then(( [, {request: {query}}] ) => {
 				const queryRi = JSON.parse(query.ri);
 				const ri = {
 					one: '201',
@@ -118,7 +118,7 @@ function apiAddReleaseTooLong (type, browserVersionMatcher) {
 	);
 }
 function apiAddReleaseNotUsed (type, browserVersionMatcher) {
-	testDriver.test(`${type} - no query param when release is not set`, browserVersionMatcher, 
+	testDriver.test(`${type} - no query param when release is not set`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
@@ -134,7 +134,7 @@ function apiAddReleaseNotUsed (type, browserVersionMatcher) {
 			let errPromise = router.expectErrors();
 
 			Promise.all([loadPromise, errPromise])
-			.then(( [, {query}] ) => {
+			.then(( [, {request: {query}}] ) => {
 				t.notOk('ri' in query, 'should not have ri query param')
       	t.end()
 			}).catch(fail(t));
@@ -142,12 +142,12 @@ function apiAddReleaseNotUsed (type, browserVersionMatcher) {
 	);
 }
 
-// --- Final harvest tests --- ... looking for this? Go to ./eol-harvest.test.js 
+// --- Final harvest tests --- ... looking for this? Go to ./eol-harvest.test.js
 // --- Framework detection tests --- ... not available right now (in worker), leave a msg after the tone (don't wait)
 
 // --- Harvest tests ---
 function harvestReferrerSent (type, browserVersionMatcher) {
-	testDriver.test(`${type} - referrer attr is sent in the query string & does not include query params`, browserVersionMatcher, 
+	testDriver.test(`${type} - referrer attr is sent in the query string & does not include query params`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
@@ -159,7 +159,7 @@ function harvestReferrerSent (type, browserVersionMatcher) {
 			const ajaxPromise = router.expectAjaxEvents();	// used in place of RUM call that dne in workers
 
 			Promise.all([ajaxPromise, loadPromise])
-			.then(( [{query, headers}] ) => {
+			.then(( [{request: {query}}] ) => {
 				t.ok(query.ref, 'The query string should include the ref attribute.');
 
 				let queryRefUrl = url.parse(query.ref);
@@ -175,7 +175,7 @@ function harvestReferrerSent (type, browserVersionMatcher) {
 	);
 }
 function harvestSessionIsNullWhenEnabled (type, browserVersionMatcher) {
-	testDriver.test(`${type} - session tracking (enabled by default) is in query string attributes and is 0`, browserVersionMatcher, 
+	testDriver.test(`${type} - session tracking (enabled by default) is in query string attributes and is 0`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
@@ -187,7 +187,7 @@ function harvestSessionIsNullWhenEnabled (type, browserVersionMatcher) {
 			const ajaxPromise = router.expectAjaxEvents();	// used in place of RUM call that dne in workers
 
 			Promise.all([ajaxPromise, loadPromise])
-			.then(( [{query}] ) => {
+			.then(( [{request: {query}}] ) => {
 				t.equal(query.ck, '0', "The cookie flag ('ck') should equal 0.");
     		t.equal(query.s, '0', "The session id attr 's' should be 0.");
 				t.end();
@@ -202,7 +202,7 @@ function harvestSessionIsNullWhenEnabled (type, browserVersionMatcher) {
 
 // --- Obfuscate test ---
 function obfuscateAll (type, browserVersionMatcher) {
-	testDriver.test(`${type} - Obfuscate All Events`, browserVersionMatcher, 
+	testDriver.test(`${type} - Obfuscate All Events`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
@@ -229,7 +229,7 @@ function obfuscateAll (type, browserVersionMatcher) {
 					ins: { harvestTimeSeconds: 2 },
 					metrics: { enabled: false }
 				},
-				workerCommands: [() => { 
+				workerCommands: [() => {
 					setTimeout(function () {
 						fetch('/tests/assets/obfuscate-pii-valid.html')
 						throw new Error('pii,fakeid')
@@ -245,7 +245,7 @@ function obfuscateAll (type, browserVersionMatcher) {
 			const insPromise = router.expectIns();
 
 			Promise.all([loadPromise, ajaxPromise, errorsPromise, insPromise])
-			.then(( [, ajaxResponse, errorsResponse, insResponse] ) => {
+			.then(( [, {request: ajaxResponse}, {request: errorsResponse}, {request: insResponse}] ) => {
 				checkPayload(t, ajaxResponse.body, 'AJAX')
 				checkPayload(t, errorsResponse.body, 'Errors')
 				checkPayload(t, insResponse.body, 'INS body')

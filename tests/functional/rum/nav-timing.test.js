@@ -12,10 +12,10 @@ testDriver.test('RUM navTiming', supported, function (t, browser, router) {
   t.plan(1)
 
   let rumPromise = router.expectRum()
-  let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
+  let loadPromise = browser.safeGet(router.assetURL('instrumented.html')).waitForFeature('loaded')
 
   Promise.all([rumPromise, loadPromise])
-    .then(([{query}]) => {
+    .then(([{request: {query}}]) => {
       try {
         let timing = JSON.parse(query.perf).timing
         t.ok(typeof timing.le === 'number', 'navTiming')
@@ -35,10 +35,10 @@ testDriver.test('RUM navTiming unsupported', supported.inverse().and(withTls), f
   t.plan(1)
 
   let rumPromise = router.expectRum()
-  let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
+  let loadPromise = browser.safeGet(router.assetURL('instrumented.html')).waitForFeature('loaded')
 
   Promise.all([rumPromise, loadPromise])
-    .then(([{query}]) => {
+    .then(([{request: {query}}]) => {
       t.notok(query.perf, 'No navTiming')
     })
     .catch(fail)

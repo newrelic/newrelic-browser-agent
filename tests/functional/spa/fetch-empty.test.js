@@ -10,9 +10,9 @@ let supported = testDriver.Matcher.withFeature('fetch')
 testDriver.test('empty fetch does not break the agent', supported, function (t, browser, router) {
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/fetch-empty.html', { loader: 'spa' }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/fetch-empty.html', { loader: 'spa' })).waitForFeature('loaded')
 
-  rumPromise.then(({query}) => {
+  rumPromise.then(({request: {query}}) => {
     t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa')
   })
 

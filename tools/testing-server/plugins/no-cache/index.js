@@ -3,6 +3,7 @@ const fp = require("fastify-plugin");
 /**
  * Fastify plugin to disable browser caching. Caching when running tests can cause
  * false positives and negatives.
+ * @param {module:fastify.FastifyInstance} fastify the fastify server instance
  */
 module.exports = fp(async function (fastify) {
   fastify.addHook("onSend", async (request, reply, payload) => {

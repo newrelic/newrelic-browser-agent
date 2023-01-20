@@ -20,27 +20,27 @@ testDriver.test('session traces are retried when collector returns 429 during fi
     }
   })
 
-  router.scheduleResponse('resources', 429)
+  router.scheduleReply('resources', {statusCode: 429})
 
-  let loadPromise = browser.safeGet(assetURL)
+  let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
 
   let firstBody
 
   Promise.all([resourcePromise, loadPromise, rumPromise]).then(([result]) => {
-    t.equal(result.res.statusCode, 429, 'server responded with 429')
-    firstBody = result.body
+    t.equal(result.reply.statusCode, 429, 'server responded with 429')
+    firstBody = result.request.body
     return router.expectResources()
   }).then(result => {
-    let secondBody = result.body
+    let secondBody = result.request.body
 
     const firstParsed = JSON.parse(firstBody)
     const secondParsed = JSON.parse(secondBody)
 
     t.ok(secondParsed.res.length > firstParsed.res.length, 'second try has more nodes than first')
     t.ok(containsAll(secondParsed, firstParsed), 'all nodes have been resent')
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
     t.equal(router.seenRequests.resources, 2, 'got two harvest requests')
 
     t.end()
@@ -65,24 +65,24 @@ testDriver.test('retried first harvest captures ptid', supported, function (t, b
     }
   })
 
-  router.scheduleResponse('resources', 429)
+  router.scheduleReply('resources', {statusCode: 429})
 
-  let loadPromise = browser.safeGet(assetURL)
+  let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
 
   Promise.all([resourcePromise, loadPromise, rumPromise]).then(([result]) => {
-    t.equal(result.res.statusCode, 429, 'server responded with 429')
+    t.equal(result.reply.statusCode, 429, 'server responded with 429')
     return router.expectResources()
   }).then(result => {
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
     const domPromise = browser
       .elementByCssSelector('body')
       .click()
     return Promise.all([router.expectResources(), domPromise])
   }).then(([result]) => {
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
-    t.ok(result.query.ptid, 'ptid was included')
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
+    t.ok(result.request.query.ptid, 'ptid was included')
     t.end()
   }).catch(fail)
 
@@ -105,24 +105,24 @@ testDriver.test('session traces are retried when collector returns 429 during sc
     }
   })
 
-  let loadPromise = browser.safeGet(assetURL)
+  let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
 
   let firstBody, secondBody
 
   Promise.all([resourcePromise, loadPromise, rumPromise]).then(([result]) => {
-    firstBody = result.body
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    firstBody = result.request.body
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
-    router.scheduleResponse('resources', 429)
+    router.scheduleReply('resources', {statusCode: 429})
     return router.expectResources()
   }).then(result => {
-    t.equal(result.res.statusCode, 429, 'server responded with 429')
-    secondBody = result.body
+    t.equal(result.reply.statusCode, 429, 'server responded with 429')
+    secondBody = result.request.body
     return router.expectResources()
   }).then(result => {
-    let thirdBody = result.body
+    let thirdBody = result.request.body
 
     const firstParsed = JSON.parse(firstBody)
     const secondParsed = JSON.parse(secondBody)
@@ -138,7 +138,7 @@ testDriver.test('session traces are retried when collector returns 429 during sc
     resentNodes = intersectPayloads(thirdParsed, firstParsed)
     t.ok(resentNodes.length === 0, 'nodes from first successful harvest are not resent in third harvest')
 
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
     t.equal(router.seenRequests.resources, 3, 'got three harvest requests')
 
     t.end()

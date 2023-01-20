@@ -17,8 +17,8 @@ testDriver.test('errors get to session traces', supported, function (
   let loadPromise = browser.get(router.assetURL('sessiontraceerror.html'))
 
   Promise.all([resourcePromise, rumPromise, loadPromise])
-    .then(([{ query }]) => {
-      return router.expectResources().then(({ query, body }) => {
+    .then(() => {
+      return router.expectResources().then(({request: {body}}) => {
         let parsed = JSON.parse(body)
 
         let err = parsed.res.find((node) => {

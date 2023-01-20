@@ -20,10 +20,10 @@ testDriver.test('PageAction submission', function (t, browser, router) {
       browser.safeEval('newrelic.addPageAction("DummyEvent", { free: "tacos" })')
       return router.expectIns()
     })
-    .then(({req, query, body}) => {
-      t.equal(req.method, 'POST', 'first PageAction submission is a POST')
-      t.notOk(query.ins, 'query string does not include ins parameter')
-      validatePageActionData(t, JSON.parse(body).ins, query)
+    .then(({request}) => {
+      t.equal(request.method, 'POST', 'first PageAction submission is a POST')
+      t.notOk(request.query.ins, 'query string does not include ins parameter')
+      validatePageActionData(t, JSON.parse(request.body).ins, request.query)
       t.end()
     })
     .catch(fail(t))
@@ -47,21 +47,21 @@ testDriver.test('PageActions are retried when collector returns 429', function (
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
-      router.scheduleResponse('ins', 429)
+      router.scheduleReply('ins', {statusCode: 429})
       browser.safeEval('newrelic.addPageAction("exampleEvent", {param: "value"})')
 
       return router.expectIns()
     })
-    .then((insResult) => {
-      t.equal(insResult.res.statusCode, 429, 'server responded with 429')
-      firstBody = JSON.parse(insResult.body)
+    .then(({request, reply}) => {
+      t.equal(reply.statusCode, 429, 'server responded with 429')
+      firstBody = JSON.parse(request.body)
 
       return router.expectIns()
     })
-    .then((insResult) => {
-      const secondBody = JSON.parse(insResult.body)
+    .then(({request, reply}) => {
+      const secondBody = JSON.parse(request.body)
 
-      t.equal(insResult.res.statusCode, 200, 'server responded with 200')
+      t.equal(reply.statusCode, 200, 'server responded with 200')
       t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
       t.equal(router.seenRequests.ins, 2, 'got two ins harvest requests')
 
@@ -83,33 +83,33 @@ testDriver.test('PageAction submission on final harvest', function (t, browser, 
   let loadPromise = browser.get(url)
 
   Promise.all([rumPromise, loadPromise])
-    .then(({req, query, body}) => {
+    .then(() => {
       let insPromise = router.expectIns()
 
       let loadPromise = browser
         .safeEval('newrelic.addPageAction("DummyEvent", { free: "tacos" })')
         .get(url)
 
-      return Promise.all([insPromise, loadPromise]).then(([ins, load]) => {
+      return Promise.all([insPromise, loadPromise]).then(([ins]) => {
         return ins
       })
     })
-    .then(({req, query, body}) => {
+    .then(({request}) => {
       let insData
 
       if (workingSendBeacon.match(browser)) {
-        t.ok(body, 'second PageAction POST has non-empty body')
-        insData = JSON.parse(body).ins
-        t.equal(req.method, 'POST', 'final PageAction submission should be a POST')
-        t.notOk(query.ins, 'query string does not include ins parameter')
+        t.ok(request.body, 'second PageAction POST has non-empty body')
+        insData = JSON.parse(request.body).ins
+        t.equal(request.method, 'POST', 'final PageAction submission should be a POST')
+        t.notOk(request.query.ins, 'query string does not include ins parameter')
         t.ok(insData, 'POST body is not empty')
       } else {
-        insData = JSON.parse(query.ins)
-        t.equal(req.method, 'GET', 'final PageAction submission should be a GET')
+        insData = JSON.parse(request.query.ins)
+        t.equal(request.method, 'GET', 'final PageAction submission should be a GET')
         t.ok(insData, 'has ins query string parameter')
       }
 
-      validatePageActionData(t, insData, query)
+      validatePageActionData(t, insData, request.query)
 
       t.end()
     })
@@ -130,13 +130,13 @@ testDriver.test('precedence', function (t, browser, router) {
       browser.safeEval('newrelic.addPageAction("MyEvent", { referrerUrl: "http://test.com", foo: {bar: "baz"} })').catch(fail(t))
       return router.expectIns()
     })
-    .then(({req, query, body}) => {
-      validatePageActionData(JSON.parse(body).ins, query)
+    .then(({request}) => {
+      validatePageActionData(JSON.parse(request.body).ins, request.query)
       t.end()
     })
     .catch(fail(t))
 
-  function validatePageActionData (pageActionData, query) {
+  function validatePageActionData (pageActionData) {
     t.equal(pageActionData.length, 1, 'should have 1 event')
 
     let event = pageActionData[0]

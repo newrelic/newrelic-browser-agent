@@ -1,21 +1,24 @@
 const fp = require("fastify-plugin");
-const LoaderTransform = require("./loader-transform");
-const ConfigTransform = require("./config-transform");
-const InitTransform = require("./init-transform");
-const WorkerCommandsTransformer = require("./worker-commands-transform");
-const ScriptTransform = require("./script-transform");
-const PolyfillsTransform = require("./polyfills-transform");
+const applyLoaderTransform = require("./loader-transform");
+const applyConfigTransformer = require("./config-transform");
+const applyInitTransform = require("./init-transform");
+const applyWorkerCommandsTransform = require("./worker-commands-transform");
+const applyScriptTransform = require("./script-transform");
+const applyPolyfillsTransform = require("./polyfills-transform");
+const { paths } = require("../../constants");
 
 /**
  * Fastify plugin to apply transformations for test HTML files for the injection
  * of the agent and other supported testing and configuration scripts.
+ * @param {module:fastify.FastifyInstance} fastify the fastify server instance
+ * @param {TestServer} testServer test server instance
  */
-module.exports = fp(async function (fastify, opts) {
+module.exports = fp(async function (fastify, testServer) {
   fastify.addHook("onSend", async (request, reply, payload) => {
     if (
       !payload ||
       !payload.filename ||
-      payload.filename.indexOf(opts.paths.testsAssetsDir) === -1 ||
+      payload.filename.indexOf(paths.testsAssetsDir) === -1 ||
       !payload.filename.endsWith(".html")
     ) {
       return payload;
@@ -23,13 +26,11 @@ module.exports = fp(async function (fastify, opts) {
 
     reply.removeHeader("content-length");
     return payload
-      .pipe(
-        new LoaderTransform(request.query.loader || opts.cliOpts.loader, opts)
-      )
-      .pipe(new ConfigTransform(request.query, opts))
-      .pipe(new InitTransform(request.query))
-      .pipe(new WorkerCommandsTransformer(request.query))
-      .pipe(new ScriptTransform(request.query))
-      .pipe(new PolyfillsTransform(opts));
+      .pipe(applyLoaderTransform(request, reply, testServer))
+      .pipe(applyConfigTransformer(request, reply, testServer))
+      .pipe(applyInitTransform(request, reply, testServer))
+      .pipe(applyWorkerCommandsTransform(request, reply, testServer))
+      .pipe(applyScriptTransform(request, reply, testServer))
+      .pipe(applyPolyfillsTransform(request, reply, testServer));
   });
 });

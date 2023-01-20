@@ -17,6 +17,7 @@ const TestHarness = require('./harness')
 const DeviceTest = require('./DeviceTest')
 const {BrowserSpec} = require('../util/browser-list')
 const {isSauceConnected} = require('../util/external-services')
+const { v4: uuidV4 } = require('uuid')
 
 class Driver {
   constructor (config, output) {
@@ -89,7 +90,7 @@ class Driver {
   }
 
   generateID () {
-    return Math.random().toString(36).slice(2)
+    return uuidV4();
   }
 
   // runs tests based on an array of DeviceTest objects
@@ -283,6 +284,7 @@ class Driver {
           let id = driver.generateID()
           currentTest = t
           try {
+            t.comment(`testId: ${id}`);
             fn(t, browser, router.handle(id, false, browser))
           } catch (e) {
             newrelic.noticeError(e)

@@ -1,6 +1,7 @@
 const testDriver = require('../../../tools/jil/index')
 const {workerTypes, typeToMatcher} = require('./helpers')
 const {fail, condition} = require('../xhr/helpers')
+const querypack = require("@newrelic/nr-querypack")
 
 const supportsFetch = testDriver.Matcher.withFeature('fetch');
 
@@ -14,14 +15,12 @@ workerTypes.forEach(type => {
 
 // --- Tests ---
 function ajaxEventsDisabled (type, browserVersionMatcher) {
-	testDriver.test(`${type} - disabled ajax events`, browserVersionMatcher, 
+	testDriver.test(`${type} - disabled ajax events`, browserVersionMatcher,
 		function (t, browser, router) {
-			const savedTimeout = router.router.timeout;
-			router.timeout = router.router.timeout = 5000;
 
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
-					ajax: { 
+					ajax: {
 						harvestTimeSeconds: 2,
 						enabled: false
 					}
@@ -31,21 +30,19 @@ function ajaxEventsDisabled (type, browserVersionMatcher) {
 						var xhr = new XMLHttpRequest()
 						xhr.open('GET', '/json')
 						xhr.send()
-	
+
 					}, 2000);
 				}].map(x => x.toString())
 			});
 
 			const loadPromise = browser.get(assetURL);
-			const ajaxPromise = router.expectAjaxEvents();
+			const ajaxPromise = router.expectAjaxEvents(7000);
 
 			Promise.all([ajaxPromise, loadPromise])
 			.then(( ) => {
-				router.timeout = router.router.timeout = savedTimeout;	// restore timeout before failing
 				t.error()
 				t.end()
 			}).catch(function () {	// the timeout is actually supposed to happen in this test
-				router.timeout = router.router.timeout = savedTimeout;
 				t.ok(true, 'AJAX Promise did not execute because enabled was false')
 				t.end()
 			});
@@ -53,11 +50,11 @@ function ajaxEventsDisabled (type, browserVersionMatcher) {
 	);
 }
 function ajaxEventsEnabled (type, browserVersionMatcher) {
-	testDriver.test(`${type} - capturing XHR and fetch ajax events`, browserVersionMatcher, 
+	testDriver.test(`${type} - capturing XHR and fetch ajax events`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
-					ajax: { 
+					ajax: {
 						harvestTimeSeconds: 2,
 						enabled: true
 					}
@@ -67,37 +64,31 @@ function ajaxEventsEnabled (type, browserVersionMatcher) {
 						var xhr = new XMLHttpRequest()
 						xhr.open('GET', '/json')
 						xhr.send()
-						try { 
-							fetch('/json'); 
+						try {
+							fetch('/json');
 						} finally {}
 					}, 2000);
 				}].map(x => x.toString())
 			});
 
 			const loadPromise = browser.get(assetURL);
-			const ajaxPromise = router.expectSpecificEvents({ condition });
+			const ajaxPromise = router.expectAjaxEvents()
 
 			Promise.all([ajaxPromise, loadPromise])
-			.then(( [response] ) => {
-				if (response.length == 2) {
-					t.ok('XMLHttpRequest & fetch events were harvested');
-				} else {		// one of these should fail, unless browser only supports XHR not fetch
-					t.equal(response[0].requestedWith, 'XMLHttpRequest', 'XHR is harvested');
-					if (browser.match(supportsFetch)) {
-						t.equal(response[0].requestedWith, 'fetch', 'fetch is harvested');
-					}
-				}
-      	t.end()
+            .then(( [{request: {body}}] ) => {
+                const data = querypack.decode(body)
+                t.ok(data.length === 2, 'events were harvested');
+                t.end()
 			}).catch(fail(t));
 		}
 	);
 }
 function ajaxEventsPayload (type, browserVersionMatcher) {
-	testDriver.test(`${type} - capturing large payload of XHR ajax events`, browserVersionMatcher, 
+	testDriver.test(`${type} - capturing large payload of XHR ajax events`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
-					ajax: { 
+					ajax: {
 						harvestTimeSeconds: 5,
         		maxPayloadSize: 500,
 						enabled: true
@@ -122,21 +113,19 @@ function ajaxEventsPayload (type, browserVersionMatcher) {
 			});
 
 			const loadPromise = browser.get(assetURL);
-			const ajaxPromise = Promise.all([
-				router.expectSpecificEvents({ condition }),
-				router.expectSpecificEvents({ condition })
-			]);
+			const ajaxPromise = router.expectAjaxEvents();
 
 			Promise.all([ajaxPromise, loadPromise])
-			.then(( [responses] ) => {
-				t.ok(responses)
-      	t.end()
+            .then(( [{request: {body}}] ) => {
+                const data = querypack.decode(body)
+                t.ok(data.length > 0, 'events were harvested');
+      	        t.end()
 			}).catch(fail(t));
 		}
 	);
 }
 function ajaxDTInfo (type, browserVersionMatcher) {
-	testDriver.test(`${type} - Distributed Tracing info is added to XHR & fetch ajax events`, browserVersionMatcher, 
+	testDriver.test(`${type} - Distributed Tracing info is added to XHR & fetch ajax events`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				injectUpdatedLoaderConfig: true,
@@ -157,27 +146,21 @@ function ajaxDTInfo (type, browserVersionMatcher) {
 						var xhr = new XMLHttpRequest()
 						xhr.open('GET', '/json')
 						xhr.send()
-						try { 
-							fetch('/json'); 
+						try {
+							fetch('/json');
 						} finally {}
 					}, 2000);
 				}].map(x => x.toString())
 			});
 
 			const loadPromise = browser.get(assetURL);
-			const ajaxPromise = router.expectSpecificEvents({ condition });
+			const ajaxPromise = router.expectAjaxEvents();
 
 			Promise.all([ajaxPromise, loadPromise])
-			.then(( [response] ) => {
-				if (response.length == 2) {
-					t.ok('XMLHttpRequest & fetch events were harvested');
-				} else {		// one of these should fail, unless browser only supports XHR not fetch
-					t.equal(response[0].requestedWith, 'XMLHttpRequest', 'XHR is harvested');
-					if (browser.match(supportsFetch)) {
-						t.equal(response[0].requestedWith, 'fetch', 'fetch is harvested');
-					}
-				}
-				response.forEach(r => {
+			.then(( [{request: {body}}] ) => {
+                const data = querypack.decode(body)
+                t.equal(data.length, 2, 'XMLHttpRequest & fetch events were harvested');
+                data.forEach(r => {
 					t.ok(r.guid && r.guid.length > 0, 'should be a non-empty guid string')
 					t.ok(r.traceId && r.traceId.length > 0, 'should be a non-empty traceId string')
 					t.ok(r.timestamp != null && r.timestamp > 0, 'should be a non-zero timestamp')

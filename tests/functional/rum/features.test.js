@@ -12,7 +12,7 @@ testDriver.test('rum feature flags, full loader', withTls, function (t, browser,
   let rumPromise = router.expectRum()
   let loadPromise = browser.get(router.assetURL('rum-data.html', {loader: 'full'}))
 
-  Promise.all([rumPromise, loadPromise]).then(([{query}]) => {
+  Promise.all([rumPromise, loadPromise]).then(([{request: {query}}]) => {
     if (!browser.hasFeature('xhr')) {
       t.equal(query.af, 'err,ins')
     } else if (!browser.hasFeature('stn')) {
@@ -35,7 +35,7 @@ testDriver.test('rum feature flags, rum loader', withTls, function (t, browser, 
   let rumPromise = router.expectRum()
   let loadPromise = browser.get(router.assetURL('rum-data.html', {loader: 'rum'}))
 
-  Promise.all([rumPromise, loadPromise]).then(([{query}]) => {
+  Promise.all([rumPromise, loadPromise]).then(([{request: {query}}]) => {
     t.equal(query.af, void 0)
     t.end()
   }).catch(fail)

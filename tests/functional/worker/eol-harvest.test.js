@@ -11,13 +11,13 @@ workerTypes.forEach(type => {  // runs all test for classic & module workers & u
 
 // --- Tests ---
 function finalHarvest (type, browserVersionMatcher) {
-	testDriver.test(`${type} - buffered events are sent at end-of-life aka worker closing`, browserVersionMatcher, 
+	testDriver.test(`${type} - buffered events are sent at end-of-life aka worker closing`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
-					ajax: { harvestTimeSeconds: 81 },
-					jserrors: { harvestTimeSeconds: 81 },
-					ins: { harvestTimeSeconds: 81 }
+					ajax: { harvestTimeSeconds: 8 },
+					jserrors: { harvestTimeSeconds: 8 },
+					ins: { harvestTimeSeconds: 8 }
 				},
 				workerCommands: [() => {
 					newrelic.noticeError("test");
@@ -28,7 +28,7 @@ function finalHarvest (type, browserVersionMatcher) {
 			});
 
 			const loadPromise = browser.get(assetURL);
-			const metrPromise = router.expectErrors();
+			const metrPromise = router.expectMetrics();
 			const errPromise = router.expectErrors();		// CAUTION: the order of metrics (sm) and jserrors matters; metrics are always sent out FIRST
 			const ajaxPromise = router.expectAjaxEvents();
 			const insPromise = router.expectIns();
@@ -37,26 +37,26 @@ function finalHarvest (type, browserVersionMatcher) {
 			.then(( [, metrResponse, errResponse, ajaxResponse, insResponse] ) => {
 				let body;
 
-				body = JSON.parse(metrResponse.body);
+				body = JSON.parse(metrResponse.request.body);
 				t.ok(body.sm, 'supportability metrics are sent on close');
 				t.ok(body.sm.length >= 2, 'metrics included api calls as expected');
-				t.equal(metrResponse.req.method, 'POST', 'metrics(-jserror) harvest is a POST');
+				t.equal(metrResponse.request.method, 'POST', 'metrics(-jserror) harvest is a POST');
 
-				body = JSON.parse(errResponse.body);
+				body = JSON.parse(errResponse.request.body);
 				t.ok(body.err, 'jserrors are sent on close');
 				t.equal(body.err.length, 1, 'should have 1 error obj');
 				t.equal(body.err[0].params.message, 'test', 'should have correct message');
-				t.equal(errResponse.req.method, 'POST', 'jserrors harvest is a POST');
+				t.equal(errResponse.request.method, 'POST', 'jserrors harvest is a POST');
 
-				body = ajaxResponse.body;
+				body = ajaxResponse.request.body;
 				t.ok(body.startsWith('bel.'), 'ajax event is sent on close');	// note: there's a race condition between api calls & final harvest callbacks that determines what the payload may look like
-				t.equal(errResponse.req.method, 'POST', 'events harvest is a POST');
+				t.equal(errResponse.request.method, 'POST', 'events harvest is a POST');
 
-				body = JSON.parse(insResponse.body);
+				body = JSON.parse(insResponse.request.body);
 				t.ok(body.ins, 'page actions are sent on close');
 				t.equal(body.ins.length, 1, 'should have 1 action obj');
 				t.equal(body.ins[0].actionName, 'blahblahblah', 'should have correct actionName');
-				t.equal(insResponse.req.method, 'POST', 'ins harvest is a POST');
+				t.equal(insResponse.request.method, 'POST', 'ins harvest is a POST');
 
       	t.end()
 			})

@@ -16,14 +16,14 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
   const asset = router.assetURL('spa/xhr.html', { loader: 'spa', init: {session_trace: {enabled: false} }} )
-  let loadPromise = browser.safeGet(asset)
+  let loadPromise = browser.safeGet(asset).waitForFeature('loaded')
 
-  rumPromise.then(({query}) => {
+  rumPromise.then(({request: {query}}) => {
     t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa')
   })
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([eventsResult]) => {
+    .then(([{request: eventsResult}]) => {
       let {body, query} = eventsResult
 
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
@@ -39,7 +39,7 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({request: {query, body}}) => {
       let receiptTime = now()
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -86,14 +86,16 @@ testDriver.test('capturing SPA interactions using loader_config data', supported
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/xhr.html', { loader: 'spa', injectUpdatedLoaderConfig: true, init: {session_trace: {enabled: false}} }))
+  let loadPromise = browser
+    .safeGet(router.assetURL('spa/xhr.html', { loader: 'spa', injectUpdatedLoaderConfig: true, init: {session_trace: {enabled: false}} }))
+    .waitForFeature('loaded')
 
-  rumPromise.then(({query}) => {
+  rumPromise.then(({request: {query}}) => {
     t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa')
   })
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([eventsResult]) => {
+    .then(([{request: eventsResult}]) => {
       let {body, query} = eventsResult
 
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
@@ -109,7 +111,7 @@ testDriver.test('capturing SPA interactions using loader_config data', supported
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({request: {query, body}}) => {
       let receiptTime = now()
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -153,14 +155,14 @@ testDriver.test('capturing SPA interactions using loader_config data', supported
 testDriver.test('child nodes in SPA interaction does not exceed set limit', supported, function (t, browser, router) {
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/fetch-exceed-max-spa-nodes.html', { loader: 'spa' }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/fetch-exceed-max-spa-nodes.html', { loader: 'spa' })).waitForFeature('loaded')
 
-  rumPromise.then(({query}) => {
+  rumPromise.then(({request: {query}}) => {
     t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa')
   })
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([eventsResult]) => {
+    .then(([{request: eventsResult}]) => {
       let {body, query} = eventsResult
 
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
@@ -178,7 +180,7 @@ testDriver.test('child nodes in SPA interaction does not exceed set limit', supp
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({request: {query, body}}) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.ok(interactionTree.children.length <= 128, 'interaction should have no more than 128 child nodes')
       t.end()

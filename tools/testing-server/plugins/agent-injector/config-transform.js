@@ -1,6 +1,76 @@
 const { Transform } = require("stream");
 const debugShim = require("./debug-shim");
 const sslShim = require("./ssl-shim");
+const {
+  defaultAgentConfig,
+  loaderConfigKeys,
+  loaderOnlyConfigKeys,
+} = require("../../constants");
+
+/**
+ * Constructs the agent config script block based on the config query and default
+ * agent config from the test server.
+ * @param {module:fastify.FastifyRequest} request
+ * @param {module:fastify.FastifyReply} reply
+ * @param {TestServer} testServer
+ * @return {string}
+ */
+function getConfigContent(request, reply, testServer) {
+  const queryConfig = (() => {
+    try {
+      return JSON.parse(
+        Buffer.from(request.query.config || "e30=", "base64").toString()
+      );
+    } catch (error) {
+      testServer.config.logger.error(
+        `Invalid config query parameter for request ${request.url}`
+      );
+      testServer.config.logger.error(error);
+      return {};
+    }
+  })();
+  const config = {
+    agent: `${testServer.assetServer.host}:${testServer.assetServer.port}/build/nr.js`,
+    beacon: `${testServer.bamServer.host}:${testServer.bamServer.port}`,
+    errorBeacon: `${testServer.bamServer.host}:${testServer.bamServer.port}`,
+    ...defaultAgentConfig,
+    ...queryConfig,
+  };
+
+  let updatedConfig = {
+    info: {},
+    loaderConfig: {},
+  };
+
+  for (const key in config) {
+    if (request.query.injectUpdatedLoaderConfig === "true") {
+      if (loaderConfigKeys.includes(key)) {
+        // this simulates the collector injects only the primary app ID
+        if (key === "applicationID") {
+          const primaryAppId = config[key].toString().split(",")[0];
+          updatedConfig.loaderConfig[key] = primaryAppId;
+        } else {
+          updatedConfig.loaderConfig[key] = config[key];
+        }
+      }
+    }
+
+    // add all keys to `info` except the ones that exist only in `loader_config`
+    if (!loaderOnlyConfigKeys.includes(key)) {
+      updatedConfig.info[key] = config[key];
+    }
+  }
+
+  const infoJSON = JSON.stringify(updatedConfig.info);
+  const loaderConfigJSON = JSON.stringify(updatedConfig.loaderConfig);
+  const loaderConfigAssignment = request.query.injectUpdatedLoaderConfig
+    ? `NREUM.loader_config=${loaderConfigJSON};`
+    : "";
+
+  return `${sslShim}window.NREUM||(NREUM={});NREUM.info=${infoJSON};${loaderConfigAssignment}${
+    testServer.config.debugShim ? debugShim : ""
+  }`;
+}
 
 /**
  * Transforms requests for HTML files that contain the \{config\} string with the
@@ -8,115 +78,23 @@ const sslShim = require("./ssl-shim");
  * it was provided. The transform also injects the debug shim if debugging has been
  * enabled via the CLI.
  */
-class ConfigTransform extends Transform {
-  #reqParams;
-  #testServerConfig;
-  #injectUpdatedLoaderConfig;
+module.exports = function (request, reply, testServer) {
+  return new Transform({
+    transform(chunk, encoding, done) {
+      const chunkString = chunk.toString();
 
-  constructor(reqParams, testServerConfig, transformOptions) {
-    super(transformOptions);
-
-    this.#reqParams = reqParams;
-    this.#testServerConfig = testServerConfig;
-    this.#injectUpdatedLoaderConfig =
-      reqParams.injectUpdatedLoaderConfig === "true";
-  }
-
-  _transform(chunk, encoding, done) {
-    const chunkString = chunk.toString();
-
-    if (chunkString.indexOf("{config}") > -1) {
-      const replacement = this.#getConfigContent();
-      done(
-        null,
-        chunkString.replace(
-          "{config}",
-          `<script type="text/javascript">${replacement}</script>`
-        )
-      );
-    } else {
-      done(null, chunkString);
-    }
-  }
-
-  #getConfigContent(loaderName, params, ssl, injectUpdatedLoaderConfig) {
-    const config = this.#generateConfig(
-      loaderName,
-      params,
-      ssl,
-      injectUpdatedLoaderConfig
-    );
-    const infoJSON = JSON.stringify(config.info);
-    const loaderConfigJSON = JSON.stringify(config.loaderConfig);
-    const loaderConfigAssignment = this.#injectUpdatedLoaderConfig
-      ? `NREUM.loader_config=${loaderConfigJSON};`
-      : "";
-
-    return `${sslShim}window.NREUM||(NREUM={});NREUM.info=${infoJSON};${loaderConfigAssignment}${
-      this.#testServerConfig.cliOpts.debugShim ? debugShim : ""
-    }`;
-  }
-
-  #generateConfig() {
-    let config = {
-      agent: `${this.#testServerConfig.cliOpts.host}:${
-        this.#testServerConfig.serverConfig.assetServerPort
-      }/build/nr.js`,
-      beacon: `${this.#testServerConfig.cliOpts.host}:${
-        this.#testServerConfig.serverConfig.collectorServerPort
-      }`,
-      errorBeacon: `${this.#testServerConfig.cliOpts.host}:${
-        this.#testServerConfig.serverConfig.collectorServerPort
-      }`,
-      ...this.#testServerConfig.agentConfig,
-      ...(this.#parseConfigFromQueryString() || {}),
-    };
-
-    const loaderConfigKeys = [
-      "accountID",
-      "agentID",
-      "applicationID",
-      "licenseKey",
-      "trustKey",
-    ];
-
-    const loaderOnlyConfigKeys = ["accountID", "agentID", "trustKey"];
-
-    let updatedConfig = {
-      info: {},
-      loaderConfig: {},
-    };
-
-    for (const key in config) {
-      if (this.#injectUpdatedLoaderConfig) {
-        if (loaderConfigKeys.includes(key)) {
-          // this simulates the collector injects only the primary app ID
-          if (key === "applicationID") {
-            const primaryAppId = config[key].toString().split(",")[0];
-            updatedConfig.loaderConfig[key] = primaryAppId;
-          } else {
-            updatedConfig.loaderConfig[key] = config[key];
-          }
-        }
+      if (chunkString.indexOf("{config}") > -1) {
+        const replacement = getConfigContent(request, reply, testServer);
+        done(
+          null,
+          chunkString.replace(
+            "{config}",
+            `<script type="text/javascript">${replacement}</script>`
+          )
+        );
+      } else {
+        done(null, chunkString);
       }
-
-      // add all keys to `info` except the ones that exist only in `loader_config`
-      if (!loaderOnlyConfigKeys.includes(key)) {
-        updatedConfig.info[key] = config[key];
-      }
-    }
-
-    return updatedConfig;
-  }
-
-  #parseConfigFromQueryString() {
-    if (!this.#reqParams.config) {
-      return {};
-    }
-
-    let configString = Buffer.from(this.#reqParams.config, "base64").toString();
-    return JSON.parse(configString);
-  }
-}
-
-module.exports = ConfigTransform;
+    },
+  });
+};

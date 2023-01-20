@@ -1,6 +1,7 @@
 const testDriver = require('../../../tools/jil/index')
 const {workerTypes, typeToMatcher} = require('./helpers')
 const {fail, testCases, validateNewrelicHeader, validateNoNewrelicHeader, validateTraceContextHeaders, validateNoTraceContextHeaders} = require('../xhr/helpers')
+const querypack = require("@newrelic/nr-querypack")
 
 const fetchBrowsers = testDriver.Matcher.withFeature('fetch');
 
@@ -13,7 +14,7 @@ workerTypes.forEach(type => {
 });
 
 function fetchDTHeader (type, testCase, browserVersionMatcher) {
-	testDriver.test(`${type} - ${testCase.name}`, browserVersionMatcher, 
+	testDriver.test(`${type} - ${testCase.name}`, browserVersionMatcher,
 		function (t, browser, router) {
 			const config = {
 				accountID: '1234',
@@ -22,13 +23,13 @@ function fetchDTHeader (type, testCase, browserVersionMatcher) {
 			};
 			// create init configuration from test case
 			let init = {
-				jserrors: {harvestTimeSeconds:80},
-				ajax: {harvestTimeSeconds:80}
+				jserrors: {harvestTimeSeconds:8},
+				ajax: {harvestTimeSeconds:8}
 			};
 			if (testCase.configuration) {
 				init.distributed_tracing = testCase.configuration;
 				if (testCase.addRouterToAllowedOrigins) {
-					init.distributed_tracing.allowed_origins.push(router.beaconURL())
+					init.distributed_tracing.allowed_origins.push("http://" + router.testServer.bamServer.host + ":" + router.testServer.bamServer.port)
 				}
 			}
 			const scenarios = [
@@ -71,29 +72,29 @@ function fetchDTHeader (type, testCase, browserVersionMatcher) {
 					let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 						config,
 						init,
-						testId: router.testID,
+						testId: router.testId,
 						injectUpdatedLoaderConfig: true,
 						workerCommands: [
-							`self.testId = '${router.testID}'`,
+							`self.testId = '${router.testId}'`,
 							scenario.fetchTest
 						].map(x => x.toString())
 					});
 
+                    const ajaxPromise = router.expectCustomBamServerAjax(`/dt/${router.testId}`)
 					const loadPromise = browser.get(assetURL);
-					const fetchPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') });
-		
-					Promise.all([fetchPromise, loadPromise])
-					.then(( [{headers}] ) => {
+
+					Promise.all([ajaxPromise, loadPromise])
+					.then(( [{request}] ) => {
 						if (testCase.newrelicHeader) {
-							validateNewrelicHeader(t, headers, config)
+							validateNewrelicHeader(t, request.headers, config)
 						} else {
-							validateNoNewrelicHeader(t, headers)
+							validateNoNewrelicHeader(t, request.headers)
 						}
-		
+
 						if (testCase.traceContextHeaders) {
-							validateTraceContextHeaders(t, headers, config)
+							validateTraceContextHeaders(t, request.headers, config)
 						} else {
-							validateNoTraceContextHeaders(t, headers)
+							validateNoTraceContextHeaders(t, request.headers)
 						}
 						t.end()
 					}).catch(fail(t))

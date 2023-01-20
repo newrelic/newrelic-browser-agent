@@ -5,6 +5,7 @@
 
 const testDriver = require('../../../tools/jil/index')
 const {fail} = require('./helpers')
+const asserters = require('wd').asserters
 
 const supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 const sendBeaconBrowsers = testDriver.Matcher.withFeature('workingSendBeacon')
@@ -12,7 +13,8 @@ const sendBeaconBrowsers = testDriver.Matcher.withFeature('workingSendBeacon')
 testDriver.test('xhr instrumentation works with EventTarget.prototype.addEventListener patched', supported, function (t, browser, router) {
   t.plan(1)
 
-  let rumPromise = router.expectRumAndConditionAndErrors('window.xhrDone && window.wrapperInvoked')
+  let rumPromise = router.expectRum()
+  let ajaxPromise = router.expectAjaxTimeSlices()
   let loadPromise = browser.get(router.assetURL('xhr-add-event-listener-patched.html', {
     init: {
       page_view_timing: {
@@ -22,9 +24,9 @@ testDriver.test('xhr instrumentation works with EventTarget.prototype.addEventLi
         enabled: false
       }
     }
-  }))
+  })).waitFor(asserters.jsCondition('window.xhrDone && window.wrapperInvoked', true))
 
-  Promise.all([rumPromise, loadPromise]).then(([{query, body}]) => {
+  Promise.all([ajaxPromise, rumPromise, loadPromise]).then(([{request: {query, body}}]) => {
     if (sendBeaconBrowsers.match(browser)) {
       t.ok(JSON.parse(body).xhr, 'got XHR data')
     } else {

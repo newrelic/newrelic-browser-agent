@@ -1,43 +1,53 @@
+const path = require("path");
 const { Transform } = require("stream");
+const { paths } = require("../../constants");
+const { browserifyScript } = require("../browserify/browserify-transform");
+const fs = require("fs");
 
 /**
  * Transforms requests for HTML files that contain the \{script\} string with the
  * deserialized script query param. If a script query param is not provided, the
  * string will simply be removed.
  */
-class ScriptTransform extends Transform {
-  #reqParams;
+module.exports = function (request, reply, testServer) {
+  return new Transform({
+    async transform(chunk, encoding, done) {
+      let chunkString = chunk.toString();
 
-  constructor(reqParams, transformOptions) {
-    super(transformOptions);
-
-    this.#reqParams = reqParams;
-  }
-
-  async _transform(chunk, encoding, done) {
-    const chunkString = chunk.toString();
-
-    if (chunkString.indexOf("{script}") > -1) {
-      const replacement = await this.#getScriptContent();
-      done(
-        null,
-        chunkString.replace(
-          "{script}",
-          `<script type="text/javascript" src="${replacement}"></script>`
+      const testScriptInjections = chunkString.matchAll(
+        new RegExp(
+          `{(${path.relative(paths.rootDir, paths.testsAssetsDir)}/.*?)}`,
+          "ig"
         )
       );
-    } else {
-      done(null, chunkString);
-    }
-  }
+      for (let match of testScriptInjections) {
+        const scriptPath = path.resolve(paths.rootDir, match[1]);
+        const scriptFileStats = await fs.promises.stat(scriptPath);
 
-  #getScriptContent() {
-    if (!this.#reqParams.script) {
-      return "";
-    }
+        if (!scriptFileStats.isFile()) {
+          throw new Error(`Could not find script file ${match[1]}`);
+        }
 
-    return decodeURIComponent(this.#reqParams.script);
-  }
-}
+        const script = (await fs.promises.readFile(scriptPath)).toString();
+        chunkString = chunkString.replace(
+          match[0],
+          `<script type="text/javascript">${script}</script>`
+        );
+      }
 
-module.exports = ScriptTransform;
+      if (chunkString.indexOf("{script}") > -1) {
+        done(
+          null,
+          chunkString.replace(
+            "{script}",
+            `<script type="text/javascript" src="${
+              request.query.script || ""
+            }"></script>`
+          )
+        );
+      } else {
+        done(null, chunkString);
+      }
+    },
+  });
+};

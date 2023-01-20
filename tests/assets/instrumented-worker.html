@@ -12,22 +12,22 @@
 
     <script>
         try {
-            let worker1 = new Worker('./worker-scripts/simple.js');
+            let worker1 = new Worker('./worker/js/classic-worker.js');
             // Not all version that support classic workers also support module workers, so the following line is prone to throwing error
             //  when testing older browser versions. But it'll still emit the supportability metric, and hence the try-catch's are separated.
-            let worker2 = new Worker('./worker-scripts/simple.js', {type: 'module'});
+            let worker2 = new Worker('./worker/js/module-worker.js', {type: 'module'});
         } catch (e) {
             console.warn(e);
         }
         try {
-            let worker1 = new SharedWorker('./worker-scripts/simple.js');
-            let worker2 = new SharedWorker('./worker-scripts/simple.js', {type: 'module'});
+            let worker1 = new SharedWorker('./worker/js/classic-worker.js');
+            let worker2 = new SharedWorker('./worker/js/module-worker.js', {type: 'module'});
         } catch (e) {
             console.warn(e);
         }
         try {
-            let worker1 = self.navigator.serviceWorker.register('./worker-scripts/simple.js');  // This script will probably cause an error
-            let worker2 = self.navigator.serviceWorker.register('./worker-scripts/simple.js', {type: 'module'});
+            let worker1 = self.navigator.serviceWorker.register('./worker/js/classic-worker.js');  // This script will probably cause an error
+            let worker2 = self.navigator.serviceWorker.register('./worker/js/module-worker.js', {type: 'module'});
         } catch (e) {
             console.warn(e);
         }

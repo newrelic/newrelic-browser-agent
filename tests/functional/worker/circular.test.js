@@ -28,7 +28,7 @@ function circularTest(type, matcher) {
         `() => {
           var ouroboros = {}
           ouroboros.ouroboros = ouroboros
-          var e = new Error('asdf'); 
+          var e = new Error('asdf');
           e.message = ouroboros;
           throw e
         }`
@@ -38,8 +38,8 @@ function circularTest(type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([response]) => {
-      const actualErrors = getErrorsFromResponse(response, browser)
+    Promise.all([errPromise, loadPromise]).then(([{request}]) => {
+      const actualErrors = getErrorsFromResponse(request, browser)
 
       t.equal(actualErrors.length, 1, 'exactly one error')
 

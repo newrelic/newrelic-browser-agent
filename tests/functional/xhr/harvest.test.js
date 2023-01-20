@@ -29,20 +29,20 @@ testDriver.test('ajax events harvests are retried when collector returns 429', f
     }
   })
 
-  router.scheduleResponse('events', 429)
+  router.scheduleReply('events', {statusCode: 429})
 
   let ajaxPromise = router.expectAjaxEvents()
   let rumPromise = router.expectRum()
-  let loadPromise = browser.safeGet(assetURL)
+  let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
 
   let firstBody
 
   Promise.all([ajaxPromise, loadPromise, rumPromise]).then(([result]) => {
-    t.equal(result.res.statusCode, 429, 'server responded with 429')
-    firstBody = querypack.decode(result.body)
+    t.equal(result.reply.statusCode, 429, 'server responded with 429')
+    firstBody = querypack.decode(result.request.body)
     return router.expectAjaxEvents()
   }).then(result => {
-    const secondBody = querypack.decode(result.body)
+    const secondBody = querypack.decode(result.request.body)
 
     const secondContainsFirst = firstBody.every(firstElement => {
       return secondBody.find(secondElement => {
@@ -50,7 +50,7 @@ testDriver.test('ajax events harvests are retried when collector returns 429', f
       })
     })
 
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
     t.ok(secondContainsFirst, 'second body should include the contents of the first retried harvest')
     t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
 

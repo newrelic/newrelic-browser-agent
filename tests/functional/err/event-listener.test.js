@@ -28,9 +28,9 @@ testDriver.test('reporting errors from event listener callbacks', supported, fun
   let rumPromise = router.expectRumAndErrors()
   let loadPromise = browser.get(assetURL)
 
-  Promise.all([rumPromise, loadPromise]).then(([response]) => {
-    assertErrorAttributes(t, response.query)
-    const actualErrors = getErrorsFromResponse(response, browser)
+  Promise.all([rumPromise, loadPromise]).then(([{request}]) => {
+    assertErrorAttributes(t, request.query)
+    const actualErrors = getErrorsFromResponse(request, browser)
     let eventListenersURL = router.assetURL('js/event-listener-error.js').split('?')[0]
     let expectedErrors = [
       {

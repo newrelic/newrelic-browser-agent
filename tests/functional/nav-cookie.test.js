@@ -14,7 +14,7 @@ testDriver.test('agent set nav cookie when page is unloading', function (t, brow
     }
   })
 
-  let loadPromise = browser.safeGet(url).catch(fail)
+  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise])

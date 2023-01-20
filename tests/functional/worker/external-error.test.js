@@ -34,8 +34,8 @@ function externalTest(type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([errResponse]) => {
-      const { err } = JSON.parse(errResponse.body)
+    Promise.all([errPromise, loadPromise]).then(([{request}]) => {
+      const { err } = JSON.parse(request.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')

@@ -23,8 +23,8 @@ function paSubmission (type, supportRegOrESMWorker) {
 		let insPromise = router.expectIns();
 
 		Promise.all([loadPromise, insPromise])
-		.then(( [/* loadPromise junk */, {req, query, body}] ) => {
-      t.equal(req.method, 'POST', 'first PageAction submission is a POST')
+		.then(( [/* loadPromise junk */, {request: {method, query, body}}] ) => {
+      t.equal(method, 'POST', 'first PageAction submission is a POST')
       t.notOk(query.ins, 'query string does not include ins parameter')
       validatePageActionData(t, JSON.parse(body).ins, query)
       t.end()
@@ -42,23 +42,23 @@ function paRetry (type, supportRegOrESMWorker) {
       workerCommands: [`newrelic.addPageAction("exampleEvent", {param: "value"})`]
     });
 
-		router.scheduleResponse('ins', 429);
+		router.scheduleReply('ins', {statusCode: 429});
 
 		let loadPromise = browser.get(assetURL);
 		let insPromise = router.expectIns();
 		let firstBody;
-	
+
 		Promise.all([loadPromise, insPromise])
 		.then(( [, insResult] ) => {
-			t.equal(insResult.res.statusCode, 429, 'server responded with 429')
-			firstBody = JSON.parse(insResult.body)
+			t.equal(insResult.reply.statusCode, 429, 'server responded with 429')
+			firstBody = JSON.parse(insResult.request.body)
 
 			return router.expectIns()
 		})
 		.then((insResult) => {
-			const secondBody = JSON.parse(insResult.body)
+			const secondBody = JSON.parse(insResult.request.body)
 
-			t.equal(insResult.res.statusCode, 200, 'server responded with 200')
+			t.equal(insResult.reply.statusCode, 200, 'server responded with 200')
 			t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
 			t.equal(router.seenRequests.ins, 2, 'got two ins harvest requests')
 
@@ -81,16 +81,16 @@ function paPrecedence (type, supportRegOrESMWorker) {
 
 		let loadPromise = browser.get(assetURL);
 		let insPromise = router.expectIns();
-	
+
 		Promise.all([loadPromise, insPromise])
-		.then(( [, {body}] ) => {
+		.then(( [, {request: {body}}] ) => {
 			precValidatePageActionData(JSON.parse(body).ins)
       t.end()
 		}).catch(fail(t));
 
 		function precValidatePageActionData (pageActionData) {
 			t.equal(pageActionData.length, 1, 'should have 1 event')
-	
+
 			let event = pageActionData[0]
 			t.equal(event.actionName, 'MyEvent', 'event has correct action name')
 			t.equal(event.eventType, 'PageAction', 'defaults has correct precedence')

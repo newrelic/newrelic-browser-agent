@@ -41,13 +41,13 @@ testDriver.test('final harvest happens on page unload -- new unload BFC work', f
     }
   })
 
-  let loadPromise = browser.safeGet(url).catch(fail(t))
+  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
       t.equal(router.seenRequests.ins, 0, 'no ins harvest yet')
-      t.equal(router.seenRequests.errors, 0, 'no err harvest yet')
+      t.equal(router.seenRequests.jserrors, 0, 'no err harvest yet')
 
       let insPromise = router.expectIns()
       let errPromise = router.expectErrors()
@@ -62,12 +62,12 @@ testDriver.test('final harvest happens on page unload -- new unload BFC work', f
     })
     .then(() => {
       t.equal(router.seenRequests.ins, 1, 'received one ins harvest')
-      t.equal(router.seenRequests.errors, 1, 'received one err harvest')
+      t.equal(router.seenRequests.jserrors, 1, 'received one err harvest')
       t.end();
     })
     .catch(fail(t))
 })
-/** iOS or mobile doesn't like the way the (wd) new tab is driven, so this test almost always timeout for iOS. 
+/** iOS or mobile doesn't like the way the (wd) new tab is driven, so this test almost always timeout for iOS.
  *  WD's .newWindow causes later tests to fail. JWP mapping is complicated to figure out how to solve this. Can reassess this test with webdriveio later. */
 /*testDriver.test('final harvest happens on doc hide -- new unload BFC work', reliablePageUnload, function (t, browser, router) {
   let url = router.assetURL('final-harvest.html', {
@@ -82,13 +82,13 @@ testDriver.test('final harvest happens on page unload -- new unload BFC work', f
     }
   })
 
-  let loadPromise = browser.safeGet(url).catch(fail(t))
+  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
       t.equal(router.seenRequests.ins, 0, 'no ins harvest yet')
-      t.equal(router.seenRequests.errors, 0, 'no err harvest yet')
+      t.equal(router.seenRequests.jserrors, 0, 'no err harvest yet')
 
       let insPromise = router.expectIns()
       let errPromise = router.expectErrors()
@@ -103,7 +103,7 @@ testDriver.test('final harvest happens on page unload -- new unload BFC work', f
     })
     .then(() => {
       t.equal(router.seenRequests.ins, 1, 'received one ins harvest')
-      t.equal(router.seenRequests.errors, 1, 'received one err harvest')
+      t.equal(router.seenRequests.jserrors, 1, 'received one err harvest')
       t.end();
     })
     .catch(fail(t))
@@ -125,7 +125,7 @@ testDriver.test('final harvest sends page action', workingSendBeacon, function (
     }
   })
 
-  let loadPromise = browser.safeGet(url).catch(fail(t))
+  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise])
@@ -151,7 +151,7 @@ testDriver.test('final harvest sends page action', workingSendBeacon, function (
 
 testDriver.test('final harvest sends pageHide if not already recorded', workingSendBeacon, function (t, browser, router) {
   let url = router.assetURL('final-harvest-timings.html', { loader: 'rum' })
-  let loadPromise = browser.safeGet(url).catch(fail)
+  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
   let rumPromise = router.expectRum()
   const start = Date.now()
 
@@ -171,7 +171,7 @@ testDriver.test('final harvest sends pageHide if not already recorded', workingS
         return data
       })
     })
-    .then(({ body, query }) => {
+    .then(({request: {body, query}}) => {
       t.equal(router.seenRequests.events, 1, 'received first events harvest')
       const timings = querypack.decode(body && body.length ? body : query.e)
       const pageHide = timings.find(x => x.type === 'timing' && x.name === 'pageHide')
@@ -192,7 +192,7 @@ testDriver.test('final harvest sends pageHide if not already recorded', workingS
 
 testDriver.test('final harvest doesnt append pageHide if already previously recorded', workingSendBeacon, function (t, browser, router) {
   let url = router.assetURL('pagehide.html', { loader: 'rum' })
-  let loadPromise = browser.safeGet(url).catch(fail)
+  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
   let start = Date.now()
 
   Promise.all([loadPromise, router.expectRum()])
@@ -203,7 +203,7 @@ testDriver.test('final harvest doesnt append pageHide if already previously reco
       const timingsPromise = router.expectTimings()
       return Promise.all([timingsPromise, clickPromise])
     })
-    .then(([{ body, query }]) => {
+    .then(([{request: {body, query}}]) => {
       const timings = querypack.decode(body && body.length ? body : query.e)
       let duration = Date.now() - start
       t.ok(timings.length > 0, 'there should be at least one timing metric')
@@ -223,12 +223,12 @@ testDriver.test('final harvest doesnt append pageHide if already previously reco
 
 testDriver.test('final harvest sends js errors', workingSendBeacon, function (t, browser, router) {
   let url = router.assetURL('final-harvest.html', { init: { metrics: { enabled: false } } })
-  let loadPromise = browser.safeGet(url).catch(fail)
+  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
-      t.equal(router.seenRequests.errors, 0, 'no errors harvest yet')
+      t.equal(router.seenRequests.jserrors, 0, 'no errors harvest yet')
 
       let errorsPromise = router.expectErrors()
 
@@ -242,7 +242,7 @@ testDriver.test('final harvest sends js errors', workingSendBeacon, function (t,
       })
     })
     .then(() => {
-      t.equal(router.seenRequests.errors, 1, 'received one errors harvest')
+      t.equal(router.seenRequests.jserrors, 1, 'received one errors harvest')
       t.end()
     })
     .catch(fail)
@@ -255,7 +255,7 @@ testDriver.test('final harvest sends js errors', workingSendBeacon, function (t,
 
 testDriver.test('final harvest sends resources', reliableResourcesHarvest.and(stnSupported), function (t, browser, router) {
   let url = router.assetURL('final-harvest.html')
-  let loadPromise = browser.safeGet(url).catch(fail)
+  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise])
@@ -289,7 +289,7 @@ testDriver.test('final harvest sends resources', reliableResourcesHarvest.and(st
 
 testDriver.test('final harvest sends timings data', workingSendBeacon, function (t, browser, router) {
   let url = router.assetURL('final-harvest-timings.html', { loader: 'rum' })
-  let loadPromise = browser.safeGet(url).catch(fail)
+  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise])
@@ -308,7 +308,7 @@ testDriver.test('final harvest sends timings data', workingSendBeacon, function 
         return data
       })
     })
-    .then(({ body, query }) => {
+    .then(({request: {body, query}}) => {
       t.equal(router.seenRequests.events, 1, 'received first events harvest')
       const timings = querypack.decode(body && body.length ? body : query.e)
       t.ok(timings.length > 0, 'there should be at least one timing metric')
@@ -328,13 +328,13 @@ testDriver.test('final harvest sends timings data', workingSendBeacon, function 
 // test.  Sending more than that makes the test very fragile on some platforms.
 testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stnSupported), function (t, browser, router) {
   let url = router.assetURL('final-harvest-timings.html', { init: { metrics: { enabled: false } } })
-  let loadPromise = browser.safeGet(url).catch(fail)
+  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
       t.equal(router.seenRequests.resources, 1, 'resources harvest is sent on startup')
-      t.equal(router.seenRequests.errors, 0, 'no errors harvest yet')
+      t.equal(router.seenRequests.jserrors, 0, 'no errors harvest yet')
 
       let resourcesPromise = router.expectResources()
       let errorsPromise = router.expectErrors()
@@ -354,7 +354,7 @@ testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stn
     })
     .then(() => {
       t.equal(router.seenRequests.resources, 2, 'received second resources harvest')
-      t.equal(router.seenRequests.errors, 1, 'received one errors harvest')
+      t.equal(router.seenRequests.jserrors, 1, 'received one errors harvest')
       t.end()
     })
     .catch(fail)
@@ -367,7 +367,7 @@ testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stn
 
 testDriver.test('final harvest sends ajax events', workingSendBeacon.and(doNotSupportWaitForConditionInBrowser), function (t, browser, router) {
   let url = router.assetURL('final-harvest-ajax.html', { loader: 'spa' })
-  let loadPromise = browser.safeGet(url).catch(fail)
+  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise])
@@ -385,7 +385,7 @@ testDriver.test('final harvest sends ajax events', workingSendBeacon.and(doNotSu
         return data
       })
     })
-    .then(({ body, query }) => {
+    .then(({request: {body, query}}) => {
       const events = querypack.decode(body && body.length ? body : query.e)
       t.ok(events.length > 0, 'there should be at least one ajax call')
       t.equal(events[0].type, 'ajax', 'first node is a ajax node')

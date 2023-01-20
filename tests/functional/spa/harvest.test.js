@@ -29,22 +29,22 @@ testDriver.test('events are retried when collector returns 429', supported, func
     }
   })
 
-  router.scheduleResponse('events', 429)
+  router.scheduleReply('events', {statusCode: 429})
 
-  let loadPromise = browser.safeGet(assetURL)
+  let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
 
   let firstBody
 
   Promise.all([eventsPromise, loadPromise, rumPromise]).then(([eventsResult]) => {
-    t.equal(eventsResult.res.statusCode, 429, 'server responded with 429')
-    firstBody = eventsResult.body
+    t.equal(eventsResult.reply.statusCode, 429, 'server responded with 429')
+    firstBody = eventsResult.request.body
     return router.expectEvents()
-  }).then(result => {
-    let secondBody = result.body
+  }).then((result) => {
+    let secondBody = result.request.body
 
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
     t.equal(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
     t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
 

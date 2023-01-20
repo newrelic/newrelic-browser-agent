@@ -5,7 +5,7 @@ const {fail, querypack, getXhrFromResponse} = require('../xhr/helpers')
 workerTypes.forEach(type => {
 	const browsersWithOrWithoutModuleSupport = typeToMatcher(type);
 	addEventListenerPatched(type, browsersWithOrWithoutModuleSupport);
-	constructorMonkeyPatched(type, browsersWithOrWithoutModuleSupport);
+	constructorRuntimePatched(type, browsersWithOrWithoutModuleSupport);
 
 	catCors(type, browsersWithOrWithoutModuleSupport);
 	harvestRetried(type, browsersWithOrWithoutModuleSupport);
@@ -15,7 +15,7 @@ workerTypes.forEach(type => {
 
 // --- Tests ---
 function addEventListenerPatched (type, browserVersionMatcher) {
-	testDriver.test(`${type} - xhr instrumentation works with EventTarget.prototype.addEventListener patched`, browserVersionMatcher, 
+	testDriver.test(`${type} - xhr instrumentation works with EventTarget.prototype.addEventListener patched`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
@@ -56,19 +56,19 @@ function addEventListenerPatched (type, browserVersionMatcher) {
 			});
 
 			const loadPromise = browser.get(assetURL);
-			const jserrPromise = router.expectErrors();
+			const jserrPromise = router.expectAjaxTimeSlices();
 
 			Promise.all([loadPromise, jserrPromise])
-			.then(( [, response] ) => {
-				t.ok(!!getXhrFromResponse(response), 'got XHR data')
+			.then(( [, {request}] ) => {
+				t.ok(!!getXhrFromResponse(request), 'got XHR data')
       	t.end()
 			})
 			.catch(fail(t, 'unexpected problem reading payload'));
 		}
 	);
 }
-function constructorMonkeyPatched (type, browserVersionMatcher) {
-	testDriver.test(`${type} - xhr instrumentation works with bad XHR constructor monkey-patch`, browserVersionMatcher, 
+function constructorRuntimePatched (type, browserVersionMatcher) {
+	testDriver.test(`${type} - xhr instrumentation works with bad XHR constructor runtime-patch`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
@@ -94,11 +94,11 @@ function constructorMonkeyPatched (type, browserVersionMatcher) {
 			});
 
 			const loadPromise = browser.get(assetURL);
-			const jserrPromise = router.expectErrors();
+			const jserrPromise = router.expectAjaxTimeSlices();
 
 			Promise.all([loadPromise, jserrPromise])
-			.then(( [, response] ) => {
-				t.ok(!!getXhrFromResponse(response), 'got XHR data')
+			.then(( [, {request}] ) => {
+				t.ok(!!getXhrFromResponse(request), 'got XHR data')
       	t.end()
 			})
 			.catch(fail(t, 'unexpected problem reading payload'));
@@ -107,28 +107,28 @@ function constructorMonkeyPatched (type, browserVersionMatcher) {
 }
 
 function catCors (type, browserVersionMatcher) {
-	testDriver.test(`${type} - does not set CAT headers on outbound XHRs to different origin`, browserVersionMatcher, 
+	testDriver.test(`${type} - does not set CAT headers on outbound XHRs to different origin`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				workerCommands: [() => {
 					if (!NREUM.loader_config) NREUM.loader_config = {}
 					NREUM.loader_config.xpid = '12#34'
 				},
-				`self.testId = '${router.testID}'`,
+				`self.testId = '${router.testId}'`,
 				() => {
-					var url = 'http://' + NREUM.info.beacon + '/cat-cors/' + testId
+					var url = 'http://' + NREUM.info.beacon + '/cat-cors/' + self.testId
 					var xhr = new XMLHttpRequest()
 					xhr.open('GET', url)
 					xhr.send()
 				}].map(x => x.toString())
 			});
 
+            const ajaxPromise = router.expectCustomBamServerAjax(`/cat-cors/${router.testId}`)
 			const loadPromise = browser.get(assetURL);
-			const meowPromise = router.expectCustomGet('/cat-cors/{key}', (req, res) => { res.end('ok') });
 
-			Promise.all([meowPromise, loadPromise])
-			.then(( [req] ) => {
-				t.notok(req.headers['x-newrelic-id'], 'cross-origin XHR should not have CAT header')
+			Promise.all([ajaxPromise, loadPromise])
+			.then(( [{request}] ) => {
+				t.notok(request.headers['x-newrelic-id'], 'cross-origin XHR should not have CAT header')
       	t.end()
 			})
 			.catch(fail(t, 'unexpected error'));
@@ -136,7 +136,7 @@ function catCors (type, browserVersionMatcher) {
 	);
 }
 function harvestRetried (type, browserVersionMatcher) {
-	testDriver.test(`${type} - ajax events harvests are retried when collector returns 429`, browserVersionMatcher, 
+	testDriver.test(`${type} - ajax events harvests are retried when collector returns 429`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
@@ -155,27 +155,27 @@ function harvestRetried (type, browserVersionMatcher) {
 					}, 2000);
 				}].map(x => x.toString())
 			});
-			router.scheduleResponse('events', 429);
+			router.scheduleReply('events', {statusCode: 429});
 
-			const loadPromise = browser.safeGet(assetURL);
+			const loadPromise = browser.get(assetURL);
 			const ajaxPromise = router.expectAjaxEvents();
 			let firstBody;
 
 			Promise.all([ajaxPromise, loadPromise])
 			.then(( [result] ) => {
-				t.equal(result.res.statusCode, 429, 'server responded with 429')
-				firstBody = querypack.decode(result.body)
+				t.equal(result.reply.statusCode, 429, 'server responded with 429')
+				firstBody = querypack.decode(result.request.body)
 				return router.expectAjaxEvents();
 			}).then( result => {
-				const secondBody = querypack.decode(result.body)
-		
+				const secondBody = querypack.decode(result.request.body)
+
 				const secondContainsFirst = firstBody.every(firstElement => {
 					return secondBody.find(secondElement => {
 						return secondElement.path === firstElement.path && secondElement.start === firstElement.start
 					})
 				})
 
-				t.equal(result.res.statusCode, 200, 'server responded with 200')
+				t.equal(result.reply.statusCode, 200, 'server responded with 200')
 				t.ok(secondContainsFirst, 'second body should include the contents of the first retried harvest')
 				t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
 				t.end()
@@ -185,7 +185,7 @@ function harvestRetried (type, browserVersionMatcher) {
 }
 
 function abortCalled (type, browserVersionMatcher) {
-	testDriver.test(`${type} - xhr.abort() called in load callback`, browserVersionMatcher, 
+	testDriver.test(`${type} - xhr.abort() called in load callback`, browserVersionMatcher,
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
@@ -204,11 +204,11 @@ function abortCalled (type, browserVersionMatcher) {
 			});
 
 			const loadPromise = browser.get(assetURL);
-			const xhrPromise = router.expectErrors();
+			const xhrPromise = router.expectAjaxTimeSlices();
 
 			Promise.all([xhrPromise, loadPromise])
-			.then(( [response] ) => {
-				const parsedXhrs = getXhrFromResponse(response, browser)
+			.then(( [{request}] ) => {
+				const parsedXhrs = getXhrFromResponse(request, browser)
 				t.ok(parsedXhrs, 'got XHR data')
 				t.ok(parsedXhrs.length >= 1, 'has at least one XHR record')
 				t.ok(parsedXhrs.find(function (xhr) {

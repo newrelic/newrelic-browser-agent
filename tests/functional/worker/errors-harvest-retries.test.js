@@ -29,17 +29,17 @@ function errorRetryTest(type, matcher) {
       ].map(x => x.toString())
   })
 
-  router.scheduleResponse('jserrors', 429)
+  router.scheduleReply('jserrors', {statusCode: 429})
 
   let loadPromise = browser.get(assetURL)
   let errPromise = router.expectErrors()
 
-  Promise.all([errPromise, loadPromise]).then(([response]) => {
-    t.equal(response.res.statusCode, 429, 'server responded with 429')
-    firstBody = JSON.parse(response.body).err
+  Promise.all([errPromise, loadPromise]).then(([result]) => {
+    t.equal(result.reply.statusCode, 429, 'server responded with 429')
+    firstBody = JSON.parse(result.request.body).err
     return router.expectErrors()
-  }).then(response => {
-    const actualErrors = getErrorsFromResponse(response, browser)
+  }).then(result => {
+    const actualErrors = getErrorsFromResponse(result.request, browser)
 
     t.equal(actualErrors.length, 1, 'exactly one error')
 

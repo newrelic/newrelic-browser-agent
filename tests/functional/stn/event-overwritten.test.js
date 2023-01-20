@@ -13,7 +13,7 @@ testDriver.test('captures callbacks even when window.Event overwritten', support
   let loadPromise = browser.get(router.assetURL('click.html'))
 
   Promise.all([rumPromise, resourcePromise, loadPromise]).then(() => {
-    return router.expectResources().then(({body}) => {
+    return router.expectResources().then(({request: {body}}) => {
       let nodes = JSON.parse(body).res
       let ntimers = nodes.filter((n) => n.t === 'timer').length
       t.ok(ntimers >= 31, ntimers + ' timer nodes seen in session trace, want >= 31')

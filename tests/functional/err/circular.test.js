@@ -23,8 +23,8 @@ testDriver.test('encoding error where message contains a circular reference', su
     }
   }))
 
-  Promise.all([rumPromise, loadPromise]).then(([response]) => {
-    const actualErrors = getErrorsFromResponse(response, browser)
+  Promise.all([rumPromise, loadPromise]).then(([{request}]) => {
+    const actualErrors = getErrorsFromResponse(request, browser)
 
     t.equal(actualErrors.length, 1, 'exactly one error')
 

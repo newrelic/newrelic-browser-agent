@@ -13,7 +13,9 @@ testDriver.test('DT payload is NOT added when the feature is not enabled (defaul
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/dt/fetch-dt-harvest-disabled.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+  let loadPromise = browser
+    .safeGet(router.assetURL('spa/dt/fetch-dt-harvest-disabled.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+    .waitForFeature('loaded')
 
   Promise.all([loadPromise, eventsPromise, rumPromise])
     .then((data) => {
@@ -24,7 +26,7 @@ testDriver.test('DT payload is NOT added when the feature is not enabled (defaul
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({request: {query, body}}) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
@@ -46,7 +48,9 @@ testDriver.test('fetch request using string URL with two parameters on same orig
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/dt/fetch-dt-harvest-enabled-stringurl-two-params.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+  let loadPromise = browser
+    .safeGet(router.assetURL('spa/dt/fetch-dt-harvest-enabled-stringurl-two-params.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+    .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(() => {
@@ -57,7 +61,7 @@ testDriver.test('fetch request using string URL with two parameters on same orig
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({request: {query, body}}) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
@@ -79,7 +83,9 @@ testDriver.test('fetch request using string URL with one parameter on same origi
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/dt/fetch-dt-harvest-enabled-stringurl-one-param.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+  let loadPromise = browser
+    .safeGet(router.assetURL('spa/dt/fetch-dt-harvest-enabled-stringurl-one-param.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+    .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(() => {
@@ -90,7 +96,7 @@ testDriver.test('fetch request using string URL with one parameter on same origi
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({request: {query, body}}) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
@@ -112,7 +118,9 @@ testDriver.test('fetch request using object URL on same origin has AJAX request 
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/dt/fetch-dt-harvest-enabled-objecturl.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+  let loadPromise = browser
+    .safeGet(router.assetURL('spa/dt/fetch-dt-harvest-enabled-objecturl.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+    .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(() => {
@@ -123,7 +131,7 @@ testDriver.test('fetch request using object URL on same origin has AJAX request 
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({request: {query, body}}) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
@@ -146,7 +154,9 @@ testDriver.test('fetch request on different origin has no AJAX request with DT p
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/dt/fetch-dt-harvest-enabled-different-origin.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+  let loadPromise = browser
+    .safeGet(router.assetURL('spa/dt/fetch-dt-harvest-enabled-different-origin.html', { loader: 'spa', injectUpdatedLoaderConfig: true }))
+    .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(() => {
@@ -157,7 +167,7 @@ testDriver.test('fetch request on different origin has no AJAX request with DT p
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({request: {query, body}}) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 

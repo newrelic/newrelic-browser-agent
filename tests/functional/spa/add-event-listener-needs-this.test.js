@@ -13,7 +13,7 @@ testDriver.test('overwrite strict window.addEventListener does not break agent',
   t.plan(1)
 
   let rumPromise = router.expectRum()
-  let loadPromise = browser.safeGet(router.assetURL('spa/overwrite-add-event-listener.html', { loader: 'spa' }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/overwrite-add-event-listener.html', { loader: 'spa' })).waitForFeature('loaded')
 
   Promise.all([rumPromise, loadPromise]).then(function () {
     return browser

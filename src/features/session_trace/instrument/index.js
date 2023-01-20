@@ -9,9 +9,9 @@ import { eventListenerOpts } from '../../../common/event-listener/event-listener
 import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { isBrowserWindow } from '../../../common/window/win'
 import * as CONSTANTS from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { isBrowserScope } from '../../../common/util/global-scope'
 
 const {
   ADD_EVENT_LISTENER, BST_RESOURCE, BST_TIMER, END, FEATURE_NAME, FN_END, FN_START, learResourceTimings,
@@ -22,7 +22,7 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator, auto=true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    if (!isBrowserWindow) return; // session traces not supported outside web env
+    if (!isBrowserScope) return; // session traces not supported outside web env
 
     if (!(window.performance &&
       window.performance.timing &&

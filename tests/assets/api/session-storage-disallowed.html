@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  <script>
+    if (window.sessionStorage) {
+      window.sessionStorage.clear();
+      window.sessionStorage.setItem = function () {
+        throw new Error('session storage not allowed')
+      }
+    }
+  </script>
+  <title>RUM Unit Test</title>
+  {init}
+  {config}
+  {loader}
+</head>
+<body>
+Api test!
+</body>
+</html>
+

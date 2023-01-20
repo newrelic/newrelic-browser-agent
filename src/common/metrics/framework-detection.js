@@ -1,4 +1,4 @@
-import { isBrowserWindow } from '../window/win';
+import { isBrowserScope } from '../util/global-scope'
 
 var FRAMEWORKS = {
   REACT: 'React',
@@ -13,7 +13,7 @@ var FRAMEWORKS = {
 }
 
 export function getFrameworks() {
-  if (!isBrowserWindow) return [];  // don't bother detecting frameworks if not in the main window context
+  if (!isBrowserScope) return [];  // don't bother detecting frameworks if not in the main window context
 
   var frameworks = []
   try {

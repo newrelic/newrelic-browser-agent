@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import globalScope from '../util/global-scope';
+
 export function generateUuid () {
   var randomVals = null
   var rvIndex = 0
-  var crypto = self.crypto || self.msCrypto
+  var crypto = globalScope?.crypto || globalScope?.msCrypto
   if (crypto && crypto.getRandomValues) {
     // eslint-disable-next-line
     randomVals = crypto.getRandomValues(new Uint8Array(31))

@@ -17,10 +17,10 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { Serializer } from './serializer'
 import { ee } from '../../../common/event-emitter/contextual-ee'
-import { isBrowserWindow } from '../../../common/window/win'
 import * as CONSTANTS from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { isBrowserScope } from '../../../common/util/global-scope'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING, 
@@ -30,7 +30,7 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
-    if (!isBrowserWindow) return; // TO DO: can remove once aggregate is chained to instrument
+    if (!isBrowserScope) return; // TO DO: can remove once aggregate is chained to instrument
 
     this.state = {
       initialPageURL: getRuntime(agentIdentifier).origin,
@@ -53,6 +53,7 @@ export class Aggregate extends AggregateBase {
     this.serializer = new Serializer(this)
 
     const { state, serializer } = this
+    let { blocked } = this
 
     const baseEE = ee.get(agentIdentifier) // <-- parent baseEE
     const mutationEE = baseEE.get('mutation')
@@ -103,6 +104,11 @@ export class Aggregate extends AggregateBase {
     //  | click ending:                   |   65  |    50    |        |           |           |
     // click fn-end                       |   70  |    0     |    0   |     70    |     20    |
 
+    // if rum response determines that customer lacks entitlements for spa endpoint, block it
+    this.ee.on('block-spa', () => {
+      blocked = true
+      scheduler.harvest.stopTimer()
+    })
 
     if (!isEnabled()) return
 
@@ -615,7 +621,7 @@ export class Aggregate extends AggregateBase {
     }
 
     function onHarvestStarted(options) {
-      if (state.interactionsToHarvest.length === 0) return {}
+      if (state.interactionsToHarvest.length === 0 || blocked) return {}
       var payload = serializer.serializeMultiple(state.interactionsToHarvest, 0, navTiming)
 
       if (options.retry) {

@@ -15,3 +15,4 @@ newrelic.js
 
 tools/jil/
 jest.preset.js
+coverage/

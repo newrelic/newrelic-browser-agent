@@ -2,19 +2,19 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { isBrowserWindow } from "../window/win"
+import { isBrowserScope } from '../util/global-scope'
 
 // TO DO: this entire file & ieVersion descendents are severely outdated and can be scraped
 
 let len;
-if (isBrowserWindow) {
+if (isBrowserScope) {
   const div = document.createElement('div')
 
   div.innerHTML = '<!--[if lte IE 6]><div></div><![endif]-->' +
     '<!--[if lte IE 7]><div></div><![endif]-->' +
     '<!--[if lte IE 8]><div></div><![endif]-->' +
     '<!--[if lte IE 9]><div></div><![endif]-->'
-  
+
   len = div.getElementsByTagName('div').length
 }
 

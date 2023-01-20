@@ -10,6 +10,7 @@ import { ee as contextualEE } from '../event-emitter/contextual-ee'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { originals } from '../config/config'
+import globalScope from '../util/global-scope'
 
 const wrapped = {}
 // eslint-disable-next-line
@@ -31,10 +32,10 @@ export function wrapXhr (sharedEE) {
   var handlers = ['onload', 'onerror', 'onabort', 'onloadstart', 'onloadend', 'onprogress', 'ontimeout']
   var pendingXhrs = []
 
-  var activeListeners = self.XMLHttpRequest.listeners
-  
-  var XHR = self.XMLHttpRequest = newXHR
-  
+  var activeListeners = globalScope.XMLHttpRequest.listeners
+
+  var XHR = globalScope.XMLHttpRequest = newXHR
+
   function newXHR (opts) {
     var xhr = new OrigXHR(opts)
     this.listeners = activeListeners ? [...activeListeners, intercept] : [intercept]

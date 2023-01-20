@@ -6,13 +6,13 @@
 // Request Animation Frame wrapper
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
-import { isBrowserWindow } from '../window/win'
+import { isBrowserScope } from '../util/global-scope'
 
 const wrapped = {}
 
 export function wrapRaf(sharedEE) {
   const ee = scopedEE(sharedEE)
-  if (wrapped[ee.debugId] || !isBrowserWindow) return ee; // animation frames inherently tied to window
+  if (wrapped[ee.debugId] || !isBrowserScope) return ee; // animation frames inherently tied to window
   wrapped[ee.debugId] = true
   var wrapFn = wfn(ee)
 

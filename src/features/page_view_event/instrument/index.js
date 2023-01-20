@@ -5,15 +5,15 @@ import { mark } from '../../../common/timing/stopwatch'
 import { findStartTime } from '../../../common/timing/start-time'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { onDOMContentLoaded, onWindowLoad } from '../../../common/window/load'
-import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { isBrowserScope } from '../../../common/util/global-scope'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator, auto=true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    if (!isBrowserWindow) return; // initial page view times non applicable outside web env
+    if (!isBrowserScope) return; // initial page view times non applicable outside web env
 
     findStartTime(agentIdentifier)
     mark(agentIdentifier, 'firstbyte', getLastTimestamp())

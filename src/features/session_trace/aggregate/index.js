@@ -292,6 +292,7 @@ export class Aggregate extends AggregateBase {
   }
 
   storeSTN(stn) {
+    if (this.blocked) return
   // limit the number of data that is stored
     if (this.nodeCount >= this.maxNodesPerHarvest) return
 

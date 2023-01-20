@@ -37,11 +37,12 @@ jil.browserTest('LCP is not collected on unload when the LCP value occurs after 
     handle('lcp', [{ size: 1, startTime: 1 }], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
 
     // invoke final harvest, which includes harvesting LCP
-    pvtAgg.finalHarvest()
+    pvtAgg.recordLcp();
+    pvtAgg.recordPageUnload(Date.now());
 
     t.equals(pvtAgg.timings.length, 2, 'there should be only 2 timings (pageHide and unload)')
-    t.ok(pvtAgg.timings[0].name === 'pageHide', 'should have pageHide timing')
-    t.ok(pvtAgg.timings[1].name === 'unload', 'should have unload timing')
+    t.ok(pvtAgg.timings[1].name === 'pageHide', 'should have pageHide timing')
+    t.ok(pvtAgg.timings[0].name === 'unload', 'should have unload timing')
 
     t.end()
   }, 1000)

@@ -8,20 +8,20 @@ import { submitData } from '../../../common/util/submit-data'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
+import { isBrowserScope } from '../../../common/util/global-scope'
 
 const jsonp = 'NREUM.setToken'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
-    if (isBrowserWindow) this.sendRum();  // initial RUM payload is only sent in web env, TO DO: can remove once aggregate is chained to instrument
+    super(agentIdentifier, aggregator, FEATURE_NAME))
+    if (isBrowserScope) this.sendRum();  // initial RUM payload is only sent in web env, TO DO: can remove once aggregate is chained to instrument
   }
 
-  getScheme() { 
-    return getConfigurationValue(this.agentIdentifier, 'ssl') === false ? 'http' : 'https' 
+  getScheme() {
+    return getConfigurationValue(this.agentIdentifier, 'ssl') === false ? 'http' : 'https'
   }
 
   sendRum() {

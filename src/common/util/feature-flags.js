@@ -11,6 +11,7 @@ export function activateFeatures (flags, agentIdentifier) {
   var sharedEE = ee.get(agentIdentifier)
   if (!(flags && typeof flags === 'object')) return
   mapOwn(flags, function (flag, val) {
+    if (!val) return sharedEE.emit('block-' + flag, [])
     if (!val || activatedFeatures[flag]) return
     sharedEE.emit('feat-' + flag, [])
     activatedFeatures[flag] = true

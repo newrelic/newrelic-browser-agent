@@ -1,3 +1,5 @@
+import globalScope from '../util/global-scope';
+
 var supportsPassive = false
 try {
   var opts = Object.defineProperty({}, 'passive', {
@@ -6,8 +8,8 @@ try {
       supportsPassive = true
     }
   })
-  self.addEventListener('testPassive', null, opts)
-  self.removeEventListener('testPassive', null, opts)
+  globalScope?.addEventListener('testPassive', null, opts)
+  globalScope?.removeEventListener('testPassive', null, opts)
 } catch (e) {
   // do nothing
 }

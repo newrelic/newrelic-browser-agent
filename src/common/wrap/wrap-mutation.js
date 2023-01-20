@@ -5,17 +5,17 @@
 import {ee as baseEE} from '../event-emitter/contextual-ee'
 import {createWrapperWithEmitter as wfn} from './wrap-function'
 import {originals} from '../config/config'
-import { isBrowserWindow } from '../window/win'
+import {  isBrowserScope } from '../util/global-scope'
 
 const wrapped = {}
 
 export function wrapMutation (sharedEE){
   const ee = scopedEE(sharedEE)
-  if (wrapped[ee.debugId] || !isBrowserWindow) return ee; // relates to the DOM tree (web env only)
+  if (wrapped[ee.debugId] || !isBrowserScope) return ee; // relates to the DOM tree (web env only)
   wrapped[ee.debugId] = true
   var wrapFn = wfn(ee)
   var OriginalObserver = originals.MO
-  
+
   if (OriginalObserver) {
     window.MutationObserver = function WrappedMutationObserver (cb) {
       if (this instanceof OriginalObserver) {
@@ -24,7 +24,7 @@ export function wrapMutation (sharedEE){
         return OriginalObserver.apply(this, arguments)
       }
     }
-  
+
     MutationObserver.prototype = OriginalObserver.prototype
   }
   return ee

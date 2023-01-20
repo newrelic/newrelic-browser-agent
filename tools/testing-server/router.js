@@ -13,7 +13,7 @@ const { _extend } = require('util')
 const { asserters } = require('wd')
 const querypack = require('@newrelic/nr-querypack')
 
-let rootDir = path.resolve(__dirname, '../../../')
+let rootDir = path.resolve(__dirname, '../../')
 
 class Router extends BaseServer {
   constructor(assetServer, config, output) {

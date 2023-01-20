@@ -16,6 +16,7 @@ import { handle } from '../../../common/event-emitter/handle'
 import { mapOwn } from '../../../common/util/map-own'
 import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
+import globalScope from '../../../common/util/global-scope'
 
 import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
@@ -50,6 +51,11 @@ export class Aggregate extends AggregateBase {
     this.scheduler.startTimer(harvestTimeSeconds)
 
     drain(this.agentIdentifier, this.featureName)
+    // if rum response determines that customer lacks entitlements for ins endpoint, block it
+    this.ee.on('block-err', () => {
+      this.blocked = true
+      this.scheduler.harvest.stopTimer()
+    })
   }
 
   onHarvestStarted(options) {
@@ -158,7 +164,7 @@ export class Aggregate extends AggregateBase {
     var params = {
       stackHash: stringHashCode(canonicalStack),
       exceptionClass: stackInfo.name,
-      request_uri: self.location.pathname
+      request_uri: globalScope?.location.pathname
     }
     if (stackInfo.message) {
       params.message = '' + stackInfo.message
@@ -198,6 +204,8 @@ export class Aggregate extends AggregateBase {
     handle('errorAgg', [type, bucketHash, params, newMetrics], undefined, FEATURE_NAMES.sessionTrace, this.ee)
     handle('errorAgg', [type, bucketHash, params, newMetrics], undefined, FEATURE_NAMES.spa, this.ee)
 
+    // still send EE events for other features such as above, but stop this one from aggregating internal data
+    if (this.blocked) return
     if (params._interactionId != null) {
       // hold on to the error until the interaction finishes
       this.errorCache[params._interactionId] = this.errorCache[params._interactionId] || []
@@ -221,8 +229,8 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  onInteractionSaved(interaction) {
-    if (!this.errorCache[interaction.id]) return
+  onInteractionSaved (interaction) {
+    if (!this.errorCache[interaction.id] || this.blocked) return
 
     this.errorCache[interaction.id].forEach((item) => {
       var customParams = {}
@@ -255,8 +263,8 @@ export class Aggregate extends AggregateBase {
     delete this.errorCache[interaction.id]
   }
 
-  onInteractionDiscarded(interaction) {
-    if (!this.errorCache || !this.errorCache[interaction.id]) return
+  onInteractionDiscarded (interaction) {
+    if (!this.errorCache || !this.errorCache[interaction.id] || this.blocked) return
 
     this.errorCache[interaction.id].forEach((item) => {
       var customParams = {}

@@ -83,7 +83,8 @@ export class HarvestScheduler extends SharedContext {
     return;
 
     function onHarvestFinished(result) {
-      scheduler.onHarvestFinished(opts, result)
+      if (result.blocked) scheduler.onHarvestBlocked(opts, result)
+      else scheduler.onHarvestFinished(opts, result)
     }
   }
 

@@ -10,9 +10,9 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
+import { isBrowserScope } from '../../../common/util/global-scope'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -28,7 +28,7 @@ export class Aggregate extends AggregateBase {
 
     this.att = getInfo(this.agentIdentifier).jsAttributes;  // per-agent, aggregators-shared info context
 
-    if (isBrowserWindow && document.referrer) this.referrerUrl = cleanURL(document.referrer)
+    if (isBrowserScope && document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
     register('api-addPageAction', (...args) => this.addPageAction(...args), this.featureName, this.ee)
 
@@ -37,6 +37,11 @@ export class Aggregate extends AggregateBase {
     scheduler.startTimer(this.harvestTimeSeconds, 0)
 
     drain(this.agentIdentifier, this.featureName)
+    // if rum response determines that customer lacks entitlements for ins endpoint, block it
+    this.ee.on('block-ins', () => {
+      this.blocked = true
+      scheduler.harvest.stopTimer()
+    })
   }
 
   onHarvestStarted(options) {
@@ -68,12 +73,12 @@ export class Aggregate extends AggregateBase {
 
   // WARNING: Insights times are in seconds. EXCEPT timestamp, which is in ms.
   addPageAction(t, name, attributes) {
-    if (this.events.length >= this.eventsPerHarvest) return
+    if (this.events.length >= this.eventsPerHarvest || this.blocked) return
     var width
     var height
     var eventAttributes = {}
 
-    if (isBrowserWindow && window.document.documentElement) {
+    if (isBrowserScope && window.document.documentElement) {
       // Doesn't include the nav bar when it disappears in mobile safari
       // https://github.com/jquery/jquery/blob/10399ddcf8a239acc27bdec9231b996b178224d3/src/dimensions.js#L23
       width = window.document.documentElement.clientWidth

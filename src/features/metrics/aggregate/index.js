@@ -20,13 +20,20 @@ export class Aggregate extends AggregateBase {
         scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
 
         drain(this.agentIdentifier, this.featureName)
+        // if rum response determines that customer lacks entitlements for ins endpoint, block it
+        this.ee.on('block-err', () => {
+            this.blocked = true
+            scheduler.harvest.stopTimer()
+        })
     }
 
     storeMetric(type, name, params, value) {
+        if (this.blocked) return
         this.aggregator.storeMetric(type, name, params, value)
     }
 
     storeEventMetrics(type, name, params, metrics) {
+        if (this.blocked) return
         this.aggregator.store(type, name, params, metrics)
     }
 }

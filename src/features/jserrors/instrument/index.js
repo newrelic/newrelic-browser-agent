@@ -13,6 +13,7 @@ import './debug'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, NR_ERR_PROP } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import globalScope from '../../../common/util/global-scope'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -22,8 +23,8 @@ export class Instrument extends InstrumentBase {
     // errors that will be the same as caught errors.
     this.skipNext = 0
     this.handleErrors = false
-    this.origOnerror = self.onerror
-    
+    this.origOnerror = globalScope?.onerror
+
     const state = this
 
     const agentRuntime = getRuntime(this.agentIdentifier)
@@ -53,15 +54,15 @@ export class Instrument extends InstrumentBase {
       handle('ierr', [e, now(), true], undefined, FEATURE_NAMES.jserrors, state.ee)
     })
 
-    const prevOnError = self.onerror
-    self.onerror = (...args) => {
+    const prevOnError = globalScope?.onerror
+    globalScope.onerror = (...args) => {
       if (prevOnError) prevOnError(...args)
       this.onerrorHandler(...args)
       return false
     }
 
     try {
-      self.addEventListener('unhandledrejection', (e) => {
+      globalScope?.addEventListener('unhandledrejection', (e) => {
         const err = new Error(`${e.reason}`)
         handle('err', [err, now(), false, {unhandledPromiseRejection: 1}], undefined, FEATURE_NAMES.jserrors, this.ee)
       })
@@ -77,7 +78,7 @@ export class Instrument extends InstrumentBase {
         wrapTimer(this.ee)
         wrapRaf(this.ee)
 
-        if ('addEventListener' in self) {
+        if ('addEventListener' in globalScope) {
           wrapEvents(this.ee)
         }
 

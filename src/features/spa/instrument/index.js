@@ -7,8 +7,8 @@ import { eventListenerOpts } from '../../../common/event-listener/event-listener
 import { InstrumentBase } from '../../utils/instrument-base'
 import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
-import { isBrowserWindow } from '../../../common/window/win'
 import * as CONSTANTS from '../constants'
+import { isBrowserScope } from '../../../common/util/global-scope'
 
 const {
     FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, ADD_EVENT_LISTENER, 
@@ -19,7 +19,7 @@ export class Instrument extends InstrumentBase {
     static featureName = FEATURE_NAME
     constructor(agentIdentifier, aggregator, auto=true) {
         super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-        if (!isBrowserWindow) return; // SPA not supported outside web env
+        if (!isBrowserScope) return; // SPA not supported outside web env
 
         const agentRuntime = getRuntime(this.agentIdentifier);
         // loader.xhrWrappable will be false in chrome for ios, but addEventListener is still available.

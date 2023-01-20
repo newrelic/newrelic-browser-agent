@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { isBrowserWindow } from "../window/win"
+import globalScope, { isBrowserScope } from '../util/global-scope';
 
 var stringsToParsedUrls = {}
 
@@ -19,11 +19,11 @@ export function parseUrl(url) {
     }
   }
 
-  let urlEl
-  var location = self.location
+  let urlEl;
+  var location = globalScope?.location
   var ret = {}
 
-  if (isBrowserWindow) {
+  if (isBrowserScope) {
     // Use an anchor dom element to resolve the url natively.
     urlEl = document.createElement('a')
     urlEl.href = url

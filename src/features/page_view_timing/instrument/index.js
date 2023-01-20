@@ -4,19 +4,19 @@
  */
 import { handle } from '../../../common/event-emitter/handle'
 import { subscribeToVisibilityChange, initializeHiddenTime } from '../../../common/window/page-visibility'
-import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
+import { documentAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { getOffset, now } from '../../../common/timing/now'
 import { getConfigurationValue, originals } from '../../../common/config/config'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { isBrowserWindow } from '../../../common/window/win'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { isBrowserScope } from '../../../common/util/global-scope'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator, auto=true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    if (!this.isEnabled() || !isBrowserWindow) return;  // CWV is irrelevant outside web context
+    if (!this.isEnabled() || !isBrowserScope) return;  // CWV is irrelevant outside web context
 
     this.pageHiddenTime = initializeHiddenTime()  // synonymous with initial visibilityState
     this.performanceObserver
@@ -52,12 +52,20 @@ export class Instrument extends InstrumentBase {
     this.fiRecorded = false
     var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart']
     allowedEventTypes.forEach((e) => {
-      document.addEventListener(e, (...args) => this.captureInteraction(...args), eventListenerOpts(false))
+      documentAddEventListener(e, (...args) => this.captureInteraction(...args));
     })
 
     // page visibility events
     this.importAggregator()
-    subscribeToVisibilityChange(() => this.onDocHide(), true);
+    // Document visibility state becomes hidden
+    subscribeToVisibilityChange(() => {
+      // time is only recorded to be used for short-circuit logic in the observer callbacks
+      this.pageHiddenTime = now()
+      handle('docHidden', [this.pageHiddenTime], undefined, FEATURE_NAMES.pageViewTiming, this.ee);
+    }, true);
+
+    // Window fires its pagehide event (typically on navigation; this occurrence is a *subset* of vis change)
+    windowAddEventListener('pagehide', () => handle('winPagehide', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee) );
   }
 
   isEnabled() {
@@ -139,11 +147,5 @@ export class Instrument extends InstrumentBase {
       this.fiRecorded = true
       handle('timing', ['fi', fi, attributes], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     }
-  }
-
-  onDocHide() {
-    // time is only recorded to be used for short-circuit logic in the observer callbacks
-    this.pageHiddenTime = now()
-    handle('pageHide', [this.pageHiddenTime], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
   }
 }

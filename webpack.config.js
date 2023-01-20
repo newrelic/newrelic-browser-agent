@@ -8,7 +8,11 @@ const TranspilePlugin = require('transpile-webpack-plugin');
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
+<<<<<<< HEAD:webpack.config.js
 const { PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE } = process.env
+=======
+let { PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE } = process.env
+>>>>>>> main:cdn/webpack.config.js
 // this will change to package.json.version when it is aligned between all the packages
 let VERSION = VERSION_OVERRIDE || fs.readFileSync('./VERSION', 'utf-8')
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
@@ -19,12 +23,14 @@ switch (PUBLISH) {
     SUBVERSION = 'PROD'
     PUBLIC_PATH = 'https://js-agent.newrelic.com/'
     MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/[url]'
+    SOURCEMAPS = false
     break
   case 'CURRENT':
     PATH_VERSION = `-current`
     SUBVERSION = 'PROD'
     PUBLIC_PATH = 'https://js-agent.newrelic.com/'
     MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/[url]'
+    SOURCEMAPS = false
     break
   case 'DEV':
     PATH_VERSION = ``
@@ -121,10 +127,6 @@ const commonConfig = {
     chunkFilename: SUBVERSION === 'PROD' ? `[name].[hash:8]${PATH_VERSION}.js` : `[name]${PATH_VERSION}.js`,
     path: path.resolve(__dirname, './build'),
     publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
-    library: {
-      name: 'NRBA',
-      type: 'self'
-    },
     clean: false
   },
   plugins: [
@@ -148,6 +150,13 @@ const standardConfig = merge(commonConfig, {
     [`nr-loader-mfe${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/microfrontend.js'),
     [`nr-loader-mfe${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/microfrontend.js')
   },
+  output: {
+    globalObject: 'window',
+    library: {
+      name: 'NRBA',
+      type: 'window'
+    }
+  },
   module: {
     rules: [
       {
@@ -163,7 +172,9 @@ const standardConfig = merge(commonConfig, {
                     "last 10 Chrome versions",
                     "last 10 Safari versions",
                     "last 10 Firefox versions",
-                    "last 10 Edge versions"
+                    "last 10 Edge versions",
+                    "last 10 ChromeAndroid versions",
+                    "last 10 iOS versions"
                   ]
                 }
               }]
@@ -218,6 +229,11 @@ const polyfillsConfig = merge(commonConfig, {
     ]
   },
   output: {
+    globalObject: 'window',
+    library: {
+      name: 'NRBA',
+      type: 'window'
+    },
     /**
      * Because the ./agent-aggregator/aggregator.js dependency is async loaded, the output filename for that chunk will
      * be the same across all bundles in non-production builds (where dependency filenames aren't hashed) and will thus
@@ -247,6 +263,13 @@ const workerConfig = merge(commonConfig, {
     }
   },
   module: standardConfig.module,
+  output: {
+    globalObject: 'self',
+    library: {
+      name: 'NRBA',
+      type: 'self'
+    },
+  },
   plugins: [
     instantiateBundleAnalyzerPlugin('worker'),
     instantiateSourceMapPlugin()

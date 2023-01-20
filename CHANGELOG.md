@@ -5,8 +5,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## v1222
 
-### Unblock instrumented pages from the back/forward cache (w/ feature flag)
+### EXPERIMENTAL - Unblock instrumented pages from the back/forward cache (w/ feature flag)
 An instrumented page's back-forward cache eligibility was hampered by the agent's `unload` listener, which will be _removed_ when a feature flag is on. With the `allow_bfcache` enabled in the `init` config, the agent's definition of (the end of) an user's session is more refined, and it will no longer be blocking the browser from utilizing its respective b/f cache.
+
+### Prevent feature from collecting and harvesting future data if account entitlements are invalid
+The agent will now attempt to shut down an initialized feature if account entitlements are invalid. Accounts that lack entitlements to use certain endpoints will see many 403 errors in the console without this behavior. This behavior requires the Page View Event feature to be enabled.
 
 ### Do not collect XHR events for data URLs
 AJAX events for data URLs have not historically been collected due to errors in the agent when handling URLs without hostnames. Going forward, XHR calls to data URLs will not cause agent errors and will continue to be excluded from collection.
@@ -16,6 +19,12 @@ The agent is now compatible with _only modern web syntax (ES6+)_; **this reduces
 
 ### Fix nrWrapper exclusion in error stack traces
 Restoring previous functionality whereby the `nrWrapper` agent method should be excluded from JavaScript error stack traces.
+
+### Fix errors with global self redefinition
+Fixing an issue where external code redefining the `self` global variable causes the agent async loading to fail and the agent to crash.
+
+### Fix check for sessionStorage object
+Ensure the agent does not crash when sessionStorage is not available or when the quota has been exceeded or set to 0. Safari has been known to set the sessionStorage quota to 0 in private browsing windows.
 
 ## v1221
 

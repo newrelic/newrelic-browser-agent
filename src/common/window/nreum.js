@@ -1,5 +1,6 @@
 
 import { now } from '../timing/now'
+import globalScope from '../util/global-scope'
 
 export const defaults = {
   beacon: 'bam.nr-data.net',
@@ -7,11 +8,11 @@ export const defaults = {
 }
 
 export function gosNREUM() {
-  if (!self.NREUM) {
-    self.NREUM = {}
+  if (!globalScope?.NREUM) {
+    globalScope.NREUM = {}
   }
-  if (typeof (self.newrelic) === 'undefined') self.newrelic = self.NREUM
-  return self.NREUM
+  if (typeof (globalScope?.newrelic) === 'undefined') globalScope.newrelic = globalScope.NREUM
+  return globalScope.NREUM
 }
 
 export function gosNREUMInfo() {

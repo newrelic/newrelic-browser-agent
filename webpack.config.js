@@ -3,8 +3,7 @@ const TerserPlugin = require('terser-webpack-plugin')
 const webpack = require('webpack')
 const fs = require('fs')
 const { merge } = require('webpack-merge');
-const pkg = require('./package.json')
-const TranspilePlugin = require('transpile-webpack-plugin');
+const babelEnv = require('./babel-env-vars')
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
@@ -65,7 +64,6 @@ switch (PUBLISH) {
 }
 
 const IS_LOCAL = SUBVERSION === 'LOCAL'
-process.env['BUILD_VERSION'] = `${VERSION}.${SUBVERSION}`;
 
 console.log("VERSION", VERSION)
 console.log("SOURCEMAPS", SOURCEMAPS)
@@ -178,11 +176,7 @@ const standardConfig = merge(commonConfig, {
                 }
               }]
             ], plugins: [
-              ["transform-inline-environment-variables", {
-                "include": [
-                  "BUILD_VERSION"
-                ]
-              }]
+              babelEnv(VERSION, SUBVERSION)
             ]
           }
         }
@@ -228,11 +222,7 @@ const polyfillsConfig = merge(commonConfig, {
                 }
               }]
             ],plugins: [
-              ["transform-inline-environment-variables", {
-                "include": [
-                  "BUILD_VERSION"
-                ]
-              }]
+              babelEnv(VERSION, SUBVERSION)
             ]
           }
         }
@@ -283,7 +273,7 @@ const workerConfig = merge(commonConfig, {
   },
   plugins: [
     instantiateBundleAnalyzerPlugin('worker'),
-    instantiateSourceMapPlugin()
+    instantiateSourceMapPlugin(),
   ],
   target: 'webworker'
 });

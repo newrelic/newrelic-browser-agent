@@ -1,13 +1,10 @@
+const babelEnv = require('./babel-env-vars')
 
 const presets = [
 
 ]
 const plugins = [
-  ["transform-inline-environment-variables", {
-    "include": [
-      "BUILD_VERSION"
-    ]
-  }]
+  babelEnv()
 ]
 
 

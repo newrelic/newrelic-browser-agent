@@ -18,7 +18,7 @@ function metricsApiCreatesSM (type, browserVersionMatcher) {
 	testDriver.test(`${type} - Calling a newrelic[api] fn creates a supportability metric`, browserVersionMatcher, 
 		function (t, browser, router) {
 			const EXPECTED_APIS_CALLED = asyncApiFns.length;
-			t.plan(EXPECTED_APIS_CALLED + 5);	// the magic number 5 comes from the "extra" assertions labeled below		~YW, *cli 10/22
+			t.plan(EXPECTED_APIS_CALLED + 6);	// the magic number 6 comes from the "extra" assertions labeled below		~YW, *cli 10/22
 
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {

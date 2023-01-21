@@ -1,9 +1,5 @@
 
-const pkg = require('./package.json')
-
-process.env['BUILD_VERSION'] = pkg.version
-
-console.log(process.env.BUILD_VERSION)
+const babelEnv = require('./babel-env-vars')
 
 const presets = [
   [
@@ -16,11 +12,7 @@ const presets = [
   ]
 ]
 const plugins = [
-  ["transform-inline-environment-variables", {
-    "include": [
-      "BUILD_VERSION"
-    ]
-  }]
+  babelEnv()
 ]
 
 

@@ -23,6 +23,7 @@ const preprocessify = require('preprocessify')
 const loaders = require('../jil/util/loaders')
 const UglifyJS = require('uglify-js')
 var runnerArgs = require('../jil/runner/args')
+const babelEnv = require('../../babel-env-vars')
 
 mime.types['es6'] = 'application/javascript'
 
@@ -326,6 +327,7 @@ class BrowserifyTransform extends AssetTransform {
           "@babel/plugin-syntax-dynamic-import",
           '@babel/plugin-transform-modules-commonjs',
           "@babel/plugin-proposal-optional-chaining",
+          babelEnv('VERSION')
         ],
         global: true
       })

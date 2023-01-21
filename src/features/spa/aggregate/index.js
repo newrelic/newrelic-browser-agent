@@ -21,6 +21,7 @@ import * as CONSTANTS from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { isBrowserScope } from '../../../common/util/global-scope'
+import { onWindowLoad } from '../../../common/window/load'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING, 
@@ -690,6 +691,6 @@ export class Aggregate extends AggregateBase {
       return true
     }
 
-    drain(this.agentIdentifier, this.featureName)
+    onWindowLoad(() => drain(this.agentIdentifier, this.featureName))
   }
 }

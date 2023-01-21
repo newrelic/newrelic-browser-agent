@@ -22,6 +22,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { onWindowLoad } from '../../../common/window/load'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -50,7 +51,7 @@ export class Aggregate extends AggregateBase {
     this.scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
     this.scheduler.startTimer(harvestTimeSeconds)
 
-    drain(this.agentIdentifier, this.featureName)
+    onWindowLoad(() => drain(this.agentIdentifier, this.featureName))
     // if rum response determines that customer lacks entitlements for jserrors endpoint, block it
     this.ee.on('block-err', () => {
       this.blocked = true

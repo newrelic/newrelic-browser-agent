@@ -16,34 +16,30 @@ import { onWindowLoad } from '../window/load'
  * @param {string} group 
  */
 export function drain(agentIdentifier, group = 'feature') {
-  if (isBrowserScope) onWindowLoad(drainGroup)
-  else drainGroup()
+  const baseEE = agentIdentifier ? ee.get(agentIdentifier) : ee
+  const handlers = defaultRegister.handlers
+  if (!baseEE.backlog || !handlers) return
 
-  function drainGroup() {
-    const baseEE = agentIdentifier ? ee.get(agentIdentifier) : ee
-    const handlers = defaultRegister.handlers
-    if (!baseEE.backlog || !handlers) return
-
-    var bufferedEventsInGroup = baseEE.backlog[group]
-    var groupHandlers = handlers[group]
-    if (groupHandlers) {
-      // don't cache length, buffer can grow while processing
-      for (var i = 0; bufferedEventsInGroup && i < bufferedEventsInGroup.length; ++i) { // eslint-disable-line no-unmodified-loop-condition
-        emitEvent(bufferedEventsInGroup[i], groupHandlers)
-      }
-
-      mapOwn(groupHandlers, function (eventType, handlerRegistrationList) {
-        mapOwn(handlerRegistrationList, function (i, registration) {
-          // registration is an array of: [targetEE, eventHandler]
-          registration[0].on(eventType, registration[1])
-        })
-      })
+  var bufferedEventsInGroup = baseEE.backlog[group]
+  var groupHandlers = handlers[group]
+  if (groupHandlers) {
+    // don't cache length, buffer can grow while processing
+    for (var i = 0; bufferedEventsInGroup && i < bufferedEventsInGroup.length; ++i) { // eslint-disable-line no-unmodified-loop-condition
+      emitEvent(bufferedEventsInGroup[i], groupHandlers)
     }
 
-    delete handlers[group]
-    // Keep the group as a property so we know it was created and drained
-    baseEE.backlog[group] = null
+    mapOwn(groupHandlers, function (eventType, handlerRegistrationList) {
+      mapOwn(handlerRegistrationList, function (i, registration) {
+        // registration is an array of: [targetEE, eventHandler]
+        registration[0].on(eventType, registration[1])
+      })
+    })
   }
+
+  delete handlers[group]
+  // Keep the group as a property so we know it was created and drained
+  baseEE.backlog[group] = null
+
 }
 
 function emitEvent(evt, groupHandlers) {

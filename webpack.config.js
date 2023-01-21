@@ -143,9 +143,7 @@ const standardConfig = merge(commonConfig, {
     [`nr-loader-full${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/pro.js'),
     [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/pro.js'),
     [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/spa.js'),
-    [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/spa.js'),
-    [`nr-loader-mfe${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/microfrontend.js'),
-    [`nr-loader-mfe${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/microfrontend.js')
+    [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/spa.js')
   },
   output: {
     globalObject: 'window',

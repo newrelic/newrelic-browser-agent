@@ -11,5 +11,5 @@ new Agent({
         InstrumentErrors,
         InstrumentXhr,
         InstrumentPageAction
-    ]
+    ], loaderType: 'worker'
 })

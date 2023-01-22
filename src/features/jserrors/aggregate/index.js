@@ -51,7 +51,7 @@ export class Aggregate extends AggregateBase {
     this.scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
     this.scheduler.startTimer(harvestTimeSeconds)
 
-    onWindowLoad(() => drain(this.agentIdentifier, this.featureName))
+    drain(this.agentIdentifier, this.featureName)
     // if rum response determines that customer lacks entitlements for jserrors endpoint, block it
     this.ee.on('block-err', () => {
       this.blocked = true

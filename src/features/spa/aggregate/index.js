@@ -691,6 +691,6 @@ export class Aggregate extends AggregateBase {
       return true
     }
 
-    onWindowLoad(() => drain(this.agentIdentifier, this.featureName))
+    drain(this.agentIdentifier, this.featureName)
   }
 }

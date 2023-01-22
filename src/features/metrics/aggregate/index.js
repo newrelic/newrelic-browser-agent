@@ -10,14 +10,14 @@ export class Aggregate extends AggregateBase {
     constructor(agentIdentifier, aggregator) {
         super(agentIdentifier, aggregator, FEATURE_NAME)
 
-        registerHandler('storeMetric', (...args) => this.storeMetric(...args),  this.featureName, this.ee)
-        registerHandler('storeEventMetrics', (...args) => this.storeEventMetrics(...args),  this.featureName, this.ee)
+        registerHandler('storeMetric', (...args) => this.storeMetric(...args), this.featureName, this.ee)
+        registerHandler('storeEventMetrics', (...args) => this.storeEventMetrics(...args), this.featureName, this.ee)
 
         var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'metrics.harvestTimeSeconds') || 30
 
         var scheduler = new HarvestScheduler('jserrors', {}, this)
         scheduler.startTimer(harvestTimeSeconds)
-        scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
+        this.ee.on(`drain-${this.featureName}`, () => scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) })))
 
         drain(this.agentIdentifier, this.featureName)
         // if rum response determines that customer lacks entitlements for ins endpoint, block it
@@ -33,6 +33,7 @@ export class Aggregate extends AggregateBase {
     }
 
     storeEventMetrics(type, name, params, metrics) {
+        console.log("storeEventMetrics...")
         if (this.blocked) return
         this.aggregator.store(type, name, params, metrics)
     }

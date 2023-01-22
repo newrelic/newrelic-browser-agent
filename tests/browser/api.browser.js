@@ -16,9 +16,7 @@ new MetricsAggreg(agentIdentifier, agg); // registers 'storeEventMetrics'
 
 
 test('api', function (t) {
-    console.log(nr)
     t.equal(getRuntime(agentIdentifier).customTransaction, undefined)
-    console.log("setPageViewName")
     nr.setPageViewName('bar/baz')
     t.equal(getRuntime(agentIdentifier).customTransaction, 'http://custom.transaction/bar/baz')
 

@@ -49,7 +49,7 @@ export class Aggregate extends AggregateBase {
 
     this.scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
     this.scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
-    this.scheduler.startTimer(harvestTimeSeconds)
+    this.ee.on(`drain-${this.featureName}`, () => this.scheduler.startTimer(harvestTimeSeconds))
 
     drain(this.agentIdentifier, this.featureName)
     // if rum response determines that customer lacks entitlements for jserrors endpoint, block it

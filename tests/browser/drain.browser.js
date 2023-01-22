@@ -4,14 +4,14 @@
  */
 
 const jil = require('jil')
+const { drain, registerDrain } = require('../../src/common/drain/drain')
+var { registerHandler: register } = require('../../src/common/event-emitter/register-handler.js')
+
+const { setup } = require('./utils/setup')
+const { baseEE, agentIdentifier } = setup()
 
 jil.browserTest('drain', function (t) {
-  const {setup} = require('./utils/setup')
-  const {drain} = require('../../src/common/drain/drain')
 
-  const {baseEE, agentIdentifier} = setup()
-
-  var {registerHandler: register} = require('../../src/common/event-emitter/register-handler.js')
 
   let eventId = 0
   let bufferId = 0
@@ -26,6 +26,7 @@ jil.browserTest('drain', function (t) {
 
     t.plan(11)
 
+    registerDrain(agentIdentifier, bufferName)
     ee.buffer([eventName], bufferName)
 
     baseEE.on(eventName, function () {
@@ -74,6 +75,7 @@ jil.browserTest('drain', function (t) {
 
     t.plan(11)
 
+    registerDrain(agentIdentifier, bufferName)
     ee.buffer([eventName], bufferName)
 
     baseEE.on(eventName, function () {
@@ -120,6 +122,7 @@ jil.browserTest('drain', function (t) {
 
     t.plan(13)
 
+    registerDrain(agentIdentifier, bufferName)
     ee.buffer([eventName], bufferName)
 
     baseEE.on(eventName, function () {
@@ -169,6 +172,7 @@ jil.browserTest('drain', function (t) {
 
     t.plan(11)
 
+    registerDrain(agentIdentifier, bufferName)
     ee.buffer([eventName], bufferName)
     ee.buffer([otherEvent], bufferName)
 
@@ -216,6 +220,7 @@ jil.browserTest('drain', function (t) {
 
     t.plan(8)
 
+    registerDrain(agentIdentifier, bufferName)
     ee.buffer([eventName, otherEvent], bufferName)
 
     register(eventName, function () {
@@ -249,6 +254,7 @@ jil.browserTest('drain', function (t) {
 
     t.plan(2)
 
+    registerDrain(agentIdentifier, bufferName)
     ee.buffer([eventName], bufferName)
     ee.emit(eventName)
     t.equal(baseEE.backlog[bufferName].length, 1, 'should buffer events before drain')

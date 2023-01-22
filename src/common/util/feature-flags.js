@@ -5,6 +5,8 @@
 import { mapOwn } from './map-own'
 import { ee } from '../event-emitter/contextual-ee'
 import { gosNREUM } from '../window/nreum'
+import { drain } from '../drain/drain'
+import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export function activateFeatures (flags, agentIdentifier) {
   const nr = gosNREUM()
@@ -16,6 +18,8 @@ export function activateFeatures (flags, agentIdentifier) {
     sharedEE.emit('feat-' + flag, [])
     activatedFeatures[flag] = true
   })
+
+  drain(agentIdentifier, FEATURE_NAMES.pageViewEvent)
 }
 
 export const activatedFeatures = {}

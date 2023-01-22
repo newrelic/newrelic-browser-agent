@@ -77,7 +77,6 @@ function runTests () {
     pvtAgg.addTiming('fi', fiVal, {fid: fidVal})
 
     ee.emit('feat-stn', [])
-    drain(agentIdentifier, 'feature')
 
     const payload = stnAgg.takeSTNs()
 

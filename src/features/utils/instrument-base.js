@@ -1,3 +1,4 @@
+import { registerDrain } from "../../common/drain/drain"
 import { FeatureBase } from "./feature-base"
 
 export class InstrumentBase extends FeatureBase {
@@ -9,6 +10,8 @@ export class InstrumentBase extends FeatureBase {
       })
       this.hasAggregator = false
       this.auto = auto
+
+      if (auto) registerDrain(agentIdentifier, featureName)
     }
   
     async importAggregator() {

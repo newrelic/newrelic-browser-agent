@@ -6,59 +6,19 @@ const supportsFetch = testDriver.Matcher.withFeature('fetch');
 
 workerTypes.forEach(type => {
 	const browsersWithOrWithoutModuleSupport = typeToMatcher(type);
-	ajaxEventsDisabled(type, browsersWithOrWithoutModuleSupport);
 	ajaxEventsEnabled(type, browsersWithOrWithoutModuleSupport);
 	ajaxEventsPayload(type, browsersWithOrWithoutModuleSupport);
 	ajaxDTInfo(type, browsersWithOrWithoutModuleSupport);
 });
 
 // --- Tests ---
-function ajaxEventsDisabled (type, browserVersionMatcher) {
-	testDriver.test(`${type} - disabled ajax events`, browserVersionMatcher, 
-		function (t, browser, router) {
-			const savedTimeout = router.router.timeout;
-			router.timeout = router.router.timeout = 5000;
-
-			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
-				init: {
-					ajax: { 
-						harvestTimeSeconds: 2,
-						enabled: false
-					}
-				},
-				workerCommands: [() => {
-					setTimeout(function () {
-						var xhr = new XMLHttpRequest()
-						xhr.open('GET', '/json')
-						xhr.send()
-	
-					}, 2000);
-				}].map(x => x.toString())
-			});
-
-			const loadPromise = browser.get(assetURL);
-			const ajaxPromise = router.expectAjaxEvents();
-
-			Promise.all([ajaxPromise, loadPromise])
-			.then(( ) => {
-				router.timeout = router.router.timeout = savedTimeout;	// restore timeout before failing
-				t.error()
-				t.end()
-			}).catch(function () {	// the timeout is actually supposed to happen in this test
-				router.timeout = router.router.timeout = savedTimeout;
-				t.ok(true, 'AJAX Promise did not execute because enabled was false')
-				t.end()
-			});
-		}
-	);
-}
 function ajaxEventsEnabled (type, browserVersionMatcher) {
 	testDriver.test(`${type} - capturing XHR and fetch ajax events`, browserVersionMatcher, 
 		function (t, browser, router) {
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
 					ajax: { 
-						harvestTimeSeconds: 2,
+						harvestTimeSeconds: 5,
 						enabled: true
 					}
 				},

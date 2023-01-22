@@ -34,8 +34,8 @@ jil.onWindowLoaded(function () {
   afterLoad = true
   originalSetTimeout(function () {
     const { Aggregate: InsAggregate } = require('../../../src/features/page_action/aggregate/index')
-    new InsAggregate(agentIdentifier, aggregator, false)
-    if (!spaAgg) spaAgg = new SpaAggregate(agentIdentifier, aggregator, false)
+    new InsAggregate(agentIdentifier, aggregator)
+    if (!spaAgg) spaAgg = new SpaAggregate(agentIdentifier, aggregator)
     drain(agentIdentifier, 'api')
     drain(agentIdentifier, 'feature')
 

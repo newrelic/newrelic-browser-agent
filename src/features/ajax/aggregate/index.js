@@ -59,7 +59,7 @@ export class Aggregate extends AggregateBase {
         getPayload: prepareHarvest
       }, this)
 
-      scheduler.startTimer(harvestTimeSeconds)
+      ee.on(`drain-${this.featureName}`, () => scheduler.startTimer(harvestTimeSeconds))
     }
 
     function storeXhr(params, metrics, startTime, endTime, type) {

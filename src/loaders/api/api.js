@@ -9,7 +9,7 @@ import { handle } from '../../common/event-emitter/handle'
 import { mapOwn } from '../../common/util/map-own'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { now } from '../../common/timing/now'
-import { drain } from '../../common/drain/drain'
+import { drain, registerDrain } from '../../common/drain/drain'
 
 function setTopLevelCallers(nr) {
   const funcs = [
@@ -28,7 +28,8 @@ function setTopLevelCallers(nr) {
   }
 }
 
-export function setAPI(agentIdentifier, nr) {
+export function setAPI(agentIdentifier, nr, forceDrain) {
+  if (!forceDrain) registerDrain(agentIdentifier, 'api')
   setTopLevelCallers(nr)
   var instanceEE = ee.get(agentIdentifier)
   var tracerEE = instanceEE.get('tracer')

@@ -4,7 +4,7 @@ import { setConfiguration, setInfo, setLoaderConfig, setRuntime } from '../../co
 import { activateFeatures, activatedFeatures } from '../../common/util/feature-flags'
 import { isBrowserScope, isWorkerScope } from '../../common/util/global-scope'
 
-export function configure(agentIdentifier, opts = {}, loaderType) {
+export function configure(agentIdentifier, opts = {}, loaderType, forceDrain) {
     let { init, info, loader_config, runtime = {loaderType}, exposed = true } = opts
     const nr = gosCDN()
     let api = {}
@@ -25,7 +25,7 @@ export function configure(agentIdentifier, opts = {}, loaderType) {
     setRuntime(agentIdentifier, runtime)
 
 
-    setAPI(agentIdentifier, api)
+    setAPI(agentIdentifier, api, forceDrain)
     gosNREUMInitializedAgents(agentIdentifier, nr, 'api')
     gosNREUMInitializedAgents(agentIdentifier, exposed, 'exposed')
     if (isBrowserScope) {

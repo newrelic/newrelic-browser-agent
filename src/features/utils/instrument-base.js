@@ -1,28 +1,36 @@
 import { registerDrain } from "../../common/drain/drain"
 import { FeatureBase } from "./feature-base"
+import { onWindowLoad } from '../../common/window/load'
+import { isWorkerScope } from "../../common/util/global-scope"
 
 export class InstrumentBase extends FeatureBase {
-    constructor(agentIdentifier, aggregator, featureName, auto = true) {
-      super(agentIdentifier, aggregator, featureName)
-      this.completed = new Promise((resolve, reject) => {
-        this.resolve = resolve
-        this.reject = reject
-      })
-      this.hasAggregator = false
-      this.auto = auto
+  constructor(agentIdentifier, aggregator, featureName, auto = true) {
+    super(agentIdentifier, aggregator, featureName)
+    this.completed = new Promise((resolve, reject) => {
+      this.resolve = resolve
+      this.reject = reject
+    })
+    this.hasAggregator = false
+    this.auto = auto
 
-      if (auto) registerDrain(agentIdentifier, featureName)
-    }
-  
-    async importAggregator() {
-      try {
-        if (this.hasAggregator || !this.auto) return 
-        this.hasAggregator = true
+    if (auto) registerDrain(agentIdentifier, featureName)
+  }
+
+  async importAggregator() {
+    try {
+      if (this.hasAggregator || !this.auto) return
+      this.hasAggregator = true
+      const lazyLoad = async () => {
         const { Aggregate } = await import(`../../features/${this.featureName}/aggregate`)
         new Aggregate(this.agentIdentifier, this.aggregator)
         this.resolve()
-      } catch (err) {
-        this.reject(err)
       }
+      // theres no window.load event on non-browser scopes, lazy load immediately
+      if (isWorkerScope) lazyLoad()
+      // try to stay out of the way of the window.load event, lazy load once that has finished.
+      else onWindowLoad(() => lazyLoad())
+    } catch (err) {
+      this.reject(err)
     }
   }
+}

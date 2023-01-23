@@ -1,16 +1,16 @@
 import { windowAddEventListener, documentAddEventListener } from '../event-listener/event-listener-opts'
 
-function checkState (cb) {
-  if (!document || document.readyState === 'complete') return cb() || true
+function checkState () {
+  return (typeof document === 'undefined' || document.readyState === 'complete')
 }
 
 export function onWindowLoad(cb) {
-  if (checkState(cb)) return
+  if (checkState()) return cb()
   windowAddEventListener('load', cb);
 }
 
 export function onDOMContentLoaded(cb) {
-  if (checkState(cb)) return
+  if (checkState()) return cb()
   documentAddEventListener('DOMContentLoaded', cb);
 }
 

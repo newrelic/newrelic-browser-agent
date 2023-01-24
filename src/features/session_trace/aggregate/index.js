@@ -129,10 +129,6 @@ export class Aggregate extends AggregateBase {
 
       drain(this.agentIdentifier, this.featureName)
     })
-
-    this.ee.on('block-stn', () => {
-      drain(this.agentIdentifier, this.featureName)
-    })
   }
 
   processPVT(name, value, attrs) {

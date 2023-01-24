@@ -2,6 +2,7 @@ import { registerDrain } from "../../common/drain/drain"
 import { FeatureBase } from "./feature-base"
 import { onWindowLoad } from '../../common/window/load'
 import { isWorkerScope } from "../../common/util/global-scope"
+import { FEATURE_NAMES } from "../../loaders/features/features"
 
 export class InstrumentBase extends FeatureBase {
   constructor(agentIdentifier, aggregator, featureName, auto = true) {
@@ -13,7 +14,7 @@ export class InstrumentBase extends FeatureBase {
     this.hasAggregator = false
     this.auto = auto
 
-    if (auto) registerDrain(agentIdentifier, featureName)
+    if (auto && featureName !== FEATURE_NAMES.sessionTrace) registerDrain(agentIdentifier, featureName)
   }
 
   importAggregator() {

@@ -16,7 +16,7 @@ export class InstrumentBase extends FeatureBase {
     if (auto) registerDrain(agentIdentifier, featureName)
   }
 
-  async importAggregator() {
+  importAggregator() {
     try {
       if (this.hasAggregator || !this.auto) return
       this.hasAggregator = true
@@ -28,7 +28,7 @@ export class InstrumentBase extends FeatureBase {
       // theres no window.load event on non-browser scopes, lazy load immediately
       if (isWorkerScope) lazyLoad()
       // try to stay out of the way of the window.load event, lazy load once that has finished.
-      else onWindowLoad(() => lazyLoad())
+      else onWindowLoad(() => lazyLoad(), true)
     } catch (err) {
       this.reject(err)
     }

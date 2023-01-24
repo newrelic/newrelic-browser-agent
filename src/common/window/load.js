@@ -4,9 +4,9 @@ function checkState () {
   return (typeof document === 'undefined' || document.readyState === 'complete')
 }
 
-export function onWindowLoad(cb) {
+export function onWindowLoad(cb, useCapture) {
   if (checkState()) return cb()
-  windowAddEventListener('load', cb);
+  windowAddEventListener('load', cb, useCapture);
 }
 
 export function onDOMContentLoaded(cb) {

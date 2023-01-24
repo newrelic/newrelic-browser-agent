@@ -44,5 +44,5 @@ test('api', function (t) {
       t.equal(agg.take(['cm']), null, 'really only finish once')
 
       t.end()
-    }, 100)
+    }, 1000)
 })

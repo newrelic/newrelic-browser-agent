@@ -10,6 +10,8 @@ import { mapOwn } from '../../common/util/map-own'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { now } from '../../common/timing/now'
 import { drain, registerDrain } from '../../common/drain/drain'
+import { onWindowLoad } from '../../common/window/load'
+import { isWorkerScope } from '../../common/util/global-scope'
 
 function setTopLevelCallers(nr) {
   const funcs = [
@@ -113,10 +115,18 @@ export function setAPI(agentIdentifier, nr, forceDrain) {
     handle('err', [err, now(), false, customAttributes], undefined, FEATURE_NAMES.jserrors, instanceEE)
   }
 
-  import('./apiAsync').then(({ setAPI }) => {
-    setAPI(agentIdentifier)
-    drain(agentIdentifier, 'api')
-  })
+
+  // theres no window.load event on non-browser scopes, lazy load immediately
+  if (isWorkerScope) lazyLoad()
+  // try to stay out of the way of the window.load event, lazy load once that has finished.
+  else onWindowLoad(() => lazyLoad(), true)
+  
+  function lazyLoad() {
+    import('./apiAsync').then(({ setAPI }) => {
+      setAPI(agentIdentifier)
+      drain(agentIdentifier, 'api')
+    })
+  }
 
   // experimental feature -- not ready
   // nr.BrowserAgentInstance = async function (){

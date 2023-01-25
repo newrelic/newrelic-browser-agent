@@ -12,8 +12,10 @@ import { now } from '../../common/timing/now'
 import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
 import { isWorkerScope } from '../../common/util/global-scope'
+import { gosNREUM } from '../../common/window/nreum'
 
-function setTopLevelCallers(nr) {
+function setTopLevelCallers() {
+  const nr = gosNREUM()
   const funcs = [
     'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
     'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
@@ -32,7 +34,7 @@ function setTopLevelCallers(nr) {
 
 export function setAPI(agentIdentifier, nr, forceDrain) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
-  setTopLevelCallers(nr)
+  setTopLevelCallers()
   var instanceEE = ee.get(agentIdentifier)
   var tracerEE = instanceEE.get('tracer')
 
@@ -120,7 +122,7 @@ export function setAPI(agentIdentifier, nr, forceDrain) {
   if (isWorkerScope) lazyLoad()
   // try to stay out of the way of the window.load event, lazy load once that has finished.
   else onWindowLoad(() => lazyLoad(), true)
-  
+
   function lazyLoad() {
     import('./apiAsync').then(({ setAPI }) => {
       setAPI(agentIdentifier)

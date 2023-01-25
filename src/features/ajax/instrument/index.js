@@ -31,7 +31,7 @@ export class Instrument extends InstrumentBase {
     const agentRuntime = getRuntime(this.agentIdentifier);
 
     // Don't instrument Chrome for iOS, it is buggy and acts like there are URL verification issues
-    if (!agentRuntime.xhrWrappable || agentRuntime.disabled) return
+    if (!agentRuntime.xhrWrappable) return
 
     agentRuntime.features.xhr = true;   // declare that we are using xhr instrumentation
 

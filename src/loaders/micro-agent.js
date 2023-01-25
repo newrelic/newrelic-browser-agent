@@ -6,14 +6,15 @@ import { Aggregator } from '../common/aggregate/aggregator'
 import { gosNREUMInitializedAgents } from '../common/window/nreum'
 import { generateRandomHexString } from '../common/ids/unique-id'
 import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
+import { FEATURE_NAMES } from './features/features'
 
 const nonAutoFeatures = [
-    'jserrors',
-    'page_action'
+    FEATURE_NAMES.jserrors,
+    FEATURE_NAMES.pageAction
 ]
 
 const autoFeatures = [
-    'metrics'
+    FEATURE_NAMES.metrics
 ]
 
 export class MicroAgent {

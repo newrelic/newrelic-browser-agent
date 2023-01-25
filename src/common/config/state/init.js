@@ -5,7 +5,7 @@ import { Configurable } from './configurable'
 const model = {
   allow_bfcache: false, // *cli - temporary feature flag for BFCache work; disabled by default for stage 1
   privacy: { cookies_enabled: true }, // *cli - per discussion, default should be true
-  ajax: { deny_list: undefined, enabled: true, auto: true, harvestTimeSeconds: 10 },
+  ajax: { deny_list: undefined, enabled: true, harvestTimeSeconds: 10 },
   distributed_tracing: {
     enabled: undefined,
     exclude_newrelic_header: undefined,
@@ -15,13 +15,13 @@ const model = {
   },
   ssl: undefined,
   obfuscate: undefined,
-  jserrors: {enabled: true, auto: true, harvestTimeSeconds: 10},
-  metrics: {enabled: true, auto: true, harvestTimeSeconds: 10},
-  page_action: {enabled: true, auto: false, harvestTimeSeconds: 30},
-  page_view_event: {enabled: true, auto: true},
-  page_view_timing: {enabled: true, auto: true, harvestTimeSeconds: 30},
-  session_trace: {enabled: true, auto: true, harvestTimeSeconds: 10},
-  spa: {enabled: true, auto: true, harvestTimeSeconds: 10}
+  jserrors: { enabled: true, harvestTimeSeconds: 10 },
+  metrics: { enabled: true, harvestTimeSeconds: 10 },
+  page_action: { enabled: true, harvestTimeSeconds: 30 },
+  page_view_event: { enabled: true, },
+  page_view_timing: { enabled: true, harvestTimeSeconds: 30 },
+  session_trace: { enabled: true, harvestTimeSeconds: 10 },
+  spa: { enabled: true, harvestTimeSeconds: 10 }
 }
 
 const _cache = {}

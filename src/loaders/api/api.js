@@ -12,10 +12,8 @@ import { now } from '../../common/timing/now'
 import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
 import { isWorkerScope } from '../../common/util/global-scope'
-import { gosNREUM } from '../../common/window/nreum'
 
-function setTopLevelCallers() {
-  const nr = gosNREUM()
+function setTopLevelCallers(nr) {
   const funcs = [
     'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
     'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
@@ -34,7 +32,7 @@ function setTopLevelCallers() {
 
 export function setAPI(agentIdentifier, nr, forceDrain) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
-  setTopLevelCallers()
+  setTopLevelCallers(nr)
   var instanceEE = ee.get(agentIdentifier)
   var tracerEE = instanceEE.get('tracer')
 

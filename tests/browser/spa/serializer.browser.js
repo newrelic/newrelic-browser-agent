@@ -6,7 +6,7 @@
 const jil = require('jil')
 const matcher = require('../../../tools/jil/util/browser-matcher')
 const { setup } = require('../utils/setup')
-const { getInfo, setInfo } = require("@newrelic/browser-agent-core/src/common/config/config")
+const { getInfo, setInfo } = require("../../../src/common/config/config")
 
 const setupData = setup()
 const {baseEE, agentIdentifier, aggregator} = setupData
@@ -21,8 +21,8 @@ let testCases = require('@newrelic/nr-querypack/examples/all.json').filter((test
 })
 
 if (process.browser) {
-  var {Serializer} = require('@newrelic/browser-agent-core/src/features/spa/aggregate/serializer')
-  var {Interaction} = require('@newrelic/browser-agent-core/src/features/spa/aggregate/interaction')
+  var {Serializer} = require('../../../src/features/spa/aggregate/serializer')
+  var {Interaction} = require('../../../src/features/spa/aggregate/interaction')
 
   var serializer = new Serializer({agentIdentifier})
   setInfo(agentIdentifier, {})

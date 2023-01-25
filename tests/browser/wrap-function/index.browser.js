@@ -4,7 +4,7 @@
  */
 
 import { setup } from '../utils/setup'
-import createWrapperWithEmitter from '@newrelic/browser-agent-core/src/common/wrap/wrap-function'
+import createWrapperWithEmitter from '../../../src/common/wrap/wrap-function'
 import test from '../../../tools/jil/browser-test.js'
 
 const { baseEE } = setup();

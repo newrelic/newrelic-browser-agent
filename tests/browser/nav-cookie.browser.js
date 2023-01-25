@@ -5,9 +5,9 @@
 
 import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
-import { setConfiguration } from '@newrelic/browser-agent-core/src/common/config/config'
-import * as navCookie from '@newrelic/browser-agent-core/src/common/cookie/nav-cookie'
-import * as startTime from '@newrelic/browser-agent-core/src/common/timing/start-time'
+import { setConfiguration } from '../../src/common/config/config'
+import * as navCookie from '../../src/common/cookie/nav-cookie'
+import * as startTime from '../../src/common/timing/start-time'
 
 const { agentIdentifier } = setup();
 startTime.findStartTime(agentIdentifier);

@@ -6,7 +6,7 @@
 const jil = require('jil')
 
 const {setup} = require('./utils/setup')
-const {wrapJsonP} = require('@newrelic/browser-agent-core/src/common/wrap/wrap-jsonp')
+const {wrapJsonP} = require('../../src/common/wrap/wrap-jsonp')
 const {baseEE} = setup()
 
 function removeListener (type, fn) {

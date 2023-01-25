@@ -18,7 +18,7 @@ function metricsApiCreatesSM (type, browserVersionMatcher) {
 	testDriver.test(`${type} - Calling a newrelic[api] fn creates a supportability metric`, browserVersionMatcher, 
 		function (t, browser, router) {
 			const EXPECTED_APIS_CALLED = asyncApiFns.length;
-			t.plan(EXPECTED_APIS_CALLED + 5);	// the magic number 5 comes from the "extra" assertions labeled below		~YW, *cli 10/22
+			t.plan(EXPECTED_APIS_CALLED + 6);	// the magic number 6 comes from the "extra" assertions labeled below		~YW, *cli 10/22
 
 			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 				init: {
@@ -40,10 +40,10 @@ function metricsApiCreatesSM (type, browserVersionMatcher) {
 				}].map(x => x.toString())
 			});
 			const loadPromise = browser.get(assetURL);
-			const errPromise = router.expectErrors();
+			const metricsPromise = router.expectMetrics();
 			const observedAPImetrics = [];
 
-			Promise.all([errPromise, loadPromise])
+			Promise.all([metricsPromise, loadPromise])
 			.then(( [data] ) => {
 				const supportabilityMetrics = getMetricsFromResponse(data, true)
 				const customMetrics = getMetricsFromResponse(data, false)
@@ -91,9 +91,9 @@ function metricsValidObfuscationCreatesSM (type, browserVersionMatcher) {
 				}].map(x => x.toString())
 			});
 			const loadPromise = browser.get(assetURL);
-			const errPromise = router.expectErrors();
+			const metricsPromise = router.expectMetrics();
 
-			Promise.all([errPromise, loadPromise])
+			Promise.all([metricsPromise, loadPromise])
 			.then(( [data] ) => {
 				const supportabilityMetrics = getMetricsFromResponse(data, true)
 				t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
@@ -137,9 +137,9 @@ function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
 				});
 
 				const loadPromise = browser.get(assetURL);
-				const errPromise = router.expectErrors();
+				const metricsPromise = router.expectMetrics();
 
-				Promise.all([errPromise, loadPromise])
+				Promise.all([metricsPromise, loadPromise])
 				.then(( [data] ) => {
 					const supportabilityMetrics = getMetricsFromResponse(data, true)
 					t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
@@ -182,9 +182,9 @@ function metricsWorkersCreateSM (type, browserVersionMatcher) {
 				}].map(x => x.toString())
 			});
 			const loadPromise = browser.get(assetURL);
-			const errPromise = router.expectErrors();
+			const metricsPromise = router.expectMetrics();
 
-			Promise.all([errPromise, loadPromise])
+			Promise.all([metricsPromise, loadPromise])
 			.then(( [data] ) => {
 				const supportabilityMetrics = getMetricsFromResponse(data, true)
 				t.ok(supportabilityMetrics && !!supportabilityMetrics.length, `${supportabilityMetrics.length} SupportabilityMetrics object(s) were generated`);

@@ -5,14 +5,14 @@
 
 import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
-import { getRuntime, setRuntime, setInfo } from '@newrelic/browser-agent-core/src/common/config/config'
-import { submitData } from '@newrelic/browser-agent-core/src/common/util/submit-data'
-import * as harvest from '@newrelic/browser-agent-core/src/common/harvest/harvest'
+import { getRuntime, setRuntime, setInfo } from '../../src/common/config/config'
+import { submitData } from '../../src/common/util/submit-data'
+import * as harvest from '../../src/common/harvest/harvest'
 import * as sinon from 'sinon'
-import * as encode from '@newrelic/browser-agent-core/src/common/url/encode'
-import * as locationUtil  from '@newrelic/browser-agent-core/src/common/url/location'
-import { stringify } from '@newrelic/browser-agent-core/src/common/util/stringify'
-import { VERSION } from '@newrelic/browser-agent-core/src/common/constants/environment-variables'
+import * as encode from '../../src/common/url/encode'
+import * as locationUtil  from '../../src/common/url/location'
+import { stringify } from '../../src/common/util/stringify'
+import { VERSION } from '../../src/common/constants/environment-variables'
 
 const { agentIdentifier } = setup();
 const harvesterInst = new harvest.Harvest({agentIdentifier});
@@ -637,7 +637,9 @@ test('when sendBeacon returns false', function(t) {
 
     t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (events)')
     let call = submitData.img.getCall(0)
+    console.log(call.args[0])
     let expectedUrl = baseUrl + encode.obj(expectedPayload)
+    console.log(expectedUrl)
     validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
     t.notOk(call.args[1], 'no body arg given to img')
 

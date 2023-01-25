@@ -24,14 +24,13 @@ function prependSemicolon(fileName, text) {
         return fs.promises.readFile(`${buildDir}/${fileName}`, 'utf-8')
     }))
 
-    console.log("builtFileNames", builtFileNames)
-
-    const prepends = await Promise.all(files
+    let prepended = 0
+    await Promise.all(files
         .map((f, i) => {
             if (builtFileNames[i].includes('-loader') && builtFileNames[i].endsWith('.js')) {
                 const fileName = builtFileNames[i]
-                console.log("prepend...", fileName)
                 const content = f
+                prepended++
                 return prependSemicolon(fileName, content)
             } else return Promise.resolve()
         }))
@@ -43,5 +42,5 @@ function prependSemicolon(fileName, text) {
     }))
 
     console.log(`Removed non ascii chars from ${removals.length} files`)
-    console.log(`Prepended ; to ${prepends.length} files`)
+    console.log(`Prepended ; to ${prepended} files`)
 })()

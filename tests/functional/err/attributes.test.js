@@ -96,10 +96,10 @@ function runTests(loader, supported) {
 
     let loadPromise = browser.get(url)
     let rumPromise = router.expectRum()
+    var errorsPromise = router.expectErrors()
 
     Promise.all([rumPromise, loadPromise])
       .then(() => {
-        var errorsPromise = router.expectErrors()
         var domPromise = browser.get(url) // forces harvest
         return Promise.all([errorsPromise, domPromise])
       })

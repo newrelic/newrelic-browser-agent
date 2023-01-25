@@ -6,10 +6,11 @@
 const jil = require('jil')
 
 const {setup} = require('./utils/setup')
-const {drain} = require('@newrelic/browser-agent-core/src/common/drain/drain')
-const {handle} = require('@newrelic/browser-agent-core/src/common/event-emitter/handle')
-const {setConfiguration} = require("@newrelic/browser-agent-core/src/common/config/state/init")
-const {Aggregate: PvtAggregate} = require('@newrelic/browser-agent-core/src/features/page-view-timing/aggregate/index')
+const {drain} = require('../../src/common/drain/drain')
+const {handle} = require('../../src/common/event-emitter/handle')
+const {setConfiguration} = require("../../src/common/config/state/init")
+const {Aggregate: PvtAggregate} = require('../../src/features/page_view_timing/aggregate/index')
+const {FEATURE_NAMES} = require('../../src/loaders/features/features')
 
 const {agentIdentifier, aggregator} = setup()
 
@@ -33,7 +34,7 @@ jil.browserTest('LCP is not collected on unload when the LCP value occurs after 
 
   setTimeout(function() {
     // simulate LCP observed
-    handle('lcp', [{ size: 1, startTime: 1 }], undefined, undefined, pvtAgg.ee)
+    handle('lcp', [{ size: 1, startTime: 1 }], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
 
     // invoke final harvest, which includes harvesting LCP
     pvtAgg.recordLcp();

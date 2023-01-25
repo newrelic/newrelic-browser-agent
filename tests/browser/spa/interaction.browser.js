@@ -5,7 +5,7 @@
 
 const jil = require('jil')
 const { setup } = require('../utils/setup')
-const { setInfo } = require('@newrelic/browser-agent-core/src/common/config/config')
+const { setInfo } = require('../../../src/common/config/config')
 
 const setupData = setup()
 const {agentIdentifier, nr} = setupData
@@ -26,7 +26,7 @@ jil.browserTest('checkFinish', function (t) {
     return setTimeoutCalls
   }
 
-  var { Interaction } = require('@newrelic/browser-agent-core/src/features/spa/aggregate/interaction')
+  var { Interaction } = require('../../../src/features/spa/aggregate/interaction')
 
   t.test('checkFinish sets timers', function(t) {
     var interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, agentIdentifier)

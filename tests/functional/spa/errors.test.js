@@ -45,7 +45,7 @@ testDriver.test('error on the initial page load', function (t, browser, router) 
       var error = errors[0]
       t.equal(error.params.message, 'initial page load error')
       t.equal(error.params.browserInteractionId, interactionId, 'should have the correct interaction id')
-      t.equal(error.params.parentNodeId, tracer.nodeId, 'should not have parent id')
+      t.ok(!error.params.parentNodeId, 'should not have parent id')
 
       t.end()
     })

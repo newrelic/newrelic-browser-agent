@@ -9,12 +9,13 @@ const { fail, getXhrFromResponse } = require('./helpers')
 let reliableUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 let xhrBrowsers = testDriver.Matcher.withFeature('xhr')
 let fetchBrowsers = testDriver.Matcher.withFeature('fetch')
-let workingSendBeacon = testDriver.Matcher.withFeature('workingSendBeacon')
+let workingSendBeacon = testDriver.Matcher.withFeature('sendBeacon')
 let xhrSupported = xhrBrowsers.intersect(reliableUnload)
 let fetchSupported = fetchBrowsers.intersect(reliableUnload)
 
-testDriver.test('capturing XHR metrics', xhrSupported, function (t, browser, router) {
-  let rumPromise = router.expectRumAndErrors()
+testDriver.test('capturing XHR metrics', workingSendBeacon, function (t, browser, router) {
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectXHRMetrics()
   let loadPromise = browser.get(router.assetURL('xhr.html', {
     init: {
       page_view_timing: {
@@ -26,7 +27,7 @@ testDriver.test('capturing XHR metrics', xhrSupported, function (t, browser, rou
     }
   }))
 
-  Promise.all([rumPromise, loadPromise])
+  Promise.all([metricsPromise, rumPromise, loadPromise])
     .then(([response]) => {
       if (workingSendBeacon.match(browser)) {
         t.equal(response.req.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
@@ -47,7 +48,8 @@ testDriver.test('capturing XHR metrics', xhrSupported, function (t, browser, rou
 })
 
 testDriver.test('capturing fetch metrics', fetchSupported, function (t, browser, router) {
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let metricsPromise = router.expectXHRMetrics()
   let loadPromise = browser.get(router.assetURL('fetch.html', {
     init: {
       page_view_timing: {
@@ -59,7 +61,7 @@ testDriver.test('capturing fetch metrics', fetchSupported, function (t, browser,
     }
   }))
 
-  Promise.all([rumPromise, loadPromise])
+  Promise.all([metricsPromise, rumPromise, loadPromise])
     .then(([response]) => {
       if (workingSendBeacon.match(browser)) {
         t.equal(response.req.method, 'POST', 'XHR data submitted via POST request from sendBeacon')

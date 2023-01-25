@@ -1,26 +1,31 @@
-import { BrowserAgent } from '@newrelic/browser-agent' // should import es modules, should allow code-splitting
+import BrowserAgent from '@newrelic/browser-agent'
 
-// const nrConfig = {
-//   applicationID: 35094708,
-//   licenseKey: '2fec6ab188',
-//   beacon: 'staging-bam-cell.nr-data.net',
-//   jserrors: { harvestTimeSeconds: 5 }
-// }
+const info = {
+     ...NREUM.info, 
+    applicationID: 2
+  }
+  const init = {
+    ...NREUM.init,
+    page_view_event: {enabled: false},
+    ajax: {enabled: false},
+    page_view_timing: {enabled: false},
+    session_trace: {enabled: false},
+    spa: {enabled: false},
+    jserrors: {auto: false}
+  }
+  const loader_config = {
+     ...NREUM.loader_config, 
+  }
 
-const nrConfig = {
-  ...NREUM.init,
-   ...NREUM.info, 
-   ...NREUM.loader_config, 
-  // licenseKey: 'asdf',
-  applicationID: 2
-}
-const nr = new BrowserAgent() // Create a new instance of the Browser Agent
+  // this should notice global errors
+const nr = new BrowserAgent()
 
-nr.features.errors.auto = false // Disable auto instrumentation (full page)
+// nr.features.errors.auto = false // Disable auto instrumentation (full page)
 
-nr.start(nrConfig).then(() => {
-  console.debug("agent initialized! -- Kitten Component")
-})
+
+nr.start({info, init, loader_config, exposed: false})
+
+console.log("component 2, nr", nr)
 
 
 class KittenComponent extends HTMLElement {

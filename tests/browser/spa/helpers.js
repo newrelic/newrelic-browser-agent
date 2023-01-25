@@ -9,16 +9,16 @@ const { setup } = require('../utils/setup')
 const setupData = setup()
 const { baseEE, agentIdentifier, aggregator, nr } = setupData
 
-const { Instrument: AjaxInstrument } = require('@newrelic/browser-agent-core/src/features/ajax/instrument/index')
-const { Instrument: SpaInstrument } = require('@newrelic/browser-agent-core/src/features/spa/instrument/index')
-const { Aggregate: SpaAggregate } = require('@newrelic/browser-agent-core/src/features/spa/aggregate/index')
-new AjaxInstrument(agentIdentifier)
-new SpaInstrument(agentIdentifier)
+const { Instrument: AjaxInstrument } = require('../../../src/features/ajax/instrument/index')
+const { Instrument: SpaInstrument } = require('../../../src/features/spa/instrument/index')
+const { Aggregate: SpaAggregate } = require('../../../src/features/spa/aggregate/index')
+new AjaxInstrument(agentIdentifier, aggregator, false)
+new SpaInstrument(agentIdentifier, aggregator, false)
 let spaAgg
-const { wrapTimer } = require("@newrelic/browser-agent-core/src/common/wrap/index")
+const { wrapTimer } = require("../../../src/common/wrap/index")
 const timerEE = wrapTimer(baseEE)
-const { drain } = require('@newrelic/browser-agent-core/src/common/drain/drain')
-const { mapOwn } = require('@newrelic/browser-agent-core/src/common/util/map-own')
+const { drain } = require('../../../src/common/drain/drain')
+const { mapOwn } = require('../../../src/common/util/map-own')
 
 
 var currentNodeId = () => {
@@ -33,8 +33,8 @@ var afterLoad = false
 jil.onWindowLoaded(function () {
   afterLoad = true
   originalSetTimeout(function () {
-    const { Aggregate: InsAggregate } = require('@newrelic/browser-agent-core/src/features/page-action/aggregate/index')
-    new InsAggregate(agentIdentifier)
+    const { Aggregate: InsAggregate } = require('../../../src/features/page_action/aggregate/index')
+    new InsAggregate(agentIdentifier, aggregator)
     if (!spaAgg) spaAgg = new SpaAggregate(agentIdentifier, aggregator)
     drain(agentIdentifier, 'api')
     drain(agentIdentifier, 'feature')

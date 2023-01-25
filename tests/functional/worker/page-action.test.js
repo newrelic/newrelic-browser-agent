@@ -14,7 +14,7 @@ function paSubmission (type, supportRegOrESMWorker) {
 	testDriver.test(`${type} - addPageAction sends PA event`, supportRegOrESMWorker, function (t, browser, router) {
 		let assetURL = router.assetURL(`worker/${type}-worker.html`, {
 			init: {
-				ins: { harvestTimeSeconds: 5 }
+				page_action: { harvestTimeSeconds: 5 }
 			},
       workerCommands: [`newrelic.addPageAction("DummyEvent", { free: "tacos" })`]
     });

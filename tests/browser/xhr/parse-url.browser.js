@@ -4,7 +4,7 @@
  */
 
 import test from '../../../tools/jil/browser-test'
-import { parseUrl } from '@newrelic/browser-agent-core/src/common/url/parse-url'
+import { parseUrl } from '../../../src/common/url/parse-url'
 
 if (window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener) xhr_tests()
 else {

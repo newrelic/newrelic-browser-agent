@@ -56,9 +56,9 @@ function addEventListenerPatched (type, browserVersionMatcher) {
 			});
 
 			const loadPromise = browser.get(assetURL);
-			const jserrPromise = router.expectErrors();
+			const xhrMetricsPromise = router.expectXHRMetrics();
 
-			Promise.all([loadPromise, jserrPromise])
+			Promise.all([loadPromise, xhrMetricsPromise])
 			.then(( [, response] ) => {
 				t.ok(!!getXhrFromResponse(response), 'got XHR data')
       	t.end()
@@ -94,9 +94,9 @@ function constructorMonkeyPatched (type, browserVersionMatcher) {
 			});
 
 			const loadPromise = browser.get(assetURL);
-			const jserrPromise = router.expectErrors();
+			const xhrMetricsPromise = router.expectXHRMetrics();
 
-			Promise.all([loadPromise, jserrPromise])
+			Promise.all([loadPromise, xhrMetricsPromise])
 			.then(( [, response] ) => {
 				t.ok(!!getXhrFromResponse(response), 'got XHR data')
       	t.end()
@@ -204,7 +204,7 @@ function abortCalled (type, browserVersionMatcher) {
 			});
 
 			const loadPromise = browser.get(assetURL);
-			const xhrPromise = router.expectErrors();
+			const xhrPromise = router.expectXHRMetrics();
 
 			Promise.all([xhrPromise, loadPromise])
 			.then(( [response] ) => {

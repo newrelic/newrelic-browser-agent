@@ -1,16 +1,10 @@
-import { BrowserAgent } from '@newrelic/browser-agent'
-
-const nrConfig = {
-    ...NREUM.init,
-     ...NREUM.info, 
-     ...NREUM.loader_config, 
-    applicationID: 3
-  }
+import BrowserAgent from '@newrelic/browser-agent'
 
   // this should notice global errors
 const nr = new BrowserAgent()
 
-nr.start(nrConfig)
+// should just accept full NREUM object ({init, info, loader_config, ...other data})
+nr.start(NREUM)
 
 import { mount as dogsMount, unmount as dogsUnmount } from '@newrelic/component-1'
 import { mount as catsMount, unmount as catsUnmount } from '@newrelic/component-2'

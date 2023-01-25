@@ -23,6 +23,7 @@ const preprocessify = require('preprocessify')
 const loaders = require('../jil/util/loaders')
 const UglifyJS = require('uglify-js')
 var runnerArgs = require('../jil/runner/args')
+const babelEnv = require('../../babel-env-vars')
 
 mime.types['es6'] = 'application/javascript'
 
@@ -57,7 +58,7 @@ class AgentInjectorTransform extends AssetTransform {
   }
 
   generateConfig(loaderName, params, ssl, injectUpdatedLoaderConfig) {
-    let loaderSpec = loaders.find((spec) => spec.name === loaderName)
+    let loaderSpec = [...loaders, ...[{name: 'mfe'}, {name: 'prebuilt'}]].find((spec) => spec.name === loaderName)
     let payloadSuffix = loaderSpec.payload
     let payloadFilename = payloadSuffix ? `nr-${payloadSuffix}.js` : 'nr.js'
 
@@ -188,8 +189,8 @@ class AgentInjectorTransform extends AssetTransform {
     `
   }
 
-  getLoaderContent(loaderName, dir, callback) {
-    let loaderFilename = `nr-loader-${loaderName}${runnerArgs.polyfills ? '-polyfills' : ''}.min.js`
+  getLoaderContent(loader, dir, callback) {
+    let loaderFilename = `nr-loader-${loader}${runnerArgs.polyfills ? '-polyfills' : ''}.min.js`
     let loaderPath = path.join(dir, loaderFilename)
     fs.readFile(loaderPath, callback)
   }
@@ -326,16 +327,13 @@ class BrowserifyTransform extends AssetTransform {
           "@babel/plugin-syntax-dynamic-import",
           '@babel/plugin-transform-modules-commonjs',
           "@babel/plugin-proposal-optional-chaining",
-          ["module-resolver", {
-            "alias": {
-              "@newrelic/browser-agent-core/src": './dist/packages/browser-agent-core/src'
-            }
-          }]
+          babelEnv('VERSION')
         ],
         global: true
       })
       .transform(preprocessify())
       .bundle((err, buf) => {
+        if (err) console.log("error at ", assetPath)
         if (err) return callback(err)
 
         let content = buf.toString()

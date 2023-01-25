@@ -5,11 +5,11 @@
 
 import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
-import { setRuntime, setInfo } from '@newrelic/browser-agent-core/src/common/config/config'
+import { setRuntime, setInfo } from '../../src/common/config/config'
 import * as sinon from 'sinon'
-import * as harv from '@newrelic/browser-agent-core/src/common/harvest/harvest'
-import { submitData } from '@newrelic/browser-agent-core/src/common/util/submit-data'
-import { HarvestScheduler } from '@newrelic/browser-agent-core/src/common/harvest/harvest-scheduler'
+import * as harv from '../../src/common/harvest/harvest'
+import { submitData } from '../../src/common/util/submit-data'
+import { HarvestScheduler } from '../../src/common/harvest/harvest-scheduler'
 
 const { agentIdentifier, aggregator } = setup();
 const nrInfo = { errorBeacon: 'foo', licenseKey: 'bar' }

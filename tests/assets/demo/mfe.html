@@ -1,0 +1,44 @@
+<html>
+
+<head>
+    <script>
+        const loader = 'mfe'
+        const url = new URL(window.location)
+        const params = url.searchParams
+        if (params.get('loader') !== loader) {
+            params.set('loader', loader)
+            window.location = `${url.origin}${url.pathname}?${params.toString()}`
+        }
+    </script>
+    {init}
+    {info}
+    {loader}
+    <script>
+
+        const configs = {
+            info: { applicationID: '601303348', licenseKey: 'a60cc46d05', errorBeacon: 'bam.nr-data.net' }
+        }
+
+        const agent = new newrelic.mfeLoader(configs)
+        console.log("trigger agent1")
+        agent.noticeError(new Error("test"))
+        agent.addPageAction('test1')
+    </script>
+</head>
+
+<body>
+    this is a generic page that is instrumented by the JS agent
+    <script>
+        const configs2 = {
+            info: { applicationID: '35095249', licenseKey: '2fec6ab188', errorBeacon: 'staging-bam-cell.nr-data.net' }
+        }
+        window.agent2 = new newrelic.mfeLoader(configs2)
+
+        console.log("trigger agent2")
+        window.agent2.noticeError(new Error("test2"))
+        window.agent2.addPageAction('test2')
+
+    </script>
+</body>
+
+</html>

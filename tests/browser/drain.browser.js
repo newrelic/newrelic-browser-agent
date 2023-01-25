@@ -4,14 +4,14 @@
  */
 
 const jil = require('jil')
+const { drain, registerDrain } = require('../../src/common/drain/drain')
+var { registerHandler: register } = require('../../src/common/event-emitter/register-handler.js')
+
+const { setup } = require('./utils/setup')
+const { baseEE, agentIdentifier } = setup()
 
 jil.browserTest('drain', function (t) {
-  const {setup} = require('./utils/setup')
-  const {drain} = require('@newrelic/browser-agent-core/src/common/drain/drain')
 
-  const {baseEE, agentIdentifier} = setup()
-
-  var {registerHandler: register} = require('@newrelic/browser-agent-core/src/common/event-emitter/register-handler.js')
 
   let eventId = 0
   let bufferId = 0

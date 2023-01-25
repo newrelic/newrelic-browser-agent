@@ -5,10 +5,10 @@
 
 import test from '../../../tools/jil/browser-test'
 import { setup } from '../utils/setup'
-import { Instrument as AjaxInstrum } from '@newrelic/browser-agent-core/src/features/ajax/instrument/index'
+import { Instrument as AjaxInstrum } from '../../../src/features/ajax/instrument/index'
 
-const { baseEE, agentIdentifier } = setup();
-const ajaxTestInstr = new AjaxInstrum(agentIdentifier); // attach instrumentation event handlers to agent's events (baseEE)
+const { baseEE, agentIdentifier, aggregator } = setup();
+const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false); // attach instrumentation event handlers to agent's events (baseEE)
 const handleEE = baseEE.get('handle');
 const hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener;
 

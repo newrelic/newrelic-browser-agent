@@ -148,7 +148,7 @@ function byVersion(left, right) {
 function cleanVersion(version) {
   // assign to high number, so that it is high in the list when sorted (i.e. beta is highest)
   if (!version || latestVersStringRe.test(version)) {
-    let prevVersionOffset = version?.split('-')[1];
+    let prevVersionOffset = !!version && version.split('-')[1];
     if (prevVersionOffset)
       version = '9999' - prevVersionOffset;
     else

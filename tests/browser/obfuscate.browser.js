@@ -5,15 +5,14 @@
 
 const jil = require('jil')
 import { setup } from './utils/setup'
-import { setConfiguration } from '@newrelic/browser-agent-core/src/common/config/config'
-import { Instrument as MetricsInstrum } from '@newrelic/browser-agent-core/src/features/metrics/instrument/index'
-import { Aggregate as MetricsAggreg } from '@newrelic/browser-agent-core/src/features/metrics/aggregate/index'
-import * as obfuscate from '@newrelic/browser-agent-core/src/common/util/obfuscate'
-
-import { setScope, resetScope } from '@newrelic/browser-agent-core/src/common/util/global-scope';
+import { setConfiguration } from '../../src/common/config/config'
+import { Instrument as MetricsInstrum } from '../../src/features/metrics/instrument/index'
+import { Aggregate as MetricsAggreg } from '../../src/features/metrics/aggregate/index'
+import * as obfuscate from '../../src/common/util/obfuscate'
+import { setScope, resetScope } from '../../src/common/util/global-scope';
 
 const { aggregator, agentIdentifier } = setup();
-new MetricsInstrum(agentIdentifier);
+new MetricsInstrum(agentIdentifier, aggregator, {}, false);
 new MetricsAggreg(agentIdentifier, aggregator);
 const obfuscatorInst = new obfuscate.Obfuscator({ agentIdentifier });
 

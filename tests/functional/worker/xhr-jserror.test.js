@@ -76,7 +76,7 @@ function submissionXhr (type, browserVersionMatcher) {
 			});
 
 			const loadPromise = browser.get(assetURL);
-			const xhrPromise = router.expectErrors();
+			const xhrPromise = router.expectXHRMetrics();
 
 			Promise.all([xhrPromise, loadPromise])
 			.then(( [response] ) => {
@@ -101,7 +101,7 @@ function submissionFetch (type, browserVersionMatcher) {
 			});
 
 			const loadPromise = browser.get(assetURL);
-			const xhrPromise = router.expectErrors();
+			const xhrPromise = router.expectXHRMetrics();
 
 			Promise.all([xhrPromise, loadPromise])
 			.then(( [response] ) => {

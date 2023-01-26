@@ -77,8 +77,13 @@ export class Aggregate extends AggregateBase {
     this.laststart = 0
     findStartTime(agentIdentifier)
 
-    this.ee.on('feat-stn', () => {
+    let decision = undefined
+    let shouldsettle = true
+    let precache = []
+    let settleTimer = setTimeout(() => { shouldsettle = false }, 5000)
 
+    this.ee.on('feat-stn', () => {
+      decision = true
       this.storeTiming(window.performance.timing)
 
       var scheduler = new HarvestScheduler('resources', {
@@ -117,18 +122,31 @@ export class Aggregate extends AggregateBase {
 
         return this.takeSTNs(options.retry)
       }
-
-      registerHandler('bst', (...args) => this.storeEvent(...args),  this.featureName, this.ee)
-      registerHandler('bstTimer', (...args) => this.storeTimer(...args),  this.featureName, this.ee)
-      registerHandler('bstResource', (...args) => this.storeResources(...args),  this.featureName, this.ee)
-      registerHandler('bstHist', (...args) => this.storeHist(...args),  this.featureName, this.ee)
-      registerHandler('bstXhrAgg', (...args) => this.storeXhrAgg(...args),  this.featureName, this.ee)
-      registerHandler('bstApi', (...args) => this.storeSTN(...args),  this.featureName, this.ee)
-      registerHandler('errorAgg', (...args) => this.storeErrorAgg(...args),  this.featureName, this.ee)
-      registerHandler('pvtAdded', (...args) => this.processPVT(...args),  this.featureName, this.ee)
-
-      drain(this.agentIdentifier, this.featureName)
+      precache.forEach(h => h())
+      precache = []
+      clearTimeout(settleTimer)
     })
+
+    this.ee.on('block-stn', () => {
+      this.decision = false
+    })
+
+    registerHandler('bst', (...args) => settle(() => this.storeEvent(...args)), this.featureName, this.ee)
+    registerHandler('bstTimer', (...args) => settle(() => this.storeTimer(...args)), this.featureName, this.ee)
+    registerHandler('bstResource', (...args) => settle(() => this.storeResources(...args)), this.featureName, this.ee)
+    registerHandler('bstHist', (...args) => settle(() => this.storeHist(...args)), this.featureName, this.ee)
+    registerHandler('bstXhrAgg', (...args) => settle(() => this.storeXhrAgg(...args)), this.featureName, this.ee)
+    registerHandler('bstApi', (...args) => settle(() => this.storeSTN(...args)), this.featureName, this.ee)
+    registerHandler('errorAgg', (...args) => settle(() => this.storeErrorAgg(...args)), this.featureName, this.ee)
+    registerHandler('pvtAdded', (...args) => settle(() => this.processPVT(...args)), this.featureName, this.ee)
+    drain(this.agentIdentifier, this.featureName)
+
+    function settle(handler) {
+      if (decision === false || shouldsettle === false) return
+      else if (!decision) precache.push(handler)
+      else handler()
+    }
+
   }
 
   processPVT(name, value, attrs) {

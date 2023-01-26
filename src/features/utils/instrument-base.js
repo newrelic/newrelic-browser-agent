@@ -14,7 +14,7 @@ export class InstrumentBase extends FeatureBase {
     this.hasAggregator = false
     this.auto = auto
 
-    if (auto && featureName !== FEATURE_NAMES.sessionTrace) registerDrain(agentIdentifier, featureName)
+    if (auto) registerDrain(agentIdentifier, featureName)
   }
 
   importAggregator() {

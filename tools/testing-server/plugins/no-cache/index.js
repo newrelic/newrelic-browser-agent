@@ -6,7 +6,7 @@ const fp = require("fastify-plugin");
  * @param {module:fastify.FastifyInstance} fastify the fastify server instance
  */
 module.exports = fp(async function (fastify) {
-  fastify.addHook("onSend", async (request, reply, payload) => {
+  fastify.addHook("onSend", (request, reply, response, done) => {
     reply.header("Surrogate-Control", "no-store");
     reply.header(
       "Cache-Control",
@@ -15,6 +15,6 @@ module.exports = fp(async function (fastify) {
     reply.header("Pragma", "no-cache");
     reply.header("Expires", "0");
 
-    return payload;
+    done(null, response);
   });
 });

@@ -6,6 +6,7 @@
 const testDriver = require('../../../tools/jil/index')
 const { getErrorsFromResponse } = require('../err/assertion-helpers')
 const { workerTypes, typeToMatcher } = require('./helpers')
+const {testErrorsRequest} = require("../../../tools/testing-server/utils/expect-tests");
 
 const init = {
   jserrors: {
@@ -29,7 +30,10 @@ function errorRetryTest(type, matcher) {
       ].map(x => x.toString())
   })
 
-  router.scheduleReply('jserrors', {statusCode: 429})
+  router.scheduleReply('bamServer', {
+    test: testErrorsRequest,
+    statusCode: 429
+  })
 
   let loadPromise = browser.get(assetURL)
   let errPromise = router.expectErrors()

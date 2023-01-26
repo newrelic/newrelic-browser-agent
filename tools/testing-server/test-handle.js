@@ -1,0 +1,303 @@
+const { v4: uuidV4 } = require("uuid");
+const { paths } = require("./constants");
+const { urlFor } = require("./utils/url");
+const path = require("path");
+const { deepmerge } = require("deepmerge-ts");
+const {
+  testRumRequest,
+  testEventsRequest,
+  testTimingEventsRequest,
+  testAjaxEventsRequest,
+  testMetricsRequest,
+  testCustomMetricsRequest,
+  testSupportMetricsRequest,
+  testErrorsRequest,
+  testInsRequest,
+  testAjaxTimeSlicesRequest,
+  testResourcesRequest,
+  testInteractionEventsRequest,
+} = require("./utils/expect-tests");
+
+/**
+ * Scheduled reply options
+ * @typedef {object} ScheduledReply
+ * @property {Function|string} test function that takes the fastify request object and returns true if the scheduled
+ * response should be applied
+ * @property {number} statusCode response code
+ * @property {string} body response body
+ * @property {number} delay delay the response by a number of milliseconds
+ */
+
+/**
+ * Test server expect options
+ * @typedef {object} TestServerExpect
+ * @property {false|number|null|undefined} timeout time in milliseconds to timeout and reject the expect or false if the
+ * timeout should not be applied
+ * @property {Function|string} test function that takes the fastify request object and returns true if the expect should
+ * be resolved
+ */
+
+/**
+ * Deferred object
+ * @typedef {object} Deferred
+ * @property {Promise<any>} promise the underlying promise of the deferred object
+ * @property {Function} resolve the resolve function of the deferred object
+ * @property {Function} reject the reject function of the deferred object
+ * @property {Function} [test] optional test function that takes the request and
+ * returns a boolean indicating if the request matches. This is useful for the
+ * jserrors BAM endpoint where multiple types of data are reported.
+ */
+
+module.exports = class TestHandle {
+  /**
+   * @type TestServer
+   */
+  #testServer;
+
+  /**
+   * @type string
+   */
+  #testId;
+
+  /**
+   * List of scheduled replies keyed to a server id {'assetServer'|'bamServer'}
+   * @type {Map<string, Set<ScheduledReply>>}
+   */
+  #scheduledReplies = new Map();
+
+  /**
+   * List of pending expects keyed to a server id {'assetServer'|'bamServer'}
+   * @type {Map<string, Set<Deferred>>}
+   */
+  #pendingExpects = new Map();
+
+  constructor(testServer, testId) {
+    this.#testServer = testServer;
+    this.#testId = testId || uuidV4();
+  }
+
+  get testServer() {
+    return this.#testServer;
+  }
+
+  get testId() {
+    return this.#testId;
+  }
+
+  /**
+   * Processes an incoming request for scheduled responses and pending expects
+   * @param {'assetServer'|'bamServer'} serverId Id of the server the request was received on
+   * @param {module:fastify.FastifyInstance} fastify fastify server the request was received on
+   * @param {module:fastify.FastifyRequest} request the incoming request
+   */
+  processRequest(serverId, fastify, request) {
+    if (this.#scheduledReplies.has(serverId)) {
+      const scheduledReplies = this.#scheduledReplies.get(serverId);
+
+      for (const scheduledReply of scheduledReplies) {
+        let test = scheduledReply.test;
+
+        if (typeof test === "string") {
+          test = new Function(test);
+        }
+
+        if (test.call(this, request)) {
+          request.scheduledReply = scheduledReply;
+          scheduledReplies.delete(scheduledReply);
+          break;
+        }
+      }
+    }
+
+    if (this.#pendingExpects.has(serverId)) {
+      const pendingExpects = this.#pendingExpects.get(serverId);
+
+      for (const pendingExpect of pendingExpects) {
+        let test = pendingExpect.test;
+
+        if (typeof test === "string") {
+          test = new Function(test);
+        }
+
+        if (test.call(this, request)) {
+          request.resolvingExpect = pendingExpect;
+          pendingExpects.delete(pendingExpect);
+          break;
+        }
+      }
+    }
+  }
+
+  scheduleReply(serverId, scheduledReply) {
+    if (!this.#scheduledReplies.has(serverId)) {
+      this.#scheduledReplies.set(serverId, new Set());
+    }
+
+    this.#scheduledReplies.get(serverId).add(scheduledReply);
+  }
+
+  expect(serverId, testServerExpect) {
+    if (!this.#pendingExpects.has(serverId)) {
+      this.#pendingExpects.set(serverId, new Set());
+    }
+
+    const deferred = this.#createDeferred();
+    deferred.test = testServerExpect.test;
+
+    if (testServerExpect.timeout !== false) {
+      setTimeout(() => {
+        deferred.reject(
+          `Expect for ${serverId} timed out for test ${this.#testId}`,
+          testServerExpect.test.toString()
+        );
+      }, testServerExpect.timeout || this.#testServer.config.timeout);
+    }
+
+    this.#pendingExpects.get(serverId).add(deferred);
+
+    return deferred.promise;
+  }
+
+  /**
+   * Constructs an url for a test asset relative to the current testId
+   * @param {string} assetFile
+   * @param {object} query
+   * @returns {string}
+   */
+  assetURL(assetFile, query = {}) {
+    return urlFor(
+      path.relative(
+        paths.rootDir,
+        path.resolve(paths.testsAssetsDir, assetFile)
+      ),
+      deepmerge(
+        {
+          loader: "full",
+          config: {
+            licenseKey: this.#testId,
+          },
+        },
+        query
+      ),
+      this.#testServer
+    );
+  }
+
+  urlForBrowserTest(testFile) {
+    return urlFor(
+      "/tests/assets/browser.html",
+      {
+        loader: "full",
+        config: {
+          licenseKey: this.#testId,
+          assetServerPort: this.testServer.assetServer.port,
+          corsServerPort: this.testServer.corsServer.port,
+        },
+        script:
+          "/" + path.relative(paths.rootDir, testFile) + "?browserify=true",
+      },
+      this.#testServer
+    );
+  }
+
+  /**
+   * Creates a basic deferred object
+   * @returns {Deferred}
+   */
+  #createDeferred() {
+    let resolve;
+    let reject;
+    let promise = new Promise((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+
+    return { promise, resolve, reject };
+  }
+
+  /****** BAM Expect Shortcut Methods ******/
+
+  expectRum(timeout) {
+    return this.expect("bamServer", {
+      timeout,
+      test: testRumRequest,
+    });
+  }
+
+  expectEvents(timeout) {
+    return this.expect("bamServer", {
+      timeout,
+      test: testEventsRequest,
+    });
+  }
+
+  expectTimings(timeout) {
+    return this.expect("bamServer", {
+      timeout,
+      test: testTimingEventsRequest,
+    });
+  }
+
+  expectAjaxEvents(timeout) {
+    return this.expect("bamServer", {
+      timeout,
+      test: testAjaxEventsRequest,
+    });
+  }
+
+  expectInteractionEvents(timeout) {
+    return this.expect("bamServer", {
+      timeout,
+      test: testInteractionEventsRequest,
+    });
+  }
+
+  expectMetrics(timeout) {
+    return this.expect("bamServer", {
+      timeout,
+      test: testMetricsRequest,
+    });
+  }
+
+  expectSupportMetrics(timeout) {
+    return this.expect("bamServer", {
+      timeout,
+      test: testSupportMetricsRequest,
+    });
+  }
+
+  expectCustomMetrics(timeout) {
+    return this.expect("bamServer", {
+      timeout,
+      test: testCustomMetricsRequest,
+    });
+  }
+
+  expectErrors(timeout) {
+    return this.expect("bamServer", {
+      timeout,
+      test: testErrorsRequest,
+    });
+  }
+
+  expectAjaxTimeSlices(timeout) {
+    return this.expect("bamServer", {
+      timeout,
+      test: testAjaxTimeSlicesRequest,
+    });
+  }
+
+  expectIns(timeout) {
+    return this.expect("bamServer", {
+      timeout,
+      test: testInsRequest,
+    });
+  }
+
+  expectResources(timeout) {
+    return this.expect("bamServer", {
+      timeout,
+      test: testResourcesRequest,
+    });
+  }
+};

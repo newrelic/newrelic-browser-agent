@@ -8,29 +8,25 @@ const querypack = require('@newrelic/nr-querypack')
 
 let supported = testDriver.Matcher.withFeature('addEventListener')
 
-testDriver.test('', supported, function (t, browser, router) {
+testDriver.test('hash change during page load', supported, function (t, browser, router) {
   t.plan(2)
   let targetUrl = router.assetURL('spa/hashchange-during-page-load.html', { loader: 'spa' })
 
   let rumPromise = router.expectRum()
-  let eventsPromise = router.expectEvents()
+  let eventsPromise = router.expectInteractionEvents()
   let loadPromise = browser.safeGet(targetUrl).waitForFeature('loaded')
-
-  router.timeout = 5000
 
   // This promise should never be fulfilled, because we should only get one
   // /events submission, for the initial page load.
-  router.expectEvents()
+  let secondEventsPromise = router.expectInteractionEvents(5000)
     .then(({request: eventsResult}) => {
-      let {body, query} = eventsResult
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.fail('got second /events submission with interaction of type ' + interactionTree.trigger)
     })
     .catch(() => {
       t.ok('did not get second /events submission')
     })
 
-  Promise.all([eventsPromise, rumPromise, loadPromise])
+  Promise.all([eventsPromise, rumPromise, loadPromise, secondEventsPromise])
     .then(([{request: eventsResult}]) => {
       let {body, query} = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]

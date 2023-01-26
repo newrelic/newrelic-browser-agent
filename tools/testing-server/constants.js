@@ -36,12 +36,3 @@ module.exports.rumFlags = {
   spa: 1,
   loaded: 1,
 };
-
-module.exports.beaconRequests = {
-  rum: "rum",
-  events: "events",
-  timings: "timings", // events bam call containing a timing entry
-  jserrors: "jserrors",
-  ins: "ins",
-  resources: "resources",
-};

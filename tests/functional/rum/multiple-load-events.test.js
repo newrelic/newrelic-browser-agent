@@ -16,16 +16,13 @@ testDriver.test('rum with multiple load events', withTls, function (t, browser, 
 
   Promise.all([rumPromise, loadPromise]).then(() => {
     t.ok(true, 'got first RUM submission')
-  })
-    .catch(fail)
+  }).catch(fail)
 
-  router.timeout = 5000
-  router.expectRum().then(() => {
+  router.expectRum(10000).then(() => {
     t.fail('should not get second RUM request even when window load event fires again')
+  }).catch(() => {
+    t.ok(true, 'did not get second RUM request')
   })
-    .catch(() => {
-      t.ok(true, 'did not get second RUM request')
-    })
 
   function fail (err) {
     t.fail(err)

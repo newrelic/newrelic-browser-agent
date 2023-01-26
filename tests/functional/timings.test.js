@@ -45,17 +45,16 @@ testDriver.test('Disabled timings feature', function (t, browser, router) {
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
-      t.equal(router.seenRequests.events, 0, 'no events harvest yet')
-
+      const eventsPromise = router.expectEvents(8000).then(() => t.error('Events should not have been harvested')).catch(() => {});
       let domPromise = browser
         .elementById('standardBtn')
         .click()
         .get(router.assetURL('/'))
 
-      return domPromise
+      return Promise.all([eventsPromise, domPromise]);
     })
-    .then(() => {
-      t.equal(router.seenRequests.events, 0, 'no events harvest')
+    .then(([results]) => {
+      t.ok(!results, 'no events harvest')
       t.end()
     })
     .catch(fail)

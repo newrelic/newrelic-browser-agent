@@ -1,6 +1,7 @@
 const testDriver = require('../../../tools/jil/index')
 const { workerTypes, typeToMatcher } = require('./helpers')
-const { validatePageActionData, fail } = require('../ins/ins-internal-help.cjs')	// shared helpers
+const { validatePageActionData, fail } = require('../ins/ins-internal-help.cjs')
+const {testErrorsRequest, testInsRequest} = require("../../../tools/testing-server/utils/expect-tests");	// shared helpers
 
 workerTypes.forEach(type => {  // runs all test for classic & module workers & use the 'workers' browser-matcher for classic and the 'workersFull' for module
 	const browsersWithOrWithoutModuleSupport = typeToMatcher(type);
@@ -42,7 +43,10 @@ function paRetry (type, supportRegOrESMWorker) {
       workerCommands: [`newrelic.addPageAction("exampleEvent", {param: "value"})`]
     });
 
-		router.scheduleReply('ins', {statusCode: 429});
+        router.scheduleReply('bamServer', {
+            test: testInsRequest,
+            statusCode: 429
+        })
 
 		let loadPromise = browser.get(assetURL);
 		let insPromise = router.expectIns();
@@ -60,7 +64,6 @@ function paRetry (type, supportRegOrESMWorker) {
 
 			t.equal(insResult.reply.statusCode, 200, 'server responded with 200')
 			t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
-			t.equal(router.seenRequests.ins, 2, 'got two ins harvest requests')
 
 			t.end()
 		}).catch(fail(t));

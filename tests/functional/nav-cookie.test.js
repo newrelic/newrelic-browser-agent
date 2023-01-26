@@ -19,20 +19,20 @@ testDriver.test('agent set nav cookie when page is unloading', function (t, brow
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
-      t.equal(router.seenRequests.ins, 0, 'no ins harvest yet')
-
       let insPromise = router.expectIns()
 
       let loadPromise = browser
         .safeEval('newrelic.addPageAction("hello", { a: 1 })')
         .get(router.assetURL('/'))
 
-      return Promise.all([insPromise, loadPromise]).then(([ins, load]) => {
-        return ins
-      })
+      return Promise.all([insPromise, loadPromise])
     })
-    .then(() => {
-      t.equal(router.seenRequests.ins, 1, 'received one ins harvest')
+    .then(([{request: {body, query}}]) => {
+      if (body) {
+        t.ok(JSON.parse(body).ins, 'received ins harvest')
+      } else {
+        t.ok(query.ins, 'received ins harvest')
+      }
       t.end()
     })
     .catch(fail)

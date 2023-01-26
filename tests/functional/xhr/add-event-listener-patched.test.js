@@ -8,7 +8,6 @@ const {fail} = require('./helpers')
 const asserters = require('wd').asserters
 
 const supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
-const sendBeaconBrowsers = testDriver.Matcher.withFeature('workingSendBeacon')
 
 testDriver.test('xhr instrumentation works with EventTarget.prototype.addEventListener patched', supported, function (t, browser, router) {
   t.plan(1)
@@ -27,9 +26,10 @@ testDriver.test('xhr instrumentation works with EventTarget.prototype.addEventLi
   })).waitFor(asserters.jsCondition('window.xhrDone && window.wrapperInvoked', true))
 
   Promise.all([ajaxPromise, rumPromise, loadPromise]).then(([{request: {query, body}}]) => {
-    if (sendBeaconBrowsers.match(browser)) {
-      t.ok(JSON.parse(body).xhr, 'got XHR data')
-    } else {
+    try {
+      const parsedBody = JSON.parse(body);
+      t.ok(parsedBody.xhr, 'got XHR data')
+    } catch (err) {
       t.ok(query.xhr, 'got XHR data')
     }
   }).catch(fail(t, 'unexpected error'))

@@ -61,9 +61,15 @@ testCases.forEach((testCase, tcIndex) => {
           htmlFile = scenario.crossOriginFile
         }
 
-        const ajaxPromise = testCase.sameOrigin
-          ? router.expectCustomAssetServerAjax(`/dt/${router.testId}`)
-          : router.expectCustomBamServerAjax(`/dt/${router.testId}`)
+        const ajaxPromiseServer = testCase.sameOrigin
+          ? 'assetServer'
+          : 'bamServer'
+        const ajaxPromise = router.expect(ajaxPromiseServer, {
+          test: function(request) {
+            const url = new URL(request.url, 'resolve://');
+            return url.pathname === `/dt/${router.testId}`
+          }
+        })
         let loadPromise = browser.get(router.assetURL(htmlFile, { testId: router.testId, injectUpdatedLoaderConfig: true, config, init }))
 
         Promise.all([ajaxPromise, loadPromise])

@@ -111,6 +111,9 @@ class TestRun extends EventEmitter {
     harness.addTest(testName, opts, (t) => {
       let startTime = Date.now()
 
+      const id = self._generateID()
+      const handle = router.createTestHandle(id)
+
       harness.pause()
       observeTapeTest(t, onTestFinished, onTestResult)
 
@@ -118,6 +121,8 @@ class TestRun extends EventEmitter {
         self.allOk = self.allOk && (passed || attempt < numberOfAttempts)
         self.currentTest = null
         let endTime = Date.now()
+
+        router.destroyTestHandle(handle.testId)
 
         if (passed) {
           harness.resume()
@@ -164,10 +169,8 @@ class TestRun extends EventEmitter {
         }
       }
 
-      let id = self._generateID()
       try {
-        t.comment(`testId: ${id}`);
-        fn(t, browser, router.handle(id, false, browser))
+        fn(t, browser, handle)
       } catch (e) {
         newrelic.noticeError(e)
         t.error(e)

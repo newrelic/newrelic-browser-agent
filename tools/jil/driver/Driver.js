@@ -194,6 +194,8 @@ class Driver {
           let startTime = Date.now()
           harness.pause()
 
+          const id = driver.generateID()
+          const handle = router.createTestHandle(id)
           let ended = false
 
           t.on('result', function(result) {
@@ -222,6 +224,7 @@ class Driver {
 
           t.on('end', function () {
             let endTime = Date.now()
+            router.destroyTestHandle(handle.testId)
 
             let plannedOk = !t._plan || t._plan <= t.assertCount
             let allAssertsOk = t._ok
@@ -281,11 +284,9 @@ class Driver {
             }
           }
 
-          let id = driver.generateID()
           currentTest = t
           try {
-            t.comment(`testId: ${id}`);
-            fn(t, browser, router.handle(id, false, browser))
+            fn(t, browser, handle)
           } catch (e) {
             newrelic.noticeError(e)
             t.error(e)

@@ -9,11 +9,7 @@ const path = require("path");
  * @return {string}
  * @todo Need to remove the use of querystring in this method.
  */
-module.exports.urlFor = function urlFor(
-  relativePath,
-  query,
-  testServer
-) {
+module.exports.urlFor = function urlFor(relativePath, query, testServer) {
   if (relativePath.indexOf("%") > -1) {
     // Double-encode the file path part that contains a percent symbol
     // to allow files like tests/assets/symbols%20in&referrer.html to

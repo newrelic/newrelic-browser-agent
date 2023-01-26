@@ -5,6 +5,7 @@
 
 const testDriver = require('jil')
 const {assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse} = require('./assertion-helpers')
+const {testErrorsRequest} = require("../../../tools/testing-server/utils/expect-tests");
 
 let supported = testDriver.Matcher.withFeature('notInternetExplorer')
 const init = {
@@ -54,7 +55,10 @@ testDriver.test('NR-40043: Multiple errors with noticeError and unique messages 
 })
 
 testDriver.test('NR-40043: Multiple errors with noticeError and unique messages should not bucket when retrying due to 429', supported, function (t, browser, router) {
-  router.scheduleReply('jserrors', {statusCode: 429})
+  router.scheduleReply('bamServer', {
+    test: testErrorsRequest,
+    statusCode: 429
+  })
 
   const assetURL = router.assetURL('js-errors-noticeerror-bucketing.html', { loader: 'full', init })
   const rumPromise = router.expectRum()
@@ -71,7 +75,6 @@ testDriver.test('NR-40043: Multiple errors with noticeError and unique messages 
 
     t.equal(errors.reply.statusCode, 200, 'server responded with 200')
     t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
-    t.equal(router.seenRequests.jserrors, 2, 'got two jserrors harvest requests')
 
     t.end()
   }).catch(fail)
@@ -107,7 +110,10 @@ testDriver.test('NEWRELIC-3788: Multiple identical errors from the same line but
 
 
 testDriver.test('NEWRELIC-3788: Multiple identical errors from the same line but different columns should not be bucketed when retrying due to 429', supported, function (t, browser, router) {
-  router.scheduleReply('jserrors', {statusCode: 429})
+  router.scheduleReply('bamServer', {
+    test: testErrorsRequest,
+    statusCode: 429
+  })
 
   const assetURL = router.assetURL('js-error-column-bucketing.html', { loader: 'full', init })
   const rumPromise = router.expectRum()
@@ -124,7 +130,6 @@ testDriver.test('NEWRELIC-3788: Multiple identical errors from the same line but
 
     t.equal(errors.reply.statusCode, 200, 'server responded with 200')
     t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
-    t.equal(router.seenRequests.jserrors, 2, 'got two jserrors harvest requests')
 
     t.end()
   }).catch(fail)

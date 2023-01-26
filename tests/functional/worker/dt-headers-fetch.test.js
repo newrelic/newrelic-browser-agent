@@ -80,7 +80,12 @@ function fetchDTHeader (type, testCase, browserVersionMatcher) {
 						].map(x => x.toString())
 					});
 
-                    const ajaxPromise = router.expectCustomBamServerAjax(`/dt/${router.testId}`)
+                    const ajaxPromise = router.expect('bamServer', {
+                      test: function(request) {
+                        const url = new URL(request.url, 'resolve://');
+                        return url.pathname === `/dt/${router.testId}`
+                      }
+                    })
 					const loadPromise = browser.get(assetURL);
 
 					Promise.all([ajaxPromise, loadPromise])

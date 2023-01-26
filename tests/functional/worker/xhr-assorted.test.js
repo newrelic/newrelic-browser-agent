@@ -1,6 +1,7 @@
 const testDriver = require('../../../tools/jil/index')
 const {workerTypes, typeToMatcher} = require('./helpers')
 const {fail, querypack, getXhrFromResponse} = require('../xhr/helpers')
+const {testInsRequest, testEventsRequest} = require("../../../tools/testing-server/utils/expect-tests");
 
 workerTypes.forEach(type => {
 	const browsersWithOrWithoutModuleSupport = typeToMatcher(type);
@@ -123,7 +124,12 @@ function catCors (type, browserVersionMatcher) {
 				}].map(x => x.toString())
 			});
 
-            const ajaxPromise = router.expectCustomBamServerAjax(`/cat-cors/${router.testId}`)
+            const ajaxPromise = router.expect('bamServer', {
+                test: function(request) {
+                    const url = new URL(request.url, 'resolve://');
+                    return url.pathname === `/cat-cors/${router.testId}`
+                }
+            })
 			const loadPromise = browser.get(assetURL);
 
 			Promise.all([ajaxPromise, loadPromise])
@@ -155,7 +161,10 @@ function harvestRetried (type, browserVersionMatcher) {
 					}, 2000);
 				}].map(x => x.toString())
 			});
-			router.scheduleReply('events', {statusCode: 429});
+            router.scheduleReply('bamServer', {
+                test: testEventsRequest,
+                statusCode: 429
+            })
 
 			const loadPromise = browser.get(assetURL);
 			const ajaxPromise = router.expectAjaxEvents();
@@ -177,7 +186,6 @@ function harvestRetried (type, browserVersionMatcher) {
 
 				t.equal(result.reply.statusCode, 200, 'server responded with 200')
 				t.ok(secondContainsFirst, 'second body should include the contents of the first retried harvest')
-				t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
 				t.end()
 			}).catch(fail(t))
 		}

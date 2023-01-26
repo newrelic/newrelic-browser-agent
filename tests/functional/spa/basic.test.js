@@ -14,7 +14,7 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
   let testStartTime = now()
 
   let rumPromise = router.expectRum()
-  let eventsPromise = router.expectEvents()
+  let eventsPromise = router.expectInteractionEvents()
   const asset = router.assetURL('spa/xhr.html', { loader: 'spa', init: {session_trace: {enabled: false} }} )
   let loadPromise = browser.safeGet(asset).waitForFeature('loaded')
 
@@ -32,7 +32,7 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
       t.equal(interactionTree.children.length, 0, 'expect no child nodes')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
-      let eventPromise = router.expectEvents()
+      let eventPromise = router.expectInteractionEvents()
       let domPromise = browser.elementByCssSelector('body').click()
 
       return Promise.all([eventPromise, domPromise]).then(([eventData, domData]) => {
@@ -85,7 +85,7 @@ testDriver.test('capturing SPA interactions using loader_config data', supported
   let testStartTime = now()
 
   let rumPromise = router.expectRum()
-  let eventsPromise = router.expectEvents()
+  let eventsPromise = router.expectInteractionEvents()
   let loadPromise = browser
     .safeGet(router.assetURL('spa/xhr.html', { loader: 'spa', injectUpdatedLoaderConfig: true, init: {session_trace: {enabled: false}} }))
     .waitForFeature('loaded')
@@ -104,7 +104,7 @@ testDriver.test('capturing SPA interactions using loader_config data', supported
       t.equal(interactionTree.children.length, 0, 'expect no child nodes')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
-      let eventPromise = router.expectEvents()
+      let eventPromise = router.expectInteractionEvents()
       let domPromise = browser.elementByCssSelector('body').click()
 
       return Promise.all([eventPromise, domPromise]).then(([eventData, domData]) => {
@@ -154,7 +154,7 @@ testDriver.test('capturing SPA interactions using loader_config data', supported
 
 testDriver.test('child nodes in SPA interaction does not exceed set limit', supported, function (t, browser, router) {
   let rumPromise = router.expectRum()
-  let eventsPromise = router.expectEvents()
+  let eventsPromise = router.expectInteractionEvents()
   let loadPromise = browser.safeGet(router.assetURL('spa/fetch-exceed-max-spa-nodes.html', { loader: 'spa' })).waitForFeature('loaded')
 
   rumPromise.then(({request: {query}}) => {
@@ -171,7 +171,7 @@ testDriver.test('child nodes in SPA interaction does not exceed set limit', supp
       t.equal(interactionTree.children.length, 0, 'expect no child nodes')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
-      let eventPromise = router.expectEvents()
+      let eventPromise = router.expectInteractionEvents()
       let domPromise = browser
         .elementByCssSelector('body')
         .click()

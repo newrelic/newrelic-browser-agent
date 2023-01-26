@@ -30,9 +30,6 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
   Promise.all([resourcePromise, loadPromise, rumPromise]).then(([result]) => {
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
-    const body = result.request.body
-    const harvestBody = JSON.parse(body).res
-
     // trigger an XHR call after
     var clickPromise = browser
       .elementByCssSelector('body')
@@ -43,7 +40,6 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
     return Promise.all([resourcePromise, clickPromise])
   })
   .then(([result]) => {
-    t.equal(router.seenRequests.resources, 2, 'got two harvest requests')
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
     const body = result.request.body

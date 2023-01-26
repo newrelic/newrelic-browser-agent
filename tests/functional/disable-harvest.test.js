@@ -1,4 +1,5 @@
 const testDriver = require('jil')
+const {testRumRequest} = require("../../tools/testing-server/utils/expect-tests");
 
 let supported = testDriver.Matcher.withFeature('notInternetExplorer')
 
@@ -17,13 +18,14 @@ testDriver.test('METRICS - Kills feature if entitlements flag is 0', supported, 
     jserrors: { enabled: false, harvestTimeSeconds: 5 },
   }
 
-  router.scheduleReply('rum', {
-    body: JSON.stringify({
+  router.scheduleReply('bamServer', {
+    test: testRumRequest,
+    body: `NREUM.setToken(${JSON.stringify({
       err: 0,
       ins: 1,
       spa: 1,
       stn: 1
-    })
+    })})`
   })
   const assetURL = router.assetURL('obfuscate-pii.html', { loader: 'full', init })
   const rumPromise = router.expectRum()
@@ -53,13 +55,14 @@ testDriver.test('ERRORS - Kills feature if entitlements flag is 0', supported, f
     jserrors: { enabled: true, harvestTimeSeconds: 5 },
   }
 
-  router.scheduleReply('rum', {
-    body: JSON.stringify({
+  router.scheduleReply('bamServer', {
+    test: testRumRequest,
+    body: `NREUM.setToken(${JSON.stringify({
       err: 0,
       ins: 1,
       spa: 1,
       stn: 1
-    })
+    })})`
   })
   const assetURL = router.assetURL('obfuscate-pii.html', { loader: 'full', init })
   const rumPromise = router.expectRum()
@@ -89,13 +92,14 @@ testDriver.test('SPA - Kills feature if entitlements flag is 0', supported, func
     page_view_timing: {enabled: false, harvestTimeSeconds: 5}
   }
 
-  router.scheduleReply('rum', {
-    body: JSON.stringify({
+  router.scheduleReply('bamServer', {
+    test: testRumRequest,
+    body: `NREUM.setToken(${JSON.stringify({
       err: 1,
       ins: 1,
       spa: 0,
       stn: 1
-    })
+    })})`
   })
   const assetURL = router.assetURL('obfuscate-pii.html', { loader: 'spa', init })
   const rumPromise = router.expectRum()
@@ -124,13 +128,14 @@ testDriver.test('PAGE ACTIONS - Kills feature if entitlements flag is 0', suppor
     ins: {enabled: true, harvestTimeSeconds: 5}
   }
 
-  router.scheduleReply('rum', {
-    body: JSON.stringify({
+  router.scheduleReply('bamServer', {
+    test: testRumRequest,
+    body: `NREUM.setToken(${JSON.stringify({
       err: 1,
       ins: 0,
       spa: 1,
       stn: 1
-    })
+    })})`
   })
   const assetURL = router.assetURL('obfuscate-pii.html', { loader: 'full', init })
   const rumPromise = router.expectRum()

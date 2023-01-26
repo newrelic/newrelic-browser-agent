@@ -1,7 +1,6 @@
 const path = require("path");
 const { Transform } = require("stream");
 const { paths } = require("../../constants");
-const { browserifyScript } = require("../browserify/browserify-transform");
 const fs = require("fs");
 
 /**

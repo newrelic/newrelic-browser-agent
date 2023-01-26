@@ -14,23 +14,23 @@ const { paths } = require("../../constants");
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify, testServer) {
-  fastify.addHook("onSend", async (request, reply, payload) => {
+  fastify.addHook("onSend", (request, reply, payload, done) => {
     if (
-      !payload ||
-      !payload.filename ||
-      payload.filename.indexOf(paths.testsAssetsDir) === -1 ||
-      !payload.filename.endsWith(".html")
+      payload &&
+      payload.filename &&
+      payload.filename.indexOf(paths.testsAssetsDir) > -1 &&
+      payload.filename.endsWith(".html")
     ) {
-      return payload;
+      payload = payload
+        .pipe(applyLoaderTransform(request, reply, testServer))
+        .pipe(applyConfigTransformer(request, reply, testServer))
+        .pipe(applyInitTransform(request, reply, testServer))
+        .pipe(applyWorkerCommandsTransform(request, reply, testServer))
+        .pipe(applyScriptTransform(request, reply, testServer))
+        .pipe(applyPolyfillsTransform(request, reply, testServer));
     }
 
     reply.removeHeader("content-length");
-    return payload
-      .pipe(applyLoaderTransform(request, reply, testServer))
-      .pipe(applyConfigTransformer(request, reply, testServer))
-      .pipe(applyInitTransform(request, reply, testServer))
-      .pipe(applyWorkerCommandsTransform(request, reply, testServer))
-      .pipe(applyScriptTransform(request, reply, testServer))
-      .pipe(applyPolyfillsTransform(request, reply, testServer));
+    done(null, payload);
   });
 });

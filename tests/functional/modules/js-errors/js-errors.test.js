@@ -383,11 +383,11 @@ testDriver.test('reporting errors from XHR callbacks', supported, function (t, b
 
 
 testDriver.test('Errors are not sent if agent is not initialized', supported, function (t, browser, router) {
-  setRouterTimeout(10000)
   t.plan(1)
 
-  let loadPromise = browser.setAsyncScriptTimeout(5000).safeGet(router.assetURL('modular/js-errors/invalid-not-initialized.html', opts))
-  let errorsPromise = router.expectErrors()
+  let loadPromise = browser.setAsyncScriptTimeout(5000)
+    .safeGet(router.assetURL('modular/js-errors/invalid-not-initialized.html', opts))
+  let errorsPromise = router.expectErrors(10000)
 
   Promise.all([loadPromise, errorsPromise])
     .then(([response]) => {
@@ -395,25 +395,19 @@ testDriver.test('Errors are not sent if agent is not initialized', supported, fu
       t.end()
     })
     .catch(fail)
-    .finally(() => setRouterTimeout(32000))
 
   function fail() {
     t.ok(true, 'Errors Promise did not execute because agent was not initialized')
     t.end()
   }
-
-  function setRouterTimeout(ms) {
-    router.timeout = router.router.timeout = ms
-  }
 })
 
 
 testDriver.test('Errors are not sent if feature is disabled', supported, function (t, browser, router) {
-  setRouterTimeout(10000)
   t.plan(1)
 
   let loadPromise = browser.setAsyncScriptTimeout(5000).safeGet(router.assetURL('modular/js-errors/disabled.html', opts))
-  let errorsPromise = router.expectErrors()
+  let errorsPromise = router.expectErrors(10000)
 
   Promise.all([loadPromise, errorsPromise])
     .then(([response]) => {
@@ -421,15 +415,10 @@ testDriver.test('Errors are not sent if feature is disabled', supported, functio
       t.end()
     })
     .catch(fail)
-    .finally(() => setRouterTimeout(32000))
 
   function fail() {
     t.ok(true, 'Errors Promise did not execute because errors feature was disabled')
     t.end()
-  }
-
-  function setRouterTimeout(ms) {
-    router.timeout = router.router.timeout = ms
   }
 })
 

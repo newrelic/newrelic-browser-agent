@@ -62,7 +62,7 @@
   "safari": [
     {
       "browserName": "safari",
-      "platform": "Mac 12",
+      "platform": "Mac 13",
       "version": "16",
       "acceptInsecureCerts": false
     },

@@ -20,10 +20,11 @@ testDriver.test('reporting uncaught errors', supported, function (t, browser, ro
     }
   })
 
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let errorsPromise = router.expectErrors()
   let loadPromise = browser.get(assetURL)
 
-  Promise.all([rumPromise, loadPromise]).then(([{request}]) => {
+  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{request}]) => {
     assertErrorAttributes(t, request.query)
     const actualErrors = getErrorsFromResponse(request, browser)
     const expectedErrorMessages = [

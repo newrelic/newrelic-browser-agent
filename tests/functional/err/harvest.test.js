@@ -4,6 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
+const {testErrorsRequest} = require("../../../tools/testing-server/utils/expect-tests");
 
 // we use XHR for harvest calls only if browser support XHR
 let cors = testDriver.Matcher.withFeature('cors')
@@ -26,7 +27,10 @@ testDriver.test('jserrors are retried when collector returns 429', supported, fu
   })
 
   // simulate 429 response for the first jserrors request
-  router.scheduleReply('jserrors', {statusCode: 429})
+  router.scheduleReply('bamServer', {
+    test: testErrorsRequest,
+    statusCode: 429
+  })
 
   let loadPromise = browser.get(assetURL)
   let rumPromise = router.expectRum()
@@ -43,7 +47,6 @@ testDriver.test('jserrors are retried when collector returns 429', supported, fu
 
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
     t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
-    t.equal(router.seenRequests.jserrors, 2, 'got two jserrors harvest requests')
 
     t.end()
   }).catch(fail)

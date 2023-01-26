@@ -11,10 +11,11 @@ let supported = testDriver.Matcher.withFeature('setImmediate')
 testDriver.test('reporting errors from setImmediate callbacks', supported, function (t, browser, router) {
   let assetURL = router.assetURL('set-immediate-error.html', { init: { metrics: { enabled: false } } })
 
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let errorsPromise = router.expectErrors()
   let loadPromise = browser.get(assetURL).waitForConditionInBrowser('window.setImmediateFired')
 
-  Promise.all([rumPromise, loadPromise]).then(([{request: {body, query}}]) => {
+  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{request: {body, query}}]) => {
     assertErrorAttributes(t, query)
 
     let actualErrors = JSON.parse(body).err

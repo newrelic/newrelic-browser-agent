@@ -9,7 +9,6 @@ const { fail, getXhrFromResponse } = require('./helpers')
 let reliableUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 let xhrBrowsers = testDriver.Matcher.withFeature('xhr')
 let fetchBrowsers = testDriver.Matcher.withFeature('fetch')
-let workingSendBeacon = testDriver.Matcher.withFeature('workingSendBeacon')
 let xhrSupported = xhrBrowsers.intersect(reliableUnload)
 let fetchSupported = fetchBrowsers.intersect(reliableUnload)
 
@@ -29,13 +28,8 @@ testDriver.test('capturing XHR metrics', xhrSupported, function (t, browser, rou
 
   Promise.all([ajaxPromise, rumPromise, loadPromise])
     .then(([result]) => {
-      if (workingSendBeacon.match(browser)) {
-        t.equal(result.request.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
-        t.ok(result.request.body, 'request body should not be empty')
-      } else {
-        t.equal(result.request.method, 'GET', 'XHR data submitted via GET request')
-        t.notOk(result.request.body, 'request body should be empty')
-      }
+      t.equal(result.request.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
+      t.ok(result.request.body, 'request body should not be empty')
 
       const parsedXhrs = getXhrFromResponse(result.request, browser)
       t.ok(parsedXhrs, 'has xhr data')
@@ -63,13 +57,8 @@ testDriver.test('capturing fetch metrics', fetchSupported, function (t, browser,
 
   Promise.all([ajaxPromise, rumPromise, loadPromise])
     .then(([result]) => {
-      if (workingSendBeacon.match(browser)) {
-        t.equal(result.request.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
-        t.ok(result.request.body, 'request body should not be empty')
-      } else {
-        t.equal(result.request.method, 'GET', 'XHR data submitted via GET request')
-        t.notOk(result.request.body, 'request body should be empty')
-      }
+      t.equal(result.request.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
+      t.ok(result.request.body, 'request body should not be empty')
 
       const parsedXhrs = getXhrFromResponse(result.request, browser)
       var fetchData = parsedXhrs.find(xhr => xhr.params.pathname === '/json')

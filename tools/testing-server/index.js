@@ -2,6 +2,7 @@ const fastify = require("fastify");
 const { urlFor } = require("./utils/url");
 const waitOn = require("wait-on");
 const { paths, defaultAgentConfig } = require("./constants");
+const TestHandle = require("./test-handle");
 
 /**
  * Test server configuration options
@@ -50,6 +51,12 @@ class TestServer {
    * @type module:fastify.FastifyInstance
    */
   #bamServer;
+
+  /**
+   * List of test handles keyed to a test id
+   * @type {Map<string, TestHandle>}
+   */
+  #testHandles = new Map();
 
   constructor(config) {
     if (!config.logger) {
@@ -131,15 +138,31 @@ class TestServer {
     };
   }
 
+  createTestHandle(testId) {
+    const testHandle = new TestHandle(this, testId);
+    this.#testHandles.set(testHandle.testId, testHandle);
+    return testHandle;
+  }
+
+  destroyTestHandle(testId) {
+    this.#testHandles.delete(testId);
+  }
+
+  getTestHandle(testId) {
+    return this.#testHandles.get(testId);
+  }
+
   /**
    * Backwards compatibility with JIL
    * @deprecated
    */
   get router() {
     return {
-      handle: (testId, ...args) => {
-        return this.#bamServer.getCreateTestHandle(testId);
+      handle: (testId) => {
+        return this.createTestHandle(testId);
       },
+      createTestHandle: this.createTestHandle.bind(this),
+      destroyTestHandle: this.destroyTestHandle.bind(this),
     };
   }
 
@@ -166,6 +189,7 @@ class TestServer {
       logger: this.#config.logRequests ? this.#config.logger : false,
     });
 
+    this.#assetServer.decorate("testServerId", "assetServer");
     this.#assetServer.register(require("@fastify/multipart"), {
       addToBody: true,
     });
@@ -185,6 +209,7 @@ class TestServer {
     this.#assetServer.register(require("./plugins/browserify"), this);
     this.#assetServer.register(require("./routes/tests-index"), this);
     this.#assetServer.register(require("./routes/mock-apis"), this);
+    this.#assetServer.register(require("./plugins/test-handle"), this);
     this.#assetServer.register(require("./plugins/no-cache"));
   }
 
@@ -214,6 +239,7 @@ class TestServer {
       logger: this.#config.logRequests ? this.#config.logger : false,
     });
 
+    this.#bamServer.decorate("testServerId", "bamServer");
     this.#bamServer.register(require("@fastify/multipart"), {
       addToBody: true,
     });
@@ -223,8 +249,9 @@ class TestServer {
       exposedHeaders: "X-NewRelic-App-Data",
     });
     this.#bamServer.register(require("./plugins/bam-parser"), this);
-    this.#bamServer.register(require("./plugins/test-handle"), this);
     this.#bamServer.register(require("./routes/bam-apis"), this);
+    this.#bamServer.register(require("./plugins/test-handle"), this);
+    this.#bamServer.register(require("./plugins/no-cache"));
   }
 
   /**

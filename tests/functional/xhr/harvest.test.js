@@ -5,6 +5,7 @@
 
 const testDriver = require('../../../tools/jil/index')
 const {fail, querypack} = require('./helpers')
+const {testErrorsRequest, testEventsRequest} = require("../../../tools/testing-server/utils/expect-tests");
 
 testDriver.test('ajax events harvests are retried when collector returns 429', function (t, browser, router) {
   let assetURL = router.assetURL('xhr-outside-interaction.html', {
@@ -29,7 +30,10 @@ testDriver.test('ajax events harvests are retried when collector returns 429', f
     }
   })
 
-  router.scheduleReply('events', {statusCode: 429})
+  router.scheduleReply('bamServer', {
+    test: testEventsRequest,
+    statusCode: 429
+  })
 
   let ajaxPromise = router.expectAjaxEvents()
   let rumPromise = router.expectRum()
@@ -52,7 +56,6 @@ testDriver.test('ajax events harvests are retried when collector returns 429', f
 
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
     t.ok(secondContainsFirst, 'second body should include the contents of the first retried harvest')
-    t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
 
     t.end()
   }).catch(fail(t))

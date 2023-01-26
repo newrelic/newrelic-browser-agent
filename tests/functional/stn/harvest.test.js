@@ -4,6 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
+const {testResourcesRequest} = require("../../../tools/testing-server/utils/expect-tests");
 
 let supported = testDriver.Matcher.withFeature('stn')
 
@@ -20,7 +21,10 @@ testDriver.test('session traces are retried when collector returns 429 during fi
     }
   })
 
-  router.scheduleReply('resources', {statusCode: 429})
+  router.scheduleReply('bamServer', {
+    test: testResourcesRequest,
+    statusCode: 429
+  })
 
   let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
@@ -41,7 +45,6 @@ testDriver.test('session traces are retried when collector returns 429 during fi
     t.ok(secondParsed.res.length > firstParsed.res.length, 'second try has more nodes than first')
     t.ok(containsAll(secondParsed, firstParsed), 'all nodes have been resent')
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
-    t.equal(router.seenRequests.resources, 2, 'got two harvest requests')
 
     t.end()
   }).catch(fail)
@@ -65,7 +68,10 @@ testDriver.test('retried first harvest captures ptid', supported, function (t, b
     }
   })
 
-  router.scheduleReply('resources', {statusCode: 429})
+  router.scheduleReply('bamServer', {
+    test: testResourcesRequest,
+    statusCode: 429
+  })
 
   let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
@@ -115,7 +121,10 @@ testDriver.test('session traces are retried when collector returns 429 during sc
     firstBody = result.request.body
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
-    router.scheduleReply('resources', {statusCode: 429})
+    router.scheduleReply('bamServer', {
+      test: testResourcesRequest,
+      statusCode: 429
+    })
     return router.expectResources()
   }).then(result => {
     t.equal(result.reply.statusCode, 429, 'server responded with 429')
@@ -139,7 +148,6 @@ testDriver.test('session traces are retried when collector returns 429 during sc
     t.ok(resentNodes.length === 0, 'nodes from first successful harvest are not resent in third harvest')
 
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
-    t.equal(router.seenRequests.resources, 3, 'got three harvest requests')
 
     t.end()
   }).catch(fail)

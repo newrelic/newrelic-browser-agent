@@ -104,7 +104,8 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
 
 testDriver.test('noticeError takes an error object', withUnload, function (t, browser, router) {
   t.plan(2)
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let errorsPromise = router.expectErrors()
   let loadPromise = browser.get(router.assetURL('api.html', {
     init: {
       page_view_timing: {
@@ -116,7 +117,7 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
     }
   })).waitForFeature('loaded')
 
-  Promise.all([rumPromise, loadPromise])
+  Promise.all([errorsPromise, rumPromise, loadPromise])
     .then(([{request: data}]) => {
       var errorData = getErrorsFromResponse(data, browser)
       var params = errorData[0] && errorData[0]['params']
@@ -135,7 +136,8 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
 
 testDriver.test('noticeError takes a string', withUnload, function (t, browser, router) {
   t.plan(2)
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let errorsPromise = router.expectErrors()
   let loadPromise = browser.get(router.assetURL('api/noticeError.html', {
     init: {
       page_view_timing: {
@@ -147,7 +149,7 @@ testDriver.test('noticeError takes a string', withUnload, function (t, browser, 
     }
   })).waitForFeature('loaded')
 
-  Promise.all([rumPromise, loadPromise])
+  Promise.all([errorsPromise, rumPromise, loadPromise])
     .then(([{request: data}]) => {
       var errorData = getErrorsFromResponse(data, browser)
       var params = errorData[0] && errorData[0]['params']

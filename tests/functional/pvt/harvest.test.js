@@ -4,6 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
+const {testErrorsRequest, testTimingEventsRequest} = require("../../../tools/testing-server/utils/expect-tests");
 
 // we use XHR for harvest calls only if browser support XHR
 let cors = testDriver.Matcher.withFeature('cors')
@@ -28,7 +29,10 @@ testDriver.test('timings are retried when collector returns 429', supported, fun
     }
   })
 
-  router.scheduleReply('timings', { statusCode: 429 })
+  router.scheduleReply('bamServer', {
+    test: testTimingEventsRequest,
+    statusCode: 429
+  })
 
   let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()

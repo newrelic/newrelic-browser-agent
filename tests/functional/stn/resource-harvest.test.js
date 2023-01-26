@@ -38,7 +38,6 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
   }).then(([result]) => {
     const body = result.request.body
 
-    t.equal(router.seenRequests.resources, 2, 'got two harvest requests')
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
     const parsed = JSON.parse(body).res

@@ -17,6 +17,7 @@ import { now } from '../../../common/timing/now'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
+import { HandlerCache } from '../../utils/handler-cache'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -24,6 +25,7 @@ export class Aggregate extends AggregateBase {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     const agentRuntime = getRuntime(agentIdentifier)
+    const handlerCache = new HandlerCache()
 
     if (!xhrUsable || !agentRuntime.xhrWrappable) return
 
@@ -77,13 +79,7 @@ export class Aggregate extends AggregateBase {
     this.laststart = 0
     findStartTime(agentIdentifier)
 
-    let decision = undefined
-    let shouldsettle = true
-    let precache = []
-    let settleTimer = setTimeout(() => { shouldsettle = false }, 5000)
-
     this.ee.on('feat-stn', () => {
-      decision = true
       this.storeTiming(window.performance.timing)
 
       var scheduler = new HarvestScheduler('resources', {
@@ -122,31 +118,23 @@ export class Aggregate extends AggregateBase {
 
         return this.takeSTNs(options.retry)
       }
-      precache.forEach(h => h())
-      precache = []
-      clearTimeout(settleTimer)
+      handlerCache.decide(true)
     })
 
     this.ee.on('block-stn', () => {
-      this.decision = false
+      handlerCache.decide(false)
     })
 
-    registerHandler('bst', (...args) => settle(() => this.storeEvent(...args)), this.featureName, this.ee)
-    registerHandler('bstTimer', (...args) => settle(() => this.storeTimer(...args)), this.featureName, this.ee)
-    registerHandler('bstResource', (...args) => settle(() => this.storeResources(...args)), this.featureName, this.ee)
-    registerHandler('bstHist', (...args) => settle(() => this.storeHist(...args)), this.featureName, this.ee)
-    registerHandler('bstXhrAgg', (...args) => settle(() => this.storeXhrAgg(...args)), this.featureName, this.ee)
-    registerHandler('bstApi', (...args) => settle(() => this.storeSTN(...args)), this.featureName, this.ee)
-    registerHandler('errorAgg', (...args) => settle(() => this.storeErrorAgg(...args)), this.featureName, this.ee)
-    registerHandler('pvtAdded', (...args) => settle(() => this.processPVT(...args)), this.featureName, this.ee)
+    // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...
+    registerHandler('bst', (...args) => handlerCache.settle(() => this.storeEvent(...args)), this.featureName, this.ee)
+    registerHandler('bstTimer', (...args) => handlerCache.settle(() => this.storeTimer(...args)), this.featureName, this.ee)
+    registerHandler('bstResource', (...args) => handlerCache.settle(() => this.storeResources(...args)), this.featureName, this.ee)
+    registerHandler('bstHist', (...args) => handlerCache.settle(() => this.storeHist(...args)), this.featureName, this.ee)
+    registerHandler('bstXhrAgg', (...args) => handlerCache.settle(() => this.storeXhrAgg(...args)), this.featureName, this.ee)
+    registerHandler('bstApi', (...args) => handlerCache.settle(() => this.storeSTN(...args)), this.featureName, this.ee)
+    registerHandler('errorAgg', (...args) => handlerCache.settle(() => this.storeErrorAgg(...args)), this.featureName, this.ee)
+    registerHandler('pvtAdded', (...args) => handlerCache.settle(() => this.processPVT(...args)), this.featureName, this.ee)
     drain(this.agentIdentifier, this.featureName)
-
-    function settle(handler) {
-      if (decision === false || shouldsettle === false) return
-      else if (!decision) precache.push(handler)
-      else handler()
-    }
-
   }
 
   processPVT(name, value, attrs) {
@@ -230,7 +218,7 @@ export class Aggregate extends AggregateBase {
 
   evtOrigin(t, target) {
     var origin = 'unknown'
-    
+
     if (t && t instanceof XMLHttpRequest) {
       var params = this.ee.context(t).params
       if (!params || !params.status || !params.method || !params.host || !params.pathname) return 'xhrOriginMissing'

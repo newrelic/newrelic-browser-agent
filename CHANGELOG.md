@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1223
+
+### Refactor loader architecture for improved developer experience
+
+This architectural release simplifies file structure and refactors the way features are composed, in preparation for future developer experience improvements. These changes are not anticipated to have impact on agent behavior or functionality.
+
 ## v1222
 
 ### EXPERIMENTAL - Unblock instrumented pages from the back/forward cache (w/ feature flag)

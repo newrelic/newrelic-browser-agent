@@ -53,8 +53,8 @@
     },
     {
       "browserName": "MicrosoftEdge",
-      "platform": "Windows 10",
-      "platformName": "Windows 10",
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
       "version": "98",
       "browserVersion": "98"
     }
@@ -62,7 +62,7 @@
   "safari": [
     {
       "browserName": "safari",
-      "platform": "Mac 12",
+      "platform": "Mac 13",
       "version": "16",
       "acceptInsecureCerts": false
     },

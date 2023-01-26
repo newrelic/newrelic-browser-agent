@@ -2,7 +2,7 @@ import { registerDrain } from "../../common/drain/drain"
 import { FeatureBase } from "./feature-base"
 import { onWindowLoad } from '../../common/window/load'
 import { isWorkerScope } from "../../common/util/global-scope"
-import { FEATURE_NAMES } from "../../loaders/features/features"
+import { warn } from '../../common/util/console'
 
 export class InstrumentBase extends FeatureBase {
   constructor(agentIdentifier, aggregator, featureName, auto = true) {
@@ -22,9 +22,13 @@ export class InstrumentBase extends FeatureBase {
       if (this.hasAggregator || !this.auto) return
       this.hasAggregator = true
       const lazyLoad = async () => {
-        const { Aggregate } = await import(`../../features/${this.featureName}/aggregate`)
-        new Aggregate(this.agentIdentifier, this.aggregator)
-        this.resolve()
+        try {
+          const { Aggregate } = await import(`../../features/${this.featureName}/aggregate`)
+          new Aggregate(this.agentIdentifier, this.aggregator)
+          this.resolve()
+        } catch (e) {
+          warn(`Failed to import aggregator class for ${this.featureName}`, e)
+        }
       }
       // theres no window.load event on non-browser scopes, lazy load immediately
       if (isWorkerScope) lazyLoad()

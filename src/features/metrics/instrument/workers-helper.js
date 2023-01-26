@@ -1,5 +1,6 @@
 export {insertSupportMetrics};    // export list
 import { globalScope, isWorkerScope } from '../../../common/util/global-scope'
+import { warn } from '../../../common/util/console'
 
 /**
  * True for each Worker type supported in browser's execution context. Not all browser versions may support certain Workers or options however.
@@ -101,6 +102,6 @@ function insertSupportMetrics(report) {
     }
     function handleInsertionError(e, workerType) {  // indicates the browser version doesn't support how code is injected, such as Proxy API
         report(`Workers/${workerType}/SM/Unsupported`); // expected to be niche & for older borderline-ES6 browser versions
-        console.warn(`NR Agent: Unable to capture ${workerType} workers.`, e);
+        warn(`NR Agent: Unable to capture ${workerType} workers.`, e);
     }
 }

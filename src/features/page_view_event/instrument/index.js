@@ -19,7 +19,7 @@ export class Instrument extends InstrumentBase {
     mark(agentIdentifier, 'firstbyte', getLastTimestamp())
 
     onDOMContentLoaded(() => this.measureDomContentLoaded());
-    onWindowLoad(() => this.measureWindowLoaded());
+    onWindowLoad(() => this.measureWindowLoaded(), true); // we put this in the front of load listeners (useCapture=true) for better precision on measuring when it fires!
     this.importAggregator();  // the measureWindowLoaded cb should run *before* the page_view_event agg runs
   }
 

@@ -17,8 +17,7 @@ export class Configurable {
             }
           })
         }
-        if (!!value && typeof this[key] === 'object' && typeof value === 'object') this[key] = { ...this[key], ...value }
-        else this[key] = value
+        this[key] = value
       })
     } catch (err) {
       warn('An error occured while setting a Configurable', err)

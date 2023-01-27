@@ -8,10 +8,10 @@ export const defaults = {
 }
 
 export function gosNREUM() {
-  if (!globalScope?.NREUM) {
+  if (!globalScope.NREUM) {
     globalScope.NREUM = {}
   }
-  if (typeof (globalScope?.newrelic) === 'undefined') globalScope.newrelic = globalScope.NREUM
+  if (typeof globalScope.newrelic === 'undefined') globalScope.newrelic = globalScope.NREUM
   return globalScope.NREUM
 }
 
@@ -53,20 +53,16 @@ export function gosNREUMInit() {
 export function gosNREUMOriginals() {
   let nr = gosNREUM()
   if (!nr.o) {
-    var win = self
-    // var doc = win.document
-    var XHR = win.XMLHttpRequest
-
     nr.o = {
-      ST: setTimeout,
-      SI: win.setImmediate,
-      CT: clearTimeout,
-      XHR: XHR,
-      REQ: win.Request,
-      EV: win.Event,
-      PR: win.Promise,
-      MO: win.MutationObserver, // this'll be undefined if not in a web window
-      FETCH: win.fetch
+      ST: globalScope.setTimeout,
+      SI: globalScope.setImmediate,
+      CT: globalScope.clearTimeout,
+      XHR: globalScope.XMLHttpRequest,
+      REQ: globalScope.Request,
+      EV: globalScope.Event,
+      PR: globalScope.Promise,
+      MO: globalScope.MutationObserver, // this'll be undefined if not in a web window
+      FETCH: globalScope.fetch
     }
   }
   return nr

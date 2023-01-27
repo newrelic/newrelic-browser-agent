@@ -18,11 +18,9 @@ export class Instrument extends InstrumentBase {
     findStartTime(agentIdentifier)
     mark(agentIdentifier, 'firstbyte', getLastTimestamp())
 
-    onWindowLoad(() => { 
-      this.measureWindowLoaded(); 
-      if (isBrowserScope) this.importAggregator() 
-    })
-    onDOMContentLoaded(() => this.measureDomContentLoaded())
+    onDOMContentLoaded(() => this.measureDomContentLoaded());
+    onWindowLoad(() => this.measureWindowLoaded());
+    this.importAggregator();  // the measureWindowLoaded cb should run *before* the page_view_event agg runs
   }
 
   // should be called on window.load or window.onload, will not be called if agent is loaded after window load

@@ -6,7 +6,7 @@ import { handle } from '../../../common/event-emitter/handle'
 import { subscribeToVisibilityChange, initializeHiddenTime } from '../../../common/window/page-visibility'
 import { documentAddEventListener, windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { getOffset, now } from '../../../common/timing/now'
-import { getConfigurationValue, originals } from '../../../common/config/config'
+import { originals } from '../../../common/config/config'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
@@ -16,7 +16,7 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator, auto=true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    if (!this.isEnabled() || !isBrowserScope) return;  // CWV is irrelevant outside web context
+    if (!isBrowserScope) return;  // CWV is irrelevant outside web context
 
     this.pageHiddenTime = initializeHiddenTime()  // synonymous with initial visibilityState
     this.performanceObserver
@@ -55,8 +55,6 @@ export class Instrument extends InstrumentBase {
       documentAddEventListener(e, (...args) => this.captureInteraction(...args));
     })
 
-    // page visibility events
-    this.importAggregator()
     // Document visibility state becomes hidden
     subscribeToVisibilityChange(() => {
       // time is only recorded to be used for short-circuit logic in the observer callbacks
@@ -66,10 +64,9 @@ export class Instrument extends InstrumentBase {
 
     // Window fires its pagehide event (typically on navigation; this occurrence is a *subset* of vis change)
     windowAddEventListener('pagehide', () => handle('winPagehide', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee) );
-  }
-
-  isEnabled() {
-    return getConfigurationValue(this.agentIdentifier, 'page_view_timing.enabled') !== false
+    
+    // page visibility events
+    this.importAggregator()
   }
 
   // paint metrics

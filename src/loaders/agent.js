@@ -48,6 +48,8 @@ export class Agent {
             gosNREUMInitializedAgents(this.agentIdentifier, this.features, 'features')
         } catch (err) {
             warn(`Failed to initialize instrument classes`, err)
+            // unwrap window apis to their originals
+            // remove agent if initialized to free resources ?
             return false
         }
     }

@@ -12,7 +12,7 @@ export class HandlerCache {
     /** @private @type {Function[]} */
     #cache = []
     /** @private @type {Timeout} */
-    #settleTimer = setTimeout(() => this.close(), 5000)
+    #settleTimer = setTimeout(() => this.#close(), 5000)
 
     /**
      * tell the handlerCache that its ok to immediately execute the callbacks that are triggered by the ee from this moment on

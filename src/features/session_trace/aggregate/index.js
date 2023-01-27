@@ -79,7 +79,7 @@ export class Aggregate extends AggregateBase {
     this.laststart = 0
     findStartTime(agentIdentifier)
 
-    this.ee.on('feat-stn', () => {
+    registerHandler('feat-stn', () => {
       this.storeTiming(window.performance.timing)
 
       var scheduler = new HarvestScheduler('resources', {
@@ -119,11 +119,11 @@ export class Aggregate extends AggregateBase {
         return this.takeSTNs(options.retry)
       }
       handlerCache.decide(true)
-    })
+    }, this.featureName, this.ee)
 
-    this.ee.on('block-stn', () => {
+    registerHandler('block-stn', () => {
       handlerCache.decide(false)
-    })
+    }, this.featureName, this.ee)
 
     // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...
     registerHandler('bst', (...args) => handlerCache.settle(() => this.storeEvent(...args)), this.featureName, this.ee)
@@ -196,8 +196,8 @@ export class Aggregate extends AggregateBase {
     }
 
     try {
-    // webcomponents-lite.js can trigger an exception on currentEvent.target getter because
-    // it does not check currentEvent.currentTarget before calling getRootNode() on it
+      // webcomponents-lite.js can trigger an exception on currentEvent.target getter because
+      // it does not check currentEvent.currentTarget before calling getRootNode() on it
       evt.o = this.evtOrigin(currentEvent.target, target)
     } catch (e) {
       evt.o = this.evtOrigin(null, target)
@@ -298,8 +298,7 @@ export class Aggregate extends AggregateBase {
   }
 
   storeSTN(stn) {
-    if (this.blocked) return
-  // limit the number of data that is stored
+    // limit the number of data that is stored
     if (this.nodeCount >= this.maxNodesPerHarvest) return
 
     var traceArr = this.trace[stn.n]
@@ -310,7 +309,7 @@ export class Aggregate extends AggregateBase {
   }
 
   mergeSTNs(key, nodes) {
-  // limit the number of data that is stored
+    // limit the number of data that is stored
     if (this.nodeCount >= this.maxNodesPerHarvest) return
 
     var traceArr = this.trace[key]
@@ -321,7 +320,7 @@ export class Aggregate extends AggregateBase {
   }
 
   takeSTNs(retry) {
-  // if the observer is not being used, this checks resourcetiming buffer every harvest
+    // if the observer is not being used, this checks resourcetiming buffer every harvest
     if (!supportsPerformanceObserver()) {
       this.storeResources(window.performance.getEntriesByType('resource'))
     }
@@ -346,7 +345,7 @@ export class Aggregate extends AggregateBase {
     }
 
     if (!this.ptid) {
-      const {userAttributes, atts, jsAttributes} = getInfo(this.agentIdentifier)
+      const { userAttributes, atts, jsAttributes } = getInfo(this.agentIdentifier)
       stnInfo.qs.ua = userAttributes
       stnInfo.qs.at = atts
       var ja = stringify(jsAttributes)

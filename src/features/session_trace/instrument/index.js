@@ -112,7 +112,7 @@ export class Instrument extends InstrumentBase {
 
     function onResourceTimingBufferFull(e) {
 
-      handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)], undefined, FEATURE_NAMES.jserrors, ee)
+      handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)], undefined, FEATURE_NAMES.sessionTrace, ee)
 
       // stop recording once buffer is full
       if (window.performance['c' + learResourceTimings]) {

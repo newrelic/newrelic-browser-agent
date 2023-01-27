@@ -4,21 +4,26 @@
  */
 import { mapOwn } from './map-own'
 import { ee } from '../event-emitter/contextual-ee'
-import { gosNREUM } from '../window/nreum'
+import { handle } from '../event-emitter/handle'
 import { drain } from '../drain/drain'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
+const bucketMap = {
+  stn: FEATURE_NAMES.sessionTrace,
+  err: FEATURE_NAMES.jserrors,
+  ins: FEATURE_NAMES.pageAction,
+  spa: FEATURE_NAMES.spa
+}
+
 export function activateFeatures (flags, agentIdentifier) {
-  const nr = gosNREUM()
   var sharedEE = ee.get(agentIdentifier)
   if (!(flags && typeof flags === 'object')) return
   mapOwn(flags, function (flag, val) {
-    if (!val) return sharedEE.emit('block-' + flag, [])
+    if (!val) return handle('block-' + flag, [], undefined, bucketMap[flag], sharedEE)
     if (!val || activatedFeatures[flag]) return
-    sharedEE.emit('feat-' + flag, [])
+    handle('feat-' + flag, [], undefined, bucketMap[flag], sharedEE)
     activatedFeatures[flag] = true
   })
-
   drain(agentIdentifier, FEATURE_NAMES.pageViewEvent)
 }
 

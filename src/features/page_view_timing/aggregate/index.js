@@ -61,7 +61,7 @@ export class Aggregate extends AggregateBase {
     }, maxLCPTimeSeconds * 1000)
 
     // send initial data sooner, then start regular
-    this.ee.on(`drain-${this.featureName}`, () => this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds))
+    this.ee.on(`drain-${this.featureName}`, () => {if (!this.blocked) this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)})
 
     drain(this.agentIdentifier, this.featureName)
   }

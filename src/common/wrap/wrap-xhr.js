@@ -11,6 +11,7 @@ import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { originals } from '../config/config'
 import { globalScope } from '../util/global-scope'
+import { warn } from '../util/console'
 
 const wrapped = {}
 // eslint-disable-next-line
@@ -44,7 +45,7 @@ export function wrapXhr (sharedEE) {
         ee.emit('new-xhr', [xhr], xhr)
         xhr.addEventListener(READY_STATE_CHANGE, wrapXHR, eventListenerOpts(false))
       } catch (e) {
-        console.error(e)
+        warn('An error occured while intercepting XHR', e)
         try {
           ee.emit('internal-error', [e])
         } catch (err) {

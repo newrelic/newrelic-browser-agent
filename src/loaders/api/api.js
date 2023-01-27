@@ -120,7 +120,7 @@ export function setAPI(agentIdentifier, nr, forceDrain) {
   if (isWorkerScope) lazyLoad()
   // try to stay out of the way of the window.load event, lazy load once that has finished.
   else onWindowLoad(() => lazyLoad(), true)
-  
+
   function lazyLoad() {
     import('./apiAsync').then(({ setAPI }) => {
       setAPI(agentIdentifier)

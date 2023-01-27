@@ -1,14 +1,10 @@
-import { asyncFeatures, syncFeatures } from './features'
+import { FEATURE_NAMES } from './features'
 import { getConfigurationValue, getRuntime } from '../../common/config/config'
 
-const featureNames = [...asyncFeatures, ...syncFeatures]
+const featureNames = Object.values(FEATURE_NAMES)
 
 function isEnabled(name, agentIdentifier) {
-  return getRuntime(agentIdentifier).disabled !== true && getConfigurationValue(agentIdentifier, `${name}.enabled`) !== false
-}
-
-export function isAuto(name, agentIdentifier) {
-  return getConfigurationValue(agentIdentifier, `${name}.auto`) !== false && !asyncFeatures.includes(name)
+  return getConfigurationValue(agentIdentifier, `${name}.enabled`) !== false
 }
 
 export function getEnabledFeatures(agentIdentifier) {

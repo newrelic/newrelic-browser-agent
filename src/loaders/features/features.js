@@ -9,20 +9,6 @@ export const FEATURE_NAMES = {
     spa: "spa"
 }
 
-export const asyncFeatures = [
-    FEATURE_NAMES.metrics
-]
-
-export const syncFeatures = [
-    FEATURE_NAMES.ajax,
-    FEATURE_NAMES.jserrors,
-    FEATURE_NAMES.pageAction,
-    FEATURE_NAMES.pageViewEvent,
-    FEATURE_NAMES.pageViewTiming,
-    FEATURE_NAMES.sessionTrace,
-    FEATURE_NAMES.spa
-]
-
 // this is the instrumentation order that has been traditionally implemented.
 // unclear if there are any ramifications for the order of wrapping events, so enforcing this order intentionally for now
 export const featurePriority = {

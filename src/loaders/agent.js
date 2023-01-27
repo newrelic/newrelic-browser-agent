@@ -8,6 +8,7 @@ import { Aggregator } from '../common/aggregate/aggregator'
 import { gosNREUMInitializedAgents } from '../common/window/nreum'
 import { generateRandomHexString } from '../common/ids/unique-id'
 import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
+import { warn } from '../common/util/console'
 
 
 export class Agent {
@@ -40,16 +41,15 @@ export class Agent {
                 if (enabledFeatures[f.featureName]) {
                     const dependencies = getFeatureDependencyNames(f.featureName)
                     const hasAllDeps = dependencies.every(x => enabledFeatures[x])
-
-                    if (!hasAllDeps) console.warn(`New Relic: ${f.featureName} is enabled but one or more dependent features has been disabled (${JSON.stringify(dependencies)}). This may cause unintended consequences or missing data...`)
-
+                    if (!hasAllDeps) warn(`${f.featureName} is enabled but one or more dependent features has been disabled (${JSON.stringify(dependencies)}). This may cause unintended consequences or missing data...`)
                     this.features[f.featureName] = new f(this.agentIdentifier, this.sharedAggregator)
                 }
             })
             gosNREUMInitializedAgents(this.agentIdentifier, this.features, 'features')
-            return this
         } catch (err) {
-            console.error(err)
+            warn(`Failed to initialize instrument classes`, err)
+            // unwrap window apis to their originals
+            // remove agent if initialized to free resources ?
             return false
         }
     }

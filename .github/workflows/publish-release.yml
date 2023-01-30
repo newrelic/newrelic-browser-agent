@@ -134,5 +134,5 @@ jobs:
         run: npm ci
       - name: Build and raise PR to docs-website
         run: |
-          node tools/scripts/upload-to-nr.js \
+          node tools/scripts/docs-website/create-docs-pr.js \
             -t=v$(cat VERSION)

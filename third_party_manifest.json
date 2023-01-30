@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Fri Jan 20 2023 21:58:25 GMT-0500 (Eastern Standard Time)",
+  "lastUpdated": "Mon Jan 30 2023 11:56:33 GMT-0500 (Eastern Standard Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -157,6 +157,17 @@
       "versionedRepoUrl": "https://github.com/newrelic/nr-querypack/tree/v3.12.0",
       "licenseFile": "node_modules/@newrelic/nr-querypack/LICENSE",
       "licenseUrl": "https://github.com/newrelic/nr-querypack/blob/v3.12.0/LICENSE",
+      "licenseTextSource": "file"
+    },
+    "@octokit/rest@19.0.7": {
+      "name": "@octokit/rest",
+      "version": "19.0.7",
+      "range": "^19.0.7",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/octokit/rest.js",
+      "versionedRepoUrl": "https://github.com/octokit/rest.js/tree/v19.0.7",
+      "licenseFile": "node_modules/@octokit/rest/LICENSE",
+      "licenseUrl": "https://github.com/octokit/rest.js/blob/v19.0.7/LICENSE",
       "licenseTextSource": "file"
     },
     "@types/jest@28.1.1": {

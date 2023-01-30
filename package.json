@@ -77,6 +77,7 @@
     "@faker-js/faker": "^7.6.0",
     "@newrelic/newrelic-oss-cli": "^0.1.2",
     "@newrelic/nr-querypack": "https://git@github.com/newrelic/nr-querypack",
+    "@octokit/rest": "^19.0.7",
     "@types/jest": "28.1.1",
     "@types/node": "^17.0.30",
     "@typescript-eslint/eslint-plugin": "^5.36.1",

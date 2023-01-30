@@ -17,6 +17,12 @@ Prevent time slice metric collection for ajax calls when such a call matches an 
 ### Bind navigator scope to sendBeacon
 Some browser versions will throw errors if sendBeacon does not have the navigator scope bound to it. A fail-safe action of binding the navigator scope to sendBeacon was added to try to support those browsers.
 
+### Add automation for docs-site updates on new releases
+A new release of the Browser Agent will automatically raise a PR to the docs-site team with relevant changelog items.
+
+### Preserve unhandledPromiseRejection reasons as human-readable strings in error payloads
+The agent will attempt to preserve unhandledPromiseRejection reasons as human-readable messages on the Error payload that gets harvested. The previous strategy did not always work, because Promise.reject can pass any value, not just strings.
+
 ## v1223
 
 ### Refactor loader architecture for improved developer experience

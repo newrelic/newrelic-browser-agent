@@ -14,28 +14,32 @@ export class InstrumentBase extends FeatureBase {
     this.hasAggregator = false
     this.auto = auto
 
+    /** @type {Function} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
+    this.abortHandler;
+
     if (auto) registerDrain(agentIdentifier, featureName)
   }
 
+  /** This is responsible for pulling in and executing the latter part of the feature--its aggregator. The first part--the instrumentation--should call this at the end of its setup. */
   importAggregator() {
-    try {
-      if (this.hasAggregator || !this.auto) return
-      this.hasAggregator = true
-      const lazyLoad = async () => {
-        try {
-          const { Aggregate } = await import(`../../features/${this.featureName}/aggregate`)
-          new Aggregate(this.agentIdentifier, this.aggregator)
-          this.resolve()
-        } catch (e) {
-          warn(`Failed to import aggregator class for ${this.featureName}`, e)
-        }
+    if (this.hasAggregator || !this.auto) return
+    this.hasAggregator = true
+    const waitForWindowLoad = async () => {
+      /** Note this try-catch differs from the one in Agent.start() in that it's placed later in a page's lifecycle and
+       *  it's only responsible for aborting its one specific feature, rather than all. */
+      try {
+        const { Aggregate } = await import(`../../features/${this.featureName}/aggregate`)
+        new Aggregate(this.agentIdentifier, this.aggregator)
+        this.resolve();
+      } catch (e) {
+        warn(`Failed to import aggregator module for ${this.featureName} -`, e);
+        this.abortHandler?.();  // undo any important alterations made to the page
+        this.reject(e);
       }
-      // theres no window.load event on non-browser scopes, lazy load immediately
-      if (isWorkerScope) lazyLoad()
-      // try to stay out of the way of the window.load event, lazy load once that has finished.
-      else onWindowLoad(() => lazyLoad(), true)
-    } catch (err) {
-      this.reject(err)
     }
+
+    // Workers have no window load event, and so it's okay to run the feature's aggregator asap. For web UI, it should wait for the window to load first.
+    if (isWorkerScope) waitForWindowLoad();
+    else onWindowLoad(() => waitForWindowLoad(), true);
   }
 }

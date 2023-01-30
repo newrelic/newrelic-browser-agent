@@ -2,11 +2,13 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import globalScope from "./global-scope"
 export const submitData = {}
 
 /**
- * Do NOT call this function outside of a guaranteed web window environment.
+ * Send via JSONP. Do NOT call this function outside of a guaranteed web window environment.
+ * @param {string} url 
+ * @param {string} jsonp 
+ * @returns {Element}
  */
 submitData.jsonp = function jsonp (url, jsonp) {
   var element = document.createElement('script')
@@ -17,6 +19,13 @@ submitData.jsonp = function jsonp (url, jsonp) {
   return element
 }
 
+/**
+ * Send via XHR
+ * @param {string} url 
+ * @param {string} body 
+ * @param {boolean} sync 
+ * @returns {XMLHttpRequest}
+ */
 submitData.xhr = function xhr (url, body, sync) {
   var request = new XMLHttpRequest()
 
@@ -41,7 +50,9 @@ submitData.xhr = function xhr (url, body, sync) {
 // }
 
 /**
- * Do NOT call this function outside of a guaranteed web window environment.
+ * Send by appending an <img> element to the page. Do NOT call this function outside of a guaranteed web window environment.
+ * @param {string} url 
+ * @returns {Element}
  */
 submitData.img = function img (url) {
   var element = new Image()
@@ -50,7 +61,10 @@ submitData.img = function img (url) {
 }
 
 /**
- * Do NOT call this function outside of a guaranteed web window environment.
+ * Send via sendBeacon. Do NOT call this function outside of a guaranteed web window environment.
+ * @param {string} url 
+ * @param {string} body 
+ * @returns {boolean}
  */
 submitData.beacon = function (url, body) {
   // Navigator has to be bound to ensure it does not error in some browsers

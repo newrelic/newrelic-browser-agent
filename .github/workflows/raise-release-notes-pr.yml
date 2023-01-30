@@ -1,4 +1,4 @@
-name: Push Release To All Platforms
+name: Raise Release Notes PR with Docs Site
 
 on:
   workflow_dispatch:

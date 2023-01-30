@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
 */
-import { wrapMutation, wrapPromise, wrapHistory, wrapEvents, wrapTimer, wrapFetch, wrapXhr, wrapJson } from '../../../common/wrap'
+import { wrapMutation, wrapPromise, wrapHistory, wrapEvents, wrapTimer, wrapFetch, wrapXhr, wrapJsonP } from '../../../common/wrap'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { getRuntime } from '../../../common/config/config'
@@ -29,7 +29,7 @@ export class Instrument extends InstrumentBase {
         let startHash
 
         const tracerEE = this.ee.get('tracer')
-        const jsonpEE = wrapJson(this.ee)
+        const jsonpEE = wrapJsonP(this.ee)
         const promiseEE = wrapPromise(this.ee)
         const eventsEE = wrapEvents(this.ee)
         const timerEE = wrapTimer(this.ee)

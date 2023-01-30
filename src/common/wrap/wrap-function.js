@@ -153,6 +153,13 @@ export function wrapInPlace(obj, fnName, wrapper) {
   obj[fnName] = wrapFunction(fn, wrapper)
 }
 
+/** If a func-property on an object, e.g. window, was previously wrapped (by this module), this will remove that layer. */
+export function unwrapFunction(obj, fnName) {
+  if (obj[fnName]?.[flag]) {  // previous state of the function property is stored under our wrapper's "flag"; we don't wrap properties that *were* undefined to begin with
+    obj[fnName] = obj[fnName][flag];
+  }
+}
+
 export function argsToArray() {
   var len = arguments.length
   var arr = new Array(len)

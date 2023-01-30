@@ -4,10 +4,17 @@
  */
 
 import { ee as baseEE } from '../event-emitter/contextual-ee'
-import { createWrapperWithEmitter as wfn } from './wrap-function'
+import { createWrapperWithEmitter as wfn, unwrapFunction } from './wrap-function'
 import { globalScope } from '../util/global-scope'
 
 const wrapped = {}
+const SET_TIMEOUT = 'setTimeout'
+const SET_INTERVAL = 'setInterval'
+const CLEAR_TIMEOUT = 'clearTimeout'
+const START = '-start'
+const DASH = '-'
+const TIMER_NAMES = [SET_TIMEOUT, 'setImmediate', SET_INTERVAL, CLEAR_TIMEOUT, 'clearImmediate'];
+
 //eslint-disable-next-line
 export function wrapTimer(sharedEE) {
   const ee = scopedEE(sharedEE)
@@ -15,15 +22,9 @@ export function wrapTimer(sharedEE) {
   wrapped[ee.debugId] = true
   var wrapFn = wfn(ee)
 
-  var SET_TIMEOUT = 'setTimeout'
-  var SET_INTERVAL = 'setInterval'
-  var CLEAR_TIMEOUT = 'clearTimeout'
-  var START = '-start'
-  var DASH = '-'
-
-  wrapFn.inPlace(globalScope, [SET_TIMEOUT, 'setImmediate'], SET_TIMEOUT + DASH)
-  wrapFn.inPlace(globalScope, [SET_INTERVAL], SET_INTERVAL + DASH)
-  wrapFn.inPlace(globalScope, [CLEAR_TIMEOUT, 'clearImmediate'], CLEAR_TIMEOUT + DASH)
+  wrapFn.inPlace(globalScope, TIMER_NAMES.slice(0, 2), SET_TIMEOUT + DASH)
+  wrapFn.inPlace(globalScope, TIMER_NAMES.slice(2, 3), SET_INTERVAL + DASH)
+  wrapFn.inPlace(globalScope, TIMER_NAMES.slice(3), CLEAR_TIMEOUT + DASH)
 
   ee.on(SET_INTERVAL + START, interval)
   ee.on(SET_TIMEOUT + START, timer)
@@ -40,7 +41,13 @@ export function wrapTimer(sharedEE) {
 
   return ee
 }
-
+export function unwrapTimer(sharedEE) {
+  const ee = scopedEE(sharedEE);
+  if (wrapped[ee.debugId] === true) {
+    TIMER_NAMES.forEach(fn => unwrapFunction(globalScope, fn));
+    wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
+  }
+}
 export function scopedEE(sharedEE){
   return (sharedEE || baseEE).get('timer')
 }

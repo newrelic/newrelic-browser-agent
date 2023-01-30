@@ -4,16 +4,17 @@
  */
 
 import { handle } from '../../../common/event-emitter/handle'
-import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { getOrSet } from '../../../common/util/get-or-set'
-import { wrapRaf, wrapTimer, wrapEvents, wrapXhr } from '../../../common/wrap'
+import { wrapRaf, wrapTimer, wrapEvents, wrapXhr, unwrapRaf, unwrapTimer, unwrapEvents, unwrapXhr } from '../../../common/wrap'
 import slice from 'lodash._slice'
 import './debug'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, NR_ERR_PROP } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { globalScope } from '../../../common/util/global-scope'
+import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
+import { getRuntime } from '../../../common/config/config'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -22,76 +23,63 @@ export class Instrument extends InstrumentBase {
     // skipNext counter to keep track of uncaught
     // errors that will be the same as caught errors.
     this.skipNext = 0
-    this.handleErrors = false
-    this.origOnerror = globalScope?.onerror
+    this.origOnerror = globalScope.onerror
 
-    const state = this
+    const thisInstrument = this;
 
-    const agentRuntime = getRuntime(this.agentIdentifier)
-    // Declare that we are using err instrumentation
-    agentRuntime.features.err = true
-
-    state.ee.on('fn-start', function (args, obj, methodName) {
-      if (state.handleErrors) state.skipNext += 1
+    thisInstrument.ee.on('fn-start', function (args, obj, methodName) {
+      if (thisInstrument.abortHandler) thisInstrument.skipNext += 1
     })
 
-    state.ee.on('fn-err', function (args, obj, err) {
-      if (state.handleErrors && !err[NR_ERR_PROP]) {
+    thisInstrument.ee.on('fn-err', function (args, obj, err) {
+      if (thisInstrument.abortHandler && !err[NR_ERR_PROP]) {
         getOrSet(err, NR_ERR_PROP, function getVal() {
           return true
         })
         this.thrown = true
-        notice(err, undefined, state.ee)
+        notice(err, undefined, thisInstrument.ee)
       }
     })
 
-    state.ee.on('fn-end', function () {
-      if (!state.handleErrors) return
-      if (!this.thrown && state.skipNext > 0) state.skipNext -= 1
+    thisInstrument.ee.on('fn-end', function () {
+      if (!thisInstrument.abortHandler) return
+      if (!this.thrown && thisInstrument.skipNext > 0) thisInstrument.skipNext -= 1
     })
 
-    state.ee.on('internal-error', (e) => {
-      handle('ierr', [e, now(), true], undefined, FEATURE_NAMES.jserrors, state.ee)
+    thisInstrument.ee.on('internal-error', function (e) {
+      handle('ierr', [e, now(), true], undefined, FEATURE_NAMES.jserrors, thisInstrument.ee)
     })
 
-    const prevOnError = globalScope?.onerror
+    // Tack on our error handler onto the existing global one.
     globalScope.onerror = (...args) => {
-      if (prevOnError) prevOnError(...args)
+      if (this.origOnerror) this.origOnerror(...args)
       this.onerrorHandler(...args)
       return false
     }
 
-    try {
-      globalScope?.addEventListener('unhandledrejection', (e) => {
-        /** rejections can contain data of any type -- this is an effort to keep the message human readable */
-        const err = castReasonToError(e.reason)
-        handle('err', [err, now(), false, { unhandledPromiseRejection: 1 }], undefined, FEATURE_NAMES.jserrors, this.ee)
-      })
-    } catch (err) {
-      // do nothing -- addEventListener is not supported
-    }
+    globalScope.addEventListener('unhandledrejection', (e) => {
+      /** rejections can contain data of any type -- this is an effort to keep the message human readable */
+      const err = castReasonToError(e.reason)
+      handle('err', [err, now(), false, { unhandledPromiseRejection: 1 }], undefined, FEATURE_NAMES.jserrors, this.ee)
+    })
 
-    try {
-      throw new Error()
-    } catch (e) {
-      // Only wrap stuff if try/catch gives us useful data. It doesn't in IE < 10.
-      if ('stack' in e) {
-        wrapTimer(this.ee)
-        wrapRaf(this.ee)
+    wrapRaf(this.ee);
+    wrapTimer(this.ee);
+    wrapEvents(this.ee);
+    if(getRuntime(agentIdentifier).xhrWrappable) wrapXhr(this.ee);
 
-        if ('addEventListener' in globalScope) {
-          wrapEvents(this.ee)
-        }
+    this.abortHandler = this.#abort;  // we also use this as a flag to denote that the feature is active or on and handling errors
+    this.importAggregator();
+  }
 
-        if (agentRuntime.xhrWrappable) {
-          wrapXhr(this.ee)
-        }
-
-        state.handleErrors = true
-      }
-    }
-
-    this.importAggregator()
+  /** Restoration and resource release tasks to be done if JS error loader is being aborted. */
+  #abort() {
+    globalScope.onerror = this.origOnerror;
+    unwrapRaf(this.ee);
+    unwrapTimer(this.ee);
+    unwrapEvents(this.ee);
+    if(getRuntime(this.agentIdentifier).xhrWrappable) unwrapXhr(this.ee);
+    this.abortHandler = undefined; // weakly allow this abort op to run only once
   }
 
   /**

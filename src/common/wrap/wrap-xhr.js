@@ -14,6 +14,8 @@ import { globalScope } from '../util/global-scope'
 import { warn } from '../util/console'
 
 const wrapped = {}
+const XHR_PROPS = ['open', 'send']; // these are the specific funcs being wrapped on all XMLHttpRequests(.prototype)
+
 // eslint-disable-next-line
 export function wrapXhr (sharedEE) {
   var baseEE = sharedEE || contextualEE
@@ -61,7 +63,7 @@ export function wrapXhr (sharedEE) {
 
   XHR.prototype = OrigXHR.prototype
 
-  wrapFn.inPlace(XHR.prototype, ['open', 'send'], '-xhr-', getObject)
+  wrapFn.inPlace(XHR.prototype, XHR_PROPS, '-xhr-', getObject)
 
   ee.on('send-xhr-start', function (args, xhr) {
     wrapOnreadystatechange(args, xhr)
@@ -187,7 +189,16 @@ export function wrapXhr (sharedEE) {
 
   return ee
 }
-
+export function unwrapXhr(sharedEE) {
+  const ee = scopedEE(sharedEE);
+  if (wrapped[ee.debugId] === true) {
+    globalScope.XMLHttpRequest = originals.XHR;
+    XHR_PROPS.forEach(fn => { // the original object was replaced AND its prototype was altered
+      unwrapFunction(globalScope.XMLHttpRequest.prototype, fn);
+    });
+    wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
+  }
+}
 
 export function scopedEE(sharedEE){
   return (sharedEE || contextualEE).get('xhr')

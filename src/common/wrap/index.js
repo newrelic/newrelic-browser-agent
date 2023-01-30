@@ -1,46 +1,14 @@
 
-import {wrapFetch as wf} from './wrap-fetch'
-import {wrapTimer as wt} from './wrap-timer'
-import {wrapRaf as wr} from './wrap-raf'
-import {wrapHistory as wh} from './wrap-history'
-import {wrapJsonP as wj} from './wrap-jsonp'
-import {wrapMutation as wm} from './wrap-mutation'
-import {wrapPromise as wp} from './wrap-promise'
-import {wrapXhr as wx} from './wrap-xhr'
-import {wrapEvents as we} from './wrap-events'
+import {wrapFetch} from './wrap-fetch'
+import {wrapTimer, unwrapTimer} from './wrap-timer'
+import {wrapRaf, unwrapRaf} from './wrap-raf'
+import {wrapHistory} from './wrap-history'
+import {wrapJsonP} from './wrap-jsonp'
+import {wrapMutation} from './wrap-mutation'
+import {wrapPromise} from './wrap-promise'
+import {wrapXhr, unwrapXhr} from './wrap-xhr'
+import {wrapEvents, unwrapEvents} from './wrap-events'
 
-export function wrapEvents(sharedEE) {
-  return we(sharedEE)
-}
+export {wrapEvents, wrapFetch, wrapHistory, wrapJsonP, wrapMutation, wrapPromise, wrapRaf, wrapTimer, wrapXhr};
 
-export function wrapFetch(sharedEE) {
-  return wf(sharedEE)
-}
-
-export function wrapHistory(sharedEE) {
-  return wh(sharedEE)
-}
-
-export function wrapJson(sharedEE) {
-  return wj(sharedEE)
-}
-
-export function wrapMutation(sharedEE) {
-  return wm(sharedEE)
-}
-
-export function wrapPromise(sharedEE) {
-  return wp(sharedEE)
-}
-
-export function wrapRaf(sharedEE) {
-  return wr(sharedEE)
-}
-
-export function wrapTimer(sharedEE) {
-  return wt(sharedEE)
-}
-
-export function wrapXhr(sharedEE) {
-  return wx(sharedEE)
-}
+export {unwrapEvents, unwrapRaf, unwrapTimer, unwrapXhr};

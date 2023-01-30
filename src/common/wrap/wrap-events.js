@@ -4,21 +4,20 @@
  */
 
 import {ee as baseEE} from '../event-emitter/contextual-ee'
-import { createWrapperWithEmitter as wfn } from './wrap-function'
+import { createWrapperWithEmitter as wfn, unwrapFunction } from './wrap-function'
 import { getOrSet } from '../util/get-or-set'
 import { globalScope, isBrowserScope } from '../util/global-scope'
 
 const wrapped = {}
+var XHR = XMLHttpRequest
+var ADD_EVENT_LISTENER = 'addEventListener'
+var REMOVE_EVENT_LISTENER = 'removeEventListener'
 
 export function wrapEvents(sharedEE) {
   var ee = scopedEE(sharedEE)
   if (wrapped[ee.debugId]) return ee
   wrapped[ee.debugId] = true
   var wrapFn = wfn(ee, true)
-
-  var XHR = XMLHttpRequest
-  var ADD_EVENT_LISTENER = 'addEventListener'
-  var REMOVE_EVENT_LISTENER = 'removeEventListener'
 
   // Guard against instrumenting environments w/o necessary features
   if ('getPrototypeOf' in Object) {
@@ -79,7 +78,17 @@ export function wrapEvents(sharedEE) {
 
   return ee
 }
-
+export function unwrapEvents(sharedEE) {
+  const ee = scopedEE(sharedEE);
+  if (wrapped[ee.debugId] === true) {
+    [ADD_EVENT_LISTENER, REMOVE_EVENT_LISTENER].forEach(fn => {
+      if (typeof document === 'object') unwrapFunction(document, fn);
+      unwrapFunction(globalScope, fn);
+      unwrapFunction(XHR.prototype, fn);
+    });
+    wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
+  }
+}
 export function scopedEE(sharedEE){
   return (sharedEE || baseEE).get('events')
 }

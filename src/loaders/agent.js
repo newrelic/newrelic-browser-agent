@@ -49,7 +49,7 @@ export class Agent {
             })
             gosNREUMInitializedAgents(this.agentIdentifier, this.features, NR_FEATURES_REF_NAME);
         } catch (err) {
-            warn(`Failed to initialize all enabled instrument classes -`, err)
+            warn(`Failed to initialize all enabled instrument classes (agent aborted) -`, err)
             for (const featName in this.features) { // this.features hold only features that have been instantiated
                 this.features[featName].abortHandler?.();
             }

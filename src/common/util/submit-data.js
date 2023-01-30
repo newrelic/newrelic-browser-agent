@@ -55,6 +55,6 @@ submitData.img = function img (url) {
 submitData.beacon = function (url, body) {
   // Navigator has to be bound to ensure it does not error in some browsers
   // https://xgwang.me/posts/you-may-not-know-beacon/#it-may-throw-error%2C-be-sure-to-catch
-  const send = globalScope.navigator.sendBeacon.bind(navigator)
+  const send = window.navigator.sendBeacon.bind(navigator)
   return send(url, body)
 }

@@ -5,15 +5,14 @@
 
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import slice from 'lodash._slice'
-import { mapOwn } from '../util/map-own'
 import { globalScope } from '../util/global-scope'
+import { flag, unwrapFunction } from './wrap-function'
 
-var win = globalScope
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
 var bodyMethods = ['arrayBuffer', 'blob', 'json', 'text', 'formData']
-var Req = win.Request
-var Res = win.Response
+var Req = globalScope.Request
+var Res = globalScope.Response
 var proto = 'prototype'
 var ctxId = 'nr@context'
 
@@ -21,19 +20,18 @@ const wrapped = {}
 
 export function wrapFetch(sharedEE){
   const ee = scopedEE(sharedEE)
-  if (!(Req && Res && win.fetch)) {
+  if (!(Req && Res && globalScope.fetch)) {
     return ee
   }
 
   if (wrapped[ee.debugId]) return ee
   wrapped[ee.debugId] = true
 
-  mapOwn(bodyMethods, function (i, name) {
-    wrapPromiseMethod(Req[proto], name, bodyPrefix)
-    wrapPromiseMethod(Res[proto], name, bodyPrefix)
-  })
-
-  wrapPromiseMethod(win, 'fetch', prefix)
+  bodyMethods.forEach(method => {
+    wrapPromiseMethod(Req[proto], method, bodyPrefix)
+    wrapPromiseMethod(Res[proto], method, bodyPrefix)
+  });
+  wrapPromiseMethod(globalScope, 'fetch', prefix)
 
   ee.on(prefix + 'end', function (err, res) {
     var ctx = this
@@ -72,12 +70,23 @@ export function wrapFetch(sharedEE){
           throw err
         })
       }
+      target[name][flag] = fn;  // track original similar to in wrap-function.js, so that they can be unwrapped with ease
     }
   }
 
   return ee
 }
-
+export function unwrapFetch(sharedEE) {
+  const ee = scopedEE(sharedEE);
+  if (wrapped[ee.debugId] === true) {
+    bodyMethods.forEach(fnName => {
+      unwrapFunction(Req[proto], fnName);
+      unwrapFunction(Res[proto], fnName);
+    });
+    unwrapFunction(globalScope, "fetch");
+    wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
+  }
+}
 export function scopedEE(sharedEE){
   return (sharedEE || baseEE).get('fetch')
 }

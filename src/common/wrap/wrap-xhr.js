@@ -8,7 +8,7 @@
 import { wrapEvents } from './wrap-events'
 import { ee as contextualEE } from '../event-emitter/contextual-ee'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
-import { createWrapperWithEmitter as wfn } from './wrap-function'
+import { createWrapperWithEmitter as wfn, unwrapFunction } from './wrap-function'
 import { originals } from '../config/config'
 import { globalScope } from '../util/global-scope'
 import { warn } from '../util/console'
@@ -20,8 +20,10 @@ const XHR_PROPS = ['open', 'send']; // these are the specific funcs being wrappe
 export function wrapXhr (sharedEE) {
   var baseEE = sharedEE || contextualEE
   const ee = scopedEE(baseEE)
-  if (wrapped[ee.debugId]) return ee
-  wrapped[ee.debugId] = true
+
+  if (wrapped[ee.debugId]++)  // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
+    return ee;                // then we increment the count to track # of feats using this at runtime.
+  wrapped[ee.debugId] = 1;  // <- otherwise, first feature to wrap XHR
   wrapEvents(baseEE)
   var wrapFn = wfn(ee)
 
@@ -191,12 +193,13 @@ export function wrapXhr (sharedEE) {
 }
 export function unwrapXhr(sharedEE) {
   const ee = scopedEE(sharedEE);
-  if (wrapped[ee.debugId] === true) {
+  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this, but always decrement the count after checking it per unwrap call.
+  if (wrapped[ee.debugId]-- == 1) {
     globalScope.XMLHttpRequest = originals.XHR;
     XHR_PROPS.forEach(fn => { // the original object was replaced AND its prototype was altered
       unwrapFunction(globalScope.XMLHttpRequest.prototype, fn);
     });
-    wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
+    wrapped[ee.debugId] = Infinity; // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
   }
 }
 

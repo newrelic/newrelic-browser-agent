@@ -1,5 +1,5 @@
 
-import {wrapFetch} from './wrap-fetch'
+import {wrapFetch, unwrapFetch} from './wrap-fetch'
 import {wrapTimer, unwrapTimer} from './wrap-timer'
 import {wrapRaf, unwrapRaf} from './wrap-raf'
 import {wrapHistory} from './wrap-history'
@@ -11,4 +11,4 @@ import {wrapEvents, unwrapEvents} from './wrap-events'
 
 export {wrapEvents, wrapFetch, wrapHistory, wrapJsonP, wrapMutation, wrapPromise, wrapRaf, wrapTimer, wrapXhr};
 
-export {unwrapEvents, unwrapRaf, unwrapTimer, unwrapXhr};
+export {unwrapEvents, unwrapFetch, unwrapRaf, unwrapTimer, unwrapXhr};

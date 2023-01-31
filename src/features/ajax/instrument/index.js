@@ -9,7 +9,7 @@ import { ffVersion } from '../../../common/browser-version/firefox-version'
 import { dataSize } from '../../../common/util/data-size'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
-import { wrapFetch, wrapXhr } from '../../../common/wrap'
+import { wrapFetch, wrapXhr, unwrapFetch, unwrapXhr } from '../../../common/wrap'
 import { parseUrl } from '../../../common/url/parse-url'
 import { DT } from './distributed-tracing'
 import { responseSizeFromXhr } from './response-size'
@@ -22,35 +22,34 @@ var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
 
 var origRequest = originals.REQ
-var origXHR = globalScope?.XMLHttpRequest
+var origXHR = globalScope.XMLHttpRequest
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    const agentRuntime = getRuntime(this.agentIdentifier);
 
+    const agentRuntime = getRuntime(this.agentIdentifier);
     // Don't instrument Chrome for iOS, it is buggy and acts like there are URL verification issues
     if (!agentRuntime.xhrWrappable) return
-
-    agentRuntime.features.xhr = true;   // declare that we are using xhr instrumentation
 
     this.dt = new DT(this.agentIdentifier)
 
     this.handler = (type, args, ctx, group) => handle(type, args, ctx, group, this.ee)
-    this.wrappedFetch = getWrappedFetch(this.ee)
+    wrapFetch(this.ee)
     wrapXhr(this.ee)
     subscribeToEvents(this.agentIdentifier, this.ee, this.handler, this.dt)
 
-    this.importAggregator()
+    this.abortHandler = this.#abort;
+    this.importAggregator();
   }
-}
 
-// TODO update all of this to go into class and use this.ee for ee, handle, and register
-
-export function getWrappedFetch(ee, handler) {
-  var wrappedFetch = wrapFetch(ee)
-  return wrappedFetch
+  /** Restoration and resource release tasks to be done if Ajax loader is being aborted. */
+  #abort() {
+    unwrapFetch(this.ee);
+    unwrapXhr(this.ee);
+    this.abortHandler = null; // weakly allow this abort op to run only once
+  }
 }
 
 function subscribeToEvents(agentIdentifier, ee, handler, dt) {
@@ -88,19 +87,13 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
       captureXhrData(ctx, xhr)
     }, eventListenerOpts(false))
 
-    // In Firefox 34+, XHR ProgressEvents report pre-content-decoding sizes via
+    // In Firefox (v34+), XHR ProgressEvents report pre-content-decoding sizes via
     // their 'loaded' property, rather than post-decoding sizes. We want
     // post-decoding sizes for consistency with browsers where that's all we have.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1227674
     //
-    // In really old versions of Firefox (older than somewhere between 5 and 10),
-    // we don't reliably get a final XHR ProgressEvent which reflects the full
-    // size of the transferred resource.
-    //
-    // So, in both of these cases, we fall back to not using ProgressEvents to
-    // measure XHR sizes.
-
-    if (ffVersion && (ffVersion > 34 || ffVersion < 10)) return
+    // So we don't use ProgressEvents to measure XHR sizes for FF.
+    if (ffVersion) return;
 
     xhr.addEventListener('progress', function (event) {
       ctx.lastSize = event.loaded

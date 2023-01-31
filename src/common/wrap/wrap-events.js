@@ -22,13 +22,13 @@ export function wrapEvents(sharedEE) {
   // Guard against instrumenting environments w/o necessary features
   if ('getPrototypeOf' in Object) {
     if (isBrowserScope)
-      findAndWrapNode(document);
-    findAndWrapNode(globalScope);
-    findAndWrapNode(XHR.prototype)
+      findEventListenerProtoAndCb(document, wrapNode);
+    findEventListenerProtoAndCb(globalScope, wrapNode);
+    findEventListenerProtoAndCb(XHR.prototype, wrapNode);
     // eslint-disable-next-line
   } else if (XHR.prototype.hasOwnProperty(ADD_EVENT_LISTENER)) {
     wrapNode(globalScope)
-    wrapNode(XHR.prototype)
+    wrapNode(XHR.prototype) // CAUTION: this would conflict with wrap-xhr, and one of them end up not wrappable or wrapped; it's unknown the usage of this else-if case...
   }
 
   ee.on(ADD_EVENT_LISTENER + '-start', function (args, target) {
@@ -60,13 +60,6 @@ export function wrapEvents(sharedEE) {
     args[1] = this.wrapped || args[1]
   })
 
-  function findAndWrapNode(object) {
-    var step = object
-    // eslint-disable-next-line
-    while (step && !step.hasOwnProperty(ADD_EVENT_LISTENER)) { step = Object.getPrototypeOf(step) }
-    if (step) { wrapNode(step) }
-  }
-
   function wrapNode(node) {
     wrapFn.inPlace(node, [ADD_EVENT_LISTENER, REMOVE_EVENT_LISTENER], '-', uniqueListener)
   }
@@ -78,13 +71,26 @@ export function wrapEvents(sharedEE) {
 
   return ee
 }
+/**
+ * Find the base prototype of 'object' that has its own "addEventListener" property, and run some function on it.
+ * @param {Object} object - the initial object to traverse prototype chain on
+ * @param {Function} cb - the function to run on the ancestral object once found, accepts an object as a arg
+ * @param {Array} rest - [optional] any additional arguments to pass to the cb
+ */
+function findEventListenerProtoAndCb(object, cb, ...rest) {
+  let step = object;
+  // eslint-disable-next-line
+  while (step && !step.hasOwnProperty(ADD_EVENT_LISTENER)) { step = Object.getPrototypeOf(step) }
+  if (step) cb(step, ...rest);
+}
+
 export function unwrapEvents(sharedEE) {
   const ee = scopedEE(sharedEE);
   if (wrapped[ee.debugId] === true) {
     [ADD_EVENT_LISTENER, REMOVE_EVENT_LISTENER].forEach(fn => {
-      if (typeof document === 'object') unwrapFunction(document, fn);
-      unwrapFunction(globalScope, fn);
-      unwrapFunction(XHR.prototype, fn);
+      if (typeof document === 'object')  findEventListenerProtoAndCb(document, unwrapFunction, fn); //==> unwrapFunction(findProto(document)?, fn);
+      findEventListenerProtoAndCb(globalScope, unwrapFunction, fn);
+      findEventListenerProtoAndCb(XHR.prototype, unwrapFunction, fn);
     });
     wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
   }

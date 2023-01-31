@@ -46,7 +46,6 @@ The Browser agent is loaded onto a web page in two parts. To install a version o
    NREUM.info={
      "licenseKey":"example",
      "applicationID": 123,
-     "agent": "http://localhost:8080/nr-spa.js"
    };
 </script>
 <!-- Browser agent loader script -->
@@ -55,8 +54,10 @@ The Browser agent is loaded onto a web page in two parts. To install a version o
 
 NOTE: Your browser might cache JS scripts, which means you may not see your changes when the agent files are re-built. To turn off caching in Chrome, open DevTools and check the [Disable cache](https://developer.chrome.com/docs/devtools/network/reference/#disable-cache) checkbox.
 
+## Running a pre-configured server
+A prebuilt server can serve the locally built agent files as noted above, to use run the command `npm run test-server`
 ## Configure the agent
-The Browser agent uses a JSON configuration to set license key, application ID and which agent type to use.
+The Browser agent uses a JSON configuration to set license key and application ID.
 
 ### Set application ID and license key
 
@@ -67,13 +68,14 @@ You can find the `licenseKey` and `applicationID` in the New Relic UI's Browser 
 ### Set agent type
 Pick an agent type and update the following files from the table below:
 * The file loaded as the _Browser agent loader script_ from the HTML above using **loader filename**
-* The file loaded under `NREUM.info.agent` in _Browser agent configuration_ from the HTML above using **agent filename**.
 
 | Agent type | loader filename   |
 |------------|-------------------|
-| Lite       | nr-loader-rum.js  |
-| Pro        | nr-loader-full.js |
-| Pro + SPA  | nr-loader-spa.js  |
+| Lite       | nr-loader-rum.min.js  |
+| Pro        | nr-loader-full.min.js |
+| Pro + SPA  | nr-loader-spa.min.js  |
+
+The agent loader will automatically import any necessary chunks of code later on the page after being successfully initialized wiht configurations.
 
 
 ## Testing
@@ -84,6 +86,14 @@ The Browser agent uses a tool called the JavaScript Integration test Loader (`ji
 tests (located in `/tools/jil`).
 
 _Before running tests locally, be sure to [install and build](#building) from the root directory to ensure all dependencies are loaded and the application is properly built._
+
+```
+npm install
+```
+
+```
+npm run build:all
+```
 
 ### Running the test suite
 
@@ -108,7 +118,7 @@ npm run test -- -b chrome@latest --selenium-server=localhost:4444
 
 **Important Notes:** 
 - `jil` does not handle building the agent automatically;
-either run `npm run build` after each change, or use `npm run watch` to automatically rebuild on each change.
+either run `npm run build:all` after each change, or use `npm run watch` to automatically rebuild on each change.
 - To pass arguments to the testing suite using `npm run test` you must separate your arguments from the npm script using an empty `--` parameter as was exemplified above.
 
 
@@ -133,11 +143,11 @@ Running this command starts a server, available at http://localhost:3333, with a
 ```
 http://localhost:3333/tests/assets/spa/fetch.html?loader=spa
 ```
-| Agent type | querystring name |
-| -----------| ---------------- |
-| Lite       | rum              |
-| Pro        | full             |
-| Pro + SPA  | spa              |
+| Agent type    | querystring name |
+| --------------| ---------------- |
+| Lite          | rum              |
+| Pro (default) | full             |
+| Pro + SPA     | spa              |
 
 ### PR Testing
 

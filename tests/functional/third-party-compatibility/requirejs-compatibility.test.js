@@ -30,7 +30,6 @@ testDriver.test(`Loading RequireJS does not cause errors.`, matcher, function (t
   let loadPromise = browser.get(assetUrl)
 
   Promise.all([rumPromise, loadPromise]).then(([response]) => {
-    console.log('response: ' + JSON.stringify(response));
     t.pass()
     t.end()
   }).catch((err) => {

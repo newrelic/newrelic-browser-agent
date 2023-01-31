@@ -257,6 +257,15 @@ class AgentInjectorTransform extends AssetTransform {
             }
           }
 
+          let scriptStringContent = ''
+          if (params.scriptString) {
+            try {
+              scriptStringContent = Buffer.from(params.scriptString, 'base64').toString()
+            } catch (e) {
+              return callback(e)
+            }
+          }
+
           let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;'
 
           let rspData = rawContent
@@ -264,8 +273,8 @@ class AgentInjectorTransform extends AssetTransform {
             .replace('{config}', tagify(disableSsl + configContent))
             .replace('{init}', tagify(disableSsl + initContent + this.getAjaxDenyListString()))
             .replace('{worker-commands}', tagify(disableSsl + wcContent))
-            .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
-            .replace('{script-injection}', `<script>${params.scriptString}</script>`)
+            .replace('{script}', `<script type="text/javascript" src="${params.script}" charset="utf-8"></script>`)
+            .replace('{script-injection}', `<script type="text/javascript">${scriptStringContent}</script>`)
 
           if (runnerArgs.polyfills) {
             rspData = rspData.replace('{polyfills}', `<script type="text/javascript">${this.polyfills}</script>`)

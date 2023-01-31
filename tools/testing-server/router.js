@@ -305,6 +305,12 @@ class RouterHandle {
       })
     }
 
+    if (query.scriptString) {
+      _extend(mergedQuery, {
+        scriptString: Buffer.from(query.scriptString).toString('base64')
+      })
+    }
+
     if (useRouterUrl) {
       return this.router.urlFor(relative, mergedQuery)
     }

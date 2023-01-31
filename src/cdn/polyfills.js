@@ -5,6 +5,7 @@ import 'core-js/stable/array/from'
 import 'core-js/stable/array/find'
 import 'core-js/stable/object/assign'
 import 'core-js/stable/object/entries'
+import 'core-js/stable/object/values'
 import 'core-js/stable/map'
 
 // promise

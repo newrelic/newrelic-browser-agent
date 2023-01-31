@@ -66,6 +66,10 @@ function insertSupportMetrics(report) {
      * @returns Proxy worker that intercepts the original constructor
      */
     function extendWorkerConstructor(origClass, workerType) {
+        if (typeof Proxy === 'undefined') {
+          return origClass;
+        }
+
         const newHandler = {
             construct(oConstructor, args) {
                 reportWorkerCreationAttempt(workerType, args[1]?.type);

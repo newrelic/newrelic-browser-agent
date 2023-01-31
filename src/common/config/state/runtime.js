@@ -25,14 +25,9 @@ const model = agentId => { return {
   releaseIds: {},
   sessionId: getConfigurationValue(agentId, 'privacy.cookies_enabled') == true ?
     getCurrentSessionIdOrMakeNew() : null,  // if cookies (now session tracking) is turned off or can't get session ID, this is null
-<<<<<<< HEAD
   xhrWrappable: XHR && XHR_PROTO && XHR_PROTO['addEventListener'],
-  userAgent
-=======
-  xhrWrappable: XHR && XHR_PROTO && XHR_PROTO['addEventListener'] && !/CriOS/.test(navigator.userAgent),
   userAgent,
   version: VERSION
->>>>>>> 33d6e21 (add build version to runtime obj)
 }}
 
 const _cache = {}

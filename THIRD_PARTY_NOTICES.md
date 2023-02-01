@@ -29,6 +29,7 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [@faker-js/faker](#faker-jsfaker)
 * [@newrelic/newrelic-oss-cli](#newrelicnewrelic-oss-cli)
 * [@newrelic/nr-querypack](#newrelicnr-querypack)
+* [@octokit/rest](#octokitrest)
 * [@types/jest](#typesjest)
 * [@types/node](#typesnode)
 * [@typescript-eslint/eslint-plugin](#typescript-eslinteslint-plugin)
@@ -68,6 +69,7 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [multiparty](#multiparty)
 * [newrelic](#newrelic)
 * [node-fetch](#node-fetch)
+* [npm-run-all](#npm-run-all)
 * [object-inspect](#object-inspect)
 * [pre-commit](#pre-commit)
 * [preprocessify](#preprocessify)
@@ -854,6 +856,36 @@ This product includes source derived from [@newrelic/nr-querypack](https://githu
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+```
+
+### @octokit/rest
+
+This product includes source derived from [@octokit/rest](https://github.com/octokit/rest.js) ([v19.0.7](https://github.com/octokit/rest.js/tree/v19.0.7)), distributed under the [MIT License](https://github.com/octokit/rest.js/blob/v19.0.7/LICENSE):
+
+```
+The MIT License
+
+Copyright (c) 2012 Cloud9 IDE, Inc. (Mike de Boer)
+Copyright (c) 2017-2018 Octokit contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 
 ```
 
@@ -2381,6 +2413,36 @@ This product includes source derived from [node-fetch](https://github.com/node-f
 The MIT License (MIT)
 
 Copyright (c) 2016 - 2020 Node Fetch Team
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+```
+
+### npm-run-all
+
+This product includes source derived from [npm-run-all](https://github.com/mysticatea/npm-run-all) ([v4.1.5](https://github.com/mysticatea/npm-run-all/tree/v4.1.5)), distributed under the [MIT License](https://github.com/mysticatea/npm-run-all/blob/v4.1.5/LICENSE):
+
+```
+The MIT License (MIT)
+
+Copyright (c) 2015 Toru Nagashima
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

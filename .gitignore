@@ -23,3 +23,4 @@ packages/browser-agent-core/cjs
 **/cdn/webpack-analysis-polyfills.html
 **/cdn/webpack-analysis-standard.html
 **/cdn/webpack-analysis-worker.html
+./docs-website

@@ -1,0 +1,20 @@
+name: Raise Release Notes PR with Docs Site
+
+on:
+  workflow_dispatch:
+
+jobs:
+  raise-release-notes-pr:
+    runs-on: ubuntu-latest
+    container: node:14
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      GITHUB_TOKEN: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: install
+        run: npm ci
+      - name: Build and raise PR to docs-website
+        run: |
+          node tools/scripts/docs-website/create-docs-pr.js \
+            -t=v$(cat VERSION)

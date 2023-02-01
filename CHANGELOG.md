@@ -20,10 +20,16 @@ Some browser versions will throw errors if sendBeacon does not have the navigato
 ### Expose build version to newrelic global
 The build version will now be exposed to the newrelic global object. It can be accessed under `newrelic.intializedAgents[<agentID>].runtime.version`.
 
+### Add automation for docs-site updates on new releases
+A new release of the Browser Agent will automatically raise a PR to the docs-site team with relevant changelog items.
+
+### Preserve unhandledPromiseRejection reasons as human-readable strings in error payloads
+The agent will attempt to preserve unhandledPromiseRejection reasons as human-readable messages on the Error payload that gets harvested. The previous strategy did not always work, because Promise.reject can pass any value, not just strings.
+
+
 ## v1223
 
 ### Refactor loader architecture for improved developer experience
-
 This architectural release simplifies file structure and refactors the way features are composed, in preparation for future developer experience improvements. These changes are not anticipated to have impact on agent behavior or functionality.
 
 ## v1222

@@ -55,7 +55,8 @@ The Browser agent is loaded onto a web page in two parts. To install a version o
 NOTE: Your browser might cache JS scripts, which means you may not see your changes when the agent files are re-built. To turn off caching in Chrome, open DevTools and check the [Disable cache](https://developer.chrome.com/docs/devtools/network/reference/#disable-cache) checkbox.
 
 ## Running a pre-configured server
-A prebuilt server can serve the locally built agent files as noted above, to use run the command `npm run test-server`
+The prebuilt test server can serve the locally built agent files as noted under _[Debugging Tests](#debugging-tests)_ below. To use this server, run the `npm run test-server` command.
+
 ## Configure the agent
 The Browser agent uses a JSON configuration to set license key and application ID.
 

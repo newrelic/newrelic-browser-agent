@@ -22,8 +22,6 @@ export class Instrument extends InstrumentBase {
         if (!isBrowserScope) return; // SPA not supported outside web env
 
         const agentRuntime = getRuntime(this.agentIdentifier);
-        // loader.xhrWrappable will be false in chrome for ios, but addEventListener is still available.
-        // sauce does not have a browser to test this case against, so be careful when modifying this check
         if (!win[ADD_EVENT_LISTENER] || !agentRuntime.xhrWrappable ) return
         agentRuntime.features.spa = true;
 

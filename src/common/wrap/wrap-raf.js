@@ -13,8 +13,10 @@ const RAF_NAME = 'requestAnimationFrame';
 
 export function wrapRaf(sharedEE) {
   const ee = scopedEE(sharedEE)
-  if (wrapped[ee.debugId] || !isBrowserScope) return ee; // animation frames inherently tied to window
-  wrapped[ee.debugId] = true
+  if (!isBrowserScope || wrapped[ee.debugId]++) // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
+    return ee;                                  // then we increment the count to track # of feats using this at runtime. (Check the env before wrapping!)
+  wrapped[ee.debugId] = 1;
+
   var wrapFn = wfn(ee)
 
   wrapFn.inPlace(window, [RAF_NAME], 'raf-')
@@ -28,9 +30,11 @@ export function wrapRaf(sharedEE) {
 }
 export function unwrapRaf(sharedEE) {
   const ee = scopedEE(sharedEE);
-  if (wrapped[ee.debugId] === true) {  // only if it's wrapped first, e.g. if execution context is browser window for RAF
+
+  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this, but always decrement the count after checking it per unwrap call.
+  if (wrapped[ee.debugId]-- == 1) {
     unwrapFunction(window, RAF_NAME);
-    wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
+    wrapped[ee.debugId] = Infinity; // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
   }
 }
 export function scopedEE(sharedEE){

@@ -15,8 +15,10 @@ var REMOVE_EVENT_LISTENER = 'removeEventListener'
 
 export function wrapEvents(sharedEE) {
   var ee = scopedEE(sharedEE)
-  if (wrapped[ee.debugId]) return ee
-  wrapped[ee.debugId] = true
+  if (wrapped[ee.debugId]++)  // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
+    return ee;                // then we increment the count to track # of feats using this at runtime.
+  wrapped[ee.debugId] = 1;
+
   var wrapFn = wfn(ee, true)
 
   // Guard against instrumenting environments w/o necessary features
@@ -86,13 +88,15 @@ function findEventListenerProtoAndCb(object, cb, ...rest) {
 
 export function unwrapEvents(sharedEE) {
   const ee = scopedEE(sharedEE);
-  if (wrapped[ee.debugId] === true) {
+  
+  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this, but always decrement the count after checking it per unwrap call.
+  if (wrapped[ee.debugId]-- == 1) {
     [ADD_EVENT_LISTENER, REMOVE_EVENT_LISTENER].forEach(fn => {
       if (typeof document === 'object')  findEventListenerProtoAndCb(document, unwrapFunction, fn); //==> unwrapFunction(findProto(document)?, fn);
       findEventListenerProtoAndCb(globalScope, unwrapFunction, fn);
       findEventListenerProtoAndCb(XHR.prototype, unwrapFunction, fn);
     });
-    wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
+    wrapped[ee.debugId] = Infinity; // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
   }
 }
 export function scopedEE(sharedEE){

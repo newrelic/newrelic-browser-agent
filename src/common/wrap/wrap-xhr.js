@@ -5,7 +5,7 @@
 
 // wrap-events patches XMLHttpRequest.prototype.addEventListener for us.
 // TODO: if we want to load Ajax feature on its own, we'll need to call wrapEvents(sharedEE)
-import { wrapEvents } from './wrap-events'
+import { wrapEvents, unwrapEvents } from './wrap-events'
 import { ee as contextualEE } from '../event-emitter/contextual-ee'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { createWrapperWithEmitter as wfn, unwrapFunction } from './wrap-function'
@@ -24,6 +24,7 @@ export function wrapXhr (sharedEE) {
   if (wrapped[ee.debugId]++)  // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
     return ee;                // then we increment the count to track # of feats using this at runtime.
   wrapped[ee.debugId] = 1;  // <- otherwise, first feature to wrap XHR
+  
   wrapEvents(baseEE)
   var wrapFn = wfn(ee)
 
@@ -192,7 +193,9 @@ export function wrapXhr (sharedEE) {
   return ee
 }
 export function unwrapXhr(sharedEE) {
+  unwrapEvents(sharedEE || contextualEE); // because in "wrapXHR", events was wrapped or incremented, we have to reverse that too
   const ee = scopedEE(sharedEE);
+  
   // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this, but always decrement the count after checking it per unwrap call.
   if (wrapped[ee.debugId]-- == 1) {
     globalScope.XMLHttpRequest = originals.XHR;

@@ -46,6 +46,7 @@ export class Instrument extends InstrumentBase {
 
   /** Restoration and resource release tasks to be done if Ajax loader is being aborted. */
   #abort() {
+    // (Much of this module affects specific XHR instances.)
     unwrapFetch(this.ee);
     unwrapXhr(this.ee);
     this.abortHandler = null; // weakly allow this abort op to run only once

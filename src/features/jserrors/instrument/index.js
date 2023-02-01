@@ -23,7 +23,9 @@ export class Instrument extends InstrumentBase {
     // skipNext counter to keep track of uncaught
     // errors that will be the same as caught errors.
     this.skipNext = 0
-    this.origOnerror = globalScope.onerror
+    this.origOnerror = globalScope.onerror;
+    try { this.removeOnAbort = new AbortController(); } // this try-catch can be removed when IE11 is completely unsupported & gone
+    catch (e) {}
 
     const thisInstrument = this;
 
@@ -61,7 +63,7 @@ export class Instrument extends InstrumentBase {
       /** rejections can contain data of any type -- this is an effort to keep the message human readable */
       const err = castReasonToError(e.reason)
       handle('err', [err, now(), false, { unhandledPromiseRejection: 1 }], undefined, FEATURE_NAMES.jserrors, this.ee)
-    })
+    }, {signal: this.removeOnAbort?.signal});
 
     wrapRaf(this.ee);
     wrapTimer(this.ee);
@@ -72,9 +74,10 @@ export class Instrument extends InstrumentBase {
     this.importAggregator();
   }
 
-  /** Restoration and resource release tasks to be done if JS error loader is being aborted. */
+  /** Restoration and resource release tasks to be done if JS error loader is being aborted. Unwind changes to globals. */
   #abort() {
     globalScope.onerror = this.origOnerror;
+    this.removeOnAbort?.abort();
     unwrapRaf(this.ee);
     unwrapTimer(this.ee);
     unwrapEvents(this.ee);

@@ -8,10 +8,11 @@
  */
 
 import { ee as globalEE } from '../event-emitter/contextual-ee'
-import { createWrapperWithEmitter as wfn } from './wrap-function'
+import {createWrapperWithEmitter as wfn, unwrapFunction} from './wrap-function'
 import { isBrowserScope } from '../util/global-scope'
 
 const wrapped = {}
+const HISTORY_FNS = ['pushState', 'replaceState'];
 
 /**
  * Wraps the `pushState` and `replaceState` methods of `window.history` and returns a corresponding event emitter
@@ -21,8 +22,9 @@ const wrapped = {}
  */
 export function wrapHistory(sharedEE){
   const ee = scopedEE(sharedEE)
-  if (wrapped[ee.debugId] || !isBrowserScope) return ee; // History API is only relevant within web env
+  if (!isBrowserScope || wrapped[ee.debugId]) return ee; // History API is only relevant within web env
   wrapped[ee.debugId] = true
+
   var wrapFn = wfn(ee)
 
   /**
@@ -30,11 +32,18 @@ export function wrapHistory(sharedEE){
    * is instantiated only once, so we can wrap its methods directly--and we must wrap the history methods directly as
    * long as [Chromium issue 783382](https://bugs.chromium.org/p/chromium/issues/detail?id=783382) remains unresolved.
    */
-  wrapFn.inPlace(window.history, [ 'pushState', 'replaceState' ], '-')
+  wrapFn.inPlace(window.history, HISTORY_FNS, '-')
 
   return ee
 }
-
+export function unwrapHistory(sharedEE) {
+  const ee = scopedEE(sharedEE);
+  
+  if (wrapped[ee.debugId] === true) {
+    HISTORY_FNS.forEach(fnName => unwrapFunction(window.history, fnName));
+    wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
+  }
+}
 /**
  * Returns an event emitter scoped specifically for the history object. This scoping is a remnant from when all the
  * features shared the same group in the event, to isolate events between features. It will likely be revisited.

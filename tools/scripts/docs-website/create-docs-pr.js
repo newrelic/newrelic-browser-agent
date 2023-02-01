@@ -57,6 +57,8 @@ var options = require('yargs')
 
     .argv
 
+const FORKED_DOCS_SITE = 'https://github.com/newrelic-forks/browser-agent-docs-website.git'
+
 const RELEASE_NOTES_PATH =
     './src/content/docs/release-notes/new-relic-browser-release-notes/browser-agent-release-notes'
 
@@ -65,6 +67,11 @@ const SUPPORT_STATEMENT = `
 New Relic recommends that you upgrade the agent regularly to ensure that you're getting the latest features and performance benefits. Older releases will no longer be supported when they reach [end-of-life](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/browser-agent-eol-policy/). Release dates are reflective of the original publish date of the agent version.
 
 New Browser Agent releases are rolled out to customers in small stages over a period of time. Because of this, the date the release becomes accessible to your account may not match the original publish date. Please see this [status dashboard](https://newrelic.github.io/newrelic-browser-agent-release/) for more information.`
+
+if (!process.env.GITHUB_TOKEN) {
+    console.log("NO GITHUB TOKEN FOUND!")
+    process.exit(1)
+}
 
 async function createReleaseNotesPr() {
 
@@ -172,9 +179,8 @@ async function readReleaseNoteFile(file) {
  * @param {boolean} dryRun skip branch creation
  */
 async function createBranch(filePath, remote, version, dryRun) {
-    if (!fs.existsSync(filePath)) {
-        fs.mkdirSync(filePath);
-    }
+    fs.rmSync(filePath, { recursive: true, force: true })
+    fs.mkdirSync(filePath);
     filePath = path.resolve(filePath)
     console.log(`Changing to ${filePath}`)
     process.chdir(filePath)
@@ -182,16 +188,16 @@ async function createBranch(filePath, remote, version, dryRun) {
     if (dryRun) {
         console.log(`Dry run indicated (--dry-run), not creating branch ${branchName}`)
     } else {
-        try{
+        try {
             await git.deleteUpstreamBranch(remote, branchName)
-        } catch(e) {
-            // branch does not exist
+        } catch (e) {
+            // repo and/or branch does not exist, no action needed
         }
-        await git.clone('https://github.com/metal-messiah/docs-website.git', filePath, [])
+        await git.clone(FORKED_DOCS_SITE, filePath, [])
         await git.checkout(BASE_BRANCH)
         await git.syncWithParent(remote, branchName)
         await git.checkoutNewBranch(branchName)
-        
+
     }
 
     return branchName

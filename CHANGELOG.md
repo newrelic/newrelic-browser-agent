@@ -14,6 +14,9 @@ Fixed an issue where multiple custom interactions harvested at the same time wou
 ### Prevent ajax time slice metrics based on deny list
 Prevent time slice metric collection for ajax calls when such a call matches an entry in the ajax deny list.
 
+### Bind navigator scope to sendBeacon
+Some browser versions will throw errors if sendBeacon does not have the navigator scope bound to it. A fail-safe action of binding the navigator scope to sendBeacon was added to try to support those browsers.
+
 ## v1223
 
 ### Refactor loader architecture for improved developer experience

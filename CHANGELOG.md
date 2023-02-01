@@ -11,6 +11,9 @@ Previously, the agent did not collect SPA browser interactions, XHR events, or s
 ### Fix multiple custom interaction end times
 Fixed an issue where multiple custom interactions harvested at the same time would result in only one interaction being persisted in NR1.
 
+### Prevent ajax time slice metrics based on deny list
+Prevent time slice metric collection for ajax calls when such a call matches an entry in the ajax deny list.
+
 ## v1223
 
 ### Refactor loader architecture for improved developer experience

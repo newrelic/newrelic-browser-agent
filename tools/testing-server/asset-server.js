@@ -265,6 +265,7 @@ class AgentInjectorTransform extends AssetTransform {
             .replace('{init}', tagify(disableSsl + initContent + this.getAjaxDenyListString()))
             .replace('{worker-commands}', tagify(disableSsl + wcContent))
             .replace('{script}', `<script src="${params.script}" charset="utf-8"></script>`)
+            .replace('{script-injection}', `<script>${params.scriptString}</script>`)
 
           if (runnerArgs.polyfills) {
             rspData = rspData.replace('{polyfills}', `<script type="text/javascript">${this.polyfills}</script>`)

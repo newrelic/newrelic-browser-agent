@@ -126,7 +126,9 @@ testDriver.test('browsers that do not decode the url when accessing window.locat
 
 testDriver.test('cookie disabled: query string attributes', notSafariWithSeleniumBug, function (t, browser, router) {
   t.plan(2)
-  let loadPromise = browser.safeGet(router.assetURL('instrumented-disable-cookies.html'))
+  let loadPromise = browser.safeGet(router.assetURL('instrumented.html', { 
+    init: { privacy: {cookies_enabled: false} }
+  }));
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {

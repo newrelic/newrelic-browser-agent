@@ -23,6 +23,9 @@ A new release of the Browser Agent will automatically raise a PR to the docs-sit
 ### Preserve unhandledPromiseRejection reasons as human-readable strings in error payloads
 The agent will attempt to preserve unhandledPromiseRejection reasons as human-readable messages on the Error payload that gets harvested. The previous strategy did not always work, because Promise.reject can pass any value, not just strings.
 
+### Add automation for docs-site updates on new releases
+A new release of the Browser Agent will automatically raise a PR to the docs-site team with relevant changelog items.
+
 ## v1223
 
 ### Refactor loader architecture for improved developer experience

@@ -17,7 +17,7 @@ import { globalScope } from '../../../common/util/global-scope'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor(agentIdentifier, aggregator, auto=true) {
+  constructor(agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     // skipNext counter to keep track of uncaught
     // errors that will be the same as caught errors.
@@ -63,8 +63,9 @@ export class Instrument extends InstrumentBase {
 
     try {
       globalScope?.addEventListener('unhandledrejection', (e) => {
-        const err = new Error(`${e.reason}`)
-        handle('err', [err, now(), false, {unhandledPromiseRejection: 1}], undefined, FEATURE_NAMES.jserrors, this.ee)
+        /** rejections can contain data of any type -- this is an effort to keep the message human readable */
+        const err = castReasonToError(e.reason)
+        handle('err', [err, now(), false, { unhandledPromiseRejection: 1 }], undefined, FEATURE_NAMES.jserrors, this.ee)
       })
     } catch (err) {
       // do nothing -- addEventListener is not supported
@@ -93,8 +94,16 @@ export class Instrument extends InstrumentBase {
     this.importAggregator()
   }
 
-  // FF and Android browsers do not provide error info to the 'error' event callback,
-  // so we must use window.onerror
+  /**
+   * FF and Android browsers do not provide error info to the 'error' event callback,
+   * so we must use window.onerror
+   * @param {string} message 
+   * @param {string} filename 
+   * @param {number} lineno 
+   * @param {number} column 
+   * @param {Error | *} errorObj 
+   * @returns 
+   */
   onerrorHandler(message, filename, lineno, column, errorObj) {
     try {
       if (this.skipNext) this.skipNext -= 1
@@ -112,16 +121,46 @@ export class Instrument extends InstrumentBase {
   }
 }
 
+/**
+ * 
+ * @param {string} message 
+ * @param {string} filename 
+ * @param {number} lineno 
+ */
 function UncaughtException(message, filename, lineno) {
   this.message = message || 'Uncaught error with no additional information'
   this.sourceURL = filename
   this.line = lineno
 }
 
-// emits 'handle > error' event, which the error aggregator listens on
+/**
+ * Adds a timestamp and emits the 'err' event, which the error aggregator listens for
+ * @param {Error} err 
+ * @param {boolean} doNotStamp 
+ * @param {ContextualEE} ee 
+ */
 function notice(err, doNotStamp, ee) {
   // by default add timestamp, unless specifically told not to
   // this is to preserve existing behavior
   var time = (!doNotStamp) ? now() : null
   handle('err', [err, time], undefined, FEATURE_NAMES.jserrors, ee)
+}
+
+/**
+ * Attempts to cast an unhandledPromiseRejection reason (reject(...)) to an Error object
+ * @param {*} reason - The reason property from an unhandled promise rejection
+ * @returns {Error} - An Error object with the message as the casted reason
+ */
+function castReasonToError(reason) {
+  let prefix = 'Unhandled Promise Rejection: '
+  if (reason instanceof Error) {
+    reason.message = prefix + reason.message
+    return reason
+  }
+  if (typeof reason === 'undefined') return new Error(prefix)
+  try {
+    return new Error(prefix + JSON.stringify(reason))
+  } catch (err) {
+    return new Error(prefix)
+  }
 }

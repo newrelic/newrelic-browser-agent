@@ -17,6 +17,9 @@ Prevent time slice metric collection for ajax calls when such a call matches an 
 ### Bind navigator scope to sendBeacon
 Some browser versions will throw errors if sendBeacon does not have the navigator scope bound to it. A fail-safe action of binding the navigator scope to sendBeacon was added to try to support those browsers.
 
+### Expose build version to newrelic global
+The build version will now be exposed to the newrelic global object. It can be accessed under `newrelic.intializedAgents[<agentID>].runtime.version`.
+
 ## v1223
 
 ### Refactor loader architecture for improved developer experience

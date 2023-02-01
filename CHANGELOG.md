@@ -8,6 +8,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Support SPA, XHR, and session trace features on Chrome for iOS.
 Previously, the agent did not collect SPA browser interactions, XHR events, or session trace data in Chrome for iOS (which uses the webkit engine with modifications). The agent will now collect the same data in Chrome for iOS as in other supported browsers.
 
+### Fix multiple custom interaction end times
+Fixed an issue where multiple custom interactions harvested at the same time would result in only one interaction being persisted in NR1.
+
 ## v1223
 
 ### Refactor loader architecture for improved developer experience

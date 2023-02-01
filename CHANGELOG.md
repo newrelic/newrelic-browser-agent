@@ -30,7 +30,6 @@ The agent will attempt to preserve unhandledPromiseRejection reasons as human-re
 ## v1223
 
 ### Refactor loader architecture for improved developer experience
-
 This architectural release simplifies file structure and refactors the way features are composed, in preparation for future developer experience improvements. These changes are not anticipated to have impact on agent behavior or functionality.
 
 ## v1222

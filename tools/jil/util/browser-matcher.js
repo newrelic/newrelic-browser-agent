@@ -383,7 +383,7 @@ features.es6 = new BrowserMatcher()
 
   features.bfcache = new BrowserMatcher()
   .exclude('*')
-  .include('chrome', '>99') // included in v96+, but either not enabled by default until later or Sauce doesn't enable the flag
+  .include('chrome', '>100') // included in v96+, but either not enabled by default until later or Sauce doesn't enable the flag
   //.include('edge', '>=89') -- not enabled by default still (current v109); user must set flag
   .include('firefox')
   .include('safari')

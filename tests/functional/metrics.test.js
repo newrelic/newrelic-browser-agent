@@ -9,7 +9,6 @@ const { asyncApiFns, failWithEndTimeout, extractWorkerSM, getMetricsFromResponse
 const withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 const fetchBrowsers = testDriver.Matcher.withFeature('fetchExt')
 
-const NUM_POLYFILL_SM_FEATS = 4;  // disabled in workers
 const multipleApiCalls = asyncApiFns[1]; // page should trigger 5 calls of 'setPageViewName'
 
 const loaderTypes = ['rum', 'full', 'spa']
@@ -38,7 +37,7 @@ function loaderTypeSupportabilityMetric(loaderType) {
 }
 
 testDriver.test('Calling a newrelic[api] fn creates a supportability metric', withUnload, function (t, browser, router) {
-  t.plan((asyncApiFns.length) + 6 + NUM_POLYFILL_SM_FEATS)
+  t.plan((asyncApiFns.length) + 6)
   let rumPromise = router.expectRum()
   let loadPromise = browser.get(router.assetURL('api/customMetrics.html', {}))
   let metricsPromise = router.expectMetrics()

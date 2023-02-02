@@ -10,16 +10,12 @@ const querypack = require('@newrelic/nr-querypack')
 let supported = testDriver.Matcher.withFeature('fetch')
 
 testDriver.test('capturing fetch in SPA interactions', supported, function (t, browser, router) {
-  t.plan(22)
+  t.plan(21)
   let testStartTime = now()
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
   let loadPromise = browser.safeGet(router.assetURL('spa/fetch.html', { loader: 'spa' }))
-
-  rumPromise.then(({query}) => {
-    t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa')
-  })
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {

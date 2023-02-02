@@ -58,7 +58,6 @@ export class Aggregate extends AggregateBase {
     chunksForQueryString.push(param('us', info.user))
     chunksForQueryString.push(param('ac', info.account))
     chunksForQueryString.push(param('pr', info.product))
-    chunksForQueryString.push(param('af', Object.keys(agentRuntime.features).join(',')))
 
     if (window.performance && typeof (window.performance.timing) !== 'undefined') {
       var navTimingApiData = ({

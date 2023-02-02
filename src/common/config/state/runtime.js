@@ -10,7 +10,6 @@ import { VERSION } from '../../constants/environment-variables'
 const model = agentId => { return {
   customTransaction: undefined,
   disabled: false,
-  features: {},
   isolatedBacklog: false,
   loaderType: undefined,
   maxBytes: 30000,

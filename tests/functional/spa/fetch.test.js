@@ -15,7 +15,7 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/fetch.html', { loader: 'spa' }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/fetch.html', { loader: 'spa', init: { ajax: { deny_list: [router.router.assetServer.host]}} }))
 
   rumPromise.then(({query}) => {
     t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa')
@@ -28,6 +28,7 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
+      console.log(interactionTree.children)
       t.equal(interactionTree.children.length, 0, 'expect no child nodes')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 

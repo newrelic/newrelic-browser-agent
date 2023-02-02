@@ -13,7 +13,7 @@ export function shouldCollectEvent(params) {
   if (denyList.length === 0) {
     return true
   }
-  
+
   // XHR requests with an undefined hostname (e.g., data URLs) should not be collected.
   if (params.hostname === undefined) {
     return false
@@ -25,8 +25,9 @@ export function shouldCollectEvent(params) {
     if (parsed.hostname === '*') {
       return false
     }
-    
+
     if (domainMatchesPattern(parsed.hostname, params.hostname)
+      && portMatchesPattern(parsed.port, params.port)
       && comparePath(parsed.pathname, params.pathname)) {
       return false
     }
@@ -56,20 +57,18 @@ export function setDenyList(denyListConfig) {
     }
 
     var firstSlash = url.indexOf('/')
+    var hostname = url.substring(0, firstSlash >= 0 ? firstSlash : url.length)
+    var port = hostname.indexOf(':') > -1 ? hostname.substring(hostname.indexOf(':')) : ''
+    var pathname = firstSlash >= 0 ? url.substring(firstSlash) : ''
 
-    if (firstSlash > 0) {
-      denyList.push({
-        hostname: url.substring(0, firstSlash),
-        pathname: url.substring(firstSlash)
-      })
-    } else {
-      denyList.push({
-        hostname: url,
-        pathname: ''
-      })
-    }
+    denyList.push({
+      hostname: hostname.replace(port, ''),
+      port: port.replace(':', ''),
+      pathname
+    })
   }
 }
+
 /**
  * Returns true if the right side of `domain` (end of string) matches `pattern`.
  * @param {string} pattern - a string to be matched against the end of `domain` string
@@ -86,6 +85,20 @@ function domainMatchesPattern(pattern, domain) {
   }
 
   return false
+}
+
+/**
+ * Returns true if the deny pattern has a port specified and the port matches.
+ * @param {string} pattern - a string to be matched against the request port
+ * @param {string} domain - a port string
+ * @returns {boolean} `true` if deny list entry has port and it matches; false otherwise
+ */
+function portMatchesPattern(pattern, port) {
+  if (!pattern || pattern.length === 0) {
+    return true;
+  }
+
+  return pattern === port;
 }
 
 /**

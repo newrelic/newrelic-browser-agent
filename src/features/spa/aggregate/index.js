@@ -115,6 +115,7 @@ export class Aggregate extends AggregateBase {
 
     state.initialPageLoad = new Interaction('initialPageLoad', 0, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
     state.initialPageLoad.save = true
+    state.prevInteraction = state.initialPageLoad
     state.currentNode = state.initialPageLoad.root // hint
     // ensure that checkFinish calls are safe during initialPageLoad
     state.initialPageLoad[REMAINING]++
@@ -206,6 +207,7 @@ export class Aggregate extends AggregateBase {
         // so that it has a chance to possibly start an interaction.
         if (INTERACTION_EVENTS.indexOf(evName) !== -1) {
           var ixn = new Interaction(evName, this[FN_START], state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
+          state.prevInteraction = ixn
           setCurrentNode(ixn.root)
 
           if (evName === 'click') {
@@ -412,6 +414,20 @@ export class Aggregate extends AggregateBase {
     register('newURL', function (url, hashChangedDuringCb) {
       if (state.currentNode) {
         state.currentNode[INTERACTION].setNewURL(url)
+      } else if (state.prevInteraction && !state.prevInteraction.ignored) {
+        /*
+         * The previous interaction was discarded before the route was changed. This can happen in SPA
+         * frameworks when using lazy loading. We have also seen this in version 11+ of Nextjs where
+         * some route changes re-use cached resolved promises.
+         */
+        const interaction = state.prevInteraction
+        interaction.setNewURL(url)
+        interaction.root.end = null
+
+        setCurrentNode(interaction.root)
+      }
+
+      if (state.currentNode) {
         if (state.lastSeenUrl !== url) {
           state.currentNode[INTERACTION].routeChange = true
         }
@@ -670,6 +686,12 @@ export class Aggregate extends AggregateBase {
         return
       }
 
+      if (state.prevInteraction === interaction) {
+        // If the interaction is being saved, remove it from prevInteraction variable
+        // to prevent the interaction from possibly being sent twice or causing an internal
+        // recursive loop issue.
+        state.prevInteraction = null;
+      }
       // assign unique id, this is serialized and used to link interactions with errors
       interaction.root.attrs.id = generateUuid()
 
@@ -680,7 +702,6 @@ export class Aggregate extends AggregateBase {
       baseEE.emit('interactionSaved', [interaction])
       state.interactionsToHarvest.push(interaction)
       scheduler.scheduleHarvest(0)
-
     }
 
     function isEnabled() {

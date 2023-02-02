@@ -1,5 +1,6 @@
 module.exports = {
   "ignorePatterns": [
+    "dist/**/*",
     "build/**/*",
     "coverage/**/*",
     "tests/**/*",
@@ -14,7 +15,7 @@ module.exports = {
     "NREUM": true,
     "newrelic": true,
   },
-  "extends": "eslint:recommended",
+  "extends": ["eslint:recommended", "prettier"],
   "overrides": [
     {
       "files": ["src/**/*.js"],

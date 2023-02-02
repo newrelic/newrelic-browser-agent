@@ -1,0 +1,18 @@
+**/node_modules/**
+dist/**/*
+build/**/*
+coverage/**/*
+tests/assets/frameworks/**/*
+tests/assets/js/internal/**/*
+tests/assets/js/vendor/**/*
+
+# Do not format webpack analysis files
+webpack-analysis*.html
+
+# Do not format these static/generated files
+cla.md
+CONTRIBUTING.md
+THIRD_PARTY_NOTICES.md
+third_party_manifest.json
+LICENSE
+VERSION

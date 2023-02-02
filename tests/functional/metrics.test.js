@@ -58,9 +58,10 @@ testDriver.test('Calling a newrelic[api] fn creates a supportability metric', wi
 
         if (sm.params.name === multipleApiCalls)
           t.equal(sm.stats.c, 5, sm.params.name + ' count was incremented by 1 until reached 5');
-        else if (sm.params.name.startsWith('Workers/'))
-          continue; // these metrics have an unreliable count dependent & are tested separately anyways
-        else
+        else if (sm.params.name.startsWith('Workers/')) {
+          // these metrics have an unreliable count dependent & are tested separately anyways
+          continue;
+        } else
           t.equal(sm.stats.c, 1, sm.params.name + ' count was incremented by 1');
       }
 
@@ -181,7 +182,7 @@ testDriver.test('workers creation generates sm', function (t, browser, router) {
         t.ok(wsm.classicWorker, 'classic worker is expected and used');
 
         /* Also note that though Firefox & older Safari don't actually support module workers, their call to the constructor still succeeds hence
-          generating a false positive sm. For simplicity, we'll just accept it as-is, so there's no add'l check here for 'workersFull' match. 
+          generating a false positive sm. For simplicity, we'll just accept it as-is, so there's no add'l check here for 'workersFull' match.
           ... Actually, if you compare Safari v14 vs. Edge v79, in both of which module workers are n/a, only the latter errors out while the former silently ignores. */
         t.ok(wsm.moduleWorker, 'module worker is expected and used');
       }

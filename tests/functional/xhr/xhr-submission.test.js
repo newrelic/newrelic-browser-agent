@@ -7,10 +7,8 @@ const testDriver = require('../../../tools/jil/index')
 const { fail, getXhrFromResponse } = require('./helpers')
 
 let reliableUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
-let xhrBrowsers = testDriver.Matcher.withFeature('xhr')
 let fetchBrowsers = testDriver.Matcher.withFeature('fetch')
 let workingSendBeacon = testDriver.Matcher.withFeature('sendBeacon')
-let xhrSupported = xhrBrowsers.intersect(reliableUnload)
 let fetchSupported = fetchBrowsers.intersect(reliableUnload)
 
 testDriver.test('capturing XHR metrics', workingSendBeacon, function (t, browser, router) {

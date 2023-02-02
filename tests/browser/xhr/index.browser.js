@@ -20,7 +20,6 @@ const jserrTestInstr = new JsErrInstrum(agentIdentifier, aggregator, false);
 const jserrTestAgg = new JsErrAggreg(agentIdentifier, aggregator);
 
 import ffVersion from '../../../src/common/browser-version/firefox-version'
-import ieVersion from '../../../src/common/browser-version/ie-version'
 const hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener;
 
 let onloadtime = 2
@@ -270,10 +269,9 @@ var urls = {
       xhr.onload = function (e) {
         t.deepEqual(e.target.response, {text: 'hi!'}, 'JSON content matches')
 
-        let oldIE = ieVersion && ieVersion <= 9
         let brokenFF = ffVersion && ffVersion > 33
 
-        if (!oldIE && !brokenFF) {
+        if (!brokenFF) {
           let descriptor = getResponsePropertyDescriptor(xhr)
           if (descriptor && descriptor.configurable) {
             Object.defineProperty(xhr, 'response', {

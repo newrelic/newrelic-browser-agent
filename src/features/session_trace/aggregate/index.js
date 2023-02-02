@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { xhrUsable } from '../../../common/harvest/harvest'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { mapOwn } from '../../../common/util/map-own'
 import { reduce } from '../../../common/util/reduce'
@@ -24,11 +23,10 @@ export class Aggregate extends AggregateBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
-    const agentRuntime = getRuntime(agentIdentifier)
+    // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
+    if (!getRuntime(agentIdentifier).xhrWrappable) return
+
     const handlerCache = new HandlerCache()
-
-    if (!xhrUsable || !agentRuntime.xhrWrappable) return
-
     this.ptid = ''
     this.ignoredEvents = {
       // we find that certain events make the data too noisy to be useful

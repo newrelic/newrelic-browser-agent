@@ -6,12 +6,9 @@
 const testDriver = require('../../../tools/jil/index')
 const querypack = require("@newrelic/nr-querypack");
 
-// we use XHR for harvest calls only if browser support XHR
-let cors = testDriver.Matcher.withFeature('cors')
-let xhrWithAddEventListener = testDriver.Matcher.withFeature('xhrWithAddEventListener')
-let supported = cors.and(xhrWithAddEventListener)
+let corsSupported = testDriver.Matcher.withFeature('cors');
 
-testDriver.test('events are retried when collector returns 429', supported, function (t, browser, router) {
+testDriver.test('events are retried when collector returns 429', corsSupported, function (t, browser, router) {
   let assetURL = router.assetURL('instrumented.html', {
     loader: 'spa',
     init: {
@@ -61,7 +58,7 @@ testDriver.test('events are retried when collector returns 429', supported, func
 // NOTE: we do not test 408 response in a functional test because some browsers automatically retry
 // 408 responses, which makes it difficult to distinguish browser retries from the agent retries
 
-testDriver.test('multiple custom interactions have correct customEnd value', supported, function (t, browser, router) {
+testDriver.test('multiple custom interactions have correct customEnd value', corsSupported, function (t, browser, router) {
   let assetURL = router.assetURL('spa/multiple-custom-interactions.html', {
     loader: 'spa',
     init: {

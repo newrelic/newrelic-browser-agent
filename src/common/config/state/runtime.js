@@ -1,4 +1,3 @@
-import { ieVersion } from '../../browser-version/ie-version'
 import { getLastTimestamp } from '../../timing/now'
 import * as userAgent from '../../util/user-agent'
 import { Configurable } from './configurable'
@@ -8,24 +7,21 @@ import { getConfigurationValue } from '../config'
 import { globalScope } from '../../util/global-scope';
 import { VERSION } from '../../constants/environment-variables'
 
-var XHR = globalScope?.XMLHttpRequest
-var XHR_PROTO = XHR && XHR.prototype
-
 const model = agentId => { return {
   customTransaction: undefined,
   disabled: false,
   features: {},
   isolatedBacklog: false,
   loaderType: undefined,
-  maxBytes: ieVersion === 6 ? 2000 : 30000,
+  maxBytes: 30000,
   offset: getLastTimestamp(),
   onerror: undefined,
-  origin: '' + globalScope?.location,
+  origin: '' + globalScope.location,
   ptid: undefined,
   releaseIds: {},
   sessionId: getConfigurationValue(agentId, 'privacy.cookies_enabled') == true ?
     getCurrentSessionIdOrMakeNew() : null,  // if cookies (now session tracking) is turned off or can't get session ID, this is null
-  xhrWrappable: XHR && XHR_PROTO && XHR_PROTO['addEventListener'],
+  xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
   userAgent,
   version: VERSION
 }}

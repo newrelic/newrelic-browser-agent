@@ -29,16 +29,15 @@ export class Instrument extends InstrumentBase {
   constructor(agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
 
-    const agentRuntime = getRuntime(this.agentIdentifier);
-    // Don't instrument Chrome for iOS, it is buggy and acts like there are URL verification issues
-    if (!agentRuntime.xhrWrappable) return
+    // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
+    if (!getRuntime(agentIdentifier).xhrWrappable) return
 
-    this.dt = new DT(this.agentIdentifier)
+    this.dt = new DT(agentIdentifier)
 
     this.handler = (type, args, ctx, group) => handle(type, args, ctx, group, this.ee)
     wrapFetch(this.ee)
     wrapXhr(this.ee)
-    subscribeToEvents(this.agentIdentifier, this.ee, this.handler, this.dt)
+    subscribeToEvents(agentIdentifier, this.ee, this.handler, this.dt)
 
     this.abortHandler = this.#abort;
     this.importAggregator();

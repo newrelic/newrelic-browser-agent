@@ -11,8 +11,7 @@ import * as CONSTANTS from '../constants'
 import { isBrowserScope } from '../../../common/util/global-scope'
 
 const {
-    FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, ADD_EVENT_LISTENER, 
-    WIN: win, LOCATION: location, FN_START, CB_START, FN_END
+    FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, ADD_EVENT_LISTENER, FN_START, CB_START, FN_END
 } = CONSTANTS
 
 export class Instrument extends InstrumentBase {
@@ -21,9 +20,7 @@ export class Instrument extends InstrumentBase {
         super(agentIdentifier, aggregator, FEATURE_NAME, auto)
         if (!isBrowserScope) return; // SPA not supported outside web env
 
-        const agentRuntime = getRuntime(this.agentIdentifier);
-        if (!win[ADD_EVENT_LISTENER] || !agentRuntime.xhrWrappable ) return
-        agentRuntime.features.spa = true;
+        if (!getRuntime(agentIdentifier).xhrWrappable) return
 
         let depth = 0
         let startHash
@@ -66,25 +63,25 @@ export class Instrument extends InstrumentBase {
         historyEE.on('pushState-end', trackURLChange)
         historyEE.on('replaceState-end', trackURLChange)
 
-        win[ADD_EVENT_LISTENER]('hashchange', trackURLChange, eventListenerOpts(true))
-        win[ADD_EVENT_LISTENER]('load', trackURLChange, eventListenerOpts(true))
-        win[ADD_EVENT_LISTENER]('popstate', function () {
+        window[ADD_EVENT_LISTENER]('hashchange', trackURLChange, eventListenerOpts(true))
+        window[ADD_EVENT_LISTENER]('load', trackURLChange, eventListenerOpts(true))
+        window[ADD_EVENT_LISTENER]('popstate', function () {
             trackURLChange(0, depth > 1)
         }, eventListenerOpts(true))
 
         function trackURLChange(unusedArgs, hashChangedDuringCb) {
-            historyEE.emit('newURL', ['' + location, hashChangedDuringCb])
+            historyEE.emit('newURL', ['' + window.location, hashChangedDuringCb])
         }
 
         function startTimestamp() {
             depth++
-            startHash = location.hash
+            startHash = window.location.hash
             this[FN_START] = now()
         }
 
         function endTimestamp() {
             depth--
-            if (location.hash !== startHash) {
+            if (window.location.hash !== startHash) {
                 trackURLChange(0, true)
             }
 

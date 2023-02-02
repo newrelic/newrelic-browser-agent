@@ -44,7 +44,7 @@ testDriver.test(
             stack: [
               {
                 u: "<inline>",
-                l: 23,
+                l: 21,
               },
             ],
           },

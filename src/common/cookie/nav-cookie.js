@@ -14,6 +14,7 @@ export function conditionallySet(agentIdentifier) {
   var areCookiesEnabled = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled')
 
   if (navCookie && areCookiesEnabled && isBrowserScope) {
+    // eslint-disable-next-line no-undef
     exports.setCookie(); // allow importing modules (e.g., browser tests) to change setCookie() below
   }
 }

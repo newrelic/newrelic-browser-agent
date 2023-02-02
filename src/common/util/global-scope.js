@@ -1,5 +1,3 @@
-/* global globalThis, WorkerGlobalScope, WorkerNavigator */
-
 export const isBrowserScope =
   Boolean(typeof window !== 'undefined' && window.document);
 

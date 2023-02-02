@@ -25,7 +25,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
       execSync(`npm version ${version} ${additionalArgs.join(" ")}`, {
         cwd: packagePath,
-        stdio: "inherit"
+        stdio: "inherit",
       });
     } catch (err) {
       logger.error(err);

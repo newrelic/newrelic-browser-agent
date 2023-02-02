@@ -14,58 +14,58 @@
 // * 0's are not included unless the value is a 'relative zero'
 //
 
-var START = 'Start'
-var END = 'End'
-var UNLOAD_EVENT = 'unloadEvent'
-var REDIRECT = 'redirect'
-var DOMAIN_LOOKUP = 'domainLookup'
-var ONNECT = 'onnect'
-var REQUEST = 'request'
-var RESPONSE = 'response'
-var LOAD_EVENT = 'loadEvent'
-var DOM_CONTENT_LOAD_EVENT = 'domContentLoadedEvent'
+var START = "Start";
+var END = "End";
+var UNLOAD_EVENT = "unloadEvent";
+var REDIRECT = "redirect";
+var DOMAIN_LOOKUP = "domainLookup";
+var ONNECT = "onnect";
+var REQUEST = "request";
+var RESPONSE = "response";
+var LOAD_EVENT = "loadEvent";
+var DOM_CONTENT_LOAD_EVENT = "domContentLoadedEvent";
 
-export var navTimingValues = []
+export var navTimingValues = [];
 
-export function addPT (pt, v) {
-  var offset = pt['navigation' + START]
-  v.of = offset
-  addRel(offset, offset, v, 'n')
-  addRel(pt[UNLOAD_EVENT + START], offset, v, 'u')
-  addRel(pt[REDIRECT + START], offset, v, 'r')
-  addRel(pt[UNLOAD_EVENT + END], offset, v, 'ue')
-  addRel(pt[REDIRECT + END], offset, v, 're')
-  addRel(pt['fetch' + START], offset, v, 'f')
-  addRel(pt[DOMAIN_LOOKUP + START], offset, v, 'dn')
-  addRel(pt[DOMAIN_LOOKUP + END], offset, v, 'dne')
-  addRel(pt['c' + ONNECT + START], offset, v, 'c')
-  addRel(pt['secureC' + ONNECT + 'ion' + START], offset, v, 's')
-  addRel(pt['c' + ONNECT + END], offset, v, 'ce')
-  addRel(pt[REQUEST + START], offset, v, 'rq')
-  addRel(pt[RESPONSE + START], offset, v, 'rp')
-  addRel(pt[RESPONSE + END], offset, v, 'rpe')
-  addRel(pt.domLoading, offset, v, 'dl')
-  addRel(pt.domInteractive, offset, v, 'di')
-  addRel(pt[DOM_CONTENT_LOAD_EVENT + START], offset, v, 'ds')
-  addRel(pt[DOM_CONTENT_LOAD_EVENT + END], offset, v, 'de')
-  addRel(pt.domComplete, offset, v, 'dc')
-  addRel(pt[LOAD_EVENT + START], offset, v, 'l')
-  addRel(pt[LOAD_EVENT + END], offset, v, 'le')
-  return v
+export function addPT(pt, v) {
+  var offset = pt["navigation" + START];
+  v.of = offset;
+  addRel(offset, offset, v, "n");
+  addRel(pt[UNLOAD_EVENT + START], offset, v, "u");
+  addRel(pt[REDIRECT + START], offset, v, "r");
+  addRel(pt[UNLOAD_EVENT + END], offset, v, "ue");
+  addRel(pt[REDIRECT + END], offset, v, "re");
+  addRel(pt["fetch" + START], offset, v, "f");
+  addRel(pt[DOMAIN_LOOKUP + START], offset, v, "dn");
+  addRel(pt[DOMAIN_LOOKUP + END], offset, v, "dne");
+  addRel(pt["c" + ONNECT + START], offset, v, "c");
+  addRel(pt["secureC" + ONNECT + "ion" + START], offset, v, "s");
+  addRel(pt["c" + ONNECT + END], offset, v, "ce");
+  addRel(pt[REQUEST + START], offset, v, "rq");
+  addRel(pt[RESPONSE + START], offset, v, "rp");
+  addRel(pt[RESPONSE + END], offset, v, "rpe");
+  addRel(pt.domLoading, offset, v, "dl");
+  addRel(pt.domInteractive, offset, v, "di");
+  addRel(pt[DOM_CONTENT_LOAD_EVENT + START], offset, v, "ds");
+  addRel(pt[DOM_CONTENT_LOAD_EVENT + END], offset, v, "de");
+  addRel(pt.domComplete, offset, v, "dc");
+  addRel(pt[LOAD_EVENT + START], offset, v, "l");
+  addRel(pt[LOAD_EVENT + END], offset, v, "le");
+  return v;
 }
 
 // Add Performance Navigation values to the given object
-export function addPN (pn, v) {
-  addRel(pn.type, 0, v, 'ty')
-  addRel(pn.redirectCount, 0, v, 'rc')
-  return v
+export function addPN(pn, v) {
+  addRel(pn.type, 0, v, "ty");
+  addRel(pn.redirectCount, 0, v, "rc");
+  return v;
 }
 
-export function addRel (value, offset, obj, prop) {
-  var relativeValue
-  if (typeof (value) === 'number' && (value > 0)) {
-    relativeValue = Math.round(value - offset)
-    obj[prop] = relativeValue
+export function addRel(value, offset, obj, prop) {
+  var relativeValue;
+  if (typeof value === "number" && value > 0) {
+    relativeValue = Math.round(value - offset);
+    obj[prop] = relativeValue;
   }
-  navTimingValues.push(relativeValue)
+  navTimingValues.push(relativeValue);
 }

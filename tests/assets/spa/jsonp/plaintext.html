@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <!--
   Copyright 2020 New Relic Corporation. All rights reserved.
   SPDX-License-Identifier: Apache-2.0
@@ -7,26 +7,27 @@
 <html>
   <head>
     <title>JSONP Unit Test</title>
-    {init}
-    {config}
-    {loader}
+    {init} {config} {loader}
   </head>
   <body>
-      <script>
-function foo (data) {
-  var el = document.createElement('p')
-  el.innerHTML = data
-  document.body.appendChild(el)
-  window.location.hash = Math.random()
-}
+    <script>
+      function foo(data) {
+        var el = document.createElement("p");
+        el.innerHTML = data;
+        document.body.appendChild(el);
+        window.location.hash = Math.random();
+      }
 
-document.addEventListener('click', function () {
-  var el = document.createElement('script')
-  el.src = '/jsonp?cb=foo&plain=true'
-  window.document.body.appendChild(el)
-}, false)
-
-      </script>
-      <p>Click me!</p>
+      document.addEventListener(
+        "click",
+        function () {
+          var el = document.createElement("script");
+          el.src = "/jsonp?cb=foo&plain=true";
+          window.document.body.appendChild(el);
+        },
+        false
+      );
+    </script>
+    <p>Click me!</p>
   </body>
 </html>

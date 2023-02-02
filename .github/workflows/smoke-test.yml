@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # Runs every day at 3AM
-    - cron: '0 3 * * *'
-
+    - cron: "0 3 * * *"
 
 env:
   BUILD_NUMBER: event-${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
@@ -15,7 +14,7 @@ jobs:
     if: contains(fromJson('["schedule"]'), github.event_name) || contains(fromJson('["workflow_dispatch"]'), github.event_name)
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -32,7 +31,7 @@ jobs:
   check-failures:
     runs-on: ubuntu-latest
     container: node:14
-    if: contains(github.event.pull_request.labels.*.name, 'safe to test') && ${{ !failure() }}  # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test') && ${{ !failure() }} # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
     needs: [chrome]
     env:
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
@@ -43,4 +42,3 @@ jobs:
 
       - name: check failed tests
         run: node --max-old-space-size=8192 ./tools/jil/util/get-failed-tests.js
-  

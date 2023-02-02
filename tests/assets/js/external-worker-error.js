@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-self.externalFunction = () => { // eslint-disable-line
-  throw new Error("worker error")
-}
+self.externalFunction = () => {
+  // eslint-disable-line
+  throw new Error("worker error");
+};

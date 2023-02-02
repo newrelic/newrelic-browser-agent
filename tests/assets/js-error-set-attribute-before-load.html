@@ -5,17 +5,15 @@
 -->
 <html>
   <head>
-    {init}
-    {config}
-    {loader}
+    {init} {config} {loader}
 
     <script>
       try {
-        throw new Error("My error")
+        throw new Error("My error");
       } catch (e) {
-        NREUM.noticeError(e)
+        NREUM.noticeError(e);
       }
-      newrelic.interaction().setAttribute('customParamKey', 1)
+      newrelic.interaction().setAttribute("customParamKey", 1);
     </script>
     <title>RUM Unit Test</title>
   </head>

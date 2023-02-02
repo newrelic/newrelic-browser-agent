@@ -3,15 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { sHash } from '../util/s-hash'
-import { navCookie } from '../timing/start-time'
-import { getConfigurationValue } from '../config/config'
-import { isBrowserScope } from '../util/global-scope'
+import { sHash } from "../util/s-hash";
+import { navCookie } from "../timing/start-time";
+import { getConfigurationValue } from "../config/config";
+import { isBrowserScope } from "../util/global-scope";
 
 // TO DO: this entire file & document.cookie & conditionallySet in harvester are severely outdated and can be scraped
 
 export function conditionallySet(agentIdentifier) {
-  var areCookiesEnabled = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled')
+  var areCookiesEnabled = getConfigurationValue(
+    agentIdentifier,
+    "privacy.cookies_enabled"
+  );
 
   if (navCookie && areCookiesEnabled && isBrowserScope) {
     // eslint-disable-next-line no-undef
@@ -20,5 +23,12 @@ export function conditionallySet(agentIdentifier) {
 }
 
 export function setCookie() {
-  document.cookie = 'NREUM=s=' + Number(new Date()) + '&r=' + sHash(document.location.href) + '&p=' + sHash(document.referrer) + '; path=/'
+  document.cookie =
+    "NREUM=s=" +
+    Number(new Date()) +
+    "&r=" +
+    sHash(document.location.href) +
+    "&p=" +
+    sHash(document.referrer) +
+    "; path=/";
 }

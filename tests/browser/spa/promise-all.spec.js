@@ -1,2 +1,2 @@
-const matcher = require('jil/util/browser-matcher')
-module.exports = matcher.withFeature('promise')
+const matcher = require("jil/util/browser-matcher");
+module.exports = matcher.withFeature("promise");

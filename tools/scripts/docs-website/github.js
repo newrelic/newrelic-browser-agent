@@ -3,31 +3,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict'
+"use strict";
 
-const { Octokit } = require('@octokit/rest')
+const { Octokit } = require("@octokit/rest");
 
 if (!process.env.GITHUB_TOKEN) {
-  console.log('GITHUB_TOKEN recommended to be set in ENV')
+  console.log("GITHUB_TOKEN recommended to be set in ENV");
 }
 
 const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN
-})
+  auth: process.env.GITHUB_TOKEN,
+});
 
 class Github {
-  constructor(repoOwner = 'newrelic', repository = 'newrelic-browser-agent') {
-    this.repoOwner = repoOwner
-    this.repository = repository
+  constructor(repoOwner = "newrelic", repository = "newrelic-browser-agent") {
+    this.repoOwner = repoOwner;
+    this.repository = repository;
   }
 
   async getLatestRelease() {
     const result = await octokit.repos.getLatestRelease({
       owner: this.repoOwner,
-      repo: this.repository
-    })
+      repo: this.repository,
+    });
 
-    return result.data
+    return result.data;
   }
 
   async createRelease(tag, name, body) {
@@ -36,86 +36,86 @@ class Github {
       repo: this.repository,
       tag_name: tag,
       name: name,
-      body: body
-    })
+      body: body,
+    });
 
-    return result.data
+    return result.data;
   }
 
   async getTagByName(name) {
-    const perPage = 100
+    const perPage = 100;
 
-    let pageNum = 1
+    let pageNum = 1;
 
-    let result = null
+    let result = null;
     do {
       result = await octokit.repos.listTags({
         owner: this.repoOwner,
         repo: this.repository,
         per_page: perPage,
-        page: pageNum
-      })
+        page: pageNum,
+      });
 
       const found = result.data.find((tag) => {
-        return tag.name === name
-      })
+        return tag.name === name;
+      });
 
       if (found) {
-        return found
+        return found;
       }
 
-      pageNum++
-    } while (result.data.length === perPage) // there *might* be more data
+      pageNum++;
+    } while (result.data.length === perPage); // there *might* be more data
 
-    return null
+    return null;
   }
 
   async getCommit(sha) {
     const result = await octokit.repos.getCommit({
       owner: this.repoOwner,
       repo: this.repository,
-      ref: sha
-    })
+      ref: sha,
+    });
 
-    return result.data
+    return result.data;
   }
 
   async getMergedPullRequestsSince(date) {
-    const perPage = 50
+    const perPage = 50;
 
-    const comparisonDate = new Date(date)
+    const comparisonDate = new Date(date);
 
-    let pageNum = 1
-    const mergedPullRequests = []
-    let result = null
-    let hadData = false
+    let pageNum = 1;
+    const mergedPullRequests = [];
+    let result = null;
+    let hadData = false;
 
     do {
       result = await octokit.pulls.list({
         owner: this.repoOwner,
         repo: this.repository,
-        state: 'closed',
-        sort: 'updated',
-        direction: 'desc',
+        state: "closed",
+        sort: "updated",
+        direction: "desc",
         per_page: perPage,
-        page: pageNum
-      })
+        page: pageNum,
+      });
 
       const mergedPrs = result.data.filter((pr) => {
-        return pr.merged_at && new Date(pr.merged_at) > comparisonDate
-      })
+        return pr.merged_at && new Date(pr.merged_at) > comparisonDate;
+      });
 
-      mergedPullRequests.push(...mergedPrs)
+      mergedPullRequests.push(...mergedPrs);
       // Since we are going by 'updated' on query but merged on filter,
       // there's a chance some boundaries are off. While in super extreme
       // cases we could still miss some it is unlikely given we are grabbing
       // large pages.
-      hadData = mergedPrs.length > 0
+      hadData = mergedPrs.length > 0;
 
-      pageNum++
-    } while (result.data.length === perPage && hadData) // might be more in next batch
+      pageNum++;
+    } while (result.data.length === perPage && hadData); // might be more in next batch
 
-    return mergedPullRequests
+    return mergedPullRequests;
   }
 
   async getLatestWorkflowRun(nameOrId, branch) {
@@ -125,14 +125,14 @@ class Github {
       repo: this.repository,
       workflow_id: nameOrId,
       branch: branch,
-      per_page: 5
-    })
+      per_page: 5,
+    });
 
-    return runs.data.workflow_runs[0]
+    return runs.data.workflow_runs[0];
   }
 
   async createPR(options) {
-    const { head, base, title, body, draft } = options
+    const { head, base, title, body, draft } = options;
 
     await octokit.pulls.create({
       owner: this.repoOwner,
@@ -141,9 +141,9 @@ class Github {
       base: base,
       title: title,
       body: body,
-      draft: draft
-    })
+      draft: draft,
+    });
   }
 }
 
-module.exports = Github
+module.exports = Github;

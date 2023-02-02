@@ -1,21 +1,23 @@
-import { globalScope } from '../util/global-scope';
+import { globalScope } from "../util/global-scope";
 
-var supportsPassive = false
+var supportsPassive = false;
 try {
-  var opts = Object.defineProperty({}, 'passive', {
+  var opts = Object.defineProperty({}, "passive", {
     // eslint-disable-next-line
-    get: function() {
-      supportsPassive = true
-    }
-  })
-  globalScope?.addEventListener('testPassive', null, opts)
-  globalScope?.removeEventListener('testPassive', null, opts)
+    get: function () {
+      supportsPassive = true;
+    },
+  });
+  globalScope?.addEventListener("testPassive", null, opts);
+  globalScope?.removeEventListener("testPassive", null, opts);
 } catch (e) {
   // do nothing
 }
 
 export function eventListenerOpts(useCapture) {
-  return supportsPassive ? {passive: true, capture: !!useCapture} : !!useCapture
+  return supportsPassive
+    ? { passive: true, capture: !!useCapture }
+    : !!useCapture;
 }
 
 /** Do not use this within the worker context. */

@@ -1,22 +1,16 @@
 <html>
-
-<head>
+  <head>
     <script>
-        const loader = 'full'
-        const url = new URL(window.location)
-        const params = url.searchParams
-        if (params.get('loader') !== loader) {
-            params.set('loader', loader)
-            window.location = `${url.origin}${url.pathname}?${params.toString()}`
-        }
+      const loader = "full";
+      const url = new URL(window.location);
+      const params = url.searchParams;
+      if (params.get("loader") !== loader) {
+        params.set("loader", loader);
+        window.location = `${url.origin}${url.pathname}?${params.toString()}`;
+      }
     </script>
-    {init}
-    {config}
-    {loader}
-</head>
+    {init} {config} {loader}
+  </head>
 
-<body>
-
-</body>
-
+  <body></body>
 </html>

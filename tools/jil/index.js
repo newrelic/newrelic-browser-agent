@@ -3,5 +3,5 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const runner = require('./runner')
-module.exports = runner
+const runner = require("./runner");
+module.exports = runner;

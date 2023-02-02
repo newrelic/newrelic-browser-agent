@@ -8,10 +8,10 @@
     <title>RUM Unit Test</title>
     {config}
     <script>
-    var originalSetTimeout = window.setTimeout
-    window.setTimeout = function (cb, dur) {
-      originalSetTimeout(cb, dur/1000)
-    }
+      var originalSetTimeout = window.setTimeout;
+      window.setTimeout = function (cb, dur) {
+        originalSetTimeout(cb, dur / 1000);
+      };
     </script>
     {loader}
   </head>

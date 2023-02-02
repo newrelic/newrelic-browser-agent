@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {documentAddEventListener} from '../event-listener/event-listener-opts'
+import { documentAddEventListener } from "../event-listener/event-listener-opts";
 
 /**
  * @param {function} cb - called when a visibility change occurs with the vis state at that time
@@ -11,12 +11,13 @@ import {documentAddEventListener} from '../event-listener/event-listener-opts'
  * @returns void
  */
 export function subscribeToVisibilityChange(cb, toHiddenOnly = false) {
-  documentAddEventListener('visibilitychange', handleVisibilityChange);
+  documentAddEventListener("visibilitychange", handleVisibilityChange);
   return;
 
   function handleVisibilityChange() {
-    if (toHiddenOnly) { // trigger cb on change to hidden state only
-      if (document.visibilityState == 'hidden') cb();
+    if (toHiddenOnly) {
+      // trigger cb on change to hidden state only
+      if (document.visibilityState == "hidden") cb();
       else return;
     }
     cb(document.visibilityState);
@@ -24,5 +25,5 @@ export function subscribeToVisibilityChange(cb, toHiddenOnly = false) {
 }
 
 export function initializeHiddenTime() {
-  return document.visibilityState === 'hidden' ? -1 : Infinity;
+  return document.visibilityState === "hidden" ? -1 : Infinity;
 }

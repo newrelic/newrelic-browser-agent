@@ -2,15 +2,20 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { cleanURL } from '../../../common/url/clean-url'
-import { mapOwn } from '../../../common/util/map-own'
-import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
-import { SharedContext } from '../../../common/context/shared-context'
-import { getInfo } from '../../../common/config/config'
+import { cleanURL } from "../../../common/url/clean-url";
+import { mapOwn } from "../../../common/util/map-own";
+import {
+  nullable,
+  numeric,
+  getAddStringContext,
+  addCustomAttributes,
+} from "../../../common/serialize/bel-serializer";
+import { SharedContext } from "../../../common/context/shared-context";
+import { getInfo } from "../../../common/config/config";
 
 export class Serializer extends SharedContext {
   constructor(parent) {
-    super(parent)
+    super(parent);
 
     /**
      * This variable is used to calculate an interactions ending offset when the
@@ -23,96 +28,122 @@ export class Serializer extends SharedContext {
   }
 
   serializeMultiple(interactions, offset, navTiming) {
-    const info = getInfo(this.sharedContext.agentIdentifier)
-    var addString = getAddStringContext(this.sharedContext.agentIdentifier)
-    var serialized = 'bel.7'
+    const info = getInfo(this.sharedContext.agentIdentifier);
+    var addString = getAddStringContext(this.sharedContext.agentIdentifier);
+    var serialized = "bel.7";
     interactions.forEach((interaction) => {
-      serialized += ';' + this.serializeInteraction(interaction.root, offset, navTiming, interaction.routeChange, addString, info)
-    })
-    this.firstTimestamp = undefined
-    return serialized
+      serialized +=
+        ";" +
+        this.serializeInteraction(
+          interaction.root,
+          offset,
+          navTiming,
+          interaction.routeChange,
+          addString,
+          info
+        );
+    });
+    this.firstTimestamp = undefined;
+    return serialized;
   }
 
   serializeSingle(root, offset, navTiming, isRouteChange) {
-    const info = getInfo(this.sharedContext.agentIdentifier)
-    var addString = getAddStringContext(this.sharedContext.agentIdentifier)
-    var serialized = 'bel.7;' + this.serializeInteraction(root, offset, navTiming, isRouteChange, addString, info)
-    this.firstTimestamp = undefined
-    return serialized
+    const info = getInfo(this.sharedContext.agentIdentifier);
+    var addString = getAddStringContext(this.sharedContext.agentIdentifier);
+    var serialized =
+      "bel.7;" +
+      this.serializeInteraction(
+        root,
+        offset,
+        navTiming,
+        isRouteChange,
+        addString,
+        info
+      );
+    this.firstTimestamp = undefined;
+    return serialized;
   }
 
-  serializeInteraction(root, offset, navTiming, isRouteChange, addString, info) {
-    offset = offset || 0
-    var isInitialPage = root.attrs.trigger === 'initialPageLoad'
+  serializeInteraction(
+    root,
+    offset,
+    navTiming,
+    isRouteChange,
+    addString,
+    info
+  ) {
+    offset = offset || 0;
+    var isInitialPage = root.attrs.trigger === "initialPageLoad";
     var typeIdsByName = {
       interaction: 1,
       ajax: 2,
-      customTracer: 4
-    }
+      customTracer: 4,
+    };
 
     // Include the hash fragment with all SPA data
-    var includeHashFragment = true
+    var includeHashFragment = true;
 
     const addNode = (node, nodeList) => {
-      if (node.type === 'customEnd') return nodeList.push([3, numeric(node.end - this.firstTimestamp)])
-      var typeName = node.type
-      var typeId = typeIdsByName[typeName]
-      var startTimestamp = node.start
-      var childCount = node.children.length
-      var attrCount = 0
-      var apmAttributes = info.atts
-      var hasNavTiming = isInitialPage && navTiming.length && typeId === 1
-      var children = []
-      var attrs = node.attrs
-      var metrics = attrs.metrics
-      var params = attrs.params
-      var queueTime = info.queueTime
-      var appTime = info.applicationTime
+      if (node.type === "customEnd")
+        return nodeList.push([3, numeric(node.end - this.firstTimestamp)]);
+      var typeName = node.type;
+      var typeId = typeIdsByName[typeName];
+      var startTimestamp = node.start;
+      var childCount = node.children.length;
+      var attrCount = 0;
+      var apmAttributes = info.atts;
+      var hasNavTiming = isInitialPage && navTiming.length && typeId === 1;
+      var children = [];
+      var attrs = node.attrs;
+      var metrics = attrs.metrics;
+      var params = attrs.params;
+      var queueTime = info.queueTime;
+      var appTime = info.applicationTime;
 
-      if (typeof this.firstTimestamp === 'undefined') {
-        startTimestamp += offset
-        this.firstTimestamp = startTimestamp
+      if (typeof this.firstTimestamp === "undefined") {
+        startTimestamp += offset;
+        this.firstTimestamp = startTimestamp;
       } else {
-        startTimestamp -= this.firstTimestamp
+        startTimestamp -= this.firstTimestamp;
       }
 
       var fields = [
         numeric(startTimestamp),
         numeric(node.end - node.start),
         numeric(node.jsEnd - node.end),
-        numeric(node.jsTime)
-      ]
+        numeric(node.jsTime),
+      ];
 
       switch (typeId) {
         case 1:
-          fields[2] = numeric(node.jsEnd - this.firstTimestamp)
+          fields[2] = numeric(node.jsEnd - this.firstTimestamp);
           fields.push(
             addString(attrs.trigger),
             addString(cleanURL(attrs.initialPageURL, includeHashFragment)),
             addString(cleanURL(attrs.oldURL, includeHashFragment)),
             addString(cleanURL(attrs.newURL, includeHashFragment)),
             addString(attrs.customName),
-            isInitialPage ? '' : isRouteChange ? 1 : 2,
+            isInitialPage ? "" : isRouteChange ? 1 : 2,
             nullable(isInitialPage && queueTime, numeric, true) +
-            nullable(isInitialPage && appTime, numeric, true) +
-            nullable(attrs.oldRoute, addString, true) +
-            nullable(attrs.newRoute, addString, true) +
-            addString(attrs.id),
+              nullable(isInitialPage && appTime, numeric, true) +
+              nullable(attrs.oldRoute, addString, true) +
+              nullable(attrs.newRoute, addString, true) +
+              addString(attrs.id),
             addString(node.id),
             nullable(attrs.firstPaint, numeric, true) +
-            nullable(attrs.firstContentfulPaint, numeric, false)
-          )
+              nullable(attrs.firstContentfulPaint, numeric, false)
+          );
 
-          var attrParts = addCustomAttributes(attrs.custom, addString)
-          children = children.concat(attrParts)
-          attrCount = attrParts.length
+          var attrParts = addCustomAttributes(attrs.custom, addString);
+          children = children.concat(attrParts);
+          attrCount = attrParts.length;
 
           if (apmAttributes) {
-            childCount++
-            children.push('a,' + addString(apmAttributes))
+            childCount++;
+            children.push("a," + addString(apmAttributes));
           }
 
-          break
+          break;
 
         case 2:
           fields.push(
@@ -122,37 +153,33 @@ export class Serializer extends SharedContext {
             addString(params.pathname),
             numeric(metrics.txSize),
             numeric(metrics.rxSize),
-            attrs.isFetch ? 1 : (attrs.isJSONP ? 2 : ''),
+            attrs.isFetch ? 1 : attrs.isJSONP ? 2 : "",
             addString(node.id),
             nullable(node.dt && node.dt.spanId, addString, true) +
-            nullable(node.dt && node.dt.traceId, addString, true) +
-            nullable(node.dt && node.dt.timestamp, numeric, false)
-          )
-          break
+              nullable(node.dt && node.dt.traceId, addString, true) +
+              nullable(node.dt && node.dt.timestamp, numeric, false)
+          );
+          break;
 
         case 4:
-          var tracedTime = attrs.tracedTime
+          var tracedTime = attrs.tracedTime;
           fields.push(
             addString(attrs.name),
-            nullable(tracedTime, numeric, true) +
-            addString(node.id)
-          )
-          break
+            nullable(tracedTime, numeric, true) + addString(node.id)
+          );
+          break;
       }
 
       for (var i = 0; i < node.children.length; i++) {
-        addNode(node.children[i], children)
+        addNode(node.children[i], children);
       }
 
-      fields.unshift(
-        numeric(typeId),
-        numeric(childCount += attrCount)
-      )
+      fields.unshift(numeric(typeId), numeric((childCount += attrCount)));
 
-      nodeList.push(fields)
+      nodeList.push(fields);
 
       if (childCount) {
-        nodeList.push(children.join(';'))
+        nodeList.push(children.join(";"));
       }
 
       if (hasNavTiming) {
@@ -168,31 +195,31 @@ export class Serializer extends SharedContext {
         //   the reason for writing the null seperator instead of setting the seperator
         //   is to ensure we still write it if the null is the last navTiming value.
 
-        var seperator = ','
-        var navTimingNode = 'b'
-        var prev = 0
+        var seperator = ",";
+        var navTimingNode = "b";
+        var prev = 0;
 
         // get all navTiming values except navigationStart
         // (since its the same as interaction.start)
         // and limit to just the first 20 values we know about
         mapOwn(navTiming.slice(1, 21), function (i, v) {
           if (v !== void 0) {
-            navTimingNode += seperator + numeric(v - prev)
-            seperator = ','
-            prev = v
+            navTimingNode += seperator + numeric(v - prev);
+            seperator = ",";
+            prev = v;
           } else {
-            navTimingNode += seperator + '!'
-            seperator = ''
+            navTimingNode += seperator + "!";
+            seperator = "";
           }
-        })
-        nodeList.push(navTimingNode)
+        });
+        nodeList.push(navTimingNode);
       } else if (typeId === 1) {
-        nodeList.push('')
+        nodeList.push("");
       }
 
-      return nodeList
-    }
+      return nodeList;
+    };
 
-    return addNode(root, []).join(';')
+    return addNode(root, []).join(";");
   }
 }

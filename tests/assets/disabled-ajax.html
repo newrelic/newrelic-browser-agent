@@ -8,15 +8,14 @@
     <title>Final Harvest Test with page view timings disabled</title>
     <script>
       // disable the ajax feature
-      window.NREUM||(NREUM={});
+      window.NREUM || (NREUM = {});
       NREUM.init = {
         ajax: {
-          enabled: false
-        }
-      }
+          enabled: false,
+        },
+      };
     </script>
-    {config}
-    {loader}
+    {config} {loader}
   </head>
   <body>
     <div>This page is used for testing disabled ajax feature.</div>

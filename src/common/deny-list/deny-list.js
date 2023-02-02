@@ -2,7 +2,7 @@
  * @see {@link https://docs.newrelic.com/docs/browser/new-relic-browser/configuration/filter-ajax-request-events/ Filter AjaxRequest events}
  * @type {Array.<{hostname: string, pathname: string}>}
  */
-var denyList = []
+var denyList = [];
 
 /**
  * Evaluates whether an XHR event should be included for collection based on the {@link denyList|AjaxRequest deny list}.
@@ -11,28 +11,30 @@ var denyList = []
  */
 export function shouldCollectEvent(params) {
   if (denyList.length === 0) {
-    return true
+    return true;
   }
-  
+
   // XHR requests with an undefined hostname (e.g., data URLs) should not be collected.
   if (params.hostname === undefined) {
-    return false
+    return false;
   }
 
   for (var i = 0; i < denyList.length; i++) {
-    var parsed = denyList[i]
+    var parsed = denyList[i];
 
-    if (parsed.hostname === '*') {
-      return false
+    if (parsed.hostname === "*") {
+      return false;
     }
-    
-    if (domainMatchesPattern(parsed.hostname, params.hostname)
-      && comparePath(parsed.pathname, params.pathname)) {
-      return false
+
+    if (
+      domainMatchesPattern(parsed.hostname, params.hostname) &&
+      comparePath(parsed.pathname, params.pathname)
+    ) {
+      return false;
     }
   }
 
-  return true
+  return true;
 }
 
 /**
@@ -40,33 +42,33 @@ export function shouldCollectEvent(params) {
  * @param {string[]} denyListConfig - array of URL filters to identify XHR requests to be excluded from collection
  */
 export function setDenyList(denyListConfig) {
-  denyList = []
+  denyList = [];
 
   if (!denyListConfig || !denyListConfig.length) {
-    return
+    return;
   }
 
   for (var i = 0; i < denyListConfig.length; i++) {
-    var url = denyListConfig[i]
+    var url = denyListConfig[i];
 
-    if (url.indexOf('http://') === 0) {
-      url = url.substring(7)
-    } else if (url.indexOf('https://') === 0) {
-      url = url.substring(8)
+    if (url.indexOf("http://") === 0) {
+      url = url.substring(7);
+    } else if (url.indexOf("https://") === 0) {
+      url = url.substring(8);
     }
 
-    var firstSlash = url.indexOf('/')
+    var firstSlash = url.indexOf("/");
 
     if (firstSlash > 0) {
       denyList.push({
         hostname: url.substring(0, firstSlash),
-        pathname: url.substring(firstSlash)
-      })
+        pathname: url.substring(firstSlash),
+      });
     } else {
       denyList.push({
         hostname: url,
-        pathname: ''
-      })
+        pathname: "",
+      });
     }
   }
 }
@@ -78,14 +80,14 @@ export function setDenyList(denyListConfig) {
  */
 function domainMatchesPattern(pattern, domain) {
   if (pattern.length > domain.length) {
-    return false
+    return false;
   }
 
-  if (domain.indexOf(pattern) === (domain.length - pattern.length)) {
-    return true
+  if (domain.indexOf(pattern) === domain.length - pattern.length) {
+    return true;
   }
 
-  return false
+  return false;
 }
 
 /**
@@ -95,22 +97,22 @@ function domainMatchesPattern(pattern, domain) {
  * @returns {boolean} `true` if path and pattern are an exact string match (except for leading slashes); else `false`
  */
 function comparePath(pattern, path) {
-  if (pattern.indexOf('/') === 0) {
-    pattern = pattern.substring(1)
+  if (pattern.indexOf("/") === 0) {
+    pattern = pattern.substring(1);
   }
 
-  if (path.indexOf('/') === 0) {
-    path = path.substring(1)
+  if (path.indexOf("/") === 0) {
+    path = path.substring(1);
   }
 
   // No path in pattern means match all paths.
-  if (pattern === '') {
-    return true
+  if (pattern === "") {
+    return true;
   }
 
   if (pattern === path) {
-    return true
+    return true;
   }
 
-  return false
+  return false;
 }

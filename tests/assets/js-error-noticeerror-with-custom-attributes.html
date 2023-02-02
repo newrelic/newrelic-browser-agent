@@ -5,12 +5,13 @@
 -->
 <html>
   <head>
-    {init}
-    {config}
-    {loader}
+    {init} {config} {loader}
 
     <script>
-      newrelic.noticeError(new Error('my error'), {custom1: 'val1', custom2: 'val2'})
+      newrelic.noticeError(new Error("my error"), {
+        custom1: "val1",
+        custom2: "val2",
+      });
     </script>
 
     <title>RUM Unit Test</title>

@@ -6,44 +6,47 @@
 <html>
   <head>
     <title>XHR constructor monkey-patching test</title>
-    {init}
-    {config}
-    {loader}
+    {init} {config} {loader}
     <script type="text/javascript">
-    var wrapperInvoked = false
+      var wrapperInvoked = false;
 
-    function wrap(callback) {
-      return function () {
-        var args = Array.prototype.slice.call(arguments)
-        wrapperInvoked = true
-        callback.apply(window, args)
+      function wrap(callback) {
+        return function () {
+          var args = Array.prototype.slice.call(arguments);
+          wrapperInvoked = true;
+          callback.apply(window, args);
+        };
       }
-    }
 
-    function patchAddEventListener(prototype) {
-      if (prototype.hasOwnProperty && prototype.hasOwnProperty('addEventListener')) {
-        var orig = prototype.addEventListener
-        prototype.addEventListener = function(event, callback, bubble) {
-          orig.call(this, event, wrap(callback), bubble)
+      function patchAddEventListener(prototype) {
+        if (
+          prototype.hasOwnProperty &&
+          prototype.hasOwnProperty("addEventListener")
+        ) {
+          var orig = prototype.addEventListener;
+          prototype.addEventListener = function (event, callback, bubble) {
+            orig.call(this, event, wrap(callback), bubble);
+          };
         }
       }
-    }
 
-    var proto = XMLHttpRequest.prototype
-    while (proto && !proto.hasOwnProperty('addEventListener')) {
-      proto = Object.getPrototypeOf(proto)
-    }
-    patchAddEventListener(proto)
+      var proto = XMLHttpRequest.prototype;
+      while (proto && !proto.hasOwnProperty("addEventListener")) {
+        proto = Object.getPrototypeOf(proto);
+      }
+      patchAddEventListener(proto);
 
-    var xhrDone = false
-    var xhr = new XMLHttpRequest()
-    xhr.open('GET', '/json')
-    xhr.addEventListener('load', function () { xhrDone = true })
-    xhr.send()
+      var xhrDone = false;
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "/json");
+      xhr.addEventListener("load", function () {
+        xhrDone = true;
+      });
+      xhr.send();
     </script>
   </head>
   <body>
-    The inline JS on this page emulates 3rd-party code which monkey-patches
-    the EventTarget.prototype.addEventListener after our patching.
+    The inline JS on this page emulates 3rd-party code which monkey-patches the
+    EventTarget.prototype.addEventListener after our patching.
   </body>
 </html>

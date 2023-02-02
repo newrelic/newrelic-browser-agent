@@ -3,70 +3,93 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil')
+const jil = require("jil");
 
-const { setup } = require('../utils/setup')
+const { setup } = require("../utils/setup");
 
-const setupData = setup()
-const {agentIdentifier, aggregator, nr} = setupData
+const setupData = setup();
+const { agentIdentifier, aggregator, nr } = setupData;
 
-jil.browserTest('MutationObserver instanceof check', function (t) {
-  var origMutationObserver = MutationObserver
-  const {Instrument} = require('../../../src/features/spa/instrument/index.js')
-  new Instrument(agentIdentifier, aggregator, false)
+jil.browserTest("MutationObserver instanceof check", function (t) {
+  var origMutationObserver = MutationObserver;
+  const {
+    Instrument,
+  } = require("../../../src/features/spa/instrument/index.js");
+  new Instrument(agentIdentifier, aggregator, false);
 
-  var observer = new MutationObserver(function () {})
+  var observer = new MutationObserver(function () {});
 
-  t.ok(observer instanceof MutationObserver, 'observer should be an instanceof MutationObserver')
-  t.ok(observer instanceof origMutationObserver, 'observer should be an instanceof original MutationObserver')
-  t.end()
-})
+  t.ok(
+    observer instanceof MutationObserver,
+    "observer should be an instanceof MutationObserver"
+  );
+  t.ok(
+    observer instanceof origMutationObserver,
+    "observer should be an instanceof original MutationObserver"
+  );
+  t.end();
+});
 
-jil.browserTest('MutationObserver double-instrumentation', function (t) {
-  var OrigMutationObserver = MutationObserver
-  const {Instrument} = require('../../../src/features/spa/instrument/index.js')
-  new Instrument(agentIdentifier, aggregator, false)
+jil.browserTest("MutationObserver double-instrumentation", function (t) {
+  var OrigMutationObserver = MutationObserver;
+  const {
+    Instrument,
+  } = require("../../../src/features/spa/instrument/index.js");
+  new Instrument(agentIdentifier, aggregator, false);
 
   // This simulates what zone.js does when they wrap MutationObserver
   var WrappedObserver = function (cb) {
-    return new OrigMutationObserver(cb)
-  }
-  window.MutationObserver = WrappedObserver
+    return new OrigMutationObserver(cb);
+  };
+  window.MutationObserver = WrappedObserver;
 
-  var observer = new MutationObserver(function () {})
+  var observer = new MutationObserver(function () {});
 
-  t.ok(observer, 'successfully created new double-wrapped MutationObserver instance')
-  t.end()
-})
+  t.ok(
+    observer,
+    "successfully created new double-wrapped MutationObserver instance"
+  );
+  t.end();
+});
 
-jil.browserTest('MutationObserver functionality check', function (t) {
-  const {Instrument} = require('../../../src/features/spa/instrument/index.js')
-  new Instrument(agentIdentifier, aggregator, false)
-  let callbackInvocations = 0
+jil.browserTest("MutationObserver functionality check", function (t) {
+  const {
+    Instrument,
+  } = require("../../../src/features/spa/instrument/index.js");
+  new Instrument(agentIdentifier, aggregator, false);
+  let callbackInvocations = 0;
 
   var observer = new MutationObserver(function () {
-    callbackInvocations++
-  })
+    callbackInvocations++;
+  });
 
-  let el = document.createElement('div')
-  document.body.appendChild(el)
+  let el = document.createElement("div");
+  document.body.appendChild(el);
 
   // Observing the same element twice should still result in the callback being
   // invoked only once.
-  observer.observe(el, { attributes: true })
-  observer.observe(el, { attributes: true })
+  observer.observe(el, { attributes: true });
+  observer.observe(el, { attributes: true });
 
-  el.setAttribute('foo', 'bar')
+  el.setAttribute("foo", "bar");
 
   setTimeout(() => {
-    t.equal(callbackInvocations, 1, 'expected callback to have been invoked exactly once')
+    t.equal(
+      callbackInvocations,
+      1,
+      "expected callback to have been invoked exactly once"
+    );
 
-    observer.disconnect()
+    observer.disconnect();
 
-    el.setAttribute('bar', 'baz')
+    el.setAttribute("bar", "baz");
     setTimeout(() => {
-      t.equal(callbackInvocations, 1, 'expected callback to not be invoked after disconnect')
-      t.end()
-    })
-  })
-})
+      t.equal(
+        callbackInvocations,
+        1,
+        "expected callback to not be invoked after disconnect"
+      );
+      t.end();
+    });
+  });
+});

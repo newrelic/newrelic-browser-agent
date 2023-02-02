@@ -5,10 +5,10 @@
 
 // represents test and browser/platform combination
 class DeviceTest {
-  constructor (test, browserSpec) {
-    this.test = test
-    this.browserSpec = browserSpec
+  constructor(test, browserSpec) {
+    this.test = test;
+    this.browserSpec = browserSpec;
   }
 }
 
-module.exports = DeviceTest
+module.exports = DeviceTest;

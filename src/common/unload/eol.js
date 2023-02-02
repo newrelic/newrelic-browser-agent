@@ -2,22 +2,27 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { ffVersion } from '../browser-version/firefox-version'
-import { windowAddEventListener } from '../event-listener/event-listener-opts';
-import { single } from '../util/single'
-import { globalScope, isWorkerScope, isBrowserScope } from '../util/global-scope'
-import { subscribeToVisibilityChange } from '../window/page-visibility';
+import { ffVersion } from "../browser-version/firefox-version";
+import { windowAddEventListener } from "../event-listener/event-listener-opts";
+import { single } from "../util/single";
+import {
+  globalScope,
+  isWorkerScope,
+  isBrowserScope,
+} from "../util/global-scope";
+import { subscribeToVisibilityChange } from "../window/page-visibility";
 
 if (isWorkerScope) {
   globalScope.cleanupTasks = []; // create new list on WorkerGlobalScope to track funcs to run before exiting thread
 
   const origClose = globalScope.close;
-  globalScope.close = () => {  // on worker's EoL signal, execute all "listeners", e.g. final harvests
+  globalScope.close = () => {
+    // on worker's EoL signal, execute all "listeners", e.g. final harvests
     for (let task of globalScope.cleanupTasks) {
       task();
     }
     origClose();
-  }
+  };
 }
 
 /**
@@ -26,12 +31,12 @@ if (isWorkerScope) {
  * @param {function} cb - func to run before or during the last reliable event or time of an env's life span
  * @param {boolean} allowBFCache - (temp) feature flag to gate new v1222 BFC support
  */
-export function subscribeToEOL (cb, allowBFCache) {
+export function subscribeToEOL(cb, allowBFCache) {
   if (isBrowserScope) {
     if (allowBFCache) {
-      subscribeToVisibilityChange(cb, true);  // when user switches tab or hides window, esp. mobile scenario
-      windowAddEventListener('pagehide', cb); // when user navigates away, and because safari iOS v14.4- doesn't fully support vis change
-                                                // --this ought to be removed once support for version below 14.5 phases out
+      subscribeToVisibilityChange(cb, true); // when user switches tab or hides window, esp. mobile scenario
+      windowAddEventListener("pagehide", cb); // when user navigates away, and because safari iOS v14.4- doesn't fully support vis change
+      // --this ought to be removed once support for version below 14.5 phases out
     } else {
       var oneCall = single(cb);
 
@@ -49,14 +54,13 @@ export function subscribeToEOL (cb, allowBFCache) {
       // attempting to submit from pagehide to ensure that we don't slow down loading
       // of the next page.
       if (!ffVersion || navigator.sendBeacon) {
-        windowAddEventListener('pagehide', oneCall)
+        windowAddEventListener("pagehide", oneCall);
       } else {
-        windowAddEventListener('beforeunload', oneCall)
+        windowAddEventListener("beforeunload", oneCall);
       }
-      windowAddEventListener('unload', oneCall)
+      windowAddEventListener("unload", oneCall);
     }
-  }
-  else if (isWorkerScope) {
+  } else if (isWorkerScope) {
     globalScope.cleanupTasks.push(cb); // close() should run these tasks before quitting thread
   }
   // By default (for other env), this fn has no effect.

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Browser Agent version number to publish (ex. 1221)'
+        description: "Browser Agent version number to publish (ex. 1221)"
         required: true
 
 jobs:

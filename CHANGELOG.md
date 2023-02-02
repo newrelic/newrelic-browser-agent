@@ -6,100 +6,126 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## v1224
 
 ### Support SPA, XHR, and session trace features on Chrome for iOS.
+
 Previously, the agent did not collect SPA browser interactions, XHR events, or session trace data in Chrome for iOS (which uses the webkit engine with modifications). The agent will now collect the same data in Chrome for iOS as in other supported browsers.
 
 ### Fix multiple custom interaction end times
+
 Fixed an issue where multiple custom interactions harvested at the same time would result in only one interaction being persisted in NR1.
 
 ### Prevent ajax time slice metrics based on deny list
+
 Prevent time slice metric collection for ajax calls when such a call matches an entry in the ajax deny list.
 
 ### Bind navigator scope to sendBeacon
+
 Some browser versions will throw errors if sendBeacon does not have the navigator scope bound to it. A fail-safe action of binding the navigator scope to sendBeacon was added to try to support those browsers.
 
 ### Expose build version to newrelic global
+
 The build version will now be exposed to the newrelic global object. It can be accessed under `newrelic.intializedAgents[<agentID>].runtime.version`.
 
 ### Add automation for docs-site updates on new releases
+
 A new release of the Browser Agent will automatically raise a PR to the docs-site team with relevant changelog items.
 
 ### Preserve unhandledPromiseRejection reasons as human-readable strings in error payloads
+
 The agent will attempt to preserve unhandledPromiseRejection reasons as human-readable messages on the Error payload that gets harvested. The previous strategy did not always work, because Promise.reject can pass any value, not just strings.
 
 ### Fix missing interactions for dynamic routes in Next/React
+
 Fixed an issue where when using the SPA loader with Next/React, route changes that lazy loaded components would not be captured. While the issue specifically called out Next/React, this should apply to Nuxt/Vue and Angular.
 
 ## v1223
 
 ### Refactor loader architecture for improved developer experience
+
 This architectural release simplifies file structure and refactors the way features are composed, in preparation for future developer experience improvements. These changes are not anticipated to have impact on agent behavior or functionality.
 
 ## v1222
 
 ### EXPERIMENTAL - Unblock instrumented pages from the back/forward cache (w/ feature flag)
+
 An instrumented page's back-forward cache eligibility was hampered by the agent's `unload` listener, which will be _removed_ when a feature flag is on. With the `allow_bfcache` enabled in the `init` config, the agent's definition of (the end of) an user's session is more refined, and it will no longer be blocking the browser from utilizing its respective b/f cache.
 
 ### Prevent feature from collecting and harvesting future data if account entitlements are invalid
+
 The agent will now attempt to shut down an initialized feature if account entitlements are invalid. Accounts that lack entitlements to use certain endpoints will see many 403 errors in the console without this behavior. This behavior requires the Page View Event feature to be enabled.
 
 ### Do not collect XHR events for data URLs
+
 AJAX events for data URLs have not historically been collected due to errors in the agent when handling URLs without hostnames. Going forward, XHR calls to data URLs will not cause agent errors and will continue to be excluded from collection.
 
 ### Reduce size of builds for modern browser targets
+
 The agent is now compatible with _only modern web syntax (ES6+)_; **this reduces loader size for these browsers by 20% or more**. We target and test support for just the last ten versions of Chrome, Edge, Safari, and Firefox -- see [browser agent EOL policy](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/browser-agent-eol-policy/) for more details.
 
 ### Fix nrWrapper exclusion in error stack traces
+
 Restoring previous functionality whereby the `nrWrapper` agent method should be excluded from JavaScript error stack traces.
 
 ### Fix errors with global self redefinition
+
 Fixing an issue where external code redefining the `self` global variable causes the agent async loading to fail and the agent to crash.
 
 ### Fix check for sessionStorage object
+
 Ensure the agent does not crash when sessionStorage is not available or when the quota has been exceeded or set to 0. Safari has been known to set the sessionStorage quota to 0 in private browsing windows.
 
 ## v1221
 
 ### Add infrastructure to run on web workers
+
 The agent's infrastructure will now allow for the agent to be built to run on web workers for future projects.
 
 ### Expose webpack library as output type "self" vs. "umd"
+
 To address "mismatched anonymous define" errors thrown by RequireJS, the agent's webpack library output will no longer include UMD checks for CommonJS and AMD module environments, and will instead be exposed globally via `self`.
 
 ### Fix custom attribute handling in cases where the info block is loaded after initialization
+
 Fixed an issue where custom attributes could be cleared and reset if the info block was included on the page below the loader script. Our guidance still remains that **all configurations should be included on the page above the loader code**, however this is an attempt to do no harm when feasible for backwards compatibility.
 
 ### Update JS error bucketing algorithm
+
 The Agent will now take into account the error object type, message, and original stack trace when deciding on whether multiple JS errors should be bucketed together.
 
 ### Detect Workflow Changes
+
 PRs will run an action to detect workflow changes for a warning layer against vulnerability.
 
 ### Fix initial page load interaction reporting with Nuxt
+
 Fixed an issue where when using the SPA loader with Nuxt, the initial page load interaction was never being completed. This resulted in events like errors being retained in memory and never harvested because they were tied to an incomplete interaction.
 
 ### Fix error with jsPDF library and SPA agent
+
 Fixed an issue with the jsPDF library where it was not correctly detecting browser native support for Promises due to our wrapper. This resulted in an exception and jsPDF not generating the PDF. This issue is not present with the pro or lite agent.
 
 **Note**: This issue does not affect the pro or lite agent. This change allows the jsPDF library to function correctly when the spa agent is used. However, it does cause an internal error within the agent to be generated. This error does not break the agent, jsPDF, or other functionality. The issue is planned to be addressed in a future update.
 
 ### Ship automated PR builds to internal dev components for comparison with stable build
+
 Pull requests will now generate and ship a build which gets consumed by NR1 `dev` components
 
 ## v1220
 
-* Internal NR Platform release date: 10/5/2022
-* Production APM-injected release date: 10/6/2022
-* Production Standalone release date: TBD
+- Internal NR Platform release date: 10/5/2022
+- Production APM-injected release date: 10/6/2022
+- Production Standalone release date: TBD
 
 ### Capture unhandled Promise rejections
-The Agent will now observes and captures __*unhandled*__ Promise rejections as JavaScript Error objects.
+
+The Agent will now observes and captures **_unhandled_** Promise rejections as JavaScript Error objects.
 
 ### Remove non-ASCII characters from builds
+
 Certain dependencies were appending non-ASCII characters to build files. These characters were affecting older Python agent implementations downstream that worked to encode the agent snippet. The build files are now checked and cleaned of non-ASCII characters before shipping.
 
 ### Removed 3rd Party Cookies
 
-The browser agent no longer uses 3rd party cookies to maintain and track session information.  1st party implementation using `window.sessionStorage` is now used, which is automatically cleared when a page session ends.
+The browser agent no longer uses 3rd party cookies to maintain and track session information. 1st party implementation using `window.sessionStorage` is now used, which is automatically cleared when a page session ends.
 
 ### LCP is no longer reported on initialliy hidden pages
 
@@ -111,10 +137,11 @@ Individual features of the browser agent can now be dynamically loaded, enabled,
 
 ### Removal of script tag injection
 
-The agent no longer inserts other features into the page via a script tag insertion.  It now uses network requests to instantiate other code modules.
+The agent no longer inserts other features into the page via a script tag insertion. It now uses network requests to instantiate other code modules.
 
 ### Updated test process
-In an effort to better support the majority of our traffic, the test suite required to merge PRs has been updated to run against the __latest 10 major versions__ of Chrome, Firefox, Edge, Android, and the __latest 5 major versions__ of Safari and iOS. As part of this process, outdated code and polyfill libraries aimed at supporting deprecated browsers are no longer included in production builds by default.
+
+In an effort to better support the majority of our traffic, the test suite required to merge PRs has been updated to run against the **latest 10 major versions** of Chrome, Firefox, Edge, Android, and the **latest 5 major versions** of Safari and iOS. As part of this process, outdated code and polyfill libraries aimed at supporting deprecated browsers are no longer included in production builds by default.
 
 ### Polyfilling
 
@@ -123,14 +150,16 @@ Polyfills for IE11 have been included with the agent bundle.
 ### Fixed issue with BrowserInteraction nodes generating circular references
 
 BrowserInteractions no longer generate circular trees when they are self referential
+
 ## 0.0.9-beta.121 (2022-05-27)
+
 **Note:** Version bump only for package newrelic
 
 ## v1216
 
-* Internal NR Platform release date: 4/19/2022
-* Production APM-injected release date: 4/20/2022
-* Production Standalone release date: 4/27/2022
+- Internal NR Platform release date: 4/19/2022
+- Production APM-injected release date: 4/20/2022
+- Production Standalone release date: 4/27/2022
 
 ### Introduced obfuscation mechanism to payloads
 
@@ -142,17 +171,19 @@ A change has been implemented in our handling of applications hosted locally on 
 
 ### Fixed issue with trace ID random hex character length
 
-The final character in trace ID hex generation was returning as `undefined`, which translated to always be `0` (`undefined & 15 === 0`).  This change fixes this final character and ensures it is valid.
+The final character in trace ID hex generation was returning as `undefined`, which translated to always be `0` (`undefined & 15 === 0`). This change fixes this final character and ensures it is valid.
+
 ## v1215
 
-* Internal NR Platform release date: 01/24/2021
-* Production APM-injected release date: 01/25/2021
-* Production Standalone release date: 01/31/2021
+- Internal NR Platform release date: 01/24/2021
+- Production APM-injected release date: 01/25/2021
+- Production Standalone release date: 01/31/2021
 
 ### Collect supportability metrics for front end frameworks
 
 Added front end framework detection metrics to help guide future priorities for browser agent features. The following front end frameworks will now be detected and analyzed:
-- React 
+
+- React
 - Angular
 - AngularJS
 - Backbone
@@ -164,9 +195,9 @@ Added front end framework detection metrics to help guide future priorities for 
 
 ## v1214
 
-* Internal NR Platform release date: TBD
-* Production APM-injected release date: TBD
-* Production Standalone release date: TBD
+- Internal NR Platform release date: TBD
+- Production APM-injected release date: TBD
+- Production Standalone release date: TBD
 
 ### Exclude Data URL requests from Ajax events and metrics
 
@@ -178,9 +209,9 @@ Renamed LargestContentfulPaint PageViewTiming attributes from `url` to `elUrl` a
 
 ## v1213
 
-* Internal NR Platform release date: 12/06/2021
-* Production APM-injected release date: n/a
-* Production Standalone release date: n/a
+- Internal NR Platform release date: 12/06/2021
+- Production APM-injected release date: n/a
+- Production Standalone release date: n/a
 
 ### Included page view timing data in session trace payload
 
@@ -192,7 +223,7 @@ If a session trace ID exists, it will now be appended to harvests for the linkin
 
 ### Added NetworkInformation attributes to LCP & FI
 
-The core web vitals metrics `LCP` and `FI` will now include metadata describing the [network information](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation) observed on the page.  This includes [network type](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/type), [round trip time (rtt)](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/rtt) and [downlink](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/downlink).
+The core web vitals metrics `LCP` and `FI` will now include metadata describing the [network information](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation) observed on the page. This includes [network type](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/type), [round trip time (rtt)](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/rtt) and [downlink](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/downlink).
 
 ### Added element identification attributes to LCP
 
@@ -200,9 +231,9 @@ The core web vitals metrics `LCP` and `FI` will now include metadata describing 
 
 ## v1212
 
-* Staging release date: 11/04/2021
-* Production APM-injected release date: 11/08/2021
-* Production Standalone release date: 11/16/2021
+- Staging release date: 11/04/2021
+- Production APM-injected release date: 11/08/2021
+- Production Standalone release date: 11/16/2021
 
 ### Updated LCP tracking
 
@@ -232,12 +263,11 @@ The agent can now send metrics that capture information about how the agent itse
 
 ### Added agent supportability metrics for tracking excluded Ajax events
 
-
 ## v1211
 
-* Staging release date: 09/27/2021
-* Production APM-injected release date: 09/29/2021
-* Production Standalone release date: 10/21/2021
+- Staging release date: 09/27/2021
+- Production APM-injected release date: 09/29/2021
+- Production Standalone release date: 10/21/2021
 
 ### AjaxRequest events for all XHR/fetch requests
 
@@ -257,59 +287,65 @@ The agent no longer calls the `clearResourceTimings` API, which had the potentia
 
 ### Removed Opera from test matrix
 
-
 ## v1210
 
-* Staging release date: 07/01/2021
-* Production APM-injected release date: 07/06/2021
-* Production Standalone release date: 07/19/2021
-
+- Staging release date: 07/01/2021
+- Production APM-injected release date: 07/06/2021
+- Production Standalone release date: 07/19/2021
 
 ### PageHide PageViewTiming events are now accounted for during page unload events
-`PageHide` PageViewTiming events are used to query CLS values. In cases where the page was never hidden, inconsistencies would arise because the PageViewTiming event with that type would not be collected.  Now when `pageUnload` fires, if a `pageHide` PageViewTiming has not already been set, it will set it to the time of unload. 
+
+`PageHide` PageViewTiming events are used to query CLS values. In cases where the page was never hidden, inconsistencies would arise because the PageViewTiming event with that type would not be collected. Now when `pageUnload` fires, if a `pageHide` PageViewTiming has not already been set, it will set it to the time of unload.
 
 ### Perfect Cumulative Layout Scores (CLS) are now recorded as 0
-Perfect CLS scores were being ignored, because a score was only recorded when content shifted.  This change reports perfect scores as 0, fixing inconsistent CLS queries.
+
+Perfect CLS scores were being ignored, because a score was only recorded when content shifted. This change reports perfect scores as 0, fixing inconsistent CLS queries.
 
 ### Record fetch calls as metrics
-Fetch calls are currently only recorded as AjaxRequest events with SPA browser interactions. This change records fetch calls as AJAX metrics, which will make them visible in the AJAX UI charts.
 
+Fetch calls are currently only recorded as AjaxRequest events with SPA browser interactions. This change records fetch calls as AJAX metrics, which will make them visible in the AJAX UI charts.
 
 ## v1209
 
-* Staging release date: 05/24/2021
-* Production APM-injected release date: 05/26/2021
-* Production Standalone release date: 6/2/2021
-
+- Staging release date: 05/24/2021
+- Production APM-injected release date: 05/26/2021
+- Production Standalone release date: 6/2/2021
 
 ### Doubled the limit of PageAction events per harvest
+
 Up to 120 PageAction events can be harvested every 30 seconds.
 
 ### Prevent duplicate session trace nodes
+
 The final Session Trace node in a harvest, captured using the Resource Timing API, is no longer duplicated in the subsequent harvest.
 
 This issue lead to 1 duplicate node in a Session Trace, every 10 seconds, over the duration of the trace.
 
-### Memory overhead when agent script 
+### Memory overhead when agent script
+
 Fixed a memory leak in the agent when the network request to load the second part of the agent is blocked.
 
 ### Update to file protocol restriction
+
 Fixed an error thrown in the console when the agent is loaded using the `file://` protocol caused by features in the agent trying to run when others had been aborted.
 
 ### Removed call to /ping endpoint
+
 Removed a legacy behavior used to ensure network connection was kept alive in IE 7/8/9.
 
-### setTimeouts without callback functions 
+### setTimeouts without callback functions
+
 Fixed an issue where route change Browser Interactions would wait forever if a setTimeout was called without a callback function ([passing code in as a string in the first argument](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setTimeout#syntax)) as the first argument.
 
 ### Cypress.io
+
 Fixed a conflict between the Browser agent and the Cypress.io test framework when instrumenting XMLHttpRequest.
 
 ## v1208
 
-* Staging release date: 03/10/2021
-* Production APM-injected release date: 03/11/2021
-* Production Standalone release date: 03/22/2021
+- Staging release date: 03/10/2021
+- Production APM-injected release date: 03/11/2021
+- Production Standalone release date: 03/22/2021
 
 ### Retry harvest network requests
 
@@ -321,19 +357,19 @@ The agent will not report any data when it is on a page opened from a local file
 
 ## v1198
 
-* Staging release date: 01/29/2021
-* Production APM-injected release date: 02/01/2021
-* Production Standalone release date: 02/08/2021
+- Staging release date: 01/29/2021
+- Production APM-injected release date: 02/01/2021
+- Production Standalone release date: 02/08/2021
 
 ### Send metrics harvest as POST body
 
-The agent now sends JS errors and AJAX metrics data as body of a standard XHR request. 
+The agent now sends JS errors and AJAX metrics data as body of a standard XHR request.
 
 ## v1194
 
-* Staging release date: 01/07/2021
-* Production APM-injected release date: 01/11/2021
-* Production Standalone release date: 01/19/2021
+- Staging release date: 01/07/2021
+- Production APM-injected release date: 01/11/2021
+- Production Standalone release date: 01/19/2021
 
 ### Optimized instrumentation of promises
 
@@ -347,12 +383,11 @@ In a rare case where large number of callbacks are executed at the end of an int
 
 Added handling for the use of fetch with a URL object.
 
-
 ## v1177
 
-* Staging release date: 08/18/2020
-* Production APM-injected release date: 08/19/2020
-* Production Standalone release date: 08/26/2020
+- Staging release date: 08/18/2020
+- Production APM-injected release date: 08/19/2020
+- Production Standalone release date: 08/26/2020
 
 ### [Timing] Added pageHide and windowLoad PageViewTiming events
 
@@ -370,9 +405,9 @@ Older browsers report Event.timeStamp as an epoch time instead of value relative
 
 ## v1173
 
-* Staging release date: 07/23/2020
-* Production APM-injected release date: 07/28/2020
-* Production Standalone release date: 08/03/2020
+- Staging release date: 07/23/2020
+- Production APM-injected release date: 07/28/2020
+- Production Standalone release date: 08/03/2020
 
 ### [DT] W3C TraceContext headers
 
@@ -380,9 +415,9 @@ The agent can now use the W3C TraceContext headers in addition to and instead of
 
 ## v1169
 
-* Staging release date: 05/20/2020
-* Production APM-injected release date: 05/28/2020
-* Production Standalone release date: 06/01/2020
+- Staging release date: 05/20/2020
+- Production APM-injected release date: 05/28/2020
+- Production Standalone release date: 06/01/2020
 
 ### [Privacy] Added ability to enable/disable cookies
 
@@ -394,9 +429,9 @@ In some cases, the agent was causing a DOMException error when getting size of X
 
 ## v1167
 
-* Staging release date: 02/07/2020
-* Production APM-injected release date: 02/07/2020
-* Production Standalone release date: 02/07/2020
+- Staging release date: 02/07/2020
+- Production APM-injected release date: 02/07/2020
+- Production Standalone release date: 02/07/2020
 
 ### [Timing] Fixed a script error on old IE browsers
 
@@ -404,7 +439,7 @@ Resolved a bug that caused a script error when the windowUnload event fired. Thi
 
 ## v1163
 
-* Staging release date: 02/03/2020
+- Staging release date: 02/03/2020
 
 ### [Timing] Largest Contentful Paint
 
@@ -414,17 +449,17 @@ The agent is now capturing Largest Contentful Paint (LCP) as a new type of the P
 
 The agent is now capturing the timing of the [Window unload](https://developer.mozilla.org/en-US/docs/Web/API/Window/unload_event) event as a new type of the PageViewTiming event.
 
-### [XHR] Fixed capturing response size for requests with *ms-stream* response type
+### [XHR] Fixed capturing response size for requests with _ms-stream_ response type
 
 Requests with ms-stream data were previously causing errors in the agent.
 
 ## v1158
 
-* Staging release date: 12/18/2019
-* Lite release date (US): 12/19/2019
-* Lite release date (EU): 12/19/2019
-* Pro / Enterprise release date: 12/19/2019
-* Standalone/Current release date: 12/30/2019
+- Staging release date: 12/18/2019
+- Lite release date (US): 12/19/2019
+- Lite release date (EU): 12/19/2019
+- Pro / Enterprise release date: 12/19/2019
+- Standalone/Current release date: 12/30/2019
 
 ### [DT] Distributed Tracing for cross-origin AJAX calls
 
@@ -432,11 +467,11 @@ The agent can now add the `newrelic` DT header to outgoing cross-origin AJAX cal
 
 ## v1153
 
-* Staging release date: 11/08/2019
-* Lite release date (US): 11/14/2019
-* Lite release date (EU): 11/19/2019
-* Pro / Enterprise release date: 11/19/2019
-* Standalone/Current release date: 11/21/2019
+- Staging release date: 11/08/2019
+- Lite release date (US): 11/14/2019
+- Lite release date (EU): 11/19/2019
+- Pro / Enterprise release date: 11/19/2019
+- Standalone/Current release date: 11/21/2019
 
 ### [Timing] New PageViewTiming Event to capture User Centric Perceived Performance metrics in real time
 
@@ -448,8 +483,8 @@ The agent can now capture Span events for DT traces. This is accomplished by add
 
 ## v1149
 
-* Staging release date: 11/01/2019
-* Lite release date: 11/05/2019
+- Staging release date: 11/01/2019
+- Lite release date: 11/05/2019
 
 ### [Timing] Added First Interaction with delay (FID), improved FP and FCP accuracy
 
@@ -461,10 +496,10 @@ Browser interactions measure the time of all Javascript code that runs as a resu
 
 ## v1130
 
-* Staging release date: 07/11/2019
-* Lite release date: 07/16/2019
-* Pro / Enterprise release date: 07/18/2019
-* Standalone/Current release date: 07/25/2019
+- Staging release date: 07/11/2019
+- Lite release date: 07/16/2019
+- Pro / Enterprise release date: 07/18/2019
+- Standalone/Current release date: 07/25/2019
 
 ### [RUM][SPA] First Paint and First Contentful Paint values are now being collected
 
@@ -472,7 +507,7 @@ For browsers that implement the Paint Timing API, the agent will now collect pai
 
 ### [SPA] Updated instrumentation of the History API
 
-The history API methods are now instrumented on the History object constructor.  This is to ensure that our instrumentation does not override other libraries that wrap these methods.
+The history API methods are now instrumented on the History object constructor. This is to ensure that our instrumentation does not override other libraries that wrap these methods.
 
 ### [SPA] Updated instrumentation of DOM API methods
 
@@ -480,21 +515,21 @@ The DOM API methods used for JSONP instrumentation are now instrumented on the N
 
 ## v1123
 
-* Staging release date: 04/17/2019
-* Lite release date: 04/19/2019
-* Pro / Enterprise release date: 04/19/2019
-* Standalone/Current release date: 04/26/2019
+- Staging release date: 04/17/2019
+- Lite release date: 04/19/2019
+- Pro / Enterprise release date: 04/19/2019
+- Standalone/Current release date: 04/26/2019
 
 ### [XHR] Fixed capturing status code for Angular apps
 
-Angular calls abort() on the XHR object after it successfully finishes.  This was seen by our instrumentation as a call that did not finish, and as a result status code was set to `0`.  This fix addresses this use case by capturing status code earlier in the call stack.
+Angular calls abort() on the XHR object after it successfully finishes. This was seen by our instrumentation as a call that did not finish, and as a result status code was set to `0`. This fix addresses this use case by capturing status code earlier in the call stack.
 
 ## v1118
 
-* Staging release date: 01/02/2019
-* Lite release date: 01/04/2019
-* Pro / Enterprise release date: 01/08/2019
-* Standalone/Current release date: 01/14/2019
+- Staging release date: 01/02/2019
+- Lite release date: 01/04/2019
+- Pro / Enterprise release date: 01/08/2019
+- Standalone/Current release date: 01/14/2019
 
 ### [ERR] Custom attributes are now included on JavascriptError events.
 
@@ -504,24 +539,24 @@ This includes custom attributes added using the setCustomAttribute(), interactio
 
 ### [RUM] The page URL query param now contains value of the URL at the time the RUM call is made
 
-Currently, we are using the referer header value from the RUM call for transaction naming and for URL attributes on Insights events.  The agent also sends the URL value as a query parameter with the RUM call to get around HTTP header stripping.  This update brings the query parameter value on a par with the HTTP header by capturing it at the time the RUM request is made (to account for redirects).
+Currently, we are using the referer header value from the RUM call for transaction naming and for URL attributes on Insights events. The agent also sends the URL value as a query parameter with the RUM call to get around HTTP header stripping. This update brings the query parameter value on a par with the HTTP header by capturing it at the time the RUM request is made (to account for redirects).
 
 ## v1099
 
-* Staging release date: 10/02/2018
-* Lite release date: 10/04/2018
-* Pro / Enterprise release date: 10/08/2018
-* Standalone/Current release date: 10/17/2018
+- Staging release date: 10/02/2018
+- Lite release date: 10/04/2018
+- Pro / Enterprise release date: 10/08/2018
+- Standalone/Current release date: 10/17/2018
 
 ### [SPA] Action Text
 
-The agent now captures the text of the HTML element that was clicked when a browser interaction started.  This value is stored as an attribute called actionText on the BrowserInteraction events.
+The agent now captures the text of the HTML element that was clicked when a browser interaction started. This value is stored as an attribute called actionText on the BrowserInteraction events.
 
 There is also a new API `actionText`, which can be used to manually set the action text value.
 
 ### [Harvest] The agent now uses a fallback method for collecting data when sendBeacon fails
 
-Browsers can return false from sendBeacon call when it cannot be completed.  The agent now detects it and falls back to a different method to ensure data is captured.
+Browsers can return false from sendBeacon call when it cannot be completed. The agent now detects it and falls back to a different method to ensure data is captured.
 
 ### [ERR] Fixed calculating stackHash value in Safari 10 and 11
 
@@ -529,18 +564,18 @@ The stackHash value was not being properly calculated for global errors in Safar
 
 ### [SPA] Fixed issue with calling fetch without any arguments
 
-On certain versions of the Safari browser, calling fetch without any arguments is permitted.  Other browsers, in contrast, do not allow this and throw an error.  This also prevented the agent from working properly.
+On certain versions of the Safari browser, calling fetch without any arguments is permitted. Other browsers, in contrast, do not allow this and throw an error. This also prevented the agent from working properly.
 
 ### [SPA] Removed response size calculation for streaming fetch calls
 
-Previously, the agent cloned the response of a fetch call and read the response body in order to capture its size.  In certain versions of the Safari browser this caused other clone calls to fail.  As a result, the agent now only uses the `content-length` header, when available, to capture response size.
+Previously, the agent cloned the response of a fetch call and read the response body in order to capture its size. In certain versions of the Safari browser this caused other clone calls to fail. As a result, the agent now only uses the `content-length` header, when available, to capture response size.
 
 ## v1071
 
-* Staging release date: 11/14/2017
-* Lite release date: 11/28/2017
-* Pro / Enterprise release date: 12/04/2017
-* Standalone/Current release date: 12/08/2017
+- Staging release date: 11/14/2017
+- Lite release date: 11/28/2017
+- Pro / Enterprise release date: 12/04/2017
+- Standalone/Current release date: 12/08/2017
 
 ### [SPA] Add JS Errors to Browser Interactions
 
@@ -558,10 +593,10 @@ https://newrelic.atlassian.net/browse/JS-3486
 
 ## v1059
 
-* Staging release date: 09/27/2017
-* Lite release date: 10/02/2017
-* Pro / Enterprise release date: 10/04/2017
-* Standalone/Current release date: 10/11/2017
+- Staging release date: 09/27/2017
+- Lite release date: 10/02/2017
+- Pro / Enterprise release date: 10/04/2017
+- Standalone/Current release date: 10/11/2017
 
 ### [SPA] Add JSONP Support
 
@@ -582,10 +617,10 @@ wrappable.
 
 ## v1044
 
-* Staging release date: 06/30/17
-* Lite release date: 07/05/17
-* Pro / Enterprise release date: 07/10/17 1:20PM Pacific
-* Standalone/Current release date: 07/17/17 9:15AM Pacific
+- Staging release date: 06/30/17
+- Lite release date: 07/05/17
+- Pro / Enterprise release date: 07/10/17 1:20PM Pacific
+- Standalone/Current release date: 07/17/17 9:15AM Pacific
 
 ### [SPA] Improve aggregator performance
 
@@ -602,10 +637,10 @@ Session Traces.
 
 ## v1039
 
-* Staging release date: 06/08/17
-* Lite release date: 06/13/17
-* Pro / Enterprise release date: 06/15/17
-* Standalone/Current release date: 06/22/17
+- Staging release date: 06/08/17
+- Lite release date: 06/13/17
+- Pro / Enterprise release date: 06/15/17
+- Standalone/Current release date: 06/22/17
 
 ### [SPA] Do not instrument SPA without wrappable XHR
 
@@ -625,10 +660,10 @@ Some libraries recursively set timers that left our interactions open. The agent
 
 ## v1026
 
-* Staging release date: 03/07/17
-* Lite release date: 03/09/17
-* Pro / Enterprise release date: 03/13/17
-* Standalone/Current release date: 03/20/17
+- Staging release date: 03/07/17
+- Lite release date: 03/09/17
+- Pro / Enterprise release date: 03/13/17
+- Standalone/Current release date: 03/20/17
 
 ### [INS] Increase harvest interval from 10s to 30s
 
@@ -650,11 +685,11 @@ the bug fix from v993.
 
 ## v1016
 
-* Staging release date: 01/06/17
-* Lite release date: 01/10/17
-* Pro / Enterprise release date: 01/13/17
-* Standalone release date: 01/19/17
-* Current release date: 01/19/17
+- Staging release date: 01/06/17
+- Lite release date: 01/10/17
+- Pro / Enterprise release date: 01/13/17
+- Standalone release date: 01/19/17
+- Current release date: 01/19/17
 
 ### [Sourcemaps] Release ID's API Renamed
 
@@ -666,11 +701,11 @@ Previously, when the agent would send data using an XHR, it would feature-check 
 
 ## v1009
 
-* Staging release date: 11/18/16
-* Lite release date: TBD
-* Pro / Enterprise release date: TBD
-* Standalone release date: TBD
-* Current release date: TBD
+- Staging release date: 11/18/16
+- Lite release date: TBD
+- Pro / Enterprise release date: TBD
+- Standalone release date: TBD
+- Current release date: TBD
 
 ### Release ID's API
 
@@ -682,11 +717,11 @@ Previously, the wrapped scroll event listener did not take advantage of an avail
 
 ## v998
 
-* Staging release date: 10/27/16
-* Lite release date: 11/1/16
-* Pro / Enterprise release date: 11/3/16
-* Standalone release date: 11/10/16
-* Current release date: 11/10/16
+- Staging release date: 10/27/16
+- Lite release date: 11/1/16
+- Pro / Enterprise release date: 11/3/16
+- Standalone release date: 11/10/16
+- Current release date: 11/10/16
 
 ### [EE] - Fixed how we handle backlog draining
 
@@ -695,11 +730,11 @@ backlog after 30 seconds.
 
 ## v995
 
-* Staging release date: 10/4/16
-* Lite release date: 10/5/16
-* Pro / Enterprise release date: 10/10/16
-* Standalone release date: TBD
-* Current release date: TBD
+- Staging release date: 10/4/16
+- Lite release date: 10/5/16
+- Pro / Enterprise release date: 10/10/16
+- Standalone release date: TBD
+- Current release date: TBD
 
 ### [wrap-event] Fixed a bug with addEventListener wrapping introduced in v993.
 
@@ -707,18 +742,18 @@ Previously Objects implementing the EventListener interface which were registere
 
 ## v993
 
-* Staging release date: 9/22/16
-* Lite release date: TBD
-* Pro / Enterprise release date: TBD
-* Standalone release date: TBD
-* Current release date: TBD
+- Staging release date: 9/22/16
+- Lite release date: TBD
+- Pro / Enterprise release date: TBD
+- Standalone release date: TBD
+- Current release date: TBD
 
 ### [EE] Fixed a compatibility issue with zone.js
 
 Previously when the agent and zone.js were both included on a page, additional
 event handlers would be triggered twice. For example, when event handlers were
 added as properties, such as `onreadystatechange`, these handlers would be
-triggered twice in some browsers.  This issue has now been resolved.
+triggered twice in some browsers. This issue has now been resolved.
 
 ### [wrap-function] Fixed a bug with cross-frame callbacks
 
@@ -730,7 +765,7 @@ thrown. The agent will now only wrap callbacks created in the same frame.
 ### [EE] Agent no longer leaks memory when it does not load correctly
 
 Previously, the agent would continue to buffer events to be processed and
-harvested, even if the aggregator portion of the agent failed to load.  The agent
+harvested, even if the aggregator portion of the agent failed to load. The agent
 now will clear the buffers and stop emitting events if it detects a failure, or
 if the rum request has not completed within 30 seconds of the load event.
 
@@ -748,16 +783,16 @@ This api can be used to set the `previousRouteName` and `targetRouteName` for
 ### [Harvest] Disabled insecure communication with the router
 
 Previously the agent would send rum data to the router without TLS if the
-request was initiated from an insecure page.  Now the agent will always use
+request was initiated from an insecure page. Now the agent will always use
 TLS connection when transmitting data.
 
 ## v974
 
-* Staging release date: 8/16/2016
-* Lite release date: 8/18/2016
-* Pro / Enterprise release date: 8/18/2016
-* Standalone release date: 8/24/2016
-* Current release date: 8/24/2016
+- Staging release date: 8/16/2016
+- Lite release date: 8/18/2016
+- Pro / Enterprise release date: 8/18/2016
+- Standalone release date: 8/24/2016
+- Current release date: 8/24/2016
 
 This release adds a new setErrorHandler api to agent which allows
 applications to see the errors collected by the agent, and optionally
@@ -765,11 +800,11 @@ ignore them.
 
 ## v971
 
-* Staging release date: 8/10/2016
-* Lite release date: 8/15/2016
-* Pro / Enterprise release date: 8/17/2016
-* Standalone release date: TBD
-* Current release date: TBD
+- Staging release date: 8/10/2016
+- Lite release date: 8/15/2016
+- Pro / Enterprise release date: 8/17/2016
+- Standalone release date: TBD
+- Current release date: TBD
 
 ### [SPA] Add support for keyboard change events
 
@@ -789,11 +824,11 @@ events. This is to match the attributes of other events.
 
 ## v963
 
-* Staging release date: 7/5/2016
-* Lite release date: 7/6/2016
-* Pro / Enterprise release date: 7/7/2016
-* Standalone release date: TBD
-* Current release date: TBD
+- Staging release date: 7/5/2016
+- Lite release date: 7/6/2016
+- Pro / Enterprise release date: 7/7/2016
+- Standalone release date: TBD
+- Current release date: TBD
 
 ### [SPA] Finalize the browser interaction api
 
@@ -838,11 +873,11 @@ of the original promise function, rather than throwing an error.
 
 ## v952
 
-* Staging release date: 6/3/16
-* Lite release date: 6/6/16
-* Pro / Enterprise release date: 6/10/16
-* Standalone release date: TBD
-* Current release date: TBD
+- Staging release date: 6/3/16
+- Lite release date: 6/6/16
+- Pro / Enterprise release date: 6/10/16
+- Standalone release date: TBD
+- Current release date: TBD
 
 ### [SPA] Update to bel.3 schema
 
@@ -853,11 +888,11 @@ sizes.
 
 ## v943
 
-* Staging release date: 5/2/16
-* Lite release date: 5/4/16
-* Pro / Enterprise release date: 5/5/16
-* Standalone release date: 6/6/16
-* Current release date: 6/6/16
+- Staging release date: 5/2/16
+- Lite release date: 5/4/16
+- Pro / Enterprise release date: 5/5/16
+- Standalone release date: 6/6/16
+- Current release date: 6/6/16
 
 ### Explicitly report the current URL when collection data
 
@@ -871,7 +906,7 @@ meta tag.
 
 All spa api methods are now attached to an interaction handle returned
 by calling newrelic.interaction(). This handle will be bound to the interaction
-that was active when it was first created.  The goal of this refactor is to
+that was active when it was first created. The goal of this refactor is to
 allow more usecases to be handled by the api, and to reduce confusion caused
 by not knowing when an interaction is active.
 
@@ -915,8 +950,8 @@ not produce `BrowserInteraction` events. This has been fixed.
 
 ## v918
 
-* Standalone release date: 5/4/16
-* Current release date: 5/4/16
+- Standalone release date: 5/4/16
+- Current release date: 5/4/16
 
 ### Fix zone.js compatibility for window.addEventListener wrapping
 
@@ -979,7 +1014,7 @@ time they were recorded. This has been fixed.
 ### Report jsDuration for BrowserInteraction Events
 
 This release bumps the querypack schema version to `bel.2` which adds support
-for jsDuration for browser interactions.  It also removes the children property
+for jsDuration for browser interactions. It also removes the children property
 from attribute nodes, and removes the className property from elementData nodes.
 
 ## v885

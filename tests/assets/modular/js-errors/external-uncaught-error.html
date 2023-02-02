@@ -4,31 +4,33 @@
   PDX-License-Identifier: Apache-2.0
 -->
 <html>
+  <head>
+    {init} {config}
 
-<head>
-  {init}
-  {config}
-
-  <!-- Any injection tag with 'packages/<PATH>' will automatically be
+    <!-- Any injection tag with 'packages/<PATH>' will automatically be
       replaced with that file -->
-  {tests/assets/js/internal/modular/index.js}
-  <script>
-    const { default: NR } = NRBA;
-    const opts1 = {
-      ...NREUM.init,
-      ...NREUM.info,
-      ...NREUM.loader_config,
-      applicationID: 1
-    };
-    const agent = new NR()
-    agent.start(opts1)
-  </script>
-  <title>RUM Unit Test</title>
-</head>
+    {tests/assets/js/internal/modular/index.js}
+    <script>
+      const { default: NR } = NRBA;
+      const opts1 = {
+        ...NREUM.init,
+        ...NREUM.info,
+        ...NREUM.loader_config,
+        applicationID: 1,
+      };
+      const agent = new NR();
+      agent.start(opts1);
+    </script>
+    <title>RUM Unit Test</title>
+  </head>
 
-<body>
-  This page fires an uncaught exception from external JS code
-  <script type="text/javascript" src="js/external-uncaught-error.js?secretParameter=secretValue" async defer></script>
-</body>
-
+  <body>
+    This page fires an uncaught exception from external JS code
+    <script
+      type="text/javascript"
+      src="js/external-uncaught-error.js?secretParameter=secretValue"
+      async
+      defer
+    ></script>
+  </body>
 </html>

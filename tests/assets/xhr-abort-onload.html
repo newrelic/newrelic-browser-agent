@@ -6,22 +6,21 @@
 <html>
   <head>
     <title>Basic XHR test</title>
-    {init}
-    {config}
-    {loader}
+    {init} {config} {loader}
     <script type="text/javascript">
-    var xhr = new XMLHttpRequest()
+      var xhr = new XMLHttpRequest();
 
-    xhr.addEventListener('load', function() {
-      xhr.abort()
-      xhrDone = true
-    })
+      xhr.addEventListener("load", function () {
+        xhr.abort();
+        xhrDone = true;
+      });
 
-    xhr.open('GET', '/xhr_with_cat/1')
-    xhr.send()
+      xhr.open("GET", "/xhr_with_cat/1");
+      xhr.send();
     </script>
   </head>
   <body>
-    This page just sends an XHR and calls xhr.abort() and sets window.xhrDone to true in the load callback.
+    This page just sends an XHR and calls xhr.abort() and sets window.xhrDone to
+    true in the load callback.
   </body>
 </html>

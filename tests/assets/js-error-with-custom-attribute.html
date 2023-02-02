@@ -5,30 +5,29 @@
 -->
 <html>
   <head>
-    {init}
-    {config}
-    {loader}
+    {init} {config} {loader}
 
     <script>
-      var i = 0
+      var i = 0;
       function triggerError() {
-        newrelic.setCustomAttribute('customParamKey', i++)
-        newrelic.noticeError(new Error("My error"))
+        newrelic.setCustomAttribute("customParamKey", i++);
+        newrelic.noticeError(new Error("My error"));
       }
     </script>
 
     <title>RUM Unit Test</title>
   </head>
   <body>
-    This page throws a new error with a caught exception when the window receives a click event
-    <br/><br/>
+    This page throws a new error with a caught exception when the window
+    receives a click event
+    <br /><br />
     <button id="trigger">Trigger error</button>
     <script>
-      var btn = document.getElementById('trigger')
+      var btn = document.getElementById("trigger");
       if (window.addEventListener) {
-        btn.addEventListener('click', triggerError)
+        btn.addEventListener("click", triggerError);
       } else {
-        btn.onclick = triggerError
+        btn.onclick = triggerError;
       }
     </script>
   </body>

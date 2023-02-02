@@ -4,15 +4,29 @@
   PDX-License-Identifier: Apache-2.0
 -->
 <html>
-<head>
-  <title>RUM Unit Test</title>
-  {init}
-  {config}
-  {loader}
-</head>
-<body>
-this is a generic page that is instrumented by the JS agent
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config} {loader}
+  </head>
+  <body>
+    this is a generic page that is instrumented by the JS agent
 
-<script>function myFunc(a) { console.log(a.click); }</script><script>(() => {var myVar; myFunc(myVar)})()</script><script>(() => {var myVar2; myFunc(myVar2)})();</script>
-</body>
+    <script>
+      function myFunc(a) {
+        console.log(a.click);
+      }
+    </script>
+    <script>
+      (() => {
+        var myVar;
+        myFunc(myVar);
+      })();
+    </script>
+    <script>
+      (() => {
+        var myVar2;
+        myFunc(myVar2);
+      })();
+    </script>
+  </body>
 </html>

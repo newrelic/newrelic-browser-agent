@@ -5,13 +5,12 @@
 -->
 <!-- we're using this to test the whole obfuscation process -->
 <html>
-
-<head>
-  <title>RUM Unit Test</title>
-  <!-- Uncomment below for functional test -->
-  {init}
-  <!-- Uncomment below for manual local server test -->
-  <!-- <script>
+  <head>
+    <title>RUM Unit Test</title>
+    <!-- Uncomment below for functional test -->
+    {init}
+    <!-- Uncomment below for manual local server test -->
+    <!-- <script>
     NREUM = window.NREUM || {init: {}};NREUM.init = {
       ...NREUM.init,
       obfuscate: [{
@@ -48,23 +47,21 @@
     }
     
   </script> -->
-  {config}
-  {loader}
-  <script type="text/javascript">
-    setTimeout(function () {
-      fetch('/json')
-      throw new Error('example')
-      document.getElementById("btn").click()
-    }, 100)
-  </script>
-  <script>
-    newrelic.addPageAction('pageaction')
-    newrelic.setCustomAttribute('customAttribute', 'customAttribute')
-  </script>
-</head>
+    {config} {loader}
+    <script type="text/javascript">
+      setTimeout(function () {
+        fetch("/json");
+        throw new Error("example");
+        document.getElementById("btn").click();
+      }, 100);
+    </script>
+    <script>
+      newrelic.addPageAction("pageaction");
+      newrelic.setCustomAttribute("customAttribute", "customAttribute");
+    </script>
+  </head>
 
-<body>
-  <a id="btn" href="#test">Click Me</a>
-</body>
-
+  <body>
+    <a id="btn" href="#test">Click Me</a>
+  </body>
 </html>

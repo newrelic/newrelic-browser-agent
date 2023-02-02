@@ -1,3 +1,3 @@
-import { gosNREUMOriginals } from '../../window/nreum'
+import { gosNREUMOriginals } from "../../window/nreum";
 
-export const originals = gosNREUMOriginals().o
+export const originals = gosNREUMOriginals().o;

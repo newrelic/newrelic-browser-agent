@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-function externalFunction () { // eslint-disable-line
-  throw new Error()
+function externalFunction() {
+  // eslint-disable-line
+  throw new Error();
 }

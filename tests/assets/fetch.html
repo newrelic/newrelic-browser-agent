@@ -6,14 +6,13 @@
 <html>
   <head>
     <title>Basic fetch test</title>
-    {init}
-    {config}
-    {loader}
+    {init} {config} {loader}
     <script type="text/javascript">
-      fetch('/json')
+      fetch("/json");
     </script>
   </head>
   <body>
-    This page just sends an XHR and sets window.xhrDone to true in the load callback.
+    This page just sends an XHR and sets window.xhrDone to true in the load
+    callback.
   </body>
 </html>

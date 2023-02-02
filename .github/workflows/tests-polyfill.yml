@@ -3,9 +3,8 @@ name: Polyfill Tests
 on:
   schedule:
     # Runs every day at 4AM
-    - cron: '0 4 * * *'
+    - cron: "0 4 * * *"
   workflow_dispatch:
-
 
 env:
   BUILD_NUMBER: polyfills-${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}

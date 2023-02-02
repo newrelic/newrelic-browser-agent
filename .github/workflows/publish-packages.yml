@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Type of release. patch or minor (major if breaking)'
+        description: "Type of release. patch or minor (major if breaking)"
         required: true
         type: choice
         options:
@@ -21,7 +21,6 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
       NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
       NODE_AUTH_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
-
 
     steps:
       - uses: actions/checkout@v3

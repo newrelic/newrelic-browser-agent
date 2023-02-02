@@ -6,19 +6,21 @@
 <html>
   <head>
     <title>Basic XHR test</title>
-    {init}
-    {config}
-    {loader}
+    {init} {config} {loader}
     <script type="text/javascript">
-      var xhr = new XMLHttpRequest()
-      xhr.open('GET', '/json')
-      xhr.send()
-      xhr.addEventListener('load', function () {
-        var xhr = new XMLHttpRequest()
-        xhr.open('GET', '/text')
-        xhr.addEventListener('load', function () {}, true)
-        xhr.send()
-      }, true)
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "/json");
+      xhr.send();
+      xhr.addEventListener(
+        "load",
+        function () {
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", "/text");
+          xhr.addEventListener("load", function () {}, true);
+          xhr.send();
+        },
+        true
+      );
     </script>
   </head>
   <body>

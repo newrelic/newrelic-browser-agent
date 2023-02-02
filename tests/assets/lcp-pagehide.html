@@ -6,31 +6,32 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {config}
-    {init}
-    {loader}
+    {config} {init} {loader}
   </head>
   <body>
-    <div id="initial-content">initial content</div>    
+    <div id="initial-content">initial content</div>
 
     <script>
       setTimeout(function () {
-        simulatePageHide()
-        addLargerElement()
-      }, 1000)
+        simulatePageHide();
+        addLargerElement();
+      }, 1000);
 
       function addLargerElement() {
-        var div = document.createElement("div")
-        div.innerText = 'larger element!!!!!!!!!!'
-        div.id = 'post-load-element'
-        document.body.insertBefore(div, document.body.firstChild)
+        var div = document.createElement("div");
+        div.innerText = "larger element!!!!!!!!!!";
+        div.id = "post-load-element";
+        document.body.insertBefore(div, document.body.firstChild);
       }
 
       // simulate page hide by dispatching the event manually
       function simulatePageHide() {
-        Object.defineProperty(document, 'visibilityState', {value: 'visible', writable: true})
-        document.visibilityState = 'hidden'
-        document.dispatchEvent(new Event("visibilitychange"))
+        Object.defineProperty(document, "visibilityState", {
+          value: "visible",
+          writable: true,
+        });
+        document.visibilityState = "hidden";
+        document.dispatchEvent(new Event("visibilitychange"));
       }
     </script>
   </body>

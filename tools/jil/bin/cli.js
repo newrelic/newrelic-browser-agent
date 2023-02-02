@@ -5,4 +5,4 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-require('../runner')
+require("../runner");

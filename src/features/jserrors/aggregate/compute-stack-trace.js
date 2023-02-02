@@ -56,58 +56,61 @@
 // INTERNET EXPLORER:
 // ex.message = ...
 // ex.name = ReferenceError
-import { reduce } from '../../../common/util/reduce'
-import { formatStackTrace } from './format-stack-trace'
+import { reduce } from "../../../common/util/reduce";
+import { formatStackTrace } from "./format-stack-trace";
 
-var debug = false
+var debug = false;
 
-var classNameRegex = /function (.+?)\s*\(/
-var chrome = /^\s*at (?:((?:\[object object\])?(?:[^(]*\([^)]*\))*[^()]*(?: \[as \S+\])?) )?\(?((?:file|http|https|chrome-extension):.*?)?:(\d+)(?::(\d+))?\)?\s*$/i
-var gecko = /^\s*(?:(\S*|global code)(?:\(.*?\))?@)?((?:file|http|https|chrome|safari-extension).*?):(\d+)(?::(\d+))?\s*$/i
-var chrome_eval = /^\s*at .+ \(eval at \S+ \((?:(?:file|http|https):[^)]+)?\)(?:, [^:]*:\d+:\d+)?\)$/i
-var ie_eval = /^\s*at Function code \(Function code:\d+:\d+\)\s*/i
+var classNameRegex = /function (.+?)\s*\(/;
+var chrome =
+  /^\s*at (?:((?:\[object object\])?(?:[^(]*\([^)]*\))*[^()]*(?: \[as \S+\])?) )?\(?((?:file|http|https|chrome-extension):.*?)?:(\d+)(?::(\d+))?\)?\s*$/i;
+var gecko =
+  /^\s*(?:(\S*|global code)(?:\(.*?\))?@)?((?:file|http|https|chrome|safari-extension).*?):(\d+)(?::(\d+))?\s*$/i;
+var chrome_eval =
+  /^\s*at .+ \(eval at \S+ \((?:(?:file|http|https):[^)]+)?\)(?:, [^:]*:\d+:\d+)?\)$/i;
+var ie_eval = /^\s*at Function code \(Function code:\d+:\d+\)\s*/i;
 
-export function computeStackTrace (ex) {
-  var stack = null
+export function computeStackTrace(ex) {
+  var stack = null;
 
   try {
-    stack = computeStackTraceFromStackProp(ex)
+    stack = computeStackTraceFromStackProp(ex);
     if (stack) {
-      return stack
+      return stack;
     }
   } catch (e) {
     if (debug) {
-      throw e
+      throw e;
     }
   }
 
   try {
-    stack = computeStackTraceBySourceAndLine(ex)
+    stack = computeStackTraceBySourceAndLine(ex);
     if (stack) {
-      return stack
+      return stack;
     }
   } catch (e) {
     if (debug) {
-      throw e
+      throw e;
     }
   }
 
   try {
-    stack = computeStackTraceWithMessageOnly(ex)
+    stack = computeStackTraceWithMessageOnly(ex);
     if (stack) {
-      return stack
+      return stack;
     }
   } catch (e) {
     if (debug) {
-      throw e
+      throw e;
     }
   }
 
   return {
-    'mode': 'failed',
-    'stackString': '',
-    'frames': []
-  }
+    mode: "failed",
+    stackString: "",
+    frames: [],
+  };
 }
 
 /**
@@ -116,117 +119,121 @@ export function computeStackTrace (ex) {
  * @param {Error} ex
  * @return {?Object.<string, *>} Stack trace information.
  */
-function computeStackTraceFromStackProp (ex) {
+function computeStackTraceFromStackProp(ex) {
   if (!ex.stack) {
-    return null
+    return null;
   }
 
-  var errorInfo = reduce(
-    ex.stack.split('\n'),
-    parseStackProp,
-    {frames: [], stackLines: [], wrapperSeen: false}
-  )
+  var errorInfo = reduce(ex.stack.split("\n"), parseStackProp, {
+    frames: [],
+    stackLines: [],
+    wrapperSeen: false,
+  });
 
-  if (!errorInfo.frames.length) return null
+  if (!errorInfo.frames.length) return null;
 
   return {
-    'mode': 'stack',
-    'name': ex.name || getClassName(ex),
-    'message': ex.message,
-    'stackString': formatStackTrace(errorInfo.stackLines),
-    'frames': errorInfo.frames
-  }
+    mode: "stack",
+    name: ex.name || getClassName(ex),
+    message: ex.message,
+    stackString: formatStackTrace(errorInfo.stackLines),
+    frames: errorInfo.frames,
+  };
 }
 
-function parseStackProp (info, line) {
-  var element = getElement(line)
+function parseStackProp(info, line) {
+  var element = getElement(line);
 
   if (!element) {
-    info.stackLines.push(line)
-    return info
+    info.stackLines.push(line);
+    return info;
   }
 
-  if (isWrapper(element.func)) info.wrapperSeen = true
-  else info.stackLines.push(line)
+  if (isWrapper(element.func)) info.wrapperSeen = true;
+  else info.stackLines.push(line);
 
-  if (!info.wrapperSeen) info.frames.push(element)
-  return info
+  if (!info.wrapperSeen) info.frames.push(element);
+  return info;
 }
 
-function getElement (line) {
-  var parts = line.match(gecko)
-  if (!parts) parts = line.match(chrome)
+function getElement(line) {
+  var parts = line.match(gecko);
+  if (!parts) parts = line.match(chrome);
 
   if (parts) {
-    return ({
-      'url': parts[2],
-      'func': (parts[1] !== 'Anonymous function' && parts[1] !== 'global code' && parts[1]) || null,
-      'line': +parts[3],
-      'column': parts[4] ? +parts[4] : null
-    })
+    return {
+      url: parts[2],
+      func:
+        (parts[1] !== "Anonymous function" &&
+          parts[1] !== "global code" &&
+          parts[1]) ||
+        null,
+      line: +parts[3],
+      column: parts[4] ? +parts[4] : null,
+    };
   }
 
-  if (line.match(chrome_eval) || line.match(ie_eval) || line === 'anonymous') {
-    return { 'func': 'evaluated code' }
+  if (line.match(chrome_eval) || line.match(ie_eval) || line === "anonymous") {
+    return { func: "evaluated code" };
   }
 }
 
-function computeStackTraceBySourceAndLine (ex) {
-  if (!('line' in ex)) return null
+function computeStackTraceBySourceAndLine(ex) {
+  if (!("line" in ex)) return null;
 
-  var className = ex.name || getClassName(ex)
+  var className = ex.name || getClassName(ex);
 
   // Safari does not provide a URL for errors in eval'd code
   if (!ex.sourceURL) {
-    return ({
-      'mode': 'sourceline',
-      'name': className,
-      'message': ex.message,
-      'stackString': getClassName(ex) + ': ' + ex.message + '\n    in evaluated code',
-      'frames': [{
-        'func': 'evaluated code'
-      }]
-    })
+    return {
+      mode: "sourceline",
+      name: className,
+      message: ex.message,
+      stackString:
+        getClassName(ex) + ": " + ex.message + "\n    in evaluated code",
+      frames: [
+        {
+          func: "evaluated code",
+        },
+      ],
+    };
   }
 
-  var stackString = className + ': ' + ex.message + '\n    at ' + ex.sourceURL
+  var stackString = className + ": " + ex.message + "\n    at " + ex.sourceURL;
   if (ex.line) {
-    stackString += ':' + ex.line
+    stackString += ":" + ex.line;
     if (ex.column) {
-      stackString += ':' + ex.column
+      stackString += ":" + ex.column;
     }
   }
 
-  return ({
-    'mode': 'sourceline',
-    'name': className,
-    'message': ex.message,
-    'stackString': stackString,
-    'frames': [{ 'url': ex.sourceURL,
-      'line': ex.line,
-      'column': ex.column
-    }]
-  })
+  return {
+    mode: "sourceline",
+    name: className,
+    message: ex.message,
+    stackString: stackString,
+    frames: [{ url: ex.sourceURL, line: ex.line, column: ex.column }],
+  };
 }
 
-function computeStackTraceWithMessageOnly (ex) {
-  var className = ex.name || getClassName(ex)
-  if (!className) return null
+function computeStackTraceWithMessageOnly(ex) {
+  var className = ex.name || getClassName(ex);
+  if (!className) return null;
 
-  return ({
-    'mode': 'nameonly',
-    'name': className,
-    'message': ex.message,
-    'stackString': className + ': ' + ex.message,
-    'frames': []
-  })
+  return {
+    mode: "nameonly",
+    name: className,
+    message: ex.message,
+    stackString: className + ": " + ex.message,
+    frames: [],
+  };
 }
 
-function getClassName (obj) {
-  var results = classNameRegex.exec(String(obj.constructor))
-  return (results && results.length > 1) ? results[1] : 'unknown'
+function getClassName(obj) {
+  var results = classNameRegex.exec(String(obj.constructor));
+  return results && results.length > 1 ? results[1] : "unknown";
 }
 
-function isWrapper (functionName) {
-  return (functionName && functionName.indexOf('nrWrapper') >= 0)
+function isWrapper(functionName) {
+  return functionName && functionName.indexOf("nrWrapper") >= 0;
 }

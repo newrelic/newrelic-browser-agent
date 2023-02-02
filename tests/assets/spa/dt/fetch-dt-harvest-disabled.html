@@ -6,26 +6,29 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init}
-    {config}
+    {init} {config}
     <script type="text/javascript">
-      if (!NREUM.loader_config) NREUM.loader_config = {}
-      NREUM.loader_config.xpid = '12#34'
+      if (!NREUM.loader_config) NREUM.loader_config = {};
+      NREUM.loader_config.xpid = "12#34";
     </script>
     {loader}
   </head>
   <body>
     <div>This page fires an XHR and calls pushState when clicked</div>
     <script type="text/javascript">
-      document.addEventListener('click', function () {
-        fetch('/echo', {
-          method: 'POST',
-          body: '123'
-        }).then(function (res) {
-          return res.json()
-        })
-        window.location.hash = Math.random()
-      }, false)
+      document.addEventListener(
+        "click",
+        function () {
+          fetch("/echo", {
+            method: "POST",
+            body: "123",
+          }).then(function (res) {
+            return res.json();
+          });
+          window.location.hash = Math.random();
+        },
+        false
+      );
     </script>
   </body>
 </html>

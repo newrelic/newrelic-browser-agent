@@ -9,36 +9,37 @@
     {init}
     <script>
       // disable the page view timings feature
-      window.NREUM||(NREUM={});
+      window.NREUM || (NREUM = {});
       NREUM.init = {
         page_view_timing: {
-          enabled: false
-        }
-      }
+          enabled: false,
+        },
+      };
     </script>
-    {config}
-    {loader}
+    {config} {loader}
   </head>
   <body>
     <div>This page is used for generating harvest data.</div>
-    <button id="resourcesBtn" onclick="generateResources();">generate resources data</button>
+    <button id="resourcesBtn" onclick="generateResources();">
+      generate resources data
+    </button>
     <button id="errorBtn" onclick="generateError();">generate error</button>
     <button id="standardBtn">I'm just a regular button</button>
 
     <script type="text/javascript">
       function generateError() {
-        throw new Error('some error')
+        throw new Error("some error");
       }
 
       function generateResources() {
-        var count = 0
-        loop()
+        var count = 0;
+        loop();
 
-        function loop () {
-          count++
+        function loop() {
+          count++;
           // resources are sent only when 30 or more events happen
-          if (count > 100) return window.timerLoopDone = true
-          setTimeout(loop, 0)
+          if (count > 100) return (window.timerLoopDone = true);
+          setTimeout(loop, 0);
         }
       }
     </script>

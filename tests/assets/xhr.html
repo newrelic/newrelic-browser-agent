@@ -6,17 +6,18 @@
 <html>
   <head>
     <title>Basic XHR test</title>
-    {init}
-    {config}
-    {loader}
+    {init} {config} {loader}
     <script type="text/javascript">
-    var xhr = new XMLHttpRequest()
-    xhr.open('GET', '/json')
-    xhr.onload = function () { xhrDone = true }
-    xhr.send()
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "/json");
+      xhr.onload = function () {
+        xhrDone = true;
+      };
+      xhr.send();
     </script>
   </head>
   <body>
-    This page just sends an XHR and sets window.xhrDone to true in the load callback.
+    This page just sends an XHR and sets window.xhrDone to true in the load
+    callback.
   </body>
 </html>

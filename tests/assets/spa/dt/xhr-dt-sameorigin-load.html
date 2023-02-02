@@ -6,20 +6,18 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {config}
-    {init}
-    {loader}
+    {config} {init} {loader}
   </head>
   <body>
     <div>This page fires an XHR and calls pushState when clicked</div>
     <script type="text/javascript">
-      var xhr = new XMLHttpRequest()
+      var xhr = new XMLHttpRequest();
 
-      var testId = window.location.search.match(/testId=([^&]*)/)[1]
-      var url = '/dt/' + testId
+      var testId = window.location.search.match(/testId=([^&]*)/)[1];
+      var url = "/dt/" + testId;
 
-      xhr.open('GET', url)
-      xhr.send()
+      xhr.open("GET", url);
+      xhr.send();
     </script>
   </body>
 </html>

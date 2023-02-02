@@ -2,11 +2,6 @@
   "chrome": [
     {
       "browserName": "chrome",
-      "platform": "linux",
-      "version": "latest"
-    },
-    {
-      "browserName": "chrome",
       "platform": "Windows 11",
       "platformName": "Windows 11",
       "version": "109",
@@ -35,11 +30,6 @@
     }
   ],
   "edge": [
-    {
-      "browserName": "edge",
-      "platform": "linux",
-      "version": "latest"
-    },
     {
       "browserName": "MicrosoftEdge",
       "platform": "Windows 10",
@@ -84,11 +74,6 @@
     }
   ],
   "firefox": [
-    {
-      "browserName": "firefox",
-      "platform": "linux",
-      "version": "latest"
-    },
     {
       "browserName": "firefox",
       "platform": "Windows 10",

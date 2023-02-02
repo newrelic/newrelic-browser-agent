@@ -3,26 +3,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var MAX_NODES = 128
+var MAX_NODES = 128;
 
-var lastId = 0
+var lastId = 0;
 
-export function InteractionNode (interaction, parent, type, timestamp) {
-  Object.defineProperty(this, 'interaction', {
-    value: interaction, writable: true // enumerable: false -- by default, which hides this prop from obj (iterations)
-  })
-  this.parent = parent
-  this.id = ++lastId
-  this.type = type
-  this.children = []
-  this.end = null
-  this.jsEnd = this.start = timestamp
-  this.jsTime = 0
-  this.attrs = {}
-  this.cancelled = false
+export function InteractionNode(interaction, parent, type, timestamp) {
+  Object.defineProperty(this, "interaction", {
+    value: interaction,
+    writable: true, // enumerable: false -- by default, which hides this prop from obj (iterations)
+  });
+  this.parent = parent;
+  this.id = ++lastId;
+  this.type = type;
+  this.children = [];
+  this.end = null;
+  this.jsEnd = this.start = timestamp;
+  this.jsTime = 0;
+  this.attrs = {};
+  this.cancelled = false;
 }
 
-var InteractionNodePrototype = InteractionNode.prototype
+var InteractionNodePrototype = InteractionNode.prototype;
 
 /**
  * @param {string} type
@@ -32,49 +33,57 @@ var InteractionNodePrototype = InteractionNode.prototype
  *                          for this node to complete. This is used when the creation of
  *                          the node and its start happen at different times (e.g. XHR).
  */
-InteractionNodePrototype.child = function child (type, timestamp, name, dontWait) {
-  var interaction = this.interaction
-  if (interaction.end || interaction.nodes >= MAX_NODES) return null
+InteractionNodePrototype.child = function child(
+  type,
+  timestamp,
+  name,
+  dontWait
+) {
+  var interaction = this.interaction;
+  if (interaction.end || interaction.nodes >= MAX_NODES) return null;
 
-  interaction.onNodeAdded(this)
+  interaction.onNodeAdded(this);
 
-  var node = new InteractionNode(interaction, this, type, timestamp)
-  node.attrs.name = name
-  interaction.nodes++
+  var node = new InteractionNode(interaction, this, type, timestamp);
+  node.attrs.name = name;
+  interaction.nodes++;
   if (!dontWait) {
-    interaction.remaining++
+    interaction.remaining++;
   }
-  return node
-}
+  return node;
+};
 
-InteractionNodePrototype.callback = function addCallbackTime (exclusiveTime, end) {
-  var node = this
+InteractionNodePrototype.callback = function addCallbackTime(
+  exclusiveTime,
+  end
+) {
+  var node = this;
 
-  node.jsTime += exclusiveTime
+  node.jsTime += exclusiveTime;
   if (end > node.jsEnd) {
-    node.jsEnd = end
-    node.interaction.lastCb = end
+    node.jsEnd = end;
+    node.interaction.lastCb = end;
   }
-}
+};
 
 InteractionNodePrototype.cancel = function cancel() {
-  this.cancelled = true
-  var interaction = this.interaction
-  interaction.remaining--
-}
+  this.cancelled = true;
+  var interaction = this.interaction;
+  interaction.remaining--;
+};
 
-InteractionNodePrototype.finish = function finish (timestamp) {
-  var node = this
-  if (node.end) return
-  node.end = timestamp
-  var parent = node.parent
-  while (parent.cancelled) parent = parent.parent
-  parent.children.push(node)
-  node.parent = null
+InteractionNodePrototype.finish = function finish(timestamp) {
+  var node = this;
+  if (node.end) return;
+  node.end = timestamp;
+  var parent = node.parent;
+  while (parent.cancelled) parent = parent.parent;
+  parent.children.push(node);
+  node.parent = null;
 
-  var interaction = this.interaction
-  interaction.remaining--
-  interaction.lastFinish = timestamp
+  var interaction = this.interaction;
+  interaction.remaining--;
+  interaction.lastFinish = timestamp;
   // check if interaction has finished, (this is needed for older browsers for unknown reasons)
-  interaction.checkFinish()
-}
+  interaction.checkFinish();
+};

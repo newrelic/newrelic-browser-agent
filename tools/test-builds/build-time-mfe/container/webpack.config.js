@@ -1,42 +1,45 @@
-const path = require('path')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
+const path = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
-  entry: './index.js',
+  entry: "./index.js",
   output: {
-    filename: 'build-time-mfe.js',
-    path: path.resolve(__dirname, '../../../../tests/assets/test-builds/build-time-mfe'),
+    filename: "build-time-mfe.js",
+    path: path.resolve(
+      __dirname,
+      "../../../../tests/assets/test-builds/build-time-mfe"
+    ),
     // path: path.resolve(__dirname, './dist'),
     library: {
-      name: 'container',
-      type: 'umd'
+      name: "container",
+      type: "umd",
     },
-    chunkFormat: 'module'
+    chunkFormat: "module",
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: [".ts", ".js"],
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './index.html'
-    })
+      template: "./index.html",
+    }),
   ],
   optimization: {
-    minimize: false
+    minimize: false,
   },
-  devtool: 'source-map',
+  devtool: "source-map",
   module: {
     rules: [
       {
         test: /\.js$/,
         exclude: /(node_modules)/,
         use: {
-          loader: 'babel-loader',
+          loader: "babel-loader",
           options: {
-            presets: ['@babel/preset-env']
-          }
-        }
-      }
-    ]
-  }
-}
+            presets: ["@babel/preset-env"],
+          },
+        },
+      },
+    ],
+  },
+};

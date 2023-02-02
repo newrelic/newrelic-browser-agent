@@ -5,8 +5,8 @@
  * @design https://newrelic.atlassian.net/wiki/spaces/INST/pages/2522513791/JSESSIONID+Cookie+Change+Design+Document
  * @environment Browser script
  */
-import { generateRandomHexString } from '../ids/unique-id'
-import { isBrowserScope } from '../util/global-scope'
+import { generateRandomHexString } from "../ids/unique-id";
+import { isBrowserScope } from "../util/global-scope";
 
 export { getCurrentSessionIdOrMakeNew };
 

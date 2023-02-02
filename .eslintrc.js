@@ -1,65 +1,65 @@
 module.exports = {
-  "ignorePatterns": [
+  ignorePatterns: [
     "dist/**/*",
     "build/**/*",
     "coverage/**/*",
     "tests/**/*",
-    "tools/**/*"
+    "tools/**/*",
   ],
-  "env": {
-    "es2022": true,
+  env: {
+    es2022: true,
   },
   globals: {
-    "WorkerNavigator": true,
-    "WorkerGlobalScope": true,
-    "NREUM": true,
-    "newrelic": true,
+    WorkerNavigator: true,
+    WorkerGlobalScope: true,
+    NREUM: true,
+    newrelic: true,
   },
-  "extends": ["eslint:recommended", "prettier"],
-  "overrides": [
+  extends: ["eslint:recommended", "prettier"],
+  overrides: [
     {
-      "files": ["src/**/*.js"],
-      "excludedFiles": "*.test.js",
-      "env": {
-        browser: true
+      files: ["src/**/*.js"],
+      excludedFiles: "*.test.js",
+      env: {
+        browser: true,
       },
       parserOptions: {
-        "sourceType": "module"
-      }
+        sourceType: "module",
+      },
     },
     {
-      "files": ["src/common/constants/environment-variables.js"],
+      files: ["src/common/constants/environment-variables.js"],
       globals: {
-        "process": true
-      }
+        process: true,
+      },
     },
     {
-      "files": ["src/**/*.test.js"],
-      "env": {
+      files: ["src/**/*.test.js"],
+      env: {
         browser: true,
         node: true,
-        jest: true
+        jest: true,
       },
       parserOptions: {
-        "sourceType": "module"
-      }
+        sourceType: "module",
+      },
     },
     {
-      "files": [
+      files: [
         "webpack.*.js",
         "babel.*.js",
         "babel-env-vars.js",
         ".eslintrc.js",
         "jest.preset.js",
-        "newrelic.js"
+        "newrelic.js",
       ],
-      "env": {
+      env: {
         browser: true,
-        node: true
-      }
-    }
+        node: true,
+      },
+    },
   ],
-  "rules": {
-    "no-unused-vars": "off"
-  }
-}
+  rules: {
+    "no-unused-vars": "off",
+  },
+};

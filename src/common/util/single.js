@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import slice from 'lodash._slice'
+import slice from "lodash._slice";
 
-export function single (fn) {
-  var called = false
-  var res
+export function single(fn) {
+  var called = false;
+  var res;
 
   return function () {
-    if (called) return res
-    called = true
-    res = fn.apply(this, slice(arguments))
-    return res
-  }
+    if (called) return res;
+    called = true;
+    res = fn.apply(this, slice(arguments));
+    return res;
+  };
 }

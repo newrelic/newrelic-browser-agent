@@ -29,7 +29,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
       execSync(`npm publish --tag ${tag} ${additionalArgs.join(" ")}`, {
         cwd: outputPath,
-        stdio: "inherit"
+        stdio: "inherit",
       });
     } catch (err) {
       logger.error(err);

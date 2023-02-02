@@ -6,23 +6,23 @@
 <html>
   <head>
     <title>Final Harvest Test</title>
-    {init}
-    {config}
-    {loader}
+    {init} {config} {loader}
   </head>
   <body>
     <div>This page is used for generating harvest data.</div>
-    <button id="btnGenerate" onclick="generateAjaxEvents();">generate ajax events</button>
+    <button id="btnGenerate" onclick="generateAjaxEvents();">
+      generate ajax events
+    </button>
 
     <script type="text/javascript">
       function generateAjaxEvents() {
-        var xhrDone = false
-        var xhr = new XMLHttpRequest()
-        xhr.open('GET', '/json')
-        xhr.addEventListener('load', function () {
-          return window.ajaxCallsDone = true
-        })
-        xhr.send()
+        var xhrDone = false;
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/json");
+        xhr.addEventListener("load", function () {
+          return (window.ajaxCallsDone = true);
+        });
+        xhr.send();
       }
     </script>
   </body>

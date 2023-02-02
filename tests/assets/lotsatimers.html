@@ -6,30 +6,28 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init}
-    {config}
-    {loader}
+    {init} {config} {loader}
   </head>
   <body>
     This page creates a timer loop that will call setTimeout 100 times
     <script>
-      var start = null
-      var count = 0
+      var start = null;
+      var count = 0;
 
-      document.addEventListener('click', function() {
-        count = 0
-        loop()
-      })
+      document.addEventListener("click", function () {
+        count = 0;
+        loop();
+      });
 
-      newrelic.setCustomAttribute('aargh', 'somanytimers')
-      loop()
+      newrelic.setCustomAttribute("aargh", "somanytimers");
+      loop();
 
-      function loop () {
-        count++
+      function loop() {
+        count++;
         if (count > 100) {
-          return window.timerLoopDone = true
+          return (window.timerLoopDone = true);
         }
-        setTimeout(loop, 0)
+        setTimeout(loop, 0);
       }
     </script>
   </body>

@@ -4,15 +4,19 @@
   PDX-License-Identifier: Apache-2.0
 -->
 <html>
-<head>
-  <title>load indicator</title>
-  <script>
-    window.addEventListener('load', function () {
-      window.loadFired = true
-    }, true)
-  </script>
-</head>
-<body>
-This page sets window.loadFired when the page-level load event fires.
-</body>
+  <head>
+    <title>load indicator</title>
+    <script>
+      window.addEventListener(
+        "load",
+        function () {
+          window.loadFired = true;
+        },
+        true
+      );
+    </script>
+  </head>
+  <body>
+    This page sets window.loadFired when the page-level load event fires.
+  </body>
 </html>

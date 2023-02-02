@@ -4,5 +4,5 @@
  */
 
 export function getLocation() {
-  return '' + location
+  return "" + location;
 }

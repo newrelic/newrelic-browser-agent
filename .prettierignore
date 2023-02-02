@@ -5,9 +5,13 @@ coverage/**/*
 tests/assets/frameworks/**/*
 tests/assets/js/internal/**/*
 tests/assets/js/vendor/**/*
+tests/assets/modular/js-errors/js/vendor/**/*
 
 # Do not format webpack analysis files
 webpack-analysis*.html
+
+# Do not format generated files
+tools/jil/util/browsers-supported.json
 
 # Do not format these static/generated files
 cla.md

@@ -33,7 +33,7 @@ export function constructError(errorData) {
     },
     has(target, key) {
       return key in target || key in errorData;
-    }
+    },
   });
 
   return errorProxy;

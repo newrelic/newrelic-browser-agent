@@ -6,17 +6,16 @@
 <html>
   <head>
     <title>RUM Test</title>
-    {config}
-    {loader}
+    {config} {loader}
     <script>
-        newrelic.setCustomAttribute('foo', 'bar')
+      newrelic.setCustomAttribute("foo", "bar");
     </script>
   </head>
   <body>
     Generating some rum datas
     <script type="text/javascript">
       // Delay DOMContentLoaded event by a tangible amount
-      var start = new Date()
+      var start = new Date();
       while (new Date() - start < 5) {}
     </script>
   </body>

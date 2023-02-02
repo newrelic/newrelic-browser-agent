@@ -6,23 +6,24 @@
 <html>
   <head>
     <title>SPA Functional Test</title>
-    {init}
-    {config}
-    {loader}
+    {init} {config} {loader}
   </head>
   <body>
     <p>This tests data harvested from interaction with custom tracer.</p>
     <script type="text/javascript">
-    document.addEventListener('click', function () {
-      var interaction = newrelic.interaction()
-        .save()
+      document.addEventListener(
+        "click",
+        function () {
+          var interaction = newrelic.interaction().save();
 
-      interaction.createTracer('custom', function() {
-        setTimeout(function() {
-          interaction.end()
-        })
-      })()
-    }, false)
+          interaction.createTracer("custom", function () {
+            setTimeout(function () {
+              interaction.end();
+            });
+          })();
+        },
+        false
+      );
     </script>
   </body>
 </html>

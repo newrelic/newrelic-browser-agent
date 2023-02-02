@@ -1,5 +1,8 @@
-import { defaults as nrDefaults, gosNREUMInitializedAgents } from '../../window/nreum'
-import { Configurable } from './configurable'
+import {
+  defaults as nrDefaults,
+  gosNREUMInitializedAgents,
+} from "../../window/nreum";
+import { Configurable } from "./configurable";
 
 const model = {
   // preset defaults
@@ -16,34 +19,32 @@ const model = {
   account: undefined,
   product: undefined,
   extra: undefined,
-  jsAttributes: {
-    
-  },
+  jsAttributes: {},
   userAttributes: undefined,
   atts: undefined,
   transactionName: undefined,
-  tNamePlain: undefined
-}
+  tNamePlain: undefined,
+};
 
-const _cache = {}
+const _cache = {};
 
-export function isValid(id){
+export function isValid(id) {
   try {
-    const info = getInfo(id)
-    return (!!info.licenseKey && !!info.errorBeacon && !!info.applicationID)
+    const info = getInfo(id);
+    return !!info.licenseKey && !!info.errorBeacon && !!info.applicationID;
   } catch (err) {
-    return false
+    return false;
   }
 }
 
 export function getInfo(id) {
-  if (!id) throw new Error('All info objects require an agent identifier!')
-  if (!_cache[id]) throw new Error(`Info for ${id} was never set`)
-  return _cache[id]
+  if (!id) throw new Error("All info objects require an agent identifier!");
+  if (!_cache[id]) throw new Error(`Info for ${id} was never set`);
+  return _cache[id];
 }
 
 export function setInfo(id, obj) {
-  if (!id) throw new Error('All info objects require an agent identifier!')
-  _cache[id] = new Configurable(obj, model)
-  gosNREUMInitializedAgents(id, _cache[id], 'info')
+  if (!id) throw new Error("All info objects require an agent identifier!");
+  _cache[id] = new Configurable(obj, model);
+  gosNREUMInitializedAgents(id, _cache[id], "info");
 }

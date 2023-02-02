@@ -27,7 +27,7 @@ export class InstrumentBase extends FeatureBase {
           new Aggregate(this.agentIdentifier, this.aggregator)
           this.resolve()
         } catch (e) {
-          warn(`Failed to import aggregator class for ${this.featureName}`, e)
+          warn(`Something prevented the agent from being downloaded`)
         }
       }
       // theres no window.load event on non-browser scopes, lazy load immediately

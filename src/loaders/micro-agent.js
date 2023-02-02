@@ -45,14 +45,16 @@ export class MicroAgent {
                 if (enabledFeatures[f]) {
                     import(`../features/${f}/instrument`).then(({ Instrument }) => {
                         this.features[f] = new Instrument(this.agentIdentifier, this.sharedAggregator)
-                    }).catch(err => warn(`Failed to import ${f}`, err))
+                    }).catch(err => 
+                        warn(`Something prevented the agent from being downloaded`))
                 }
             })
             nonAutoFeatures.forEach(f => {
                 if (enabledFeatures[f]) {
                     import(`../features/${f}/aggregate`).then(({ Aggregate }) => {
                         this.features[f] = new Aggregate(this.agentIdentifier, this.sharedAggregator)
-                    }).catch(err => warn(`Failed to import ${f}`, err))
+                    }).catch(err =>
+                        warn(`Something prevented the agent from being downloaded`))
                 }
             })
             gosNREUMInitializedAgents(this.agentIdentifier, this.features, 'features')

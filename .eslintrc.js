@@ -15,7 +15,7 @@ module.exports = {
     NREUM: true,
     newrelic: true,
   },
-  extends: ["eslint:recommended", "prettier"],
+  extends: ["eslint:recommended", "standard", "prettier"],
   overrides: [
     {
       files: ["src/**/*.js"],
@@ -61,5 +61,27 @@ module.exports = {
   ],
   rules: {
     "no-unused-vars": "off",
+
+    // Disable lint rules that need code changes to re-enabled
+    camelcase: "off",
+    "no-var": "off",
+    "object-shorthand": "off",
+    "no-void": "off",
+    eqeqeq: "off",
+    "prefer-regex-literals": "off",
+    "new-cap": "off",
+    "no-new": "off",
+    "no-useless-return": "off",
+    "no-useless-constructor": "off",
+    "dot-notation": "off",
+    "spaced-comment": "off",
+    "no-unused-expressions": "off",
+    "import/first": "off",
+    "lines-between-class-members": "off",
+    "prefer-const": "off",
+    "no-use-before-define": "off",
+    "n/handle-callback-err": "off",
+    "valid-typeof": "off",
+    "no-unmodified-loop-condition": "off",
   },
 };

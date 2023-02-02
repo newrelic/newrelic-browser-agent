@@ -50,6 +50,7 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [defined](#defined)
 * [dotenv-webpack](#dotenv-webpack)
 * [eslint-config-prettier](#eslint-config-prettier)
+* [eslint-config-standard](#eslint-config-standard)
 * [eslint-import-resolver-alias](#eslint-import-resolver-alias)
 * [eslint-import-resolver-webpack](#eslint-import-resolver-webpack)
 * [eslint-plugin-import](#eslint-plugin-import)
@@ -74,6 +75,7 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [pre-commit](#pre-commit)
 * [preprocessify](#preprocessify)
 * [prettier](#prettier)
+* [pretty-quick](#pretty-quick)
 * [request](#request)
 * [sauce-connect-launcher](#sauce-connect-launcher)
 * [semver](#semver)
@@ -1008,7 +1010,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### aws-sdk
 
-This product includes source derived from [aws-sdk](https://github.com/aws/aws-sdk-js) ([v2.1307.0](https://github.com/aws/aws-sdk-js/tree/v2.1307.0)), distributed under the [Apache-2.0 License](https://github.com/aws/aws-sdk-js/blob/v2.1307.0/LICENSE.txt):
+This product includes source derived from [aws-sdk](https://github.com/aws/aws-sdk-js) ([v2.1308.0](https://github.com/aws/aws-sdk-js/tree/v2.1308.0)), distributed under the [Apache-2.0 License](https://github.com/aws/aws-sdk-js/blob/v2.1308.0/LICENSE.txt):
 
 ```
 
@@ -1637,6 +1639,34 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+```
+
+### eslint-config-standard
+
+This product includes source derived from [eslint-config-standard](https://github.com/standard/eslint-config-standard) ([v17.0.0](https://github.com/standard/eslint-config-standard/tree/v17.0.0)), distributed under the [MIT License](https://github.com/standard/eslint-config-standard/blob/v17.0.0/LICENSE):
+
+```
+The MIT License (MIT)
+
+Copyright (c) Feross Aboukhadijeh
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ```
 
@@ -8550,6 +8580,35 @@ By: Ika
 > LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 > OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 > SOFTWARE.
+
+```
+
+### pretty-quick
+
+This product includes source derived from [pretty-quick](https://github.com/azz/pretty-quick) ([v3.1.3](https://github.com/azz/pretty-quick/tree/v3.1.3)), distributed under the [MIT License](https://github.com/azz/pretty-quick/blob/v3.1.3/LICENSE):
+
+```
+MIT License
+
+Copyright (c) 2017- Lucas Azzola
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ```
 

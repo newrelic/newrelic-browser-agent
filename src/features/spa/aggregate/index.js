@@ -24,7 +24,7 @@ import { isBrowserScope } from '../../../common/util/global-scope'
 import { onWindowLoad } from '../../../common/window/load'
 
 const {
-  FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
+  FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING, 
   INTERACTION, SPA_NODE, JSONP_NODE, FETCH_START, FETCH_DONE, FETCH_BODY, JSONP_END, originalSetTimeout
 } = CONSTANTS
 export class Aggregate extends AggregateBase {

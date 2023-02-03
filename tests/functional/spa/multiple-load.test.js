@@ -12,14 +12,7 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
   t.plan(5)
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/multiple-load.html', { loader: 'spa', init: {
-      ajax: {
-        deny_list: [router.router.assetServer.host + ':' + router.router.port],
-        enabled: true
-      }
-    }
-  }))
-  console.log(router.router.assetServer.host + ':' + router.router.port)
+  let loadPromise = browser.safeGet(router.assetURL('spa/multiple-load.html', { loader: 'spa' }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {

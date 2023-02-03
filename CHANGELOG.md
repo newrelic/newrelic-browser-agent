@@ -32,9 +32,6 @@ Fixed an issue where when using the SPA loader with Next/React, route changes th
 ### Fix interactions missing API calls in Angular
 Fixed an issue where when using the SPA loader with Angular, route changes that contained API calls, via Angular resolver, would not capture the xhr/fetch on the interaction. This works with eager and lazy routes in an Angular SPA.
 
-### Ajax deny list will now respect port numbers
-Placing entries in the ajax deny list with port numbers would render the entry non-functional. This has been corrected and, if a port number is provided, it will be used to match XHRs. If no port is provided, the port for XHRs will be ignored.
-
 ## v1223
 
 ### Refactor loader architecture for improved developer experience

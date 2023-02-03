@@ -83,7 +83,6 @@ export class Aggregate extends AggregateBase {
         }
         return
       }
-
       // store as metric
       aggregator.store('xhr', hash, params, metrics)
 

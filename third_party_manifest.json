@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Thu Feb 02 2023 18:08:08 GMT-0600 (Central Standard Time)",
+  "lastUpdated": "Thu Feb 02 2023 18:20:28 GMT-0600 (Central Standard Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -442,6 +442,31 @@
       "licenseTextSource": "file",
       "publisher": "Ben Mosher",
       "email": "me@benmosher.com"
+    },
+    "eslint-plugin-n@15.6.1": {
+      "name": "eslint-plugin-n",
+      "version": "15.6.1",
+      "range": "^15.6.1",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/eslint-community/eslint-plugin-n",
+      "versionedRepoUrl": "https://github.com/eslint-community/eslint-plugin-n/tree/v15.6.1",
+      "licenseFile": "node_modules/eslint-plugin-n/LICENSE",
+      "licenseUrl": "https://github.com/eslint-community/eslint-plugin-n/blob/v15.6.1/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Toru Nagashima"
+    },
+    "eslint-plugin-promise@6.1.1": {
+      "name": "eslint-plugin-promise",
+      "version": "6.1.1",
+      "range": "^6.1.1",
+      "licenses": "ISC",
+      "repoUrl": "https://github.com/eslint-community/eslint-plugin-promise",
+      "versionedRepoUrl": "https://github.com/eslint-community/eslint-plugin-promise/tree/v6.1.1",
+      "licenseFile": "node_modules/eslint-plugin-promise/LICENSE.md",
+      "licenseUrl": "https://github.com/eslint-community/eslint-plugin-promise/blob/v6.1.1/LICENSE.md",
+      "licenseTextSource": "file",
+      "publisher": "jden",
+      "email": "jason@denizac.org"
     },
     "eslint@8.33.0": {
       "name": "eslint",

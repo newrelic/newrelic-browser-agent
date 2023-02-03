@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Thu Feb 02 2023 14:24:47 GMT-0600 (Central Standard Time)",
+  "lastUpdated": "Thu Feb 02 2023 18:08:08 GMT-0600 (Central Standard Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -170,50 +170,6 @@
       "licenseUrl": "https://github.com/octokit/rest.js/blob/v19.0.7/LICENSE",
       "licenseTextSource": "file"
     },
-    "@types/jest@28.1.1": {
-      "name": "@types/jest",
-      "version": "28.1.1",
-      "range": "28.1.1",
-      "licenses": "MIT",
-      "repoUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped",
-      "versionedRepoUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/v28.1.1",
-      "licenseFile": "node_modules/@types/jest/LICENSE",
-      "licenseUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped/blob/v28.1.1/LICENSE",
-      "licenseTextSource": "file"
-    },
-    "@types/node@17.0.45": {
-      "name": "@types/node",
-      "version": "17.0.45",
-      "range": "^17.0.30",
-      "licenses": "MIT",
-      "repoUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped",
-      "versionedRepoUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/v17.0.45",
-      "licenseFile": "node_modules/@types/node/LICENSE",
-      "licenseUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped/blob/v17.0.45/LICENSE",
-      "licenseTextSource": "file"
-    },
-    "@typescript-eslint/eslint-plugin@5.50.0": {
-      "name": "@typescript-eslint/eslint-plugin",
-      "version": "5.50.0",
-      "range": "^5.36.1",
-      "licenses": "MIT",
-      "repoUrl": "https://github.com/typescript-eslint/typescript-eslint",
-      "versionedRepoUrl": "https://github.com/typescript-eslint/typescript-eslint/tree/v5.50.0",
-      "licenseFile": "node_modules/@typescript-eslint/eslint-plugin/LICENSE",
-      "licenseUrl": "https://github.com/typescript-eslint/typescript-eslint/blob/v5.50.0/LICENSE",
-      "licenseTextSource": "file"
-    },
-    "@typescript-eslint/parser@5.50.0": {
-      "name": "@typescript-eslint/parser",
-      "version": "5.50.0",
-      "range": "^5.36.1",
-      "licenses": "BSD-2-Clause",
-      "repoUrl": "https://github.com/typescript-eslint/typescript-eslint",
-      "versionedRepoUrl": "https://github.com/typescript-eslint/typescript-eslint/tree/v5.50.0",
-      "licenseFile": "node_modules/@typescript-eslint/parser/LICENSE",
-      "licenseUrl": "https://github.com/typescript-eslint/typescript-eslint/blob/v5.50.0/LICENSE",
-      "licenseTextSource": "file"
-    },
     "aws-sdk@2.1308.0": {
       "name": "aws-sdk",
       "version": "2.1308.0",
@@ -226,6 +182,17 @@
       "licenseTextSource": "file",
       "publisher": "Amazon Web Services",
       "url": "https://aws.amazon.com/"
+    },
+    "babel-jest@29.4.1": {
+      "name": "babel-jest",
+      "version": "29.4.1",
+      "range": "^29.4.1",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/facebook/jest",
+      "versionedRepoUrl": "https://github.com/facebook/jest/tree/v29.4.1",
+      "licenseFile": "node_modules/babel-jest/LICENSE",
+      "licenseUrl": "https://github.com/facebook/jest/blob/v29.4.1/LICENSE",
+      "licenseTextSource": "file"
     },
     "babel-loader@8.3.0": {
       "name": "babel-loader",
@@ -540,15 +507,15 @@
       "licenseUrl": "https://github.com/facebook/jest/blob/v28.1.1/LICENSE",
       "licenseTextSource": "file"
     },
-    "jest@28.1.1": {
+    "jest@28.1.3": {
       "name": "jest",
-      "version": "28.1.1",
-      "range": "28.1.1",
+      "version": "28.1.3",
+      "range": "^28.1.1",
       "licenses": "MIT",
       "repoUrl": "https://github.com/facebook/jest",
-      "versionedRepoUrl": "https://github.com/facebook/jest/tree/v28.1.1",
+      "versionedRepoUrl": "https://github.com/facebook/jest/tree/v28.1.3",
       "licenseFile": "node_modules/jest/LICENSE",
-      "licenseUrl": "https://github.com/facebook/jest/blob/v28.1.1/LICENSE",
+      "licenseUrl": "https://github.com/facebook/jest/blob/v28.1.3/LICENSE",
       "licenseTextSource": "file"
     },
     "jquery@1.11.3": {
@@ -883,60 +850,6 @@
       "publisher": "Chungen Li",
       "email": "licg9999@gmail.com",
       "url": "https://github.com/licg9999"
-    },
-    "ts-jest@28.0.5": {
-      "name": "ts-jest",
-      "version": "28.0.5",
-      "range": "28.0.5",
-      "licenses": "MIT",
-      "repoUrl": "https://github.com/kulshekhar/ts-jest",
-      "versionedRepoUrl": "https://github.com/kulshekhar/ts-jest/tree/v28.0.5",
-      "licenseFile": "node_modules/ts-jest/LICENSE.md",
-      "licenseUrl": "https://github.com/kulshekhar/ts-jest/blob/v28.0.5/LICENSE.md",
-      "licenseTextSource": "file",
-      "publisher": "Kulshekhar Kabra",
-      "email": "kulshekhar@users.noreply.github.com",
-      "url": "https://github.com/kulshekhar"
-    },
-    "ts-loader@9.4.2": {
-      "name": "ts-loader",
-      "version": "9.4.2",
-      "range": "^9.4.1",
-      "licenses": "MIT",
-      "repoUrl": "https://github.com/TypeStrong/ts-loader",
-      "versionedRepoUrl": "https://github.com/TypeStrong/ts-loader/tree/v9.4.2",
-      "licenseFile": "node_modules/ts-loader/LICENSE",
-      "licenseUrl": "https://github.com/TypeStrong/ts-loader/blob/v9.4.2/LICENSE",
-      "licenseTextSource": "file",
-      "publisher": "John Reilly",
-      "email": "johnny_reilly@hotmail.com",
-      "url": "https://blog.johnnyreilly.com"
-    },
-    "ts-node@10.9.1": {
-      "name": "ts-node",
-      "version": "10.9.1",
-      "range": "^10.9.1",
-      "licenses": "MIT",
-      "repoUrl": "https://github.com/TypeStrong/ts-node",
-      "versionedRepoUrl": "https://github.com/TypeStrong/ts-node/tree/v10.9.1",
-      "licenseFile": "node_modules/ts-node/LICENSE",
-      "licenseUrl": "https://github.com/TypeStrong/ts-node/blob/v10.9.1/LICENSE",
-      "licenseTextSource": "file",
-      "publisher": "Blake Embrey",
-      "email": "hello@blakeembrey.com",
-      "url": "http://blakeembrey.me"
-    },
-    "typescript@4.9.5": {
-      "name": "typescript",
-      "version": "4.9.5",
-      "range": "^4.8.4",
-      "licenses": "Apache-2.0",
-      "repoUrl": "https://github.com/Microsoft/TypeScript",
-      "versionedRepoUrl": "https://github.com/Microsoft/TypeScript/tree/v4.9.5",
-      "licenseFile": "node_modules/typescript/LICENSE.txt",
-      "licenseUrl": "https://github.com/Microsoft/TypeScript/blob/v4.9.5/LICENSE.txt",
-      "licenseTextSource": "file",
-      "publisher": "Microsoft Corp."
     },
     "uglify-js@3.17.4": {
       "name": "uglify-js",

@@ -57,17 +57,17 @@ jil.browserTest('basic promise chain', function (t) {
         resolve(1)
       }), 1)
     })
-      .then(() => {
-        return new Promise(function (resolve, reject) {
-          setTimeout(newrelic.interaction().createTracer('timer-in-second-promise', function () {
-            reject(2)
-          }), 2)
-        })
+    .then(() => {
+      return new Promise(function (resolve, reject) {
+        setTimeout(newrelic.interaction().createTracer('timer-in-second-promise', function () {
+          reject(2)
+        }), 2)
       })
-      .catch(function () {}).catch(function () {}).then(() => {
-        newrelic.interaction().setAttribute('in-catch', true)
-        setTimeout(newrelic.interaction().createTracer('timer', cb), 3)
-      })
+    })
+    .catch(function () {}).catch(function () {}).then(() => {
+      newrelic.interaction().setAttribute('in-catch', true)
+      setTimeout(newrelic.interaction().createTracer('timer', cb), 3)
+    })
   }
 
   function afterInteractionDone (interaction) {
@@ -82,10 +82,9 @@ jil.browserTest('instanceof', function diferTest (t) {
   var promise = Promise.resolve()
   var unwrapped = unwrappedPromise.resolve()
 
-  t.ok(promise instanceof Promise, 'instanceof should work on wrapped Promise')
-  t.ok(promise instanceof unwrappedPromise, 'instanceof should work on unwrapped Promise')
-  t.ok(unwrapped instanceof Promise, 'instanceof should work on wrapped Promise')
-  t.ok(unwrapped instanceof unwrappedPromise, 'instanceof should work on unwrapped Promise')
+  t.ok(promise instanceof Promise, 'global (wrapped) Promise.resolve should return an instance of itself')
+  t.ok(promise instanceof unwrappedPromise, 'the wrapped promise should be an instance of the original Promise')
+  t.ok(unwrapped instanceof unwrappedPromise, 'original Promise.resolve should return an instance of itself')
   t.end()
 })
 

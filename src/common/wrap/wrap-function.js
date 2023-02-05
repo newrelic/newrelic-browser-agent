@@ -159,12 +159,3 @@ export function unwrapFunction(obj, fnName) {
     obj[fnName] = obj[fnName][flag];
   }
 }
-
-export function argsToArray() {
-  var len = arguments.length
-  var arr = new Array(len)
-  for (var i = 0; i < len; ++i) {
-    arr[i] = arguments[i]
-  }
-  return arr
-}

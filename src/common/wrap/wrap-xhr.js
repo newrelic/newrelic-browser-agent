@@ -193,11 +193,12 @@ export function wrapXhr (sharedEE) {
   return ee
 }
 export function unwrapXhr(sharedEE) {
-  unwrapEvents(sharedEE || contextualEE); // because in "wrapXHR", events was wrapped or incremented, we have to reverse that too
   const ee = scopedEE(sharedEE);
   
   // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this, but always decrement the count after checking it per unwrap call.
   if (wrapped[ee.debugId]-- == 1) {
+    unwrapEvents(ee); // because in "wrapXHR", events was wrapped or incremented, we have to reverse that too
+
     globalScope.XMLHttpRequest = originals.XHR;
     XHR_PROPS.forEach(fn => { // the original object was replaced AND its prototype was altered
       unwrapFunction(globalScope.XMLHttpRequest.prototype, fn);

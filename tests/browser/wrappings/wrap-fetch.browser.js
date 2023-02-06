@@ -6,8 +6,8 @@
 const jil = require('jil')
 
 jil.browserTest('response size', function(t) {
-  const {setup} = require('./utils/setup')
-  const {wrapFetch} = require('../../src/common/wrap/wrap-fetch')
+  const {setup} = require('../utils/setup')
+  const {wrapFetch} = require('../../../src/common/wrap/wrap-fetch')
 
   const {baseEE} = setup()
   const fetchEE = wrapFetch(baseEE)
@@ -60,8 +60,8 @@ jil.browserTest('response size', function(t) {
 })
 
 jil.browserTest('Safari 11 fetch clone regression', function (t) {
-  const {setup} = require('./utils/setup')
-  const {wrapFetch} = require('../../src/common/wrap/wrap-fetch')
+  const {setup} = require('../utils/setup')
+  const {wrapFetch} = require('../../../src/common/wrap/wrap-fetch')
 
   const {baseEE} = setup()
   const fetchEE = wrapFetch(baseEE)

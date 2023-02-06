@@ -7,8 +7,8 @@ const jil = require('jil')
 
 jil.browserTest('history functions are wrapped', function (t) {
   // wrap
-  const {setup} = require('./utils/setup')
-  const {wrapHistory} = require('../../src/common/wrap/wrap-history')
+  const {setup} = require('../utils/setup')
+  const {wrapHistory} = require('../../../src/common/wrap/wrap-history')
 
   const {baseEE} = setup()
   wrapHistory(baseEE)
@@ -25,8 +25,8 @@ jil.browserTest('history functions are wrapped', function (t) {
 
 jil.browserTest('two modified properties are shown on the history object', function (t) {
   // wrap
-  const {setup} = require('./utils/setup')
-  const {wrapHistory} = require('../../src/common/wrap/wrap-history')
+  const {setup} = require('../utils/setup')
+  const {wrapHistory} = require('../../../src/common/wrap/wrap-history')
 
   const {baseEE} = setup()
   wrapHistory(baseEE)

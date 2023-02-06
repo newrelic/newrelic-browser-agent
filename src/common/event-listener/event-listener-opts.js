@@ -18,7 +18,7 @@ try {
   globalScope.removeEventListener("test", null, options);
 } catch (err) {}
 
-export function eventListenerOpts(useCapture, abortSignal = null) {
+export function eventListenerOpts(useCapture, abortSignal) {
   return (passiveSupported || signalSupported) ?
   {
     capture: !!useCapture,

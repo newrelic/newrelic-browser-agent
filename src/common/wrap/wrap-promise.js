@@ -30,10 +30,11 @@
   function wrap() {
     globalScope.Promise = WrappedPromise;
 
+    // Renamed from "WrappedPromise" back to "Promise" & toString() so that we appear "native" to TP libraries...
     Object.defineProperty(WrappedPromise, 'name', {
-      value: 'Promise'  // renamed from "WrappedPromise" back to "Promise" so that we appear "native" to TP libraries...
+      value: 'Promise'
     })
-    WrappedPromise.toString = function() { return prevPromiseObj.toString() } // -- *cli: is there a reason we have to obscure the custom Promise string??
+    WrappedPromise.toString = function() { return prevPromiseObj.toString() }
 
     function WrappedPromise (executor) {
       var ctx = promiseEE.context()
@@ -59,7 +60,7 @@
         });
 
         const origFnCallWithThis = prevStaticFn.apply(this, arguments);
-        return this.resolve(origFnCallWithThis);  // -- *cli: is this so we emit 'propagate' from the custom .resolve fn below or something?
+        return origFnCallWithThis;
 
         function setNrId (overwrite) {
           return function () {

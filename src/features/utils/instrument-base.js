@@ -14,7 +14,7 @@ export class InstrumentBase extends FeatureBase {
     this.hasAggregator = false
     this.auto = auto
 
-    /** @type {Function} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
+    /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
     this.abortHandler;
 
     if (auto) registerDrain(agentIdentifier, featureName)

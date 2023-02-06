@@ -7,6 +7,7 @@ import 'core-js/stable/object/assign'
 import 'core-js/stable/object/entries'
 import 'core-js/stable/object/values'
 import 'core-js/stable/map'
+import 'core-js/stable/reflect'
 
 // promise
 // ie - none

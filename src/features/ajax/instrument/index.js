@@ -48,7 +48,7 @@ export class Instrument extends InstrumentBase {
     // (Much of this module affects specific XHR instances.)
     unwrapFetch(this.ee);
     unwrapXhr(this.ee);
-    this.abortHandler = null; // weakly allow this abort op to run only once
+    this.abortHandler = undefined; // weakly allow this abort op to run only once
   }
 }
 

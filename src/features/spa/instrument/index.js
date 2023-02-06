@@ -114,6 +114,6 @@ export class Instrument extends InstrumentBase {
     unwrapFetch(this.ee);
     unwrapHistory(this.ee);
     unwrapMutation(this.ee);
-    this.abortHandler = null; // weakly allow this abort op to run only once
+    this.abortHandler = undefined; // weakly allow this abort op to run only once
   }
 }

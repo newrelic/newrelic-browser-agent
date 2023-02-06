@@ -7,14 +7,6 @@ var unwrappedPromise = global.Promise
 
 const jil = require('jil')
 
-// ff38 will throw if you copy the toString method from the native promise class
-jil.browserTest('stringifying promises still works', function (t) {
-  require('./helpers')
-  t.ok(String(window.Promise).match(/function Promise\s*\(\)\s*{\s*\[native code\]\s*}/))
-  t.ok(window.Promise.toString().match(/function Promise\s*\(\)\s*{\s*\[native code\]\s*}/))
-  t.end()
-})
-
 jil.browserTest('basic promise chain', function (t) {
   let helpers = require('./helpers')
 

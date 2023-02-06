@@ -2,7 +2,9 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
+/**
+ * This module is used by: ajax, spa
+ */
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import slice from 'lodash._slice'
 import { globalScope } from '../util/global-scope'
@@ -24,8 +26,9 @@ export function wrapFetch(sharedEE){
     return ee
   }
 
-  if (wrapped[ee.debugId]) return ee
-  wrapped[ee.debugId] = true
+  if (wrapped[ee.debugId]++)  // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
+    return ee;                // then we increment the count to track # of feats using this at runtime.
+  wrapped[ee.debugId] = 1;
 
   bodyMethods.forEach(method => {
     wrapPromiseMethod(Req[proto], method, bodyPrefix)
@@ -78,13 +81,15 @@ export function wrapFetch(sharedEE){
 }
 export function unwrapFetch(sharedEE) {
   const ee = scopedEE(sharedEE);
-  if (wrapped[ee.debugId] === true) {
+
+  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this, but always decrement the count after checking it per unwrap call.
+  if (wrapped[ee.debugId]-- == 1) {
     bodyMethods.forEach(fnName => {
       unwrapFunction(Req[proto], fnName);
       unwrapFunction(Res[proto], fnName);
     });
     unwrapFunction(globalScope, "fetch");
-    wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
+    wrapped[ee.debugId] = Infinity; // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
   }
 }
 export function scopedEE(sharedEE){

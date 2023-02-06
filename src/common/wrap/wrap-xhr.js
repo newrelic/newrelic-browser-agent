@@ -2,9 +2,9 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
-// wrap-events patches XMLHttpRequest.prototype.addEventListener for us.
-// TODO: if we want to load Ajax feature on its own, we'll need to call wrapEvents(sharedEE)
+/**
+ * This module is used by: ajax, jserrors, spa
+ */
 import { wrapEvents, unwrapEvents } from './wrap-events'
 import { ee as contextualEE } from '../event-emitter/contextual-ee'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
@@ -25,7 +25,7 @@ export function wrapXhr (sharedEE) {
     return ee;                // then we increment the count to track # of feats using this at runtime.
   wrapped[ee.debugId] = 1;  // <- otherwise, first feature to wrap XHR
   
-  wrapEvents(baseEE)
+  wrapEvents(baseEE)  // wrap-events patches XMLHttpRequest.prototype.addEventListener for us
   var wrapFn = wfn(ee)
 
   var OrigXHR = originals.XHR

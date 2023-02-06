@@ -2,7 +2,10 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
+/**
+ * This module is used directly by: session_trace
+ * It is also called by -> wrapXhr <-, so see "wrap-xhr.js" for featuers that uses this indirectly.
+ */
 import {ee as baseEE} from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn, unwrapFunction } from './wrap-function'
 import { getOrSet } from '../util/get-or-set'

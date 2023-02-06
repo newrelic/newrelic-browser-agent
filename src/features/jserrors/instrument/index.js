@@ -6,7 +6,7 @@
 import { handle } from '../../../common/event-emitter/handle'
 import { now } from '../../../common/timing/now'
 import { getOrSet } from '../../../common/util/get-or-set'
-import { wrapRaf, wrapTimer, wrapEvents, wrapXhr, unwrapRaf, unwrapTimer, unwrapEvents, unwrapXhr } from '../../../common/wrap'
+import { wrapRaf, wrapTimer, wrapXhr, unwrapRaf, unwrapTimer, unwrapXhr } from '../../../common/wrap'
 import slice from 'lodash._slice'
 import './debug'
 import { InstrumentBase } from '../../utils/instrument-base'
@@ -63,7 +63,7 @@ export class Instrument extends InstrumentBase {
       /** rejections can contain data of any type -- this is an effort to keep the message human readable */
       const err = castReasonToError(e.reason)
       handle('err', [err, now(), false, { unhandledPromiseRejection: 1 }], undefined, FEATURE_NAMES.jserrors, this.ee)
-    }, {signal: this.removeOnAbort?.signal});
+    }, eventListenerOpts(false, this.removeOnAbort?.signal));
 
     wrapRaf(this.ee);
     wrapTimer(this.ee);

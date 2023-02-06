@@ -2,7 +2,9 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
+/**
+ * This module is used by: jserrors, session_trace, spa
+ */
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn, unwrapFunction } from './wrap-function'
 import { globalScope } from '../util/global-scope'

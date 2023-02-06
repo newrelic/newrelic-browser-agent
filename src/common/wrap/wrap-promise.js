@@ -5,9 +5,9 @@
 /**
  * This module is used by: spa
  */
- import {createWrapperWithEmitter as wrapFn} from './wrap-function'
- import {ee as baseEE, getOrSetContext} from '../event-emitter/contextual-ee'
- import {originals} from '../config/config'
+ import { createWrapperWithEmitter as wrapFn } from './wrap-function'
+ import { ee as baseEE, getOrSetContext } from '../event-emitter/contextual-ee'
+ import { originals } from '../config/config'
  import { globalScope } from '../util/global-scope'
  
  const wrapped = {}
@@ -128,7 +128,14 @@
   }
   return promiseEE;
 }
-
+export function unwrapPromise(sharedEE) {
+  const ee = scopedEE(sharedEE);
+  if (wrapped[ee.debugId] === true) {
+    // Since nothing about the original aka previous Promise was altered, this is simply...
+    globalScope.Promise = originals.PR;
+    wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
+  }
+}
 export function scopedEE(sharedEE){
   return (sharedEE || baseEE).get('promise')
 }

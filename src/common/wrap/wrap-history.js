@@ -4,9 +4,8 @@
  */
 
 /**
- * Wrapper for pushState and replaceState methods of window.history object
+ * This module is used by: session_trace, spa
  */
-
 import { ee as globalEE } from '../event-emitter/contextual-ee'
 import {createWrapperWithEmitter as wfn, unwrapFunction} from './wrap-function'
 import { isBrowserScope } from '../util/global-scope'
@@ -22,11 +21,11 @@ const HISTORY_FNS = ['pushState', 'replaceState'];
  */
 export function wrapHistory(sharedEE){
   const ee = scopedEE(sharedEE)
-  if (!isBrowserScope || wrapped[ee.debugId]) return ee; // History API is only relevant within web env
-  wrapped[ee.debugId] = true
+  if (!isBrowserScope || wrapped[ee.debugId]++) // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
+    return ee;                                  // then we increment the count to track # of feats using this at runtime. (History API is only avail in browser DOM context.)
+  wrapped[ee.debugId] = 1;
 
   var wrapFn = wfn(ee)
-
   /**
    * For objects that will be instantiated more than once, we wrap the object's prototype methods. The history object
    * is instantiated only once, so we can wrap its methods directly--and we must wrap the history methods directly as
@@ -38,10 +37,11 @@ export function wrapHistory(sharedEE){
 }
 export function unwrapHistory(sharedEE) {
   const ee = scopedEE(sharedEE);
-  
-  if (wrapped[ee.debugId] === true) {
+
+  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this, but always decrement the count after checking it per unwrap call.
+  if (wrapped[ee.debugId]-- == 1) {
     HISTORY_FNS.forEach(fnName => unwrapFunction(window.history, fnName));
-    wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
+    wrapped[ee.debugId] = Infinity; // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
   }
 }
 /**

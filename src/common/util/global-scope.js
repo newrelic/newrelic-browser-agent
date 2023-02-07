@@ -17,7 +17,7 @@ export let globalScope = (() => {
     }
   }
 
-  throw new Error('New Relic browser agent shutting down due to error: Unable to locate global scope. This is possibly due to code redefining browser global variables like `self` and `window`.');
+  throw new Error('New Relic browser agent shutting down due to error: Unable to locate global scope. This is possibly due to code redefining browser global variables like "self" and "window".');
 })();
 
 /**
@@ -40,7 +40,7 @@ export function resetScope() {
     }
   }
   else {
-    throw new Error('New Relic browser agent shutting down due to error: Unable to locate global scope. This is possibly due to code redefining browser global variables like `self` and `window`.');
+    throw new Error('New Relic browser agent shutting down due to error: Unable to locate global scope. This is possibly due to code redefining browser global variables like "self" and "window".');
   }
 }
 export function getGlobalScope() {

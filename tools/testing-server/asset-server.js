@@ -337,6 +337,9 @@ class BrowserifyTransform extends AssetTransform {
           "@babel/plugin-syntax-dynamic-import",
           '@babel/plugin-transform-modules-commonjs',
           "@babel/plugin-proposal-optional-chaining",
+          // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
+          // assigning to a variable, which conflicts with template literals.
+          "@babel/plugin-transform-template-literals",
           babelEnv('VERSION')
         ],
         global: true

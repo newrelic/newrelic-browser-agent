@@ -6,7 +6,7 @@
 import { handle } from '../../../common/event-emitter/handle'
 import { now } from '../../../common/timing/now'
 import { getOrSet } from '../../../common/util/get-or-set'
-import { wrapRaf, wrapTimer, wrapXhr, unwrapRaf, unwrapTimer, unwrapXhr } from '../../../common/wrap'
+import { wrapRaf, wrapTimer, wrapEvents, wrapXhr, unwrapRaf, unwrapTimer, unwrapEvents, unwrapXhr } from '../../../common/wrap'
 import slice from 'lodash._slice'
 import './debug'
 import { InstrumentBase } from '../../utils/instrument-base'

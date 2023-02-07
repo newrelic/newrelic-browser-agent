@@ -2,7 +2,6 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 /**
  * This module is used by: session_trace, spa
  */

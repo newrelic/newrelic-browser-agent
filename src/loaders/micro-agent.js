@@ -46,7 +46,7 @@ export class MicroAgent {
                     import(`../features/${f}/instrument`).then(({ Instrument }) => {
                         this.features[f] = new Instrument(this.agentIdentifier, this.sharedAggregator)
                     }).catch(err => 
-                        warn(`Something prevented the agent from being downloaded`))
+                        warn('Something prevented the agent from being downloaded.'))
                 }
             })
             nonAutoFeatures.forEach(f => {
@@ -54,13 +54,13 @@ export class MicroAgent {
                     import(`../features/${f}/aggregate`).then(({ Aggregate }) => {
                         this.features[f] = new Aggregate(this.agentIdentifier, this.sharedAggregator)
                     }).catch(err =>
-                        warn(`Something prevented the agent from being downloaded`))
+                        warn('Something prevented the agent from being downloaded.'))
                 }
             })
             gosNREUMInitializedAgents(this.agentIdentifier, this.features, 'features')
             return this
         } catch (err) {
-            warn(`Failed to initialize instrument classes`, err)
+            warn('Failed to initialize instrument classes.', err)
             return false
         }
     }

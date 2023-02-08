@@ -10,9 +10,9 @@
     {config} {init} {loader}
     <script type="text/javascript">
       var testId = window.location.search.match(/testId=([^&]*)/)[1];
-      var url = "/dt/" + testId;
+      var url = '/dt/' + testId;
       var request = new Request(url);
-      request.headers.set("initheader", "initValue");
+      request.headers.set('initheader', 'initValue');
       window.fetch(request);
     </script>
   </head>

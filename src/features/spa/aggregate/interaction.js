@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getInfo, getRuntime, originals } from "../../../common/config/config";
-import { mapOwn } from "../../../common/util/map-own";
-import { ee } from "../../../common/event-emitter/contextual-ee";
-import { InteractionNode } from "./interaction-node";
-import { now } from "../../../common/timing/now";
+import { getInfo, getRuntime, originals } from '../../../common/config/config';
+import { mapOwn } from '../../../common/util/map-own';
+import { ee } from '../../../common/event-emitter/contextual-ee';
+import { InteractionNode } from './interaction-node';
+import { now } from '../../../common/timing/now';
 
 var originalSetTimeout = originals.ST;
 var originalClearTimeout = originals.CT;
@@ -30,7 +30,7 @@ export function Interaction(eventName, timestamp, url, routeName, onFinished, ag
   this.onFinished = onFinished;
   this.done = false;
 
-  var root = (this.root = new InteractionNode(this, null, "interaction", timestamp));
+  var root = (this.root = new InteractionNode(this, null, 'interaction', timestamp));
   var attrs = root.attrs;
 
   attrs.trigger = eventName;
@@ -108,5 +108,5 @@ InteractionPrototype.finish = function finishInteraction() {
   });
 
   root.end = endTimestamp;
-  interaction.ee.emit("interaction", [this]);
+  interaction.ee.emit('interaction', [this]);
 };

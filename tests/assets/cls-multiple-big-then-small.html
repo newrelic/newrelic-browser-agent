@@ -19,7 +19,7 @@
         updatedAt: performance.now(),
       };
       window.allCls = allCls = [];
-      window.addEventListener("load", run);
+      window.addEventListener('load', run);
 
       function run() {
         // when not delayed, the CLS entry is seen as having recent input
@@ -29,18 +29,18 @@
       }
 
       function triggerCls() {
-        var newDiv = document.createElement("div");
-        newDiv.id = "clsText";
-        newDiv.innerText = "inserted text";
+        var newDiv = document.createElement('div');
+        newDiv.id = 'clsText';
+        newDiv.innerText = 'inserted text';
         document.body.insertBefore(newDiv, document.body.firstChild);
       }
 
       function triggerBigCls(reps) {
         reps = reps || 1;
         if (reps < 20) {
-          var newDiv = document.createElement("div");
-          newDiv.id = "bigClsText" + reps;
-          newDiv.innerText = "inserted text " + reps;
+          var newDiv = document.createElement('div');
+          newDiv.id = 'bigClsText' + reps;
+          newDiv.innerText = 'inserted text ' + reps;
           document.body.insertBefore(newDiv, document.body.firstChild);
           setTimeout(
             function () {
@@ -58,7 +58,7 @@
       clsPerformanceObserver = new PerformanceObserver(clsObserver); // eslint-disable-line no-undef
       try {
         clsPerformanceObserver.observe({
-          type: "layout-shift",
+          type: 'layout-shift',
           buffered: true,
         });
       } catch (e) {}

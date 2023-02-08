@@ -3,21 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
-jil.browserTest("Promise.all", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('Promise.all', function (t) {
+  let helpers = require('./helpers');
 
   let validator = new helpers.InteractionValidator({
     attrs: {
-      trigger: "click",
+      trigger: 'click',
     },
-    name: "interaction",
+    name: 'interaction',
     children: [
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "timer",
+          name: 'timer',
         },
       },
     ],
@@ -34,9 +34,9 @@ jil.browserTest("Promise.all", function (t) {
 
     promise.then(function (val) {
       setTimeout(
-        newrelic.interaction().createTracer("timer", function () {
-          t.deepEqual(val, [123, 456], "promise should yield correct value");
-          window.location.hash = "#" + Math.random();
+        newrelic.interaction().createTracer('timer', function () {
+          t.deepEqual(val, [123, 456], 'promise should yield correct value');
+          window.location.hash = '#' + Math.random();
           cb();
         })
       );
@@ -44,41 +44,41 @@ jil.browserTest("Promise.all", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
-    t.ok(interaction.root.end, "interaction should be finished");
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
+    t.ok(interaction.root.end, 'interaction should be finished');
     validator.validate(t, interaction);
     t.end();
   }
 });
 
-jil.browserTest("Promise.all async resolve after rejected", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('Promise.all async resolve after rejected', function (t) {
+  let helpers = require('./helpers');
 
   let validator = new helpers.InteractionValidator({
     attrs: {
-      trigger: "click",
+      trigger: 'click',
     },
-    name: "interaction",
+    name: 'interaction',
     children: [
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "timer",
+          name: 'timer',
         },
         children: [
           {
-            type: "customTracer",
+            type: 'customTracer',
             attrs: {
-              name: "timer",
+              name: 'timer',
             },
             children: [],
           },
         ],
       },
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "timer",
+          name: 'timer',
         },
         children: [],
       },
@@ -94,13 +94,13 @@ jil.browserTest("Promise.all async resolve after rejected", function (t) {
     var idOnReject;
     var b = new Promise(function (resolve) {
       setTimeout(
-        newrelic.interaction().createTracer("timer", function () {
+        newrelic.interaction().createTracer('timer', function () {
           resolve(456);
           setTimeout(
-            newrelic.interaction().createTracer("timer", function () {
+            newrelic.interaction().createTracer('timer', function () {
               promise.catch(function (val) {
-                t.equal(val, 123, "should get reject value in delayed catch");
-                t.equal(helpers.currentNodeId(), idOnReject, "should have same node id as other catch");
+                t.equal(val, 123, 'should get reject value in delayed catch');
+                t.equal(helpers.currentNodeId(), idOnReject, 'should have same node id as other catch');
                 cb();
               });
             }),
@@ -116,17 +116,17 @@ jil.browserTest("Promise.all async resolve after rejected", function (t) {
     promise.catch(function (val) {
       idOnReject = helpers.currentNodeId();
       setTimeout(
-        newrelic.interaction().createTracer("timer", function () {
-          t.equal(val, 123, "should get reject value in fist catch");
-          window.location.hash = "#" + Math.random();
+        newrelic.interaction().createTracer('timer', function () {
+          t.equal(val, 123, 'should get reject value in fist catch');
+          window.location.hash = '#' + Math.random();
         })
       );
     });
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
-    t.ok(interaction.root.end, "interaction should be finished");
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
+    t.ok(interaction.root.end, 'interaction should be finished');
     validator.validate(t, interaction);
     t.end();
   }

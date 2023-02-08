@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const tapParser = require("tap-parser");
-const asserters = require("wd").asserters;
+const tapParser = require('tap-parser');
+const asserters = require('wd').asserters;
 
 function loadBrowser(testDriver, file, name, spec) {
   let path = niceFileName(file);
   testDriver.test(name || path, spec || null, (t, browser, router) => {
     browser
       .safeGet(router.urlForBrowserTest(file))
-      .waitFor(asserters.jsCondition("window._jilUnitDone", true), testDriver.timeout)
+      .waitFor(asserters.jsCondition('window._jilUnitDone', true), testDriver.timeout)
       .safeEval('$("#tap").text()')
       .then((text) => {
         parse(t, text, path, browser.stream);
@@ -26,12 +26,12 @@ function loadBrowser(testDriver, file, name, spec) {
 }
 
 function niceFileName(path) {
-  return path.replace(/^.*\/tests\//, "");
+  return path.replace(/^.*\/tests\//, '');
 }
 
 function parse(t, tap, path, stream) {
   if (!tap) {
-    t.fail(new Error("did not receive tap output"));
+    t.fail(new Error('did not receive tap output'));
     t.end();
     return;
   }
@@ -40,23 +40,23 @@ function parse(t, tap, path, stream) {
   let sawTests = false;
   let sawPlan = false;
 
-  parser.once("assert", function (assert) {
+  parser.once('assert', function (assert) {
     sawTests = true;
   });
 
-  parser.once("plan", function () {
+  parser.once('plan', function () {
     sawPlan = true;
   });
 
-  parser.on("assert", function (assert) {
+  parser.on('assert', function (assert) {
     t.ok(assert.ok, assert.name);
   });
 
-  parser.on("comment", function (comment) {
+  parser.on('comment', function (comment) {
     t.comment(comment);
   });
 
-  parser.on("complete", (results) => {
+  parser.on('complete', (results) => {
     if (!sawPlan) {
       t.fail(`did not see plan before first assertion for ${path}`);
     } else if (!sawTests) {

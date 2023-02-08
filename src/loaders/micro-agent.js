@@ -1,13 +1,13 @@
 // loader files
-import { getEnabledFeatures } from "./features/enabled-features";
-import { configure } from "./configure/configure";
+import { getEnabledFeatures } from './features/enabled-features';
+import { configure } from './configure/configure';
 // core files
-import { Aggregator } from "../common/aggregate/aggregator";
-import { gosNREUMInitializedAgents } from "../common/window/nreum";
-import { generateRandomHexString } from "../common/ids/unique-id";
-import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from "../common/config/config";
-import { FEATURE_NAMES } from "./features/features";
-import { warn } from "../common/util/console";
+import { Aggregator } from '../common/aggregate/aggregator';
+import { gosNREUMInitializedAgents } from '../common/window/nreum';
+import { generateRandomHexString } from '../common/ids/unique-id';
+import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../common/config/config';
+import { FEATURE_NAMES } from './features/features';
+import { warn } from '../common/util/console';
 
 const nonAutoFeatures = [FEATURE_NAMES.jserrors, FEATURE_NAMES.pageAction];
 
@@ -26,7 +26,7 @@ export class MicroAgent {
       configure(
         this.agentIdentifier,
         { ...options, runtime: { isolatedBacklog: true } },
-        options.loaderType || "micro-agent"
+        options.loaderType || 'micro-agent'
       )
     );
 
@@ -51,7 +51,7 @@ export class MicroAgent {
             .then(({ Instrument }) => {
               this.features[f] = new Instrument(this.agentIdentifier, this.sharedAggregator);
             })
-            .catch((err) => warn("Something prevented the agent from being downloaded."));
+            .catch((err) => warn('Something prevented the agent from being downloaded.'));
         }
       });
       nonAutoFeatures.forEach((f) => {
@@ -60,13 +60,13 @@ export class MicroAgent {
             .then(({ Aggregate }) => {
               this.features[f] = new Aggregate(this.agentIdentifier, this.sharedAggregator);
             })
-            .catch((err) => warn("Something prevented the agent from being downloaded."));
+            .catch((err) => warn('Something prevented the agent from being downloaded.'));
         }
       });
-      gosNREUMInitializedAgents(this.agentIdentifier, this.features, "features");
+      gosNREUMInitializedAgents(this.agentIdentifier, this.features, 'features');
       return this;
     } catch (err) {
-      warn("Failed to initialize instrument classes.", err);
+      warn('Failed to initialize instrument classes.', err);
       return false;
     }
   }

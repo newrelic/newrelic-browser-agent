@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const browsersPolyfill = require("./browsers-polyfill.json");
-const browsersSelenium = require("./browsers-selenium.json");
-const browsersSupported = require("./browsers-supported.json");
-const semver = require("semver");
-const BrowserMatcher = require("./browser-matcher");
-var config = require("../runner/args");
+const browsersPolyfill = require('./browsers-polyfill.json');
+const browsersSelenium = require('./browsers-selenium.json');
+const browsersSupported = require('./browsers-supported.json');
+const semver = require('semver');
+const BrowserMatcher = require('./browser-matcher');
+var config = require('../runner/args');
 
 // list of pre-defined browsers = require(test matrix
 var allowedBrowsers = browsersSupported;
@@ -26,7 +26,7 @@ class BrowserSpec {
   }
 
   allowsExtendedDebugging() {
-    return ["chrome", "firefox"].includes(this.desired.browserName) && this.version === "latest";
+    return ['chrome', 'firefox'].includes(this.desired.browserName) && this.version === 'latest';
   }
 
   toString() {
@@ -65,7 +65,7 @@ class BrowserSpec {
     if (this.desired.platform) {
       return this.desired.platform.toLowerCase();
     }
-    return "";
+    return '';
   }
 
   get platformVersion() {
@@ -90,7 +90,7 @@ function resetBrowserList() {
   allowedBrowsers = browsers;
 }
 
-function browserList(pattern = "chrome@latest") {
+function browserList(pattern = 'chrome@latest') {
   let requested = pattern
     .trim()
     .split(/\s*,\s*/)
@@ -110,21 +110,21 @@ function browserList(pattern = "chrome@latest") {
 }
 
 function parse(pattern) {
-  let [browserFull, platform] = pattern.split("/");
-  let [browser, range] = browserFull.split("@");
-  return getBrowsersFor(browser || "chrome", range, platform);
+  let [browserFull, platform] = pattern.split('/');
+  let [browser, range] = browserFull.split('@');
+  return getBrowsersFor(browser || 'chrome', range, platform);
 }
 
 function getBrowsersFor(browser, range, platform) {
   let list = [];
   if (allowedBrowsers[browser]) list = allowedBrowsers[browser].slice();
-  else if (browser === "*") list = Object.keys(allowedBrowsers).reduce(merge, []);
+  else if (browser === '*') list = Object.keys(allowedBrowsers).reduce(merge, []);
 
   list.sort(byVersion);
 
   if (!range && !platform) {
     return list;
-  } else if (range === "beta") {
+  } else if (range === 'beta') {
     return list.filter(findBetaVersions);
   } else if (latestVersStringRe.test(range)) {
     var latestX = list.filter(findLatestVersions, range);
@@ -135,7 +135,7 @@ function getBrowsersFor(browser, range, platform) {
   return list;
 
   function inRange(option) {
-    if (option.platformVersion === "beta" || option.version === "beta") {
+    if (option.platformVersion === 'beta' || option.version === 'beta') {
       return false;
     }
     if (platform && option.platform.toLowerCase() !== platform.toLowerCase()) {
@@ -146,7 +146,7 @@ function getBrowsersFor(browser, range, platform) {
   }
 
   function findBetaVersions(option) {
-    return option.platformVersion === "beta" || option.version === "beta";
+    return option.platformVersion === 'beta' || option.version === 'beta';
   }
 
   function findLatestVersions(option) {
@@ -164,12 +164,12 @@ function byVersion(left, right) {
 function cleanVersion(version) {
   // assign to high number, so that it is high in the list when sorted (i.e. beta is highest)
   if (!version || latestVersStringRe.test(version)) {
-    let prevVersionOffset = !!version && version.split("-")[1];
-    if (prevVersionOffset) version = "9999" - prevVersionOffset;
-    else version = "9999"; // undefined 'version' (e.g., mobile) will be set to 'latest' too
-  } else if (version === "beta") version = "10000";
-  version = version + ".0.0";
-  return version.split(".", 3).join(".");
+    let prevVersionOffset = !!version && version.split('-')[1];
+    if (prevVersionOffset) version = '9999' - prevVersionOffset;
+    else version = '9999'; // undefined 'version' (e.g., mobile) will be set to 'latest' too
+  } else if (version === 'beta') version = '10000';
+  version = version + '.0.0';
+  return version.split('.', 3).join('.');
 }
 
 function merge(list, browser) {

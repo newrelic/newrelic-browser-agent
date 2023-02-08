@@ -1,4 +1,4 @@
-import BrowserAgent from "@newrelic/browser-agent";
+import BrowserAgent from '@newrelic/browser-agent';
 
 const info = {
   ...NREUM.info,
@@ -23,22 +23,22 @@ const nr = new BrowserAgent();
 
 nr.start({ info, init, loader_config, exposed: false });
 
-console.log("component 1 ", nr);
+console.log('component 1 ', nr);
 
 class PuppyComponent extends HTMLElement {
-  static name = "puppy-component";
+  static name = 'puppy-component';
   constructor() {
     super();
-    this.shadow = this.attachShadow({ mode: "open" });
-    this.elem = document.createElement("img");
-    this.name = "Puppy Component";
+    this.shadow = this.attachShadow({ mode: 'open' });
+    this.elem = document.createElement('img');
+    this.name = 'Puppy Component';
     this.setImg();
   }
 
   fetchImg = async () => {
     const params = {
-      api_key: "TMWFkdtKTv6To8CjL9OqC2KBNQTM8D3N",
-      q: "puppy",
+      api_key: 'TMWFkdtKTv6To8CjL9OqC2KBNQTM8D3N',
+      q: 'puppy',
       limit: 100,
     };
     const url = new URL(`https://api.giphy.com/v1/gifs/search`);
@@ -48,15 +48,15 @@ class PuppyComponent extends HTMLElement {
     const result =
       json.data.length > 0
         ? json.data[Math.floor(Math.random() * json.data.length)].images.downsized.url
-        : "https://media.giphy.com/media/3zhxq2ttgN6rEw8SDx/giphy.gif";
+        : 'https://media.giphy.com/media/3zhxq2ttgN6rEw8SDx/giphy.gif';
     return result;
   };
 
   setImg = async () => {
     const img = await this.fetchImg();
     this.elem.src = img;
-    this.elem.style.maxWidth = "100vw";
-    this.elem.style.maxHeight = "250px";
+    this.elem.style.maxWidth = '100vw';
+    this.elem.style.maxHeight = '250px';
     this.shadow.appendChild(this.elem);
     this.sendError();
   };
@@ -64,7 +64,7 @@ class PuppyComponent extends HTMLElement {
   sendError = () => {
     console.debug(`NOTICING (nr.noticeError()) an error in ${this.name}`);
     const err = new Error(`nr.noticeError() called in ${this.name} (Component-1)!`);
-    nr.noticeError(err, { customAttr: "hi" });
+    nr.noticeError(err, { customAttr: 'hi' });
     throw new Error(`component-1 threw global error`);
   };
 }

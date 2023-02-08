@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var newrelic = require("newrelic");
-const Driver = require("./Driver");
-const TestRun = require("./TestRun");
-const DeviceTest = require("./DeviceTest");
+var newrelic = require('newrelic');
+const Driver = require('./Driver');
+const TestRun = require('./TestRun');
+const DeviceTest = require('./DeviceTest');
 
 class ParallelDriver extends Driver {
   run(cb) {
@@ -119,7 +119,7 @@ class ParallelDriver extends Driver {
       }
 
       function isMobile(env) {
-        return env.browserSpec.platformName === "ios" || env.browserSpec.platformName === "android";
+        return env.browserSpec.platformName === 'ios' || env.browserSpec.platformName === 'android';
       }
 
       function enoughTests(tests) {
@@ -131,13 +131,13 @@ class ParallelDriver extends Driver {
       driver.output.log(`# starting ${env.toString()}`);
       let testRun = new TestRun(env, driver.router, driver.config);
 
-      testRun.on("testFinished", onTestFinished);
-      testRun.on("closed", onClosed);
+      testRun.on('testFinished', onTestFinished);
+      testRun.on('closed', onClosed);
 
       driver.output.addChild(testRun.browserSpec.toString(), testRun.stream);
       testRuns.add(testRun);
 
-      testRun.initialize(driver.assetServer.urlFor("/"), (err) => {
+      testRun.initialize(driver.assetServer.urlFor('/'), (err) => {
         if (err) {
           return cb(err);
         }
@@ -160,7 +160,7 @@ class ParallelDriver extends Driver {
         duration: result.duration,
         remaining: getRemaining(testRun.env),
       };
-      newrelic.recordCustomEvent("JilTest", eventData);
+      newrelic.recordCustomEvent('JilTest', eventData);
 
       if (result.passed) {
         runNextTest(testRun);
@@ -205,7 +205,7 @@ class ParallelDriver extends Driver {
     }
 
     function shutdown() {
-      driver.output.log("# stopping asset server");
+      driver.output.log('# stopping asset server');
       driver.assetServer.stop();
       driver.output.finish();
       newrelic.shutdown({ collectPendingData: true, timeout: 3000 }, cb);

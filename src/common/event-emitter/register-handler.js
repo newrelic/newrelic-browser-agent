@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { handleEE } from "./handle";
+import { handleEE } from './handle';
 
 export { defaultRegister as registerHandler };
 
@@ -16,7 +16,7 @@ export function defaultRegister(type, handler, group, ee) {
 }
 
 function registerWithSpecificEmitter(ee, handlers, type, handler, group) {
-  if (!group) group = "feature";
+  if (!group) group = 'feature';
   if (!ee) ee = handleEE;
 
   var groupHandlers = (handlers[group] = handlers[group] || {});

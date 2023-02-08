@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var hasProcess = typeof process !== "undefined" && process && process.hrtime;
+var hasProcess = typeof process !== 'undefined' && process && process.hrtime;
 
 function now() {
   if (hasProcess) {

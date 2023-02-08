@@ -3,25 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 /*eslint no-undef: "error"*/
-import { registerHandler as register } from "../../../common/event-emitter/register-handler";
-import { parseUrl } from "../../../common/url/parse-url";
-import { shouldCollectEvent } from "../../../common/deny-list/deny-list";
-import { mapOwn } from "../../../common/util/map-own";
-import { navTimingValues as navTiming } from "../../../common/timing/nav-timing";
-import { generateUuid } from "../../../common/ids/unique-id";
-import { paintMetrics } from "../../../common/metrics/paint-metrics";
-import { Interaction } from "./interaction";
-import { getConfigurationValue, getRuntime } from "../../../common/config/config";
-import { eventListenerOpts } from "../../../common/event-listener/event-listener-opts";
-import { AggregateBase } from "../../utils/aggregate-base";
-import { HarvestScheduler } from "../../../common/harvest/harvest-scheduler";
-import { Serializer } from "./serializer";
-import { ee } from "../../../common/event-emitter/contextual-ee";
-import * as CONSTANTS from "../constants";
-import { drain } from "../../../common/drain/drain";
-import { FEATURE_NAMES } from "../../../loaders/features/features";
-import { isBrowserScope } from "../../../common/util/global-scope";
-import { onWindowLoad } from "../../../common/window/load";
+import { registerHandler as register } from '../../../common/event-emitter/register-handler';
+import { parseUrl } from '../../../common/url/parse-url';
+import { shouldCollectEvent } from '../../../common/deny-list/deny-list';
+import { mapOwn } from '../../../common/util/map-own';
+import { navTimingValues as navTiming } from '../../../common/timing/nav-timing';
+import { generateUuid } from '../../../common/ids/unique-id';
+import { paintMetrics } from '../../../common/metrics/paint-metrics';
+import { Interaction } from './interaction';
+import { getConfigurationValue, getRuntime } from '../../../common/config/config';
+import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts';
+import { AggregateBase } from '../../utils/aggregate-base';
+import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler';
+import { Serializer } from './serializer';
+import { ee } from '../../../common/event-emitter/contextual-ee';
+import * as CONSTANTS from '../constants';
+import { drain } from '../../../common/drain/drain';
+import { FEATURE_NAMES } from '../../../loaders/features/features';
+import { isBrowserScope } from '../../../common/util/global-scope';
+import { onWindowLoad } from '../../../common/window/load';
 
 const {
   FEATURE_NAME,
@@ -60,7 +60,7 @@ export class Aggregate extends AggregateBase {
       pageLoaded: false,
       childTime: 0,
       depth: 0,
-      harvestTimeSeconds: getConfigurationValue(agentIdentifier, "spa.harvestTimeSeconds") || 10,
+      harvestTimeSeconds: getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10,
       interactionsToHarvest: [],
       interactionsSent: [],
     };
@@ -71,25 +71,25 @@ export class Aggregate extends AggregateBase {
     let { blocked } = this;
 
     const baseEE = ee.get(agentIdentifier); // <-- parent baseEE
-    const mutationEE = baseEE.get("mutation");
-    const promiseEE = baseEE.get("promise");
-    const historyEE = baseEE.get("history");
-    const eventsEE = baseEE.get("events"); // ajax --> ee(123).emit() ee()
-    const timerEE = baseEE.get("timer");
-    const fetchEE = baseEE.get("fetch");
-    const jsonpEE = baseEE.get("jsonp");
-    const xhrEE = baseEE.get("xhr");
-    const tracerEE = baseEE.get("tracer");
+    const mutationEE = baseEE.get('mutation');
+    const promiseEE = baseEE.get('promise');
+    const historyEE = baseEE.get('history');
+    const eventsEE = baseEE.get('events'); // ajax --> ee(123).emit() ee()
+    const timerEE = baseEE.get('timer');
+    const fetchEE = baseEE.get('fetch');
+    const jsonpEE = baseEE.get('jsonp');
+    const xhrEE = baseEE.get('xhr');
+    const tracerEE = baseEE.get('tracer');
 
     const scheduler = new HarvestScheduler(
-      "events",
+      'events',
       {
         onFinished: onHarvestFinished,
         retryDelay: state.harvestTimeSeconds,
       },
       { agentIdentifier }
     );
-    scheduler.harvest.on("events", onHarvestStarted);
+    scheduler.harvest.on('events', onHarvestStarted);
 
     // childTime is used when calculating exclusive time for a cb duration.
     //
@@ -125,7 +125,7 @@ export class Aggregate extends AggregateBase {
 
     // if rum response determines that customer lacks entitlements for spa endpoint, block it
     register(
-      "block-spa",
+      'block-spa',
       () => {
         blocked = true;
         scheduler.stopTimer();
@@ -137,7 +137,7 @@ export class Aggregate extends AggregateBase {
     if (!isEnabled()) return;
 
     state.initialPageLoad = new Interaction(
-      "initialPageLoad",
+      'initialPageLoad',
       0,
       state.lastSeenUrl,
       state.lastSeenRouteName,
@@ -160,9 +160,9 @@ export class Aggregate extends AggregateBase {
     };
 
     register(
-      "spa-register",
+      'spa-register',
       function (init) {
-        if (typeof init === "function") {
+        if (typeof init === 'function') {
           init(pluginApi);
         }
       },
@@ -179,7 +179,7 @@ export class Aggregate extends AggregateBase {
     }
 
     register(FN_END, callbackEnd, this.featureName, baseEE);
-    register("cb-end", callbackEnd, this.featureName, promiseEE);
+    register('cb-end', callbackEnd, this.featureName, promiseEE);
 
     function callbackEnd() {
       state.depth--;
@@ -208,7 +208,7 @@ export class Aggregate extends AggregateBase {
         var evName = ev.type;
         var eventNode = ev.__nrNode;
 
-        if (!state.pageLoaded && evName === "load" && eventSource === window) {
+        if (!state.pageLoaded && evName === 'load' && eventSource === window) {
           state.pageLoaded = true;
           // set to null so prevNode is set correctly
           this.prevNode = state.currentNode = null;
@@ -220,7 +220,7 @@ export class Aggregate extends AggregateBase {
             state.initialPageLoad[REMAINING] = 0;
 
             originalSetTimeout(function () {
-              INTERACTION_EVENTS.push("popstate");
+              INTERACTION_EVENTS.push('popstate');
             });
           }
         }
@@ -230,7 +230,7 @@ export class Aggregate extends AggregateBase {
           // just restore that. We want multiple handlers for the same event to share
           // a node.
           setCurrentNode(eventNode);
-        } else if (evName === "hashchange") {
+        } else if (evName === 'hashchange') {
           setCurrentNode(state.nodeOnLastHashUpdate);
           state.nodeOnLastHashUpdate = null;
         } else if (eventSource instanceof XMLHttpRequest) {
@@ -256,10 +256,10 @@ export class Aggregate extends AggregateBase {
 
             setCurrentNode(ixn.root);
 
-            if (evName === "click") {
+            if (evName === 'click') {
               var value = getActionText(ev.target);
               if (value) {
-                state.currentNode.attrs.custom["actionText"] = value;
+                state.currentNode.attrs.custom['actionText'] = value;
               }
             }
           }
@@ -280,7 +280,7 @@ export class Aggregate extends AggregateBase {
     // The context supplied to this callback will be shared with the fn-start/fn-end
     // callbacks that fire around the callback passed to setTimeout originally.
     register(
-      "setTimeout-end",
+      'setTimeout-end',
       function saveId(args, obj, timerId) {
         if (!state.currentNode || state.timerBudget - this.timerDuration < 0) return;
         if (args && !(args[0] instanceof Function)) return;
@@ -294,7 +294,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      "clearTimeout-start",
+      'clearTimeout-start',
       function clear(args) {
         var timerId = args[0];
         var node = state.timerMap[timerId];
@@ -350,7 +350,7 @@ export class Aggregate extends AggregateBase {
     // context is stored on the xhr and is shared with all callbacks associated
     // with the new xhr
     register(
-      "new-xhr",
+      'new-xhr',
       function () {
         if (!state.currentNode && state.prevInteraction && !state.prevInteraction.ignored) {
           /*
@@ -363,7 +363,7 @@ export class Aggregate extends AggregateBase {
         }
 
         if (state.currentNode) {
-          this[SPA_NODE] = state.currentNode.child("ajax", null, null, true);
+          this[SPA_NODE] = state.currentNode.child('ajax', null, null, true);
         }
       },
       this.featureName,
@@ -371,7 +371,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      "send-xhr-start",
+      'send-xhr-start',
       function () {
         var node = this[SPA_NODE];
         if (node && !this.sent) {
@@ -386,7 +386,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      "xhr-resolved",
+      'xhr-resolved',
       function () {
         var node = this[SPA_NODE];
         if (node) {
@@ -413,11 +413,11 @@ export class Aggregate extends AggregateBase {
      */
 
     register(
-      "new-jsonp",
+      'new-jsonp',
       function (url) {
         if (state.currentNode) {
-          var node = (this[JSONP_NODE] = state.currentNode.child("ajax", this[FETCH_START]));
-          node.start = this["new-jsonp"];
+          var node = (this[JSONP_NODE] = state.currentNode.child('ajax', this[FETCH_START]));
+          node.start = this['new-jsonp'];
           this.url = url;
           this.status = null;
         }
@@ -427,7 +427,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      "cb-start",
+      'cb-start',
       function (args) {
         var node = this[JSONP_NODE];
         if (node) {
@@ -440,7 +440,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      "jsonp-error",
+      'jsonp-error',
       function () {
         var node = this[JSONP_NODE];
         if (node) {
@@ -466,9 +466,9 @@ export class Aggregate extends AggregateBase {
           var params = (attrs.params = {});
 
           var parsed = parseUrl(this.url);
-          params.method = "GET";
+          params.method = 'GET';
           params.pathname = parsed.pathname;
-          params.host = parsed.hostname + ":" + parsed.port;
+          params.host = parsed.hostname + ':' + parsed.port;
           params.status = this.status;
 
           attrs.metrics = {
@@ -501,7 +501,7 @@ export class Aggregate extends AggregateBase {
           }
 
           if (state.currentNode) {
-            this[SPA_NODE] = state.currentNode.child("ajax", this[FETCH_START]);
+            this[SPA_NODE] = state.currentNode.child('ajax', this[FETCH_START]);
             if (dtPayload && this[SPA_NODE]) this[SPA_NODE].dt = dtPayload;
           }
         }
@@ -511,7 +511,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      FETCH_BODY + "start",
+      FETCH_BODY + 'start',
       function (args) {
         if (state.currentNode) {
           this[SPA_NODE] = state.currentNode;
@@ -523,7 +523,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      FETCH_BODY + "end",
+      FETCH_BODY + 'end',
       function (args, ctx, bodyPromise) {
         var node = this[SPA_NODE];
         if (node) node[INTERACTION][REMAINING]--;
@@ -558,7 +558,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      "newURL",
+      'newURL',
       function (url, hashChangedDuringCb) {
         if (state.currentNode) {
           state.currentNode[INTERACTION].setNewURL(url);
@@ -608,18 +608,18 @@ export class Aggregate extends AggregateBase {
     // dom-start is emitted when appendChild or replaceChild are called. If the element being
     // inserted is script and we are inside an interaction, we will keep the interaction open
     // until the script is loaded.
-    jsonpEE.on("dom-start", function (args) {
+    jsonpEE.on('dom-start', function (args) {
       if (!state.currentNode) return;
 
       var el = args[0];
-      var isScript = el && el.nodeName === "SCRIPT" && el.src !== "";
+      var isScript = el && el.nodeName === 'SCRIPT' && el.src !== '';
       var interaction = state.currentNode.interaction;
 
       if (isScript) {
         // increase remaining count to keep the interaction open
         interaction[REMAINING]++;
-        el.addEventListener("load", onload, eventListenerOpts(false));
-        el.addEventListener("error", onerror, eventListenerOpts(false));
+        el.addEventListener('load', onload, eventListenerOpts(false));
+        el.addEventListener('error', onerror, eventListenerOpts(false));
       }
 
       function onload() {
@@ -652,10 +652,10 @@ export class Aggregate extends AggregateBase {
       mutationEE
     );
 
-    register("resolve-start", resolvePromise, this.featureName, promiseEE);
-    register("executor-err", resolvePromise, this.featureName, promiseEE);
+    register('resolve-start', resolvePromise, this.featureName, promiseEE);
+    register('executor-err', resolvePromise, this.featureName, promiseEE);
 
-    register("propagate", saveNode, this.featureName, promiseEE);
+    register('propagate', saveNode, this.featureName, promiseEE);
 
     register(
       CB_START,
@@ -668,18 +668,18 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      INTERACTION_API + "get",
+      INTERACTION_API + 'get',
       function (t) {
         var interaction;
         if (state?.currentNode?.[INTERACTION]) interaction = this.ixn = state.currentNode[INTERACTION];
         else if (
           state?.prevNode?.end === null &&
-          state?.prevNode?.[INTERACTION]?.root?.[INTERACTION]?.eventName != "initialPageLoad"
+          state?.prevNode?.[INTERACTION]?.root?.[INTERACTION]?.eventName != 'initialPageLoad'
         )
           interaction = this.ixn = state.prevNode[INTERACTION];
         else
           interaction = this.ixn = new Interaction(
-            "api",
+            'api',
             t,
             state.lastSeenUrl,
             state.lastSeenRouteName,
@@ -696,7 +696,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      INTERACTION_API + "actionText",
+      INTERACTION_API + 'actionText',
       function (t, actionText) {
         var customAttrs = this.ixn.root.attrs.custom;
         if (actionText) customAttrs.actionText = actionText;
@@ -706,7 +706,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      INTERACTION_API + "setName",
+      INTERACTION_API + 'setName',
       function (t, name, trigger) {
         var attrs = this.ixn.root.attrs;
         if (name) attrs.customName = name;
@@ -717,7 +717,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      INTERACTION_API + "setAttribute",
+      INTERACTION_API + 'setAttribute',
       function (t, name, value) {
         this.ixn.root.attrs.custom[name] = value;
       },
@@ -726,12 +726,12 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      INTERACTION_API + "end",
+      INTERACTION_API + 'end',
       function (timestamp) {
         var interaction = this.ixn;
         var node = activeNodeFor(interaction);
         setCurrentNode(null);
-        node.child("customEnd", timestamp).finish(timestamp);
+        node.child('customEnd', timestamp).finish(timestamp);
         interaction.finish();
       },
       this.featureName,
@@ -739,7 +739,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      INTERACTION_API + "ignore",
+      INTERACTION_API + 'ignore',
       function (t) {
         this.ixn.ignored = true;
       },
@@ -748,7 +748,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      INTERACTION_API + "save",
+      INTERACTION_API + 'save',
       function (t) {
         this.ixn.save = true;
       },
@@ -757,7 +757,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      INTERACTION_API + "tracer",
+      INTERACTION_API + 'tracer',
       function (timestamp, name, store) {
         var interaction = this.ixn;
         var parent = activeNodeFor(interaction);
@@ -767,14 +767,14 @@ export class Aggregate extends AggregateBase {
 
           return (ctx[SPA_NODE] = parent);
         }
-        ctx[SPA_NODE] = parent.child("customTracer", timestamp, name);
+        ctx[SPA_NODE] = parent.child('customTracer', timestamp, name);
       },
       this.featureName,
       baseEE
     );
 
     register(FN_START, tracerDone, this.featureName, tracerEE);
-    register("no-" + FN_START, tracerDone, this.featureName, tracerEE);
+    register('no-' + FN_START, tracerDone, this.featureName, tracerEE);
 
     function tracerDone(timestamp, interactionContext, hasCb) {
       var node = this[SPA_NODE];
@@ -791,7 +791,7 @@ export class Aggregate extends AggregateBase {
     }
 
     register(
-      INTERACTION_API + "getContext",
+      INTERACTION_API + 'getContext',
       function (t, cb) {
         var store = this.ixn.root.attrs.store;
         setTimeout(function () {
@@ -803,7 +803,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      INTERACTION_API + "onEnd",
+      INTERACTION_API + 'onEnd',
       function (t, cb) {
         this.ixn.handlers.push(cb);
       },
@@ -812,7 +812,7 @@ export class Aggregate extends AggregateBase {
     );
 
     register(
-      "api-routeName",
+      'api-routeName',
       function (t, currentRouteName) {
         state.lastSeenRouteName = currentRouteName;
         if (state.currentNode) state.currentNode[INTERACTION].setNewRoute(currentRouteName);
@@ -887,20 +887,20 @@ export class Aggregate extends AggregateBase {
       }
     }
 
-    baseEE.on("errorAgg", function (type, name, params, metrics) {
+    baseEE.on('errorAgg', function (type, name, params, metrics) {
       if (!state.currentNode) return;
       params._interactionId = state.currentNode.interaction.id;
       // do not capture parentNodeId when in root node
-      if (state.currentNode.type && state.currentNode.type !== "interaction") {
+      if (state.currentNode.type && state.currentNode.type !== 'interaction') {
         params._interactionNodeId = state.currentNode.id;
       }
     });
 
-    baseEE.on("interaction", saveInteraction);
+    baseEE.on('interaction', saveInteraction);
 
     function getActionText(node) {
       var nodeType = node.tagName.toLowerCase();
-      var goodNodeTypes = ["a", "button", "input"];
+      var goodNodeTypes = ['a', 'button', 'input'];
       var isGoodNode = goodNodeTypes.indexOf(nodeType) !== -1;
       if (isGoodNode) {
         return node.title || node.value || node.innerText;
@@ -909,7 +909,7 @@ export class Aggregate extends AggregateBase {
 
     function saveInteraction(interaction) {
       if (interaction.ignored || (!interaction.save && !interaction.routeChange)) {
-        baseEE.emit("interactionDiscarded", [interaction]);
+        baseEE.emit('interactionDiscarded', [interaction]);
         return;
       }
 
@@ -923,17 +923,17 @@ export class Aggregate extends AggregateBase {
       // assign unique id, this is serialized and used to link interactions with errors
       interaction.root.attrs.id = generateUuid();
 
-      if (interaction.root.attrs.trigger === "initialPageLoad") {
-        interaction.root.attrs.firstPaint = paintMetrics["first-paint"];
-        interaction.root.attrs.firstContentfulPaint = paintMetrics["first-contentful-paint"];
+      if (interaction.root.attrs.trigger === 'initialPageLoad') {
+        interaction.root.attrs.firstPaint = paintMetrics['first-paint'];
+        interaction.root.attrs.firstContentfulPaint = paintMetrics['first-contentful-paint'];
       }
-      baseEE.emit("interactionSaved", [interaction]);
+      baseEE.emit('interactionSaved', [interaction]);
       state.interactionsToHarvest.push(interaction);
       scheduler.scheduleHarvest(0);
     }
 
     function isEnabled() {
-      var enabled = getConfigurationValue(agentIdentifier, "spa.enabled");
+      var enabled = getConfigurationValue(agentIdentifier, 'spa.enabled');
       if (enabled === false) {
         return false;
       }

@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { gosNREUM } from "../window/nreum";
-import { getOrSet } from "../util/get-or-set";
-import { mapOwn } from "../util/map-own";
-import { getRuntime } from "../config/config";
+import { gosNREUM } from '../window/nreum';
+import { getOrSet } from '../util/get-or-set';
+import { mapOwn } from '../util/map-own';
+import { getRuntime } from '../config/config';
 
-var ctxId = "nr@context";
+var ctxId = 'nr@context';
 
 // create global emitter instance that can be shared among bundles
 let nr = gosNREUM();
@@ -17,7 +17,7 @@ var globalInstance;
 if (nr.ee) {
   globalInstance = nr.ee;
 } else {
-  globalInstance = ee(undefined, "globalEE");
+  globalInstance = ee(undefined, 'globalEE');
   nr.ee = globalInstance;
 }
 
@@ -50,7 +50,7 @@ function ee(old, debugId) {
     aborted: false,
     isBuffering: isBuffering,
     debugId,
-    backlog: isolatedBacklog ? {} : old && typeof old.backlog === "object" ? old.backlog : {},
+    backlog: isolatedBacklog ? {} : old && typeof old.backlog === 'object' ? old.backlog : {},
   };
 
   return emitter;
@@ -120,7 +120,7 @@ function ee(old, debugId) {
     // do not buffer events if agent has been aborted
     if (emitter.aborted) return;
     mapOwn(types, function (i, type) {
-      group = group || "feature";
+      group = group || 'feature';
       bufferGroupMap[type] = group;
       if (!(group in eventBuffer)) {
         eventBuffer[group] = [];

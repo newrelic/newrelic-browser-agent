@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const url = require("url");
+const url = require('url');
 
 function assertErrorAttributes(t, query) {
-  t.equal(query.pve, "1", "pageViewErr reported");
+  t.equal(query.pve, '1', 'pageViewErr reported');
 }
 
 function verifyStackTraceOmits(t, actualErrors, query) {
-  t.equal(actualErrors.length, 1, "Expected exactly one error");
+  t.equal(actualErrors.length, 1, 'Expected exactly one error');
 
   let stackTrace = actualErrors[0].params.stack_trace;
-  t.equal(stackTrace.indexOf(query), -1, "stack trace should not include URL query string or fragment");
+  t.equal(stackTrace.indexOf(query), -1, 'stack trace should not include URL query string or fragment');
 }
 
 function assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL) {
@@ -27,19 +27,19 @@ function assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL
     });
     let actualError = matchingErrors[0];
 
-    t.ok(actualError, "found expected error");
+    t.ok(actualError, 'found expected error');
     // This is a bit hacky here, where we check if the message is
     // 'uncaught error' before testing the class name
-    if (expectedError.message === "uncaught error") {
+    if (expectedError.message === 'uncaught error') {
       var errorClass = actualError.params.exceptionClass;
-      if (browser.hasFeature("uncaughtErrorObject")) {
-        t.equal(errorClass, "Error", "Uncaught error is of Error class");
+      if (browser.hasFeature('uncaughtErrorObject')) {
+        t.equal(errorClass, 'Error', 'Uncaught error is of Error class');
       } else {
-        t.equal(errorClass, "UncaughtException", "Uncaught error class is UncaughtException");
+        t.equal(errorClass, 'UncaughtException', 'Uncaught error class is UncaughtException');
       }
     }
 
-    t.equal(actualError.params["request_uri"], expectedPath, "has correct request_uri attribute");
+    t.equal(actualError.params['request_uri'], expectedPath, 'has correct request_uri attribute');
   }
 }
 
@@ -66,7 +66,7 @@ function getAppIdFromResponse(response) {
 }
 
 function getMetricsFromResponse(response, isSupportability) {
-  var attr = isSupportability ? "sm" : "cm";
+  var attr = isSupportability ? 'sm' : 'cm';
   if (response.body) {
     try {
       var parsedBody = JSON.parse(response.body);

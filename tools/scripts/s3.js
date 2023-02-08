@@ -1,4 +1,4 @@
-var AWS = require("aws-sdk");
+var AWS = require('aws-sdk');
 
 var s3;
 
@@ -9,7 +9,7 @@ module.exports = {
 
       var roleToAssume = {
         RoleArn: role, // argv['role']
-        RoleSessionName: "uploadToS3Session",
+        RoleSessionName: 'uploadToS3Session',
         DurationSeconds: 900,
       };
 
@@ -52,19 +52,19 @@ module.exports = {
     });
 
     if (!dry) await s3.deleteObjects(deleteParams).promise();
-    else console.log("would have deleted", deleteParams);
+    else console.log('would have deleted', deleteParams);
 
-    console.log("deleted".deleteParams, "recurse?", listedObjects.IsTruncated);
+    console.log('deleted'.deleteParams, 'recurse?', listedObjects.IsTruncated);
     if (listedObjects.IsTruncated) await emptyS3Directory(bucket, dir);
   },
 
   uploadToS3: function uploadToS3(fileName, content, bucket, dry = false, maxAge = 3600, expires) {
     return new Promise((resolve, reject) => {
-      console.log("expires?", expires);
+      console.log('expires?', expires);
       var params = {
         Body: content,
         Bucket: bucket, // argv.bucket,
-        ContentType: "application/javascript",
+        ContentType: 'application/javascript',
         CacheControl: `public, max-age=${maxAge}`,
         ...(!!expires && { Expires: expires }),
         Key: fileName,
@@ -72,7 +72,7 @@ module.exports = {
 
       // if (argv['dry'] === true) {
       if (dry) {
-        console.log("running in dry mode, file not uploaded, params:", params);
+        console.log('running in dry mode, file not uploaded, params:', params);
         return resolve();
       }
 

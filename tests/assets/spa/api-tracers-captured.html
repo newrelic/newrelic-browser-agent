@@ -12,11 +12,11 @@
     <p>This tests data harvested from interaction with custom tracer.</p>
     <script type="text/javascript">
       document.addEventListener(
-        "click",
+        'click',
         function () {
           var interaction = newrelic.interaction().save();
 
-          interaction.createTracer("custom", function () {
+          interaction.createTracer('custom', function () {
             setTimeout(function () {
               interaction.end();
             });

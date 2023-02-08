@@ -13,10 +13,10 @@
     <div>This page contains zone.js</div>
     <script type="text/javascript">
       document.addEventListener(
-        "click",
+        'click',
         function () {
           setTimeout(
-            newrelic.interaction().createTracer("timer", function () {
+            newrelic.interaction().createTracer('timer', function () {
               window.location.hash = Math.random();
             }),
             500

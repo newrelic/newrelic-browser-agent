@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ee as globalInstance } from "./contextual-ee";
-export var handleEE = globalInstance.get("handle");
+import { ee as globalInstance } from './contextual-ee';
+export var handleEE = globalInstance.get('handle');
 
 export function handle(type, args, ctx, group, ee) {
   if (ee) {

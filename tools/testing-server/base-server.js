@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const http = require("http");
-const https = require("https");
-const cors = require("cors");
-const url = require("url");
-const enableDestroy = require("server-destroy");
+const http = require('http');
+const https = require('https');
+const cors = require('cors');
+const url = require('url');
+const enableDestroy = require('server-destroy');
 
 // SSL is currently not setup, tests will always run over HTTP
 // if we re-enable SSL, we would need to provide cert and key in sslConfiguration
@@ -24,9 +24,9 @@ class BaseServer {
     this.cors = cors({
       origin: true,
       credentials: true,
-      exposedHeaders: "X-NewRelic-App-Data",
+      exposedHeaders: 'X-NewRelic-App-Data',
     });
-    this.tag = "";
+    this.tag = '';
     this.logRequests = false;
     this.sslPort = null;
   }
@@ -39,17 +39,17 @@ class BaseServer {
     let server = this;
 
     if (this.logRequests) {
-      console.log(this.tag + " -> " + req.method + " " + req.url);
+      console.log(this.tag + ' -> ' + req.method + ' ' + req.url);
     }
 
-    if (req.method === "OPTIONS") {
-      res.setHeader("access-control-allow-origin", "*");
-      res.setHeader("access-control-allow-headers", "newrelic, traceparent, tracestate");
+    if (req.method === 'OPTIONS') {
+      res.setHeader('access-control-allow-origin', '*');
+      res.setHeader('access-control-allow-headers', 'newrelic, traceparent, tracestate');
       res.end();
       return;
     }
 
-    if (url.parse(req.url, true).query.cors === "false") {
+    if (url.parse(req.url, true).query.cors === 'false') {
       dispatch();
     } else {
       this.cors(req, res, dispatch);

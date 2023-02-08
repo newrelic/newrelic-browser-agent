@@ -1,24 +1,24 @@
-const fs = require("fs");
-const browserslist = require("browserslist");
-const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
+const fs = require('fs');
+const browserslist = require('browserslist');
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 (async function () {
   // Fetch an unfiltered list of browser-platform definitions from Sauce Labs.
-  console.log("contacting saucelabs API ...");
-  const r = await fetch("https://api.us-west-1.saucelabs.com/rest/v1/info/platforms/all", {
+  console.log('contacting saucelabs API ...');
+  const r = await fetch('https://api.us-west-1.saucelabs.com/rest/v1/info/platforms/all', {
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
   });
   const json = await r.json();
   console.log(
-    "Browser Types Found:",
+    'Browser Types Found:',
     json.reduce((prev, next) => prev.add(next.api_name), new Set())
   );
   console.log(`fetched ${json.length} browsers from saucelabs`);
 
   // Filter list down to a sample of supported browsers and write metadata to a file for testing.
-  fs.writeFileSync("./tools/jil/util/browsers-supported.json", JSON.stringify(getBrowsers(json), null, 2));
+  fs.writeFileSync('./tools/jil/util/browsers-supported.json', JSON.stringify(getBrowsers(json), null, 2));
   console.log(`saved saucelabs browsers to browsers-supported.json`);
 })();
 
@@ -41,10 +41,10 @@ const browsers = {
  */
 const browserName = (name) => {
   switch (name) {
-    case "edge":
-      return "MicrosoftEdge";
-    case "ios":
-      return "iphone";
+    case 'edge':
+      return 'MicrosoftEdge';
+    case 'ios':
+      return 'iphone';
     default:
       return name;
   }
@@ -57,8 +57,8 @@ const browserName = (name) => {
  */
 const browserslistMinVersion = (query) => {
   const list = browserslist(query);
-  const version = list[list.length - 1].split(" ")[1]; // browserslist returns id version pairs like 'ios_saf 16.1'
-  return Number(version.split("-")[0]); // versions might be a range (e.g. 14.0-14.4), and we want the low end.
+  const version = list[list.length - 1].split(' ')[1]; // browserslist returns id version pairs like 'ios_saf 16.1'
+  return Number(version.split('-')[0]); // versions might be a range (e.g. 14.0-14.4), and we want the low end.
 };
 
 /**
@@ -68,24 +68,24 @@ const browserslistMinVersion = (query) => {
  */
 const minSupportedVersion = (apiName) => {
   switch (apiName) {
-    case "chrome":
+    case 'chrome':
       return browserslistMinVersion(`last 10 Chrome versions`);
-    case "firefox":
-      return browserslistMinVersion("last 10 Firefox versions");
-    case "edge":
-    case "MicrosoftEdge":
-      return browserslistMinVersion("last 10 Edge versions");
-    case "safari":
-      return Math.floor(browserslistMinVersion("last 10 Safari versions"));
-    case "android":
+    case 'firefox':
+      return browserslistMinVersion('last 10 Firefox versions');
+    case 'edge':
+    case 'MicrosoftEdge':
+      return browserslistMinVersion('last 10 Edge versions');
+    case 'safari':
+      return Math.floor(browserslistMinVersion('last 10 Safari versions'));
+    case 'android':
       // browserslist only ever provides the most recent ChromeAndroid version.
       // Sauce Labs provides only a single Chrome Android version (100) on all emulators.
       // Android version <= 9 on Sauce Labs uses the JSON Wire Protocol by default.
       // https://changelog.saucelabs.com/en/update-to-google-chrome-version-100-on-android-emulators
       return 9;
-    case "ios":
-    case "iphone":
-      return browserslistMinVersion("last 10 iOS versions");
+    case 'ios':
+    case 'iphone':
+      return browserslistMinVersion('last 10 iOS versions');
   }
 };
 
@@ -96,10 +96,10 @@ const minSupportedVersion = (apiName) => {
  */
 const maxSupportedVersion = (apiName) => {
   switch (apiName) {
-    case "ios":
-    case "iphone": // Sauce only uses Appium 2.0 for ios16 which requires W3C that we don't comply with yet
+    case 'ios':
+    case 'iphone': // Sauce only uses Appium 2.0 for ios16 which requires W3C that we don't comply with yet
       return 15.9; // TO DO: this can be removed once that work is incorporated into JIL
-    case "android":
+    case 'android':
       return 9; // See min value above.
     default:
       return 9999;
@@ -137,31 +137,31 @@ function getBrowsers(sauceBrowsers) {
       const metadata = {
         browserName: mobileBrowserName(sauceBrowser),
         platform: mobilePlatformName(sauceBrowser),
-        ...(!["safari", "firefox"].includes(sauceBrowser.api_name) && {
+        ...(!['safari', 'firefox'].includes(sauceBrowser.api_name) && {
           platformName: mobilePlatformName(sauceBrowser),
         }),
         version: sauceBrowser.short_version,
-        ...(sauceBrowser.automation_backend !== "appium" &&
-          !["safari", "firefox"].includes(sauceBrowser.api_name) && {
+        ...(sauceBrowser.automation_backend !== 'appium' &&
+          !['safari', 'firefox'].includes(sauceBrowser.api_name) && {
             browserVersion: sauceBrowser.short_version,
           }),
         ...(sauceBrowser.device && { device: sauceBrowser.device }),
-        ...(sauceBrowser.automation_backend === "appium" && {
-          ["appium:deviceName"]: sauceBrowser.long_name,
+        ...(sauceBrowser.automation_backend === 'appium' && {
+          ['appium:deviceName']: sauceBrowser.long_name,
         }),
-        ...(sauceBrowser.automation_backend === "appium" && {
-          ["appium:platformVersion"]: sauceBrowser.short_version,
+        ...(sauceBrowser.automation_backend === 'appium' && {
+          ['appium:platformVersion']: sauceBrowser.short_version,
         }),
-        ...(sauceBrowser.automation_backend === "appium" && {
-          ["appium:automationName"]: sauceBrowser.api_name === "android" ? "UiAutomator2" : "XCUITest",
+        ...(sauceBrowser.automation_backend === 'appium' && {
+          ['appium:automationName']: sauceBrowser.api_name === 'android' ? 'UiAutomator2' : 'XCUITest',
         }),
-        ...(sauceBrowser.automation_backend === "appium" && {
-          ["sauce:options"]: {
+        ...(sauceBrowser.automation_backend === 'appium' && {
+          ['sauce:options']: {
             appiumVersion: sauceBrowser.recommended_backend_version,
           },
         }),
       };
-      if (metadata.browserName.toLowerCase() === "safari") metadata.acceptInsecureCerts = false;
+      if (metadata.browserName.toLowerCase() === 'safari') metadata.acceptInsecureCerts = false;
       browsers[browser].push(metadata);
     });
   });
@@ -183,22 +183,22 @@ function platformSelector(desiredBrowser, minVersion = 0, maxVersion = 9999) {
     if (sauceBrowser.short_version > maxVersion) return false;
 
     switch (desiredBrowser) {
-      case "iphone":
-      case "ipad":
-      case "android":
-        if (sauceBrowser.automation_backend !== "appium") return false;
+      case 'iphone':
+      case 'ipad':
+      case 'android':
+        if (sauceBrowser.automation_backend !== 'appium') return false;
         break;
       // NOTE: the following platform limitation per browser is FRAGILE -- will have to update this in the future!
-      case "firefox":
-        if (sauceBrowser.os !== "Windows 10") return false; // we're only testing FF on Win10
+      case 'firefox':
+        if (sauceBrowser.os !== 'Windows 10') return false; // we're only testing FF on Win10
         break;
-      case "MicrosoftEdge":
-      case "chrome":
-        if (!sauceBrowser.os.startsWith("Windows 1")) return false; // exclude Linux, Mac, and pre-Win10
+      case 'MicrosoftEdge':
+      case 'chrome':
+        if (!sauceBrowser.os.startsWith('Windows 1')) return false; // exclude Linux, Mac, and pre-Win10
         break;
       // 'safari' will only ever be on MacOS
-      case "safari":
-        if (sauceBrowser.short_version == 12 && sauceBrowser.os == "Mac 10.13") return false; // this OS+safari combo has issues with functional/XHR tests
+      case 'safari':
+        if (sauceBrowser.short_version == 12 && sauceBrowser.os == 'Mac 10.13') return false; // this OS+safari combo has issues with functional/XHR tests
         break;
     }
     return true;
@@ -238,11 +238,11 @@ function evenlySampleArray(arr, n = 4) {
  */
 function mobileBrowserName(sauceBrowser) {
   switch (sauceBrowser.api_name) {
-    case "iphone":
-    case "ipad":
-      return "Safari";
-    case "android":
-      return "Chrome";
+    case 'iphone':
+    case 'ipad':
+      return 'Safari';
+    case 'android':
+      return 'Chrome';
     default:
       return sauceBrowser.api_name;
   }
@@ -255,14 +255,14 @@ function mobileBrowserName(sauceBrowser) {
  */
 function mobilePlatformName(sauceBrowser) {
   switch (sauceBrowser.api_name) {
-    case "iphone":
-    case "ipad":
-      return "iOS";
-    case "safari":
+    case 'iphone':
+    case 'ipad':
+      return 'iOS';
+    case 'safari':
       // return browser.os.replace('Mac', 'macOS')
       return sauceBrowser.os;
-    case "android":
-      return "Android";
+    case 'android':
+      return 'Android';
     default:
       return sauceBrowser.os;
   }

@@ -1,27 +1,27 @@
-const request = require("request");
-var argv = require("yargs")
-  .string("fastly-key")
-  .describe("fastly-key", "Fastly API Key for purging cache")
+const request = require('request');
+var argv = require('yargs')
+  .string('fastly-key')
+  .describe('fastly-key', 'Fastly API Key for purging cache')
 
-  .string("env")
-  .alias("env", "environment")
-  .describe("env", "NR Internal Environment")
-  .default("env", "dev")
-  .choices("env", ["dev", "staging", "prod", "eu-prod"])
+  .string('env')
+  .alias('env', 'environment')
+  .describe('env', 'NR Internal Environment')
+  .default('env', 'dev')
+  .choices('env', ['dev', 'staging', 'prod', 'eu-prod'])
 
-  .boolean("purge-internal")
-  .describe("purge-internal", "Purge fastly cache for internal env url")
-  .default("purge-internal", false)
+  .boolean('purge-internal')
+  .describe('purge-internal', 'Purge fastly cache for internal env url')
+  .default('purge-internal', false)
 
-  .string("purge-path")
-  .describe("purge-path", "CDN Path to purge").argv;
+  .string('purge-path')
+  .describe('purge-path', 'CDN Path to purge').argv;
 
 const { fastlyKey, env, purgeInternal, purgePath } = argv;
 
-const fastlyRoot = "https://api.fastly.com/purge/js-agent.newrelic.com";
+const fastlyRoot = 'https://api.fastly.com/purge/js-agent.newrelic.com';
 
 if (!fastlyKey) {
-  console.log("must supply fastly key");
+  console.log('must supply fastly key');
   process.exit(1);
 }
 
@@ -39,15 +39,15 @@ if (!fastlyKey) {
 async function purge(path) {
   var opts = {
     uri: `${fastlyRoot}/${path}`,
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Fastly-Soft-Purge": "1",
-      "Fastly-Key": fastlyKey,
-      Accept: "application/json",
+      'Fastly-Soft-Purge': '1',
+      'Fastly-Key': fastlyKey,
+      Accept: 'application/json',
     },
   };
 
-  console.log("purging... ", path);
+  console.log('purging... ', path);
 
   return new Promise((resolve, reject) => {
     request(opts, (err, res, body) => {
@@ -56,7 +56,7 @@ async function purge(path) {
         reject(err);
         return;
       }
-      console.log("purge complete");
+      console.log('purge complete');
       resolve();
     });
   });

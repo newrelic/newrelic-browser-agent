@@ -5,7 +5,7 @@
 
 export function reduce(arr, fn, next) {
   var i = 0;
-  if (typeof next === "undefined") {
+  if (typeof next === 'undefined') {
     next = arr[0];
     i = 1;
   }

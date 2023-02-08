@@ -1,5 +1,5 @@
-import { gosNREUMInitializedAgents } from "../../window/nreum";
-import { Configurable } from "./configurable";
+import { gosNREUMInitializedAgents } from '../../window/nreum';
+import { Configurable } from './configurable';
 
 const model = {
   allow_bfcache: false, // *cli - temporary feature flag for BFCache work; disabled by default for stage 1
@@ -26,25 +26,25 @@ const model = {
 const _cache = {};
 
 export function getConfiguration(id) {
-  if (!id) throw new Error("All configuration objects require an agent identifier!");
+  if (!id) throw new Error('All configuration objects require an agent identifier!');
   if (!_cache[id]) throw new Error(`Configuration for ${id} was never set`);
   return _cache[id];
 }
 
 export function setConfiguration(id, obj) {
-  if (!id) throw new Error("All configuration objects require an agent identifier!");
+  if (!id) throw new Error('All configuration objects require an agent identifier!');
   _cache[id] = new Configurable(obj, model);
-  gosNREUMInitializedAgents(id, _cache[id], "config");
+  gosNREUMInitializedAgents(id, _cache[id], 'config');
 }
 
 export function getConfigurationValue(id, path) {
-  if (!id) throw new Error("All configuration objects require an agent identifier!");
+  if (!id) throw new Error('All configuration objects require an agent identifier!');
   var val = getConfiguration(id);
   if (val) {
-    var parts = path.split(".");
+    var parts = path.split('.');
     for (var i = 0; i < parts.length - 1; i++) {
       val = val[parts[i]];
-      if (typeof val !== "object") return;
+      if (typeof val !== 'object') return;
     }
     val = val[parts[parts.length - 1]];
   }

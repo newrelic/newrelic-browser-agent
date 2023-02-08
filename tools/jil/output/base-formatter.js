@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const through = require("through");
-const format = require("util").format;
+const through = require('through');
+const format = require('util').format;
 
 class BaseFormatter {
   constructor(config) {
@@ -18,18 +18,18 @@ class BaseFormatter {
   }
 
   addOutputParser(parser) {
-    throw new Error("addOutputParser method of Formatter is not implemented");
+    throw new Error('addOutputParser method of Formatter is not implemented');
   }
 
   log(...args) {
-    var data = format(...args) + "\n";
+    var data = format(...args) + '\n';
     this.stream.queue(data);
   }
 
   finish(ok) {
     var formatter = this;
     this.stream.queue(null);
-    process.on("exit", function () {
+    process.on('exit', function () {
       process.exit(formatter.ok && ok ? 0 : 1);
     });
   }

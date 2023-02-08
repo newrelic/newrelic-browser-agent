@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const Driver = require("./Driver");
-const TestRun = require("./TestRun");
-var newrelic = require("newrelic");
+const Driver = require('./Driver');
+const TestRun = require('./TestRun');
+var newrelic = require('newrelic');
 
 class DefaultDriver extends Driver {
   run(done) {
@@ -67,7 +67,7 @@ class DefaultDriver extends Driver {
     }
 
     function shutdown() {
-      driver.output.log("# stopping asset server");
+      driver.output.log('# stopping asset server');
       driver.assetServer.stop();
       driver.output.finish();
       newrelic.shutdown({ collectPendingData: true, timeout: 3000 }, done);

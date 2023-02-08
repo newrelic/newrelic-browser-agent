@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
-const { getErrorsFromResponse } = require("../err/assertion-helpers");
-const { workerTypes, typeToMatcher } = require("./helpers");
+const testDriver = require('../../../tools/jil/index');
+const { getErrorsFromResponse } = require('../err/assertion-helpers');
+const { workerTypes, typeToMatcher } = require('./helpers');
 
 const init = {
   jserrors: {
@@ -45,10 +45,10 @@ function circularTest(type, matcher) {
         .then(([response]) => {
           const actualErrors = getErrorsFromResponse(response, browser);
 
-          t.equal(actualErrors.length, 1, "exactly one error");
+          t.equal(actualErrors.length, 1, 'exactly one error');
 
           let actualError = actualErrors[0];
-          t.equal(actualError.params.message, "[object Object]", "has the expected message");
+          t.equal(actualError.params.message, '[object Object]', 'has the expected message');
           t.end();
         })
         .catch(fail);

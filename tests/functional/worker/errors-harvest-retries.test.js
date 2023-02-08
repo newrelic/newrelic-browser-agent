@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
-const { getErrorsFromResponse } = require("../err/assertion-helpers");
-const { workerTypes, typeToMatcher } = require("./helpers");
+const testDriver = require('../../../tools/jil/index');
+const { getErrorsFromResponse } = require('../err/assertion-helpers');
+const { workerTypes, typeToMatcher } = require('./helpers');
 
 const init = {
   jserrors: {
@@ -29,33 +29,33 @@ function errorRetryTest(type, matcher) {
         init,
         workerCommands: [
           () => {
-            throw new Error("test");
+            throw new Error('test');
           },
         ].map((x) => x.toString()),
       });
 
-      router.scheduleResponse("jserrors", 429);
+      router.scheduleResponse('jserrors', 429);
 
       let loadPromise = browser.get(assetURL);
       let errPromise = router.expectErrors();
 
       Promise.all([errPromise, loadPromise])
         .then(([response]) => {
-          t.equal(response.res.statusCode, 429, "server responded with 429");
+          t.equal(response.res.statusCode, 429, 'server responded with 429');
           firstBody = JSON.parse(response.body).err;
           return router.expectErrors();
         })
         .then((response) => {
           const actualErrors = getErrorsFromResponse(response, browser);
 
-          t.equal(actualErrors.length, 1, "exactly one error");
+          t.equal(actualErrors.length, 1, 'exactly one error');
 
           let actualError = actualErrors[0];
-          t.equal(actualError.metrics.count, 1, "Should have seen 1 error");
-          t.ok(actualError.metrics.time.t > 0, "Should have a valid timestamp");
-          t.equal(actualError.params.exceptionClass, "Error", "Should be Error class");
-          t.equal(actualError.params.message, "test", "Should have correct message");
-          t.ok(actualError.params.stack_trace, "Should have a stack trace");
+          t.equal(actualError.metrics.count, 1, 'Should have seen 1 error');
+          t.ok(actualError.metrics.time.t > 0, 'Should have a valid timestamp');
+          t.equal(actualError.params.exceptionClass, 'Error', 'Should be Error class');
+          t.equal(actualError.params.message, 'test', 'Should have correct message');
+          t.ok(actualError.params.stack_trace, 'Should have a stack trace');
           t.end();
         })
         .catch(fail);

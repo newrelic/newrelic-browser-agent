@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ee } from "../event-emitter/contextual-ee";
-import { mapOwn } from "../util/map-own";
-import { registerHandler as defaultRegister } from "../event-emitter/register-handler";
-import { featurePriority } from "../../loaders/features/features";
+import { ee } from '../event-emitter/contextual-ee';
+import { mapOwn } from '../util/map-own';
+import { registerHandler as defaultRegister } from '../event-emitter/register-handler';
+import { featurePriority } from '../../loaders/features/features';
 
 const registry = {};
 
@@ -26,7 +26,7 @@ function curateRegistry(agentIdentifier) {
  * @param {string} agentIdentifier
  * @param {string} group
  */
-export function drain(agentIdentifier = "", featureName = "feature") {
+export function drain(agentIdentifier = '', featureName = 'feature') {
   curateRegistry(agentIdentifier);
   // if its not in the registry, that means the instrument file was bypassed.  This could happen in tests, or loaders that directly import the agg
   if (!agentIdentifier || !registry[agentIdentifier].get(featureName)) return drainGroup(featureName);
@@ -65,7 +65,7 @@ export function drain(agentIdentifier = "", featureName = "feature") {
     delete handlers[group];
     // Keep the group as a property so we know it was created and drained
     baseEE.backlog[group] = null;
-    baseEE.emit("drain-" + group, []);
+    baseEE.emit('drain-' + group, []);
   }
 }
 

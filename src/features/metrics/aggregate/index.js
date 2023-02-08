@@ -1,23 +1,23 @@
-import { getConfigurationValue } from "../../../common/config/config";
-import { registerHandler } from "../../../common/event-emitter/register-handler";
-import { HarvestScheduler } from "../../../common/harvest/harvest-scheduler";
-import { AggregateBase } from "../../utils/aggregate-base";
-import { FEATURE_NAME } from "../constants";
-import { drain } from "../../../common/drain/drain";
+import { getConfigurationValue } from '../../../common/config/config';
+import { registerHandler } from '../../../common/event-emitter/register-handler';
+import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler';
+import { AggregateBase } from '../../utils/aggregate-base';
+import { FEATURE_NAME } from '../constants';
+import { drain } from '../../../common/drain/drain';
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME;
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME);
 
-    registerHandler("storeMetric", (...args) => this.storeMetric(...args), this.featureName, this.ee);
-    registerHandler("storeEventMetrics", (...args) => this.storeEventMetrics(...args), this.featureName, this.ee);
+    registerHandler('storeMetric', (...args) => this.storeMetric(...args), this.featureName, this.ee);
+    registerHandler('storeEventMetrics', (...args) => this.storeEventMetrics(...args), this.featureName, this.ee);
 
-    var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, "metrics.harvestTimeSeconds") || 30;
+    var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'metrics.harvestTimeSeconds') || 30;
 
-    var scheduler = new HarvestScheduler("jserrors", {}, this);
-    scheduler.harvest.on("jserrors", () => ({
-      body: this.aggregator.take(["cm", "sm"]),
+    var scheduler = new HarvestScheduler('jserrors', {}, this);
+    scheduler.harvest.on('jserrors', () => ({
+      body: this.aggregator.take(['cm', 'sm']),
     }));
     this.ee.on(`drain-${this.featureName}`, () => {
       if (!this.blocked) scheduler.startTimer(harvestTimeSeconds);
@@ -25,7 +25,7 @@ export class Aggregate extends AggregateBase {
 
     // if rum response determines that customer lacks entitlements for ins endpoint, block it
     registerHandler(
-      "block-err",
+      'block-err',
       () => {
         this.blocked = true;
         scheduler.stopTimer();

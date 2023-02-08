@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const BaseFormatter = require("./base-formatter");
+const BaseFormatter = require('./base-formatter');
 
 let startTimestamp = Date.now();
 
@@ -17,20 +17,20 @@ class MergedTapFormatter extends BaseFormatter {
   }
 
   start() {
-    this.log("TAP version 13\n");
+    this.log('TAP version 13\n');
   }
 
   addOutputParser(parser) {
-    parser.on("assert", (d, indent, parents) => {
+    parser.on('assert', (d, indent, parents) => {
       this.countAssertion(d);
       this.log(this.formatAssertion(parser, parents, d));
       if (d.formattedDiag) this.log(this.formatDiag(d));
     });
 
-    parser.on("comment", (d) => {
+    parser.on('comment', (d) => {
       this.log(this.formatComment(parser, d));
     });
-    parser.on("extra", (d) => this.log(`# ${d}`));
+    parser.on('extra', (d) => this.log(`# ${d}`));
   }
 
   countAssertion(assertion) {
@@ -55,8 +55,8 @@ class MergedTapFormatter extends BaseFormatter {
   }
 
   formatAssertion(parser, parents, assertion) {
-    let testName = [this.getLabel(parser), ...parents, assertion.name].join(" -> ");
-    return `${assertion.ok ? "ok" : "not ok"} ${testName}`;
+    let testName = [this.getLabel(parser), ...parents, assertion.name].join(' -> ');
+    return `${assertion.ok ? 'ok' : 'not ok'} ${testName}`;
   }
 
   formatDiag(assertion) {
@@ -65,25 +65,25 @@ class MergedTapFormatter extends BaseFormatter {
 
   fixYaml(yaml) {
     return yaml
-      .split("\n")
+      .split('\n')
       .map((line) => {
         // allow opening, closing, and line with keys on them
         if (line.match(/^\s{2,4}(?:\w+:|```|---).*/)) return line;
-        return line.replace(/\[|\||-|\?|:/g, "?");
+        return line.replace(/\[|\||-|\?|:/g, '?');
       })
-      .join("\n");
+      .join('\n');
   }
 
   finish(ok) {
     if (!ok && this.passed === this.assertions && !this.failed) {
-      this.log("# finished called with not ok although everything passed (likely due to missing plan)");
+      this.log('# finished called with not ok although everything passed (likely due to missing plan)');
     }
 
     var noFailures = this.passed === this.assertions && !this.failed && this.ok;
     if (!noFailures) {
-      if (!this.ok) this.log("# received data on std error of a child process");
+      if (!this.ok) this.log('# received data on std error of a child process');
 
-      if (this.passed !== this.assertions || this.failed) this.log("# not all assertions passed");
+      if (this.passed !== this.assertions || this.failed) this.log('# not all assertions passed');
 
       // mk: not sure why number of assertions and failed is increased here, it always
       // results in one additional count, not matching number of assertions
@@ -96,9 +96,9 @@ class MergedTapFormatter extends BaseFormatter {
     this.log(`# pass ${this.passed}`);
     if (this.failed) {
       this.log(`# fail ${this.failed}`);
-      this.log("# not ok");
+      this.log('# not ok');
     } else {
-      this.log("# ok");
+      this.log('# ok');
     }
 
     super.finish(noFailures);

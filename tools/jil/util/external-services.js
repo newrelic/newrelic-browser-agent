@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const sauceConnectLauncher = require("sauce-connect-launcher");
-const os = require("os");
-const childProcess = require("child_process");
+const sauceConnectLauncher = require('sauce-connect-launcher');
+const os = require('os');
+const childProcess = require('child_process');
 
 let externalServices = new Set();
 
@@ -15,7 +15,7 @@ function getSauceLabsCreds() {
 
   if (!sauceLabsUsername || !sauceLabsAccessKey) {
     throw new Error(
-      "Did not find Sauce Labs credentials in JIL_SAUCE_LABS_USERNAME and JIL_SAUCE_LABS_ACCESS_KEY environment variables. Please set them."
+      'Did not find Sauce Labs credentials in JIL_SAUCE_LABS_USERNAME and JIL_SAUCE_LABS_ACCESS_KEY environment variables. Please set them.'
     );
   }
 
@@ -47,31 +47,31 @@ function stopExternalServices() {
 }
 
 function startSauce(config, cb) {
-  var tunnelIdentifier = process.env.USER + "@" + os.hostname();
+  var tunnelIdentifier = process.env.USER + '@' + os.hostname();
   var sauceCreds = getSauceLabsCreds();
 
   var opts = {
     username: sauceCreds.username,
     accessKey: sauceCreds.accessKey,
     tunnelName: tunnelIdentifier,
-    noSslBumpDomains: "all",
+    noSslBumpDomains: 'all',
     logger: console.log,
-    tunnelDomains: config.host || "bam-test-1.nr-local.net",
+    tunnelDomains: config.host || 'bam-test-1.nr-local.net',
   };
 
   if (config.verbose) {
     opts.verbose = true;
     opts.verboseDebugging = true;
-    console.log("starting sauce-connect with tunnel ID = " + tunnelIdentifier);
+    console.log('starting sauce-connect with tunnel ID = ' + tunnelIdentifier);
   }
 
   sauceConnectLauncher(opts, function (err, sauceConnect) {
     if (err) {
-      return cb(new Error("Failed to start sauce-connect: " + err.message));
+      return cb(new Error('Failed to start sauce-connect: ' + err.message));
     }
 
     externalServices.add(sauceConnect);
-    sauceConnect.on("exit", () => externalServices.delete(sauceConnect));
+    sauceConnect.on('exit', () => externalServices.delete(sauceConnect));
 
     cb();
   });
@@ -79,7 +79,7 @@ function startSauce(config, cb) {
 
 function isSauceConnected() {
   for (let item of externalServices.values()) {
-    if (item.spawnfile.indexOf("sauce-connect-launcher") > -1) {
+    if (item.spawnfile.indexOf('sauce-connect-launcher') > -1) {
       return true;
     }
   }

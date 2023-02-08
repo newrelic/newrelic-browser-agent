@@ -11,10 +11,10 @@ export const submitData = {};
  * @returns {Element}
  */
 submitData.jsonp = function jsonp(url, jsonp) {
-  var element = document.createElement("script");
-  element.type = "text/javascript";
-  element.src = url + "&jsonp=" + jsonp;
-  var firstScript = document.getElementsByTagName("script")[0];
+  var element = document.createElement('script');
+  element.type = 'text/javascript';
+  element.src = url + '&jsonp=' + jsonp;
+  var firstScript = document.getElementsByTagName('script')[0];
   firstScript.parentNode.insertBefore(element, firstScript);
   return element;
 };
@@ -29,15 +29,15 @@ submitData.jsonp = function jsonp(url, jsonp) {
 submitData.xhr = function xhr(url, body, sync) {
   var request = new XMLHttpRequest();
 
-  request.open("POST", url, !sync);
+  request.open('POST', url, !sync);
   try {
     // Set cookie
-    if ("withCredentials" in request) request.withCredentials = true;
+    if ('withCredentials' in request) request.withCredentials = true;
   } catch (e) {
     // do nothing
   }
 
-  request.setRequestHeader("content-type", "text/plain");
+  request.setRequestHeader('content-type', 'text/plain');
   request.send(body);
   return request;
 };

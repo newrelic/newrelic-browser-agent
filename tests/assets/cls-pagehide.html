@@ -15,8 +15,8 @@
     <button id="btn1">finish</button>
 
     <script>
-      var btn = document.getElementById("btn1");
-      btn.addEventListener("click", run);
+      var btn = document.getElementById('btn1');
+      btn.addEventListener('click', run);
 
       function run() {
         // when not delayed, the CLS entry is seen as having recent input
@@ -25,9 +25,9 @@
       }
 
       function triggerCls() {
-        var newDiv = document.createElement("div");
-        newDiv.id = "clsText";
-        newDiv.innerText = "inserted text (29 characters)";
+        var newDiv = document.createElement('div');
+        newDiv.id = 'clsText';
+        newDiv.innerText = 'inserted text (29 characters)';
         document.body.insertBefore(newDiv, document.body.firstChild);
 
         setTimeout(simulatPageHide, 600);
@@ -35,12 +35,12 @@
 
       // simulate page hide by dispatching the event manually
       function simulatPageHide() {
-        Object.defineProperty(document, "visibilityState", {
-          value: "visible",
+        Object.defineProperty(document, 'visibilityState', {
+          value: 'visible',
           writable: true,
         });
-        document.visibilityState = "hidden";
-        document.dispatchEvent(new Event("visibilitychange"));
+        document.visibilityState = 'hidden';
+        document.dispatchEvent(new Event('visibilitychange'));
 
         window.contentAdded = true;
       }

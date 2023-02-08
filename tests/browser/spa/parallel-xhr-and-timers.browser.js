@@ -3,32 +3,32 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
-jil.browserTest("spa parallel XHRs and timers", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('spa parallel XHRs and timers', function (t) {
+  let helpers = require('./helpers');
   let validator = new helpers.InteractionValidator({
-    name: "interaction",
+    name: 'interaction',
     children: [
       {
-        name: "ajax",
+        name: 'ajax',
         children: [],
       },
       {
-        name: "ajax",
+        name: 'ajax',
         children: [],
       },
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "timer",
+          name: 'timer',
         },
         children: [],
       },
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "timer",
+          name: 'timer',
         },
         children: [],
       },
@@ -46,13 +46,13 @@ jil.browserTest("spa parallel XHRs and timers", function (t) {
     xhr1.onload = xhrOrTimerDone;
     xhr2.onload = xhrOrTimerDone;
 
-    xhr1.open("GET", "/");
-    xhr2.open("GET", "/");
+    xhr1.open('GET', '/');
+    xhr2.open('GET', '/');
     xhr1.send();
     xhr2.send();
 
-    setTimeout(newrelic.interaction().createTracer("timer", xhrOrTimerDone), Math.random() * 10);
-    setTimeout(newrelic.interaction().createTracer("timer", xhrOrTimerDone), Math.random() * 10);
+    setTimeout(newrelic.interaction().createTracer('timer', xhrOrTimerDone), Math.random() * 10);
+    setTimeout(newrelic.interaction().createTracer('timer', xhrOrTimerDone), Math.random() * 10);
 
     function xhrOrTimerDone() {
       remaining--;
@@ -62,8 +62,8 @@ jil.browserTest("spa parallel XHRs and timers", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(interaction.root.end, "interaction should be finished and have an end time");
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    t.ok(interaction.root.end, 'interaction should be finished and have an end time');
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
     validator.validate(t, interaction);
     t.end();
   }

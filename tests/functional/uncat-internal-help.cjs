@@ -1,6 +1,6 @@
-const { getMetricsFromResponse } = require("./err/assertion-helpers"); // used by metrics tests
-const url = require("url"); // used by harvest tests
-const cleanURL = require("../lib/clean-url.js"); // used by harvest test
+const { getMetricsFromResponse } = require('./err/assertion-helpers'); // used by metrics tests
+const url = require('url'); // used by harvest tests
+const cleanURL = require('../lib/clean-url.js'); // used by harvest test
 
 function fail(t, addlMsg = undefined) {
   return (err) => {
@@ -28,66 +28,66 @@ function getTime(cm) {
 }
 
 const asyncApiFns = [
-  "noticeError",
-  "setPageViewName",
-  "setCustomAttribute",
-  "setErrorHandler",
-  "finished",
-  "addToTrace",
-  "addRelease",
+  'noticeError',
+  'setPageViewName',
+  'setCustomAttribute',
+  'setErrorHandler',
+  'finished',
+  'addToTrace',
+  'addRelease',
 ].map((fn) => `API/${fn}/called`);
 
 function extractWorkerSM(supportabilityMetrics) {
   const wsm = {};
   const flags = [
-    "classicWorker",
-    "moduleWorker",
-    "classicShared",
-    "moduleShared",
-    "classicService",
-    "moduleService",
-    "sharedUnavail",
-    "serviceUnavail",
-    "workerImplFail",
-    "sharedImplFail",
-    "serviceImplFail",
+    'classicWorker',
+    'moduleWorker',
+    'classicShared',
+    'moduleShared',
+    'classicService',
+    'moduleService',
+    'sharedUnavail',
+    'serviceUnavail',
+    'workerImplFail',
+    'sharedImplFail',
+    'serviceImplFail',
   ];
   flags.forEach((key) => (wsm[key] = false));
 
   // Comb through for specific worker SM tags we want to see.
   for (const sm of supportabilityMetrics) {
     switch (sm.params.name) {
-      case "Workers/Dedicated/Classic":
+      case 'Workers/Dedicated/Classic':
         wsm.classicWorker = true;
         break;
-      case "Workers/Dedicated/Module":
+      case 'Workers/Dedicated/Module':
         wsm.moduleWorker = true;
         break;
-      case "Workers/Dedicated/SM/Unsupported":
+      case 'Workers/Dedicated/SM/Unsupported':
         wsm.workerImplFail = true;
         break;
-      case "Workers/Shared/Classic":
+      case 'Workers/Shared/Classic':
         wsm.classicShared = true;
         break;
-      case "Workers/Shared/Module":
+      case 'Workers/Shared/Module':
         wsm.moduleShared = true;
         break;
-      case "Workers/Shared/SM/Unsupported":
+      case 'Workers/Shared/SM/Unsupported':
         wsm.sharedImplFail = true;
         break;
-      case "Workers/Shared/Unavailable":
+      case 'Workers/Shared/Unavailable':
         wsm.sharedUnavail = true;
         break;
-      case "Workers/Service/Classic":
+      case 'Workers/Service/Classic':
         wsm.classicService = true;
         break;
-      case "Workers/Service/Module":
+      case 'Workers/Service/Module':
         wsm.moduleService = true;
         break;
-      case "Workers/Service/SM/Unsupported":
+      case 'Workers/Service/SM/Unsupported':
         wsm.serviceImplFail = true;
         break;
-      case "Workers/Service/Unavailable":
+      case 'Workers/Service/Unavailable':
         wsm.serviceUnavail = true;
         break;
     }
@@ -102,9 +102,9 @@ function checkPayload(t, payload, name) {
   var strPayload = JSON.stringify(payload);
   //var failed = strPayload.includes('bam-test') || strPayload.includes('fakeid') || strPayload.includes('pii')
 
-  t.ok(!strPayload.includes("pii"), `${name} -- pii was obfuscated`);
-  t.ok(!strPayload.includes("bam-test"), `${name} -- bam-test was obfuscated`);
-  t.ok(!strPayload.includes("fakeid"), `${name} -- fakeid was obfuscated`);
+  t.ok(!strPayload.includes('pii'), `${name} -- pii was obfuscated`);
+  t.ok(!strPayload.includes('bam-test'), `${name} -- bam-test was obfuscated`);
+  t.ok(!strPayload.includes('fakeid'), `${name} -- fakeid was obfuscated`);
 }
 
 module.exports = {

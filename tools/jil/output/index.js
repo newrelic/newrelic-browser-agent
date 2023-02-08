@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const tapParser = require("tap-parser");
-const formatters = require("./formatters");
-const { EventEmitter } = require("events");
-const util = require("util");
-const fs = require("fs");
+const tapParser = require('tap-parser');
+const formatters = require('./formatters');
+const { EventEmitter } = require('events');
+const util = require('util');
+const fs = require('fs');
 
 let yamlChars = /\[|\?|\||:|-/;
 
@@ -38,7 +38,7 @@ class Output {
     this.children.push(parser);
     this.formatter.addOutputParser(parser);
     this.remaining += 1;
-    parser.on("exit", () => {
+    parser.on('exit', () => {
       if (--this.remaining > 0) return;
     });
 
@@ -65,75 +65,75 @@ class OutputParser extends EventEmitter {
     stream.pipe(this.tapParser);
 
     this.registerTapParser(this.tapParser);
-    stream.on("data", (buf) => {
+    stream.on('data', (buf) => {
       this.started = true;
-      this.emit("out", buf.toString());
+      this.emit('out', buf.toString());
     });
 
-    stream.on("end", () => {
-      setTimeout(() => this.emit("exit"), 0);
+    stream.on('end', () => {
+      setTimeout(() => this.emit('exit'), 0);
     });
   }
 
-  registerTapParser(parser, indent = "", parents = []) {
+  registerTapParser(parser, indent = '', parents = []) {
     let indentDepth = indent.length;
-    let lastComment = "<unknown>";
+    let lastComment = '<unknown>';
 
-    parser.on("assert", (d) => {
+    parser.on('assert', (d) => {
       let data = util._extend({}, d);
-      let tap = `${indent}${d.ok ? "ok" : "not ok"} ${this.name}: ${d.name}`;
+      let tap = `${indent}${d.ok ? 'ok' : 'not ok'} ${this.name}: ${d.name}`;
 
       if (d.diag) {
         data.formattedDiag = this.formatDiag(d.diag);
         tap += `\n${data.formattedDiag}`;
       }
 
-      this.emit("assert", data, indentDepth, [...parents, lastComment]);
-      this.emit("tap", tap);
-      this.emit(d.ok ? "pass" : "fail", data, indentDepth, [...parents, lastComment]);
+      this.emit('assert', data, indentDepth, [...parents, lastComment]);
+      this.emit('tap', tap);
+      this.emit(d.ok ? 'pass' : 'fail', data, indentDepth, [...parents, lastComment]);
       if (data.formattedDiag) {
-        this.emit("diag", data.formattedDiag, indentDepth, [...parents, lastComment]);
+        this.emit('diag', data.formattedDiag, indentDepth, [...parents, lastComment]);
       }
     });
 
-    parser.on("child", (child) => {
-      this.registerTapParser(child, indent + "    ", [...parents, lastComment]);
+    parser.on('child', (child) => {
+      this.registerTapParser(child, indent + '    ', [...parents, lastComment]);
     });
 
-    parser.on("comment", (d) => {
+    parser.on('comment', (d) => {
       let padding = getPadding(d);
       let comment = d.trim().slice(1).trim();
 
       lastComment = comment;
-      this.emit("comment", comment, padding.length, parents);
+      this.emit('comment', comment, padding.length, parents);
 
       if (comment.match(/Subtest:/)) {
         comment = comment.replace(/Subtest: /, `Subtest: ${this.name}: `);
-        this.emit("tap", `${padding}# ${comment}`);
+        this.emit('tap', `${padding}# ${comment}`);
       } else {
-        this.emit("tap", `${padding}# ${this.name}: ${comment}`);
+        this.emit('tap', `${padding}# ${this.name}: ${comment}`);
       }
     });
 
-    parser.on("extra", (d) => {
+    parser.on('extra', (d) => {
       let padding = getPadding(d);
       let extra = d.trim();
-      this.emit("extra", extra, padding.length, [...parents, lastComment]);
-      this.emit("tap", `${padding}${this.name}: ${extra}`);
+      this.emit('extra', extra, padding.length, [...parents, lastComment]);
+      this.emit('tap', `${padding}${this.name}: ${extra}`);
     });
 
-    parser.on("plan", (plan) => {
-      this.emit("plan", plan, indentDepth, [...parents, lastComment]);
+    parser.on('plan', (plan) => {
+      this.emit('plan', plan, indentDepth, [...parents, lastComment]);
       // plans conflicts with merged tap output
       // this.emit('tap', `${indent}${plan.start}..${plan.end}`)
     });
 
     if (indent) return;
-    parser.on("complete", (results) => {
+    parser.on('complete', (results) => {
       this.done = true;
       this.ok = this.ok && results.ok;
       this.results = results;
-      this.emit("complete", results);
+      this.emit('complete', results);
     });
 
     function getPadding(line) {
@@ -142,23 +142,23 @@ class OutputParser extends EventEmitter {
   }
 
   formatDiag(diag) {
-    let msg = ["  ---"];
-    let keys = ["operator", "expected", "actual", "at", "stack"].filter((key) => key in diag);
+    let msg = ['  ---'];
+    let keys = ['operator', 'expected', 'actual', 'at', 'stack'].filter((key) => key in diag);
     let longest = keys[0];
 
     for (let key of keys) {
-      let indent = new Array(longest.length - key.length + 1).join(" ");
+      let indent = new Array(longest.length - key.length + 1).join(' ');
       msg.push(`    ${key}: ${indent}${formatVal(diag[key])}`);
     }
 
-    return msg.join("\n") + "\n  ...";
+    return msg.join('\n') + '\n  ...';
 
     function formatVal(val) {
       let strVal = util.format(val);
-      let lines = strVal.split("\n");
+      let lines = strVal.split('\n');
       if (lines.length === 1 && !yamlChars.test(strVal)) return strVal;
-      let indent = new Array(longest.length + 9).join(" ");
-      return "-|\n" + lines.map((line) => `${indent}  ${line}`).join("\n");
+      let indent = new Array(longest.length + 9).join(' ');
+      return '-|\n' + lines.map((line) => `${indent}  ${line}`).join('\n');
     }
   }
 }

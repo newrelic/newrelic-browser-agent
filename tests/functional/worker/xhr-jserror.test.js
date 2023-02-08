@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
-const { fail, getErrorsFromResponse } = require("../err/assertion-helpers");
-const { getXhrFromResponse } = require("../xhr/helpers");
-const { workerTypes, typeToMatcher } = require("./helpers");
+const testDriver = require('../../../tools/jil/index');
+const { fail, getErrorsFromResponse } = require('../err/assertion-helpers');
+const { getXhrFromResponse } = require('../xhr/helpers');
+const { workerTypes, typeToMatcher } = require('./helpers');
 
-const supportsFetch = testDriver.Matcher.withFeature("fetch");
+const supportsFetch = testDriver.Matcher.withFeature('fetch');
 const init = {
   jserrors: {
     harvestTimeSeconds: 5,
@@ -38,9 +38,9 @@ function xhrErrorTest(type, matcher) {
           () => {
             var xhrload = new XMLHttpRequest();
             xhrload.onload = function goodxhr() {
-              throw new Error("xhr onload");
+              throw new Error('xhr onload');
             };
-            xhrload.open("GET", "/bogus");
+            xhrload.open('GET', '/bogus');
             xhrload.send();
           },
         ].map((x) => x.toString()),
@@ -53,14 +53,14 @@ function xhrErrorTest(type, matcher) {
         .then(([response]) => {
           const actualErrors = getErrorsFromResponse(response, browser);
 
-          t.equal(actualErrors.length, 1, "exactly one error");
+          t.equal(actualErrors.length, 1, 'exactly one error');
 
           let actualError = actualErrors[0];
-          t.equal(actualError.metrics.count, 1, "Should have seen 1 error");
-          t.ok(actualError.metrics.time.t > 0, "Should have a valid timestamp");
-          t.equal(actualError.params.exceptionClass, "Error", "Should be Error class");
-          t.equal(actualError.params.message, "xhr onload", "Should have correct message");
-          t.ok(actualError.params.stack_trace, "Should have a stack trace");
+          t.equal(actualError.metrics.count, 1, 'Should have seen 1 error');
+          t.ok(actualError.metrics.time.t > 0, 'Should have a valid timestamp');
+          t.equal(actualError.params.exceptionClass, 'Error', 'Should be Error class');
+          t.equal(actualError.params.message, 'xhr onload', 'Should have correct message');
+          t.ok(actualError.params.stack_trace, 'Should have a stack trace');
           t.end();
         })
         .catch(fail(t));
@@ -75,7 +75,7 @@ function submissionXhr(type, browserVersionMatcher) {
       workerCommands: [
         () => {
           var xhr = new XMLHttpRequest();
-          xhr.open("GET", "/json");
+          xhr.open('GET', '/json');
           xhr.onload = function () {
             self.xhrDone = true;
           };
@@ -89,13 +89,13 @@ function submissionXhr(type, browserVersionMatcher) {
 
     Promise.all([xhrPromise, loadPromise])
       .then(([response]) => {
-        t.equal(response.req.method, "POST", "XHR data submitted via POST request from sendBeacon");
-        t.ok(response.body, "request body should not be empty");
+        t.equal(response.req.method, 'POST', 'XHR data submitted via POST request from sendBeacon');
+        t.ok(response.body, 'request body should not be empty');
 
         const parsedXhrs = getXhrFromResponse(response, browser);
-        t.ok(parsedXhrs, "has xhr data");
-        t.ok(parsedXhrs.length >= 1, "has at least one XHR record");
-        t.deepEqual(["metrics", "params"], Object.keys(parsedXhrs[0]).sort(), "XHR record has correct keys");
+        t.ok(parsedXhrs, 'has xhr data');
+        t.ok(parsedXhrs.length >= 1, 'has at least one XHR record');
+        t.deepEqual(['metrics', 'params'], Object.keys(parsedXhrs[0]).sort(), 'XHR record has correct keys');
         t.end();
       })
       .catch(fail(t));
@@ -113,13 +113,13 @@ function submissionFetch(type, browserVersionMatcher) {
 
     Promise.all([xhrPromise, loadPromise])
       .then(([response]) => {
-        t.equal(response.req.method, "POST", "XHR data submitted via POST request from sendBeacon");
-        t.ok(response.body, "request body should not be empty");
+        t.equal(response.req.method, 'POST', 'XHR data submitted via POST request from sendBeacon');
+        t.ok(response.body, 'request body should not be empty');
 
         const parsedXhrs = getXhrFromResponse(response, browser);
-        var fetchData = parsedXhrs.find((xhr) => xhr.params.pathname === "/json");
-        t.ok(fetchData, "has xhr data");
-        t.deepEqual(["metrics", "params"], Object.keys(fetchData).sort(), "XHR record has correct keys");
+        var fetchData = parsedXhrs.find((xhr) => xhr.params.pathname === '/json');
+        t.ok(fetchData, 'has xhr data');
+        t.deepEqual(['metrics', 'params'], Object.keys(fetchData).sort(), 'XHR record has correct keys');
         t.end();
       })
       .catch(fail(t));

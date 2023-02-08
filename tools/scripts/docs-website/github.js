@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-"use strict";
+'use strict';
 
-const { Octokit } = require("@octokit/rest");
+const { Octokit } = require('@octokit/rest');
 
 if (!process.env.GITHUB_TOKEN) {
-  console.log("GITHUB_TOKEN recommended to be set in ENV");
+  console.log('GITHUB_TOKEN recommended to be set in ENV');
 }
 
 const octokit = new Octokit({
@@ -16,7 +16,7 @@ const octokit = new Octokit({
 });
 
 class Github {
-  constructor(repoOwner = "newrelic", repository = "newrelic-browser-agent") {
+  constructor(repoOwner = 'newrelic', repository = 'newrelic-browser-agent') {
     this.repoOwner = repoOwner;
     this.repository = repository;
   }
@@ -94,9 +94,9 @@ class Github {
       result = await octokit.pulls.list({
         owner: this.repoOwner,
         repo: this.repository,
-        state: "closed",
-        sort: "updated",
-        direction: "desc",
+        state: 'closed',
+        sort: 'updated',
+        direction: 'desc',
         per_page: perPage,
         page: pageNum,
       });

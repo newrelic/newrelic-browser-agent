@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var newrelic = require("newrelic");
-const wd = require("wd");
-const through = require("through");
-const { EventEmitter } = require("events");
-const TestHarness = require("./harness");
-const { isSauceConnected } = require("../util/external-services");
-const observeTapeTest = require("./TapeTestObserver");
+var newrelic = require('newrelic');
+const wd = require('wd');
+const through = require('through');
+const { EventEmitter } = require('events');
+const TestHarness = require('./harness');
+const { isSauceConnected } = require('../util/external-services');
+const observeTapeTest = require('./TapeTestObserver');
 
 /**
  * Runs tests on a specific browser session (represented by TestRun instance)
@@ -65,7 +65,7 @@ class TestRun extends EventEmitter {
 
   run() {
     if (!this.initialized) {
-      throw new Error("Not initialized");
+      throw new Error('Not initialized');
     }
 
     if (!this.harness.started) {
@@ -139,12 +139,12 @@ class TestRun extends EventEmitter {
             column: result.column || null,
             functionName: result.functionName || null,
           };
-          newrelic.recordCustomEvent("JilTestResult", eventData);
+          newrelic.recordCustomEvent('JilTestResult', eventData);
         }
       }
 
       function notifyTestFinished(passed, duration) {
-        self.emit("testFinished", self, test, {
+        self.emit('testFinished', self, test, {
           passed: passed,
           retry: attempt - 1,
           duration: duration,
@@ -183,11 +183,11 @@ class TestRun extends EventEmitter {
     }
     self.browser
       .quit(() => {
-        self.emit("closed", self);
+        self.emit('closed', self);
         if (done) done();
       })
       .catch((err) => {
-        self.emit("closed", self);
+        self.emit('closed', self);
         if (done) done(err);
       });
   }

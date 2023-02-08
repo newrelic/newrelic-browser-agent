@@ -2,26 +2,26 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-const testDriver = require("../../../tools/jil");
-const querypack = require("@newrelic/nr-querypack");
+const testDriver = require('../../../tools/jil');
+const querypack = require('@newrelic/nr-querypack');
 
-const supported = testDriver.Matcher.withFeature("addEventListener");
+const supported = testDriver.Matcher.withFeature('addEventListener');
 
-testDriver.test("ajax in deny list is not harvested with interaction", supported, function (t, browser, router) {
+testDriver.test('ajax in deny list is not harvested with interaction', supported, function (t, browser, router) {
   var cases = [
     {
-      name: "no deny list",
+      name: 'no deny list',
       denyList: [],
       expected: {
-        type: "interaction",
+        type: 'interaction',
         children: [
           {
-            type: "ajax",
-            path: "/json",
+            type: 'ajax',
+            path: '/json',
             children: [
               {
-                type: "ajax",
-                path: "/text",
+                type: 'ajax',
+                path: '/text',
               },
             ],
           },
@@ -29,27 +29,27 @@ testDriver.test("ajax in deny list is not harvested with interaction", supported
       },
     },
     {
-      name: "node at the end of tree branch",
-      denyList: ["bam-test-1.nr-local.net/text"],
+      name: 'node at the end of tree branch',
+      denyList: ['bam-test-1.nr-local.net/text'],
       expected: {
-        type: "interaction",
+        type: 'interaction',
         children: [
           {
-            type: "ajax",
-            path: "/json",
+            type: 'ajax',
+            path: '/json',
           },
         ],
       },
     },
     {
-      name: "node in the middle of tree branch",
-      denyList: ["bam-test-1.nr-local.net/json"],
+      name: 'node in the middle of tree branch',
+      denyList: ['bam-test-1.nr-local.net/json'],
       expected: {
-        type: "interaction",
+        type: 'interaction',
         children: [
           {
-            type: "ajax",
-            path: "/text",
+            type: 'ajax',
+            path: '/text',
           },
         ],
       },
@@ -61,8 +61,8 @@ testDriver.test("ajax in deny list is not harvested with interaction", supported
       let rumPromise = router.expectRum();
       let eventsPromise = router.expectEvents();
       let loadPromise = browser.safeGet(
-        router.assetURL("spa/ajax-deny-list.html", {
-          loader: "spa",
+        router.assetURL('spa/ajax-deny-list.html', {
+          loader: 'spa',
           init: {
             ajax: {
               deny_list: testCase.denyList,
@@ -104,7 +104,7 @@ function validateNode(t, expected, actual) {
   for (var key in expected) {
     var expectedVal = expected[key];
 
-    if (key === "children") {
+    if (key === 'children') {
       expectedVal.forEach((expectedChild, index) => {
         validateNode(t, expectedChild, actual.children[index]);
       });
@@ -114,6 +114,6 @@ function validateNode(t, expected, actual) {
   }
 
   if (!expected.children || expected.children.length === 0) {
-    t.equals(0, actual.children.length, "there should be no children");
+    t.equals(0, actual.children.length, 'there should be no children');
   }
 }

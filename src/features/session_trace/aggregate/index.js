@@ -2,22 +2,22 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { registerHandler } from "../../../common/event-emitter/register-handler";
-import { xhrUsable } from "../../../common/harvest/harvest";
-import { HarvestScheduler } from "../../../common/harvest/harvest-scheduler";
-import { mapOwn } from "../../../common/util/map-own";
-import { reduce } from "../../../common/util/reduce";
-import { stringify } from "../../../common/util/stringify";
-import { parseUrl } from "../../../common/url/parse-url";
-import { supportsPerformanceObserver } from "../../../common/window/supports-performance-observer";
-import slice from "lodash._slice";
-import { getConfigurationValue, getInfo, getRuntime } from "../../../common/config/config";
-import { findStartTime } from "../../../common/timing/start-time";
-import { now } from "../../../common/timing/now";
-import { AggregateBase } from "../../utils/aggregate-base";
-import { FEATURE_NAME } from "../constants";
-import { drain } from "../../../common/drain/drain";
-import { HandlerCache } from "../../utils/handler-cache";
+import { registerHandler } from '../../../common/event-emitter/register-handler';
+import { xhrUsable } from '../../../common/harvest/harvest';
+import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler';
+import { mapOwn } from '../../../common/util/map-own';
+import { reduce } from '../../../common/util/reduce';
+import { stringify } from '../../../common/util/stringify';
+import { parseUrl } from '../../../common/url/parse-url';
+import { supportsPerformanceObserver } from '../../../common/window/supports-performance-observer';
+import slice from 'lodash._slice';
+import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config';
+import { findStartTime } from '../../../common/timing/start-time';
+import { now } from '../../../common/timing/now';
+import { AggregateBase } from '../../utils/aggregate-base';
+import { FEATURE_NAME } from '../constants';
+import { drain } from '../../../common/drain/drain';
+import { HandlerCache } from '../../utils/handler-cache';
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME;
@@ -29,7 +29,7 @@ export class Aggregate extends AggregateBase {
 
     if (!xhrUsable || !agentRuntime.xhrWrappable) return;
 
-    this.ptid = "";
+    this.ptid = '';
     this.ignoredEvents = {
       // we find that certain events make the data too noisy to be useful
       global: { mouseup: true, mousedown: true },
@@ -73,26 +73,26 @@ export class Aggregate extends AggregateBase {
     this.trace = {};
     this.nodeCount = 0;
     this.sentTrace = null;
-    this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, "session_trace.harvestTimeSeconds") || 10;
-    this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, "session_trace.maxNodesPerHarvest") || 1000;
+    this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10;
+    this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000;
 
     this.laststart = 0;
     findStartTime(agentIdentifier);
 
     registerHandler(
-      "feat-stn",
+      'feat-stn',
       () => {
         this.storeTiming(window.performance.timing);
 
         var scheduler = new HarvestScheduler(
-          "resources",
+          'resources',
           {
             onFinished: onHarvestFinished.bind(this),
             retryDelay: this.harvestTimeSeconds,
           },
           this
         );
-        scheduler.harvest.on("resources", prepareHarvest.bind(this));
+        scheduler.harvest.on('resources', prepareHarvest.bind(this));
         scheduler.runHarvest({ needResponse: true });
 
         function onHarvestFinished(result) {
@@ -131,7 +131,7 @@ export class Aggregate extends AggregateBase {
     );
 
     registerHandler(
-      "block-stn",
+      'block-stn',
       () => {
         handlerCache.decide(false);
       },
@@ -140,45 +140,45 @@ export class Aggregate extends AggregateBase {
     );
 
     // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...
-    registerHandler("bst", (...args) => handlerCache.settle(() => this.storeEvent(...args)), this.featureName, this.ee);
+    registerHandler('bst', (...args) => handlerCache.settle(() => this.storeEvent(...args)), this.featureName, this.ee);
     registerHandler(
-      "bstTimer",
+      'bstTimer',
       (...args) => handlerCache.settle(() => this.storeTimer(...args)),
       this.featureName,
       this.ee
     );
     registerHandler(
-      "bstResource",
+      'bstResource',
       (...args) => handlerCache.settle(() => this.storeResources(...args)),
       this.featureName,
       this.ee
     );
     registerHandler(
-      "bstHist",
+      'bstHist',
       (...args) => handlerCache.settle(() => this.storeHist(...args)),
       this.featureName,
       this.ee
     );
     registerHandler(
-      "bstXhrAgg",
+      'bstXhrAgg',
       (...args) => handlerCache.settle(() => this.storeXhrAgg(...args)),
       this.featureName,
       this.ee
     );
     registerHandler(
-      "bstApi",
+      'bstApi',
       (...args) => handlerCache.settle(() => this.storeSTN(...args)),
       this.featureName,
       this.ee
     );
     registerHandler(
-      "errorAgg",
+      'errorAgg',
       (...args) => handlerCache.settle(() => this.storeErrorAgg(...args)),
       this.featureName,
       this.ee
     );
     registerHandler(
-      "pvtAdded",
+      'pvtAdded',
       (...args) => handlerCache.settle(() => this.processPVT(...args)),
       this.featureName,
       this.ee
@@ -191,7 +191,7 @@ export class Aggregate extends AggregateBase {
     t[name] = value;
     this.storeTiming(t, true);
     if (this.hasFID(name, attrs))
-      this.storeEvent({ type: "fid", target: "document" }, "document", value, value + attrs.fid);
+      this.storeEvent({ type: 'fid', target: 'document' }, 'document', value, value + attrs.fid);
   }
 
   storeTiming(_t, ignoreOffset) {
@@ -206,7 +206,7 @@ export class Aggregate extends AggregateBase {
 
       // ignore inherited methods, meaningless 0 values, and bogus timestamps
       // that are in the future (Microsoft Edge seems to sometimes produce these)
-      if (!(typeof val === "number" && val > 0 && val < dateNow)) continue;
+      if (!(typeof val === 'number' && val > 0 && val < dateNow)) continue;
 
       timeOffset = !ignoreOffset ? _t[key] - getRuntime(this.agentIdentifier).offset : _t[key];
 
@@ -214,21 +214,21 @@ export class Aggregate extends AggregateBase {
         n: key,
         s: timeOffset,
         e: timeOffset,
-        o: "document",
-        t: "timing",
+        o: 'document',
+        t: 'timing',
       });
     }
   }
 
   storeTimer(target, start, end, type) {
-    var category = "timer";
-    if (type === "requestAnimationFrame") category = type;
+    var category = 'timer';
+    if (type === 'requestAnimationFrame') category = type;
 
     var evt = {
       n: type,
       s: start,
       e: end,
-      o: "window",
+      o: 'window',
       t: category,
     };
 
@@ -242,7 +242,7 @@ export class Aggregate extends AggregateBase {
       n: this.evtName(currentEvent.type),
       s: start,
       e: end,
-      t: "event",
+      t: 'event',
     };
 
     try {
@@ -267,23 +267,23 @@ export class Aggregate extends AggregateBase {
   }
 
   evtOrigin(t, target) {
-    var origin = "unknown";
+    var origin = 'unknown';
 
     if (t && t instanceof XMLHttpRequest) {
       var params = this.ee.context(t).params;
-      if (!params || !params.status || !params.method || !params.host || !params.pathname) return "xhrOriginMissing";
-      origin = params.status + " " + params.method + ": " + params.host + params.pathname;
-    } else if (t && typeof t.tagName === "string") {
+      if (!params || !params.status || !params.method || !params.host || !params.pathname) return 'xhrOriginMissing';
+      origin = params.status + ' ' + params.method + ': ' + params.host + params.pathname;
+    } else if (t && typeof t.tagName === 'string') {
       origin = t.tagName.toLowerCase();
-      if (t.id) origin += "#" + t.id;
-      if (t.className) origin += "." + slice(t.classList).join(".");
+      if (t.id) origin += '#' + t.id;
+      if (t.className) origin += '.' + slice(t.classList).join('.');
     }
 
-    if (origin === "unknown") {
-      if (typeof target === "string") origin = target;
-      else if (target === document) origin = "document";
-      else if (target === window) origin = "window";
-      else if (target instanceof FileReader) origin = "FileReader";
+    if (origin === 'unknown') {
+      if (typeof target === 'string') origin = target;
+      else if (target === document) origin = 'document';
+      else if (target === window) origin = 'window';
+      else if (target instanceof FileReader) origin = 'FileReader';
     }
 
     return origin;
@@ -291,7 +291,7 @@ export class Aggregate extends AggregateBase {
 
   storeHist(path, old, time) {
     var node = {
-      n: "history.pushState",
+      n: 'history.pushState',
       s: time,
       e: time,
       o: path,
@@ -310,7 +310,7 @@ export class Aggregate extends AggregateBase {
         n: currentResource.initiatorType,
         s: currentResource.fetchStart | 0,
         e: currentResource.responseEnd | 0,
-        o: parsed.protocol + "://" + parsed.hostname + ":" + parsed.port + parsed.pathname, // resource.name is actually a URL so it's the source
+        o: parsed.protocol + '://' + parsed.hostname + ':' + parsed.port + parsed.pathname, // resource.name is actually a URL so it's the source
         t: currentResource.entryType,
       };
 
@@ -324,9 +324,9 @@ export class Aggregate extends AggregateBase {
   }
 
   storeErrorAgg(type, name, params, metrics) {
-    if (type !== "err") return;
+    if (type !== 'err') return;
     var node = {
-      n: "error",
+      n: 'error',
       s: metrics.time,
       e: metrics.time,
       o: params.message,
@@ -336,13 +336,13 @@ export class Aggregate extends AggregateBase {
   }
 
   storeXhrAgg(type, name, params, metrics) {
-    if (type !== "xhr") return;
+    if (type !== 'xhr') return;
     var node = {
-      n: "Ajax",
+      n: 'Ajax',
       s: metrics.time,
       e: metrics.time + metrics.duration,
-      o: params.status + " " + params.method + ": " + params.host + params.pathname,
-      t: "ajax",
+      o: params.status + ' ' + params.method + ': ' + params.host + params.pathname,
+      t: 'ajax',
     };
     this.storeSTN(node);
   }
@@ -372,7 +372,7 @@ export class Aggregate extends AggregateBase {
   takeSTNs(retry) {
     // if the observer is not being used, this checks resourcetiming buffer every harvest
     if (!supportsPerformanceObserver()) {
-      this.storeResources(window.performance.getEntriesByType("resource"));
+      this.storeResources(window.performance.getEntriesByType('resource'));
     }
 
     var stns = reduce(
@@ -398,7 +398,7 @@ export class Aggregate extends AggregateBase {
     this.nodeCount = 0;
 
     var stnInfo = {
-      qs: { st: "" + getRuntime(this.agentIdentifier).offset },
+      qs: { st: '' + getRuntime(this.agentIdentifier).offset },
       body: { res: stns },
     };
 
@@ -407,7 +407,7 @@ export class Aggregate extends AggregateBase {
       stnInfo.qs.ua = userAttributes;
       stnInfo.qs.at = atts;
       var ja = stringify(jsAttributes);
-      stnInfo.qs.ja = ja === "{}" ? null : ja;
+      stnInfo.qs.ja = ja === '{}' ? null : ja;
     }
     return stnInfo;
   }
@@ -428,9 +428,9 @@ export class Aggregate extends AggregateBase {
 
       var last = lastO[evt.o];
 
-      if (name === "scrolling" && !this.trivial(evt)) {
+      if (name === 'scrolling' && !this.trivial(evt)) {
         lastO[evt.o] = null;
-        evt.n = "scroll";
+        evt.n = 'scroll';
         lastArr.push(evt);
       } else if (last && evt.s - last.s < maxLen && last.e > evt.s - maxGap) {
         last.e = evt.e;
@@ -452,12 +452,12 @@ export class Aggregate extends AggregateBase {
   }
 
   hasFID(name, attrs) {
-    return name === "fi" && !!attrs && typeof attrs.fid === "number";
+    return name === 'fi' && !!attrs && typeof attrs.fid === 'number';
   }
 
   trivial(node) {
     var limit = 4;
-    if (node && typeof node.e === "number" && typeof node.s === "number" && node.e - node.s < limit) return true;
+    if (node && typeof node.e === 'number' && typeof node.s === 'number' && node.e - node.s < limit) return true;
     else return false;
   }
 

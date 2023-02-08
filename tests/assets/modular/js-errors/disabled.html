@@ -26,7 +26,7 @@
       agent.features.errors.auto = true;
       agent.start(opts1).then(() => {
         setTimeout(() => {
-          throw new Error("hello");
+          throw new Error('hello');
         }, 1000);
       });
     </script>

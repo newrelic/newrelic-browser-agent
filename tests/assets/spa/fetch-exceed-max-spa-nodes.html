@@ -11,7 +11,7 @@
       window.NREUM.init = {
         distributed_tracing: {
           enabled: true,
-          allowed_origins: ["http://test-1.fake-nr-beacon.com:3333"],
+          allowed_origins: ['http://test-1.fake-nr-beacon.com:3333'],
         },
         session_trace: {
           enabled: false,
@@ -29,11 +29,11 @@
     <div>This page fires a fetch request and calls pushState when clicked</div>
     <script type="text/javascript">
       document.addEventListener(
-        "click",
+        'click',
         function () {
           window.location.hash = Math.random();
           for (var i = 0; i <= 128; i++) {
-            fetch("/echo");
+            fetch('/echo');
           }
         },
         false

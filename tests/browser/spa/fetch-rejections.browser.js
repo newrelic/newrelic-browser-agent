@@ -3,23 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
-jil.browserTest("fetch.reject", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('fetch.reject', function (t) {
+  let helpers = require('./helpers');
   let validator = new helpers.InteractionValidator({
-    type: "interaction",
+    type: 'interaction',
     children: [
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "promise",
+          name: 'promise',
         },
         children: [
           {
-            type: "customTracer",
+            type: 'customTracer',
             attrs: {
-              name: "timer",
+              name: 'timer',
             },
             children: [],
           },
@@ -30,22 +30,22 @@ jil.browserTest("fetch.reject", function (t) {
 
   t.plan(4 + validator.count);
 
-  t.notok(helpers.currentNodeId(), "interaction should be null at first");
+  t.notok(helpers.currentNodeId(), 'interaction should be null at first');
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone);
 
   function onInteractionStart(cb) {
     window
-      .fetch("http://not.a.real.website")
+      .fetch('http://not.a.real.website')
       .catch(function (err) {
-        t.ok(err, "should get error");
-        return newrelic.interaction().createTracer("promise", () => {
+        t.ok(err, 'should get error');
+        return newrelic.interaction().createTracer('promise', () => {
           return Promise.resolve();
         })();
       })
       .then(function () {
         setTimeout(
-          newrelic.interaction().createTracer("timer", function () {
+          newrelic.interaction().createTracer('timer', function () {
             cb();
           }),
           100
@@ -54,34 +54,34 @@ jil.browserTest("fetch.reject", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(interaction.root.end, "interaction should be finished and have an end time");
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    t.ok(interaction.root.end, 'interaction should be finished and have an end time');
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
     validator.validate(t, interaction);
     t.end();
   }
 });
 
-jil.browserTest("fetch body.reject", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('fetch body.reject', function (t) {
+  let helpers = require('./helpers');
   let validator = new helpers.InteractionValidator({
-    type: "interaction",
+    type: 'interaction',
     children: [
       {
-        type: "ajax",
+        type: 'ajax',
         attrs: {
           isFetch: true,
         },
         children: [
           {
-            type: "customTracer",
+            type: 'customTracer',
             attrs: {
-              name: "promise",
+              name: 'promise',
             },
             children: [
               {
-                type: "customTracer",
+                type: 'customTracer',
                 attrs: {
-                  name: "timer",
+                  name: 'timer',
                 },
                 children: [],
               },
@@ -94,24 +94,24 @@ jil.browserTest("fetch body.reject", function (t) {
 
   t.plan(4 + validator.count);
 
-  t.notok(helpers.currentNodeId(), "interaction should be null at first");
+  t.notok(helpers.currentNodeId(), 'interaction should be null at first');
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone);
 
   function onInteractionStart(cb) {
     window
-      .fetch("/")
+      .fetch('/')
       .then(function (res) {
         return res.json().catch((err) => {
-          t.ok(err, "should get error");
-          return newrelic.interaction().createTracer("promise", () => {
+          t.ok(err, 'should get error');
+          return newrelic.interaction().createTracer('promise', () => {
             return Promise.resolve();
           })();
         });
       })
       .then(function () {
         setTimeout(
-          newrelic.interaction().createTracer("timer", function () {
+          newrelic.interaction().createTracer('timer', function () {
             cb();
           }),
           0
@@ -121,8 +121,8 @@ jil.browserTest("fetch body.reject", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(interaction.root.end, "interaction should be finished and have an end time");
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    t.ok(interaction.root.end, 'interaction should be finished and have an end time');
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
     validator.validate(t, interaction);
     t.end();
   }

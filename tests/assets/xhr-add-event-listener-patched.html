@@ -19,7 +19,7 @@
       }
 
       function patchAddEventListener(prototype) {
-        if (prototype.hasOwnProperty && prototype.hasOwnProperty("addEventListener")) {
+        if (prototype.hasOwnProperty && prototype.hasOwnProperty('addEventListener')) {
           var orig = prototype.addEventListener;
           prototype.addEventListener = function (event, callback, bubble) {
             orig.call(this, event, wrap(callback), bubble);
@@ -28,15 +28,15 @@
       }
 
       var proto = XMLHttpRequest.prototype;
-      while (proto && !proto.hasOwnProperty("addEventListener")) {
+      while (proto && !proto.hasOwnProperty('addEventListener')) {
         proto = Object.getPrototypeOf(proto);
       }
       patchAddEventListener(proto);
 
       var xhrDone = false;
       var xhr = new XMLHttpRequest();
-      xhr.open("GET", "/json");
-      xhr.addEventListener("load", function () {
+      xhr.open('GET', '/json');
+      xhr.addEventListener('load', function () {
         xhrDone = true;
       });
       xhr.send();

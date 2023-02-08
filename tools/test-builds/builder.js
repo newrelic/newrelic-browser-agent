@@ -1,6 +1,6 @@
-const path = require("path");
-const fs = require("fs");
-const child_process = require("child_process");
+const path = require('path');
+const fs = require('fs');
+const child_process = require('child_process');
 
 const root = process.cwd();
 
@@ -16,7 +16,7 @@ function print(msg) {
 
 // Recurses into a folder
 function recurse(folder) {
-  const has_package_json = fs.existsSync(path.join(folder, "package.json"));
+  const has_package_json = fs.existsSync(path.join(folder, 'package.json'));
   // If there is `package.json` in this folder then perform `npm install`.
   if (has_package_json && folder !== root) {
     build(folder);
@@ -30,13 +30,13 @@ function recurse(folder) {
 
 // Performs `npm install`
 function build(folder) {
-  const cmd = /^win/.test(process.platform) ? "npm.cmd" : "npm";
+  const cmd = /^win/.test(process.platform) ? 'npm.cmd' : 'npm';
   print(`Building ./${path.relative(root, folder)}`);
 
   child_process.execSync(`npm run build`, {
     cwd: folder,
     env: process.env,
-    stdio: "inherit",
+    stdio: 'inherit',
   });
 }
 
@@ -45,6 +45,6 @@ function subfolders(folder) {
   return fs
     .readdirSync(folder)
     .filter((subfolder) => fs.statSync(path.join(folder, subfolder)).isDirectory())
-    .filter((subfolder) => subfolder !== "node_modules" && subfolder[0] !== ".")
+    .filter((subfolder) => subfolder !== 'node_modules' && subfolder[0] !== '.')
     .map((subfolder) => path.join(folder, subfolder));
 }

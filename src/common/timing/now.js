@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { exists } from "./performance-check";
+import { exists } from './performance-check';
 
 var lastTimestamp = new Date().getTime();
 var offset = lastTimestamp;

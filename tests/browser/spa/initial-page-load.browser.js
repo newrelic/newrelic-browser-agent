@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
-jil.browserTest("initial page load timing", function (t) {
-  var helpers = require("./helpers");
+jil.browserTest('initial page load timing', function (t) {
+  var helpers = require('./helpers');
   let validator = new helpers.InteractionValidator({
-    name: "interaction",
+    name: 'interaction',
     jsTime: 0,
     attrs: {
       custom: {
-        "from-start": true,
+        'from-start': true,
       },
     },
     children: [],
@@ -20,10 +20,10 @@ jil.browserTest("initial page load timing", function (t) {
 
   t.plan(5 + validator.count);
 
-  t.notok(helpers.currentNodeId(), "interaction should be null at first");
+  t.notok(helpers.currentNodeId(), 'interaction should be null at first');
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone, {
-    eventType: "initialPageLoad",
+    eventType: 'initialPageLoad',
   });
 
   function onInteractionStart(cb) {
@@ -32,18 +32,18 @@ jil.browserTest("initial page load timing", function (t) {
     while (helpers.now() <= deadline) {
       x++;
     }
-    let e = window.document.createElement("div");
+    let e = window.document.createElement('div');
     e.innerHTML = x;
-    newrelic.interaction().setAttribute("from-start", true);
+    newrelic.interaction().setAttribute('from-start', true);
     cb();
   }
 
   function afterInteractionDone(interaction) {
     setTimeout(() => {
-      t.ok(interaction.root.attrs.trigger === "initialPageLoad", "event should be initial page load");
-      t.ok(interaction.root.end, "interaction should have an end time");
-      t.ok(interaction.root.attrs.id, "interaction should have assigned uid");
-      t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+      t.ok(interaction.root.attrs.trigger === 'initialPageLoad', 'event should be initial page load');
+      t.ok(interaction.root.end, 'interaction should have an end time');
+      t.ok(interaction.root.attrs.id, 'interaction should have assigned uid');
+      t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
       validator.validate(t, interaction);
       t.end();
     }, 0);

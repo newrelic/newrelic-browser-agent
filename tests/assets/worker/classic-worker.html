@@ -12,22 +12,22 @@
 
   <body>
     <script type="text/javascript">
-      const worker = new Worker("./js/classic-worker.js");
+      const worker = new Worker('./js/classic-worker.js');
 
       const opts = NREUM;
 
-      worker.postMessage({ type: "startAgent", payload: opts });
+      worker.postMessage({ type: 'startAgent', payload: opts });
 
       worker.onmessage = function ({ data: { type } }) {
-        if (type === "ready") {
+        if (type === 'ready') {
           workerCommands = window.workerCommands || [];
-          workerCommands.forEach((command) => worker.postMessage({ type: "command", fn: command }));
+          workerCommands.forEach((command) => worker.postMessage({ type: 'command', fn: command }));
         }
       };
 
       // main page
       worker.onerror = function (e) {
-        console.log("error from worker", e);
+        console.log('error from worker', e);
       };
     </script>
   </body>

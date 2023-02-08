@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { globalScope, isBrowserScope } from "../util/global-scope";
+import { globalScope, isBrowserScope } from '../util/global-scope';
 
 var stringsToParsedUrls = {};
 
@@ -13,9 +13,9 @@ export function parseUrl(url) {
   }
 
   // Return if URL is a data URL, parseUrl assumes urls are http/https
-  if ((url || "").indexOf("data:") === 0) {
+  if ((url || '').indexOf('data:') === 0) {
     return {
-      protocol: "data",
+      protocol: 'data',
     };
   }
 
@@ -25,7 +25,7 @@ export function parseUrl(url) {
 
   if (isBrowserScope) {
     // Use an anchor dom element to resolve the url natively.
-    urlEl = document.createElement("a");
+    urlEl = document.createElement('a');
     urlEl.href = url;
   } else {
     try {
@@ -37,12 +37,12 @@ export function parseUrl(url) {
 
   ret.port = urlEl.port;
 
-  var firstSplit = urlEl.href.split("://");
+  var firstSplit = urlEl.href.split('://');
 
   if (!ret.port && firstSplit[1]) {
-    ret.port = firstSplit[1].split("/")[0].split("@").pop().split(":")[1];
+    ret.port = firstSplit[1].split('/')[0].split('@').pop().split(':')[1];
   }
-  if (!ret.port || ret.port === "0") ret.port = firstSplit[0] === "https" ? "443" : "80";
+  if (!ret.port || ret.port === '0') ret.port = firstSplit[0] === 'https' ? '443' : '80';
 
   // Host not provided in IE for relative urls
   ret.hostname = urlEl.hostname || location.hostname;
@@ -52,17 +52,17 @@ export function parseUrl(url) {
   ret.protocol = firstSplit[0];
 
   // Pathname sometimes doesn't have leading slash (IE 8 and 9)
-  if (ret.pathname.charAt(0) !== "/") ret.pathname = "/" + ret.pathname;
+  if (ret.pathname.charAt(0) !== '/') ret.pathname = '/' + ret.pathname;
 
   // urlEl.protocol is ':' in old ie when protocol is not specified
-  var sameProtocol = !urlEl.protocol || urlEl.protocol === ":" || urlEl.protocol === location.protocol;
+  var sameProtocol = !urlEl.protocol || urlEl.protocol === ':' || urlEl.protocol === location.protocol;
   var sameDomain = urlEl.hostname === location.hostname && urlEl.port === location.port;
 
   // urlEl.hostname is not provided by IE for relative urls, but relative urls are also same-origin
   ret.sameOrigin = sameProtocol && (!urlEl.hostname || sameDomain);
 
   // Only cache if url doesn't have a path
-  if (ret.pathname === "/") {
+  if (ret.pathname === '/') {
     stringsToParsedUrls[url] = ret;
   }
 

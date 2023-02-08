@@ -12,16 +12,16 @@
     <script type="text/javascript">
       var count = 0;
       setTimeout(function () {
-        throw new Error("ignore");
+        throw new Error('ignore');
       }, 0);
 
       setTimeout(function () {
-        throw new Error("report");
+        throw new Error('report');
       }, 0);
 
       newrelic.setErrorHandler(function (err) {
         if (++count === 2) window.errorsThrown = true;
-        return err.message === "ignore";
+        return err.message === 'ignore';
       });
     </script>
   </head>

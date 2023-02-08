@@ -8,18 +8,18 @@
   <head>
     <script>
       window.onerror = function originalOnerrorHandler(message) {
-        if (message && message.search("uncaught error") >= 0) {
+        if (message && message.search('uncaught error') >= 0) {
           // Thrown error used as a convoluted way to
           // report to the fake beacon that
           // this handler was called when the uncaught error
           // happened.
           try {
-            throw new Error("original onerror");
+            throw new Error('original onerror');
           } catch (e) {
             NREUM.noticeError(e);
           }
         }
-        return "abc";
+        return 'abc';
       };
     </script>
 

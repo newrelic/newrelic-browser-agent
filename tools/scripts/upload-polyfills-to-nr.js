@@ -5,31 +5,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var fs = require("fs");
-var path = require("path");
-var request = require("request");
-var util = require("util");
-var yargs = require("yargs");
+var fs = require('fs');
+var path = require('path');
+var request = require('request');
+var util = require('util');
+var yargs = require('yargs');
 
 var argv = yargs
-  .string("environments")
-  .describe("environments", "Comma-separated list of environments to upload loaders to")
-  .default("environments", "staging,production,eu")
+  .string('environments')
+  .describe('environments', 'Comma-separated list of environments to upload loaders to')
+  .default('environments', 'staging,production,eu')
 
-  .string("production-api-key")
-  .describe("production-api-key", "API key to use for talking to production RPM site to upload loaders")
+  .string('production-api-key')
+  .describe('production-api-key', 'API key to use for talking to production RPM site to upload loaders')
 
-  .string("staging-api-key")
-  .describe("staging-api-key", "API key to use for talking to staging RPM site to upload loaders")
+  .string('staging-api-key')
+  .describe('staging-api-key', 'API key to use for talking to staging RPM site to upload loaders')
 
-  .string("eu-api-key")
-  .describe("eu-api-key", "API key to use for talking to EU RPM site to upload loaders")
+  .string('eu-api-key')
+  .describe('eu-api-key', 'API key to use for talking to EU RPM site to upload loaders')
 
-  .boolean("skip-upload-failures")
-  .describe("skip-upload-failures", "Don't bail out after the first failure, keep trying other requests")
+  .boolean('skip-upload-failures')
+  .describe('skip-upload-failures', "Don't bail out after the first failure, keep trying other requests")
 
-  .help("h")
-  .alias("h", "help").argv;
+  .help('h')
+  .alias('h', 'help').argv;
 
 var loaders = [];
 var fileData = {};
@@ -37,7 +37,7 @@ var fileData = {};
 let checked = 0;
 let v = 1184;
 let proms = [];
-let types = ["rum", "full", "spa"];
+let types = ['rum', 'full', 'spa'];
 while (v++ < 1216) {
   types.forEach((t) => {
     proms.push(getFile(`https://js-agent.newrelic.com/nr-loader-${t}-${v}.min.js`));
@@ -47,17 +47,17 @@ while (v++ < 1216) {
 }
 
 Promise.all(proms).then((files) => {
-  console.log(files.length, "files", ", checked:", checked);
+  console.log(files.length, 'files', ', checked:', checked);
   files.forEach((f) => {
     const [url, res, body] = f;
-    if (res.statusCode !== 200) console.log("res status was not 200...", res.statusCode, url);
+    if (res.statusCode !== 200) console.log('res status was not 200...', res.statusCode, url);
     else {
       const uploadUrl = url
-        .split(".com/")[1]
-        .split("-")
-        .map((x) => (isNaN(Number(x.substr(0, 4))) ? x : ["polyfills", x]))
+        .split('.com/')[1]
+        .split('-')
+        .map((x) => (isNaN(Number(x.substr(0, 4))) ? x : ['polyfills', x]))
         .flat()
-        .join("-");
+        .join('-');
       loaders.push(uploadUrl);
       fileData[uploadUrl] = body;
     }
@@ -70,10 +70,10 @@ Promise.all(proms).then((files) => {
     },
     function (err) {
       if (err) throw err;
-      console.log("All steps finished.");
+      console.log('All steps finished.');
 
       if (uploadErrorCallback && uploadErrors.length > 0) {
-        console.log("Failures:");
+        console.log('Failures:');
         uploadErrors.forEach(function (e) {
           console.log(e);
         });
@@ -87,11 +87,11 @@ function getFile(path) {
   var url = path;
   var opts = {
     uri: url,
-    method: "GET",
+    method: 'GET',
     gzip: true,
   };
 
-  console.log("checking ", url);
+  console.log('checking ', url);
 
   return new Promise((resolve, reject) => {
     request(opts, (err, res, body) => {
@@ -104,7 +104,7 @@ function getFile(path) {
   });
 }
 
-var targetEnvironments = argv.environments.split(",");
+var targetEnvironments = argv.environments.split(',');
 
 var uploadErrors = [];
 var uploadErrorCallback = null;
@@ -115,7 +115,7 @@ uploadErrorCallback = function (err) {
 var steps = [];
 
 targetEnvironments.forEach(function (env) {
-  console.log("Will upload loaders to " + env);
+  console.log('Will upload loaders to ' + env);
   steps.push(function (cb) {
     uploadAllLoadersToDB(env, cb);
   });
@@ -127,7 +127,7 @@ function loadFiles(cb) {
   asyncForEach(allFiles, readFile, cb);
 
   function readFile(file, next) {
-    fs.readFile(path.resolve(__dirname, "../../build/", file), function (err, data) {
+    fs.readFile(path.resolve(__dirname, '../../build/', file), function (err, data) {
       if (err) return next(err);
       fileData[file] = data;
       next();
@@ -148,7 +148,7 @@ function uploadAllLoadersToDB(environment, cb) {
 
 function uploadLoaderToDB(filename, loader, environment, cb) {
   var baseOptions = {
-    method: "PUT",
+    method: 'PUT',
     followAllRedirects: true,
     json: {
       js_agent_loader: {
@@ -161,44 +161,44 @@ function uploadLoaderToDB(filename, loader, environment, cb) {
 
   var envOptions = {
     staging: {
-      url: "https://staging-api.newrelic.com/v2/js_agent_loaders/create.json",
+      url: 'https://staging-api.newrelic.com/v2/js_agent_loaders/create.json',
       headers: {
-        "X-Api-Key": argv["staging-api-key"],
+        'X-Api-Key': argv['staging-api-key'],
       },
     },
     eu: {
-      url: "https://api.eu.newrelic.com/v2/js_agent_loaders/create.json",
+      url: 'https://api.eu.newrelic.com/v2/js_agent_loaders/create.json',
       headers: {
-        "Api-Key": argv["eu-api-key"],
+        'Api-Key': argv['eu-api-key'],
       },
     },
     production: {
-      url: "https://api.newrelic.com/v2/js_agent_loaders/create.json",
+      url: 'https://api.newrelic.com/v2/js_agent_loaders/create.json',
       headers: {
-        "X-Api-Key": argv["production-api-key"],
+        'X-Api-Key': argv['production-api-key'],
       },
     },
   };
 
-  console.log("Uploading loader " + filename + " to " + environment + "...");
+  console.log('Uploading loader ' + filename + ' to ' + environment + '...');
   var options = util._extend(envOptions[environment], baseOptions);
 
   request(options, function (err, res, body) {
     if (err) return cb(err);
     if (res.statusCode === 200) {
-      console.log("Uploaded loader version " + filename + " to " + environment);
+      console.log('Uploaded loader version ' + filename + ' to ' + environment);
       return cb();
     }
 
     cb(
       new Error(
-        "Failed to upload " +
+        'Failed to upload ' +
           filename +
-          " loader to " +
+          ' loader to ' +
           environment +
-          " db: (" +
+          ' db: (' +
           res.statusCode +
-          ") " +
+          ') ' +
           JSON.stringify(body)
       )
     );
@@ -206,8 +206,8 @@ function uploadLoaderToDB(filename, loader, environment, cb) {
 }
 
 function loaderFilenames() {
-  const buildDir = path.resolve(__dirname, "../../build/");
-  return fs.readdirSync(buildDir).filter((x) => x.startsWith("nr-loader") && x.endsWith(".js"));
+  const buildDir = path.resolve(__dirname, '../../build/');
+  return fs.readdirSync(buildDir).filter((x) => x.startsWith('nr-loader') && x.endsWith('.js'));
 }
 
 // errorCallback is optional

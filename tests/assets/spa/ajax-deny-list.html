@@ -9,14 +9,14 @@
     {init} {config} {loader}
     <script type="text/javascript">
       var xhr = new XMLHttpRequest();
-      xhr.open("GET", "/json");
+      xhr.open('GET', '/json');
       xhr.send();
       xhr.addEventListener(
-        "load",
+        'load',
         function () {
           var xhr = new XMLHttpRequest();
-          xhr.open("GET", "/text");
-          xhr.addEventListener("load", function () {}, true);
+          xhr.open('GET', '/text');
+          xhr.addEventListener('load', function () {}, true);
           xhr.send();
         },
         true

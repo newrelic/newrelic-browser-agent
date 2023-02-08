@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { globalScope } from "../util/global-scope";
+import { globalScope } from '../util/global-scope';
 
 export function generateUuid() {
   var randomVals = null;
@@ -24,14 +24,14 @@ export function generateUuid() {
   }
 
   // v4 UUID
-  var template = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
-  var id = "";
+  var template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+  var id = '';
   var c;
   for (var i = 0; i < template.length; i++) {
     c = template[i];
-    if (c === "x") {
+    if (c === 'x') {
       id += getRandomValue().toString(16);
-    } else if (c === "y") {
+    } else if (c === 'y') {
       // this is the uuid variant per spec (8, 9, a, b)
       // % 4, then shift to get values 8-11
       c = (getRandomValue() & 0x3) | 0x8;
@@ -68,7 +68,7 @@ export function generateRandomHexString(length) {
   for (var i = 0; i < length; i++) {
     chars.push(getRandomValue().toString(16));
   }
-  return chars.join("");
+  return chars.join('');
 
   function getRandomValue() {
     if (randomVals) {

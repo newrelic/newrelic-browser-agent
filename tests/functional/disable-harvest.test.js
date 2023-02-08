@@ -1,6 +1,6 @@
-const testDriver = require("jil");
+const testDriver = require('jil');
 
-let supported = testDriver.Matcher.withFeature("notInternetExplorer");
+let supported = testDriver.Matcher.withFeature('notInternetExplorer');
 
 var timedPromiseAll = (promises, ms = 5000) =>
   Promise.race([
@@ -12,15 +12,15 @@ var timedPromiseAll = (promises, ms = 5000) =>
     Promise.all(promises),
   ]);
 
-testDriver.test("METRICS, ERRORS - Kills feature if entitlements flag is 0", supported, function (t, browser, router) {
+testDriver.test('METRICS, ERRORS - Kills feature if entitlements flag is 0', supported, function (t, browser, router) {
   const init = {
     metrics: { enabled: true, harvestTimeSeconds: 5 },
     jserrors: { enabled: true, harvestTimeSeconds: 5 },
   };
 
   router.flags.err = 0;
-  const assetURL = router.assetURL("obfuscate-pii.html", {
-    loader: "full",
+  const assetURL = router.assetURL('obfuscate-pii.html', {
+    loader: 'full',
     init,
   });
   const rumPromise = router.expectRum();
@@ -32,10 +32,10 @@ testDriver.test("METRICS, ERRORS - Kills feature if entitlements flag is 0", sup
     .then(() => {
       timedPromiseAll([metricsPromise, errorsPromise], 6000)
         .then(([metrics, errors]) => {
-          t.fail("should not have recieved metrics or errors");
+          t.fail('should not have recieved metrics or errors');
         })
         .catch(() => {
-          t.pass("did not recieve metrics or errors :)");
+          t.pass('did not recieve metrics or errors :)');
         })
         .finally(() => {
           t.end();
@@ -49,7 +49,7 @@ testDriver.test("METRICS, ERRORS - Kills feature if entitlements flag is 0", sup
   }
 });
 
-testDriver.test("SPA - Kills feature if entitlements flag is 0", supported, function (t, browser, router) {
+testDriver.test('SPA - Kills feature if entitlements flag is 0', supported, function (t, browser, router) {
   const init = {
     ajax: { enabled: false, harvestTimeSeconds: 5 },
     spa: { enabled: true, harvestTimeSeconds: 5 },
@@ -57,8 +57,8 @@ testDriver.test("SPA - Kills feature if entitlements flag is 0", supported, func
   };
 
   router.flags.spa = 0;
-  const assetURL = router.assetURL("obfuscate-pii.html", {
-    loader: "spa",
+  const assetURL = router.assetURL('obfuscate-pii.html', {
+    loader: 'spa',
     init,
   });
   const rumPromise = router.expectRum();
@@ -69,10 +69,10 @@ testDriver.test("SPA - Kills feature if entitlements flag is 0", supported, func
     .then(() => {
       timedPromiseAll([spaPromise], 6000)
         .then(() => {
-          t.fail("should not have recieved spa data");
+          t.fail('should not have recieved spa data');
         })
         .catch(() => {
-          t.pass("did not recieve spa data :)");
+          t.pass('did not recieve spa data :)');
         })
         .finally(() => {
           t.end();
@@ -86,14 +86,14 @@ testDriver.test("SPA - Kills feature if entitlements flag is 0", supported, func
   }
 });
 
-testDriver.test("PAGE ACTIONS - Kills feature if entitlements flag is 0", supported, function (t, browser, router) {
+testDriver.test('PAGE ACTIONS - Kills feature if entitlements flag is 0', supported, function (t, browser, router) {
   const init = {
     page_action: { enabled: true, harvestTimeSeconds: 5 },
   };
 
   router.flags.ins = 0;
-  const assetURL = router.assetURL("obfuscate-pii.html", {
-    loader: "full",
+  const assetURL = router.assetURL('obfuscate-pii.html', {
+    loader: 'full',
     init,
   });
   const rumPromise = router.expectRum();
@@ -104,10 +104,10 @@ testDriver.test("PAGE ACTIONS - Kills feature if entitlements flag is 0", suppor
     .then(() => {
       timedPromiseAll([insPromise], 6000)
         .then(() => {
-          t.fail("should not have recieved page action");
+          t.fail('should not have recieved page action');
         })
         .catch(() => {
-          t.pass("did not recieve page action data :)");
+          t.pass('did not recieve page action data :)');
         })
         .finally(() => {
           t.end();

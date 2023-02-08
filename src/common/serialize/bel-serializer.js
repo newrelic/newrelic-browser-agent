@@ -3,33 +3,33 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { mapOwn } from "../util/map-own";
-import { stringify } from "../util/stringify";
-import { Obfuscator } from "../util/obfuscate";
+import { mapOwn } from '../util/map-own';
+import { stringify } from '../util/stringify';
+import { Obfuscator } from '../util/obfuscate';
 
 var hasOwnProp = Object.prototype.hasOwnProperty;
 var MAX_ATTRIBUTES = 64;
 
 export function nullable(val, fn, comma) {
-  return val || val === 0 || val === "" ? fn(val) + (comma ? "," : "") : "!";
+  return val || val === 0 || val === '' ? fn(val) + (comma ? ',' : '') : '!';
 }
 
 export function numeric(n, noDefault) {
   if (noDefault) {
     return Math.floor(n).toString(36);
   }
-  return n === undefined || n === 0 ? "" : Math.floor(n).toString(36);
+  return n === undefined || n === 0 ? '' : Math.floor(n).toString(36);
 }
 
 export function getAddStringContext(agentIdentifier) {
   // eslint-disable-next-line
-  var stringTable = Object.hasOwnProperty("create") ? Object.create(null) : {};
+  var stringTable = Object.hasOwnProperty('create') ? Object.create(null) : {};
   var stringTableIdx = 0;
 
   return addString;
 
   function addString(str) {
-    if (typeof str === "undefined" || str === "") return "";
+    if (typeof str === 'undefined' || str === '') return '';
     var obfuscator = new Obfuscator({ agentIdentifier: agentIdentifier });
     str = String(str);
     if (obfuscator.shouldObfuscate()) str = obfuscator.obfuscateString(str);
@@ -53,7 +53,7 @@ export function addCustomAttributes(attrs, addString) {
     key = addString(key);
 
     switch (typeof val) {
-      case "object":
+      case 'object':
         if (val) {
           // serialize objects to strings
           serializedValue = addString(stringify(val));
@@ -62,15 +62,15 @@ export function addCustomAttributes(attrs, addString) {
           type = 9;
         }
         break;
-      case "number":
+      case 'number':
         type = 6;
         // make sure numbers contain a `.` so they are parsed as doubles
-        serializedValue = val % 1 ? val : val + ".";
+        serializedValue = val % 1 ? val : val + '.';
         break;
-      case "boolean":
+      case 'boolean':
         type = val ? 7 : 8;
         break;
-      case "undefined":
+      case 'undefined':
         // we treat undefined as a null attribute (since dirac does not have a concept of undefined)
         type = 9;
         break;
@@ -78,7 +78,7 @@ export function addCustomAttributes(attrs, addString) {
         serializedValue = addString(val);
     }
 
-    attrParts.push([type, key + (serializedValue ? "," + serializedValue : "")]);
+    attrParts.push([type, key + (serializedValue ? ',' + serializedValue : '')]);
   });
 
   return attrParts;
@@ -87,5 +87,5 @@ export function addCustomAttributes(attrs, addString) {
 var escapable = /([,\\;])/g;
 
 function quoteString(str) {
-  return "'" + str.replace(escapable, "\\$1");
+  return "'" + str.replace(escapable, '\\$1');
 }

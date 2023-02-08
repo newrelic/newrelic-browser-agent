@@ -2,10 +2,10 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getConfiguration, getConfigurationValue, getLoaderConfig } from "../../../common/config/config";
-import { generateSpanId, generateTraceId } from "../../../common/ids/unique-id";
-import { parseUrl } from "../../../common/url/parse-url";
-import { globalScope } from "../../../common/util/global-scope";
+import { getConfiguration, getConfigurationValue, getLoaderConfig } from '../../../common/config/config';
+import { generateSpanId, generateTraceId } from '../../../common/ids/unique-id';
+import { parseUrl } from '../../../common/url/parse-url';
+import { globalScope } from '../../../common/util/global-scope';
 
 export class DT {
   constructor(agentIdentifier) {
@@ -26,9 +26,9 @@ export class DT {
       return null;
     }
 
-    var accountId = (loader_config.accountID || "").toString() || null;
-    var agentId = (loader_config.agentID || "").toString() || null;
-    var trustKey = (loader_config.trustKey || "").toString() || null;
+    var accountId = (loader_config.accountID || '').toString() || null;
+    var agentId = (loader_config.agentID || '').toString() || null;
+    var trustKey = (loader_config.trustKey || '').toString() || null;
 
     if (!accountId || !agentId) {
       return null;
@@ -66,41 +66,41 @@ export class DT {
   }
 
   generateTraceContextParentHeader(spanId, traceId) {
-    return "00-" + traceId + "-" + spanId + "-01";
+    return '00-' + traceId + '-' + spanId + '-01';
   }
 
   generateTraceContextStateHeader(spanId, timestamp, accountId, appId, trustKey) {
     var version = 0;
-    var transactionId = "";
+    var transactionId = '';
     var parentType = 1;
-    var sampled = "";
-    var priority = "";
+    var sampled = '';
+    var priority = '';
 
     return (
       trustKey +
-      "@nr=" +
+      '@nr=' +
       version +
-      "-" +
+      '-' +
       parentType +
-      "-" +
+      '-' +
       accountId +
-      "-" +
+      '-' +
       appId +
-      "-" +
+      '-' +
       spanId +
-      "-" +
+      '-' +
       transactionId +
-      "-" +
+      '-' +
       sampled +
-      "-" +
+      '-' +
       priority +
-      "-" +
+      '-' +
       timestamp
     );
   }
 
   generateTraceHeader(spanId, traceId, timestamp, accountId, appId, trustKey) {
-    var hasBtoa = typeof globalScope?.btoa === "function";
+    var hasBtoa = typeof globalScope?.btoa === 'function';
     if (!hasBtoa) {
       return null;
     }
@@ -108,7 +108,7 @@ export class DT {
     var payload = {
       v: [0, 1],
       d: {
-        ty: "Browser",
+        ty: 'Browser',
         ac: accountId,
         ap: appId,
         id: spanId,
@@ -132,7 +132,7 @@ export class DT {
   isAllowedOrigin(parsedOrigin) {
     var allowed = false;
     var dtConfig = {};
-    var dt = getConfigurationValue(this.agentIdentifier, "distributed_tracing");
+    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing');
 
     if (dt) {
       dtConfig = getConfiguration(this.agentIdentifier).distributed_tracing;
@@ -157,7 +157,7 @@ export class DT {
   }
 
   isDtEnabled() {
-    var dt = getConfigurationValue(this.agentIdentifier, "distributed_tracing");
+    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing');
     if (dt) {
       return !!dt.enabled;
     }
@@ -166,7 +166,7 @@ export class DT {
 
   // exclude the newrelic header for same-origin calls
   excludeNewrelicHeader() {
-    var dt = getConfigurationValue(this.agentIdentifier, "distributed_tracing");
+    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing');
     if (dt) {
       return !!dt.exclude_newrelic_header;
     }
@@ -174,7 +174,7 @@ export class DT {
   }
 
   useNewrelicHeaderForCors() {
-    var dt = getConfigurationValue(this.agentIdentifier, "distributed_tracing");
+    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing');
     if (dt) {
       return dt.cors_use_newrelic_header !== false;
     }
@@ -182,7 +182,7 @@ export class DT {
   }
 
   useTraceContextHeadersForCors() {
-    var dt = getConfigurationValue(this.agentIdentifier, "distributed_tracing");
+    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing');
     if (dt) {
       return !!dt.cors_use_tracecontext_headers;
     }

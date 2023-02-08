@@ -10,5 +10,5 @@
 //     Calls the original window.onerror handler.
 //       Throws the error that reports back that it was called.
 (function uncaughtError() {
-  throw new Error("uncaught error");
+  throw new Error('uncaught error');
 })();

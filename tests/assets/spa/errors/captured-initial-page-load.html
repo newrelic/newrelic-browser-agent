@@ -13,8 +13,8 @@
     <p>Tests the interaction between Browser Interactions and Errors on the initial page load.</p>
 
     <script>
-      newrelic.interaction().createTracer("custom", function () {
-        throw new Error("initial page load error");
+      newrelic.interaction().createTracer('custom', function () {
+        throw new Error('initial page load error');
       })();
     </script>
   </body>

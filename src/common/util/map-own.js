@@ -7,7 +7,7 @@ var has = Object.prototype.hasOwnProperty;
 
 export function mapOwn(obj, fn) {
   var results = [];
-  var key = "";
+  var key = '';
   var i = 0;
 
   for (key in obj) {

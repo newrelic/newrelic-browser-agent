@@ -1,2 +1,2 @@
-const matcher = require("jil/util/browser-matcher");
-module.exports = matcher.withFeature("fetch");
+const matcher = require('jil/util/browser-matcher');
+module.exports = matcher.withFeature('fetch');

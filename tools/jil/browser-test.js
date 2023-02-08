@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var through = require("through");
-var tape = require("tape");
+var through = require('through');
+var tape = require('tape');
 
-window.$ = require("jquery");
+window.$ = require('jquery');
 
 var out = through(
   function (data) {
-    window.$("#tap").append(data);
+    window.$('#tap').append(data);
     if (test._exitCode) window._jilUnitDone = true;
   },
   function () {
@@ -25,7 +25,7 @@ module.exports = runTest;
 
 function runTest(name, supported, fn) {
   var args;
-  if (typeof supported === "function") {
+  if (typeof supported === 'function') {
     fn = supported;
     args = [name, wrappedTest];
   } else {
@@ -46,6 +46,6 @@ runTest.log = log;
 
 function log() {
   for (var i = 0; i < arguments.length; i++) {
-    out.write(arguments[i] + "\n");
+    out.write(arguments[i] + '\n');
   }
 }

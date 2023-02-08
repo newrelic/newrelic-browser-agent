@@ -3,21 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
-jil.browserTest("Promise.resolve", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('Promise.resolve', function (t) {
+  let helpers = require('./helpers');
 
   let validator = new helpers.InteractionValidator({
     attrs: {
-      trigger: "click",
+      trigger: 'click',
     },
-    name: "interaction",
+    name: 'interaction',
     children: [
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "timer",
+          name: 'timer',
         },
         children: [],
       },
@@ -33,9 +33,9 @@ jil.browserTest("Promise.resolve", function (t) {
 
     promise.then(function (val) {
       setTimeout(
-        newrelic.interaction().createTracer("timer", function () {
-          t.equal(val, 10, "promise should yield correct value");
-          window.location.hash = "#" + Math.random();
+        newrelic.interaction().createTracer('timer', function () {
+          t.equal(val, 10, 'promise should yield correct value');
+          window.location.hash = '#' + Math.random();
           cb();
         })
       );
@@ -43,32 +43,32 @@ jil.browserTest("Promise.resolve", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
-    t.ok(interaction.root.end, "interaction should be finished");
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
+    t.ok(interaction.root.end, 'interaction should be finished');
     validator.validate(t, interaction);
     t.end();
   }
 });
 
-jil.browserTest("promise.resolve with Promise argument", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('promise.resolve with Promise argument', function (t) {
+  let helpers = require('./helpers');
 
   let validator = new helpers.InteractionValidator({
     attrs: {
-      trigger: "click",
+      trigger: 'click',
     },
-    name: "interaction",
+    name: 'interaction',
     children: [
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "timer",
+          name: 'timer',
         },
         children: [
           {
-            type: "customTracer",
+            type: 'customTracer',
             attrs: {
-              name: "timer",
+              name: 'timer',
             },
             children: [],
           },
@@ -84,7 +84,7 @@ jil.browserTest("promise.resolve with Promise argument", function (t) {
   function onInteractionStart(cb) {
     var p0 = new Promise(function (resolve, reject) {
       setTimeout(
-        newrelic.interaction().createTracer("timer", function () {
+        newrelic.interaction().createTracer('timer', function () {
           resolve(123);
         })
       );
@@ -92,9 +92,9 @@ jil.browserTest("promise.resolve with Promise argument", function (t) {
 
     Promise.resolve(p0).then(function (val) {
       setTimeout(
-        newrelic.interaction().createTracer("timer", function () {
-          t.equal(val, 123, "promise should yield correct value");
-          window.location.hash = "#" + Math.random();
+        newrelic.interaction().createTracer('timer', function () {
+          t.equal(val, 123, 'promise should yield correct value');
+          window.location.hash = '#' + Math.random();
           cb();
         })
       );
@@ -102,8 +102,8 @@ jil.browserTest("promise.resolve with Promise argument", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
-    t.ok(interaction.root.end, "interaction should be finished");
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
+    t.ok(interaction.root.end, 'interaction should be finished');
     validator.validate(t, interaction);
     t.end();
   }

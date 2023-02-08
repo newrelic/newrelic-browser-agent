@@ -1,8 +1,8 @@
-const babelEnv = require("./babel-env-vars");
+const babelEnv = require('./babel-env-vars');
 
 const presets = [
   [
-    "@babel/preset-env",
+    '@babel/preset-env',
     {
       targets: {
         node: true,

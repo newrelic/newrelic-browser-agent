@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
-const { getErrorsFromResponse } = require("../err/assertion-helpers");
-const { workerTypes, typeToMatcher } = require("./helpers");
+const testDriver = require('../../../tools/jil/index');
+const { getErrorsFromResponse } = require('../err/assertion-helpers');
+const { workerTypes, typeToMatcher } = require('./helpers');
 
 const init = {
   jserrors: {
@@ -41,14 +41,14 @@ function setIntervalErrorTest(type, matcher) {
       .then(([response]) => {
         const actualErrors = getErrorsFromResponse(response, browser);
 
-        t.equal(actualErrors.length, 1, "exactly one error");
+        t.equal(actualErrors.length, 1, 'exactly one error');
 
         let actualError = actualErrors[0];
-        t.equal(actualError.metrics.count, 1, "Should have seen 1 error");
-        t.ok(actualError.metrics.time.t > 0, "Should have a valid timestamp");
-        t.equal(actualError.params.exceptionClass, "Error", "Should be Error class");
-        t.equal(actualError.params.message, "interval callback", "Should have correct message");
-        t.ok(actualError.params.stack_trace, "Should have a stack trace");
+        t.equal(actualError.metrics.count, 1, 'Should have seen 1 error');
+        t.ok(actualError.metrics.time.t > 0, 'Should have a valid timestamp');
+        t.equal(actualError.params.exceptionClass, 'Error', 'Should be Error class');
+        t.equal(actualError.params.message, 'interval callback', 'Should have correct message');
+        t.ok(actualError.params.stack_trace, 'Should have a stack trace');
         t.end();
       })
       .catch(fail);

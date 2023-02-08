@@ -5,12 +5,12 @@
  * @design https://newrelic.atlassian.net/wiki/spaces/INST/pages/2522513791/JSESSIONID+Cookie+Change+Design+Document
  * @environment Browser script
  */
-import { generateRandomHexString } from "../ids/unique-id";
-import { isBrowserScope } from "../util/global-scope";
+import { generateRandomHexString } from '../ids/unique-id';
+import { isBrowserScope } from '../util/global-scope';
 
 export { getCurrentSessionIdOrMakeNew };
 
-const SESS_ID = "NRBA_SESSION_ID"; // prevents potential key collisions in session storage
+const SESS_ID = 'NRBA_SESSION_ID'; // prevents potential key collisions in session storage
 
 /**
  * @returns {string} This tab|window's session identifier, or a new ID if not found in storage

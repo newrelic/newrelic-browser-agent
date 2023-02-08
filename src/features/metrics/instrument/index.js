@@ -1,19 +1,19 @@
-import { handle } from "../../../common/event-emitter/handle";
-import { registerHandler } from "../../../common/event-emitter/register-handler";
-import { InstrumentBase } from "../../utils/instrument-base";
-import { getFrameworks } from "../../../common/metrics/framework-detection";
-import { protocol } from "../../../common/url/protocol";
-import { getRules, validateRules } from "../../../common/util/obfuscate";
-import { VERSION } from "../../../common/constants/environment-variables";
-import { onDOMContentLoaded } from "../../../common/window/load";
-import { windowAddEventListener } from "../../../common/event-listener/event-listener-opts";
-import { isBrowserScope } from "../../../common/util/global-scope";
-import { getRuntime } from "../../../common/config/config";
-import { insertSupportMetrics } from "./workers-helper";
-import { FEATURE_NAME } from "../constants";
+import { handle } from '../../../common/event-emitter/handle';
+import { registerHandler } from '../../../common/event-emitter/register-handler';
+import { InstrumentBase } from '../../utils/instrument-base';
+import { getFrameworks } from '../../../common/metrics/framework-detection';
+import { protocol } from '../../../common/url/protocol';
+import { getRules, validateRules } from '../../../common/util/obfuscate';
+import { VERSION } from '../../../common/constants/environment-variables';
+import { onDOMContentLoaded } from '../../../common/window/load';
+import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts';
+import { isBrowserScope } from '../../../common/util/global-scope';
+import { getRuntime } from '../../../common/config/config';
+import { insertSupportMetrics } from './workers-helper';
+import { FEATURE_NAME } from '../constants';
 
-var SUPPORTABILITY_METRIC = "sm";
-var CUSTOM_METRIC = "cm";
+var SUPPORTABILITY_METRIC = 'sm';
+var CUSTOM_METRIC = 'cm';
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME;
@@ -25,12 +25,12 @@ export class Instrument extends InstrumentBase {
     this.eachSessionChecks(); // the start of every time user engages with page
     // listen for messages from features and capture them
     registerHandler(
-      "record-supportability",
+      'record-supportability',
       (...args) => this.recordSupportability(...args),
       this.featureName,
       this.ee
     );
-    registerHandler("record-custom", (...args) => this.recordCustom(...args), this.featureName, this.ee);
+    registerHandler('record-custom', (...args) => this.recordCustom(...args), this.featureName, this.ee);
 
     this.importAggregator();
   }
@@ -43,7 +43,7 @@ export class Instrument extends InstrumentBase {
    */
   recordSupportability(name, value) {
     var opts = [SUPPORTABILITY_METRIC, name, { name: name }, value];
-    handle("storeMetric", opts, null, this.featureName, this.ee);
+    handle('storeMetric', opts, null, this.featureName, this.ee);
     return opts;
   }
   /**
@@ -55,7 +55,7 @@ export class Instrument extends InstrumentBase {
   recordCustom(name, metrics) {
     var opts = [CUSTOM_METRIC, name, { name: name }, metrics];
 
-    handle("storeEventMetrics", opts, null, this.featureName, this.ee);
+    handle('storeEventMetrics', opts, null, this.featureName, this.ee);
     return opts;
   }
 
@@ -71,20 +71,20 @@ export class Instrument extends InstrumentBase {
     if (isBrowserScope)
       onDOMContentLoaded(() => {
         getFrameworks().forEach((framework) => {
-          this.recordSupportability("Framework/" + framework + "/Detected");
+          this.recordSupportability('Framework/' + framework + '/Detected');
         });
       });
 
     // file protocol detection
     if (protocol.isFileProtocol()) {
-      this.recordSupportability("Generic/FileProtocol/Detected");
+      this.recordSupportability('Generic/FileProtocol/Detected');
       protocol.supportabilityMetricSent = true;
     }
 
     // obfuscation rules detection
     const rules = getRules(this.agentIdentifier);
-    if (rules.length > 0) this.recordSupportability("Generic/Obfuscate/Detected");
-    if (rules.length > 0 && !validateRules(rules)) this.recordSupportability("Generic/Obfuscate/Invalid");
+    if (rules.length > 0) this.recordSupportability('Generic/Obfuscate/Detected');
+    if (rules.length > 0 && !validateRules(rules)) this.recordSupportability('Generic/Obfuscate/Invalid');
 
     // polyfilled feature detection
     if (isBrowserScope) this.reportPolyfillsNeeded();
@@ -104,8 +104,8 @@ export class Instrument extends InstrumentBase {
     if (!isBrowserScope) return;
 
     // [Temporary] Report restores from BFCache to NR1 while feature flag is in place in lieu of sending pageshow events.
-    windowAddEventListener("pageshow", (evt) => {
-      if (evt.persisted) this.recordSupportability("Generic/BFCache/PageRestored");
+    windowAddEventListener('pageshow', (evt) => {
+      if (evt.persisted) this.recordSupportability('Generic/BFCache/PageRestored');
       return;
     });
   }

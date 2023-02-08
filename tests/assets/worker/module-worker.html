@@ -12,21 +12,21 @@
 
   <body>
     <script type="text/javascript">
-      const worker = new Worker("./js/module-worker.js", { type: "module" });
+      const worker = new Worker('./js/module-worker.js', { type: 'module' });
 
       const opts = NREUM;
 
-      worker.postMessage({ type: "startAgent", payload: opts });
+      worker.postMessage({ type: 'startAgent', payload: opts });
 
       worker.onmessage = function ({ data: { type } }) {
-        if (type === "ready") {
+        if (type === 'ready') {
           workerCommands = window.workerCommands || [];
-          workerCommands.forEach((command) => worker.postMessage({ type: "command", fn: command }));
+          workerCommands.forEach((command) => worker.postMessage({ type: 'command', fn: command }));
         }
       };
 
       worker.onerror = function (e) {
-        console.log("worker error -- ", e);
+        console.log('worker error -- ', e);
       };
     </script>
   </body>

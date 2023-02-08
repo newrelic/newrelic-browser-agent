@@ -3,17 +3,17 @@ function observe(t, finishedCallback, resultCallback) {
   observeTapeTest(t, false);
 
   function observeTapeTest(t, isChild) {
-    t.on("end", function () {
+    t.on('end', function () {
       onTestFinished(t, !!isChild);
     });
 
-    t.on("result", function (result) {
+    t.on('result', function (result) {
       if (resultCallback) {
         resultCallback(result);
       }
     });
 
-    t.on("test", function (childTest) {
+    t.on('test', function (childTest) {
       observeTapeTest(childTest, true);
     });
   }
@@ -25,7 +25,7 @@ function observe(t, finishedCallback, resultCallback) {
 
     if (!isChild) {
       if (!plannedOk) {
-        t.once("result", function () {
+        t.once('result', function () {
           if (t.error) {
             allOk = false;
           }

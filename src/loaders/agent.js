@@ -1,14 +1,14 @@
 // loader files
-import { getEnabledFeatures } from "./features/enabled-features";
-import { configure } from "./configure/configure";
-import { getFeatureDependencyNames } from "./features/featureDependencies";
-import { featurePriority } from "./features/features";
+import { getEnabledFeatures } from './features/enabled-features';
+import { configure } from './configure/configure';
+import { getFeatureDependencyNames } from './features/featureDependencies';
+import { featurePriority } from './features/features';
 // common files
-import { Aggregator } from "../common/aggregate/aggregator";
-import { gosNREUMInitializedAgents } from "../common/window/nreum";
-import { generateRandomHexString } from "../common/ids/unique-id";
-import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from "../common/config/config";
-import { warn } from "../common/util/console";
+import { Aggregator } from '../common/aggregate/aggregator';
+import { gosNREUMInitializedAgents } from '../common/window/nreum';
+import { generateRandomHexString } from '../common/ids/unique-id';
+import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../common/config/config';
+import { warn } from '../common/util/console';
 
 export class Agent {
   constructor(options, agentIdentifier = generateRandomHexString(16)) {
@@ -21,7 +21,7 @@ export class Agent {
     this.desiredFeatures = options.features || [];
     this.desiredFeatures.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName]);
 
-    Object.assign(this, configure(this.agentIdentifier, options, options.loaderType || "agent"));
+    Object.assign(this, configure(this.agentIdentifier, options, options.loaderType || 'agent'));
 
     this.start();
   }
@@ -51,7 +51,7 @@ export class Agent {
           this.features[f.featureName] = new f(this.agentIdentifier, this.sharedAggregator);
         }
       });
-      gosNREUMInitializedAgents(this.agentIdentifier, this.features, "features");
+      gosNREUMInitializedAgents(this.agentIdentifier, this.features, 'features');
     } catch (err) {
       warn(`Failed to initialize instrument classes`, err);
       // unwrap window apis to their originals

@@ -5,13 +5,13 @@
 
 /* eslint-disable no-useless-escape */
 
-const through = require("through");
-const inspect = require("object-inspect");
-const defined = require("defined");
-const has = require("has");
-const bind = require("function-bind");
-const { EventEmitter } = require("events");
-const { Test } = require("tape");
+const through = require('through');
+const inspect = require('object-inspect');
+const defined = require('defined');
+const has = require('has');
+const bind = require('function-bind');
+const { EventEmitter } = require('events');
+const { Test } = require('tape');
 
 var regexpTest = bind.call(Function.call, RegExp.prototype.test);
 var yamlIndicators = /:|\-|\?/;
@@ -82,7 +82,7 @@ class TestHarness extends EventEmitter {
 
   run() {
     if (this.closed) {
-      throw new Error("TestHarness has already closed.");
+      throw new Error('TestHarness has already closed.');
     }
 
     let self = this;
@@ -90,7 +90,7 @@ class TestHarness extends EventEmitter {
     this.running = true;
 
     if (!this.started) {
-      this.stream.push("TAP version 13\n");
+      this.stream.push('TAP version 13\n');
       this.started = true;
     }
 
@@ -101,7 +101,7 @@ class TestHarness extends EventEmitter {
       while (t) {
         t.run();
         if (!t.ended) {
-          return t.once("end", function () {
+          return t.once('end', function () {
             nextTick(next);
           });
         }
@@ -130,11 +130,11 @@ class TestHarness extends EventEmitter {
     let plannedOk = true;
     let handledPlannedAssertion = false;
 
-    t.once("prerun", function () {
-      self._write("# " + t.name + "\n");
+    t.once('prerun', function () {
+      self._write('# ' + t.name + '\n');
     });
 
-    t.on("result", function (res) {
+    t.on('result', function (res) {
       if (ended) {
         if (!plannedOk && !handledPlannedAssertion) {
           handledPlannedAssertion = true;
@@ -145,18 +145,18 @@ class TestHarness extends EventEmitter {
       }
     });
 
-    t.on("test", function (st) {
+    t.on('test', function (st) {
       self._watch(st);
     });
 
-    t.once("end", function () {
+    t.once('end', function () {
       ended = true;
       plannedOk = !t._plan || t._plan === t.assertCount;
     });
 
     function onResult(res) {
-      if (typeof res === "string") {
-        self._write("# " + res + "\n");
+      if (typeof res === 'string') {
+        self._write('# ' + res + '\n');
         return;
       }
       self._write(self._encodeResult(res, self.count + self.bufferCounts.count + 1));
@@ -172,7 +172,7 @@ class TestHarness extends EventEmitter {
       }
 
       if (!res.ok) {
-        self.emit("fail");
+        self.emit('fail');
       }
     }
   }
@@ -183,19 +183,19 @@ class TestHarness extends EventEmitter {
 
   _close() {
     var self = this;
-    if (self.closed) self.stream.emit("error", new Error("ALREADY CLOSED"));
+    if (self.closed) self.stream.emit('error', new Error('ALREADY CLOSED'));
     self.closed = true;
 
     // Specifying the plan is optional, and it was here only because the `tape-parser`
     // module will flag the whole test as not ok. This is, however, not needed, and
     // including it makes testing more difficult (when retries output multiple plans)
-    self._write("# tests " + self.count + "\n");
-    self._write("# pass  " + self.pass + "\n");
-    if (self.fail) self._write("# fail  " + self.fail + "\n");
-    else self._write("\n# ok\n");
+    self._write('# tests ' + self.count + '\n');
+    self._write('# pass  ' + self.pass + '\n');
+    if (self.fail) self._write('# fail  ' + self.fail + '\n');
+    else self._write('\n# ok\n');
 
     self.stream.end();
-    self.emit("done");
+    self.emit('done');
   }
 
   _write(data) {
@@ -207,50 +207,50 @@ class TestHarness extends EventEmitter {
   }
 
   _encodeResult(res, count) {
-    var output = "";
-    output += (res.ok ? "ok " : "not ok ") + count;
-    output += res.name ? " " + res.name.toString().replace(/\s+/g, " ") : "";
+    var output = '';
+    output += (res.ok ? 'ok ' : 'not ok ') + count;
+    output += res.name ? ' ' + res.name.toString().replace(/\s+/g, ' ') : '';
 
-    if (res.skip) output += " # SKIP";
-    else if (res.todo) output += " # TODO";
+    if (res.skip) output += ' # SKIP';
+    else if (res.todo) output += ' # TODO';
 
-    output += "\n";
+    output += '\n';
     if (res.ok) return output;
 
-    var outer = "  ";
-    var inner = outer + "  ";
-    output += outer + "---\n";
-    output += inner + "operator: " + res.operator + "\n";
+    var outer = '  ';
+    var inner = outer + '  ';
+    output += outer + '---\n';
+    output += inner + 'operator: ' + res.operator + '\n';
 
-    if (has(res, "expected") || has(res, "actual")) {
+    if (has(res, 'expected') || has(res, 'actual')) {
       var ex = inspect(res.expected, { depth: res.objectPrintDepth });
       var ac = inspect(res.actual, { depth: res.objectPrintDepth });
 
       if (Math.max(ex.length, ac.length) > 65 || invalidYaml(ex) || invalidYaml(ac)) {
-        output += inner + "expected: |-\n" + inner + "  " + ex + "\n";
-        output += inner + "actual: |-\n" + inner + "  " + ac + "\n";
+        output += inner + 'expected: |-\n' + inner + '  ' + ex + '\n';
+        output += inner + 'actual: |-\n' + inner + '  ' + ac + '\n';
       } else {
-        output += inner + "expected: " + ex + "\n";
-        output += inner + "actual:   " + ac + "\n";
+        output += inner + 'expected: ' + ex + '\n';
+        output += inner + 'actual:   ' + ac + '\n';
       }
     }
     if (res.at) {
-      output += inner + "at: " + res.at + "\n";
+      output += inner + 'at: ' + res.at + '\n';
     }
 
     var actualStack =
-      res.actual && (typeof res.actual === "object" || typeof res.actual === "function") ? res.actual.stack : undefined;
+      res.actual && (typeof res.actual === 'object' || typeof res.actual === 'function') ? res.actual.stack : undefined;
     var errorStack = res.error && res.error.stack;
     var stack = defined(actualStack, errorStack);
     if (stack) {
-      var lines = String(stack).split("\n");
-      output += inner + "stack: |-\n";
+      var lines = String(stack).split('\n');
+      output += inner + 'stack: |-\n';
       for (var i = 0; i < lines.length; i++) {
-        output += inner + "  " + lines[i] + "\n";
+        output += inner + '  ' + lines[i] + '\n';
       }
     }
 
-    output += outer + "...\n";
+    output += outer + '...\n';
     return output;
   }
 }

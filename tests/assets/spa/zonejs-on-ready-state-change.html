@@ -17,10 +17,10 @@
       xhr.onreadystatechange = function () {
         counts[xhr.readyState]++;
       };
-      xhr.open("GET", "/");
+      xhr.open('GET', '/');
       xhr.send();
       var interaction = newrelic.interaction().onEnd(function () {
-        interaction.setAttribute("counts", counts);
+        interaction.setAttribute('counts', counts);
       });
     </script>
   </body>

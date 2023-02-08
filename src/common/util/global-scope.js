@@ -1,16 +1,16 @@
 /* global globalThis, WorkerGlobalScope, WorkerNavigator */
 
-export const isBrowserScope = Boolean(typeof window !== "undefined" && window.document);
+export const isBrowserScope = Boolean(typeof window !== 'undefined' && window.document);
 
 export const isWorkerScope = Boolean(
-  typeof WorkerGlobalScope !== "undefined" && self.navigator instanceof WorkerNavigator
+  typeof WorkerGlobalScope !== 'undefined' && self.navigator instanceof WorkerNavigator
 );
 
 export let globalScope = (() => {
   if (isBrowserScope) {
     return window;
   } else if (isWorkerScope) {
-    if (typeof globalThis !== "undefined" && globalThis instanceof WorkerGlobalScope) {
+    if (typeof globalThis !== 'undefined' && globalThis instanceof WorkerGlobalScope) {
       return globalThis;
     } else if (self instanceof WorkerGlobalScope) {
       return self;
@@ -35,7 +35,7 @@ export function resetScope() {
   if (isBrowserScope) {
     globalScope = window;
   } else if (isWorkerScope) {
-    if (typeof globalThis !== "undefined" && globalThis instanceof WorkerGlobalScope) {
+    if (typeof globalThis !== 'undefined' && globalThis instanceof WorkerGlobalScope) {
       globalScope = globalThis;
     } else if (self instanceof WorkerGlobalScope) {
       globalScope = self;

@@ -1,7 +1,7 @@
-import { getInfo, isConfigured, getRuntime } from "../../common/config/config";
-import { ee } from "../../common/event-emitter/contextual-ee";
-import { configure } from "../../loaders/configure/configure";
-import { gosCDN } from "../../common/window/nreum";
+import { getInfo, isConfigured, getRuntime } from '../../common/config/config';
+import { ee } from '../../common/event-emitter/contextual-ee';
+import { configure } from '../../loaders/configure/configure';
+import { gosCDN } from '../../common/window/nreum';
 
 export class FeatureBase {
   constructor(agentIdentifier, aggregator, featureName) {

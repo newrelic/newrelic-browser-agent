@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("jil");
-const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require("./assertion-helpers");
+const testDriver = require('jil');
+const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require('./assertion-helpers');
 
-let supported = testDriver.Matcher.withFeature("notInternetExplorer");
+let supported = testDriver.Matcher.withFeature('notInternetExplorer');
 const init = {
   page_view_timing: {
     enabled: false,
@@ -21,11 +21,11 @@ const init = {
 };
 
 testDriver.test(
-  "NR-40043: Multiple errors with noticeError and unique messages should not bucket",
+  'NR-40043: Multiple errors with noticeError and unique messages should not bucket',
   supported,
   function (t, browser, router) {
-    const assetURL = router.assetURL("js-errors-noticeerror-bucketing.html", {
-      loader: "full",
+    const assetURL = router.assetURL('js-errors-noticeerror-bucketing.html', {
+      loader: 'full',
       init,
     });
     const rumPromise = router.expectRum();
@@ -34,20 +34,20 @@ testDriver.test(
 
     Promise.all([errPromise, rumPromise, loadPromise])
       .then(([errors]) => {
-        assertErrorAttributes(t, errors.query, "has errors");
+        assertErrorAttributes(t, errors.query, 'has errors');
 
         const actualErrors = getErrorsFromResponse(errors, browser);
 
         let expectedErrors = [...Array(8)].map((_, i) => ({
-          name: "Error",
+          name: 'Error',
           message: `Error message ${i + 1}`,
           stack: [
             {
-              u: "<inline>",
+              u: '<inline>',
               l: 37,
             },
             {
-              u: "<inline>",
+              u: '<inline>',
               l: 36,
             },
           ],
@@ -66,13 +66,13 @@ testDriver.test(
 );
 
 testDriver.test(
-  "NR-40043: Multiple errors with noticeError and unique messages should not bucket when retrying due to 429",
+  'NR-40043: Multiple errors with noticeError and unique messages should not bucket when retrying due to 429',
   supported,
   function (t, browser, router) {
-    router.scheduleResponse("jserrors", 429);
+    router.scheduleResponse('jserrors', 429);
 
-    const assetURL = router.assetURL("js-errors-noticeerror-bucketing.html", {
-      loader: "full",
+    const assetURL = router.assetURL('js-errors-noticeerror-bucketing.html', {
+      loader: 'full',
       init,
     });
     const rumPromise = router.expectRum();
@@ -82,16 +82,16 @@ testDriver.test(
 
     Promise.all([errPromise, rumPromise, loadPromise])
       .then(([errors]) => {
-        t.equal(errors.res.statusCode, 429, "server responded with 429");
+        t.equal(errors.res.statusCode, 429, 'server responded with 429');
         firstBody = JSON.parse(errors.body).err;
         return router.expectErrors();
       })
       .then((errors) => {
         let secondBody = JSON.parse(errors.body).err;
 
-        t.equal(errors.res.statusCode, 200, "server responded with 200");
-        t.deepEqual(secondBody, firstBody, "post body in retry harvest should be the same as in the first harvest");
-        t.equal(router.seenRequests.errors_post, 2, "got two jserrors harvest requests");
+        t.equal(errors.res.statusCode, 200, 'server responded with 200');
+        t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest');
+        t.equal(router.seenRequests.errors_post, 2, 'got two jserrors harvest requests');
 
         t.end();
       })
@@ -105,11 +105,11 @@ testDriver.test(
 );
 
 testDriver.test(
-  "NEWRELIC-3788: Multiple identical errors from the same line but different columns should not be bucketed",
+  'NEWRELIC-3788: Multiple identical errors from the same line but different columns should not be bucketed',
   supported,
   function (t, browser, router) {
-    const assetURL = router.assetURL("js-error-column-bucketing.html", {
-      loader: "full",
+    const assetURL = router.assetURL('js-error-column-bucketing.html', {
+      loader: 'full',
       init,
     });
     const rumPromise = router.expectRum();
@@ -118,12 +118,12 @@ testDriver.test(
 
     Promise.all([errPromise, rumPromise, loadPromise])
       .then(([errors]) => {
-        assertErrorAttributes(t, errors.query, "has errors");
+        assertErrorAttributes(t, errors.query, 'has errors');
 
         const actualErrors = getErrorsFromResponse(errors, browser);
-        t.ok(actualErrors.length === 2, "two errors reported");
-        t.ok(typeof actualErrors[0].params.stack_trace === "string", "first error has stack trace");
-        t.ok(typeof actualErrors[1].params.stack_trace === "string", "second error has stack trace");
+        t.ok(actualErrors.length === 2, 'two errors reported');
+        t.ok(typeof actualErrors[0].params.stack_trace === 'string', 'first error has stack trace');
+        t.ok(typeof actualErrors[1].params.stack_trace === 'string', 'second error has stack trace');
 
         t.end();
       })
@@ -137,13 +137,13 @@ testDriver.test(
 );
 
 testDriver.test(
-  "NEWRELIC-3788: Multiple identical errors from the same line but different columns should not be bucketed when retrying due to 429",
+  'NEWRELIC-3788: Multiple identical errors from the same line but different columns should not be bucketed when retrying due to 429',
   supported,
   function (t, browser, router) {
-    router.scheduleResponse("jserrors", 429);
+    router.scheduleResponse('jserrors', 429);
 
-    const assetURL = router.assetURL("js-error-column-bucketing.html", {
-      loader: "full",
+    const assetURL = router.assetURL('js-error-column-bucketing.html', {
+      loader: 'full',
       init,
     });
     const rumPromise = router.expectRum();
@@ -153,16 +153,16 @@ testDriver.test(
 
     Promise.all([errPromise, rumPromise, loadPromise])
       .then(([errors]) => {
-        t.equal(errors.res.statusCode, 429, "server responded with 429");
+        t.equal(errors.res.statusCode, 429, 'server responded with 429');
         firstBody = JSON.parse(errors.body).err;
         return router.expectErrors();
       })
       .then((errors) => {
         let secondBody = JSON.parse(errors.body).err;
 
-        t.equal(errors.res.statusCode, 200, "server responded with 200");
-        t.deepEqual(secondBody, firstBody, "post body in retry harvest should be the same as in the first harvest");
-        t.equal(router.seenRequests.errors_post, 2, "got two jserrors harvest requests");
+        t.equal(errors.res.statusCode, 200, 'server responded with 200');
+        t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest');
+        t.equal(router.seenRequests.errors_post, 2, 'got two jserrors harvest requests');
 
         t.end();
       })

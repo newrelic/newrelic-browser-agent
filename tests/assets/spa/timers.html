@@ -13,7 +13,7 @@
     <a id="pushStateButton" href="#">click me to start interaction</a>
     <p id="counter"></p>
     <script type="text/javascript">
-      document.body.addEventListener("click", changeUrl);
+      document.body.addEventListener('click', changeUrl);
       function changeUrl(ev) {
         ev.preventDefault();
         doTick(50);
@@ -21,7 +21,7 @@
 
       function doTick(n) {
         if (!n) {
-          return (window.location.hash = "#" + Math.random());
+          return (window.location.hash = '#' + Math.random());
         }
         setTimeout(function () {
           doTick(n - 1);

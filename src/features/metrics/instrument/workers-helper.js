@@ -1,6 +1,6 @@
 export { insertSupportMetrics }; // export list
-import { globalScope, isWorkerScope } from "../../../common/util/global-scope";
-import { warn } from "../../../common/util/console";
+import { globalScope, isWorkerScope } from '../../../common/util/global-scope';
+import { warn } from '../../../common/util/console';
 
 /**
  * True for each Worker type supported in browser's execution context. Not all browser versions may support certain Workers or options however.
@@ -34,35 +34,35 @@ function insertSupportMetrics(report) {
   if (origWorker) return;
 
   if (!workersApiIsSupported.dedicated) {
-    reportUnavailable("All");
+    reportUnavailable('All');
     return; // similarly, if dedicated is n/a, none of them are supported so quit
   } else {
     origWorker = Worker;
     try {
-      globalScope.Worker = extendWorkerConstructor(origWorker, "Dedicated");
+      globalScope.Worker = extendWorkerConstructor(origWorker, 'Dedicated');
     } catch (e) {
-      handleInsertionError(e, "Dedicated");
+      handleInsertionError(e, 'Dedicated');
     }
   }
 
   if (!workersApiIsSupported.shared) {
-    reportUnavailable("Shared");
+    reportUnavailable('Shared');
   } else {
     origSharedWorker = SharedWorker;
     try {
-      globalScope.SharedWorker = extendWorkerConstructor(origSharedWorker, "Shared");
+      globalScope.SharedWorker = extendWorkerConstructor(origSharedWorker, 'Shared');
     } catch (e) {
-      handleInsertionError(e, "Shared");
+      handleInsertionError(e, 'Shared');
     }
   }
   if (!workersApiIsSupported.service) {
-    reportUnavailable("Service");
+    reportUnavailable('Service');
   } else {
     origServiceWorkerCreate = navigator.serviceWorker.register;
     try {
       globalScope.navigator.serviceWorker.register = extendServiceCreation(origServiceWorkerCreate);
     } catch (e) {
-      handleInsertionError(e, "Service");
+      handleInsertionError(e, 'Service');
     }
   }
   return;
@@ -75,7 +75,7 @@ function insertSupportMetrics(report) {
    * @returns Proxy worker that intercepts the original constructor
    */
   function extendWorkerConstructor(origClass, workerType) {
-    if (typeof Proxy === "undefined") {
+    if (typeof Proxy === 'undefined') {
       return origClass;
     }
 
@@ -95,7 +95,7 @@ function insertSupportMetrics(report) {
    */
   function extendServiceCreation(origFunc) {
     return (...args) => {
-      reportWorkerCreationAttempt("Service", args[1]?.type);
+      reportWorkerCreationAttempt('Service', args[1]?.type);
       return origFunc.apply(navigator.serviceWorker, args); // register() has to be rebound to the ServiceWorkerContainer object
     };
   }
@@ -107,7 +107,7 @@ function insertSupportMetrics(report) {
     report(`Workers/${workerType}/Unavailable`);
   }
   function reportWorkerCreationAttempt(workerType, optionType) {
-    if (optionType === "module") {
+    if (optionType === 'module') {
       report(`Workers/${workerType}/Module`);
     } else {
       report(`Workers/${workerType}/Classic`);

@@ -2,15 +2,15 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { handle } from "../../../common/event-emitter/handle";
-import { subscribeToVisibilityChange, initializeHiddenTime } from "../../../common/window/page-visibility";
-import { documentAddEventListener, windowAddEventListener } from "../../../common/event-listener/event-listener-opts";
-import { getOffset, now } from "../../../common/timing/now";
-import { originals } from "../../../common/config/config";
-import { InstrumentBase } from "../../utils/instrument-base";
-import { FEATURE_NAME } from "../constants";
-import { FEATURE_NAMES } from "../../../loaders/features/features";
-import { isBrowserScope } from "../../../common/util/global-scope";
+import { handle } from '../../../common/event-emitter/handle';
+import { subscribeToVisibilityChange, initializeHiddenTime } from '../../../common/window/page-visibility';
+import { documentAddEventListener, windowAddEventListener } from '../../../common/event-listener/event-listener-opts';
+import { getOffset, now } from '../../../common/timing/now';
+import { originals } from '../../../common/config/config';
+import { InstrumentBase } from '../../utils/instrument-base';
+import { FEATURE_NAME } from '../constants';
+import { FEATURE_NAMES } from '../../../loaders/features/features';
+import { isBrowserScope } from '../../../common/util/global-scope';
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME;
@@ -24,11 +24,11 @@ export class Instrument extends InstrumentBase {
     this.clsPerformanceObserver;
     this.fiRecorded = false;
 
-    if ("PerformanceObserver" in window && typeof window.PerformanceObserver === "function") {
+    if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {
       // passing in an unknown entry type to observer could throw an exception
       this.performanceObserver = new PerformanceObserver((...args) => this.perfObserver(...args));
       try {
-        this.performanceObserver.observe({ entryTypes: ["paint"] });
+        this.performanceObserver.observe({ entryTypes: ['paint'] });
       } catch (e) {
         // do nothing
       }
@@ -36,7 +36,7 @@ export class Instrument extends InstrumentBase {
       this.lcpPerformanceObserver = new PerformanceObserver((...args) => this.lcpObserver(...args));
       try {
         this.lcpPerformanceObserver.observe({
-          entryTypes: ["largest-contentful-paint"],
+          entryTypes: ['largest-contentful-paint'],
         });
       } catch (e) {
         // do nothing
@@ -45,7 +45,7 @@ export class Instrument extends InstrumentBase {
       this.clsPerformanceObserver = new PerformanceObserver((...args) => this.clsObserver(...args));
       try {
         this.clsPerformanceObserver.observe({
-          type: "layout-shift",
+          type: 'layout-shift',
           buffered: true,
         });
       } catch (e) {
@@ -55,7 +55,7 @@ export class Instrument extends InstrumentBase {
 
     // first interaction and first input delay
     this.fiRecorded = false;
-    var allowedEventTypes = ["click", "keydown", "mousedown", "pointerdown", "touchstart"];
+    var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart'];
     allowedEventTypes.forEach((e) => {
       documentAddEventListener(e, (...args) => this.captureInteraction(...args));
     });
@@ -64,12 +64,12 @@ export class Instrument extends InstrumentBase {
     subscribeToVisibilityChange(() => {
       // time is only recorded to be used for short-circuit logic in the observer callbacks
       this.pageHiddenTime = now();
-      handle("docHidden", [this.pageHiddenTime], undefined, FEATURE_NAMES.pageViewTiming, this.ee);
+      handle('docHidden', [this.pageHiddenTime], undefined, FEATURE_NAMES.pageViewTiming, this.ee);
     }, true);
 
     // Window fires its pagehide event (typically on navigation; this occurrence is a *subset* of vis change)
-    windowAddEventListener("pagehide", () =>
-      handle("winPagehide", [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
+    windowAddEventListener('pagehide', () =>
+      handle('winPagehide', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     );
 
     // page visibility events
@@ -80,10 +80,10 @@ export class Instrument extends InstrumentBase {
   perfObserver(list, observer) {
     var entries = list.getEntries();
     entries.forEach((entry) => {
-      if (entry.name === "first-paint") {
-        handle("timing", ["fp", Math.floor(entry.startTime)], undefined, FEATURE_NAMES.pageViewTiming, this.ee);
-      } else if (entry.name === "first-contentful-paint") {
-        handle("timing", ["fcp", Math.floor(entry.startTime)], undefined, FEATURE_NAMES.pageViewTiming, this.ee);
+      if (entry.name === 'first-paint') {
+        handle('timing', ['fp', Math.floor(entry.startTime)], undefined, FEATURE_NAMES.pageViewTiming, this.ee);
+      } else if (entry.name === 'first-contentful-paint') {
+        handle('timing', ['fcp', Math.floor(entry.startTime)], undefined, FEATURE_NAMES.pageViewTiming, this.ee);
       }
     });
   }
@@ -102,14 +102,14 @@ export class Instrument extends InstrumentBase {
       var attributes = this.addConnectionAttributes({});
       if (attributes) payload.push(attributes);
 
-      handle("lcp", payload, undefined, FEATURE_NAMES.pageViewTiming, this.ee);
+      handle('lcp', payload, undefined, FEATURE_NAMES.pageViewTiming, this.ee);
     }
   }
 
   clsObserver(list) {
     list.getEntries().forEach((entry) => {
       if (!entry.hadRecentInput) {
-        handle("cls", [entry], undefined, FEATURE_NAMES.pageViewTiming, this.ee);
+        handle('cls', [entry], undefined, FEATURE_NAMES.pageViewTiming, this.ee);
       }
     });
   }
@@ -119,10 +119,10 @@ export class Instrument extends InstrumentBase {
     var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection; // to date, both window & worker shares the same support for connection
     if (!connection) return;
 
-    if (connection.type) attributes["net-type"] = connection.type;
-    if (connection.effectiveType) attributes["net-etype"] = connection.effectiveType;
-    if (connection.rtt) attributes["net-rtt"] = connection.rtt;
-    if (connection.downlink) attributes["net-dlink"] = connection.downlink;
+    if (connection.type) attributes['net-type'] = connection.type;
+    if (connection.effectiveType) attributes['net-etype'] = connection.effectiveType;
+    if (connection.rtt) attributes['net-rtt'] = connection.rtt;
+    if (connection.downlink) attributes['net-dlink'] = connection.downlink;
 
     return attributes;
   }
@@ -140,16 +140,16 @@ export class Instrument extends InstrumentBase {
       // The value of Event.timeStamp is epoch time in some old browser, and relative
       // timestamp in newer browsers. We assume that large numbers represent epoch time.
       if (fi <= now()) {
-        attributes["fid"] = now() - fi;
+        attributes['fid'] = now() - fi;
       } else if (fi > getOffset() && fi <= Date.now()) {
         fi = fi - getOffset();
-        attributes["fid"] = now() - fi;
+        attributes['fid'] = now() - fi;
       } else {
         fi = now();
       }
 
       this.fiRecorded = true;
-      handle("timing", ["fi", fi, attributes], undefined, FEATURE_NAMES.pageViewTiming, this.ee);
+      handle('timing', ['fi', fi, attributes], undefined, FEATURE_NAMES.pageViewTiming, this.ee);
     }
   }
 }

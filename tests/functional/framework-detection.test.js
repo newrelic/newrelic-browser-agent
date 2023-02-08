@@ -3,20 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../tools/jil/index");
-const { getMetricsFromResponse } = require("./err/assertion-helpers");
+const testDriver = require('../../tools/jil/index');
+const { getMetricsFromResponse } = require('./err/assertion-helpers');
 
-let frameworks = testDriver.Matcher.withFeature("frameworks");
+let frameworks = testDriver.Matcher.withFeature('frameworks');
 
 testDriver.test(
-  "Agent detects a page built with REACT and sends a supportability metric",
+  'Agent detects a page built with REACT and sends a supportability metric',
   frameworks,
   function (t, browser, router) {
     t.plan(2);
     let rumPromise = router.expectRum();
     let metricsPromise = router.expectMetrics();
     let loadPromise = browser.get(
-      router.assetURL("frameworks/react/simple-app/index.html", {
+      router.assetURL('frameworks/react/simple-app/index.html', {
         init: {
           page_view_timing: {
             enabled: false,
@@ -28,12 +28,12 @@ testDriver.test(
     Promise.all([metricsPromise, rumPromise, loadPromise])
       .then(([data]) => {
         var supportabilityMetrics = getMetricsFromResponse(data, true);
-        t.ok(supportabilityMetrics && !!supportabilityMetrics.length, "SupportabilityMetrics objects were generated");
-        const sm = supportabilityMetrics.find((x) => x.params.name.includes("Framework"));
+        t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics objects were generated');
+        const sm = supportabilityMetrics.find((x) => x.params.name.includes('Framework'));
         t.equals(
           sm.params.name,
-          "Framework/React/Detected",
-          "Supportability metric is React and is formatted correctly"
+          'Framework/React/Detected',
+          'Supportability metric is React and is formatted correctly'
         );
         t.end();
       })
@@ -49,14 +49,14 @@ testDriver.test(
 );
 
 testDriver.test(
-  "Agent detects a page built with ANGULAR and sends a supportability metric",
+  'Agent detects a page built with ANGULAR and sends a supportability metric',
   frameworks,
   function (t, browser, router) {
     t.plan(2);
     let rumPromise = router.expectRum();
     let metricsPromise = router.expectMetrics();
     let loadPromise = browser.get(
-      router.assetURL("frameworks/angular/simple-app/index.html", {
+      router.assetURL('frameworks/angular/simple-app/index.html', {
         init: {
           page_view_timing: {
             enabled: false,
@@ -68,12 +68,12 @@ testDriver.test(
     Promise.all([metricsPromise, rumPromise, loadPromise])
       .then(([data]) => {
         var supportabilityMetrics = getMetricsFromResponse(data, true);
-        t.ok(supportabilityMetrics && !!supportabilityMetrics.length, "SupportabilityMetrics objects were generated");
-        const sm = supportabilityMetrics.find((x) => x.params.name.includes("Framework"));
+        t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics objects were generated');
+        const sm = supportabilityMetrics.find((x) => x.params.name.includes('Framework'));
         t.equals(
           sm.params.name,
-          "Framework/Angular/Detected",
-          "Supportability metric is Angular and is formatted correctly"
+          'Framework/Angular/Detected',
+          'Supportability metric is Angular and is formatted correctly'
         );
         t.end();
       })
@@ -89,14 +89,14 @@ testDriver.test(
 );
 
 testDriver.test(
-  "Agent detects a page built with NO FRAMEWORK and DOES NOT send a supportability metric",
+  'Agent detects a page built with NO FRAMEWORK and DOES NOT send a supportability metric',
   frameworks,
   function (t, browser, router) {
     t.plan(1);
     let rumPromise = router.expectRum();
     let metricsPromise = router.expectMetrics();
     let loadPromise = browser.get(
-      router.assetURL("frameworks/control.html", {
+      router.assetURL('frameworks/control.html', {
         init: {
           page_view_timing: {
             enabled: false,
@@ -109,11 +109,11 @@ testDriver.test(
       .then(([data]) => {
         var supportabilityMetrics = getMetricsFromResponse(data, true);
         if (!supportabilityMetrics) {
-          t.ok(1 === 1, "FRAMEWORK SupportabilityMetrics object(s) were NOT generated");
+          t.ok(1 === 1, 'FRAMEWORK SupportabilityMetrics object(s) were NOT generated');
           t.end();
         } else {
-          const sm = supportabilityMetrics.find((x) => x.params.name.includes("Framework"));
-          t.ok(!sm, "FRAMEWORK SupportabilityMetrics object(s) were NOT generated");
+          const sm = supportabilityMetrics.find((x) => x.params.name.includes('Framework'));
+          t.ok(!sm, 'FRAMEWORK SupportabilityMetrics object(s) were NOT generated');
           t.end();
         }
       })

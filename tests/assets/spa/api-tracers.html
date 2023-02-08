@@ -13,12 +13,12 @@
     <script type="text/javascript">
       window.firedCallbacks = {};
       document.addEventListener(
-        "click",
+        'click',
         function () {
-          var wrappedCb = newrelic.interaction().createTracer("some other name", noteCallbackFired);
-          wrappedCb("syncCallback");
+          var wrappedCb = newrelic.interaction().createTracer('some other name', noteCallbackFired);
+          wrappedCb('syncCallback');
           setTimeout(function () {
-            wrappedCb("asyncCallback");
+            wrappedCb('asyncCallback');
           }, 0);
 
           function noteCallbackFired(name) {

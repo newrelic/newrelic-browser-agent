@@ -12,12 +12,12 @@
     <button id="trigger">trigger</button>
 
     <script type="text/javascript">
-      document.addEventListener("click", trigger);
+      document.addEventListener('click', trigger);
 
       function trigger() {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/json");
-        xhr.addEventListener("load", function () {
+        xhr.open('GET', '/json');
+        xhr.addEventListener('load', function () {
           generateNodes();
         });
         xhr.send();

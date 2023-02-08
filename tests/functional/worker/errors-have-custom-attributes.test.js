@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
-const { getErrorsFromResponse } = require("../err/assertion-helpers");
-const { workerTypes, typeToMatcher, workerCustomAttrs } = require("./helpers");
+const testDriver = require('../../../tools/jil/index');
+const { getErrorsFromResponse } = require('../err/assertion-helpers');
+const { workerTypes, typeToMatcher, workerCustomAttrs } = require('./helpers');
 
 const init = {
   jserrors: {
@@ -29,10 +29,10 @@ function setCustomAttributeTest(type, matcher) {
         init,
         workerCommands: [
           () => {
-            newrelic.setCustomAttribute("hi", "mom");
+            newrelic.setCustomAttribute('hi', 'mom');
           },
           () => {
-            throw new Error("test");
+            throw new Error('test');
           },
         ].map((x) => x.toString()),
       });
@@ -44,11 +44,11 @@ function setCustomAttributeTest(type, matcher) {
         .then(([response]) => {
           const actualErrors = getErrorsFromResponse(response, browser);
 
-          t.equal(actualErrors.length, 1, "exactly one error");
+          t.equal(actualErrors.length, 1, 'exactly one error');
 
           let actualError = actualErrors[0];
-          t.equal(actualError.params.message, "test", "has the expected message");
-          t.deepEqual(actualError.custom, { ...workerCustomAttrs, hi: "mom" }, "Should have correct custom attributes");
+          t.equal(actualError.params.message, 'test', 'has the expected message');
+          t.deepEqual(actualError.custom, { ...workerCustomAttrs, hi: 'mom' }, 'Should have correct custom attributes');
           t.end();
         })
         .catch(fail);

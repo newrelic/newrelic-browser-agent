@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { mapOwn } from "../../../common/util/map-own";
-import { stringify } from "../../../common/util/stringify";
-import { registerHandler as register } from "../../../common/event-emitter/register-handler";
-import { HarvestScheduler } from "../../../common/harvest/harvest-scheduler";
-import { cleanURL } from "../../../common/url/clean-url";
-import { getConfigurationValue, getInfo, getRuntime } from "../../../common/config/config";
-import { AggregateBase } from "../../utils/aggregate-base";
-import { FEATURE_NAME } from "../constants";
-import { drain } from "../../../common/drain/drain";
-import { isBrowserScope } from "../../../common/util/global-scope";
+import { mapOwn } from '../../../common/util/map-own';
+import { stringify } from '../../../common/util/stringify';
+import { registerHandler as register } from '../../../common/event-emitter/register-handler';
+import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler';
+import { cleanURL } from '../../../common/url/clean-url';
+import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config';
+import { AggregateBase } from '../../utils/aggregate-base';
+import { FEATURE_NAME } from '../constants';
+import { drain } from '../../../common/drain/drain';
+import { isBrowserScope } from '../../../common/util/global-scope';
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME;
@@ -20,8 +20,8 @@ export class Aggregate extends AggregateBase {
     super(agentIdentifier, aggregator, FEATURE_NAME);
     this.eventsPerMinute = 240;
     this.harvestTimeSeconds =
-      getConfigurationValue(this.agentIdentifier, "page_action.harvestTimeSeconds") ||
-      getConfigurationValue(this.agentIdentifier, "ins.harvestTimeSeconds") ||
+      getConfigurationValue(this.agentIdentifier, 'page_action.harvestTimeSeconds') ||
+      getConfigurationValue(this.agentIdentifier, 'ins.harvestTimeSeconds') ||
       30;
     this.eventsPerHarvest = (this.eventsPerMinute * this.harvestTimeSeconds) / 60;
     this.referrerUrl;
@@ -33,17 +33,17 @@ export class Aggregate extends AggregateBase {
 
     if (isBrowserScope && document.referrer) this.referrerUrl = cleanURL(document.referrer);
 
-    register("api-addPageAction", (...args) => this.addPageAction(...args), this.featureName, this.ee);
+    register('api-addPageAction', (...args) => this.addPageAction(...args), this.featureName, this.ee);
 
-    var scheduler = new HarvestScheduler("ins", { onFinished: (...args) => this.onHarvestFinished(...args) }, this);
-    scheduler.harvest.on("ins", (...args) => this.onHarvestStarted(...args));
+    var scheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this);
+    scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args));
     this.ee.on(`drain-${this.featureName}`, () => {
       if (!this.blocked) scheduler.startTimer(this.harvestTimeSeconds, 0);
     });
 
     // if rum response determines that customer lacks entitlements for ins endpoint, block it
     register(
-      "block-ins",
+      'block-ins',
       () => {
         this.blocked = true;
         scheduler.stopTimer();
@@ -102,22 +102,22 @@ export class Aggregate extends AggregateBase {
       browserWidth: width,
       browserHeight: height,
       referrerUrl: this.referrerUrl,
-      currentUrl: cleanURL("" + location),
+      currentUrl: cleanURL('' + location),
       pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin),
-      eventType: "PageAction",
+      eventType: 'PageAction',
     };
 
     mapOwn(defaults, set);
     mapOwn(getInfo(this.agentIdentifier).jsAttributes, set);
-    if (attributes && typeof attributes === "object") {
+    if (attributes && typeof attributes === 'object') {
       mapOwn(attributes, set);
     }
-    eventAttributes.actionName = name || "";
+    eventAttributes.actionName = name || '';
 
     this.events.push(eventAttributes);
 
     function set(key, val) {
-      eventAttributes[key] = val && typeof val === "object" ? stringify(val) : val;
+      eventAttributes[key] = val && typeof val === 'object' ? stringify(val) : val;
     }
   }
 }

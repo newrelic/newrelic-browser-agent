@@ -3,22 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-"use strict";
+'use strict';
 
-const { exec } = require("child_process");
+const { exec } = require('child_process');
 
 async function getPushRemotes() {
-  const stdout = await execAsPromise("git remote -v");
+  const stdout = await execAsPromise('git remote -v');
 
-  const remotes = stdout.split("\n");
+  const remotes = stdout.split('\n');
   return remotes.reduce((remotePairs, currentRemote) => {
-    const parts = currentRemote.split("\t");
+    const parts = currentRemote.split('\t');
     if (parts.length < 2) {
       return remotePairs;
     }
 
     const [name, url] = parts;
-    if (url.indexOf("(push)") >= 0) {
+    if (url.indexOf('(push)') >= 0) {
       remotePairs[name] = url;
     }
 
@@ -27,7 +27,7 @@ async function getPushRemotes() {
 }
 
 async function getCurrentBranch() {
-  const stdout = await execAsPromise("git branch --show-current");
+  const stdout = await execAsPromise('git branch --show-current');
   return stdout.trim();
 }
 
@@ -42,7 +42,7 @@ async function addAllFiles() {
 }
 
 async function addFiles(files) {
-  files = files.join(" ");
+  files = files.join(' ');
   const stdout = await execAsPromise(`git add ${files}`);
   return stdout.trim();
 }
@@ -68,7 +68,7 @@ async function setParent() {
 }
 
 async function syncWithParent() {
-  let stdout = "";
+  let stdout = '';
   try {
     stdout = await setParent();
   } catch (e) {}
@@ -92,7 +92,7 @@ async function createAnnotatedTag(name, message) {
 }
 
 async function pushTags() {
-  const stdout = await execAsPromise("git push --tags");
+  const stdout = await execAsPromise('git push --tags');
   return stdout.trim();
 }
 
@@ -102,7 +102,7 @@ async function checkout(branchName) {
 }
 
 async function clone(url, name, args) {
-  const argsString = args.join(" ");
+  const argsString = args.join(' ');
   const stdout = await execAsPromise(`git clone ${argsString} ${url} ${name}`);
   return stdout.trim();
 }
@@ -113,7 +113,7 @@ async function rebase() {
 }
 
 async function setSparseCheckoutFolders(folders) {
-  const foldersString = folders.join(" ");
+  const foldersString = folders.join(' ');
 
   const stdout = await execAsPromise(`git sparse-checkout set --no-cone ${foldersString}`);
   return stdout.trim();
@@ -122,7 +122,7 @@ async function setSparseCheckoutFolders(folders) {
 async function sparseCloneRepo(repoInfo, checkoutFiles) {
   const { name, repository, branch } = repoInfo;
 
-  const cloneOptions = ["--filter=blob:none", "--no-checkout", "--depth 1", "--sparse", `--branch=${branch}`];
+  const cloneOptions = ['--filter=blob:none', '--no-checkout', '--depth 1', '--sparse', `--branch=${branch}`];
   await clone(repository, name, cloneOptions);
   process.chdir(name);
 
@@ -130,7 +130,7 @@ async function sparseCloneRepo(repoInfo, checkoutFiles) {
 
   await checkout(branch);
 
-  process.chdir("..");
+  process.chdir('..');
 }
 
 function execAsPromise(command) {

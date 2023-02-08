@@ -3,20 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
-jil.browserTest("spa single XHR", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('spa single XHR', function (t) {
+  let helpers = require('./helpers');
   let validator = new helpers.InteractionValidator({
-    name: "interaction",
+    name: 'interaction',
     children: [
       {
-        name: "ajax",
+        name: 'ajax',
         children: [
           {
-            type: "customTracer",
+            type: 'customTracer',
             attrs: {
-              name: "timer",
+              name: 'timer',
             },
             children: [],
           },
@@ -27,7 +27,7 @@ jil.browserTest("spa single XHR", function (t) {
 
   t.plan(3 + validator.count);
 
-  t.notok(helpers.currentNodeId(), "interaction should be null at first");
+  t.notok(helpers.currentNodeId(), 'interaction should be null at first');
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone);
 
@@ -42,7 +42,7 @@ jil.browserTest("spa single XHR", function (t) {
       if (!asserted) {
         asserted = true;
         setTimeout(
-          newrelic.interaction().createTracer("timer", function () {}),
+          newrelic.interaction().createTracer('timer', function () {}),
           0
         );
       }
@@ -52,13 +52,13 @@ jil.browserTest("spa single XHR", function (t) {
 
     // This response is ~16 KB, big enough to generate multiple
     // readsystatechange callbacks in state 3 as more chunks come in.
-    xhr.open("GET", "/slowresponse");
+    xhr.open('GET', '/slowresponse');
     xhr.send();
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(interaction.root.end, "interaction should be finished and have an end time");
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    t.ok(interaction.root.end, 'interaction should be finished and have an end time');
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
     validator.validate(t, interaction);
     t.end();
   }

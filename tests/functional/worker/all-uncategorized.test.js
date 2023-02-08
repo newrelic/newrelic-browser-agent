@@ -1,9 +1,9 @@
-const testDriver = require("../../../tools/jil/index");
-const { workerTypes, typeToMatcher } = require("./helpers");
-const { fail, checkPayload, url } = require("../uncat-internal-help.cjs");
+const testDriver = require('../../../tools/jil/index');
+const { workerTypes, typeToMatcher } = require('./helpers');
+const { fail, checkPayload, url } = require('../uncat-internal-help.cjs');
 
-const fetchExt = testDriver.Matcher.withFeature("fetchExt");
-const FAIL_MSG = "unexpected error";
+const fetchExt = testDriver.Matcher.withFeature('fetchExt');
+const FAIL_MSG = 'unexpected error';
 
 workerTypes.forEach((type) => {
   // runs all test for classic & module workers & use the 'workers' browser-matcher for classic and the 'workersFull' for module
@@ -35,8 +35,8 @@ function apiFinished(type, browserVersionMatcher) {
     Promise.all([loadPromise, insPromise])
       .then(([, /* loadPromise junk */ { body }]) => {
         let insData = JSON.parse(body).ins;
-        t.equal(insData.length, 1, "exactly 1 PageAction was submitted");
-        t.equal(insData[0].actionName, "finished", "PageAction has actionName = finished");
+        t.equal(insData.length, 1, 'exactly 1 PageAction was submitted');
+        t.equal(insData[0].actionName, 'finished', 'PageAction has actionName = finished');
         t.end();
       })
       .catch(fail(t));
@@ -54,10 +54,10 @@ function apiAddReleaseTooMany(type, browserVersionMatcher) {
         },
         workerCommands: [
           () => {
-            for (let i = 1; i <= 11; i++) newrelic.addRelease("num" + i, i);
+            for (let i = 1; i <= 11; i++) newrelic.addRelease('num' + i, i);
           },
           () => {
-            throw new Error("error with release");
+            throw new Error('error with release');
           },
         ].map((x) => x.toString()),
       });
@@ -69,7 +69,7 @@ function apiAddReleaseTooMany(type, browserVersionMatcher) {
         .then(([, { query }]) => {
           const queryRi = JSON.parse(query.ri);
           const ri = {};
-          for (let i = 1; i <= 10; i++) ri["num" + i] = String(i); // 10 is the magic number (limit) defined in addRelease of api.js
+          for (let i = 1; i <= 10; i++) ri['num' + i] = String(i); // 10 is the magic number (limit) defined in addRelease of api.js
 
           t.deepEqual(queryRi, ri, `${JSON.stringify(ri)} is expected but got ${JSON.stringify(queryRi)}`);
           t.end();
@@ -91,16 +91,16 @@ function apiAddReleaseTooLong(type, browserVersionMatcher) {
         workerCommands: [
           () => {
             let twoHundredOneCharacterString =
-              "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy";
+              'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy';
             twoHundredOneCharacterString +=
-              "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-            twoHundredOneCharacterString += "q";
-            newrelic.addRelease("one", twoHundredOneCharacterString.length);
-            newrelic.addRelease(twoHundredOneCharacterString, "2");
-            newrelic.addRelease("three", twoHundredOneCharacterString);
+              'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+            twoHundredOneCharacterString += 'q';
+            newrelic.addRelease('one', twoHundredOneCharacterString.length);
+            newrelic.addRelease(twoHundredOneCharacterString, '2');
+            newrelic.addRelease('three', twoHundredOneCharacterString);
           },
           () => {
-            throw new Error("error with release");
+            throw new Error('error with release');
           },
         ].map((x) => x.toString()),
       });
@@ -108,24 +108,24 @@ function apiAddReleaseTooLong(type, browserVersionMatcher) {
       let loadPromise = browser.get(assetURL);
       let errPromise = router.expectErrors();
       const ninetyNineY =
-        "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy";
+        'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy';
       const oneHundredX =
-        "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-      const twoHundredCharacterString = ninetyNineY + oneHundredX + "q";
+        'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+      const twoHundredCharacterString = ninetyNineY + oneHundredX + 'q';
 
       Promise.all([loadPromise, errPromise])
         .then(([, { query }]) => {
           const queryRi = JSON.parse(query.ri);
           const ri = {
-            one: "201",
+            one: '201',
             three: twoHundredCharacterString,
           };
-          ri[twoHundredCharacterString] = "2";
+          ri[twoHundredCharacterString] = '2';
 
           t.equal(
             twoHundredCharacterString.length,
             200,
-            "twoHundredCharacterString should be 200 characters but is " + twoHundredCharacterString.length
+            'twoHundredCharacterString should be 200 characters but is ' + twoHundredCharacterString.length
           );
           t.deepEqual(queryRi, ri, `${JSON.stringify(ri)} is expected but got ${JSON.stringify(queryRi)}`);
           t.end();
@@ -146,7 +146,7 @@ function apiAddReleaseNotUsed(type, browserVersionMatcher) {
         },
         workerCommands: [
           () => {
-            throw new Error("error with release");
+            throw new Error('error with release');
           },
         ].map((x) => x.toString()),
       });
@@ -156,7 +156,7 @@ function apiAddReleaseNotUsed(type, browserVersionMatcher) {
 
       Promise.all([loadPromise, errPromise])
         .then(([, { query }]) => {
-          t.notOk("ri" in query, "should not have ri query param");
+          t.notOk('ri' in query, 'should not have ri query param');
           t.end();
         })
         .catch(fail(t));
@@ -184,10 +184,10 @@ function harvestReferrerSent(type, browserVersionMatcher) {
 
       Promise.all([ajaxPromise, loadPromise])
         .then(([{ query, headers }]) => {
-          t.ok(query.ref, "The query string should include the ref attribute.");
+          t.ok(query.ref, 'The query string should include the ref attribute.');
 
           let queryRefUrl = url.parse(query.ref);
-          t.ok(queryRefUrl.query == null, "url in ref query param does not contain query parameters");
+          t.ok(queryRefUrl.query == null, 'url in ref query param does not contain query parameters');
 
           // if (originOnlyReferer.inverse().match(browser.browserSpec)) {	-- this test doesn't seem to be true for workers even if it is for main
           // 	let headerUrl = url.parse(headers.referer);
@@ -215,8 +215,8 @@ function harvestSessionIsNullWhenEnabled(type, browserVersionMatcher) {
 
       Promise.all([ajaxPromise, loadPromise])
         .then(([{ query }]) => {
-          t.equal(query.ck, "0", "The cookie flag ('ck') should equal 0.");
-          t.equal(query.s, "0", "The session id attr 's' should be 0.");
+          t.equal(query.ck, '0', "The cookie flag ('ck') should equal 0.");
+          t.equal(query.s, '0', "The session id attr 's' should be 0.");
           t.end();
         })
         .catch(fail(t, FAIL_MSG));
@@ -236,26 +236,26 @@ function obfuscateAll(type, browserVersionMatcher) {
         obfuscate: [
           {
             regex: /bam-test/g,
-            replacement: "OBFUSCATED",
+            replacement: 'OBFUSCATED',
           },
           {
             regex: /fakeid/g,
           },
           {
             regex: /pii/g,
-            replacement: "OBFUSCATED",
+            replacement: 'OBFUSCATED',
           },
           {
-            regex: "comma",
-            replacement: "invalid,string",
+            regex: 'comma',
+            replacement: 'invalid,string',
           },
           {
-            regex: "semicolon",
-            replacement: "invalid;string",
+            regex: 'semicolon',
+            replacement: 'invalid;string',
           },
           {
-            regex: "backslash",
-            replacement: "invalid\\string",
+            regex: 'backslash',
+            replacement: 'invalid\\string',
           },
         ],
         ajax: { harvestTimeSeconds: 2 },
@@ -266,11 +266,11 @@ function obfuscateAll(type, browserVersionMatcher) {
       workerCommands: [
         () => {
           setTimeout(function () {
-            fetch("/tests/assets/obfuscate-pii-valid.html");
-            throw new Error("pii,fakeid");
+            fetch('/tests/assets/obfuscate-pii-valid.html');
+            throw new Error('pii,fakeid');
           }, 100);
-          newrelic.addPageAction("fakeidpageactionpii");
-          newrelic.setCustomAttribute("customAttribute", "fakeid,pii");
+          newrelic.addPageAction('fakeidpageactionpii');
+          newrelic.setCustomAttribute('customAttribute', 'fakeid,pii');
         },
       ].map((x) => x.toString()),
     });
@@ -282,11 +282,11 @@ function obfuscateAll(type, browserVersionMatcher) {
 
     Promise.all([loadPromise, ajaxPromise, errorsPromise, insPromise])
       .then(([, ajaxResponse, errorsResponse, insResponse]) => {
-        checkPayload(t, ajaxResponse.body, "AJAX");
-        checkPayload(t, errorsResponse.body, "Errors");
-        checkPayload(t, insResponse.body, "INS body");
-        checkPayload(t, errorsResponse.query, "Errors query");
-        checkPayload(t, insResponse.query, "INS query");
+        checkPayload(t, ajaxResponse.body, 'AJAX');
+        checkPayload(t, errorsResponse.body, 'Errors');
+        checkPayload(t, insResponse.body, 'INS body');
+        checkPayload(t, errorsResponse.query, 'Errors query');
+        checkPayload(t, insResponse.query, 'INS query');
         t.end();
       })
       .catch(fail(t));

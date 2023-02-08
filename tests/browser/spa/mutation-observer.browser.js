@@ -3,28 +3,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
-const { setup } = require("../utils/setup");
+const { setup } = require('../utils/setup');
 
 const setupData = setup();
 const { agentIdentifier, aggregator, nr } = setupData;
 
-jil.browserTest("MutationObserver instanceof check", function (t) {
+jil.browserTest('MutationObserver instanceof check', function (t) {
   var origMutationObserver = MutationObserver;
-  const { Instrument } = require("../../../src/features/spa/instrument/index.js");
+  const { Instrument } = require('../../../src/features/spa/instrument/index.js');
   new Instrument(agentIdentifier, aggregator, false);
 
   var observer = new MutationObserver(function () {});
 
-  t.ok(observer instanceof MutationObserver, "observer should be an instanceof MutationObserver");
-  t.ok(observer instanceof origMutationObserver, "observer should be an instanceof original MutationObserver");
+  t.ok(observer instanceof MutationObserver, 'observer should be an instanceof MutationObserver');
+  t.ok(observer instanceof origMutationObserver, 'observer should be an instanceof original MutationObserver');
   t.end();
 });
 
-jil.browserTest("MutationObserver double-instrumentation", function (t) {
+jil.browserTest('MutationObserver double-instrumentation', function (t) {
   var OrigMutationObserver = MutationObserver;
-  const { Instrument } = require("../../../src/features/spa/instrument/index.js");
+  const { Instrument } = require('../../../src/features/spa/instrument/index.js');
   new Instrument(agentIdentifier, aggregator, false);
 
   // This simulates what zone.js does when they wrap MutationObserver
@@ -35,12 +35,12 @@ jil.browserTest("MutationObserver double-instrumentation", function (t) {
 
   var observer = new MutationObserver(function () {});
 
-  t.ok(observer, "successfully created new double-wrapped MutationObserver instance");
+  t.ok(observer, 'successfully created new double-wrapped MutationObserver instance');
   t.end();
 });
 
-jil.browserTest("MutationObserver functionality check", function (t) {
-  const { Instrument } = require("../../../src/features/spa/instrument/index.js");
+jil.browserTest('MutationObserver functionality check', function (t) {
+  const { Instrument } = require('../../../src/features/spa/instrument/index.js');
   new Instrument(agentIdentifier, aggregator, false);
   let callbackInvocations = 0;
 
@@ -48,7 +48,7 @@ jil.browserTest("MutationObserver functionality check", function (t) {
     callbackInvocations++;
   });
 
-  let el = document.createElement("div");
+  let el = document.createElement('div');
   document.body.appendChild(el);
 
   // Observing the same element twice should still result in the callback being
@@ -56,16 +56,16 @@ jil.browserTest("MutationObserver functionality check", function (t) {
   observer.observe(el, { attributes: true });
   observer.observe(el, { attributes: true });
 
-  el.setAttribute("foo", "bar");
+  el.setAttribute('foo', 'bar');
 
   setTimeout(() => {
-    t.equal(callbackInvocations, 1, "expected callback to have been invoked exactly once");
+    t.equal(callbackInvocations, 1, 'expected callback to have been invoked exactly once');
 
     observer.disconnect();
 
-    el.setAttribute("bar", "baz");
+    el.setAttribute('bar', 'baz');
     setTimeout(() => {
-      t.equal(callbackInvocations, 1, "expected callback to not be invoked after disconnect");
+      t.equal(callbackInvocations, 1, 'expected callback to not be invoked after disconnect');
       t.end();
     });
   });

@@ -12,21 +12,21 @@
   <body>
     <script>
       function foo(data) {
-        var el = document.createElement("p");
+        var el = document.createElement('p');
         el.innerHTML = JSON.stringify(data);
         document.body.appendChild(el);
         setTimeout(
-          newrelic.interaction().createTracer("tacoTimer", function () {
+          newrelic.interaction().createTracer('tacoTimer', function () {
             window.location.hash = Math.random();
           }),
           500
         );
       }
       window.addEventListener(
-        "load",
+        'load',
         function () {
-          var el = document.createElement("script");
-          el.src = "/jsonp?cb=foo";
+          var el = document.createElement('script');
+          el.src = '/jsonp?cb=foo';
           window.location.hash = Math.random();
           window.document.body.appendChild(el);
         },

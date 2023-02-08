@@ -1,4 +1,4 @@
-import { FEATURE_NAMES } from "./features";
+import { FEATURE_NAMES } from './features';
 
 export function getFeatureDependencyNames(feature) {
   switch (feature) {
@@ -21,6 +21,6 @@ export function getFrozenAttributes(feature) {
     case FEATURE_NAMES.jserrors:
       return [];
     default:
-      return ["auto"];
+      return ['auto'];
   }
 }

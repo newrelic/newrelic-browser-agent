@@ -1,11 +1,11 @@
-import { getConfigurationValue } from "../config/config";
-import { SharedContext } from "../context/shared-context";
-import { protocol } from "../url/protocol";
-import { warn } from "./console";
+import { getConfigurationValue } from '../config/config';
+import { SharedContext } from '../context/shared-context';
+import { protocol } from '../url/protocol';
+import { warn } from './console';
 
 var fileProtocolRule = {
   regex: /^file:\/\/(.*)/,
-  replacement: "file://OBFUSCATED",
+  replacement: 'file://OBFUSCATED',
 };
 export class Obfuscator extends SharedContext {
   constructor(parent) {
@@ -19,7 +19,7 @@ export class Obfuscator extends SharedContext {
   // applies all regex obfuscation rules to provided URL string and returns the result
   obfuscateString(string) {
     // if string is empty string, null or not a string, return unmodified
-    if (!string || typeof string !== "string") return string;
+    if (!string || typeof string !== 'string') return string;
 
     var rules = getRules(this.sharedContext.agentIdentifier);
     var obfuscated = string;
@@ -27,7 +27,7 @@ export class Obfuscator extends SharedContext {
     // apply every rule to URL string
     for (var i = 0; i < rules.length; i++) {
       var regex = rules[i].regex;
-      var replacement = rules[i].replacement || "*";
+      var replacement = rules[i].replacement || '*';
       obfuscated = obfuscated.replace(regex, replacement);
     }
     return obfuscated;
@@ -37,7 +37,7 @@ export class Obfuscator extends SharedContext {
 // TO DO: this function should be inside the Obfuscator class since its context relates to agentID
 export function getRules(agentIdentifier) {
   var rules = [];
-  var configRules = getConfigurationValue(agentIdentifier, "obfuscate") || [];
+  var configRules = getConfigurationValue(agentIdentifier, 'obfuscate') || [];
 
   rules = rules.concat(configRules);
 
@@ -52,10 +52,10 @@ export function validateRules(rules) {
   var invalidReplacementDetected = false;
   var invalidRegexDetected = false;
   for (var i = 0; i < rules.length; i++) {
-    if (!("regex" in rules[i])) {
+    if (!('regex' in rules[i])) {
       warn('An obfuscation replacement rule was detected missing a "regex" value.');
       invalidRegexDetected = true;
-    } else if (typeof rules[i].regex !== "string" && !(rules[i].regex.constructor === RegExp)) {
+    } else if (typeof rules[i].regex !== 'string' && !(rules[i].regex.constructor === RegExp)) {
       warn(
         'An obfuscation replacement rule contains a "regex" value with an invalid type (must be a string or RegExp)'
       );
@@ -64,7 +64,7 @@ export function validateRules(rules) {
 
     var replacement = rules[i].replacement;
     if (replacement) {
-      if (typeof replacement !== "string") {
+      if (typeof replacement !== 'string') {
         warn('An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string)');
         invalidReplacementDetected = true;
       }

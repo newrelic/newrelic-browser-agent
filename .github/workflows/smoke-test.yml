@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # Runs every day at 3AM
-    - cron: "0 3 * * *"
+    - cron: '0 3 * * *'
 
 env:
   BUILD_NUMBER: event-${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}

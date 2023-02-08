@@ -4,10 +4,10 @@
  * @license Apache-2.0
  */
 
-import * as path from "node:path";
-import { fileURLToPath } from "url";
-import { createProjectGraphAsync, logger } from "@nrwl/devkit";
-import { execSync } from "child_process";
+import * as path from 'node:path';
+import { fileURLToPath } from 'url';
+import { createProjectGraphAsync, logger } from '@nrwl/devkit';
+import { execSync } from 'child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -20,12 +20,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
       logger.info(`Publishing package ${node}`);
 
       const outputPath = path.resolve(
-        path.join(__dirname, "../../", projectGraph.nodes[node].data.targets.build.options.outputPath)
+        path.join(__dirname, '../../', projectGraph.nodes[node].data.targets.build.options.outputPath)
       );
 
-      execSync(`npm publish --tag ${tag} ${additionalArgs.join(" ")}`, {
+      execSync(`npm publish --tag ${tag} ${additionalArgs.join(' ')}`, {
         cwd: outputPath,
-        stdio: "inherit",
+        stdio: 'inherit',
       });
     } catch (err) {
       logger.error(err);

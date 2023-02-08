@@ -11,11 +11,11 @@
   <body>
     Api test!
     <script>
-      newrelic.addRelease("example", 123);
-      newrelic.addRelease("other", "456");
+      newrelic.addRelease('example', 123);
+      newrelic.addRelease('other', '456');
 
       setTimeout(function () {
-        throw new Error("error with release");
+        throw new Error('error with release');
       });
     </script>
   </body>

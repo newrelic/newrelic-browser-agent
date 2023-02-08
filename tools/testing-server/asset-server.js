@@ -3,31 +3,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const url = require("url");
-const path = require("path");
-const mime = require("mime-types");
-const fs = require("fs");
-const zlib = require("zlib");
-const querystring = require("querystring");
-const browserify = require("browserify");
-const babelify = require("babelify");
-const BaseServer = require("./base-server");
-const ls = require("ls-stream");
-const through = require("through");
-const Router = require("./router");
-const minimatch = require("minimatch");
-const concat = require("concat-stream");
-const multiparty = require("multiparty");
-const assert = require("assert");
-const preprocessify = require("preprocessify");
-const loaders = require("../jil/util/loaders");
-const UglifyJS = require("uglify-js");
-var runnerArgs = require("../jil/runner/args");
-const babelEnv = require("../../babel-env-vars");
+const url = require('url');
+const path = require('path');
+const mime = require('mime-types');
+const fs = require('fs');
+const zlib = require('zlib');
+const querystring = require('querystring');
+const browserify = require('browserify');
+const babelify = require('babelify');
+const BaseServer = require('./base-server');
+const ls = require('ls-stream');
+const through = require('through');
+const Router = require('./router');
+const minimatch = require('minimatch');
+const concat = require('concat-stream');
+const multiparty = require('multiparty');
+const assert = require('assert');
+const preprocessify = require('preprocessify');
+const loaders = require('../jil/util/loaders');
+const UglifyJS = require('uglify-js');
+var runnerArgs = require('../jil/runner/args');
+const babelEnv = require('../../babel-env-vars');
 
-mime.types["es6"] = "application/javascript";
+mime.types['es6'] = 'application/javascript';
 
-const assetsDir = path.resolve(__dirname, "../../");
+const assetsDir = path.resolve(__dirname, '../../');
 const REGEXP_REPLACEMENT_REGEX = /"new RegExp\('(.*?)','(.*?)'\)"/g;
 
 class AssetTransform {
@@ -36,7 +36,7 @@ class AssetTransform {
   }
 
   execute() {
-    throw new Error("execute method of transforms must be implemented in subclasses");
+    throw new Error('execute method of transforms must be implemented in subclasses');
   }
 }
 
@@ -48,19 +48,19 @@ class AgentInjectorTransform extends AssetTransform {
     this.assetServer = assetServer;
     this.router = router;
 
-    this.polyfills = runnerArgs.polyfills ? fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`) : "";
+    this.polyfills = runnerArgs.polyfills ? fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`) : '';
   }
 
   parseConfigFromQueryString(params) {
     if (!params.config) return;
-    let configString = Buffer.from(params.config, "base64").toString();
+    let configString = Buffer.from(params.config, 'base64').toString();
     return JSON.parse(configString);
   }
 
   generateConfig(loaderName, params, ssl, injectUpdatedLoaderConfig) {
-    let loaderSpec = [...loaders, ...[{ name: "mfe" }, { name: "prebuilt" }]].find((spec) => spec.name === loaderName);
+    let loaderSpec = [...loaders, ...[{ name: 'mfe' }, { name: 'prebuilt' }]].find((spec) => spec.name === loaderName);
     let payloadSuffix = loaderSpec.payload;
-    let payloadFilename = payloadSuffix ? `nr-${payloadSuffix}.js` : "nr.js";
+    let payloadFilename = payloadSuffix ? `nr-${payloadSuffix}.js` : 'nr.js';
 
     let config = {
       agent: `${this.assetServer.host}:${this.assetServer.port}/build/${payloadFilename}`,
@@ -71,9 +71,9 @@ class AgentInjectorTransform extends AssetTransform {
     let overrides = this.parseConfigFromQueryString(params) || {};
     Object.assign(config, this.defaultAgentConfig, overrides);
 
-    const loaderConfigKeys = ["accountID", "agentID", "applicationID", "licenseKey", "trustKey"];
+    const loaderConfigKeys = ['accountID', 'agentID', 'applicationID', 'licenseKey', 'trustKey'];
 
-    const loaderOnlyConfigKeys = ["accountID", "agentID", "trustKey"];
+    const loaderOnlyConfigKeys = ['accountID', 'agentID', 'trustKey'];
 
     let updatedConfig = {
       info: {},
@@ -86,8 +86,8 @@ class AgentInjectorTransform extends AssetTransform {
       if (injectUpdatedLoaderConfig) {
         if (loaderConfigKeys.includes(key)) {
           // this simulates the collector injects only the primary app ID
-          if (key === "applicationID") {
-            var primaryAppId = config[key].toString().split(",")[0];
+          if (key === 'applicationID') {
+            var primaryAppId = config[key].toString().split(',')[0];
             updatedConfig.loaderConfig[key] = primaryAppId;
           } else {
             updatedConfig.loaderConfig[key] = config[key];
@@ -107,7 +107,7 @@ class AgentInjectorTransform extends AssetTransform {
   getAjaxDenyListString() {
     return runnerArgs.denyListBam
       ? `window.NREUM||(NREUM={init:{}});NREUM.init.ajax=NREUM.init.ajax||{};NREUM.init.ajax.deny_list=NREUM.init.ajax.deny_list||[];NREUM.init.ajax.deny_list.push('bam-test-1.nr-local.net');`
-      : "";
+      : '';
   }
 
   generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig) {
@@ -116,26 +116,26 @@ class AgentInjectorTransform extends AssetTransform {
     let loaderConfigJSON = JSON.stringify(config.loaderConfig);
 
     let debugShim = this.getDebugShim();
-    let loaderConfigAssignment = injectUpdatedLoaderConfig ? `NREUM.loader_config=${loaderConfigJSON};` : "";
+    let loaderConfigAssignment = injectUpdatedLoaderConfig ? `NREUM.loader_config=${loaderConfigJSON};` : '';
 
     return `window.NREUM||(NREUM={});NREUM.info=${infoJSON};${loaderConfigAssignment}${debugShim}`;
   }
 
   generateInit(initFromQueryString) {
-    let initString = Buffer.from(initFromQueryString, "base64").toString();
-    if (initString.includes("new RegExp"))
+    let initString = Buffer.from(initFromQueryString, 'base64').toString();
+    if (initString.includes('new RegExp'))
       // de-serialize RegExp obj from router
-      initString = initString.replace(REGEXP_REPLACEMENT_REGEX, "/$1/$2");
+      initString = initString.replace(REGEXP_REPLACEMENT_REGEX, '/$1/$2');
     return `window.NREUM||(NREUM={});NREUM.init=${initString};NREUM.init.ssl=false;`;
   }
 
   generateWorkerCommands(wcFromQueryString) {
-    let wcString = Buffer.from(wcFromQueryString, "base64").toString();
+    let wcString = Buffer.from(wcFromQueryString, 'base64').toString();
     return `workerCommands=${wcString};`;
   }
 
   getDebugShim() {
-    if (!this.assetServer.debugShim) return "";
+    if (!this.assetServer.debugShim) return '';
 
     return `
       window.NRDEBUG = (function() {
@@ -183,7 +183,7 @@ class AgentInjectorTransform extends AssetTransform {
   }
 
   getLoaderContent(loader, dir, callback) {
-    let loaderFilename = `nr-loader-${loader}${runnerArgs.polyfills ? "-polyfills" : ""}.min.js`;
+    let loaderFilename = `nr-loader-${loader}${runnerArgs.polyfills ? '-polyfills' : ''}.min.js`;
     let loaderPath = path.join(dir, loaderFilename);
     fs.readFile(loaderPath, callback);
   }
@@ -195,7 +195,7 @@ class AgentInjectorTransform extends AssetTransform {
       for (let i = 0; i < pkgPaths.length; i++) {
         const pkgPath = pkgPaths[i];
         const distPath = path.resolve(__dirname, `../../${pkgPath}`);
-        proms.push(fs.promises.readFile(distPath, "utf-8"));
+        proms.push(fs.promises.readFile(distPath, 'utf-8'));
       }
       Promise.all(proms)
         .then((data) => {
@@ -211,27 +211,27 @@ class AgentInjectorTransform extends AssetTransform {
   }
 
   execute(params, assetPath, ssl, callback) {
-    fs.readFile(assetPath, "utf-8", async (err, rawContent) => {
+    fs.readFile(assetPath, 'utf-8', async (err, rawContent) => {
       if (err) return callback(err);
 
       let loaderName = params.loader || this.assetServer.defaultLoader;
-      let injectUpdatedLoaderConfig = params.injectUpdatedLoaderConfig === "true";
+      let injectUpdatedLoaderConfig = params.injectUpdatedLoaderConfig === 'true';
 
       const htmlPackageTags = [...rawContent.matchAll(/{tests\/assets\/js\/internal\/.*}/g)].map((x) => x[0]);
-      const packagePaths = htmlPackageTags.map((x) => x.replace(/[{}]/g, ""));
+      const packagePaths = htmlPackageTags.map((x) => x.replace(/[{}]/g, ''));
       const packageFiles = await this.getBuiltPackages(packagePaths);
 
       this.getLoaderContent(loaderName, this.buildDir, (err, loaderContent) => {
         if (err) return callback(err);
 
-        let configContent = "";
+        let configContent = '';
         try {
           configContent = this.generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig);
         } catch (e) {
           return callback(e);
         }
 
-        let initContent = "";
+        let initContent = '';
         if (params.init) {
           try {
             initContent = this.generateInit(params.init);
@@ -240,7 +240,7 @@ class AgentInjectorTransform extends AssetTransform {
           }
         }
 
-        let wcContent = "";
+        let wcContent = '';
         if (params.workerCommands) {
           try {
             wcContent = this.generateWorkerCommands(params.workerCommands);
@@ -249,28 +249,28 @@ class AgentInjectorTransform extends AssetTransform {
           }
         }
 
-        let scriptStringContent = "";
+        let scriptStringContent = '';
         if (params.scriptString) {
           try {
-            scriptStringContent = Buffer.from(params.scriptString, "base64").toString();
+            scriptStringContent = Buffer.from(params.scriptString, 'base64').toString();
           } catch (e) {
             return callback(e);
           }
         }
 
-        let disableSsl = "window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;";
+        let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;';
 
         let rspData = rawContent
-          .split("{loader}")
+          .split('{loader}')
           .join(tagify(disableSsl + loaderContent))
-          .replace("{config}", tagify(disableSsl + configContent))
-          .replace("{init}", tagify(disableSsl + initContent + this.getAjaxDenyListString()))
-          .replace("{worker-commands}", tagify(disableSsl + wcContent))
-          .replace("{script}", `<script type="text/javascript" src="${params.script}" charset="utf-8"></script>`)
-          .replace("{script-injection}", `<script type="text/javascript">${scriptStringContent}</script>`);
+          .replace('{config}', tagify(disableSsl + configContent))
+          .replace('{init}', tagify(disableSsl + initContent + this.getAjaxDenyListString()))
+          .replace('{worker-commands}', tagify(disableSsl + wcContent))
+          .replace('{script}', `<script type="text/javascript" src="${params.script}" charset="utf-8"></script>`)
+          .replace('{script-injection}', `<script type="text/javascript">${scriptStringContent}</script>`);
 
         if (runnerArgs.polyfills) {
-          rspData = rspData.replace("{polyfills}", `<script type="text/javascript">${this.polyfills}</script>`);
+          rspData = rspData.replace('{polyfills}', `<script type="text/javascript">${this.polyfills}</script>`);
         }
 
         if (!!htmlPackageTags.length && !!packageFiles.length) {
@@ -306,41 +306,41 @@ class BrowserifyTransform extends AssetTransform {
     if (result) return callback(null, result);
 
     browserify(assetPath)
-      .transform("babelify", {
+      .transform('babelify', {
         presets: [
           [
-            "@babel/preset-env",
+            '@babel/preset-env',
             {
               loose: true,
               targets: {
                 browsers: runnerArgs.polyfills
-                  ? ["ie >= 11"]
+                  ? ['ie >= 11']
                   : [
-                      "last 10 Chrome versions",
-                      "last 10 Safari versions",
-                      "last 10 Firefox versions",
-                      "last 10 Edge versions",
-                      "last 10 ChromeAndroid versions",
-                      "last 10 iOS versions",
+                      'last 10 Chrome versions',
+                      'last 10 Safari versions',
+                      'last 10 Firefox versions',
+                      'last 10 Edge versions',
+                      'last 10 ChromeAndroid versions',
+                      'last 10 iOS versions',
                     ],
               },
             },
           ],
         ],
         plugins: [
-          "@babel/plugin-syntax-dynamic-import",
-          "@babel/plugin-transform-modules-commonjs",
-          "@babel/plugin-proposal-optional-chaining",
+          '@babel/plugin-syntax-dynamic-import',
+          '@babel/plugin-transform-modules-commonjs',
+          '@babel/plugin-proposal-optional-chaining',
           // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
           // assigning to a variable, which conflicts with template literals.
-          "@babel/plugin-transform-template-literals",
-          babelEnv("VERSION"),
+          '@babel/plugin-transform-template-literals',
+          babelEnv('VERSION'),
         ],
         global: true,
       })
       .transform(preprocessify())
       .bundle((err, buf) => {
-        if (err) console.log("error at ", assetPath);
+        if (err) console.log('error at ', assetPath);
         if (err) return callback(err);
 
         let content = buf.toString();
@@ -371,7 +371,7 @@ class Route {
 }
 
 const testRoutes = [
-  new Route("GET", "/slowscript", (req, res) => {
+  new Route('GET', '/slowscript', (req, res) => {
     const params = parseParams(req);
     var abort = params.abort;
     var delay = params.delay || 200;
@@ -381,127 +381,127 @@ const testRoutes = [
         res.destroy();
         return;
       }
-      res.end("window.slowScriptLoaded=1");
+      res.end('window.slowScriptLoaded=1');
     }, delay);
   }),
-  new Route("GET", "/lazyscript", (req, res) => {
+  new Route('GET', '/lazyscript', (req, res) => {
     const params = parseParams(req);
     var delay = params.delay || 0;
-    var content = params.content || "";
+    var content = params.content || '';
     setTimeout(() => res.end(content), delay);
   }),
-  new Route("GET", "/slowimage", (req, res) => {
+  new Route('GET', '/slowimage', (req, res) => {
     const params = parseParams(req);
     var delay = params.delay || 0;
-    var path = resolveAssetPath("/tests/assets/images/square.png", assetsDir);
+    var path = resolveAssetPath('/tests/assets/images/square.png', assetsDir);
     setTimeout(() => {
       fs.createReadStream(path).pipe(res);
     }, delay);
   }),
-  new Route("GET", "/abort", (req, res) => {
-    setTimeout(() => res.end("foo"), 300);
+  new Route('GET', '/abort', (req, res) => {
+    setTimeout(() => res.end('foo'), 300);
   }),
-  new Route("PUT", "/timeout", (req, res) => {
-    setTimeout(() => res.end("foo"), 300);
+  new Route('PUT', '/timeout', (req, res) => {
+    setTimeout(() => res.end('foo'), 300);
   }),
-  new Route("POST", "/echo", (req, res) => {
-    var body = "";
-    req.on("data", function (data) {
+  new Route('POST', '/echo', (req, res) => {
+    var body = '';
+    req.on('data', function (data) {
       body += data;
     });
-    req.on("end", function () {
+    req.on('end', function () {
       res.end(body);
     });
   }),
-  new Route("GET", "/jsonp", (req, res) => {
+  new Route('GET', '/jsonp', (req, res) => {
     const params = parseParams(req);
-    const cbName = params.callback || params.cb || "callback";
+    const cbName = params.callback || params.cb || 'callback';
     setTimeout(() => {
       if (params.plain) {
-        res.setHeader("Content-Type", "text/plain");
+        res.setHeader('Content-Type', 'text/plain');
         res.end(cbName + '("taco")');
       } else {
-        res.setHeader("Content-Type", "text/javascript");
+        res.setHeader('Content-Type', 'text/javascript');
         res.end(cbName + '({name: "taco"})');
       }
     }, params.timeout || 0);
   }),
-  new Route("GET", "/xhr_with_cat/*", (req, res) => {
-    res.setHeader("X-NewRelic-App-Data", "foo");
-    res.end("xhr with CAT " + new Array(100).join("data"));
+  new Route('GET', '/xhr_with_cat/*', (req, res) => {
+    res.setHeader('X-NewRelic-App-Data', 'foo');
+    res.end('xhr with CAT ' + new Array(100).join('data'));
   }),
-  new Route("GET", "/xhr_no_cat", (req, res) => {
-    res.end("xhr no CAT");
+  new Route('GET', '/xhr_no_cat', (req, res) => {
+    res.end('xhr no CAT');
   }),
-  new Route("GET", "/echo-headers", (req, res) => {
+  new Route('GET', '/echo-headers', (req, res) => {
     res.end(JSON.stringify(req.headers));
   }),
-  new Route("POST", "/postwithhi/*", (req, res) => {
+  new Route('POST', '/postwithhi/*', (req, res) => {
     req
       .pipe(
         concat((body) => {
-          if (body.toString() === "hi!") {
-            res.end("hi!");
+          if (body.toString() === 'hi!') {
+            res.end('hi!');
           } else {
             res.end('bad agent! - got body = "' + body.toString() + '"');
           }
         })
       )
-      .on("error", (err) => {
+      .on('error', (err) => {
         console.log(err);
         res.writeHead(500);
         res.end(err.stack);
       });
   }),
-  new Route("GET", "/json", (req, res) => {
+  new Route('GET', '/json', (req, res) => {
     res.end('{"text":"hi!"}');
   }),
-  new Route("GET", "/text", (req, res) => {
+  new Route('GET', '/text', (req, res) => {
     const params = parseParams(req);
     var length = params.length || 10;
-    res.end("x".repeat(length));
+    res.end('x'.repeat(length));
   }),
-  new Route("POST", "/formdata", (req, res) => {
+  new Route('POST', '/formdata', (req, res) => {
     let form = new multiparty.Form();
     form.parse(req, (err, fields, files) => {
       if (err) {
         res.writeHead(500);
-        res.end("failed to parse form data submission: " + err);
+        res.end('failed to parse form data submission: ' + err);
         return;
       }
 
       try {
-        assert.deepEqual(fields, { name: ["bob"], x: ["5"] });
-        res.end("good");
+        assert.deepEqual(fields, { name: ['bob'], x: ['5'] });
+        res.end('good');
       } catch (err) {
-        res.end("bad");
+        res.end('bad');
       }
     });
   }),
-  new Route("GET", "/slowresponse", (req, res) => {
+  new Route('GET', '/slowresponse', (req, res) => {
     res.writeHead(200);
-    res.write("x".repeat(8192));
+    res.write('x'.repeat(8192));
     setTimeout(() => {
-      res.write("y".repeat(8192));
+      res.write('y'.repeat(8192));
       res.end();
     }, 25);
   }),
-  new Route("GET", "/gzipped", (req, res) => {
-    res.writeHead(200, { "Content-Encoding": "gzip" });
+  new Route('GET', '/gzipped', (req, res) => {
+    res.writeHead(200, { 'Content-Encoding': 'gzip' });
 
     let gzip = zlib.createGzip();
     gzip.pipe(res);
-    gzip.end("x".repeat(10000));
+    gzip.end('x'.repeat(10000));
   }),
-  new Route("GET", "/chunked", (req, res) => {
+  new Route('GET', '/chunked', (req, res) => {
     res.writeHead(200, {
-      "Transfer-Encoding": "chunked",
+      'Transfer-Encoding': 'chunked',
     });
-    res.end("x".repeat(10000));
+    res.end('x'.repeat(10000));
   }),
-  new Route("GET", "/web-worker-agent", (req, res) => {
-    fs.readFile(path.resolve(__dirname, "../../build/nr-loader-worker.min.js"), "utf-8", (err, data) => {
-      res.writeHead(200, { "Content-Type": "text/javascript" }); //Solution!
+  new Route('GET', '/web-worker-agent', (req, res) => {
+    fs.readFile(path.resolve(__dirname, '../../build/nr-loader-worker.min.js'), 'utf-8', (err, data) => {
+      res.writeHead(200, { 'Content-Type': 'text/javascript' }); //Solution!
       res.write(data);
       res.end();
     });
@@ -515,7 +515,7 @@ function parseParams(req) {
 }
 
 function resolveAssetPath(relativePath, baseDir) {
-  if (relativePath[0] === "/") relativePath = relativePath.slice(1);
+  if (relativePath[0] === '/') relativePath = relativePath.slice(1);
 
   let resolvedAbsolutePath = path.resolve(baseDir, relativePath);
   if (resolvedAbsolutePath.slice(0, baseDir.length) === baseDir) {
@@ -549,9 +549,9 @@ class AssetServer extends BaseServer {
     this.timeout = testConfig.timeout;
     this.defaultLoader = testConfig.loader;
     this.debugShim = testConfig.debugShim;
-    this.buildDir = path.resolve(__dirname, "../../build");
-    this.assetsDir = path.resolve(__dirname, "../../");
-    this.unitTestDir = path.resolve(__dirname, "../../tests/browser");
+    this.buildDir = path.resolve(__dirname, '../../build');
+    this.assetsDir = path.resolve(__dirname, '../../');
+    this.unitTestDir = path.resolve(__dirname, '../../tests/browser');
     this.addHandler(this.serviceRequest.bind(this));
     this.router = new Router(this, testConfig, output);
     this.agentTransform = new AgentInjectorTransform(this.buildDir, this, this.router);
@@ -562,10 +562,10 @@ class AssetServer extends BaseServer {
     this.corsServer = new TestServer();
 
     this.transformMap = {
-      "text/html": this.agentTransform,
-      "application/javascript": new BrowserifyTransform(testConfig),
+      'text/html': this.agentTransform,
+      'application/javascript': new BrowserifyTransform(testConfig),
     };
-    this.tag = "asset";
+    this.tag = 'asset';
     this.logRequests = !!testConfig.logRequests;
     this.routes = testRoutes;
   }
@@ -595,9 +595,9 @@ class AssetServer extends BaseServer {
   serviceRequest(req, rsp, ssl) {
     let parsedUrl = url.parse(req.url);
 
-    if (parsedUrl.pathname === "/") {
+    if (parsedUrl.pathname === '/') {
       this.serveIndex(req, rsp, ssl);
-    } else if (parsedUrl.pathname.slice(0, 7) === "/build/") {
+    } else if (parsedUrl.pathname.slice(0, 7) === '/build/') {
       this.serveBuiltAsset(req, rsp, ssl);
     } else if (this.findDynamicRoute(req)) {
       let route = this.findDynamicRoute(req);
@@ -608,7 +608,7 @@ class AssetServer extends BaseServer {
   }
 
   serveBuiltAsset(req, rsp, ssl) {
-    let relativePath = url.parse(req.url).pathname.replace(/^\/build/, "");
+    let relativePath = url.parse(req.url).pathname.replace(/^\/build/, '');
     let assetPath = resolveAssetPath(relativePath, this.buildDir);
 
     if (!assetPath) return rsp.end(404);
@@ -631,7 +631,7 @@ class AssetServer extends BaseServer {
   }
 
   writeError(rsp, errorMessage) {
-    console.log("WRITE ERROR!", errorMessage);
+    console.log('WRITE ERROR!', errorMessage);
     rsp.writeHead(500);
     rsp.end(errorMessage);
   }
@@ -646,7 +646,7 @@ class AssetServer extends BaseServer {
 
       if (!transform || !transform.test(params)) {
         rsp.writeHead(200, {
-          "Content-Type": mimeType || "text/html",
+          'Content-Type': mimeType || 'text/html',
         });
         return fs.createReadStream(assetPath).pipe(rsp);
       }
@@ -654,7 +654,7 @@ class AssetServer extends BaseServer {
       transform.execute(params, assetPath, ssl, (err, transformed) => {
         if (err) return this.writeError(rsp, `Error while transforming asset ${err}: ${err.stack}`);
         rsp.writeHead(200, {
-          "Content-Type": "text/html",
+          'Content-Type': 'text/html',
         });
         rsp.end(transformed);
       });
@@ -667,11 +667,11 @@ class AssetServer extends BaseServer {
 
   serveIndex(req, res) {
     res.writeHead(200, {
-      "Content-Type": "text/html",
+      'Content-Type': 'text/html',
     });
 
     if (!this.generateIndex) {
-      return res.end("index not rendered during test runs");
+      return res.end('index not rendered during test runs');
     }
 
     this.generateIndex((err, data) => {
@@ -696,8 +696,8 @@ class AssetServer extends BaseServer {
 
     ls(this.assetsDir).pipe(
       through((entry) => {
-        if (entry.path.match("git|node_modules")) return entry.ignore;
-        if (entry.path.slice(-5) !== ".html") return;
+        if (entry.path.match('git|node_modules')) return entry.ignore;
+        if (entry.path.slice(-5) !== '.html') return;
         files.push({
           name: path.relative(server.assetsDir, entry.path),
           target: path.relative(server.assetsDir, entry.path),
@@ -707,7 +707,7 @@ class AssetServer extends BaseServer {
 
     ls(this.unitTestDir).pipe(
       through((entry) => {
-        if (entry.path.slice(-11) !== ".browser.js") return;
+        if (entry.path.slice(-11) !== '.browser.js') return;
         files.push({
           name: path.relative(server.assetsDir, entry.path),
           target: unitTestTarget(entry.path),
@@ -717,14 +717,14 @@ class AssetServer extends BaseServer {
 
     function unitTestTarget(file) {
       let script = `/${path.relative(server.assetsDir, file)}?browserify=true`;
-      return server.urlFor("/tests/assets/browser.html", {
+      return server.urlFor('/tests/assets/browser.html', {
         config: Buffer.from(
           JSON.stringify({
             assetServerPort: server.router.assetServer.port,
             assetServerSSLPort: server.router.assetServer.sslPort,
             corsServerPort: server.corsServer.port,
           })
-        ).toString("base64"),
+        ).toString('base64'),
         script: script,
       });
     }
@@ -734,11 +734,11 @@ class AssetServer extends BaseServer {
     }
 
     function buildResponse() {
-      let response = "<html><head></head><body><ul>\n";
+      let response = '<html><head></head><body><ul>\n';
       files.forEach((entry) => {
         response += `<li><a href="${entry.target}">${entry.name}</a></li>\n`;
       });
-      response += "</ul></body><html>";
+      response += '</ul></body><html>';
       server.cachedIndex = response;
       done(null, response);
     }
@@ -747,7 +747,7 @@ class AssetServer extends BaseServer {
   urlFor(relativePath, options, ssl = false) {
     let query = querystring.encode(options);
     return url.resolve(
-      `${ssl ? "https" : "http"}://${this.host}:${ssl ? this.sslPort : this.port}`,
+      `${ssl ? 'https' : 'http'}://${this.host}:${ssl ? this.sslPort : this.port}`,
       `${relativePath}?${query}`
     );
   }

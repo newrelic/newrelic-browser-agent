@@ -5,31 +5,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var request = require("request");
-var yargs = require("yargs");
+var request = require('request');
+var yargs = require('yargs');
 
 var argv = yargs
-  .string("environments")
-  .describe("environments", "Comma-separated list of environments to upload loaders to")
-  .default("environments", "staging,production,eu")
+  .string('environments')
+  .describe('environments', 'Comma-separated list of environments to upload loaders to')
+  .default('environments', 'staging,production,eu')
 
-  .string("production-api-key")
-  .describe("production-api-key", "API key to use for talking to production RPM site to upload loaders")
+  .string('production-api-key')
+  .describe('production-api-key', 'API key to use for talking to production RPM site to upload loaders')
 
-  .string("staging-api-key")
-  .describe("staging-api-key", "API key to use for talking to staging RPM site to upload loaders")
+  .string('staging-api-key')
+  .describe('staging-api-key', 'API key to use for talking to staging RPM site to upload loaders')
 
-  .string("eu-api-key")
-  .describe("eu-api-key", "API key to use for talking to EU RPM site to upload loaders")
+  .string('eu-api-key')
+  .describe('eu-api-key', 'API key to use for talking to EU RPM site to upload loaders')
 
-  .string("v")
-  .describe("v", "Browser Agent version number")
+  .string('v')
+  .describe('v', 'Browser Agent version number')
 
-  .boolean("skip-upload-failures")
-  .describe("skip-upload-failures", "Don't bail out after the first failure, keep trying other requests")
+  .boolean('skip-upload-failures')
+  .describe('skip-upload-failures', "Don't bail out after the first failure, keep trying other requests")
 
-  .help("h")
-  .alias("h", "help").argv;
+  .help('h')
+  .alias('h', 'help').argv;
 
 /**
  * An async wrapper around the execution logic
@@ -37,11 +37,11 @@ var argv = yargs
  */
 async function run() {
   var loaders = await loaderFilenames();
-  var targetEnvironments = argv.environments.split(",");
+  var targetEnvironments = argv.environments.split(',');
 
   var uploadErrors = [];
   var uploadErrorCallback = null;
-  if (argv["skip-upload-failures"]) {
+  if (argv['skip-upload-failures']) {
     uploadErrorCallback = function (err) {
       uploadErrors.push(err);
     };
@@ -50,7 +50,7 @@ async function run() {
   var steps = [];
 
   targetEnvironments.forEach(function (env) {
-    console.log("Will upload loaders to " + env);
+    console.log('Will upload loaders to ' + env);
     steps.push(function (cb) {
       uploadAllLoadersToDB(env, cb);
     });
@@ -63,10 +63,10 @@ async function run() {
     },
     function (err) {
       if (err) throw err;
-      console.log("All steps finished.");
+      console.log('All steps finished.');
 
       if (uploadErrorCallback && uploadErrors.length > 0) {
-        console.log("Failures:");
+        console.log('Failures:');
         uploadErrors.forEach(function (e) {
           console.log(e);
         });
@@ -103,11 +103,11 @@ async function run() {
   function getFile(path, fileName) {
     var opts = {
       uri: path,
-      method: "GET",
+      method: 'GET',
       gzip: true,
     };
 
-    console.log("downloading ", path);
+    console.log('downloading ', path);
 
     return new Promise((resolve, reject) => {
       request(opts, (err, res, body) => {
@@ -129,7 +129,7 @@ async function run() {
    */
   function uploadLoaderToDB(filename, loader, environment, cb) {
     var baseOptions = {
-      method: "PUT",
+      method: 'PUT',
       followAllRedirects: true,
       json: {
         js_agent_loader: {
@@ -142,26 +142,26 @@ async function run() {
 
     var envOptions = {
       staging: {
-        url: "https://staging-api.newrelic.com/v2/js_agent_loaders/create.json",
+        url: 'https://staging-api.newrelic.com/v2/js_agent_loaders/create.json',
         headers: {
-          "X-Api-Key": argv["staging-api-key"],
+          'X-Api-Key': argv['staging-api-key'],
         },
       },
       eu: {
-        url: "https://api.eu.newrelic.com/v2/js_agent_loaders/create.json",
+        url: 'https://api.eu.newrelic.com/v2/js_agent_loaders/create.json',
         headers: {
-          "X-Api-Key": argv["eu-api-key"],
+          'X-Api-Key': argv['eu-api-key'],
         },
       },
       production: {
-        url: "https://api.newrelic.com/v2/js_agent_loaders/create.json",
+        url: 'https://api.newrelic.com/v2/js_agent_loaders/create.json',
         headers: {
-          "X-Api-Key": argv["production-api-key"],
+          'X-Api-Key': argv['production-api-key'],
         },
       },
     };
 
-    console.log("Uploading loader " + filename + " to " + environment + "...");
+    console.log('Uploading loader ' + filename + ' to ' + environment + '...');
     var options = {
       ...envOptions[environment],
       ...baseOptions,
@@ -170,19 +170,19 @@ async function run() {
     request(options, function (err, res, body) {
       if (err) return cb(err);
       if (res.statusCode === 200) {
-        console.log("Uploaded loader version " + filename + " to " + environment);
+        console.log('Uploaded loader version ' + filename + ' to ' + environment);
         return cb();
       }
 
       cb(
         new Error(
-          "Failed to upload " +
+          'Failed to upload ' +
             filename +
-            " loader to " +
+            ' loader to ' +
             environment +
-            " db: (" +
+            ' db: (' +
             res.statusCode +
-            ") " +
+            ') ' +
             JSON.stringify(body)
         )
       );
@@ -194,8 +194,8 @@ async function run() {
    * @returns {Promise<{[fileName]: string}[]>} Promise contains an array of objects {[filename]: body} --> {'nr-loader-spa-1221.min.js': ...scriptContents}
    */
   async function loaderFilenames() {
-    const loaderTypes = ["rum", "full", "spa"];
-    const version = argv["v"];
+    const loaderTypes = ['rum', 'full', 'spa'];
+    const version = argv['v'];
     const fileNames = loaderTypes
       .map((type) => [
         `nr-loader-${type}-${version}.min.js`,

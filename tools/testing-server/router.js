@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const BaseServer = require("./base-server");
-const defaultResponders = require("./responders");
-const concat = require("concat-stream");
-const url = require("url");
-const querystring = require("querystring");
-const path = require("path");
-const { _extend } = require("util");
-const { asserters } = require("wd");
-const querypack = require("@newrelic/nr-querypack");
+const BaseServer = require('./base-server');
+const defaultResponders = require('./responders');
+const concat = require('concat-stream');
+const url = require('url');
+const querystring = require('querystring');
+const path = require('path');
+const { _extend } = require('util');
+const { asserters } = require('wd');
+const querypack = require('@newrelic/nr-querypack');
 
-let rootDir = path.resolve(__dirname, "../../");
+let rootDir = path.resolve(__dirname, '../../');
 
 class Router extends BaseServer {
   constructor(assetServer, config, output) {
@@ -21,7 +21,7 @@ class Router extends BaseServer {
     this.addHandler((req, res, ssl) => this.serviceRequest(req, res, ssl));
     this.assetServer = assetServer;
     this.handles = {};
-    this.tag = "router";
+    this.tag = 'router';
     this.timeout = config.timeout;
     this.logRequests = !!config.logRequests;
     this.output = output;
@@ -47,12 +47,12 @@ class Router extends BaseServer {
     }
 
     res.writeHead(404);
-    res.end("not found");
+    res.end('not found');
   }
 
   log(testId, message) {
     if (this.handles[testId] && this.handles[testId].browser) {
-      this.handles[testId].browser.stream.queue(message + "\n");
+      this.handles[testId].browser.stream.queue(message + '\n');
     } else {
       this.output.log(message);
     }
@@ -60,7 +60,7 @@ class Router extends BaseServer {
 
   urlFor(relativePath, options) {
     let query = querystring.encode(options);
-    return url.resolve(`${"http"}://${this.assetServer.host}:${this.port}`, `${relativePath}?${query}`);
+    return url.resolve(`${'http'}://${this.assetServer.host}:${this.port}`, `${relativePath}?${query}`);
   }
 }
 
@@ -95,32 +95,32 @@ class RouterHandle {
 
     this.beaconRequests = {
       rum: {
-        methods: ["GET", "POST"],
-        path: "/1/{key}",
+        methods: ['GET', 'POST'],
+        path: '/1/{key}',
       },
       events: {
-        methods: ["GET", "POST"],
-        path: "/events/1/{key}",
+        methods: ['GET', 'POST'],
+        path: '/events/1/{key}',
       },
       errors: {
-        methods: ["GET", "POST"],
-        path: "/jserrors/1/{key}",
+        methods: ['GET', 'POST'],
+        path: '/jserrors/1/{key}',
       },
       errors_get: {
-        methods: ["GET"],
-        path: "/jserrors/1/{key}",
+        methods: ['GET'],
+        path: '/jserrors/1/{key}',
       },
       errors_post: {
-        methods: ["POST"],
-        path: "/jserrors/1/{key}",
+        methods: ['POST'],
+        path: '/jserrors/1/{key}',
       },
       ins: {
-        methods: ["GET", "POST"],
-        path: "/ins/1/{key}",
+        methods: ['GET', 'POST'],
+        path: '/ins/1/{key}',
       },
       resources: {
-        methods: ["GET", "POST"],
-        path: "/resources/1/{key}",
+        methods: ['GET', 'POST'],
+        path: '/resources/1/{key}',
       },
     };
 
@@ -133,7 +133,7 @@ class RouterHandle {
 
   expectRum(appID) {
     return this.expectBeaconRequest(this.beaconRequests.rum, undefined, appID).then((rumData) => {
-      return this.browser.waitForFeature("loaded").then(() => rumData);
+      return this.browser.waitForFeature('loaded').then(() => rumData);
     });
   }
 
@@ -141,7 +141,7 @@ class RouterHandle {
     return this.expectBeaconRequest(this.beaconRequests.events, undefined, appID).then((request) => {
       let { body, query } = request;
       let decoded = querypack.decode(body && body.length ? body : query.e)[0];
-      if (decoded.type === "interaction") {
+      if (decoded.type === 'interaction') {
         return request;
       } else {
         return this.expectEvents();
@@ -153,7 +153,7 @@ class RouterHandle {
     return this.expectBeaconRequest(this.beaconRequests.events, timeout, appID).then((request) => {
       let { body, query } = request;
       let decoded = querypack.decode(body && body.length ? body : query.e)[0];
-      if (decoded.type === "timing") {
+      if (decoded.type === 'timing') {
         return request;
       } else {
         return this.expectTimings();
@@ -165,7 +165,7 @@ class RouterHandle {
     return this.expectBeaconRequest(this.beaconRequests.events, undefined, appID).then((request) => {
       let { body, query } = request;
       let decoded = querypack.decode(body && body.length ? body : query.e)[0];
-      if (decoded.type === "ajax") {
+      if (decoded.type === 'ajax') {
         return request;
       } else {
         return this.expectAjaxEvents();
@@ -173,7 +173,7 @@ class RouterHandle {
     });
   }
 
-  async expectSpecificEvents({ appID, condition = (e) => e.type === "ajax", expecter = "expectAjaxEvents" }) {
+  async expectSpecificEvents({ appID, condition = (e) => e.type === 'ajax', expecter = 'expectAjaxEvents' }) {
     const { body, query } = await this[expecter](appID);
     const ajaxEvents = querypack.decode(body && body.length ? body : query.e);
     let matches = ajaxEvents.filter(condition);
@@ -232,7 +232,7 @@ class RouterHandle {
 
   expectRumAndErrors(appID) {
     return this.expectRum(appID).then(() => {
-      return Promise.all([this.browser.safeGet(this.assetURL("/")), this.expectErrors(appID)]).then(
+      return Promise.all([this.browser.safeGet(this.assetURL('/')), this.expectErrors(appID)]).then(
         ([feat, err]) => err
       );
     });
@@ -241,7 +241,7 @@ class RouterHandle {
   expectRumAndConditionAndErrors(condition, appID) {
     return this.expectRum(appID).then(() => {
       return Promise.all([
-        this.browser.waitFor(asserters.jsCondition(condition)).safeGet(this.assetURL("/")),
+        this.browser.waitFor(asserters.jsCondition(condition)).safeGet(this.assetURL('/')),
         this.expectErrors(appID),
       ]).then(([feat, err]) => err);
     });
@@ -249,16 +249,16 @@ class RouterHandle {
 
   expectRumAndCondition(condition, appID) {
     return this.expectRum(appID).then(() => {
-      return this.browser.waitFor(asserters.jsCondition(condition)).safeGet(this.assetURL("/"));
+      return this.browser.waitFor(asserters.jsCondition(condition)).safeGet(this.assetURL('/'));
     });
   }
 
   expectCustomGet(path, handler, appID) {
-    return this.expect("GET", path, this.timeout, handler, appID);
+    return this.expect('GET', path, this.timeout, handler, appID);
   }
 
   assetURL(asset, query = {}, useRouterUrl = false) {
-    let absolute = path.resolve(rootDir, "tests", "assets", asset);
+    let absolute = path.resolve(rootDir, 'tests', 'assets', asset);
     let relative = path.relative(rootDir, absolute);
     let mergedQuery = _extend({}, query);
 
@@ -267,7 +267,7 @@ class RouterHandle {
     }
 
     _extend(mergedQuery, {
-      loader: query.loader || "full",
+      loader: query.loader || 'full',
       config: Buffer.from(
         JSON.stringify(
           _extend(
@@ -277,31 +277,31 @@ class RouterHandle {
             query.config
           )
         )
-      ).toString("base64"),
+      ).toString('base64'),
     });
 
     function replacer(k, v) {
-      if (typeof v == "object" && v instanceof RegExp) {
+      if (typeof v == 'object' && v instanceof RegExp) {
         let m = v.toString().match(/\/(.*)\/(\w*)/);
-        return `new RegExp('${m[1]}','${m[2] || ""}')`; // serialize regex in a way our test server can receive it
+        return `new RegExp('${m[1]}','${m[2] || ''}')`; // serialize regex in a way our test server can receive it
       }
       return v;
     }
     if (query.init) {
       _extend(mergedQuery, {
-        init: Buffer.from(JSON.stringify(query.init, replacer)).toString("base64"),
+        init: Buffer.from(JSON.stringify(query.init, replacer)).toString('base64'),
       });
     }
 
     if (query.workerCommands) {
       _extend(mergedQuery, {
-        workerCommands: Buffer.from(JSON.stringify(query.workerCommands)).toString("base64"),
+        workerCommands: Buffer.from(JSON.stringify(query.workerCommands)).toString('base64'),
       });
     }
 
     if (query.scriptString) {
       _extend(mergedQuery, {
-        scriptString: Buffer.from(query.scriptString).toString("base64"),
+        scriptString: Buffer.from(query.scriptString).toString('base64'),
       });
     }
 
@@ -312,12 +312,12 @@ class RouterHandle {
   }
 
   beaconURL() {
-    return `${"http"}://${this.router.assetServer.host}:${this.router.port}`;
+    return `${'http'}://${this.router.assetServer.host}:${this.router.port}`;
   }
 
   urlForBrowserTest(file) {
-    return this.router.assetServer.urlFor("/tests/assets/browser.html", {
-      loader: "full",
+    return this.router.assetServer.urlFor('/tests/assets/browser.html', {
+      loader: 'full',
       config: Buffer.from(
         JSON.stringify({
           licenseKey: this.testID,
@@ -325,13 +325,13 @@ class RouterHandle {
           assetServerSSLPort: this.router.assetServer.sslPort,
           corsServerPort: this.router.assetServer.corsServer.port,
         })
-      ).toString("base64"),
-      script: "/" + path.relative(rootDir, file) + "?browserify=true",
+      ).toString('base64'),
+      script: '/' + path.relative(rootDir, file) + '?browserify=true',
     });
   }
 
   serviceRequest(req, res, ssl) {
-    if (req.url.indexOf("isAsset") > -1) {
+    if (req.url.indexOf('isAsset') > -1) {
       let parsedUrl = url.parse(req.url);
       return this.router.assetServer.serveAsset(req, res, parsedUrl, ssl);
     }
@@ -357,10 +357,10 @@ class RouterHandle {
     }
 
     res.writeHead(404);
-    res.end("not found");
+    res.end('not found');
 
     function isMatch(testId, spec, req) {
-      let expectedPath = spec.path.replace("{key}", testId);
+      let expectedPath = spec.path.replace('{key}', testId);
       var parsed = url.parse(req.url);
       var methodMatch = spec.methods.indexOf(req.method) !== -1;
       return methodMatch && parsed.pathname === expectedPath;
@@ -369,7 +369,7 @@ class RouterHandle {
 
   waitFor(methods, pathname, timeout, accept, reject, handler, appID) {
     let handle = this;
-    let expectedPath = pathname.replace("{key}", this.testID);
+    let expectedPath = pathname.replace('{key}', this.testID);
     let duration = timeout;
     let expected = {
       test: test,
@@ -395,8 +395,8 @@ class RouterHandle {
       // ex. router.expectErrors(3) will create a promise that will only resolve
       // once a request is made from the test with '?a=3 as part of its url query params
       if (appID) {
-        const appIdInQuery = parsed.search.split("&")[0];
-        const id = appIdInQuery ? appIdInQuery.replace("?a=", "") : null;
+        const appIdInQuery = parsed.search.split('&')[0];
+        const id = appIdInQuery ? appIdInQuery.replace('?a=', '') : null;
         if (id) return methodMatch && parsed.pathname === expectedPath && Number(id) === appID;
       }
       return methodMatch && parsed.pathname === expectedPath;
@@ -424,7 +424,7 @@ class RouterHandle {
   }
 
   findResponder(req) {
-    var pathname = url.parse(req.url).pathname.replace(this.testID, "{key}");
+    var pathname = url.parse(req.url).pathname.replace(this.testID, '{key}');
     return this.responders[`${req.method} ${pathname}`];
   }
 

@@ -3,19 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
-const querypack = require("@newrelic/nr-querypack");
+const testDriver = require('../../../tools/jil/index');
+const querypack = require('@newrelic/nr-querypack');
 
-let supported = testDriver.Matcher.withFeature("navTiming");
+let supported = testDriver.Matcher.withFeature('navTiming');
 
-testDriver.test("navTiming on initialPageLoad", supported, function (t, browser, router) {
+testDriver.test('navTiming on initialPageLoad', supported, function (t, browser, router) {
   t.plan(5);
 
   let rumPromise = router.expectRum();
   let eventsPromise = router.expectEvents();
   let loadPromise = browser.safeGet(
-    router.assetURL("spa/xhr.html", {
-      loader: "spa",
+    router.assetURL('spa/xhr.html', {
+      loader: 'spa',
       init: { session_trace: { enabled: false } },
     })
   );
@@ -26,12 +26,12 @@ testDriver.test("navTiming on initialPageLoad", supported, function (t, browser,
 
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
 
-      t.equal(interactionTree.trigger, "initialPageLoad", "initial page load should be tracked with an interaction");
-      t.equal(interactionTree.children.length, 0, "expect no child nodes");
-      t.notOk(interactionTree.isRouteChange, "The interaction does not include a route change.");
+      t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction');
+      t.equal(interactionTree.children.length, 0, 'expect no child nodes');
+      t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.');
 
       let eventPromise = router.expectEvents();
-      let domPromise = browser.elementByCssSelector("body").click();
+      let domPromise = browser.elementByCssSelector('body').click();
 
       return Promise.all([eventPromise, domPromise]).then(([eventData]) => {
         return eventData;
@@ -39,8 +39,8 @@ testDriver.test("navTiming on initialPageLoad", supported, function (t, browser,
     })
     .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
-      t.equal(interactionTree.trigger, "click", "should be triggered by click");
-      t.notOk(interactionTree.navTiming, "should not have navTiming");
+      t.equal(interactionTree.trigger, 'click', 'should be triggered by click');
+      t.notOk(interactionTree.navTiming, 'should not have navTiming');
       t.end();
     })
     .catch(fail);

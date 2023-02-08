@@ -2,23 +2,23 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { originals, getLoaderConfig, getRuntime } from "../../../common/config/config";
-import { handle } from "../../../common/event-emitter/handle";
-import { id } from "../../../common/ids/id";
-import { ffVersion } from "../../../common/browser-version/firefox-version";
-import { dataSize } from "../../../common/util/data-size";
-import { eventListenerOpts } from "../../../common/event-listener/event-listener-opts";
-import { now } from "../../../common/timing/now";
-import { wrapFetch, wrapXhr } from "../../../common/wrap";
-import { parseUrl } from "../../../common/url/parse-url";
-import { DT } from "./distributed-tracing";
-import { responseSizeFromXhr } from "./response-size";
-import { InstrumentBase } from "../../utils/instrument-base";
-import { FEATURE_NAME } from "../constants";
-import { FEATURE_NAMES } from "../../../loaders/features/features";
-import { globalScope } from "../../../common/util/global-scope";
+import { originals, getLoaderConfig, getRuntime } from '../../../common/config/config';
+import { handle } from '../../../common/event-emitter/handle';
+import { id } from '../../../common/ids/id';
+import { ffVersion } from '../../../common/browser-version/firefox-version';
+import { dataSize } from '../../../common/util/data-size';
+import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts';
+import { now } from '../../../common/timing/now';
+import { wrapFetch, wrapXhr } from '../../../common/wrap';
+import { parseUrl } from '../../../common/url/parse-url';
+import { DT } from './distributed-tracing';
+import { responseSizeFromXhr } from './response-size';
+import { InstrumentBase } from '../../utils/instrument-base';
+import { FEATURE_NAME } from '../constants';
+import { FEATURE_NAMES } from '../../../loaders/features/features';
+import { globalScope } from '../../../common/util/global-scope';
 
-var handlers = ["load", "error", "abort", "timeout"];
+var handlers = ['load', 'error', 'abort', 'timeout'];
 var handlersLen = handlers.length;
 
 var origRequest = originals.REQ;
@@ -54,21 +54,21 @@ export function getWrappedFetch(ee, handler) {
 }
 
 function subscribeToEvents(agentIdentifier, ee, handler, dt) {
-  ee.on("new-xhr", onNewXhr);
-  ee.on("open-xhr-start", onOpenXhrStart);
-  ee.on("open-xhr-end", onOpenXhrEnd);
-  ee.on("send-xhr-start", onSendXhrStart);
-  ee.on("xhr-cb-time", onXhrCbTime);
-  ee.on("xhr-load-added", onXhrLoadAdded);
-  ee.on("xhr-load-removed", onXhrLoadRemoved);
-  ee.on("xhr-resolved", onXhrResolved);
-  ee.on("addEventListener-end", onAddEventListenerEnd);
-  ee.on("removeEventListener-end", onRemoveEventListenerEnd);
-  ee.on("fn-end", onFnEnd);
-  ee.on("fetch-before-start", onFetchBeforeStart);
-  ee.on("fetch-start", onFetchStart);
-  ee.on("fn-start", onFnStart);
-  ee.on("fetch-done", onFetchDone);
+  ee.on('new-xhr', onNewXhr);
+  ee.on('open-xhr-start', onOpenXhrStart);
+  ee.on('open-xhr-end', onOpenXhrEnd);
+  ee.on('send-xhr-start', onSendXhrStart);
+  ee.on('xhr-cb-time', onXhrCbTime);
+  ee.on('xhr-load-added', onXhrLoadAdded);
+  ee.on('xhr-load-removed', onXhrLoadRemoved);
+  ee.on('xhr-resolved', onXhrResolved);
+  ee.on('addEventListener-end', onAddEventListenerEnd);
+  ee.on('removeEventListener-end', onRemoveEventListenerEnd);
+  ee.on('fn-end', onFnEnd);
+  ee.on('fetch-before-start', onFetchBeforeStart);
+  ee.on('fetch-start', onFetchStart);
+  ee.on('fn-start', onFnStart);
+  ee.on('fetch-done', onFetchDone);
 
   // Setup the context for each new xhr object
   function onNewXhr(xhr) {
@@ -85,7 +85,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     ctx.metrics = this.metrics || {};
 
     xhr.addEventListener(
-      "load",
+      'load',
       function (event) {
         captureXhrData(ctx, xhr);
       },
@@ -107,7 +107,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     if (ffVersion && (ffVersion > 34 || ffVersion < 10)) return;
 
     xhr.addEventListener(
-      "progress",
+      'progress',
       function (event) {
         ctx.lastSize = event.loaded;
       },
@@ -123,21 +123,21 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
 
   function onOpenXhrEnd(args, xhr) {
     var loader_config = getLoaderConfig(agentIdentifier);
-    if ("xpid" in loader_config && this.sameOrigin) {
-      xhr.setRequestHeader("X-NewRelic-ID", loader_config.xpid);
+    if ('xpid' in loader_config && this.sameOrigin) {
+      xhr.setRequestHeader('X-NewRelic-ID', loader_config.xpid);
     }
 
     var payload = dt.generateTracePayload(this.parsedOrigin);
     if (payload) {
       var added = false;
       if (payload.newrelicHeader) {
-        xhr.setRequestHeader("newrelic", payload.newrelicHeader);
+        xhr.setRequestHeader('newrelic', payload.newrelicHeader);
         added = true;
       }
       if (payload.traceContextParentHeader) {
-        xhr.setRequestHeader("traceparent", payload.traceContextParentHeader);
+        xhr.setRequestHeader('traceparent', payload.traceContextParentHeader);
         if (payload.traceContextStateHeader) {
-          xhr.setRequestHeader("tracestate", payload.traceContextStateHeader);
+          xhr.setRequestHeader('tracestate', payload.traceContextStateHeader);
         }
         added = true;
       }
@@ -161,19 +161,19 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
 
     this.listener = function (evt) {
       try {
-        if (evt.type === "abort" && !context.loadCaptureCalled) {
+        if (evt.type === 'abort' && !context.loadCaptureCalled) {
           context.params.aborted = true;
         }
         if (
-          evt.type !== "load" ||
+          evt.type !== 'load' ||
           (context.called === context.totalCbs &&
-            (context.onloadCalled || typeof xhr.onload !== "function") &&
-            typeof context.end === "function")
+            (context.onloadCalled || typeof xhr.onload !== 'function') &&
+            typeof context.end === 'function')
         )
           context.end(xhr);
       } catch (e) {
         try {
-          ee.emit("internal-error", [e]);
+          ee.emit('internal-error', [e]);
         } catch (err) {
           // do nothing
         }
@@ -191,15 +191,15 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     else this.called += 1;
     if (
       this.called === this.totalCbs &&
-      (this.onloadCalled || typeof xhr.onload !== "function") &&
-      typeof this.end === "function"
+      (this.onloadCalled || typeof xhr.onload !== 'function') &&
+      typeof this.end === 'function'
     )
       this.end(xhr);
   }
 
   function onXhrLoadAdded(cb, useCapture) {
     // Ignore if the same arguments are passed to addEventListener twice
-    var idString = "" + id(cb) + !!useCapture;
+    var idString = '' + id(cb) + !!useCapture;
     if (!this.xhrGuids || this.xhrGuids[idString]) return;
     this.xhrGuids[idString] = true;
 
@@ -208,7 +208,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
 
   function onXhrLoadRemoved(cb, useCapture) {
     // Ignore if event listener didn't exist for this xhr object
-    var idString = "" + id(cb) + !!useCapture;
+    var idString = '' + id(cb) + !!useCapture;
     if (!this.xhrGuids || !this.xhrGuids[idString]) return;
     delete this.xhrGuids[idString];
 
@@ -221,23 +221,23 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
 
   // Listen for load listeners to be added to xhr objects
   function onAddEventListenerEnd(args, xhr) {
-    if (xhr instanceof origXHR && args[0] === "load") ee.emit("xhr-load-added", [args[1], args[2]], xhr);
+    if (xhr instanceof origXHR && args[0] === 'load') ee.emit('xhr-load-added', [args[1], args[2]], xhr);
   }
 
   function onRemoveEventListenerEnd(args, xhr) {
-    if (xhr instanceof origXHR && args[0] === "load") ee.emit("xhr-load-removed", [args[1], args[2]], xhr);
+    if (xhr instanceof origXHR && args[0] === 'load') ee.emit('xhr-load-removed', [args[1], args[2]], xhr);
   }
 
   // Listen for those load listeners to be called.
   function onFnStart(args, xhr, methodName) {
     if (xhr instanceof origXHR) {
-      if (methodName === "onload") this.onload = true;
-      if ((args[0] && args[0].type) === "load" || this.onload) this.xhrCbStart = now();
+      if (methodName === 'onload') this.onload = true;
+      if ((args[0] && args[0].type) === 'load' || this.onload) this.xhrCbStart = now();
     }
   }
 
   function onFnEnd(args, xhr) {
-    if (this.xhrCbStart) ee.emit("xhr-cb-time", [now() - this.xhrCbStart, this.onload, xhr], xhr);
+    if (this.xhrCbStart) ee.emit('xhr-cb-time', [now() - this.xhrCbStart, this.onload, xhr], xhr);
   }
 
   // this event only handles DT
@@ -245,7 +245,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     var opts = args[1] || {};
     var url;
     // argument is USVString
-    if (typeof args[0] === "string") {
+    if (typeof args[0] === 'string') {
       url = args[0];
       // argument is Request object
     } else if (args[0] && args[0].url) {
@@ -265,7 +265,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
       return;
     }
 
-    if (typeof args[0] === "string" || (globalScope?.URL && args[0] && args[0] instanceof URL)) {
+    if (typeof args[0] === 'string' || (globalScope?.URL && args[0] && args[0] instanceof URL)) {
       var clone = {};
 
       for (var key in opts) {
@@ -291,13 +291,13 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     function addHeaders(headersObj, payload) {
       var added = false;
       if (payload.newrelicHeader) {
-        headersObj.set("newrelic", payload.newrelicHeader);
+        headersObj.set('newrelic', payload.newrelicHeader);
         added = true;
       }
       if (payload.traceContextParentHeader) {
-        headersObj.set("traceparent", payload.traceContextParentHeader);
+        headersObj.set('traceparent', payload.traceContextParentHeader);
         if (payload.traceContextStateHeader) {
-          headersObj.set("tracestate", payload.traceContextStateHeader);
+          headersObj.set('tracestate', payload.traceContextStateHeader);
         }
         added = true;
       }
@@ -318,17 +318,17 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     var target = this.target;
 
     var url;
-    if (typeof target === "string") {
+    if (typeof target === 'string') {
       url = target;
-    } else if (typeof target === "object" && target instanceof origRequest) {
+    } else if (typeof target === 'object' && target instanceof origRequest) {
       url = target.url;
-    } else if (globalScope?.URL && typeof target === "object" && target instanceof URL) {
+    } else if (globalScope?.URL && typeof target === 'object' && target instanceof URL) {
       url = target.href;
     }
     addUrl(this, url);
 
     var method = (
-      "" + ((target && target instanceof origRequest && target.method) || opts.method || "GET")
+      '' + ((target && target instanceof origRequest && target.method) || opts.method || 'GET')
     ).toUpperCase();
     this.params.method = method;
 
@@ -346,7 +346,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
 
     // convert rxSize to a number
     var responseSize;
-    if (typeof this.rxSize === "string" && this.rxSize.length > 0) {
+    if (typeof this.rxSize === 'string' && this.rxSize.length > 0) {
       responseSize = +this.rxSize;
     }
 
@@ -356,7 +356,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
       duration: now() - this.startTime,
     };
 
-    handler("xhr", [this.params, metrics, this.startTime, this.endTime, "fetch"], this, FEATURE_NAMES.ajax);
+    handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax);
   }
 
   // Create report for XHR request that has finished
@@ -382,7 +382,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     // Always send cbTime, even if no noticeable time was taken.
     metrics.cbTime = this.cbTime;
 
-    handler("xhr", [params, metrics, this.startTime, this.endTime, "xhr"], this, FEATURE_NAMES.ajax);
+    handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this, FEATURE_NAMES.ajax);
   }
 
   function addUrl(ctx, url) {
@@ -392,7 +392,7 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     params.hostname = parsed.hostname;
     params.port = parsed.port;
     params.protocol = parsed.protocol;
-    params.host = parsed.hostname + ":" + parsed.port;
+    params.host = parsed.hostname + ':' + parsed.port;
     params.pathname = parsed.pathname;
     ctx.parsedOrigin = parsed;
     ctx.sameOrigin = parsed.sameOrigin;
@@ -405,9 +405,9 @@ function subscribeToEvents(agentIdentifier, ee, handler, dt) {
     if (size) ctx.metrics.rxSize = size;
 
     if (ctx.sameOrigin) {
-      var header = xhr.getResponseHeader("X-NewRelic-App-Data");
+      var header = xhr.getResponseHeader('X-NewRelic-App-Data');
       if (header) {
-        ctx.params.cat = header.split(", ").pop();
+        ctx.params.cat = header.split(', ').pop();
       }
     }
 

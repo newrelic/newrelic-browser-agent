@@ -3,26 +3,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { canonicalFunctionName } from "./canonical-function-name";
-import { cleanURL } from "../../../common/url/clean-url";
-import { computeStackTrace } from "./compute-stack-trace";
-import { stringHashCode } from "./string-hash-code";
-import { truncateSize } from "./format-stack-trace";
+import { canonicalFunctionName } from './canonical-function-name';
+import { cleanURL } from '../../../common/url/clean-url';
+import { computeStackTrace } from './compute-stack-trace';
+import { stringHashCode } from './string-hash-code';
+import { truncateSize } from './format-stack-trace';
 
-import { registerHandler as register } from "../../../common/event-emitter/register-handler";
-import { HarvestScheduler } from "../../../common/harvest/harvest-scheduler";
-import { stringify } from "../../../common/util/stringify";
-import { handle } from "../../../common/event-emitter/handle";
-import { mapOwn } from "../../../common/util/map-own";
-import { getInfo, getConfigurationValue, getRuntime } from "../../../common/config/config";
-import { now } from "../../../common/timing/now";
-import { globalScope } from "../../../common/util/global-scope";
+import { registerHandler as register } from '../../../common/event-emitter/register-handler';
+import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler';
+import { stringify } from '../../../common/util/stringify';
+import { handle } from '../../../common/event-emitter/handle';
+import { mapOwn } from '../../../common/util/map-own';
+import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config';
+import { now } from '../../../common/timing/now';
+import { globalScope } from '../../../common/util/global-scope';
 
-import { AggregateBase } from "../../utils/aggregate-base";
-import { FEATURE_NAME } from "../constants";
-import { drain } from "../../../common/drain/drain";
-import { FEATURE_NAMES } from "../../../loaders/features/features";
-import { onWindowLoad } from "../../../common/window/load";
+import { AggregateBase } from '../../utils/aggregate-base';
+import { FEATURE_NAME } from '../constants';
+import { drain } from '../../../common/drain/drain';
+import { FEATURE_NAMES } from '../../../loaders/features/features';
+import { onWindowLoad } from '../../../common/window/load';
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME;
@@ -37,29 +37,29 @@ export class Aggregate extends AggregateBase {
     this.errorOnPage = false;
 
     // this will need to change to match whatever ee we use in the instrument
-    this.ee.on("interactionSaved", (interaction) => this.onInteractionSaved(interaction));
+    this.ee.on('interactionSaved', (interaction) => this.onInteractionSaved(interaction));
 
     // this will need to change to match whatever ee we use in the instrument
-    this.ee.on("interactionDiscarded", (interaction) => this.onInteractionDiscarded(interaction));
+    this.ee.on('interactionDiscarded', (interaction) => this.onInteractionDiscarded(interaction));
 
-    register("err", (...args) => this.storeError(...args), this.featureName, this.ee);
-    register("ierr", (...args) => this.storeError(...args), this.featureName, this.ee);
+    register('err', (...args) => this.storeError(...args), this.featureName, this.ee);
+    register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee);
 
-    var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, "jserrors.harvestTimeSeconds") || 10;
+    var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'jserrors.harvestTimeSeconds') || 10;
 
     this.scheduler = new HarvestScheduler(
-      "jserrors",
+      'jserrors',
       { onFinished: (...args) => this.onHarvestFinished(...args) },
       this
     );
-    this.scheduler.harvest.on("jserrors", (...args) => this.onHarvestStarted(...args));
+    this.scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args));
     this.ee.on(`drain-${this.featureName}`, () => {
       if (!this.blocked) this.scheduler.startTimer(harvestTimeSeconds);
     });
 
     // if rum response determines that customer lacks entitlements for jserrors endpoint, block it
     register(
-      "block-err",
+      'block-err',
       () => {
         this.blocked = true;
         this.scheduler.stopTimer();
@@ -73,7 +73,7 @@ export class Aggregate extends AggregateBase {
 
   onHarvestStarted(options) {
     // this gets rid of dependency in AJAX module
-    var body = this.aggregator.take(["err", "ierr", "xhr"]);
+    var body = this.aggregator.take(['err', 'ierr', 'xhr']);
 
     if (options.retry) {
       this.currentBody = body;
@@ -82,12 +82,12 @@ export class Aggregate extends AggregateBase {
     var payload = { body: body, qs: {} };
     var releaseIds = stringify(getRuntime(this.agentIdentifier).releaseIds);
 
-    if (releaseIds !== "{}") {
+    if (releaseIds !== '{}') {
       payload.qs.ri = releaseIds;
     }
 
     if (body && body.err && body.err.length && !this.errorOnPage) {
-      payload.qs.pve = "1";
+      payload.qs.pve = '1';
       this.errorOnPage = true;
     }
     return payload;
@@ -113,31 +113,31 @@ export class Aggregate extends AggregateBase {
   }
 
   getBucketName(params, customParams) {
-    return this.nameHash(params) + ":" + stringHashCode(stringify(customParams));
+    return this.nameHash(params) + ':' + stringHashCode(stringify(customParams));
   }
 
   canonicalizeURL(url, cleanedOrigin) {
-    if (typeof url !== "string") return "";
+    if (typeof url !== 'string') return '';
 
     var cleanedURL = cleanURL(url);
     if (cleanedURL === cleanedOrigin) {
-      return "<inline>";
+      return '<inline>';
     } else {
       return cleanedURL;
     }
   }
 
   buildCanonicalStackString(stackInfo, cleanedOrigin) {
-    var canonicalStack = "";
+    var canonicalStack = '';
 
     for (var i = 0; i < stackInfo.frames.length; i++) {
       var frame = stackInfo.frames[i];
       var func = canonicalFunctionName(frame.func);
 
-      if (canonicalStack) canonicalStack += "\n";
-      if (func) canonicalStack += func + "@";
-      if (typeof frame.url === "string") canonicalStack += frame.url;
-      if (frame.line) canonicalStack += ":" + frame.line;
+      if (canonicalStack) canonicalStack += '\n';
+      if (func) canonicalStack += func + '@';
+      if (typeof frame.url === 'string') canonicalStack += frame.url;
+      if (frame.line) canonicalStack += ':' + frame.line;
     }
 
     return canonicalStack;
@@ -182,7 +182,7 @@ export class Aggregate extends AggregateBase {
       request_uri: globalScope?.location.pathname,
     };
     if (stackInfo.message) {
-      params.message = "" + stackInfo.message;
+      params.message = '' + stackInfo.message;
     }
 
     /**
@@ -211,13 +211,13 @@ export class Aggregate extends AggregateBase {
       this.pageviewReported[bucketHash] = true;
     }
 
-    var type = internal ? "ierr" : "err";
+    var type = internal ? 'ierr' : 'err';
     var newMetrics = { time: time };
 
     // stn and spa aggregators listen to this event - stn sends the error in its payload,
     // and spa annotates the error with interaction info
-    handle("errorAgg", [type, bucketHash, params, newMetrics], undefined, FEATURE_NAMES.sessionTrace, this.ee);
-    handle("errorAgg", [type, bucketHash, params, newMetrics], undefined, FEATURE_NAMES.spa, this.ee);
+    handle('errorAgg', [type, bucketHash, params, newMetrics], undefined, FEATURE_NAMES.sessionTrace, this.ee);
+    handle('errorAgg', [type, bucketHash, params, newMetrics], undefined, FEATURE_NAMES.spa, this.ee);
 
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return;
@@ -235,12 +235,12 @@ export class Aggregate extends AggregateBase {
       }
 
       var jsAttributesHash = stringHashCode(stringify(customParams));
-      var aggregateHash = bucketHash + ":" + jsAttributesHash;
+      var aggregateHash = bucketHash + ':' + jsAttributesHash;
       this.aggregator.store(type, aggregateHash, params, newMetrics, customParams);
     }
 
     function setCustom(key, val) {
-      customParams[key] = val && typeof val === "object" ? stringify(val) : val;
+      customParams[key] = val && typeof val === 'object' ? stringify(val) : val;
     }
   }
 
@@ -267,12 +267,12 @@ export class Aggregate extends AggregateBase {
 
       var hash = item[1] + interaction.root.attrs.id;
       var jsAttributesHash = stringHashCode(stringify(customParams));
-      var aggregateHash = hash + ":" + jsAttributesHash;
+      var aggregateHash = hash + ':' + jsAttributesHash;
 
       this.aggregator.store(item[0], aggregateHash, params, item[3], customParams);
 
       function setCustom(key, val) {
-        customParams[key] = val && typeof val === "object" ? stringify(val) : val;
+        customParams[key] = val && typeof val === 'object' ? stringify(val) : val;
       }
     });
     delete this.errorCache[interaction.id];
@@ -296,12 +296,12 @@ export class Aggregate extends AggregateBase {
 
       var hash = item[1];
       var jsAttributesHash = stringHashCode(stringify(customParams));
-      var aggregateHash = hash + ":" + jsAttributesHash;
+      var aggregateHash = hash + ':' + jsAttributesHash;
 
       this.aggregator.store(item[0], aggregateHash, item[2], item[3], customParams);
 
       function setCustom(key, val) {
-        customParams[key] = val && typeof val === "object" ? stringify(val) : val;
+        customParams[key] = val && typeof val === 'object' ? stringify(val) : val;
       }
     });
     delete this.errorCache[interaction.id];

@@ -17,7 +17,7 @@
         obfuscate: [
           {
             regex: /pii/g,
-            replacement: "OBFUSCATED",
+            replacement: 'OBFUSCATED',
           },
         ],
         ajax: {
@@ -35,14 +35,14 @@
     {config} {loader}
     <script type="text/javascript">
       setTimeout(function () {
-        fetch("/json");
-        throw new Error("example");
-        document.getElementById("btn").click();
+        fetch('/json');
+        throw new Error('example');
+        document.getElementById('btn').click();
       }, 100);
     </script>
     <script>
-      newrelic.addPageAction("pageaction");
-      newrelic.setCustomAttribute("customAttribute", "customAttribute");
+      newrelic.addPageAction('pageaction');
+      newrelic.setCustomAttribute('customAttribute', 'customAttribute');
     </script>
   </head>
 

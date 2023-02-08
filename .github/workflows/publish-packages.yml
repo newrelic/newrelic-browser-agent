@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: "Type of release. patch or minor (major if breaking)"
+        description: 'Type of release. patch or minor (major if breaking)'
         required: true
         type: choice
         options:

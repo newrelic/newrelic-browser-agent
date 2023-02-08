@@ -2,16 +2,16 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { handle } from "../../../common/event-emitter/handle";
-import { wrapHistory, wrapEvents, wrapTimer, wrapRaf } from "../../../common/wrap";
-import { supportsPerformanceObserver } from "../../../common/window/supports-performance-observer";
-import { eventListenerOpts } from "../../../common/event-listener/event-listener-opts";
-import { getRuntime } from "../../../common/config/config";
-import { now } from "../../../common/timing/now";
-import { InstrumentBase } from "../../utils/instrument-base";
-import * as CONSTANTS from "../constants";
-import { FEATURE_NAMES } from "../../../loaders/features/features";
-import { isBrowserScope } from "../../../common/util/global-scope";
+import { handle } from '../../../common/event-emitter/handle';
+import { wrapHistory, wrapEvents, wrapTimer, wrapRaf } from '../../../common/wrap';
+import { supportsPerformanceObserver } from '../../../common/window/supports-performance-observer';
+import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts';
+import { getRuntime } from '../../../common/config/config';
+import { now } from '../../../common/timing/now';
+import { InstrumentBase } from '../../utils/instrument-base';
+import * as CONSTANTS from '../constants';
+import { FEATURE_NAMES } from '../../../loaders/features/features';
+import { isBrowserScope } from '../../../common/util/global-scope';
 
 const {
   ADD_EVENT_LISTENER,
@@ -59,7 +59,7 @@ export class Instrument extends InstrumentBase {
       if (evt instanceof origEvent) {
         // ISSUE: when target is XMLHttpRequest, nr@context should have params so we can calculate event origin
         // When ajax is disabled, this may fail without making ajax a dependency of session_trace
-        handle("bst", [evt, target, this.bstStart, now()], undefined, FEATURE_NAMES.sessionTrace, ee);
+        handle('bst', [evt, target, this.bstStart, now()], undefined, FEATURE_NAMES.sessionTrace, ee);
       }
     });
 
@@ -79,7 +79,7 @@ export class Instrument extends InstrumentBase {
     this.rafEE.on(FN_END, function (args, target) {
       handle(
         BST_TIMER,
-        [target, this.bstStart, now(), "requestAnimationFrame"],
+        [target, this.bstStart, now(), 'requestAnimationFrame'],
         undefined,
         FEATURE_NAMES.sessionTrace,
         ee
@@ -92,7 +92,7 @@ export class Instrument extends InstrumentBase {
     });
     this.ee.on(PUSH_STATE + END, function (args) {
       handle(
-        "bstHist",
+        'bstHist',
         [location.pathname + location.hash, this.startPath, this.time],
         undefined,
         FEATURE_NAMES.sessionTrace,
@@ -104,7 +104,7 @@ export class Instrument extends InstrumentBase {
       // capture initial resources, in case our observer missed anything
       handle(
         BST_RESOURCE,
-        [window.performance.getEntriesByType("resource")],
+        [window.performance.getEntriesByType('resource')],
         undefined,
         FEATURE_NAMES.sessionTrace,
         ee
@@ -114,7 +114,7 @@ export class Instrument extends InstrumentBase {
     } else {
       // collect resource timings once when buffer is full
       if (ADD_EVENT_LISTENER in window.performance) {
-        if (window.performance["c" + learResourceTimings]) {
+        if (window.performance['c' + learResourceTimings]) {
           window.performance[ADD_EVENT_LISTENER](
             RESOURCE_TIMING_BUFFER_FULL,
             onResourceTimingBufferFull,
@@ -122,7 +122,7 @@ export class Instrument extends InstrumentBase {
           );
         } else {
           window.performance[ADD_EVENT_LISTENER](
-            "webkit" + RESOURCE_TIMING_BUFFER_FULL,
+            'webkit' + RESOURCE_TIMING_BUFFER_FULL,
             onResourceTimingBufferFull,
             eventListenerOpts(false)
           );
@@ -139,7 +139,7 @@ export class Instrument extends InstrumentBase {
       });
 
       try {
-        observer.observe({ entryTypes: ["resource"] });
+        observer.observe({ entryTypes: ['resource'] });
       } catch (e) {
         // do nothing
       }
@@ -149,7 +149,7 @@ export class Instrument extends InstrumentBase {
       handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)], undefined, FEATURE_NAMES.sessionTrace, ee);
 
       // stop recording once buffer is full
-      if (window.performance["c" + learResourceTimings]) {
+      if (window.performance['c' + learResourceTimings]) {
         try {
           window.performance[REMOVE_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false);
         } catch (e) {
@@ -158,7 +158,7 @@ export class Instrument extends InstrumentBase {
       } else {
         try {
           window.performance[REMOVE_EVENT_LISTENER](
-            "webkit" + RESOURCE_TIMING_BUFFER_FULL,
+            'webkit' + RESOURCE_TIMING_BUFFER_FULL,
             onResourceTimingBufferFull,
             false
           );
@@ -168,9 +168,9 @@ export class Instrument extends InstrumentBase {
       }
     }
 
-    document[ADD_EVENT_LISTENER]("scroll", this.noOp, eventListenerOpts(false));
-    document[ADD_EVENT_LISTENER]("keypress", this.noOp, eventListenerOpts(false));
-    document[ADD_EVENT_LISTENER]("click", this.noOp, eventListenerOpts(false));
+    document[ADD_EVENT_LISTENER]('scroll', this.noOp, eventListenerOpts(false));
+    document[ADD_EVENT_LISTENER]('keypress', this.noOp, eventListenerOpts(false));
+    document[ADD_EVENT_LISTENER]('click', this.noOp, eventListenerOpts(false));
 
     this.importAggregator();
   }

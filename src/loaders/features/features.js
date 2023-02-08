@@ -1,12 +1,12 @@
 export const FEATURE_NAMES = {
-  ajax: "ajax",
-  jserrors: "jserrors",
-  metrics: "metrics",
-  pageAction: "page_action",
-  pageViewEvent: "page_view_event",
-  pageViewTiming: "page_view_timing",
-  sessionTrace: "session_trace",
-  spa: "spa",
+  ajax: 'ajax',
+  jserrors: 'jserrors',
+  metrics: 'metrics',
+  pageAction: 'page_action',
+  pageViewEvent: 'page_view_event',
+  pageViewTiming: 'page_view_timing',
+  sessionTrace: 'session_trace',
+  spa: 'spa',
 };
 
 // this is the instrumentation order that has been traditionally implemented.

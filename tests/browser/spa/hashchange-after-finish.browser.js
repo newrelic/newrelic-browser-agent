@@ -3,26 +3,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
-jil.browserTest("spa aggregator receives complete interaction when hashchange fires after finish", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('spa aggregator receives complete interaction when hashchange fires after finish', function (t) {
+  let helpers = require('./helpers');
   let originalUrl = window.location.toString();
 
   var expected = {
-    name: "interaction",
+    name: 'interaction',
     attrs: {
-      trigger: "click",
+      trigger: 'click',
       initialPageURL: originalUrl,
       oldURL: originalUrl,
-      newURL: "placeholder",
+      newURL: 'placeholder',
       custom: {
-        "after-hashchange": true,
+        'after-hashchange': true,
       },
     },
     children: [
       {
-        name: "ajax",
+        name: 'ajax',
         children: [],
       },
     ],
@@ -46,20 +46,20 @@ jil.browserTest("spa aggregator receives complete interaction when hashchange fi
 
     // Validates that async work that is spawned by the hash change
     // will be included in the interaction.
-    window.addEventListener("hashchange", function () {
+    window.addEventListener('hashchange', function () {
       setTimeout(function () {
-        newrelic.interaction().setAttribute("after-hashchange", true);
+        newrelic.interaction().setAttribute('after-hashchange', true);
         cb();
       }, 10);
     });
 
-    xhr.open("GET", "/");
+    xhr.open('GET', '/');
     xhr.send();
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(interaction.root.attrs.newURL !== interaction.root.attrs.oldURL, "old and new URLs should be different");
-    t.ok(interaction.root.end, "interaction should be finished");
+    t.ok(interaction.root.attrs.newURL !== interaction.root.attrs.oldURL, 'old and new URLs should be different');
+    t.ok(interaction.root.end, 'interaction should be finished');
     validator.validate(t, interaction);
     t.end();
   }

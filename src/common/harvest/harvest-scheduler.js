@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { submitData } from "../util/submit-data";
-import { SharedContext } from "../context/shared-context";
-import { Harvest, getSubmitMethod } from "./harvest";
-import { subscribeToEOL } from "../unload/eol";
-import { conditionallySet } from "../cookie/nav-cookie";
-import { getConfigurationValue } from "../config/config";
+import { submitData } from '../util/submit-data';
+import { SharedContext } from '../context/shared-context';
+import { Harvest, getSubmitMethod } from './harvest';
+import { subscribeToEOL } from '../unload/eol';
+import { conditionallySet } from '../cookie/nav-cookie';
+import { getConfigurationValue } from '../config/config';
 
 /**
  * Periodically invokes harvest calls and handles retries
@@ -28,7 +28,7 @@ export class HarvestScheduler extends SharedContext {
       if (this.opts.onUnload) this.opts.onUnload();
       this.runHarvest({ unload: true });
       conditionallySet(this.sharedContext.agentIdentifier);
-    }, getConfigurationValue(this.sharedContext.agentIdentifier, "allow_bfcache")); // TO DO: remove feature flag after rls stable
+    }, getConfigurationValue(this.sharedContext.agentIdentifier, 'allow_bfcache')); // TO DO: remove feature flag after rls stable
   }
 
   startTimer(interval, initialDelay) {
@@ -68,7 +68,7 @@ export class HarvestScheduler extends SharedContext {
       var retry = submitMethod.method === submitData.xhr;
       var payload = this.opts.getPayload({ retry: retry });
       if (payload) {
-        payload = Object.prototype.toString.call(payload) === "[object Array]" ? payload : [payload];
+        payload = Object.prototype.toString.call(payload) === '[object Array]' ? payload : [payload];
         for (var i = 0; i < payload.length; i++) {
           this.harvest.send(this.endpoint, payload[i], opts, submitMethod, onHarvestFinished);
         }

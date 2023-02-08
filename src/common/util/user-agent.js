@@ -16,8 +16,8 @@ if (navigator.userAgent) {
   var userAgent = navigator.userAgent;
   var parts = userAgent.match(safari);
 
-  if (parts && userAgent.indexOf("Chrome") === -1 && userAgent.indexOf("Chromium") === -1) {
-    agentName = "Safari";
+  if (parts && userAgent.indexOf('Chrome') === -1 && userAgent.indexOf('Chromium') === -1) {
+    agentName = 'Safari';
     agentVersion = parts[1];
   }
 }
@@ -43,8 +43,8 @@ export function match(name, version) {
     return false;
   }
 
-  var detectedParts = agentVersion.split(".");
-  var requestedParts = version.split(".");
+  var detectedParts = agentVersion.split('.');
+  var requestedParts = version.split('.');
   for (var i = 0; i < requestedParts.length; i++) {
     if (requestedParts[i] !== detectedParts[i]) {
       return false;

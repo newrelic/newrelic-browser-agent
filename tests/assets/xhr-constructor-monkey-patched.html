@@ -14,14 +14,14 @@
       };
 
       for (prop in origXHR) {
-        if (typeof origXHR[prop] === "function") {
+        if (typeof origXHR[prop] === 'function') {
           window.XMLHttpRequest[prop] = origXHR[prop];
         }
       }
 
       var xhrDone = false;
       var xhr = new XMLHttpRequest();
-      xhr.open("GET", "/json");
+      xhr.open('GET', '/json');
       xhr.onload = function () {
         window.xhrDone = true;
       };

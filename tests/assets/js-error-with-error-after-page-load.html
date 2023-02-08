@@ -7,13 +7,13 @@
   <head>
     {init} {config} {loader}
     <script>
-      newrelic.setCustomAttribute("customParamKey", 0);
-      newrelic.setCustomAttribute("customParamKey", 1);
-      newrelic.setCustomAttribute("customParamKey", 2);
+      newrelic.setCustomAttribute('customParamKey', 0);
+      newrelic.setCustomAttribute('customParamKey', 1);
+      newrelic.setCustomAttribute('customParamKey', 2);
 
       function triggerError() {
         try {
-          throw new Error("My error");
+          throw new Error('My error');
         } catch (e) {
           NREUM.noticeError(e);
         }
@@ -28,9 +28,9 @@
     <br /><br />
     <button>Trigger error</button>
     <script>
-      var btn = document.getElementById("trigger");
+      var btn = document.getElementById('trigger');
       if (window.addEventListener) {
-        btn.addEventListener("click", triggerError);
+        btn.addEventListener('click', triggerError);
       } else {
         btn.onclick = triggerError;
       }

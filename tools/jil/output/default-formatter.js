@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const charm = require("charm");
-const encode = require("charm/lib/encode");
-const BaseFormatter = require("./base-formatter");
-const debounce = require("just-debounce");
-const { format } = require("util");
+const charm = require('charm');
+const encode = require('charm/lib/encode');
+const BaseFormatter = require('./base-formatter');
+const debounce = require('just-debounce');
+const { format } = require('util');
 
 let colorCodes = {
   red: 31,
@@ -52,7 +52,7 @@ class DefaultFormatter extends BaseFormatter {
     this.rows.push(row);
     this.longest = Math.max(this.longest, parser.name.length);
 
-    parser.on("assert", (d, indent, testNames) => {
+    parser.on('assert', (d, indent, testNames) => {
       row.data.push(d.ok);
       this.draw();
 
@@ -60,11 +60,11 @@ class DefaultFormatter extends BaseFormatter {
       // verbose mode, since in that case it will have been printed already
       // via the 'comment' event.
       if (!d.ok && !this.config.verbose) {
-        let testName = testNames.join(" -> ");
+        let testName = testNames.join(' -> ');
         this.writeLine(name, `# ${testName}`, indent);
       }
 
-      let status = d.ok ? "ok" : "not ok";
+      let status = d.ok ? 'ok' : 'not ok';
       if (!d.ok || this.config.verbose) {
         this.writeLine(name, `${status} ${d.name}`, indent);
       }
@@ -74,20 +74,20 @@ class DefaultFormatter extends BaseFormatter {
 
     this.draw();
 
-    parser.on("extra", (d, indent) => {
+    parser.on('extra', (d, indent) => {
       if (this.config.verbose || d.match(/DEBUG:/)) {
         this.writeLine(name, d, indent + 4);
       }
     });
 
     if (!this.config.verbose) return;
-    parser.on("comment", (d, indent) => this.writeLine(name, `# ${d}`, indent));
-    parser.on("plan", (d, indent) => this.writeLine(name, `${d.start}..${d.end}`, indent));
+    parser.on('comment', (d, indent) => this.writeLine(name, `# ${d}`, indent));
+    parser.on('plan', (d, indent) => this.writeLine(name, `${d.start}..${d.end}`, indent));
   }
 
   log(...args) {
     var data = format(...args);
-    this.writeLine("log", data, 0);
+    this.writeLine('log', data, 0);
   }
 
   writeLine(...args) {
@@ -96,27 +96,27 @@ class DefaultFormatter extends BaseFormatter {
   }
 
   indentString(n) {
-    return new Array(n + 1).join(" ");
+    return new Array(n + 1).join(' ');
   }
 
   computeBlankLine() {
-    return encode("[K") + "\n";
+    return encode('[K') + '\n';
   }
 
   computeLine(name, data, additionalIndent = 0) {
     const color = this.getColor(name);
-    const [first, ...rest] = data.split("\n");
+    const [first, ...rest] = data.split('\n');
     const indent = Math.max(this.longest - name.length + additionalIndent, 0);
 
     // clear to end of line
-    let line = encode("[K");
+    let line = encode('[K');
 
     if (name) {
       line += this.color(color);
       line += `${name}: `;
       line += this.resetColor();
     } else {
-      line += "  ";
+      line += '  ';
     }
 
     if (indent) line += this.indentString(indent);
@@ -135,15 +135,15 @@ class DefaultFormatter extends BaseFormatter {
 
   renderRowStatus(parser) {
     if (!parser.done && parser.started)
-      return `${this.withColor("yellow", "Running...")} - [${this.withColor("green", "Passed")}, ${this.withColor(
-        "red",
-        "Failed"
+      return `${this.withColor('yellow', 'Running...')} - [${this.withColor('green', 'Passed')}, ${this.withColor(
+        'red',
+        'Failed'
       )}]`;
-    else if (!parser.done) return `${this.withColor("yellow", "Pending...")}`;
+    else if (!parser.done) return `${this.withColor('yellow', 'Pending...')}`;
     else
-      return `${this.withColor("yellow", "Done")} - [${this.withColor("green", "Passed")}, ${this.withColor(
-        "red",
-        "Failed"
+      return `${this.withColor('yellow', 'Done')} - [${this.withColor('green', 'Passed')}, ${this.withColor(
+        'red',
+        'Failed'
       )}]`;
   }
 
@@ -151,23 +151,23 @@ class DefaultFormatter extends BaseFormatter {
     let numPassed = asserts.filter(Boolean).length;
     let failures = asserts.length - numPassed;
 
-    let result = "[ ";
+    let result = '[ ';
     let numPassedJust = rjust(asserts.length.toString(), countWidth);
-    result += this.withColor("green", numPassedJust);
-    result += " / ";
+    result += this.withColor('green', numPassedJust);
+    result += ' / ';
 
     if (failures > 0) {
-      result += this.withColor("red", failures);
+      result += this.withColor('red', failures);
     } else {
       result += failures;
     }
-    result += " ]";
+    result += ' ]';
     return result;
 
     function rjust(string, width) {
-      var result = "";
+      var result = '';
       if (string.length < width) {
-        for (var i = 0; i < width - string.length; i++) result += " ";
+        for (var i = 0; i < width - string.length; i++) result += ' ';
       }
       result += string;
       return result;
@@ -176,7 +176,7 @@ class DefaultFormatter extends BaseFormatter {
 
   redraw() {
     // clear test status
-    let output = this.lines ? encode("[" + this.lines + "A") : "";
+    let output = this.lines ? encode('[' + this.lines + 'A') : '';
     this.lines = 0;
 
     // add new output
@@ -195,7 +195,7 @@ class DefaultFormatter extends BaseFormatter {
     // write test status
     for (let { parser, data } of this.rows) {
       this.lines += 1;
-      let line = this.renderRowStatus(parser) + " " + this.renderCounts(data, assertionCountWidth);
+      let line = this.renderRowStatus(parser) + ' ' + this.renderCounts(data, assertionCountWidth);
       output += this.computeLine(parser.name, line);
     }
 
@@ -203,19 +203,19 @@ class DefaultFormatter extends BaseFormatter {
   }
 
   getColor(name) {
-    let id = name.split("").reduce((n, c) => n + c.charCodeAt(0), 0);
+    let id = name.split('').reduce((n, c) => n + c.charCodeAt(0), 0);
     return colorNames[id % colorNames.length];
   }
 
   color(color) {
-    if (typeof color === "number") return encode("[38;5;" + color + "m");
+    if (typeof color === 'number') return encode('[38;5;' + color + 'm');
     var code = colorCodes[color];
 
-    return encode("[" + code + "m");
+    return encode('[' + code + 'm');
   }
 
   resetColor(charm) {
-    return encode("[0m");
+    return encode('[0m');
   }
 }
 

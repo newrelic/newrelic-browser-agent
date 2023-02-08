@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
 let loaded = false;
 let loadQueue = [];
 
 if (global.addEventListener) {
-  global.addEventListener("load", function () {
+  global.addEventListener('load', function () {
     loaded = true;
     for (var i = 0; i < loadQueue.length; ++i) {
       loadQueue[i]();
@@ -25,30 +25,30 @@ function onWindowLoad(cb) {
   }
 }
 
-jil.browserTest("sync event in timer", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('sync event in timer', function (t) {
+  let helpers = require('./helpers');
   let validator = new helpers.InteractionValidator({
-    name: "interaction",
+    name: 'interaction',
     children: [
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "timer",
+          name: 'timer',
         },
         children: [
           {
-            name: "ajax",
+            name: 'ajax',
             children: [
               {
-                type: "customTracer",
+                type: 'customTracer',
                 attrs: {
-                  name: "timer",
+                  name: 'timer',
                 },
                 children: [
                   {
-                    type: "customTracer",
+                    type: 'customTracer',
                     attrs: {
-                      name: "timer",
+                      name: 'timer',
                     },
                     children: [],
                   },
@@ -57,9 +57,9 @@ jil.browserTest("sync event in timer", function (t) {
             ],
           },
           {
-            type: "customTracer",
+            type: 'customTracer',
             attrs: {
-              name: "timer",
+              name: 'timer',
             },
             children: [],
           },
@@ -76,7 +76,7 @@ jil.browserTest("sync event in timer", function (t) {
 
   function onInteractionStart(cb) {
     setTimeout(
-      newrelic.interaction().createTracer("timer", () => {
+      newrelic.interaction().createTracer('timer', () => {
         var first = true;
         var xhr = new XMLHttpRequest();
 
@@ -84,46 +84,46 @@ jil.browserTest("sync event in timer", function (t) {
           if (!first) return;
           first = false;
           setTimeout(
-            newrelic.interaction().createTracer("timer", function () {
-              setTimeout(newrelic.interaction().createTracer("timer", cb));
+            newrelic.interaction().createTracer('timer', function () {
+              setTimeout(newrelic.interaction().createTracer('timer', cb));
             })
           );
         };
 
-        xhr.open("GET", "/");
+        xhr.open('GET', '/');
         xhr.send();
-        setTimeout(newrelic.interaction().createTracer("timer", function () {}));
+        setTimeout(newrelic.interaction().createTracer('timer', function () {}));
       }),
       0
     );
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(interaction.root.end, "interaction should be finished and have an end time");
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    t.ok(interaction.root.end, 'interaction should be finished and have an end time');
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
     validator.validate(t, interaction);
     t.end();
   }
 });
 
-jil.browserTest("sync event in click", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('sync event in click', function (t) {
+  let helpers = require('./helpers');
   let validator = new helpers.InteractionValidator({
-    name: "interaction",
+    name: 'interaction',
     children: [
       {
-        name: "ajax",
+        name: 'ajax',
         children: [
           {
-            type: "customTracer",
+            type: 'customTracer',
             attrs: {
-              name: "timer",
+              name: 'timer',
             },
             children: [
               {
-                type: "customTracer",
+                type: 'customTracer',
                 attrs: {
-                  name: "timer",
+                  name: 'timer',
                 },
                 children: [],
               },
@@ -132,9 +132,9 @@ jil.browserTest("sync event in click", function (t) {
         ],
       },
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "timer",
+          name: 'timer',
         },
         children: [],
       },
@@ -155,20 +155,20 @@ jil.browserTest("sync event in click", function (t) {
       if (!first) return;
       first = false;
       setTimeout(
-        newrelic.interaction().createTracer("timer", function () {
-          setTimeout(newrelic.interaction().createTracer("timer", cb));
+        newrelic.interaction().createTracer('timer', function () {
+          setTimeout(newrelic.interaction().createTracer('timer', cb));
         })
       );
     };
 
-    xhr.open("GET", "/");
+    xhr.open('GET', '/');
     xhr.send();
-    setTimeout(newrelic.interaction().createTracer("timer", function () {}));
+    setTimeout(newrelic.interaction().createTracer('timer', function () {}));
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(interaction.root.end, "interaction should be finished and have an end time");
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    t.ok(interaction.root.end, 'interaction should be finished and have an end time');
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
     validator.validate(t, interaction);
     t.end();
   }

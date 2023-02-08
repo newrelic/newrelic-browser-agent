@@ -1,18 +1,18 @@
-const yargs = require("yargs");
-const request = require("request");
+const yargs = require('yargs');
+const request = require('request');
 
-const argv = yargs.string("v").describe("v", "The version of the loader to check in NRDB").argv;
+const argv = yargs.string('v').describe('v', 'The version of the loader to check in NRDB').argv;
 
-const version = argv["v"];
+const version = argv['v'];
 
 if (!version) {
-  console.log("version required...");
+  console.log('version required...');
   process.exit(1);
 }
 
 var opts = {
-  uri: "https://staging-api.newrelic.com/v2/js_agent_loaders/version.json",
-  method: "GET",
+  uri: 'https://staging-api.newrelic.com/v2/js_agent_loaders/version.json',
+  method: 'GET',
   gzip: true,
   qs: { loader_version: `nr-loader-spa-${version}.min.js` },
 };

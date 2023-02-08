@@ -1,8 +1,8 @@
-import { registerDrain } from "../../common/drain/drain";
-import { FeatureBase } from "./feature-base";
-import { onWindowLoad } from "../../common/window/load";
-import { isWorkerScope } from "../../common/util/global-scope";
-import { warn } from "../../common/util/console";
+import { registerDrain } from '../../common/drain/drain';
+import { FeatureBase } from './feature-base';
+import { onWindowLoad } from '../../common/window/load';
+import { isWorkerScope } from '../../common/util/global-scope';
+import { warn } from '../../common/util/console';
 
 export class InstrumentBase extends FeatureBase {
   constructor(agentIdentifier, aggregator, featureName, auto = true) {
@@ -27,7 +27,7 @@ export class InstrumentBase extends FeatureBase {
           new Aggregate(this.agentIdentifier, this.aggregator);
           this.resolve();
         } catch (e) {
-          warn("Something prevented the agent from being downloaded.");
+          warn('Something prevented the agent from being downloaded.');
         }
       };
       // theres no window.load event on non-browser scopes, lazy load immediately

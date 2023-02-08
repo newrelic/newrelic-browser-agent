@@ -1,6 +1,6 @@
-const testDriver = require("../../../tools/jil/index");
-const { workerTypes, typeToMatcher } = require("./helpers");
-const { fail, querypack, getXhrFromResponse } = require("../xhr/helpers");
+const testDriver = require('../../../tools/jil/index');
+const { workerTypes, typeToMatcher } = require('./helpers');
+const { fail, querypack, getXhrFromResponse } = require('../xhr/helpers');
 
 workerTypes.forEach((type) => {
   const browsersWithOrWithoutModuleSupport = typeToMatcher(type);
@@ -36,7 +36,7 @@ function addEventListenerPatched(type, browserVersionMatcher) {
             }
 
             function patchAddEventListener(prototype) {
-              if (prototype.hasOwnProperty && prototype.hasOwnProperty("addEventListener")) {
+              if (prototype.hasOwnProperty && prototype.hasOwnProperty('addEventListener')) {
                 var orig = prototype.addEventListener;
                 prototype.addEventListener = function (event, callback, bubble) {
                   orig.call(this, event, wrap(callback), bubble);
@@ -45,7 +45,7 @@ function addEventListenerPatched(type, browserVersionMatcher) {
             }
 
             var proto = XMLHttpRequest.prototype;
-            while (proto && !proto.hasOwnProperty("addEventListener")) {
+            while (proto && !proto.hasOwnProperty('addEventListener')) {
               proto = Object.getPrototypeOf(proto);
             }
             patchAddEventListener(proto);
@@ -53,8 +53,8 @@ function addEventListenerPatched(type, browserVersionMatcher) {
           () => {
             var xhrDone = false;
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", "/json");
-            xhr.addEventListener("load", function () {
+            xhr.open('GET', '/json');
+            xhr.addEventListener('load', function () {
               xhrDone = true;
             });
             xhr.send();
@@ -67,10 +67,10 @@ function addEventListenerPatched(type, browserVersionMatcher) {
 
       Promise.all([loadPromise, xhrMetricsPromise])
         .then(([, response]) => {
-          t.ok(!!getXhrFromResponse(response), "got XHR data");
+          t.ok(!!getXhrFromResponse(response), 'got XHR data');
           t.end();
         })
-        .catch(fail(t, "unexpected problem reading payload"));
+        .catch(fail(t, 'unexpected problem reading payload'));
     }
   );
 }
@@ -91,13 +91,13 @@ function constructorMonkeyPatched(type, browserVersionMatcher) {
               return new origXHR(flags);
             };
             for (let prop in origXHR) {
-              if (typeof origXHR[prop] === "function") {
+              if (typeof origXHR[prop] === 'function') {
                 self.XMLHttpRequest[prop] = origXHR[prop];
               }
             }
             var xhrDone = false;
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", "/json");
+            xhr.open('GET', '/json');
             xhr.onload = function () {
               xhrDone = true;
             };
@@ -111,10 +111,10 @@ function constructorMonkeyPatched(type, browserVersionMatcher) {
 
       Promise.all([loadPromise, xhrMetricsPromise])
         .then(([, response]) => {
-          t.ok(!!getXhrFromResponse(response), "got XHR data");
+          t.ok(!!getXhrFromResponse(response), 'got XHR data');
           t.end();
         })
-        .catch(fail(t, "unexpected problem reading payload"));
+        .catch(fail(t, 'unexpected problem reading payload'));
     }
   );
 }
@@ -128,29 +128,29 @@ function catCors(type, browserVersionMatcher) {
         workerCommands: [
           () => {
             if (!NREUM.loader_config) NREUM.loader_config = {};
-            NREUM.loader_config.xpid = "12#34";
+            NREUM.loader_config.xpid = '12#34';
           },
           `self.testId = '${router.testID}'`,
           () => {
-            var url = "http://" + NREUM.info.beacon + "/cat-cors/" + testId;
+            var url = 'http://' + NREUM.info.beacon + '/cat-cors/' + testId;
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", url);
+            xhr.open('GET', url);
             xhr.send();
           },
         ].map((x) => x.toString()),
       });
 
       const loadPromise = browser.get(assetURL);
-      const meowPromise = router.expectCustomGet("/cat-cors/{key}", (req, res) => {
-        res.end("ok");
+      const meowPromise = router.expectCustomGet('/cat-cors/{key}', (req, res) => {
+        res.end('ok');
       });
 
       Promise.all([meowPromise, loadPromise])
         .then(([req]) => {
-          t.notok(req.headers["x-newrelic-id"], "cross-origin XHR should not have CAT header");
+          t.notok(req.headers['x-newrelic-id'], 'cross-origin XHR should not have CAT header');
           t.end();
         })
-        .catch(fail(t, "unexpected error"));
+        .catch(fail(t, 'unexpected error'));
     }
   );
 }
@@ -172,13 +172,13 @@ function harvestRetried(type, browserVersionMatcher) {
           () => {
             setTimeout(function () {
               var xhr = new XMLHttpRequest();
-              xhr.open("GET", "/json");
+              xhr.open('GET', '/json');
               xhr.send();
             }, 2000);
           },
         ].map((x) => x.toString()),
       });
-      router.scheduleResponse("events", 429);
+      router.scheduleResponse('events', 429);
 
       const loadPromise = browser.safeGet(assetURL);
       const ajaxPromise = router.expectAjaxEvents();
@@ -186,7 +186,7 @@ function harvestRetried(type, browserVersionMatcher) {
 
       Promise.all([ajaxPromise, loadPromise])
         .then(([result]) => {
-          t.equal(result.res.statusCode, 429, "server responded with 429");
+          t.equal(result.res.statusCode, 429, 'server responded with 429');
           firstBody = querypack.decode(result.body);
           return router.expectAjaxEvents();
         })
@@ -199,9 +199,9 @@ function harvestRetried(type, browserVersionMatcher) {
             });
           });
 
-          t.equal(result.res.statusCode, 200, "server responded with 200");
-          t.ok(secondContainsFirst, "second body should include the contents of the first retried harvest");
-          t.equal(router.seenRequests.events, 2, "got two events harvest requests");
+          t.equal(result.res.statusCode, 200, 'server responded with 200');
+          t.ok(secondContainsFirst, 'second body should include the contents of the first retried harvest');
+          t.equal(router.seenRequests.events, 2, 'got two events harvest requests');
           t.end();
         })
         .catch(fail(t));
@@ -222,11 +222,11 @@ function abortCalled(type, browserVersionMatcher) {
         workerCommands: [
           () => {
             var xhr = new XMLHttpRequest();
-            xhr.addEventListener("load", function () {
+            xhr.addEventListener('load', function () {
               xhr.abort();
               self.xhrDone = true;
             });
-            xhr.open("GET", "/xhr_with_cat/1");
+            xhr.open('GET', '/xhr_with_cat/1');
             xhr.send();
           },
         ].map((x) => x.toString()),
@@ -238,31 +238,31 @@ function abortCalled(type, browserVersionMatcher) {
       Promise.all([xhrPromise, loadPromise])
         .then(([response]) => {
           const parsedXhrs = getXhrFromResponse(response, browser);
-          t.ok(parsedXhrs, "got XHR data");
-          t.ok(parsedXhrs.length >= 1, "has at least one XHR record");
+          t.ok(parsedXhrs, 'got XHR data');
+          t.ok(parsedXhrs.length >= 1, 'has at least one XHR record');
           t.ok(
             parsedXhrs.find(function (xhr) {
-              return xhr.params && xhr.params.pathname === "/xhr_with_cat/1";
+              return xhr.params && xhr.params.pathname === '/xhr_with_cat/1';
             }),
-            "has xhr with /xhr_with_cat/1 endpoint"
+            'has xhr with /xhr_with_cat/1 endpoint'
           );
           for (const parsedXhr of parsedXhrs) {
-            if (parsedXhr.params.pathname === "/xhr_with_cat/1") {
-              t.equal(parsedXhr.params.method, "GET", "has GET method");
-              t.ok(parsedXhr.params.host, "has a hostname");
-              t.equal(parsedXhr.params.status, 200, "has status of 200");
-              t.equal(parsedXhr.params.cat, "foo", "has CAT data for /xhr_with_cat");
-              t.ok(parsedXhr.metrics, "has metrics");
-              t.equal(parsedXhr.metrics.count, 1, "has one metric count");
-              t.ok(parsedXhr.metrics.duration && parsedXhr.metrics.duration.t >= 0, "has duration >= 0");
-              t.equal(parsedXhr.metrics.rxSize && parsedXhr.metrics.rxSize.t, 409, "has rxSize of 409");
-              t.ok(parsedXhr.metrics.cbTime && parsedXhr.metrics.cbTime.t >= 0, "has cbTime >= 0");
-              t.ok(parsedXhr.metrics.time && parsedXhr.metrics.time.t >= 0, "has time >= 0");
+            if (parsedXhr.params.pathname === '/xhr_with_cat/1') {
+              t.equal(parsedXhr.params.method, 'GET', 'has GET method');
+              t.ok(parsedXhr.params.host, 'has a hostname');
+              t.equal(parsedXhr.params.status, 200, 'has status of 200');
+              t.equal(parsedXhr.params.cat, 'foo', 'has CAT data for /xhr_with_cat');
+              t.ok(parsedXhr.metrics, 'has metrics');
+              t.equal(parsedXhr.metrics.count, 1, 'has one metric count');
+              t.ok(parsedXhr.metrics.duration && parsedXhr.metrics.duration.t >= 0, 'has duration >= 0');
+              t.equal(parsedXhr.metrics.rxSize && parsedXhr.metrics.rxSize.t, 409, 'has rxSize of 409');
+              t.ok(parsedXhr.metrics.cbTime && parsedXhr.metrics.cbTime.t >= 0, 'has cbTime >= 0');
+              t.ok(parsedXhr.metrics.time && parsedXhr.metrics.time.t >= 0, 'has time >= 0');
             }
           }
           t.end();
         })
-        .catch(fail(t, "unexpected error"));
+        .catch(fail(t, 'unexpected error'));
     }
   );
 }

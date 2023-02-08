@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
-const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require("../err/assertion-helpers");
-const { workerTypes, typeToMatcher } = require("./helpers");
+const testDriver = require('../../../tools/jil/index');
+const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require('../err/assertion-helpers');
+const { workerTypes, typeToMatcher } = require('./helpers');
 
 const init = {
   jserrors: {
@@ -28,16 +28,16 @@ function ignoreErrorsTest(type, matcher) {
         () => {
           var count = 0;
           setTimeout(function () {
-            throw new Error("ignore");
+            throw new Error('ignore');
           }, 0);
 
           setTimeout(function () {
-            throw new Error("report");
+            throw new Error('report');
           }, 0);
 
           newrelic.setErrorHandler(function (err) {
             if (++count === 2) self.errorsThrown = true;
-            return err.message === "ignore";
+            return err.message === 'ignore';
           });
         },
       ].map((x) => x.toString()),
@@ -48,17 +48,17 @@ function ignoreErrorsTest(type, matcher) {
 
     Promise.all([errPromise, loadPromise])
       .then(([response]) => {
-        assertErrorAttributes(t, response.query, "has errors");
+        assertErrorAttributes(t, response.query, 'has errors');
 
         const actualErrors = getErrorsFromResponse(response, browser);
-        t.equal(actualErrors.length, 1, "exactly one error");
+        t.equal(actualErrors.length, 1, 'exactly one error');
 
         let actualError = actualErrors[0];
-        t.equal(actualError.metrics.count, 1, "Should have seen 1 error");
-        t.ok(actualError.metrics.time.t > 0, "Should have a valid timestamp");
-        t.equal(actualError.params.exceptionClass, "Error", "Should be Error class");
-        t.equal(actualError.params.message, "report", "Should have correct message");
-        t.ok(actualError.params.stack_trace, "Should have a stack trace");
+        t.equal(actualError.metrics.count, 1, 'Should have seen 1 error');
+        t.ok(actualError.metrics.time.t > 0, 'Should have a valid timestamp');
+        t.equal(actualError.params.exceptionClass, 'Error', 'Should be Error class');
+        t.equal(actualError.params.message, 'report', 'Should have correct message');
+        t.ok(actualError.params.stack_trace, 'Should have a stack trace');
         t.end();
       })
       .catch(fail);

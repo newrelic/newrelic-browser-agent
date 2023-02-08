@@ -7,7 +7,7 @@ on:
         description: 'CURRENT "stable" version number (must be published to CDN root)'
         required: true
       next:
-        description: "NEXT version number (must be published to CDN root)"
+        description: 'NEXT version number (must be published to CDN root)'
         required: true
 
 jobs:

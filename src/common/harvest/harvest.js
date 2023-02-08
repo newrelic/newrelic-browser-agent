@@ -3,21 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { mapOwn } from "../util/map-own";
-import { obj as encodeObj, param as encodeParam } from "../url/encode";
-import { stringify } from "../util/stringify";
-import { submitData } from "../util/submit-data";
-import { getLocation } from "../url/location";
-import { getInfo, getConfigurationValue, getRuntime, getConfiguration } from "../config/config";
-import { cleanURL } from "../url/clean-url";
-import { now } from "../timing/now";
-import { eventListenerOpts } from "../event-listener/event-listener-opts";
-import { ieVersion } from "../browser-version/ie-version";
-import { Obfuscator } from "../util/obfuscate";
-import { applyFnToProps } from "../util/traverse";
-import { SharedContext } from "../context/shared-context";
-import { VERSION } from "../constants/environment-variables";
-import { isBrowserScope, isWorkerScope } from "../util/global-scope";
+import { mapOwn } from '../util/map-own';
+import { obj as encodeObj, param as encodeParam } from '../url/encode';
+import { stringify } from '../util/stringify';
+import { submitData } from '../util/submit-data';
+import { getLocation } from '../url/location';
+import { getInfo, getConfigurationValue, getRuntime, getConfiguration } from '../config/config';
+import { cleanURL } from '../url/clean-url';
+import { now } from '../timing/now';
+import { eventListenerOpts } from '../event-listener/event-listener-opts';
+import { ieVersion } from '../browser-version/ie-version';
+import { Obfuscator } from '../util/obfuscate';
+import { applyFnToProps } from '../util/traverse';
+import { SharedContext } from '../context/shared-context';
+import { VERSION } from '../constants/environment-variables';
+import { isBrowserScope, isWorkerScope } from '../util/global-scope';
 
 const haveSendBeacon = !!navigator.sendBeacon; // only the web window obj has sendBeacon at this time, so 'false' for other envs
 
@@ -29,10 +29,10 @@ export class Harvest extends SharedContext {
     super(parent); // gets any allowed properties from the parent and stores them in `sharedContext`
 
     this.tooManyRequestsDelay =
-      getConfigurationValue(this.sharedContext.agentIdentifier, "harvest.tooManyRequestsDelay") || 60;
+      getConfigurationValue(this.sharedContext.agentIdentifier, 'harvest.tooManyRequestsDelay') || 60;
     this.obfuscator = new Obfuscator(this.sharedContext);
     this.getScheme = () =>
-      getConfigurationValue(this.sharedContext.agentIdentifier, "ssl") === false ? "http" : "https";
+      getConfigurationValue(this.sharedContext.agentIdentifier, 'ssl') === false ? 'http' : 'https';
 
     this._events = {};
   }
@@ -88,7 +88,7 @@ export class Harvest extends SharedContext {
   }
 
   obfuscateAndSend(endpoint, payload, opts, submitMethod, cbFinished) {
-    applyFnToProps(payload, (...args) => this.obfuscator.obfuscateString(...args), "string", ["e"]);
+    applyFnToProps(payload, (...args) => this.obfuscator.obfuscateString(...args), 'string', ['e']);
     return this._send(endpoint, payload, opts, submitMethod, cbFinished);
   }
 
@@ -109,7 +109,7 @@ export class Harvest extends SharedContext {
     if (!opts) opts = {};
 
     var url =
-      this.getScheme() + "://" + info.errorBeacon + "/" + endpoint + "/1/" + info.licenseKey + this.baseQueryString();
+      this.getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + this.baseQueryString();
     if (payload.qs) url += encodeObj(payload.qs, agentRuntime.maxBytes);
 
     if (!submitMethod) {
@@ -120,7 +120,7 @@ export class Harvest extends SharedContext {
 
     var body;
     var fullUrl = url;
-    if (useBody && endpoint === "events") {
+    if (useBody && endpoint === 'events') {
       body = payload.body.e;
     } else if (useBody) {
       body = stringify(payload.body);
@@ -136,7 +136,7 @@ export class Harvest extends SharedContext {
     if (cbFinished && method === submitData.xhr) {
       var xhr = result;
       xhr.addEventListener(
-        "load",
+        'load',
         function () {
           var result = { sent: true };
           if (this.status === 429) {
@@ -173,17 +173,17 @@ export class Harvest extends SharedContext {
     var ref = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateString(location) : location;
 
     return [
-      "?a=" + info.applicationID,
-      encodeParam("sa", info.sa ? "" + info.sa : ""),
-      encodeParam("v", VERSION),
+      '?a=' + info.applicationID,
+      encodeParam('sa', info.sa ? '' + info.sa : ''),
+      encodeParam('v', VERSION),
       transactionNameParam(info),
-      encodeParam("ct", runtime.customTransaction),
-      "&rst=" + now(),
-      "&ck=0", // ck param DEPRECATED - still expected by backend
-      "&s=" + (runtime.sessionId || "0"), // the 0 id encaps all untrackable and default traffic
-      encodeParam("ref", ref),
-      encodeParam("ptid", runtime.ptid ? "" + runtime.ptid : ""),
-    ].join("");
+      encodeParam('ct', runtime.customTransaction),
+      '&rst=' + now(),
+      '&ck=0', // ck param DEPRECATED - still expected by backend
+      '&s=' + (runtime.sessionId || '0'), // the 0 id encaps all untrackable and default traffic
+      encodeParam('ref', ref),
+      encodeParam('ptid', runtime.ptid ? '' + runtime.ptid : ''),
+    ].join('');
   }
 
   createPayload(type, options) {
@@ -241,7 +241,7 @@ export function getSubmitMethod(endpoint, opts) {
       // this is practically every browser-version in use today, including all workers
       useBody = true;
       method = submitData.xhr;
-    } else if (endpoint === "events" || endpoint === "jserrors") {
+    } else if (endpoint === 'events' || endpoint === 'jserrors') {
       method = submitData.img;
     } else {
       return false;
@@ -258,8 +258,8 @@ export function getSubmitMethod(endpoint, opts) {
 // Prefers the obfuscated transaction name over the plain text.
 // Falls back to making up a name.
 function transactionNameParam(info) {
-  if (info.transactionName) return encodeParam("to", info.transactionName);
-  return encodeParam("t", info.tNamePlain || "Unnamed Transaction");
+  if (info.transactionName) return encodeParam('to', info.transactionName);
+  return encodeParam('t', info.tNamePlain || 'Unnamed Transaction');
 }
 
 // returns a function that can be called to accumulate values to a single object

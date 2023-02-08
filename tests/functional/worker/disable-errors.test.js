@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
-const { workerTypes, typeToMatcher } = require("./helpers");
+const testDriver = require('../../../tools/jil/index');
+const { workerTypes, typeToMatcher } = require('./helpers');
 
 const init = {
   jserrors: {
@@ -32,7 +32,7 @@ function disabledJsErrorsTest(type, matcher) {
   testDriver.test(`${type} - disabled jserrors should not generate errors`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
-      workerCommands: [() => newrelic.noticeError(new Error("test"))].map((x) => x.toString()),
+      workerCommands: [() => newrelic.noticeError(new Error('test'))].map((x) => x.toString()),
     });
 
     let loadPromise = browser.get(assetURL);

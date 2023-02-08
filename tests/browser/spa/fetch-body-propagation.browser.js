@@ -3,34 +3,34 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
 if (process.browser) {
-  let helpers = require("./helpers");
+  let helpers = require('./helpers');
   var loaded = false;
   helpers.onWindowLoad(() => {
     loaded = true;
   });
 }
 
-var bodyMethods = ["arrayBuffer", "blob", "json", "text"];
+var bodyMethods = ['arrayBuffer', 'blob', 'json', 'text'];
 
 bodyMethods.forEach((bodyMethod) => {
-  jil.browserTest("Response." + bodyMethod, function (t) {
-    let helpers = require("./helpers");
+  jil.browserTest('Response.' + bodyMethod, function (t) {
+    let helpers = require('./helpers');
     let validator = new helpers.InteractionValidator({
-      type: "interaction",
+      type: 'interaction',
       children: [
         {
-          type: "ajax",
+          type: 'ajax',
           attrs: {
             isFetch: true,
           },
           children: [
             {
-              type: "customTracer",
+              type: 'customTracer',
               attrs: {
-                name: "timer",
+                name: 'timer',
               },
               children: [],
             },
@@ -41,7 +41,7 @@ bodyMethods.forEach((bodyMethod) => {
 
     t.plan(4 + validator.count);
 
-    t.notok(helpers.currentNodeId(), "interaction should be null at first");
+    t.notok(helpers.currentNodeId(), 'interaction should be null at first');
 
     helpers.startInteraction(onInteractionStart, afterInteractionDone);
 
@@ -49,15 +49,15 @@ bodyMethods.forEach((bodyMethod) => {
 
     function onInteractionStart(cb) {
       window
-        .fetch("/json")
+        .fetch('/json')
         .then(function (res) {
-          const { now } = require("../../../src/common/timing/now");
+          const { now } = require('../../../src/common/timing/now');
           resTime = now();
           return res[bodyMethod]();
         })
         .then(function () {
           setTimeout(
-            newrelic.interaction().createTracer("timer", function () {
+            newrelic.interaction().createTracer('timer', function () {
               cb();
             }),
             0
@@ -67,9 +67,9 @@ bodyMethods.forEach((bodyMethod) => {
     }
 
     function afterInteractionDone(interaction) {
-      t.ok(interaction.root.children[0].end <= resTime, "resTime should be after we got response");
-      t.ok(interaction.root.end, "interaction should be finished and have an end time");
-      t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+      t.ok(interaction.root.children[0].end <= resTime, 'resTime should be after we got response');
+      t.ok(interaction.root.end, 'interaction should be finished and have an end time');
+      t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
       validator.validate(t, interaction);
       t.end();
     }
@@ -77,9 +77,9 @@ bodyMethods.forEach((bodyMethod) => {
 });
 
 // Regression test that an interaction cannot have more than a set number of child nodes (MAX_NODES).
-jil.browserTest("Exceeding max SPA nodes", function (t) {
-  let helpers = require("./helpers");
-  t.notok(helpers.currentNodeId(), "interaction should be null at first");
+jil.browserTest('Exceeding max SPA nodes', function (t) {
+  let helpers = require('./helpers');
+  t.notok(helpers.currentNodeId(), 'interaction should be null at first');
 
   start();
 
@@ -97,7 +97,7 @@ jil.browserTest("Exceeding max SPA nodes", function (t) {
     window.NREUM.init = {
       distributed_tracing: {
         enabled: true,
-        allowed_origins: ["localhost:3333"],
+        allowed_origins: ['localhost:3333'],
       },
     };
     window.NREUM.loader_config = {
@@ -108,9 +108,9 @@ jil.browserTest("Exceeding max SPA nodes", function (t) {
 
     for (var i = 0; i <= 128; i++) {
       try {
-        window.fetch("/json");
+        window.fetch('/json');
       } catch (e) {
-        t.error(e, "Exceeding the number of child nodes in an interaction should not produce an error");
+        t.error(e, 'Exceeding the number of child nodes in an interaction should not produce an error');
       }
     }
     cb();
@@ -121,21 +121,21 @@ jil.browserTest("Exceeding max SPA nodes", function (t) {
   }
 });
 
-jil.browserTest("Response.formData", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('Response.formData', function (t) {
+  let helpers = require('./helpers');
   let validator = new helpers.InteractionValidator({
-    type: "interaction",
+    type: 'interaction',
     children: [
       {
-        type: "ajax",
+        type: 'ajax',
         attrs: {
           isFetch: true,
         },
         children: [
           {
-            type: "customTracer",
+            type: 'customTracer',
             attrs: {
-              name: "timer",
+              name: 'timer',
             },
             children: [],
           },
@@ -146,46 +146,46 @@ jil.browserTest("Response.formData", function (t) {
 
   t.plan(4 + validator.count);
 
-  t.notok(helpers.currentNodeId(), "interaction should be null at first");
+  t.notok(helpers.currentNodeId(), 'interaction should be null at first');
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone);
 
   var resTime;
 
   function onInteractionStart(cb) {
-    window.fetch("/formdata", { method: "POST", body: new FormData() }).then(function (res) {
-      const { now } = require("../../../src/common/timing/now");
+    window.fetch('/formdata', { method: 'POST', body: new FormData() }).then(function (res) {
+      const { now } = require('../../../src/common/timing/now');
       resTime = now();
       if (res.formData) {
         res.formData().catch(function () {
           // can't parse as formdata
-          setTimeout(newrelic.interaction().createTracer("timer", cb), 0);
+          setTimeout(newrelic.interaction().createTracer('timer', cb), 0);
         });
       } else {
-        setTimeout(newrelic.interaction().createTracer("timer", cb), 0);
+        setTimeout(newrelic.interaction().createTracer('timer', cb), 0);
       }
     });
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(interaction.root.children[0].end <= resTime, "resTime should be after res was received");
-    t.ok(interaction.root.end, "interaction should be finished and have an end time");
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    t.ok(interaction.root.children[0].end <= resTime, 'resTime should be after res was received');
+    t.ok(interaction.root.end, 'interaction should be finished and have an end time');
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
     validator.validate(t, interaction);
     t.end();
   }
 });
 
 bodyMethods.forEach((bodyMethod) => {
-  jil.browserTest("Request." + bodyMethod, function (t) {
-    let helpers = require("./helpers");
+  jil.browserTest('Request.' + bodyMethod, function (t) {
+    let helpers = require('./helpers');
     let validator = new helpers.InteractionValidator({
-      type: "interaction",
+      type: 'interaction',
       children: [
         {
-          type: "customTracer",
+          type: 'customTracer',
           attrs: {
-            name: "timer",
+            name: 'timer',
           },
           children: [],
         },
@@ -194,20 +194,20 @@ bodyMethods.forEach((bodyMethod) => {
 
     t.plan(3 + validator.count);
 
-    t.notok(helpers.currentNodeId(), "interaction should be null at first");
+    t.notok(helpers.currentNodeId(), 'interaction should be null at first');
 
     helpers.startInteraction(onInteractionStart, afterInteractionDone);
 
     function onInteractionStart(cb) {
-      var req = new Request("/json", { method: "POST", body: "{}" });
+      var req = new Request('/json', { method: 'POST', body: '{}' });
       req[bodyMethod]().then(function () {
-        setTimeout(newrelic.interaction().createTracer("timer", cb), 0);
+        setTimeout(newrelic.interaction().createTracer('timer', cb), 0);
       });
     }
 
     function afterInteractionDone(interaction) {
-      t.ok(interaction.root.end, "interaction should be finished and have an end time");
-      t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+      t.ok(interaction.root.end, 'interaction should be finished and have an end time');
+      t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
       validator.validate(t, interaction);
       t.end();
     }

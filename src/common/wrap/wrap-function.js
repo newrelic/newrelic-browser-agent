@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ee } from "../event-emitter/contextual-ee";
-import slice from "lodash._slice";
-var flag = "nr@original";
+import { ee } from '../event-emitter/contextual-ee';
+import slice from 'lodash._slice';
+var flag = 'nr@original';
 var has = Object.prototype.hasOwnProperty;
 var inWrapper = false;
 
@@ -24,7 +24,7 @@ export function createWrapperWithEmitter(emitter, always) {
     // Unless fn is both wrappable and unwrapped, return it unchanged.
     if (notWrappable(fn)) return fn;
 
-    if (!prefix) prefix = "";
+    if (!prefix) prefix = '';
 
     nrWrapper[flag] = fn;
     copy(fn, nrWrapper, emitter);
@@ -40,38 +40,38 @@ export function createWrapperWithEmitter(emitter, always) {
         originalThis = this;
         args = slice(arguments);
 
-        if (typeof getContext === "function") {
+        if (typeof getContext === 'function') {
           ctx = getContext(args, originalThis);
         } else {
           ctx = getContext || {};
         }
       } catch (e) {
-        report([e, "", [args, originalThis, methodName], ctx], emitter);
+        report([e, '', [args, originalThis, methodName], ctx], emitter);
       }
 
       // Warning: start events may mutate args!
-      safeEmit(prefix + "start", [args, originalThis, methodName], ctx, bubble);
+      safeEmit(prefix + 'start', [args, originalThis, methodName], ctx, bubble);
 
       try {
         result = fn.apply(originalThis, args);
         return result;
       } catch (err) {
-        safeEmit(prefix + "err", [args, originalThis, err], ctx, bubble);
+        safeEmit(prefix + 'err', [args, originalThis, err], ctx, bubble);
 
         // rethrow error so we don't effect execution by observing.
         throw err;
       } finally {
         // happens no matter what.
-        safeEmit(prefix + "end", [args, originalThis, result], ctx, bubble);
+        safeEmit(prefix + 'end', [args, originalThis, result], ctx, bubble);
       }
     }
   }
 
   function inPlace(obj, methods, prefix, getContext, bubble) {
-    if (!prefix) prefix = "";
+    if (!prefix) prefix = '';
     // If prefix starts with '-' set this boolean to add the method name to
     // the prefix before passing each one to wrap.
-    var prependMethodPrefix = prefix.charAt(0) === "-";
+    var prependMethodPrefix = prefix.charAt(0) === '-';
     var fn;
     var method;
     var i;
@@ -104,7 +104,7 @@ export function createWrapperWithEmitter(emitter, always) {
 function report(args, emitter) {
   emitter || (emitter = ee);
   try {
-    emitter.emit("internal-error", args);
+    emitter.emit('internal-error', args);
   } catch (err) {
     // do nothing
   }

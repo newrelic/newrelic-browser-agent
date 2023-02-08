@@ -3,20 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
-jil.browserTest("Promise.race", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('Promise.race', function (t) {
+  let helpers = require('./helpers');
   var validator = new helpers.InteractionValidator({
     attrs: {
-      trigger: "click",
+      trigger: 'click',
     },
-    name: "interaction",
+    name: 'interaction',
     children: [
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "timer",
+          name: 'timer',
         },
         children: [],
       },
@@ -34,9 +34,9 @@ jil.browserTest("Promise.race", function (t) {
 
     promise.then(function (val) {
       setTimeout(
-        newrelic.interaction().createTracer("timer", function () {
-          t.deepEqual(val, 123, "promise should yield correct value");
-          window.location.hash = "#" + Math.random();
+        newrelic.interaction().createTracer('timer', function () {
+          t.deepEqual(val, 123, 'promise should yield correct value');
+          window.location.hash = '#' + Math.random();
           cb();
         })
       );
@@ -44,47 +44,47 @@ jil.browserTest("Promise.race", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
-    t.ok(interaction.root.end, "interaction should be finished");
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
+    t.ok(interaction.root.end, 'interaction should be finished');
     validator.validate(t, interaction);
     t.end();
   }
 });
 
-jil.browserTest("Promise.race async accept", function (t) {
+jil.browserTest('Promise.race async accept', function (t) {
   if (navigator.userAgent.match(/Edge\/\d/)) {
     t.skip(
-      "Promise.race is broken in edge 20, but fixed in latest release of edge which is not available in saucelabs"
+      'Promise.race is broken in edge 20, but fixed in latest release of edge which is not available in saucelabs'
     );
     t.end();
     return;
   }
 
-  let helpers = require("./helpers");
+  let helpers = require('./helpers');
 
   var validator = new helpers.InteractionValidator({
     attrs: {
-      trigger: "click",
+      trigger: 'click',
     },
-    name: "interaction",
+    name: 'interaction',
     children: [
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "timer",
+          name: 'timer',
         },
         children: [],
       },
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "timer",
+          name: 'timer',
         },
         children: [
           {
-            type: "customTracer",
+            type: 'customTracer',
             attrs: {
-              name: "timer",
+              name: 'timer',
             },
             children: [],
           },
@@ -100,7 +100,7 @@ jil.browserTest("Promise.race async accept", function (t) {
   function onInteractionStart(cb) {
     var a = new Promise(function (resolve) {
       setTimeout(
-        newrelic.interaction().createTracer("timer", function () {
+        newrelic.interaction().createTracer('timer', function () {
           idOnAccept = helpers.currentNodeId();
           resolve(123);
         }),
@@ -110,13 +110,13 @@ jil.browserTest("Promise.race async accept", function (t) {
     var idOnAccept;
     var b = new Promise(function (resolve, reject) {
       setTimeout(
-        newrelic.interaction().createTracer("timer", function () {
+        newrelic.interaction().createTracer('timer', function () {
           reject(456);
           setTimeout(
-            newrelic.interaction().createTracer("timer", function () {
+            newrelic.interaction().createTracer('timer', function () {
               promise.then(function (val) {
-                t.equal(val, 123, "should get accept value in delayed then");
-                t.equal(helpers.currentNodeId(), idOnAccept, "should have same node id as accept");
+                t.equal(val, 123, 'should get accept value in delayed then');
+                t.equal(helpers.currentNodeId(), idOnAccept, 'should have same node id as accept');
                 cb();
               });
             }),
@@ -131,8 +131,8 @@ jil.browserTest("Promise.race async accept", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
-    t.ok(interaction.root.end, "interaction should be finished");
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
+    t.ok(interaction.root.end, 'interaction should be finished');
     validator.validate(t, interaction);
     t.end();
   }

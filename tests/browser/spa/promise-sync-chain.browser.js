@@ -3,20 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
-jil.browserTest("promise.then sync chains", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('promise.then sync chains', function (t) {
+  let helpers = require('./helpers');
   var validator = new helpers.InteractionValidator({
     attrs: {
-      trigger: "click",
+      trigger: 'click',
     },
-    name: "interaction",
+    name: 'interaction',
     children: [
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "timer",
+          name: 'timer',
         },
         children: [],
       },
@@ -35,37 +35,37 @@ jil.browserTest("promise.then sync chains", function (t) {
 
     promise
       .then(function (val) {
-        t.equal(val, 1, "should get correct value in then callback 1");
-        t.equal(helpers.currentNodeId(), rootId, "id should be rootId");
+        t.equal(val, 1, 'should get correct value in then callback 1');
+        t.equal(helpers.currentNodeId(), rootId, 'id should be rootId');
         return 2;
       })
       .then(function (val) {
-        t.equal(val, 2, "should get correct value in then callback 2");
-        t.equal(helpers.currentNodeId(), rootId, "id should be rootId");
+        t.equal(val, 2, 'should get correct value in then callback 2');
+        t.equal(helpers.currentNodeId(), rootId, 'id should be rootId');
         return 3;
       })
       .then(function (val) {
-        t.equal(val, 3, "should get correct value in then callback 3");
-        t.equal(helpers.currentNodeId(), rootId, "id should be rootId");
+        t.equal(val, 3, 'should get correct value in then callback 3');
+        t.equal(helpers.currentNodeId(), rootId, 'id should be rootId');
       });
 
     promise
       .then(function (val) {
-        t.equal(val, 1, "should get correct value in then callback 4");
-        t.equal(helpers.currentNodeId(), rootId, "id should be rootId");
+        t.equal(val, 1, 'should get correct value in then callback 4');
+        t.equal(helpers.currentNodeId(), rootId, 'id should be rootId');
         return 4;
       })
       .then(function (val) {
-        t.equal(val, 4, "should get correct value in then callback 5");
-        t.equal(helpers.currentNodeId(), rootId, "id should be rootId");
+        t.equal(val, 4, 'should get correct value in then callback 5');
+        t.equal(helpers.currentNodeId(), rootId, 'id should be rootId');
         return 5;
       })
       .then(function (val) {
-        t.equal(val, 5, "should get correct value in then callback 6");
-        t.equal(helpers.currentNodeId(), rootId, "id should be rootId");
+        t.equal(val, 5, 'should get correct value in then callback 6');
+        t.equal(helpers.currentNodeId(), rootId, 'id should be rootId');
         setTimeout(
-          newrelic.interaction().createTracer("timer", function () {
-            window.location.hash = "#" + Math.random();
+          newrelic.interaction().createTracer('timer', function () {
+            window.location.hash = '#' + Math.random();
             cb();
           })
         );
@@ -73,8 +73,8 @@ jil.browserTest("promise.then sync chains", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
-    t.ok(interaction.root.end, "interaction should be finished");
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
+    t.ok(interaction.root.end, 'interaction should be finished');
     validator.validate(t, interaction);
     t.end();
   }

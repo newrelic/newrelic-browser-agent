@@ -12,19 +12,19 @@
     Api test!
     <script>
       // should create a 'sm' object for each tracked API call
-      newrelic.noticeError("too many free taco coupons");
-      newrelic.setPageViewName("test");
-      newrelic.setCustomAttribute("test");
+      newrelic.noticeError('too many free taco coupons');
+      newrelic.setPageViewName('test');
+      newrelic.setCustomAttribute('test');
       newrelic.setErrorHandler();
       newrelic.finished();
-      newrelic.addToTrace("test");
-      newrelic.addRelease("test");
+      newrelic.addToTrace('test');
+      newrelic.addRelease('test');
 
       // should increment count ~~-> 5
-      newrelic.setPageViewName("test");
-      newrelic.setPageViewName("test");
-      newrelic.setPageViewName("test");
-      newrelic.setPageViewName("test");
+      newrelic.setPageViewName('test');
+      newrelic.setPageViewName('test');
+      newrelic.setPageViewName('test');
+      newrelic.setPageViewName('test');
     </script>
   </body>
 </html>

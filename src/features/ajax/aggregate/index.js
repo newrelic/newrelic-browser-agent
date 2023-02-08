@@ -2,17 +2,17 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { registerHandler as register } from "../../../common/event-emitter/register-handler";
-import { stringify } from "../../../common/util/stringify";
-import { nullable, numeric, getAddStringContext, addCustomAttributes } from "../../../common/serialize/bel-serializer";
-import { handle } from "../../../common/event-emitter/handle";
-import { getConfigurationValue, getInfo } from "../../../common/config/config";
-import { HarvestScheduler } from "../../../common/harvest/harvest-scheduler";
-import { setDenyList, shouldCollectEvent } from "../../../common/deny-list/deny-list";
-import { AggregateBase } from "../../utils/aggregate-base";
-import { FEATURE_NAME } from "../constants";
-import { drain } from "../../../common/drain/drain";
-import { FEATURE_NAMES } from "../../../loaders/features/features";
+import { registerHandler as register } from '../../../common/event-emitter/register-handler';
+import { stringify } from '../../../common/util/stringify';
+import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer';
+import { handle } from '../../../common/event-emitter/handle';
+import { getConfigurationValue, getInfo } from '../../../common/config/config';
+import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler';
+import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list';
+import { AggregateBase } from '../../utils/aggregate-base';
+import { FEATURE_NAME } from '../constants';
+import { drain } from '../../../common/drain/drain';
+import { FEATURE_NAMES } from '../../../loaders/features/features';
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME;
@@ -25,8 +25,8 @@ export class Aggregate extends AggregateBase {
 
     const ee = this.ee;
 
-    const harvestTimeSeconds = getConfigurationValue(agentIdentifier, "ajax.harvestTimeSeconds") || 10;
-    const MAX_PAYLOAD_SIZE = getConfigurationValue(agentIdentifier, "ajax.maxPayloadSize") || 1000000;
+    const harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'ajax.harvestTimeSeconds') || 10;
+    const MAX_PAYLOAD_SIZE = getConfigurationValue(agentIdentifier, 'ajax.maxPayloadSize') || 1000000;
 
     // Exposes these methods to browser test files -- future TO DO: can be removed once these fns are extracted from the constructor into class func
     this.storeXhr = storeXhr;
@@ -35,13 +35,13 @@ export class Aggregate extends AggregateBase {
       return { ajaxEvents, spaAjaxEvents };
     };
 
-    ee.on("interactionSaved", (interaction) => {
+    ee.on('interactionSaved', (interaction) => {
       if (!spaAjaxEvents[interaction.id]) return;
       // remove from the spaAjaxEvents buffer, and let spa harvest it
       delete spaAjaxEvents[interaction.id];
     });
 
-    ee.on("interactionDiscarded", (interaction) => {
+    ee.on('interactionDiscarded', (interaction) => {
       if (!spaAjaxEvents[interaction.id] || !allAjaxIsEnabled()) return;
 
       spaAjaxEvents[interaction.id].forEach(function (item) {
@@ -51,13 +51,13 @@ export class Aggregate extends AggregateBase {
       delete spaAjaxEvents[interaction.id];
     });
 
-    if (allAjaxIsEnabled()) setDenyList(getConfigurationValue(agentIdentifier, "ajax.deny_list"));
+    if (allAjaxIsEnabled()) setDenyList(getConfigurationValue(agentIdentifier, 'ajax.deny_list'));
 
-    register("xhr", storeXhr, this.featureName, this.ee);
+    register('xhr', storeXhr, this.featureName, this.ee);
 
     if (allAjaxIsEnabled()) {
       scheduler = new HarvestScheduler(
-        "events",
+        'events',
         {
           onFinished: onEventsHarvestFinished,
           getPayload: prepareHarvest,
@@ -81,18 +81,18 @@ export class Aggregate extends AggregateBase {
         hash = stringify([params.status, params.host, params.pathname]);
       }
 
-      handle("bstXhrAgg", ["xhr", hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, ee);
+      handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, ee);
 
       if (!shouldCollectEvent(params)) {
         if (params.hostname === getInfo(agentIdentifier).errorBeacon) {
-          handle("record-supportability", ["Ajax/Events/Excluded/Agent"], undefined, FEATURE_NAMES.metrics, ee);
+          handle('record-supportability', ['Ajax/Events/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, ee);
         } else {
-          handle("record-supportability", ["Ajax/Events/Excluded/App"], undefined, FEATURE_NAMES.metrics, ee);
+          handle('record-supportability', ['Ajax/Events/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee);
         }
         return;
       }
       // store as metric
-      aggregator.store("xhr", hash, params, metrics);
+      aggregator.store('xhr', hash, params, metrics);
 
       if (!allAjaxIsEnabled()) {
         return;
@@ -196,7 +196,7 @@ export class Aggregate extends AggregateBase {
     function Chunk(events) {
       this.addString = getAddStringContext(agentIdentifier); // pass agentIdentifier here
       this.events = events;
-      this.payload = "bel.7;";
+      this.payload = 'bel.7;';
 
       for (var i = 0; i < events.length; i++) {
         var event = events[i];
@@ -211,26 +211,26 @@ export class Aggregate extends AggregateBase {
           this.addString(event.path),
           numeric(event.requestSize),
           numeric(event.responseSize),
-          event.type === "fetch" ? 1 : "",
+          event.type === 'fetch' ? 1 : '',
           this.addString(0), // nodeId
           nullable(event.spanId, this.addString, true) + // guid
             nullable(event.traceId, this.addString, true) + // traceId
             nullable(event.spanTimestamp, numeric, false), // timestamp
         ];
 
-        var insert = "2,";
+        var insert = '2,';
 
         // add custom attributes
         var attrParts = addCustomAttributes(getInfo(agentIdentifier).jsAttributes || {}, this.addString);
         fields.unshift(numeric(attrParts.length));
 
-        insert += fields.join(",");
+        insert += fields.join(',');
 
         if (attrParts && attrParts.length > 0) {
-          insert += ";" + attrParts.join(";");
+          insert += ';' + attrParts.join(';');
         }
 
-        if (i + 1 < events.length) insert += ";";
+        if (i + 1 < events.length) insert += ';';
 
         this.payload += insert;
       }
@@ -242,7 +242,7 @@ export class Aggregate extends AggregateBase {
     }
 
     function allAjaxIsEnabled() {
-      var enabled = getConfigurationValue(agentIdentifier, "ajax.enabled");
+      var enabled = getConfigurationValue(agentIdentifier, 'ajax.enabled');
       if (enabled === false) {
         return false;
       }

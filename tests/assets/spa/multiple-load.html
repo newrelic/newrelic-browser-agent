@@ -11,10 +11,10 @@
   <body>
     <div>Multiple load handlers</div>
     <script type="text/javascript">
-      window.addEventListener("load", function () {
+      window.addEventListener('load', function () {
         makeXhr();
       });
-      window.addEventListener("load", function () {
+      window.addEventListener('load', function () {
         makeXhr();
       });
 
@@ -22,7 +22,7 @@
 
       function makeXhr(ev2) {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/json");
+        xhr.open('GET', '/json');
         xhr.send();
       }
     </script>

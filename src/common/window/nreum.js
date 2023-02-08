@@ -1,16 +1,16 @@
-import { now } from "../timing/now";
-import { globalScope } from "../util/global-scope";
+import { now } from '../timing/now';
+import { globalScope } from '../util/global-scope';
 
 export const defaults = {
-  beacon: "bam.nr-data.net",
-  errorBeacon: "bam.nr-data.net",
+  beacon: 'bam.nr-data.net',
+  errorBeacon: 'bam.nr-data.net',
 };
 
 export function gosNREUM() {
   if (!globalScope.NREUM) {
     globalScope.NREUM = {};
   }
-  if (typeof globalScope.newrelic === "undefined") globalScope.newrelic = globalScope.NREUM;
+  if (typeof globalScope.newrelic === 'undefined') globalScope.newrelic = globalScope.NREUM;
   return globalScope.NREUM;
 }
 

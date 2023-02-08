@@ -1,4 +1,4 @@
-import BrowserAgent from "@newrelic/browser-agent";
+import BrowserAgent from '@newrelic/browser-agent';
 
 const info = {
   ...NREUM.info,
@@ -24,22 +24,22 @@ const nr = new BrowserAgent();
 
 nr.start({ info, init, loader_config, exposed: false });
 
-console.log("component 2, nr", nr);
+console.log('component 2, nr', nr);
 
 class KittenComponent extends HTMLElement {
-  static name = "kitten-component";
+  static name = 'kitten-component';
   constructor() {
     super();
-    this.shadow = this.attachShadow({ mode: "open" });
-    this.elem = document.createElement("img");
-    this.name = "Kitten Component";
+    this.shadow = this.attachShadow({ mode: 'open' });
+    this.elem = document.createElement('img');
+    this.name = 'Kitten Component';
     this.setImg();
   }
 
   fetchImg = async () => {
     const params = {
-      api_key: "TMWFkdtKTv6To8CjL9OqC2KBNQTM8D3N",
-      q: "kitten",
+      api_key: 'TMWFkdtKTv6To8CjL9OqC2KBNQTM8D3N',
+      q: 'kitten',
       limit: 100,
     };
     const url = new URL(`https://api.giphy.com/v1/gifs/search`);
@@ -49,7 +49,7 @@ class KittenComponent extends HTMLElement {
     const result =
       json.data.length > 0
         ? json.data[Math.floor(Math.random() * json.data.length)].images.downsized.url
-        : "https://media.giphy.com/media/3zhxq2ttgN6rEw8SDx/giphy.gif";
+        : 'https://media.giphy.com/media/3zhxq2ttgN6rEw8SDx/giphy.gif';
 
     return result;
   };
@@ -57,8 +57,8 @@ class KittenComponent extends HTMLElement {
   setImg = async () => {
     const img = await this.fetchImg();
     this.elem.src = img;
-    this.elem.style.maxWidth = "100vw";
-    this.elem.style.maxHeight = "250px";
+    this.elem.style.maxWidth = '100vw';
+    this.elem.style.maxHeight = '250px';
     this.shadow.appendChild(this.elem);
     this.sendError();
   };

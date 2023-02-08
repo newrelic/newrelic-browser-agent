@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
-const { fail } = require("../uncat-internal-help.cjs");
+const testDriver = require('../../../tools/jil/index');
+const { fail } = require('../uncat-internal-help.cjs');
 
-let supported = testDriver.Matcher.withFeature("notInternetExplorer");
+let supported = testDriver.Matcher.withFeature('notInternetExplorer');
 const init = {
   spa: {
     harvestTimeSeconds: 5,
@@ -36,13 +36,13 @@ var timedPromiseAll = (promises, ms) =>
     Promise.all(promises),
   ]);
 
-testDriver.test("jspdf generation should not cause error", supported, function (t, browser, router) {
+testDriver.test('jspdf generation should not cause error', supported, function (t, browser, router) {
   // t.plan(1)
 
   // This only works with the full loader. With the SPA loader, an internal error is still generated but the PDF is now generating.
   let loadPromise = browser.get(
-    router.assetURL("third-party-compatibility/jspdf.html", {
-      loader: "full",
+    router.assetURL('third-party-compatibility/jspdf.html', {
+      loader: 'full',
       init,
     })
   );
@@ -51,7 +51,7 @@ testDriver.test("jspdf generation should not cause error", supported, function (
 
   Promise.all([loadPromise, rumPromise])
     .then(() => {
-      return browser.elementByCssSelector("#createPdf").click();
+      return browser.elementByCssSelector('#createPdf').click();
     })
     .then(() => {
       return timedPromiseAll([errPromise], 6000);

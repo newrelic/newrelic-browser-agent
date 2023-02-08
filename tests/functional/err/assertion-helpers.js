@@ -3,33 +3,33 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const url = require("url");
-const canonicalFunctionName = require("../../lib/canonical-function-name");
-const stringHashCode = require("../../lib/string-hash-code");
+const url = require('url');
+const canonicalFunctionName = require('../../lib/canonical-function-name');
+const stringHashCode = require('../../lib/string-hash-code');
 
 function computeExpectedCanonicalStack(expectedStack) {
   let canonicalStack = expectedStack
     .map((frame) => {
-      let line = "";
+      let line = '';
       if (frame.f) line += `${canonicalFunctionName(frame.f)}@`;
       if (frame.u) line += frame.u;
       if (frame.l) line += `:${frame.l}`;
       return line;
     })
-    .join("\n");
+    .join('\n');
 
   return canonicalStack;
 }
 
 function assertErrorAttributes(t, query) {
-  t.equal(query.pve, "1", "pageViewErr reported");
+  t.equal(query.pve, '1', 'pageViewErr reported');
 }
 
 function verifyStackTraceOmits(t, actualErrors, query) {
-  t.equal(actualErrors.length, 1, "Expected exactly one error");
+  t.equal(actualErrors.length, 1, 'Expected exactly one error');
 
   let stackTrace = actualErrors[0].params.stack_trace;
-  t.equal(stackTrace.indexOf(query), -1, "stack trace should not include URL query string or fragment");
+  t.equal(stackTrace.indexOf(query), -1, 'stack trace should not include URL query string or fragment');
 }
 
 function assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL) {
@@ -43,15 +43,15 @@ function assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL
     });
     let actualError = matchingErrors[0];
 
-    t.ok(actualError, "found expected error");
+    t.ok(actualError, 'found expected error');
     // This is a bit hacky here, where we check if the message is
     // 'uncaught error' before testing the class name
-    if (expectedError.message === "uncaught error") {
+    if (expectedError.message === 'uncaught error') {
       var errorClass = actualError.params.exceptionClass;
-      if (browser.hasFeature("uncaughtErrorObject")) {
-        t.equal(errorClass, "Error", "Uncaught error is of Error class");
+      if (browser.hasFeature('uncaughtErrorObject')) {
+        t.equal(errorClass, 'Error', 'Uncaught error is of Error class');
       } else {
-        t.equal(errorClass, "UncaughtException", "Uncaught error class is UncaughtException");
+        t.equal(errorClass, 'UncaughtException', 'Uncaught error class is UncaughtException');
       }
     }
 
@@ -60,29 +60,29 @@ function assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL
     let actualStack = actualError.params.stack_trace;
 
     if (actualStack && actualStack.match(/nrWrapper/)) {
-      t.fail("instrumentation not filtered out of " + actualStack);
+      t.fail('instrumentation not filtered out of ' + actualStack);
     }
 
     // Evaluated code in Firefox is indistinguishable from anonymous function calls. Due to how we test
     // errors, it's not easy to ensure the stack frame line number is correct. Skip this test, disaggregation
     // when people are using eval is not a big concern.
-    if (expectedStack[0].f === "evaluated code" && browser.match("firefox")) {
-      return t.skip("Skipping eval code check for browsers with indistinguishable stacks");
+    if (expectedStack[0].f === 'evaluated code' && browser.match('firefox')) {
+      return t.skip('Skipping eval code check for browsers with indistinguishable stacks');
     }
 
     var expectedCanonicalStack = computeExpectedCanonicalStack(expectedStack);
     var expectedStackHash = stringHashCode(expectedCanonicalStack);
 
-    t.equal(actualError.params.stackHash, expectedStackHash, "Stack hash for error " + expectedError.message);
+    t.equal(actualError.params.stackHash, expectedStackHash, 'Stack hash for error ' + expectedError.message);
 
     if (actualError.params.stackHash !== expectedStackHash && actualError.params.canonicalStack) {
-      t.comment("Actual stack from browser:\n" + actualError.params.origStack);
-      t.comment("\nActual canonical stack from browser:\n" + actualError.params.canonicalStack);
-      t.comment("\nExpected canonical stack:\n" + expectedCanonicalStack + "\n");
+      t.comment('Actual stack from browser:\n' + actualError.params.origStack);
+      t.comment('\nActual canonical stack from browser:\n' + actualError.params.canonicalStack);
+      t.comment('\nExpected canonical stack:\n' + expectedCanonicalStack + '\n');
       t.comment(actualError.params.origStackInfo);
     }
 
-    t.equal(actualError.params["request_uri"], expectedPath, "has correct request_uri attribute");
+    t.equal(actualError.params['request_uri'], expectedPath, 'has correct request_uri attribute');
   }
 }
 
@@ -109,7 +109,7 @@ function getAppIdFromResponse(response) {
 }
 
 function getMetricsFromResponse(response, isSupportability) {
-  var attr = isSupportability ? "sm" : "cm";
+  var attr = isSupportability ? 'sm' : 'cm';
   if (response.body) {
     try {
       var parsedBody = JSON.parse(response.body);

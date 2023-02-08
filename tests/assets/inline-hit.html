@@ -11,19 +11,19 @@
       window.onload = function () {
         // Wait for NREUM.inlineHit to be defined by JS agent payload
         (function do_inlineHit() {
-          if ("NREUM" in window && NREUM.inlineHit) {
+          if ('NREUM' in window && NREUM.inlineHit) {
             // Simulate waiting for flash to load for 300 ms. The real reason we do this is because we can't ping the
             // error beacon at the same time as we do an inlineHit in IE 6 and 7, so this allows our tests to pass.
             setTimeout(function () {
-              NREUM.inlineHit("/inline-hit-1", 378, 198, 829, 290, 401);
+              NREUM.inlineHit('/inline-hit-1', 378, 198, 829, 290, 401);
             }, 300);
 
             setTimeout(function () {
-              NREUM.inlineHit("/inline-hit-2", 378, 198, 829, 290, 401);
+              NREUM.inlineHit('/inline-hit-2', 378, 198, 829, 290, 401);
             }, 400);
 
             setTimeout(function () {
-              NREUM.inlineHit(encodeURIComponent("maliciouse&foo"), "a&b", "c&d", "e&f", "g&h", "i&j");
+              NREUM.inlineHit(encodeURIComponent('maliciouse&foo'), 'a&b', 'c&d', 'e&f', 'g&h', 'i&j');
             }, 500);
           } else window.setTimeout(do_inlineHit, 100);
         })();

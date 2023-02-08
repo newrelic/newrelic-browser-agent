@@ -46,7 +46,7 @@ The Browser agent is loaded onto a web page in two parts. To install a version o
 <script type="text/javascript">
   window.NREUM || (NREUM = {});
   NREUM.info = {
-    licenseKey: "example",
+    licenseKey: 'example',
     applicationID: 123,
   };
 </script>

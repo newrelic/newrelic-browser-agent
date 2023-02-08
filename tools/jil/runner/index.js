@@ -2,18 +2,18 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-const newrelic = require("newrelic");
-const config = require("./args");
-const path = require("path");
-const resolve = require("path").resolve;
-const concat = require("concat-stream");
-const browserList = require("../util/browser-list");
-const Output = require("../output");
-const os = require("os");
-const glob = require("glob");
-const Driver = require("../driver");
-const loadBrowser = require("../loader/loadBrowser");
-const { getSauceLabsCreds, startExternalServices, stopExternalServices } = require("../util/external-services");
+const newrelic = require('newrelic');
+const config = require('./args');
+const path = require('path');
+const resolve = require('path').resolve;
+const concat = require('concat-stream');
+const browserList = require('../util/browser-list');
+const Output = require('../output');
+const os = require('os');
+const glob = require('glob');
+const Driver = require('../driver');
+const loadBrowser = require('../loader/loadBrowser');
+const { getSauceLabsCreds, startExternalServices, stopExternalServices } = require('../util/external-services');
 
 const buildIdentifier = getBuildIdentifier();
 const output = new Output(config);
@@ -21,28 +21,28 @@ const testDriver = new Driver(config, output);
 
 module.exports = testDriver;
 
-process.on("unhandledRejection", (reason, p) => {
+process.on('unhandledRejection', (reason, p) => {
   newrelic.noticeError(reason, {
     build: buildIdentifier,
-    "error.data": reason.data || null,
+    'error.data': reason.data || null,
   });
-  console.log("Unhandled Rejection:");
+  console.log('Unhandled Rejection:');
   console.log(reason);
 });
 
-let tunnelIdentifier = process.env.USER + "@" + os.hostname();
+let tunnelIdentifier = process.env.USER + '@' + os.hostname();
 
 let commandLineTestFiles = config._;
 
 let relativeMainFile = path.relative(__dirname, require.main.filename);
-let launchedFromCli = relativeMainFile === "../bin/cli.js";
-let launchedFromJilServer = relativeMainFile === "../bin/server.js";
+let launchedFromCli = relativeMainFile === '../bin/cli.js';
+let launchedFromJilServer = relativeMainFile === '../bin/server.js';
 
 if (launchedFromCli) {
   if (!process.stdin.isTTY) {
     process.stdin.pipe(
       concat((data) => {
-        let filesFromStdin = data.toString("utf-8").split("\n").filter(Boolean);
+        let filesFromStdin = data.toString('utf-8').split('\n').filter(Boolean);
         let testFiles = commandLineTestFiles.concat(filesFromStdin);
 
         if (testFiles.length === 0) {
@@ -64,14 +64,14 @@ if (launchedFromCli) {
 }
 
 function loadDefaultFiles(cb) {
-  let globOpts = { cwd: path.resolve(__dirname, "../../..") };
+  let globOpts = { cwd: path.resolve(__dirname, '../../..') };
 
-  let fileGlob = "tests/@(browser|functional)/**/*.@(browser|test).js";
+  let fileGlob = 'tests/@(browser|functional)/**/*.@(browser|test).js';
   if (config.u) {
-    fileGlob = "tests/@(browser)/**/*.@(browser|test).js";
+    fileGlob = 'tests/@(browser)/**/*.@(browser|test).js';
   }
   if (config.F) {
-    fileGlob = "tests/@(functional)/**/*.@(test).js";
+    fileGlob = 'tests/@(functional)/**/*.@(test).js';
   }
 
   glob(fileGlob, globOpts, (er, files) => {
@@ -83,15 +83,15 @@ function loadDefaultFiles(cb) {
 function loadFiles(testFiles, cb) {
   for (let file of testFiles) {
     file = resolve(process.cwd(), file);
-    if (file.slice(-11) === ".browser.js") {
+    if (file.slice(-11) === '.browser.js') {
       let spec;
       try {
-        spec = require(file.replace(".browser.", ".spec."));
+        spec = require(file.replace('.browser.', '.spec.'));
       } catch (err) {
         // no spec exists for this file
       }
       loadBrowser(testDriver, file, undefined, spec); // queued for later (browserify)
-    } else if (file.slice(-8) === ".test.js") {
+    } else if (file.slice(-8) === '.test.js') {
       require(file);
     }
   }
@@ -110,13 +110,13 @@ function getBuildIdentifier() {
 
 function loadBrowsersAndRunTests() {
   let browsers = browserList(config.browsers);
-  if (config.browsers === "*@*") {
+  if (config.browsers === '*@*') {
     browsers = browsers.filter((b) => {
-      return b.desired.platform !== "linux";
+      return b.desired.platform !== 'linux';
     });
   }
   if (!browsers || browsers.length === 0) {
-    console.log("No browsers matched: " + config.browsers);
+    console.log('No browsers matched: ' + config.browsers);
     return process.exit(1);
   }
 
@@ -135,7 +135,7 @@ function loadBrowsersAndRunTests() {
     let desired = browser.desired;
     let connectionInfo = {};
 
-    desired["tunnel-identifier"] = tunnelIdentifier;
+    desired['tunnel-identifier'] = tunnelIdentifier;
 
     if (config.seleniumServer) {
       connectionInfo = `http://${config.seleniumServer}/wd/hub`;
@@ -156,7 +156,7 @@ function loadBrowsersAndRunTests() {
     // Firefox requires this capability in order to accept self-signed certificates
     // https://developer.mozilla.org/en-US/docs/Web/WebDriver/Capabilities/acceptInsecureCerts
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1103196
-    if (!desired.hasOwnProperty("acceptInsecureCerts")) {
+    if (!desired.hasOwnProperty('acceptInsecureCerts')) {
       desired.acceptInsecureCerts = true;
     }
 

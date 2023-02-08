@@ -3,18 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
-jil.browserTest("spa cancelled timer", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('spa cancelled timer', function (t) {
+  let helpers = require('./helpers');
 
   let validator = new helpers.InteractionValidator({
-    name: "interaction",
+    name: 'interaction',
     children: [],
   });
 
   t.plan(3 + validator.count);
-  t.notok(helpers.currentNodeId(), "interaction should be null at first");
+  t.notok(helpers.currentNodeId(), 'interaction should be null at first');
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone);
 
@@ -24,7 +24,7 @@ jil.browserTest("spa cancelled timer", function (t) {
     setTimeout(() => clearTimeout(timer1), 5);
 
     let timer1 = setTimeout(() => {
-      t.fail("timer 1 should be cancelled, and should never fire");
+      t.fail('timer 1 should be cancelled, and should never fire');
       cb();
     }, 10);
 
@@ -32,8 +32,8 @@ jil.browserTest("spa cancelled timer", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(interaction.root.end, "interaction should be finished and have an end time");
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    t.ok(interaction.root.end, 'interaction should be finished and have an end time');
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
     validator.validate(t, interaction);
     t.end();
   }

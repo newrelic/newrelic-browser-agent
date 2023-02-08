@@ -9,7 +9,7 @@
       if (window.sessionStorage) {
         window.sessionStorage.clear();
         window.sessionStorage.setItem = function () {
-          throw new Error("session storage not allowed");
+          throw new Error('session storage not allowed');
         };
       }
     </script>

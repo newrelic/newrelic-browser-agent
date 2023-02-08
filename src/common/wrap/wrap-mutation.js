@@ -2,10 +2,10 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { ee as baseEE } from "../event-emitter/contextual-ee";
-import { createWrapperWithEmitter as wfn } from "./wrap-function";
-import { originals } from "../config/config";
-import { isBrowserScope } from "../util/global-scope";
+import { ee as baseEE } from '../event-emitter/contextual-ee';
+import { createWrapperWithEmitter as wfn } from './wrap-function';
+import { originals } from '../config/config';
+import { isBrowserScope } from '../util/global-scope';
 
 const wrapped = {};
 
@@ -19,7 +19,7 @@ export function wrapMutation(sharedEE) {
   if (OriginalObserver) {
     window.MutationObserver = function WrappedMutationObserver(cb) {
       if (this instanceof OriginalObserver) {
-        return new OriginalObserver(wrapFn(cb, "fn-"));
+        return new OriginalObserver(wrapFn(cb, 'fn-'));
       } else {
         return OriginalObserver.apply(this, arguments);
       }
@@ -31,5 +31,5 @@ export function wrapMutation(sharedEE) {
 }
 
 export function scopedEE(sharedEE) {
-  return (sharedEE || baseEE).get("mutation");
+  return (sharedEE || baseEE).get('mutation');
 }

@@ -16,12 +16,12 @@
     <script type="text/javascript">
       var counter = 0;
       setInterval(function () {
-        var text = counter++ + " " + window.location.hash;
-        document.getElementById("counter").textContent = text;
+        var text = counter++ + ' ' + window.location.hash;
+        document.getElementById('counter').textContent = text;
         setTimeout(function () {});
       }, 0);
 
-      document.getElementById("pushStateButton").addEventListener("click", changeUrl);
+      document.getElementById('pushStateButton').addEventListener('click', changeUrl);
 
       function changeUrl(ev) {
         ev.preventDefault();
@@ -33,7 +33,7 @@
           Promise.resolve(1).then(function () {
             if (Date.now() - start < 1000) return doTick();
             setTimeout(function () {
-              window.location.hash = "#" + Math.random();
+              window.location.hash = '#' + Math.random();
             }, 0);
           });
         }

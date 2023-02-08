@@ -3,25 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
 if (process.browser) {
-  var helpers = require("./helpers");
+  var helpers = require('./helpers');
   helpers.onWindowLoad(() => {
     // if interaction were active this would add a note and fail validation
     setTimeout(function () {}, 0);
   });
 }
 
-jil.browserTest("load event during interaction", function (t) {
+jil.browserTest('load event during interaction', function (t) {
   let validator = new helpers.InteractionValidator({
-    name: "interaction",
+    name: 'interaction',
     children: [],
   });
 
   t.plan(3 + validator.count);
 
-  t.notok(helpers.currentNodeId(), "interaction should be null at first");
+  t.notok(helpers.currentNodeId(), 'interaction should be null at first');
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone);
 
@@ -30,8 +30,8 @@ jil.browserTest("load event during interaction", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(interaction.root.end, "interaction should have an end time");
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    t.ok(interaction.root.end, 'interaction should have an end time');
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
     validator.validate(t, interaction);
     t.end();
   }

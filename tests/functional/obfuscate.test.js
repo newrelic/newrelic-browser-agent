@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../tools/jil/index");
-const { fail, checkPayload } = require("./uncat-internal-help.cjs");
+const testDriver = require('../../tools/jil/index');
+const { fail, checkPayload } = require('./uncat-internal-help.cjs');
 
-const browsers = testDriver.Matcher.withFeature("fetchExt");
+const browsers = testDriver.Matcher.withFeature('fetchExt');
 
-testDriver.test("Obfuscate All Events", browsers, function (t, browser, router) {
+testDriver.test('Obfuscate All Events', browsers, function (t, browser, router) {
   const spaPromise = router.expectEvents();
   const ajaxPromise = router.expectAjaxEvents();
   const timingsPromise = router.expectTimings();
@@ -18,32 +18,32 @@ testDriver.test("Obfuscate All Events", browsers, function (t, browser, router) 
   const rumPromise = router.expectRum();
 
   const loadPromise = browser.safeGet(
-    router.assetURL("obfuscate-pii.html", {
-      loader: "spa",
+    router.assetURL('obfuscate-pii.html', {
+      loader: 'spa',
       init: {
         obfuscate: [
           {
             regex: /bam-test/g,
-            replacement: "OBFUSCATED",
+            replacement: 'OBFUSCATED',
           },
           {
             regex: /fakeid/g,
           },
           {
             regex: /pii/g,
-            replacement: "OBFUSCATED",
+            replacement: 'OBFUSCATED',
           },
           {
             regex: /comma/g,
-            replacement: "invalid,string",
+            replacement: 'invalid,string',
           },
           {
             regex: /semicolon/g,
-            replacement: "invalid;string",
+            replacement: 'invalid;string',
           },
           {
             regex: /backslash/g,
-            replacement: "invalid\\string",
+            replacement: 'invalid\\string',
           },
         ],
         ajax: {
@@ -81,19 +81,19 @@ testDriver.test("Obfuscate All Events", browsers, function (t, browser, router) 
         rumResponse,
         loadPromise,
       ]) => {
-        checkPayload(t, ajaxResponse.body, "AJAX");
-        checkPayload(t, errorsResponse.body, "Errors");
-        checkPayload(t, insResponse.body, "INS body");
-        checkPayload(t, resourceResponse.body, "Resource");
-        checkPayload(t, spaResponse.body, "SPA");
-        checkPayload(t, timingsResponse.body, "Timings");
-        checkPayload(t, rumResponse.query, "RUM"); // see harvest.sendRum
+        checkPayload(t, ajaxResponse.body, 'AJAX');
+        checkPayload(t, errorsResponse.body, 'Errors');
+        checkPayload(t, insResponse.body, 'INS body');
+        checkPayload(t, resourceResponse.body, 'Resource');
+        checkPayload(t, spaResponse.body, 'SPA');
+        checkPayload(t, timingsResponse.body, 'Timings');
+        checkPayload(t, rumResponse.query, 'RUM'); // see harvest.sendRum
         // See harvest.baseQueryString
-        checkPayload(t, errorsResponse.query, "Errors query");
-        checkPayload(t, insResponse.query, "INS query");
-        checkPayload(t, resourceResponse.query, "Resource query");
-        checkPayload(t, spaResponse.query, "SPA query");
-        checkPayload(t, timingsResponse.query, "Timings query");
+        checkPayload(t, errorsResponse.query, 'Errors query');
+        checkPayload(t, insResponse.query, 'INS query');
+        checkPayload(t, resourceResponse.query, 'Resource query');
+        checkPayload(t, spaResponse.query, 'SPA query');
+        checkPayload(t, timingsResponse.query, 'Timings query');
         t.end();
       }
     )

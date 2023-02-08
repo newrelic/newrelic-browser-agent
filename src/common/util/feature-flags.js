@@ -2,11 +2,11 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { mapOwn } from "./map-own";
-import { ee } from "../event-emitter/contextual-ee";
-import { handle } from "../event-emitter/handle";
-import { drain } from "../drain/drain";
-import { FEATURE_NAMES } from "../../loaders/features/features";
+import { mapOwn } from './map-own';
+import { ee } from '../event-emitter/contextual-ee';
+import { handle } from '../event-emitter/handle';
+import { drain } from '../drain/drain';
+import { FEATURE_NAMES } from '../../loaders/features/features';
 
 const bucketMap = {
   stn: FEATURE_NAMES.sessionTrace,
@@ -17,11 +17,11 @@ const bucketMap = {
 
 export function activateFeatures(flags, agentIdentifier) {
   var sharedEE = ee.get(agentIdentifier);
-  if (!(flags && typeof flags === "object")) return;
+  if (!(flags && typeof flags === 'object')) return;
   mapOwn(flags, function (flag, val) {
-    if (!val) return handle("block-" + flag, [], undefined, bucketMap[flag], sharedEE);
+    if (!val) return handle('block-' + flag, [], undefined, bucketMap[flag], sharedEE);
     if (!val || activatedFeatures[flag]) return;
-    handle("feat-" + flag, [], undefined, bucketMap[flag], sharedEE);
+    handle('feat-' + flag, [], undefined, bucketMap[flag], sharedEE);
     activatedFeatures[flag] = true;
   });
   drain(agentIdentifier, FEATURE_NAMES.pageViewEvent);

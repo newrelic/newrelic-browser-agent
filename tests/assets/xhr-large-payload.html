@@ -11,8 +11,8 @@
       var count = 0;
       function sendHello() {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/json");
-        xhr.setRequestHeader("Content-Type", "text/plain");
+        xhr.open('GET', '/json');
+        xhr.setRequestHeader('Content-Type', 'text/plain');
         xhr.onload = function (e) {
           if (count < 50) {
             count++;

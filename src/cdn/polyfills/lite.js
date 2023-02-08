@@ -1,2 +1,2 @@
-import "../polyfills.js";
-import "../lite";
+import '../polyfills.js';
+import '../lite';

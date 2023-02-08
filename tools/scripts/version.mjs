@@ -4,10 +4,10 @@
  * @license Apache-2.0
  */
 
-import * as path from "node:path";
-import { fileURLToPath } from "url";
-import { createProjectGraphAsync, logger } from "@nrwl/devkit";
-import { execSync } from "child_process";
+import * as path from 'node:path';
+import { fileURLToPath } from 'url';
+import { createProjectGraphAsync, logger } from '@nrwl/devkit';
+import { execSync } from 'child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -19,11 +19,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
     try {
       logger.info(`Bumping version for packages ${node}`);
 
-      const packagePath = path.resolve(path.join(__dirname, "../../", projectGraph.nodes[node].data.root));
+      const packagePath = path.resolve(path.join(__dirname, '../../', projectGraph.nodes[node].data.root));
 
-      execSync(`npm version ${version} ${additionalArgs.join(" ")}`, {
+      execSync(`npm version ${version} ${additionalArgs.join(' ')}`, {
         cwd: packagePath,
-        stdio: "inherit",
+        stdio: 'inherit',
       });
     } catch (err) {
       logger.error(err);

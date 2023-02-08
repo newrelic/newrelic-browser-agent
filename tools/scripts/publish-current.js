@@ -9,59 +9,59 @@
 // AWS_SECRET_ACCESS_KEY
 // AWS_ACCESS_KEY_ID
 
-var AWS = require("aws-sdk");
-var request = require("request");
-var yargs = require("yargs");
-var loaders = require("jil/util/loaders.js");
+var AWS = require('aws-sdk');
+var request = require('request');
+var yargs = require('yargs');
+var loaders = require('jil/util/loaders.js');
 
 var argv = yargs
-  .string("build-number")
-  .describe("build-number", "build number to promote to current")
+  .string('build-number')
+  .describe('build-number', 'build number to promote to current')
 
-  .string("bucket")
-  .describe("bucket", "S3 bucket name")
+  .string('bucket')
+  .describe('bucket', 'S3 bucket name')
 
-  .string("role")
-  .describe("role", "S3 role ARN")
+  .string('role')
+  .describe('role', 'S3 role ARN')
 
-  .boolean("dry")
-  .describe("dry", "run the script without actually uploading files")
-  .alias("d", "dry")
+  .boolean('dry')
+  .describe('dry', 'run the script without actually uploading files')
+  .alias('d', 'dry')
 
-  .boolean("test")
-  .describe("test", "for testing only, uploads scripts to folder named test")
-  .alias("t", "test")
+  .boolean('test')
+  .describe('test', 'for testing only, uploads scripts to folder named test')
+  .alias('t', 'test')
 
-  .help("h")
-  .alias("h", "help").argv;
+  .help('h')
+  .alias('h', 'help').argv;
 
-if (!argv["buildNumber"]) {
-  console.log("build number must be specified");
+if (!argv['buildNumber']) {
+  console.log('build number must be specified');
   return process.exit(1);
 }
 
-if (!argv["bucket"]) {
-  console.log("S3 bucket must be specified");
+if (!argv['bucket']) {
+  console.log('S3 bucket must be specified');
   return process.exit(1);
 }
 
-if (!argv["role"]) {
-  console.log("S3 role ARN must be specified");
+if (!argv['role']) {
+  console.log('S3 role ARN must be specified');
   return process.exit(1);
 }
 
 var s3 = null;
-var buildNum = argv["build-number"];
-var bucketName = argv["bucket"];
+var buildNum = argv['build-number'];
+var bucketName = argv['bucket'];
 
 var loaderNames = loaders.map(function (loader) {
-  return "nr-loader-" + loader.name + "-{version}";
+  return 'nr-loader-' + loader.name + '-{version}';
 });
 
 var payloadNames = loaders
   .map(function (loader) {
-    if (!loader.payload) return "nr-{version}";
-    return "nr-" + loader.payload + "-{version}";
+    if (!loader.payload) return 'nr-{version}';
+    return 'nr-' + loader.payload + '-{version}';
   })
   .concat([])
   .filter(unique);
@@ -69,32 +69,32 @@ var payloadNames = loaders
 var allNames = loaderNames.concat(payloadNames);
 
 var allFiles = allNames
-  .map(add(".js"))
-  .concat(allNames.map(add(".js.map")))
-  .concat(allNames.map(add(".min.js")))
-  .concat(allNames.map(add(".min.js.map")));
+  .map(add('.js'))
+  .concat(allNames.map(add('.js.map')))
+  .concat(allNames.map(add('.min.js')))
+  .concat(allNames.map(add('.min.js.map')));
 
 var toGet = allFiles.map(setVersion(buildNum));
-var toSet = allFiles.map(setVersion("current"));
+var toSet = allFiles.map(setVersion('current'));
 
-console.log("Promoting " + buildNum + " to be current");
+console.log('Promoting ' + buildNum + ' to be current');
 
 if (!(+buildNum > 470)) {
-  throw new Error("build number must been a recent browser agent version (using buildNum `" + buildNum + "`)");
+  throw new Error('build number must been a recent browser agent version (using buildNum `' + buildNum + '`)');
 }
 
 initialize(function (err) {
   if (err) throw err;
 
   toGet.forEach(function (name, idx) {
-    request("https://js-agent.newrelic.com/" + name, function (err, req, content) {
+    request('https://js-agent.newrelic.com/' + name, function (err, req, content) {
       if (err) throw err;
-      if (!content.match("NREUM")) {
-        throw new Error("Content is missing NREUM, something went wrong");
+      if (!content.match('NREUM')) {
+        throw new Error('Content is missing NREUM, something went wrong');
       }
 
       var key = toSet[idx];
-      var type = "application/javascript";
+      var type = 'application/javascript';
 
       uploadToS3(key, content, type, function (e) {
         if (e) throw e;
@@ -105,8 +105,8 @@ initialize(function (err) {
 
 function initialize(cb) {
   var roleToAssume = {
-    RoleArn: argv["role"],
-    RoleSessionName: "uploadToS3Session",
+    RoleArn: argv['role'],
+    RoleSessionName: 'uploadToS3Session',
     DurationSeconds: 900,
   };
 
@@ -127,8 +127,8 @@ function initialize(cb) {
 }
 
 function uploadToS3(key, content, type, cb) {
-  if (argv["test"] === true) {
-    key = "test/" + key;
+  if (argv['test'] === true) {
+    key = 'test/' + key;
   }
 
   var params = {
@@ -138,13 +138,13 @@ function uploadToS3(key, content, type, cb) {
     Key: key,
   };
 
-  console.log("Updating: " + key, "type: " + type);
+  console.log('Updating: ' + key, 'type: ' + type);
 
-  params.CacheControl = "public, max-age=0";
+  params.CacheControl = 'public, max-age=0';
   params.Expires = new Date();
 
-  if (argv["dry"] === true) {
-    console.log("running in dry mode, file not uploaded");
+  if (argv['dry'] === true) {
+    console.log('running in dry mode, file not uploaded');
     process.nextTick(cb);
     return;
   }
@@ -154,7 +154,7 @@ function uploadToS3(key, content, type, cb) {
 
 function setVersion(version) {
   return function (name) {
-    return name.replace("{version}", version);
+    return name.replace('{version}', version);
   };
 }
 

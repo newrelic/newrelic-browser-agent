@@ -3,20 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const path = require("path");
-const { asserters } = require("wd");
-var newrelic = require("newrelic");
-const Matcher = require("../util/browser-matcher");
-const AssetServer = require("../../testing-server/index");
-const getCaller = require("../util/get-caller");
-const loadBrowser = require("../loader/loadBrowser");
-const Test = require("./Test");
-const TestEnv = require("./TestEnv");
-const TestRun = require("./TestRun");
-const TestHarness = require("./harness");
-const DeviceTest = require("./DeviceTest");
-const { BrowserSpec } = require("../util/browser-list");
-const { isSauceConnected } = require("../util/external-services");
+const path = require('path');
+const { asserters } = require('wd');
+var newrelic = require('newrelic');
+const Matcher = require('../util/browser-matcher');
+const AssetServer = require('../../testing-server/index');
+const getCaller = require('../util/get-caller');
+const loadBrowser = require('../loader/loadBrowser');
+const Test = require('./Test');
+const TestEnv = require('./TestEnv');
+const TestRun = require('./TestRun');
+const TestHarness = require('./harness');
+const DeviceTest = require('./DeviceTest');
+const { BrowserSpec } = require('../util/browser-list');
+const { isSauceConnected } = require('../util/external-services');
 
 class Driver {
   constructor(config, output) {
@@ -26,7 +26,7 @@ class Driver {
     this.browserTestMatchers = {};
 
     let agentConfig = {
-      licenseKey: "asdf",
+      licenseKey: 'asdf',
       applicationID: 42,
       accountID: 123,
       agentID: 456,
@@ -83,7 +83,7 @@ class Driver {
       this.browserTests.push(testFile);
       this.browserTestMatchers[testFile] = spec;
     } else if (this.browserTestMatchers[testFile] !== spec) {
-      throw new Error("all browser tests in " + relativePath + " must use the same matcher");
+      throw new Error('all browser tests in ' + relativePath + ' must use the same matcher');
     }
   }
 
@@ -108,7 +108,7 @@ class Driver {
     let driver = this;
     this.output.log(`# starting tests for ${testRun.browserSpec.toString()}`);
 
-    testRun.initialize(this.assetServer.urlFor("/"), (err) => {
+    testRun.initialize(this.assetServer.urlFor('/'), (err) => {
       if (err) {
         newrelic.noticeError(err);
         // exit early if an environment is not available
@@ -119,7 +119,7 @@ class Driver {
       }
 
       let spec = testRun.browserSpec;
-      if (spec.version === "latest" || spec.platformVersion === "latest" || spec.version === "beta") {
+      if (spec.version === 'latest' || spec.platformVersion === 'latest' || spec.version === 'beta') {
         this.output.log(`# ${spec.toString()} resolved to ${testRun.resolvedName}`);
       }
 
@@ -192,7 +192,7 @@ class Driver {
 
           let ended = false;
 
-          t.on("result", function (result) {
+          t.on('result', function (result) {
             if (!result.ok) {
               var eventData = {
                 browserName: browserSpec.desired.browserName,
@@ -212,11 +212,11 @@ class Driver {
                 column: result.column || null,
                 functionName: result.functionName || null,
               };
-              newrelic.recordCustomEvent("JilTestResult", eventData);
+              newrelic.recordCustomEvent('JilTestResult', eventData);
             }
           });
 
-          t.on("end", function () {
+          t.on('end', function () {
             let endTime = Date.now();
 
             let plannedOk = !t._plan || t._plan <= t.assertCount;
@@ -238,7 +238,7 @@ class Driver {
             if (plannedOk) {
               harness.resume();
             } else {
-              t.once("result", handlePlanResult);
+              t.once('result', handlePlanResult);
             }
 
             allOk = allOk && (t._ok || attempt < numberOfAttempts);
@@ -261,7 +261,7 @@ class Driver {
               duration: endTime - startTime,
               remaining: queued,
             };
-            newrelic.recordCustomEvent("JilTest", eventData);
+            newrelic.recordCustomEvent('JilTest', eventData);
 
             if (queued === 0) {
               process.nextTick(allDone);
@@ -290,9 +290,9 @@ class Driver {
       }
 
       function allDone() {
-        driver.output.log("# tearing down " + browserSpec);
+        driver.output.log('# tearing down ' + browserSpec);
         driver.closeBrowser(allOk, browser, (err) => {
-          driver.output.log("# closed " + browserSpec);
+          driver.output.log('# closed ' + browserSpec);
           if (err) {
             newrelic.noticeError(err);
           }
@@ -303,9 +303,9 @@ class Driver {
 
     browser.catch((err) => {
       if (currentTest) currentTest.fail(err);
-      driver.output.log("# closing due to error " + browserSpec);
+      driver.output.log('# closing due to error ' + browserSpec);
       this.closeBrowser(false, browser, () => {
-        driver.output.log("# closed due to error " + browserSpec);
+        driver.output.log('# closed due to error ' + browserSpec);
         done(err);
       });
     });

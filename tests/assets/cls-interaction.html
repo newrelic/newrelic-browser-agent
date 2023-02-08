@@ -15,7 +15,7 @@
     <button id="btn1">finish</button>
 
     <script>
-      window.addEventListener("load", run);
+      window.addEventListener('load', run);
 
       function run() {
         // when not delayed, the CLS entry is seen as having recent input
@@ -24,9 +24,9 @@
       }
 
       function triggerCls() {
-        var newDiv = document.createElement("div");
-        newDiv.id = "clsText";
-        newDiv.innerText = "inserted text (29 characters)";
+        var newDiv = document.createElement('div');
+        newDiv.id = 'clsText';
+        newDiv.innerText = 'inserted text (29 characters)';
         document.body.insertBefore(newDiv, document.body.firstChild);
         window.contentAdded = true;
       }

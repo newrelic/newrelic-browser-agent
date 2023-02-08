@@ -3,22 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
+const testDriver = require('../../../tools/jil/index');
 
-let supported = testDriver.Matcher.withFeature("fetch");
+let supported = testDriver.Matcher.withFeature('fetch');
 
-testDriver.test("empty fetch does not break the agent", supported, function (t, browser, router) {
+testDriver.test('empty fetch does not break the agent', supported, function (t, browser, router) {
   let rumPromise = router.expectRum();
   let eventsPromise = router.expectEvents();
-  let loadPromise = browser.safeGet(router.assetURL("spa/fetch-empty.html", { loader: "spa" }));
+  let loadPromise = browser.safeGet(router.assetURL('spa/fetch-empty.html', { loader: 'spa' }));
 
   rumPromise.then(({ query }) => {
-    t.ok(query.af.split(",").indexOf("spa") !== -1, "should indicate that it supports spa");
+    t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa');
   });
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
-      t.pass("events received");
+      t.pass('events received');
       t.end();
     })
     .catch(fail);

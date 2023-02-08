@@ -4,9 +4,9 @@
  */
 
 // Request Animation Frame wrapper
-import { ee as baseEE } from "../event-emitter/contextual-ee";
-import { createWrapperWithEmitter as wfn } from "./wrap-function";
-import { isBrowserScope } from "../util/global-scope";
+import { ee as baseEE } from '../event-emitter/contextual-ee';
+import { createWrapperWithEmitter as wfn } from './wrap-function';
+import { isBrowserScope } from '../util/global-scope';
 
 const wrapped = {};
 
@@ -16,27 +16,27 @@ export function wrapRaf(sharedEE) {
   wrapped[ee.debugId] = true;
   var wrapFn = wfn(ee);
 
-  var equestAnimationFrame = "equestAnimationFrame";
+  var equestAnimationFrame = 'equestAnimationFrame';
 
   wrapFn.inPlace(
     window,
     [
-      "r" + equestAnimationFrame,
-      "mozR" + equestAnimationFrame,
-      "webkitR" + equestAnimationFrame,
-      "msR" + equestAnimationFrame,
+      'r' + equestAnimationFrame,
+      'mozR' + equestAnimationFrame,
+      'webkitR' + equestAnimationFrame,
+      'msR' + equestAnimationFrame,
     ],
-    "raf-"
+    'raf-'
   );
 
-  ee.on("raf-start", function (args) {
+  ee.on('raf-start', function (args) {
     // Wrap the callback handed to requestAnimationFrame
-    args[0] = wrapFn(args[0], "fn-");
+    args[0] = wrapFn(args[0], 'fn-');
   });
 
   return ee;
 }
 
 export function scopedEE(sharedEE) {
-  return (sharedEE || baseEE).get("raf");
+  return (sharedEE || baseEE).get('raf');
 }

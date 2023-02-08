@@ -11,7 +11,7 @@
       window.gotScroll = false;
       var originalAddE = document.addEventListener;
       document.addEventListener = function (name, fn, flags) {
-        if (name === "scroll") {
+        if (name === 'scroll') {
           window.gotScroll = true;
           window.isPassive = !!flags.passive;
         }

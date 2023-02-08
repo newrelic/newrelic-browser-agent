@@ -14,12 +14,12 @@
       var start = null;
       var count = 0;
 
-      document.addEventListener("click", function () {
+      document.addEventListener('click', function () {
         count = 0;
         loop();
       });
 
-      newrelic.setCustomAttribute("aargh", "somanytimers");
+      newrelic.setCustomAttribute('aargh', 'somanytimers');
       loop();
 
       function loop() {

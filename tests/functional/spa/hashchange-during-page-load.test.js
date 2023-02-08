@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
-const querypack = require("@newrelic/nr-querypack");
+const testDriver = require('../../../tools/jil/index');
+const querypack = require('@newrelic/nr-querypack');
 
-let supported = testDriver.Matcher.withFeature("addEventListener");
+let supported = testDriver.Matcher.withFeature('addEventListener');
 
-testDriver.test("", supported, function (t, browser, router) {
+testDriver.test('', supported, function (t, browser, router) {
   t.plan(2);
-  let targetUrl = router.assetURL("spa/hashchange-during-page-load.html", {
-    loader: "spa",
+  let targetUrl = router.assetURL('spa/hashchange-during-page-load.html', {
+    loader: 'spa',
   });
 
   let rumPromise = router.expectRum();
@@ -27,17 +27,17 @@ testDriver.test("", supported, function (t, browser, router) {
     .then((eventsResult) => {
       let { body, query } = eventsResult;
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
-      t.fail("got second /events submission with interaction of type " + interactionTree.trigger);
+      t.fail('got second /events submission with interaction of type ' + interactionTree.trigger);
     })
     .catch(() => {
-      t.ok("did not get second /events submission");
+      t.ok('did not get second /events submission');
     });
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
       let { body, query } = eventsResult;
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
-      t.equal(interactionTree.trigger, "initialPageLoad", "initial page load should be tracked with an interaction");
+      t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction');
     })
     .catch(fail);
 

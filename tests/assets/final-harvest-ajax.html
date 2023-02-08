@@ -16,8 +16,8 @@
       function generateAjaxEvents() {
         var xhrDone = false;
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/json");
-        xhr.addEventListener("load", function () {
+        xhr.open('GET', '/json');
+        xhr.addEventListener('load', function () {
           return (window.ajaxCallsDone = true);
         });
         xhr.send();

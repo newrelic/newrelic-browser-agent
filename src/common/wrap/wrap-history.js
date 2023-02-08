@@ -7,9 +7,9 @@
  * Wrapper for pushState and replaceState methods of window.history object
  */
 
-import { ee as globalEE } from "../event-emitter/contextual-ee";
-import { createWrapperWithEmitter as wfn } from "./wrap-function";
-import { isBrowserScope } from "../util/global-scope";
+import { ee as globalEE } from '../event-emitter/contextual-ee';
+import { createWrapperWithEmitter as wfn } from './wrap-function';
+import { isBrowserScope } from '../util/global-scope';
 
 const wrapped = {};
 
@@ -30,7 +30,7 @@ export function wrapHistory(sharedEE) {
    * is instantiated only once, so we can wrap its methods directly--and we must wrap the history methods directly as
    * long as [Chromium issue 783382](https://bugs.chromium.org/p/chromium/issues/detail?id=783382) remains unresolved.
    */
-  wrapFn.inPlace(window.history, ["pushState", "replaceState"], "-");
+  wrapFn.inPlace(window.history, ['pushState', 'replaceState'], '-');
 
   return ee;
 }
@@ -43,5 +43,5 @@ export function wrapHistory(sharedEE) {
  * @returns {Object} Scoped event emitter with a debug ID of 'history'.
  */
 export function scopedEE(sharedEE) {
-  return (sharedEE || globalEE).get("history");
+  return (sharedEE || globalEE).get('history');
 }

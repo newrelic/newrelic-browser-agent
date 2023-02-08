@@ -9,8 +9,8 @@
 
     <script>
       function triggerError() {
-        NREUM.noticeError(new Error("My error"), { custom1: "val1" });
-        newrelic.interaction().setAttribute("custom1", "val2");
+        NREUM.noticeError(new Error('My error'), { custom1: 'val1' });
+        newrelic.interaction().setAttribute('custom1', 'val2');
         // not changing the URL means that the interaction will be discarded
       }
     </script>
@@ -23,8 +23,8 @@
     <br /><br />
     <button>Trigger error</button>
     <script>
-      var btn = document.getElementById("trigger");
-      btn.addEventListener("click", triggerError);
+      var btn = document.getElementById('trigger');
+      btn.addEventListener('click', triggerError);
     </script>
   </body>
 </html>

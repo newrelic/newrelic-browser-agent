@@ -2,11 +2,11 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { cleanURL } from "../../../common/url/clean-url";
-import { mapOwn } from "../../../common/util/map-own";
-import { nullable, numeric, getAddStringContext, addCustomAttributes } from "../../../common/serialize/bel-serializer";
-import { SharedContext } from "../../../common/context/shared-context";
-import { getInfo } from "../../../common/config/config";
+import { cleanURL } from '../../../common/url/clean-url';
+import { mapOwn } from '../../../common/util/map-own';
+import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer';
+import { SharedContext } from '../../../common/context/shared-context';
+import { getInfo } from '../../../common/config/config';
 
 export class Serializer extends SharedContext {
   constructor(parent) {
@@ -25,10 +25,10 @@ export class Serializer extends SharedContext {
   serializeMultiple(interactions, offset, navTiming) {
     const info = getInfo(this.sharedContext.agentIdentifier);
     var addString = getAddStringContext(this.sharedContext.agentIdentifier);
-    var serialized = "bel.7";
+    var serialized = 'bel.7';
     interactions.forEach((interaction) => {
       serialized +=
-        ";" + this.serializeInteraction(interaction.root, offset, navTiming, interaction.routeChange, addString, info);
+        ';' + this.serializeInteraction(interaction.root, offset, navTiming, interaction.routeChange, addString, info);
     });
     this.firstTimestamp = undefined;
     return serialized;
@@ -37,14 +37,14 @@ export class Serializer extends SharedContext {
   serializeSingle(root, offset, navTiming, isRouteChange) {
     const info = getInfo(this.sharedContext.agentIdentifier);
     var addString = getAddStringContext(this.sharedContext.agentIdentifier);
-    var serialized = "bel.7;" + this.serializeInteraction(root, offset, navTiming, isRouteChange, addString, info);
+    var serialized = 'bel.7;' + this.serializeInteraction(root, offset, navTiming, isRouteChange, addString, info);
     this.firstTimestamp = undefined;
     return serialized;
   }
 
   serializeInteraction(root, offset, navTiming, isRouteChange, addString, info) {
     offset = offset || 0;
-    var isInitialPage = root.attrs.trigger === "initialPageLoad";
+    var isInitialPage = root.attrs.trigger === 'initialPageLoad';
     var typeIdsByName = {
       interaction: 1,
       ajax: 2,
@@ -55,7 +55,7 @@ export class Serializer extends SharedContext {
     var includeHashFragment = true;
 
     const addNode = (node, nodeList) => {
-      if (node.type === "customEnd") return nodeList.push([3, numeric(node.end - this.firstTimestamp)]);
+      if (node.type === 'customEnd') return nodeList.push([3, numeric(node.end - this.firstTimestamp)]);
       var typeName = node.type;
       var typeId = typeIdsByName[typeName];
       var startTimestamp = node.start;
@@ -70,7 +70,7 @@ export class Serializer extends SharedContext {
       var queueTime = info.queueTime;
       var appTime = info.applicationTime;
 
-      if (typeof this.firstTimestamp === "undefined") {
+      if (typeof this.firstTimestamp === 'undefined') {
         startTimestamp += offset;
         this.firstTimestamp = startTimestamp;
       } else {
@@ -93,7 +93,7 @@ export class Serializer extends SharedContext {
             addString(cleanURL(attrs.oldURL, includeHashFragment)),
             addString(cleanURL(attrs.newURL, includeHashFragment)),
             addString(attrs.customName),
-            isInitialPage ? "" : isRouteChange ? 1 : 2,
+            isInitialPage ? '' : isRouteChange ? 1 : 2,
             nullable(isInitialPage && queueTime, numeric, true) +
               nullable(isInitialPage && appTime, numeric, true) +
               nullable(attrs.oldRoute, addString, true) +
@@ -109,7 +109,7 @@ export class Serializer extends SharedContext {
 
           if (apmAttributes) {
             childCount++;
-            children.push("a," + addString(apmAttributes));
+            children.push('a,' + addString(apmAttributes));
           }
 
           break;
@@ -122,7 +122,7 @@ export class Serializer extends SharedContext {
             addString(params.pathname),
             numeric(metrics.txSize),
             numeric(metrics.rxSize),
-            attrs.isFetch ? 1 : attrs.isJSONP ? 2 : "",
+            attrs.isFetch ? 1 : attrs.isJSONP ? 2 : '',
             addString(node.id),
             nullable(node.dt && node.dt.spanId, addString, true) +
               nullable(node.dt && node.dt.traceId, addString, true) +
@@ -145,7 +145,7 @@ export class Serializer extends SharedContext {
       nodeList.push(fields);
 
       if (childCount) {
-        nodeList.push(children.join(";"));
+        nodeList.push(children.join(';'));
       }
 
       if (hasNavTiming) {
@@ -161,8 +161,8 @@ export class Serializer extends SharedContext {
         //   the reason for writing the null seperator instead of setting the seperator
         //   is to ensure we still write it if the null is the last navTiming value.
 
-        var seperator = ",";
-        var navTimingNode = "b";
+        var seperator = ',';
+        var navTimingNode = 'b';
         var prev = 0;
 
         // get all navTiming values except navigationStart
@@ -171,21 +171,21 @@ export class Serializer extends SharedContext {
         mapOwn(navTiming.slice(1, 21), function (i, v) {
           if (v !== void 0) {
             navTimingNode += seperator + numeric(v - prev);
-            seperator = ",";
+            seperator = ',';
             prev = v;
           } else {
-            navTimingNode += seperator + "!";
-            seperator = "";
+            navTimingNode += seperator + '!';
+            seperator = '';
           }
         });
         nodeList.push(navTimingNode);
       } else if (typeId === 1) {
-        nodeList.push("");
+        nodeList.push('');
       }
 
       return nodeList;
     };
 
-    return addNode(root, []).join(";");
+    return addNode(root, []).join(';');
   }
 }

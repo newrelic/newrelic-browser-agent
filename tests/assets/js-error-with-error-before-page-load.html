@@ -12,10 +12,10 @@
       triggerError();
 
       function triggerError() {
-        newrelic.setCustomAttribute("customParamKey", i);
+        newrelic.setCustomAttribute('customParamKey', i);
         i++;
         try {
-          throw new Error("My error");
+          throw new Error('My error');
         } catch (e) {
           NREUM.noticeError(e);
         }

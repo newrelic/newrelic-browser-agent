@@ -1,15 +1,15 @@
-const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const { BUILD_NUMBER, NRQL_API_KEY } = process.env;
 
-console.log("NRQL_API_KEY", NRQL_API_KEY);
+console.log('NRQL_API_KEY', NRQL_API_KEY);
 
 if (!BUILD_NUMBER) process.exit(1);
 
 let allFinished = true;
 
 const queryNR = async () => {
-  console.log("---- FETCHING --", BUILD_NUMBER, " ----");
+  console.log('---- FETCHING --', BUILD_NUMBER, ' ----');
   const latest = getGQLResults(
     await getDataFromNRQL(`{
         actor {
@@ -21,8 +21,8 @@ const queryNR = async () => {
          }
     }`)
   );
-  if (latest.some((x) => !!x["latest.remaining"])) {
-    console.log("all tests did not finish....");
+  if (latest.some((x) => !!x['latest.remaining'])) {
+    console.log('all tests did not finish....');
     console.log(latest);
     allFinished = false;
     // process.exit(1)
@@ -53,14 +53,14 @@ const queryNR = async () => {
     failedTests[x.browserName.toLowerCase()][x.browserVersion].add(x.testFileName);
   });
 
-  console.log("---- FAILED TESTS ----");
+  console.log('---- FAILED TESTS ----');
   console.log(failedTests);
   var isValid = true;
   var out = failures?.data?.actor?.account?.nrql?.results?.length
-    ? "node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -s -t 85000 -b "
-    : "";
+    ? 'node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -s -t 85000 -b '
+    : '';
   Object.entries(failedTests).forEach(([key, val]) => {
-    if (!val || (typeof val === "object" && !Object.keys(val).length)) return;
+    if (!val || (typeof val === 'object' && !Object.keys(val).length)) return;
     isValid = false;
     const b = `${key}@`;
     const browsers = [];
@@ -73,10 +73,10 @@ const queryNR = async () => {
         }
       }
     });
-    out += browsers.join(",");
-    out += ` ${Array.from(tests).join(" ")}`;
+    out += browsers.join(',');
+    out += ` ${Array.from(tests).join(' ')}`;
   });
-  console.log("---- LOCAL COMMAND ----");
+  console.log('---- LOCAL COMMAND ----');
   console.log(out);
   if (!isValid || !allFinished) process.exit(1);
   else process.exit(0);
@@ -86,13 +86,13 @@ queryNR();
 
 async function getDataFromNRQL(nrqlString) {
   const body = { query: nrqlString };
-  const resp = await fetch("https://api.newrelic.com/graphql", {
+  const resp = await fetch('https://api.newrelic.com/graphql', {
     body: JSON.stringify(body),
     headers: {
-      "Api-Key": `${NRQL_API_KEY}`,
-      "Content-Type": "application/json",
+      'Api-Key': `${NRQL_API_KEY}`,
+      'Content-Type': 'application/json',
     },
-    method: "POST",
+    method: 'POST',
   });
   const json = await resp.json();
   return json;

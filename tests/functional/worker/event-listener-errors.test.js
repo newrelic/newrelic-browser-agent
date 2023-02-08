@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
-const { fail, getErrorsFromResponse } = require("../err/assertion-helpers");
-const { workerTypes, typeToMatcher } = require("./helpers");
+const testDriver = require('../../../tools/jil/index');
+const { fail, getErrorsFromResponse } = require('../err/assertion-helpers');
+const { workerTypes, typeToMatcher } = require('./helpers');
 
 const init = {
   jserrors: {
@@ -28,11 +28,11 @@ function eventListenerTest(type, matcher) {
       let assetURL = router.assetURL(`worker/${type}-worker.html`, {
         init,
         workerCommands: [
-          `${type == workerTypes[2] ? "port" : "self"}.addEventListener('message', () => {
+          `${type == workerTypes[2] ? 'port' : 'self'}.addEventListener('message', () => {
             throw new Error('test')
         })`,
           () => {
-            console.log("sent another message so that the eventListener would trigger");
+            console.log('sent another message so that the eventListener would trigger');
           },
         ].map((x) => x.toString()),
       });
@@ -44,14 +44,14 @@ function eventListenerTest(type, matcher) {
         .then(([response]) => {
           const actualErrors = getErrorsFromResponse(response, browser);
 
-          t.equal(actualErrors.length, 1, "exactly one error");
+          t.equal(actualErrors.length, 1, 'exactly one error');
 
           let actualError = actualErrors[0];
-          t.equal(actualError.metrics.count, 1, "Should have seen 1 error");
-          t.ok(actualError.metrics.time.t > 0, "Should have a valid timestamp");
-          t.equal(actualError.params.exceptionClass, "Error", "Should be Error class");
-          t.equal(actualError.params.message, "test", "Should have correct message");
-          t.ok(actualError.params.stack_trace, "Should have a stack trace");
+          t.equal(actualError.metrics.count, 1, 'Should have seen 1 error');
+          t.ok(actualError.metrics.time.t > 0, 'Should have a valid timestamp');
+          t.equal(actualError.params.exceptionClass, 'Error', 'Should be Error class');
+          t.equal(actualError.params.message, 'test', 'Should have correct message');
+          t.ok(actualError.params.stack_trace, 'Should have a stack trace');
           t.end();
         })
         .catch(fail(t));

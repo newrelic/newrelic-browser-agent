@@ -25,7 +25,7 @@ export function constructError(errorData) {
 
   const errorProxy = new Proxy(error, {
     get(target, prop) {
-      if (prop === "toString") {
+      if (prop === 'toString') {
         return () => errorData[prop];
       }
 

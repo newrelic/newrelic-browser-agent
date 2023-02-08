@@ -12,7 +12,7 @@
     <div id="initial">initial content</div>
 
     <script>
-      window.addEventListener("load", run);
+      window.addEventListener('load', run);
 
       function run() {
         // when not delayed, the CLS entry is seen as having recent input
@@ -21,9 +21,9 @@
       }
 
       function triggerCls() {
-        var newDiv = document.createElement("div");
-        newDiv.id = "clsText";
-        newDiv.innerText = "inserted text";
+        var newDiv = document.createElement('div');
+        newDiv.id = 'clsText';
+        newDiv.innerText = 'inserted text';
         document.body.insertBefore(newDiv, document.body.firstChild);
         window.contentAdded = true;
       }

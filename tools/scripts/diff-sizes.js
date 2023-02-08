@@ -5,44 +5,44 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var yargs = require("yargs");
-var glob = require("glob");
-var path = require("path");
-var fs = require("fs");
-var request = require("request");
+var yargs = require('yargs');
+var glob = require('glob');
+var path = require('path');
+var fs = require('fs');
+var request = require('request');
 
-var GHE_BASE = "https://source.datanerd.us";
+var GHE_BASE = 'https://source.datanerd.us';
 
-var config = require("yargs")
-  .usage("$0 <baseline build dir> <build dir>")
+var config = require('yargs')
+  .usage('$0 <baseline build dir> <build dir>')
 
-  .string("c")
-  .alias("c", "commit")
-  .describe("c", "Git SHA of the commit to include in resulting message")
+  .string('c')
+  .alias('c', 'commit')
+  .describe('c', 'Git SHA of the commit to include in resulting message')
 
-  .string("r")
-  .alias("r", "repo")
-  .describe("r", "Repository name to post a comment to (<owner name>/<repo name>)")
+  .string('r')
+  .alias('r', 'repo')
+  .describe('r', 'Repository name to post a comment to (<owner name>/<repo name>)')
 
-  .string("p")
-  .alias("p", "pull-request")
-  .describe("p", "Numeric ID of the pull request to post a comment to")
+  .string('p')
+  .alias('p', 'pull-request')
+  .describe('p', 'Numeric ID of the pull request to post a comment to')
 
-  .string("t")
-  .alias("t", "token")
-  .describe("t", "GitHub Enterprise authentication token")
+  .string('t')
+  .alias('t', 'token')
+  .describe('t', 'GitHub Enterprise authentication token')
 
-  .demand(2, "Please specify baseline and target build directories")
+  .demand(2, 'Please specify baseline and target build directories')
 
-  .help("h")
-  .alias("h", "help")
+  .help('h')
+  .alias('h', 'help')
   .strict()
   .wrap(Math.min(110, yargs.terminalWidth())).argv;
 
 var baselineBuildDir = config._[0];
 var branchBuildDir = config._[1];
 
-var minJsGlob = "*.min.js";
+var minJsGlob = '*.min.js';
 var baselineGlob = path.join(baselineBuildDir, minJsGlob);
 var branchGlob = path.join(branchBuildDir, minJsGlob);
 var baselineSizes = getSizes(baselineGlob);
@@ -64,7 +64,7 @@ var comment = generateComment(loaderSizes, aggregatorSizes, process.env.BUILD_NU
 if (config.repo && config.pullRequest && config.token) {
   getPreviousComments(function (comments) {
     if (comments.length > 1) {
-      console.log("Found >1 (" + comments.length + ") existing comments, bailing out.");
+      console.log('Found >1 (' + comments.length + ') existing comments, bailing out.');
       return;
     }
 
@@ -79,33 +79,33 @@ if (config.repo && config.pullRequest && config.token) {
 }
 
 function updateComment(existingCommentId, newCommentText) {
-  gheApiRequest("PATCH", "/issues/comments/" + existingCommentId, { body: newCommentText }, function (err, rsp, body) {
+  gheApiRequest('PATCH', '/issues/comments/' + existingCommentId, { body: newCommentText }, function (err, rsp, body) {
     if (err) throw err;
     if (rsp.statusCode === 200) {
-      console.log("Successfully updated comment at " + JSON.parse(rsp.body).html_url);
+      console.log('Successfully updated comment at ' + JSON.parse(rsp.body).html_url);
     } else {
-      console.log("Failed to update PR comment " + existingCommentId + " with status " + rsp.statusCode);
-      console.log("Response body:");
+      console.log('Failed to update PR comment ' + existingCommentId + ' with status ' + rsp.statusCode);
+      console.log('Response body:');
       console.log(rsp.body);
     }
   });
 }
 
 function postComment(commentBody) {
-  gheApiRequest("POST", "/issues/" + config.pullRequest + "/comments", { body: comment }, function (err, rsp, body) {
+  gheApiRequest('POST', '/issues/' + config.pullRequest + '/comments', { body: comment }, function (err, rsp, body) {
     if (err) throw err;
     if (rsp.statusCode === 201) {
-      console.log("Successfully posted comment to " + JSON.parse(rsp.body).html_url);
+      console.log('Successfully posted comment to ' + JSON.parse(rsp.body).html_url);
     } else {
-      console.log("Failed to post PR comment with status " + rsp.statusCode);
-      console.log("Response body:");
+      console.log('Failed to post PR comment with status ' + rsp.statusCode);
+      console.log('Response body:');
       console.log(rsp.body);
     }
   });
 }
 
 function getPreviousComments(cb) {
-  gheApiRequest("GET", "/issues/" + config.pullRequest + "/comments", null, function (err, rsp, body) {
+  gheApiRequest('GET', '/issues/' + config.pullRequest + '/comments', null, function (err, rsp, body) {
     if (err) throw err;
     var matchingComments = JSON.parse(body).filter(function (c) {
       return c.body.match(/^As of commit [\da-f]+, this branch affects artifact sizes as follows/);
@@ -115,44 +115,44 @@ function getPreviousComments(cb) {
 }
 
 function gheApiRequest(verb, path, body, cb) {
-  var url = GHE_BASE + "/api/v3/repos/" + config.repo + path;
+  var url = GHE_BASE + '/api/v3/repos/' + config.repo + path;
   var options = {
     method: verb,
     url: url,
-    headers: { Authorization: "token " + config.token },
+    headers: { Authorization: 'token ' + config.token },
   };
 
   if (body) options.body = JSON.stringify(body);
-  console.log(verb + " " + url);
+  console.log(verb + ' ' + url);
 
   request(options, function (err, rsp, body) {
     if (err) return cb(err, rsp, body);
-    console.log(verb + " " + url + " -> " + rsp.statusCode);
+    console.log(verb + ' ' + url + ' -> ' + rsp.statusCode);
     cb(err, rsp, body);
   });
 }
 
 function generateComment(loaderSizes, aggregatorSizes, buildId) {
-  var comment = "";
+  var comment = '';
 
   if (config.commit) {
-    comment += "As of commit " + config.commit + ", this branch affects artifact sizes as follows:\n\n";
+    comment += 'As of commit ' + config.commit + ', this branch affects artifact sizes as follows:\n\n';
   }
 
-  comment += "**Loaders**\n\n";
+  comment += '**Loaders**\n\n';
   comment += reportDiffs(loaderSizes);
-  comment += "\n";
-  comment += "**Aggregators**\n\n";
+  comment += '\n';
+  comment += '**Aggregators**\n\n';
   comment += reportDiffs(aggregatorSizes);
-  comment += "\n";
-  comment += "Generated by " + __filename; // eslint-disable-line no-path-concat
-  comment += "\n\n\n";
+  comment += '\n';
+  comment += 'Generated by ' + __filename; // eslint-disable-line no-path-concat
+  comment += '\n\n\n';
 
   return comment;
 }
 
 function reportDiffs(sizes) {
-  var output = "";
+  var output = '';
 
   var filenames = Object.keys(sizes);
   filenames = filenames.sort(function (a, b) {
@@ -163,36 +163,36 @@ function reportDiffs(sizes) {
     return 0;
   });
 
-  output += "| Filename | Size before | Size after | Delta |\n";
-  output += "|----------|-------------|------------|-------|\n";
+  output += '| Filename | Size before | Size after | Delta |\n';
+  output += '|----------|-------------|------------|-------|\n';
 
   filenames.forEach(function (filename) {
     var sizeBefore = sizes[filename].baselineSize;
     var sizeAfter = sizes[filename].branchSize;
     output +=
-      "| " +
+      '| ' +
       filename +
-      " | " +
+      ' | ' +
       formatSize(sizeBefore) +
-      " | " +
+      ' | ' +
       formatSize(sizeAfter) +
-      " | " +
+      ' | ' +
       formatDelta(sizeBefore, sizeAfter) +
-      " |\n";
+      ' |\n';
   });
 
   return output;
 
   function formatSize(size) {
-    return size || "N/A";
+    return size || 'N/A';
   }
 
   function formatDelta(before, after) {
-    if (!before || !after) return "N/A";
+    if (!before || !after) return 'N/A';
     var delta = after - before;
-    var formattedDelta = delta >= 0 ? "+" + delta : delta;
+    var formattedDelta = delta >= 0 ? '+' + delta : delta;
     var percentDelta = ((delta / before) * 100).toPrecision(2);
-    if (delta !== 0) formattedDelta = formattedDelta + " (" + percentDelta + " %)";
+    if (delta !== 0) formattedDelta = formattedDelta + ' (' + percentDelta + ' %)';
     return formattedDelta;
   }
 }

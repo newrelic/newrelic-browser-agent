@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
-const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require("./assertion-helpers");
+const testDriver = require('../../../tools/jil/index');
+const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require('./assertion-helpers');
 
-let supported = testDriver.Matcher.withFeature("reliableUnloadEvent");
+let supported = testDriver.Matcher.withFeature('reliableUnloadEvent');
 
-testDriver.test("reporting errors from setTimeout callbacks", supported, function (t, browser, router) {
-  let assetURL = router.assetURL("set-timeout-error.html", {
+testDriver.test('reporting errors from setTimeout callbacks', supported, function (t, browser, router) {
+  let assetURL = router.assetURL('set-timeout-error.html', {
     init: {
       page_view_timing: {
         enabled: false,
@@ -20,7 +20,7 @@ testDriver.test("reporting errors from setTimeout callbacks", supported, functio
     },
   });
 
-  let rumPromise = router.expectRumAndConditionAndErrors("window.setTimeoutFired");
+  let rumPromise = router.expectRumAndConditionAndErrors('window.setTimeoutFired');
   let loadPromise = browser.get(assetURL);
 
   Promise.all([rumPromise, loadPromise])
@@ -29,11 +29,11 @@ testDriver.test("reporting errors from setTimeout callbacks", supported, functio
       const actualErrors = getErrorsFromResponse(response, browser);
       let expectedErrors = [
         {
-          name: "Error",
-          message: "timeout callback",
+          name: 'Error',
+          message: 'timeout callback',
           stack: [
             {
-              u: router.assetURL("js/set-timeout-error.js").split("?")[0],
+              u: router.assetURL('js/set-timeout-error.js').split('?')[0],
               l: 9,
             },
           ],

@@ -56,8 +56,8 @@
 // INTERNET EXPLORER:
 // ex.message = ...
 // ex.name = ReferenceError
-import { reduce } from "../../../common/util/reduce";
-import { formatStackTrace } from "./format-stack-trace";
+import { reduce } from '../../../common/util/reduce';
+import { formatStackTrace } from './format-stack-trace';
 
 var debug = false;
 
@@ -106,8 +106,8 @@ export function computeStackTrace(ex) {
   }
 
   return {
-    mode: "failed",
-    stackString: "",
+    mode: 'failed',
+    stackString: '',
     frames: [],
   };
 }
@@ -123,7 +123,7 @@ function computeStackTraceFromStackProp(ex) {
     return null;
   }
 
-  var errorInfo = reduce(ex.stack.split("\n"), parseStackProp, {
+  var errorInfo = reduce(ex.stack.split('\n'), parseStackProp, {
     frames: [],
     stackLines: [],
     wrapperSeen: false,
@@ -132,7 +132,7 @@ function computeStackTraceFromStackProp(ex) {
   if (!errorInfo.frames.length) return null;
 
   return {
-    mode: "stack",
+    mode: 'stack',
     name: ex.name || getClassName(ex),
     message: ex.message,
     stackString: formatStackTrace(errorInfo.stackLines),
@@ -162,47 +162,47 @@ function getElement(line) {
   if (parts) {
     return {
       url: parts[2],
-      func: (parts[1] !== "Anonymous function" && parts[1] !== "global code" && parts[1]) || null,
+      func: (parts[1] !== 'Anonymous function' && parts[1] !== 'global code' && parts[1]) || null,
       line: +parts[3],
       column: parts[4] ? +parts[4] : null,
     };
   }
 
-  if (line.match(chrome_eval) || line.match(ie_eval) || line === "anonymous") {
-    return { func: "evaluated code" };
+  if (line.match(chrome_eval) || line.match(ie_eval) || line === 'anonymous') {
+    return { func: 'evaluated code' };
   }
 }
 
 function computeStackTraceBySourceAndLine(ex) {
-  if (!("line" in ex)) return null;
+  if (!('line' in ex)) return null;
 
   var className = ex.name || getClassName(ex);
 
   // Safari does not provide a URL for errors in eval'd code
   if (!ex.sourceURL) {
     return {
-      mode: "sourceline",
+      mode: 'sourceline',
       name: className,
       message: ex.message,
-      stackString: getClassName(ex) + ": " + ex.message + "\n    in evaluated code",
+      stackString: getClassName(ex) + ': ' + ex.message + '\n    in evaluated code',
       frames: [
         {
-          func: "evaluated code",
+          func: 'evaluated code',
         },
       ],
     };
   }
 
-  var stackString = className + ": " + ex.message + "\n    at " + ex.sourceURL;
+  var stackString = className + ': ' + ex.message + '\n    at ' + ex.sourceURL;
   if (ex.line) {
-    stackString += ":" + ex.line;
+    stackString += ':' + ex.line;
     if (ex.column) {
-      stackString += ":" + ex.column;
+      stackString += ':' + ex.column;
     }
   }
 
   return {
-    mode: "sourceline",
+    mode: 'sourceline',
     name: className,
     message: ex.message,
     stackString: stackString,
@@ -215,19 +215,19 @@ function computeStackTraceWithMessageOnly(ex) {
   if (!className) return null;
 
   return {
-    mode: "nameonly",
+    mode: 'nameonly',
     name: className,
     message: ex.message,
-    stackString: className + ": " + ex.message,
+    stackString: className + ': ' + ex.message,
     frames: [],
   };
 }
 
 function getClassName(obj) {
   var results = classNameRegex.exec(String(obj.constructor));
-  return results && results.length > 1 ? results[1] : "unknown";
+  return results && results.length > 1 ? results[1] : 'unknown';
 }
 
 function isWrapper(functionName) {
-  return functionName && functionName.indexOf("nrWrapper") >= 0;
+  return functionName && functionName.indexOf('nrWrapper') >= 0;
 }

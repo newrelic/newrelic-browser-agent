@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
-const { workerTypes, typeToMatcher, workerCustomAttrs } = require("./helpers");
+const testDriver = require('../../../tools/jil/index');
+const { workerTypes, typeToMatcher, workerCustomAttrs } = require('./helpers');
 
 const init = {
   jserrors: {
@@ -54,13 +54,13 @@ function referenceErrorTest(type, matcher) {
       Promise.all([errPromise, loadPromise])
         .then(([errResponse]) => {
           const { err } = JSON.parse(errResponse.body);
-          t.equal(err.length, 1, "Should have 1 error obj");
-          t.equal(err[0].metrics.count, 1, "Should have seen 1 error");
-          t.ok(err[0].metrics.time.t > 0, "Should have a valid timestamp");
-          t.equal(err[0].params.exceptionClass, "ReferenceError", "Should be ReferenceError class");
-          t.ok(!!err[0].params.message, "Should have message");
-          t.ok(err[0].params.stack_trace, "Should have a stack trace");
-          t.deepEqual(err[0].custom, { ...workerCustomAttrs }, "Should have correct custom attributes");
+          t.equal(err.length, 1, 'Should have 1 error obj');
+          t.equal(err[0].metrics.count, 1, 'Should have seen 1 error');
+          t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp');
+          t.equal(err[0].params.exceptionClass, 'ReferenceError', 'Should be ReferenceError class');
+          t.ok(!!err[0].params.message, 'Should have message');
+          t.ok(err[0].params.stack_trace, 'Should have a stack trace');
+          t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes');
           t.end();
         })
         .catch(fail);
@@ -83,7 +83,7 @@ function unhandledPromiseRejectionTest(type, matcher) {
         workerCommands: [
           () => {
             new Promise(() => {
-              throw new Error("unhandledPromiseRejection");
+              throw new Error('unhandledPromiseRejection');
             });
           },
         ].map((x) => x.toString()),
@@ -95,24 +95,24 @@ function unhandledPromiseRejectionTest(type, matcher) {
       timedPromiseAll([errPromise, loadPromise], 6000)
         .then(([errResponse]) => {
           const { err } = JSON.parse(errResponse.body);
-          t.equal(err.length, 1, "Should have 1 error obj");
-          t.equal(err[0].metrics.count, 1, "Should have seen 1 error");
-          t.ok(err[0].metrics.time.t > 0, "Should have a valid timestamp");
-          t.equal(err[0].params.exceptionClass, "Error", "Should be Error class");
-          t.ok(!!err[0].params.message, "Should have message");
-          t.ok(err[0].params.stack_trace, "Should have a stack trace");
+          t.equal(err.length, 1, 'Should have 1 error obj');
+          t.equal(err[0].metrics.count, 1, 'Should have seen 1 error');
+          t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp');
+          t.equal(err[0].params.exceptionClass, 'Error', 'Should be Error class');
+          t.ok(!!err[0].params.message, 'Should have message');
+          t.ok(err[0].params.stack_trace, 'Should have a stack trace');
           t.deepEqual(
             err[0].custom,
             { ...workerCustomAttrs, unhandledPromiseRejection: 1 },
-            "Should have custom attribute"
+            'Should have custom attribute'
           );
           t.end();
         })
         .catch(fail);
 
       function fail(err) {
-        if (!browser.hasFeature("unhandledPromiseRejection"))
-          t.pass("Browser does not support unhandledPromiseRejections");
+        if (!browser.hasFeature('unhandledPromiseRejection'))
+          t.pass('Browser does not support unhandledPromiseRejections');
         else t.error(err);
         t.end();
       }
@@ -138,13 +138,13 @@ function rangeErrorTest(type, matcher) {
     Promise.all([errPromise, loadPromise])
       .then(([errResponse]) => {
         const { err } = JSON.parse(errResponse.body);
-        t.equal(err.length, 1, "Should have 1 error obj");
-        t.equal(err[0].metrics.count, 1, "Should have seen 1 error");
-        t.ok(err[0].metrics.time.t > 0, "Should have a valid timestamp");
-        t.equal(err[0].params.exceptionClass, "RangeError", "Should be RangeError class");
-        t.ok(!!err[0].params.message, "Should have message");
-        t.ok(err[0].params.stack_trace, "Should have a stack trace");
-        t.deepEqual(err[0].custom, { ...workerCustomAttrs }, "Should have correct custom attributes");
+        t.equal(err.length, 1, 'Should have 1 error obj');
+        t.equal(err[0].metrics.count, 1, 'Should have seen 1 error');
+        t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp');
+        t.equal(err[0].params.exceptionClass, 'RangeError', 'Should be RangeError class');
+        t.ok(!!err[0].params.message, 'Should have message');
+        t.ok(err[0].params.stack_trace, 'Should have a stack trace');
+        t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes');
         t.end();
       })
       .catch(fail);
@@ -174,13 +174,13 @@ function typeErrorTest(type, matcher) {
     Promise.all([errPromise, loadPromise])
       .then(([errResponse]) => {
         const { err } = JSON.parse(errResponse.body);
-        t.equal(err.length, 1, "Should have 1 error obj");
-        t.equal(err[0].metrics.count, 1, "Should have seen 1 error");
-        t.ok(err[0].metrics.time.t > 0, "Should have a valid timestamp");
-        t.equal(err[0].params.exceptionClass, "TypeError", "Should be TypeError class");
-        t.ok(!!err[0].params.message, "Should have message");
-        t.ok(err[0].params.stack_trace, "Should have a stack trace");
-        t.deepEqual(err[0].custom, { ...workerCustomAttrs }, "Should have correct custom attributes");
+        t.equal(err.length, 1, 'Should have 1 error obj');
+        t.equal(err[0].metrics.count, 1, 'Should have seen 1 error');
+        t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp');
+        t.equal(err[0].params.exceptionClass, 'TypeError', 'Should be TypeError class');
+        t.ok(!!err[0].params.message, 'Should have message');
+        t.ok(err[0].params.stack_trace, 'Should have a stack trace');
+        t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes');
         t.end();
       })
       .catch(fail);
@@ -198,7 +198,7 @@ function uriErrorTest(type, matcher) {
       init,
       workerCommands: [
         () => {
-          decodeURI("%");
+          decodeURI('%');
         },
       ].map((x) => x.toString()),
     });
@@ -209,13 +209,13 @@ function uriErrorTest(type, matcher) {
     Promise.all([errPromise, loadPromise])
       .then(([errResponse]) => {
         const { err } = JSON.parse(errResponse.body);
-        t.equal(err.length, 1, "Should have 1 error obj");
-        t.equal(err[0].metrics.count, 1, "Should have seen 1 error");
-        t.ok(err[0].metrics.time.t > 0, "Should have a valid timestamp");
-        t.equal(err[0].params.exceptionClass, "URIError", "Should be URIError class");
-        t.ok(!!err[0].params.message, "Should have message");
-        t.ok(err[0].params.stack_trace, "Should have a stack trace");
-        t.deepEqual(err[0].custom, { ...workerCustomAttrs }, "Should have correct custom attributes");
+        t.equal(err.length, 1, 'Should have 1 error obj');
+        t.equal(err[0].metrics.count, 1, 'Should have seen 1 error');
+        t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp');
+        t.equal(err[0].params.exceptionClass, 'URIError', 'Should be URIError class');
+        t.ok(!!err[0].params.message, 'Should have message');
+        t.ok(err[0].params.stack_trace, 'Should have a stack trace');
+        t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes');
         t.end();
       })
       .catch(fail);
@@ -252,20 +252,20 @@ function memoryLeakTest(type, matcher) {
       timedPromiseAll([errPromise, loadPromise], 6000)
         .then(([errResponse]) => {
           const { err } = JSON.parse(errResponse.body);
-          t.equal(err.length, 1, "Should have 1 error obj");
-          t.equal(err[0].metrics.count, 1, "Should have seen 1 error");
-          t.ok(err[0].metrics.time.t > 0, "Should have a valid timestamp");
-          t.equal(err[0].params.exceptionClass, "RangeError", "Should be RangeError class");
-          t.ok(!!err[0].params.message, "Should have message");
-          t.ok(err[0].params.stack_trace, "Should have a stack trace");
-          t.deepEqual(err[0].custom, { ...workerCustomAttrs }, "Should have correct custom attributes");
+          t.equal(err.length, 1, 'Should have 1 error obj');
+          t.equal(err[0].metrics.count, 1, 'Should have seen 1 error');
+          t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp');
+          t.equal(err[0].params.exceptionClass, 'RangeError', 'Should be RangeError class');
+          t.ok(!!err[0].params.message, 'Should have message');
+          t.ok(err[0].params.stack_trace, 'Should have a stack trace');
+          t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes');
           t.end();
         })
         .catch(fail);
 
       function fail(err) {
-        if (browser.hasFeature("workerStackSizeGeneratesError"))
-          t.pass("This browser version does not throw errors in worker when max stack size is reached");
+        if (browser.hasFeature('workerStackSizeGeneratesError'))
+          t.pass('This browser version does not throw errors in worker when max stack size is reached');
         else t.error(err);
         t.end();
       }
@@ -290,13 +290,13 @@ function syntaxErrorTest(type, matcher) {
     Promise.all([errPromise, loadPromise])
       .then(([errResponse]) => {
         const { err } = JSON.parse(errResponse.body);
-        t.equal(err.length, 1, "Should have 1 error obj");
-        t.equal(err[0].metrics.count, 1, "Should have seen 1 error");
-        t.ok(err[0].metrics.time.t > 0, "Should have a valid timestamp");
-        t.equal(err[0].params.exceptionClass, "SyntaxError", "Should be SyntaxError class");
-        t.ok(!!err[0].params.message, "Should have message");
-        t.ok(err[0].params.stack_trace, "Should have a stack trace");
-        t.deepEqual(err[0].custom, { ...workerCustomAttrs }, "Should have correct custom attributes");
+        t.equal(err.length, 1, 'Should have 1 error obj');
+        t.equal(err[0].metrics.count, 1, 'Should have seen 1 error');
+        t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp');
+        t.equal(err[0].params.exceptionClass, 'SyntaxError', 'Should be SyntaxError class');
+        t.ok(!!err[0].params.message, 'Should have message');
+        t.ok(err[0].params.stack_trace, 'Should have a stack trace');
+        t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes');
         t.end();
       })
       .catch(fail);
@@ -317,7 +317,7 @@ function thrownErrorTest(type, matcher) {
         init,
         workerCommands: [
           () => {
-            throw new Error("thrown error");
+            throw new Error('thrown error');
           },
         ].map((x) => x.toString()),
       });
@@ -328,13 +328,13 @@ function thrownErrorTest(type, matcher) {
       Promise.all([errPromise, loadPromise])
         .then(([errResponse]) => {
           const { err } = JSON.parse(errResponse.body);
-          t.equal(err.length, 1, "Should have 1 error obj");
-          t.equal(err[0].metrics.count, 1, "Should have seen 1 error");
-          t.ok(err[0].metrics.time.t > 0, "Should have a valid timestamp");
-          t.equal(err[0].params.exceptionClass, "Error", "Should be Error class");
-          t.ok(!!err[0].params.message, "Should have message");
-          t.ok(err[0].params.stack_trace, "Should have a stack trace");
-          t.deepEqual(err[0].custom, { ...workerCustomAttrs }, "Should have correct custom attributes");
+          t.equal(err.length, 1, 'Should have 1 error obj');
+          t.equal(err[0].metrics.count, 1, 'Should have seen 1 error');
+          t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp');
+          t.equal(err[0].params.exceptionClass, 'Error', 'Should be Error class');
+          t.ok(!!err[0].params.message, 'Should have message');
+          t.ok(err[0].params.stack_trace, 'Should have a stack trace');
+          t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes');
           t.end();
         })
         .catch(fail);

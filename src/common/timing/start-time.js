@@ -5,12 +5,12 @@
 
 // Use various techniques to determine the time at which this page started and whether to capture navigation timing information
 
-import { sHash } from "../util/s-hash";
-import { mark } from "./stopwatch";
-import { ffVersion } from "../browser-version/firefox-version";
-import { setOffset } from "./now";
-import { exists as performanceCheckExists } from "./performance-check";
-import { globalScope } from "../util/global-scope";
+import { sHash } from '../util/s-hash';
+import { mark } from './stopwatch';
+import { ffVersion } from '../browser-version/firefox-version';
+import { setOffset } from './now';
+import { exists as performanceCheckExists } from './performance-check';
+import { globalScope } from '../util/global-scope';
 
 export let navCookie = true;
 
@@ -21,7 +21,7 @@ export function findStartTime(agentId) {
   var starttime = findStartWebTiming(); // || findStartCookie() -- now redundant *cli oct'22, TO DO: slated for removal
   if (!starttime) return;
 
-  mark(agentId, "starttime", starttime);
+  mark(agentId, 'starttime', starttime);
   setOffset(starttime);
 }
 

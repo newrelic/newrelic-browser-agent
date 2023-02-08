@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../browser-test");
+const testDriver = require('../browser-test');
 
 var loadQueue = [];
 // using es6 export breaks old ie
@@ -12,7 +12,7 @@ module.exports = { test, browserTest, loaded: false, onWindowLoaded, isEdge };
 function test() {}
 
 function browserTest(name, spec, test) {
-  if (!test && typeof spec === "function") {
+  if (!test && typeof spec === 'function') {
     test = spec;
     spec = null;
   }
@@ -20,7 +20,7 @@ function browserTest(name, spec, test) {
   testDriver(name, test);
 }
 
-window.addEventListener ? window.addEventListener("load", loaded, false) : window.attachEvent("onload", loaded);
+window.addEventListener ? window.addEventListener('load', loaded, false) : window.attachEvent('onload', loaded);
 
 function loaded() {
   module.exports.loaded = true;

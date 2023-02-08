@@ -22,7 +22,7 @@ export function shouldCollectEvent(params) {
   for (var i = 0; i < denyList.length; i++) {
     var parsed = denyList[i];
 
-    if (parsed.hostname === "*") {
+    if (parsed.hostname === '*') {
       return false;
     }
 
@@ -48,13 +48,13 @@ export function setDenyList(denyListConfig) {
   for (var i = 0; i < denyListConfig.length; i++) {
     var url = denyListConfig[i];
 
-    if (url.indexOf("http://") === 0) {
+    if (url.indexOf('http://') === 0) {
       url = url.substring(7);
-    } else if (url.indexOf("https://") === 0) {
+    } else if (url.indexOf('https://') === 0) {
       url = url.substring(8);
     }
 
-    var firstSlash = url.indexOf("/");
+    var firstSlash = url.indexOf('/');
 
     if (firstSlash > 0) {
       denyList.push({
@@ -64,7 +64,7 @@ export function setDenyList(denyListConfig) {
     } else {
       denyList.push({
         hostname: url,
-        pathname: "",
+        pathname: '',
       });
     }
   }
@@ -94,16 +94,16 @@ function domainMatchesPattern(pattern, domain) {
  * @returns {boolean} `true` if path and pattern are an exact string match (except for leading slashes); else `false`
  */
 function comparePath(pattern, path) {
-  if (pattern.indexOf("/") === 0) {
+  if (pattern.indexOf('/') === 0) {
     pattern = pattern.substring(1);
   }
 
-  if (path.indexOf("/") === 0) {
+  if (path.indexOf('/') === 0) {
     path = path.substring(1);
   }
 
   // No path in pattern means match all paths.
-  if (pattern === "") {
+  if (pattern === '') {
     return true;
   }
 

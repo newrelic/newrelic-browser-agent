@@ -13,7 +13,7 @@
     <script>
       window.browser = {};
       document.addEventListener(
-        "click",
+        'click',
         function () {
           doTheJsonp();
           doTheJsonp();
@@ -24,21 +24,21 @@
       var counter = 0;
       function doTheJsonp() {
         var count = ++counter;
-        var name = "foo_" + count;
+        var name = 'foo_' + count;
         window.browser[name] = function (data) {
           delete window[name];
-          var el = document.createElement("p");
+          var el = document.createElement('p');
           el.innerHTML = JSON.stringify(data);
           document.body.appendChild(el);
           setTimeout(
-            newrelic.interaction().createTracer("tacoTimer" + count, function () {
+            newrelic.interaction().createTracer('tacoTimer' + count, function () {
               window.location.hash = Math.random();
             }),
             500
           );
         };
-        var el = document.createElement("script");
-        el.src = "/jsonp?cb=browser." + name;
+        var el = document.createElement('script');
+        el.src = '/jsonp?cb=browser.' + name;
         window.location.hash = Math.random();
         window.document.body.appendChild(el);
       }

@@ -9,7 +9,7 @@
     {init} {config}
     <script type="text/javascript">
       if (!NREUM.loader_config) NREUM.loader_config = {};
-      NREUM.loader_config.xpid = "12#34";
+      NREUM.loader_config.xpid = '12#34';
 
       // enable the feature
       NREUM.init.distributed_tracing = {
@@ -22,13 +22,13 @@
     <div>This page fires an XHR and calls pushState when clicked</div>
     <script type="text/javascript">
       document.addEventListener(
-        "click",
+        'click',
         function () {
           var xhr = new XMLHttpRequest();
-          xhr.open("POST", "/echo");
-          xhr.send("123");
+          xhr.open('POST', '/echo');
+          xhr.send('123');
 
-          xhr.addEventListener("load", function () {}, true);
+          xhr.addEventListener('load', function () {}, true);
 
           window.location.hash = Math.random();
         },

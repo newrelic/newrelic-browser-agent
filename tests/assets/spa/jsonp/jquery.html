@@ -13,19 +13,19 @@
   <body>
     <script>
       document.addEventListener(
-        "click",
+        'click',
         function () {
           $.ajax({
-            url: "/jsonp?callback=?",
-            dataType: "jsonp",
+            url: '/jsonp?callback=?',
+            dataType: 'jsonp',
             crossDomain: true,
           }).done(function (data) {
-            var el = document.createElement("p");
+            var el = document.createElement('p');
             el.innerHTML = JSON.stringify(data);
             document.body.appendChild(el);
             window.location.hash = Math.random();
             setTimeout(
-              newrelic.interaction().createTracer("tacoTimer", function () {
+              newrelic.interaction().createTracer('tacoTimer', function () {
                 window.location.hash = Math.random();
               }),
               500

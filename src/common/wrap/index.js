@@ -1,12 +1,12 @@
-import { wrapFetch as wf } from "./wrap-fetch";
-import { wrapTimer as wt } from "./wrap-timer";
-import { wrapRaf as wr } from "./wrap-raf";
-import { wrapHistory as wh } from "./wrap-history";
-import { wrapJsonP as wj } from "./wrap-jsonp";
-import { wrapMutation as wm } from "./wrap-mutation";
-import { wrapPromise as wp } from "./wrap-promise";
-import { wrapXhr as wx } from "./wrap-xhr";
-import { wrapEvents as we } from "./wrap-events";
+import { wrapFetch as wf } from './wrap-fetch';
+import { wrapTimer as wt } from './wrap-timer';
+import { wrapRaf as wr } from './wrap-raf';
+import { wrapHistory as wh } from './wrap-history';
+import { wrapJsonP as wj } from './wrap-jsonp';
+import { wrapMutation as wm } from './wrap-mutation';
+import { wrapPromise as wp } from './wrap-promise';
+import { wrapXhr as wx } from './wrap-xhr';
+import { wrapEvents as we } from './wrap-events';
 
 export function wrapEvents(sharedEE) {
   return we(sharedEE);

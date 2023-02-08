@@ -3,19 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
-jil.browserTest("spa cancelled timer in callback", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('spa cancelled timer in callback', function (t) {
+  let helpers = require('./helpers');
 
   let validator = new helpers.InteractionValidator({
-    name: "interaction",
+    name: 'interaction',
     children: [
       {
-        name: "ajax",
+        name: 'ajax',
         children: [
           {
-            name: "customTracer",
+            name: 'customTracer',
             children: [],
           },
         ],
@@ -24,7 +24,7 @@ jil.browserTest("spa cancelled timer in callback", function (t) {
   });
 
   t.plan(4 + validator.count);
-  t.notok(helpers.currentNodeId(), "interaction should be null at first");
+  t.notok(helpers.currentNodeId(), 'interaction should be null at first');
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone);
 
@@ -32,14 +32,14 @@ jil.browserTest("spa cancelled timer in callback", function (t) {
     var xhr = new XMLHttpRequest();
     xhr.onload = function () {
       setTimeout(
-        newrelic.interaction().createTracer("timer", function () {
-          t.ok(true, "first timer fired");
+        newrelic.interaction().createTracer('timer', function () {
+          t.ok(true, 'first timer fired');
         }),
         100
       );
 
       let timer = setTimeout(() => {
-        t.fail("cancelled timer should never fire");
+        t.fail('cancelled timer should never fire');
       });
 
       // We're intentionally calling clearTimeout twice here to ensure that
@@ -49,13 +49,13 @@ jil.browserTest("spa cancelled timer in callback", function (t) {
 
       cb();
     };
-    xhr.open("GET", "/");
+    xhr.open('GET', '/');
     xhr.send();
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(interaction.root.end, "interaction should be finished and have an end time");
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    t.ok(interaction.root.end, 'interaction should be finished and have an end time');
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
     validator.validate(t, interaction);
     t.end();
   }

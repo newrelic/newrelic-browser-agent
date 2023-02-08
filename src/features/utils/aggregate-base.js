@@ -1,4 +1,4 @@
-import { FeatureBase } from "./feature-base";
+import { FeatureBase } from './feature-base';
 
 export class AggregateBase extends FeatureBase {
   constructor(agentIdentifier, aggregator, featureName) {

@@ -13,10 +13,10 @@
     Tests the interaction between Browser Interactions and Errors
 
     <script>
-      document.addEventListener("click", function () {
+      document.addEventListener('click', function () {
         var i = setInterval(function () {
           clearInterval(i);
-          throw new Error("some error");
+          throw new Error('some error');
         }, 100);
       });
     </script>

@@ -3,23 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require("jil");
+const jil = require('jil');
 
-jil.browserTest("timer between cb and microtasks", function (t) {
-  let helpers = require("./helpers");
+jil.browserTest('timer between cb and microtasks', function (t) {
+  let helpers = require('./helpers');
   if (!window.performance) {
-    t.skip("window.performance is required for this test");
+    t.skip('window.performance is required for this test');
     t.end();
     return;
   }
 
   let validator = new helpers.InteractionValidator({
-    name: "interaction",
+    name: 'interaction',
     children: [
       {
-        type: "customTracer",
+        type: 'customTracer',
         attrs: {
-          name: "timer",
+          name: 'timer',
         },
         children: [],
       },
@@ -41,17 +41,17 @@ jil.browserTest("timer between cb and microtasks", function (t) {
     while (helpers.now() <= deadline) {
       x++;
     }
-    let e = document.createElement("div");
+    let e = document.createElement('div');
     e.innerHTML = x;
 
     Promise.resolve().then(function () {
-      setTimeout(newrelic.interaction().createTracer("timer", cb));
+      setTimeout(newrelic.interaction().createTracer('timer', cb));
     });
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(interaction.root.end, "interaction should be finished and have an end time");
-    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    t.ok(interaction.root.end, 'interaction should be finished and have an end time');
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
     validator.validate(t, interaction);
     t.end();
   }

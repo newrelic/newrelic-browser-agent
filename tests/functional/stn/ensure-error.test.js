@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
+const testDriver = require('../../../tools/jil/index');
 
-let supported = testDriver.Matcher.withFeature("stn");
+let supported = testDriver.Matcher.withFeature('stn');
 
-testDriver.test("errors get to session traces", supported, function (t, browser, router) {
+testDriver.test('errors get to session traces', supported, function (t, browser, router) {
   let rumPromise = router.expectRum();
   let resourcePromise = router.expectResources();
-  let loadPromise = browser.get(router.assetURL("sessiontraceerror.html"));
+  let loadPromise = browser.get(router.assetURL('sessiontraceerror.html'));
 
   Promise.all([resourcePromise, rumPromise, loadPromise])
     .then(([{ query }]) => {
@@ -18,15 +18,15 @@ testDriver.test("errors get to session traces", supported, function (t, browser,
         let parsed = JSON.parse(body);
 
         let err = parsed.res.find((node) => {
-          return node.n === "error";
+          return node.n === 'error';
         });
-        t.ok(err, "Has an error");
-        t.equal(err.o, "hello session traces i am error");
+        t.ok(err, 'Has an error');
+        t.equal(err.o, 'hello session traces i am error');
 
         let ajax = parsed.res.find((node) => {
-          return node.n === "Ajax";
+          return node.n === 'Ajax';
         });
-        t.ok(ajax, "Has an Ajax");
+        t.ok(ajax, 'Has an Ajax');
 
         t.end();
       });

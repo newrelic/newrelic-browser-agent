@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require("../../../tools/jil/index");
-const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require("./assertion-helpers");
+const testDriver = require('../../../tools/jil/index');
+const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require('./assertion-helpers');
 
-let supported = testDriver.Matcher.withFeature("sendBeacon");
+let supported = testDriver.Matcher.withFeature('sendBeacon');
 
-testDriver.test("unhandledPromiseRejections are caught and are readable", supported, function (t, browser, router) {
-  let assetURL = router.assetURL("unhandled-promise-rejection-readable.html", {
+testDriver.test('unhandledPromiseRejections are caught and are readable', supported, function (t, browser, router) {
+  let assetURL = router.assetURL('unhandled-promise-rejection-readable.html', {
     init: {
       page_view_timing: {
         enabled: false,
@@ -32,62 +32,62 @@ testDriver.test("unhandledPromiseRejections are caught and are readable", suppor
         {
           message: 'Unhandled Promise Rejection: "Test"',
           tested: false,
-          meta: "string",
+          meta: 'string',
         },
         {
-          message: "Unhandled Promise Rejection: 1",
+          message: 'Unhandled Promise Rejection: 1',
           tested: false,
-          meta: "number",
+          meta: 'number',
         },
         {
           message: 'Unhandled Promise Rejection: {"a":1,"b":{"a":1}}',
           tested: false,
-          meta: "nested obj",
+          meta: 'nested obj',
         },
         {
-          message: "Unhandled Promise Rejection: [1,2,3]",
+          message: 'Unhandled Promise Rejection: [1,2,3]',
           tested: false,
-          meta: "array",
+          meta: 'array',
         },
         {
-          message: "Unhandled Promise Rejection: test",
+          message: 'Unhandled Promise Rejection: test',
           tested: false,
-          meta: "error with message",
+          meta: 'error with message',
         },
         {
-          message: "Unhandled Promise Rejection: ",
+          message: 'Unhandled Promise Rejection: ',
           tested: false,
-          meta: "undefined",
+          meta: 'undefined',
         },
         {
-          message: "Unhandled Promise Rejection: null",
+          message: 'Unhandled Promise Rejection: null',
           tested: false,
-          meta: "null",
+          meta: 'null',
         },
         {
-          message: "Unhandled Promise Rejection: ",
+          message: 'Unhandled Promise Rejection: ',
           tested: false,
-          meta: "error with no message",
+          meta: 'error with no message',
         },
         {
-          message: "Unhandled Promise Rejection: {}",
+          message: 'Unhandled Promise Rejection: {}',
           tested: false,
-          meta: "map object",
+          meta: 'map object',
         },
         {
           message: 'Unhandled Promise Rejection: {"abc":"Hello"}',
           tested: false,
-          meta: "factory function",
+          meta: 'factory function',
         },
         {
-          message: "Unhandled Promise Rejection: undefined",
+          message: 'Unhandled Promise Rejection: undefined',
           tested: false,
-          meta: "uncalled function",
+          meta: 'uncalled function',
         },
         {
-          message: "Unhandled Promise Rejection: ",
+          message: 'Unhandled Promise Rejection: ',
           tested: false,
-          meta: "circular object",
+          meta: 'circular object',
         },
       ];
       actualErrors.forEach((err) => {
@@ -99,7 +99,7 @@ testDriver.test("unhandledPromiseRejections are caught and are readable", suppor
       });
       t.ok(
         expectedErrorMessages.every((x) => x.tested),
-        "All expected error messages were found"
+        'All expected error messages were found'
       );
       t.end();
     })

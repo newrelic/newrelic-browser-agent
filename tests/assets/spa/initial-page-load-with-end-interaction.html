@@ -18,13 +18,13 @@
       newrelic.interaction().end();
 
       document.addEventListener(
-        "click",
+        'click',
         function () {
           var xhr = new XMLHttpRequest();
-          xhr.open("GET", window.location.pathname);
+          xhr.open('GET', window.location.pathname);
           xhr.send();
           window.location.hash = Math.random();
-          document.getElementById("coupon").style.display = "block";
+          document.getElementById('coupon').style.display = 'block';
         },
         false
       );

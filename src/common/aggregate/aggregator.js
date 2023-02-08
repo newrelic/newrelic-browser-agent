@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { SharedContext } from "../context/shared-context";
-import { mapOwn } from "../util/map-own";
+import { SharedContext } from '../context/shared-context';
+import { mapOwn } from '../util/map-own';
 
 export class Aggregator extends SharedContext {
   constructor(parent) {
@@ -36,7 +36,7 @@ export class Aggregator extends SharedContext {
     // iterate through each new metric and merge
     mapOwn(metrics, function (key, value) {
       // count is a special case handled above
-      if (key === "count") return;
+      if (key === 'count') return;
 
       var oldMetric = oldMetrics[key];
       var newMetric = metrics[key];
@@ -79,7 +79,7 @@ export class Aggregator extends SharedContext {
   // Like get, but for many types and it deletes the retrieved content from the aggregatedData
   take(types) {
     var results = {};
-    var type = "";
+    var type = '';
     var hasData = false;
     for (var i = 0; i < types.length; i++) {
       type = types[i];
@@ -162,7 +162,7 @@ function createMetricObject(value) {
 }
 
 function toArray(obj) {
-  if (typeof obj !== "object") return [];
+  if (typeof obj !== 'object') return [];
 
   return mapOwn(obj, getValue);
 }

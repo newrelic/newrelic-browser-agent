@@ -16,13 +16,13 @@
       var agentId = Object.keys(NREUM.initializedAgents)[0];
       var ee = NREUM.ee;
       var scopedEE = ee.get(agentId);
-      var type = "spa-register";
+      var type = 'spa-register';
       var args = [
         function (api) {
           spaApi = api;
         },
       ];
-      scopedEE.buffer([type], "spa");
+      scopedEE.buffer([type], 'spa');
       scopedEE.emit(type, args);
       // var handle = __nr_require('handle')
       // handle('spa-register', [function(api) {
@@ -47,13 +47,13 @@
       };
 
       document.addEventListener(
-        "click",
+        'click',
         function () {
           window.location.hash = Math.random();
 
-          var el = document.createElement("script");
-          var content = encodeURIComponent("globalCallback()");
-          el.src = "/lazyscript?delay=1000&content=" + content;
+          var el = document.createElement('script');
+          var content = encodeURIComponent('globalCallback()');
+          el.src = '/lazyscript?delay=1000&content=' + content;
           window.document.body.appendChild(el);
 
           // store current node
@@ -64,9 +64,9 @@
 
       function makeAjaxCall() {
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", "/echo");
-        xhr.send("123");
-        xhr.addEventListener("load", function () {}, true);
+        xhr.open('POST', '/echo');
+        xhr.send('123');
+        xhr.addEventListener('load', function () {}, true);
       }
     </script>
   </body>

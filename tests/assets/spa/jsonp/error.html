@@ -16,10 +16,10 @@
       }
 
       document.addEventListener(
-        "click",
+        'click',
         function () {
-          var el = document.createElement("script");
-          el.src = "/nonexistent?cb=foo";
+          var el = document.createElement('script');
+          el.src = '/nonexistent?cb=foo';
           window.document.body.appendChild(el);
 
           // change path here, since callback will not be invoked

@@ -12,19 +12,19 @@
     <script src="../../js/vendor/angular-resource-1.6.6.js"></script>
 
     <script>
-      angular.module("myApp", ["ngResource"]).controller("myCtrl", function ($scope, $http) {
+      angular.module('myApp', ['ngResource']).controller('myCtrl', function ($scope, $http) {
         window.$http = $http;
       });
 
       document.addEventListener(
-        "click",
+        'click',
         function () {
-          window.$http.jsonp("/jsonp").then(function (response) {
-            var el = document.createElement("p");
+          window.$http.jsonp('/jsonp').then(function (response) {
+            var el = document.createElement('p');
             el.innerHTML = JSON.stringify(response.data);
             document.body.appendChild(el);
             setTimeout(
-              newrelic.interaction().createTracer("tacoTimer", function () {
+              newrelic.interaction().createTracer('tacoTimer', function () {
                 window.location.hash = Math.random();
               }),
               500

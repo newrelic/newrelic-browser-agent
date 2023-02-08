@@ -20,10 +20,11 @@ testDriver.test("Agent doesn't block page from back/fwd cache", bfCacheSupport, 
   const loadPromise = browser.get(assetURL);
 
   Promise.all([loadPromise, router.expectRum()]).then(() => {
-		// Once the initial page loads and features are running, navigate away and check to see if it's cached via the custom pageaction being emitted w/o timing out.
+    router.timeout = 3000;
+    const insListener = router.expectIns();
+    // Once the initial page loads and features are running, navigate away and check to see if it's cached via the custom pageaction being emitted w/o timing out.
     browser.get(router.assetURL('/'));
-		router.timeout = 3000;
-		return router.expectIns();
+    return insListener;
   }).then((pActPayload) => {
 		// Double check we got the PA expected.
 		const pActsReceived = JSON.parse(pActPayload.body).ins;
@@ -41,22 +42,24 @@ testDriver.test("EOL events are sent appropriately", excludeIE, function (t, bro
   const loadPromise = browser.get(assetURL);
 
   Promise.all([loadPromise, router.expectRum()]).then(() => {
-		// 1) Make an interaction and simulate visibilitychange to trigger our "pagehide" logic after loading, after which we expect "final" harvest to occur.
+    router.timeout = 3000;
+    const timingsListener = router.expectTimings();
+    // 1) Make an interaction and simulate visibilitychange to trigger our "pagehide" logic after loading, after which we expect "final" harvest to occur.
     browser.elementById('btn1').click();
-		router.timeout = 3000;
-		return router.expectTimings();
+    return timingsListener;
   }).then((pvtPayload) => {
 		// 2) Verify PageViewTimings sent sufficient expected timing events, then trigger our "unload" logic.
 		const phTimings = querypack.decode(pvtPayload?.body?.length ? pvtPayload.body : pvtPayload.query.e)
 		t.ok(phTimings.length > 1, "vis hidden causes PVT harvest");	// should be more timings than "pagehide" at min -- this can increase for confidence when CLS & INP are added
-		
+
 		const phNode = phTimings.find(t => t.name === 'pageHide');
 		t.ok(phNode.value > 0, "vis hidden emits the pageHide event");
 		const ulNode = phTimings.find(t => t.name === 'unload');
 		t.equal(ulNode, undefined, "vis hidden doesn't emit unload event");
 
+        const timingsListener = router.expectTimings();
 		browser.get(router.assetURL('/'));
-		return router.expectTimings();
+		return timingsListener;
 	}).then((pvtPayload) => {
 		// 3) Verify PVTs aren't sent again but unload event is; (TEMPORARY) pageHide event should not be sent again
 		const ulTimings = querypack.decode(pvtPayload?.body?.length ? pvtPayload.body : pvtPayload.query.e)

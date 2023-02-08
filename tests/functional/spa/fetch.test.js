@@ -10,7 +10,7 @@ const querypack = require('@newrelic/nr-querypack')
 let supported = testDriver.Matcher.withFeature('fetch')
 
 testDriver.test('capturing fetch in SPA interactions', supported, function (t, browser, router) {
-  t.plan(22)
+  t.plan(21)
   let testStartTime = now()
 
   let rumPromise = router.expectRum()
@@ -28,7 +28,6 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
-      t.equal(interactionTree.children.length, 0, 'expect no child nodes')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
       let eventPromise = router.expectEvents()

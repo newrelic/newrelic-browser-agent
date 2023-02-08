@@ -139,6 +139,7 @@ jobs:
   publish-current-to-s3:
     runs-on: ubuntu-latest
     container: node:14
+    needs: [publish-to-nrdb]
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

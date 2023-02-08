@@ -31,11 +31,9 @@
           el.innerHTML = JSON.stringify(data);
           document.body.appendChild(el);
           setTimeout(
-            newrelic
-              .interaction()
-              .createTracer("tacoTimer" + count, function () {
-                window.location.hash = Math.random();
-              }),
+            newrelic.interaction().createTracer("tacoTimer" + count, function () {
+              window.location.hash = Math.random();
+            }),
             500
           );
         };

@@ -5,10 +5,7 @@ module.exports = {
   entry: "./index.js",
   output: {
     filename: "build-time-mfe.js",
-    path: path.resolve(
-      __dirname,
-      "../../../../tests/assets/test-builds/build-time-mfe"
-    ),
+    path: path.resolve(__dirname, "../../../../tests/assets/test-builds/build-time-mfe"),
     // path: path.resolve(__dirname, './dist'),
     library: {
       name: "container",

@@ -11,15 +11,7 @@ const { baseEE } = setup();
 wrapPromise(baseEE);
 
 test("jspdf should recognize native promise after wrapping", function (t) {
-  t.match(
-    self.Promise.toString(),
-    /\[native code\]/,
-    "toString should retain native code indicator"
-  );
-  t.equal(
-    self.Promise.name,
-    "Promise",
-    "name should retain original value of Promise"
-  );
+  t.match(self.Promise.toString(), /\[native code\]/, "toString should retain native code indicator");
+  t.equal(self.Promise.name, "Promise", "name should retain original value of Promise");
   t.end();
 });

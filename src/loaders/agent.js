@@ -7,12 +7,7 @@ import { featurePriority } from "./features/features";
 import { Aggregator } from "../common/aggregate/aggregator";
 import { gosNREUMInitializedAgents } from "../common/window/nreum";
 import { generateRandomHexString } from "../common/ids/unique-id";
-import {
-  getConfiguration,
-  getInfo,
-  getLoaderConfig,
-  getRuntime,
-} from "../common/config/config";
+import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from "../common/config/config";
 import { warn } from "../common/util/console";
 
 export class Agent {
@@ -24,14 +19,9 @@ export class Agent {
     this.features = {};
 
     this.desiredFeatures = options.features || [];
-    this.desiredFeatures.sort(
-      (a, b) => featurePriority[a.featureName] - featurePriority[b.featureName]
-    );
+    this.desiredFeatures.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName]);
 
-    Object.assign(
-      this,
-      configure(this.agentIdentifier, options, options.loaderType || "agent")
-    );
+    Object.assign(this, configure(this.agentIdentifier, options, options.loaderType || "agent"));
 
     this.start();
   }
@@ -54,23 +44,14 @@ export class Agent {
           const hasAllDeps = dependencies.every((x) => enabledFeatures[x]);
           if (!hasAllDeps)
             warn(
-              `${
-                f.featureName
-              } is enabled but one or more dependent features has been disabled (${JSON.stringify(
+              `${f.featureName} is enabled but one or more dependent features has been disabled (${JSON.stringify(
                 dependencies
               )}). This may cause unintended consequences or missing data...`
             );
-          this.features[f.featureName] = new f(
-            this.agentIdentifier,
-            this.sharedAggregator
-          );
+          this.features[f.featureName] = new f(this.agentIdentifier, this.sharedAggregator);
         }
       });
-      gosNREUMInitializedAgents(
-        this.agentIdentifier,
-        this.features,
-        "features"
-      );
+      gosNREUMInitializedAgents(this.agentIdentifier, this.features, "features");
     } catch (err) {
       warn(`Failed to initialize instrument classes`, err);
       // unwrap window apis to their originals

@@ -23,14 +23,7 @@
             }, 400);
 
             setTimeout(function () {
-              NREUM.inlineHit(
-                encodeURIComponent("maliciouse&foo"),
-                "a&b",
-                "c&d",
-                "e&f",
-                "g&h",
-                "i&j"
-              );
+              NREUM.inlineHit(encodeURIComponent("maliciouse&foo"), "a&b", "c&d", "e&f", "g&h", "i&j");
             }, 500);
           } else window.setTimeout(do_inlineHit, 100);
         })();

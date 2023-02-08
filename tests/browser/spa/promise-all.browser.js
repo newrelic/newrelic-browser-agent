@@ -44,10 +44,7 @@ jil.browserTest("Promise.all", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.ok(interaction.root.end, "interaction should be finished");
     validator.validate(t, interaction);
     t.end();
@@ -103,11 +100,7 @@ jil.browserTest("Promise.all async resolve after rejected", function (t) {
             newrelic.interaction().createTracer("timer", function () {
               promise.catch(function (val) {
                 t.equal(val, 123, "should get reject value in delayed catch");
-                t.equal(
-                  helpers.currentNodeId(),
-                  idOnReject,
-                  "should have same node id as other catch"
-                );
+                t.equal(helpers.currentNodeId(), idOnReject, "should have same node id as other catch");
                 cb();
               });
             }),
@@ -132,10 +125,7 @@ jil.browserTest("Promise.all async resolve after rejected", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.ok(interaction.root.end, "interaction should be finished");
     validator.validate(t, interaction);
     t.end();

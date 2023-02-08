@@ -43,15 +43,12 @@ class KittenComponent extends HTMLElement {
       limit: 100,
     };
     const url = new URL(`https://api.giphy.com/v1/gifs/search`);
-    Object.keys(params).forEach((key) =>
-      url.searchParams.append(key, params[key])
-    );
+    Object.keys(params).forEach((key) => url.searchParams.append(key, params[key]));
     const resp = await fetch(url);
     const json = await resp.json();
     const result =
       json.data.length > 0
-        ? json.data[Math.floor(Math.random() * json.data.length)].images
-            .downsized.url
+        ? json.data[Math.floor(Math.random() * json.data.length)].images.downsized.url
         : "https://media.giphy.com/media/3zhxq2ttgN6rEw8SDx/giphy.gif";
 
     return result;
@@ -68,9 +65,7 @@ class KittenComponent extends HTMLElement {
 
   sendError = () => {
     console.debug(`NOTICING (nr.noticeError()) an error in ${this.name}`);
-    const err = new Error(
-      `nr.noticeError() called in ${this.name} (Component-2)!`
-    );
+    const err = new Error(`nr.noticeError() called in ${this.name} (Component-2)!`);
     nr.noticeError(err);
     // throw new Error(`${this.name} called nr.noticeError() then intentionally threw this GLOBAL error!`)
   };
@@ -84,7 +79,5 @@ export function mount(elem) {
 }
 
 export function unmount() {
-  document
-    .querySelectorAll(KittenComponent.name)
-    .forEach((component) => component.remove());
+  document.querySelectorAll(KittenComponent.name).forEach((component) => component.remove());
 }

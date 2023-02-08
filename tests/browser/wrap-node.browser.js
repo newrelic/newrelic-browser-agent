@@ -14,44 +14,17 @@ jil.browserTest("functions are wrapped", function (t) {
   // wrap
   wrapJsonP(baseEE);
 
-  t.ok(
-    isWrapped(HTMLElement.prototype.appendChild),
-    "appendChild is wrapped on HTMLElement"
-  );
-  t.ok(
-    isWrapped(HTMLElement.prototype.insertBefore),
-    "insertBefore is wrapped on HTMLElement"
-  );
-  t.ok(
-    isWrapped(HTMLElement.prototype.replaceChild),
-    "replaceChild is wrapped on HTMLElement"
-  );
+  t.ok(isWrapped(HTMLElement.prototype.appendChild), "appendChild is wrapped on HTMLElement");
+  t.ok(isWrapped(HTMLElement.prototype.insertBefore), "insertBefore is wrapped on HTMLElement");
+  t.ok(isWrapped(HTMLElement.prototype.replaceChild), "replaceChild is wrapped on HTMLElement");
 
-  t.ok(
-    isWrapped(HTMLHeadElement.prototype.appendChild),
-    "appendChild is wrapped on HTMLHeadElement"
-  );
-  t.ok(
-    isWrapped(HTMLHeadElement.prototype.insertBefore),
-    "insertBefore is wrapped on HTMLHeadElement"
-  );
-  t.ok(
-    isWrapped(HTMLHeadElement.prototype.replaceChild),
-    "replaceChild is wrapped on HTMLHeadElement"
-  );
+  t.ok(isWrapped(HTMLHeadElement.prototype.appendChild), "appendChild is wrapped on HTMLHeadElement");
+  t.ok(isWrapped(HTMLHeadElement.prototype.insertBefore), "insertBefore is wrapped on HTMLHeadElement");
+  t.ok(isWrapped(HTMLHeadElement.prototype.replaceChild), "replaceChild is wrapped on HTMLHeadElement");
 
-  t.ok(
-    isWrapped(HTMLBodyElement.prototype.appendChild),
-    "appendChild is wrapped on HTMLBodyElement"
-  );
-  t.ok(
-    isWrapped(HTMLBodyElement.prototype.insertBefore),
-    "insertBefore is wrapped on HTMLBodyElement"
-  );
-  t.ok(
-    isWrapped(HTMLBodyElement.prototype.replaceChild),
-    "replaceChild is wrapped on HTMLBodyElement"
-  );
+  t.ok(isWrapped(HTMLBodyElement.prototype.appendChild), "appendChild is wrapped on HTMLBodyElement");
+  t.ok(isWrapped(HTMLBodyElement.prototype.insertBefore), "insertBefore is wrapped on HTMLBodyElement");
+  t.ok(isWrapped(HTMLBodyElement.prototype.replaceChild), "replaceChild is wrapped on HTMLBodyElement");
 });
 
 jil.browserTest("new property is not added to HTMLElement", function (t) {

@@ -70,14 +70,8 @@ jil.browserTest("simple sync api test", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }
@@ -109,12 +103,10 @@ jil.browserTest("simple async api test", function (t) {
   helpers.startInteraction(onInteractionStart, afterInteractionDone);
 
   function onInteractionStart(cb) {
-    var tracer = newrelic
-      .interaction()
-      .createTracer("requestAnimationFrame", function () {
-        newrelic.interaction().setAttribute("raf-cb", true);
-        return 123;
-      });
+    var tracer = newrelic.interaction().createTracer("requestAnimationFrame", function () {
+      newrelic.interaction().setAttribute("raf-cb", true);
+      return 123;
+    });
     raf(() => {
       t.equal(tracer(), 123);
       cb();
@@ -122,14 +114,8 @@ jil.browserTest("simple async api test", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }
@@ -171,14 +157,8 @@ jil.browserTest("async api no callback", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }
@@ -187,14 +167,12 @@ jil.browserTest("async api no callback", function (t) {
 jil.browserTest("async api outside interaction", function (t) {
   t.plan(4);
 
-  var tracer = newrelic
-    .interaction()
-    .createTracer("requestAnimationFrame", function (a, b, c) {
-      t.equal(a, 1);
-      t.equal(b, 2);
-      t.equal(c, 3);
-      return 123;
-    });
+  var tracer = newrelic.interaction().createTracer("requestAnimationFrame", function (a, b, c) {
+    t.equal(a, 1);
+    t.equal(b, 2);
+    t.equal(c, 3);
+    return 123;
+  });
 
   setTimeout(() => {
     t.equal(tracer(1, 2, 3), 123);
@@ -205,14 +183,12 @@ jil.browserTest("async api outside interaction", function (t) {
 jil.browserTest("sync api outside interaction", function (t) {
   t.plan(4);
 
-  var returnVal = newrelic
-    .interaction()
-    .createTracer("function 1", (a, b, c) => {
-      t.equal(a, 1);
-      t.equal(b, 2);
-      t.equal(c, 3);
-      return 456;
-    })(1, 2, 3);
+  var returnVal = newrelic.interaction().createTracer("function 1", (a, b, c) => {
+    t.equal(a, 1);
+    t.equal(b, 2);
+    t.equal(c, 3);
+    return 456;
+  })(1, 2, 3);
 
   t.equal(returnVal, 456);
   t.end();
@@ -220,14 +196,12 @@ jil.browserTest("sync api outside interaction", function (t) {
 
 jil.browserTest("async api outside interaction with throw", function (t) {
   var expected = new Error();
-  var tracer = newrelic
-    .interaction()
-    .createTracer("requestAnimationFrame", function (a, b, c) {
-      t.equal(a, 1);
-      t.equal(b, 2);
-      t.equal(c, 3);
-      throw expected;
-    });
+  var tracer = newrelic.interaction().createTracer("requestAnimationFrame", function (a, b, c) {
+    t.equal(a, 1);
+    t.equal(b, 2);
+    t.equal(c, 3);
+    throw expected;
+  });
 
   try {
     tracer(1, 2, 3);
@@ -295,14 +269,8 @@ jil.browserTest("simple sync api test with throw", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }
@@ -335,15 +303,13 @@ jil.browserTest("simple async api test with throw", function (t) {
   helpers.startInteraction(onInteractionStart, afterInteractionDone);
 
   function onInteractionStart(cb) {
-    var tracer = newrelic
-      .interaction()
-      .createTracer("requestAnimationFrame", function () {
-        setTimeout(function () {
-          newrelic.interaction().setAttribute("setTimeout-cb", true);
-          cb();
-        }, 5);
-        throw expected;
-      });
+    var tracer = newrelic.interaction().createTracer("requestAnimationFrame", function () {
+      setTimeout(function () {
+        newrelic.interaction().setAttribute("setTimeout-cb", true);
+        cb();
+      }, 5);
+      throw expected;
+    });
 
     raf(() => {
       try {
@@ -355,82 +321,65 @@ jil.browserTest("simple async api test with throw", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }
 });
 
-jil.browserTest(
-  "async api test with throw does not leave context",
-  function (t) {
-    var expected = new Error();
-    let helpers = require("./helpers");
+jil.browserTest("async api test with throw does not leave context", function (t) {
+  var expected = new Error();
+  let helpers = require("./helpers");
 
-    let validator = new helpers.InteractionValidator({
-      name: "interaction",
-      attrs: {
-        custom: {
-          "setTimeout-cb": true,
-        },
+  let validator = new helpers.InteractionValidator({
+    name: "interaction",
+    attrs: {
+      custom: {
+        "setTimeout-cb": true,
       },
-      children: [
-        {
-          name: "customTracer",
-          attrs: {
-            name: "requestAnimationFrame",
-          },
-          children: [],
+    },
+    children: [
+      {
+        name: "customTracer",
+        attrs: {
+          name: "requestAnimationFrame",
         },
-      ],
+        children: [],
+      },
+    ],
+  });
+
+  t.plan(3 + validator.count);
+
+  helpers.startInteraction(onInteractionStart, afterInteractionDone);
+
+  function onInteractionStart(cb) {
+    var tracer = newrelic.interaction().createTracer("requestAnimationFrame", function () {
+      throw expected;
     });
 
-    t.plan(3 + validator.count);
+    setTimeout(() => {
+      try {
+        tracer();
+      } catch (err) {
+        t.equal(err, expected);
+      }
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone);
-
-    function onInteractionStart(cb) {
-      var tracer = newrelic
-        .interaction()
-        .createTracer("requestAnimationFrame", function () {
-          throw expected;
-        });
-
-      setTimeout(() => {
-        try {
-          tracer();
-        } catch (err) {
-          t.equal(err, expected);
-        }
-
-        setTimeout(function () {
-          newrelic.interaction().setAttribute("setTimeout-cb", true);
-          cb();
-        });
-      }, 5);
-    }
-
-    function afterInteractionDone(interaction) {
-      t.ok(
-        interaction.root.end,
-        "interaction should be finished and have an end time"
-      );
-      t.notok(
-        helpers.currentNodeId(),
-        "interaction should be null outside of async chain"
-      );
-      validator.validate(t, interaction);
-      t.end();
-    }
+      setTimeout(function () {
+        newrelic.interaction().setAttribute("setTimeout-cb", true);
+        cb();
+      });
+    }, 5);
   }
-);
+
+  function afterInteractionDone(interaction) {
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    validator.validate(t, interaction);
+    t.end();
+  }
+});
 
 jil.browserTest("simple sync api test with throw and sibling", function (t) {
   var expected = new Error();
@@ -496,14 +445,8 @@ jil.browserTest("simple sync api test with throw and sibling", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }
@@ -535,14 +478,8 @@ jil.browserTest("end interaction", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }
@@ -571,14 +508,8 @@ jil.browserTest("custom interaction name", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }
@@ -609,14 +540,8 @@ jil.browserTest("custom actionText", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }
@@ -643,14 +568,8 @@ jil.browserTest("ignore interaction", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.ok(interaction.ignored, "interaction should be ignored");
     validator.validate(t, interaction);
     t.end();
@@ -688,14 +607,8 @@ jil.browserTest("custom attributes", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.notok(interaction.ignored, "interaction should not be ignored");
     validator.validate(t, interaction);
     t.end();
@@ -734,14 +647,8 @@ jil.browserTest("custom attributes and interaction attributes", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.notok(interaction.ignored, "interaction should not be ignored");
     validator.validate(t, interaction);
     t.end();
@@ -780,14 +687,8 @@ jil.browserTest("custom attributes and interaction attributes", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.notok(interaction.ignored, "interaction should not be ignored");
     validator.validate(t, interaction);
 
@@ -851,14 +752,8 @@ jil.browserTest("context store and onEnd", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.notok(interaction.ignored, "interaction should not be ignored");
     validator.validate(t, interaction);
     t.end();
@@ -988,14 +883,8 @@ jil.browserTest("interaction outside interaction", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.notok(interaction.ignored, "interaction should not be ignored");
     validator.validate(t, interaction);
     t.end();
@@ -1065,14 +954,8 @@ jil.browserTest("interaction outside wrapped function", function (t) {
   });
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.notok(interaction.ignored, "interaction should not be ignored");
     validator.validate(t, interaction);
     t.end();
@@ -1119,14 +1002,8 @@ jil.browserTest("set trigger", function (t) {
   });
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.notok(interaction.ignored, "interaction should not be ignored");
     validator.validate(t, interaction);
     t.end();
@@ -1173,14 +1050,8 @@ jil.browserTest("createTracer no name", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.notok(interaction.ignored, "interaction should not be ignored");
     validator.validate(t, interaction);
     t.end();
@@ -1202,11 +1073,7 @@ jil.browserTest("createTracer no name, no callback", function (t) {
   function onInteractionStart(cb) {
     var start = helpers.now();
     cb();
-    setTimeout["nr@original"].call(
-      window,
-      newrelic.interaction().createTracer(),
-      50
-    );
+    setTimeout["nr@original"].call(window, newrelic.interaction().createTracer(), 50);
     newrelic.interaction().onEnd(function () {
       t.ok(helpers.now() - start >= 50);
     });
@@ -1217,14 +1084,8 @@ jil.browserTest("createTracer no name, no callback", function (t) {
       interaction.root.end - interaction.root.start < 50,
       "should not include duration of no name, no callback tracer"
     );
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.notok(interaction.ignored, "interaction should not be ignored");
     validator.validate(t, interaction);
     t.end();
@@ -1259,14 +1120,8 @@ jil.browserTest("reuse handle from outside interaction", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.notok(interaction.ignored, "interaction should not be ignored");
     validator.validate(t, interaction);
     t.end();

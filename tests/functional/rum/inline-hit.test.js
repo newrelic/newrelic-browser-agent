@@ -54,11 +54,7 @@ testDriver.test("inline hit api", supported, function (t, browser, router) {
 
   function inlineHit3({ query }) {
     t.equal(query.a, "42", "inlineHit app id");
-    t.equal(
-      query.t,
-      encodeURIComponent("maliciouse&foo"),
-      "inlineHit request name"
-    );
+    t.equal(query.t, encodeURIComponent("maliciouse&foo"), "inlineHit request name");
     t.equal(+query.qt, 0, "inlineHit queue time");
     t.equal(+query.ap, 0, "inlineHit app time");
     t.equal(+query.be, 0, "inlineHit backend time");

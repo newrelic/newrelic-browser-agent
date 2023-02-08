@@ -159,9 +159,7 @@ class TestHarness extends EventEmitter {
         self._write("# " + res + "\n");
         return;
       }
-      self._write(
-        self._encodeResult(res, self.count + self.bufferCounts.count + 1)
-      );
+      self._write(self._encodeResult(res, self.count + self.bufferCounts.count + 1));
 
       if (self.paused) {
         self.bufferCounts.count++;
@@ -228,11 +226,7 @@ class TestHarness extends EventEmitter {
       var ex = inspect(res.expected, { depth: res.objectPrintDepth });
       var ac = inspect(res.actual, { depth: res.objectPrintDepth });
 
-      if (
-        Math.max(ex.length, ac.length) > 65 ||
-        invalidYaml(ex) ||
-        invalidYaml(ac)
-      ) {
+      if (Math.max(ex.length, ac.length) > 65 || invalidYaml(ex) || invalidYaml(ac)) {
         output += inner + "expected: |-\n" + inner + "  " + ex + "\n";
         output += inner + "actual: |-\n" + inner + "  " + ac + "\n";
       } else {
@@ -245,10 +239,7 @@ class TestHarness extends EventEmitter {
     }
 
     var actualStack =
-      res.actual &&
-      (typeof res.actual === "object" || typeof res.actual === "function")
-        ? res.actual.stack
-        : undefined;
+      res.actual && (typeof res.actual === "object" || typeof res.actual === "function") ? res.actual.stack : undefined;
     var errorStack = res.error && res.error.stack;
     var stack = defined(actualStack, errorStack);
     if (stack) {

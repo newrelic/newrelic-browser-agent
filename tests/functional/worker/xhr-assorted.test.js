@@ -36,16 +36,9 @@ function addEventListenerPatched(type, browserVersionMatcher) {
             }
 
             function patchAddEventListener(prototype) {
-              if (
-                prototype.hasOwnProperty &&
-                prototype.hasOwnProperty("addEventListener")
-              ) {
+              if (prototype.hasOwnProperty && prototype.hasOwnProperty("addEventListener")) {
                 var orig = prototype.addEventListener;
-                prototype.addEventListener = function (
-                  event,
-                  callback,
-                  bubble
-                ) {
+                prototype.addEventListener = function (event, callback, bubble) {
                   orig.call(this, event, wrap(callback), bubble);
                 };
               }
@@ -148,19 +141,13 @@ function catCors(type, browserVersionMatcher) {
       });
 
       const loadPromise = browser.get(assetURL);
-      const meowPromise = router.expectCustomGet(
-        "/cat-cors/{key}",
-        (req, res) => {
-          res.end("ok");
-        }
-      );
+      const meowPromise = router.expectCustomGet("/cat-cors/{key}", (req, res) => {
+        res.end("ok");
+      });
 
       Promise.all([meowPromise, loadPromise])
         .then(([req]) => {
-          t.notok(
-            req.headers["x-newrelic-id"],
-            "cross-origin XHR should not have CAT header"
-          );
+          t.notok(req.headers["x-newrelic-id"], "cross-origin XHR should not have CAT header");
           t.end();
         })
         .catch(fail(t, "unexpected error"));
@@ -208,23 +195,13 @@ function harvestRetried(type, browserVersionMatcher) {
 
           const secondContainsFirst = firstBody.every((firstElement) => {
             return secondBody.find((secondElement) => {
-              return (
-                secondElement.path === firstElement.path &&
-                secondElement.start === firstElement.start
-              );
+              return secondElement.path === firstElement.path && secondElement.start === firstElement.start;
             });
           });
 
           t.equal(result.res.statusCode, 200, "server responded with 200");
-          t.ok(
-            secondContainsFirst,
-            "second body should include the contents of the first retried harvest"
-          );
-          t.equal(
-            router.seenRequests.events,
-            2,
-            "got two events harvest requests"
-          );
+          t.ok(secondContainsFirst, "second body should include the contents of the first retried harvest");
+          t.equal(router.seenRequests.events, 2, "got two events harvest requests");
           t.end();
         })
         .catch(fail(t));
@@ -274,30 +251,13 @@ function abortCalled(type, browserVersionMatcher) {
               t.equal(parsedXhr.params.method, "GET", "has GET method");
               t.ok(parsedXhr.params.host, "has a hostname");
               t.equal(parsedXhr.params.status, 200, "has status of 200");
-              t.equal(
-                parsedXhr.params.cat,
-                "foo",
-                "has CAT data for /xhr_with_cat"
-              );
+              t.equal(parsedXhr.params.cat, "foo", "has CAT data for /xhr_with_cat");
               t.ok(parsedXhr.metrics, "has metrics");
               t.equal(parsedXhr.metrics.count, 1, "has one metric count");
-              t.ok(
-                parsedXhr.metrics.duration && parsedXhr.metrics.duration.t >= 0,
-                "has duration >= 0"
-              );
-              t.equal(
-                parsedXhr.metrics.rxSize && parsedXhr.metrics.rxSize.t,
-                409,
-                "has rxSize of 409"
-              );
-              t.ok(
-                parsedXhr.metrics.cbTime && parsedXhr.metrics.cbTime.t >= 0,
-                "has cbTime >= 0"
-              );
-              t.ok(
-                parsedXhr.metrics.time && parsedXhr.metrics.time.t >= 0,
-                "has time >= 0"
-              );
+              t.ok(parsedXhr.metrics.duration && parsedXhr.metrics.duration.t >= 0, "has duration >= 0");
+              t.equal(parsedXhr.metrics.rxSize && parsedXhr.metrics.rxSize.t, 409, "has rxSize of 409");
+              t.ok(parsedXhr.metrics.cbTime && parsedXhr.metrics.cbTime.t >= 0, "has cbTime >= 0");
+              t.ok(parsedXhr.metrics.time && parsedXhr.metrics.time.t >= 0, "has time >= 0");
             }
           }
           t.end();

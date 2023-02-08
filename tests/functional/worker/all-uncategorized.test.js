@@ -21,34 +21,26 @@ workerTypes.forEach((type) => {
 
 // --- API tests ---
 function apiFinished(type, browserVersionMatcher) {
-  testDriver.test(
-    `${type} - finished records a PageAction`,
-    browserVersionMatcher,
-    function (t, browser, router) {
-      let assetURL = router.assetURL(`worker/${type}-worker.html`, {
-        init: {
-          ins: { harvestTimeSeconds: 2 },
-        },
-        workerCommands: [`newrelic.finished()`],
-      });
+  testDriver.test(`${type} - finished records a PageAction`, browserVersionMatcher, function (t, browser, router) {
+    let assetURL = router.assetURL(`worker/${type}-worker.html`, {
+      init: {
+        ins: { harvestTimeSeconds: 2 },
+      },
+      workerCommands: [`newrelic.finished()`],
+    });
 
-      let loadPromise = browser.get(assetURL);
-      let insPromise = router.expectIns();
+    let loadPromise = browser.get(assetURL);
+    let insPromise = router.expectIns();
 
-      Promise.all([loadPromise, insPromise])
-        .then(([, /* loadPromise junk */ { body }]) => {
-          let insData = JSON.parse(body).ins;
-          t.equal(insData.length, 1, "exactly 1 PageAction was submitted");
-          t.equal(
-            insData[0].actionName,
-            "finished",
-            "PageAction has actionName = finished"
-          );
-          t.end();
-        })
-        .catch(fail(t));
-    }
-  );
+    Promise.all([loadPromise, insPromise])
+      .then(([, /* loadPromise junk */ { body }]) => {
+        let insData = JSON.parse(body).ins;
+        t.equal(insData.length, 1, "exactly 1 PageAction was submitted");
+        t.equal(insData[0].actionName, "finished", "PageAction has actionName = finished");
+        t.end();
+      })
+      .catch(fail(t));
+  });
 }
 function apiAddReleaseTooMany(type, browserVersionMatcher) {
   testDriver.test(
@@ -79,13 +71,7 @@ function apiAddReleaseTooMany(type, browserVersionMatcher) {
           const ri = {};
           for (let i = 1; i <= 10; i++) ri["num" + i] = String(i); // 10 is the magic number (limit) defined in addRelease of api.js
 
-          t.deepEqual(
-            queryRi,
-            ri,
-            `${JSON.stringify(ri)} is expected but got ${JSON.stringify(
-              queryRi
-            )}`
-          );
+          t.deepEqual(queryRi, ri, `${JSON.stringify(ri)} is expected but got ${JSON.stringify(queryRi)}`);
           t.end();
         })
         .catch(fail(t));
@@ -139,16 +125,9 @@ function apiAddReleaseTooLong(type, browserVersionMatcher) {
           t.equal(
             twoHundredCharacterString.length,
             200,
-            "twoHundredCharacterString should be 200 characters but is " +
-              twoHundredCharacterString.length
+            "twoHundredCharacterString should be 200 characters but is " + twoHundredCharacterString.length
           );
-          t.deepEqual(
-            queryRi,
-            ri,
-            `${JSON.stringify(ri)} is expected but got ${JSON.stringify(
-              queryRi
-            )}`
-          );
+          t.deepEqual(queryRi, ri, `${JSON.stringify(ri)} is expected but got ${JSON.stringify(queryRi)}`);
           t.end();
         })
         .catch(fail(t));
@@ -208,10 +187,7 @@ function harvestReferrerSent(type, browserVersionMatcher) {
           t.ok(query.ref, "The query string should include the ref attribute.");
 
           let queryRefUrl = url.parse(query.ref);
-          t.ok(
-            queryRefUrl.query == null,
-            "url in ref query param does not contain query parameters"
-          );
+          t.ok(queryRefUrl.query == null, "url in ref query param does not contain query parameters");
 
           // if (originOnlyReferer.inverse().match(browser.browserSpec)) {	-- this test doesn't seem to be true for workers even if it is for main
           // 	let headerUrl = url.parse(headers.referer);
@@ -254,71 +230,67 @@ function harvestSessionIsNullWhenEnabled(type, browserVersionMatcher) {
 
 // --- Obfuscate test ---
 function obfuscateAll(type, browserVersionMatcher) {
-  testDriver.test(
-    `${type} - Obfuscate All Events`,
-    browserVersionMatcher,
-    function (t, browser, router) {
-      let assetURL = router.assetURL(`worker/${type}-worker.html`, {
-        init: {
-          obfuscate: [
-            {
-              regex: /bam-test/g,
-              replacement: "OBFUSCATED",
-            },
-            {
-              regex: /fakeid/g,
-            },
-            {
-              regex: /pii/g,
-              replacement: "OBFUSCATED",
-            },
-            {
-              regex: "comma",
-              replacement: "invalid,string",
-            },
-            {
-              regex: "semicolon",
-              replacement: "invalid;string",
-            },
-            {
-              regex: "backslash",
-              replacement: "invalid\\string",
-            },
-          ],
-          ajax: { harvestTimeSeconds: 2 },
-          jserrors: { harvestTimeSeconds: 2 },
-          ins: { harvestTimeSeconds: 2 },
-          metrics: { enabled: false },
-        },
-        workerCommands: [
-          () => {
-            setTimeout(function () {
-              fetch("/tests/assets/obfuscate-pii-valid.html");
-              throw new Error("pii,fakeid");
-            }, 100);
-            newrelic.addPageAction("fakeidpageactionpii");
-            newrelic.setCustomAttribute("customAttribute", "fakeid,pii");
+  testDriver.test(`${type} - Obfuscate All Events`, browserVersionMatcher, function (t, browser, router) {
+    let assetURL = router.assetURL(`worker/${type}-worker.html`, {
+      init: {
+        obfuscate: [
+          {
+            regex: /bam-test/g,
+            replacement: "OBFUSCATED",
           },
-        ].map((x) => x.toString()),
-      });
+          {
+            regex: /fakeid/g,
+          },
+          {
+            regex: /pii/g,
+            replacement: "OBFUSCATED",
+          },
+          {
+            regex: "comma",
+            replacement: "invalid,string",
+          },
+          {
+            regex: "semicolon",
+            replacement: "invalid;string",
+          },
+          {
+            regex: "backslash",
+            replacement: "invalid\\string",
+          },
+        ],
+        ajax: { harvestTimeSeconds: 2 },
+        jserrors: { harvestTimeSeconds: 2 },
+        ins: { harvestTimeSeconds: 2 },
+        metrics: { enabled: false },
+      },
+      workerCommands: [
+        () => {
+          setTimeout(function () {
+            fetch("/tests/assets/obfuscate-pii-valid.html");
+            throw new Error("pii,fakeid");
+          }, 100);
+          newrelic.addPageAction("fakeidpageactionpii");
+          newrelic.setCustomAttribute("customAttribute", "fakeid,pii");
+        },
+      ].map((x) => x.toString()),
+    });
 
-      let loadPromise = browser.get(assetURL);
-      const ajaxPromise = router.expectAjaxEvents();
-      const errorsPromise = router.expectErrors();
-      const insPromise = router.expectIns();
+    let loadPromise = browser.get(assetURL);
+    const ajaxPromise = router.expectAjaxEvents();
+    const errorsPromise = router.expectErrors();
+    const insPromise = router.expectIns();
 
-      Promise.all([loadPromise, ajaxPromise, errorsPromise, insPromise])
-        .then(([, ajaxResponse, errorsResponse, insResponse]) => {
-          checkPayload(t, ajaxResponse.body, "AJAX");
-          checkPayload(t, errorsResponse.body, "Errors");
-          checkPayload(t, insResponse.body, "INS body");
-          checkPayload(t, errorsResponse.query, "Errors query");
-          checkPayload(t, insResponse.query, "INS query");
-          t.end();
-        })
-        .catch(fail(t));
-    }
-  );
+    Promise.all([loadPromise, ajaxPromise, errorsPromise, insPromise])
+      .then(([, ajaxResponse, errorsResponse, insResponse]) => {
+        checkPayload(t, ajaxResponse.body, "AJAX");
+        checkPayload(t, errorsResponse.body, "Errors");
+        checkPayload(t, insResponse.body, "INS body");
+        checkPayload(t, errorsResponse.query, "Errors query");
+        checkPayload(t, insResponse.query, "INS query");
+        t.end();
+      })
+      .catch(fail(t));
+  });
 }
 
 // --- Timings tests --- ... PVT not applicable to workers

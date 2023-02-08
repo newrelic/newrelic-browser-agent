@@ -11,11 +11,7 @@ import { stringify } from "../../../common/util/stringify";
 import { parseUrl } from "../../../common/url/parse-url";
 import { supportsPerformanceObserver } from "../../../common/window/supports-performance-observer";
 import slice from "lodash._slice";
-import {
-  getConfigurationValue,
-  getInfo,
-  getRuntime,
-} from "../../../common/config/config";
+import { getConfigurationValue, getInfo, getRuntime } from "../../../common/config/config";
 import { findStartTime } from "../../../common/timing/start-time";
 import { now } from "../../../common/timing/now";
 import { AggregateBase } from "../../utils/aggregate-base";
@@ -77,16 +73,8 @@ export class Aggregate extends AggregateBase {
     this.trace = {};
     this.nodeCount = 0;
     this.sentTrace = null;
-    this.harvestTimeSeconds =
-      getConfigurationValue(
-        agentIdentifier,
-        "session_trace.harvestTimeSeconds"
-      ) || 10;
-    this.maxNodesPerHarvest =
-      getConfigurationValue(
-        agentIdentifier,
-        "session_trace.maxNodesPerHarvest"
-      ) || 1000;
+    this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, "session_trace.harvestTimeSeconds") || 10;
+    this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, "session_trace.maxNodesPerHarvest") || 1000;
 
     this.laststart = 0;
     findStartTime(agentIdentifier);
@@ -152,12 +140,7 @@ export class Aggregate extends AggregateBase {
     );
 
     // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...
-    registerHandler(
-      "bst",
-      (...args) => handlerCache.settle(() => this.storeEvent(...args)),
-      this.featureName,
-      this.ee
-    );
+    registerHandler("bst", (...args) => handlerCache.settle(() => this.storeEvent(...args)), this.featureName, this.ee);
     registerHandler(
       "bstTimer",
       (...args) => handlerCache.settle(() => this.storeTimer(...args)),
@@ -208,12 +191,7 @@ export class Aggregate extends AggregateBase {
     t[name] = value;
     this.storeTiming(t, true);
     if (this.hasFID(name, attrs))
-      this.storeEvent(
-        { type: "fid", target: "document" },
-        "document",
-        value,
-        value + attrs.fid
-      );
+      this.storeEvent({ type: "fid", target: "document" }, "document", value, value + attrs.fid);
   }
 
   storeTiming(_t, ignoreOffset) {
@@ -230,9 +208,7 @@ export class Aggregate extends AggregateBase {
       // that are in the future (Microsoft Edge seems to sometimes produce these)
       if (!(typeof val === "number" && val > 0 && val < dateNow)) continue;
 
-      timeOffset = !ignoreOffset
-        ? _t[key] - getRuntime(this.agentIdentifier).offset
-        : _t[key];
+      timeOffset = !ignoreOffset ? _t[key] - getRuntime(this.agentIdentifier).offset : _t[key];
 
       this.storeSTN({
         n: key,
@@ -295,21 +271,8 @@ export class Aggregate extends AggregateBase {
 
     if (t && t instanceof XMLHttpRequest) {
       var params = this.ee.context(t).params;
-      if (
-        !params ||
-        !params.status ||
-        !params.method ||
-        !params.host ||
-        !params.pathname
-      )
-        return "xhrOriginMissing";
-      origin =
-        params.status +
-        " " +
-        params.method +
-        ": " +
-        params.host +
-        params.pathname;
+      if (!params || !params.status || !params.method || !params.host || !params.pathname) return "xhrOriginMissing";
+      origin = params.status + " " + params.method + ": " + params.host + params.pathname;
     } else if (t && typeof t.tagName === "string") {
       origin = t.tagName.toLowerCase();
       if (t.id) origin += "#" + t.id;
@@ -347,13 +310,7 @@ export class Aggregate extends AggregateBase {
         n: currentResource.initiatorType,
         s: currentResource.fetchStart | 0,
         e: currentResource.responseEnd | 0,
-        o:
-          parsed.protocol +
-          "://" +
-          parsed.hostname +
-          ":" +
-          parsed.port +
-          parsed.pathname, // resource.name is actually a URL so it's the source
+        o: parsed.protocol + "://" + parsed.hostname + ":" + parsed.port + parsed.pathname, // resource.name is actually a URL so it's the source
         t: currentResource.entryType,
       };
 
@@ -384,13 +341,7 @@ export class Aggregate extends AggregateBase {
       n: "Ajax",
       s: metrics.time,
       e: metrics.time + metrics.duration,
-      o:
-        params.status +
-        " " +
-        params.method +
-        ": " +
-        params.host +
-        params.pathname,
+      o: params.status + " " + params.method + ": " + params.host + params.pathname,
       t: "ajax",
     };
     this.storeSTN(node);
@@ -429,10 +380,7 @@ export class Aggregate extends AggregateBase {
         if (!(name in this.toAggregate)) return nodes;
 
         return reduce(
-          mapOwn(
-            reduce(nodes.sort(this.byStart), this.smearEvtsByOrigin(name), {}),
-            this.val
-          ),
+          mapOwn(reduce(nodes.sort(this.byStart), this.smearEvtsByOrigin(name), {}), this.val),
           this.flatten,
           []
         );
@@ -455,9 +403,7 @@ export class Aggregate extends AggregateBase {
     };
 
     if (!this.ptid) {
-      const { userAttributes, atts, jsAttributes } = getInfo(
-        this.agentIdentifier
-      );
+      const { userAttributes, atts, jsAttributes } = getInfo(this.agentIdentifier);
       stnInfo.qs.ua = userAttributes;
       stnInfo.qs.at = atts;
       var ja = stringify(jsAttributes);
@@ -511,26 +457,15 @@ export class Aggregate extends AggregateBase {
 
   trivial(node) {
     var limit = 4;
-    if (
-      node &&
-      typeof node.e === "number" &&
-      typeof node.s === "number" &&
-      node.e - node.s < limit
-    )
-      return true;
+    if (node && typeof node.e === "number" && typeof node.s === "number" && node.e - node.s < limit) return true;
     else return false;
   }
 
   shouldIgnoreEvent(event, target) {
     var origin = this.evtOrigin(event.target, target);
     if (event.type in this.ignoredEvents.global) return true;
-    if (!!this.ignoredEvents[origin] && this.ignoredEvents[origin].ignoreAll)
-      return true;
-    if (
-      !!this.ignoredEvents[origin] &&
-      event.type in this.ignoredEvents[origin]
-    )
-      return true;
+    if (!!this.ignoredEvents[origin] && this.ignoredEvents[origin].ignoreAll) return true;
+    if (!!this.ignoredEvents[origin] && event.type in this.ignoredEvents[origin]) return true;
     return false;
   }
 }

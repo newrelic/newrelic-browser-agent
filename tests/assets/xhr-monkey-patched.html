@@ -9,21 +9,14 @@
     {config} {loader}
     <script type="text/javascript">
       var orig = window.XMLHttpRequest.prototype.open;
-      window.XMLHttpRequest.prototype.open = function (
-        method,
-        url,
-        async,
-        user,
-        pass
-      ) {
+      window.XMLHttpRequest.prototype.open = function (method, url, async, user, pass) {
         orig.call(this, method, url, async, user, pass);
       };
     </script>
   </head>
   <body>
-    The inline JS on this page emulates bad 3rd-party code which monkey-patches
-    XMLHttpRequest.prototype.open in such a way that it changes the default
-    value of the async flag from true to undefined, making all XHRs that don't
+    The inline JS on this page emulates bad 3rd-party code which monkey-patches XMLHttpRequest.prototype.open in such a
+    way that it changes the default value of the async flag from true to undefined, making all XHRs that don't
     explicitly specify otherwise synchronous.
   </body>
 </html>

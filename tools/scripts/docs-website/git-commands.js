@@ -53,23 +53,17 @@ async function commit(message) {
 }
 
 async function setUpstream(remote, branchName) {
-  const stdout = await execAsPromise(
-    `git branch --set-upstream-to=${remote}/${branchName} ${branchName}`
-  );
+  const stdout = await execAsPromise(`git branch --set-upstream-to=${remote}/${branchName} ${branchName}`);
   return stdout.trim();
 }
 
 async function deleteUpstreamBranch(remote, branchName) {
-  const stdout = await execAsPromise(
-    `git push ${remote} --delete ${branchName}`
-  );
+  const stdout = await execAsPromise(`git push ${remote} --delete ${branchName}`);
   return stdout.trim();
 }
 
 async function setParent() {
-  const stdout = await execAsPromise(
-    `git remote add parent https://github.com/newrelic/docs-website.git`
-  );
+  const stdout = await execAsPromise(`git remote add parent https://github.com/newrelic/docs-website.git`);
   return stdout.trim();
 }
 
@@ -88,9 +82,7 @@ async function syncWithParent() {
 }
 
 async function pushToRemote(remote, branchName) {
-  const stdout = await execAsPromise(
-    `git push -f --set-upstream ${remote} ${branchName}`
-  );
+  const stdout = await execAsPromise(`git push -f --set-upstream ${remote} ${branchName}`);
   return stdout.trim();
 }
 
@@ -123,22 +115,14 @@ async function rebase() {
 async function setSparseCheckoutFolders(folders) {
   const foldersString = folders.join(" ");
 
-  const stdout = await execAsPromise(
-    `git sparse-checkout set --no-cone ${foldersString}`
-  );
+  const stdout = await execAsPromise(`git sparse-checkout set --no-cone ${foldersString}`);
   return stdout.trim();
 }
 
 async function sparseCloneRepo(repoInfo, checkoutFiles) {
   const { name, repository, branch } = repoInfo;
 
-  const cloneOptions = [
-    "--filter=blob:none",
-    "--no-checkout",
-    "--depth 1",
-    "--sparse",
-    `--branch=${branch}`,
-  ];
+  const cloneOptions = ["--filter=blob:none", "--no-checkout", "--depth 1", "--sparse", `--branch=${branch}`];
   await clone(repository, name, cloneOptions);
   process.chdir(name);
 

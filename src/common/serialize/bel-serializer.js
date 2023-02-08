@@ -78,10 +78,7 @@ export function addCustomAttributes(attrs, addString) {
         serializedValue = addString(val);
     }
 
-    attrParts.push([
-      type,
-      key + (serializedValue ? "," + serializedValue : ""),
-    ]);
+    attrParts.push([type, key + (serializedValue ? "," + serializedValue : "")]);
   });
 
   return attrParts;

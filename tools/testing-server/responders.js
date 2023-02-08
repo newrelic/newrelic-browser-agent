@@ -35,9 +35,7 @@ function eventsData(req, res, handle, data) {
   let parsed = url.parse(req.url, true);
   let scheduledResponse;
   if (data) {
-    let decoded = querypack.decode(
-      data && data.length ? data : parsed.query.e
-    )[0];
+    let decoded = querypack.decode(data && data.length ? data : parsed.query.e)[0];
     if (decoded.type === "timing") {
       scheduledResponse = handle.getNextScheduledResponse("timings");
     } else {

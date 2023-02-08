@@ -38,33 +38,19 @@ function finalHarvest(type, browserVersionMatcher) {
       const ajaxPromise = router.expectAjaxEvents();
       const insPromise = router.expectIns();
 
-      Promise.all([
-        loadPromise,
-        metrPromise,
-        errPromise,
-        ajaxPromise,
-        insPromise,
-      ])
+      Promise.all([loadPromise, metrPromise, errPromise, ajaxPromise, insPromise])
         .then(([, metrResponse, errResponse, ajaxResponse, insResponse]) => {
           let body;
 
           body = JSON.parse(metrResponse.body);
           t.ok(body.sm, "supportability metrics are sent on close");
           t.ok(body.sm.length >= 2, "metrics included api calls as expected");
-          t.equal(
-            metrResponse.req.method,
-            "POST",
-            "metrics(-jserror) harvest is a POST"
-          );
+          t.equal(metrResponse.req.method, "POST", "metrics(-jserror) harvest is a POST");
 
           body = JSON.parse(errResponse.body);
           t.ok(body.err, "jserrors are sent on close");
           t.equal(body.err.length, 1, "should have 1 error obj");
-          t.equal(
-            body.err[0].params.message,
-            "test",
-            "should have correct message"
-          );
+          t.equal(body.err[0].params.message, "test", "should have correct message");
           t.equal(errResponse.req.method, "POST", "jserrors harvest is a POST");
 
           body = ajaxResponse.body;
@@ -74,11 +60,7 @@ function finalHarvest(type, browserVersionMatcher) {
           body = JSON.parse(insResponse.body);
           t.ok(body.ins, "page actions are sent on close");
           t.equal(body.ins.length, 1, "should have 1 action obj");
-          t.equal(
-            body.ins[0].actionName,
-            "blahblahblah",
-            "should have correct actionName"
-          );
+          t.equal(body.ins[0].actionName, "blahblahblah", "should have correct actionName");
           t.equal(insResponse.req.method, "POST", "ins harvest is a POST");
 
           t.end();

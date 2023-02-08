@@ -40,12 +40,7 @@ class TestRun extends EventEmitter {
     let browserSpec = this.browserSpec;
     let numberOfRetries = 4;
 
-    let browser = this._initializeBrowser(
-      this.connectionInfo,
-      this.browserSpec,
-      rootUrl,
-      numberOfRetries
-    );
+    let browser = this._initializeBrowser(this.connectionInfo, this.browserSpec, rootUrl, numberOfRetries);
 
     browser.browserSpec = this.browserSpec;
     browser.stream = this.stream;
@@ -131,8 +126,7 @@ class TestRun extends EventEmitter {
           var eventData = {
             browserName: browserSpec.desired.browserName,
             browserVersion: browserSpec.desired.version || null,
-            platformName:
-              browserSpec.desired.platform || browserSpec.desired.platformName,
+            platformName: browserSpec.desired.platform || browserSpec.desired.platformName,
             platformVersion: browserSpec.desired.platformVersion || null,
             build: browserSpec.desired.build,
             testName: name,
@@ -198,13 +192,7 @@ class TestRun extends EventEmitter {
       });
   }
 
-  _initializeBrowser(
-    connectionInfo,
-    browserSpec,
-    rootURL,
-    numberOfRetries,
-    retry
-  ) {
+  _initializeBrowser(connectionInfo, browserSpec, rootURL, numberOfRetries, retry) {
     if (!retry) retry = 0;
     return wd
       .promiseChainRemote(connectionInfo)
@@ -217,13 +205,7 @@ class TestRun extends EventEmitter {
           throw err;
         }
 
-        return this._initializeBrowser(
-          connectionInfo,
-          browserSpec,
-          rootURL,
-          numberOfRetries,
-          retry
-        );
+        return this._initializeBrowser(connectionInfo, browserSpec, rootURL, numberOfRetries, retry);
       });
   }
 

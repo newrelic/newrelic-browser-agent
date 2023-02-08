@@ -26,10 +26,7 @@ class BrowserSpec {
   }
 
   allowsExtendedDebugging() {
-    return (
-      ["chrome", "firefox"].includes(this.desired.browserName) &&
-      this.version === "latest"
-    );
+    return ["chrome", "firefox"].includes(this.desired.browserName) && this.version === "latest";
   }
 
   toString() {
@@ -104,9 +101,7 @@ function browserList(pattern = "chrome@latest") {
   let specSet = new Set(specs);
   let sortedSpecs = Array.from(specSet).sort((a, b) => {
     if (a.browserName === b.browserName) {
-      return semver.lt(cleanVersion(a.version), cleanVersion(b.version))
-        ? -1
-        : 1;
+      return semver.lt(cleanVersion(a.version), cleanVersion(b.version)) ? -1 : 1;
     }
     return a.browserName < b.browserName ? -1 : 1;
   });
@@ -123,8 +118,7 @@ function parse(pattern) {
 function getBrowsersFor(browser, range, platform) {
   let list = [];
   if (allowedBrowsers[browser]) list = allowedBrowsers[browser].slice();
-  else if (browser === "*")
-    list = Object.keys(allowedBrowsers).reduce(merge, []);
+  else if (browser === "*") list = Object.keys(allowedBrowsers).reduce(merge, []);
 
   list.sort(byVersion);
 
@@ -148,10 +142,7 @@ function getBrowsersFor(browser, range, platform) {
       return false;
     }
     // NOTE: 'range' itself needs to be sanitized as semver will not accept "latest - 73" or even "9999 - 73"
-    return semver.satisfies(
-      cleanVersion(option.platformVersion || option.version),
-      range
-    );
+    return semver.satisfies(cleanVersion(option.platformVersion || option.version), range);
   }
 
   function findBetaVersions(option) {
@@ -167,9 +158,7 @@ function getBrowsersFor(browser, range, platform) {
 }
 
 function byVersion(left, right) {
-  return semver.lt(cleanVersion(left.version), cleanVersion(right.version))
-    ? 1
-    : -1;
+  return semver.lt(cleanVersion(left.version), cleanVersion(right.version)) ? 1 : -1;
 }
 
 function cleanVersion(version) {

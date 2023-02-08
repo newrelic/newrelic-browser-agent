@@ -13,13 +13,7 @@ var Output = require("../output");
 
 // mocks
 TestRun.prototype._initializeBrowser = _initializeBrowser;
-function _initializeBrowser(
-  connectionInfo,
-  browserSpec,
-  rootURL,
-  numberOfRetries,
-  retry
-) {
+function _initializeBrowser(connectionInfo, browserSpec, rootURL, numberOfRetries, retry) {
   let retVal = Promise.resolve({});
   retVal.sauceJobStatus = () => {};
   retVal.quit = (fn) => {

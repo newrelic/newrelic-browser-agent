@@ -70,21 +70,18 @@ jil.browserTest("Safari 11 fetch clone regression", function (t) {
 
   var responseSizes = [1, 10, 100, 1000, 10000, 100000];
   responseSizes.forEach(function (size) {
-    t.test(
-      "agent should not cause clone to fail, response size: " + size,
-      function (t) {
-        window
-          .fetch("/text?length=" + size)
-          .then(function (res) {
-            res.clone();
-            t.pass("clone was successful");
-            t.end();
-          })
-          .catch((err) => {
-            t.error(err);
-            t.end();
-          });
-      }
-    );
+    t.test("agent should not cause clone to fail, response size: " + size, function (t) {
+      window
+        .fetch("/text?length=" + size)
+        .then(function (res) {
+          res.clone();
+          t.pass("clone was successful");
+          t.end();
+        })
+        .catch((err) => {
+          t.error(err);
+          t.end();
+        });
+    });
   });
 });

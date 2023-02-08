@@ -38,6 +38,7 @@ The agent will attempt to preserve unhandledPromiseRejection reasons as human-re
 Fixed an issue where when using the SPA loader with Next/React, route changes that lazy loaded components would not be captured. While the issue specifically called out Next/React, this should apply to Nuxt/Vue and Angular.
 
 ### Fix interactions missing API calls in Angular
+
 Fixed an issue where when using the SPA loader with Angular, route changes that contained API calls, via Angular resolver, would not capture the xhr/fetch on the interaction. This works with eager and lazy routes in an Angular SPA.
 
 ## v1223

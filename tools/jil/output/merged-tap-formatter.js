@@ -55,9 +55,7 @@ class MergedTapFormatter extends BaseFormatter {
   }
 
   formatAssertion(parser, parents, assertion) {
-    let testName = [this.getLabel(parser), ...parents, assertion.name].join(
-      " -> "
-    );
+    let testName = [this.getLabel(parser), ...parents, assertion.name].join(" -> ");
     return `${assertion.ok ? "ok" : "not ok"} ${testName}`;
   }
 
@@ -78,17 +76,14 @@ class MergedTapFormatter extends BaseFormatter {
 
   finish(ok) {
     if (!ok && this.passed === this.assertions && !this.failed) {
-      this.log(
-        "# finished called with not ok although everything passed (likely due to missing plan)"
-      );
+      this.log("# finished called with not ok although everything passed (likely due to missing plan)");
     }
 
     var noFailures = this.passed === this.assertions && !this.failed && this.ok;
     if (!noFailures) {
       if (!this.ok) this.log("# received data on std error of a child process");
 
-      if (this.passed !== this.assertions || this.failed)
-        this.log("# not all assertions passed");
+      if (this.passed !== this.assertions || this.failed) this.log("# not all assertions passed");
 
       // mk: not sure why number of assertions and failed is increased here, it always
       // results in one additional count, not matching number of assertions

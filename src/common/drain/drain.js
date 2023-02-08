@@ -13,8 +13,7 @@ const registry = {};
 export function registerDrain(agentIdentifier, group) {
   const item = { staged: false, priority: featurePriority[group] || 0 };
   curateRegistry(agentIdentifier);
-  if (!registry[agentIdentifier].get(group))
-    registry[agentIdentifier].set(group, item);
+  if (!registry[agentIdentifier].get(group)) registry[agentIdentifier].set(group, item);
 }
 
 function curateRegistry(agentIdentifier) {
@@ -30,8 +29,7 @@ function curateRegistry(agentIdentifier) {
 export function drain(agentIdentifier = "", featureName = "feature") {
   curateRegistry(agentIdentifier);
   // if its not in the registry, that means the instrument file was bypassed.  This could happen in tests, or loaders that directly import the agg
-  if (!agentIdentifier || !registry[agentIdentifier].get(featureName))
-    return drainGroup(featureName);
+  if (!agentIdentifier || !registry[agentIdentifier].get(featureName)) return drainGroup(featureName);
   registry[agentIdentifier].get(featureName).staged = true;
 
   const items = Array.from(registry[agentIdentifier]);
@@ -51,11 +49,7 @@ export function drain(agentIdentifier = "", featureName = "feature") {
     var groupHandlers = handlers[group];
     if (groupHandlers) {
       // don't cache length, buffer can grow while processing
-      for (
-        var i = 0;
-        bufferedEventsInGroup && i < bufferedEventsInGroup.length;
-        ++i
-      ) {
+      for (var i = 0; bufferedEventsInGroup && i < bufferedEventsInGroup.length; ++i) {
         // eslint-disable-line no-unmodified-loop-condition
         emitEvent(bufferedEventsInGroup[i], groupHandlers);
       }

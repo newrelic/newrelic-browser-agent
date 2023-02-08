@@ -68,31 +68,14 @@ export class Instrument extends InstrumentBase {
 
     this.ee.buffer([FN_START, FN_END, "xhr-resolved"], this.featureName);
     eventsEE.buffer([FN_START], this.featureName);
-    timerEE.buffer(
-      ["setTimeout" + END, "clearTimeout" + START, FN_START],
-      this.featureName
-    );
+    timerEE.buffer(["setTimeout" + END, "clearTimeout" + START, FN_START], this.featureName);
     xhrEE.buffer([FN_START, "new-xhr", "send-xhr" + START], this.featureName);
-    fetchEE.buffer(
-      [
-        FETCH + START,
-        FETCH + "-done",
-        FETCH + BODY + START,
-        FETCH + BODY + END,
-      ],
-      this.featureName
-    );
+    fetchEE.buffer([FETCH + START, FETCH + "-done", FETCH + BODY + START, FETCH + BODY + END], this.featureName);
     historyEE.buffer(["newURL"], this.featureName);
     mutationEE.buffer([FN_START], this.featureName);
-    promiseEE.buffer(
-      ["propagate", CB_START, CB_END, "executor-err", "resolve" + START],
-      this.featureName
-    );
+    promiseEE.buffer(["propagate", CB_START, CB_END, "executor-err", "resolve" + START], this.featureName);
     tracerEE.buffer([FN_START, "no-" + FN_START], this.featureName);
-    jsonpEE.buffer(
-      ["new-jsonp", "cb-start", "jsonp-error", "jsonp-end"],
-      this.featureName
-    );
+    jsonpEE.buffer(["new-jsonp", "cb-start", "jsonp-error", "jsonp-end"], this.featureName);
 
     timestamp(fetchEE, FETCH + START);
     timestamp(fetchEE, FETCH + "-done");
@@ -103,11 +86,7 @@ export class Instrument extends InstrumentBase {
     historyEE.on("pushState-end", trackURLChange);
     historyEE.on("replaceState-end", trackURLChange);
 
-    win[ADD_EVENT_LISTENER](
-      "hashchange",
-      trackURLChange,
-      eventListenerOpts(true)
-    );
+    win[ADD_EVENT_LISTENER]("hashchange", trackURLChange, eventListenerOpts(true));
     win[ADD_EVENT_LISTENER]("load", trackURLChange, eventListenerOpts(true));
     win[ADD_EVENT_LISTENER](
       "popstate",

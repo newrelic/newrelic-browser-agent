@@ -30,12 +30,7 @@ export class Instrument extends InstrumentBase {
       this.featureName,
       this.ee
     );
-    registerHandler(
-      "record-custom",
-      (...args) => this.recordCustom(...args),
-      this.featureName,
-      this.ee
-    );
+    registerHandler("record-custom", (...args) => this.recordCustom(...args), this.featureName, this.ee);
 
     this.importAggregator();
   }
@@ -70,8 +65,7 @@ export class Instrument extends InstrumentBase {
     this.recordSupportability(`Generic/Version/${VERSION}/Detected`);
     // report loaderType
     const { loaderType } = getRuntime(this.agentIdentifier);
-    if (loaderType)
-      this.recordSupportability(`Generic/LoaderType/${loaderType}/Detected`);
+    if (loaderType) this.recordSupportability(`Generic/LoaderType/${loaderType}/Detected`);
 
     // frameworks on page
     if (isBrowserScope)
@@ -89,10 +83,8 @@ export class Instrument extends InstrumentBase {
 
     // obfuscation rules detection
     const rules = getRules(this.agentIdentifier);
-    if (rules.length > 0)
-      this.recordSupportability("Generic/Obfuscate/Detected");
-    if (rules.length > 0 && !validateRules(rules))
-      this.recordSupportability("Generic/Obfuscate/Invalid");
+    if (rules.length > 0) this.recordSupportability("Generic/Obfuscate/Detected");
+    if (rules.length > 0 && !validateRules(rules)) this.recordSupportability("Generic/Obfuscate/Invalid");
 
     // polyfilled feature detection
     if (isBrowserScope) this.reportPolyfillsNeeded();
@@ -102,18 +94,10 @@ export class Instrument extends InstrumentBase {
   }
 
   reportPolyfillsNeeded() {
-    this.recordSupportability(
-      `Generic/Polyfill/Promise/${this.PfFeatStatusEnum.PROMISE}`
-    );
-    this.recordSupportability(
-      `Generic/Polyfill/ArrayIncludes/${this.PfFeatStatusEnum.ARRAY_INCLUDES}`
-    );
-    this.recordSupportability(
-      `Generic/Polyfill/ObjectAssign/${this.PfFeatStatusEnum.OBJECT_ASSIGN}`
-    );
-    this.recordSupportability(
-      `Generic/Polyfill/ObjectEntries/${this.PfFeatStatusEnum.OBJECT_ENTRIES}`
-    );
+    this.recordSupportability(`Generic/Polyfill/Promise/${this.PfFeatStatusEnum.PROMISE}`);
+    this.recordSupportability(`Generic/Polyfill/ArrayIncludes/${this.PfFeatStatusEnum.ARRAY_INCLUDES}`);
+    this.recordSupportability(`Generic/Polyfill/ObjectAssign/${this.PfFeatStatusEnum.OBJECT_ASSIGN}`);
+    this.recordSupportability(`Generic/Polyfill/ObjectEntries/${this.PfFeatStatusEnum.OBJECT_ENTRIES}`);
   }
 
   eachSessionChecks() {
@@ -121,8 +105,7 @@ export class Instrument extends InstrumentBase {
 
     // [Temporary] Report restores from BFCache to NR1 while feature flag is in place in lieu of sending pageshow events.
     windowAddEventListener("pageshow", (evt) => {
-      if (evt.persisted)
-        this.recordSupportability("Generic/BFCache/PageRestored");
+      if (evt.persisted) this.recordSupportability("Generic/BFCache/PageRestored");
       return;
     });
   }

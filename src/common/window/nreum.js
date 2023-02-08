@@ -10,8 +10,7 @@ export function gosNREUM() {
   if (!globalScope.NREUM) {
     globalScope.NREUM = {};
   }
-  if (typeof globalScope.newrelic === "undefined")
-    globalScope.newrelic = globalScope.NREUM;
+  if (typeof globalScope.newrelic === "undefined") globalScope.newrelic = globalScope.NREUM;
   return globalScope.NREUM;
 }
 

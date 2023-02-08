@@ -15,9 +15,7 @@ testDriver.test(
   function (t, browser, router) {
     t.plan(1);
 
-    let rumPromise = router.expectRumAndCondition(
-      "window.xhrDone && window.wrapperInvoked"
-    );
+    let rumPromise = router.expectRumAndCondition("window.xhrDone && window.wrapperInvoked");
     let xhrMetricsPromise = router.expectXHRMetrics();
     let loadPromise = browser.get(
       router.assetURL("xhr-add-event-listener-patched.html", {

@@ -1,7 +1,4 @@
-import {
-  defaults as nrDefaults,
-  gosNREUMInitializedAgents,
-} from "../../window/nreum";
+import { defaults as nrDefaults, gosNREUMInitializedAgents } from "../../window/nreum";
 import { Configurable } from "./configurable";
 
 const model = {

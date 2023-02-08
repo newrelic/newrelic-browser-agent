@@ -4,11 +4,7 @@
  */
 
 const testDriver = require("jil");
-const {
-  assertErrorAttributes,
-  assertExpectedErrors,
-  getErrorsFromResponse,
-} = require("./assertion-helpers");
+const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require("./assertion-helpers");
 
 let supported = testDriver.Matcher.withFeature("notInternetExplorer");
 const init = {
@@ -57,13 +53,7 @@ testDriver.test(
           ],
         }));
 
-        assertExpectedErrors(
-          t,
-          browser,
-          actualErrors,
-          expectedErrors,
-          assetURL
-        );
+        assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL);
         t.end();
       })
       .catch(fail);
@@ -100,16 +90,8 @@ testDriver.test(
         let secondBody = JSON.parse(errors.body).err;
 
         t.equal(errors.res.statusCode, 200, "server responded with 200");
-        t.deepEqual(
-          secondBody,
-          firstBody,
-          "post body in retry harvest should be the same as in the first harvest"
-        );
-        t.equal(
-          router.seenRequests.errors_post,
-          2,
-          "got two jserrors harvest requests"
-        );
+        t.deepEqual(secondBody, firstBody, "post body in retry harvest should be the same as in the first harvest");
+        t.equal(router.seenRequests.errors_post, 2, "got two jserrors harvest requests");
 
         t.end();
       })
@@ -140,14 +122,8 @@ testDriver.test(
 
         const actualErrors = getErrorsFromResponse(errors, browser);
         t.ok(actualErrors.length === 2, "two errors reported");
-        t.ok(
-          typeof actualErrors[0].params.stack_trace === "string",
-          "first error has stack trace"
-        );
-        t.ok(
-          typeof actualErrors[1].params.stack_trace === "string",
-          "second error has stack trace"
-        );
+        t.ok(typeof actualErrors[0].params.stack_trace === "string", "first error has stack trace");
+        t.ok(typeof actualErrors[1].params.stack_trace === "string", "second error has stack trace");
 
         t.end();
       })
@@ -185,16 +161,8 @@ testDriver.test(
         let secondBody = JSON.parse(errors.body).err;
 
         t.equal(errors.res.statusCode, 200, "server responded with 200");
-        t.deepEqual(
-          secondBody,
-          firstBody,
-          "post body in retry harvest should be the same as in the first harvest"
-        );
-        t.equal(
-          router.seenRequests.errors_post,
-          2,
-          "got two jserrors harvest requests"
-        );
+        t.deepEqual(secondBody, firstBody, "post body in retry harvest should be the same as in the first harvest");
+        t.equal(router.seenRequests.errors_post, 2, "got two jserrors harvest requests");
 
         t.end();
       })

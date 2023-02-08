@@ -12,11 +12,9 @@
     <script src="../../js/vendor/angular-resource-1.6.6.js"></script>
 
     <script>
-      angular
-        .module("myApp", ["ngResource"])
-        .controller("myCtrl", function ($scope, $http) {
-          window.$http = $http;
-        });
+      angular.module("myApp", ["ngResource"]).controller("myCtrl", function ($scope, $http) {
+        window.$http = $http;
+      });
 
       document.addEventListener(
         "click",

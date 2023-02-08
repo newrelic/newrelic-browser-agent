@@ -30,14 +30,8 @@ jil.browserTest("setCurrentRouteName", function (t) {
 
   function afterInteractionDone(interaction) {
     t.notOk(interaction.routeChange);
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }
@@ -65,332 +59,251 @@ jil.browserTest(
 
     function afterInteractionDone(interaction) {
       t.notOk(interaction.routeChange);
-      t.ok(
-        interaction.root.end,
-        "interaction should be finished and have an end time"
-      );
-      t.notok(
-        helpers.currentNodeId(),
-        "interaction should be null outside of async chain"
-      );
+      t.ok(interaction.root.end, "interaction should be finished and have an end time");
+      t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
       validator.validate(t, interaction);
       t.end();
     }
   }
 );
 
-jil.browserTest(
-  "interaction is not a route change if it does not change url or route",
-  function (t) {
-    let helpers = require("./helpers");
+jil.browserTest("interaction is not a route change if it does not change url or route", function (t) {
+  let helpers = require("./helpers");
 
-    let validator = new helpers.InteractionValidator({
-      name: "interaction",
-      attrs: {},
-      children: [],
-    });
+  let validator = new helpers.InteractionValidator({
+    name: "interaction",
+    attrs: {},
+    children: [],
+  });
 
-    t.plan(3 + validator.count);
-    newrelic.setCurrentRouteName("test start");
+  t.plan(3 + validator.count);
+  newrelic.setCurrentRouteName("test start");
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone);
+  helpers.startInteraction(onInteractionStart, afterInteractionDone);
 
-    function onInteractionStart(cb) {
-      cb();
-    }
-
-    function afterInteractionDone(interaction) {
-      t.notOk(interaction.routeChange);
-      t.ok(
-        interaction.root.end,
-        "interaction should be finished and have an end time"
-      );
-      t.notok(
-        helpers.currentNodeId(),
-        "interaction should be null outside of async chain"
-      );
-      validator.validate(t, interaction);
-      t.end();
-    }
+  function onInteractionStart(cb) {
+    cb();
   }
-);
 
-jil.browserTest(
-  "url change is a route change when route name is set",
-  function (t) {
-    let helpers = require("./helpers");
-
-    let validator = new helpers.InteractionValidator({
-      name: "interaction",
-      attrs: {},
-      children: [],
-    });
-
-    t.plan(3 + validator.count);
-
-    newrelic.setCurrentRouteName("test start");
-    helpers.startInteraction(onInteractionStart, afterInteractionDone);
-
-    function onInteractionStart(cb) {
-      window.location.hash = Math.random();
-      cb();
-    }
-
-    function afterInteractionDone(interaction) {
-      t.ok(interaction.routeChange);
-      t.ok(
-        interaction.root.end,
-        "interaction should be finished and have an end time"
-      );
-      t.notok(
-        helpers.currentNodeId(),
-        "interaction should be null outside of async chain"
-      );
-      validator.validate(t, interaction);
-      t.end();
-    }
+  function afterInteractionDone(interaction) {
+    t.notOk(interaction.routeChange);
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    validator.validate(t, interaction);
+    t.end();
   }
-);
+});
 
-jil.browserTest(
-  "replaceState is a route change when route name is set",
-  function (t) {
-    let helpers = require("./helpers");
+jil.browserTest("url change is a route change when route name is set", function (t) {
+  let helpers = require("./helpers");
 
-    if (!window.history.replaceState) {
-      t.skip("does not have replaceState");
-      t.end();
-      return;
-    }
+  let validator = new helpers.InteractionValidator({
+    name: "interaction",
+    attrs: {},
+    children: [],
+  });
 
-    let validator = new helpers.InteractionValidator({
-      name: "interaction",
-      attrs: {},
-      children: [],
-    });
+  t.plan(3 + validator.count);
 
-    t.plan(3 + validator.count);
+  newrelic.setCurrentRouteName("test start");
+  helpers.startInteraction(onInteractionStart, afterInteractionDone);
 
-    newrelic.setCurrentRouteName("test start");
-    helpers.startInteraction(onInteractionStart, afterInteractionDone);
-
-    function onInteractionStart(cb) {
-      var prevLocation =
-        window.location.pathname +
-        window.location.search +
-        window.location.hash;
-      window.history.replaceState(null, "test", "/something-else");
-      window.history.replaceState(null, "test", prevLocation);
-      cb();
-    }
-
-    function afterInteractionDone(interaction) {
-      t.ok(interaction.routeChange);
-      t.ok(
-        interaction.root.end,
-        "interaction should be finished and have an end time"
-      );
-      t.notok(
-        helpers.currentNodeId(),
-        "interaction should be null outside of async chain"
-      );
-      validator.validate(t, interaction);
-      t.end();
-    }
+  function onInteractionStart(cb) {
+    window.location.hash = Math.random();
+    cb();
   }
-);
 
-jil.browserTest(
-  "setting route to null does not count as a route change",
-  function (t) {
-    let helpers = require("./helpers");
-
-    let validator = new helpers.InteractionValidator({
-      name: "interaction",
-      attrs: {},
-      children: [],
-    });
-
-    t.plan(3 + validator.count);
-
-    newrelic.setCurrentRouteName("test start");
-    helpers.startInteraction(onInteractionStart, afterInteractionDone);
-
-    function onInteractionStart(cb) {
-      newrelic.setCurrentRouteName(null);
-      cb();
-    }
-
-    function afterInteractionDone(interaction) {
-      t.notOk(interaction.routeChange);
-      t.ok(
-        interaction.root.end,
-        "interaction should be finished and have an end time"
-      );
-      t.notok(
-        helpers.currentNodeId(),
-        "interaction should be null outside of async chain"
-      );
-      validator.validate(t, interaction);
-      t.end();
-    }
+  function afterInteractionDone(interaction) {
+    t.ok(interaction.routeChange);
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    validator.validate(t, interaction);
+    t.end();
   }
-);
+});
 
-jil.browserTest(
-  "changing the url when route name is null counts as a route change",
-  function (t) {
-    let helpers = require("./helpers");
+jil.browserTest("replaceState is a route change when route name is set", function (t) {
+  let helpers = require("./helpers");
 
-    let validator = new helpers.InteractionValidator({
-      name: "interaction",
-      attrs: {},
-      children: [],
-    });
+  if (!window.history.replaceState) {
+    t.skip("does not have replaceState");
+    t.end();
+    return;
+  }
 
-    t.plan(3 + validator.count);
+  let validator = new helpers.InteractionValidator({
+    name: "interaction",
+    attrs: {},
+    children: [],
+  });
 
-    newrelic.setCurrentRouteName("test start");
+  t.plan(3 + validator.count);
+
+  newrelic.setCurrentRouteName("test start");
+  helpers.startInteraction(onInteractionStart, afterInteractionDone);
+
+  function onInteractionStart(cb) {
+    var prevLocation = window.location.pathname + window.location.search + window.location.hash;
+    window.history.replaceState(null, "test", "/something-else");
+    window.history.replaceState(null, "test", prevLocation);
+    cb();
+  }
+
+  function afterInteractionDone(interaction) {
+    t.ok(interaction.routeChange);
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    validator.validate(t, interaction);
+    t.end();
+  }
+});
+
+jil.browserTest("setting route to null does not count as a route change", function (t) {
+  let helpers = require("./helpers");
+
+  let validator = new helpers.InteractionValidator({
+    name: "interaction",
+    attrs: {},
+    children: [],
+  });
+
+  t.plan(3 + validator.count);
+
+  newrelic.setCurrentRouteName("test start");
+  helpers.startInteraction(onInteractionStart, afterInteractionDone);
+
+  function onInteractionStart(cb) {
     newrelic.setCurrentRouteName(null);
-
-    helpers.startInteraction(onInteractionStart, afterInteractionDone);
-
-    function onInteractionStart(cb) {
-      window.location.hash = Math.random();
-      cb();
-    }
-
-    function afterInteractionDone(interaction) {
-      t.ok(interaction.routeChange);
-      t.ok(
-        interaction.root.end,
-        "interaction should be finished and have an end time"
-      );
-      t.notok(
-        helpers.currentNodeId(),
-        "interaction should be null outside of async chain"
-      );
-      validator.validate(t, interaction);
-      t.end();
-    }
+    cb();
   }
-);
 
-jil.browserTest(
-  "resetting the route to the same routename does not count as a route change",
-  function (t) {
-    let helpers = require("./helpers");
+  function afterInteractionDone(interaction) {
+    t.notOk(interaction.routeChange);
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    validator.validate(t, interaction);
+    t.end();
+  }
+});
 
-    let validator = new helpers.InteractionValidator({
-      name: "interaction",
-      attrs: {},
-      children: [],
-    });
+jil.browserTest("changing the url when route name is null counts as a route change", function (t) {
+  let helpers = require("./helpers");
 
-    t.plan(3 + validator.count);
+  let validator = new helpers.InteractionValidator({
+    name: "interaction",
+    attrs: {},
+    children: [],
+  });
 
+  t.plan(3 + validator.count);
+
+  newrelic.setCurrentRouteName("test start");
+  newrelic.setCurrentRouteName(null);
+
+  helpers.startInteraction(onInteractionStart, afterInteractionDone);
+
+  function onInteractionStart(cb) {
+    window.location.hash = Math.random();
+    cb();
+  }
+
+  function afterInteractionDone(interaction) {
+    t.ok(interaction.routeChange);
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    validator.validate(t, interaction);
+    t.end();
+  }
+});
+
+jil.browserTest("resetting the route to the same routename does not count as a route change", function (t) {
+  let helpers = require("./helpers");
+
+  let validator = new helpers.InteractionValidator({
+    name: "interaction",
+    attrs: {},
+    children: [],
+  });
+
+  t.plan(3 + validator.count);
+
+  newrelic.setCurrentRouteName("test start");
+
+  helpers.startInteraction(onInteractionStart, afterInteractionDone);
+
+  function onInteractionStart(cb) {
     newrelic.setCurrentRouteName("test start");
-
-    helpers.startInteraction(onInteractionStart, afterInteractionDone);
-
-    function onInteractionStart(cb) {
-      newrelic.setCurrentRouteName("test start");
-      cb();
-    }
-
-    function afterInteractionDone(interaction) {
-      t.notOk(interaction.routeChange);
-      t.ok(
-        interaction.root.end,
-        "interaction should be finished and have an end time"
-      );
-      t.notok(
-        helpers.currentNodeId(),
-        "interaction should be null outside of async chain"
-      );
-      validator.validate(t, interaction);
-      t.end();
-    }
+    cb();
   }
-);
 
-jil.browserTest(
-  "changeing route, and changing back to original is not a route change",
-  function (t) {
-    let helpers = require("./helpers");
+  function afterInteractionDone(interaction) {
+    t.notOk(interaction.routeChange);
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    validator.validate(t, interaction);
+    t.end();
+  }
+});
 
-    let validator = new helpers.InteractionValidator({
-      name: "interaction",
-      attrs: {},
-      children: [],
-    });
+jil.browserTest("changeing route, and changing back to original is not a route change", function (t) {
+  let helpers = require("./helpers");
 
-    t.plan(3 + validator.count);
+  let validator = new helpers.InteractionValidator({
+    name: "interaction",
+    attrs: {},
+    children: [],
+  });
 
+  t.plan(3 + validator.count);
+
+  newrelic.setCurrentRouteName("original");
+
+  helpers.startInteraction(onInteractionStart, afterInteractionDone);
+
+  function onInteractionStart(cb) {
+    newrelic.setCurrentRouteName("new");
     newrelic.setCurrentRouteName("original");
-
-    helpers.startInteraction(onInteractionStart, afterInteractionDone);
-
-    function onInteractionStart(cb) {
-      newrelic.setCurrentRouteName("new");
-      newrelic.setCurrentRouteName("original");
-      cb();
-    }
-
-    function afterInteractionDone(interaction) {
-      t.notOk(interaction.routeChange);
-      t.ok(
-        interaction.root.end,
-        "interaction should be finished and have an end time"
-      );
-      t.notok(
-        helpers.currentNodeId(),
-        "interaction should be null outside of async chain"
-      );
-      validator.validate(t, interaction);
-      t.end();
-    }
+    cb();
   }
-);
 
-jil.browserTest(
-  "changeing url, and changing back to original is a route change",
-  function (t) {
-    let helpers = require("./helpers");
+  function afterInteractionDone(interaction) {
+    t.notOk(interaction.routeChange);
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    validator.validate(t, interaction);
+    t.end();
+  }
+});
 
-    let validator = new helpers.InteractionValidator({
-      name: "interaction",
-      attrs: {},
-      children: [],
+jil.browserTest("changeing url, and changing back to original is a route change", function (t) {
+  let helpers = require("./helpers");
+
+  let validator = new helpers.InteractionValidator({
+    name: "interaction",
+    attrs: {},
+    children: [],
+  });
+
+  t.plan(3 + validator.count);
+
+  newrelic.setCurrentRouteName(null);
+  window.location.hash = "original";
+
+  helpers.startInteraction(onInteractionStart, afterInteractionDone);
+
+  function onInteractionStart(cb) {
+    window.location.hash = "new";
+    setTimeout(function () {
+      window.location.hash = "original";
     });
-
-    t.plan(3 + validator.count);
-
-    newrelic.setCurrentRouteName(null);
-    window.location.hash = "original";
-
-    helpers.startInteraction(onInteractionStart, afterInteractionDone);
-
-    function onInteractionStart(cb) {
-      window.location.hash = "new";
-      setTimeout(function () {
-        window.location.hash = "original";
-      });
-      cb();
-    }
-
-    function afterInteractionDone(interaction) {
-      t.ok(interaction.routeChange);
-      t.ok(
-        interaction.root.end,
-        "interaction should be finished and have an end time"
-      );
-      t.notok(
-        helpers.currentNodeId(),
-        "interaction should be null outside of async chain"
-      );
-      validator.validate(t, interaction);
-      t.end();
-    }
+    cb();
   }
-);
+
+  function afterInteractionDone(interaction) {
+    t.ok(interaction.routeChange);
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
+    validator.validate(t, interaction);
+    t.end();
+  }
+});

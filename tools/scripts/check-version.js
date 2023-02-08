@@ -15,10 +15,7 @@ var config = require("yargs")
 
   .string("e")
   .alias("e", "exists")
-  .describe(
-    "e",
-    "Fails when set to yes and scripts do not exist or when set to no and scripts do exist."
-  )
+  .describe("e", "Fails when set to yes and scripts do not exist or when set to no and scripts do exist.")
   .default("e", "yes,no")
 
   .boolean("d")
@@ -41,9 +38,7 @@ var config = require("yargs")
   .wrap(Math.min(110, yargs.terminalWidth())).argv;
 
 const buildDir = path.resolve(__dirname, "../../build/");
-const builtFileNames = fs
-  .readdirSync(buildDir)
-  .filter((x) => (!config.m ? !x.endsWith(".map") : x));
+const builtFileNames = fs.readdirSync(buildDir).filter((x) => (!config.m ? !x.endsWith(".map") : x));
 const version = getVersionFromFilenames(builtFileNames);
 var errors = [];
 
@@ -66,8 +61,7 @@ function getVersionFromFilenames(fileNames) {
   return Array.from(
     fileNames.reduce((prev, next) => {
       const parts = next.split(".");
-      if (parts.length === 2 && parts[1] === "js")
-        prev.add(parts[0].split("-")[parts[0].split("-").length - 1]);
+      if (parts.length === 2 && parts[1] === "js") prev.add(parts[0].split("-")[parts[0].split("-").length - 1]);
       return prev;
     }, new Set())
   )[0];

@@ -17,10 +17,7 @@ new MetricsAggreg(agentIdentifier, agg); // registers 'storeEventMetrics'
 test("api", function (t) {
   t.equal(getRuntime(agentIdentifier).customTransaction, undefined);
   nr.setPageViewName("bar/baz");
-  t.equal(
-    getRuntime(agentIdentifier).customTransaction,
-    "http://custom.transaction/bar/baz"
-  );
+  t.equal(getRuntime(agentIdentifier).customTransaction, "http://custom.transaction/bar/baz");
 
   setTimeout(() => {
     nr.finished();
@@ -38,10 +35,7 @@ test("api", function (t) {
       finishedTime = cm[0].metrics.time.t;
     } catch (e) {}
 
-    t.ok(
-      finishedTime > 0,
-      `Set custom metric for finished time: ${finishedTime} > 0`
-    );
+    t.ok(finishedTime > 0, `Set custom metric for finished time: ${finishedTime} > 0`);
     t.equal(typeof cm[1], "undefined", "only finish once");
 
     nr.finished();

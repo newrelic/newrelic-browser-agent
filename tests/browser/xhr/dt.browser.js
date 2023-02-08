@@ -6,11 +6,7 @@
 import test from "../../../tools/jil/browser-test";
 import { setup } from "../utils/setup";
 import { DT } from "../../../src/features/ajax/instrument/distributed-tracing";
-import {
-  setLoaderConfig,
-  getLoaderConfig,
-  setConfiguration,
-} from "../../../src/common/config/config";
+import { setLoaderConfig, getLoaderConfig, setConfiguration } from "../../../src/common/config/config";
 
 const { agentIdentifier } = setup();
 const distributedTracing = new DT(agentIdentifier);
@@ -49,21 +45,13 @@ test("newrelic header has the correct format", function (t) {
   t.ok(payload.traceId, "traceId is not null");
   t.equal(payload.traceId, header.d.tr, "traceId is the same as tr in header");
   t.ok(payload.timestamp, "timestamp is not null");
-  t.equal(
-    payload.timestamp,
-    header.d.ti,
-    "timestamp is the same as ti in header"
-  );
+  t.equal(payload.timestamp, header.d.ti, "timestamp is the same as ti in header");
 
   const loadercfg = getLoaderConfig(agentIdentifier);
   t.deepEqual(header.v, [0, 1], "version in header is set");
   t.equal(header.d.ty, "Browser", "type in header is set to Browser");
   t.equal(header.d.ac, loadercfg.accountID, "ac in header is set to account");
-  t.equal(
-    header.d.ap,
-    loadercfg.agentID,
-    "ap in header is set to app/agent ID"
-  );
+  t.equal(header.d.ap, loadercfg.agentID, "ap in header is set to app/agent ID");
   t.equal(header.d.tk, loadercfg.trustKey, "tk in header is set to trust key");
   t.end();
 });
@@ -82,18 +70,9 @@ test("newrelic header is not generated for same-origin calls when disabled in co
   });
 
   var payload = generateTracePayload(parsedOrigin);
-  t.ok(
-    payload.newrelicHeader == null,
-    "newrelicHeader should not be generated"
-  );
-  t.ok(
-    payload.traceContextParentHeader != null,
-    "traceparent header should be generated"
-  );
-  t.ok(
-    payload.traceContextStateHeader != null,
-    "tracestate header should be generated"
-  );
+  t.ok(payload.newrelicHeader == null, "newrelicHeader should not be generated");
+  t.ok(payload.traceContextParentHeader != null, "traceparent header should be generated");
+  t.ok(payload.traceContextStateHeader != null, "tracestate header should be generated");
   t.end();
 });
 
@@ -230,17 +209,9 @@ test("TraceContext headers are generated with the correct format", function (t) 
   t.equal(parts[3], loadercfg.agentID, "fourth part is set to app/agent ID");
   t.equal(parts[4], payload.spanId, "fourth part is set to span ID");
   t.equal(parts[5], "", "fifth part is empty - no transaction in Browser");
-  t.equal(
-    parts[6],
-    "",
-    "fifth part is set to empty to defer sampling decision to next hop"
-  );
+  t.equal(parts[6], "", "fifth part is set to empty to defer sampling decision to next hop");
   t.equal(parts[7], "", "priority is not set");
-  t.equal(
-    parts[8],
-    payload.timestamp.toString(),
-    "last part is set to timestamp"
-  );
+  t.equal(parts[8], payload.timestamp.toString(), "last part is set to timestamp");
 
   t.end();
 });

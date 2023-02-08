@@ -67,18 +67,9 @@ bodyMethods.forEach((bodyMethod) => {
     }
 
     function afterInteractionDone(interaction) {
-      t.ok(
-        interaction.root.children[0].end <= resTime,
-        "resTime should be after we got response"
-      );
-      t.ok(
-        interaction.root.end,
-        "interaction should be finished and have an end time"
-      );
-      t.notok(
-        helpers.currentNodeId(),
-        "interaction should be null outside of async chain"
-      );
+      t.ok(interaction.root.children[0].end <= resTime, "resTime should be after we got response");
+      t.ok(interaction.root.end, "interaction should be finished and have an end time");
+      t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
       validator.validate(t, interaction);
       t.end();
     }
@@ -119,10 +110,7 @@ jil.browserTest("Exceeding max SPA nodes", function (t) {
       try {
         window.fetch("/json");
       } catch (e) {
-        t.error(
-          e,
-          "Exceeding the number of child nodes in an interaction should not produce an error"
-        );
+        t.error(e, "Exceeding the number of child nodes in an interaction should not produce an error");
       }
     }
     cb();
@@ -165,35 +153,24 @@ jil.browserTest("Response.formData", function (t) {
   var resTime;
 
   function onInteractionStart(cb) {
-    window
-      .fetch("/formdata", { method: "POST", body: new FormData() })
-      .then(function (res) {
-        const { now } = require("../../../src/common/timing/now");
-        resTime = now();
-        if (res.formData) {
-          res.formData().catch(function () {
-            // can't parse as formdata
-            setTimeout(newrelic.interaction().createTracer("timer", cb), 0);
-          });
-        } else {
+    window.fetch("/formdata", { method: "POST", body: new FormData() }).then(function (res) {
+      const { now } = require("../../../src/common/timing/now");
+      resTime = now();
+      if (res.formData) {
+        res.formData().catch(function () {
+          // can't parse as formdata
           setTimeout(newrelic.interaction().createTracer("timer", cb), 0);
-        }
-      });
+        });
+      } else {
+        setTimeout(newrelic.interaction().createTracer("timer", cb), 0);
+      }
+    });
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.children[0].end <= resTime,
-      "resTime should be after res was received"
-    );
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.children[0].end <= resTime, "resTime should be after res was received");
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }
@@ -229,14 +206,8 @@ bodyMethods.forEach((bodyMethod) => {
     }
 
     function afterInteractionDone(interaction) {
-      t.ok(
-        interaction.root.end,
-        "interaction should be finished and have an end time"
-      );
-      t.notok(
-        helpers.currentNodeId(),
-        "interaction should be null outside of async chain"
-      );
+      t.ok(interaction.root.end, "interaction should be finished and have an end time");
+      t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
       validator.validate(t, interaction);
       t.end();
     }

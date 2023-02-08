@@ -14,23 +14,13 @@ const { baseEE, agentIdentifier, aggregator } = setupData;
 // TO DO(?) - this file doesn't run correctly if it's cleaned up under pull #243, i.e. remove `matcher` and `supported`
 let supported = matcher.withFeature("wrappableAddEventListener");
 var qp = require("@newrelic/nr-querypack");
-let testCases = require("@newrelic/nr-querypack/examples/all.json").filter(
-  (testCase) => {
-    return (
-      testCase.schema.name === "bel" &&
-      testCase.schema.version === 7 &&
-      JSON.parse(testCase.json).length === 1
-    );
-  }
-);
+let testCases = require("@newrelic/nr-querypack/examples/all.json").filter((testCase) => {
+  return testCase.schema.name === "bel" && testCase.schema.version === 7 && JSON.parse(testCase.json).length === 1;
+});
 
 if (process.browser) {
-  var {
-    Serializer,
-  } = require("../../../src/features/spa/aggregate/serializer");
-  var {
-    Interaction,
-  } = require("../../../src/features/spa/aggregate/interaction");
+  var { Serializer } = require("../../../src/features/spa/aggregate/serializer");
+  var { Interaction } = require("../../../src/features/spa/aggregate/interaction");
 
   var serializer = new Serializer({ agentIdentifier });
   setInfo(agentIdentifier, {});
@@ -47,13 +37,9 @@ var fieldPropMap = {
 };
 
 _forEach(testCases, function (testCase) {
-  jil.browserTest(
-    "spa interaction serializer " + testCase.name,
-    supported,
-    function (t) {
-      runTest(testCase, t);
-    }
-  );
+  jil.browserTest("spa interaction serializer " + testCase.name, supported, function (t) {
+    runTest(testCase, t);
+  });
 });
 
 jil.browserTest(
@@ -81,10 +67,7 @@ jil.browserTest(
 
     // Firefox inserts a "use strict"; as the first line of our test function, so
     // strip it out if present for comparison purposes.
-    attrs["function"]["value"] = attrs["function"]["value"].replace(
-      /"use strict";\n\n/,
-      ""
-    );
+    attrs["function"]["value"] = attrs["function"]["value"].replace(/"use strict";\n\n/, "");
 
     t.deepEqual(
       attrs,
@@ -124,11 +107,7 @@ jil.browserTest(
     }
 
     var decoded = qp.decode(
-      serializer.serializeSingle(
-        interaction.root,
-        0,
-        interaction.root.attrs.trigger === "initialPageLoad"
-      )
+      serializer.serializeSingle(interaction.root, 0, interaction.root.attrs.trigger === "initialPageLoad")
     )[0];
     var attrs = decoded.children.reduce((map, attr) => {
       map[attr.key] = attr;
@@ -141,47 +120,25 @@ jil.browserTest(
   "attributes should be limited"
 );
 
-jil.browserTest(
-  "spa interaction serializer with undefined string values",
-  supported,
-  function (t) {
-    var interaction = new Interaction(
-      "click",
-      1459358524622,
-      "http://domain/path",
-      undefined,
-      undefined,
-      agentIdentifier
-    );
-    let decoded = qp.decode(serializer.serializeSingle(interaction.root));
-    t.equal(
-      decoded[0].customName,
-      null,
-      "customName (which was undefined originally) should have default value"
-    );
-    t.end();
-  }
-);
+jil.browserTest("spa interaction serializer with undefined string values", supported, function (t) {
+  var interaction = new Interaction(
+    "click",
+    1459358524622,
+    "http://domain/path",
+    undefined,
+    undefined,
+    agentIdentifier
+  );
+  let decoded = qp.decode(serializer.serializeSingle(interaction.root));
+  t.equal(decoded[0].customName, null, "customName (which was undefined originally) should have default value");
+  t.end();
+});
 
 jil.browserTest("serializing multiple interactions", supported, function (t) {
-  var ixn = new Interaction(
-    "initialPageLoad",
-    0,
-    "http://some-domain",
-    undefined,
-    undefined,
-    agentIdentifier
-  );
+  var ixn = new Interaction("initialPageLoad", 0, "http://some-domain", undefined, undefined, agentIdentifier);
   addAjaxNode(ixn.root);
 
-  var ixn2 = new Interaction(
-    "click",
-    0,
-    "http://some-domain",
-    undefined,
-    undefined,
-    agentIdentifier
-  );
+  var ixn2 = new Interaction("click", 0, "http://some-domain", undefined, undefined, agentIdentifier);
   ixn2.routeChange = true;
   addAjaxNode(ixn2.root);
 
@@ -190,17 +147,9 @@ jil.browserTest("serializing multiple interactions", supported, function (t) {
 
   t.equal(decoded.length, 2, "there are two root nodes");
   t.equal(decoded[0].type, "interaction");
-  t.equal(
-    decoded[0].children.length,
-    1,
-    "first interaction has one child node"
-  );
+  t.equal(decoded[0].children.length, 1, "first interaction has one child node");
   t.equal(decoded[1].type, "interaction");
-  t.equal(
-    decoded[1].children.length,
-    1,
-    "second interaction has one child node"
-  );
+  t.equal(decoded[1].children.length, 1, "second interaction has one child node");
 
   t.ok(true);
   t.end();
@@ -233,18 +182,9 @@ function runTest(testCase, t) {
     mungeInput(root, schema);
   });
 
-  var result = serializer.serializeSingle(
-    inputJSON[0],
-    0,
-    navTiming,
-    inputJSON[0].attrs.category === "Route change"
-  );
+  var result = serializer.serializeSingle(inputJSON[0], 0, navTiming, inputJSON[0].attrs.category === "Route change");
 
-  t.equal(
-    result,
-    testCase.querypack,
-    "agent serializer should produce same output as reference encoder"
-  );
+  t.equal(result, testCase.querypack, "agent serializer should produce same output as reference encoder");
   t.end();
 
   // Transform the flat JSON input data from the Querypack repo into the object format
@@ -307,106 +247,30 @@ function runTest(testCase, t) {
 
         if (fieldSpec.name === "navTiming" && node.navTiming) {
           navTiming.push(0);
+          navTiming.push(node.navTiming.unloadEventStart ? node.navTiming.unloadEventStart - offset : void 0);
+          navTiming.push(node.navTiming.redirectStart ? node.navTiming.redirectStart - offset : void 0);
+          navTiming.push(node.navTiming.unloadEventEnd ? node.navTiming.unloadEventEnd - offset : void 0);
+          navTiming.push(node.navTiming.redirectEnd ? node.navTiming.redirectEnd - offset : void 0);
+          navTiming.push(node.navTiming.fetchStart ? node.navTiming.fetchStart - offset : void 0);
+          navTiming.push(node.navTiming.domainLookupStart ? node.navTiming.domainLookupStart - offset : void 0);
+          navTiming.push(node.navTiming.domainLookupEnd ? node.navTiming.domainLookupEnd - offset : void 0);
+          navTiming.push(node.navTiming.connectStart ? node.navTiming.connectStart - offset : void 0);
+          navTiming.push(node.navTiming.secureConnectionStart ? node.navTiming.secureConnectionStart - offset : void 0);
+          navTiming.push(node.navTiming.connectEnd ? node.navTiming.connectEnd - offset : void 0);
+          navTiming.push(node.navTiming.requestStart ? node.navTiming.requestStart - offset : void 0);
+          navTiming.push(node.navTiming.responseStart ? node.navTiming.responseStart - offset : void 0);
+          navTiming.push(node.navTiming.responseEnd ? node.navTiming.responseEnd - offset : void 0);
+          navTiming.push(node.navTiming.domLoading ? node.navTiming.domLoading - offset : void 0);
+          navTiming.push(node.navTiming.domInteractive ? node.navTiming.domInteractive - offset : void 0);
           navTiming.push(
-            node.navTiming.unloadEventStart
-              ? node.navTiming.unloadEventStart - offset
-              : void 0
+            node.navTiming.domContentLoadedEventStart ? node.navTiming.domContentLoadedEventStart - offset : void 0
           );
           navTiming.push(
-            node.navTiming.redirectStart
-              ? node.navTiming.redirectStart - offset
-              : void 0
+            node.navTiming.domContentLoadedEventEnd ? node.navTiming.domContentLoadedEventEnd - offset : void 0
           );
-          navTiming.push(
-            node.navTiming.unloadEventEnd
-              ? node.navTiming.unloadEventEnd - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.redirectEnd
-              ? node.navTiming.redirectEnd - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.fetchStart
-              ? node.navTiming.fetchStart - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.domainLookupStart
-              ? node.navTiming.domainLookupStart - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.domainLookupEnd
-              ? node.navTiming.domainLookupEnd - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.connectStart
-              ? node.navTiming.connectStart - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.secureConnectionStart
-              ? node.navTiming.secureConnectionStart - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.connectEnd
-              ? node.navTiming.connectEnd - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.requestStart
-              ? node.navTiming.requestStart - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.responseStart
-              ? node.navTiming.responseStart - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.responseEnd
-              ? node.navTiming.responseEnd - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.domLoading
-              ? node.navTiming.domLoading - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.domInteractive
-              ? node.navTiming.domInteractive - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.domContentLoadedEventStart
-              ? node.navTiming.domContentLoadedEventStart - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.domContentLoadedEventEnd
-              ? node.navTiming.domContentLoadedEventEnd - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.domComplete
-              ? node.navTiming.domComplete - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.loadEventStart
-              ? node.navTiming.loadEventStart - offset
-              : void 0
-          );
-          navTiming.push(
-            node.navTiming.loadEventEnd
-              ? node.navTiming.loadEventEnd - offset
-              : void 0
-          );
+          navTiming.push(node.navTiming.domComplete ? node.navTiming.domComplete - offset : void 0);
+          navTiming.push(node.navTiming.loadEventStart ? node.navTiming.loadEventStart - offset : void 0);
+          navTiming.push(node.navTiming.loadEventEnd ? node.navTiming.loadEventEnd - offset : void 0);
         }
 
         if (fieldSpec.name === "queueTime") {

@@ -4,12 +4,7 @@
  */
 import { cleanURL } from "../../../common/url/clean-url";
 import { mapOwn } from "../../../common/util/map-own";
-import {
-  nullable,
-  numeric,
-  getAddStringContext,
-  addCustomAttributes,
-} from "../../../common/serialize/bel-serializer";
+import { nullable, numeric, getAddStringContext, addCustomAttributes } from "../../../common/serialize/bel-serializer";
 import { SharedContext } from "../../../common/context/shared-context";
 import { getInfo } from "../../../common/config/config";
 
@@ -33,15 +28,7 @@ export class Serializer extends SharedContext {
     var serialized = "bel.7";
     interactions.forEach((interaction) => {
       serialized +=
-        ";" +
-        this.serializeInteraction(
-          interaction.root,
-          offset,
-          navTiming,
-          interaction.routeChange,
-          addString,
-          info
-        );
+        ";" + this.serializeInteraction(interaction.root, offset, navTiming, interaction.routeChange, addString, info);
     });
     this.firstTimestamp = undefined;
     return serialized;
@@ -50,28 +37,12 @@ export class Serializer extends SharedContext {
   serializeSingle(root, offset, navTiming, isRouteChange) {
     const info = getInfo(this.sharedContext.agentIdentifier);
     var addString = getAddStringContext(this.sharedContext.agentIdentifier);
-    var serialized =
-      "bel.7;" +
-      this.serializeInteraction(
-        root,
-        offset,
-        navTiming,
-        isRouteChange,
-        addString,
-        info
-      );
+    var serialized = "bel.7;" + this.serializeInteraction(root, offset, navTiming, isRouteChange, addString, info);
     this.firstTimestamp = undefined;
     return serialized;
   }
 
-  serializeInteraction(
-    root,
-    offset,
-    navTiming,
-    isRouteChange,
-    addString,
-    info
-  ) {
+  serializeInteraction(root, offset, navTiming, isRouteChange, addString, info) {
     offset = offset || 0;
     var isInitialPage = root.attrs.trigger === "initialPageLoad";
     var typeIdsByName = {
@@ -84,8 +55,7 @@ export class Serializer extends SharedContext {
     var includeHashFragment = true;
 
     const addNode = (node, nodeList) => {
-      if (node.type === "customEnd")
-        return nodeList.push([3, numeric(node.end - this.firstTimestamp)]);
+      if (node.type === "customEnd") return nodeList.push([3, numeric(node.end - this.firstTimestamp)]);
       var typeName = node.type;
       var typeId = typeIdsByName[typeName];
       var startTimestamp = node.start;
@@ -130,8 +100,7 @@ export class Serializer extends SharedContext {
               nullable(attrs.newRoute, addString, true) +
               addString(attrs.id),
             addString(node.id),
-            nullable(attrs.firstPaint, numeric, true) +
-              nullable(attrs.firstContentfulPaint, numeric, false)
+            nullable(attrs.firstPaint, numeric, true) + nullable(attrs.firstContentfulPaint, numeric, false)
           );
 
           var attrParts = addCustomAttributes(attrs.custom, addString);
@@ -163,10 +132,7 @@ export class Serializer extends SharedContext {
 
         case 4:
           var tracedTime = attrs.tracedTime;
-          fields.push(
-            addString(attrs.name),
-            nullable(tracedTime, numeric, true) + addString(node.id)
-          );
+          fields.push(addString(attrs.name), nullable(tracedTime, numeric, true) + addString(node.id));
           break;
       }
 

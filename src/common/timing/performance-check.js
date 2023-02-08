@@ -4,5 +4,4 @@
  */
 
 import { globalScope } from "../util/global-scope";
-export const exists =
-  typeof globalScope?.performance?.timing?.navigationStart !== "undefined";
+export const exists = typeof globalScope?.performance?.timing?.navigationStart !== "undefined";

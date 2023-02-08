@@ -31,10 +31,7 @@ var raf =
 
 var setTimeoutWrapped = !!setTimeout["nr@wrapper"];
 var shouldExpectXHRErrors =
-  setTimeoutWrapped &&
-  XMLHttpRequest &&
-  XMLHttpRequest.prototype &&
-  XMLHttpRequest.prototype.addEventListener;
+  setTimeoutWrapped && XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener;
 
 // Old versions of FF don't fire readystatechange on the document
 var hasReadyStateChange = !(ffVersion && ffVersion <= 3.6);
@@ -228,19 +225,12 @@ if (!setTimeoutWrapped) {
       // event errors
       t.ok(errors["DOMContentLoaded error"], "DOMContentLoaded error");
       if (hasReadyStateChange) {
-        t.ok(
-          errors["document readystatechange"],
-          "document readystatechange error"
-        );
+        t.ok(errors["document readystatechange"], "document readystatechange error");
       } else {
         t.skip("readystatechange not available");
       }
       t.ok(errors["Window addE"], "Window addE error");
-      t.equal(
-        errors["Window addE"].metrics.count,
-        1,
-        "Only one Window addE error"
-      );
+      t.equal(errors["Window addE"].metrics.count, 1, "Only one Window addE error");
 
       // custom event error
       // Tested because synthetically fired custom events behave differently than
@@ -281,22 +271,12 @@ if (!setTimeoutWrapped) {
       setTimeout(function () {
         err = agg.take(["err"]).err;
         t.ok(err.length >= 1, "at least one more error reported again");
-        t.equal(
-          err[0].params.stack_trace,
-          undefined,
-          "timeout error stack not reported again"
-        );
-        t.ok(
-          err[0].params.browser_stack_hash !== 0,
-          "timeout error browser stack hash reported"
-        );
+        t.equal(err[0].params.stack_trace, undefined, "timeout error stack not reported again");
+        t.ok(err[0].params.browser_stack_hash !== 0, "timeout error browser stack hash reported");
       }, 100);
 
       if (shouldExpectXHRErrors) {
-        t.ok(
-          errors["xhr on load event listener"],
-          "xhr on load event listener error"
-        );
+        t.ok(errors["xhr on load event listener"], "xhr on load event listener error");
       }
     }
   });

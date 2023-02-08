@@ -22,10 +22,7 @@ var config = require("yargs")
 
   .string("r")
   .alias("r", "repo")
-  .describe(
-    "r",
-    "Repository name to post a comment to (<owner name>/<repo name>)"
-  )
+  .describe("r", "Repository name to post a comment to (<owner name>/<repo name>)")
 
   .string("p")
   .alias("p", "pull-request")
@@ -62,18 +59,12 @@ for (var filename in mergedSizes) {
   }
 }
 
-var comment = generateComment(
-  loaderSizes,
-  aggregatorSizes,
-  process.env.BUILD_NUMBER
-);
+var comment = generateComment(loaderSizes, aggregatorSizes, process.env.BUILD_NUMBER);
 
 if (config.repo && config.pullRequest && config.token) {
   getPreviousComments(function (comments) {
     if (comments.length > 1) {
-      console.log(
-        "Found >1 (" + comments.length + ") existing comments, bailing out."
-      );
+      console.log("Found >1 (" + comments.length + ") existing comments, bailing out.");
       return;
     }
 
@@ -88,65 +79,39 @@ if (config.repo && config.pullRequest && config.token) {
 }
 
 function updateComment(existingCommentId, newCommentText) {
-  gheApiRequest(
-    "PATCH",
-    "/issues/comments/" + existingCommentId,
-    { body: newCommentText },
-    function (err, rsp, body) {
-      if (err) throw err;
-      if (rsp.statusCode === 200) {
-        console.log(
-          "Successfully updated comment at " + JSON.parse(rsp.body).html_url
-        );
-      } else {
-        console.log(
-          "Failed to update PR comment " +
-            existingCommentId +
-            " with status " +
-            rsp.statusCode
-        );
-        console.log("Response body:");
-        console.log(rsp.body);
-      }
+  gheApiRequest("PATCH", "/issues/comments/" + existingCommentId, { body: newCommentText }, function (err, rsp, body) {
+    if (err) throw err;
+    if (rsp.statusCode === 200) {
+      console.log("Successfully updated comment at " + JSON.parse(rsp.body).html_url);
+    } else {
+      console.log("Failed to update PR comment " + existingCommentId + " with status " + rsp.statusCode);
+      console.log("Response body:");
+      console.log(rsp.body);
     }
-  );
+  });
 }
 
 function postComment(commentBody) {
-  gheApiRequest(
-    "POST",
-    "/issues/" + config.pullRequest + "/comments",
-    { body: comment },
-    function (err, rsp, body) {
-      if (err) throw err;
-      if (rsp.statusCode === 201) {
-        console.log(
-          "Successfully posted comment to " + JSON.parse(rsp.body).html_url
-        );
-      } else {
-        console.log("Failed to post PR comment with status " + rsp.statusCode);
-        console.log("Response body:");
-        console.log(rsp.body);
-      }
+  gheApiRequest("POST", "/issues/" + config.pullRequest + "/comments", { body: comment }, function (err, rsp, body) {
+    if (err) throw err;
+    if (rsp.statusCode === 201) {
+      console.log("Successfully posted comment to " + JSON.parse(rsp.body).html_url);
+    } else {
+      console.log("Failed to post PR comment with status " + rsp.statusCode);
+      console.log("Response body:");
+      console.log(rsp.body);
     }
-  );
+  });
 }
 
 function getPreviousComments(cb) {
-  gheApiRequest(
-    "GET",
-    "/issues/" + config.pullRequest + "/comments",
-    null,
-    function (err, rsp, body) {
-      if (err) throw err;
-      var matchingComments = JSON.parse(body).filter(function (c) {
-        return c.body.match(
-          /^As of commit [\da-f]+, this branch affects artifact sizes as follows/
-        );
-      });
-      cb(matchingComments);
-    }
-  );
+  gheApiRequest("GET", "/issues/" + config.pullRequest + "/comments", null, function (err, rsp, body) {
+    if (err) throw err;
+    var matchingComments = JSON.parse(body).filter(function (c) {
+      return c.body.match(/^As of commit [\da-f]+, this branch affects artifact sizes as follows/);
+    });
+    cb(matchingComments);
+  });
 }
 
 function gheApiRequest(verb, path, body, cb) {
@@ -171,10 +136,7 @@ function generateComment(loaderSizes, aggregatorSizes, buildId) {
   var comment = "";
 
   if (config.commit) {
-    comment +=
-      "As of commit " +
-      config.commit +
-      ", this branch affects artifact sizes as follows:\n\n";
+    comment += "As of commit " + config.commit + ", this branch affects artifact sizes as follows:\n\n";
   }
 
   comment += "**Loaders**\n\n";
@@ -230,8 +192,7 @@ function reportDiffs(sizes) {
     var delta = after - before;
     var formattedDelta = delta >= 0 ? "+" + delta : delta;
     var percentDelta = ((delta / before) * 100).toPrecision(2);
-    if (delta !== 0)
-      formattedDelta = formattedDelta + " (" + percentDelta + " %)";
+    if (delta !== 0) formattedDelta = formattedDelta + " (" + percentDelta + " %)";
     return formattedDelta;
   }
 }

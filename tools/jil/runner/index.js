@@ -13,11 +13,7 @@ const os = require("os");
 const glob = require("glob");
 const Driver = require("../driver");
 const loadBrowser = require("../loader/loadBrowser");
-const {
-  getSauceLabsCreds,
-  startExternalServices,
-  stopExternalServices,
-} = require("../util/external-services");
+const { getSauceLabsCreds, startExternalServices, stopExternalServices } = require("../util/external-services");
 
 const buildIdentifier = getBuildIdentifier();
 const output = new Output(config);

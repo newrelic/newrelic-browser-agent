@@ -80,33 +80,26 @@ var toSet = allFiles.map(setVersion("current"));
 console.log("Promoting " + buildNum + " to be current");
 
 if (!(+buildNum > 470)) {
-  throw new Error(
-    "build number must been a recent browser agent version (using buildNum `" +
-      buildNum +
-      "`)"
-  );
+  throw new Error("build number must been a recent browser agent version (using buildNum `" + buildNum + "`)");
 }
 
 initialize(function (err) {
   if (err) throw err;
 
   toGet.forEach(function (name, idx) {
-    request(
-      "https://js-agent.newrelic.com/" + name,
-      function (err, req, content) {
-        if (err) throw err;
-        if (!content.match("NREUM")) {
-          throw new Error("Content is missing NREUM, something went wrong");
-        }
-
-        var key = toSet[idx];
-        var type = "application/javascript";
-
-        uploadToS3(key, content, type, function (e) {
-          if (e) throw e;
-        });
+    request("https://js-agent.newrelic.com/" + name, function (err, req, content) {
+      if (err) throw err;
+      if (!content.match("NREUM")) {
+        throw new Error("Content is missing NREUM, something went wrong");
       }
-    );
+
+      var key = toSet[idx];
+      var type = "application/javascript";
+
+      uploadToS3(key, content, type, function (e) {
+        if (e) throw e;
+      });
+    });
   });
 });
 

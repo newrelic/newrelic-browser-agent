@@ -13,35 +13,20 @@ var yargs = require("yargs");
 
 var argv = yargs
   .string("environments")
-  .describe(
-    "environments",
-    "Comma-separated list of environments to upload loaders to"
-  )
+  .describe("environments", "Comma-separated list of environments to upload loaders to")
   .default("environments", "staging,production,eu")
 
   .string("production-api-key")
-  .describe(
-    "production-api-key",
-    "API key to use for talking to production RPM site to upload loaders"
-  )
+  .describe("production-api-key", "API key to use for talking to production RPM site to upload loaders")
 
   .string("staging-api-key")
-  .describe(
-    "staging-api-key",
-    "API key to use for talking to staging RPM site to upload loaders"
-  )
+  .describe("staging-api-key", "API key to use for talking to staging RPM site to upload loaders")
 
   .string("eu-api-key")
-  .describe(
-    "eu-api-key",
-    "API key to use for talking to EU RPM site to upload loaders"
-  )
+  .describe("eu-api-key", "API key to use for talking to EU RPM site to upload loaders")
 
   .boolean("skip-upload-failures")
-  .describe(
-    "skip-upload-failures",
-    "Don't bail out after the first failure, keep trying other requests"
-  )
+  .describe("skip-upload-failures", "Don't bail out after the first failure, keep trying other requests")
 
   .help("h")
   .alias("h", "help").argv;
@@ -55,9 +40,7 @@ let proms = [];
 let types = ["rum", "full", "spa"];
 while (v++ < 1216) {
   types.forEach((t) => {
-    proms.push(
-      getFile(`https://js-agent.newrelic.com/nr-loader-${t}-${v}.min.js`)
-    );
+    proms.push(getFile(`https://js-agent.newrelic.com/nr-loader-${t}-${v}.min.js`));
     proms.push(getFile(`https://js-agent.newrelic.com/nr-loader-${t}-${v}.js`));
     checked += 2;
   });
@@ -67,8 +50,7 @@ Promise.all(proms).then((files) => {
   console.log(files.length, "files", ", checked:", checked);
   files.forEach((f) => {
     const [url, res, body] = f;
-    if (res.statusCode !== 200)
-      console.log("res status was not 200...", res.statusCode, url);
+    if (res.statusCode !== 200) console.log("res status was not 200...", res.statusCode, url);
     else {
       const uploadUrl = url
         .split(".com/")[1]
@@ -145,14 +127,11 @@ function loadFiles(cb) {
   asyncForEach(allFiles, readFile, cb);
 
   function readFile(file, next) {
-    fs.readFile(
-      path.resolve(__dirname, "../../build/", file),
-      function (err, data) {
-        if (err) return next(err);
-        fileData[file] = data;
-        next();
-      }
-    );
+    fs.readFile(path.resolve(__dirname, "../../build/", file), function (err, data) {
+      if (err) return next(err);
+      fileData[file] = data;
+      next();
+    });
   }
 }
 
@@ -228,9 +207,7 @@ function uploadLoaderToDB(filename, loader, environment, cb) {
 
 function loaderFilenames() {
   const buildDir = path.resolve(__dirname, "../../build/");
-  return fs
-    .readdirSync(buildDir)
-    .filter((x) => x.startsWith("nr-loader") && x.endsWith(".js"));
+  return fs.readdirSync(buildDir).filter((x) => x.startsWith("nr-loader") && x.endsWith(".js"));
 }
 
 // errorCallback is optional

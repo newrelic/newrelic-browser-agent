@@ -11,10 +11,7 @@ var argv = yargs
   .describe("role", "S3 role ARN")
 
   .boolean("skip-upload-failures")
-  .describe(
-    "skip-upload-failures",
-    "Don't bail out after the first failure, keep trying other requests"
-  )
+  .describe("skip-upload-failures", "Don't bail out after the first failure, keep trying other requests")
 
   .boolean("dry")
   .describe("dry", "run the script without actually uploading files")
@@ -25,10 +22,7 @@ var argv = yargs
   .alias("t", "test")
 
   .boolean("dev")
-  .describe(
-    "dev",
-    "for dev early release directory only, uploads scripts to folder named dev"
-  )
+  .describe("dev", "for dev early release directory only, uploads scripts to folder named dev")
   .alias("D", "dev")
 
   .string("pr")

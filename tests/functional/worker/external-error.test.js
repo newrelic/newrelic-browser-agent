@@ -27,13 +27,8 @@ function externalTest(type, matcher) {
     function (t, browser, router) {
       const workerCommands = [];
       if (type === "classic")
-        workerCommands.push(
-          "importScripts('/tests/assets/js/external-worker-error.js?secretParameter=secretValue')"
-        );
-      else
-        workerCommands.push(
-          "import('/tests/assets/js/external-worker-error.js?secretParameter=secretValue')"
-        );
+        workerCommands.push("importScripts('/tests/assets/js/external-worker-error.js?secretParameter=secretValue')");
+      else workerCommands.push("import('/tests/assets/js/external-worker-error.js?secretParameter=secretValue')");
       workerCommands.push("setTimeout(() => externalFunction(), 1000)");
       let assetURL = router.assetURL(`worker/${type}-worker.html`, {
         init,
@@ -49,22 +44,10 @@ function externalTest(type, matcher) {
           t.equal(err.length, 1, "Should have 1 error obj");
           t.equal(err[0].metrics.count, 1, "Should have seen 1 error");
           t.ok(err[0].metrics.time.t > 0, "Should have a valid timestamp");
-          t.equal(
-            err[0].params.exceptionClass,
-            "Error",
-            "Should be Error class"
-          );
-          t.equal(
-            err[0].params.message,
-            "worker error",
-            "Should have correct message"
-          );
+          t.equal(err[0].params.exceptionClass, "Error", "Should be Error class");
+          t.equal(err[0].params.message, "worker error", "Should have correct message");
           t.ok(err[0].params.stack_trace, "Should have a stack trace");
-          t.deepEqual(
-            err[0].custom,
-            { ...workerCustomAttrs },
-            "Should have correct custom attributes"
-          );
+          t.deepEqual(err[0].custom, { ...workerCustomAttrs }, "Should have correct custom attributes");
           t.end();
         })
         .catch(fail);

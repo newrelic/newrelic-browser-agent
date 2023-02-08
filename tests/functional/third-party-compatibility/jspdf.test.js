@@ -36,39 +36,35 @@ var timedPromiseAll = (promises, ms) =>
     Promise.all(promises),
   ]);
 
-testDriver.test(
-  "jspdf generation should not cause error",
-  supported,
-  function (t, browser, router) {
-    // t.plan(1)
+testDriver.test("jspdf generation should not cause error", supported, function (t, browser, router) {
+  // t.plan(1)
 
-    // This only works with the full loader. With the SPA loader, an internal error is still generated but the PDF is now generating.
-    let loadPromise = browser.get(
-      router.assetURL("third-party-compatibility/jspdf.html", {
-        loader: "full",
-        init,
-      })
-    );
-    let rumPromise = router.expectRum();
-    let errPromise = router.expectErrors();
+  // This only works with the full loader. With the SPA loader, an internal error is still generated but the PDF is now generating.
+  let loadPromise = browser.get(
+    router.assetURL("third-party-compatibility/jspdf.html", {
+      loader: "full",
+      init,
+    })
+  );
+  let rumPromise = router.expectRum();
+  let errPromise = router.expectErrors();
 
-    Promise.all([loadPromise, rumPromise])
-      .then(() => {
-        return browser.elementByCssSelector("#createPdf").click();
-      })
-      .then(() => {
-        return timedPromiseAll([errPromise], 6000);
-      })
-      .then((response) => {
-        if (response) {
-          // will be null if timed out, so a payload here means it sent and error
-          t.fail(`Should not have generated "error" payload`);
-        } else {
-          // errors harvest every 5 seconds, if 6 seconds pass and Promise is not resolved, that means it was never generated
-          t.pass(`Did not generate "error" payload`);
-        }
-        t.end();
-      })
-      .catch(fail);
-  }
-);
+  Promise.all([loadPromise, rumPromise])
+    .then(() => {
+      return browser.elementByCssSelector("#createPdf").click();
+    })
+    .then(() => {
+      return timedPromiseAll([errPromise], 6000);
+    })
+    .then((response) => {
+      if (response) {
+        // will be null if timed out, so a payload here means it sent and error
+        t.fail(`Should not have generated "error" payload`);
+      } else {
+        // errors harvest every 5 seconds, if 6 seconds pass and Promise is not resolved, that means it was never generated
+        t.pass(`Did not generate "error" payload`);
+      }
+      t.end();
+    })
+    .catch(fail);
+});

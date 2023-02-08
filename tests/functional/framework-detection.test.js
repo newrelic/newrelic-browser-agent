@@ -28,13 +28,8 @@ testDriver.test(
     Promise.all([metricsPromise, rumPromise, loadPromise])
       .then(([data]) => {
         var supportabilityMetrics = getMetricsFromResponse(data, true);
-        t.ok(
-          supportabilityMetrics && !!supportabilityMetrics.length,
-          "SupportabilityMetrics objects were generated"
-        );
-        const sm = supportabilityMetrics.find((x) =>
-          x.params.name.includes("Framework")
-        );
+        t.ok(supportabilityMetrics && !!supportabilityMetrics.length, "SupportabilityMetrics objects were generated");
+        const sm = supportabilityMetrics.find((x) => x.params.name.includes("Framework"));
         t.equals(
           sm.params.name,
           "Framework/React/Detected",
@@ -73,13 +68,8 @@ testDriver.test(
     Promise.all([metricsPromise, rumPromise, loadPromise])
       .then(([data]) => {
         var supportabilityMetrics = getMetricsFromResponse(data, true);
-        t.ok(
-          supportabilityMetrics && !!supportabilityMetrics.length,
-          "SupportabilityMetrics objects were generated"
-        );
-        const sm = supportabilityMetrics.find((x) =>
-          x.params.name.includes("Framework")
-        );
+        t.ok(supportabilityMetrics && !!supportabilityMetrics.length, "SupportabilityMetrics objects were generated");
+        const sm = supportabilityMetrics.find((x) => x.params.name.includes("Framework"));
         t.equals(
           sm.params.name,
           "Framework/Angular/Detected",
@@ -119,19 +109,11 @@ testDriver.test(
       .then(([data]) => {
         var supportabilityMetrics = getMetricsFromResponse(data, true);
         if (!supportabilityMetrics) {
-          t.ok(
-            1 === 1,
-            "FRAMEWORK SupportabilityMetrics object(s) were NOT generated"
-          );
+          t.ok(1 === 1, "FRAMEWORK SupportabilityMetrics object(s) were NOT generated");
           t.end();
         } else {
-          const sm = supportabilityMetrics.find((x) =>
-            x.params.name.includes("Framework")
-          );
-          t.ok(
-            !sm,
-            "FRAMEWORK SupportabilityMetrics object(s) were NOT generated"
-          );
+          const sm = supportabilityMetrics.find((x) => x.params.name.includes("Framework"));
+          t.ok(!sm, "FRAMEWORK SupportabilityMetrics object(s) were NOT generated");
           t.end();
         }
       })

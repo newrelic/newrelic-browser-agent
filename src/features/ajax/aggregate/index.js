@@ -4,19 +4,11 @@
  */
 import { registerHandler as register } from "../../../common/event-emitter/register-handler";
 import { stringify } from "../../../common/util/stringify";
-import {
-  nullable,
-  numeric,
-  getAddStringContext,
-  addCustomAttributes,
-} from "../../../common/serialize/bel-serializer";
+import { nullable, numeric, getAddStringContext, addCustomAttributes } from "../../../common/serialize/bel-serializer";
 import { handle } from "../../../common/event-emitter/handle";
 import { getConfigurationValue, getInfo } from "../../../common/config/config";
 import { HarvestScheduler } from "../../../common/harvest/harvest-scheduler";
-import {
-  setDenyList,
-  shouldCollectEvent,
-} from "../../../common/deny-list/deny-list";
+import { setDenyList, shouldCollectEvent } from "../../../common/deny-list/deny-list";
 import { AggregateBase } from "../../utils/aggregate-base";
 import { FEATURE_NAME } from "../constants";
 import { drain } from "../../../common/drain/drain";
@@ -33,10 +25,8 @@ export class Aggregate extends AggregateBase {
 
     const ee = this.ee;
 
-    const harvestTimeSeconds =
-      getConfigurationValue(agentIdentifier, "ajax.harvestTimeSeconds") || 10;
-    const MAX_PAYLOAD_SIZE =
-      getConfigurationValue(agentIdentifier, "ajax.maxPayloadSize") || 1000000;
+    const harvestTimeSeconds = getConfigurationValue(agentIdentifier, "ajax.harvestTimeSeconds") || 10;
+    const MAX_PAYLOAD_SIZE = getConfigurationValue(agentIdentifier, "ajax.maxPayloadSize") || 1000000;
 
     // Exposes these methods to browser test files -- future TO DO: can be removed once these fns are extracted from the constructor into class func
     this.storeXhr = storeXhr;
@@ -61,8 +51,7 @@ export class Aggregate extends AggregateBase {
       delete spaAjaxEvents[interaction.id];
     });
 
-    if (allAjaxIsEnabled())
-      setDenyList(getConfigurationValue(agentIdentifier, "ajax.deny_list"));
+    if (allAjaxIsEnabled()) setDenyList(getConfigurationValue(agentIdentifier, "ajax.deny_list"));
 
     register("xhr", storeXhr, this.featureName, this.ee);
 
@@ -92,31 +81,13 @@ export class Aggregate extends AggregateBase {
         hash = stringify([params.status, params.host, params.pathname]);
       }
 
-      handle(
-        "bstXhrAgg",
-        ["xhr", hash, params, metrics],
-        undefined,
-        FEATURE_NAMES.sessionTrace,
-        ee
-      );
+      handle("bstXhrAgg", ["xhr", hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, ee);
 
       if (!shouldCollectEvent(params)) {
         if (params.hostname === getInfo(agentIdentifier).errorBeacon) {
-          handle(
-            "record-supportability",
-            ["Ajax/Events/Excluded/Agent"],
-            undefined,
-            FEATURE_NAMES.metrics,
-            ee
-          );
+          handle("record-supportability", ["Ajax/Events/Excluded/Agent"], undefined, FEATURE_NAMES.metrics, ee);
         } else {
-          handle(
-            "record-supportability",
-            ["Ajax/Events/Excluded/App"],
-            undefined,
-            FEATURE_NAMES.metrics,
-            ee
-          );
+          handle("record-supportability", ["Ajax/Events/Excluded/App"], undefined, FEATURE_NAMES.metrics, ee);
         }
         return;
       }
@@ -165,10 +136,7 @@ export class Aggregate extends AggregateBase {
         return null;
       }
 
-      var payload = getPayload(
-        ajaxEvents,
-        options.maxPayloadSize || MAX_PAYLOAD_SIZE
-      );
+      var payload = getPayload(ajaxEvents, options.maxPayloadSize || MAX_PAYLOAD_SIZE);
 
       var payloadObjs = [];
       for (var i = 0; i < payload.length; i++) {
@@ -253,10 +221,7 @@ export class Aggregate extends AggregateBase {
         var insert = "2,";
 
         // add custom attributes
-        var attrParts = addCustomAttributes(
-          getInfo(agentIdentifier).jsAttributes || {},
-          this.addString
-        );
+        var attrParts = addCustomAttributes(getInfo(agentIdentifier).jsAttributes || {}, this.addString);
         fields.unshift(numeric(attrParts.length));
 
         insert += fields.join(",");

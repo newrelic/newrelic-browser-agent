@@ -5,9 +5,7 @@
 
 const test = require("../../tools/jil/browser-test.js");
 const { handle, handleEE } = require("../../src/common/event-emitter/handle");
-const {
-  registerHandler,
-} = require("../../src/common/event-emitter/register-handler");
+const { registerHandler } = require("../../src/common/event-emitter/register-handler");
 const { drain } = require("../../src/common/drain/drain");
 
 test("Handler", function (t) {

@@ -16,9 +16,7 @@ testDriver.test("RUM ", function (t, browser, router) {
   let rumPromise = router.expectRum();
   let loadPromise = browser.get(router.assetURL("unconfigured-on-load.html"));
 
-  Promise.all([rumPromise, loadPromise]).then(() =>
-    fail("should not have recieved rum call!")
-  );
+  Promise.all([rumPromise, loadPromise]).then(() => fail("should not have recieved rum call!"));
 
   function fail(e) {
     t.error(e);

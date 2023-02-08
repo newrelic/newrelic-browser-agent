@@ -47,11 +47,7 @@ class Output {
 
   finish() {
     this.formatter.finish(
-      this.children.reduce(
-        (ok, next) =>
-          (ok && next.ok) || next.results.pass === next.results.count,
-        true
-      )
+      this.children.reduce((ok, next) => (ok && next.ok) || next.results.pass === next.results.count, true)
     );
   }
 }
@@ -94,15 +90,9 @@ class OutputParser extends EventEmitter {
 
       this.emit("assert", data, indentDepth, [...parents, lastComment]);
       this.emit("tap", tap);
-      this.emit(d.ok ? "pass" : "fail", data, indentDepth, [
-        ...parents,
-        lastComment,
-      ]);
+      this.emit(d.ok ? "pass" : "fail", data, indentDepth, [...parents, lastComment]);
       if (data.formattedDiag) {
-        this.emit("diag", data.formattedDiag, indentDepth, [
-          ...parents,
-          lastComment,
-        ]);
+        this.emit("diag", data.formattedDiag, indentDepth, [...parents, lastComment]);
       }
     });
 
@@ -153,9 +143,7 @@ class OutputParser extends EventEmitter {
 
   formatDiag(diag) {
     let msg = ["  ---"];
-    let keys = ["operator", "expected", "actual", "at", "stack"].filter(
-      (key) => key in diag
-    );
+    let keys = ["operator", "expected", "actual", "at", "stack"].filter((key) => key in diag);
     let longest = keys[0];
 
     for (let key of keys) {

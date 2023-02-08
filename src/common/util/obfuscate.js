@@ -53,14 +53,9 @@ export function validateRules(rules) {
   var invalidRegexDetected = false;
   for (var i = 0; i < rules.length; i++) {
     if (!("regex" in rules[i])) {
-      warn(
-        'An obfuscation replacement rule was detected missing a "regex" value.'
-      );
+      warn('An obfuscation replacement rule was detected missing a "regex" value.');
       invalidRegexDetected = true;
-    } else if (
-      typeof rules[i].regex !== "string" &&
-      !(rules[i].regex.constructor === RegExp)
-    ) {
+    } else if (typeof rules[i].regex !== "string" && !(rules[i].regex.constructor === RegExp)) {
       warn(
         'An obfuscation replacement rule contains a "regex" value with an invalid type (must be a string or RegExp)'
       );
@@ -70,9 +65,7 @@ export function validateRules(rules) {
     var replacement = rules[i].replacement;
     if (replacement) {
       if (typeof replacement !== "string") {
-        warn(
-          'An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string)'
-        );
+        warn('An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string)');
         invalidReplacementDetected = true;
       }
     }

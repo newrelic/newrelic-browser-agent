@@ -5,11 +5,7 @@
 
 import test from "../../../tools/jil/browser-test";
 import { setup } from "../utils/setup";
-import {
-  getRuntime,
-  setInfo,
-  setConfiguration,
-} from "../../../src/common/config/config";
+import { getRuntime, setInfo, setConfiguration } from "../../../src/common/config/config";
 import { Aggregate as AjaxAggreg } from "../../../src/features/ajax/aggregate/index";
 const qp = require("@newrelic/nr-querypack");
 
@@ -62,16 +58,10 @@ test("storeXhr for a SPA ajax request buffers in spaAjaxEvents", function (t) {
     interactionAjaxEvents.length === 1,
     "SPA ajax requests are buffered and associated in spaAjaxEvents by interaction id"
   );
-  t.notok(
-    events.ajaxEvents.length > 0,
-    "SPA ajax requests are not buffered in ajaxEvents"
-  );
+  t.notok(events.ajaxEvents.length > 0, "SPA ajax requests are not buffered in ajaxEvents");
 
   const spaAjaxEvent = interactionAjaxEvents[0];
-  t.ok(
-    spaAjaxEvent.startTime === 0 && spaAjaxEvent.path === "/pathname",
-    "expected SPA ajax event is buffered"
-  );
+  t.ok(spaAjaxEvent.startTime === 0 && spaAjaxEvent.path === "/pathname", "expected SPA ajax event is buffered");
 
   // clear spaAjaxEvents
   baseEE.emit("interactionSaved", [interaction]);
@@ -103,20 +93,11 @@ test("storeXhr for a non-SPA ajax request buffers in ajaxEvents", function (t) {
   storeXhr.apply(context, ajaxArguments);
 
   const events = getStoredEvents();
-  t.ok(
-    events.ajaxEvents.length === 1,
-    "non-SPA ajax requests are buffered in ajaxEvents"
-  );
-  t.notok(
-    Object.keys(events.spaAjaxEvents).length > 0,
-    "non-SPA ajax requests are not buffered in spaAjaxEvents"
-  );
+  t.ok(events.ajaxEvents.length === 1, "non-SPA ajax requests are buffered in ajaxEvents");
+  t.notok(Object.keys(events.spaAjaxEvents).length > 0, "non-SPA ajax requests are not buffered in spaAjaxEvents");
 
   const ajaxEvent = events.ajaxEvents[0];
-  t.ok(
-    ajaxEvent.startTime === 0 && ajaxEvent.path === "/pathname",
-    "expected ajax event is buffered"
-  );
+  t.ok(ajaxEvent.startTime === 0 && ajaxEvent.path === "/pathname", "expected ajax event is buffered");
 
   // clear ajaxEvents buffer
   prepareHarvest({ retry: false });
@@ -155,10 +136,7 @@ test("on interactionDiscarded, saved SPA events are buffered in ajaxEvents", fun
   const events = getStoredEvents();
 
   // no interactions in SPA under interaction 0
-  t.notok(
-    events.spaAjaxEvents[interaction.id],
-    "ajax requests from discarded interaction no longer held buffer"
-  );
+  t.notok(events.spaAjaxEvents[interaction.id], "ajax requests from discarded interaction no longer held buffer");
   t.ok(events.ajaxEvents.length === 1, "ajax request buffered as non-SPA");
 
   // clear ajaxEvents buffer
@@ -228,40 +206,24 @@ test("prepareHarvest correctly serializes an AjaxRequest events payload", functi
 
   decodedEvents.forEach((payload) => {
     payload.forEach((event) => {
-      t.equal(
-        event.children.length,
-        expectedCustomAttrCount,
-        "ajax event has expected number of custom attributes"
-      );
+      t.equal(event.children.length, expectedCustomAttrCount, "ajax event has expected number of custom attributes");
 
       // validate custom attribute values
       event.children.forEach((attribute) => {
         switch (attribute.type) {
           case "stringAttribute":
           case "doubleAttribute":
-            t.ok(
-              expectedCustomAttributes[attribute.key] === attribute.value,
-              "string & num custom attributes encoded"
-            );
+            t.ok(expectedCustomAttributes[attribute.key] === attribute.value, "string & num custom attributes encoded");
             break;
           case "trueAttribute":
-            t.ok(
-              expectedCustomAttributes[attribute.key] === true,
-              "true custom attribute encoded"
-            );
+            t.ok(expectedCustomAttributes[attribute.key] === true, "true custom attribute encoded");
             break;
           case "falseAttribute":
-            t.ok(
-              expectedCustomAttributes[attribute.key] === false,
-              "false custom attribute encoded"
-            );
+            t.ok(expectedCustomAttributes[attribute.key] === false, "false custom attribute encoded");
             break;
           case "nullAttribute":
             // undefined is treated as null in querypack
-            t.ok(
-              expectedCustomAttributes[attribute.key] === undefined,
-              "undefined custom attributes encoded"
-            );
+            t.ok(expectedCustomAttributes[attribute.key] === undefined, "undefined custom attributes encoded");
             break;
           default:
             t.fail("unexpected custom attribute type");
@@ -344,15 +306,11 @@ test("prepareHarvest correctly serializes a very large AjaxRequest events payloa
   // and that each list item is smaller than the limit
   t.ok(
     decodedEvents.length > 1,
-    "Large Payload of AJAX Events are broken into multiple chunks (" +
-      decodedEvents.length +
-      ")"
+    "Large Payload of AJAX Events are broken into multiple chunks (" + decodedEvents.length + ")"
   );
   t.ok(
     serializedPayload.every((sp) => !exceedsSizeLimit(sp, maxPayloadSize)),
-    "All AJAX chunks are less than the maxPayloadSize property (" +
-      maxPayloadSize +
-      ")"
+    "All AJAX chunks are less than the maxPayloadSize property (" + maxPayloadSize + ")"
   );
 
   decodedEvents.forEach((payload, idx) => {
@@ -362,9 +320,7 @@ test("prepareHarvest correctly serializes a very large AjaxRequest events payloa
           switch (attribute.type) {
             case "stringAttribute":
             case "doubleAttribute":
-              return (
-                expectedCustomAttributes[attribute.key] === attribute.value
-              );
+              return expectedCustomAttributes[attribute.key] === attribute.value;
             case "trueAttribute":
               return expectedCustomAttributes[attribute.key] === true;
             case "falseAttribute":
@@ -375,9 +331,7 @@ test("prepareHarvest correctly serializes a very large AjaxRequest events payloa
               return false;
           }
         }),
-        "Custom attributes are accounted for in chunked AJAX payload (" +
-          idx +
-          ")"
+        "Custom attributes are accounted for in chunked AJAX payload (" + idx + ")"
       );
     });
   });
@@ -451,10 +405,7 @@ test("prepareHarvest correctly exits if maxPayload is too small", function (t) {
 
   // we just want to check that the list of AJAX events to be sent contains multiple items because it exceeded the allowed byte limit,
   // and that each list item is smaller than the limit
-  t.ok(
-    serializedPayload.length === 0,
-    "Payload of AJAX Events that are each too small for limit will be dropped"
-  );
+  t.ok(serializedPayload.length === 0, "Payload of AJAX Events that are each too small for limit will be dropped");
 
   // clear ajaxEventsBuffer
   prepareHarvest();

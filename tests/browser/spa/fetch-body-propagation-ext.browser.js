@@ -17,9 +17,7 @@ jil.browserTest("spa single fetch with formData", function (t) {
         // Request.formData() throws an error in Chrome (starting in 60), but not in Firefox
         // Firefox has had this feature longer, allowing the test to pass in case this is
         // a bug in Chrome and the behavior changes in the future
-        t.comment(
-          "Request.formData errored, skipping test. The error was: " + err
-        );
+        t.comment("Request.formData errored, skipping test. The error was: " + err);
         t.ok(true, "since there must be at least one assertion");
         t.end();
       }
@@ -71,14 +69,8 @@ jil.browserTest("spa single fetch with formData", function (t) {
     }
 
     function afterInteractionDone(interaction) {
-      t.ok(
-        interaction.root.end,
-        "interaction should be finished and have an end time"
-      );
-      t.notok(
-        helpers.currentNodeId(),
-        "interaction should be null outside of async chain"
-      );
+      t.ok(interaction.root.end, "interaction should be finished and have an end time");
+      t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
       validator.validate(t, interaction);
       t.end();
     }

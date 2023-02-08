@@ -16,8 +16,7 @@ module.exports = function apply(b, opts) {
   b.pipeline.get("label").push(
     through.obj(function (row, enc, next) {
       for (var key in row.deps) {
-        if (row.deps[key] && row.deps[key].toString() === key.toString())
-          delete row.deps[key];
+        if (row.deps[key] && row.deps[key].toString() === key.toString()) delete row.deps[key];
       }
 
       this.push(row);

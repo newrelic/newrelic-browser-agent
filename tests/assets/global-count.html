@@ -17,14 +17,7 @@
     </ul>
     <script>
       // Some globals aren't detected beforehand
-      var preGlobals = [
-        "XMLHttpRequest",
-        "MutationObserver",
-        "onerror",
-        "getInterface",
-        "constructor",
-        "Worker",
-      ];
+      var preGlobals = ["XMLHttpRequest", "MutationObserver", "onerror", "getInterface", "constructor", "Worker"];
       // *cli 10/22 - added Worker to preGlobals, caused issues specifically for Safari v12, 13, 14 in "global-count.test.js"
       var postGlobals = [];
       var added = [];
@@ -89,8 +82,7 @@
 
       // For old IE: add any single letter global variables, most likely
       // thing to leak after minification.
-      for (testVarI in mangledVars)
-        if (window[testVarI] !== undefined) added.push(testVarI);
+      for (testVarI in mangledVars) if (window[testVarI] !== undefined) added.push(testVarI);
     </script>
   </body>
 </html>

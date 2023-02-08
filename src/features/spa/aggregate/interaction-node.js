@@ -33,12 +33,7 @@ var InteractionNodePrototype = InteractionNode.prototype;
  *                          for this node to complete. This is used when the creation of
  *                          the node and its start happen at different times (e.g. XHR).
  */
-InteractionNodePrototype.child = function child(
-  type,
-  timestamp,
-  name,
-  dontWait
-) {
+InteractionNodePrototype.child = function child(type, timestamp, name, dontWait) {
   var interaction = this.interaction;
   if (interaction.end || interaction.nodes >= MAX_NODES) return null;
 
@@ -53,10 +48,7 @@ InteractionNodePrototype.child = function child(
   return node;
 };
 
-InteractionNodePrototype.callback = function addCallbackTime(
-  exclusiveTime,
-  end
-) {
+InteractionNodePrototype.callback = function addCallbackTime(exclusiveTime, end) {
   var node = this;
 
   node.jsTime += exclusiveTime;

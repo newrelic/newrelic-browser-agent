@@ -53,23 +53,11 @@ tape("maintains test numbering when the harness is paused", (t) => {
     const tapLines = data.split("\n");
 
     t.ok(tapLines[1] === "# first fake test", "first test name in output");
-    t.ok(
-      tapLines[2] === "ok 1 should be truthy",
-      "first assertion is numbered correctly"
-    );
-    t.ok(
-      tapLines[3] === "ok 2 should be truthy",
-      "second assertion is numbered correctly"
-    );
+    t.ok(tapLines[2] === "ok 1 should be truthy", "first assertion is numbered correctly");
+    t.ok(tapLines[3] === "ok 2 should be truthy", "second assertion is numbered correctly");
     t.ok(tapLines[4] === "# third fake test", "third test name in output");
-    t.ok(
-      tapLines[5] === "ok 3 should be truthy",
-      "first assertion is numbered correctly"
-    );
-    t.ok(
-      tapLines[6] === "ok 4 should be truthy",
-      "second assertion is numbered correctly"
-    );
+    t.ok(tapLines[5] === "ok 3 should be truthy", "first assertion is numbered correctly");
+    t.ok(tapLines[6] === "ok 4 should be truthy", "second assertion is numbered correctly");
 
     t.end();
   });

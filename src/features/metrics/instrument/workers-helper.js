@@ -20,8 +20,7 @@ let origWorker, origSharedWorker, origServiceWorkerCreate;
 function resetSupportability() {
   if (origWorker) globalScope.Worker = origWorker; // Worker was changed by this module
   if (origSharedWorker) globalScope.SharedWorker = origSharedWorker;
-  if (origServiceWorkerCreate)
-    globalScope.navigator.serviceWorker.register = origServiceWorkerCreate;
+  if (origServiceWorkerCreate) globalScope.navigator.serviceWorker.register = origServiceWorkerCreate;
   origWorker = origSharedWorker = origServiceWorkerCreate = undefined;
 }
 
@@ -51,10 +50,7 @@ function insertSupportMetrics(report) {
   } else {
     origSharedWorker = SharedWorker;
     try {
-      globalScope.SharedWorker = extendWorkerConstructor(
-        origSharedWorker,
-        "Shared"
-      );
+      globalScope.SharedWorker = extendWorkerConstructor(origSharedWorker, "Shared");
     } catch (e) {
       handleInsertionError(e, "Shared");
     }
@@ -64,9 +60,7 @@ function insertSupportMetrics(report) {
   } else {
     origServiceWorkerCreate = navigator.serviceWorker.register;
     try {
-      globalScope.navigator.serviceWorker.register = extendServiceCreation(
-        origServiceWorkerCreate
-      );
+      globalScope.navigator.serviceWorker.register = extendServiceCreation(origServiceWorkerCreate);
     } catch (e) {
       handleInsertionError(e, "Service");
     }

@@ -16,30 +16,26 @@ const init = {
   },
 };
 
-testDriver.test(
-  `Loading RequireJS does not cause errors.`,
-  matcher,
-  function (t, browser, router) {
-    t.plan(1);
+testDriver.test(`Loading RequireJS does not cause errors.`, matcher, function (t, browser, router) {
+  t.plan(1);
 
-    let rumPromise = router.expectRum();
-    let assetUrl = router.assetURL("requirejs-compatibility.html", {
-      init: {
-        page_view_timing: {
-          enabled: false,
-        },
+  let rumPromise = router.expectRum();
+  let assetUrl = router.assetURL("requirejs-compatibility.html", {
+    init: {
+      page_view_timing: {
+        enabled: false,
       },
-    });
-    let loadPromise = browser.get(assetUrl);
+    },
+  });
+  let loadPromise = browser.get(assetUrl);
 
-    Promise.all([rumPromise, loadPromise])
-      .then(([response]) => {
-        t.pass();
-        t.end();
-      })
-      .catch((err) => {
-        t.error(err);
-        t.end();
-      });
-  }
-);
+  Promise.all([rumPromise, loadPromise])
+    .then(([response]) => {
+      t.pass();
+      t.end();
+    })
+    .catch((err) => {
+      t.error(err);
+      t.end();
+    });
+});

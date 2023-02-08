@@ -25,18 +25,10 @@ function validatePageActionData(t, pageActionData, query) {
 
   t.ok(
     relativeHarvestTime > eventTimeSinceLoad,
-    "harvest time (" +
-      relativeHarvestTime +
-      ") should always be bigger than event time (" +
-      eventTimeSinceLoad +
-      ")"
+    "harvest time (" + relativeHarvestTime + ") should always be bigger than event time (" + eventTimeSinceLoad + ")"
   );
   t.ok(
     estimatedEventTime < receiptTime,
-    "estimated event time (" +
-      estimatedEventTime +
-      ") < receipt time (" +
-      receiptTime +
-      ")"
+    "estimated event time (" + estimatedEventTime + ") < receipt time (" + receiptTime + ")"
   );
 }

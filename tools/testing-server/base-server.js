@@ -15,12 +15,8 @@ let sslOptions = {};
 
 class BaseServer {
   constructor() {
-    this.server = http.createServer((req, res) =>
-      this.handleReq(req, res, false)
-    );
-    this.sslServer = https.createServer(sslOptions, (req, res) =>
-      this.handleReq(req, res, true)
-    );
+    this.server = http.createServer((req, res) => this.handleReq(req, res, false));
+    this.sslServer = https.createServer(sslOptions, (req, res) => this.handleReq(req, res, true));
 
     enableDestroy(this.server);
     enableDestroy(this.sslServer);
@@ -48,10 +44,7 @@ class BaseServer {
 
     if (req.method === "OPTIONS") {
       res.setHeader("access-control-allow-origin", "*");
-      res.setHeader(
-        "access-control-allow-headers",
-        "newrelic, traceparent, tracestate"
-      );
+      res.setHeader("access-control-allow-headers", "newrelic, traceparent, tracestate");
       res.end();
       return;
     }

@@ -40,14 +40,8 @@ jil.browserTest("callback timing", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }
@@ -89,14 +83,8 @@ jil.browserTest("callback timing multiple callbacks", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }
@@ -130,14 +118,8 @@ jil.browserTest("callback timing microtasks", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }

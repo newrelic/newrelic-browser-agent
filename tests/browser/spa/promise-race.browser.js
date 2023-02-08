@@ -44,10 +44,7 @@ jil.browserTest("Promise.race", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.ok(interaction.root.end, "interaction should be finished");
     validator.validate(t, interaction);
     t.end();
@@ -119,11 +116,7 @@ jil.browserTest("Promise.race async accept", function (t) {
             newrelic.interaction().createTracer("timer", function () {
               promise.then(function (val) {
                 t.equal(val, 123, "should get accept value in delayed then");
-                t.equal(
-                  helpers.currentNodeId(),
-                  idOnAccept,
-                  "should have same node id as accept"
-                );
+                t.equal(helpers.currentNodeId(), idOnAccept, "should have same node id as accept");
                 cb();
               });
             }),
@@ -138,10 +131,7 @@ jil.browserTest("Promise.race async accept", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.ok(interaction.root.end, "interaction should be finished");
     validator.validate(t, interaction);
     t.end();

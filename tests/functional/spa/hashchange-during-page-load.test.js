@@ -26,13 +26,8 @@ testDriver.test("", supported, function (t, browser, router) {
     .expectEvents()
     .then((eventsResult) => {
       let { body, query } = eventsResult;
-      let interactionTree = querypack.decode(
-        body && body.length ? body : query.e
-      )[0];
-      t.fail(
-        "got second /events submission with interaction of type " +
-          interactionTree.trigger
-      );
+      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
+      t.fail("got second /events submission with interaction of type " + interactionTree.trigger);
     })
     .catch(() => {
       t.ok("did not get second /events submission");
@@ -41,14 +36,8 @@ testDriver.test("", supported, function (t, browser, router) {
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
       let { body, query } = eventsResult;
-      let interactionTree = querypack.decode(
-        body && body.length ? body : query.e
-      )[0];
-      t.equal(
-        interactionTree.trigger,
-        "initialPageLoad",
-        "initial page load should be tracked with an interaction"
-      );
+      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
+      t.equal(interactionTree.trigger, "initialPageLoad", "initial page load should be tracked with an interaction");
     })
     .catch(fail);
 

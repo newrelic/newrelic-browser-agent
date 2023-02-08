@@ -3,12 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {
-  nullable,
-  numeric,
-  getAddStringContext,
-  addCustomAttributes,
-} from "../../../common/serialize/bel-serializer";
+import { nullable, numeric, getAddStringContext, addCustomAttributes } from "../../../common/serialize/bel-serializer";
 import { now } from "../../../common/timing/now";
 import { mapOwn } from "../../../common/util/map-own";
 import { HarvestScheduler } from "../../../common/harvest/harvest-scheduler";
@@ -38,27 +33,15 @@ export class Aggregate extends AggregateBase {
     this.curSessEndRecorded = false;
 
     try {
-      this.clsSupported =
-        PerformanceObserver.supportedEntryTypes.includes("layout-shift");
+      this.clsSupported = PerformanceObserver.supportedEntryTypes.includes("layout-shift");
     } catch (e) {
       // do nothing
     }
 
-    var maxLCPTimeSeconds =
-      getConfigurationValue(
-        this.agentIdentifier,
-        "page_view_timing.maxLCPTimeSeconds"
-      ) || 60;
+    var maxLCPTimeSeconds = getConfigurationValue(this.agentIdentifier, "page_view_timing.maxLCPTimeSeconds") || 60;
     var initialHarvestSeconds =
-      getConfigurationValue(
-        this.agentIdentifier,
-        "page_view_timing.initialHarvestSeconds"
-      ) || 10;
-    var harvestTimeSeconds =
-      getConfigurationValue(
-        this.agentIdentifier,
-        "page_view_timing.harvestTimeSeconds"
-      ) || 30;
+      getConfigurationValue(this.agentIdentifier, "page_view_timing.initialHarvestSeconds") || 10;
+    var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, "page_view_timing.harvestTimeSeconds") || 30;
 
     this.scheduler = new HarvestScheduler(
       "events",
@@ -70,36 +53,11 @@ export class Aggregate extends AggregateBase {
       this
     );
 
-    registerHandler(
-      "timing",
-      (...args) => this.processTiming(...args),
-      this.featureName,
-      this.ee
-    );
-    registerHandler(
-      "lcp",
-      (...args) => this.updateLatestLcp(...args),
-      this.featureName,
-      this.ee
-    );
-    registerHandler(
-      "cls",
-      (...args) => this.updateClsScore(...args),
-      this.featureName,
-      this.ee
-    );
-    registerHandler(
-      "docHidden",
-      (msTimestamp) => this.endCurrentSession(msTimestamp),
-      this.featureName,
-      this.ee
-    );
-    registerHandler(
-      "winPagehide",
-      (msTimestamp) => this.recordPageUnload(msTimestamp),
-      this.featureName,
-      this.ee
-    );
+    registerHandler("timing", (...args) => this.processTiming(...args), this.featureName, this.ee);
+    registerHandler("lcp", (...args) => this.updateLatestLcp(...args), this.featureName, this.ee);
+    registerHandler("cls", (...args) => this.updateClsScore(...args), this.featureName, this.ee);
+    registerHandler("docHidden", (msTimestamp) => this.endCurrentSession(msTimestamp), this.featureName, this.ee);
+    registerHandler("winPagehide", (msTimestamp) => this.recordPageUnload(msTimestamp), this.featureName, this.ee);
 
     // After 1 minute has passed, record LCP value if no user interaction has occurred first
     setTimeout(() => {
@@ -109,8 +67,7 @@ export class Aggregate extends AggregateBase {
 
     // send initial data sooner, then start regular
     this.ee.on(`drain-${this.featureName}`, () => {
-      if (!this.blocked)
-        this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds);
+      if (!this.blocked) this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds);
     });
 
     drain(this.agentIdentifier, this.featureName);
@@ -128,13 +85,10 @@ export class Aggregate extends AggregateBase {
       };
 
       if (networkInfo) {
-        if (networkInfo["net-type"])
-          attrs["net-type"] = networkInfo["net-type"];
-        if (networkInfo["net-etype"])
-          attrs["net-etype"] = networkInfo["net-etype"];
+        if (networkInfo["net-type"]) attrs["net-type"] = networkInfo["net-type"];
+        if (networkInfo["net-etype"]) attrs["net-etype"] = networkInfo["net-etype"];
         if (networkInfo["net-rtt"]) attrs["net-rtt"] = networkInfo["net-rtt"];
-        if (networkInfo["net-dlink"])
-          attrs["net-dlink"] = networkInfo["net-dlink"];
+        if (networkInfo["net-dlink"]) attrs["net-dlink"] = networkInfo["net-dlink"];
       }
 
       if (lcpEntry.url) {
@@ -181,10 +135,7 @@ export class Aggregate extends AggregateBase {
     }
 
     this.clsSession.value += clsEntry.value;
-    this.clsSession.lastEntryTime = Math.max(
-      this.clsSession.lastEntryTime,
-      clsEntry.startTime
-    );
+    this.clsSession.lastEntryTime = Math.max(this.clsSession.lastEntryTime, clsEntry.startTime);
 
     // only keep the biggest CLS we've observed
     if (this.cls < this.clsSession.value) this.cls = this.clsSession.value;
@@ -225,13 +176,7 @@ export class Aggregate extends AggregateBase {
       attrs: attrs,
     });
 
-    handle(
-      "pvtAdded",
-      [name, value, attrs],
-      undefined,
-      FEATURE_NAMES.sessionTrace,
-      this.ee
-    );
+    handle("pvtAdded", [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee);
   }
 
   processTiming(name, value, attrs) {

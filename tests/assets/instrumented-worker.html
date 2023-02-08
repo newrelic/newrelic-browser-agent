@@ -28,20 +28,14 @@
         console.warn(e);
       }
       try {
-        let worker1 = self.navigator.serviceWorker.register(
-          "./worker-scripts/simple.js"
-        ); // This script will probably cause an error
-        let worker2 = self.navigator.serviceWorker.register(
-          "./worker-scripts/simple.js",
-          { type: "module" }
-        );
+        let worker1 = self.navigator.serviceWorker.register("./worker-scripts/simple.js"); // This script will probably cause an error
+        let worker2 = self.navigator.serviceWorker.register("./worker-scripts/simple.js", { type: "module" });
       } catch (e) {
         console.warn(e);
       }
     </script>
   </head>
   <body>
-    this is a generic page that is instrumented by the JS agent with spawned
-    worker
+    this is a generic page that is instrumented by the JS agent with spawned worker
   </body>
 </html>

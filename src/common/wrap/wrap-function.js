@@ -84,13 +84,7 @@ export function createWrapperWithEmitter(emitter, always) {
       // so we don't add extra properties with undefined values.
       if (notWrappable(fn)) continue;
 
-      obj[method] = wrapFn(
-        fn,
-        prependMethodPrefix ? method + prefix : prefix,
-        getContext,
-        method,
-        bubble
-      );
+      obj[method] = wrapFn(fn, prependMethodPrefix ? method + prefix : prefix, getContext, method, bubble);
     }
   }
 

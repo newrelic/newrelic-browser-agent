@@ -6,12 +6,7 @@
 import test from "../../../tools/jil/browser-test";
 import { parseUrl } from "../../../src/common/url/parse-url";
 
-if (
-  window.XMLHttpRequest &&
-  XMLHttpRequest.prototype &&
-  XMLHttpRequest.prototype.addEventListener
-)
-  xhr_tests();
+if (window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener) xhr_tests();
 else {
   test("skipping because browser does not have xhr and addEventListener", function (t) {
     t.skip("no tests for this browser");
@@ -76,13 +71,7 @@ function xhr_tests() {
         },
       },
       {
-        url:
-          location.protocol +
-          "//" +
-          location.hostname +
-          ":" +
-          location.port +
-          "/path/name?qs=5&a=b",
+        url: location.protocol + "//" + location.hostname + ":" + location.port + "/path/name?qs=5&a=b",
         results: {
           hostname: location.hostname,
           pathname: "/path/name",
@@ -111,11 +100,7 @@ function xhr_tests() {
         // https://connect.microsoft.com/IE/feedbackdetail/view/2011466/accessing-properties-of-an-htmlanchorelement-with-an-embedded-username-results-in-a-security-error
         t.skip("skipping URL parsing test with credentials in URL on MS Edge");
       } else {
-        t.deepEqual(
-          parseUrl(example.url),
-          example.results,
-          "parsed url " + example.url + " correctly"
-        );
+        t.deepEqual(parseUrl(example.url), example.results, "parsed url " + example.url + " correctly");
       }
     }
 

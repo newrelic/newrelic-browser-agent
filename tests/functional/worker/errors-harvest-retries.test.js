@@ -53,16 +53,8 @@ function errorRetryTest(type, matcher) {
           let actualError = actualErrors[0];
           t.equal(actualError.metrics.count, 1, "Should have seen 1 error");
           t.ok(actualError.metrics.time.t > 0, "Should have a valid timestamp");
-          t.equal(
-            actualError.params.exceptionClass,
-            "Error",
-            "Should be Error class"
-          );
-          t.equal(
-            actualError.params.message,
-            "test",
-            "Should have correct message"
-          );
+          t.equal(actualError.params.exceptionClass, "Error", "Should be Error class");
+          t.equal(actualError.params.message, "test", "Should have correct message");
           t.ok(actualError.params.stack_trace, "Should have a stack trace");
           t.end();
         })

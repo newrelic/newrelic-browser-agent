@@ -10,9 +10,7 @@ const setupData = setup();
 const { baseEE, agentIdentifier, aggregator } = setupData;
 
 jil.browserTest("spa buffers all expected events", function (t) {
-  var {
-    registerHandler,
-  } = require("../../../src/common/event-emitter/register-handler.js");
+  var { registerHandler } = require("../../../src/common/event-emitter/register-handler.js");
   var { drain } = require("../../../src/common/drain/drain");
 
   var plan = 0;
@@ -28,13 +26,7 @@ jil.browserTest("spa buffers all expected events", function (t) {
     fetch: ["fetch-start", "fetch-done"],
     history: ["newURL"],
     mutation: ["fn-start"],
-    promise: [
-      "propagate",
-      "cb-start",
-      "cb-end",
-      "executor-err",
-      "resolve-start",
-    ],
+    promise: ["propagate", "cb-start", "cb-end", "executor-err", "resolve-start"],
     tracer: ["fn-start", "no-fn-start"],
   };
 

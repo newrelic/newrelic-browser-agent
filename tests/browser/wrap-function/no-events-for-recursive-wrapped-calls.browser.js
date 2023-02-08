@@ -110,17 +110,9 @@ test("calls to other wrapped functions from start/end event callbacks with diffe
 
   t.equal(fooCallCount, 1, "foo should be called once");
   t.equal(barCallCount, 3, "bar should be called thrice");
-  t.equal(
-    fooStartCount,
-    1,
-    "foo-start event emitted " + fooStartCount + " times"
-  );
+  t.equal(fooStartCount, 1, "foo-start event emitted " + fooStartCount + " times");
   t.equal(fooEndCount, 1, "foo-end event emitted " + fooEndCount + " times");
-  t.equal(
-    barStartCount,
-    1,
-    "bar-start event emitted " + barStartCount + " times"
-  );
+  t.equal(barStartCount, 1, "bar-start event emitted " + barStartCount + " times");
   t.equal(barEndCount, 1, "bar-end event emitted " + barEndCount + " times");
   t.end();
 
@@ -158,16 +150,8 @@ test("always flag allows nested calls", function (t) {
 
   t.equal(fooCallCount, 2, "foo should be called twice");
   t.equal(barCallCount, 3, "bar should be called thrice");
-  t.equal(
-    fooStartCount,
-    2,
-    "foo-start event emitted " + fooStartCount + " times"
-  );
-  t.equal(
-    barStartCount,
-    1,
-    "bar-start event emitted " + barStartCount + " times"
-  );
+  t.equal(fooStartCount, 2, "foo-start event emitted " + fooStartCount + " times");
+  t.equal(barStartCount, 1, "bar-start event emitted " + barStartCount + " times");
   t.end();
 
   function foo() {

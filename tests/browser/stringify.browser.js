@@ -27,18 +27,13 @@ test("fake stringify", function (t) {
   t.equal(stringify(obj2), '{"other":222}', "obj w/ prototype");
   t.equal(stringify(F), undefined, "function");
   t.ok(
-    stringify(obj3) ===
-      '{"stringified":"{\\"a\\":123,\\"c\\":\\"b\\",\\"f\\":\\"asdf\\",\\"n\\":null}"}',
+    stringify(obj3) === '{"stringified":"{\\"a\\":123,\\"c\\":\\"b\\",\\"f\\":\\"asdf\\",\\"n\\":null}"}',
     "stringified object"
   );
 
   var a = {};
   a.a = a;
-  t.equal(
-    stringify(a),
-    undefined,
-    "Stringifying a circular object returns empty string"
-  );
+  t.equal(stringify(a), undefined, "Stringifying a circular object returns empty string");
 
   Array.prototype.toJSON = function () {
     return "bad!";
@@ -61,24 +56,15 @@ test("fake stringify", function (t) {
 
   t.equal(stringify([1, 2, 3]), "[1,2,3]", "array detection w/o toString");
 
-  t.equal(
-    stringify(arr),
-    '[0,1,"asdf",null,null,"weee"]',
-    "Array with bad toJSON"
-  );
+  t.equal(stringify(arr), '[0,1,"asdf",null,null,"weee"]', "Array with bad toJSON");
   t.equal(stringify(undefined), undefined, "undefined with bad toJSON");
   t.equal(stringify(null), "null", "null with bad toJSON");
   t.equal(stringify(123), "123", "number with bad toJSON");
-  t.equal(
-    stringify(obj),
-    '{"a":123,"c":"b","f":"asdf","n":null}',
-    "obj with bad toJSON"
-  );
+  t.equal(stringify(obj), '{"a":123,"c":"b","f":"asdf","n":null}', "obj with bad toJSON");
   t.equal(stringify(obj2), '{"other":222}', "obj w/ prototype with bad toJSON");
   t.equal(stringify(F), undefined, "function with bad toJSON");
   t.ok(
-    stringify(obj3) ===
-      '{"stringified":"{\\"a\\":123,\\"c\\":\\"b\\",\\"f\\":\\"asdf\\",\\"n\\":null}"}',
+    stringify(obj3) === '{"stringified":"{\\"a\\":123,\\"c\\":\\"b\\",\\"f\\":\\"asdf\\",\\"n\\":null}"}',
     "stringified object with bad toJSON"
   );
 

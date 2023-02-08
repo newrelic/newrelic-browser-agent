@@ -19,10 +19,7 @@
       }
 
       function patchAddEventListener(prototype) {
-        if (
-          prototype.hasOwnProperty &&
-          prototype.hasOwnProperty("addEventListener")
-        ) {
+        if (prototype.hasOwnProperty && prototype.hasOwnProperty("addEventListener")) {
           var orig = prototype.addEventListener;
           prototype.addEventListener = function (event, callback, bubble) {
             orig.call(this, event, wrap(callback), bubble);
@@ -46,7 +43,7 @@
     </script>
   </head>
   <body>
-    The inline JS on this page emulates 3rd-party code which monkey-patches the
-    EventTarget.prototype.addEventListener after our patching.
+    The inline JS on this page emulates 3rd-party code which monkey-patches the EventTarget.prototype.addEventListener
+    after our patching.
   </body>
 </html>

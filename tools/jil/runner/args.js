@@ -19,33 +19,21 @@ module.exports = yargs
   .string("b")
   .alias("b", "browsers")
   .requiresArg("b")
-  .describe(
-    "b",
-    "a comma seperated list of browsers with an optional semver range. (eg. chrome@>39)"
-  )
+  .describe("b", "a comma seperated list of browsers with an optional semver range. (eg. chrome@>39)")
 
   .string("concurrent")
   .describe("concurrent", "number of browser sessions to run concurrently")
 
   .string("session-test-threshold")
-  .describe(
-    "session-test-threshold",
-    "minimum number of tests per session (when running more than one)"
-  )
+  .describe("session-test-threshold", "minimum number of tests per session (when running more than one)")
 
   .string("H")
   .alias("H", "host")
-  .describe(
-    "H",
-    "hostname to use for communicating with the fake router and asset server"
-  )
+  .describe("H", "hostname to use for communicating with the fake router and asset server")
   .default("H", "bam-test-1.nr-local.net")
 
   .string("selenium-server")
-  .describe(
-    "selenium-server",
-    'URL of the Selenium server to run tests against, e.g. "localhost:4444"'
-  )
+  .describe("selenium-server", 'URL of the Selenium server to run tests against, e.g. "localhost:4444"')
 
   .boolean("r")
   .alias("r", "retry")
@@ -66,10 +54,7 @@ module.exports = yargs
 
   .boolean("T")
   .alias("T", "timestamps")
-  .describe(
-    "T",
-    "include timestamps in assertions (only for merged, ci formatters)"
-  )
+  .describe("T", "include timestamps in assertions (only for merged, ci formatters)")
   .default("T", false)
 
   .alias("t", "timeout")

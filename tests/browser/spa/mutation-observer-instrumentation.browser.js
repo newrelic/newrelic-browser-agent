@@ -48,10 +48,7 @@ jil.browserTest("basic MutationObserver instrumentation", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.ok(interaction.root.end, "interaction should be finished");
     validator.validate(t, interaction);
     t.end();

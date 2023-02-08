@@ -11,10 +11,7 @@ function loadBrowser(testDriver, file, name, spec) {
   testDriver.test(name || path, spec || null, (t, browser, router) => {
     browser
       .safeGet(router.urlForBrowserTest(file))
-      .waitFor(
-        asserters.jsCondition("window._jilUnitDone", true),
-        testDriver.timeout
-      )
+      .waitFor(asserters.jsCondition("window._jilUnitDone", true), testDriver.timeout)
       .safeEval('$("#tap").text()')
       .then((text) => {
         parse(t, text, path, browser.stream);

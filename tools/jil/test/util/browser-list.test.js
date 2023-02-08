@@ -7,8 +7,7 @@ var tape = require("tape");
 var browsers = require("../../util/browsers-supported.json");
 var browserList = require("../../util/browser-list");
 var BrowserSpec = require("../../util/browser-list").BrowserSpec;
-const latestVersStringRe =
-  require("../../util/browser-list").latestVersStringRe;
+const latestVersStringRe = require("../../util/browser-list").latestVersStringRe;
 
 tape("Regex for latest versions works", function (t) {
   t.ok(latestVersStringRe.test("latest"), "latest -- should pass");
@@ -42,10 +41,7 @@ tape("returns only browsers defined in config file", (t) => {
 tape("`*` returns all non-beta versions", (t) => {
   // note that beta browsers are excluded, since they are allowed to fail
   // unreleased should be tested separately
-  t.ok(
-    browsers.chrome.find((b) => b.version === "beta") != null,
-    "chrome beta is defined"
-  );
+  t.ok(browsers.chrome.find((b) => b.version === "beta") != null, "chrome beta is defined");
   var browserSpecs = browserList("chrome@*");
   t.ok(browserSpecs.length === browsers.chrome.length - 1, "got all browsers");
   t.end();
@@ -96,16 +92,13 @@ tape("latest returns labeled `latest` and -1 if defined", function (t) {
   t.end();
 });
 
-tape(
-  "latest returns biggest version if `latest` and previous -X labels not defined",
-  function (t) {
-    var browserSpecs = browserList("ie@latest");
-    t.equal(browserSpecs.length, 1, "got one");
-    t.equal(browserSpecs[0].version, "11", "got the right one (ie-11)");
+tape("latest returns biggest version if `latest` and previous -X labels not defined", function (t) {
+  var browserSpecs = browserList("ie@latest");
+  t.equal(browserSpecs.length, 1, "got one");
+  t.equal(browserSpecs[0].version, "11", "got the right one (ie-11)");
 
-    browserSpecs = browserList("chrome@latest-9");
-    t.equal(browserSpecs.length, 1, "got one");
-    t.equal(browserSpecs[0].version, "beta", "got the right one (chrome-beta)");
-    t.end();
-  }
-);
+  browserSpecs = browserList("chrome@latest-9");
+  t.equal(browserSpecs.length, 1, "got one");
+  t.equal(browserSpecs[0].version, "beta", "got the right one (chrome-beta)");
+  t.end();
+});

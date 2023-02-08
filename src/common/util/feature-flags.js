@@ -19,8 +19,7 @@ export function activateFeatures(flags, agentIdentifier) {
   var sharedEE = ee.get(agentIdentifier);
   if (!(flags && typeof flags === "object")) return;
   mapOwn(flags, function (flag, val) {
-    if (!val)
-      return handle("block-" + flag, [], undefined, bucketMap[flag], sharedEE);
+    if (!val) return handle("block-" + flag, [], undefined, bucketMap[flag], sharedEE);
     if (!val || activatedFeatures[flag]) return;
     handle("feat-" + flag, [], undefined, bucketMap[flag], sharedEE);
     activatedFeatures[flag] = true;

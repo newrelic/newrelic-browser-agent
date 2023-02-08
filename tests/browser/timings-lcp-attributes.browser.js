@@ -9,9 +9,7 @@ const { setup } = require("./utils/setup");
 const { drain } = require("../../src/common/drain/drain");
 const { handle } = require("../../src/common/event-emitter/handle");
 const { setConfiguration } = require("../../src/common/config/state/init");
-const {
-  Aggregate: PvtAggregate,
-} = require("../../src/features/page_view_timing/aggregate/index");
+const { Aggregate: PvtAggregate } = require("../../src/features/page_view_timing/aggregate/index");
 const { FEATURE_NAMES } = require("../../src/loaders/features/features");
 
 const { agentIdentifier, aggregator } = setup();
@@ -55,20 +53,10 @@ jil.browserTest("sends expected attributes when available", function (t) {
   };
 
   // simulate LCP observed
-  handle(
-    "lcp",
-    [lcpEntry, networkInfo],
-    undefined,
-    FEATURE_NAMES.pageViewTiming,
-    pvtAgg.ee
-  );
+  handle("lcp", [lcpEntry, networkInfo], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee);
 
   setTimeout(function () {
-    t.equals(
-      pvtAgg.timings.length,
-      1,
-      "there should be only 2 timings (pageHide and unload)"
-    );
+    t.equals(pvtAgg.timings.length, 1, "there should be only 2 timings (pageHide and unload)");
     t.ok(pvtAgg.timings[0].name === "lcp", "lcp should be present");
 
     const attributes = pvtAgg.timings[0].attrs;
@@ -76,26 +64,10 @@ jil.browserTest("sends expected attributes when available", function (t) {
     t.equal(attributes.size, 123, "size should be present");
     t.equal(attributes.elUrl, "http://foo.com/a/b", "url should be present");
     t.equal(attributes.elTag, "IMG", "element.tagName should be present");
-    t.equal(
-      attributes["net-type"],
-      networkInfo["net-type"],
-      "network type should be present"
-    );
-    t.equal(
-      attributes["net-etype"],
-      networkInfo["net-etype"],
-      "network effectiveType should be present"
-    );
-    t.equal(
-      attributes["net-rtt"],
-      networkInfo["net-rtt"],
-      "network rtt should be present"
-    );
-    t.equal(
-      attributes["net-dlink"],
-      networkInfo["net-dlink"],
-      "network downlink should be present"
-    );
+    t.equal(attributes["net-type"], networkInfo["net-type"], "network type should be present");
+    t.equal(attributes["net-etype"], networkInfo["net-etype"], "network effectiveType should be present");
+    t.equal(attributes["net-rtt"], networkInfo["net-rtt"], "network rtt should be present");
+    t.equal(attributes["net-dlink"], networkInfo["net-dlink"], "network downlink should be present");
 
     t.end();
   }, 1000);

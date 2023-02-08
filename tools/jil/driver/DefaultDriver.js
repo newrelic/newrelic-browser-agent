@@ -44,9 +44,7 @@ class DefaultDriver extends Driver {
 
     function onBrowserFinished(err, testRun) {
       if (err) {
-        driver.output.log(
-          `# got error while running tests (${testRun.browserSpec.toString()})`
-        );
+        driver.output.log(`# got error while running tests (${testRun.browserSpec.toString()})`);
         newrelic.noticeError(err);
       }
 

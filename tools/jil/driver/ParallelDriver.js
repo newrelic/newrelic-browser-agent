@@ -119,10 +119,7 @@ class ParallelDriver extends Driver {
       }
 
       function isMobile(env) {
-        return (
-          env.browserSpec.platformName === "ios" ||
-          env.browserSpec.platformName === "android"
-        );
+        return env.browserSpec.platformName === "ios" || env.browserSpec.platformName === "android";
       }
 
       function enoughTests(tests) {
@@ -154,8 +151,7 @@ class ParallelDriver extends Driver {
       var eventData = {
         browserName: browserSpec.desired.browserName,
         browserVersion: browserSpec.desired.version || null,
-        platformName:
-          browserSpec.desired.platform || browserSpec.desired.platformName,
+        platformName: browserSpec.desired.platform || browserSpec.desired.platformName,
         platformVersion: browserSpec.desired.platformVersion || null,
         build: browserSpec.desired.build,
         testName: test.name,
@@ -171,11 +167,7 @@ class ParallelDriver extends Driver {
       } else if (result.retry === numberOfAttempts - 1) {
         if (driver.config.retry) {
           testRun.harness.clear();
-          driver.output.log(
-            `# storing failed test for later retry: ${testRun.browserSpec.toString()} - ${
-              test.name
-            }`
-          );
+          driver.output.log(`# storing failed test for later retry: ${testRun.browserSpec.toString()} - ${test.name}`);
           driver.failedTests.push(new DeviceTest(test, testRun.browserSpec));
         }
         testRun.harness.resume();

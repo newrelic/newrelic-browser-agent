@@ -11,10 +11,7 @@ import { isBrowserScope } from "../util/global-scope";
 // TO DO: this entire file & document.cookie & conditionallySet in harvester are severely outdated and can be scraped
 
 export function conditionallySet(agentIdentifier) {
-  var areCookiesEnabled = getConfigurationValue(
-    agentIdentifier,
-    "privacy.cookies_enabled"
-  );
+  var areCookiesEnabled = getConfigurationValue(agentIdentifier, "privacy.cookies_enabled");
 
   if (navCookie && areCookiesEnabled && isBrowserScope) {
     // eslint-disable-next-line no-undef

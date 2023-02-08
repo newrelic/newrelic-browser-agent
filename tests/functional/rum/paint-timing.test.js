@@ -5,13 +5,9 @@
 
 const testDriver = require("../../../tools/jil/index");
 
-let notSafariWithSeleniumBug = testDriver.Matcher.withFeature(
-  "notSafariWithSeleniumBug"
-);
+let notSafariWithSeleniumBug = testDriver.Matcher.withFeature("notSafariWithSeleniumBug");
 var firstPaint = testDriver.Matcher.withFeature("firstPaint");
-var firstContentfulPaint = testDriver.Matcher.withFeature(
-  "firstContentfulPaint"
-);
+var firstContentfulPaint = testDriver.Matcher.withFeature("firstContentfulPaint");
 
 testDriver.test(
   "First paint for supported browsers",
@@ -28,9 +24,7 @@ testDriver.test(
           const firstPaint = Number(query.fp);
           t.ok(firstPaint > 0, "firstPaint has a positive value");
         } catch (e) {
-          t.fail(
-            "Failed to get paint timings: " + e.message + ", query = " + query
-          );
+          t.fail("Failed to get paint timings: " + e.message + ", query = " + query);
         }
       })
       .catch(fail);
@@ -55,14 +49,9 @@ testDriver.test(
       .then(([{ query }]) => {
         try {
           const firstContentfulPaint = Number(query.fcp);
-          t.ok(
-            firstContentfulPaint > 0,
-            "firstContentfulPaint has a positive value"
-          );
+          t.ok(firstContentfulPaint > 0, "firstContentfulPaint has a positive value");
         } catch (e) {
-          t.fail(
-            "Failed to get paint timings: " + e.message + ", query = " + query
-          );
+          t.fail("Failed to get paint timings: " + e.message + ", query = " + query);
         }
       })
       .catch(fail);
@@ -89,9 +78,7 @@ testDriver.test(
           const firstPaint = query.fp;
           t.ok(firstPaint === undefined, "firstPaint should not exist");
         } catch (e) {
-          t.fail(
-            "Failed to get paint timings: " + e.message + ", query = " + query
-          );
+          t.fail("Failed to get paint timings: " + e.message + ", query = " + query);
         }
       })
       .catch(fail);
@@ -116,14 +103,9 @@ testDriver.test(
       .then(([{ query }]) => {
         try {
           const firstContentfulPaint = query.fcp;
-          t.ok(
-            firstContentfulPaint === undefined,
-            "firstContentfulPaint should not exist"
-          );
+          t.ok(firstContentfulPaint === undefined, "firstContentfulPaint should not exist");
         } catch (e) {
-          t.fail(
-            "Failed to get paint timings: " + e.message + ", query = " + query
-          );
+          t.fail("Failed to get paint timings: " + e.message + ", query = " + query);
         }
       })
       .catch(fail);

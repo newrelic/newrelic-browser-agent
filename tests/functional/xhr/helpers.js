@@ -11,8 +11,7 @@ const condition = (e) => e.type === "ajax" && e.path === "/json";
 function getXhrFromResponse(response, browser) {
   const target = response?.body || response?.query || null;
   if (!target) return null;
-  const parsed =
-    typeof target === "string" ? JSON.parse(target).xhr : target.xhr;
+  const parsed = typeof target === "string" ? JSON.parse(target).xhr : target.xhr;
   return typeof parsed === "string" ? JSON.parse(parsed) : parsed;
 }
 
@@ -148,11 +147,7 @@ function validateTraceContextHeaders(t, headers, config) {
   t.equal(parts[3], config.agentID, "fourth part is set to app/agent ID");
   t.ok(parts[4], "span ID is there");
   t.equal(parts[5], "", "fifth part is empty - no transaction in Browser");
-  t.equal(
-    parts[6],
-    "",
-    "fifth part is set to empty to defer sampling decision to next hop"
-  );
+  t.equal(parts[6], "", "fifth part is set to empty to defer sampling decision to next hop");
   t.equal(parts[7], "", "priority is not set");
   t.ok(parts[8], "timestamp is there");
 }

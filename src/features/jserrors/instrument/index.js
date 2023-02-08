@@ -51,13 +51,7 @@ export class Instrument extends InstrumentBase {
     });
 
     state.ee.on("internal-error", (e) => {
-      handle(
-        "ierr",
-        [e, now(), true],
-        undefined,
-        FEATURE_NAMES.jserrors,
-        state.ee
-      );
+      handle("ierr", [e, now(), true], undefined, FEATURE_NAMES.jserrors, state.ee);
     });
 
     const prevOnError = globalScope?.onerror;
@@ -119,28 +113,16 @@ export class Instrument extends InstrumentBase {
   onerrorHandler(message, filename, lineno, column, errorObj) {
     try {
       if (this.skipNext) this.skipNext -= 1;
-      else
-        notice(
-          errorObj || new UncaughtException(message, filename, lineno),
-          true,
-          this.ee
-        );
+      else notice(errorObj || new UncaughtException(message, filename, lineno), true, this.ee);
     } catch (e) {
       try {
-        handle(
-          "ierr",
-          [e, now(), true],
-          undefined,
-          FEATURE_NAMES.jserrors,
-          this.ee
-        );
+        handle("ierr", [e, now(), true], undefined, FEATURE_NAMES.jserrors, this.ee);
       } catch (err) {
         // do nothing
       }
     }
 
-    if (typeof this.origOnerror === "function")
-      return this.origOnerror.apply(this, slice(arguments));
+    if (typeof this.origOnerror === "function") return this.origOnerror.apply(this, slice(arguments));
     return false;
   }
 }

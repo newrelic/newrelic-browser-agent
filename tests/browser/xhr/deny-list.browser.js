@@ -5,10 +5,7 @@
 
 import test from "../../../tools/jil/browser-test";
 import { parseUrl } from "../../../src/common/url/parse-url";
-import {
-  setDenyList,
-  shouldCollectEvent,
-} from "../../../src/common/deny-list/deny-list";
+import { setDenyList, shouldCollectEvent } from "../../../src/common/deny-list/deny-list";
 
 /* NOTE: This file contains pure unit tests that has no need for the agent at all.
  */
@@ -24,11 +21,7 @@ test("domain-only blocks all subdomains and all paths", function (t) {
   t.equals(shouldCollectEvent(parseUrl("http://a.b.foo.com")), false);
   t.equals(shouldCollectEvent(parseUrl("http://a.b.foo.com/c/d")), false);
 
-  t.equals(
-    shouldCollectEvent(parseUrl("http://oo.com")),
-    true,
-    "regression for length comparison"
-  );
+  t.equals(shouldCollectEvent(parseUrl("http://oo.com")), true, "regression for length comparison");
 
   // other domains are allowed
   t.equals(shouldCollectEvent(parseUrl("http://bar.com")), true);
@@ -123,18 +116,12 @@ test("invalid values", function (t) {
 test("URL that contains protocol multiple times", function (t) {
   setDenyList(["https://example.com/http://foo.bar/"]);
 
-  t.equals(
-    shouldCollectEvent(parseUrl("https://example.com/http://foo.bar/")),
-    false
-  );
+  t.equals(shouldCollectEvent(parseUrl("https://example.com/http://foo.bar/")), false);
   t.equals(shouldCollectEvent(parseUrl("https://example.com")), true);
 
   setDenyList(["example.com"]);
 
-  t.equals(
-    shouldCollectEvent(parseUrl("https://example.com/http://foo.bar/")),
-    false
-  );
+  t.equals(shouldCollectEvent(parseUrl("https://example.com/http://foo.bar/")), false);
 
   t.end();
 });

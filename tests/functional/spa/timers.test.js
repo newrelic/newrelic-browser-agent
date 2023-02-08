@@ -10,29 +10,19 @@ const supported = testDriver.Matcher.withFeature("addEventListener");
 testDriver.test("incorrect timer", supported, function (t, browser, router) {
   let rumPromise = router.expectRum();
   let eventsPromise = router.expectEvents();
-  let loadPromise = browser.safeGet(
-    router.assetURL("spa/incorrect-timer.html", { loader: "spa" })
-  );
+  let loadPromise = browser.safeGet(router.assetURL("spa/incorrect-timer.html", { loader: "spa" }));
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
       let eventPromise = router.expectEvents();
       let domPromise = browser.elementByCssSelector("body").click();
-      return Promise.all([eventPromise, domPromise]).then(
-        ([eventData, domData]) => {
-          return eventData;
-        }
-      );
+      return Promise.all([eventPromise, domPromise]).then(([eventData, domData]) => {
+        return eventData;
+      });
     })
     .then(({ query, body }) => {
-      let interactionTree = querypack.decode(
-        body && body.length ? body : query.e
-      )[0];
-      t.equal(
-        interactionTree.category,
-        "Route change",
-        "got route change harvest call"
-      );
+      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
+      t.equal(interactionTree.category, "Route change", "got route change harvest call");
       t.end();
     })
     .catch(fail);

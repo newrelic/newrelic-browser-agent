@@ -8,12 +8,7 @@ import { obj as encodeObj, param as encodeParam } from "../url/encode";
 import { stringify } from "../util/stringify";
 import { submitData } from "../util/submit-data";
 import { getLocation } from "../url/location";
-import {
-  getInfo,
-  getConfigurationValue,
-  getRuntime,
-  getConfiguration,
-} from "../config/config";
+import { getInfo, getConfigurationValue, getRuntime, getConfiguration } from "../config/config";
 import { cleanURL } from "../url/clean-url";
 import { now } from "../timing/now";
 import { eventListenerOpts } from "../event-listener/event-listener-opts";
@@ -34,15 +29,10 @@ export class Harvest extends SharedContext {
     super(parent); // gets any allowed properties from the parent and stores them in `sharedContext`
 
     this.tooManyRequestsDelay =
-      getConfigurationValue(
-        this.sharedContext.agentIdentifier,
-        "harvest.tooManyRequestsDelay"
-      ) || 60;
+      getConfigurationValue(this.sharedContext.agentIdentifier, "harvest.tooManyRequestsDelay") || 60;
     this.obfuscator = new Obfuscator(this.sharedContext);
     this.getScheme = () =>
-      getConfigurationValue(this.sharedContext.agentIdentifier, "ssl") === false
-        ? "http"
-        : "https";
+      getConfigurationValue(this.sharedContext.agentIdentifier, "ssl") === false ? "http" : "https";
 
     this._events = {};
   }
@@ -64,20 +54,8 @@ export class Harvest extends SharedContext {
       retry: submitMethod.method === submitData.xhr,
     };
     return this.obfuscator.shouldObfuscate()
-      ? this.obfuscateAndSend(
-          endpoint,
-          this.createPayload(endpoint, options),
-          opts,
-          submitMethod,
-          cbFinished
-        )
-      : this._send(
-          endpoint,
-          this.createPayload(endpoint, options),
-          opts,
-          submitMethod,
-          cbFinished
-        );
+      ? this.obfuscateAndSend(endpoint, this.createPayload(endpoint, options), opts, submitMethod, cbFinished)
+      : this._send(endpoint, this.createPayload(endpoint, options), opts, submitMethod, cbFinished);
   }
 
   /**
@@ -110,12 +88,7 @@ export class Harvest extends SharedContext {
   }
 
   obfuscateAndSend(endpoint, payload, opts, submitMethod, cbFinished) {
-    applyFnToProps(
-      payload,
-      (...args) => this.obfuscator.obfuscateString(...args),
-      "string",
-      ["e"]
-    );
+    applyFnToProps(payload, (...args) => this.obfuscator.obfuscateString(...args), "string", ["e"]);
     return this._send(endpoint, payload, opts, submitMethod, cbFinished);
   }
 
@@ -136,14 +109,7 @@ export class Harvest extends SharedContext {
     if (!opts) opts = {};
 
     var url =
-      this.getScheme() +
-      "://" +
-      info.errorBeacon +
-      "/" +
-      endpoint +
-      "/1/" +
-      info.licenseKey +
-      this.baseQueryString();
+      this.getScheme() + "://" + info.errorBeacon + "/" + endpoint + "/1/" + info.licenseKey + this.baseQueryString();
     if (payload.qs) url += encodeObj(payload.qs, agentRuntime.maxBytes);
 
     if (!submitMethod) {
@@ -176,11 +142,7 @@ export class Harvest extends SharedContext {
           if (this.status === 429) {
             result.retry = true;
             result.delay = this.tooManyRequestsDelay;
-          } else if (
-            this.status === 408 ||
-            this.status === 500 ||
-            this.status === 503
-          ) {
+          } else if (this.status === 408 || this.status === 500 || this.status === 503) {
             result.retry = true;
           }
 
@@ -208,9 +170,7 @@ export class Harvest extends SharedContext {
     var info = getInfo(this.sharedContext.agentIdentifier);
 
     var location = cleanURL(getLocation());
-    var ref = this.obfuscator.shouldObfuscate()
-      ? this.obfuscator.obfuscateString(location)
-      : location;
+    var ref = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateString(location) : location;
 
     return [
       "?a=" + info.applicationID,

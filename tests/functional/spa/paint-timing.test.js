@@ -6,13 +6,9 @@
 const testDriver = require("../../../tools/jil/index");
 const querypack = require("@newrelic/nr-querypack");
 
-let notSafariWithSeleniumBug = testDriver.Matcher.withFeature(
-  "notSafariWithSeleniumBug"
-);
+let notSafariWithSeleniumBug = testDriver.Matcher.withFeature("notSafariWithSeleniumBug");
 var firstPaint = testDriver.Matcher.withFeature("firstPaint");
-var firstContentfulPaint = testDriver.Matcher.withFeature(
-  "firstContentfulPaint"
-);
+var firstContentfulPaint = testDriver.Matcher.withFeature("firstContentfulPaint");
 
 testDriver.test(
   "First paint for supported browsers",
@@ -22,16 +18,12 @@ testDriver.test(
 
     let rumPromise = router.expectRum();
     let eventsPromise = router.expectEvents();
-    let loadPromise = browser.safeGet(
-      router.assetURL("instrumented.html", { loader: "spa" })
-    );
+    let loadPromise = browser.safeGet(router.assetURL("instrumented.html", { loader: "spa" }));
 
     Promise.all([eventsPromise, rumPromise, loadPromise])
       .then(([eventsResult]) => {
         let { body, query } = eventsResult;
-        let interactionTree = querypack.decode(
-          body && body.length ? body : query.e
-        )[0];
+        let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
 
         t.ok(interactionTree.firstPaint > 0, "firstPaint has positive value");
       })
@@ -52,21 +44,14 @@ testDriver.test(
 
     let rumPromise = router.expectRum();
     let eventsPromise = router.expectEvents();
-    let loadPromise = browser.safeGet(
-      router.assetURL("instrumented.html", { loader: "spa" })
-    );
+    let loadPromise = browser.safeGet(router.assetURL("instrumented.html", { loader: "spa" }));
 
     Promise.all([eventsPromise, rumPromise, loadPromise])
       .then(([eventsResult]) => {
         let { body, query } = eventsResult;
-        let interactionTree = querypack.decode(
-          body && body.length ? body : query.e
-        )[0];
+        let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
 
-        t.ok(
-          interactionTree.firstContentfulPaint > 0,
-          "firstContentfulPaint has positive value"
-        );
+        t.ok(interactionTree.firstContentfulPaint > 0, "firstContentfulPaint has positive value");
       })
       .catch(fail);
 
@@ -85,21 +70,14 @@ testDriver.test(
 
     let rumPromise = router.expectRum();
     let eventsPromise = router.expectEvents();
-    let loadPromise = browser.safeGet(
-      router.assetURL("instrumented.html", { loader: "spa" })
-    );
+    let loadPromise = browser.safeGet(router.assetURL("instrumented.html", { loader: "spa" }));
 
     Promise.all([eventsPromise, rumPromise, loadPromise])
       .then(([eventsResult]) => {
         let { body, query } = eventsResult;
-        let interactionTree = querypack.decode(
-          body && body.length ? body : query.e
-        )[0];
+        let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
 
-        t.ok(
-          interactionTree.firstPaint === null,
-          "firstPaint should not exist"
-        );
+        t.ok(interactionTree.firstPaint === null, "firstPaint should not exist");
       })
       .catch(fail);
 
@@ -118,21 +96,14 @@ testDriver.test(
 
     let rumPromise = router.expectRum();
     let eventsPromise = router.expectEvents();
-    let loadPromise = browser.safeGet(
-      router.assetURL("instrumented.html", { loader: "spa" })
-    );
+    let loadPromise = browser.safeGet(router.assetURL("instrumented.html", { loader: "spa" }));
 
     Promise.all([eventsPromise, rumPromise, loadPromise])
       .then(([eventsResult]) => {
         let { body, query } = eventsResult;
-        let interactionTree = querypack.decode(
-          body && body.length ? body : query.e
-        )[0];
+        let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
 
-        t.ok(
-          interactionTree.firstContentfulPaint === null,
-          "firstContentfulPaint should not exist"
-        );
+        t.ok(interactionTree.firstContentfulPaint === null, "firstContentfulPaint should not exist");
       })
       .catch(fail);
 
@@ -151,9 +122,7 @@ testDriver.test(
 
     let rumPromise = router.expectRum();
     let eventsPromise = router.expectEvents();
-    let loadPromise = browser.safeGet(
-      router.assetURL("spa/xhr.html", { loader: "spa" })
-    );
+    let loadPromise = browser.safeGet(router.assetURL("spa/xhr.html", { loader: "spa" }));
 
     Promise.all([eventsPromise, rumPromise, loadPromise])
       .then(([eventsResult]) => {
@@ -164,23 +133,11 @@ testDriver.test(
       })
       .then(([eventsResult]) => {
         let { body, query } = eventsResult;
-        let interactionTree = querypack.decode(
-          body && body.length ? body : query.e
-        )[0];
+        let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
 
-        t.equal(
-          interactionTree.category,
-          "Route change",
-          "should be route change interaction"
-        );
-        t.ok(
-          interactionTree.firstPaint === null,
-          "firstPaint should not exist"
-        );
-        t.ok(
-          interactionTree.firstContentfulPaint === null,
-          "firstContentfulPaint should not exist"
-        );
+        t.equal(interactionTree.category, "Route change", "should be route change interaction");
+        t.ok(interactionTree.firstPaint === null, "firstPaint should not exist");
+        t.ok(interactionTree.firstContentfulPaint === null, "firstContentfulPaint should not exist");
       })
       .catch(fail);
 

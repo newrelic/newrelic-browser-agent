@@ -1,5 +1,4 @@
-const fetch = (...args) =>
-  import("node-fetch").then(({ default: fetch }) => fetch(...args));
+const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 const { BUILD_NUMBER, NRQL_API_KEY } = process.env;
 
@@ -46,14 +45,12 @@ const queryNR = async () => {
     ios: {},
   };
   failures?.data?.actor?.account?.nrql?.results.forEach((x) => {
-    failedTests[x.browserName.toLowerCase()][x.browserVersion] = failedTests[
-      x.browserName.toLowerCase()
-    ][x.browserVersion]
+    failedTests[x.browserName.toLowerCase()][x.browserVersion] = failedTests[x.browserName.toLowerCase()][
+      x.browserVersion
+    ]
       ? failedTests[x.browserName.toLowerCase()][x.browserVersion]
       : new Set();
-    failedTests[x.browserName.toLowerCase()][x.browserVersion].add(
-      x.testFileName
-    );
+    failedTests[x.browserName.toLowerCase()][x.browserVersion].add(x.testFileName);
   });
 
   console.log("---- FAILED TESTS ----");

@@ -1,9 +1,5 @@
 import { FEATURE_NAMES } from "../features/features";
-import {
-  getConfigurationValue,
-  getInfo,
-  getRuntime,
-} from "../../common/config/config";
+import { getConfigurationValue, getInfo, getRuntime } from "../../common/config/config";
 import { ee } from "../../common/event-emitter/contextual-ee";
 import { handle } from "../../common/event-emitter/handle";
 import { registerHandler } from "../../common/event-emitter/register-handler";
@@ -16,8 +12,7 @@ export function setAPI(agentIdentifier) {
   var instanceEE = ee.get(agentIdentifier);
   var cycle = 0;
 
-  var scheme =
-    getConfigurationValue(agentIdentifier, "ssl") === false ? "http" : "https";
+  var scheme = getConfigurationValue(agentIdentifier, "ssl") === false ? "http" : "https";
 
   var api = {
     finished: single(finished),
@@ -36,28 +31,14 @@ export function setAPI(agentIdentifier) {
   // first parameter. These functions can be called asynchronously.
 
   function finished(t, providedTime) {
-    var time = providedTime
-      ? providedTime - getRuntime(agentIdentifier).offset
-      : t;
-    handle(
-      "record-custom",
-      ["finished", { time }],
-      undefined,
-      FEATURE_NAMES.metrics,
-      instanceEE
-    );
+    var time = providedTime ? providedTime - getRuntime(agentIdentifier).offset : t;
+    handle("record-custom", ["finished", { time }], undefined, FEATURE_NAMES.metrics, instanceEE);
     addToTrace(t, {
       name: "finished",
       start: time + getRuntime(agentIdentifier).offset,
       origin: "nr",
     });
-    handle(
-      "api-addPageAction",
-      [time, "finished"],
-      undefined,
-      FEATURE_NAMES.pageAction,
-      instanceEE
-    );
+    handle("api-addPageAction", [time, "finished"], undefined, FEATURE_NAMES.pageAction, instanceEE);
   }
 
   function addToTrace(t, evt) {
@@ -71,13 +52,7 @@ export function setAPI(agentIdentifier) {
       t: "api",
     };
 
-    handle(
-      "bstApi",
-      [report],
-      undefined,
-      FEATURE_NAMES.sessionTrace,
-      instanceEE
-    );
+    handle("bstApi", [report], undefined, FEATURE_NAMES.sessionTrace, instanceEE);
   }
 
   // NREUM.inlineHit(request_name, queue_time, app_time, total_be_time, dom_time, fe_time)
@@ -88,15 +63,7 @@ export function setAPI(agentIdentifier) {
   // total_be_time - the total roundtrip time of the remote service call
   // dom_time - the time spent processing the result of the service call (or user defined)
   // fe_time - the time spent rendering the result of the service call (or user defined)
-  function inlineHit(
-    t,
-    request_name,
-    queue_time,
-    app_time,
-    total_be_time,
-    dom_time,
-    fe_time
-  ) {
+  function inlineHit(t, request_name, queue_time, app_time, total_be_time, dom_time, fe_time) {
     if (!isBrowserScope) return;
 
     request_name = window.encodeURIComponent(request_name);
@@ -126,8 +93,6 @@ export function setAPI(agentIdentifier) {
   var releaseCount = 0;
   function addRelease(t, name, id) {
     if (++releaseCount > 10) return;
-    getRuntime(agentIdentifier).releaseIds[name.slice(-200)] = ("" + id).slice(
-      -200
-    );
+    getRuntime(agentIdentifier).releaseIds[name.slice(-200)] = ("" + id).slice(-200);
   }
 }

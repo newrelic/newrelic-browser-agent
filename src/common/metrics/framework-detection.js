@@ -56,12 +56,7 @@ function detectAngularJs() {
       )
     )
       return true;
-    if (
-      document.querySelector(
-        'script[src*="angular.js"], script[src*="angular.min.js"]'
-      )
-    )
-      return true;
+    if (document.querySelector('script[src*="angular.js"], script[src*="angular.min.js"]')) return true;
     return false;
   } catch (err) {
     // not supported?

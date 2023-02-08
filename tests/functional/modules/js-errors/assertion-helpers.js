@@ -13,27 +13,13 @@ function verifyStackTraceOmits(t, actualErrors, query) {
   t.equal(actualErrors.length, 1, "Expected exactly one error");
 
   let stackTrace = actualErrors[0].params.stack_trace;
-  t.equal(
-    stackTrace.indexOf(query),
-    -1,
-    "stack trace should not include URL query string or fragment"
-  );
+  t.equal(stackTrace.indexOf(query), -1, "stack trace should not include URL query string or fragment");
 }
 
-function assertExpectedErrors(
-  t,
-  browser,
-  actualErrors,
-  expectedErrors,
-  assetURL
-) {
+function assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL) {
   let expectedPath = url.parse(assetURL).pathname;
 
-  t.equal(
-    actualErrors.length,
-    expectedErrors.length,
-    `exactly ${expectedErrors.length} errors`
-  );
+  t.equal(actualErrors.length, expectedErrors.length, `exactly ${expectedErrors.length} errors`);
 
   for (let expectedError of expectedErrors) {
     let matchingErrors = actualErrors.filter((e) => {
@@ -49,19 +35,11 @@ function assertExpectedErrors(
       if (browser.hasFeature("uncaughtErrorObject")) {
         t.equal(errorClass, "Error", "Uncaught error is of Error class");
       } else {
-        t.equal(
-          errorClass,
-          "UncaughtException",
-          "Uncaught error class is UncaughtException"
-        );
+        t.equal(errorClass, "UncaughtException", "Uncaught error class is UncaughtException");
       }
     }
 
-    t.equal(
-      actualError.params["request_uri"],
-      expectedPath,
-      "has correct request_uri attribute"
-    );
+    t.equal(actualError.params["request_uri"], expectedPath, "has correct request_uri attribute");
   }
 }
 

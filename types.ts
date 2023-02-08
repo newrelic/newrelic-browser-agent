@@ -8,19 +8,13 @@ export interface BrowserAgent {
   finished: (timestamp?: number) => void;
   inlineHit: () => void;
   addRelease: (releaseName: string, releaseId: string) => void;
-  addPageAction: (
-    name: string,
-    attributes?: Record<string, SimpleType>
-  ) => void;
+  addPageAction: (name: string, attributes?: Record<string, SimpleType>) => void;
   addToTrace: (eventObject: EventObject) => void;
   setCurrentRouteName: (name: string | null) => void;
   setPageViewName: (name: string, host?: string) => void;
   setCustomAttribute: (name: string, value: SimpleType) => void;
   interaction: () => BrowserInteraction;
-  noticeError: (
-    error: Error | string,
-    customAttributes?: Record<string, SimpleType>
-  ) => void;
+  noticeError: (error: Error | string, customAttributes?: Record<string, SimpleType>) => void;
 }
 
 export interface NrOptions {
@@ -117,10 +111,7 @@ export interface NrLoaderConfig extends NrShared {
   applicationID: string;
 }
 
-export type NrNoticeError = (
-  err: Error | String,
-  customAttributes: Object
-) => void;
+export type NrNoticeError = (err: Error | String, customAttributes: Object) => void;
 
 interface EventObject {
   /** Event name */
@@ -175,9 +166,7 @@ interface BrowserInteraction {
    * @see https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api/spa-get-context
    */
   // tslint:disable-next-line:no-unnecessary-generics
-  getContext<T extends Record<string, any>>(
-    callback: GetContextCallback<T>
-  ): this;
+  getContext<T extends Record<string, any>>(callback: GetContextCallback<T>): this;
 
   /**
    * Overrides other SPA save() calls; ignores an interaction so it is not saved or sent to New Relic.

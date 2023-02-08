@@ -1,29 +1,11 @@
 import { setAPI } from "../api/api";
-import {
-  addToNREUM,
-  gosCDN,
-  gosNREUMInitializedAgents,
-} from "../../common/window/nreum";
-import {
-  setConfiguration,
-  setInfo,
-  setLoaderConfig,
-  setRuntime,
-} from "../../common/config/config";
-import {
-  activateFeatures,
-  activatedFeatures,
-} from "../../common/util/feature-flags";
+import { addToNREUM, gosCDN, gosNREUMInitializedAgents } from "../../common/window/nreum";
+import { setConfiguration, setInfo, setLoaderConfig, setRuntime } from "../../common/config/config";
+import { activateFeatures, activatedFeatures } from "../../common/util/feature-flags";
 import { isWorkerScope } from "../../common/util/global-scope";
 
 export function configure(agentIdentifier, opts = {}, loaderType, forceDrain) {
-  let {
-    init,
-    info,
-    loader_config,
-    runtime = { loaderType },
-    exposed = true,
-  } = opts;
+  let { init, info, loader_config, runtime = { loaderType }, exposed = true } = opts;
   const nr = gosCDN();
   let api = {};
   if (!info) {

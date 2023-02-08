@@ -42,8 +42,7 @@ export function parseUrl(url) {
   if (!ret.port && firstSplit[1]) {
     ret.port = firstSplit[1].split("/")[0].split("@").pop().split(":")[1];
   }
-  if (!ret.port || ret.port === "0")
-    ret.port = firstSplit[0] === "https" ? "443" : "80";
+  if (!ret.port || ret.port === "0") ret.port = firstSplit[0] === "https" ? "443" : "80";
 
   // Host not provided in IE for relative urls
   ret.hostname = urlEl.hostname || location.hostname;
@@ -56,12 +55,8 @@ export function parseUrl(url) {
   if (ret.pathname.charAt(0) !== "/") ret.pathname = "/" + ret.pathname;
 
   // urlEl.protocol is ':' in old ie when protocol is not specified
-  var sameProtocol =
-    !urlEl.protocol ||
-    urlEl.protocol === ":" ||
-    urlEl.protocol === location.protocol;
-  var sameDomain =
-    urlEl.hostname === location.hostname && urlEl.port === location.port;
+  var sameProtocol = !urlEl.protocol || urlEl.protocol === ":" || urlEl.protocol === location.protocol;
+  var sameDomain = urlEl.hostname === location.hostname && urlEl.port === location.port;
 
   // urlEl.hostname is not provided by IE for relative urls, but relative urls are also same-origin
   ret.sameOrigin = sameProtocol && (!urlEl.hostname || sameDomain);

@@ -5,10 +5,6 @@ import { Instrument as InstrumentPageViewTiming } from "../features/page_view_ti
 import { Instrument as InstrumentMetrics } from "../features/metrics/instrument";
 
 new Agent({
-  features: [
-    InstrumentPageViewEvent,
-    InstrumentPageViewTiming,
-    InstrumentMetrics,
-  ],
+  features: [InstrumentPageViewEvent, InstrumentPageViewTiming, InstrumentMetrics],
   loaderType: "lite",
 });

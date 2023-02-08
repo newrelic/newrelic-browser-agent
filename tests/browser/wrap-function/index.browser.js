@@ -42,10 +42,7 @@ test("Wrap Function", function (t) {
   });
 
   baseEE.on("time-end", function (args, self, result) {
-    t.ok(
-      new Date().getTime() - this.start > 9,
-      "start and end fired at least as far apart as fn took"
-    );
+    t.ok(new Date().getTime() - this.start > 9, "start and end fired at least as far apart as fn took");
   });
 
   baseEE.on("errFn-err", function (args, self, err) {

@@ -29,31 +29,18 @@ testDriver.test(
         let eventPromise = router.expectEvents();
         let domPromise = browser.elementByCssSelector("body").click();
 
-        return Promise.all([eventPromise, domPromise]).then(
-          ([eventData, domData]) => {
-            return eventData;
-          }
-        );
+        return Promise.all([eventPromise, domPromise]).then(([eventData, domData]) => {
+          return eventData;
+        });
       })
       .then(({ query, body }) => {
-        let interactionTree = querypack.decode(
-          body && body.length ? body : query.e
-        )[0];
+        let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
         t.equal(interactionTree.children.length, 1, "expected one child node");
 
         var xhr = interactionTree.children[0];
-        t.ok(
-          xhr.guid && xhr.guid.length > 0,
-          "should be a non-empty guid string"
-        );
-        t.ok(
-          xhr.traceId && xhr.traceId.length > 0,
-          "should be a non-empty traceId string"
-        );
-        t.ok(
-          xhr.timestamp != null && xhr.timestamp > 0,
-          "should be a non-zero timestamp"
-        );
+        t.ok(xhr.guid && xhr.guid.length > 0, "should be a non-empty guid string");
+        t.ok(xhr.traceId && xhr.traceId.length > 0, "should be a non-empty traceId string");
+        t.ok(xhr.timestamp != null && xhr.timestamp > 0, "should be a non-zero timestamp");
       })
       .catch(fail);
 
@@ -85,16 +72,12 @@ testDriver.test(
         let eventPromise = router.expectEvents();
         let domPromise = browser.elementByCssSelector("body").click();
 
-        return Promise.all([eventPromise, domPromise]).then(
-          ([eventData, domData]) => {
-            return eventData;
-          }
-        );
+        return Promise.all([eventPromise, domPromise]).then(([eventData, domData]) => {
+          return eventData;
+        });
       })
       .then(({ query, body }) => {
-        let interactionTree = querypack.decode(
-          body && body.length ? body : query.e
-        )[0];
+        let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
         t.equal(interactionTree.children.length, 1, "expected one child node");
 
         var xhr = interactionTree.children[0];
@@ -131,16 +114,12 @@ testDriver.test(
         let eventPromise = router.expectEvents();
         let domPromise = browser.elementByCssSelector("body").click();
 
-        return Promise.all([eventPromise, domPromise]).then(
-          ([eventData, domData]) => {
-            return eventData;
-          }
-        );
+        return Promise.all([eventPromise, domPromise]).then(([eventData, domData]) => {
+          return eventData;
+        });
       })
       .then(({ query, body }) => {
-        let interactionTree = querypack.decode(
-          body && body.length ? body : query.e
-        )[0];
+        let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
         t.equal(interactionTree.children.length, 1, "expected one child node");
 
         var xhr = interactionTree.children[0];

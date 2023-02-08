@@ -4,10 +4,7 @@
  */
 
 const testDriver = require("../../../../tools/jil/index");
-const {
-  getErrorsFromResponse,
-  getAppIdFromResponse,
-} = require("../../err/assertion-helpers");
+const { getErrorsFromResponse, getAppIdFromResponse } = require("../../err/assertion-helpers");
 
 const supported = testDriver.Matcher.withFeature("mfe");
 
@@ -28,9 +25,7 @@ testDriver.test(
   function (t, browser, router) {
     t.plan(10);
 
-    let loadPromise = browser.safeGet(
-      router.assetURL("test-builds/build-time-mfe/index.html", opts)
-    );
+    let loadPromise = browser.safeGet(router.assetURL("test-builds/build-time-mfe/index.html", opts));
 
     const appsOnPage = [
       // component-1 - @newrelic/browser-agent
@@ -54,23 +49,14 @@ testDriver.test(
       },
     ];
 
-    const errorPromises = appsOnPage.map((app) =>
-      router.expectErrors(app.appID)
-    );
+    const errorPromises = appsOnPage.map((app) => router.expectErrors(app.appID));
 
     function testError(appID, exceptionClass, message) {
       const app = appsOnPage.find((x) => Number(x.appID) === Number(appID));
       if (app) app.seen = true;
       t.ok(!!app, "App ID is expected -- " + app.appID);
-      t.equal(
-        "Error",
-        exceptionClass,
-        "The agent passes an error class instead of a string. -- " + app.appID
-      );
-      t.ok(
-        message.toLowerCase().includes(app.message),
-        "Params contain the right error message. -- " + app.appID
-      );
+      t.equal("Error", exceptionClass, "The agent passes an error class instead of a string. -- " + app.appID);
+      t.ok(message.toLowerCase().includes(app.message), "Params contain the right error message. -- " + app.appID);
     }
 
     Promise.all([loadPromise, ...errorPromises])

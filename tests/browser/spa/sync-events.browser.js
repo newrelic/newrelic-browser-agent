@@ -92,23 +92,15 @@ jil.browserTest("sync event in timer", function (t) {
 
         xhr.open("GET", "/");
         xhr.send();
-        setTimeout(
-          newrelic.interaction().createTracer("timer", function () {})
-        );
+        setTimeout(newrelic.interaction().createTracer("timer", function () {}));
       }),
       0
     );
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }
@@ -175,14 +167,8 @@ jil.browserTest("sync event in click", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }

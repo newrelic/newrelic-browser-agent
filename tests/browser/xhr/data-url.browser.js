@@ -10,10 +10,7 @@ import { Instrument as AjaxInstrum } from "../../../src/features/ajax/instrument
 const { baseEE, agentIdentifier, aggregator } = setup();
 const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false); // attach instrumentation event handlers to agent's events (baseEE)
 const handleEE = baseEE.get("handle");
-const hasXhr =
-  window.XMLHttpRequest &&
-  XMLHttpRequest.prototype &&
-  XMLHttpRequest.prototype.addEventListener;
+const hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener;
 
 test("XHR request for Data URL does not generate telemetry", function (t) {
   if (!hasXhr) {

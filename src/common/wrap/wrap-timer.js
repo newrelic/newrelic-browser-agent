@@ -21,17 +21,9 @@ export function wrapTimer(sharedEE) {
   var START = "-start";
   var DASH = "-";
 
-  wrapFn.inPlace(
-    globalScope,
-    [SET_TIMEOUT, "setImmediate"],
-    SET_TIMEOUT + DASH
-  );
+  wrapFn.inPlace(globalScope, [SET_TIMEOUT, "setImmediate"], SET_TIMEOUT + DASH);
   wrapFn.inPlace(globalScope, [SET_INTERVAL], SET_INTERVAL + DASH);
-  wrapFn.inPlace(
-    globalScope,
-    [CLEAR_TIMEOUT, "clearImmediate"],
-    CLEAR_TIMEOUT + DASH
-  );
+  wrapFn.inPlace(globalScope, [CLEAR_TIMEOUT, "clearImmediate"], CLEAR_TIMEOUT + DASH);
 
   ee.on(SET_INTERVAL + START, interval);
   ee.on(SET_TIMEOUT + START, timer);

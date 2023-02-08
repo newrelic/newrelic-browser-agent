@@ -68,18 +68,9 @@ export class HarvestScheduler extends SharedContext {
       var retry = submitMethod.method === submitData.xhr;
       var payload = this.opts.getPayload({ retry: retry });
       if (payload) {
-        payload =
-          Object.prototype.toString.call(payload) === "[object Array]"
-            ? payload
-            : [payload];
+        payload = Object.prototype.toString.call(payload) === "[object Array]" ? payload : [payload];
         for (var i = 0; i < payload.length; i++) {
-          this.harvest.send(
-            this.endpoint,
-            payload[i],
-            opts,
-            submitMethod,
-            onHarvestFinished
-          );
+          this.harvest.send(this.endpoint, payload[i], opts, submitMethod, onHarvestFinished);
         }
       }
     } else {

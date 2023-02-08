@@ -5,11 +5,7 @@
 
 import test from "../../tools/jil/browser-test";
 import { setup } from "./utils/setup";
-import {
-  getRuntime,
-  setRuntime,
-  setInfo,
-} from "../../src/common/config/config";
+import { getRuntime, setRuntime, setInfo } from "../../src/common/config/config";
 import { submitData } from "../../src/common/util/submit-data";
 import * as harvest from "../../src/common/harvest/harvest";
 import * as sinon from "sinon";
@@ -117,10 +113,7 @@ function validateUrl(t, actualUrl, expectedUrlTemplate, message) {
   }
 
   // In addition to replacing timestamp, add in the ck parameter which goes after timestamp
-  let expectedUrl = expectedUrlTemplate.replace(
-    "{TIMESTAMP}",
-    `${submissionTimestamp}&ck=${ckValue}&s=${sessionId}`
-  );
+  let expectedUrl = expectedUrlTemplate.replace("{TIMESTAMP}", `${submissionTimestamp}&ck=${ckValue}&s=${sessionId}`);
 
   t.equal(actualUrl, expectedUrl, message);
 }
@@ -150,10 +143,7 @@ test("encodes only the origin of the referrer url, not the fragment ", function 
     let call = submitData.xhr.getCall(0);
     validateUrl(t, call.args[0], baseUrl, "correct URL given to sendBeacon");
   } else {
-    t.notOk(
-      result,
-      "result falsy when attempting to submit ins in unsupported browser"
-    );
+    t.notOk(result, "result falsy when attempting to submit ins in unsupported browser");
   }
 
   t.end();
@@ -178,10 +168,7 @@ test("encodes referrer urls that include spaces", function (t) {
     let call = submitData.xhr.getCall(0);
     validateUrl(t, call.args[0], baseUrl, "correct URL given to sendBeacon");
   } else {
-    t.notOk(
-      result,
-      "result falsy when attempting to submit ins in unsupported browser"
-    );
+    t.notOk(result, "result falsy when attempting to submit ins in unsupported browser");
   }
 
   t.end();
@@ -206,10 +193,7 @@ test("encodes referrer urls that include ampersands", function (t) {
     let call = submitData.xhr.getCall(0);
     validateUrl(t, call.args[0], baseUrl, "correct URL given to sendBeacon");
   } else {
-    t.notOk(
-      result,
-      "result falsy when attempting to submit ins in unsupported browser"
-    );
+    t.notOk(result, "result falsy when attempting to submit ins in unsupported browser");
   }
 
   t.end();
@@ -244,21 +228,10 @@ test("uses correct submission mechanism for ins", function (t) {
     t.ok(result, "result truthy when ins submitted via XHR");
     let call = submitData.xhr.getCall(0);
     validateUrl(t, call.args[0], baseUrl, "correct URL given to sendBeacon");
-    t.equal(
-      call.args[1],
-      stringify(expectedPayload),
-      "correct body given to XHR"
-    );
+    t.equal(call.args[1], stringify(expectedPayload), "correct body given to XHR");
   } else {
-    t.notOk(
-      result,
-      "result falsy when attempting to submit ins in unsupported browser"
-    );
-    t.equal(
-      submitData.img.callCount,
-      0,
-      "should not try to submit ins via img tag"
-    );
+    t.notOk(result, "result falsy when attempting to submit ins in unsupported browser");
+    t.equal(submitData.img.callCount, 0, "should not try to submit ins via img tag");
   }
 });
 
@@ -271,16 +244,8 @@ test("does not send ins call when there is no body", function (t) {
 
   t.notOk(result, "result should be falsy");
   t.equal(submitData.xhr.callCount, 0, "no xhr call should have been made");
-  t.equal(
-    submitData.img.callCount,
-    0,
-    "no call via img tag should have been made"
-  );
-  t.equal(
-    submitData.beacon.callCount,
-    0,
-    "no beacon call should have been made"
-  );
+  t.equal(submitData.img.callCount, 0, "no call via img tag should have been made");
+  t.equal(submitData.beacon.callCount, 0, "no beacon call should have been made");
   t.end();
 
   function testPayload() {
@@ -323,16 +288,9 @@ test("uses correct submission mechanism for resources", function (t) {
     t.ok(result, "result truthy when resources submitted via XHR");
     let call = submitData.xhr.getCall(0);
     validateUrl(t, call.args[0], baseUrl, "correct URL given to XHR");
-    t.equal(
-      call.args[1],
-      stringify(expectedPayload),
-      "correct body given to XHR"
-    );
+    t.equal(call.args[1], stringify(expectedPayload), "correct body given to XHR");
   } else {
-    t.notOk(
-      result,
-      "result falsy when attempting to submit resources in unsupported browser"
-    );
+    t.notOk(result, "result falsy when attempting to submit resources in unsupported browser");
     t.equal(submitData.img.callCount, 0, "should not try to submit via img");
   }
 });
@@ -346,16 +304,8 @@ test("does not send resources when there is no body", function (t) {
 
   t.notOk(result, "result should be falsy");
   t.equal(submitData.xhr.callCount, 0, "no xhr call should have been made");
-  t.equal(
-    submitData.img.callCount,
-    0,
-    "no call via img tag should have been made"
-  );
-  t.equal(
-    submitData.beacon.callCount,
-    0,
-    "no beacon call should have been made"
-  );
+  t.equal(submitData.img.callCount, 0, "no call via img tag should have been made");
+  t.equal(submitData.beacon.callCount, 0, "no beacon call should have been made");
   t.end();
 
   function testPayload() {
@@ -382,33 +332,15 @@ test("uses an XHR and returns it for first resources POST", function (t) {
   let expectedPayload = { resources: ["one", "two", "three"] };
 
   if (xhrUsable) {
-    t.ok(
-      result,
-      "result truthy when resources submitted via XHR with needResponse"
-    );
+    t.ok(result, "result truthy when resources submitted via XHR with needResponse");
     let call = submitData.xhr.getCall(0);
     validateUrl(t, call.args[0], baseUrl, "correct URL given to XHR");
-    t.equal(
-      call.args[1],
-      stringify(expectedPayload),
-      "correct body given to XHR"
-    );
+    t.equal(call.args[1], stringify(expectedPayload), "correct body given to XHR");
 
-    t.equal(
-      submitData.img.callCount,
-      0,
-      "did not use img to submit first resources POST"
-    );
-    t.equal(
-      submitData.beacon.callCount,
-      0,
-      "did not use beacon to submit first resources POST"
-    );
+    t.equal(submitData.img.callCount, 0, "did not use img to submit first resources POST");
+    t.equal(submitData.beacon.callCount, 0, "did not use beacon to submit first resources POST");
   } else {
-    t.notOk(
-      result,
-      "result false when resources submitted via XHR with needResponse"
-    );
+    t.notOk(result, "result false when resources submitted via XHR with needResponse");
   }
 
   t.end();
@@ -444,11 +376,7 @@ test("uses correct submission mechanism for jserrors", function (t) {
     t.ok(result, "result truthy when jserrors submitted via xhr");
     let call = submitData.xhr.getCall(0);
     validateUrl(t, call.args[0], baseUrl, "correct URL given to xhr");
-    t.equal(
-      call.args[1],
-      JSON.stringify(expectedPayload),
-      "body arg given to xhr is correct"
-    );
+    t.equal(call.args[1], JSON.stringify(expectedPayload), "body arg given to xhr is correct");
   } else {
     t.ok(result, "result truthy when jserrors submitted via img");
     let call = submitData.img.getCall(0);
@@ -513,17 +441,11 @@ test("does not add ptid to harvest when ptid is not present", function (t) {
   if (xhrUsable) {
     t.ok(result, "result truthy when jserrors submitted via xhr");
     let call = submitData.xhr.getCall(0);
-    t.ok(
-      call.args[0].indexOf("ptid") === -1,
-      "ptid not included in querystring"
-    );
+    t.ok(call.args[0].indexOf("ptid") === -1, "ptid not included in querystring");
   } else {
     t.ok(result, "result truthy when jserrors submitted via img");
     let call = submitData.img.getCall(0);
-    t.ok(
-      call.args[0].indexOf("ptid") === -1,
-      "ptid not included in querystring"
-    );
+    t.ok(call.args[0].indexOf("ptid") === -1, "ptid not included in querystring");
   }
 });
 
@@ -536,16 +458,8 @@ test("does not send jserrors when there is nothing to send", function (t) {
 
   t.notOk(result, "result should be falsy");
   t.equal(submitData.xhr.callCount, 0, "no xhr call should have been made");
-  t.equal(
-    submitData.img.callCount,
-    0,
-    "no call via img tag should have been made"
-  );
-  t.equal(
-    submitData.beacon.callCount,
-    0,
-    "no beacon call should have been made"
-  );
+  t.equal(submitData.img.callCount, 0, "no call via img tag should have been made");
+  t.equal(submitData.beacon.callCount, 0, "no beacon call should have been made");
   t.end();
 
   function testPayload() {
@@ -614,16 +528,8 @@ test("does not send eents when there is nothing to send", function (t) {
 
   t.notOk(result, "result should be falsy");
   t.equal(submitData.xhr.callCount, 0, "no xhr call should have been made");
-  t.equal(
-    submitData.img.callCount,
-    0,
-    "no call via img tag should have been made"
-  );
-  t.equal(
-    submitData.beacon.callCount,
-    0,
-    "no beacon call should have been made"
-  );
+  t.equal(submitData.img.callCount, 0, "no call via img tag should have been made");
+  t.equal(submitData.beacon.callCount, 0, "no beacon call should have been made");
   t.end();
 
   function testPayload() {
@@ -655,20 +561,12 @@ test("uses correct submission mechanisms on unload", function (t) {
     harvesterInst.sendX(evt, { unload: true });
   });
 
-  t.equal(
-    submitData.xhr.callCount,
-    0,
-    "did not send any final submissions via XHR"
-  );
+  t.equal(submitData.xhr.callCount, 0, "did not send any final submissions via XHR");
 
   let calls;
   if (hasSendBeacon) {
     calls = submitData.beacon.getCalls();
-    t.equal(
-      submitData.beacon.callCount,
-      4,
-      "sent all final submissions via sendBeacon"
-    );
+    t.equal(submitData.beacon.callCount, 4, "sent all final submissions via sendBeacon");
   } else {
     calls = submitData.img.getCalls();
     t.equal(submitData.img.callCount, 4, "sent all final submissions via img");
@@ -690,50 +588,14 @@ test("uses correct submission mechanisms on unload", function (t) {
   let expectedEventsPayload = { e: "bel.1;1;" };
 
   if (hasSendBeacon) {
-    validateUrl(
-      t,
-      insCall.args[0],
-      baseUrlFor("ins"),
-      "correct URL for ins unload submission"
-    );
-    t.equal(
-      insCall.args[1],
-      stringify(expectedInsPayload),
-      "correct body for ins unload submission"
-    );
-    validateUrl(
-      t,
-      resourcesCall.args[0],
-      baseUrlFor("resources"),
-      "correct URL for resources unload submission"
-    );
-    t.equal(
-      resourcesCall.args[1],
-      stringify(expectedResourcesPayload),
-      "correct body for resources unload submission"
-    );
-    validateUrl(
-      t,
-      eventsCall.args[0],
-      baseUrlFor("events", ""),
-      "correct URL for events unload submission"
-    );
-    t.equal(
-      eventsCall.args[1],
-      expectedEventsPayload.e,
-      "send correct body on final events submission"
-    );
-    validateUrl(
-      t,
-      jserrorsCall.args[0],
-      baseUrlFor("jserrors"),
-      "correct URL for jserrors unload submission"
-    );
-    t.equal(
-      jserrorsCall.args[1],
-      stringify(expectedJserrorsPayload),
-      "correct body for jserrors unload submission"
-    );
+    validateUrl(t, insCall.args[0], baseUrlFor("ins"), "correct URL for ins unload submission");
+    t.equal(insCall.args[1], stringify(expectedInsPayload), "correct body for ins unload submission");
+    validateUrl(t, resourcesCall.args[0], baseUrlFor("resources"), "correct URL for resources unload submission");
+    t.equal(resourcesCall.args[1], stringify(expectedResourcesPayload), "correct body for resources unload submission");
+    validateUrl(t, eventsCall.args[0], baseUrlFor("events", ""), "correct URL for events unload submission");
+    t.equal(eventsCall.args[1], expectedEventsPayload.e, "send correct body on final events submission");
+    validateUrl(t, jserrorsCall.args[0], baseUrlFor("jserrors"), "correct URL for jserrors unload submission");
+    t.equal(jserrorsCall.args[1], stringify(expectedJserrorsPayload), "correct body for jserrors unload submission");
   } else {
     validateUrl(
       t,
@@ -741,20 +603,14 @@ test("uses correct submission mechanisms on unload", function (t) {
       baseUrlFor("ins") + encode.obj(expectedInsPayload),
       "correct URL for ins unload submission"
     );
-    t.notOk(
-      insCall.args[1],
-      "did not send body on final submission of ins data"
-    );
+    t.notOk(insCall.args[1], "did not send body on final submission of ins data");
     validateUrl(
       t,
       resourcesCall.args[0],
       baseUrlFor("resources") + encode.obj(expectedResourcesPayload),
       "correct URL for resources unload submission"
     );
-    t.notOk(
-      resourcesCall.args[1],
-      "did not send body on final submission of resources data"
-    );
+    t.notOk(resourcesCall.args[1], "did not send body on final submission of resources data");
     validateUrl(
       t,
       eventsCall.args[0],
@@ -768,10 +624,7 @@ test("uses correct submission mechanisms on unload", function (t) {
       baseUrlFor("jserrors") + encode.obj(expectedJserrorsPayload),
       "correct URL for jserrors unload submission"
     );
-    t.notOk(
-      jserrorsCall.args[1],
-      "did not send body on final jserrors submission"
-    );
+    t.notOk(jserrorsCall.args[1], "did not send body on final jserrors submission");
   }
 
   t.end();
@@ -811,11 +664,7 @@ test("when sendBeacon returns false", function (t) {
     setupFakeNr();
     harvesterInst.sendX("jserrors", { unload: true });
 
-    t.equal(
-      submitData.img.callCount,
-      1,
-      "sent one final submissions via IMG (jserrors)"
-    );
+    t.equal(submitData.img.callCount, 1, "sent one final submissions via IMG (jserrors)");
     let call = submitData.img.getCall(0);
     let expectedUrl = baseUrl + encode.obj(expectedPayload);
     validateUrl(t, call.args[0], expectedUrl, "correct URL given to img");
@@ -842,11 +691,7 @@ test("when sendBeacon returns false", function (t) {
     setupFakeNr();
     harvesterInst.sendX("ins", { unload: true });
 
-    t.equal(
-      submitData.img.callCount,
-      1,
-      "sent one final submissions via IMG (ins)"
-    );
+    t.equal(submitData.img.callCount, 1, "sent one final submissions via IMG (ins)");
     let call = submitData.img.getCall(0);
     let expectedUrl = baseUrl + encode.obj(expectedPayload);
     validateUrl(t, call.args[0], expectedUrl, "correct URL given to img");
@@ -873,11 +718,7 @@ test("when sendBeacon returns false", function (t) {
     setupFakeNr();
     harvesterInst.sendX("resources", { unload: true });
 
-    t.equal(
-      submitData.img.callCount,
-      1,
-      "sent one final submissions via IMG (resources)"
-    );
+    t.equal(submitData.img.callCount, 1, "sent one final submissions via IMG (resources)");
     let call = submitData.img.getCall(0);
     let expectedUrl = baseUrl + encode.obj(expectedPayload);
     validateUrl(t, call.args[0], expectedUrl, "correct URL given to img");
@@ -904,11 +745,7 @@ test("when sendBeacon returns false", function (t) {
     setupFakeNr();
     harvesterInst.sendX("events", { unload: true });
 
-    t.equal(
-      submitData.img.callCount,
-      1,
-      "sent one final submissions via IMG (events)"
-    );
+    t.equal(submitData.img.callCount, 1, "sent one final submissions via IMG (events)");
     let call = submitData.img.getCall(0);
     console.log(call.args[0]);
     let expectedUrl = baseUrl + encode.obj(expectedPayload);

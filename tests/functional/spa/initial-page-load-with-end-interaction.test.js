@@ -25,25 +25,12 @@ testDriver.test(
     Promise.all([eventsPromise, rumPromise, loadPromise])
       .then(([eventsResult]) => {
         let { body, query } = eventsResult;
-        let interactionTree = querypack.decode(
-          body && body.length ? body : query.e
-        )[0];
+        let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
 
-        t.equal(
-          interactionTree.trigger,
-          "initialPageLoad",
-          "initial page load should be tracked with an interaction"
-        );
+        t.equal(interactionTree.trigger, "initialPageLoad", "initial page load should be tracked with an interaction");
         t.equal(interactionTree.children.length, 1, "expect one child node");
-        t.equal(
-          interactionTree.children[0].type,
-          "customEnd",
-          "expect one custom end node"
-        );
-        t.notOk(
-          interactionTree.isRouteChange,
-          "The interaction does not include a route change."
-        );
+        t.equal(interactionTree.children[0].type, "customEnd", "expect one custom end node");
+        t.notOk(interactionTree.isRouteChange, "The interaction does not include a route change.");
 
         let eventPromise = router.expectEvents();
         let domPromise = browser.elementByCssSelector("body").click();
@@ -53,13 +40,8 @@ testDriver.test(
         });
       })
       .then(({ query, body }) => {
-        let interactionTree = querypack.decode(
-          body && body.length ? body : query.e
-        )[0];
-        t.ok(
-          interactionTree.end >= interactionTree.start,
-          "interaction end time should be >= start"
-        );
+        let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
+        t.ok(interactionTree.end >= interactionTree.start, "interaction end time should be >= start");
         t.ok(
           interactionTree.callbackEnd >= interactionTree.start,
           "interaaction callback end should be >= interaction start"

@@ -12,16 +12,10 @@ var argv = require("yargs")
 
   .string("current")
   .describe("current", "current/stable build (defaults to -current)")
-  .default(
-    "current",
-    "https://js-agent.newrelic.com/nr-loader-spa-current.min.js"
-  )
+  .default("current", "https://js-agent.newrelic.com/nr-loader-spa-current.min.js")
 
   .string("next")
-  .describe(
-    "next",
-    "next version to compare to stable version (defaults to /dev)"
-  )
+  .describe("next", "next version to compare to stable version (defaults to /dev)")
   .default("next", "https://js-agent.newrelic.com/dev/nr-loader-spa.min.js")
 
   .string("licenseKey")
@@ -59,12 +53,7 @@ const config = {
       enabled: true,
     },
     ajax: {
-      deny_list: [
-        "nr-data.net",
-        "bam.nr-data.net",
-        "staging-bam.nr-data.net",
-        "bam-cell.nr-data.net",
-      ],
+      deny_list: ["nr-data.net", "bam.nr-data.net", "staging-bam.nr-data.net", "bam-cell.nr-data.net"],
     },
   },
 
@@ -132,14 +121,7 @@ function getIdFromUrl(url) {
           const expires = new Date();
           expires.setMonth(expires.getMonth() + 1);
 
-          const uploads = await uploadToS3(
-            filename,
-            output,
-            bucket,
-            dry,
-            300,
-            expires.toISOString()
-          );
+          const uploads = await uploadToS3(filename, output, bucket, dry, 300, expires.toISOString());
           console.log(`Successfully uploaded ${filename} to S3`);
           process.exit(0);
         })

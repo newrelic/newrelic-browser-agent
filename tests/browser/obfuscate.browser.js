@@ -92,17 +92,11 @@ jil.browserTest("Should Obfuscate", function (t) {
     obfuscate: validationCases.filter((x) => x.expected).map((x) => x.rule),
   });
 
-  t.ok(
-    obfuscatorInst.shouldObfuscate(),
-    "When init.obfuscate is defined, shouldObfuscate is true"
-  );
+  t.ok(obfuscatorInst.shouldObfuscate(), "When init.obfuscate is defined, shouldObfuscate is true");
 
   //delete win.getWindowOrWorkerGlobScope().NREUM.init.obfuscate
   setConfiguration(agentIdentifier, {}); // note this'll reset the *whole* config to the default values
-  t.ok(
-    !obfuscatorInst.shouldObfuscate(),
-    "When init.obfuscate is NOT defined, shouldObfuscate is false"
-  );
+  t.ok(!obfuscatorInst.shouldObfuscate(), "When init.obfuscate is NOT defined, shouldObfuscate is false");
   t.end();
 });
 
@@ -111,10 +105,7 @@ jil.browserTest("Get Rules", function (t) {
     obfuscate: validationCases.filter((x) => x.expected).map((x) => x.rule),
   });
 
-  t.ok(
-    !!obfuscate.getRules(agentIdentifier).length,
-    "getRules should generate a list of rules from init.obfuscate"
-  );
+  t.ok(!!obfuscate.getRules(agentIdentifier).length, "getRules should generate a list of rules from init.obfuscate");
 
   //delete win.getWindowOrWorkerGlobScope().NREUM.init.obfuscate
   setConfiguration(agentIdentifier, {}); // note this'll reset the *whole* config to the default values
@@ -125,9 +116,7 @@ jil.browserTest("Get Rules", function (t) {
 
   setScope({ location: fileLocation });
   t.ok(
-    !!obfuscate
-      .getRules(agentIdentifier)
-      .filter((x) => x.regex.source.includes("file")).length,
+    !!obfuscate.getRules(agentIdentifier).filter((x) => x.regex.source.includes("file")).length,
     "getRules should generate a rule for file obfuscation if file protocol is detected"
   );
 
@@ -146,16 +135,9 @@ jil.browserTest("Obfuscate String Method", function (t) {
       .includes("missing-replacement-field"),
     "Successfully obfuscates missing replacement field"
   );
+  t.ok(!obfuscatorInst.obfuscateString("http://example.com/pii/123").includes("pii"), "Successfully obfuscates string");
   t.ok(
-    !obfuscatorInst
-      .obfuscateString("http://example.com/pii/123")
-      .includes("pii"),
-    "Successfully obfuscates string"
-  );
-  t.ok(
-    !obfuscatorInst
-      .obfuscateString("http://example.com/abcdefghijklmnopqrstuvwxyz/123")
-      .includes("i"),
+    !obfuscatorInst.obfuscateString("http://example.com/abcdefghijklmnopqrstuvwxyz/123").includes("i"),
     "Successfully obfuscates regex"
   );
 
@@ -163,9 +145,8 @@ jil.browserTest("Obfuscate String Method", function (t) {
   //delete win.getWindowOrWorkerGlobScope().NREUM.init.obfuscate
   setConfiguration(agentIdentifier, {}); // note this'll reset the *whole* config to the default values
   t.ok(
-    obfuscatorInst.obfuscateString(
-      "file:///Users/jporter/Documents/Code/scratch/noticeErrorTest.html"
-    ) === "file://OBFUSCATED",
+    obfuscatorInst.obfuscateString("file:///Users/jporter/Documents/Code/scratch/noticeErrorTest.html") ===
+      "file://OBFUSCATED",
     "Successfully obfuscates file protocol"
   );
 

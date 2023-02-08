@@ -9,12 +9,7 @@ export class WorkerAgent extends Agent {
   constructor(...args) {
     super({
       ...args,
-      features: [
-        InstrumentMetrics,
-        InstrumentErrors,
-        InstrumentXhr,
-        InstrumentPageAction,
-      ],
+      features: [InstrumentMetrics, InstrumentErrors, InstrumentXhr, InstrumentPageAction],
       loaderType: "worker-agent",
     });
   }

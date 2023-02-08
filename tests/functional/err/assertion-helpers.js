@@ -29,27 +29,13 @@ function verifyStackTraceOmits(t, actualErrors, query) {
   t.equal(actualErrors.length, 1, "Expected exactly one error");
 
   let stackTrace = actualErrors[0].params.stack_trace;
-  t.equal(
-    stackTrace.indexOf(query),
-    -1,
-    "stack trace should not include URL query string or fragment"
-  );
+  t.equal(stackTrace.indexOf(query), -1, "stack trace should not include URL query string or fragment");
 }
 
-function assertExpectedErrors(
-  t,
-  browser,
-  actualErrors,
-  expectedErrors,
-  assetURL
-) {
+function assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL) {
   let expectedPath = url.parse(assetURL).pathname;
 
-  t.equal(
-    actualErrors.length,
-    expectedErrors.length,
-    `exactly ${expectedErrors.length} errors`
-  );
+  t.equal(actualErrors.length, expectedErrors.length, `exactly ${expectedErrors.length} errors`);
 
   for (let expectedError of expectedErrors) {
     let matchingErrors = actualErrors.filter((e) => {
@@ -65,11 +51,7 @@ function assertExpectedErrors(
       if (browser.hasFeature("uncaughtErrorObject")) {
         t.equal(errorClass, "Error", "Uncaught error is of Error class");
       } else {
-        t.equal(
-          errorClass,
-          "UncaughtException",
-          "Uncaught error class is UncaughtException"
-        );
+        t.equal(errorClass, "UncaughtException", "Uncaught error class is UncaughtException");
       }
     }
 
@@ -85,40 +67,22 @@ function assertExpectedErrors(
     // errors, it's not easy to ensure the stack frame line number is correct. Skip this test, disaggregation
     // when people are using eval is not a big concern.
     if (expectedStack[0].f === "evaluated code" && browser.match("firefox")) {
-      return t.skip(
-        "Skipping eval code check for browsers with indistinguishable stacks"
-      );
+      return t.skip("Skipping eval code check for browsers with indistinguishable stacks");
     }
 
     var expectedCanonicalStack = computeExpectedCanonicalStack(expectedStack);
     var expectedStackHash = stringHashCode(expectedCanonicalStack);
 
-    t.equal(
-      actualError.params.stackHash,
-      expectedStackHash,
-      "Stack hash for error " + expectedError.message
-    );
+    t.equal(actualError.params.stackHash, expectedStackHash, "Stack hash for error " + expectedError.message);
 
-    if (
-      actualError.params.stackHash !== expectedStackHash &&
-      actualError.params.canonicalStack
-    ) {
+    if (actualError.params.stackHash !== expectedStackHash && actualError.params.canonicalStack) {
       t.comment("Actual stack from browser:\n" + actualError.params.origStack);
-      t.comment(
-        "\nActual canonical stack from browser:\n" +
-          actualError.params.canonicalStack
-      );
-      t.comment(
-        "\nExpected canonical stack:\n" + expectedCanonicalStack + "\n"
-      );
+      t.comment("\nActual canonical stack from browser:\n" + actualError.params.canonicalStack);
+      t.comment("\nExpected canonical stack:\n" + expectedCanonicalStack + "\n");
       t.comment(actualError.params.origStackInfo);
     }
 
-    t.equal(
-      actualError.params["request_uri"],
-      expectedPath,
-      "has correct request_uri attribute"
-    );
+    t.equal(actualError.params["request_uri"], expectedPath, "has correct request_uri attribute");
   }
 }
 

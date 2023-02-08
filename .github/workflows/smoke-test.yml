@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # Runs every day at 3AM
-    - cron: '0 3 * * *'
-
+    - cron: "0 3 * * *"
 
 env:
   BUILD_NUMBER: event-${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
@@ -15,7 +14,7 @@ jobs:
     if: contains(fromJson('["schedule"]'), github.event_name) || contains(fromJson('["workflow_dispatch"]'), github.event_name)
     runs-on: ubuntu-latest
     container: node:14
-    
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -29,5 +28,3 @@ jobs:
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=10
-
-  

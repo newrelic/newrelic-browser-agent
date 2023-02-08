@@ -9,9 +9,7 @@ jil.browserTest("spa multiple event handlers", function (t) {
   let helpers = require("./helpers");
 
   if (!window.performance) {
-    t.skip(
-      "skipping SPA test in browser that does not support window.performance"
-    );
+    t.skip("skipping SPA test in browser that does not support window.performance");
     t.end();
     return;
   }
@@ -68,14 +66,8 @@ jil.browserTest("spa multiple event handlers", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }

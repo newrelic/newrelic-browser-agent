@@ -24,13 +24,8 @@ function runTest(title, htmlPage, supported) {
         return clickPageAndWaitForEvents(browser, router);
       })
       .then(({ query, body }) => {
-        let interactionTree = querypack.decode(
-          body && body.length ? body : query.e
-        )[0];
-        t.ok(
-          interactionTree.end >= interactionTree.start,
-          "interaction end time should be >= start"
-        );
+        let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
+        t.ok(interactionTree.end >= interactionTree.start, "interaction end time should be >= start");
         t.ok(
           interactionTree.callbackEnd >= interactionTree.start,
           "interaaction callback end should be >= interaction start"
@@ -46,24 +41,12 @@ function runTest(title, htmlPage, supported) {
         t.equal(xhr.type, "ajax", "should be an ajax node");
         t.equal(xhr.method, "GET", "should be a GET request");
         t.equal(xhr.status, 200, "should have a 200 status");
-        t.equal(
-          xhr.domain.split(":")[0],
-          "bam-test-1.nr-local.net",
-          "should have a correct hostname"
-        );
+        t.equal(xhr.domain.split(":")[0], "bam-test-1.nr-local.net", "should have a correct hostname");
         var port = +xhr.domain.split(":")[1];
         t.ok(port > 1000 && port < 100000, "port should be in expected range");
         t.equal(xhr.requestBodySize, 0, "should have correct requestBodySize");
-        t.equal(
-          xhr.responseBodySize,
-          0,
-          "should have correct responseBodySize"
-        );
-        t.equal(
-          xhr.requestedWith,
-          "JSONP",
-          "should indicate it was requested with JSONP"
-        );
+        t.equal(xhr.responseBodySize, 0, "should have correct responseBodySize");
+        t.equal(xhr.requestedWith, "JSONP", "should indicate it was requested with JSONP");
         t.equal(xhr.children.length, 1, "expected one child node");
 
         var tracer = xhr.children[0];
@@ -80,76 +63,52 @@ function runTest(title, htmlPage, supported) {
   });
 }
 
-testDriver.test(
-  "JSONP on initial page load",
-  supported,
-  function (t, browser, router) {
-    t.plan(16);
+testDriver.test("JSONP on initial page load", supported, function (t, browser, router) {
+  t.plan(16);
 
-    waitForPageLoad(browser, router, "spa/jsonp/load.html")
-      .then((result) => {
-        let query, body;
-        ({ query, body } = result[1]);
+  waitForPageLoad(browser, router, "spa/jsonp/load.html")
+    .then((result) => {
+      let query, body;
+      ({ query, body } = result[1]);
 
-        let interactionTree = querypack.decode(
-          body && body.length ? body : query.e
-        )[0];
-        t.ok(
-          interactionTree.end >= interactionTree.start,
-          "interaction end time should be >= start"
-        );
-        t.ok(
-          interactionTree.callbackEnd >= interactionTree.start,
-          "interaaction callback end should be >= interaction start"
-        );
-        t.ok(
-          interactionTree.callbackEnd <= interactionTree.end,
-          "interaction callback end should be <= interaction end"
-        );
-        t.equal(interactionTree.children.length, 1, "expected one child node");
+      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
+      t.ok(interactionTree.end >= interactionTree.start, "interaction end time should be >= start");
+      t.ok(
+        interactionTree.callbackEnd >= interactionTree.start,
+        "interaaction callback end should be >= interaction start"
+      );
+      t.ok(interactionTree.callbackEnd <= interactionTree.end, "interaction callback end should be <= interaction end");
+      t.equal(interactionTree.children.length, 1, "expected one child node");
 
-        var xhr = interactionTree.children[0];
+      var xhr = interactionTree.children[0];
 
-        t.equal(xhr.type, "ajax", "should be an ajax node");
-        t.equal(xhr.method, "GET", "should be a GET request");
-        t.equal(xhr.status, 200, "should have a 200 status");
-        t.equal(
-          xhr.domain.split(":")[0],
-          "bam-test-1.nr-local.net",
-          "should have a correct hostname"
-        );
-        var port = +xhr.domain.split(":")[1];
-        t.ok(port > 1000 && port < 100000, "port should be in expected range");
-        t.equal(xhr.requestBodySize, 0, "should have correct requestBodySize");
-        t.equal(
-          xhr.responseBodySize,
-          0,
-          "should have correct responseBodySize"
-        );
-        t.equal(
-          xhr.requestedWith,
-          "JSONP",
-          "should indicate it was requested with JSONP"
-        );
-        t.comment("second: " + xhr.children.length);
-        t.ok(xhr.children.length >= 1, "expected at least one child node");
+      t.equal(xhr.type, "ajax", "should be an ajax node");
+      t.equal(xhr.method, "GET", "should be a GET request");
+      t.equal(xhr.status, 200, "should have a 200 status");
+      t.equal(xhr.domain.split(":")[0], "bam-test-1.nr-local.net", "should have a correct hostname");
+      var port = +xhr.domain.split(":")[1];
+      t.ok(port > 1000 && port < 100000, "port should be in expected range");
+      t.equal(xhr.requestBodySize, 0, "should have correct requestBodySize");
+      t.equal(xhr.responseBodySize, 0, "should have correct responseBodySize");
+      t.equal(xhr.requestedWith, "JSONP", "should indicate it was requested with JSONP");
+      t.comment("second: " + xhr.children.length);
+      t.ok(xhr.children.length >= 1, "expected at least one child node");
 
-        var tracer = xhr.children.find(function (node) {
-          return node.type === "customTracer";
-        });
+      var tracer = xhr.children.find(function (node) {
+        return node.type === "customTracer";
+      });
 
-        t.ok(tracer, "xhr must have a child node of tracer");
-        t.equal(tracer.name, "tacoTimer", "tracer should be named tacoTimer");
-        t.equal(tracer.children.length, 0, "should not have nested children");
-      })
-      .catch(fail);
+      t.ok(tracer, "xhr must have a child node of tracer");
+      t.equal(tracer.name, "tacoTimer", "tracer should be named tacoTimer");
+      t.equal(tracer.children.length, 0, "should not have nested children");
+    })
+    .catch(fail);
 
-    function fail(err) {
-      t.error(err);
-      t.end();
-    }
+  function fail(err) {
+    t.error(err);
+    t.end();
   }
-);
+});
 
 testDriver.test("two JSONP events", supported, function (t, browser, router) {
   t.plan(14);
@@ -159,21 +118,13 @@ testDriver.test("two JSONP events", supported, function (t, browser, router) {
       return clickPageAndWaitForEvents(browser, router);
     })
     .then(({ query, body }) => {
-      let interactionTree = querypack.decode(
-        body && body.length ? body : query.e
-      )[0];
-      t.ok(
-        interactionTree.end >= interactionTree.start,
-        "interaction end time should be >= start"
-      );
+      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
+      t.ok(interactionTree.end >= interactionTree.start, "interaction end time should be >= start");
       t.ok(
         interactionTree.callbackEnd >= interactionTree.start,
         "interaaction callback end should be >= interaction start"
       );
-      t.ok(
-        interactionTree.callbackEnd <= interactionTree.end,
-        "interaction callback end should be <= interaction end"
-      );
+      t.ok(interactionTree.callbackEnd <= interactionTree.end, "interaction callback end should be <= interaction end");
       t.equal(interactionTree.children.length, 2, "expected two child nodes");
 
       // First jsonp
@@ -182,10 +133,7 @@ testDriver.test("two JSONP events", supported, function (t, browser, router) {
       t.equal(firstJsonp.children.length, 1, "expected one child node");
       var tracerOne = firstJsonp.children[0];
       t.equal(tracerOne.type, "customTracer", "child must be a custom tracer");
-      t.ok(
-        tracerOne.name.match(/tacoTimer/),
-        "tracer should be named tacoTimer"
-      );
+      t.ok(tracerOne.name.match(/tacoTimer/), "tracer should be named tacoTimer");
       t.equal(tracerOne.children.length, 0, "should not have nested children");
 
       // Second jsonp
@@ -194,10 +142,7 @@ testDriver.test("two JSONP events", supported, function (t, browser, router) {
       t.equal(secondJsonp.children.length, 1, "expected one child node");
       var tracerTwo = secondJsonp.children[0];
       t.equal(tracerTwo.type, "customTracer", "child must be a custom tracer");
-      t.ok(
-        tracerTwo.name.match(/tacoTimer/),
-        "tracer should be named tacoTimer"
-      );
+      t.ok(tracerTwo.name.match(/tacoTimer/), "tracer should be named tacoTimer");
       t.equal(tracerTwo.children.length, 0, "should not have nested children");
     })
     .catch(fail);
@@ -208,43 +153,29 @@ testDriver.test("two JSONP events", supported, function (t, browser, router) {
   }
 });
 
-testDriver.test(
-  "JSONP with non-JSON response",
-  supported,
-  function (t, browser, router) {
-    t.plan(4);
+testDriver.test("JSONP with non-JSON response", supported, function (t, browser, router) {
+  t.plan(4);
 
-    waitForPageLoad(browser, router, "spa/jsonp/plaintext.html")
-      .then(() => {
-        return clickPageAndWaitForEvents(browser, router);
-      })
-      .then(({ query, body }) => {
-        let interactionTree = querypack.decode(
-          body && body.length ? body : query.e
-        )[0];
-        var xhr = interactionTree.children[0];
+  waitForPageLoad(browser, router, "spa/jsonp/plaintext.html")
+    .then(() => {
+      return clickPageAndWaitForEvents(browser, router);
+    })
+    .then(({ query, body }) => {
+      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
+      var xhr = interactionTree.children[0];
 
-        t.equal(xhr.status, 200, "should have a 200 status");
-        t.equal(xhr.requestBodySize, 0, "should have correct requestBodySize");
-        t.equal(
-          xhr.responseBodySize,
-          0,
-          "should have correct responseBodySize"
-        );
-        t.equal(
-          xhr.requestedWith,
-          "JSONP",
-          "should indicate it was requested with JSONP"
-        );
-      })
-      .catch(fail);
+      t.equal(xhr.status, 200, "should have a 200 status");
+      t.equal(xhr.requestBodySize, 0, "should have correct requestBodySize");
+      t.equal(xhr.responseBodySize, 0, "should have correct responseBodySize");
+      t.equal(xhr.requestedWith, "JSONP", "should indicate it was requested with JSONP");
+    })
+    .catch(fail);
 
-    function fail(err) {
-      t.error(err);
-      t.end();
-    }
+  function fail(err) {
+    t.error(err);
+    t.end();
   }
-);
+});
 
 testDriver.test("JSONP with error", supported, function (t, browser, router) {
   t.plan(5);
@@ -254,20 +185,14 @@ testDriver.test("JSONP with error", supported, function (t, browser, router) {
       return clickPageAndWaitForEvents(browser, router);
     })
     .then(({ query, body }) => {
-      let interactionTree = querypack.decode(
-        body && body.length ? body : query.e
-      )[0];
+      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
       var xhr = interactionTree.children[0];
       t.ok(xhr, "xhr node should exist");
 
       t.equal(xhr.status, 0, "should have a 0 status");
       t.equal(xhr.requestBodySize, 0, "should have correct requestBodySize");
       t.equal(xhr.responseBodySize, 0, "should have correct responseBodySize");
-      t.equal(
-        xhr.requestedWith,
-        "JSONP",
-        "should indicate it was requested with JSONP"
-      );
+      t.equal(xhr.requestedWith, "JSONP", "should indicate it was requested with JSONP");
     })
     .catch(fail);
 
@@ -292,9 +217,7 @@ testDriver.test("JSONP timings", supported, function (t, browser, router) {
       return clickPageAndWaitForEvents(browser, router);
     })
     .then(({ query, body }) => {
-      let interactionTree = querypack.decode(
-        body && body.length ? body : query.e
-      )[0];
+      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0];
       var xhr = interactionTree.children[0];
       t.ok(xhr, "xhr node should exist");
 
@@ -304,10 +227,7 @@ testDriver.test("JSONP timings", supported, function (t, browser, router) {
 
       t.ok(asyncTime >= 1000, "asyncTime is bigger than 1s");
       t.ok(syncTime >= 1000, "syncTime is bigger than 1s");
-      t.ok(
-        totalDuration > asyncTime,
-        "total duration is bigger than async time"
-      );
+      t.ok(totalDuration > asyncTime, "total duration is bigger than async time");
       t.ok(totalDuration > syncTime, "total duration is bigger than sync time");
       t.ok(xhr.end > xhr.start, "end is bigger than start");
     })
@@ -333,10 +253,9 @@ function waitForPageLoad(browser, router, urlPath) {
 }
 
 function clickPageAndWaitForEvents(browser, router) {
-  return Promise.all([
-    router.expectEvents(),
-    browser.elementByCssSelector("body").click(),
-  ]).then(([eventData, domData]) => {
-    return eventData;
-  });
+  return Promise.all([router.expectEvents(), browser.elementByCssSelector("body").click()]).then(
+    ([eventData, domData]) => {
+      return eventData;
+    }
+  );
 }

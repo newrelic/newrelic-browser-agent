@@ -48,11 +48,7 @@ function ajaxEventsEnabled(type, browserVersionMatcher) {
             t.ok("XMLHttpRequest & fetch events were harvested");
           } else {
             // one of these should fail, unless browser only supports XHR not fetch
-            t.equal(
-              response[0].requestedWith,
-              "XMLHttpRequest",
-              "XHR is harvested"
-            );
+            t.equal(response[0].requestedWith, "XMLHttpRequest", "XHR is harvested");
             if (browser.match(supportsFetch)) {
               t.equal(response[0].requestedWith, "fetch", "fetch is harvested");
             }
@@ -154,28 +150,15 @@ function ajaxDTInfo(type, browserVersionMatcher) {
             t.ok("XMLHttpRequest & fetch events were harvested");
           } else {
             // one of these should fail, unless browser only supports XHR not fetch
-            t.equal(
-              response[0].requestedWith,
-              "XMLHttpRequest",
-              "XHR is harvested"
-            );
+            t.equal(response[0].requestedWith, "XMLHttpRequest", "XHR is harvested");
             if (browser.match(supportsFetch)) {
               t.equal(response[0].requestedWith, "fetch", "fetch is harvested");
             }
           }
           response.forEach((r) => {
-            t.ok(
-              r.guid && r.guid.length > 0,
-              "should be a non-empty guid string"
-            );
-            t.ok(
-              r.traceId && r.traceId.length > 0,
-              "should be a non-empty traceId string"
-            );
-            t.ok(
-              r.timestamp != null && r.timestamp > 0,
-              "should be a non-zero timestamp"
-            );
+            t.ok(r.guid && r.guid.length > 0, "should be a non-empty guid string");
+            t.ok(r.traceId && r.traceId.length > 0, "should be a non-empty traceId string");
+            t.ok(r.timestamp != null && r.timestamp > 0, "should be a non-zero timestamp");
           });
           t.end();
         })

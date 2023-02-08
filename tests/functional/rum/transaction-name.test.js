@@ -11,9 +11,7 @@ testDriver.test("RUM transactionName", withTls, function (t, browser, router) {
   t.plan(2);
 
   let rumPromise = router.expectRum();
-  let loadPromise = browser.get(
-    router.assetURL("instrumented.html", { config: { transactionName: "abc" } })
-  );
+  let loadPromise = browser.get(router.assetURL("instrumented.html", { config: { transactionName: "abc" } }));
 
   Promise.all([rumPromise, loadPromise])
     .then(([{ query }]) => {
@@ -32,9 +30,7 @@ testDriver.test("RUM tNamePlain", withTls, function (t, browser, router) {
   t.plan(2);
 
   let rumPromise = router.expectRum();
-  let loadPromise = browser.get(
-    router.assetURL("instrumented.html", { config: { tNamePlain: "abc" } })
-  );
+  let loadPromise = browser.get(router.assetURL("instrumented.html", { config: { tNamePlain: "abc" } }));
 
   Promise.all([rumPromise, loadPromise])
     .then(([{ query }]) => {
@@ -49,28 +45,22 @@ testDriver.test("RUM tNamePlain", withTls, function (t, browser, router) {
   }
 });
 
-testDriver.test(
-  "RUM transactionName and tNamePlain",
-  withTls,
-  function (t, browser, router) {
-    t.plan(2);
-    let options = { config: { transactionName: "abc", tNamePlain: "def" } };
+testDriver.test("RUM transactionName and tNamePlain", withTls, function (t, browser, router) {
+  t.plan(2);
+  let options = { config: { transactionName: "abc", tNamePlain: "def" } };
 
-    let rumPromise = router.expectRum();
-    let loadPromise = browser.get(
-      router.assetURL("instrumented.html", options)
-    );
+  let rumPromise = router.expectRum();
+  let loadPromise = browser.get(router.assetURL("instrumented.html", options));
 
-    Promise.all([rumPromise, loadPromise])
-      .then(([{ query }]) => {
-        t.equal(query.to, "abc", "has correct obfuscated transactionName");
-        t.equal(query.t, undefined, "tNamePlain excluded");
-      })
-      .catch(fail);
+  Promise.all([rumPromise, loadPromise])
+    .then(([{ query }]) => {
+      t.equal(query.to, "abc", "has correct obfuscated transactionName");
+      t.equal(query.t, undefined, "tNamePlain excluded");
+    })
+    .catch(fail);
 
-    function fail(e) {
-      t.error(e);
-      t.end();
-    }
+  function fail(e) {
+    t.error(e);
+    t.end();
   }
-);
+});

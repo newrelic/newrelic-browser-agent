@@ -5,10 +5,7 @@
 
 import test from "../../tools/jil/browser-test";
 import { setup } from "./utils/setup";
-import {
-  setConfiguration,
-  getConfigurationValue,
-} from "../../src/common/config/config";
+import { setConfiguration, getConfigurationValue } from "../../src/common/config/config";
 
 const { agentIdentifier } = setup();
 

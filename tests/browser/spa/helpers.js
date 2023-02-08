@@ -9,15 +9,9 @@ const { setup } = require("../utils/setup");
 const setupData = setup();
 const { baseEE, agentIdentifier, aggregator, nr } = setupData;
 
-const {
-  Instrument: AjaxInstrument,
-} = require("../../../src/features/ajax/instrument/index");
-const {
-  Instrument: SpaInstrument,
-} = require("../../../src/features/spa/instrument/index");
-const {
-  Aggregate: SpaAggregate,
-} = require("../../../src/features/spa/aggregate/index");
+const { Instrument: AjaxInstrument } = require("../../../src/features/ajax/instrument/index");
+const { Instrument: SpaInstrument } = require("../../../src/features/spa/instrument/index");
+const { Aggregate: SpaAggregate } = require("../../../src/features/spa/aggregate/index");
 new AjaxInstrument(agentIdentifier, aggregator, false);
 new SpaInstrument(agentIdentifier, aggregator, false);
 let spaAgg;
@@ -41,9 +35,7 @@ var afterLoad = false;
 jil.onWindowLoaded(function () {
   afterLoad = true;
   originalSetTimeout(function () {
-    const {
-      Aggregate: InsAggregate,
-    } = require("../../../src/features/page_action/aggregate/index");
+    const { Aggregate: InsAggregate } = require("../../../src/features/page_action/aggregate/index");
     new InsAggregate(agentIdentifier, aggregator);
     if (!spaAgg) spaAgg = new SpaAggregate(agentIdentifier, aggregator);
     drain(agentIdentifier, "api");
@@ -68,11 +60,7 @@ if (afterLoad) {
 
 timerEE.on("setTimeout-end", function (args) {
   if (!isEdge()) return;
-  if (
-    args[0] &&
-    args[0]["nr@original"] &&
-    args[0]["nr@original"].toString().match(/\[native code\]/)
-  ) {
+  if (args[0] && args[0]["nr@original"] && args[0]["nr@original"].toString().match(/\[native code\]/)) {
     this.method = "setTimeout (internal)";
   }
 });
@@ -125,11 +113,7 @@ function isInternetExplorer() {
   return userAgent.match(/msie/i) || userAgent.match(/rv:(\d+)/);
 }
 
-function startInteraction(
-  onInteractionStart,
-  afterInteractionFinish,
-  options = {}
-) {
+function startInteraction(onInteractionStart, afterInteractionFinish, options = {}) {
   let interactionId = null;
   let done = false;
   let eventType = options.eventType || "click";
@@ -150,9 +134,7 @@ function startInteraction(
 
   baseEE.on("interaction", function (interaction) {
     let id = interaction.root.attrs.custom.__interactionId;
-    let isInitialPageLoad =
-      eventType === "initialPageLoad" &&
-      interaction.root.attrs.trigger === "initialPageLoad";
+    let isInitialPageLoad = eventType === "initialPageLoad" && interaction.root.attrs.trigger === "initialPageLoad";
     if (done) {
       if (isInitialPageLoad) {
         afterInteractionFinish(interaction);
@@ -234,8 +216,7 @@ InteractionValidator.prototype.initialize = function initialize() {
     validator.count += 1; // name
     if (node.jsTime) validator.count += 1;
     if (node.attrs) validator.count += Object.keys(node.attrs).length;
-    if (TIMED_NODE_TYPES.indexOf(node.name || node.type) !== -1)
-      validator.count += 5;
+    if (TIMED_NODE_TYPES.indexOf(node.name || node.type) !== -1) validator.count += 5;
   });
 };
 
@@ -247,8 +228,7 @@ InteractionValidator.prototype.validate = function validate(t, interaction) {
   this.forEachNode(root, function validateNode(expected, actual) {
     mapOwn(expected, function (key) {
       // mak sure we don't pass because of a typo
-      if (handledKeys.indexOf(key) === -1)
-        t.fail("expected unknown key " + key);
+      if (handledKeys.indexOf(key) === -1) t.fail("expected unknown key " + key);
     });
 
     if (actual.jsTime) totalDuration += actual.jsTime;
@@ -266,39 +246,19 @@ InteractionValidator.prototype.validate = function validate(t, interaction) {
 
     t.ok(actual.children, "node should have children");
     t.equal(actual.type, expected.type || expected.name, "type should match");
-    t.equal(
-      actual.children.length,
-      expectedChildCount,
-      "node should have expected number of children"
-    );
+    t.equal(actual.children.length, expectedChildCount, "node should have expected number of children");
 
     if (TIMED_NODE_TYPES.indexOf(actual.type) !== -1) {
-      if (
-        actual.type === "interaction" &&
-        actual.attrs.trigger === "initialPageLoad"
-      ) {
-        t.equal(
-          actual.start,
-          0,
-          actual.type + " node has a zero start time for initial page loads"
-        );
+      if (actual.type === "interaction" && actual.attrs.trigger === "initialPageLoad") {
+        t.equal(actual.start, 0, actual.type + " node has a zero start time for initial page loads");
       } else {
         t.ok(actual.start, actual.type + " node has non-zero start time");
       }
 
-      t.ok(
-        actual.end >= actual.start,
-        actual.type + " node has end time >= start"
-      );
+      t.ok(actual.end >= actual.start, actual.type + " node has end time >= start");
       t.ok(actual.jsTime >= 0, actual.type + " node has a callback time >= 0");
-      t.ok(
-        actual.jsEnd >= actual.start,
-        actual.type + " node has a callback end time >= start"
-      );
-      t.ok(
-        actual.jsEnd >= actual.start + actual.jsTime,
-        actual.type + " jsEnd - jsTime <= start"
-      );
+      t.ok(actual.jsEnd >= actual.start, actual.type + " node has a callback end time >= start");
+      t.ok(actual.jsEnd >= actual.start + actual.jsTime, actual.type + " jsEnd - jsTime <= start");
       endTime = Math.max(endTime, actual.jsEnd, actual.end);
     }
   });
@@ -310,10 +270,7 @@ InteractionValidator.prototype.validate = function validate(t, interaction) {
   t.equal(root.end, endTime, "should have correct end Time");
 };
 
-InteractionValidator.prototype.forEachNode = function forEachNode(
-  interactionNode,
-  fn
-) {
+InteractionValidator.prototype.forEachNode = function forEachNode(interactionNode, fn) {
   runNode(this.json, interactionNode);
 
   function runNode(node, interactionNode) {
@@ -321,10 +278,7 @@ InteractionValidator.prototype.forEachNode = function forEachNode(
     if (interactionNode) interactionNode.children.sort(byId);
     if (node.children) {
       for (var i = 0; i < node.children.length; ++i) {
-        runNode(
-          node.children[i],
-          interactionNode ? interactionNode.children[i] : null
-        );
+        runNode(node.children[i], interactionNode ? interactionNode.children[i] : null);
       }
     }
   }
@@ -347,10 +301,7 @@ function filterInternal(original) {
 
   function filteredChildren(children) {
     return children.reduce((list, child) => {
-      if (
-        child.type !== "timer" ||
-        child.attrs.method !== "setTimeout (internal)"
-      ) {
+      if (child.type !== "timer" || child.attrs.method !== "setTimeout (internal)") {
         return list.concat([filterInternal(child)]);
       }
 

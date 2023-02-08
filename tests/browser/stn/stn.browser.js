@@ -6,21 +6,11 @@
 const test = require("../../../tools/jil/browser-test.js");
 const { setup } = require("../utils/setup");
 
-const {
-  Instrument: StnInstrument,
-} = require("../../../src/features/session_trace/instrument/index");
-const {
-  Instrument: AjaxInstrument,
-} = require("../../../src/features/ajax/instrument/index");
-const {
-  Aggregate: AjaxAggregate,
-} = require("../../../src/features/ajax/aggregate/index");
-const {
-  Instrument: JsErrorsInstrument,
-} = require("../../../src/features/jserrors/instrument/index");
-const {
-  Aggregate: JsErrorsAggregate,
-} = require("../../../src/features/jserrors/aggregate/index");
+const { Instrument: StnInstrument } = require("../../../src/features/session_trace/instrument/index");
+const { Instrument: AjaxInstrument } = require("../../../src/features/ajax/instrument/index");
+const { Aggregate: AjaxAggregate } = require("../../../src/features/ajax/aggregate/index");
+const { Instrument: JsErrorsInstrument } = require("../../../src/features/jserrors/instrument/index");
+const { Aggregate: JsErrorsAggregate } = require("../../../src/features/jserrors/aggregate/index");
 
 const { drain } = require("../../../src/common/drain/drain");
 
@@ -36,11 +26,7 @@ drain(agentIdentifier, "api");
 
 let originalPath = window.location.pathname;
 
-if (
-  window.performance &&
-  window.performance.timing &&
-  window.performance.getEntriesByType
-) {
+if (window.performance && window.performance.timing && window.performance.getEntriesByType) {
   runTests();
 } else {
   test("unsupported browser", function (t) {
@@ -77,13 +63,9 @@ function runTests() {
   });
 
   test("session trace nodes", function (t) {
-    const {
-      Aggregate: StnAggregate,
-    } = require("../../../src/features/session_trace/aggregate/index");
+    const { Aggregate: StnAggregate } = require("../../../src/features/session_trace/aggregate/index");
     const stnAgg = new StnAggregate(agentIdentifier, aggregator);
-    const {
-      Aggregate: PvtAggregate,
-    } = require("../../../src/features/page_view_timing/aggregate/index");
+    const { Aggregate: PvtAggregate } = require("../../../src/features/page_view_timing/aggregate/index");
     const pvtAgg = new PvtAggregate(agentIdentifier, aggregator);
 
     let fiVal = 30;
@@ -99,10 +81,7 @@ function runTests() {
     let res = payload.body.res;
     let qs = payload.qs;
 
-    t.ok(
-      +qs.st > 1404952055986 && Date.now() > +qs.st,
-      "Start time is between recent time and now " + qs.st
-    );
+    t.ok(+qs.st > 1404952055986 && Date.now() > +qs.st, "Start time is between recent time and now " + qs.st);
 
     t.test("stn DOMContentLoaded", function (t) {
       let node = res.filter(function (node) {
@@ -185,10 +164,7 @@ function runTests() {
         }
         if (x.n === "fid") {
           t.ok(x.o === "document", "FID owner is document");
-          t.ok(
-            x.s === fiVal && x.e === fiVal + fidVal,
-            "FID has a duration relative to FI"
-          );
+          t.ok(x.s === fiVal && x.e === fiVal + fidVal, "FID has a duration relative to FI");
           t.ok(x.t === "event", "FID is an event node");
         }
       }

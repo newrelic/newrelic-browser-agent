@@ -21,18 +21,14 @@ const jserrTestAgg = new JsErrAggreg(agentIdentifier, aggregator);
 
 import ffVersion from "../../../src/common/browser-version/firefox-version";
 import ieVersion from "../../../src/common/browser-version/ie-version";
-const hasXhr =
-  window.XMLHttpRequest &&
-  XMLHttpRequest.prototype &&
-  XMLHttpRequest.prototype.addEventListener;
+const hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener;
 
 let onloadtime = 2;
 let loadeventtime = 2;
 let proto = location.protocol;
 let assetServerHTTPPort = nr.info.assetServerPort;
 let assetServerSSLPort = nr.info.assetServerSSLPort;
-let assetServerPort =
-  proto === "http:" ? assetServerHTTPPort : assetServerSSLPort;
+let assetServerPort = proto === "http:" ? assetServerHTTPPort : assetServerSSLPort;
 let corsServerPort = nr.info.corsServerPort;
 
 let assetServerHostname = window.location.host.split(":")[0];
@@ -52,8 +48,7 @@ test("xhr timing", function (t) {
 
   if (oldFF)
     test.log(
-      "Can't instrument 'xhr.onload' handlers because they become not functions when assigned in FF " +
-        ffVersion
+      "Can't instrument 'xhr.onload' handlers because they become not functions when assigned in FF " + ffVersion
     );
 
   baseEE.emit("feat-err", []);
@@ -83,10 +78,7 @@ test("xhr timing", function (t) {
     plan += testCase.plan;
 
     let fullURL = (testCase.host || "") + url + (testCase.qs || "");
-    let payload =
-      typeof testCase.payload === "function"
-        ? testCase.payload()
-        : testCase.payload;
+    let payload = typeof testCase.payload === "function" ? testCase.payload() : testCase.payload;
     let xhr = (testCase.xhr = new XMLHttpRequest());
     xhr.open(testCase.method || "GET", fullURL);
     fire("afterOpen", testCase, [t]);
@@ -99,20 +91,14 @@ test("xhr timing", function (t) {
   registerHandler(
     "xhr",
     async function (params, metrics, start) {
-      const { Aggregate: AjaxAggreg } = await import(
-        "../../../src/features/ajax/aggregate/index"
-      );
+      const { Aggregate: AjaxAggreg } = await import("../../../src/features/ajax/aggregate/index");
       const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator);
       ajaxTestAgg.storeXhr(params, metrics, start);
 
-      if ("pathname" in params)
-        fire("check", urls[params.pathname], [params, metrics, t]);
-      else if (params.method === "GET")
-        fire("check", urls["/"], [params, metrics, t]);
-      else if (params.method === "PUT")
-        fire("check", urls["/timeout"], [params, metrics, t]);
-      else if (params.method === "POST")
-        fire("check", urls["/asdf"], [params, metrics, t]);
+      if ("pathname" in params) fire("check", urls[params.pathname], [params, metrics, t]);
+      else if (params.method === "GET") fire("check", urls["/"], [params, metrics, t]);
+      else if (params.method === "PUT") fire("check", urls["/timeout"], [params, metrics, t]);
+      else if (params.method === "POST") fire("check", urls["/asdf"], [params, metrics, t]);
     },
     undefined,
     baseEE
@@ -144,14 +130,10 @@ var urls = {
       } else {
         t.ok(
           metrics.cbTime >= onloadtime + loadeventtime,
-          "Callbacks Took some time for /xhr_with_cat, one load and onload : " +
-            metrics.cbTime
+          "Callbacks Took some time for /xhr_with_cat, one load and onload : " + metrics.cbTime
         );
       }
-      t.skip(
-        params.pathname,
-        "does not have pathname when CAT data present for /xhr_with_cat"
-      );
+      t.skip(params.pathname, "does not have pathname when CAT data present for /xhr_with_cat");
     },
     afterOpen: function () {
       this.xhr.onload = wait;
@@ -170,10 +152,7 @@ var urls = {
   },
   "/timeout": {
     check: function (params, metrics, t) {
-      if (metrics.duration >= 300)
-        t.skip(
-          "status code for timeout request is 0 (browser does not support timeouts)"
-        );
+      if (metrics.duration >= 300) t.skip("status code for timeout request is 0 (browser does not support timeouts)");
       else t.equal(params.status, 0, "Status code for timeout request is 0");
       t.equal(metrics.txSize, undefined, "No txSize for empty put");
     },
@@ -190,10 +169,7 @@ var urls = {
       if (oldFF) {
         t.skip("old firefox has inconsistent timing");
       } else {
-        t.ok(
-          metrics.cbTime >= onloadtime,
-          "Callbacks Took some time for /echo, onload : " + metrics.cbTime
-        );
+        t.ok(metrics.cbTime >= onloadtime, "Callbacks Took some time for /echo, onload : " + metrics.cbTime);
       }
     },
     method: "POST",
@@ -207,11 +183,7 @@ var urls = {
     check: function (params, metrics, t) {
       t.equal(params.status, 200, "correct status for /xhr_no_cat");
       t.equal(params.method, "GET", "correct method for /xhr_no_cat");
-      t.equal(
-        params.pathname,
-        "/xhr_no_cat",
-        "correct pathname for /xhr_no_cat"
-      );
+      t.equal(params.pathname, "/xhr_no_cat", "correct pathname for /xhr_no_cat");
       t.ok(metrics.rxSize > 5, "Has some size for /xhr_no_cat");
       t.ok(metrics.duration > 1, "Took some time for /xhr_no_cat");
       t.notok(params.cat, "does not have CAT data for /xhr_no_cat");
@@ -220,8 +192,7 @@ var urls = {
       } else {
         t.ok(
           metrics.cbTime >= 4 && metrics.cbTime < 2000,
-          "Callbacks Took some time for /xhr_no_cat, two load handlers: " +
-            metrics.cbTime
+          "Callbacks Took some time for /xhr_no_cat, two load handlers: " + metrics.cbTime
         );
       }
     },
@@ -255,34 +226,15 @@ var urls = {
       return true;
     },
     check: function (params, metrics, t) {
-      t.equal(
-        params.status,
-        200,
-        "status for /xhr_with_cat/2 was " + params.status
-      );
-      t.equal(
-        params.pathname,
-        "/xhr_with_cat/2",
-        "got pathname for cross-origin XHR request"
-      );
-      t.notok(
-        params.cat,
-        "does not process CAT data for cross-origin XHR request"
-      );
+      t.equal(params.status, 200, "status for /xhr_with_cat/2 was " + params.status);
+      t.equal(params.pathname, "/xhr_with_cat/2", "got pathname for cross-origin XHR request");
+      t.notok(params.cat, "does not process CAT data for cross-origin XHR request");
       if (oldFF) {
         t.skip("old firefox has inconsistent timing");
       } else {
-        t.equal(
-          typeof metrics.cbTime,
-          "number",
-          "cbTime reported even w/o long running CBs"
-        );
+        t.equal(typeof metrics.cbTime, "number", "cbTime reported even w/o long running CBs");
       }
-      t.equal(
-        params.host,
-        assetServerHostname + ":" + corsServerPort,
-        "host has hostname and port"
-      );
+      t.equal(params.host, assetServerHostname + ":" + corsServerPort, "host has hostname and port");
     },
     host: proto + "//" + assetServerHostname + ":" + corsServerPort,
     plan: 5,
@@ -319,11 +271,7 @@ var urls = {
         var buffer = new Int8Array([104, 105, 33]); // 'hi!'
 
         var xhr = e.target;
-        t.deepEqual(
-          new Int8Array(xhr.response),
-          buffer,
-          "arraybuffer content matches"
-        );
+        t.deepEqual(new Int8Array(xhr.response), buffer, "arraybuffer content matches");
       };
     },
     payload: function () {
@@ -331,11 +279,7 @@ var urls = {
     }, // 'hi!'
     check: function (params, metrics, t) {
       t.equal(metrics.txSize, 3, "correct size for sent arraybuffer objects");
-      t.equal(
-        metrics.rxSize,
-        3,
-        "correct size for received arraybuffer objects"
-      );
+      t.equal(metrics.rxSize, 3, "correct size for received arraybuffer objects");
     },
     plan: 3,
   },
@@ -376,11 +320,7 @@ var urls = {
       }
     },
     check: function (params, metrics, t) {
-      t.equal(
-        metrics.rxSize,
-        '{"text":"hi!"}'.length,
-        "correct size for received JSON objects"
-      );
+      t.equal(metrics.rxSize, '{"text":"hi!"}'.length, "correct size for received JSON objects");
     },
     plan: 2,
   },
@@ -425,11 +365,7 @@ var urls = {
   "/gzipped": {
     plan: 1,
     check: function (params, metrics, t) {
-      t.equal(
-        metrics.rxSize,
-        10000,
-        "rxSize should be the uncompressed resource size"
-      );
+      t.equal(metrics.rxSize, 10000, "rxSize should be the uncompressed resource size");
     },
   },
   "/chunked": {
@@ -443,12 +379,8 @@ var urls = {
         "load",
         function () {
           let transferEncoding = xhr.getResponseHeader("transfer-encoding");
-          if (transferEncoding)
-            transferEncoding = transferEncoding.toLowerCase();
-          t.notok(
-            xhr.getResponseHeader("content-length"),
-            "content-length header should not be present"
-          );
+          if (transferEncoding) transferEncoding = transferEncoding.toLowerCase();
+          t.notok(xhr.getResponseHeader("content-length"), "content-length header should not be present");
         },
         false
       );

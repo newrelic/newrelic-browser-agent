@@ -20,9 +20,7 @@ test("ms-stream has undefined size", function (t) {
 
 test("arraybuffer returns response size", function (t) {
   if (typeof ArrayBuffer !== "function") {
-    t.comment(
-      "ArrayBuffer constructor is not supported in this browser, skipping"
-    );
+    t.comment("ArrayBuffer constructor is not supported in this browser, skipping");
     t.end();
     return;
   }

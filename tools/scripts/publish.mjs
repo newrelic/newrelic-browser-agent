@@ -20,11 +20,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
       logger.info(`Publishing package ${node}`);
 
       const outputPath = path.resolve(
-        path.join(
-          __dirname,
-          "../../",
-          projectGraph.nodes[node].data.targets.build.options.outputPath
-        )
+        path.join(__dirname, "../../", projectGraph.nodes[node].data.targets.build.options.outputPath)
       );
 
       execSync(`npm publish --tag ${tag} ${additionalArgs.join(" ")}`, {

@@ -14,14 +14,7 @@ var originalClearTimeout = originals.CT;
 
 var lastId = {};
 
-export function Interaction(
-  eventName,
-  timestamp,
-  url,
-  routeName,
-  onFinished,
-  agentIdentifier
-) {
+export function Interaction(eventName, timestamp, url, routeName, onFinished, agentIdentifier) {
   this.agentIdentifier = agentIdentifier;
   this.ee = ee.get(agentIdentifier);
 
@@ -37,12 +30,7 @@ export function Interaction(
   this.onFinished = onFinished;
   this.done = false;
 
-  var root = (this.root = new InteractionNode(
-    this,
-    null,
-    "interaction",
-    timestamp
-  ));
+  var root = (this.root = new InteractionNode(this, null, "interaction", timestamp));
   var attrs = root.attrs;
 
   attrs.trigger = eventName;
@@ -115,12 +103,9 @@ InteractionPrototype.finish = function finishInteraction() {
     this.onFinished(this);
   }
 
-  mapOwn(
-    getInfo(interaction.agentIdentifier).jsAttributes,
-    function (attr, value) {
-      if (!(attr in customAttrs)) customAttrs[attr] = value;
-    }
-  );
+  mapOwn(getInfo(interaction.agentIdentifier).jsAttributes, function (attr, value) {
+    if (!(attr in customAttrs)) customAttrs[attr] = value;
+  });
 
   root.end = endTimestamp;
   interaction.ee.emit("interaction", [this]);

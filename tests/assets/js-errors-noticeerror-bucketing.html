@@ -1,9 +1,6 @@
 <html>
   <head>
-    <meta
-      name="issue link"
-      content="https://issues.newrelic.com/browse/NR-40043"
-    />
+    <meta name="issue link" content="https://issues.newrelic.com/browse/NR-40043" />
     <title>Test recreation for NR-40443</title>
     {init} {config} {loader}
   </head>
@@ -18,10 +15,9 @@
     <h3>Expected</h3>
     Each of the error messages should be logged.
     <h3>Observed</h3>
-    In the customer's app, only the first error message was logged, overwriting
-    each subsequent error message. All errors were timestamped with the same
-    second, despite the Chrome debugger holding execution with a breakpoint on
-    the `noticeError` call, creating many seconds difference.
+    In the customer's app, only the first error message was logged, overwriting each subsequent error message. All
+    errors were timestamped with the same second, despite the Chrome debugger holding execution with a breakpoint on the
+    `noticeError` call, creating many seconds difference.
 
     <script>
       const uniqueErrorMessages = [

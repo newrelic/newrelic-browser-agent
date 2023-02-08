@@ -44,10 +44,7 @@ export function wrapJsonP(sharedEE) {
   // subscribe to events on the JSONP <script> element and wrap the JSONP callback
   // in order to track start and end of the interaction node
   function wrapElement(el) {
-    var isScript =
-      el &&
-      typeof el.nodeName === "string" &&
-      el.nodeName.toLowerCase() === "script";
+    var isScript = el && typeof el.nodeName === "string" && el.nodeName.toLowerCase() === "script";
     if (!isScript) return;
 
     var isValidElement = typeof el.addEventListener === "function";

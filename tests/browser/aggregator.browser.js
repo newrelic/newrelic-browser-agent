@@ -12,31 +12,11 @@ test("aggregator", function (t) {
   // Test condensed metric data when there is only one data point
   agg.store("foo", "bar", { misc: "params" }, { value: 1 });
   t.equal(agg.get("foo", "bar").params.misc, "params", "params set first time");
-  t.equal(
-    agg.get("foo", "bar").metrics.value.min,
-    undefined,
-    "condensed undefined min"
-  );
-  t.equal(
-    agg.get("foo", "bar").metrics.value.max,
-    undefined,
-    "condensed undefined max"
-  );
-  t.equal(
-    agg.get("foo", "bar").metrics.value.sos,
-    undefined,
-    "condensed undefined sos"
-  );
-  t.equal(
-    agg.get("foo", "bar").metrics.value.c,
-    undefined,
-    "condensed undefined c"
-  );
-  t.equal(
-    agg.get("foo", "bar").metrics.value.t,
-    1,
-    "condensed total value set"
-  );
+  t.equal(agg.get("foo", "bar").metrics.value.min, undefined, "condensed undefined min");
+  t.equal(agg.get("foo", "bar").metrics.value.max, undefined, "condensed undefined max");
+  t.equal(agg.get("foo", "bar").metrics.value.sos, undefined, "condensed undefined sos");
+  t.equal(agg.get("foo", "bar").metrics.value.c, undefined, "condensed undefined c");
+  t.equal(agg.get("foo", "bar").metrics.value.t, 1, "condensed total value set");
   t.equal(agg.get("foo", "bar").metrics.count, 1, "condensed count set");
 
   // Test metric data aggregation
@@ -123,16 +103,8 @@ test("get and take return the same data", function (t) {
       var getMetric = getMetrics[type][name];
       var hint = `type: ${type} name: ${name}`;
 
-      t.deepEqual(
-        takeMetric.params,
-        getMetric.params,
-        "params match for metric with " + hint
-      );
-      t.deepEqual(
-        takeMetric.metrics,
-        getMetric.metrics,
-        "metrics match for metric with " + hint
-      );
+      t.deepEqual(takeMetric.params, getMetric.params, "params match for metric with " + hint);
+      t.deepEqual(takeMetric.metrics, getMetric.metrics, "metrics match for metric with " + hint);
     });
   }
 });
@@ -144,21 +116,12 @@ test("merge single-value metric when there is no data in aggregator", function (
   agg.take(["merge"]);
 
   // merge[singleValueMetric -> no-data]
-  agg.merge(
-    "merge",
-    "bar",
-    singleValueMetric.metrics,
-    singleValueMetric.params
-  );
+  agg.merge("merge", "bar", singleValueMetric.metrics, singleValueMetric.params);
 
   // validate
   var metrics = agg.get("merge").bar.metrics;
   t.equal(metrics.count, 1, "count value set");
-  t.equal(
-    metrics.value.t,
-    singleValueMetric.metrics.value.t,
-    "single-value t value set"
-  );
+  t.equal(metrics.value.t, singleValueMetric.metrics.value.t, "single-value t value set");
 });
 
 test("merge metric when there is no data in aggregator", function (t) {
@@ -188,12 +151,7 @@ test("merge single-value metric into single-value metric", function (t) {
 
   // merge[singleValueMetric -> singleValueMetric]
   agg.store("merge", "bar", { other: "blah" }, { value: 2 });
-  agg.merge(
-    "merge",
-    "bar",
-    singleValueMetric.metrics,
-    singleValueMetric.params
-  );
+  agg.merge("merge", "bar", singleValueMetric.metrics, singleValueMetric.params);
 
   // validate
   var metrics = agg.get("merge").bar.metrics;
@@ -234,12 +192,7 @@ test("merge single-value metric into metric", function (t) {
   // merge[singleValueMetric -> metric]
   agg.store("merge", "bar", { other: "blah" }, { value: 2 });
   agg.store("merge", "bar", { other: "blah" }, { value: 3 });
-  agg.merge(
-    "merge",
-    "bar",
-    singleValueMetric.metrics,
-    singleValueMetric.params
-  );
+  agg.merge("merge", "bar", singleValueMetric.metrics, singleValueMetric.params);
 
   // validate
   var metrics = agg.get("merge").bar.metrics;

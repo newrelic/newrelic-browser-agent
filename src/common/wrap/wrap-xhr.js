@@ -30,15 +30,7 @@ export function wrapXhr(sharedEE) {
 
   var READY_STATE_CHANGE = "readystatechange";
 
-  var handlers = [
-    "onload",
-    "onerror",
-    "onabort",
-    "onloadstart",
-    "onloadend",
-    "onprogress",
-    "ontimeout",
-  ];
+  var handlers = ["onload", "onerror", "onabort", "onloadstart", "onloadend", "onprogress", "ontimeout"];
   var pendingXhrs = [];
 
   var activeListeners = globalScope.XMLHttpRequest.listeners;
@@ -47,17 +39,11 @@ export function wrapXhr(sharedEE) {
 
   function newXHR(opts) {
     var xhr = new OrigXHR(opts);
-    this.listeners = activeListeners
-      ? [...activeListeners, intercept]
-      : [intercept];
+    this.listeners = activeListeners ? [...activeListeners, intercept] : [intercept];
     function intercept() {
       try {
         ee.emit("new-xhr", [xhr], xhr);
-        xhr.addEventListener(
-          READY_STATE_CHANGE,
-          wrapXHR,
-          eventListenerOpts(false)
-        );
+        xhr.addEventListener(READY_STATE_CHANGE, wrapXHR, eventListenerOpts(false));
       } catch (e) {
         warn("An error occured while intercepting XHR", e);
         try {

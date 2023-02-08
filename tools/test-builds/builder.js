@@ -11,9 +11,7 @@ print('Bundling "Test Builds"');
 recurse(root);
 
 function print(msg) {
-  console.log(
-    `\n================================\n${msg}\n================================\n`
-  );
+  console.log(`\n================================\n${msg}\n================================\n`);
 }
 
 // Recurses into a folder
@@ -46,9 +44,7 @@ function build(folder) {
 function subfolders(folder) {
   return fs
     .readdirSync(folder)
-    .filter((subfolder) =>
-      fs.statSync(path.join(folder, subfolder)).isDirectory()
-    )
+    .filter((subfolder) => fs.statSync(path.join(folder, subfolder)).isDirectory())
     .filter((subfolder) => subfolder !== "node_modules" && subfolder[0] !== ".")
     .map((subfolder) => path.join(folder, subfolder));
 }

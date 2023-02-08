@@ -107,8 +107,7 @@ describe("errors with stack property", () => {
   test("parser can handle chrome eval stack", () => {
     const mockError = browserErrorUtils.constructError({
       ...baseMockError,
-      stack:
-        "    at foobar (eval at foobar (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html))",
+      stack: "    at foobar (eval at foobar (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html))",
     });
 
     const result = computeStackTrace(mockError);

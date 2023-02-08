@@ -58,14 +58,7 @@ module.exports = {
     if (listedObjects.IsTruncated) await emptyS3Directory(bucket, dir);
   },
 
-  uploadToS3: function uploadToS3(
-    fileName,
-    content,
-    bucket,
-    dry = false,
-    maxAge = 3600,
-    expires
-  ) {
+  uploadToS3: function uploadToS3(fileName, content, bucket, dry = false, maxAge = 3600, expires) {
     return new Promise((resolve, reject) => {
       console.log("expires?", expires);
       var params = {

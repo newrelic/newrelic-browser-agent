@@ -2,11 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import {
-  createWrapperWithEmitter as wrapFn,
-  wrapInPlace,
-  argsToArray,
-} from "./wrap-function";
+import { createWrapperWithEmitter as wrapFn, wrapInPlace, argsToArray } from "./wrap-function";
 import { ee as baseEE, getOrSetContext } from "../event-emitter/contextual-ee";
 import { mapOwn } from "../util/map-own";
 import { originals } from "../config/config";
@@ -47,13 +43,7 @@ export function wrapPromise(sharedEE) {
 
         function setNrId(overwrite) {
           return function () {
-            promiseEE.emit(
-              "propagate",
-              [null, !finalized],
-              originalReturnValue,
-              false,
-              false
-            );
+            promiseEE.emit("propagate", [null, !finalized], originalReturnValue, false, false);
             finalized = finalized || !overwrite;
           };
         }
@@ -89,13 +79,7 @@ export function wrapPromise(sharedEE) {
 
     function WrappedPromise(executor) {
       var ctx = promiseEE.context();
-      var wrappedExecutor = promiseWrapper(
-        executor,
-        "executor-",
-        ctx,
-        null,
-        false
-      );
+      var wrappedExecutor = promiseWrapper(executor, "executor-", ctx, null, false);
 
       var promise = new OriginalPromise(wrappedExecutor);
 
@@ -135,13 +119,7 @@ export function wrapPromise(sharedEE) {
     });
 
     promiseEE.on("cb-end", function (args, originalThis, result) {
-      promiseEE.emit(
-        "propagate",
-        [result, true],
-        this.nextPromise,
-        false,
-        false
-      );
+      promiseEE.emit("propagate", [result, true], this.nextPromise, false, false);
     });
 
     promiseEE.on("propagate", function (val, overwrite, trigger) {

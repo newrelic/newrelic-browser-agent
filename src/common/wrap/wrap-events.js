@@ -33,11 +33,7 @@ export function wrapEvents(sharedEE) {
 
   ee.on(ADD_EVENT_LISTENER + "-start", function (args, target) {
     var originalListener = args[1];
-    if (
-      originalListener === null ||
-      (typeof originalListener !== "function" &&
-        typeof originalListener !== "object")
-    ) {
+    if (originalListener === null || (typeof originalListener !== "function" && typeof originalListener !== "object")) {
       return;
     }
 
@@ -47,9 +43,7 @@ export function wrapEvents(sharedEE) {
         function: originalListener,
       }[typeof originalListener];
 
-      return listener
-        ? wrapFn(listener, "fn-", null, listener.name || "anonymous")
-        : originalListener;
+      return listener ? wrapFn(listener, "fn-", null, listener.name || "anonymous") : originalListener;
 
       function wrapHandleEvent() {
         if (typeof originalListener.handleEvent !== "function") return;
@@ -76,12 +70,7 @@ export function wrapEvents(sharedEE) {
   }
 
   function wrapNode(node) {
-    wrapFn.inPlace(
-      node,
-      [ADD_EVENT_LISTENER, REMOVE_EVENT_LISTENER],
-      "-",
-      uniqueListener
-    );
+    wrapFn.inPlace(node, [ADD_EVENT_LISTENER, REMOVE_EVENT_LISTENER], "-", uniqueListener);
   }
 
   function uniqueListener(args, obj) {

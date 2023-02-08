@@ -10,24 +10,10 @@ export class Aggregate extends AggregateBase {
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME);
 
-    registerHandler(
-      "storeMetric",
-      (...args) => this.storeMetric(...args),
-      this.featureName,
-      this.ee
-    );
-    registerHandler(
-      "storeEventMetrics",
-      (...args) => this.storeEventMetrics(...args),
-      this.featureName,
-      this.ee
-    );
+    registerHandler("storeMetric", (...args) => this.storeMetric(...args), this.featureName, this.ee);
+    registerHandler("storeEventMetrics", (...args) => this.storeEventMetrics(...args), this.featureName, this.ee);
 
-    var harvestTimeSeconds =
-      getConfigurationValue(
-        this.agentIdentifier,
-        "metrics.harvestTimeSeconds"
-      ) || 30;
+    var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, "metrics.harvestTimeSeconds") || 30;
 
     var scheduler = new HarvestScheduler("jserrors", {}, this);
     scheduler.harvest.on("jserrors", () => ({

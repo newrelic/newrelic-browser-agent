@@ -6,11 +6,7 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    <link
-      rel="modulepreload"
-      href="./js/classic-worker.js"
-      type="text/javascript"
-    />
+    <link rel="modulepreload" href="./js/classic-worker.js" type="text/javascript" />
     {init} {config} {worker-commands}
   </head>
 
@@ -25,9 +21,7 @@
       worker.onmessage = function ({ data: { type } }) {
         if (type === "ready") {
           workerCommands = window.workerCommands || [];
-          workerCommands.forEach((command) =>
-            worker.postMessage({ type: "command", fn: command })
-          );
+          workerCommands.forEach((command) => worker.postMessage({ type: "command", fn: command }));
         }
       };
 

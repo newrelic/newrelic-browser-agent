@@ -14,11 +14,7 @@ import { HarvestScheduler } from "../../../common/harvest/harvest-scheduler";
 import { stringify } from "../../../common/util/stringify";
 import { handle } from "../../../common/event-emitter/handle";
 import { mapOwn } from "../../../common/util/map-own";
-import {
-  getInfo,
-  getConfigurationValue,
-  getRuntime,
-} from "../../../common/config/config";
+import { getInfo, getConfigurationValue, getRuntime } from "../../../common/config/config";
 import { now } from "../../../common/timing/now";
 import { globalScope } from "../../../common/util/global-scope";
 
@@ -41,42 +37,22 @@ export class Aggregate extends AggregateBase {
     this.errorOnPage = false;
 
     // this will need to change to match whatever ee we use in the instrument
-    this.ee.on("interactionSaved", (interaction) =>
-      this.onInteractionSaved(interaction)
-    );
+    this.ee.on("interactionSaved", (interaction) => this.onInteractionSaved(interaction));
 
     // this will need to change to match whatever ee we use in the instrument
-    this.ee.on("interactionDiscarded", (interaction) =>
-      this.onInteractionDiscarded(interaction)
-    );
+    this.ee.on("interactionDiscarded", (interaction) => this.onInteractionDiscarded(interaction));
 
-    register(
-      "err",
-      (...args) => this.storeError(...args),
-      this.featureName,
-      this.ee
-    );
-    register(
-      "ierr",
-      (...args) => this.storeError(...args),
-      this.featureName,
-      this.ee
-    );
+    register("err", (...args) => this.storeError(...args), this.featureName, this.ee);
+    register("ierr", (...args) => this.storeError(...args), this.featureName, this.ee);
 
-    var harvestTimeSeconds =
-      getConfigurationValue(
-        this.agentIdentifier,
-        "jserrors.harvestTimeSeconds"
-      ) || 10;
+    var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, "jserrors.harvestTimeSeconds") || 10;
 
     this.scheduler = new HarvestScheduler(
       "jserrors",
       { onFinished: (...args) => this.onHarvestFinished(...args) },
       this
     );
-    this.scheduler.harvest.on("jserrors", (...args) =>
-      this.onHarvestStarted(...args)
-    );
+    this.scheduler.harvest.on("jserrors", (...args) => this.onHarvestStarted(...args));
     this.ee.on(`drain-${this.featureName}`, () => {
       if (!this.blocked) this.scheduler.startTimer(harvestTimeSeconds);
     });
@@ -123,13 +99,7 @@ export class Aggregate extends AggregateBase {
         for (var i = 0; i < value.length; i++) {
           var bucket = value[i];
           var name = this.getBucketName(bucket.params, bucket.custom);
-          this.aggregator.merge(
-            key,
-            name,
-            bucket.metrics,
-            bucket.params,
-            bucket.custom
-          );
+          this.aggregator.merge(key, name, bucket.metrics, bucket.params, bucket.custom);
         }
       });
       this.currentBody = null;
@@ -138,16 +108,12 @@ export class Aggregate extends AggregateBase {
 
   nameHash(params) {
     return stringHashCode(
-      `${params.exceptionClass}_${params.message}_${
-        params.stack_trace || params.browser_stack_hash
-      }`
+      `${params.exceptionClass}_${params.message}_${params.stack_trace || params.browser_stack_hash}`
     );
   }
 
   getBucketName(params, customParams) {
-    return (
-      this.nameHash(params) + ":" + stringHashCode(stringify(customParams))
-    );
+    return this.nameHash(params) + ":" + stringHashCode(stringify(customParams));
   }
 
   canonicalizeURL(url, cleanedOrigin) {
@@ -195,9 +161,7 @@ export class Aggregate extends AggregateBase {
       var cleanedURL = this.canonicalizeURL(originalURL, cleanedOrigin);
       if (cleanedURL && cleanedURL !== frame.url) {
         frame.url = cleanedURL;
-        stackInfo.stackString = stackInfo.stackString
-          .split(originalURL)
-          .join(cleanedURL);
+        stackInfo.stackString = stackInfo.stackString.split(originalURL).join(cleanedURL);
       }
     }
 
@@ -207,12 +171,7 @@ export class Aggregate extends AggregateBase {
   storeError(err, time, internal, customAttributes) {
     // are we in an interaction
     time = time || now();
-    if (
-      !internal &&
-      getRuntime(this.agentIdentifier).onerror &&
-      getRuntime(this.agentIdentifier).onerror(err)
-    )
-      return;
+    if (!internal && getRuntime(this.agentIdentifier).onerror && getRuntime(this.agentIdentifier).onerror(err)) return;
 
     var stackInfo = this.canonicalizeStackURLs(computeStackTrace(err));
     var canonicalStack = this.buildCanonicalStackString(stackInfo);
@@ -232,9 +191,7 @@ export class Aggregate extends AggregateBase {
      * the canonical stack trace excludes items like the column number increasing the hit-rate of different errors potentially
      * bucketing and ultimately resulting in the loss of data in NR1.
      */
-    var bucketHash = stringHashCode(
-      `${stackInfo.name}_${stackInfo.message}_${stackInfo.stackString}`
-    );
+    var bucketHash = stringHashCode(`${stackInfo.name}_${stackInfo.message}_${stackInfo.stackString}`);
 
     if (!this.stackReported[bucketHash]) {
       this.stackReported[bucketHash] = true;
@@ -259,35 +216,15 @@ export class Aggregate extends AggregateBase {
 
     // stn and spa aggregators listen to this event - stn sends the error in its payload,
     // and spa annotates the error with interaction info
-    handle(
-      "errorAgg",
-      [type, bucketHash, params, newMetrics],
-      undefined,
-      FEATURE_NAMES.sessionTrace,
-      this.ee
-    );
-    handle(
-      "errorAgg",
-      [type, bucketHash, params, newMetrics],
-      undefined,
-      FEATURE_NAMES.spa,
-      this.ee
-    );
+    handle("errorAgg", [type, bucketHash, params, newMetrics], undefined, FEATURE_NAMES.sessionTrace, this.ee);
+    handle("errorAgg", [type, bucketHash, params, newMetrics], undefined, FEATURE_NAMES.spa, this.ee);
 
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return;
     if (params._interactionId != null) {
       // hold on to the error until the interaction finishes
-      this.errorCache[params._interactionId] =
-        this.errorCache[params._interactionId] || [];
-      this.errorCache[params._interactionId].push([
-        type,
-        bucketHash,
-        params,
-        newMetrics,
-        att,
-        customAttributes,
-      ]);
+      this.errorCache[params._interactionId] = this.errorCache[params._interactionId] || [];
+      this.errorCache[params._interactionId].push([type, bucketHash, params, newMetrics, att, customAttributes]);
     } else {
       // store custom attributes
       var customParams = {};
@@ -299,13 +236,7 @@ export class Aggregate extends AggregateBase {
 
       var jsAttributesHash = stringHashCode(stringify(customParams));
       var aggregateHash = bucketHash + ":" + jsAttributesHash;
-      this.aggregator.store(
-        type,
-        aggregateHash,
-        params,
-        newMetrics,
-        customParams
-      );
+      this.aggregator.store(type, aggregateHash, params, newMetrics, customParams);
     }
 
     function setCustom(key, val) {
@@ -338,25 +269,17 @@ export class Aggregate extends AggregateBase {
       var jsAttributesHash = stringHashCode(stringify(customParams));
       var aggregateHash = hash + ":" + jsAttributesHash;
 
-      this.aggregator.store(
-        item[0],
-        aggregateHash,
-        params,
-        item[3],
-        customParams
-      );
+      this.aggregator.store(item[0], aggregateHash, params, item[3], customParams);
 
       function setCustom(key, val) {
-        customParams[key] =
-          val && typeof val === "object" ? stringify(val) : val;
+        customParams[key] = val && typeof val === "object" ? stringify(val) : val;
       }
     });
     delete this.errorCache[interaction.id];
   }
 
   onInteractionDiscarded(interaction) {
-    if (!this.errorCache || !this.errorCache[interaction.id] || this.blocked)
-      return;
+    if (!this.errorCache || !this.errorCache[interaction.id] || this.blocked) return;
 
     this.errorCache[interaction.id].forEach((item) => {
       var customParams = {};
@@ -375,17 +298,10 @@ export class Aggregate extends AggregateBase {
       var jsAttributesHash = stringHashCode(stringify(customParams));
       var aggregateHash = hash + ":" + jsAttributesHash;
 
-      this.aggregator.store(
-        item[0],
-        aggregateHash,
-        item[2],
-        item[3],
-        customParams
-      );
+      this.aggregator.store(item[0], aggregateHash, item[2], item[3], customParams);
 
       function setCustom(key, val) {
-        customParams[key] =
-          val && typeof val === "object" ? stringify(val) : val;
+        customParams[key] = val && typeof val === "object" ? stringify(val) : val;
       }
     });
     delete this.errorCache[interaction.id];

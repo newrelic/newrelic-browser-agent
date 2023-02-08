@@ -28,10 +28,7 @@ function prependSemicolon(fileName, text) {
   let prepended = 0;
   await Promise.all(
     files.map((f, i) => {
-      if (
-        builtFileNames[i].includes("-loader") &&
-        builtFileNames[i].endsWith(".js")
-      ) {
+      if (builtFileNames[i].includes("-loader") && builtFileNames[i].endsWith(".js")) {
         const fileName = builtFileNames[i];
         const content = f;
         prepended++;

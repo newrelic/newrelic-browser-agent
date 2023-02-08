@@ -6,26 +6,24 @@
 <html>
   <head>
     <title>Multiple load handlers</title>
-    {init}
-    {config}
-    {loader}
+    {init} {config} {loader}
   </head>
   <body>
     <div>Multiple load handlers</div>
     <script type="text/javascript">
-      window.addEventListener('load', function () {
-        makeXhr()
-      })
-      window.addEventListener('load', function () {
-        makeXhr()
-      })
+      window.addEventListener("load", function () {
+        makeXhr();
+      });
+      window.addEventListener("load", function () {
+        makeXhr();
+      });
 
-      var ev
+      var ev;
 
-      function makeXhr (ev2) {
-        var xhr = new XMLHttpRequest()
-        xhr.open('GET', '/json')
-        xhr.send()
+      function makeXhr(ev2) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/json");
+        xhr.send();
       }
     </script>
   </body>

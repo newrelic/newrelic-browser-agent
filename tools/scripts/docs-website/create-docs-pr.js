@@ -55,8 +55,7 @@ var options = require("yargs")
   .describe("R", "Path to the docs-website form on local machine")
   .default("R", "docs-website").argv;
 
-const FORKED_DOCS_SITE =
-  "https://github.com/newrelic-forks/browser-agent-docs-website.git";
+const FORKED_DOCS_SITE = "https://github.com/newrelic-forks/browser-agent-docs-website.git";
 
 const RELEASE_NOTES_PATH =
   "./src/content/docs/release-notes/new-relic-browser-release-notes/browser-agent-release-notes";
@@ -73,9 +72,7 @@ if (!process.env.GITHUB_TOKEN) {
 }
 
 async function createReleaseNotesPr() {
-  console.log(
-    `Script running with following options: ${JSON.stringify(options)}`
-  );
+  console.log(`Script running with following options: ${JSON.stringify(options)}`);
 
   try {
     const version = options.tag.replace("refs/tags/", "");
@@ -84,17 +81,9 @@ async function createReleaseNotesPr() {
     logStep("Validation");
     validateTag(version, options.force);
     logStep("Get Release Notes from File");
-    const { body, releaseDate } = await getReleaseNotes(
-      version,
-      options.changelog
-    );
+    const { body, releaseDate } = await getReleaseNotes(version, options.changelog);
     logStep("Branch Creation");
-    const branchName = await createBranch(
-      options.repoPath,
-      options.remote,
-      version,
-      options.dryRun
-    );
+    const branchName = await createBranch(options.repoPath, options.remote, version, options.dryRun);
     logStep("Format release notes file");
     const releaseNotesBody = formatReleaseNotes(releaseDate, version, body);
     logStep("Create Release Notes");
@@ -111,9 +100,7 @@ async function createReleaseNotesPr() {
     console.log("*** Full Run Successful ***");
   } catch (err) {
     if (err.status && err.status === 404) {
-      console.log(
-        "404 status error detected. For octokit, this may mean insufficient permissions."
-      );
+      console.log("404 status error detected. For octokit, this may mean insufficient permissions.");
       console.log("Ensure you have a valid GITHUB_TOKEN set in your env vars.");
     }
 
@@ -136,10 +123,7 @@ function validateTag(version, force) {
   }
 
   if (!TAG_VALID_REGEX.exec(version)) {
-    console.log(
-      "Tag arg invalid (%s). Valid tags in form: v#.#.# (e.g. v7.2.1)",
-      version
-    );
+    console.log("Tag arg invalid (%s). Valid tags in form: v#.#.# (e.g. v7.2.1)", version);
     stopOnError();
   }
 }
@@ -153,21 +137,15 @@ function validateTag(version, force) {
 async function getReleaseNotes(version, releaseNotesFile) {
   console.log("Retrieving release notes from file: ", releaseNotesFile);
 
-  const data = await readReleaseNoteFile(
-    process.cwd() + "/" + releaseNotesFile
-  );
+  const data = await readReleaseNoteFile(process.cwd() + "/" + releaseNotesFile);
 
   const sections = data.split("\n## ");
   // Iterate over all past releases to find the version we want
-  const versionChangeLog = sections.find((section) =>
-    section.startsWith(version)
-  );
+  const versionChangeLog = sections.find((section) => section.startsWith(version));
   // e.g. v7.1.2 (2021-02-24)\n\n
   const body = versionChangeLog + SUPPORT_STATEMENT;
   //   const [, releaseDate] = headingRegex.exec(versionChangeLog)
-  const releaseDate = `${new Date().getFullYear()}-${
-    new Date().getMonth() + 1
-  }-${new Date().getDate()}`;
+  const releaseDate = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`;
 
   return { body, releaseDate };
 }
@@ -205,9 +183,7 @@ async function createBranch(filePath, remote, version, dryRun) {
   process.chdir(filePath);
   const branchName = `add-browser-agent-${version}`;
   if (dryRun) {
-    console.log(
-      `Dry run indicated (--dry-run), not creating branch ${branchName}`
-    );
+    console.log(`Dry run indicated (--dry-run), not creating branch ${branchName}`);
   } else {
     try {
       await git.deleteUpstreamBranch(remote, branchName);
@@ -284,9 +260,7 @@ function getFileName(version) {
  */
 async function commitReleaseNotes(version, remote, branch, dryRun) {
   if (dryRun) {
-    console.log(
-      "Dry run indicated (--dry-run), skipping committing release notes."
-    );
+    console.log("Dry run indicated (--dry-run), skipping committing release notes.");
     return;
   }
 
@@ -321,14 +295,10 @@ async function createPR(username, version, branch, dryRun) {
     body: title,
   };
 
-  console.log(
-    `Creating PR with following options: ${JSON.stringify(prOptions)}\n\n`
-  );
+  console.log(`Creating PR with following options: ${JSON.stringify(prOptions)}\n\n`);
 
   if (dryRun) {
-    console.log(
-      "Dry run indicated (--dry-run), skipping creating pull request."
-    );
+    console.log("Dry run indicated (--dry-run), skipping creating pull request.");
     return;
   }
 

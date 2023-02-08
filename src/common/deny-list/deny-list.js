@@ -26,10 +26,7 @@ export function shouldCollectEvent(params) {
       return false;
     }
 
-    if (
-      domainMatchesPattern(parsed.hostname, params.hostname) &&
-      comparePath(parsed.pathname, params.pathname)
-    ) {
+    if (domainMatchesPattern(parsed.hostname, params.hostname) && comparePath(parsed.pathname, params.pathname)) {
       return false;
     }
   }

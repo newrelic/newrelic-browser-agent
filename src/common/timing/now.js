@@ -13,9 +13,7 @@ export function now() {
     return Math.round(performance.now());
   }
   // ensure a new timestamp is never smaller than a previous timestamp
-  return (
-    (lastTimestamp = Math.max(new Date().getTime(), lastTimestamp)) - offset
-  );
+  return (lastTimestamp = Math.max(new Date().getTime(), lastTimestamp)) - offset;
 }
 
 export function getLastTimestamp() {

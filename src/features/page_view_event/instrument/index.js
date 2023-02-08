@@ -26,13 +26,7 @@ export class Instrument extends InstrumentBase {
   measureWindowLoaded() {
     var ts = now();
     mark(this.agentIdentifier, "onload", ts + getOffset());
-    handle(
-      "timing",
-      ["load", ts],
-      undefined,
-      FEATURE_NAMES.pageViewTiming,
-      this.ee
-    );
+    handle("timing", ["load", ts], undefined, FEATURE_NAMES.pageViewTiming, this.ee);
   }
 
   // should be called on DOMContentLoaded, will not be called if agent is loaded after DOMContentLoaded

@@ -49,10 +49,7 @@ function verifyLoader(loaderURL) {
 
       if (config.version !== "current") {
         var versionQuery = config.version + ".";
-        t.ok(
-          res.body.match(versionQuery),
-          'loader contained version string "' + versionQuery + '"'
-        );
+        t.ok(res.body.match(versionQuery), 'loader contained version string "' + versionQuery + '"');
       }
 
       var regex = /agent:\s*['"]([^'"]+)['"]/;
@@ -79,21 +76,13 @@ function verifyLoader(loaderURL) {
   });
 
   function sanityCheckResponse(t, res, body, label) {
-    t.equal(
-      res.statusCode,
-      200,
-      "got status " + res.statusCode + " for " + label
-    );
+    t.equal(res.statusCode, 200, "got status " + res.statusCode + " for " + label);
     t.equal(
       res.headers["content-type"],
       "application/javascript",
       "got content-type = " + res.headers["content-type"] + " for " + label
     );
-    t.equal(
-      res.headers["content-encoding"],
-      "gzip",
-      label + " was served compressed"
-    );
+    t.equal(res.headers["content-encoding"], "gzip", label + " was served compressed");
     t.ok(body.length > 0, label + " was " + body.length + " bytes");
   }
 }
@@ -101,11 +90,7 @@ function verifyLoader(loaderURL) {
 function getLoaderURLs(config) {
   var filenames = [];
   config.loaders.split(/\s*,\s*/).forEach(function (loaderName) {
-    var baseURL =
-      "https://js-agent.newrelic.com/nr-loader-" +
-      loaderName +
-      "-" +
-      config.version;
+    var baseURL = "https://js-agent.newrelic.com/nr-loader-" + loaderName + "-" + config.version;
     filenames.push(baseURL + ".js");
     filenames.push(baseURL + ".min.js");
   });

@@ -48,11 +48,7 @@ function circularTest(type, matcher) {
           t.equal(actualErrors.length, 1, "exactly one error");
 
           let actualError = actualErrors[0];
-          t.equal(
-            actualError.params.message,
-            "[object Object]",
-            "has the expected message"
-          );
+          t.equal(actualError.params.message, "[object Object]", "has the expected message");
           t.end();
         })
         .catch(fail);

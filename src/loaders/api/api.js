@@ -44,13 +44,7 @@ export function setAPI(agentIdentifier, nr, forceDrain) {
   var instanceEE = ee.get(agentIdentifier);
   var tracerEE = instanceEE.get("tracer");
 
-  var asyncApiFns = [
-    "setErrorHandler",
-    "finished",
-    "addToTrace",
-    "inlineHit",
-    "addRelease",
-  ];
+  var asyncApiFns = ["setErrorHandler", "finished", "addToTrace", "inlineHit", "addRelease"];
 
   var prefix = "api-";
   var spaPrefix = prefix + "ixn-";
@@ -60,24 +54,13 @@ export function setAPI(agentIdentifier, nr, forceDrain) {
     nr[fnName] = apiCall(prefix, fnName, true, "api");
   });
 
-  nr.addPageAction = apiCall(
-    prefix,
-    "addPageAction",
-    true,
-    FEATURE_NAMES.pageAction
-  );
-  nr.setCurrentRouteName = apiCall(
-    prefix,
-    "routeName",
-    true,
-    FEATURE_NAMES.spa
-  );
+  nr.addPageAction = apiCall(prefix, "addPageAction", true, FEATURE_NAMES.pageAction);
+  nr.setCurrentRouteName = apiCall(prefix, "routeName", true, FEATURE_NAMES.spa);
 
   nr.setPageViewName = function (name, host) {
     if (typeof name !== "string") return;
     if (name.charAt(0) !== "/") name = "/" + name;
-    getRuntime(agentIdentifier).customTransaction =
-      (host || "http://custom.transaction") + name;
+    getRuntime(agentIdentifier).customTransaction = (host || "http://custom.transaction") + name;
     return apiCall(prefix, "setPageViewName", true, "api")();
   };
 
@@ -101,28 +84,14 @@ export function setAPI(agentIdentifier, nr, forceDrain) {
       var contextStore = {};
       var ixn = this;
       var hasCb = typeof cb === "function";
-      handle(
-        spaPrefix + "tracer",
-        [now(), name, contextStore],
-        ixn,
-        FEATURE_NAMES.spa,
-        instanceEE
-      );
+      handle(spaPrefix + "tracer", [now(), name, contextStore], ixn, FEATURE_NAMES.spa, instanceEE);
       return function () {
-        tracerEE.emit(
-          (hasCb ? "" : "no-") + "fn-start",
-          [now(), ixn, hasCb],
-          contextStore
-        );
+        tracerEE.emit((hasCb ? "" : "no-") + "fn-start", [now(), ixn, hasCb], contextStore);
         if (hasCb) {
           try {
             return cb.apply(this, arguments);
           } catch (err) {
-            tracerEE.emit(
-              "fn-err",
-              [arguments, this, typeof err == "string" ? new Error(err) : err],
-              contextStore
-            );
+            tracerEE.emit("fn-err", [arguments, this, typeof err == "string" ? new Error(err) : err], contextStore);
             // the error came from outside the agent, so don't swallow
             throw err;
           } finally {
@@ -133,56 +102,22 @@ export function setAPI(agentIdentifier, nr, forceDrain) {
     },
   });
 
-  mapOwn(
-    "actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get".split(
-      ","
-    ),
-    function addApi(n, name) {
-      InteractionApiProto[name] = apiCall(
-        spaPrefix,
-        name,
-        undefined,
-        FEATURE_NAMES.spa
-      );
-    }
-  );
+  mapOwn("actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get".split(","), function addApi(n, name) {
+    InteractionApiProto[name] = apiCall(spaPrefix, name, undefined, FEATURE_NAMES.spa);
+  });
 
   function apiCall(prefix, name, notSpa, bufferGroup) {
     return function () {
-      handle(
-        "record-supportability",
-        ["API/" + name + "/called"],
-        undefined,
-        FEATURE_NAMES.metrics,
-        instanceEE
-      );
-      handle(
-        prefix + name,
-        [now()].concat(slice(arguments)),
-        notSpa ? null : this,
-        bufferGroup,
-        instanceEE
-      );
+      handle("record-supportability", ["API/" + name + "/called"], undefined, FEATURE_NAMES.metrics, instanceEE);
+      handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup, instanceEE);
       return notSpa ? void 0 : this;
     };
   }
 
   nr.noticeError = function (err, customAttributes) {
     if (typeof err === "string") err = new Error(err);
-    handle(
-      "record-supportability",
-      ["API/noticeError/called"],
-      undefined,
-      FEATURE_NAMES.metrics,
-      instanceEE
-    );
-    handle(
-      "err",
-      [err, now(), false, customAttributes],
-      undefined,
-      FEATURE_NAMES.jserrors,
-      instanceEE
-    );
+    handle("record-supportability", ["API/noticeError/called"], undefined, FEATURE_NAMES.metrics, instanceEE);
+    handle("err", [err, now(), false, customAttributes], undefined, FEATURE_NAMES.jserrors, instanceEE);
   };
 
   // theres no window.load event on non-browser scopes, lazy load immediately

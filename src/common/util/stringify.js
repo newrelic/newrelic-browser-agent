@@ -37,9 +37,7 @@ function quote(string) {
     ? '"' +
         string.replace(escapable, function (a) {
           var c = meta[a];
-          return typeof c === "string"
-            ? c
-            : "\\u" + ("0000" + a.charCodeAt(0).toString(16)).slice(-4);
+          return typeof c === "string" ? c : "\\u" + ("0000" + a.charCodeAt(0).toString(16)).slice(-4);
         }) +
         '"'
     : '"' + string + '"';
@@ -63,10 +61,7 @@ function str(key, holder) {
 
       // The value is an array. Stringify every element. Use null as a placeholder
       // for non-JSON values.
-      if (
-        value instanceof globalScope.Array ||
-        Object.prototype.toString.apply(value) === "[object Array]"
-      ) {
+      if (value instanceof globalScope.Array || Object.prototype.toString.apply(value) === "[object Array]") {
         var length = value.length;
         for (var i = 0; i < length; i += 1) {
           partial[i] = str(i, value) || "null";

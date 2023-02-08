@@ -9,14 +9,10 @@ import { setup } from "../utils/setup";
 const { agentIdentifier, baseEE, aggregator } = setup();
 
 jil.browserTest("xhr with blob request body", async function (t) {
-  const { Instrument: AjaxInstrum } = await import(
-    "../../../src/features/ajax/instrument/index"
-  );
+  const { Instrument: AjaxInstrum } = await import("../../../src/features/ajax/instrument/index");
   const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false);
   const { drain } = await import("../../../src/common/drain/drain");
-  const { registerHandler } = await import(
-    "../../../src/common/event-emitter/register-handler"
-  );
+  const { registerHandler } = await import("../../../src/common/event-emitter/register-handler");
 
   t.plan(3);
 
@@ -43,9 +39,7 @@ jil.browserTest("xhr with blob request body", async function (t) {
   registerHandler(
     "xhr",
     async function (params, metrics, start) {
-      const { Aggregate: AjaxAggreg } = await import(
-        "../../../src/features/ajax/aggregate/index"
-      );
+      const { Aggregate: AjaxAggreg } = await import("../../../src/features/ajax/aggregate/index");
       const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator);
       ajaxTestAgg.storeXhr(params, metrics, start);
 

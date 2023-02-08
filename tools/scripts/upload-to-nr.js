@@ -10,38 +10,23 @@ var yargs = require("yargs");
 
 var argv = yargs
   .string("environments")
-  .describe(
-    "environments",
-    "Comma-separated list of environments to upload loaders to"
-  )
+  .describe("environments", "Comma-separated list of environments to upload loaders to")
   .default("environments", "staging,production,eu")
 
   .string("production-api-key")
-  .describe(
-    "production-api-key",
-    "API key to use for talking to production RPM site to upload loaders"
-  )
+  .describe("production-api-key", "API key to use for talking to production RPM site to upload loaders")
 
   .string("staging-api-key")
-  .describe(
-    "staging-api-key",
-    "API key to use for talking to staging RPM site to upload loaders"
-  )
+  .describe("staging-api-key", "API key to use for talking to staging RPM site to upload loaders")
 
   .string("eu-api-key")
-  .describe(
-    "eu-api-key",
-    "API key to use for talking to EU RPM site to upload loaders"
-  )
+  .describe("eu-api-key", "API key to use for talking to EU RPM site to upload loaders")
 
   .string("v")
   .describe("v", "Browser Agent version number")
 
   .boolean("skip-upload-failures")
-  .describe(
-    "skip-upload-failures",
-    "Don't bail out after the first failure, keep trying other requests"
-  )
+  .describe("skip-upload-failures", "Don't bail out after the first failure, keep trying other requests")
 
   .help("h")
   .alias("h", "help").argv;
@@ -185,9 +170,7 @@ async function run() {
     request(options, function (err, res, body) {
       if (err) return cb(err);
       if (res.statusCode === 200) {
-        console.log(
-          "Uploaded loader version " + filename + " to " + environment
-        );
+        console.log("Uploaded loader version " + filename + " to " + environment);
         return cb();
       }
 
@@ -222,11 +205,7 @@ async function run() {
       ])
       .flat();
     const loaders = (
-      await Promise.all(
-        fileNames.map((fileName) =>
-          getFile(`https://js-agent.newrelic.com/${fileName}`, fileName)
-        )
-      )
+      await Promise.all(fileNames.map((fileName) => getFile(`https://js-agent.newrelic.com/${fileName}`, fileName)))
     ).map(([url, fileName, body]) => ({ [fileName]: body }));
     return loaders;
   }

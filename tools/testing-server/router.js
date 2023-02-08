@@ -36,10 +36,7 @@ class Router extends BaseServer {
     let parsed = url.parse(req.url, true);
     if (parsed.pathname.match(/^\/debug/)) {
       let ix = parseInt(parsed.query.ix);
-      this.log(
-        parsed.query.testId,
-        `DEBUG [${ix}](${parsed.query.l}): ${parsed.query.m}`
-      );
+      this.log(parsed.query.testId, `DEBUG [${ix}](${parsed.query.l}): ${parsed.query.m}`);
       res.end();
       return;
     }
@@ -63,10 +60,7 @@ class Router extends BaseServer {
 
   urlFor(relativePath, options) {
     let query = querystring.encode(options);
-    return url.resolve(
-      `${"http"}://${this.assetServer.host}:${this.port}`,
-      `${relativePath}?${query}`
-    );
+    return url.resolve(`${"http"}://${this.assetServer.host}:${this.port}`, `${relativePath}?${query}`);
   }
 }
 
@@ -138,21 +132,13 @@ class RouterHandle {
   }
 
   expectRum(appID) {
-    return this.expectBeaconRequest(
-      this.beaconRequests.rum,
-      undefined,
-      appID
-    ).then((rumData) => {
+    return this.expectBeaconRequest(this.beaconRequests.rum, undefined, appID).then((rumData) => {
       return this.browser.waitForFeature("loaded").then(() => rumData);
     });
   }
 
   expectEvents(appID) {
-    return this.expectBeaconRequest(
-      this.beaconRequests.events,
-      undefined,
-      appID
-    ).then((request) => {
+    return this.expectBeaconRequest(this.beaconRequests.events, undefined, appID).then((request) => {
       let { body, query } = request;
       let decoded = querypack.decode(body && body.length ? body : query.e)[0];
       if (decoded.type === "interaction") {
@@ -164,11 +150,7 @@ class RouterHandle {
   }
 
   expectTimings(appID, timeout) {
-    return this.expectBeaconRequest(
-      this.beaconRequests.events,
-      timeout,
-      appID
-    ).then((request) => {
+    return this.expectBeaconRequest(this.beaconRequests.events, timeout, appID).then((request) => {
       let { body, query } = request;
       let decoded = querypack.decode(body && body.length ? body : query.e)[0];
       if (decoded.type === "timing") {
@@ -180,11 +162,7 @@ class RouterHandle {
   }
 
   expectAjaxEvents(appID) {
-    return this.expectBeaconRequest(
-      this.beaconRequests.events,
-      undefined,
-      appID
-    ).then((request) => {
+    return this.expectBeaconRequest(this.beaconRequests.events, undefined, appID).then((request) => {
       let { body, query } = request;
       let decoded = querypack.decode(body && body.length ? body : query.e)[0];
       if (decoded.type === "ajax") {
@@ -195,25 +173,16 @@ class RouterHandle {
     });
   }
 
-  async expectSpecificEvents({
-    appID,
-    condition = (e) => e.type === "ajax",
-    expecter = "expectAjaxEvents",
-  }) {
+  async expectSpecificEvents({ appID, condition = (e) => e.type === "ajax", expecter = "expectAjaxEvents" }) {
     const { body, query } = await this[expecter](appID);
     const ajaxEvents = querypack.decode(body && body.length ? body : query.e);
     let matches = ajaxEvents.filter(condition);
-    if (!matches.length)
-      matches = this.expectSpecificEvents({ expecter, condition });
+    if (!matches.length) matches = this.expectSpecificEvents({ expecter, condition });
     return matches;
   }
 
   expectErrors(appID) {
-    return this.expectBeaconRequest(
-      this.beaconRequests.errors,
-      80000,
-      appID
-    ).then((request) => {
+    return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID).then((request) => {
       let { body, query } = request;
       try {
         if (JSON.parse(body)?.err) return request;
@@ -226,11 +195,7 @@ class RouterHandle {
   }
 
   expectMetrics(appID) {
-    return this.expectBeaconRequest(
-      this.beaconRequests.errors,
-      80000,
-      appID
-    ).then((request) => {
+    return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID).then((request) => {
       let { body, query } = request;
       try {
         if (JSON.parse(body)?.sm) return request;
@@ -244,11 +209,7 @@ class RouterHandle {
   }
 
   expectXHRMetrics(appID) {
-    return this.expectBeaconRequest(
-      this.beaconRequests.errors,
-      80000,
-      appID
-    ).then((request) => {
+    return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID).then((request) => {
       let { body, query } = request;
       try {
         if (JSON.parse(body)?.xhr) return request;
@@ -266,28 +227,21 @@ class RouterHandle {
   }
 
   expectResources(appID) {
-    return this.expectBeaconRequest(
-      this.beaconRequests.resources,
-      undefined,
-      appID
-    );
+    return this.expectBeaconRequest(this.beaconRequests.resources, undefined, appID);
   }
 
   expectRumAndErrors(appID) {
     return this.expectRum(appID).then(() => {
-      return Promise.all([
-        this.browser.safeGet(this.assetURL("/")),
-        this.expectErrors(appID),
-      ]).then(([feat, err]) => err);
+      return Promise.all([this.browser.safeGet(this.assetURL("/")), this.expectErrors(appID)]).then(
+        ([feat, err]) => err
+      );
     });
   }
 
   expectRumAndConditionAndErrors(condition, appID) {
     return this.expectRum(appID).then(() => {
       return Promise.all([
-        this.browser
-          .waitFor(asserters.jsCondition(condition))
-          .safeGet(this.assetURL("/")),
+        this.browser.waitFor(asserters.jsCondition(condition)).safeGet(this.assetURL("/")),
         this.expectErrors(appID),
       ]).then(([feat, err]) => err);
     });
@@ -295,9 +249,7 @@ class RouterHandle {
 
   expectRumAndCondition(condition, appID) {
     return this.expectRum(appID).then(() => {
-      return this.browser
-        .waitFor(asserters.jsCondition(condition))
-        .safeGet(this.assetURL("/"));
+      return this.browser.waitFor(asserters.jsCondition(condition)).safeGet(this.assetURL("/"));
     });
   }
 
@@ -337,17 +289,13 @@ class RouterHandle {
     }
     if (query.init) {
       _extend(mergedQuery, {
-        init: Buffer.from(JSON.stringify(query.init, replacer)).toString(
-          "base64"
-        ),
+        init: Buffer.from(JSON.stringify(query.init, replacer)).toString("base64"),
       });
     }
 
     if (query.workerCommands) {
       _extend(mergedQuery, {
-        workerCommands: Buffer.from(
-          JSON.stringify(query.workerCommands)
-        ).toString("base64"),
+        workerCommands: Buffer.from(JSON.stringify(query.workerCommands)).toString("base64"),
       });
     }
 
@@ -428,11 +376,7 @@ class RouterHandle {
       handle: onRequest,
       timer: setTimeout(() => {
         this.pendingExpects.delete(expected);
-        reject(
-          new Error(
-            `fake router did not receive ${methods} ${pathname} within ${duration} ms`
-          )
-        );
+        reject(new Error(`fake router did not receive ${methods} ${pathname} within ${duration} ms`));
       }, duration),
     };
     // loop over pendind reqs
@@ -453,12 +397,7 @@ class RouterHandle {
       if (appID) {
         const appIdInQuery = parsed.search.split("&")[0];
         const id = appIdInQuery ? appIdInQuery.replace("?a=", "") : null;
-        if (id)
-          return (
-            methodMatch &&
-            parsed.pathname === expectedPath &&
-            Number(id) === appID
-          );
+        if (id) return methodMatch && parsed.pathname === expectedPath && Number(id) === appID;
       }
       return methodMatch && parsed.pathname === expectedPath;
     }
@@ -466,9 +405,7 @@ class RouterHandle {
     function onRequest(req, res, ssl) {
       let responder = handler || handle.findResponder(req);
       if (!responder) {
-        return reject(
-          new Error(`no responder for ${req.method} ${expectedPath}`)
-        );
+        return reject(new Error(`no responder for ${req.method} ${expectedPath}`));
       }
 
       req.pipe(
@@ -491,24 +428,10 @@ class RouterHandle {
     return this.responders[`${req.method} ${pathname}`];
   }
 
-  expect(
-    methodOrMethods,
-    expectedPath,
-    expectedTimeout = this.timeout,
-    handler,
-    appID
-  ) {
+  expect(methodOrMethods, expectedPath, expectedTimeout = this.timeout, handler, appID) {
     let methods = [].concat(methodOrMethods).map((m) => m.toUpperCase());
     return new Promise((resolve, reject) => {
-      this.waitFor(
-        methods,
-        expectedPath,
-        expectedTimeout,
-        resolve,
-        reject,
-        handler,
-        appID
-      );
+      this.waitFor(methods, expectedPath, expectedTimeout, resolve, reject, handler, appID);
     });
   }
 

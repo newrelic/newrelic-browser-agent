@@ -44,10 +44,7 @@ jil.browserTest("promise.then", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.ok(interaction.root.end, "interaction should be finished");
     validator.validate(t, interaction);
     t.end();
@@ -112,10 +109,7 @@ jil.browserTest("promise.then chain with async", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.ok(interaction.root.end, "interaction should be finished");
     validator.validate(t, interaction);
     t.end();
@@ -186,10 +180,7 @@ jil.browserTest("promise.then chain with async with rejection", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.ok(interaction.root.end, "interaction should be finished");
     validator.validate(t, interaction);
     t.end();
@@ -248,10 +239,7 @@ jil.browserTest("throw in promise.then", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.ok(interaction.root.end, "interaction should be finished");
     validator.validate(t, interaction);
     t.end();
@@ -316,10 +304,7 @@ jil.browserTest("throw in promise.then", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.ok(interaction.root.end, "interaction should be finished");
     validator.validate(t, interaction);
     t.end();

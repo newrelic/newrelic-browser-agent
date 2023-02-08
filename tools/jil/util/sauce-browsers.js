@@ -1,19 +1,15 @@
 const fs = require("fs");
 const browserslist = require("browserslist");
-const fetch = (...args) =>
-  import("node-fetch").then(({ default: fetch }) => fetch(...args));
+const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 (async function () {
   // Fetch an unfiltered list of browser-platform definitions from Sauce Labs.
   console.log("contacting saucelabs API ...");
-  const r = await fetch(
-    "https://api.us-west-1.saucelabs.com/rest/v1/info/platforms/all",
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const r = await fetch("https://api.us-west-1.saucelabs.com/rest/v1/info/platforms/all", {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
   const json = await r.json();
   console.log(
     "Browser Types Found:",
@@ -22,10 +18,7 @@ const fetch = (...args) =>
   console.log(`fetched ${json.length} browsers from saucelabs`);
 
   // Filter list down to a sample of supported browsers and write metadata to a file for testing.
-  fs.writeFileSync(
-    "./tools/jil/util/browsers-supported.json",
-    JSON.stringify(getBrowsers(json), null, 2)
-  );
+  fs.writeFileSync("./tools/jil/util/browsers-supported.json", JSON.stringify(getBrowsers(json), null, 2));
   console.log(`saved saucelabs browsers to browsers-supported.json`);
 })();
 
@@ -122,15 +115,9 @@ function getBrowsers(sauceBrowsers) {
   Object.keys(browsers).forEach((browser) => {
     const name = browserName(browser);
     const versListForBrowser = sauceBrowsers.filter(
-      platformSelector(
-        name,
-        minSupportedVersion(name),
-        maxSupportedVersion(name)
-      )
+      platformSelector(name, minSupportedVersion(name), maxSupportedVersion(name))
     );
-    versListForBrowser.sort(
-      (a, b) => Number(a.short_version) - Number(b.short_version)
-    ); // in ascending version order
+    versListForBrowser.sort((a, b) => Number(a.short_version) - Number(b.short_version)); // in ascending version order
 
     // Remove duplicate version numbers.
     let uniques = [],
@@ -166,8 +153,7 @@ function getBrowsers(sauceBrowsers) {
           ["appium:platformVersion"]: sauceBrowser.short_version,
         }),
         ...(sauceBrowser.automation_backend === "appium" && {
-          ["appium:automationName"]:
-            sauceBrowser.api_name === "android" ? "UiAutomator2" : "XCUITest",
+          ["appium:automationName"]: sauceBrowser.api_name === "android" ? "UiAutomator2" : "XCUITest",
         }),
         ...(sauceBrowser.automation_backend === "appium" && {
           ["sauce:options"]: {
@@ -175,8 +161,7 @@ function getBrowsers(sauceBrowsers) {
           },
         }),
       };
-      if (metadata.browserName.toLowerCase() === "safari")
-        metadata.acceptInsecureCerts = false;
+      if (metadata.browserName.toLowerCase() === "safari") metadata.acceptInsecureCerts = false;
       browsers[browser].push(metadata);
     });
   });
@@ -213,8 +198,7 @@ function platformSelector(desiredBrowser, minVersion = 0, maxVersion = 9999) {
         break;
       // 'safari' will only ever be on MacOS
       case "safari":
-        if (sauceBrowser.short_version == 12 && sauceBrowser.os == "Mac 10.13")
-          return false; // this OS+safari combo has issues with functional/XHR tests
+        if (sauceBrowser.short_version == 12 && sauceBrowser.os == "Mac 10.13") return false; // this OS+safari combo has issues with functional/XHR tests
         break;
     }
     return true;

@@ -47,16 +47,8 @@ function setCustomAttributeTest(type, matcher) {
           t.equal(actualErrors.length, 1, "exactly one error");
 
           let actualError = actualErrors[0];
-          t.equal(
-            actualError.params.message,
-            "test",
-            "has the expected message"
-          );
-          t.deepEqual(
-            actualError.custom,
-            { ...workerCustomAttrs, hi: "mom" },
-            "Should have correct custom attributes"
-          );
+          t.equal(actualError.params.message, "test", "has the expected message");
+          t.deepEqual(actualError.custom, { ...workerCustomAttrs, hi: "mom" }, "Should have correct custom attributes");
           t.end();
         })
         .catch(fail);

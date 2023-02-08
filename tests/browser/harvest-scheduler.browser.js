@@ -84,11 +84,7 @@ test("after calling startTimer, periodically invokes harvest", function (t) {
   }
 
   function validate() {
-    t.equal(
-      harv.Harvest.prototype.send.callCount,
-      2,
-      "harvest was initiated more than once"
-    );
+    t.equal(harv.Harvest.prototype.send.callCount, 2, "harvest was initiated more than once");
     t.end();
   }
 });
@@ -96,11 +92,7 @@ test("after calling startTimer, periodically invokes harvest", function (t) {
 test("scheduleHarvest invokes harvest once", function (t) {
   resetSpies();
 
-  var scheduler = new HarvestScheduler(
-    "endpoint",
-    { getPayload: getPayload },
-    aggregator.sharedContext
-  );
+  var scheduler = new HarvestScheduler("endpoint", { getPayload: getPayload }, aggregator.sharedContext);
   scheduler.scheduleHarvest(0.1);
 
   function getPayload() {
@@ -110,11 +102,7 @@ test("scheduleHarvest invokes harvest once", function (t) {
   setTimeout(validate, 1000);
 
   function validate() {
-    t.equal(
-      harv.Harvest.prototype.send.callCount,
-      1,
-      "harvest was initiated once"
-    );
+    t.equal(harv.Harvest.prototype.send.callCount, 1, "harvest was initiated once");
     t.end();
   }
 });
@@ -135,21 +123,14 @@ test("when getPayload is provided, calls harvest.send", function (t) {
   function onFinished() {
     scheduler.stopTimer();
     t.ok(harv.Harvest.prototype.send.called, "harvest.send was called");
-    t.notOk(
-      harv.Harvest.prototype.sendX.called,
-      "harvest.sendX was not called"
-    );
+    t.notOk(harv.Harvest.prototype.sendX.called, "harvest.sendX was not called");
     t.end();
   }
 });
 
 test("when getPayload is not provided, calls harvest.sendX", function (t) {
   resetSpies();
-  var scheduler = new HarvestScheduler(
-    "endpoint",
-    { onFinished: onFinished },
-    aggregator.sharedContext
-  );
+  var scheduler = new HarvestScheduler("endpoint", { onFinished: onFinished }, aggregator.sharedContext);
   scheduler.startTimer(0.1);
 
   function onFinished() {
@@ -162,11 +143,7 @@ test("when getPayload is not provided, calls harvest.sendX", function (t) {
 
 test("does not call harvest.send when payload is null", function (t) {
   resetSpies();
-  var scheduler = new HarvestScheduler(
-    "endpoint",
-    { getPayload: getPayload },
-    aggregator.sharedContext
-  );
+  var scheduler = new HarvestScheduler("endpoint", { getPayload: getPayload }, aggregator.sharedContext);
   scheduler.startTimer(0.1);
 
   function getPayload() {
@@ -177,10 +154,7 @@ test("does not call harvest.send when payload is null", function (t) {
   function validate() {
     scheduler.stopTimer();
     t.notOk(harv.Harvest.prototype.send.called, "harvest.send was not called");
-    t.notOk(
-      harv.Harvest.prototype.sendX.called,
-      "harvest.sendX was not called"
-    );
+    t.notOk(harv.Harvest.prototype.sendX.called, "harvest.sendX was not called");
     t.end();
   }
 });
@@ -188,11 +162,7 @@ test("does not call harvest.send when payload is null", function (t) {
 test("provides retry to getPayload when submit method is xhr", function (t) {
   resetSpies({ submitMethod: submitData.xhr });
 
-  var scheduler = new HarvestScheduler(
-    "endpoint",
-    { getPayload: getPayload },
-    aggregator.sharedContext
-  );
+  var scheduler = new HarvestScheduler("endpoint", { getPayload: getPayload }, aggregator.sharedContext);
   scheduler.startTimer(0.1);
 
   function getPayload(opts) {

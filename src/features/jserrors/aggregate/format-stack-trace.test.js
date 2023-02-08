@@ -25,9 +25,7 @@ describe("formatStackTrace", () => {
   });
 
   test("truncates the middle of the stack lines when more than 100", () => {
-    const input = Array.apply(null, Array(200)).map(() =>
-      faker.datatype.uuid()
-    );
+    const input = Array.apply(null, Array(200)).map(() => faker.datatype.uuid());
     const expected =
       input.slice(0, 50).join("\n") +
       `\n< ...truncated ${input.length - 100} lines... >\n` +

@@ -15,9 +15,7 @@
       document.addEventListener(
         "click",
         function () {
-          var wrappedCb = newrelic
-            .interaction()
-            .createTracer("some other name", noteCallbackFired);
+          var wrappedCb = newrelic.interaction().createTracer("some other name", noteCallbackFired);
           wrappedCb("syncCallback");
           setTimeout(function () {
             wrappedCb("asyncCallback");

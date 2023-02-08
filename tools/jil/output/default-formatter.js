@@ -82,9 +82,7 @@ class DefaultFormatter extends BaseFormatter {
 
     if (!this.config.verbose) return;
     parser.on("comment", (d, indent) => this.writeLine(name, `# ${d}`, indent));
-    parser.on("plan", (d, indent) =>
-      this.writeLine(name, `${d.start}..${d.end}`, indent)
-    );
+    parser.on("plan", (d, indent) => this.writeLine(name, `${d.start}..${d.end}`, indent));
   }
 
   log(...args) {
@@ -137,16 +135,16 @@ class DefaultFormatter extends BaseFormatter {
 
   renderRowStatus(parser) {
     if (!parser.done && parser.started)
-      return `${this.withColor("yellow", "Running...")} - [${this.withColor(
-        "green",
-        "Passed"
-      )}, ${this.withColor("red", "Failed")}]`;
+      return `${this.withColor("yellow", "Running...")} - [${this.withColor("green", "Passed")}, ${this.withColor(
+        "red",
+        "Failed"
+      )}]`;
     else if (!parser.done) return `${this.withColor("yellow", "Pending...")}`;
     else
-      return `${this.withColor("yellow", "Done")} - [${this.withColor(
-        "green",
-        "Passed"
-      )}, ${this.withColor("red", "Failed")}]`;
+      return `${this.withColor("yellow", "Done")} - [${this.withColor("green", "Passed")}, ${this.withColor(
+        "red",
+        "Failed"
+      )}]`;
   }
 
   renderCounts(asserts, countWidth) {
@@ -197,10 +195,7 @@ class DefaultFormatter extends BaseFormatter {
     // write test status
     for (let { parser, data } of this.rows) {
       this.lines += 1;
-      let line =
-        this.renderRowStatus(parser) +
-        " " +
-        this.renderCounts(data, assertionCountWidth);
+      let line = this.renderRowStatus(parser) + " " + this.renderCounts(data, assertionCountWidth);
       output += this.computeLine(parser.name, line);
     }
 

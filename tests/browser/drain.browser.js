@@ -5,9 +5,7 @@
 
 const jil = require("jil");
 const { drain, registerDrain } = require("../../src/common/drain/drain");
-var {
-  registerHandler: register,
-} = require("../../src/common/event-emitter/register-handler.js");
+var { registerHandler: register } = require("../../src/common/event-emitter/register-handler.js");
 
 const { setup } = require("./utils/setup");
 const { baseEE, agentIdentifier } = setup();
@@ -31,21 +29,13 @@ jil.browserTest("drain", function (t) {
     baseEE.on(eventName, function () {
       t.equal(step++, 0, "should be in right order");
       t.equal(this, ctx, "should have right context");
-      t.deepEqual(
-        Array.prototype.slice.call(arguments),
-        args,
-        "should have right args"
-      );
+      t.deepEqual(Array.prototype.slice.call(arguments), args, "should have right args");
     });
 
     ee.on(eventName, function () {
       t.equal(step++, 1, "should be in right order");
       t.equal(this, ctx, "should have right context");
-      t.deepEqual(
-        Array.prototype.slice.call(arguments),
-        args,
-        "should have right args"
-      );
+      t.deepEqual(Array.prototype.slice.call(arguments), args, "should have right args");
     });
 
     ee.emit(eventName, args, ctx);
@@ -64,11 +54,7 @@ jil.browserTest("drain", function (t) {
       function () {
         t.equal(step++, 3, "should be in right order");
         t.equal(this, ctx, "should have right context");
-        t.deepEqual(
-          Array.prototype.slice.call(arguments),
-          args,
-          "should have right args"
-        );
+        t.deepEqual(Array.prototype.slice.call(arguments), args, "should have right args");
       },
       bufferName,
       ee
@@ -106,21 +92,13 @@ jil.browserTest("drain", function (t) {
     baseEE.on(eventName, function () {
       t.equal(step++, 0, "should be in right order");
       t.equal(this, ctx, "should have right context");
-      t.deepEqual(
-        Array.prototype.slice.call(arguments),
-        args,
-        "should have right args"
-      );
+      t.deepEqual(Array.prototype.slice.call(arguments), args, "should have right args");
     });
 
     ee.on(eventName, function () {
       t.equal(step++, 1, "should be in right order");
       t.equal(this, ctx, "should have right context");
-      t.deepEqual(
-        Array.prototype.slice.call(arguments),
-        args,
-        "should have right args"
-      );
+      t.deepEqual(Array.prototype.slice.call(arguments), args, "should have right args");
     });
 
     register(
@@ -137,11 +115,7 @@ jil.browserTest("drain", function (t) {
       function () {
         t.equal(step++, 3, "should be in right order");
         t.equal(this, ctx, "should have right context");
-        t.deepEqual(
-          Array.prototype.slice.call(arguments),
-          args,
-          "should have right args"
-        );
+        t.deepEqual(Array.prototype.slice.call(arguments), args, "should have right args");
       },
       bufferName,
       ee
@@ -179,21 +153,13 @@ jil.browserTest("drain", function (t) {
     baseEE.on(eventName, function () {
       t.equal(step++, 0, "should be in right order");
       t.equal(this, ctx, "should have right context");
-      t.deepEqual(
-        Array.prototype.slice.call(arguments),
-        args,
-        "should have right args"
-      );
+      t.deepEqual(Array.prototype.slice.call(arguments), args, "should have right args");
     });
 
     ee.on(eventName, function () {
       t.equal(step++, 2, "should be in right order");
       t.equal(this, ctx, "should have right context");
-      t.deepEqual(
-        Array.prototype.slice.call(arguments),
-        args,
-        "should have right args"
-      );
+      t.deepEqual(Array.prototype.slice.call(arguments), args, "should have right args");
     });
 
     register(
@@ -201,11 +167,7 @@ jil.browserTest("drain", function (t) {
       function () {
         t.equal(step++, 1, "should be in right order");
         t.equal(this, ctx, "should have right context");
-        t.deepEqual(
-          Array.prototype.slice.call(arguments),
-          args,
-          "should have right args"
-        );
+        t.deepEqual(Array.prototype.slice.call(arguments), args, "should have right args");
       },
       bufferName,
       baseEE
@@ -216,11 +178,7 @@ jil.browserTest("drain", function (t) {
       function () {
         t.equal(step++, 3, "should be in right order");
         t.equal(this, ctx, "should have right context");
-        t.deepEqual(
-          Array.prototype.slice.call(arguments),
-          args,
-          "should have right args"
-        );
+        t.deepEqual(Array.prototype.slice.call(arguments), args, "should have right args");
       },
       bufferName,
       ee
@@ -262,11 +220,7 @@ jil.browserTest("drain", function (t) {
       function () {
         t.equal(step++, 1, "should be in right order");
         t.equal(this, ctx, "should have right context");
-        t.deepEqual(
-          Array.prototype.slice.call(arguments),
-          args,
-          "should have right args"
-        );
+        t.deepEqual(Array.prototype.slice.call(arguments), args, "should have right args");
         ee.emit(otherEvent, [123], ctx);
       },
       bufferName,
@@ -280,20 +234,12 @@ jil.browserTest("drain", function (t) {
           case 0:
             t.equal(step++, 2, "should be in right order");
             t.equal(this, ctx, "should have right context");
-            t.deepEqual(
-              Array.prototype.slice.call(arguments),
-              args,
-              "should have right args"
-            );
+            t.deepEqual(Array.prototype.slice.call(arguments), args, "should have right args");
             break;
           case 1:
             t.equal(step++, 3, "should be in right order");
             t.equal(this, ctx, "should have right context");
-            t.deepEqual(
-              Array.prototype.slice.call(arguments),
-              [123],
-              "should have right args"
-            );
+            t.deepEqual(Array.prototype.slice.call(arguments), [123], "should have right args");
             break;
           default:
             t.fail("should only be called twice");
@@ -330,11 +276,7 @@ jil.browserTest("drain", function (t) {
       function () {
         t.equal(step++, 2, "should be in right order");
         t.equal(this, ctx, "should have right context");
-        t.deepEqual(
-          Array.prototype.slice.call(arguments),
-          args,
-          "should have right args"
-        );
+        t.deepEqual(Array.prototype.slice.call(arguments), args, "should have right args");
       },
       bufferName,
       ee
@@ -345,11 +287,7 @@ jil.browserTest("drain", function (t) {
       function () {
         t.equal(step++, 1, "should be in right order");
         t.equal(this, ctx, "should have right context");
-        t.deepEqual(
-          Array.prototype.slice.call(arguments),
-          args,
-          "should have right args"
-        );
+        t.deepEqual(Array.prototype.slice.call(arguments), args, "should have right args");
       },
       bufferName,
       ee
@@ -376,11 +314,7 @@ jil.browserTest("drain", function (t) {
 
     ee.buffer([eventName], bufferName);
     ee.emit(eventName);
-    t.equal(
-      baseEE.backlog[bufferName].length,
-      1,
-      "should buffer events before drain"
-    );
+    t.equal(baseEE.backlog[bufferName].length, 1, "should buffer events before drain");
     drain(agentIdentifier, bufferName);
     ee.buffer([eventName], bufferName);
     ee.emit(eventName);

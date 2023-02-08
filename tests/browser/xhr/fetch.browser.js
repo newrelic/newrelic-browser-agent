@@ -13,8 +13,7 @@ const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false); // at
 let proto = location.protocol;
 let assetServerHTTPPort = nr.info.assetServerPort; // these ports are not stored per agent
 let assetServerSSLPort = nr.info.assetServerSSLPort;
-let assetServerPort =
-  proto === "http:" ? assetServerHTTPPort : assetServerSSLPort;
+let assetServerPort = proto === "http:" ? assetServerHTTPPort : assetServerSSLPort;
 let assetServerHostname = window.location.host.split(":")[0];
 
 var testCases = [
@@ -26,11 +25,7 @@ var testCases = [
     check: function (t, params, metrics, start) {
       t.equals(params.method, "GET", "method");
       t.equals(params.status, 200, "status");
-      t.equals(
-        params.host,
-        assetServerHostname + ":" + assetServerPort,
-        "host"
-      );
+      t.equals(params.host, assetServerHostname + ":" + assetServerPort, "host");
       t.equals(params.pathname, "/json", "pathname");
       t.equals(metrics.txSize, 0, "request size");
       t.equals(metrics.rxSize, 14, "response size");
@@ -47,11 +42,7 @@ var testCases = [
     check: function (t, params, metrics, start) {
       t.equals(params.method, "GET", "method");
       t.equals(params.status, 200, "status");
-      t.equals(
-        params.host,
-        assetServerHostname + ":" + assetServerPort,
-        "host"
-      );
+      t.equals(params.host, assetServerHostname + ":" + assetServerPort, "host");
       t.equals(params.pathname, "/json", "pathname");
       t.equals(metrics.txSize, 0, "request size");
       t.equals(metrics.rxSize, 14, "response size");
@@ -62,19 +53,13 @@ var testCases = [
   {
     name: "fetch with URL parameter",
     invoke: function () {
-      var request = new URL(
-        "http://" + assetServerHostname + ":" + assetServerPort + "/json"
-      );
+      var request = new URL("http://" + assetServerHostname + ":" + assetServerPort + "/json");
       window.fetch(request);
     },
     check: function (t, params, metrics, start) {
       t.equals(params.method, "GET", "method");
       t.equals(params.status, 200, "status");
-      t.equals(
-        params.host,
-        assetServerHostname + ":" + assetServerPort,
-        "host"
-      );
+      t.equals(params.host, assetServerHostname + ":" + assetServerPort, "host");
       t.equals(params.pathname, "/json", "pathname");
       t.equals(metrics.txSize, 0, "request size");
       t.equals(metrics.rxSize, 14, "response size");
@@ -85,23 +70,13 @@ var testCases = [
   {
     name: "fetch with error response",
     invoke: function () {
-      var request = new URL(
-        "http://" +
-          assetServerHostname +
-          ":" +
-          assetServerPort +
-          "/paththatdoesnotexist"
-      );
+      var request = new URL("http://" + assetServerHostname + ":" + assetServerPort + "/paththatdoesnotexist");
       window.fetch(request);
     },
     check: function (t, params, metrics, start) {
       t.equals(params.method, "GET", "method");
       t.equals(params.status, 404, "status");
-      t.equals(
-        params.host,
-        assetServerHostname + ":" + assetServerPort,
-        "host"
-      );
+      t.equals(params.host, assetServerHostname + ":" + assetServerPort, "host");
       t.equals(params.pathname, "/paththatdoesnotexist", "pathname");
       t.equals(metrics.txSize, 0, "request size");
       t.ok(!metrics.rxSize, "response size is not defined");

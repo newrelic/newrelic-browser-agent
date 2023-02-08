@@ -10,10 +10,7 @@ export class FeatureBase {
     /** @type {Aggregator} */
     this.aggregator = aggregator;
     /** @type {ContextualEE} */
-    this.ee = ee.get(
-      agentIdentifier,
-      getRuntime(this.agentIdentifier).isolatedBacklog
-    );
+    this.ee = ee.get(agentIdentifier, getRuntime(this.agentIdentifier).isolatedBacklog);
     /** @type {string} */
     this.featureName = featureName;
     /**

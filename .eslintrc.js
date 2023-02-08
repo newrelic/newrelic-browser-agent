@@ -1,11 +1,5 @@
 module.exports = {
-  ignorePatterns: [
-    "dist/**/*",
-    "build/**/*",
-    "coverage/**/*",
-    "tests/**/*",
-    "tools/**/*",
-  ],
+  ignorePatterns: ["dist/**/*", "build/**/*", "coverage/**/*", "tests/**/*", "tools/**/*"],
   env: {
     es2022: true,
   },
@@ -45,14 +39,7 @@ module.exports = {
       },
     },
     {
-      files: [
-        "webpack.*.js",
-        "babel.*.js",
-        "babel-env-vars.js",
-        ".eslintrc.js",
-        "jest.preset.js",
-        "newrelic.js",
-      ],
+      files: ["webpack.*.js", "babel.*.js", "babel-env-vars.js", ".eslintrc.js", "jest.preset.js", "newrelic.js"],
       env: {
         browser: true,
         node: true,

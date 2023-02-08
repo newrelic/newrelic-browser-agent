@@ -10,16 +10,8 @@ const jil = require("jil");
 // ff38 will throw if you copy the toString method from the native promise class
 jil.browserTest("stringifying promises still works", function (t) {
   require("./helpers");
-  t.ok(
-    String(window.Promise).match(
-      /function Promise\s*\(\)\s*{\s*\[native code\]\s*}/
-    )
-  );
-  t.ok(
-    window.Promise.toString().match(
-      /function Promise\s*\(\)\s*{\s*\[native code\]\s*}/
-    )
-  );
+  t.ok(String(window.Promise).match(/function Promise\s*\(\)\s*{\s*\[native code\]\s*}/));
+  t.ok(window.Promise.toString().match(/function Promise\s*\(\)\s*{\s*\[native code\]\s*}/));
   t.end();
 });
 
@@ -68,22 +60,18 @@ jil.browserTest("basic promise chain", function (t) {
   function onInteractionStart(cb) {
     new Promise(function (resolve, reject) {
       setTimeout(
-        newrelic
-          .interaction()
-          .createTracer("timer-in-first-promise", function () {
-            resolve(1);
-          }),
+        newrelic.interaction().createTracer("timer-in-first-promise", function () {
+          resolve(1);
+        }),
         1
       );
     })
       .then(() => {
         return new Promise(function (resolve, reject) {
           setTimeout(
-            newrelic
-              .interaction()
-              .createTracer("timer-in-second-promise", function () {
-                reject(2);
-              }),
+            newrelic.interaction().createTracer("timer-in-second-promise", function () {
+              reject(2);
+            }),
             2
           );
         });
@@ -97,10 +85,7 @@ jil.browserTest("basic promise chain", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.ok(interaction.root.end, "interaction should be finished");
     validator.validate(t, interaction);
     t.end();
@@ -112,18 +97,9 @@ jil.browserTest("instanceof", function diferTest(t) {
   var unwrapped = unwrappedPromise.resolve();
 
   t.ok(promise instanceof Promise, "instanceof should work on wrapped Promise");
-  t.ok(
-    promise instanceof unwrappedPromise,
-    "instanceof should work on unwrapped Promise"
-  );
-  t.ok(
-    unwrapped instanceof Promise,
-    "instanceof should work on wrapped Promise"
-  );
-  t.ok(
-    unwrapped instanceof unwrappedPromise,
-    "instanceof should work on unwrapped Promise"
-  );
+  t.ok(promise instanceof unwrappedPromise, "instanceof should work on unwrapped Promise");
+  t.ok(unwrapped instanceof Promise, "instanceof should work on wrapped Promise");
+  t.ok(unwrapped instanceof unwrappedPromise, "instanceof should work on unwrapped Promise");
   t.end();
 });
 
@@ -159,11 +135,7 @@ jil.browserTest("Promise throw in executor", function (t) {
     promise.catch(function (val) {
       setTimeout(
         newrelic.interaction().createTracer("timer", function () {
-          t.equal(
-            val,
-            thrownError,
-            "promise should yield the error that was thrown in executor"
-          );
+          t.equal(val, thrownError, "promise should yield the error that was thrown in executor");
           window.location.hash = "#" + Math.random();
           cb();
         })
@@ -172,10 +144,7 @@ jil.browserTest("Promise throw in executor", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     t.ok(interaction.root.end, "interaction should be finished");
     validator.validate(t, interaction);
     t.end();

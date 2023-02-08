@@ -33,12 +33,7 @@ class Driver {
       trustKey: 789,
     };
     this.browserTests = [];
-    this.assetServer = new AssetServer(
-      config,
-      agentConfig,
-      this.browserTests,
-      output
-    );
+    this.assetServer = new AssetServer(config, agentConfig, this.browserTests, output);
     this.assetServer.start(config.port);
     this.router = this.assetServer.router;
     this.timeout = config.timeout = config.timeout || 32000;
@@ -88,9 +83,7 @@ class Driver {
       this.browserTests.push(testFile);
       this.browserTestMatchers[testFile] = spec;
     } else if (this.browserTestMatchers[testFile] !== spec) {
-      throw new Error(
-        "all browser tests in " + relativePath + " must use the same matcher"
-      );
+      throw new Error("all browser tests in " + relativePath + " must use the same matcher");
     }
   }
 
@@ -119,24 +112,15 @@ class Driver {
       if (err) {
         newrelic.noticeError(err);
         // exit early if an environment is not available
-        newrelic.shutdown(
-          { collectPendingData: true, timeout: 3000 },
-          function () {
-            process.exit(1);
-          }
-        );
+        newrelic.shutdown({ collectPendingData: true, timeout: 3000 }, function () {
+          process.exit(1);
+        });
         return;
       }
 
       let spec = testRun.browserSpec;
-      if (
-        spec.version === "latest" ||
-        spec.platformVersion === "latest" ||
-        spec.version === "beta"
-      ) {
-        this.output.log(
-          `# ${spec.toString()} resolved to ${testRun.resolvedName}`
-        );
+      if (spec.version === "latest" || spec.platformVersion === "latest" || spec.version === "beta") {
+        this.output.log(`# ${spec.toString()} resolved to ${testRun.resolvedName}`);
       }
 
       driver.runTestsAgainstBrowser(testRun.browser, tests, isRetry, (err) => {
@@ -213,9 +197,7 @@ class Driver {
               var eventData = {
                 browserName: browserSpec.desired.browserName,
                 browserVersion: browserSpec.desired.version || null,
-                platformName:
-                  browserSpec.desired.platform ||
-                  browserSpec.desired.platformName,
+                platformName: browserSpec.desired.platform || browserSpec.desired.platformName,
                 platformVersion: browserSpec.desired.platformVersion || null,
                 build: browserSpec.desired.build,
                 testName: name,
@@ -246,11 +228,7 @@ class Driver {
                 queueTest(test, attempt + 1);
               } else if (!isRetry && driver.config.retry) {
                 harness.clear();
-                driver.output.log(
-                  `# storing failed test for later retry: ${browserSpec.toString()} - ${
-                    test.name
-                  }`
-                );
+                driver.output.log(`# storing failed test for later retry: ${browserSpec.toString()} - ${test.name}`);
                 driver.failedTests.push(new DeviceTest(test, browserSpec));
               }
             }
@@ -272,9 +250,7 @@ class Driver {
             var eventData = {
               browserName: browserSpec.desired.browserName,
               browserVersion: browserSpec.desired.version || null,
-              platformName:
-                browserSpec.desired.platform ||
-                browserSpec.desired.platformName,
+              platformName: browserSpec.desired.platform || browserSpec.desired.platformName,
               platformVersion: browserSpec.desired.platformVersion || null,
               build: browserSpec.desired.build,
               testName: name,
@@ -294,10 +270,7 @@ class Driver {
 
           function handlePlanResult() {
             if (ended && t.error) {
-              if (
-                attempt < numberOfAttempts ||
-                (!isRetry && driver.config.retry)
-              ) {
+              if (attempt < numberOfAttempts || (!isRetry && driver.config.retry)) {
                 harness.clear();
               }
               harness.resume();
@@ -357,18 +330,14 @@ class Driver {
       this.output.addChild(browserSpec.toString(), testRun.stream);
 
       let testsToRun = findTests(tests, browserSpec);
-      driver.output.log(
-        `# retrying ${testsToRun.length} tests for ${browserSpec.toString()}`
-      );
+      driver.output.log(`# retrying ${testsToRun.length} tests for ${browserSpec.toString()}`);
       this.runTestRun(testRun, testsToRun, true, onBrowserFinished);
       running.add(testRun);
     }
 
     function onBrowserFinished(err, testRun) {
       if (err) {
-        driver.output.log(
-          `# got error while running tests (${testRun.browserSpec.toString()})`
-        );
+        driver.output.log(`# got error while running tests (${testRun.browserSpec.toString()})`);
         newrelic.noticeError(err);
       }
 

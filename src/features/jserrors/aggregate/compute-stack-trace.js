@@ -66,8 +66,7 @@ var chrome =
   /^\s*at (?:((?:\[object object\])?(?:[^(]*\([^)]*\))*[^()]*(?: \[as \S+\])?) )?\(?((?:file|http|https|chrome-extension):.*?)?:(\d+)(?::(\d+))?\)?\s*$/i;
 var gecko =
   /^\s*(?:(\S*|global code)(?:\(.*?\))?@)?((?:file|http|https|chrome|safari-extension).*?):(\d+)(?::(\d+))?\s*$/i;
-var chrome_eval =
-  /^\s*at .+ \(eval at \S+ \((?:(?:file|http|https):[^)]+)?\)(?:, [^:]*:\d+:\d+)?\)$/i;
+var chrome_eval = /^\s*at .+ \(eval at \S+ \((?:(?:file|http|https):[^)]+)?\)(?:, [^:]*:\d+:\d+)?\)$/i;
 var ie_eval = /^\s*at Function code \(Function code:\d+:\d+\)\s*/i;
 
 export function computeStackTrace(ex) {
@@ -163,11 +162,7 @@ function getElement(line) {
   if (parts) {
     return {
       url: parts[2],
-      func:
-        (parts[1] !== "Anonymous function" &&
-          parts[1] !== "global code" &&
-          parts[1]) ||
-        null,
+      func: (parts[1] !== "Anonymous function" && parts[1] !== "global code" && parts[1]) || null,
       line: +parts[3],
       column: parts[4] ? +parts[4] : null,
     };
@@ -189,8 +184,7 @@ function computeStackTraceBySourceAndLine(ex) {
       mode: "sourceline",
       name: className,
       message: ex.message,
-      stackString:
-        getClassName(ex) + ": " + ex.message + "\n    in evaluated code",
+      stackString: getClassName(ex) + ": " + ex.message + "\n    in evaluated code",
       frames: [
         {
           func: "evaluated code",

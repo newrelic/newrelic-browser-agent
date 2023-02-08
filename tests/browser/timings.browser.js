@@ -249,9 +249,7 @@ function waitForWindowLoad(fn) {
 
 const { setup } = require("./utils/setup");
 const { setInfo } = require("../../src/common/config/config");
-const {
-  Aggregate: PvtAggregate,
-} = require("../../src/features/page_view_timing/aggregate/index");
+const { Aggregate: PvtAggregate } = require("../../src/features/page_view_timing/aggregate/index");
 
 const { agentIdentifier, aggregator } = setup();
 
@@ -273,29 +271,26 @@ jil.browserTest("page-view-timing serializer default attributes", function (t) {
   }
 });
 
-jil.browserTest(
-  "page-view-timing serializer handles custom attributes",
-  function (t) {
-    const pvtAgg = new PvtAggregate(agentIdentifier, aggregator);
+jil.browserTest("page-view-timing serializer handles custom attributes", function (t) {
+  const pvtAgg = new PvtAggregate(agentIdentifier, aggregator);
 
-    waitForWindowLoad(startTest);
+  waitForWindowLoad(startTest);
 
-    function startTest() {
-      // should add custom, should not add cls (reserved)
-      setInfo(agentIdentifier, {
-        jsAttributes: { custom: "val", cls: "customVal" },
-      });
+  function startTest() {
+    // should add custom, should not add cls (reserved)
+    setInfo(agentIdentifier, {
+      jsAttributes: { custom: "val", cls: "customVal" },
+    });
 
-      testCases.forEach((testCase) => {
-        var payload = pvtAgg.getPayload(getAgentInternalFormat(testCase.input));
-        var events = qp.decode(payload);
-        var hasReserved = overriddenReservedAttributes(events);
-        var result = haveCustomAttributes(events);
-        t.notOk(hasReserved, "should not allow overridden reserved attribute");
-        t.ok(result, "all events should have the set custom attribute");
-      });
+    testCases.forEach((testCase) => {
+      var payload = pvtAgg.getPayload(getAgentInternalFormat(testCase.input));
+      var events = qp.decode(payload);
+      var hasReserved = overriddenReservedAttributes(events);
+      var result = haveCustomAttributes(events);
+      t.notOk(hasReserved, "should not allow overridden reserved attribute");
+      t.ok(result, "all events should have the set custom attribute");
+    });
 
-      t.end();
-    }
+    t.end();
   }
-);
+});

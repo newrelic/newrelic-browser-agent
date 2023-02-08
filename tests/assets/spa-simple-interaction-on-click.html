@@ -20,11 +20,7 @@
 
           function onload() {
             fetch("/").then(function () {
-              window.history.replaceState(
-                null,
-                Math.random(),
-                "#" + Math.random()
-              );
+              window.history.replaceState(null, Math.random(), "#" + Math.random());
               setTimeout(function () {
                 window.location.hash = "#" + Math.random();
                 Promise.resolve()

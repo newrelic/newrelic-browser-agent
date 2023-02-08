@@ -30,9 +30,7 @@ function noticeErrorTest(type, supportRegOrESMWorker) {
     function (t, browser, router) {
       let assetURL = router.assetURL(`worker/${type}-worker.html`, {
         init,
-        workerCommands: [() => newrelic.noticeError(new Error("test"))].map(
-          (x) => x.toString()
-        ),
+        workerCommands: [() => newrelic.noticeError(new Error("test"))].map((x) => x.toString()),
       });
 
       let loadPromise = browser.get(assetURL);
@@ -42,11 +40,7 @@ function noticeErrorTest(type, supportRegOrESMWorker) {
         .then(([errResponse]) => {
           const { err } = JSON.parse(errResponse.body);
           checkBasics(t, err);
-          t.deepEqual(
-            err[0].custom,
-            { ...workerCustomAttrs },
-            "Should not have correct custom attributes"
-          );
+          t.deepEqual(err[0].custom, { ...workerCustomAttrs }, "Should not have correct custom attributes");
           t.end();
         })
         .catch(fail(t));
@@ -71,11 +65,7 @@ function noticeErrorStringTest(type, supportRegOrESMWorker) {
         .then(([errResponse]) => {
           const { err } = JSON.parse(errResponse.body);
           checkBasics(t, err);
-          t.deepEqual(
-            err[0].custom,
-            { ...workerCustomAttrs },
-            "Should not have correct custom attributes"
-          );
+          t.deepEqual(err[0].custom, { ...workerCustomAttrs }, "Should not have correct custom attributes");
           t.end();
         })
         .catch(fail(t));
@@ -90,9 +80,7 @@ function noticeErrorWithParamsTest(type, supportRegOrESMWorker) {
     function (t, browser, router) {
       let assetURL = router.assetURL(`worker/${type}-worker.html`, {
         init,
-        workerCommands: [
-          () => newrelic.noticeError(new Error("test"), { hi: "mom" }),
-        ].map((x) => x.toString()),
+        workerCommands: [() => newrelic.noticeError(new Error("test"), { hi: "mom" })].map((x) => x.toString()),
       });
 
       let loadPromise = browser.get(assetURL);
@@ -102,11 +90,7 @@ function noticeErrorWithParamsTest(type, supportRegOrESMWorker) {
         .then(([errResponse]) => {
           const { err } = JSON.parse(errResponse.body);
           checkBasics(t, err);
-          t.deepEqual(
-            err[0].custom,
-            { hi: "mom", ...workerCustomAttrs },
-            "Should have correct custom attributes"
-          );
+          t.deepEqual(err[0].custom, { hi: "mom", ...workerCustomAttrs }, "Should have correct custom attributes");
           t.end();
         })
         .catch(fail(t));

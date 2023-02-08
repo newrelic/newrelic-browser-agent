@@ -16,11 +16,7 @@ if (navigator.userAgent) {
   var userAgent = navigator.userAgent;
   var parts = userAgent.match(safari);
 
-  if (
-    parts &&
-    userAgent.indexOf("Chrome") === -1 &&
-    userAgent.indexOf("Chromium") === -1
-  ) {
+  if (parts && userAgent.indexOf("Chrome") === -1 && userAgent.indexOf("Chromium") === -1) {
     agentName = "Safari";
     agentVersion = parts[1];
   }

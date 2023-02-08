@@ -2,11 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import {
-  getConfiguration,
-  getConfigurationValue,
-  getLoaderConfig,
-} from "../../../common/config/config";
+import { getConfiguration, getConfigurationValue, getLoaderConfig } from "../../../common/config/config";
 import { generateSpanId, generateTraceId } from "../../../common/ids/unique-id";
 import { parseUrl } from "../../../common/url/parse-url";
 import { globalScope } from "../../../common/util/global-scope";
@@ -48,15 +44,8 @@ export class DT {
       timestamp: timestamp,
     };
 
-    if (
-      parsedOrigin.sameOrigin ||
-      (this.isAllowedOrigin(parsedOrigin) &&
-        this.useTraceContextHeadersForCors())
-    ) {
-      payload.traceContextParentHeader = this.generateTraceContextParentHeader(
-        spanId,
-        traceId
-      );
+    if (parsedOrigin.sameOrigin || (this.isAllowedOrigin(parsedOrigin) && this.useTraceContextHeadersForCors())) {
+      payload.traceContextParentHeader = this.generateTraceContextParentHeader(spanId, traceId);
       payload.traceContextStateHeader = this.generateTraceContextStateHeader(
         spanId,
         timestamp,
@@ -68,18 +57,9 @@ export class DT {
 
     if (
       (parsedOrigin.sameOrigin && !this.excludeNewrelicHeader()) ||
-      (!parsedOrigin.sameOrigin &&
-        this.isAllowedOrigin(parsedOrigin) &&
-        this.useNewrelicHeaderForCors())
+      (!parsedOrigin.sameOrigin && this.isAllowedOrigin(parsedOrigin) && this.useNewrelicHeaderForCors())
     ) {
-      payload.newrelicHeader = this.generateTraceHeader(
-        spanId,
-        traceId,
-        timestamp,
-        accountId,
-        agentId,
-        trustKey
-      );
+      payload.newrelicHeader = this.generateTraceHeader(spanId, traceId, timestamp, accountId, agentId, trustKey);
     }
 
     return payload;
@@ -89,13 +69,7 @@ export class DT {
     return "00-" + traceId + "-" + spanId + "-01";
   }
 
-  generateTraceContextStateHeader(
-    spanId,
-    timestamp,
-    accountId,
-    appId,
-    trustKey
-  ) {
+  generateTraceContextStateHeader(spanId, timestamp, accountId, appId, trustKey) {
     var version = 0;
     var transactionId = "";
     var parentType = 1;

@@ -3,12 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from "../../../common/event-emitter/handle";
-import {
-  wrapHistory,
-  wrapEvents,
-  wrapTimer,
-  wrapRaf,
-} from "../../../common/wrap";
+import { wrapHistory, wrapEvents, wrapTimer, wrapRaf } from "../../../common/wrap";
 import { supportsPerformanceObserver } from "../../../common/window/supports-performance-observer";
 import { eventListenerOpts } from "../../../common/event-listener/event-listener-opts";
 import { getRuntime } from "../../../common/config/config";
@@ -41,14 +36,7 @@ export class Instrument extends InstrumentBase {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto);
     if (!isBrowserScope) return; // session traces not supported outside web env
 
-    if (
-      !(
-        window.performance &&
-        window.performance.timing &&
-        window.performance.getEntriesByType
-      )
-    )
-      return;
+    if (!(window.performance && window.performance.timing && window.performance.getEntriesByType)) return;
 
     getRuntime(this.agentIdentifier).features.stn = true;
 
@@ -71,13 +59,7 @@ export class Instrument extends InstrumentBase {
       if (evt instanceof origEvent) {
         // ISSUE: when target is XMLHttpRequest, nr@context should have params so we can calculate event origin
         // When ajax is disabled, this may fail without making ajax a dependency of session_trace
-        handle(
-          "bst",
-          [evt, target, this.bstStart, now()],
-          undefined,
-          FEATURE_NAMES.sessionTrace,
-          ee
-        );
+        handle("bst", [evt, target, this.bstStart, now()], undefined, FEATURE_NAMES.sessionTrace, ee);
       }
     });
 
@@ -87,13 +69,7 @@ export class Instrument extends InstrumentBase {
     });
 
     this.timerEE.on(FN_END, function (args, target) {
-      handle(
-        BST_TIMER,
-        [target, this.bstStart, now(), this.bstType],
-        undefined,
-        FEATURE_NAMES.sessionTrace,
-        ee
-      );
+      handle(BST_TIMER, [target, this.bstStart, now(), this.bstType], undefined, FEATURE_NAMES.sessionTrace, ee);
     });
 
     this.rafEE.on(FN_START, function () {
@@ -159,13 +135,7 @@ export class Instrument extends InstrumentBase {
         // eslint-disable-line no-undef
         var entries = list.getEntries();
 
-        handle(
-          BST_RESOURCE,
-          [entries],
-          undefined,
-          FEATURE_NAMES.sessionTrace,
-          ee
-        );
+        handle(BST_RESOURCE, [entries], undefined, FEATURE_NAMES.sessionTrace, ee);
       });
 
       try {
@@ -176,22 +146,12 @@ export class Instrument extends InstrumentBase {
     }
 
     function onResourceTimingBufferFull(e) {
-      handle(
-        BST_RESOURCE,
-        [window.performance.getEntriesByType(RESOURCE)],
-        undefined,
-        FEATURE_NAMES.sessionTrace,
-        ee
-      );
+      handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)], undefined, FEATURE_NAMES.sessionTrace, ee);
 
       // stop recording once buffer is full
       if (window.performance["c" + learResourceTimings]) {
         try {
-          window.performance[REMOVE_EVENT_LISTENER](
-            RESOURCE_TIMING_BUFFER_FULL,
-            onResourceTimingBufferFull,
-            false
-          );
+          window.performance[REMOVE_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false);
         } catch (e) {
           // do nothing
         }
@@ -209,11 +169,7 @@ export class Instrument extends InstrumentBase {
     }
 
     document[ADD_EVENT_LISTENER]("scroll", this.noOp, eventListenerOpts(false));
-    document[ADD_EVENT_LISTENER](
-      "keypress",
-      this.noOp,
-      eventListenerOpts(false)
-    );
+    document[ADD_EVENT_LISTENER]("keypress", this.noOp, eventListenerOpts(false));
     document[ADD_EVENT_LISTENER]("click", this.noOp, eventListenerOpts(false));
 
     this.importAggregator();

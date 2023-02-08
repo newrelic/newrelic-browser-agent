@@ -71,8 +71,7 @@ export class Aggregator extends SharedContext {
 
   get(type, name) {
     // if name is passed, get a single bucket
-    if (name)
-      return this.aggregatedData[type] && this.aggregatedData[type][name];
+    if (name) return this.aggregatedData[type] && this.aggregatedData[type][name];
     // else, get all buckets of that type
     return this.aggregatedData[type];
   }

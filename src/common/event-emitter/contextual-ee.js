@@ -32,8 +32,7 @@ function ee(old, debugId) {
   // backlog must be isolated if multiple agents can run on page. MFE loader packages sets this to true. only check this for feature emitters (length = 16)
   var isolatedBacklog = false;
   try {
-    isolatedBacklog =
-      debugId.length !== 16 ? false : getRuntime(debugId).isolatedBacklog;
+    isolatedBacklog = debugId.length !== 16 ? false : getRuntime(debugId).isolatedBacklog;
   } catch (err) {
     // do nothing for now
   }
@@ -51,11 +50,7 @@ function ee(old, debugId) {
     aborted: false,
     isBuffering: isBuffering,
     debugId,
-    backlog: isolatedBacklog
-      ? {}
-      : old && typeof old.backlog === "object"
-      ? old.backlog
-      : {},
+    backlog: isolatedBacklog ? {} : old && typeof old.backlog === "object" ? old.backlog : {},
   };
 
   return emitter;

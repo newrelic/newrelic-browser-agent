@@ -16,8 +16,7 @@ export function applyFnToProps(obj, fn, type, ignoreKeys) {
         if (typeof obj[property] === "object") {
           traverse(obj[property]);
         } else {
-          if (typeof obj[property] === type && !shouldIgnore(property))
-            obj[property] = fn(obj[property]);
+          if (typeof obj[property] === type && !shouldIgnore(property)) obj[property] = fn(obj[property]);
         }
       }
     }

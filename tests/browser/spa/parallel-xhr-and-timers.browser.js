@@ -51,14 +51,8 @@ jil.browserTest("spa parallel XHRs and timers", function (t) {
     xhr1.send();
     xhr2.send();
 
-    setTimeout(
-      newrelic.interaction().createTracer("timer", xhrOrTimerDone),
-      Math.random() * 10
-    );
-    setTimeout(
-      newrelic.interaction().createTracer("timer", xhrOrTimerDone),
-      Math.random() * 10
-    );
+    setTimeout(newrelic.interaction().createTracer("timer", xhrOrTimerDone), Math.random() * 10);
+    setTimeout(newrelic.interaction().createTracer("timer", xhrOrTimerDone), Math.random() * 10);
 
     function xhrOrTimerDone() {
       remaining--;
@@ -68,14 +62,8 @@ jil.browserTest("spa parallel XHRs and timers", function (t) {
   }
 
   function afterInteractionDone(interaction) {
-    t.ok(
-      interaction.root.end,
-      "interaction should be finished and have an end time"
-    );
-    t.notok(
-      helpers.currentNodeId(),
-      "interaction should be null outside of async chain"
-    );
+    t.ok(interaction.root.end, "interaction should be finished and have an end time");
+    t.notok(helpers.currentNodeId(), "interaction should be null outside of async chain");
     validator.validate(t, interaction);
     t.end();
   }

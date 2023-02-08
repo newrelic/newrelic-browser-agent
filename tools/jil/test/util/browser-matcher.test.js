@@ -82,9 +82,7 @@ tape("include takes precedence", function (t) {
     ],
   });
 
-  let matcher = new BrowserMatcher()
-    .exclude("safari", "10")
-    .include("safari", "10");
+  let matcher = new BrowserMatcher().exclude("safari", "10").include("safari", "10");
 
   t.ok(
     matcher.match(
@@ -96,9 +94,7 @@ tape("include takes precedence", function (t) {
     "should match"
   );
 
-  matcher = new BrowserMatcher()
-    .include("safari", "10")
-    .exclude("safari", "10");
+  matcher = new BrowserMatcher().include("safari", "10").exclude("safari", "10");
 
   t.ok(
     matcher.match(

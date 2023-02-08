@@ -12,7 +12,6 @@ env:
 jobs:
   ie-functional:
     timeout-minutes: 90
-    continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
 
@@ -31,7 +30,6 @@ jobs:
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=5 --functional-only
   ie-unit:
     timeout-minutes: 90
-    continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
 
@@ -48,19 +46,3 @@ jobs:
 
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=5 --unit-only
-#  polyfill-check-failures:
-#    runs-on: ubuntu-latest
-#    continue-on-error: true
-#    container: node:14
-#    if: ${{ !failure() }}  # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
-#    needs: [ie-functional, ie-unit]
-#    env:
-#
-#      NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: checkout and build
-#        uses: ./.github/actions/test-setup
-#
-#      - name: check failed tests
-#        run: node --max-old-space-size=8192 ./tools/jil/util/get-failed-tests.js

@@ -35,7 +35,7 @@ test('encode.obj', function (t) {
   t.equal(encode.obj(obj3, 1000), '&bar=%5B%22a%22,%7B%7D,%22c%22%5D', 'Handle bad objects')
 
   var circular2 = []
-  circular2.circular = circular
+  circular2.push(circular2)
   var obj4 = { bar: ['a', circular2, 'c'] }
   t.equal(encode.obj(obj4, 1000), '&bar=%5B%22a%22,%5B%5D,%22c%22%5D', 'Handle bad arrays')
 

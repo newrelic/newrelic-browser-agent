@@ -174,7 +174,10 @@ const standardConfig = merge(commonConfig, {
                 }
               }]
             ], plugins: [
-              babelEnv(VERSION, SUBVERSION)
+              babelEnv(VERSION, SUBVERSION),
+              // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
+              // assigning to a variable, which conflicts with template literals.
+              "@babel/plugin-transform-template-literals"
             ]
           }
         }

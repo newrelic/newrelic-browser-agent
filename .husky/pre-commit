@@ -7,7 +7,6 @@ npm run unit -- --onlyChanged
 npm run sauce:get-browsers
 git add tools/jil/util/browsers-supported.json
 
-STAGED_FILES=$(git diff --cached --name-only)
 for FILE in $STAGED_FILES
 do
   if [ "$FILE" = "package.json" ] || [ "$FILE" = "package-lock.json" ]; then

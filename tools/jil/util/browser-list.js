@@ -5,6 +5,7 @@
 
 const browsersPolyfill = require('./browsers-polyfill.json')
 const browsersSupported = require('./browsers-supported.json')
+const browsersSelenium = require('./browsers-selenium.json')
 const semver = require('semver')
 const BrowserMatcher = require('./browser-matcher')
 var config = require('../runner/args')
@@ -13,6 +14,11 @@ var config = require('../runner/args')
 var allowedBrowsers = config.polyfills ? browsersPolyfill : browsersSupported
 const latestVersStringRe = /latest(?:-[1-9])?$/
 
+if (config.polyfills) {
+  allowedBrowsers = browsersPolyfill
+} else if (config.seleniumServer) {
+  allowedBrowsers = browsersSelenium
+}
 class BrowserSpec {
   constructor (desired) {
     this.desired = desired
@@ -101,24 +107,28 @@ function browserList (pattern = 'chrome@latest') {
 }
 
 function parse (pattern) {
-  let [browser, range] = pattern.split('@')
-  return getBrowsersFor(browser || 'chrome', range)
+  let [browserFull, platform] = pattern.split('/')
+  let [browser, range] = browserFull.split('@')
+  return getBrowsersFor(browser || 'chrome', range, platform)
 }
 
-function getBrowsersFor (browser, range) {
+function getBrowsersFor (browser, range, platform) {
   let list = []
   if (allowedBrowsers[browser]) list = allowedBrowsers[browser].slice()
   else if (browser === '*') list = Object.keys(allowedBrowsers).reduce(merge, [])
 
   list.sort(byVersion)
 
-  if (!range) {
+  if (!range && !platform) {
     return list
   } else if (range === 'beta') {
     return list.filter(findBetaVersions)
   } else if (latestVersStringRe.test(range)) {
     var latestX = list.filter(findLatestVersions, range)
     return latestX.length ? latestX : list.slice(0, 1) // default to the highest version if latest-# cannot be found
+  }
+  if (platform && option.platform.toLowerCase() !== platform.toLowerCase()) {
+    return false
   }
 
   list = list.filter(inRange)
@@ -137,6 +147,9 @@ function getBrowsersFor (browser, range) {
   }
 
   function findLatestVersions (option) {
+    if (platform && option.platform.toLowerCase() !== platform.toLowerCase()) {
+      return false
+    }
     return (option.version === this.valueOf()) // 'this' should be bound to the lastest version string (object)
   }
 }

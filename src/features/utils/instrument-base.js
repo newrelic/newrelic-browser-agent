@@ -20,15 +20,19 @@ export class InstrumentBase extends FeatureBase {
   importAggregator() {
     if (this.hasAggregator || !this.auto) return
     this.hasAggregator = true
-    const lazyLoad = async () => {
+
+    const importLater = async () => {
+      /**
+       * Note this try-catch differs from the one in Agent.start() in that it's placed later in a page's lifecycle and
+       * it's only responsible for aborting its one specific feature, rather than all.
+       */
       try {
         const { lazyLoader } = await import(/* webpackChunkName: "lazy-loader" */ './lazy-loader')
         const { Aggregate } = await lazyLoader(this.featureName, 'aggregate');
         new Aggregate(this.agentIdentifier, this.aggregator);
-        this.resolve();
       } catch (e) {
-        warn('Something prevented the agent from being downloaded.')
-        return null
+        warn(`Downloading ${this.featureName} failed...`);
+        this.abortHandler?.(); // undo any important alterations made to the page
       }
     }
 

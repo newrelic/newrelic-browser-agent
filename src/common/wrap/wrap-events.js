@@ -12,9 +12,9 @@ import { getOrSet } from '../util/get-or-set'
 import { globalScope, isBrowserScope } from '../util/global-scope'
 
 const wrapped = {}
-var XHR = XMLHttpRequest
-var ADD_EVENT_LISTENER = 'addEventListener'
-var REMOVE_EVENT_LISTENER = 'removeEventListener'
+const XHR = XMLHttpRequest;
+const ADD_EVENT_LISTENER = 'addEventListener';
+const REMOVE_EVENT_LISTENER = 'removeEventListener';
 
 export function wrapEvents(sharedEE) {
   var ee = scopedEE(sharedEE)
@@ -30,10 +30,6 @@ export function wrapEvents(sharedEE) {
       findEventListenerProtoAndCb(document, wrapNode);
     findEventListenerProtoAndCb(globalScope, wrapNode);
     findEventListenerProtoAndCb(XHR.prototype, wrapNode);
-    // eslint-disable-next-line
-  } else if (XHR.prototype.hasOwnProperty(ADD_EVENT_LISTENER)) {
-    wrapNode(globalScope)
-    wrapNode(XHR.prototype) // CAUTION: this would conflict with wrap-xhr, and one of them end up not wrappable or wrapped; it's unknown the usage of this else-if case...
   }
 
   ee.on(ADD_EVENT_LISTENER + '-start', function (args, target) {
@@ -84,22 +80,25 @@ export function wrapEvents(sharedEE) {
  */
 function findEventListenerProtoAndCb(object, cb, ...rest) {
   let step = object;
-  // eslint-disable-next-line
-  while (step && !step.hasOwnProperty(ADD_EVENT_LISTENER)) { step = Object.getPrototypeOf(step) }
+  while (typeof step === 'object' && !Object.prototype.hasOwnProperty.call(step, ADD_EVENT_LISTENER)) { 
+    step = Object.getPrototypeOf(step) 
+  }
   if (step) cb(step, ...rest);
 }
 
 export function unwrapEvents(sharedEE) {
   const ee = scopedEE(sharedEE);
   
-  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this, but always decrement the count after checking it per unwrap call.
-  if (wrapped[ee.debugId]-- == 1) {
+  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this.
+  if (wrapped[ee.debugId] == 1) {
     [ADD_EVENT_LISTENER, REMOVE_EVENT_LISTENER].forEach(fn => {
       if (typeof document === 'object')  findEventListenerProtoAndCb(document, unwrapFunction, fn); //==> unwrapFunction(findProto(document)?, fn);
       findEventListenerProtoAndCb(globalScope, unwrapFunction, fn);
       findEventListenerProtoAndCb(XHR.prototype, unwrapFunction, fn);
     });
     wrapped[ee.debugId] = Infinity; // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
+  } else {
+    wrapped[ee.debugId]--;
   }
 }
 export function scopedEE(sharedEE){

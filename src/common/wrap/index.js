@@ -9,6 +9,5 @@ import {wrapPromise, unwrapPromise} from './wrap-promise'
 import {wrapXhr, unwrapXhr} from './wrap-xhr'
 import {wrapEvents, unwrapEvents} from './wrap-events'
 
-export {wrapEvents, wrapFetch, wrapHistory, wrapJsonP, wrapMutation, wrapPromise, wrapRaf, wrapTimer, wrapXhr};
-
-export {unwrapEvents, unwrapFetch, unwrapHistory, unwrapJsonP, unwrapMutation, unwrapPromise, unwrapRaf, unwrapTimer, unwrapXhr};
+export {wrapEvents, wrapFetch, wrapHistory, wrapJsonP, wrapMutation, wrapPromise, wrapRaf, wrapTimer, wrapXhr,
+	unwrapEvents, unwrapFetch, unwrapHistory, unwrapJsonP, unwrapMutation, unwrapPromise, unwrapRaf, unwrapTimer, unwrapXhr};

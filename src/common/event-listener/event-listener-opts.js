@@ -1,5 +1,8 @@
 import { globalScope } from '../util/global-scope';
 
+/*
+ * See https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#safely_detecting_option_support
+ */
 let passiveSupported = false;
 let signalSupported = false;
 try {

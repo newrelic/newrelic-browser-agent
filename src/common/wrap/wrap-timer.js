@@ -48,10 +48,12 @@ export function wrapTimer(sharedEE) {
 export function unwrapTimer(sharedEE) {
   const ee = scopedEE(sharedEE);
   
-  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this, but always decrement the count after checking it per unwrap call.
-  if (wrapped[ee.debugId]-- == 1) {
+  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this.
+  if (wrapped[ee.debugId] == 1) {
     TIMER_FNS.forEach(fn => unwrapFunction(globalScope, fn));
     wrapped[ee.debugId] = Infinity; // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
+  } else {
+    wrapped[ee.debugId]--;
   }
 }
 export function scopedEE(sharedEE){

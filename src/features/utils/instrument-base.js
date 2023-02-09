@@ -20,7 +20,7 @@ export class InstrumentBase extends FeatureBase {
   importAggregator() {
     if (this.hasAggregator || !this.auto) return
     this.hasAggregator = true
-    const waitForWindowLoad = async () => {
+    const importLater = async () => {
       /** Note this try-catch differs from the one in Agent.start() in that it's placed later in a page's lifecycle and
        *  it's only responsible for aborting its one specific feature, rather than all. */
       try {
@@ -33,7 +33,7 @@ export class InstrumentBase extends FeatureBase {
     }
 
     // Workers have no window load event, and so it's okay to run the feature's aggregator asap. For web UI, it should wait for the window to load first.
-    if (isWorkerScope) waitForWindowLoad();
-    else onWindowLoad(() => waitForWindowLoad(), true);
+    if (isWorkerScope) importLater();
+    else onWindowLoad(() => importLater(), true);
   }
 }

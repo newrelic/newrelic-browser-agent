@@ -18,10 +18,10 @@
       document.addEventListener('click', function () {
         newrelic.interaction().createTracer('custom', function () {
           // change hash to capture interaction
-          window.location.hash = Math.random();
-          throw 'some error';
-        })();
-      });
+          window.location.hash = Math.random()
+          throw 'some error'
+        })()
+      })
     </script>
   </body>
 </html>

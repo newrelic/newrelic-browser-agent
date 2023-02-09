@@ -8,15 +8,15 @@
     {init} {config} {loader}
 
     <script>
-      newrelic.setCustomAttribute('localKey', 1);
+      newrelic.setCustomAttribute('localKey', 1)
       setTimeout(function () {
         try {
-          throw new Error('My error');
+          throw new Error('My error')
         } catch (e) {
-          NREUM.noticeError(e);
+          NREUM.noticeError(e)
         }
-      }, 100);
-      newrelic.interaction().setAttribute('localKey', 2);
+      }, 100)
+      newrelic.interaction().setAttribute('localKey', 2)
     </script>
     <title>RUM Unit Test</title>
   </head>

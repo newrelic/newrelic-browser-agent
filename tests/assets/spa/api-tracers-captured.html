@@ -14,16 +14,16 @@
       document.addEventListener(
         'click',
         function () {
-          var interaction = newrelic.interaction().save();
+          var interaction = newrelic.interaction().save()
 
           interaction.createTracer('custom', function () {
             setTimeout(function () {
-              interaction.end();
-            });
-          })();
+              interaction.end()
+            })
+          })()
         },
         false
-      );
+      )
     </script>
   </body>
 </html>

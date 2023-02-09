@@ -18,15 +18,15 @@
       document.addEventListener(
         'click',
         function () {
-          var el = document.createElement('script');
-          el.src = '/nonexistent?cb=foo';
-          window.document.body.appendChild(el);
+          var el = document.createElement('script')
+          el.src = '/nonexistent?cb=foo'
+          window.document.body.appendChild(el)
 
           // change path here, since callback will not be invoked
-          window.location.hash = Math.random();
+          window.location.hash = Math.random()
         },
         false
-      );
+      )
     </script>
     <p>Click me!</p>
   </body>

@@ -14,21 +14,21 @@
       window.globalCallback = function () {
         // this currently has the interaction in context without additional
         // instrumentation
-        newrelic.setCustomAttribute('customAttr', 1);
-      };
+        newrelic.setCustomAttribute('customAttr', 1)
+      }
 
       document.addEventListener(
         'click',
         function () {
-          window.location.hash = Math.random();
+          window.location.hash = Math.random()
 
-          var el = document.createElement('script');
-          var content = encodeURIComponent('globalCallback()');
-          el.src = '/slowscript?delay=1000&abort=1';
-          window.document.body.appendChild(el);
+          var el = document.createElement('script')
+          var content = encodeURIComponent('globalCallback()')
+          el.src = '/slowscript?delay=1000&abort=1'
+          window.document.body.appendChild(el)
         },
         false
-      );
+      )
     </script>
   </body>
 </html>

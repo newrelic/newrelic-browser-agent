@@ -8,12 +8,12 @@
     <title>Basic XHR test</title>
     {init} {config} {loader}
     <script type="text/javascript">
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', '/json');
+      var xhr = new XMLHttpRequest()
+      xhr.open('GET', '/json')
       xhr.onload = function () {
-        xhrDone = true;
-      };
-      xhr.send();
+        xhrDone = true
+      }
+      xhr.send()
     </script>
   </head>
   <body>

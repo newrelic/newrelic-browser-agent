@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-(function timeoutCallback() {
+;(function timeoutCallback() {
   window.setTimeout(function () {
-    window.setTimeoutFired = true;
-    throw new Error('timeout callback');
-  }, 0);
-})();
+    window.setTimeoutFired = true
+    throw new Error('timeout callback')
+  }, 0)
+})()

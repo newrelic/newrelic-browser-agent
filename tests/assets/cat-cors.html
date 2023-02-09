@@ -9,15 +9,15 @@
     <title>Example Page</title>
     {init} {config} {loader}
     <script type="text/javascript">
-      if (!NREUM.loader_config) NREUM.loader_config = {};
-      NREUM.loader_config.xpid = '12#34';
+      if (!NREUM.loader_config) NREUM.loader_config = {}
+      NREUM.loader_config.xpid = '12#34'
 
-      var xhr = new XMLHttpRequest();
-      var testId = window.location.search.match(/testId=([^&]*)/)[1];
-      var url = 'http://' + NREUM.info.beacon + '/cat-cors/' + testId;
+      var xhr = new XMLHttpRequest()
+      var testId = window.location.search.match(/testId=([^&]*)/)[1]
+      var url = 'http://' + NREUM.info.beacon + '/cat-cors/' + testId
 
-      xhr.open('GET', url);
-      xhr.send();
+      xhr.open('GET', url)
+      xhr.send()
     </script>
   </head>
   <body></body>

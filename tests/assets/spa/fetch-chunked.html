@@ -12,11 +12,11 @@
     <div>This page fires a fetch request and calls pushState when clicked</div>
 
     <script type="text/javascript">
-      document.addEventListener('click', chunkedFetch);
+      document.addEventListener('click', chunkedFetch)
 
       function chunkedFetch() {
-        fetch('/chunked').then(function (res) {});
-        window.location.hash = Math.random();
+        fetch('/chunked').then(function (res) {})
+        window.location.hash = Math.random()
       }
     </script>
   </body>

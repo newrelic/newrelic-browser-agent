@@ -8,16 +8,16 @@
     <title>RUM Unit Test</title>
     {init} {config} {loader}
     <script>
-      newrelic.setPageViewName('foo');
+      newrelic.setPageViewName('foo')
     </script>
   </head>
   <body>
     Api test!
     <script>
-      newrelic.noticeError(new Error('no free taco coupons'));
+      newrelic.noticeError(new Error('no free taco coupons'))
       setTimeout(function () {
-        newrelic.finished(new Date().getTime());
-      }, 0);
+        newrelic.finished(new Date().getTime())
+      }, 0)
     </script>
   </body>
 </html>

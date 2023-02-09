@@ -8,24 +8,24 @@
     <title>XHR constructor monkey-patching test</title>
     {init} {config} {loader}
     <script type="text/javascript">
-      var origXHR = window.XMLHttpRequest;
+      var origXHR = window.XMLHttpRequest
       window.XMLHttpRequest = function (flags) {
-        return new origXHR(flags);
-      };
+        return new origXHR(flags)
+      }
 
       for (prop in origXHR) {
         if (typeof origXHR[prop] === 'function') {
-          window.XMLHttpRequest[prop] = origXHR[prop];
+          window.XMLHttpRequest[prop] = origXHR[prop]
         }
       }
 
-      var xhrDone = false;
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', '/json');
+      var xhrDone = false
+      var xhr = new XMLHttpRequest()
+      xhr.open('GET', '/json')
       xhr.onload = function () {
-        window.xhrDone = true;
-      };
-      xhr.send();
+        window.xhrDone = true
+      }
+      xhr.send()
     </script>
   </head>
   <body>

@@ -1,26 +1,26 @@
 /* global globalThis, WorkerGlobalScope, WorkerNavigator */
 
-export const isBrowserScope = Boolean(typeof window !== 'undefined' && window.document);
+export const isBrowserScope = Boolean(typeof window !== 'undefined' && window.document)
 
 export const isWorkerScope = Boolean(
   typeof WorkerGlobalScope !== 'undefined' && self.navigator instanceof WorkerNavigator
-);
+)
 
 export let globalScope = (() => {
   if (isBrowserScope) {
-    return window;
+    return window
   } else if (isWorkerScope) {
     if (typeof globalThis !== 'undefined' && globalThis instanceof WorkerGlobalScope) {
-      return globalThis;
+      return globalThis
     } else if (self instanceof WorkerGlobalScope) {
-      return self;
+      return self
     }
   }
 
   throw new Error(
     'New Relic browser agent shutting down due to error: Unable to locate global scope. This is possibly due to code redefining browser global variables like "self" and "window".'
-  );
-})();
+  )
+})()
 
 /**
  * The below methods are only used for testing and should be removed once the
@@ -28,24 +28,24 @@ export let globalScope = (() => {
  * tests/browser/protocol.browser.js
  * tests/browser/obfuscate.browser.js
  */
-export function setScope(obj) {
-  globalScope = { ...obj };
+export function setScope (obj) {
+  globalScope = { ...obj }
 }
-export function resetScope() {
+export function resetScope () {
   if (isBrowserScope) {
-    globalScope = window;
+    globalScope = window
   } else if (isWorkerScope) {
     if (typeof globalThis !== 'undefined' && globalThis instanceof WorkerGlobalScope) {
-      globalScope = globalThis;
+      globalScope = globalThis
     } else if (self instanceof WorkerGlobalScope) {
-      globalScope = self;
+      globalScope = self
     }
   } else {
     throw new Error(
       'New Relic browser agent shutting down due to error: Unable to locate global scope. This is possibly due to code redefining browser global variables like "self" and "window".'
-    );
+    )
   }
 }
-export function getGlobalScope() {
-  return globalScope;
+export function getGlobalScope () {
+  return globalScope
 }

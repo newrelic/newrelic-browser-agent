@@ -1,4 +1,4 @@
-import { isBrowserScope } from '../util/global-scope';
+import { isBrowserScope } from '../util/global-scope'
 
 var FRAMEWORKS = {
   REACT: 'React',
@@ -9,73 +9,71 @@ var FRAMEWORKS = {
   VUE: 'Vue',
   METEOR: 'Meteor',
   ZEPTO: 'Zepto',
-  JQUERY: 'Jquery',
-};
+  JQUERY: 'Jquery'
+}
 
-export function getFrameworks() {
-  if (!isBrowserScope) return []; // don't bother detecting frameworks if not in the main window context
+export function getFrameworks () {
+  if (!isBrowserScope) return [] // don't bother detecting frameworks if not in the main window context
 
-  var frameworks = [];
+  var frameworks = []
   try {
-    if (detectReact()) frameworks.push(FRAMEWORKS.REACT);
-    if (detectAngularJs()) frameworks.push(FRAMEWORKS.ANGULARJS);
-    if (detectAngular()) frameworks.push(FRAMEWORKS.ANGULAR);
-    if (window.Backbone) frameworks.push(FRAMEWORKS.BACKBONE);
-    if (window.Ember) frameworks.push(FRAMEWORKS.EMBER);
-    if (window.Vue) frameworks.push(FRAMEWORKS.VUE);
-    if (window.Meteor) frameworks.push(FRAMEWORKS.METEOR);
-    if (window.Zepto) frameworks.push(FRAMEWORKS.ZEPTO);
-    if (window.jQuery) frameworks.push(FRAMEWORKS.JQUERY);
+    if (detectReact()) frameworks.push(FRAMEWORKS.REACT)
+    if (detectAngularJs()) frameworks.push(FRAMEWORKS.ANGULARJS)
+    if (detectAngular()) frameworks.push(FRAMEWORKS.ANGULAR)
+    if (window.Backbone) frameworks.push(FRAMEWORKS.BACKBONE)
+    if (window.Ember) frameworks.push(FRAMEWORKS.EMBER)
+    if (window.Vue) frameworks.push(FRAMEWORKS.VUE)
+    if (window.Meteor) frameworks.push(FRAMEWORKS.METEOR)
+    if (window.Zepto) frameworks.push(FRAMEWORKS.ZEPTO)
+    if (window.jQuery) frameworks.push(FRAMEWORKS.JQUERY)
   } catch (err) {
     // not supported?
   }
-  return frameworks;
+  return frameworks
 }
 
-function detectReact() {
+function detectReact () {
   try {
-    if (!!window.React || !!window.ReactDOM || !!window.ReactRedux) return true;
-    if (document.querySelector('[data-reactroot], [data-reactid]')) return true;
-    var divs = document.querySelectorAll('body > div');
+    if (!!window.React || !!window.ReactDOM || !!window.ReactRedux) return true
+    if (document.querySelector('[data-reactroot], [data-reactid]')) return true
+    var divs = document.querySelectorAll('body > div')
     for (var i = 0; i < divs.length; i++) {
-      if (Object.keys(divs[i]).indexOf('_reactRootContainer') >= 0) return true;
+      if (Object.keys(divs[i]).indexOf('_reactRootContainer') >= 0) return true
     }
-    return false;
+    return false
   } catch (err) {
     // not supported?
-    return false;
+    return false
   }
 }
 
-function detectAngularJs() {
+function detectAngularJs () {
   try {
-    if (window.angular) return true;
+    if (window.angular) return true
     if (
       document.querySelector(
         '.ng-binding, [ng-app], [data-ng-app], [ng-controller], [data-ng-controller], [ng-repeat], [data-ng-repeat]'
       )
-    )
-      return true;
-    if (document.querySelector('script[src*="angular.js"], script[src*="angular.min.js"]')) return true;
-    return false;
+    ) { return true }
+    if (document.querySelector('script[src*="angular.js"], script[src*="angular.min.js"]')) return true
+    return false
   } catch (err) {
     // not supported?
-    return false;
+    return false
   }
 }
 
-function detectAngular() {
+function detectAngular () {
   try {
     // eslint-disable-next-line
     if (
       Object.prototype.hasOwnProperty.call(window, 'ng') &&
       Object.prototype.hasOwnProperty.call(window.ng, 'coreTokens') &&
       Object.prototype.hasOwnProperty.call(window.ng.coreTokens, 'NgZone')
-    )
-      return true;
-    return !!document.querySelectorAll('[ng-version]').length;
+    ) { return true }
+    return !!document.querySelectorAll('[ng-version]').length
   } catch (err) {
     // not supported?
-    return false;
+    return false
   }
 }

@@ -5,37 +5,37 @@
 
 // Use various techniques to determine the time at which this page started and whether to capture navigation timing information
 
-import { sHash } from '../util/s-hash';
-import { mark } from './stopwatch';
-import { ffVersion } from '../browser-version/firefox-version';
-import { setOffset } from './now';
-import { exists as performanceCheckExists } from './performance-check';
-import { globalScope } from '../util/global-scope';
+import { sHash } from '../util/s-hash'
+import { mark } from './stopwatch'
+import { ffVersion } from '../browser-version/firefox-version'
+import { setOffset } from './now'
+import { exists as performanceCheckExists } from './performance-check'
+import { globalScope } from '../util/global-scope'
 
-export let navCookie = true;
+export let navCookie = true
 
 // findStartTime() *cli - comment out to add agentId context which is n/a at import time
 
-export function findStartTime(agentId) {
+export function findStartTime (agentId) {
   // findStartCookie is used for FF7/8 & browsers which do not support window.performance.timing.navigationStart
-  var starttime = findStartWebTiming(); // || findStartCookie() -- now redundant *cli oct'22, TO DO: slated for removal
-  if (!starttime) return;
+  var starttime = findStartWebTiming() // || findStartCookie() -- now redundant *cli oct'22, TO DO: slated for removal
+  if (!starttime) return
 
-  mark(agentId, 'starttime', starttime);
-  setOffset(starttime);
+  mark(agentId, 'starttime', starttime)
+  setOffset(starttime)
 }
 
 // Find the start time from the Web Timing 'performance' object.
 // http://test.w3.org/webperf/specs/NavigationTiming/
 // http://blog.chromium.org/2010/07/do-you-know-how-slow-your-web-page-is.html
-function findStartWebTiming() {
+function findStartWebTiming () {
   // FF 7/8 has a bug with the navigation start time, so use cookie instead of native interface
-  if (ffVersion && ffVersion < 9) return;
+  if (ffVersion && ffVersion < 9) return
 
   if (performanceCheckExists) {
     // note that we don't need to use a cookie to record navigation start time
-    navCookie = false;
-    return globalScope?.performance?.timing?.navigationStart;
+    navCookie = false
+    return globalScope?.performance?.timing?.navigationStart
   }
 }
 /*

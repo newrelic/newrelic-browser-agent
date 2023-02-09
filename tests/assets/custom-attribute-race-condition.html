@@ -8,7 +8,7 @@
     <title>RUM Unit Test</title>
     {init} {loader}
     <script>
-      newrelic.setCustomAttribute('customParamKey', 0);
+      newrelic.setCustomAttribute('customParamKey', 0)
     </script>
   </head>
 
@@ -16,9 +16,9 @@
     {config} this is a generic page that is instrumented by the JS agent
     <script>
       try {
-        throw new Error('My error');
+        throw new Error('My error')
       } catch (e) {
-        newrelic.noticeError(e);
+        newrelic.noticeError(e)
       }
     </script>
   </body>

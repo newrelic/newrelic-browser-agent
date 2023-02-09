@@ -1,33 +1,33 @@
-import { originals } from '../../common/config/config';
-import { globalScope } from '../../common/util/global-scope';
-import { FEATURE_NAMES } from '../../loaders/features/features';
+import { originals } from '../../common/config/config'
+import { globalScope } from '../../common/util/global-scope'
+import { FEATURE_NAMES } from '../../loaders/features/features'
 
-export const FEATURE_NAME = FEATURE_NAMES.spa;
-export const INTERACTION_EVENTS = ['click', 'submit', 'keypress', 'keydown', 'keyup', 'change'];
+export const FEATURE_NAME = FEATURE_NAMES.spa
+export const INTERACTION_EVENTS = ['click', 'submit', 'keypress', 'keydown', 'keyup', 'change']
 
-export const MAX_TIMER_BUDGET = 999;
-export const FN_START = 'fn-start';
-export const FN_END = 'fn-end';
-export const CB_START = 'cb-start';
-export const INTERACTION_API = 'api-ixn-';
-export const REMAINING = 'remaining';
-export const INTERACTION = 'interaction';
-export const SPA_NODE = 'spaNode';
-export const JSONP_NODE = 'jsonpNode';
-export const FETCH_START = 'fetch-start';
-export const FETCH_DONE = 'fetch-done';
-export const FETCH_BODY = 'fetch-body-';
-export const JSONP_END = 'jsonp-end';
+export const MAX_TIMER_BUDGET = 999
+export const FN_START = 'fn-start'
+export const FN_END = 'fn-end'
+export const CB_START = 'cb-start'
+export const INTERACTION_API = 'api-ixn-'
+export const REMAINING = 'remaining'
+export const INTERACTION = 'interaction'
+export const SPA_NODE = 'spaNode'
+export const JSONP_NODE = 'jsonpNode'
+export const FETCH_START = 'fetch-start'
+export const FETCH_DONE = 'fetch-done'
+export const FETCH_BODY = 'fetch-body-'
+export const JSONP_END = 'jsonp-end'
 
-export const originalSetTimeout = originals.ST;
+export const originalSetTimeout = originals.ST
 
-export const START = '-start';
-export const END = '-end';
-export const BODY = '-body';
-export const CB_END = 'cb' + END;
-export const JS_TIME = 'jsTime';
-export const FETCH = 'fetch';
-export const ADD_EVENT_LISTENER = 'addEventListener';
+export const START = '-start'
+export const END = '-end'
+export const BODY = '-body'
+export const CB_END = 'cb' + END
+export const JS_TIME = 'jsTime'
+export const FETCH = 'fetch'
+export const ADD_EVENT_LISTENER = 'addEventListener'
 
-export const WIN = globalScope;
-export const LOCATION = WIN.location;
+export const WIN = globalScope
+export const LOCATION = WIN.location

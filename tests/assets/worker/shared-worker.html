@@ -12,23 +12,23 @@
 
   <body>
     <script type="text/javascript">
-      const worker = new SharedWorker('./js/shared-worker.js');
+      const worker = new SharedWorker('./js/shared-worker.js')
 
-      const opts = NREUM;
+      const opts = NREUM
 
-      worker.port.postMessage({ type: 'startAgent', payload: opts });
+      worker.port.postMessage({ type: 'startAgent', payload: opts })
 
       worker.port.onmessage = function ({ data: { type } }) {
         if (type === 'ready') {
-          workerCommands = window.workerCommands || [];
-          workerCommands.forEach((command) => worker.port.postMessage({ type: 'command', fn: command }));
+          workerCommands = window.workerCommands || []
+          workerCommands.forEach((command) => worker.port.postMessage({ type: 'command', fn: command }))
         }
-      };
+      }
 
       // main page
       worker.port.onerror = function (e) {
-        console.log('error from worker', e);
-      };
+        console.log('error from worker', e)
+      }
     </script>
   </body>
 </html>

@@ -12,72 +12,72 @@
     <div id="initial">THIS IS A CLS PAGE THAT INSERTS IN MULTIPLE CHUNKS</div>
 
     <script>
-      window.cls = cls = 0;
+      window.cls = cls = 0
       window.nextCls = nextCls = {
         value: 0,
         startedAt: performance.now(),
         updatedAt: performance.now(),
-      };
-      window.allCls = allCls = [];
-      window.addEventListener('load', run);
+      }
+      window.allCls = allCls = []
+      window.addEventListener('load', run)
 
       function run() {
         // when not delayed, the CLS entry is seen as having recent input
         // not sure why that it, it only happens in Selenium
-        setTimeout(triggerCls, 600);
-        setTimeout(triggerBigCls, 6000);
+        setTimeout(triggerCls, 600)
+        setTimeout(triggerBigCls, 6000)
       }
 
       function triggerCls() {
-        var newDiv = document.createElement('div');
-        newDiv.id = 'clsText';
-        newDiv.innerText = 'inserted text';
-        document.body.insertBefore(newDiv, document.body.firstChild);
+        var newDiv = document.createElement('div')
+        newDiv.id = 'clsText'
+        newDiv.innerText = 'inserted text'
+        document.body.insertBefore(newDiv, document.body.firstChild)
       }
 
       function triggerBigCls(reps) {
-        reps = reps || 1;
+        reps = reps || 1
         if (reps < 20) {
-          var newDiv = document.createElement('div');
-          newDiv.id = 'bigClsText' + reps;
-          newDiv.innerText = 'inserted text ' + reps;
-          document.body.insertBefore(newDiv, document.body.firstChild);
+          var newDiv = document.createElement('div')
+          newDiv.id = 'bigClsText' + reps
+          newDiv.innerText = 'inserted text ' + reps
+          document.body.insertBefore(newDiv, document.body.firstChild)
           setTimeout(
             function () {
-              triggerBigCls(reps + 1);
+              triggerBigCls(reps + 1)
             },
             50,
             reps
-          );
+          )
         } else {
-          allCls.push(nextCls.value);
-          window.contentAdded = true;
+          allCls.push(nextCls.value)
+          window.contentAdded = true
         }
       }
 
-      clsPerformanceObserver = new PerformanceObserver(clsObserver); // eslint-disable-line no-undef
+      clsPerformanceObserver = new PerformanceObserver(clsObserver) // eslint-disable-line no-undef
       try {
         clsPerformanceObserver.observe({
           type: 'layout-shift',
           buffered: true,
-        });
+        })
       } catch (e) {}
 
       function clsObserver(list) {
         list.getEntries().forEach(function (clsEntry) {
           if (!clsEntry.hadRecentInput) {
-            var n = performance.now();
+            var n = performance.now()
             // this used to be cumulative for the whole page, now we need to split it to a
             // new CLS measurement after 1s between shifts or 5s total
             if (n - nextCls.updatedAt > 1000 || n - nextCls.startedAt > 5000) {
-              allCls.push(cls);
-              nextCls = { value: 0, startedAt: n };
+              allCls.push(cls)
+              nextCls = { value: 0, startedAt: n }
             }
-            nextCls.value += clsEntry.value;
-            nextCls.updatedAt = n;
-            if (cls < nextCls.value) cls = nextCls.value;
+            nextCls.value += clsEntry.value
+            nextCls.updatedAt = n
+            if (cls < nextCls.value) cls = nextCls.value
           }
-        });
+        })
       }
     </script>
   </body>

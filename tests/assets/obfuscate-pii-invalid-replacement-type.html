@@ -11,7 +11,7 @@
     {init}
     <!-- Uncomment below for manual local server test -->
     <script>
-      NREUM = window.NREUM || { init: {} };
+      NREUM = window.NREUM || { init: {} }
       NREUM.init = {
         ...NREUM.init,
         obfuscate: [
@@ -30,19 +30,19 @@
         ins: {
           harvestTimeSeconds: 2,
         },
-      };
+      }
     </script>
     {config} {loader}
     <script type="text/javascript">
       setTimeout(function () {
-        fetch('/json');
-        throw new Error('example');
-        document.getElementById('btn').click();
-      }, 100);
+        fetch('/json')
+        throw new Error('example')
+        document.getElementById('btn').click()
+      }, 100)
     </script>
     <script>
-      newrelic.addPageAction('pageaction');
-      newrelic.setCustomAttribute('customAttribute', 'customAttribute');
+      newrelic.addPageAction('pageaction')
+      newrelic.setCustomAttribute('customAttribute', 'customAttribute')
     </script>
   </head>
 

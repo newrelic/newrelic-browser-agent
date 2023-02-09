@@ -7,17 +7,17 @@
   <head>
     <title>RUM Unit Test</title>
     <script>
-      window.failed = false;
-      window.gotScroll = false;
-      var originalAddE = document.addEventListener;
+      window.failed = false
+      window.gotScroll = false
+      var originalAddE = document.addEventListener
       document.addEventListener = function (name, fn, flags) {
         if (name === 'scroll') {
-          window.gotScroll = true;
-          window.isPassive = !!flags.passive;
+          window.gotScroll = true
+          window.isPassive = !!flags.passive
         }
 
-        originalAddE.apply(this, arguments);
-      };
+        originalAddE.apply(this, arguments)
+      }
     </script>
     {config} {loader}
   </head>

@@ -9,19 +9,19 @@
     {init}
     <script type="text/javascript">
       // Setting a deny list is necessary or `shouldCollectEvent` is never invoked.
-      NREUM.init || (NREUM.init = {});
-      NREUM.init.ajax || (NREUM.init.ajax = {});
-      NREUM.init.ajax.deny_list = ['example.com'];
+      NREUM.init || (NREUM.init = {})
+      NREUM.init.ajax || (NREUM.init.ajax = {})
+      NREUM.init.ajax.deny_list = ['example.com']
     </script>
     {config} {loader}
 
     <script type="text/javascript">
-      const xhr = new XMLHttpRequest();
+      const xhr = new XMLHttpRequest()
       xhr.addEventListener('load', function () {
-        console.log(this.responseText);
-      });
-      xhr.open('GET', 'data:,Hello%2C%20World%21');
-      xhr.send();
+        console.log(this.responseText)
+      })
+      xhr.open('GET', 'data:,Hello%2C%20World%21')
+      xhr.send()
     </script>
   </head>
   <body>

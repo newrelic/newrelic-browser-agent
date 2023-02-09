@@ -1,4 +1,4 @@
-import { stringHashCode } from './string-hash-code';
+import { stringHashCode } from './string-hash-code'
 
 test.each([
   { input: undefined, expected: 0, title: 'Return 0 for undefined input' },
@@ -7,10 +7,10 @@ test.each([
   {
     input: 'lksjdflksjdf',
     expected: 32668720,
-    title: 'Return valid hash of string',
-  },
+    title: 'Return valid hash of string'
+  }
 ])('$title', ({ input, expected }) => {
-  const result = stringHashCode(input);
+  const result = stringHashCode(input)
 
-  expect(result).toEqual(expected);
-});
+  expect(result).toEqual(expected)
+})

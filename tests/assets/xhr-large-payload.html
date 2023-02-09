@@ -8,22 +8,22 @@
     <title>Basic XHR test</title>
     {init} {config} {loader}
     <script type="text/javascript">
-      var count = 0;
+      var count = 0
       function sendHello() {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', '/json');
-        xhr.setRequestHeader('Content-Type', 'text/plain');
+        var xhr = new XMLHttpRequest()
+        xhr.open('GET', '/json')
+        xhr.setRequestHeader('Content-Type', 'text/plain')
         xhr.onload = function (e) {
           if (count < 50) {
-            count++;
-            sendHello();
+            count++
+            sendHello()
           }
-        };
-        xhr.send();
+        }
+        xhr.send()
       }
       setTimeout(function () {
-        sendHello();
-      }, 2000);
+        sendHello()
+      }, 2000)
     </script>
   </head>
   <body>

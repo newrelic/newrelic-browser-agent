@@ -16,12 +16,12 @@
         session_trace: {
           enabled: false,
         },
-      };
+      }
       window.NREUM.loader_config = {
         accountID: 1,
         agentID: 1,
         trustKey: 1,
-      };
+      }
     </script>
     {loader}
   </head>
@@ -31,13 +31,13 @@
       document.addEventListener(
         'click',
         function () {
-          window.location.hash = Math.random();
+          window.location.hash = Math.random()
           for (var i = 0; i <= 128; i++) {
-            fetch('/echo');
+            fetch('/echo')
           }
         },
         false
-      );
+      )
     </script>
   </body>
 </html>

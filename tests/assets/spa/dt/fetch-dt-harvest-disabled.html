@@ -8,8 +8,8 @@
     <title>RUM Unit Test</title>
     {init} {config}
     <script type="text/javascript">
-      if (!NREUM.loader_config) NREUM.loader_config = {};
-      NREUM.loader_config.xpid = '12#34';
+      if (!NREUM.loader_config) NREUM.loader_config = {}
+      NREUM.loader_config.xpid = '12#34'
     </script>
     {loader}
   </head>
@@ -23,12 +23,12 @@
             method: 'POST',
             body: '123',
           }).then(function (res) {
-            return res.json();
-          });
-          window.location.hash = Math.random();
+            return res.json()
+          })
+          window.location.hash = Math.random()
         },
         false
-      );
+      )
     </script>
   </body>
 </html>

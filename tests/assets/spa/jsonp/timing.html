@@ -12,23 +12,23 @@
   <body>
     <script>
       function foo(data) {
-        var start = new Date();
+        var start = new Date()
         while (new Date() - start < 2000);
-        var el = document.createElement('p');
-        el.innerHTML = JSON.stringify(data);
-        document.body.appendChild(el);
+        var el = document.createElement('p')
+        el.innerHTML = JSON.stringify(data)
+        document.body.appendChild(el)
       }
 
       document.addEventListener(
         'click',
         function () {
-          var el = document.createElement('script');
-          el.src = '/jsonp?timeout=2000&cb=foo';
-          window.location.hash = Math.random();
-          window.document.body.appendChild(el);
+          var el = document.createElement('script')
+          el.src = '/jsonp?timeout=2000&cb=foo'
+          window.location.hash = Math.random()
+          window.document.body.appendChild(el)
         },
         false
-      );
+      )
     </script>
     <p>Click me!</p>
   </body>

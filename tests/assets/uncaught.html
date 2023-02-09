@@ -14,13 +14,13 @@
           // this handler was called when the uncaught error
           // happened.
           try {
-            throw new Error('original onerror');
+            throw new Error('original onerror')
           } catch (e) {
-            NREUM.noticeError(e);
+            NREUM.noticeError(e)
           }
         }
-        return 'abc';
-      };
+        return 'abc'
+      }
     </script>
 
     {init} {config} {loader}

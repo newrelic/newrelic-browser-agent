@@ -44,11 +44,11 @@ The Browser agent is loaded onto a web page in two parts. To install a version o
 ```html
 <!-- Browser agent configuration -->
 <script type="text/javascript">
-  window.NREUM || (NREUM = {});
+  window.NREUM || (NREUM = {})
   NREUM.info = {
     licenseKey: 'example',
     applicationID: 123,
-  };
+  }
 </script>
 <!-- Browser agent loader script -->
 <script src="http://localhost:8080/nr-loader-spa.js"></script>

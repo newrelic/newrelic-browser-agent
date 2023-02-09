@@ -11,12 +11,12 @@
   <body>
     <div>This page makes a cross-origin XHR call when loading.</div>
     <script type="text/javascript">
-      var xhr = new XMLHttpRequest();
-      var testId = window.location.search.match(/testId=([^&]*)/)[1];
-      var url = 'http://' + NREUM.info.beacon + '/dt/' + testId;
+      var xhr = new XMLHttpRequest()
+      var testId = window.location.search.match(/testId=([^&]*)/)[1]
+      var url = 'http://' + NREUM.info.beacon + '/dt/' + testId
 
-      xhr.open('GET', url);
-      xhr.send();
+      xhr.open('GET', url)
+      xhr.send()
     </script>
   </body>
 </html>

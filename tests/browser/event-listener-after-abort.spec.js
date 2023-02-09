@@ -1,2 +1,2 @@
-let matcher = require('../../tools/jil/util/browser-matcher');
-module.exports = matcher.withFeature('wrappableAddEventListener');
+let matcher = require('../../tools/jil/util/browser-matcher')
+module.exports = matcher.withFeature('wrappableAddEventListener')

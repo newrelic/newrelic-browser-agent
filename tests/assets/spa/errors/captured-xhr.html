@@ -15,20 +15,20 @@
     <script>
       // click starts interaction
       document.addEventListener('click', function () {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/echo');
-        xhr.send('123');
+        var xhr = new XMLHttpRequest()
+        xhr.open('POST', '/echo')
+        xhr.send('123')
 
         xhr.addEventListener(
           'load',
           function () {
             // change hash to capture interaction
-            window.location.hash = Math.random();
-            throw new Error('some error');
+            window.location.hash = Math.random()
+            throw new Error('some error')
           },
           true
-        );
-      });
+        )
+      })
     </script>
   </body>
 </html>

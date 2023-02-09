@@ -4,8 +4,8 @@
  * @param {*} secondary - Secondary data to include, usually an error or object
  * @returns
  */
-export function warn(message, secondary) {
-  if (!console || !console.warn || typeof console.warn !== 'function') return;
-  console.warn(`New Relic: ${message}`);
-  if (secondary) console.warn(secondary);
+export function warn (message, secondary) {
+  if (!console || !console.warn || typeof console.warn !== 'function') return
+  console.warn(`New Relic: ${message}`)
+  if (secondary) console.warn(secondary)
 }

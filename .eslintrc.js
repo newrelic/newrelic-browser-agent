@@ -1,50 +1,50 @@
 module.exports = {
   ignorePatterns: ['dist/**/*', 'build/**/*', 'coverage/**/*', 'tests/**/*', 'tools/**/*'],
   env: {
-    es2022: true,
+    es2022: true
   },
   globals: {
     WorkerNavigator: true,
     WorkerGlobalScope: true,
     NREUM: true,
-    newrelic: true,
+    newrelic: true
   },
-  extends: ['eslint:recommended', 'standard', 'prettier'],
+  extends: ['eslint:recommended', 'standard'],
   overrides: [
     {
       files: ['src/**/*.js'],
       excludedFiles: '*.test.js',
       env: {
-        browser: true,
+        browser: true
       },
       parserOptions: {
-        sourceType: 'module',
-      },
+        sourceType: 'module'
+      }
     },
     {
       files: ['src/common/constants/environment-variables.js'],
       globals: {
-        process: true,
-      },
+        process: true
+      }
     },
     {
       files: ['src/**/*.test.js'],
       env: {
         browser: true,
         node: true,
-        jest: true,
+        jest: true
       },
       parserOptions: {
-        sourceType: 'module',
-      },
+        sourceType: 'module'
+      }
     },
     {
       files: ['webpack.*.js', 'babel.*.js', 'babel-env-vars.js', '.eslintrc.js', 'jest.preset.js', 'newrelic.js'],
       env: {
         browser: true,
-        node: true,
-      },
-    },
+        node: true
+      }
+    }
   ],
   rules: {
     'no-unused-vars': 'off',
@@ -69,6 +69,6 @@ module.exports = {
     'no-use-before-define': 'off',
     'n/handle-callback-err': 'off',
     'valid-typeof': 'off',
-    'no-unmodified-loop-condition': 'off',
-  },
-};
+    'no-unmodified-loop-condition': 'off'
+  }
+}

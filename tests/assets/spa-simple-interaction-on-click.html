@@ -13,26 +13,26 @@
     <script>
       document.addEventListener('click', function () {
         setTimeout(function () {
-          var xhr = new XMLHttpRequest();
-          xhr.onload = onload;
-          xhr.open('GET', '/');
-          xhr.send();
+          var xhr = new XMLHttpRequest()
+          xhr.onload = onload
+          xhr.open('GET', '/')
+          xhr.send()
 
           function onload() {
             fetch('/').then(function () {
-              window.history.replaceState(null, Math.random(), '#' + Math.random());
+              window.history.replaceState(null, Math.random(), '#' + Math.random())
               setTimeout(function () {
-                window.location.hash = '#' + Math.random();
+                window.location.hash = '#' + Math.random()
                 Promise.resolve()
                   .catch()
                   .then(function () {
-                    setTimeout(function () {}, 10);
-                  });
-              }, 10);
-            });
+                    setTimeout(function () {}, 10)
+                  })
+              }, 10)
+            })
           }
-        }, 100);
-      });
+        }, 100)
+      })
     </script>
   </body>
 </html>

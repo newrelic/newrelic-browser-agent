@@ -17,14 +17,14 @@
     </ul>
     <script>
       // Some globals aren't detected beforehand
-      var preGlobals = ['XMLHttpRequest', 'MutationObserver', 'onerror', 'getInterface', 'constructor', 'Worker'];
+      var preGlobals = ['XMLHttpRequest', 'MutationObserver', 'onerror', 'getInterface', 'constructor', 'Worker']
       // *cli 10/22 - added Worker to preGlobals, caused issues specifically for Safari v12, 13, 14 in "global-count.test.js"
-      var postGlobals = [];
-      var added = [];
-      var flag = false;
-      var testVarI;
-      var testVarJ;
-      var mangledVars = {};
+      var postGlobals = []
+      var added = []
+      var flag = false
+      var testVarI
+      var testVarJ
+      var mangledVars = {}
       var alpha = {
         a: 1,
         b: 1,
@@ -52,37 +52,37 @@
         x: 1,
         y: 1,
         z: 1,
-      };
-
-      for (testVarI in alpha) {
-        alpha[testVarI.toUpperCase()] = 1;
       }
 
       for (testVarI in alpha) {
-        mangledVars[testVarI] = 1;
+        alpha[testVarI.toUpperCase()] = 1
+      }
+
+      for (testVarI in alpha) {
+        mangledVars[testVarI] = 1
         for (testVarJ in alpha) {
-          mangledVars[testVarI + testVarJ] = 1;
+          mangledVars[testVarI + testVarJ] = 1
         }
       }
 
-      for (testVarI in window) preGlobals.push(testVarI);
+      for (testVarI in window) preGlobals.push(testVarI)
     </script>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     {config} {loader}
     <script>
       // Old ie doesn't get anything new in postGlobals
-      for (testVarI in window) postGlobals.push(testVarI);
+      for (testVarI in window) postGlobals.push(testVarI)
       while ((testVarI = postGlobals.pop())) {
         for (testVarJ = 0; testVarJ < preGlobals.length; testVarJ++) {
-          if (testVarI === preGlobals[testVarJ]) flag = true;
+          if (testVarI === preGlobals[testVarJ]) flag = true
         }
-        if (!flag) added.push(testVarI);
-        flag = false;
+        if (!flag) added.push(testVarI)
+        flag = false
       }
 
       // For old IE: add any single letter global variables, most likely
       // thing to leak after minification.
-      for (testVarI in mangledVars) if (window[testVarI] !== undefined) added.push(testVarI);
+      for (testVarI in mangledVars) if (window[testVarI] !== undefined) added.push(testVarI)
     </script>
   </body>
 </html>

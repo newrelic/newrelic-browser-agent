@@ -10,12 +10,12 @@
 
     <script type="text/javascript">
       // simulate application code overwriting window.Event
-      window.Event = {};
+      window.Event = {}
 
       // we need to have >30 nodes in the session trace to ensure it actually gets
       // sent, so make some nodes
       for (var i = 0; i < 31; i++) {
-        setTimeout(function () {}, 0);
+        setTimeout(function () {}, 0)
       }
     </script>
   </head>

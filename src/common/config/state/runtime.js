@@ -1,15 +1,15 @@
-import { ieVersion } from '../../browser-version/ie-version';
-import { getLastTimestamp } from '../../timing/now';
-import * as userAgent from '../../util/user-agent';
-import { Configurable } from './configurable';
-import { gosNREUMInitializedAgents } from '../../window/nreum';
-import { getCurrentSessionIdOrMakeNew } from '../../window/session-storage';
-import { getConfigurationValue } from '../config';
-import { globalScope } from '../../util/global-scope';
-import { VERSION } from '../../constants/environment-variables';
+import { ieVersion } from '../../browser-version/ie-version'
+import { getLastTimestamp } from '../../timing/now'
+import * as userAgent from '../../util/user-agent'
+import { Configurable } from './configurable'
+import { gosNREUMInitializedAgents } from '../../window/nreum'
+import { getCurrentSessionIdOrMakeNew } from '../../window/session-storage'
+import { getConfigurationValue } from '../config'
+import { globalScope } from '../../util/global-scope'
+import { VERSION } from '../../constants/environment-variables'
 
-var XHR = globalScope?.XMLHttpRequest;
-var XHR_PROTO = XHR && XHR.prototype;
+var XHR = globalScope?.XMLHttpRequest
+var XHR_PROTO = XHR && XHR.prototype
 
 const model = (agentId) => {
   return {
@@ -28,20 +28,20 @@ const model = (agentId) => {
       getConfigurationValue(agentId, 'privacy.cookies_enabled') == true ? getCurrentSessionIdOrMakeNew() : null, // if cookies (now session tracking) is turned off or can't get session ID, this is null
     xhrWrappable: XHR && XHR_PROTO && XHR_PROTO['addEventListener'],
     userAgent,
-    version: VERSION,
-  };
-};
-
-const _cache = {};
-
-export function getRuntime(id) {
-  if (!id) throw new Error('All runtime objects require an agent identifier!');
-  if (!_cache[id]) throw new Error(`Runtime for ${id} was never set`);
-  return _cache[id];
+    version: VERSION
+  }
 }
 
-export function setRuntime(id, obj) {
-  if (!id) throw new Error('All runtime objects require an agent identifier!');
-  _cache[id] = new Configurable(obj, model(id));
-  gosNREUMInitializedAgents(id, _cache[id], 'runtime');
+const _cache = {}
+
+export function getRuntime (id) {
+  if (!id) throw new Error('All runtime objects require an agent identifier!')
+  if (!_cache[id]) throw new Error(`Runtime for ${id} was never set`)
+  return _cache[id]
+}
+
+export function setRuntime (id, obj) {
+  if (!id) throw new Error('All runtime objects require an agent identifier!')
+  _cache[id] = new Configurable(obj, model(id))
+  gosNREUMInitializedAgents(id, _cache[id], 'runtime')
 }

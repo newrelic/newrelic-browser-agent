@@ -16,11 +16,11 @@
     <script>
       document.addEventListener('click', function () {
         setTimeout(function foo() {
-          (function bar() {
-            throw new Error('some error');
-          })();
-        }, 100);
-      });
+          ;(function bar() {
+            throw new Error('some error')
+          })()
+        }, 100)
+      })
     </script>
   </body>
 </html>

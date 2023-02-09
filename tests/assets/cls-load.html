@@ -15,19 +15,19 @@
     <img src="/slowimage?delay=1000" />
 
     <script>
-      run();
+      run()
 
       function run() {
         // delay inserting new content, so that's seen as a change to existing content
-        setTimeout(triggerCls, 600);
+        setTimeout(triggerCls, 600)
       }
 
       function triggerCls() {
-        var newDiv = document.createElement('div');
-        newDiv.id = 'clsText';
-        newDiv.innerText = 'inserted text';
-        document.body.insertBefore(newDiv, document.body.firstChild);
-        window.contentAdded = true;
+        var newDiv = document.createElement('div')
+        newDiv.id = 'clsText'
+        newDiv.innerText = 'inserted text'
+        document.body.insertBefore(newDiv, document.body.firstChild)
+        window.contentAdded = true
       }
     </script>
   </body>

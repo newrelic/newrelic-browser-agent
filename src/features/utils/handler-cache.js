@@ -3,23 +3,23 @@
  */
 export class HandlerCache {
   /** @private @type {boolean | undefined} */
-  #decision = undefined;
+  #decision = undefined
   /** @private @type {boolean} */
-  #shouldsettle = true;
+  #shouldsettle = true
   /** @private @type {Function[]} */
-  #cache = [];
+  #cache = []
   /** @private @type {Timeout} */
-  #settleTimer = setTimeout(() => this.#close(), 5000);
+  #settleTimer = setTimeout(() => this.#close(), 5000)
 
   /**
    * tell the handlerCache that its ok to immediately execute the callbacks that are triggered by the ee from this moment on
    * and execute all the storage callbacks saved up in the handlerCache
    * @private
    */
-  #drain() {
-    this.#cache.forEach((h) => h());
-    this.#cache = [];
-    clearTimeout(this.#settleTimer);
+  #drain () {
+    this.#cache.forEach((h) => h())
+    this.#cache = []
+    clearTimeout(this.#settleTimer)
   }
 
   /**
@@ -27,9 +27,9 @@ export class HandlerCache {
    * and wipe out all the storage callbacks saved up in the handlerCache
    * @private
    */
-  #close() {
-    this.#shouldsettle = false;
-    this.#cache = [];
+  #close () {
+    this.#shouldsettle = false
+    this.#cache = []
   }
 
   /**
@@ -37,10 +37,10 @@ export class HandlerCache {
    * @param {Function} handler
    * @returns {void}
    */
-  settle(handler) {
-    if (this.#decision === false || this.#shouldsettle === false) return;
-    else if (this.#decision === undefined) this.#cache.push(handler);
-    else handler();
+  settle (handler) {
+    if (this.#decision === false || this.#shouldsettle === false) return
+    else if (this.#decision === undefined) this.#cache.push(handler)
+    else handler()
   }
 
   /**
@@ -51,9 +51,9 @@ export class HandlerCache {
    * and wipe out all the storage callbacks saved up in the handlerCache
    * @param {boolean} decision
    */
-  decide(decision) {
-    this.#decision = decision;
-    if (decision === false) this.#close();
-    if (decision === true) this.#drain();
+  decide (decision) {
+    this.#decision = decision
+    if (decision === false) this.#close()
+    if (decision === true) this.#drain()
   }
 }

@@ -1,13 +1,13 @@
-export { Agent as CustomAgent } from './loaders/agent';
-export { BrowserAgent } from './loaders/browser-agent';
-export { MicroAgent } from './loaders/micro-agent';
-export { WorkerAgent } from './loaders/worker-agent';
+export { Agent as CustomAgent } from './loaders/agent'
+export { BrowserAgent } from './loaders/browser-agent'
+export { MicroAgent } from './loaders/micro-agent'
+export { WorkerAgent } from './loaders/worker-agent'
 
-export { Instrument as Ajax } from './features/ajax/instrument';
-export { Instrument as JSErrors } from './features/ajax/instrument';
-export { Instrument as Metrics } from './features/ajax/instrument';
-export { Instrument as PageAction } from './features/ajax/instrument';
-export { Instrument as PageViewEvent } from './features/ajax/instrument';
-export { Instrument as PageViewTiming } from './features/ajax/instrument';
-export { Instrument as SessionTrace } from './features/ajax/instrument';
-export { Instrument as Spa } from './features/ajax/instrument';
+export { Instrument as Ajax } from './features/ajax/instrument'
+export { Instrument as JSErrors } from './features/ajax/instrument'
+export { Instrument as Metrics } from './features/ajax/instrument'
+export { Instrument as PageAction } from './features/ajax/instrument'
+export { Instrument as PageViewEvent } from './features/ajax/instrument'
+export { Instrument as PageViewTiming } from './features/ajax/instrument'
+export { Instrument as SessionTrace } from './features/ajax/instrument'
+export { Instrument as Spa } from './features/ajax/instrument'

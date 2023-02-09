@@ -1,2 +1,2 @@
-import '../polyfills.js';
-import '../spa';
+import '../polyfills.js'
+import '../spa'

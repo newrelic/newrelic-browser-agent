@@ -31,11 +31,11 @@
     <a href="iframe-bottom.html" id="reload">Reload</a>
     <script>
       // Makes it obvious what page iteration we are on by adding a number
-      var currentId = +document.location.search.substring(1);
-      var nextId = 1 + currentId;
-      var el = document.getElementById('reload');
-      el.text = 'Reload - Currently on ' + currentId;
-      el.href = 'iframe-bottom.html?' + nextId;
+      var currentId = +document.location.search.substring(1)
+      var nextId = 1 + currentId
+      var el = document.getElementById('reload')
+      el.text = 'Reload - Currently on ' + currentId
+      el.href = 'iframe-bottom.html?' + nextId
     </script>
   </body>
 </html>

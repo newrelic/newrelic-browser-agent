@@ -14,16 +14,16 @@
       document.addEventListener(
         'click',
         function () {
-          var xhr = new XMLHttpRequest();
-          xhr.open('POST', '/echo');
-          xhr.send('123');
+          var xhr = new XMLHttpRequest()
+          xhr.open('POST', '/echo')
+          xhr.send('123')
 
-          xhr.addEventListener('load', function () {}, true);
+          xhr.addEventListener('load', function () {}, true)
 
-          window.location.hash = Math.random();
+          window.location.hash = Math.random()
         },
         false
-      );
+      )
     </script>
   </body>
 </html>

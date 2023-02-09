@@ -29,12 +29,12 @@
         'Error message 6',
         'Error message 7',
         'Error message 8',
-      ];
+      ]
 
       uniqueErrorMessages.forEach((message) => {
-        const error = new Error(message);
-        newrelic.noticeError(error);
-      });
+        const error = new Error(message)
+        newrelic.noticeError(error)
+      })
     </script>
   </body>
 </html>

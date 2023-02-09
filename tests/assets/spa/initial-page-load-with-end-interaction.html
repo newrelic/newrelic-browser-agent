@@ -15,19 +15,19 @@
     </div>
     <script type="text/javascript">
       // endInteraction is called before the load event.
-      newrelic.interaction().end();
+      newrelic.interaction().end()
 
       document.addEventListener(
         'click',
         function () {
-          var xhr = new XMLHttpRequest();
-          xhr.open('GET', window.location.pathname);
-          xhr.send();
-          window.location.hash = Math.random();
-          document.getElementById('coupon').style.display = 'block';
+          var xhr = new XMLHttpRequest()
+          xhr.open('GET', window.location.pathname)
+          xhr.send()
+          window.location.hash = Math.random()
+          document.getElementById('coupon').style.display = 'block'
         },
         false
-      );
+      )
     </script>
 
     <p id="coupon" style="display: none">Free Tacos!!!</p>

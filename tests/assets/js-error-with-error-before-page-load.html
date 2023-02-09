@@ -8,16 +8,16 @@
     {init} {config} {loader}
 
     <script>
-      var i = 0;
-      triggerError();
+      var i = 0
+      triggerError()
 
       function triggerError() {
-        newrelic.setCustomAttribute('customParamKey', i);
-        i++;
+        newrelic.setCustomAttribute('customParamKey', i)
+        i++
         try {
-          throw new Error('My error');
+          throw new Error('My error')
         } catch (e) {
-          NREUM.noticeError(e);
+          NREUM.noticeError(e)
         }
       }
     </script>

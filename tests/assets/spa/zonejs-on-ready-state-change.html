@@ -12,16 +12,16 @@
   <body>
     <div>This page contains zone.js</div>
     <script type="text/javascript">
-      var xhr = new XMLHttpRequest();
-      var counts = [0, 0, 0, 0, 0];
+      var xhr = new XMLHttpRequest()
+      var counts = [0, 0, 0, 0, 0]
       xhr.onreadystatechange = function () {
-        counts[xhr.readyState]++;
-      };
-      xhr.open('GET', '/');
-      xhr.send();
+        counts[xhr.readyState]++
+      }
+      xhr.open('GET', '/')
+      xhr.send()
       var interaction = newrelic.interaction().onEnd(function () {
-        interaction.setAttribute('counts', counts);
-      });
+        interaction.setAttribute('counts', counts)
+      })
     </script>
   </body>
 </html>

@@ -9,10 +9,10 @@
     <title>Example Page</title>
     {config} {init} {loader}
     <script type="text/javascript">
-      var testId = window.location.search.match(/testId=([^&]*)/)[1];
-      var url = 'http://' + NREUM.info.beacon + '/dt/' + testId;
-      var request = new Request(url);
-      window.fetch(request);
+      var testId = window.location.search.match(/testId=([^&]*)/)[1]
+      var url = 'http://' + NREUM.info.beacon + '/dt/' + testId
+      var request = new Request(url)
+      window.fetch(request)
     </script>
   </head>
   <body></body>

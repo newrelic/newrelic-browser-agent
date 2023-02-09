@@ -10,12 +10,12 @@
     <script>
       function triggerError() {
         try {
-          throw new Error('My error');
+          throw new Error('My error')
         } catch (e) {
-          NREUM.noticeError(e);
+          NREUM.noticeError(e)
         }
-        newrelic.interaction().setAttribute('customParamKey', 1);
-        window.location.hash = Math.random();
+        newrelic.interaction().setAttribute('customParamKey', 1)
+        window.location.hash = Math.random()
       }
     </script>
 
@@ -27,11 +27,11 @@
     <br /><br />
     <button>Trigger error</button>
     <script>
-      var btn = document.getElementById('trigger');
+      var btn = document.getElementById('trigger')
       if (window.addEventListener) {
-        btn.addEventListener('click', triggerError);
+        btn.addEventListener('click', triggerError)
       } else {
-        btn.onclick = triggerError;
+        btn.onclick = triggerError
       }
     </script>
   </body>

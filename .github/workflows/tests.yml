@@ -9,13 +9,27 @@ env:
   BUILD_NUMBER: PR${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
 
 jobs:
+  lint:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    container: node:14
+    
+    steps:
+      - uses: actions/checkout@v3
+      - name: checkout and build
+        uses: ./.github/actions/test-setup
+
+      - name: lint
+        run: npm run lint
+  
   chrome-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -35,7 +49,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -55,7 +69,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -75,7 +89,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -95,7 +109,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -115,7 +129,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -135,7 +149,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -155,7 +169,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -175,7 +189,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -195,7 +209,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -215,7 +229,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-
+    
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -235,7 +249,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-
+   
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -252,22 +266,8 @@ jobs:
   check-failures:
     runs-on: ubuntu-latest
     container: node:14
-    if: contains(github.event.pull_request.labels.*.name, 'safe to test') && ${{ !failure() }} # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
-    needs:
-      [
-        chrome-functional,
-        chrome-unit,
-        firefox-functional,
-        firefox-unit,
-        safari-functional,
-        safari-unit,
-        edge-functional,
-        edge-unit,
-        ios-functional,
-        ios-unit,
-        android-functional,
-        android-unit,
-      ]
+    if: contains(github.event.pull_request.labels.*.name, 'safe to test') && ${{ !failure() }}  # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
+    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, safari-functional, safari-unit, edge-functional, edge-unit, ios-functional, ios-unit, android-functional, android-unit]
     env:
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
     steps:

@@ -3,20 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil');
-const { setup } = require('../utils/setup');
+const jil = require('jil')
+const { setup } = require('../utils/setup')
 
-const setupData = setup();
-const { baseEE, agentIdentifier, aggregator } = setupData;
+const setupData = setup()
+const { baseEE, agentIdentifier, aggregator } = setupData
 
 jil.browserTest('spa buffers all expected events', function (t) {
-  var { registerHandler } = require('../../../src/common/event-emitter/register-handler.js');
-  var { drain } = require('../../../src/common/drain/drain');
+  var { registerHandler } = require('../../../src/common/event-emitter/register-handler.js')
+  var { drain } = require('../../../src/common/drain/drain')
 
-  var plan = 0;
+  var plan = 0
 
-  const { Instrument } = require('../../../src/features/spa/instrument/index');
-  const spaIns = new Instrument(agentIdentifier, aggregator, false);
+  const { Instrument } = require('../../../src/features/spa/instrument/index')
+  const spaIns = new Instrument(agentIdentifier, aggregator, false)
 
   var events = {
     base: ['fn-start', 'fn-end', 'xhr-resolved'],
@@ -28,14 +28,14 @@ jil.browserTest('spa buffers all expected events', function (t) {
     mutation: ['fn-start'],
     promise: ['propagate', 'cb-start', 'cb-end', 'executor-err', 'resolve-start'],
     tracer: ['fn-start', 'no-fn-start'],
-  };
+  }
 
   Object.keys(events).forEach((key) => {
-    var eventNames = events[key];
-    var emitter = key === 'base' ? baseEE : baseEE.get(key);
+    var eventNames = events[key]
+    var emitter = key === 'base' ? baseEE : baseEE.get(key)
 
     eventNames.forEach((evName) => {
-      plan += 3;
+      plan += 3
       var args = [
         {
           addEventListener: () => null,
@@ -48,33 +48,33 @@ jil.browserTest('spa buffers all expected events', function (t) {
               arrayBuffer: () => {
                 return {
                   then: () => null,
-                };
+                }
               },
-            };
+            }
           },
         },
         {
           then: () => null,
         },
-      ];
-      var ctx = baseEE.context();
-      emitter.emit(evName, args, ctx);
+      ]
+      var ctx = baseEE.context()
+      emitter.emit(evName, args, ctx)
       registerHandler(
         evName,
         function (a, b) {
           // filter out non test events
-          if (this !== ctx) return;
-          t.equal(a, args[0]);
-          t.equal(b, args[1]);
-          t.equal(this, ctx);
+          if (this !== ctx) return
+          t.equal(a, args[0])
+          t.equal(b, args[1])
+          t.equal(this, ctx)
         },
         'spa',
         emitter
-      );
-    });
-  });
+      )
+    })
+  })
 
-  t.plan(plan);
+  t.plan(plan)
 
-  setTimeout(() => drain(agentIdentifier, 'spa'));
-});
+  setTimeout(() => drain(agentIdentifier, 'spa'))
+})

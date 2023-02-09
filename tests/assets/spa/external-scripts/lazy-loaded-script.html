@@ -11,26 +11,26 @@
   <body>
     <div>This page fires an XHR and calls pushState when clicked</div>
     <script type="text/javascript">
-      window.globalCallbackDone = false;
+      window.globalCallbackDone = false
 
       window.globalCallback = function () {
         // This currently has the interaction in context without additional
         // instrumentation (most browser, but not all)
-        window.globalCallbackDone = true;
-      };
+        window.globalCallbackDone = true
+      }
 
       document.addEventListener(
         'click',
         function () {
-          window.location.hash = Math.random();
+          window.location.hash = Math.random()
 
-          var el = document.createElement('script');
-          var content = encodeURIComponent('globalCallback()');
-          el.src = '/lazyscript?delay=1000&content=' + content;
-          window.document.body.appendChild(el);
+          var el = document.createElement('script')
+          var content = encodeURIComponent('globalCallback()')
+          el.src = '/lazyscript?delay=1000&content=' + content
+          window.document.body.appendChild(el)
         },
         false
-      );
+      )
     </script>
   </body>
 </html>

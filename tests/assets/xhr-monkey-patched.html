@@ -8,10 +8,10 @@
     <title>XHR Monkey-patching test</title>
     {config} {loader}
     <script type="text/javascript">
-      var orig = window.XMLHttpRequest.prototype.open;
+      var orig = window.XMLHttpRequest.prototype.open
       window.XMLHttpRequest.prototype.open = function (method, url, async, user, pass) {
-        orig.call(this, method, url, async, user, pass);
-      };
+        orig.call(this, method, url, async, user, pass)
+      }
     </script>
   </head>
   <body>

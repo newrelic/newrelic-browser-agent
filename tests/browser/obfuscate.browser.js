@@ -3,18 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil');
-import { setup } from './utils/setup';
-import { setConfiguration } from '../../src/common/config/config';
-import { Instrument as MetricsInstrum } from '../../src/features/metrics/instrument/index';
-import { Aggregate as MetricsAggreg } from '../../src/features/metrics/aggregate/index';
-import * as obfuscate from '../../src/common/util/obfuscate';
-import { setScope, resetScope } from '../../src/common/util/global-scope';
+const jil = require('jil')
+import { setup } from './utils/setup'
+import { setConfiguration } from '../../src/common/config/config'
+import { Instrument as MetricsInstrum } from '../../src/features/metrics/instrument/index'
+import { Aggregate as MetricsAggreg } from '../../src/features/metrics/aggregate/index'
+import * as obfuscate from '../../src/common/util/obfuscate'
+import { setScope, resetScope } from '../../src/common/util/global-scope'
 
-const { aggregator, agentIdentifier } = setup();
-new MetricsInstrum(agentIdentifier, aggregator, {}, false);
-new MetricsAggreg(agentIdentifier, aggregator);
-const obfuscatorInst = new obfuscate.Obfuscator({ agentIdentifier });
+const { aggregator, agentIdentifier } = setup()
+new MetricsInstrum(agentIdentifier, aggregator, {}, false)
+new MetricsAggreg(agentIdentifier, aggregator)
+const obfuscatorInst = new obfuscate.Obfuscator({ agentIdentifier })
 
 var fileLocation = {
   hash: '',
@@ -25,7 +25,7 @@ var fileLocation = {
   pathname: '/Users/jporter/Documents/Code/test.html',
   port: '',
   protocol: 'file:',
-};
+}
 
 var validationCases = [
   {
@@ -75,81 +75,81 @@ var validationCases = [
       replacement: 'obfuscated',
     },
   },
-];
+]
 
 jil.browserTest('Obfuscation validateRules input', function (t) {
   validationCases.forEach(function (testCase) {
     t.test(testCase.name, function (t) {
-      var result = obfuscate.validateRules([testCase.rule]);
-      t.equal(testCase.expected, result, 'expecting ' + testCase.expected);
-      t.end();
-    });
-  });
-});
+      var result = obfuscate.validateRules([testCase.rule])
+      t.equal(testCase.expected, result, 'expecting ' + testCase.expected)
+      t.end()
+    })
+  })
+})
 
 jil.browserTest('Should Obfuscate', function (t) {
   setConfiguration(agentIdentifier, {
     obfuscate: validationCases.filter((x) => x.expected).map((x) => x.rule),
-  });
+  })
 
-  t.ok(obfuscatorInst.shouldObfuscate(), 'When init.obfuscate is defined, shouldObfuscate is true');
+  t.ok(obfuscatorInst.shouldObfuscate(), 'When init.obfuscate is defined, shouldObfuscate is true')
 
   //delete win.getWindowOrWorkerGlobScope().NREUM.init.obfuscate
-  setConfiguration(agentIdentifier, {}); // note this'll reset the *whole* config to the default values
-  t.ok(!obfuscatorInst.shouldObfuscate(), 'When init.obfuscate is NOT defined, shouldObfuscate is false');
-  t.end();
-});
+  setConfiguration(agentIdentifier, {}) // note this'll reset the *whole* config to the default values
+  t.ok(!obfuscatorInst.shouldObfuscate(), 'When init.obfuscate is NOT defined, shouldObfuscate is false')
+  t.end()
+})
 
 jil.browserTest('Get Rules', function (t) {
   setConfiguration(agentIdentifier, {
     obfuscate: validationCases.filter((x) => x.expected).map((x) => x.rule),
-  });
+  })
 
-  t.ok(!!obfuscate.getRules(agentIdentifier).length, 'getRules should generate a list of rules from init.obfuscate');
+  t.ok(!!obfuscate.getRules(agentIdentifier).length, 'getRules should generate a list of rules from init.obfuscate')
 
   //delete win.getWindowOrWorkerGlobScope().NREUM.init.obfuscate
-  setConfiguration(agentIdentifier, {}); // note this'll reset the *whole* config to the default values
+  setConfiguration(agentIdentifier, {}) // note this'll reset the *whole* config to the default values
   t.ok(
     !obfuscate.getRules(agentIdentifier).length,
     'getRules should generate an empty list if init.obfuscate is undefined'
-  );
+  )
 
-  setScope({ location: fileLocation });
+  setScope({ location: fileLocation })
   t.ok(
     !!obfuscate.getRules(agentIdentifier).filter((x) => x.regex.source.includes('file')).length,
     'getRules should generate a rule for file obfuscation if file protocol is detected'
-  );
+  )
 
-  resetScope();
-  t.end();
-});
+  resetScope()
+  t.end()
+})
 
 jil.browserTest('Obfuscate String Method', function (t) {
   setConfiguration(agentIdentifier, {
     obfuscate: validationCases.filter((x) => x.expected).map((x) => x.rule),
-  });
+  })
 
   t.ok(
     !obfuscatorInst
       .obfuscateString('http://example.com/missing-replacement-field/123')
       .includes('missing-replacement-field'),
     'Successfully obfuscates missing replacement field'
-  );
-  t.ok(!obfuscatorInst.obfuscateString('http://example.com/pii/123').includes('pii'), 'Successfully obfuscates string');
+  )
+  t.ok(!obfuscatorInst.obfuscateString('http://example.com/pii/123').includes('pii'), 'Successfully obfuscates string')
   t.ok(
     !obfuscatorInst.obfuscateString('http://example.com/abcdefghijklmnopqrstuvwxyz/123').includes('i'),
     'Successfully obfuscates regex'
-  );
+  )
 
-  setScope({ location: fileLocation });
+  setScope({ location: fileLocation })
   //delete win.getWindowOrWorkerGlobScope().NREUM.init.obfuscate
-  setConfiguration(agentIdentifier, {}); // note this'll reset the *whole* config to the default values
+  setConfiguration(agentIdentifier, {}) // note this'll reset the *whole* config to the default values
   t.ok(
     obfuscatorInst.obfuscateString('file:///Users/jporter/Documents/Code/scratch/noticeErrorTest.html') ===
       'file://OBFUSCATED',
     'Successfully obfuscates file protocol'
-  );
+  )
 
-  resetScope();
-  t.end();
-});
+  resetScope()
+  t.end()
+})

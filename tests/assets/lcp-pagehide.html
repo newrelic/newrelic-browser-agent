@@ -13,15 +13,15 @@
 
     <script>
       setTimeout(function () {
-        simulatePageHide();
-        addLargerElement();
-      }, 1000);
+        simulatePageHide()
+        addLargerElement()
+      }, 1000)
 
       function addLargerElement() {
-        var div = document.createElement('div');
-        div.innerText = 'larger element!!!!!!!!!!';
-        div.id = 'post-load-element';
-        document.body.insertBefore(div, document.body.firstChild);
+        var div = document.createElement('div')
+        div.innerText = 'larger element!!!!!!!!!!'
+        div.id = 'post-load-element'
+        document.body.insertBefore(div, document.body.firstChild)
       }
 
       // simulate page hide by dispatching the event manually
@@ -29,9 +29,9 @@
         Object.defineProperty(document, 'visibilityState', {
           value: 'visible',
           writable: true,
-        });
-        document.visibilityState = 'hidden';
-        document.dispatchEvent(new Event('visibilitychange'));
+        })
+        document.visibilityState = 'hidden'
+        document.dispatchEvent(new Event('visibilitychange'))
       }
     </script>
   </body>

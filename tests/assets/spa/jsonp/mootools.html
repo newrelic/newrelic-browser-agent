@@ -16,24 +16,24 @@
       document.addEventListener(
         'click',
         function () {
-          window.location.hash = Math.random();
+          window.location.hash = Math.random()
           var myJSONP = new Request.JSONP({
             url: '/jsonp',
             onComplete: function (data) {
-              var el = document.createElement('p');
-              el.innerHTML = JSON.stringify(data);
-              document.body.appendChild(el);
+              var el = document.createElement('p')
+              el.innerHTML = JSON.stringify(data)
+              document.body.appendChild(el)
               setTimeout(
                 newrelic.interaction().createTracer('tacoTimer', function () {
-                  window.location.hash = Math.random();
+                  window.location.hash = Math.random()
                 }),
                 500
-              );
+              )
             },
-          }).send();
+          }).send()
         },
         false
-      );
+      )
     </script>
     <p>Click me!</p>
   </body>

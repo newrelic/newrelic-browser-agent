@@ -8,13 +8,13 @@
     <title>RUM Unit Test</title>
     {init} {config}
     <script type="text/javascript">
-      if (!NREUM.loader_config) NREUM.loader_config = {};
-      NREUM.loader_config.xpid = '12#34';
+      if (!NREUM.loader_config) NREUM.loader_config = {}
+      NREUM.loader_config.xpid = '12#34'
 
       // enable the feature
       NREUM.init.distributed_tracing = {
         enabled: true,
-      };
+      }
     </script>
     {loader}
   </head>
@@ -24,18 +24,18 @@
       document.addEventListener(
         'click',
         function () {
-          var xhr = new XMLHttpRequest();
-          var url = 'http://' + NREUM.info.beacon + '/echo';
+          var xhr = new XMLHttpRequest()
+          var url = 'http://' + NREUM.info.beacon + '/echo'
 
-          xhr.open('POST', url);
-          xhr.send('123');
+          xhr.open('POST', url)
+          xhr.send('123')
 
-          xhr.addEventListener('load', function () {}, true);
+          xhr.addEventListener('load', function () {}, true)
 
-          window.location.hash = Math.random();
+          window.location.hash = Math.random()
         },
         false
-      );
+      )
     </script>
   </body>
 </html>

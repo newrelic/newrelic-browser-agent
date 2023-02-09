@@ -9,12 +9,12 @@
     <title>Example Page</title>
     {config} {init} {loader}
     <script type="text/javascript">
-      var testId = window.location.search.match(/testId=([^&]*)/)[1];
-      var url = 'http://' + NREUM.info.beacon + '/dt/' + testId;
-      var headers = new Headers();
-      var init = { headers: headers };
+      var testId = window.location.search.match(/testId=([^&]*)/)[1]
+      var url = 'http://' + NREUM.info.beacon + '/dt/' + testId
+      var headers = new Headers()
+      var init = { headers: headers }
 
-      window.fetch(url, init);
+      window.fetch(url, init)
     </script>
   </head>
   <body></body>

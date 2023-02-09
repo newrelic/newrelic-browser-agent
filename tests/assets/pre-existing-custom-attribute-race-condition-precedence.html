@@ -8,21 +8,21 @@
     <title>RUM Unit Test</title>
     {init} {loader}
     <script>
-      newrelic.setCustomAttribute('customParamKey', 0);
+      newrelic.setCustomAttribute('customParamKey', 0)
     </script>
   </head>
 
   <body>
     {config}
     <script>
-      newrelic.info.jsAttributes = { customParamKey: 1 }; // setCustomAttribute should take precedence over this, even though this is technically implemented later in the lifecycle
+      newrelic.info.jsAttributes = { customParamKey: 1 } // setCustomAttribute should take precedence over this, even though this is technically implemented later in the lifecycle
     </script>
     this is a generic page that is instrumented by the JS agent
     <script>
       try {
-        throw new Error('My error');
+        throw new Error('My error')
       } catch (e) {
-        NREUM.noticeError(e);
+        NREUM.noticeError(e)
       }
     </script>
   </body>

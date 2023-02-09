@@ -2,79 +2,79 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getConfiguration, getConfigurationValue, getLoaderConfig } from '../../../common/config/config';
-import { generateSpanId, generateTraceId } from '../../../common/ids/unique-id';
-import { parseUrl } from '../../../common/url/parse-url';
-import { globalScope } from '../../../common/util/global-scope';
+import { getConfiguration, getConfigurationValue, getLoaderConfig } from '../../../common/config/config'
+import { generateSpanId, generateTraceId } from '../../../common/ids/unique-id'
+import { parseUrl } from '../../../common/url/parse-url'
+import { globalScope } from '../../../common/util/global-scope'
 
 export class DT {
-  constructor(agentIdentifier) {
-    this.agentIdentifier = agentIdentifier;
+  constructor (agentIdentifier) {
+    this.agentIdentifier = agentIdentifier
     // Binds this class instance context to the following fn used in an external module (exported);
     //  Alternatively, can make them class field arrow functions, but requires experimental features/plugin for eslint.
-    this.generateTracePayload = this.generateTracePayload.bind(this);
-    this.shouldGenerateTrace = this.shouldGenerateTrace.bind(this);
+    this.generateTracePayload = this.generateTracePayload.bind(this)
+    this.shouldGenerateTrace = this.shouldGenerateTrace.bind(this)
   }
 
-  generateTracePayload(parsedOrigin) {
+  generateTracePayload (parsedOrigin) {
     if (!this.shouldGenerateTrace(parsedOrigin)) {
-      return null;
+      return null
     }
 
-    var loader_config = getLoaderConfig(this.agentIdentifier);
+    var loader_config = getLoaderConfig(this.agentIdentifier)
     if (!loader_config) {
-      return null;
+      return null
     }
 
-    var accountId = (loader_config.accountID || '').toString() || null;
-    var agentId = (loader_config.agentID || '').toString() || null;
-    var trustKey = (loader_config.trustKey || '').toString() || null;
+    var accountId = (loader_config.accountID || '').toString() || null
+    var agentId = (loader_config.agentID || '').toString() || null
+    var trustKey = (loader_config.trustKey || '').toString() || null
 
     if (!accountId || !agentId) {
-      return null;
+      return null
     }
 
-    var spanId = generateSpanId();
-    var traceId = generateTraceId();
-    var timestamp = Date.now();
+    var spanId = generateSpanId()
+    var traceId = generateTraceId()
+    var timestamp = Date.now()
 
     var payload = {
       spanId: spanId,
       traceId: traceId,
-      timestamp: timestamp,
-    };
+      timestamp: timestamp
+    }
 
     if (parsedOrigin.sameOrigin || (this.isAllowedOrigin(parsedOrigin) && this.useTraceContextHeadersForCors())) {
-      payload.traceContextParentHeader = this.generateTraceContextParentHeader(spanId, traceId);
+      payload.traceContextParentHeader = this.generateTraceContextParentHeader(spanId, traceId)
       payload.traceContextStateHeader = this.generateTraceContextStateHeader(
         spanId,
         timestamp,
         accountId,
         agentId,
         trustKey
-      );
+      )
     }
 
     if (
       (parsedOrigin.sameOrigin && !this.excludeNewrelicHeader()) ||
       (!parsedOrigin.sameOrigin && this.isAllowedOrigin(parsedOrigin) && this.useNewrelicHeaderForCors())
     ) {
-      payload.newrelicHeader = this.generateTraceHeader(spanId, traceId, timestamp, accountId, agentId, trustKey);
+      payload.newrelicHeader = this.generateTraceHeader(spanId, traceId, timestamp, accountId, agentId, trustKey)
     }
 
-    return payload;
+    return payload
   }
 
-  generateTraceContextParentHeader(spanId, traceId) {
-    return '00-' + traceId + '-' + spanId + '-01';
+  generateTraceContextParentHeader (spanId, traceId) {
+    return '00-' + traceId + '-' + spanId + '-01'
   }
 
-  generateTraceContextStateHeader(spanId, timestamp, accountId, appId, trustKey) {
-    var version = 0;
-    var transactionId = '';
-    var parentType = 1;
-    var sampled = '';
-    var priority = '';
+  generateTraceContextStateHeader (spanId, timestamp, accountId, appId, trustKey) {
+    var version = 0
+    var transactionId = ''
+    var parentType = 1
+    var sampled = ''
+    var priority = ''
 
     return (
       trustKey +
@@ -96,13 +96,13 @@ export class DT {
       priority +
       '-' +
       timestamp
-    );
+    )
   }
 
-  generateTraceHeader(spanId, traceId, timestamp, accountId, appId, trustKey) {
-    var hasBtoa = typeof globalScope?.btoa === 'function';
+  generateTraceHeader (spanId, traceId, timestamp, accountId, appId, trustKey) {
+    var hasBtoa = typeof globalScope?.btoa === 'function'
     if (!hasBtoa) {
-      return null;
+      return null
     }
 
     var payload = {
@@ -113,79 +113,79 @@ export class DT {
         ap: appId,
         id: spanId,
         tr: traceId,
-        ti: timestamp,
-      },
-    };
+        ti: timestamp
+      }
+    }
     if (trustKey && accountId !== trustKey) {
-      payload.d.tk = trustKey;
+      payload.d.tk = trustKey
     }
 
-    return btoa(JSON.stringify(payload));
+    return btoa(JSON.stringify(payload))
   }
 
   // return true if DT is enabled and the origin is allowed, either by being
   // same-origin, or included in the allowed list
-  shouldGenerateTrace(parsedOrigin) {
-    return this.isDtEnabled() && this.isAllowedOrigin(parsedOrigin);
+  shouldGenerateTrace (parsedOrigin) {
+    return this.isDtEnabled() && this.isAllowedOrigin(parsedOrigin)
   }
 
-  isAllowedOrigin(parsedOrigin) {
-    var allowed = false;
-    var dtConfig = {};
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing');
+  isAllowedOrigin (parsedOrigin) {
+    var allowed = false
+    var dtConfig = {}
+    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
 
     if (dt) {
-      dtConfig = getConfiguration(this.agentIdentifier).distributed_tracing;
+      dtConfig = getConfiguration(this.agentIdentifier).distributed_tracing
     }
 
     if (parsedOrigin.sameOrigin) {
-      allowed = true;
+      allowed = true
     } else if (dtConfig.allowed_origins instanceof Array) {
       for (var i = 0; i < dtConfig.allowed_origins.length; i++) {
-        var allowedOrigin = parseUrl(dtConfig.allowed_origins[i]);
+        var allowedOrigin = parseUrl(dtConfig.allowed_origins[i])
         if (
           parsedOrigin.hostname === allowedOrigin.hostname &&
           parsedOrigin.protocol === allowedOrigin.protocol &&
           parsedOrigin.port === allowedOrigin.port
         ) {
-          allowed = true;
-          break;
+          allowed = true
+          break
         }
       }
     }
-    return allowed;
+    return allowed
   }
 
-  isDtEnabled() {
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing');
+  isDtEnabled () {
+    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
     if (dt) {
-      return !!dt.enabled;
+      return !!dt.enabled
     }
-    return false;
+    return false
   }
 
   // exclude the newrelic header for same-origin calls
-  excludeNewrelicHeader() {
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing');
+  excludeNewrelicHeader () {
+    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
     if (dt) {
-      return !!dt.exclude_newrelic_header;
+      return !!dt.exclude_newrelic_header
     }
-    return false;
+    return false
   }
 
-  useNewrelicHeaderForCors() {
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing');
+  useNewrelicHeaderForCors () {
+    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
     if (dt) {
-      return dt.cors_use_newrelic_header !== false;
+      return dt.cors_use_newrelic_header !== false
     }
-    return false;
+    return false
   }
 
-  useTraceContextHeadersForCors() {
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing');
+  useTraceContextHeadersForCors () {
+    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
     if (dt) {
-      return !!dt.cors_use_tracecontext_headers;
+      return !!dt.cors_use_tracecontext_headers
     }
-    return false;
+    return false
   }
 }

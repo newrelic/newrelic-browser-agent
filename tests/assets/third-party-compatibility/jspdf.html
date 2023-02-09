@@ -15,10 +15,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.js"></script>
     <script>
       document.getElementById('createPdf').addEventListener('click', () => {
-        const doc = new jspdf.jsPDF();
+        const doc = new jspdf.jsPDF()
 
         // Source HTMLElement or a string containing HTML.
-        var elementHTML = document.querySelector('#content');
+        var elementHTML = document.querySelector('#content')
 
         doc.html(elementHTML, {
           callback: function (doc) {},
@@ -26,8 +26,8 @@
           y: 15,
           width: 170, //target width in the PDF document
           windowWidth: 650, //window width in CSS pixels
-        });
-      });
+        })
+      })
     </script>
   </body>
 </html>

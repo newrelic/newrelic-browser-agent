@@ -1,6 +1,6 @@
-const babelEnv = require('./babel-env-vars');
+const babelEnv = require('./babel-env-vars')
 
-const presets = [];
-const plugins = [babelEnv()];
+const presets = []
+const plugins = [babelEnv()]
 
-module.exports = { presets, plugins };
+module.exports = { presets, plugins }

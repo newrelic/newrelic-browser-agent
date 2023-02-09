@@ -12,3 +12,4 @@ export const FN_END = 'fn' + END
 export const BST_TIMER = 'bstTimer'
 export const PUSH_STATE = 'pushState'
 export const ORIG_EVENT = originals.EV
+export const ADD_EVENT_LISTENER = 'addEventListener'

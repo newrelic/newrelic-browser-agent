@@ -13,7 +13,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { isBrowserScope } from '../../../common/util/global-scope'
 
 const {
-  BST_RESOURCE, BST_TIMER, END, FEATURE_NAME, FN_END, FN_START,
+  BST_RESOURCE, BST_TIMER, END, FEATURE_NAME, FN_END, FN_START, ADD_EVENT_LISTENER,
   PUSH_STATE, RESOURCE, RESOURCE_TIMING_BUFFER_FULL, START, ORIG_EVENT: origEvent
 } = CONSTANTS
 const CRT = "clearResourceTimings";
@@ -79,7 +79,7 @@ export class Instrument extends InstrumentBase {
       observeResourceTimings()
     } else {
       // collect resource timings once when buffer is full
-      if (window.performance[CRT])
+      if (window.performance[CRT] && window.performance[ADD_EVENT_LISTENER])
         window.performance.addEventListener(RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, eventListenerOpts(false));
     }
 

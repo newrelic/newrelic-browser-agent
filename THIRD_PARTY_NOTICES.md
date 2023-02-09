@@ -20,85 +20,98 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 
 **[devDependencies](#devDependencies)**
 
-* [@babel/cli](#babelcli)
-* [@babel/core](#babelcore)
-* [@babel/plugin-proposal-optional-chaining](#babelplugin-proposal-optional-chaining)
-* [@babel/plugin-syntax-dynamic-import](#babelplugin-syntax-dynamic-import)
-* [@babel/plugin-transform-modules-commonjs](#babelplugin-transform-modules-commonjs)
-* [@babel/plugin-transform-strict-mode](#babelplugin-transform-strict-mode)
-* [@babel/preset-env](#babelpreset-env)
-* [@faker-js/faker](#faker-jsfaker)
-* [@fastify/cors](#fastifycors)
-* [@fastify/multipart](#fastifymultipart)
-* [@fastify/static](#fastifystatic)
-* [@newrelic/newrelic-oss-cli](#newrelicnewrelic-oss-cli)
-* [@newrelic/nr-querypack](#newrelicnr-querypack)
-* [@octokit/rest](#octokitrest)
-* [aws-sdk](#aws-sdk)
-* [babel-jest](#babel-jest)
-* [babel-loader](#babel-loader)
-* [babel-plugin-module-resolver](#babel-plugin-module-resolver)
-* [babel-plugin-search-and-replace](#babel-plugin-search-and-replace)
-* [babel-plugin-transform-inline-environment-variables](#babel-plugin-transform-inline-environment-variables)
-* [babelify](#babelify)
-* [browserify](#browserify)
-* [bundle-collapser](#bundle-collapser)
-* [chalk](#chalk)
-* [charm](#charm)
-* [concat-stream](#concat-stream)
-* [cors](#cors)
-* [create-polyfill-service-url](#create-polyfill-service-url)
-* [deepmerge-ts](#deepmerge-ts)
-* [defined](#defined)
-* [dotenv-webpack](#dotenv-webpack)
-* [eslint-config-standard](#eslint-config-standard)
-* [eslint-import-resolver-alias](#eslint-import-resolver-alias)
-* [eslint-import-resolver-webpack](#eslint-import-resolver-webpack)
-* [eslint-plugin-import](#eslint-plugin-import)
-* [eslint-plugin-n](#eslint-plugin-n)
-* [eslint-plugin-promise](#eslint-plugin-promise)
-* [eslint](#eslint)
-* [fastify-plugin](#fastify-plugin)
-* [fastify](#fastify)
-* [function-bind](#function-bind)
-* [glob](#glob)
-* [husky](#husky)
-* [jest-environment-jsdom](#jest-environment-jsdom)
-* [jest](#jest)
-* [jquery](#jquery)
-* [jsonc-eslint-parser](#jsonc-eslint-parser)
-* [jung](#jung)
-* [just-debounce](#just-debounce)
-* [ls-stream](#ls-stream)
-* [mime-types](#mime-types)
-* [minimatch](#minimatch)
-* [multiparty](#multiparty)
-* [newrelic](#newrelic)
-* [node-fetch](#node-fetch)
-* [npm-run-all](#npm-run-all)
-* [object-inspect](#object-inspect)
-* [preprocessify](#preprocessify)
-* [request](#request)
-* [sauce-connect-launcher](#sauce-connect-launcher)
-* [semver](#semver)
-* [server-destroy](#server-destroy)
-* [sinon](#sinon)
-* [tap-parser](#tap-parser)
-* [tape](#tape)
-* [through2](#through2)
-* [through](#through)
-* [transpile-webpack-plugin](#transpile-webpack-plugin)
-* [uglify-js](#uglify-js)
-* [uuid](#uuid)
-* [vinyl-buffer](#vinyl-buffer)
-* [vinyl-source-stream](#vinyl-source-stream)
-* [wait-on](#wait-on)
-* [watchify](#watchify)
-* [wd](#wd)
-* [webpack-bundle-analyzer](#webpack-bundle-analyzer)
-* [webpack-cli](#webpack-cli)
-* [webpack](#webpack)
-* [yargs](#yargs)
+- [Third Party Notices](#third-party-notices)
+  - [Content](#content)
+  - [dependencies](#dependencies)
+    - [core-js](#core-js)
+    - [lodash.\_slice](#lodash_slice)
+    - [web-vitals](#web-vitals)
+  - [devDependencies](#devdependencies)
+    - [@babel/cli](#babelcli)
+    - [@babel/core](#babelcore)
+    - [@babel/plugin-proposal-optional-chaining](#babelplugin-proposal-optional-chaining)
+    - [@babel/plugin-syntax-dynamic-import](#babelplugin-syntax-dynamic-import)
+    - [@babel/plugin-transform-modules-commonjs](#babelplugin-transform-modules-commonjs)
+    - [@babel/plugin-transform-strict-mode](#babelplugin-transform-strict-mode)
+    - [@babel/preset-env](#babelpreset-env)
+    - [@faker-js/faker](#faker-jsfaker)
+    - [@fastify/cors](#fastifycors)
+    - [@fastify/multipart](#fastifymultipart)
+    - [@fastify/static](#fastifystatic)
+    - [@newrelic/newrelic-oss-cli](#newrelicnewrelic-oss-cli)
+    - [@newrelic/nr-querypack](#newrelicnr-querypack)
+    - [@octokit/rest](#octokitrest)
+    - [aws-sdk](#aws-sdk)
+    - [@types/jest](#typesjest)
+    - [@types/node](#typesnode)
+    - [@typescript-eslint/eslint-plugin](#typescript-eslinteslint-plugin)
+    - [@typescript-eslint/parser](#typescript-eslintparser)
+    - [aws-sdk](#aws-sdk-1)
+    - [babel-jest](#babel-jest)
+    - [babel-loader](#babel-loader)
+    - [babel-plugin-module-resolver](#babel-plugin-module-resolver)
+    - [babel-plugin-search-and-replace](#babel-plugin-search-and-replace)
+    - [babel-plugin-transform-inline-environment-variables](#babel-plugin-transform-inline-environment-variables)
+    - [babelify](#babelify)
+    - [browserify](#browserify)
+    - [bundle-collapser](#bundle-collapser)
+    - [chalk](#chalk)
+    - [charm](#charm)
+    - [concat-stream](#concat-stream)
+    - [cors](#cors)
+    - [create-polyfill-service-url](#create-polyfill-service-url)
+    - [deepmerge-ts](#deepmerge-ts)
+    - [defined](#defined)
+    - [dotenv-webpack](#dotenv-webpack)
+    - [eslint-config-standard](#eslint-config-standard)
+    - [eslint-import-resolver-alias](#eslint-import-resolver-alias)
+    - [eslint-import-resolver-webpack](#eslint-import-resolver-webpack)
+    - [eslint-plugin-import](#eslint-plugin-import)
+    - [eslint-plugin-n](#eslint-plugin-n)
+    - [eslint-plugin-promise](#eslint-plugin-promise)
+    - [eslint](#eslint)
+    - [fastify-plugin](#fastify-plugin)
+    - [fastify](#fastify)
+    - [function-bind](#function-bind)
+    - [glob](#glob)
+    - [husky](#husky)
+    - [jest-environment-jsdom](#jest-environment-jsdom)
+    - [jest](#jest)
+    - [jquery](#jquery)
+    - [jsonc-eslint-parser](#jsonc-eslint-parser)
+    - [jung](#jung)
+    - [just-debounce](#just-debounce)
+    - [ls-stream](#ls-stream)
+    - [mime-types](#mime-types)
+    - [minimatch](#minimatch)
+    - [multiparty](#multiparty)
+    - [newrelic](#newrelic)
+    - [node-fetch](#node-fetch)
+    - [npm-run-all](#npm-run-all)
+    - [object-inspect](#object-inspect)
+    - [preprocessify](#preprocessify)
+    - [request](#request)
+    - [sauce-connect-launcher](#sauce-connect-launcher)
+    - [semver](#semver)
+    - [server-destroy](#server-destroy)
+    - [sinon](#sinon)
+    - [tap-parser](#tap-parser)
+    - [tape](#tape)
+    - [through2](#through2)
+    - [through](#through)
+    - [transpile-webpack-plugin](#transpile-webpack-plugin)
+    - [uglify-js](#uglify-js)
+    - [uuid](#uuid)
+    - [vinyl-buffer](#vinyl-buffer)
+    - [vinyl-source-stream](#vinyl-source-stream)
+    - [wait-on](#wait-on)
+    - [watchify](#watchify)
+    - [wd](#wd)
+    - [webpack-bundle-analyzer](#webpack-bundle-analyzer)
+    - [webpack-cli](#webpack-cli)
+    - [webpack](#webpack)
+    - [yargs](#yargs)
+  - [optionalDependencies](#optionaldependencies)
 
 **[optionalDependencies](#optionalDependencies)**
 
@@ -1191,6 +1204,126 @@ THE SOFTWARE.
 ### aws-sdk
 
 This product includes source derived from [aws-sdk](https://github.com/aws/aws-sdk-js) ([v2.1312.0](https://github.com/aws/aws-sdk-js/tree/v2.1312.0)), distributed under the [Apache-2.0 License](https://github.com/aws/aws-sdk-js/blob/v2.1312.0/LICENSE.txt):
+### @types/jest
+
+This product includes source derived from [@types/jest](https://github.com/DefinitelyTyped/DefinitelyTyped) ([v28.1.1](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/v28.1.1)), distributed under the [MIT License](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/v28.1.1/LICENSE):
+
+```
+    MIT License
+
+    Copyright (c) Microsoft Corporation.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE
+
+```
+
+### @types/node
+
+This product includes source derived from [@types/node](https://github.com/DefinitelyTyped/DefinitelyTyped) ([v17.0.45](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/v17.0.45)), distributed under the [MIT License](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/v17.0.45/LICENSE):
+
+```
+    MIT License
+
+    Copyright (c) Microsoft Corporation.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE
+
+```
+
+### @typescript-eslint/eslint-plugin
+
+This product includes source derived from [@typescript-eslint/eslint-plugin](https://github.com/typescript-eslint/typescript-eslint) ([v5.51.0](https://github.com/typescript-eslint/typescript-eslint/tree/v5.51.0)), distributed under the [MIT License](https://github.com/typescript-eslint/typescript-eslint/blob/v5.51.0/LICENSE):
+
+```
+MIT License
+
+Copyright (c) 2019 typescript-eslint and other contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+```
+
+### @typescript-eslint/parser
+
+This product includes source derived from [@typescript-eslint/parser](https://github.com/typescript-eslint/typescript-eslint) ([v5.51.0](https://github.com/typescript-eslint/typescript-eslint/tree/v5.51.0)), distributed under the [BSD-2-Clause License](https://github.com/typescript-eslint/typescript-eslint/blob/v5.51.0/LICENSE):
+
+```
+TypeScript ESLint Parser
+Copyright JS Foundation and other contributors, https://js.foundation
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+- Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+- Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+```
+
+### aws-sdk
+
+This product includes source derived from [aws-sdk](https://github.com/aws/aws-sdk-js) ([v2.1311.0](https://github.com/aws/aws-sdk-js/tree/v2.1311.0)), distributed under the [Apache-2.0 License](https://github.com/aws/aws-sdk-js/blob/v2.1311.0/LICENSE.txt):
 
 ```
 

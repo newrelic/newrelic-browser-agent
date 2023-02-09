@@ -10,7 +10,7 @@ import { Instrument as InstrumentSpa } from '../features/spa/instrument'
 import { Instrument as InstrumentPageAction } from '../features/page_action/instrument'
 
 export class BrowserAgent extends Agent {
-  constructor (...args) {
+  constructor (args) {
     super({
       ...args,
       features: [

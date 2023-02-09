@@ -19,6 +19,9 @@ Some older IE-related code is removed, and so is a query param in our page view 
 Related to failed imports, a "loading chunk 629" error was thrown despite the intention to just catch it as a warning. The cause was actually an uncaught promise in the code,
 which has now been fixed and the error silenced.
 
+### Resolving google indexing of agent relative paths
+In previous version, the agent script that was injected or copied/pasted into page HTML included relative paths to the agents lazy chunks. Google indexing picked these relative paths up and attempted to index them as pages. This change removes those relatives paths from the loader and centralizes our lazy chunk loading for agent features.
+
 ## v1224
 
 ### Support SPA, XHR, and session trace features on Chrome for iOS

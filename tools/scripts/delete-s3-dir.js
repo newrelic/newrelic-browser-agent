@@ -17,7 +17,9 @@ var argv = yargs
   .describe('pr', 'PR name')
 
   .help('h')
-  .alias('h', 'help').argv
+  .alias('h', 'help')
+
+  .argv
 
 const { bucket, pr, dry, role } = argv
 
@@ -34,11 +36,9 @@ if (!pr) {
   process.exit(1)
 }
 
-connectToS3(role, dry)
-  .then(() => {
-    emptyS3Directory(bucket, pr, dry)
-  })
-  .catch((err) => {
-    console.log('err...', err)
-    process.exit(1)
-  })
+connectToS3(role, dry).then(() => {
+  emptyS3Directory(bucket, pr, dry)
+}).catch(err => {
+  console.log('err...', err)
+  process.exit(1)
+})

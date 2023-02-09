@@ -19,7 +19,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
     try {
       logger.info(`Bumping version for packages ${node}`)
 
-      const packagePath = path.resolve(path.join(__dirname, '../../', projectGraph.nodes[node].data.root))
+      const packagePath = path.resolve(
+        path.join(__dirname, '../../', projectGraph.nodes[node].data.root)
+      )
 
       execSync(`npm version ${version} ${additionalArgs.join(' ')}`, {
         cwd: packagePath,

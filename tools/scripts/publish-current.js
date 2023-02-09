@@ -33,7 +33,8 @@ var argv = yargs
   .alias('t', 'test')
 
   .help('h')
-  .alias('h', 'help').argv
+  .alias('h', 'help')
+  .argv
 
 if (!argv['buildNumber']) {
   console.log('build number must be specified')
@@ -58,18 +59,14 @@ var loaderNames = loaders.map(function (loader) {
   return 'nr-loader-' + loader.name + '-{version}'
 })
 
-var payloadNames = loaders
-  .map(function (loader) {
-    if (!loader.payload) return 'nr-{version}'
-    return 'nr-' + loader.payload + '-{version}'
-  })
-  .concat([])
-  .filter(unique)
+var payloadNames = loaders.map(function (loader) {
+  if (!loader.payload) return 'nr-{version}'
+  return 'nr-' + loader.payload + '-{version}'
+}).concat([]).filter(unique)
 
 var allNames = loaderNames.concat(payloadNames)
 
-var allFiles = allNames
-  .map(add('.js'))
+var allFiles = allNames.map(add('.js'))
   .concat(allNames.map(add('.js.map')))
   .concat(allNames.map(add('.min.js')))
   .concat(allNames.map(add('.min.js.map')))
@@ -83,13 +80,13 @@ if (!(+buildNum > 470)) {
   throw new Error('build number must been a recent browser agent version (using buildNum `' + buildNum + '`)')
 }
 
-initialize(function (err) {
+initialize(function(err) {
   if (err) throw err
 
   toGet.forEach(function (name, idx) {
     request('https://js-agent.newrelic.com/' + name, function (err, req, content) {
       if (err) throw err
-      if (!content.match('NREUM')) {
+      if (!(content.match('NREUM'))) {
         throw new Error('Content is missing NREUM, something went wrong')
       }
 
@@ -103,15 +100,15 @@ initialize(function (err) {
   })
 })
 
-function initialize (cb) {
+function initialize(cb) {
   var roleToAssume = {
     RoleArn: argv['role'],
     RoleSessionName: 'uploadToS3Session',
     DurationSeconds: 900
   }
 
-  var sts = new AWS.STS()
-  sts.assumeRole(roleToAssume, function (err, data) {
+  var sts = new AWS.STS();
+  sts.assumeRole(roleToAssume, function(err, data) {
     if (err) {
       return cb(err)
     } else {

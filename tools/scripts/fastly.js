@@ -1,3 +1,4 @@
+
 const request = require('request')
 var argv = require('yargs')
   .string('fastly-key')
@@ -14,7 +15,9 @@ var argv = require('yargs')
   .default('purge-internal', false)
 
   .string('purge-path')
-  .describe('purge-path', 'CDN Path to purge').argv
+  .describe('purge-path', 'CDN Path to purge')
+
+  .argv
 
 const { fastlyKey, env, purgeInternal, purgePath } = argv
 

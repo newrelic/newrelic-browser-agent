@@ -25,12 +25,11 @@ var config = require('yargs')
   .help('h')
   .alias('h', 'help')
   .strict()
-  .wrap(Math.min(110, yargs.terminalWidth())).argv
+  .wrap(Math.min(110, yargs.terminalWidth()))
+  .argv
 
 var loaderURLs = getLoaderURLs(config)
-loaderURLs.forEach(function (loaderURL) {
-  verifyLoader(loaderURL)
-})
+loaderURLs.forEach(function (loaderURL) { verifyLoader(loaderURL) })
 
 function verifyLoader (loaderURL) {
   test('loader at ' + loaderURL, function (t) {
@@ -77,11 +76,7 @@ function verifyLoader (loaderURL) {
 
   function sanityCheckResponse (t, res, body, label) {
     t.equal(res.statusCode, 200, 'got status ' + res.statusCode + ' for ' + label)
-    t.equal(
-      res.headers['content-type'],
-      'application/javascript',
-      'got content-type = ' + res.headers['content-type'] + ' for ' + label
-    )
+    t.equal(res.headers['content-type'], 'application/javascript', 'got content-type = ' + res.headers['content-type'] + ' for ' + label)
     t.equal(res.headers['content-encoding'], 'gzip', label + ' was served compressed')
     t.ok(body.length > 0, label + ' was ' + body.length + ' bytes')
   }

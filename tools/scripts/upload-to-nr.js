@@ -29,7 +29,9 @@ var argv = yargs
   .describe('skip-upload-failures', "Don't bail out after the first failure, keep trying other requests")
 
   .help('h')
-  .alias('h', 'help').argv
+  .alias('h', 'help')
+
+  .argv
 
 /**
  * An async wrapper around the execution logic
@@ -56,42 +58,33 @@ async function run () {
     })
   })
 
-  asyncForEach(
-    steps,
-    function (fn, next) {
-      fn(next)
-    },
-    function (err) {
-      if (err) throw err
-      console.log('All steps finished.')
+  asyncForEach(steps, function (fn, next) {
+    fn(next)
+  }, function (err) {
+    if (err) throw err
+    console.log('All steps finished.')
 
-      if (uploadErrorCallback && uploadErrors.length > 0) {
-        console.log('Failures:')
-        uploadErrors.forEach(function (e) {
-          console.log(e)
-        })
-        process.exit(1)
-      }
+    if (uploadErrorCallback && uploadErrors.length > 0) {
+      console.log('Failures:')
+      uploadErrors.forEach(function (e) {
+        console.log(e)
+      })
+      process.exit(1)
     }
-  )
+  })
 
   /**
-   * Iterate over each environment to upload loaders
-   * @param {string} environment
-   * @param {Function} cb
-   * @returns {void}
-   */
+ * Iterate over each environment to upload loaders
+ * @param {string} environment
+ * @param {Function} cb
+ * @returns {void}
+ */
   function uploadAllLoadersToDB (environment, cb) {
-    asyncForEach(
-      loaders,
-      function (data, next) {
-        const filename = Object.keys(data)[0]
-        const fileData = data[filename]
-        uploadLoaderToDB(filename, fileData, environment, next)
-      },
-      cb,
-      uploadErrorCallback
-    )
+    asyncForEach(loaders, function (data, next) {
+      const filename = Object.keys(data)[0]
+      const fileData = data[filename]
+      uploadLoaderToDB(filename, fileData, environment, next)
+    }, cb, uploadErrorCallback)
   }
 
   /**
@@ -174,18 +167,7 @@ async function run () {
         return cb()
       }
 
-      cb(
-        new Error(
-          'Failed to upload ' +
-            filename +
-            ' loader to ' +
-            environment +
-            ' db: (' +
-            res.statusCode +
-            ') ' +
-            JSON.stringify(body)
-        )
-      )
+      cb(new Error('Failed to upload ' + filename + ' loader to ' + environment + ' db: (' + res.statusCode + ') ' + JSON.stringify(body)))
     })
   }
 
@@ -196,17 +178,13 @@ async function run () {
   async function loaderFilenames () {
     const loaderTypes = ['rum', 'full', 'spa']
     const version = argv['v']
-    const fileNames = loaderTypes
-      .map((type) => [
-        `nr-loader-${type}-${version}.min.js`,
-        `nr-loader-${type}-polyfills-${version}.min.js`,
-        `nr-loader-${type}-${version}.js`,
-        `nr-loader-${type}-polyfills-${version}.js`
-      ])
-      .flat()
-    const loaders = (
-      await Promise.all(fileNames.map((fileName) => getFile(`https://js-agent.newrelic.com/${fileName}`, fileName)))
-    ).map(([url, fileName, body]) => ({ [fileName]: body }))
+    const fileNames = loaderTypes.map(type => [
+      `nr-loader-${type}-${version}.min.js`,
+      `nr-loader-${type}-polyfills-${version}.min.js`,
+      `nr-loader-${type}-${version}.js`,
+      `nr-loader-${type}-polyfills-${version}.js`
+    ]).flat()
+    const loaders = (await Promise.all(fileNames.map(fileName => getFile(`https://js-agent.newrelic.com/${fileName}`, fileName)))).map(([url, fileName, body]) => ({ [fileName]: body }))
     return loaders
   }
 
@@ -215,7 +193,7 @@ async function run () {
    * @param {Function} op - operator cb
    * @param {Function} done - terminal cb
    * @param {Function=} errorCallback - If not specified, processing will terminate on the first error. If specified, the errorCallback will be invoked once for each error error, and the done callback will be invoked once each item has been processed.
-   */
+  */
   function asyncForEach (list, op, done, errorCallback) {
     var index = 0
 

@@ -7,7 +7,9 @@ const argv = yargs
   .alias('paths', 'p')
 
   .help('h')
-  .alias('h', 'help').argv
+  .alias('h', 'help')
+
+  .argv
 
 const { paths } = argv
 
@@ -18,11 +20,12 @@ if (!paths) {
 
 (async () => {
   try {
-    const files = await Promise.all(paths.map((path) => getFile(path)))
+    const files = await Promise.all(paths.map(path => getFile(path)))
     if (files.every(([path, res, body]) => !!body && res.statusCode === 200)) {
       console.log('All paths exist on CDN :)')
       process.exit(0)
-    } else {
+    }
+    else {
       fail('<Status Code> or <Body> indicated an empty response')
     }
   } catch (err) {

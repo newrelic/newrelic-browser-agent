@@ -69,15 +69,9 @@ async function setParent () {
 
 async function syncWithParent () {
   let stdout = ''
-  try {
-    stdout = await setParent()
-  } catch (e) {}
-  try {
-    stdout = await execAsPromise('git fetch parent')
-  } catch (e) {}
-  try {
-    stdout = await rebase()
-  } catch (e) {}
+  try { stdout = await setParent() } catch (e) { }
+  try { stdout = await execAsPromise('git fetch parent') } catch (e) { }
+  try { stdout = await rebase() } catch (e) { }
   return stdout.trim()
 }
 
@@ -122,7 +116,13 @@ async function setSparseCheckoutFolders (folders) {
 async function sparseCloneRepo (repoInfo, checkoutFiles) {
   const { name, repository, branch } = repoInfo
 
-  const cloneOptions = ['--filter=blob:none', '--no-checkout', '--depth 1', '--sparse', `--branch=${branch}`]
+  const cloneOptions = [
+    '--filter=blob:none',
+    '--no-checkout',
+    '--depth 1',
+    '--sparse',
+    `--branch=${branch}`
+  ]
   await clone(repository, name, cloneOptions)
   process.chdir(name)
 

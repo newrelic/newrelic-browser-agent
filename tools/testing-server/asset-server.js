@@ -71,9 +71,19 @@ class AgentInjectorTransform extends AssetTransform {
     let overrides = this.parseConfigFromQueryString(params) || {}
     Object.assign(config, this.defaultAgentConfig, overrides)
 
-    const loaderConfigKeys = ['accountID', 'agentID', 'applicationID', 'licenseKey', 'trustKey']
+    const loaderConfigKeys = [
+      'accountID',
+      'agentID',
+      'applicationID',
+      'licenseKey',
+      'trustKey'
+    ]
 
-    const loaderOnlyConfigKeys = ['accountID', 'agentID', 'trustKey']
+    const loaderOnlyConfigKeys = [
+      'accountID',
+      'agentID',
+      'trustKey'
+    ]
 
     let updatedConfig = {
       info: {},
@@ -105,9 +115,7 @@ class AgentInjectorTransform extends AssetTransform {
   }
 
   getAjaxDenyListString () {
-    return runnerArgs.denyListBam
-      ? 'window.NREUM||(NREUM={init:{}});NREUM.init.ajax=NREUM.init.ajax||{};NREUM.init.ajax.deny_list=NREUM.init.ajax.deny_list||[];NREUM.init.ajax.deny_list.push(\'bam-test-1.nr-local.net\');'
-      : ''
+    return runnerArgs.denyListBam ? 'window.NREUM||(NREUM={init:{}});NREUM.init.ajax=NREUM.init.ajax||{};NREUM.init.ajax.deny_list=NREUM.init.ajax.deny_list||[];NREUM.init.ajax.deny_list.push(\'bam-test-1.nr-local.net\');' : ''
   }
 
   generateConfigString (loaderName, params, ssl, injectUpdatedLoaderConfig) {
@@ -123,8 +131,7 @@ class AgentInjectorTransform extends AssetTransform {
 
   generateInit (initFromQueryString) {
     let initString = Buffer.from(initFromQueryString, 'base64').toString()
-    if (initString.includes('new RegExp'))
-    // de-serialize RegExp obj from router
+    if (initString.includes('new RegExp')) // de-serialize RegExp obj from router
     { initString = initString.replace(REGEXP_REPLACEMENT_REGEX, '/$1/$2') }
     return `window.NREUM||(NREUM={});NREUM.init=${initString};NREUM.init.ssl=false;`
   }
@@ -197,16 +204,14 @@ class AgentInjectorTransform extends AssetTransform {
         const distPath = path.resolve(__dirname, `../../${pkgPath}`)
         proms.push(fs.promises.readFile(distPath, 'utf-8'))
       }
-      Promise.all(proms)
-        .then((data) => {
-          resolve(
-            pkgPaths.map((x, i) => ({
-              name: x,
-              data: data[i]
-            }))
-          )
-        })
-        .catch((err) => resolve([]))
+      Promise.all(proms).then(data => {
+        resolve(
+          pkgPaths.map((x, i) => ({
+            name: x,
+            data: data[i]
+          })
+          ))
+      }).catch(err => resolve([]))
     })
   }
 
@@ -215,77 +220,81 @@ class AgentInjectorTransform extends AssetTransform {
       if (err) return callback(err)
 
       let loaderName = params.loader || this.assetServer.defaultLoader
-      let injectUpdatedLoaderConfig = params.injectUpdatedLoaderConfig === 'true'
+      let injectUpdatedLoaderConfig = (params.injectUpdatedLoaderConfig === 'true')
 
-      const htmlPackageTags = [...rawContent.matchAll(/{tests\/assets\/js\/internal\/.*}/g)].map((x) => x[0])
-      const packagePaths = htmlPackageTags.map((x) => x.replace(/[{}]/g, ''))
+      const htmlPackageTags = [...rawContent.matchAll(/{tests\/assets\/js\/internal\/.*}/g)].map(x => x[0])
+      const packagePaths = htmlPackageTags.map(x => x.replace(/[{}]/g, ''))
       const packageFiles = await this.getBuiltPackages(packagePaths)
 
-      this.getLoaderContent(loaderName, this.buildDir, (err, loaderContent) => {
-        if (err) return callback(err)
+      this.getLoaderContent(
+        loaderName,
+        this.buildDir,
+        (err, loaderContent) => {
+          if (err) return callback(err)
 
-        let configContent = ''
-        try {
-          configContent = this.generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig)
-        } catch (e) {
-          return callback(e)
-        }
-
-        let initContent = ''
-        if (params.init) {
+          let configContent = ''
           try {
-            initContent = this.generateInit(params.init)
+            configContent = this.generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig)
           } catch (e) {
             return callback(e)
           }
-        }
 
-        let wcContent = ''
-        if (params.workerCommands) {
-          try {
-            wcContent = this.generateWorkerCommands(params.workerCommands)
-          } catch (e) {
-            return callback(e)
+          let initContent = ''
+          if (params.init) {
+            try {
+              initContent = this.generateInit(params.init)
+            } catch (e) {
+              return callback(e)
+            }
+          }
+
+          let wcContent = ''
+          if (params.workerCommands) {
+            try {
+              wcContent = this.generateWorkerCommands(params.workerCommands)
+            } catch (e) {
+              return callback(e)
+            }
+          }
+
+          let scriptStringContent = ''
+          if (params.scriptString) {
+            try {
+              scriptStringContent = Buffer.from(params.scriptString, 'base64').toString()
+            } catch (e) {
+              return callback(e)
+            }
+          }
+
+          let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;'
+
+          let rspData = rawContent
+            .split('{loader}').join(tagify(disableSsl + loaderContent))
+            .replace('{config}', tagify(disableSsl + configContent))
+            .replace('{init}', tagify(disableSsl + initContent + this.getAjaxDenyListString()))
+            .replace('{worker-commands}', tagify(disableSsl + wcContent))
+            .replace('{script}', `<script type="text/javascript" src="${params.script}" charset="utf-8"></script>`)
+            .replace('{script-injection}', `<script type="text/javascript">${scriptStringContent}</script>`)
+
+          if (runnerArgs.polyfills) {
+            rspData = rspData.replace('{polyfills}', `<script type="text/javascript">${this.polyfills}</script>`)
+          }
+
+          if (!!htmlPackageTags.length && !!packageFiles.length) {
+            packageFiles.forEach(pkg => {
+              const tag = htmlPackageTags.find(x => x.includes(pkg.name))
+              rspData = rspData
+                .replace(tag, tagify(disableSsl + UglifyJS.minify(pkg.data).code))
+            })
+          }
+
+          callback(null, rspData)
+
+          function tagify (s) {
+            return `<script type="text/javascript">${s}</script>`
           }
         }
-
-        let scriptStringContent = ''
-        if (params.scriptString) {
-          try {
-            scriptStringContent = Buffer.from(params.scriptString, 'base64').toString()
-          } catch (e) {
-            return callback(e)
-          }
-        }
-
-        let disableSsl = 'window.NREUM||(NREUM={});NREUM.init||(NREUM.init={});NREUM.init.ssl=false;'
-
-        let rspData = rawContent
-          .split('{loader}')
-          .join(tagify(disableSsl + loaderContent))
-          .replace('{config}', tagify(disableSsl + configContent))
-          .replace('{init}', tagify(disableSsl + initContent + this.getAjaxDenyListString()))
-          .replace('{worker-commands}', tagify(disableSsl + wcContent))
-          .replace('{script}', `<script type="text/javascript" src="${params.script}" charset="utf-8"></script>`)
-          .replace('{script-injection}', `<script type="text/javascript">${scriptStringContent}</script>`)
-
-        if (runnerArgs.polyfills) {
-          rspData = rspData.replace('{polyfills}', `<script type="text/javascript">${this.polyfills}</script>`)
-        }
-
-        if (!!htmlPackageTags.length && !!packageFiles.length) {
-          packageFiles.forEach((pkg) => {
-            const tag = htmlPackageTags.find((x) => x.includes(pkg.name))
-            rspData = rspData.replace(tag, tagify(disableSsl + UglifyJS.minify(pkg.data).code))
-          })
-        }
-
-        callback(null, rspData)
-
-        function tagify (s) {
-          return `<script type="text/javascript">${s}</script>`
-        }
-      })
+      )
     })
   }
 }
@@ -308,24 +317,23 @@ class BrowserifyTransform extends AssetTransform {
     browserify(assetPath)
       .transform('babelify', {
         presets: [
-          [
-            '@babel/preset-env',
-            {
-              loose: true,
-              targets: {
-                browsers: runnerArgs.polyfills
-                  ? ['ie >= 11']
-                  : [
-                      'last 10 Chrome versions',
-                      'last 10 Safari versions',
-                      'last 10 Firefox versions',
-                      'last 10 Edge versions',
-                      'last 10 ChromeAndroid versions',
-                      'last 10 iOS versions'
-                    ]
-              }
+          ['@babel/preset-env', {
+            loose: true,
+            targets: {
+              browsers: runnerArgs.polyfills
+                ? [
+                    'ie >= 11'
+                  ]
+                : [
+                    'last 10 Chrome versions',
+                    'last 10 Safari versions',
+                    'last 10 Firefox versions',
+                    'last 10 Edge versions',
+                    'last 10 ChromeAndroid versions',
+                    'last 10 iOS versions'
+                  ]
             }
-          ]
+          }]
         ],
         plugins: [
           '@babel/plugin-syntax-dynamic-import',
@@ -437,21 +445,17 @@ const testRoutes = [
     res.end(JSON.stringify(req.headers))
   }),
   new Route('POST', '/postwithhi/*', (req, res) => {
-    req
-      .pipe(
-        concat((body) => {
-          if (body.toString() === 'hi!') {
-            res.end('hi!')
-          } else {
-            res.end('bad agent! - got body = "' + body.toString() + '"')
-          }
-        })
-      )
-      .on('error', (err) => {
-        console.log(err)
-        res.writeHead(500)
-        res.end(err.stack)
-      })
+    req.pipe(concat((body) => {
+      if (body.toString() === 'hi!') {
+        res.end('hi!')
+      } else {
+        res.end('bad agent! - got body = "' + body.toString() + '"')
+      }
+    })).on('error', (err) => {
+      console.log(err)
+      res.writeHead(500)
+      res.end(err.stack)
+    })
   }),
   new Route('GET', '/json', (req, res) => {
     res.end('{"text":"hi!"}')
@@ -694,37 +698,31 @@ class AssetServer extends BaseServer {
       return
     }
 
-    ls(this.assetsDir).pipe(
-      through((entry) => {
-        if (entry.path.match('git|node_modules')) return entry.ignore
-        if (entry.path.slice(-5) !== '.html') return
-        files.push({
-          name: path.relative(server.assetsDir, entry.path),
-          target: path.relative(server.assetsDir, entry.path)
-        })
-      }, gotFiles)
-    )
+    ls(this.assetsDir).pipe(through((entry) => {
+      if (entry.path.match('git|node_modules')) return entry.ignore
+      if (entry.path.slice(-5) !== '.html') return
+      files.push({
+        name: path.relative(server.assetsDir, entry.path),
+        target: path.relative(server.assetsDir, entry.path)
+      })
+    }, gotFiles))
 
-    ls(this.unitTestDir).pipe(
-      through((entry) => {
-        if (entry.path.slice(-11) !== '.browser.js') return
-        files.push({
-          name: path.relative(server.assetsDir, entry.path),
-          target: unitTestTarget(entry.path)
-        })
-      }, gotFiles)
-    )
+    ls(this.unitTestDir).pipe(through((entry) => {
+      if (entry.path.slice(-11) !== '.browser.js') return
+      files.push({
+        name: path.relative(server.assetsDir, entry.path),
+        target: unitTestTarget(entry.path)
+      })
+    }, gotFiles))
 
     function unitTestTarget (file) {
       let script = `/${path.relative(server.assetsDir, file)}?browserify=true`
       return server.urlFor('/tests/assets/browser.html', {
-        config: Buffer.from(
-          JSON.stringify({
-            assetServerPort: server.router.assetServer.port,
-            assetServerSSLPort: server.router.assetServer.sslPort,
-            corsServerPort: server.corsServer.port
-          })
-        ).toString('base64'),
+        config: Buffer.from(JSON.stringify({
+          assetServerPort: server.router.assetServer.port,
+          assetServerSSLPort: server.router.assetServer.sslPort,
+          corsServerPort: server.corsServer.port
+        })).toString('base64'),
         script: script
       })
     }

@@ -53,12 +53,14 @@ var options = require('yargs')
   .string('R')
   .alias('R', 'repo-path')
   .describe('R', 'Path to the docs-website form on local machine')
-  .default('R', 'docs-website').argv
+  .default('R', 'docs-website')
+
+  .argv
 
 const FORKED_DOCS_SITE = 'https://github.com/newrelic-forks/browser-agent-docs-website.git'
 
 const RELEASE_NOTES_PATH =
-  './src/content/docs/release-notes/new-relic-browser-release-notes/browser-agent-release-notes'
+    './src/content/docs/release-notes/new-relic-browser-release-notes/browser-agent-release-notes'
 
 const SUPPORT_STATEMENT = `
 ## Support statement:
@@ -212,11 +214,12 @@ function formatReleaseNotes (releaseDate, version, body) {
   const releaseNotesBody = [
     '---',
     'subject: Browser agent',
-    `releaseDate: '${releaseDate}'`,
-    `version: ${version.substr(1)}`, // remove the `v` from start of version
-    '---',
-    '',
-    '## ' + body
+        `releaseDate: '${releaseDate}'`,
+        `version: ${version.substr(1)}`, // remove the `v` from start of version
+        '---',
+        '',
+        '## ' +
+        body
   ].join('\n')
 
   console.log(`Release Notes Body \n${releaseNotesBody}`)

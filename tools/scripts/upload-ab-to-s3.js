@@ -31,7 +31,8 @@ var argv = require('yargs')
   .describe('role', 'S3 role ARN')
 
   .boolean('dry')
-  .default('dry', false).argv
+  .default('dry', false)
+  .argv
 
 const { env, appId, licenseKey, bucket, role, current, next, dry } = argv
 
@@ -53,7 +54,12 @@ const config = {
       enabled: true
     },
     ajax: {
-      deny_list: ['nr-data.net', 'bam.nr-data.net', 'staging-bam.nr-data.net', 'bam-cell.nr-data.net']
+      deny_list: [
+        'nr-data.net',
+        'bam.nr-data.net',
+        'staging-bam.nr-data.net',
+        'bam-cell.nr-data.net'
+      ]
     }
   },
 
@@ -76,15 +82,7 @@ const config = {
 }
 
 function getIdFromUrl (url) {
-  if (url.includes('PR-')) {
-    return (
-      'PR-' +
-      url
-        .split('/')
-        .find((x) => x.includes('PR-'))
-        .split('-')[1]
-    )
-  }
+  if (url.includes('PR-')) return 'PR-' + url.split('/').find(x => x.includes('PR-')).split('-')[1]
   if (url.includes('/dev/')) return 'dev'
   if (url.includes('-current')) return 'current'
   if (url.match(/\d+/)) return url.match(/\d+/)[0]
@@ -95,45 +93,37 @@ function getIdFromUrl (url) {
   const filePaths = [
     ...(env !== 'dev' ? [current] : []), // defaults to current build
     next, // defaults to dev build
-    ...((env === 'dev' && (await getOpenPrNums())) || []).map(
-      (num) => `https://js-agent.newrelic.com/pr/PR-${num}/nr-loader-spa.min.js`
-    )
+    ...(env === 'dev' && await getOpenPrNums() || []).map(num => `https://js-agent.newrelic.com/pr/PR-${num}/nr-loader-spa.min.js`)
   ]
 
-  Promise.all(filePaths.map((fp) => getFile(fp)))
-    .then((contents) => {
-      contents = contents.filter(([url, res]) => res.statusCode === 200)
-      if (!contents.length) throw new Error('Contents are empty')
+  Promise.all(filePaths.map(fp => getFile(fp))).then((contents) => {
+    contents = contents.filter(([url, res]) => res.statusCode === 200)
+    if (!contents.length) throw new Error('Contents are empty')
 
-      console.log(`found ${contents.length} valid PR builds in CDN`)
-      let output = `window.NREUM=${JSON.stringify(config)};`
-      output += `
+    console.log(`found ${contents.length} valid PR builds in CDN`)
+    let output = `window.NREUM=${JSON.stringify(config)};`
+    output += `
       const ids = {};
     `
-      contents.forEach(([url, res, body]) => {
-        output += wrapAgent(body, getIdFromUrl(url))
-      })
-      output += randomExecutor(contents.map(([url]) => getIdFromUrl(url)))
+    contents.forEach(([url, res, body]) => { output += wrapAgent(body, getIdFromUrl(url)) })
+    output += randomExecutor(contents.map(([url]) => getIdFromUrl(url)))
 
-      const filename = `internal/${env}.js`
+    const filename = `internal/${env}.js`
 
-      connectToS3(role, dry)
-        .then(async () => {
-          const expires = new Date()
-          expires.setMonth(expires.getMonth() + 1)
+    connectToS3(role, dry).then(async () => {
+      const expires = new Date()
+      expires.setMonth(expires.getMonth() + 1)
 
-          const uploads = await uploadToS3(filename, output, bucket, dry, 300, expires.toISOString())
-          console.log(`Successfully uploaded ${filename} to S3`)
-          process.exit(0)
-        })
-        .catch((err) => {
-          console.log(err)
-          process.exit(1)
-        })
+      const uploads = await uploadToS3(filename, output, bucket, dry, 300, expires.toISOString())
+      console.log(`Successfully uploaded ${filename} to S3`)
+      process.exit(0)
+    }).catch(err => {
+      console.log(err)
+      process.exit(1)
     })
-    .catch((err) => {
-      console.log('error getting all files... ', err)
-    })
+  }).catch(err => {
+    console.log('error getting all files... ', err)
+  })
 })()
 
 function wrapAgent (agent, id) {
@@ -200,7 +190,7 @@ function getOpenPrNums () {
         reject(err)
         return
       }
-      const prNums = JSON.parse(body).map((pr) => pr.number)
+      const prNums = JSON.parse(body).map(pr => pr.number)
       resolve(prNums)
     })
   })

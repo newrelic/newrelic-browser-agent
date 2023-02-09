@@ -60,7 +60,10 @@ class Router extends BaseServer {
 
   urlFor (relativePath, options) {
     let query = querystring.encode(options)
-    return url.resolve(`${'http'}://${this.assetServer.host}:${this.port}`, `${relativePath}?${query}`)
+    return url.resolve(
+      `${'http'}://${this.assetServer.host}:${this.port}`,
+      `${relativePath}?${query}`
+    )
   }
 }
 
@@ -138,7 +141,7 @@ class RouterHandle {
   }
 
   expectEvents (appID) {
-    return this.expectBeaconRequest(this.beaconRequests.events, undefined, appID).then((request) => {
+    return this.expectBeaconRequest(this.beaconRequests.events, undefined, appID).then(request => {
       let { body, query } = request
       let decoded = querypack.decode(body && body.length ? body : query.e)[0]
       if (decoded.type === 'interaction') {
@@ -150,7 +153,7 @@ class RouterHandle {
   }
 
   expectTimings (appID, timeout) {
-    return this.expectBeaconRequest(this.beaconRequests.events, timeout, appID).then((request) => {
+    return this.expectBeaconRequest(this.beaconRequests.events, timeout, appID).then(request => {
       let { body, query } = request
       let decoded = querypack.decode(body && body.length ? body : query.e)[0]
       if (decoded.type === 'timing') {
@@ -162,7 +165,7 @@ class RouterHandle {
   }
 
   expectAjaxEvents (appID) {
-    return this.expectBeaconRequest(this.beaconRequests.events, undefined, appID).then((request) => {
+    return this.expectBeaconRequest(this.beaconRequests.events, undefined, appID).then(request => {
       let { body, query } = request
       let decoded = querypack.decode(body && body.length ? body : query.e)[0]
       if (decoded.type === 'ajax') {
@@ -173,7 +176,11 @@ class RouterHandle {
     })
   }
 
-  async expectSpecificEvents ({ appID, condition = (e) => e.type === 'ajax', expecter = 'expectAjaxEvents' }) {
+  async expectSpecificEvents ({
+    appID,
+    condition = (e) => e.type === 'ajax',
+    expecter = 'expectAjaxEvents'
+  }) {
     const { body, query } = await this[expecter](appID)
     const ajaxEvents = querypack.decode(body && body.length ? body : query.e)
     let matches = ajaxEvents.filter(condition)
@@ -182,7 +189,7 @@ class RouterHandle {
   }
 
   expectErrors (appID) {
-    return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID).then((request) => {
+    return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID).then(request => {
       let { body, query } = request
       try {
         if (JSON.parse(body)?.err) return request
@@ -195,7 +202,7 @@ class RouterHandle {
   }
 
   expectMetrics (appID) {
-    return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID).then((request) => {
+    return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID).then(request => {
       let { body, query } = request
       try {
         if (JSON.parse(body)?.sm) return request
@@ -209,7 +216,7 @@ class RouterHandle {
   }
 
   expectXHRMetrics (appID) {
-    return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID).then((request) => {
+    return this.expectBeaconRequest(this.beaconRequests.errors, 80000, appID).then(request => {
       let { body, query } = request
       try {
         if (JSON.parse(body)?.xhr) return request
@@ -232,16 +239,19 @@ class RouterHandle {
 
   expectRumAndErrors (appID) {
     return this.expectRum(appID).then(() => {
-      return Promise.all([this.browser.safeGet(this.assetURL('/')), this.expectErrors(appID)]).then(
-        ([feat, err]) => err
-      )
+      return Promise.all([
+        this.browser.safeGet(this.assetURL('/')),
+        this.expectErrors(appID)
+      ]).then(([feat, err]) => err)
     })
   }
 
   expectRumAndConditionAndErrors (condition, appID) {
     return this.expectRum(appID).then(() => {
       return Promise.all([
-        this.browser.waitFor(asserters.jsCondition(condition)).safeGet(this.assetURL('/')),
+        this.browser
+          .waitFor(asserters.jsCondition(condition))
+          .safeGet(this.assetURL('/')),
         this.expectErrors(appID)
       ]).then(([feat, err]) => err)
     })
@@ -249,7 +259,9 @@ class RouterHandle {
 
   expectRumAndCondition (condition, appID) {
     return this.expectRum(appID).then(() => {
-      return this.browser.waitFor(asserters.jsCondition(condition)).safeGet(this.assetURL('/'))
+      return this.browser
+        .waitFor(asserters.jsCondition(condition))
+        .safeGet(this.assetURL('/'))
     })
   }
 
@@ -268,16 +280,9 @@ class RouterHandle {
 
     _extend(mergedQuery, {
       loader: query.loader || 'full',
-      config: Buffer.from(
-        JSON.stringify(
-          _extend(
-            {
-              licenseKey: this.testID
-            },
-            query.config
-          )
-        )
-      ).toString('base64')
+      config: Buffer.from(JSON.stringify(_extend({
+        licenseKey: this.testID
+      }, query.config))).toString('base64')
     })
 
     function replacer (k, v) {
@@ -318,14 +323,12 @@ class RouterHandle {
   urlForBrowserTest (file) {
     return this.router.assetServer.urlFor('/tests/assets/browser.html', {
       loader: 'full',
-      config: Buffer.from(
-        JSON.stringify({
-          licenseKey: this.testID,
-          assetServerPort: this.router.assetServer.port,
-          assetServerSSLPort: this.router.assetServer.sslPort,
-          corsServerPort: this.router.assetServer.corsServer.port
-        })
-      ).toString('base64'),
+      config: Buffer.from(JSON.stringify({
+        licenseKey: this.testID,
+        assetServerPort: this.router.assetServer.port,
+        assetServerSSLPort: this.router.assetServer.sslPort,
+        corsServerPort: this.router.assetServer.corsServer.port
+      })).toString('base64'),
       script: '/' + path.relative(rootDir, file) + '?browserify=true'
     })
   }
@@ -408,18 +411,16 @@ class RouterHandle {
         return reject(new Error(`no responder for ${req.method} ${expectedPath}`))
       }
 
-      req.pipe(
-        concat((data) => {
-          let parsed = url.parse(req.url, true)
-          parsed.req = req
-          parsed.ssl = ssl
-          parsed.body = data.toString()
-          parsed.headers = req.headers
-          parsed.res = res
-          responder(req, res, handle, data.toString())
-          accept(parsed)
-        })
-      )
+      req.pipe(concat((data) => {
+        let parsed = url.parse(req.url, true)
+        parsed.req = req
+        parsed.ssl = ssl
+        parsed.body = data.toString()
+        parsed.headers = req.headers
+        parsed.res = res
+        responder(req, res, handle, data.toString())
+        accept(parsed)
+      }))
     }
   }
 

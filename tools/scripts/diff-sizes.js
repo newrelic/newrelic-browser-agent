@@ -37,7 +37,8 @@ var config = require('yargs')
   .help('h')
   .alias('h', 'help')
   .strict()
-  .wrap(Math.min(110, yargs.terminalWidth())).argv
+  .wrap(Math.min(110, yargs.terminalWidth()))
+  .argv
 
 var baselineBuildDir = config._[0]
 var branchBuildDir = config._[1]
@@ -169,16 +170,7 @@ function reportDiffs (sizes) {
   filenames.forEach(function (filename) {
     var sizeBefore = sizes[filename].baselineSize
     var sizeAfter = sizes[filename].branchSize
-    output +=
-      '| ' +
-      filename +
-      ' | ' +
-      formatSize(sizeBefore) +
-      ' | ' +
-      formatSize(sizeAfter) +
-      ' | ' +
-      formatDelta(sizeBefore, sizeAfter) +
-      ' |\n'
+    output += '| ' + filename + ' | ' + formatSize(sizeBefore) + ' | ' + formatSize(sizeAfter) + ' | ' + formatDelta(sizeBefore, sizeAfter) + ' |\n'
   })
 
   return output
@@ -191,7 +183,7 @@ function reportDiffs (sizes) {
     if (!before || !after) return 'N/A'
     var delta = after - before
     var formattedDelta = delta >= 0 ? '+' + delta : delta
-    var percentDelta = ((delta / before) * 100).toPrecision(2)
+    var percentDelta = (delta / before * 100).toPrecision(2)
     if (delta !== 0) formattedDelta = formattedDelta + ' (' + percentDelta + ' %)'
     return formattedDelta
   }

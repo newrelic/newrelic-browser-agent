@@ -29,7 +29,9 @@ var argv = yargs
   .describe('skip-upload-failures', "Don't bail out after the first failure, keep trying other requests")
 
   .help('h')
-  .alias('h', 'help').argv
+  .alias('h', 'help')
+
+  .argv
 
 var loaders = []
 var fileData = {}
@@ -39,7 +41,7 @@ let v = 1184
 let proms = []
 let types = ['rum', 'full', 'spa']
 while (v++ < 1216) {
-  types.forEach((t) => {
+  types.forEach(t => {
     proms.push(getFile(`https://js-agent.newrelic.com/nr-loader-${t}-${v}.min.js`))
     proms.push(getFile(`https://js-agent.newrelic.com/nr-loader-${t}-${v}.js`))
     checked += 2
@@ -48,39 +50,30 @@ while (v++ < 1216) {
 
 Promise.all(proms).then((files) => {
   console.log(files.length, 'files', ', checked:', checked)
-  files.forEach((f) => {
+  files.forEach(f => {
     const [url, res, body] = f
     if (res.statusCode !== 200) console.log('res status was not 200...', res.statusCode, url)
     else {
-      const uploadUrl = url
-        .split('.com/')[1]
-        .split('-')
-        .map((x) => (isNaN(Number(x.substr(0, 4))) ? x : ['polyfills', x]))
-        .flat()
-        .join('-')
+      const uploadUrl = url.split('.com/')[1].split('-').map(x => isNaN(Number(x.substr(0, 4))) ? x : ['polyfills', x]).flat().join('-')
       loaders.push(uploadUrl)
       fileData[uploadUrl] = body
     }
   })
 
-  asyncForEach(
-    steps,
-    function (fn, next) {
-      fn(next)
-    },
-    function (err) {
-      if (err) throw err
-      console.log('All steps finished.')
+  asyncForEach(steps, function (fn, next) {
+    fn(next)
+  }, function (err) {
+    if (err) throw err
+    console.log('All steps finished.')
 
-      if (uploadErrorCallback && uploadErrors.length > 0) {
-        console.log('Failures:')
-        uploadErrors.forEach(function (e) {
-          console.log(e)
-        })
-        process.exit(1)
-      }
+    if (uploadErrorCallback && uploadErrors.length > 0) {
+      console.log('Failures:')
+      uploadErrors.forEach(function (e) {
+        console.log(e)
+      })
+      process.exit(1)
     }
-  )
+  })
 })
 
 function getFile (path) {
@@ -136,14 +129,9 @@ function loadFiles (cb) {
 }
 
 function uploadAllLoadersToDB (environment, cb) {
-  asyncForEach(
-    loaders,
-    function (filename, next) {
-      uploadLoaderToDB(filename, fileData[filename], environment, next)
-    },
-    cb,
-    uploadErrorCallback
-  )
+  asyncForEach(loaders, function (filename, next) {
+    uploadLoaderToDB(filename, fileData[filename], environment, next)
+  }, cb, uploadErrorCallback)
 }
 
 function uploadLoaderToDB (filename, loader, environment, cb) {
@@ -190,24 +178,13 @@ function uploadLoaderToDB (filename, loader, environment, cb) {
       return cb()
     }
 
-    cb(
-      new Error(
-        'Failed to upload ' +
-          filename +
-          ' loader to ' +
-          environment +
-          ' db: (' +
-          res.statusCode +
-          ') ' +
-          JSON.stringify(body)
-      )
-    )
+    cb(new Error('Failed to upload ' + filename + ' loader to ' + environment + ' db: (' + res.statusCode + ') ' + JSON.stringify(body)))
   })
 }
 
 function loaderFilenames () {
   const buildDir = path.resolve(__dirname, '../../build/')
-  return fs.readdirSync(buildDir).filter((x) => x.startsWith('nr-loader') && x.endsWith('.js'))
+  return fs.readdirSync(buildDir).filter(x => x.startsWith('nr-loader') && x.endsWith('.js'))
 }
 
 // errorCallback is optional

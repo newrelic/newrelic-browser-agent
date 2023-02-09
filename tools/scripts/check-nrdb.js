@@ -1,7 +1,11 @@
 const yargs = require('yargs')
 const request = require('request')
 
-const argv = yargs.string('v').describe('v', 'The version of the loader to check in NRDB').argv
+const argv = yargs
+  .string('v')
+  .describe('v', 'The version of the loader to check in NRDB')
+
+  .argv
 
 const version = argv['v']
 

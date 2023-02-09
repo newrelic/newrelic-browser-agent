@@ -42,28 +42,28 @@ function eventsData (req, res, handle, data) {
       scheduledResponse = handle.getNextScheduledResponse('events')
     }
   }
-  const statusCode = (scheduledResponse && scheduledResponse.statusCode) || 200
+  const statusCode = scheduledResponse && scheduledResponse.statusCode || 200
   res.writeHead(statusCode)
   res.end()
 }
 
 function insData (req, res, handle) {
   const scheduledResponse = handle.getNextScheduledResponse('ins')
-  const statusCode = (scheduledResponse && scheduledResponse.statusCode) || 200
+  const statusCode = scheduledResponse && scheduledResponse.statusCode || 200
   res.writeHead(statusCode)
   res.end()
 }
 
 function resourcesData (req, res, handle) {
   const scheduledResponse = handle.getNextScheduledResponse('resources')
-  const statusCode = (scheduledResponse && scheduledResponse.statusCode) || 200
+  const statusCode = scheduledResponse && scheduledResponse.statusCode || 200
   res.writeHead(statusCode)
   res.end('123-456')
 }
 
 function jserrorsData (req, res, handle) {
   const scheduledResponse = handle.getNextScheduledResponse('jserrors')
-  const statusCode = (scheduledResponse && scheduledResponse.statusCode) || 200
+  const statusCode = scheduledResponse && scheduledResponse.statusCode || 200
   res.writeHead(statusCode)
   res.end()
 }

@@ -21,11 +21,7 @@ class BaseServer {
     enableDestroy(this.server)
     enableDestroy(this.sslServer)
     this.handlers = []
-    this.cors = cors({
-      origin: true,
-      credentials: true,
-      exposedHeaders: 'X-NewRelic-App-Data'
-    })
+    this.cors = cors({ origin: true, credentials: true, exposedHeaders: 'X-NewRelic-App-Data' })
     this.tag = ''
     this.logRequests = false
     this.sslPort = null

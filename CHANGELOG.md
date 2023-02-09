@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1226
+
+### Enable back/forward cache
+Updating the agent default configuration to enable the back/forward cache feature previously released in version 1222 by default.
+
 ## v1225
 
 ### Gracefully abort agent if not fully instantiated

@@ -26,7 +26,6 @@ export const FETCH_DONE = 'fetch-done'
 export const FETCH_BODY = 'fetch-body-'
 export const JSONP_END = 'jsonp-end'
 
-console.log("originalSetTimeout (spa)")
 export const originalSetTimeout = originals.ST
 
 export const START = '-start'

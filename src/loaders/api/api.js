@@ -28,13 +28,17 @@ function setTopLevelCallers () {
   })
 
   function caller (fnName, ...args) {
+    let returnVals = []
     Object.values(nr.initializedAgents).forEach(val => {
-      if (val.exposed && val.api[fnName]) val.api[fnName](...args)
+      if (val.exposed && val.api[fnName]) {
+        returnVals.push(val.api[fnName](...args))
+      }
     })
+    return returnVals.length > 1 ? returnsVals : returnVals[0]
   }
 }
 
-export function setAPI (agentIdentifier, nr, forceDrain) {
+export function setAPI (agentIdentifier, forceDrain) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
   const apiInterface = {}
   setTopLevelCallers()
@@ -74,7 +78,6 @@ export function setAPI (agentIdentifier, nr, forceDrain) {
   }
 
   apiInterface.interaction = function () {
-    console.log('interaction called...')
     return new InteractionHandle().get()
   }
 

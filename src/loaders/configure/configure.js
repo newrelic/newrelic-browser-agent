@@ -37,5 +37,5 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
     addToNREUM('setToken', (flags) => activateFeatures(flags, agentIdentifier))
   }
 
-  return nr
+  return api
 }

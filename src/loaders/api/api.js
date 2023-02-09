@@ -13,6 +13,7 @@ import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
 import { isWorkerScope } from '../../common/util/global-scope'
 import { warn } from '../../common/util/console'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 
 function setTopLevelCallers (nr) {
   const funcs = [
@@ -104,7 +105,7 @@ export function setAPI (agentIdentifier, nr, forceDrain) {
 
   function apiCall (prefix, name, notSpa, bufferGroup) {
     return function () {
-      handle('record-supportability', ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
       handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup, instanceEE)
       return notSpa ? void 0 : this
     }
@@ -112,7 +113,7 @@ export function setAPI (agentIdentifier, nr, forceDrain) {
 
   nr.noticeError = function (err, customAttributes) {
     if (typeof err === 'string') err = new Error(err)
-    handle('record-supportability', ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
     handle('err', [err, now(), false, customAttributes], undefined, FEATURE_NAMES.jserrors, instanceEE)
   }
 

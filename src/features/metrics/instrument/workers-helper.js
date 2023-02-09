@@ -1,6 +1,8 @@
-export { insertSupportMetrics } // export list
 import { globalScope, isWorkerScope } from '../../../common/util/global-scope'
 import { warn } from '../../../common/util/console'
+import { handle } from '../../../common/event-emitter/handle';
+import { FEATURE_NAMES } from '../../../loaders/features/features';
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../constants';
 
 /**
  * True for each Worker type supported in browser's execution context. Not all browser versions may support certain Workers or options however.
@@ -26,21 +28,23 @@ function resetSupportability () {
 
 /**
  * Injects code to report Web Workers supportability and usage as metrics, replacing the native API in global scope as a side effect.
- * @param {func} report - handles reporting of supportability metrics to NR1
+ * @param {ContextualEE} ee - the event emitter instance to send metrics through
  * @returns void
  */
-function insertSupportMetrics (report) {
-  // Of the 3, the normal worker is the most widely supported, so we can be sure metric was already inserted w/o checking other 2.
-  if (origWorker) return
+export function insertSupportMetrics(ee) {
+    // Of the 3, the normal worker is the most widely supported, so we can be sure metric was already inserted w/o checking other 2.
+    if (origWorker) return;
 
-  if (!workersApiIsSupported.dedicated) {
-    reportUnavailable('All')
-    return // similarly, if dedicated is n/a, none of them are supported so quit
-  } else {
-    origWorker = Worker
-    try { globalScope.Worker = extendWorkerConstructor(origWorker, 'Dedicated') }
-    catch (e) { handleInsertionError(e, 'Dedicated') }
-  }
+    const report = tag => handle(SUPPORTABILITY_METRIC_CHANNEL, [tag], undefined, FEATURE_NAMES.metrics, ee)
+
+    if (!workersApiIsSupported.dedicated) {
+        reportUnavailable('All');
+        return; // similarly, if dedicated is n/a, none of them are supported so quit
+    } else {
+        origWorker = Worker;
+        try { globalScope.Worker = extendWorkerConstructor(origWorker, 'Dedicated'); }
+        catch (e) { handleInsertionError(e, 'Dedicated'); }
+    }
 
   if (!workersApiIsSupported.shared) {
     reportUnavailable('Shared')

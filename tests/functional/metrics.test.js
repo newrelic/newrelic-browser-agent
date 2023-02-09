@@ -11,6 +11,10 @@ const fetchBrowsers = testDriver.Matcher.withFeature('fetchExt')
 
 const multipleApiCalls = asyncApiFns[1] // page should trigger 5 calls of 'setPageViewName'
 
+const init = {
+  metrics: { harvestTimeSeconds: 5 }
+}
+
 const loaderTypes = ['rum', 'full', 'spa']
 const loaderTypesMapped = { rum: 'lite', full: 'pro', spa: 'spa' }
 loaderTypes.forEach(lt => loaderTypeSupportabilityMetric(lt))
@@ -20,7 +24,8 @@ function loaderTypeSupportabilityMetric (loaderType) {
     let rumPromise = router.expectRum()
     let metricsPromise = router.expectMetrics()
     const loadPromise = browser.safeGet(router.assetURL('instrumented.html', {
-      loader: loaderType
+      loader: loaderType,
+      init
     }))
 
     Promise.all([metricsPromise, rumPromise, loadPromise])
@@ -36,17 +41,38 @@ function loaderTypeSupportabilityMetric (loaderType) {
   })
 }
 
-testDriver.test('Calling a newrelic[api] fn creates a supportability metric', withUnload, function (t, browser, router) {
-  t.plan((asyncApiFns.length) + 6)
+testDriver.test('agent tracks resources seen', withUnload, function (t, browser, router) {
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(router.assetURL('api/customMetrics.html', {}))
+  let metricsPromise = router.expectMetrics()
+  const loadPromise = browser.safeGet(router.assetURL('resources.html', {
+    init
+  }))
+
+  Promise.all([metricsPromise, rumPromise, loadPromise])
+    .then(([data]) => {
+      var supportabilityMetrics = getMetricsFromResponse(data, true)
+      const external = supportabilityMetrics.find(x => x.params.name.includes('Resources/External'))
+      const all = supportabilityMetrics.find(x => x.params.name.includes('Resources/All'))
+      t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
+      t.ok(!!external, 'External was captured')
+      t.ok(!!all, 'All was captured')
+      t.ok(external.stats.t <= all.stats.t, 'External should not exceed all')
+      t.ok(external.stats.t === 3, 'Page has 3 external resources that should be observed')
+      t.end()
+    })
+    .catch(failWithEndTimeout(t))
+})
+
+testDriver.test('Calling a newrelic[api] fn creates a supportability metric', withUnload, function (t, browser, router) {
+  let rumPromise = router.expectRum()
+  let loadPromise = browser.get(router.assetURL('api/customMetrics.html', { init }))
   let metricsPromise = router.expectMetrics()
 
   const observedAPImetrics = []
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([{ request: data }]) => {
-      var supportabilityMetrics = getMetricsFromResponse(data, true)
+    .then(([data]) => {
+      var supportabilityMetrics = getMetricsFromResponse(data, true).filter(sm => sm.params.name.toLowerCase().includes('api'))
       var customMetrics = getMetricsFromResponse(data, false)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
       t.ok(customMetrics && !!customMetrics.length, 'CustomMetrics object(s) were generated')
@@ -75,7 +101,7 @@ testDriver.test('a valid obfuscationRule creates detected supportability metric'
   let rumPromise = router.expectRum()
   let metricsPromise = router.expectMetrics()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-valid.html', {
-    loader: 'spa'
+    loader: 'spa', init
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
@@ -94,7 +120,7 @@ testDriver.test('an invalid obfuscation regex type creates invalid supportabilit
   let rumPromise = router.expectRum()
   let metricsPromise = router.expectMetrics()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-regex-type.html', {
-    loader: 'spa'
+    loader: 'spa', init
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
@@ -116,7 +142,7 @@ testDriver.test('an invalid obfuscation regex undefined creates invalid supporta
   let rumPromise = router.expectRum()
   let metricsPromise = router.expectMetrics()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-regex-undefined.html', {
-    loader: 'spa'
+    loader: 'spa', init
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
@@ -138,7 +164,7 @@ testDriver.test('an invalid obfuscation replacement type creates invalid support
   let rumPromise = router.expectRum()
   let metricsPromise = router.expectMetrics()
   const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-replacement-type.html', {
-    loader: 'spa'
+    loader: 'spa', init
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
@@ -164,7 +190,7 @@ testDriver.test('workers creation generates sm', function (t, browser, router) {
   let rumPromise = router.expectRum()
   let metricsPromise = router.expectMetrics()
   const loadPromise = browser.safeGet(router.assetURL('instrumented-worker.html', {
-    loader: 'spa'
+    loader: 'spa', init
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])

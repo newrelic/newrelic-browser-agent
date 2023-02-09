@@ -85,7 +85,7 @@ export class Aggregate extends AggregateBase {
         retryDelay: this.harvestTimeSeconds
       }, this)
       scheduler.harvest.on('resources', prepareHarvest.bind(this))
-      scheduler.runHarvest({ needResponse: true })
+      scheduler.runHarvest({ needResponse: true }) // sends first stn harvest immediately
 
       function onHarvestFinished (result) {
         // start timer only if ptid was returned by server

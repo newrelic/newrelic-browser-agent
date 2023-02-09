@@ -74,7 +74,7 @@ jil.browserTest('fetch body.reject', function (t) {
         children: []
       }]
     }]
-  });
+  })
 
   t.plan(4 + validator.count)
 

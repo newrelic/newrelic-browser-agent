@@ -2,9 +2,10 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
 */
-import { 
-  wrapMutation, wrapPromise, wrapHistory, wrapTimer, wrapFetch, wrapXhr, wrapJsonP, 
-  unwrapJsonP, unwrapPromise, unwrapTimer, unwrapXhr, unwrapFetch, unwrapHistory, unwrapMutation } from '../../../common/wrap'
+import {
+  wrapMutation, wrapPromise, wrapHistory, wrapTimer, wrapFetch, wrapXhr, wrapJsonP,
+  unwrapJsonP, unwrapPromise, unwrapTimer, unwrapXhr, unwrapFetch, unwrapHistory, unwrapMutation
+} from '../../../common/wrap'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { getRuntime } from '../../../common/config/config'
@@ -13,18 +14,18 @@ import * as CONSTANTS from '../constants'
 import { isBrowserScope } from '../../../common/util/global-scope'
 
 const {
-    FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, FN_START, CB_START, FN_END
+  FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, FN_START, CB_START, FN_END
 } = CONSTANTS
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor(agentIdentifier, aggregator, auto=true) {
+  constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    if (!isBrowserScope) return; // SPA not supported outside web env
+    if (!isBrowserScope) return // SPA not supported outside web env
 
     if (!getRuntime(agentIdentifier).xhrWrappable) return
 
-    try { this.removeOnAbort = new AbortController(); }
+    try { this.removeOnAbort = new AbortController() }
     catch (e) {}
     let depth = 0
     let startHash
@@ -34,7 +35,7 @@ export class Instrument extends InstrumentBase {
     const promiseEE = wrapPromise(this.ee)
     const timerEE = wrapTimer(this.ee)
     const xhrEE = wrapXhr(this.ee)
-    const eventsEE = this.ee.get('events')  // wrapXhr will call wrapEvents
+    const eventsEE = this.ee.get('events') // wrapXhr will call wrapEvents
     const fetchEE = wrapFetch(this.ee)
     const historyEE = wrapHistory(this.ee)
     const mutationEE = wrapMutation(this.ee)
@@ -67,53 +68,53 @@ export class Instrument extends InstrumentBase {
     historyEE.on('pushState-end', trackURLChange)
     historyEE.on('replaceState-end', trackURLChange)
 
-    window.addEventListener('hashchange', trackURLChange, eventListenerOpts(true, this.removeOnAbort?.signal));
-    window.addEventListener('load', trackURLChange, eventListenerOpts(true, this.removeOnAbort?.signal));
+    window.addEventListener('hashchange', trackURLChange, eventListenerOpts(true, this.removeOnAbort?.signal))
+    window.addEventListener('load', trackURLChange, eventListenerOpts(true, this.removeOnAbort?.signal))
     window.addEventListener('popstate', function () {
-        trackURLChange(0, depth > 1)
-    }, eventListenerOpts(true, this.removeOnAbort?.signal));
+      trackURLChange(0, depth > 1)
+    }, eventListenerOpts(true, this.removeOnAbort?.signal))
 
-    function trackURLChange(unusedArgs, hashChangedDuringCb) {
-        historyEE.emit('newURL', ['' + window.location, hashChangedDuringCb])
+    function trackURLChange (unusedArgs, hashChangedDuringCb) {
+      historyEE.emit('newURL', ['' + window.location, hashChangedDuringCb])
     }
 
-    function startTimestamp() {
-        depth++
-        startHash = window.location.hash
-        this[FN_START] = now()
+    function startTimestamp () {
+      depth++
+      startHash = window.location.hash
+      this[FN_START] = now()
     }
 
-    function endTimestamp() {
-        depth--
-        if (window.location.hash !== startHash) {
-            trackURLChange(0, true)
-        }
+    function endTimestamp () {
+      depth--
+      if (window.location.hash !== startHash) {
+        trackURLChange(0, true)
+      }
 
-        var time = now()
-        this[JS_TIME] = (~~this[JS_TIME]) + time - this[FN_START]
-        this[FN_END] = time
+      var time = now()
+      this[JS_TIME] = (~~this[JS_TIME]) + time - this[FN_START]
+      this[FN_END] = time
     }
 
-    function timestamp(ee, type) {
-        ee.on(type, function () {
-            this[type] = now()
-        })
+    function timestamp (ee, type) {
+      ee.on(type, function () {
+        this[type] = now()
+      })
     }
 
-    this.abortHandler = this.#abort;
-    this.importAggregator();
+    this.abortHandler = this.#abort
+    this.importAggregator()
   }
 
   /** Restoration and resource release tasks to be done if SPA loader is being aborted. Unwind changes to globals and subscription to DOM events. */
-  #abort() {
-    this.removeOnAbort?.abort();
-    unwrapJsonP(this.ee);
-    unwrapPromise(this.ee);
-    unwrapTimer(this.ee);
-    unwrapXhr(this.ee); // this will also handle unwrapping "events"
-    unwrapFetch(this.ee);
-    unwrapHistory(this.ee);
-    unwrapMutation(this.ee);
-    this.abortHandler = undefined; // weakly allow this abort op to run only once
+  #abort () {
+    this.removeOnAbort?.abort()
+    unwrapJsonP(this.ee)
+    unwrapPromise(this.ee)
+    unwrapTimer(this.ee)
+    unwrapXhr(this.ee) // this will also handle unwrapping "events"
+    unwrapFetch(this.ee)
+    unwrapHistory(this.ee)
+    unwrapMutation(this.ee)
+    this.abortHandler = undefined // weakly allow this abort op to run only once
   }
 }

@@ -34,7 +34,7 @@ bodyMethods.forEach((bodyMethod) => {
         },
         children: []
       }]
-    });
+    })
 
     t.plan(4 + validator.count)
 
@@ -131,7 +131,7 @@ jil.browserTest('Response.formData', function (t) {
       },
       children: []
     }]
-  });
+  })
 
   t.plan(4 + validator.count)
 

@@ -6,7 +6,7 @@
 const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
 
-let corsSupported = testDriver.Matcher.withFeature('cors');
+let corsSupported = testDriver.Matcher.withFeature('cors')
 
 testDriver.test('events are retried when collector returns 429', corsSupported, function (t, browser, router) {
   let assetURL = router.assetURL('instrumented.html', {

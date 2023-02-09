@@ -5,9 +5,9 @@
 
 const jil = require('jil')
 
-const {setup} = require('../utils/setup')
-const {wrapEvents} = require('../../../src/common/wrap/wrap-events')
-const {baseEE} = setup()
+const { setup } = require('../utils/setup')
+const { wrapEvents } = require('../../../src/common/wrap/wrap-events')
+const { baseEE } = setup()
 
 jil.browserTest('AEL on window should call through to AEL on EventTarget', function (t) {
   t.plan(3)

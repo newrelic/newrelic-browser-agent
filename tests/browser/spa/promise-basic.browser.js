@@ -49,17 +49,17 @@ jil.browserTest('basic promise chain', function (t) {
         resolve(1)
       }), 1)
     })
-    .then(() => {
-      return new Promise(function (resolve, reject) {
-        setTimeout(newrelic.interaction().createTracer('timer-in-second-promise', function () {
-          reject(2)
-        }), 2)
+      .then(() => {
+        return new Promise(function (resolve, reject) {
+          setTimeout(newrelic.interaction().createTracer('timer-in-second-promise', function () {
+            reject(2)
+          }), 2)
+        })
       })
-    })
-    .catch(function () {}).catch(function () {}).then(() => {
-      newrelic.interaction().setAttribute('in-catch', true)
-      setTimeout(newrelic.interaction().createTracer('timer', cb), 3)
-    })
+      .catch(function () {}).catch(function () {}).then(() => {
+        newrelic.interaction().setAttribute('in-catch', true)
+        setTimeout(newrelic.interaction().createTracer('timer', cb), 3)
+      })
   }
 
   function afterInteractionDone (interaction) {

@@ -2,7 +2,7 @@ const path = require('path')
 const TerserPlugin = require('terser-webpack-plugin')
 const webpack = require('webpack')
 const fs = require('fs')
-const { merge } = require('webpack-merge');
+const { merge } = require('webpack-merge')
 const babelEnv = require('./babel-env-vars')
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
@@ -11,7 +11,6 @@ let { PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE } = process.env
 // this will change to package.json.version when it is aligned between all the packages
 let VERSION = VERSION_OVERRIDE || fs.readFileSync('./VERSION', 'utf-8')
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
-
 
 switch (PUBLISH) {
   case 'PROD':
@@ -22,20 +21,20 @@ switch (PUBLISH) {
     SOURCEMAPS = false
     break
   case 'CURRENT':
-    PATH_VERSION = `-current`
+    PATH_VERSION = '-current'
     SUBVERSION = 'PROD'
     PUBLIC_PATH = 'https://js-agent.newrelic.com/'
     MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/[url]'
     SOURCEMAPS = false
     break
   case 'DEV':
-    PATH_VERSION = ``
+    PATH_VERSION = ''
     SUBVERSION = 'DEV'
     PUBLIC_PATH = 'https://js-agent.newrelic.com/dev/'
     MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/dev/[url]'
     break
   case 'PR':
-    PATH_VERSION = ``
+    PATH_VERSION = ''
     SUBVERSION = `${PR_NAME}`
     PUBLIC_PATH = `https://js-agent.newrelic.com/pr/${PR_NAME}/`
     MAP_PATH = `\n//# sourceMappingURL=https://js-agent.newrelic.com/pr/${PR_NAME}/[url]`
@@ -43,21 +42,21 @@ switch (PUBLISH) {
     break
   case 'EXTENSION':
     // build for extension injection
-    PATH_VERSION = ``
+    PATH_VERSION = ''
     SUBVERSION = 'EXTENSION'
     PUBLIC_PATH = 'http://localhost:3333/build/'
     MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]'
     break
   case 'NPM':
     // build for extension injection
-    PATH_VERSION = ``
+    PATH_VERSION = ''
     SUBVERSION = 'NPM'
     PUBLIC_PATH = '/dist/'
     MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]'
     break
   default:
     // local build
-    PATH_VERSION = ``
+    PATH_VERSION = ''
     SUBVERSION = 'LOCAL'
     PUBLIC_PATH = '/build/'
     MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/build/[url]'
@@ -65,14 +64,14 @@ switch (PUBLISH) {
 
 const IS_LOCAL = SUBVERSION === 'LOCAL'
 
-console.log("VERSION", VERSION)
-console.log("SOURCEMAPS", SOURCEMAPS)
-console.log("PATH_VERSION", PATH_VERSION)
-console.log("SUBVERSION", SUBVERSION)
-console.log("PUBLIC_PATH", PUBLIC_PATH)
-console.log("MAP_PATH", MAP_PATH)
-console.log("IS_LOCAL", IS_LOCAL)
-if (PR_NAME) console.log("PR_NAME", PR_NAME)
+console.log('VERSION', VERSION)
+console.log('SOURCEMAPS', SOURCEMAPS)
+console.log('PATH_VERSION', PATH_VERSION)
+console.log('SUBVERSION', SUBVERSION)
+console.log('PUBLIC_PATH', PUBLIC_PATH)
+console.log('MAP_PATH', MAP_PATH)
+console.log('IS_LOCAL', IS_LOCAL)
+if (PR_NAME) console.log('PR_NAME', PR_NAME)
 
 /**
  * Helper for configuring a source map plugin instance with some common properties.
@@ -82,8 +81,8 @@ if (PR_NAME) console.log("PR_NAME", PR_NAME)
 const instantiateSourceMapPlugin = (filename) => {
   return new webpack.SourceMapDevToolPlugin({
     append: MAP_PATH, // sourceMappingURL CDN route vs local route (for sourceMappingURL)
-    filename: filename || (SUBVERSION === 'PROD' ? `[name].[chunkhash:8].map` : `[name].map`),
-    ...(JSON.parse(SOURCEMAPS) === false && { exclude: new RegExp(".*") }) // Exclude all files if disabled.
+    filename: filename || (SUBVERSION === 'PROD' ? '[name].[chunkhash:8].map' : '[name].map'),
+    ...(JSON.parse(SOURCEMAPS) === false && { exclude: new RegExp('.*') }) // Exclude all files if disabled.
   })
 }
 
@@ -119,7 +118,7 @@ const commonConfig = {
     mergeDuplicateChunks: true
   },
   output: {
-    filename: `[name].js`,
+    filename: '[name].js',
     chunkFilename: SUBVERSION === 'PROD' ? `[name].[chunkhash:8]${PATH_VERSION}.min.js` : `[name]${PATH_VERSION}.js`,
     path: path.resolve(__dirname, './build'),
     publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
@@ -130,7 +129,7 @@ const commonConfig = {
       // 'WEBPACK_MINOR_VERSION': JSON.stringify(SUBVERSION || ''),
       // 'WEBPACK_MAJOR_VERSION': JSON.stringify(VERSION || ''),
       'process.env.BUILD_VERSION': `${VERSION}.${SUBVERSION}`,
-      'WEBPACK_DEBUG': JSON.stringify(IS_LOCAL || false)
+      WEBPACK_DEBUG: JSON.stringify(IS_LOCAL || false)
     })
   ]
 }
@@ -164,20 +163,21 @@ const standardConfig = merge(commonConfig, {
               ['@babel/preset-env', {
                 targets: {
                   browsers: [
-                    "last 10 Chrome versions",
-                    "last 10 Safari versions",
-                    "last 10 Firefox versions",
-                    "last 10 Edge versions",
-                    "last 10 ChromeAndroid versions",
-                    "last 10 iOS versions"
+                    'last 10 Chrome versions',
+                    'last 10 Safari versions',
+                    'last 10 Firefox versions',
+                    'last 10 Edge versions',
+                    'last 10 ChromeAndroid versions',
+                    'last 10 iOS versions'
                   ]
                 }
               }]
-            ], plugins: [
+            ],
+            plugins: [
               babelEnv(VERSION, SUBVERSION),
               // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
               // assigning to a variable, which conflicts with template literals.
-              "@babel/plugin-transform-template-literals"
+              '@babel/plugin-transform-template-literals'
             ]
           }
         }
@@ -218,11 +218,12 @@ const polyfillsConfig = merge(commonConfig, {
                 loose: true,
                 targets: {
                   browsers: [
-                    "ie >= 11" // Does not affect webpack's own runtime output; see `target` webpack config property.
+                    'ie >= 11' // Does not affect webpack's own runtime output; see `target` webpack config property.
                   ]
                 }
               }]
-            ],plugins: [
+            ],
+            plugins: [
               babelEnv(VERSION, SUBVERSION)
             ]
           }
@@ -247,10 +248,10 @@ const polyfillsConfig = merge(commonConfig, {
   plugins: [
     instantiateBundleAnalyzerPlugin('polyfills'),
     // Source map outputs must also must be tagged to prevent standard/polyfill filename collisions in non-production.
-    instantiateSourceMapPlugin(SUBVERSION === 'PROD' ? `[name].[chunkhash:8].map` : `[name]-es5.map`)
+    instantiateSourceMapPlugin(SUBVERSION === 'PROD' ? '[name].[chunkhash:8].map' : '[name]-es5.map')
   ],
   target: 'browserslist:ie >= 11' // Applies to webpack's own runtime output; babel-loader only impacts bundled modules.
-});
+})
 
 // Targets same modern browsers as standard configuration.
 const workerConfig = merge(commonConfig, {
@@ -270,13 +271,13 @@ const workerConfig = merge(commonConfig, {
     library: {
       name: 'NRBA',
       type: 'self'
-    },
+    }
   },
   plugins: [
     instantiateBundleAnalyzerPlugin('worker'),
-    instantiateSourceMapPlugin(),
+    instantiateSourceMapPlugin()
   ],
   target: 'webworker'
-});
+})
 
 module.exports = [standardConfig, polyfillsConfig, workerConfig]

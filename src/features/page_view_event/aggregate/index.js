@@ -14,16 +14,16 @@ const jsonp = 'NREUM.setToken'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor(agentIdentifier, aggregator) {
+  constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
-    this.sendRum();
+    this.sendRum()
   }
 
-  getScheme() {
+  getScheme () {
     return getConfigurationValue(this.agentIdentifier, 'ssl') === false ? 'http' : 'https'
   }
 
-  sendRum() {
+  sendRum () {
     const info = getInfo(this.agentIdentifier)
     if (!info.beacon) return
     if (info.queueTime) this.aggregator.store('measures', 'qt', { value: info.queueTime })

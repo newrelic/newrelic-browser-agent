@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 . "$(dirname -- "$0")/_/husky.sh"
 
-npm run lint -- --fix
+npm run lint
 npm run unit -- --onlyChanged
 
 npm run sauce:get-browsers

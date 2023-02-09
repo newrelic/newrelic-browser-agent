@@ -11,14 +11,14 @@ import { createWrapperWithEmitter as wfn, unwrapFunction } from './wrap-function
 import { isBrowserScope } from '../util/global-scope'
 
 const wrapped = {}
-const domInsertMethods = ['appendChild', 'insertBefore', 'replaceChild'];
+const domInsertMethods = ['appendChild', 'insertBefore', 'replaceChild']
 
-export function wrapJsonP(sharedEE){
+export function wrapJsonP (sharedEE) {
   const ee = scopedEE(sharedEE)
 
   if (!isBrowserScope || wrapped[ee.debugId]) // JSONP deals with DOM tags so browser window env is req'd
-    return ee;
-  wrapped[ee.debugId] = true;
+  { return ee }
+  wrapped[ee.debugId] = true
 
   var wrapFn = wfn(ee)
 
@@ -113,13 +113,13 @@ export function wrapJsonP(sharedEE){
   }
   return ee
 }
-export function unwrapJsonP(sharedEE) {
-  const ee = scopedEE(sharedEE);
+export function unwrapJsonP (sharedEE) {
+  const ee = scopedEE(sharedEE)
   if (wrapped[ee.debugId] === true) {
-    domInsertMethods.forEach(fnName => unwrapFunction(Node.prototype, fnName));
-    wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
+    domInsertMethods.forEach(fnName => unwrapFunction(Node.prototype, fnName))
+    wrapped[ee.debugId] = 'unwrapped' // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
   }
 }
-export function scopedEE(sharedEE){
+export function scopedEE (sharedEE) {
   return (sharedEE || baseEE).get('jsonp')
 }

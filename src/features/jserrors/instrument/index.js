@@ -18,16 +18,16 @@ import { getRuntime } from '../../../common/config/config'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor(agentIdentifier, aggregator, auto = true) {
+  constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     // skipNext counter to keep track of uncaught
     // errors that will be the same as caught errors.
     this.skipNext = 0
-    this.origOnerror = globalScope.onerror;
-    try { this.removeOnAbort = new AbortController(); } // this try-catch can be removed when IE11 is completely unsupported & gone
+    this.origOnerror = globalScope.onerror
+    try { this.removeOnAbort = new AbortController() } // this try-catch can be removed when IE11 is completely unsupported & gone
     catch (e) {}
 
-    const thisInstrument = this;
+    const thisInstrument = this
 
     thisInstrument.ee.on('fn-start', function (args, obj, methodName) {
       if (thisInstrument.abortHandler) thisInstrument.skipNext += 1
@@ -35,7 +35,7 @@ export class Instrument extends InstrumentBase {
 
     thisInstrument.ee.on('fn-err', function (args, obj, err) {
       if (thisInstrument.abortHandler && !err[NR_ERR_PROP]) {
-        getOrSet(err, NR_ERR_PROP, function getVal() {
+        getOrSet(err, NR_ERR_PROP, function getVal () {
           return true
         })
         this.thrown = true
@@ -63,39 +63,39 @@ export class Instrument extends InstrumentBase {
       /** rejections can contain data of any type -- this is an effort to keep the message human readable */
       const err = castReasonToError(e.reason)
       handle('err', [err, now(), false, { unhandledPromiseRejection: 1 }], undefined, FEATURE_NAMES.jserrors, this.ee)
-    }, eventListenerOpts(false, this.removeOnAbort?.signal));
+    }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
-    wrapRaf(this.ee);
-    wrapTimer(this.ee);
-    wrapEvents(this.ee);
-    if(getRuntime(agentIdentifier).xhrWrappable) wrapXhr(this.ee);
+    wrapRaf(this.ee)
+    wrapTimer(this.ee)
+    wrapEvents(this.ee)
+    if (getRuntime(agentIdentifier).xhrWrappable) wrapXhr(this.ee)
 
-    this.abortHandler = this.#abort;  // we also use this as a flag to denote that the feature is active or on and handling errors
-    this.importAggregator();
+    this.abortHandler = this.#abort // we also use this as a flag to denote that the feature is active or on and handling errors
+    this.importAggregator()
   }
 
   /** Restoration and resource release tasks to be done if JS error loader is being aborted. Unwind changes to globals. */
-  #abort() {
-    globalScope.onerror = this.origOnerror;
-    this.removeOnAbort?.abort();
-    unwrapRaf(this.ee);
-    unwrapTimer(this.ee);
-    unwrapEvents(this.ee);
-    if(getRuntime(this.agentIdentifier).xhrWrappable) unwrapXhr(this.ee);
-    this.abortHandler = undefined; // weakly allow this abort op to run only once
+  #abort () {
+    globalScope.onerror = this.origOnerror
+    this.removeOnAbort?.abort()
+    unwrapRaf(this.ee)
+    unwrapTimer(this.ee)
+    unwrapEvents(this.ee)
+    if (getRuntime(this.agentIdentifier).xhrWrappable) unwrapXhr(this.ee)
+    this.abortHandler = undefined // weakly allow this abort op to run only once
   }
 
   /**
    * FF and Android browsers do not provide error info to the 'error' event callback,
    * so we must use window.onerror
-   * @param {string} message 
-   * @param {string} filename 
-   * @param {number} lineno 
-   * @param {number} column 
-   * @param {Error | *} errorObj 
-   * @returns 
+   * @param {string} message
+   * @param {string} filename
+   * @param {number} lineno
+   * @param {number} column
+   * @param {Error | *} errorObj
+   * @returns
    */
-  onerrorHandler(message, filename, lineno, column, errorObj) {
+  onerrorHandler (message, filename, lineno, column, errorObj) {
     try {
       if (this.skipNext) this.skipNext -= 1
       else notice(errorObj || new UncaughtException(message, filename, lineno), true, this.ee)
@@ -113,12 +113,12 @@ export class Instrument extends InstrumentBase {
 }
 
 /**
- * 
- * @param {string} message 
- * @param {string} filename 
- * @param {number} lineno 
+ *
+ * @param {string} message
+ * @param {string} filename
+ * @param {number} lineno
  */
-function UncaughtException(message, filename, lineno) {
+function UncaughtException (message, filename, lineno) {
   this.message = message || 'Uncaught error with no additional information'
   this.sourceURL = filename
   this.line = lineno
@@ -126,11 +126,11 @@ function UncaughtException(message, filename, lineno) {
 
 /**
  * Adds a timestamp and emits the 'err' event, which the error aggregator listens for
- * @param {Error} err 
- * @param {boolean} doNotStamp 
- * @param {ContextualEE} ee 
+ * @param {Error} err
+ * @param {boolean} doNotStamp
+ * @param {ContextualEE} ee
  */
-function notice(err, doNotStamp, ee) {
+function notice (err, doNotStamp, ee) {
   // by default add timestamp, unless specifically told not to
   // this is to preserve existing behavior
   var time = (!doNotStamp) ? now() : null
@@ -142,7 +142,7 @@ function notice(err, doNotStamp, ee) {
  * @param {*} reason - The reason property from an unhandled promise rejection
  * @returns {Error} - An Error object with the message as the casted reason
  */
-function castReasonToError(reason) {
+function castReasonToError (reason) {
   let prefix = 'Unhandled Promise Rejection: '
   if (reason instanceof Error) {
     reason.message = prefix + reason.message

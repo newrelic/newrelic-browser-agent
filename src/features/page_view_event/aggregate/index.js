@@ -9,7 +9,6 @@ import { getConfigurationValue, getInfo, getRuntime } from '../../../common/conf
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
-import { isBrowserScope } from '../../../common/util/global-scope'
 
 const jsonp = 'NREUM.setToken'
 
@@ -17,7 +16,7 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
-    if (isBrowserScope) this.sendRum();  // initial RUM payload is only sent in web env, TO DO: can remove once aggregate is chained to instrument
+    this.sendRum();
   }
 
   getScheme() {
@@ -59,7 +58,6 @@ export class Aggregate extends AggregateBase {
     chunksForQueryString.push(param('us', info.user))
     chunksForQueryString.push(param('ac', info.account))
     chunksForQueryString.push(param('pr', info.product))
-    chunksForQueryString.push(param('af', Object.keys(agentRuntime.features).join(',')))
 
     if (window.performance && typeof (window.performance.timing) !== 'undefined') {
       var navTimingApiData = ({

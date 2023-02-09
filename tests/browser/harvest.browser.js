@@ -27,7 +27,7 @@ const setupFakeNr = (tArgs) => {
 };
 
 const hasSendBeacon = !!navigator.sendBeacon
-const xhrUsable = agentRuntime.xhrWrappable && harvest.xhrUsable;
+const xhrWrappable = agentRuntime.xhrWrappable;
 
 function once (cb) {
   var done = false
@@ -129,7 +129,7 @@ test('encodes only the origin of the referrer url, not the fragment ', function 
   let result = harvesterInst.sendX('ins');
   let baseUrl = scheme + '://foo/ins/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
 
-  if (xhrUsable) {
+  if (xhrWrappable) {
     let call = submitData.xhr.getCall(0)
     validateUrl(t, call.args[0], baseUrl, 'correct URL given to sendBeacon')
   } else {
@@ -148,7 +148,7 @@ test('encodes referrer urls that include spaces', function (t) {
   let result = harvesterInst.sendX('ins');
   let baseUrl = scheme + '://foo/ins/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com%2520crunchy%2520bacon&q1=v1&q2=v2'
 
-  if (xhrUsable) {
+  if (xhrWrappable) {
     let call = submitData.xhr.getCall(0)
     validateUrl(t, call.args[0], baseUrl, 'correct URL given to sendBeacon')
   } else {
@@ -167,7 +167,7 @@ test('encodes referrer urls that include ampersands', function (t) {
   let result = harvesterInst.sendX('ins');
   let baseUrl = scheme + '://foo/ins/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com%26crunchy%26bacon&q1=v1&q2=v2'
 
-  if (xhrUsable) {
+  if (xhrWrappable) {
     let call = submitData.xhr.getCall(0)
     validateUrl(t, call.args[0], baseUrl, 'correct URL given to sendBeacon')
   } else {
@@ -178,7 +178,7 @@ test('encodes referrer urls that include ampersands', function (t) {
 })
 
 test('uses correct submission mechanism for ins', function (t) {
-  if (xhrUsable) {
+  if (xhrWrappable) {
     t.plan(4)
   } else {
     t.plan(2)
@@ -196,7 +196,7 @@ test('uses correct submission mechanism for ins', function (t) {
   let baseUrl = scheme + '://foo/ins/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
   let expectedPayload = {ins: ['one', 'two', 'three']}
 
-  if (xhrUsable) {
+  if (xhrWrappable) {
     t.ok(result, 'result truthy when ins submitted via XHR')
     let call = submitData.xhr.getCall(0)
     validateUrl(t, call.args[0], baseUrl, 'correct URL given to sendBeacon')
@@ -231,7 +231,7 @@ test('does not send ins call when there is no body', function (t) {
 })
 
 test('uses correct submission mechanism for resources', function (t) {
-  if (xhrUsable) {
+  if (xhrWrappable) {
     t.plan(4)
   } else {
     t.plan(2)
@@ -250,7 +250,7 @@ test('uses correct submission mechanism for resources', function (t) {
   let baseUrl = scheme + '://foo/resources/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
   let expectedPayload = {resources: ['one', 'two', 'three']}
 
-  if (xhrUsable) {
+  if (xhrWrappable) {
     t.ok(result, 'result truthy when resources submitted via XHR')
     let call = submitData.xhr.getCall(0)
     validateUrl(t, call.args[0], baseUrl, 'correct URL given to XHR')
@@ -291,7 +291,7 @@ test('uses an XHR and returns it for first resources POST', function (t) {
   let baseUrl = scheme + '://foo/resources/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
   let expectedPayload = {resources: ['one', 'two', 'three']}
 
-  if (xhrUsable) {
+  if (xhrWrappable) {
     t.ok(result, 'result truthy when resources submitted via XHR with needResponse')
     let call = submitData.xhr.getCall(0)
     validateUrl(t, call.args[0], baseUrl, 'correct URL given to XHR')
@@ -307,7 +307,7 @@ test('uses an XHR and returns it for first resources POST', function (t) {
 })
 
 test('uses correct submission mechanism for jserrors', function (t) {
-  if (xhrUsable) {
+  if (xhrWrappable) {
     t.plan(4)
   } else {
     t.plan(3)
@@ -326,7 +326,7 @@ test('uses correct submission mechanism for jserrors', function (t) {
   let baseUrl = scheme + '://foo/jserrors/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&q1=v1&q2=v2'
   let expectedPayload = {jserrors: ['one', 'two', 'three']}
 
-  if (xhrUsable) {
+  if (xhrWrappable) {
     t.ok(result, 'result truthy when jserrors submitted via xhr')
     let call = submitData.xhr.getCall(0)
     validateUrl(t, call.args[0], baseUrl, 'correct URL given to xhr')
@@ -341,7 +341,7 @@ test('uses correct submission mechanism for jserrors', function (t) {
 })
 
 test('adds ptid to harvest when ptid is present', function (t) {
-  if (xhrUsable) {
+  if (xhrWrappable) {
     t.plan(2)
   } else {
     t.plan(2)
@@ -357,7 +357,7 @@ test('adds ptid to harvest when ptid is present', function (t) {
   let baseUrl = scheme + '://foo/jserrors/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com&ptid=54321&q1=v1&q2=v2'
   let expectedPayload = {jserrors: ['one', 'two', 'three']}
 
-  if (xhrUsable) {
+  if (xhrWrappable) {
     t.ok(result, 'result truthy when jserrors submitted via xhr')
     let call = submitData.xhr.getCall(0)
     validateUrl(t, call.args[0], baseUrl, 'correct URL given to xhr')
@@ -373,7 +373,7 @@ test('adds ptid to harvest when ptid is present', function (t) {
 })
 
 test('does not add ptid to harvest when ptid is not present', function (t) {
-  if (xhrUsable) {
+  if (xhrWrappable) {
     t.plan(2)
   } else {
     t.plan(2)
@@ -386,7 +386,7 @@ test('does not add ptid to harvest when ptid is not present', function (t) {
   setupFakeNr({ ptid: null });  // === ptid: undefined
   let result = harvesterInst.sendX('jserrors', null, function () {});
 
-  if (xhrUsable) {
+  if (xhrWrappable) {
     t.ok(result, 'result truthy when jserrors submitted via xhr')
     let call = submitData.xhr.getCall(0)
     t.ok(call.args[0].indexOf('ptid') === -1, 'ptid not included in querystring')
@@ -419,7 +419,7 @@ test('does not send jserrors when there is nothing to send', function (t) {
 })
 
 test('uses correct submission mechanism for events', function (t) {
-  if (xhrUsable) {
+  if (xhrWrappable) {
     t.plan(4)
   } else {
     t.plan(3)
@@ -444,7 +444,7 @@ test('uses correct submission mechanism for events', function (t) {
   let baseUrl = scheme + '://foo/events/1/bar?a=undefined&v='+ VERSION +'&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref='+ scheme + '://foo.com'
   let expectedPayload = {e: 'bel.1;1;'}
 
-  if (xhrUsable) {
+  if (xhrWrappable) {
     t.ok(result, 'result truthy when events submitted via xhr')
     let call = submitData.xhr.getCall(0)
     validateUrl(t, call.args[0], baseUrl, 'correct URL given to xhr')
@@ -648,7 +648,7 @@ test('when sendBeacon returns false', function(t) {
 })
 
 test('response codes', function(t) {
-  if (!xhrUsable) {
+  if (!xhrWrappable) {
     t.pass('no handling for response codes for browser without CORS support')
     t.end()
     return

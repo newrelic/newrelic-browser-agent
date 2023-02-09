@@ -2,25 +2,30 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
-// wrap-events patches XMLHttpRequest.prototype.addEventListener for us.
-// TODO: if we want to load Ajax feature on its own, we'll need to call wrapEvents(sharedEE)
-import { wrapEvents } from './wrap-events'
+/**
+ * This module is used by: ajax, jserrors, spa
+ */
+import { wrapEvents, unwrapEvents } from './wrap-events'
 import { ee as contextualEE } from '../event-emitter/contextual-ee'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
-import { createWrapperWithEmitter as wfn } from './wrap-function'
+import { createWrapperWithEmitter as wfn, unwrapFunction } from './wrap-function'
 import { originals } from '../config/config'
 import { globalScope } from '../util/global-scope'
 import { warn } from '../util/console'
 
 const wrapped = {}
+const XHR_PROPS = ['open', 'send']; // these are the specific funcs being wrapped on all XMLHttpRequests(.prototype)
+
 // eslint-disable-next-line
 export function wrapXhr (sharedEE) {
   var baseEE = sharedEE || contextualEE
   const ee = scopedEE(baseEE)
-  if (wrapped[ee.debugId]) return ee
-  wrapped[ee.debugId] = true
-  wrapEvents(baseEE)
+
+  if (wrapped[ee.debugId]++)  // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
+    return ee;                // then we increment the count to track # of feats using this at runtime.
+  wrapped[ee.debugId] = 1;  // <- otherwise, first feature to wrap XHR
+  
+  wrapEvents(baseEE)  // wrap-events patches XMLHttpRequest.prototype.addEventListener for us
   var wrapFn = wfn(ee)
 
   var OrigXHR = originals.XHR
@@ -61,7 +66,7 @@ export function wrapXhr (sharedEE) {
 
   XHR.prototype = OrigXHR.prototype
 
-  wrapFn.inPlace(XHR.prototype, ['open', 'send'], '-xhr-', getObject)
+  wrapFn.inPlace(XHR.prototype, XHR_PROPS, '-xhr-', getObject)
 
   ee.on('send-xhr-start', function (args, xhr) {
     wrapOnreadystatechange(args, xhr)
@@ -187,7 +192,22 @@ export function wrapXhr (sharedEE) {
 
   return ee
 }
+export function unwrapXhr(sharedEE) {
+  const ee = scopedEE(sharedEE);
+  
+  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this.
+  if (wrapped[ee.debugId] == 1) {
+    unwrapEvents(ee); // because in "wrapXHR", events was wrapped or incremented, we have to reverse that too
 
+    globalScope.XMLHttpRequest = originals.XHR;
+    XHR_PROPS.forEach(fn => { // the original object was replaced AND its prototype was altered
+      unwrapFunction(globalScope.XMLHttpRequest.prototype, fn);
+    });
+    wrapped[ee.debugId] = Infinity; // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
+  } else {
+    wrapped[ee.debugId]--;
+  }
+}
 
 export function scopedEE(sharedEE){
   return (sharedEE || contextualEE).get('xhr')

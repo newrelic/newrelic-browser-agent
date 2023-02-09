@@ -10,7 +10,6 @@ import { Aggregate as AjaxAggreg } from '../../../src/features/ajax/aggregate/in
 const qp = require('@newrelic/nr-querypack')
 
 const { baseEE, agentIdentifier, aggregator } = setup();
-getRuntime(agentIdentifier).features.xhr = true;
 setInfo(agentIdentifier, {});
 setConfiguration(agentIdentifier, {
   ajax: {enabled: true}

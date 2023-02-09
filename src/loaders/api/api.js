@@ -12,6 +12,7 @@ import { now } from '../../common/timing/now'
 import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
 import { isWorkerScope } from '../../common/util/global-scope'
+import { warn } from '../../common/util/console'
 
 function setTopLevelCallers(nr) {
   const funcs = [
@@ -125,7 +126,7 @@ export function setAPI(agentIdentifier, nr, forceDrain) {
     import('./apiAsync').then(({ setAPI }) => {
       setAPI(agentIdentifier)
       drain(agentIdentifier, 'api')
-    })
+    }).catch(() => warn("Downloading runtime APIs failed..."));
   }
 
   // experimental feature -- not ready

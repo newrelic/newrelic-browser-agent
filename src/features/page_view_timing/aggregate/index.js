@@ -15,13 +15,11 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { isBrowserScope } from '../../../common/util/global-scope'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
-    if (!isBrowserScope) return; // TO DO: can remove once aggregate is chained to instrument
 
     this.timings = []
     this.timingsSent = []

@@ -12,7 +12,6 @@ import { getInfo, getConfigurationValue, getRuntime, getConfiguration } from '..
 import { cleanURL } from '../url/clean-url'
 import { now } from '../timing/now'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
-import { ieVersion } from '../browser-version/ie-version'
 import { Obfuscator } from '../util/obfuscate'
 import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
@@ -20,9 +19,6 @@ import { VERSION } from '../constants/environment-variables'
 import { isBrowserScope, isWorkerScope } from '../util/global-scope'
 
 const haveSendBeacon = !!navigator.sendBeacon;  // only the web window obj has sendBeacon at this time, so 'false' for other envs
-
-// requiring ie version updates the IE version on the loader object
-export var xhrUsable = ieVersion > 9 || ieVersion === 0
 
 export class Harvest extends SharedContext {
   constructor(parent) {
@@ -208,27 +204,16 @@ export function getSubmitMethod(endpoint, opts) {
   var useBody
 
   if (opts.needResponse) {  // currently: only STN needs a response
-    if (xhrUsable) {
-      useBody = true
-      method = submitData.xhr
-    } else {
-      return false
-    }
+    useBody = true
+    method = submitData.xhr
   } else if (opts.unload && isBrowserScope) { // all the features' final harvest; neither methods work outside window context
     useBody = haveSendBeacon
     method = haveSendBeacon ? submitData.beacon : submitData.img  // really only IE doesn't have Beacon API for web browsers
   } else {
     // `submitData.beacon` was removed, there is an upper limit to the
-    // number of data allowed before it starts failing, so we save it for
-    // unload data
-    if (xhrUsable) {  // this is practically every browser-version in use today, including all workers
-      useBody = true
-      method = submitData.xhr
-    } else if (endpoint === 'events' || endpoint === 'jserrors') {
-      method = submitData.img
-    } else {
-      return false
-    }
+    // number of data allowed before it starts failing, so we save it only for page unloading
+    useBody = true
+    method = submitData.xhr
   }
 
   return {

@@ -5,7 +5,7 @@ import { getFeatureDependencyNames } from './features/featureDependencies'
 import { featurePriority } from './features/features'
 // common files
 import { Aggregator } from '../common/aggregate/aggregator'
-import { gosNREUMInitializedAgents } from '../common/window/nreum'
+import { gosNREUM, gosNREUMInitializedAgents } from '../common/window/nreum'
 import { generateRandomHexString } from '../common/ids/unique-id'
 import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
 import { warn } from '../common/util/console'
@@ -17,7 +17,7 @@ export class Agent {
         this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
         this.features = {}
 
-        this.desiredFeatures = options.features || []
+        this.desiredFeatures = options.features || [];  // expected to be a list of static Instrument/InstrumentBase classes, see "spa.js" for example
         this.desiredFeatures.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
 
         Object.assign(this, configure(this.agentIdentifier, options, options.loaderType || 'agent'))
@@ -35,6 +35,8 @@ export class Agent {
     }
 
     start() {
+        const NR_FEATURES_REF_NAME = "features";
+        // Attempt to initialize all the requested features (sequentially in prio order & synchronously), with any failure aborting the whole process.
         try {
             const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
             this.desiredFeatures.forEach(f => {
@@ -45,11 +47,19 @@ export class Agent {
                     this.features[f.featureName] = new f(this.agentIdentifier, this.sharedAggregator)
                 }
             })
-            gosNREUMInitializedAgents(this.agentIdentifier, this.features, 'features')
+            gosNREUMInitializedAgents(this.agentIdentifier, this.features, NR_FEATURES_REF_NAME);
         } catch (err) {
-            warn(`Failed to initialize instrument classes`, err)
-            // unwrap window apis to their originals
-            // remove agent if initialized to free resources ?
+            warn(`Failed to initialize all enabled instrument classes (agent aborted) -`, err)
+            for (const featName in this.features) { // this.features hold only features that have been instantiated
+                this.features[featName].abortHandler?.();
+            }
+
+            const newrelic = gosNREUM();
+            delete newrelic.initializedAgents[this.agentIdentifier]?.['api'];   // prevent further calls to agent-specific APIs (see "configure.js")
+            delete newrelic.initializedAgents[this.agentIdentifier]?.[NR_FEATURES_REF_NAME];    // GC mem used internally by features
+            delete this.sharedAggregator;
+            // Keep the initialized agent object with its configs for troubleshooting purposes.
+            delete newrelic.ee?.get(this.agentIdentifier);  // clear our events storage
             return false
         }
     }

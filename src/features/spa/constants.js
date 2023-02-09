@@ -34,7 +34,3 @@ export const BODY = '-body'
 export const CB_END = 'cb' + END
 export const JS_TIME = 'jsTime'
 export const FETCH = 'fetch'
-export const ADD_EVENT_LISTENER = 'addEventListener'
-
-export const WIN = globalScope
-export const LOCATION = WIN.location

@@ -20,8 +20,6 @@ import { ee } from '../../../common/event-emitter/contextual-ee'
 import * as CONSTANTS from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { isBrowserScope } from '../../../common/util/global-scope'
-import { onWindowLoad } from '../../../common/window/load'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING, 
@@ -31,7 +29,6 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor(agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
-    if (!isBrowserScope) return; // TO DO: can remove once aggregate is chained to instrument
 
     this.state = {
       initialPageURL: getRuntime(agentIdentifier).origin,

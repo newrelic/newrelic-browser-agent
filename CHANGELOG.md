@@ -3,9 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1225
+
+### Gracefully abort agent if not fully instantiated
+When importing agent code fails, e.g. gets content blocked, the agent will clean up memory it used and the global space or APIs that it wrapped, modified, or dirtied as much as feasible.
+
+### Re-done Promise wrapper
+We've seen some past problems with how Promise was wrapped, which conflicted with some third party libraries and also was missing newer methods from the native Promise API.
+This redone wrapping should resolve those problems and is a better, more conventional way to extend the Promise object.
+
+### Some clean up of deprecated code
+Some older IE-related code is removed, and so is a query param in our page view RUM call that's no longer being used.
+
+### Fix uncaught promise error introduced in v1223
+Related to failed imports, a "loading chunk 629" error was thrown despite the intention to just catch it as a warning. The cause was actually an uncaught promise in the code,
+which has now been fixed and the error silenced.
+
 ## v1224
 
-### Support SPA, XHR, and session trace features on Chrome for iOS.
+### Support SPA, XHR, and session trace features on Chrome for iOS
 Previously, the agent did not collect SPA browser interactions, XHR events, or session trace data in Chrome for iOS (which uses the webkit engine with modifications). The agent will now collect the same data in Chrome for iOS as in other supported browsers.
 
 ### Fix multiple custom interaction end times

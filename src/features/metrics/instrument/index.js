@@ -17,9 +17,8 @@ var CUSTOM_METRIC = 'cm'
 
 export class Instrument extends InstrumentBase {
     static featureName = FEATURE_NAME
-    constructor(agentIdentifier, aggregator, PfFeatStatusEnum = {}, auto = true) {
+    constructor(agentIdentifier, aggregator, auto = true) {
         super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-        this.PfFeatStatusEnum = PfFeatStatusEnum
 
         this.singleChecks() // checks that are run only one time, at script load
         this.eachSessionChecks()    // the start of every time user engages with page
@@ -90,18 +89,8 @@ export class Instrument extends InstrumentBase {
         if (rules.length > 0) this.recordSupportability('Generic/Obfuscate/Detected')
         if (rules.length > 0 && !validateRules(rules)) this.recordSupportability('Generic/Obfuscate/Invalid')
 
-        // polyfilled feature detection
-        if (isBrowserScope) this.reportPolyfillsNeeded();
-
         // poll web worker support
         insertSupportMetrics(this.recordSupportability.bind(this));
-    }
-
-    reportPolyfillsNeeded() {
-        this.recordSupportability(`Generic/Polyfill/Promise/${this.PfFeatStatusEnum.PROMISE}`);
-        this.recordSupportability(`Generic/Polyfill/ArrayIncludes/${this.PfFeatStatusEnum.ARRAY_INCLUDES}`);
-        this.recordSupportability(`Generic/Polyfill/ObjectAssign/${this.PfFeatStatusEnum.OBJECT_ASSIGN}`);
-        this.recordSupportability(`Generic/Polyfill/ObjectEntries/${this.PfFeatStatusEnum.OBJECT_ENTRIES}`);
     }
 
     eachSessionChecks() {

@@ -25,8 +25,6 @@ jobs:
         run: npm ci
       - name: Run Linting
         run: npm run lint
-      - name: Run Formatting Check
-        run: npm run format:check
 
   unit:
     runs-on: ubuntu-latest

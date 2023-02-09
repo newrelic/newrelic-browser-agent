@@ -126,7 +126,7 @@ export function setAPI(agentIdentifier, nr, forceDrain) {
     import('./apiAsync').then(({ setAPI }) => {
       setAPI(agentIdentifier)
       drain(agentIdentifier, 'api')
-    }).catch((err) => warn("A problem was encountered while attempting to setup post-load API interface."));
+    }).catch(() => warn("Downloading runtime APIs failed..."));
   }
 
   // experimental feature -- not ready

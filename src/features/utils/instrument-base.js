@@ -27,7 +27,7 @@ export class InstrumentBase extends FeatureBase {
         const { Aggregate } = await import(`../../features/${this.featureName}/aggregate`)
         new Aggregate(this.agentIdentifier, this.aggregator)
       } catch (e) {
-        warn(`Failed to execute aggregator module for ${this.featureName} -`, e);
+        warn(`Downloading ${this.featureName} failed...`);
         this.abortHandler?.();  // undo any important alterations made to the page
       }
     }

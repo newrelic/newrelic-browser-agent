@@ -3,116 +3,116 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require('../../../tools/jil/index');
+const testDriver = require('../../../tools/jil/index')
 
-let supported = testDriver.Matcher.withFeature('stn');
+let supported = testDriver.Matcher.withFeature('stn')
 
 testDriver.test('session trace resources', supported, function (t, browser, router) {
   let assetURL = router.assetURL('stn/ajax-disabled.html', {
     loader: 'full',
     init: {
       session_trace: {
-        harvestTimeSeconds: 5,
+        harvestTimeSeconds: 5
       },
       ajax: {
-        enabled: false,
+        enabled: false
       },
       page_view_timing: {
-        enabled: false,
-      },
-    },
-  });
+        enabled: false
+      }
+    }
+  })
 
-  let loadPromise = browser.safeGet(assetURL);
-  let rumPromise = router.expectRum();
-  let resourcePromise = router.expectResources();
+  let loadPromise = browser.safeGet(assetURL)
+  let rumPromise = router.expectRum()
+  let resourcePromise = router.expectResources()
 
   Promise.all([resourcePromise, loadPromise, rumPromise])
     .then(([result]) => {
-      t.equal(result.res.statusCode, 200, 'server responded with 200');
+      t.equal(result.res.statusCode, 200, 'server responded with 200')
 
       // trigger an XHR call after
-      var clickPromise = browser.elementByCssSelector('body').click();
+      var clickPromise = browser.elementByCssSelector('body').click()
 
-      resourcePromise = router.expectResources();
+      resourcePromise = router.expectResources()
 
-      return Promise.all([resourcePromise, clickPromise]);
+      return Promise.all([resourcePromise, clickPromise])
     })
     .then(([result]) => {
-      t.equal(result.res.statusCode, 200, 'server responded with 200');
+      t.equal(result.res.statusCode, 200, 'server responded with 200')
 
-      const body = result.body;
-      const harvestBody = JSON.parse(body).res;
+      const body = result.body
+      const harvestBody = JSON.parse(body).res
       const loadNodes = harvestBody.filter(function (node) {
-        return (node.t === 'event' && node.n === 'load') || node.n === 'readystatechange';
-      });
-      t.notOk(loadNodes.length > 0, 'XMLHttpRequest nodes not captured when ajax instrumentation is disabled');
+        return (node.t === 'event' && node.n === 'load') || node.n === 'readystatechange'
+      })
+      t.notOk(loadNodes.length > 0, 'XMLHttpRequest nodes not captured when ajax instrumentation is disabled')
 
-      t.end();
+      t.end()
     })
-    .catch(fail);
+    .catch(fail)
 
-  function fail(err) {
-    t.error(err);
-    t.end();
+  function fail (err) {
+    t.error(err)
+    t.end()
   }
-});
+})
 
 testDriver.test('session trace ajax deny list', supported, function (t, browser, router) {
   let assetURL = router.assetURL('stn/ajax-disabled.html', {
     loader: 'full',
     init: {
       session_trace: {
-        harvestTimeSeconds: 5,
+        harvestTimeSeconds: 5
       },
       ajax: {
         harvestTimeSeconds: 2,
         enabled: true,
-        deny_list: [router.router.assetServer.host],
+        deny_list: [router.router.assetServer.host]
       },
       page_view_timing: {
-        enabled: false,
-      },
-    },
-  });
+        enabled: false
+      }
+    }
+  })
 
-  let loadPromise = browser.safeGet(assetURL);
-  let rumPromise = router.expectRum();
-  let resourcePromise = router.expectResources();
+  let loadPromise = browser.safeGet(assetURL)
+  let rumPromise = router.expectRum()
+  let resourcePromise = router.expectResources()
   const ajaxPromise = router
     .expectBeaconRequest(router.beaconRequests.errors, 8000)
     .then(() => {
-      t.fail('Should not have seen the ajax event');
+      t.fail('Should not have seen the ajax event')
     })
-    .catch(() => {});
+    .catch(() => {})
 
   Promise.all([resourcePromise, ajaxPromise, loadPromise, rumPromise])
     .then(([result]) => {
-      t.equal(result.res.statusCode, 200, 'server responded with 200');
+      t.equal(result.res.statusCode, 200, 'server responded with 200')
 
       // trigger an XHR call after
-      var clickPromise = browser.elementByCssSelector('body').click();
+      var clickPromise = browser.elementByCssSelector('body').click()
 
-      resourcePromise = router.expectResources();
+      resourcePromise = router.expectResources()
 
-      return Promise.all([resourcePromise, clickPromise]);
+      return Promise.all([resourcePromise, clickPromise])
     })
     .then(([result]) => {
-      t.equal(result.res.statusCode, 200, 'server responded with 200');
+      t.equal(result.res.statusCode, 200, 'server responded with 200')
 
-      const body = result.body;
-      const harvestBody = JSON.parse(body).res;
+      const body = result.body
+      const harvestBody = JSON.parse(body).res
       const loadNodes = harvestBody.filter(function (node) {
-        return node.t === 'ajax';
-      });
-      t.ok(loadNodes.length > 0, 'XMLHttpRequest nodes captured even with ajax deny list');
+        return node.t === 'ajax'
+      })
+      t.ok(loadNodes.length > 0, 'XMLHttpRequest nodes captured even with ajax deny list')
 
-      t.end();
+      t.end()
     })
-    .catch(fail);
+    .catch(fail)
 
-  function fail(err) {
-    t.error(err);
-    t.end();
+  function fail (err) {
+    t.error(err)
+    t.end()
   }
-});
+})

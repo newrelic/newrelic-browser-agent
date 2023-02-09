@@ -53,7 +53,7 @@ var singleValueMetric = {
   type: 'condensed',
   name: 'bar',
   metrics: { count: 1, value: { t: 4 } },
-  params: { other: 'blah' },
+  params: { other: 'blah' }
 }
 
 var metric = {
@@ -61,9 +61,9 @@ var metric = {
   name: 'bar',
   metrics: {
     count: 2,
-    value: { t: 6, min: 3, max: 3, sos: 18, c: 2 },
+    value: { t: 6, min: 3, max: 3, sos: 18, c: 2 }
   },
-  params: { other: 'blah' },
+  params: { other: 'blah' }
 }
 
 test('params set when metric merged', function (t) {
@@ -72,7 +72,7 @@ test('params set when metric merged', function (t) {
   agg.take(['paramTest'])
   var testParams = {
     value: 'param',
-    example: 'example',
+    example: 'example'
   }
 
   agg.merge('paramTest', 'bar', singleValueMetric.metrics, testParams)
@@ -93,7 +93,7 @@ test('get and take return the same data', function (t) {
 
   var getMetrics = {
     foo: agg.get('foo'),
-    bar: agg.get('bar'),
+    bar: agg.get('bar')
   }
   var takeMetrics = agg.take(['foo', 'bar'])
 

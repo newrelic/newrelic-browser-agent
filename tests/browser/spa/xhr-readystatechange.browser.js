@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil');
+const jil = require('jil')
 
 jil.browserTest('spa XHR readystatechange callback', function (t) {
-  let helpers = require('./helpers');
+  let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
     children: [
@@ -16,51 +16,51 @@ jil.browserTest('spa XHR readystatechange callback', function (t) {
           {
             type: 'customTracer',
             attrs: {
-              name: 'timer',
+              name: 'timer'
             },
-            children: [],
+            children: []
           },
           {
             type: 'customTracer',
             attrs: {
-              name: 'timer',
+              name: 'timer'
             },
-            children: [],
-          },
-        ],
-      },
-    ],
-  });
+            children: []
+          }
+        ]
+      }
+    ]
+  })
 
-  t.plan(2 + validator.count);
+  t.plan(2 + validator.count)
 
   setTimeout(function () {
-    helpers.startInteraction(onInteractionStart, afterInteractionDone);
-  });
+    helpers.startInteraction(onInteractionStart, afterInteractionDone)
+  })
 
-  function onInteractionStart(cb) {
-    let xhr = new XMLHttpRequest();
+  function onInteractionStart (cb) {
+    let xhr = new XMLHttpRequest()
 
     xhr.addEventListener('readystatechange', function () {
-      if (xhr.readyState !== 2) return;
-      setTimeout(newrelic.interaction().createTracer('timer', function () {}));
-    });
+      if (xhr.readyState !== 2) return
+      setTimeout(newrelic.interaction().createTracer('timer', function () {}))
+    })
 
-    xhr.onload = cb;
+    xhr.onload = cb
 
-    xhr.open('GET', '/');
-    xhr.send();
+    xhr.open('GET', '/')
+    xhr.send()
 
     xhr.onreadystatechange = function () {
-      if (xhr.readyState !== 4) return;
-      setTimeout(newrelic.interaction().createTracer('timer', function () {}));
-    };
+      if (xhr.readyState !== 4) return
+      setTimeout(newrelic.interaction().createTracer('timer', function () {}))
+    }
   }
 
-  function afterInteractionDone(interaction) {
-    t.ok(interaction.root.end, 'interaction should be finished and have an end time');
-    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
-    validator.validate(t, interaction);
-    t.end();
+  function afterInteractionDone (interaction) {
+    t.ok(interaction.root.end, 'interaction should be finished and have an end time')
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
+    validator.validate(t, interaction)
+    t.end()
   }
-});
+})

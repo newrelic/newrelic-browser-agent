@@ -1,85 +1,85 @@
-var AWS = require('aws-sdk');
+var AWS = require('aws-sdk')
 
-var s3;
+var s3
 
 module.exports = {
-  connectToS3: function connectToS3(role, dry) {
+  connectToS3: function connectToS3 (role, dry) {
     return new Promise((resolve, reject) => {
-      if (dry) return resolve();
+      if (dry) return resolve()
 
       var roleToAssume = {
         RoleArn: role, // argv['role']
         RoleSessionName: 'uploadToS3Session',
-        DurationSeconds: 900,
-      };
+        DurationSeconds: 900
+      }
 
-      var sts = new AWS.STS();
+      var sts = new AWS.STS()
       sts.assumeRole(roleToAssume, function (err, data) {
         if (err) {
-          reject(err);
+          reject(err)
         } else {
           var roleCreds = {
             accessKeyId: data.Credentials.AccessKeyId,
             secretAccessKey: data.Credentials.SecretAccessKey,
-            sessionToken: data.Credentials.SessionToken,
-          };
-          s3 = new AWS.S3(roleCreds);
-          resolve();
+            sessionToken: data.Credentials.SessionToken
+          }
+          s3 = new AWS.S3(roleCreds)
+          resolve()
         }
-      });
-    });
+      })
+    })
   },
 
-  emptyS3Directory: async function emptyS3Directory(bucket, dir, dry) {
-    if (!dir) return;
+  emptyS3Directory: async function emptyS3Directory (bucket, dir, dry) {
+    if (!dir) return
 
     const listParams = {
       Bucket: bucket,
-      Prefix: dir,
-    };
+      Prefix: dir
+    }
 
-    const listedObjects = await s3.listObjectsV2(listParams).promise();
+    const listedObjects = await s3.listObjectsV2(listParams).promise()
 
-    if (listedObjects.Contents.length === 0) return;
+    if (listedObjects.Contents.length === 0) return
 
     const deleteParams = {
       Bucket: bucket,
-      Delete: { Objects: [] },
-    };
+      Delete: { Objects: [] }
+    }
 
     listedObjects.Contents.forEach(({ Key }) => {
-      deleteParams.Delete.Objects.push({ Key });
-    });
+      deleteParams.Delete.Objects.push({ Key })
+    })
 
-    if (!dry) await s3.deleteObjects(deleteParams).promise();
-    else console.log('would have deleted', deleteParams);
+    if (!dry) await s3.deleteObjects(deleteParams).promise()
+    else console.log('would have deleted', deleteParams)
 
-    console.log('deleted'.deleteParams, 'recurse?', listedObjects.IsTruncated);
-    if (listedObjects.IsTruncated) await emptyS3Directory(bucket, dir);
+    console.log('deleted'.deleteParams, 'recurse?', listedObjects.IsTruncated)
+    if (listedObjects.IsTruncated) await emptyS3Directory(bucket, dir)
   },
 
-  uploadToS3: function uploadToS3(fileName, content, bucket, dry = false, maxAge = 3600, expires) {
+  uploadToS3: function uploadToS3 (fileName, content, bucket, dry = false, maxAge = 3600, expires) {
     return new Promise((resolve, reject) => {
-      console.log('expires?', expires);
+      console.log('expires?', expires)
       var params = {
         Body: content,
         Bucket: bucket, // argv.bucket,
         ContentType: 'application/javascript',
         CacheControl: `public, max-age=${maxAge}`,
         ...(!!expires && { Expires: expires }),
-        Key: fileName,
-      };
+        Key: fileName
+      }
 
       // if (argv['dry'] === true) {
       if (dry) {
-        console.log('running in dry mode, file not uploaded, params:', params);
-        return resolve();
+        console.log('running in dry mode, file not uploaded, params:', params)
+        return resolve()
       }
 
       s3.putObject(params, (err, data) => {
-        if (err) reject(err);
-        else resolve(data);
-      });
-    });
-  },
-};
+        if (err) reject(err)
+        else resolve(data)
+      })
+    })
+  }
+}

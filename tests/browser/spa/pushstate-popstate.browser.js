@@ -3,24 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil');
+const jil = require('jil')
 
 if (process.browser) {
-  var helpers = require('./helpers');
-  var loaded = false;
+  var helpers = require('./helpers')
+  var loaded = false
   helpers.onWindowLoad(() => {
-    loaded = true;
-  });
+    loaded = true
+  })
 }
 
 jil.browserTest('spa interaction triggered by pushstate + popstate', function (t) {
   if (!window.history.pushState) {
-    t.skip('skipping SPA test in browser that does not support pushState');
-    t.end();
-    return;
+    t.skip('skipping SPA test in browser that does not support pushState')
+    t.end()
+    return
   }
 
-  let originalURL = window.location.toString();
+  let originalURL = window.location.toString()
 
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
@@ -28,45 +28,45 @@ jil.browserTest('spa interaction triggered by pushstate + popstate', function (t
       {
         type: 'customTracer',
         attrs: {
-          name: 'timer',
+          name: 'timer'
         },
-        children: [],
-      },
-    ],
-  });
+        children: []
+      }
+    ]
+  })
 
-  t.plan(5 + validator.count);
+  t.plan(5 + validator.count)
 
-  setTimeout(checkLoaded, 100);
+  setTimeout(checkLoaded, 100)
 
-  function checkLoaded() {
+  function checkLoaded () {
     if (loaded) {
-      window.history.pushState({}, '', '/newurl');
+      window.history.pushState({}, '', '/newurl')
       helpers.startInteraction(onInteractionStart, afterInteractionDone, {
-        eventType: 'popstate',
-      });
+        eventType: 'popstate'
+      })
     } else {
-      setTimeout(checkLoaded, 100);
+      setTimeout(checkLoaded, 100)
     }
   }
 
-  function onInteractionStart(cb) {
-    setTimeout(newrelic.interaction().createTracer('timer', cb));
+  function onInteractionStart (cb) {
+    setTimeout(newrelic.interaction().createTracer('timer', cb))
   }
 
-  function afterInteractionDone(interaction) {
-    t.ok(interaction.root.end, 'interaction should be finished and have an end time');
-    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
-    t.ok(interaction.routeChange, 'should be a route change');
+  function afterInteractionDone (interaction) {
+    t.ok(interaction.root.end, 'interaction should be finished and have an end time')
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
+    t.ok(interaction.routeChange, 'should be a route change')
 
-    let root = interaction.root;
+    let root = interaction.root
     t.equal(
       root.attrs.oldURL,
       window.location.protocol + '//' + window.location.host + '/newurl',
       'old url should be the url navigated from'
-    );
-    t.equal(root.attrs.newURL, originalURL, 'new url should be the current url');
-    validator.validate(t, interaction);
-    t.end();
+    )
+    t.equal(root.attrs.newURL, originalURL, 'new url should be the current url')
+    validator.validate(t, interaction)
+    t.end()
   }
-});
+})

@@ -26,14 +26,14 @@ const setupFakeNr = (tArgs) => {
   setRuntime(agentIdentifier, {
     features: nrFeatures,
     origin: tArgs?.origin || nrOrigin,
-    ptid: tArgs?.ptid || undefined,
+    ptid: tArgs?.ptid || undefined
   })
 }
 
 const hasSendBeacon = !!navigator.sendBeacon
 const xhrUsable = agentRuntime.xhrWrappable && harvest.xhrUsable
 
-function once(cb) {
+function once (cb) {
   var done = false
   return function () {
     if (done) return {}
@@ -42,7 +42,7 @@ function once(cb) {
   }
 }
 
-function createMockedXhr(responseCode) {
+function createMockedXhr (responseCode) {
   var loadListeners = []
   return {
     status: parseInt(responseCode),
@@ -56,11 +56,11 @@ function createMockedXhr(responseCode) {
           fn.call(xhr)
         })
       }, 0)
-    },
+    }
   }
 }
 
-function resetSpies(origin, options) {
+function resetSpies (origin, options) {
   harvesterInst.resetListeners()
   options = options || {}
   submitData.img = sinon.stub().returns(true)
@@ -81,18 +81,18 @@ function resetSpies(origin, options) {
   locationUtil.getLocation = sinon.stub().returns(origin)
 }
 
-function dummyPayload(key) {
+function dummyPayload (key) {
   return function () {
     var body = {}
     body[key] = ['one', 'two', 'three']
     return {
       qs: { q1: 'v1', q2: 'v2' },
-      body: body,
+      body: body
     }
   }
 }
 
-function validateUrl(t, actualUrl, expectedUrlTemplate, message) {
+function validateUrl (t, actualUrl, expectedUrlTemplate, message) {
   // Extract the timestamp from the actual URL
   // Can't use url.parse because this test has to run in old IE, which chokes
   // when trying to use the browserified version of url.parse.
@@ -209,7 +209,7 @@ test('uses correct submission mechanism for ins', function (t) {
   resetSpies(null, { xhrWithLoadEvent: true })
   harvesterInst.on('ins', once(dummyPayload('ins')))
 
-  function harvestFinished() {
+  function harvestFinished () {
     t.pass('harvest finished callback has been called')
   }
 
@@ -248,12 +248,12 @@ test('does not send ins call when there is no body', function (t) {
   t.equal(submitData.beacon.callCount, 0, 'no beacon call should have been made')
   t.end()
 
-  function testPayload() {
+  function testPayload () {
     return {
       qs: { q1: 'v1', q2: 'v2' },
       body: {
-        ins: [],
-      },
+        ins: []
+      }
     }
   }
 })
@@ -268,7 +268,7 @@ test('uses correct submission mechanism for resources', function (t) {
   resetSpies(null, { xhrWithLoadEvent: true })
   harvesterInst.on('resources', once(dummyPayload('resources')))
 
-  function harvestFinished() {
+  function harvestFinished () {
     t.pass('harvest finished callback has been called')
   }
 
@@ -308,10 +308,10 @@ test('does not send resources when there is no body', function (t) {
   t.equal(submitData.beacon.callCount, 0, 'no beacon call should have been made')
   t.end()
 
-  function testPayload() {
+  function testPayload () {
     return {
       qs: { st: '1234', ptid: 123 },
-      body: { res: [] },
+      body: { res: [] }
     }
   }
 })
@@ -356,7 +356,7 @@ test('uses correct submission mechanism for jserrors', function (t) {
   resetSpies(null, { xhrWithLoadEvent: true })
   harvesterInst.on('jserrors', once(dummyPayload('jserrors')))
 
-  function harvestFinished() {
+  function harvestFinished () {
     t.pass('harvest finished callback has been called')
   }
 
@@ -462,10 +462,10 @@ test('does not send jserrors when there is nothing to send', function (t) {
   t.equal(submitData.beacon.callCount, 0, 'no beacon call should have been made')
   t.end()
 
-  function testPayload() {
+  function testPayload () {
     return {
       qs: { pve: '1', ri: '1234' },
-      body: null,
+      body: null
     }
   }
 })
@@ -483,13 +483,13 @@ test('uses correct submission mechanism for events', function (t) {
     once(function () {
       return {
         body: {
-          e: 'bel.1;1;',
-        },
+          e: 'bel.1;1;'
+        }
       }
     })
   )
 
-  function harvestFinished() {
+  function harvestFinished () {
     t.pass('harvest finished callback has been called')
   }
 
@@ -532,9 +532,9 @@ test('does not send eents when there is nothing to send', function (t) {
   t.equal(submitData.beacon.callCount, 0, 'no beacon call should have been made')
   t.end()
 
-  function testPayload() {
+  function testPayload () {
     return {
-      body: null,
+      body: null
     }
   }
 })
@@ -550,8 +550,8 @@ test('uses correct submission mechanisms on unload', function (t) {
     once(function () {
       return {
         body: {
-          e: 'bel.1;1;',
-        },
+          e: 'bel.1;1;'
+        }
       }
     })
   )
@@ -629,13 +629,13 @@ test('uses correct submission mechanisms on unload', function (t) {
 
   t.end()
 
-  function baseUrlFor(endpoint, qs) {
+  function baseUrlFor (endpoint, qs) {
     return `${scheme}://foo/${endpoint}/1/bar?a=undefined&v=${VERSION}&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref=${scheme}://foo.com${
       qs !== undefined ? qs : '&q1=v1&q2=v2'
     }`
   }
 
-  function findCallForEndpoint(calls, desiredEndpoint) {
+  function findCallForEndpoint (calls, desiredEndpoint) {
     for (var i = 0; i < calls.length; i++) {
       let call = calls[i]
       let url = call.args[0]
@@ -766,38 +766,38 @@ test('response codes', function (t) {
 
   var cases = {
     200: {
-      retry: undefined,
+      retry: undefined
     },
     202: {
-      retry: undefined,
+      retry: undefined
     },
     429: {
-      retry: true,
+      retry: true
     },
     408: {
-      retry: true,
+      retry: true
     },
     400: {
-      retry: undefined,
+      retry: undefined
     },
     404: {
-      retry: undefined,
+      retry: undefined
     },
     500: {
-      retry: true,
+      retry: true
     },
     503: {
-      retry: true,
+      retry: true
     },
     413: {
-      retry: undefined,
+      retry: undefined
     },
     414: {
-      retry: undefined,
+      retry: undefined
     },
     431: {
-      retry: undefined,
-    },
+      retry: undefined
+    }
   }
 
   var harvestTypes = ['ins', 'events', 'jserrors', 'resources']
@@ -808,13 +808,13 @@ test('response codes', function (t) {
     }
   })
 
-  function runTest(type, responseCode, testCase) {
+  function runTest (type, responseCode, testCase) {
     t.test('returns correct result with ' + responseCode, function (t) {
       t.plan(1)
 
       resetSpies(null, {
         xhrWithLoadEvent: true,
-        xhrResponseCode: responseCode,
+        xhrResponseCode: responseCode
       })
       harvesterInst.on(type, once(dummyPayload(type)))
 

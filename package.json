@@ -24,7 +24,7 @@
     "build:all": "npm run cdn:build:local && npm run build:npm",
     "build:npm": "npm run npm:build:esm && npm run npm:build:cjs",
     "postinstall": "ln -s ../tools/jil node_modules/jil",
-    "lint": "eslint -c .eslintrc.js .",
+    "lint": "eslint -c .eslintrc.js --ext .js,.cjs,.mjs .",
     "lint:fix": "eslint --ext .js -c .eslintrc . --fix",
     "test-all": "tools/jil/bin/cli.js -b *@*",
     "ci-build": "npm ci --cache ./.npm",

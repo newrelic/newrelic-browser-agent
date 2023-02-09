@@ -33,8 +33,8 @@ test('nav cookie is set if user tracking is enabled', function (t) {
 
   setConfiguration(agentIdentifier, {
     privacy: {
-      cookies_enabled: true,
-    },
+      cookies_enabled: true
+    }
   })
 
   startTime.navCookie = true
@@ -52,8 +52,8 @@ test('nav cookie is not set if user tracking is disabled', function (t) {
 
   setConfiguration(agentIdentifier, {
     privacy: {
-      cookies_enabled: false,
-    },
+      cookies_enabled: false
+    }
   })
 
   startTime.navCookie = true

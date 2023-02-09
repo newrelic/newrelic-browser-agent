@@ -3,41 +3,41 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil');
+const jil = require('jil')
 
 jil.browserTest('interaction does not include xhrs that are not sent', function (t) {
-  let helpers = require('./helpers');
+  let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
     children: [
       {
         type: 'customTracer',
         attrs: {
-          name: 'timer',
+          name: 'timer'
         },
-        children: [],
-      },
-    ],
-  });
+        children: []
+      }
+    ]
+  })
 
-  t.plan(3 + validator.count);
+  t.plan(3 + validator.count)
 
-  t.notok(helpers.currentNodeId(), 'interaction should be null at first');
+  t.notok(helpers.currentNodeId(), 'interaction should be null at first')
 
-  helpers.startInteraction(onInteractionStart, afterInteractionDone);
+  helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
-    let xhr = new XMLHttpRequest();
+  function onInteractionStart (cb) {
+    let xhr = new XMLHttpRequest()
 
-    xhr.open('GET', '/');
-    var tracer = newrelic.interaction().createTracer('timer', cb);
-    setTimeout(tracer, 0);
+    xhr.open('GET', '/')
+    var tracer = newrelic.interaction().createTracer('timer', cb)
+    setTimeout(tracer, 0)
   }
 
-  function afterInteractionDone(interaction) {
-    t.ok(interaction.root.end, 'interaction should be finished and have an end time');
-    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
-    validator.validate(t, interaction);
-    t.end();
+  function afterInteractionDone (interaction) {
+    t.ok(interaction.root.end, 'interaction should be finished and have an end time')
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
+    validator.validate(t, interaction)
+    t.end()
   }
-});
+})

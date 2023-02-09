@@ -11,7 +11,7 @@ test('id', function (t) {
   var a = {}
   var aId = id(a)
 
-  function F() {}
+  function F () {}
   F.prototype = a
 
   var b = new F()

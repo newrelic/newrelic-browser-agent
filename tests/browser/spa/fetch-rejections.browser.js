@@ -13,19 +13,19 @@ jil.browserTest('fetch.reject', function (t) {
       {
         type: 'customTracer',
         attrs: {
-          name: 'promise',
+          name: 'promise'
         },
         children: [
           {
             type: 'customTracer',
             attrs: {
-              name: 'timer',
+              name: 'timer'
             },
-            children: [],
-          },
-        ],
-      },
-    ],
+            children: []
+          }
+        ]
+      }
+    ]
   })
 
   t.plan(4 + validator.count)
@@ -34,7 +34,7 @@ jil.browserTest('fetch.reject', function (t) {
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     window
       .fetch('http://not.a.real.website')
       .catch(function (err) {
@@ -53,7 +53,7 @@ jil.browserTest('fetch.reject', function (t) {
       })
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -69,27 +69,27 @@ jil.browserTest('fetch body.reject', function (t) {
       {
         type: 'ajax',
         attrs: {
-          isFetch: true,
+          isFetch: true
         },
         children: [
           {
             type: 'customTracer',
             attrs: {
-              name: 'promise',
+              name: 'promise'
             },
             children: [
               {
                 type: 'customTracer',
                 attrs: {
-                  name: 'timer',
+                  name: 'timer'
                 },
-                children: [],
-              },
-            ],
-          },
-        ],
-      },
-    ],
+                children: []
+              }
+            ]
+          }
+        ]
+      }
+    ]
   })
 
   t.plan(4 + validator.count)
@@ -98,7 +98,7 @@ jil.browserTest('fetch body.reject', function (t) {
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     window
       .fetch('/')
       .then(function (res) {
@@ -120,7 +120,7 @@ jil.browserTest('fetch body.reject', function (t) {
     cb()
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)

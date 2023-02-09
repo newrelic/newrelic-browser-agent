@@ -17,7 +17,7 @@ jil.browserTest('parameters not modified', async function (t) {
   let name = 'MyEvent'
   let args = {
     foo: 'bar',
-    hello: { world: 'again' },
+    hello: { world: 'again' }
   }
 
   baseEE.emit('feat-ins', [])
@@ -26,7 +26,7 @@ jil.browserTest('parameters not modified', async function (t) {
 
   t.deepEqual(args, {
     foo: 'bar',
-    hello: { world: 'again' },
+    hello: { world: 'again' }
   })
 
   t.end()

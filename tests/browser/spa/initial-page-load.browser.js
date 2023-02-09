@@ -12,10 +12,10 @@ jil.browserTest('initial page load timing', function (t) {
     jsTime: 0,
     attrs: {
       custom: {
-        'from-start': true,
-      },
+        'from-start': true
+      }
     },
-    children: [],
+    children: []
   })
 
   t.plan(5 + validator.count)
@@ -23,10 +23,10 @@ jil.browserTest('initial page load timing', function (t) {
   t.notok(helpers.currentNodeId(), 'interaction should be null at first')
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone, {
-    eventType: 'initialPageLoad',
+    eventType: 'initialPageLoad'
   })
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     let x = 0
     let deadline = helpers.now() + 75
     while (helpers.now() <= deadline) {
@@ -38,7 +38,7 @@ jil.browserTest('initial page load timing', function (t) {
     cb()
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     setTimeout(() => {
       t.ok(interaction.root.attrs.trigger === 'initialPageLoad', 'event should be initial page load')
       t.ok(interaction.root.end, 'interaction should have an end time')

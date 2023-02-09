@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-;(function immediateCallback() {
+(function immediateCallback () {
   if ('setImmediate' in window) {
     window.setImmediate(function () {
       window.setImmediateFired = true

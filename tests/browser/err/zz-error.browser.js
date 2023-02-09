@@ -49,35 +49,35 @@ throwsRemaining += setupXHRError()
 // This gets overridden in the test below
 window.onAllErrorsThrown = function () {}
 
-function decrementRemainingAndCheckDone(label) {
+function decrementRemainingAndCheckDone (label) {
   throwsRemaining--
   if (throwsRemaining === 0) window.onAllErrorsThrown()
 }
 
-function setupCustomEventError() {
+function setupCustomEventError () {
   if (typeof document.addEventListener !== 'function') return 0
 
   document.addEventListener('foo', callback, false)
   return 1
 
-  function callback() {
+  function callback () {
     decrementRemainingAndCheckDone('custom')
     throw new Error('custom event')
   }
 }
 
-function setupWindowLoadError() {
+function setupWindowLoadError () {
   windowAddEventListener('load', windowAddE)
   windowAddEventListener('load', windowAddE)
   return 1
 
-  function windowAddE() {
+  function windowAddE () {
     decrementRemainingAndCheckDone('Window addE')
     throw new Error('Window addE')
   }
 }
 
-function setupReadyStateChangeError() {
+function setupReadyStateChangeError () {
   if (!hasReadyStateChange) return 0
 
   var fired = false
@@ -90,7 +90,7 @@ function setupReadyStateChangeError() {
 
   return 1
 
-  function callback() {
+  function callback () {
     if (fired) return
     fired = true
     decrementRemainingAndCheckDone('readystatechange')
@@ -98,7 +98,7 @@ function setupReadyStateChangeError() {
   }
 }
 
-function setupDOMContentLoadedError() {
+function setupDOMContentLoadedError () {
   if (typeof document.addEventListener === 'function') {
     document.addEventListener('DOMContentLoaded', callback, false)
   } else {
@@ -106,13 +106,13 @@ function setupDOMContentLoadedError() {
   }
   return 1
 
-  function callback(e) {
+  function callback (e) {
     decrementRemainingAndCheckDone('DOMContentLoaded')
     throw new Error('DOMContentLoaded error')
   }
 }
 
-function setupTimeoutError() {
+function setupTimeoutError () {
   setTimeout(function () {
     decrementRemainingAndCheckDone('timeout')
     throw new Error('TO error')
@@ -120,7 +120,7 @@ function setupTimeoutError() {
   return 1
 }
 
-function setupIntervalError() {
+function setupIntervalError () {
   var val = setInterval(intervalErrorFunc, 10)
   setTimeout(function () {
     clearInterval(val)
@@ -129,13 +129,13 @@ function setupIntervalError() {
 }
 
 var sawIntervalError = false
-function intervalErrorFunc() {
+function intervalErrorFunc () {
   if (!sawIntervalError) decrementRemainingAndCheckDone('interval')
   sawIntervalError = true
   throw new Error('Interval Error')
 }
 
-function setupRAFError() {
+function setupRAFError () {
   if (!raf) return 0
 
   raf(function (a, b) {
@@ -145,7 +145,7 @@ function setupRAFError() {
   return 1
 }
 
-function setupXHRError() {
+function setupXHRError () {
   if (!shouldExpectXHRErrors) return 0
 
   var xhr = new XMLHttpRequest()
@@ -201,7 +201,7 @@ if (!setTimeoutWrapped) {
       }
     }
 
-    function checkForErrors() {
+    function checkForErrors () {
       var err = agg.take(['err']).err
       var errors = {}
 

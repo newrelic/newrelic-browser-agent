@@ -49,21 +49,21 @@ jil.browserTest('eventListener methods work as expected after abort', function (
 
   t.end()
 
-  function handler1() {
+  function handler1 () {
     handler1CallCount++
   }
-  function handler2() {
+  function handler2 () {
     handler2CallCount++
   }
 })
 
-function triggerEvent(el, eventName) {
+function triggerEvent (el, eventName) {
   let evt = document.createEvent('Events')
   evt.initEvent(eventName, true, false)
   el.dispatchEvent(evt)
 }
 
-function createAndAddDomElement(tagName = 'div') {
+function createAndAddDomElement (tagName = 'div') {
   var el = document.createElement(tagName)
   document.body.appendChild(el)
   return el

@@ -3,92 +3,92 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const path = require('path');
-const { asserters } = require('wd');
-var newrelic = require('newrelic');
-const Matcher = require('../util/browser-matcher');
-const AssetServer = require('../../testing-server/index');
-const getCaller = require('../util/get-caller');
-const loadBrowser = require('../loader/loadBrowser');
-const Test = require('./Test');
-const TestEnv = require('./TestEnv');
-const TestRun = require('./TestRun');
-const TestHarness = require('./harness');
-const DeviceTest = require('./DeviceTest');
-const { BrowserSpec } = require('../util/browser-list');
-const { isSauceConnected } = require('../util/external-services');
+const path = require('path')
+const { asserters } = require('wd')
+var newrelic = require('newrelic')
+const Matcher = require('../util/browser-matcher')
+const AssetServer = require('../../testing-server/index')
+const getCaller = require('../util/get-caller')
+const loadBrowser = require('../loader/loadBrowser')
+const Test = require('./Test')
+const TestEnv = require('./TestEnv')
+const TestRun = require('./TestRun')
+const TestHarness = require('./harness')
+const DeviceTest = require('./DeviceTest')
+const { BrowserSpec } = require('../util/browser-list')
+const { isSauceConnected } = require('../util/external-services')
 
 class Driver {
-  constructor(config, output) {
-    this.tests = [];
-    this.failedTests = [];
-    this.testEnvs = [];
-    this.browserTestMatchers = {};
+  constructor (config, output) {
+    this.tests = []
+    this.failedTests = []
+    this.testEnvs = []
+    this.browserTestMatchers = {}
 
     let agentConfig = {
       licenseKey: 'asdf',
       applicationID: 42,
       accountID: 123,
       agentID: 456,
-      trustKey: 789,
-    };
-    this.browserTests = [];
-    this.assetServer = new AssetServer(config, agentConfig, this.browserTests, output);
-    this.assetServer.start(config.port);
-    this.router = this.assetServer.router;
-    this.timeout = config.timeout = config.timeout || 32000;
-    this.output = output;
-    this.concurrent = config.concurrent;
-    this.config = config;
-    this.asserters = asserters;
+      trustKey: 789
+    }
+    this.browserTests = []
+    this.assetServer = new AssetServer(config, agentConfig, this.browserTests, output)
+    this.assetServer.start(config.port)
+    this.router = this.assetServer.router
+    this.timeout = config.timeout = config.timeout || 32000
+    this.output = output
+    this.concurrent = config.concurrent
+    this.config = config
+    this.asserters = asserters
   }
 
-  addBrowser(connectionInfo, desired) {
-    this.testEnvs.push(new TestEnv(connectionInfo, new BrowserSpec(desired)));
+  addBrowser (connectionInfo, desired) {
+    this.testEnvs.push(new TestEnv(connectionInfo, new BrowserSpec(desired)))
   }
 
-  closeBrowser(ok, browser, done) {
+  closeBrowser (ok, browser, done) {
     if (isSauceConnected()) {
-      browser.sauceJobStatus(ok);
+      browser.sauceJobStatus(ok)
     }
     browser
       .quit(() => {
-        done();
+        done()
       })
       .catch((err) => {
-        done(err);
-      });
+        done(err)
+      })
   }
 
-  test(name, spec, test) {
+  test (name, spec, test) {
     if (!test) {
-      test = spec;
-      spec = null;
+      test = spec
+      spec = null
     }
 
-    this.tests.push(new Test(name, spec, test));
+    this.tests.push(new Test(name, spec, test))
   }
 
-  browserTest(name, spec, test) {
+  browserTest (name, spec, test) {
     if (!test) {
-      test = spec;
-      spec = null;
+      test = spec
+      spec = null
     }
 
-    let testFile = getCaller();
-    let relativePath = path.relative(process.cwd(), testFile);
+    let testFile = getCaller()
+    let relativePath = path.relative(process.cwd(), testFile)
 
     if (!this.browserTestMatchers[testFile]) {
-      loadBrowser(this, testFile, relativePath, spec);
-      this.browserTests.push(testFile);
-      this.browserTestMatchers[testFile] = spec;
+      loadBrowser(this, testFile, relativePath, spec)
+      this.browserTests.push(testFile)
+      this.browserTestMatchers[testFile] = spec
     } else if (this.browserTestMatchers[testFile] !== spec) {
-      throw new Error('all browser tests in ' + relativePath + ' must use the same matcher');
+      throw new Error('all browser tests in ' + relativePath + ' must use the same matcher')
     }
   }
 
-  generateID() {
-    return Math.random().toString(36).slice(2);
+  generateID () {
+    return Math.random().toString(36).slice(2)
   }
 
   // runs tests based on an array of DeviceTest objects
@@ -104,93 +104,93 @@ class Driver {
    *  reported.
    * @param {function} cb
    */
-  runTestRun(testRun, tests, isRetry, cb) {
-    let driver = this;
-    this.output.log(`# starting tests for ${testRun.browserSpec.toString()}`);
+  runTestRun (testRun, tests, isRetry, cb) {
+    let driver = this
+    this.output.log(`# starting tests for ${testRun.browserSpec.toString()}`)
 
     testRun.initialize(this.assetServer.urlFor('/'), (err) => {
       if (err) {
-        newrelic.noticeError(err);
+        newrelic.noticeError(err)
         // exit early if an environment is not available
         newrelic.shutdown({ collectPendingData: true, timeout: 3000 }, function () {
-          process.exit(1);
-        });
-        return;
+          process.exit(1)
+        })
+        return
       }
 
-      let spec = testRun.browserSpec;
+      let spec = testRun.browserSpec
       if (spec.version === 'latest' || spec.platformVersion === 'latest' || spec.version === 'beta') {
-        this.output.log(`# ${spec.toString()} resolved to ${testRun.resolvedName}`);
+        this.output.log(`# ${spec.toString()} resolved to ${testRun.resolvedName}`)
       }
 
       driver.runTestsAgainstBrowser(testRun.browser, tests, isRetry, (err) => {
-        cb(err, testRun);
-      });
-    });
+        cb(err, testRun)
+      })
+    })
   }
 
-  runTestsAgainstBrowser(browser, testsToRun, isRetry, done) {
-    let browserSpec = browser.browserSpec;
-    let router = this.router;
-    let currentTest = null;
+  runTestsAgainstBrowser (browser, testsToRun, isRetry, done) {
+    let browserSpec = browser.browserSpec
+    let router = this.router
+    let currentTest = null
 
     let tests = testsToRun.filter((test) => {
-      return !test.spec || test.spec.match(browserSpec);
-    });
+      return !test.spec || test.spec.match(browserSpec)
+    })
 
     if (tests.length === 0) {
-      return process.nextTick(done);
+      return process.nextTick(done)
     }
 
-    let driver = this;
-    browser.then(queueTests).catch(done);
+    let driver = this
+    browser.then(queueTests).catch(done)
 
-    browser.match = (spec) => browserSpec.match(spec);
-    browser.hasFeature = (feature) => browserSpec.hasFeature(feature);
+    browser.match = (spec) => browserSpec.match(spec)
+    browser.hasFeature = (feature) => browserSpec.hasFeature(feature)
 
-    function queueTests() {
-      var queued = 0;
-      var numberOfAttempts = 3;
+    function queueTests () {
+      var queued = 0
+      var numberOfAttempts = 3
 
       if (!driver.config.retry) {
-        numberOfAttempts = 1;
+        numberOfAttempts = 1
       }
 
-      let harness = new TestHarness();
-      harness.stream.pipe(browser.stream);
+      let harness = new TestHarness()
+      harness.stream.pipe(browser.stream)
 
       // used to notify Saucelabs on finish whether the overall test was successful
-      var allOk = true;
+      var allOk = true
 
       for (let test of tests) {
-        queueTest(test);
+        queueTest(test)
       }
 
-      harness.run();
+      harness.run()
 
-      function queueTest(test, attempt) {
-        let name = test.name;
-        let fileName = test.fileName;
-        let fn = test.fn;
+      function queueTest (test, attempt) {
+        let name = test.name
+        let fileName = test.fileName
+        let fn = test.fn
 
         if (!attempt) {
-          attempt = 1;
+          attempt = 1
         }
 
         let opts = {
-          timeout: driver.config.tapeTimeout || 85000,
-        };
-        queued++;
+          timeout: driver.config.tapeTimeout || 85000
+        }
+        queued++
 
-        let testName = name;
+        let testName = name
         if (attempt > 1) {
-          testName += ` (retry ${attempt - 1})`;
+          testName += ` (retry ${attempt - 1})`
         }
         harness.addTest(testName, opts, (t) => {
-          let startTime = Date.now();
-          harness.pause();
+          let startTime = Date.now()
+          harness.pause()
 
-          let ended = false;
+          let ended = false
 
           t.on('result', function (result) {
             if (!result.ok) {
@@ -210,42 +210,42 @@ class Driver {
                 file: result.file || null,
                 line: result.line || null,
                 column: result.column || null,
-                functionName: result.functionName || null,
-              };
-              newrelic.recordCustomEvent('JilTestResult', eventData);
+                functionName: result.functionName || null
+              }
+              newrelic.recordCustomEvent('JilTestResult', eventData)
             }
-          });
+          })
 
           t.on('end', function () {
-            let endTime = Date.now();
+            let endTime = Date.now()
 
-            let plannedOk = !t._plan || t._plan <= t.assertCount;
-            let allAssertsOk = t._ok;
+            let plannedOk = !t._plan || t._plan <= t.assertCount
+            let allAssertsOk = t._ok
 
             if (!allAssertsOk || !plannedOk) {
               if (attempt < numberOfAttempts) {
-                harness.clear();
-                queueTest(test, attempt + 1);
+                harness.clear()
+                queueTest(test, attempt + 1)
               } else if (!isRetry && driver.config.retry) {
-                harness.clear();
-                driver.output.log(`# storing failed test for later retry: ${browserSpec.toString()} - ${test.name}`);
-                driver.failedTests.push(new DeviceTest(test, browserSpec));
+                harness.clear()
+                driver.output.log(`# storing failed test for later retry: ${browserSpec.toString()} - ${test.name}`)
+                driver.failedTests.push(new DeviceTest(test, browserSpec))
               }
             }
 
             // if plan is less than expected, there will be one more result event
             // where we will resume stream instead
             if (plannedOk) {
-              harness.resume();
+              harness.resume()
             } else {
-              t.once('result', handlePlanResult);
+              t.once('result', handlePlanResult)
             }
 
-            allOk = allOk && (t._ok || attempt < numberOfAttempts);
-            currentTest = null;
-            ended = true;
+            allOk = allOk && (t._ok || attempt < numberOfAttempts)
+            currentTest = null
+            ended = true
 
-            queued--;
+            queued--
 
             var eventData = {
               browserName: browserSpec.desired.browserName,
@@ -259,56 +259,56 @@ class Driver {
               retryRun: isRetry,
               passed: plannedOk && allAssertsOk,
               duration: endTime - startTime,
-              remaining: queued,
-            };
-            newrelic.recordCustomEvent('JilTest', eventData);
+              remaining: queued
+            }
+            newrelic.recordCustomEvent('JilTest', eventData)
 
             if (queued === 0) {
-              process.nextTick(allDone);
+              process.nextTick(allDone)
             }
-          });
+          })
 
-          function handlePlanResult() {
+          function handlePlanResult () {
             if (ended && t.error) {
               if (attempt < numberOfAttempts || (!isRetry && driver.config.retry)) {
-                harness.clear();
+                harness.clear()
               }
-              harness.resume();
+              harness.resume()
             }
           }
 
-          let id = driver.generateID();
-          currentTest = t;
+          let id = driver.generateID()
+          currentTest = t
           try {
-            fn(t, browser, router.handle(id, false, browser));
+            fn(t, browser, router.handle(id, false, browser))
           } catch (e) {
-            newrelic.noticeError(e);
-            t.error(e);
-            t.end();
+            newrelic.noticeError(e)
+            t.error(e)
+            t.end()
           }
-        });
+        })
       }
 
-      function allDone() {
-        driver.output.log('# tearing down ' + browserSpec);
+      function allDone () {
+        driver.output.log('# tearing down ' + browserSpec)
         driver.closeBrowser(allOk, browser, (err) => {
-          driver.output.log('# closed ' + browserSpec);
+          driver.output.log('# closed ' + browserSpec)
           if (err) {
-            newrelic.noticeError(err);
+            newrelic.noticeError(err)
           }
-          done(err);
-        });
+          done(err)
+        })
       }
     }
 
     browser.catch((err) => {
-      if (currentTest) currentTest.fail(err);
-      driver.output.log('# closing due to error ' + browserSpec);
+      if (currentTest) currentTest.fail(err)
+      driver.output.log('# closing due to error ' + browserSpec)
       this.closeBrowser(false, browser, () => {
-        driver.output.log('# closed due to error ' + browserSpec);
-        done(err);
-      });
-    });
+        driver.output.log('# closed due to error ' + browserSpec)
+        done(err)
+      })
+    })
   }
 
   /**
@@ -318,73 +318,73 @@ class Driver {
    * @param {Array.<DeviceTest>}  tests
    * @param {function} cb
    */
-  runDeviceTests(tests, cb) {
-    let driver = this;
+  runDeviceTests (tests, cb) {
+    let driver = this
     // find unique Browsers
-    let testEnvs = findUniqueTestEnvs(tests);
+    let testEnvs = findUniqueTestEnvs(tests)
 
-    var running = new Set();
+    var running = new Set()
     for (let testEnv of testEnvs) {
-      let browserSpec = testEnv.browserSpec;
-      let testRun = new TestRun(testEnv, this.router, this.config);
-      this.output.addChild(browserSpec.toString(), testRun.stream);
+      let browserSpec = testEnv.browserSpec
+      let testRun = new TestRun(testEnv, this.router, this.config)
+      this.output.addChild(browserSpec.toString(), testRun.stream)
 
-      let testsToRun = findTests(tests, browserSpec);
-      driver.output.log(`# retrying ${testsToRun.length} tests for ${browserSpec.toString()}`);
-      this.runTestRun(testRun, testsToRun, true, onBrowserFinished);
-      running.add(testRun);
+      let testsToRun = findTests(tests, browserSpec)
+      driver.output.log(`# retrying ${testsToRun.length} tests for ${browserSpec.toString()}`)
+      this.runTestRun(testRun, testsToRun, true, onBrowserFinished)
+      running.add(testRun)
     }
 
-    function onBrowserFinished(err, testRun) {
+    function onBrowserFinished (err, testRun) {
       if (err) {
-        driver.output.log(`# got error while running tests (${testRun.browserSpec.toString()})`);
-        newrelic.noticeError(err);
+        driver.output.log(`# got error while running tests (${testRun.browserSpec.toString()})`)
+        newrelic.noticeError(err)
       }
 
-      running.delete(testRun);
-      driver.output.log(`# closed a browser, ${running.size} remaining`);
+      running.delete(testRun)
+      driver.output.log(`# closed a browser, ${running.size} remaining`)
 
       if (running.size === 0) {
-        cb(err);
+        cb(err)
       }
     }
 
-    function findUniqueTestEnvs(tests) {
+    function findUniqueTestEnvs (tests) {
       return tests
         .map((test) => {
-          return test.browserSpec;
+          return test.browserSpec
         })
         .reduce((reduced, spec) => {
-          let found = false;
+          let found = false
           reduced.forEach((s) => {
             if (s.same(spec)) {
-              found = true;
+              found = true
             }
-          });
+          })
           if (!found) {
-            reduced.push(spec);
+            reduced.push(spec)
           }
-          return reduced;
+          return reduced
         }, [])
         .map((browserSpec) => {
           return driver.testEnvs.find((testEnv) => {
-            return testEnv.browserSpec.same(browserSpec);
-          });
-        });
+            return testEnv.browserSpec.same(browserSpec)
+          })
+        })
     }
 
-    function findTests(tests, browserSpec) {
+    function findTests (tests, browserSpec) {
       return tests
         .filter((test) => {
-          return test.browserSpec.same(browserSpec);
+          return test.browserSpec.same(browserSpec)
         })
         .map((deviceTest) => {
-          return deviceTest.test;
-        });
+          return deviceTest.test
+        })
     }
   }
 }
 
-Driver.prototype.Matcher = Matcher;
+Driver.prototype.Matcher = Matcher
 
-module.exports = Driver;
+module.exports = Driver

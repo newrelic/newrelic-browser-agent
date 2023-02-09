@@ -23,32 +23,32 @@ jil.browserTest('simple sync api test', function (t) {
       custom: {
         'in-function-1': true,
         'in-function-2': true,
-        'click-handler': true,
-      },
+        'click-handler': true
+      }
     },
     children: [
       {
         name: 'customTracer',
         attrs: {
-          name: 'function 1',
+          name: 'function 1'
         },
-        children: [],
+        children: []
       },
       {
         name: 'customTracer',
         attrs: {
-          name: 'function 2',
+          name: 'function 2'
         },
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(6 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     newrelic.interaction().setAttribute('click-handler', true)
     var interaction = newrelic.interaction()
 
@@ -69,7 +69,7 @@ jil.browserTest('simple sync api test', function (t) {
     cb()
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -84,25 +84,25 @@ jil.browserTest('simple async api test', function (t) {
     name: 'interaction',
     attrs: {
       custom: {
-        'raf-cb': true,
-      },
+        'raf-cb': true
+      }
     },
     children: [
       {
         name: 'customTracer',
         attrs: {
-          name: 'requestAnimationFrame',
+          name: 'requestAnimationFrame'
         },
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(3 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     var tracer = newrelic.interaction().createTracer('requestAnimationFrame', function () {
       newrelic.interaction().setAttribute('raf-cb', true)
       return 123
@@ -113,7 +113,7 @@ jil.browserTest('simple async api test', function (t) {
     })
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -128,25 +128,25 @@ jil.browserTest('async api no callback', function (t) {
     name: 'interaction',
     attrs: {
       custom: {
-        'setTimeout-cb': true,
-      },
+        'setTimeout-cb': true
+      }
     },
     children: [
       {
         name: 'customTracer',
         attrs: {
-          name: 'custom-async',
+          name: 'custom-async'
         },
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(2 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     var asyncDone = newrelic.interaction().createTracer('custom-async')
 
     originalSetTimeout(asyncDone, 5)
@@ -156,7 +156,7 @@ jil.browserTest('async api no callback', function (t) {
     }, 5)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -235,25 +235,25 @@ jil.browserTest('simple sync api test with throw', function (t) {
     name: 'interaction',
     attrs: {
       custom: {
-        'setTimeout-cb': true,
-      },
+        'setTimeout-cb': true
+      }
     },
     children: [
       {
         name: 'customTracer',
         attrs: {
-          name: 'function 1',
+          name: 'function 1'
         },
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(4 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     try {
       newrelic.interaction().createTracer('function 1', (val) => {
         setTimeout(() => {
@@ -268,7 +268,7 @@ jil.browserTest('simple sync api test with throw', function (t) {
     }
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -284,25 +284,25 @@ jil.browserTest('simple async api test with throw', function (t) {
     name: 'interaction',
     attrs: {
       custom: {
-        'setTimeout-cb': true,
-      },
+        'setTimeout-cb': true
+      }
     },
     children: [
       {
         name: 'customTracer',
         attrs: {
-          name: 'requestAnimationFrame',
+          name: 'requestAnimationFrame'
         },
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(3 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     var tracer = newrelic.interaction().createTracer('requestAnimationFrame', function () {
       setTimeout(function () {
         newrelic.interaction().setAttribute('setTimeout-cb', true)
@@ -320,7 +320,7 @@ jil.browserTest('simple async api test with throw', function (t) {
     })
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -336,25 +336,25 @@ jil.browserTest('async api test with throw does not leave context', function (t)
     name: 'interaction',
     attrs: {
       custom: {
-        'setTimeout-cb': true,
-      },
+        'setTimeout-cb': true
+      }
     },
     children: [
       {
         name: 'customTracer',
         attrs: {
-          name: 'requestAnimationFrame',
+          name: 'requestAnimationFrame'
         },
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(3 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     var tracer = newrelic.interaction().createTracer('requestAnimationFrame', function () {
       throw expected
     })
@@ -373,7 +373,7 @@ jil.browserTest('async api test with throw does not leave context', function (t)
     }, 5)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -390,40 +390,40 @@ jil.browserTest('simple sync api test with throw and sibling', function (t) {
     attrs: {
       custom: {
         'sibling-setTimeout-cb': true,
-        'nested-setTimeout-cb': true,
-      },
+        'nested-setTimeout-cb': true
+      }
     },
     children: [
       {
         type: 'customTracer',
         attrs: {
-          name: 'function 1',
+          name: 'function 1'
         },
         children: [
           {
             type: 'customTracer',
             attrs: {
-              name: 'nested-child',
+              name: 'nested-child'
             },
-            children: [],
-          },
-        ],
+            children: []
+          }
+        ]
       },
       {
         type: 'customTracer',
         attrs: {
-          name: 'sibling-child',
+          name: 'sibling-child'
         },
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(4 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     try {
       newrelic.interaction().createTracer('function 1', (val) => {
         setTimeout(() => {
@@ -444,7 +444,7 @@ jil.browserTest('simple sync api test with throw and sibling', function (t) {
     }, 5)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -460,16 +460,16 @@ jil.browserTest('end interaction', function (t) {
     children: [
       {
         name: 'customEnd',
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(2 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     setTimeout(() => {
       setTimeout(newrelic.interaction().createTracer('wont-be-added'))
       cb()
@@ -477,7 +477,7 @@ jil.browserTest('end interaction', function (t) {
     }, 5)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -491,23 +491,23 @@ jil.browserTest('custom interaction name', function (t) {
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
     attrs: {
-      customName: 'salt water taffy',
+      customName: 'salt water taffy'
     },
-    children: [],
+    children: []
   })
 
   t.plan(2 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     setTimeout(() => {
       newrelic.interaction().setName('salt water taffy')
       cb()
     }, 5)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -522,24 +522,24 @@ jil.browserTest('custom actionText', function (t) {
     name: 'interaction',
     attrs: {
       custom: {
-        actionText: 'Albertosaurus',
-      },
+        actionText: 'Albertosaurus'
+      }
     },
-    children: [],
+    children: []
   })
 
   t.plan(2 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     setTimeout(() => {
       newrelic.interaction().actionText('Albertosaurus')
       cb()
     }, 5)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -552,14 +552,14 @@ jil.browserTest('ignore interaction', function (t) {
 
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [],
+    children: []
   })
 
   t.plan(3 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     setTimeout(() => {
       setTimeout(() => null)
       cb()
@@ -567,7 +567,7 @@ jil.browserTest('ignore interaction', function (t) {
     }, 5)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     t.ok(interaction.ignored, 'interaction should be ignored')
@@ -587,17 +587,17 @@ jil.browserTest('custom attributes', function (t) {
         'interaction-string': '123',
         'interaction-true': true,
         'interaction-false': false,
-        'interaction-null': null,
-      },
+        'interaction-null': null
+      }
     },
-    children: [],
+    children: []
   })
 
   t.plan(3 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     newrelic.interaction().setAttribute('interaction-float', 123.456)
     newrelic.interaction().setAttribute('interaction-string', '123')
     newrelic.interaction().setAttribute('interaction-true', true)
@@ -606,7 +606,7 @@ jil.browserTest('custom attributes', function (t) {
     setTimeout(cb, 5)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     t.notok(interaction.ignored, 'interaction should not be ignored')
@@ -625,10 +625,10 @@ jil.browserTest('custom attributes and interaction attributes', function (t) {
         inside: 0,
         customOutside: true,
         customInside: true,
-        override: true,
-      },
+        override: true
+      }
     },
-    children: [],
+    children: []
   })
 
   t.plan(3 + validator.count)
@@ -638,7 +638,7 @@ jil.browserTest('custom attributes and interaction attributes', function (t) {
   newrelic.setCustomAttribute('override', false)
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     newrelic.interaction().setAttribute('inside', 0)
     newrelic.setCustomAttribute('inside', 1)
     newrelic.setCustomAttribute('customInside', true)
@@ -646,7 +646,7 @@ jil.browserTest('custom attributes and interaction attributes', function (t) {
     setTimeout(cb, 5)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     t.notok(interaction.ignored, 'interaction should not be ignored')
@@ -665,10 +665,10 @@ jil.browserTest('custom attributes and interaction attributes', function (t) {
         inside: 0,
         customOutside: true,
         customInside: true,
-        override: true,
-      },
+        override: true
+      }
     },
-    children: [],
+    children: []
   })
 
   t.plan(3 + validator.count)
@@ -678,7 +678,7 @@ jil.browserTest('custom attributes and interaction attributes', function (t) {
   newrelic.setCustomAttribute('override', false)
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     newrelic.interaction().setAttribute('inside', 0)
     newrelic.setCustomAttribute('inside', 1)
     newrelic.setCustomAttribute('customInside', true)
@@ -686,7 +686,7 @@ jil.browserTest('custom attributes and interaction attributes', function (t) {
     setTimeout(cb, 5)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     t.notok(interaction.ignored, 'interaction should not be ignored')
@@ -709,24 +709,24 @@ jil.browserTest('context store and onEnd', function (t) {
     attrs: {
       custom: {
         foo: 'bar',
-        otherFoo: 'bar',
-      },
+        otherFoo: 'bar'
+      }
     },
     children: [
       {
         type: 'customTracer',
         attrs: {
-          name: 'setTimeout',
-        },
-      },
-    ],
+          name: 'setTimeout'
+        }
+      }
+    ]
   })
 
   t.plan(5 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     var contextStore = null
     newrelic.interaction().getContext(function (ctx) {
       contextStore = ctx
@@ -751,7 +751,7 @@ jil.browserTest('context store and onEnd', function (t) {
     })
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     t.notok(interaction.ignored, 'interaction should not be ignored')
@@ -765,19 +765,19 @@ jil.browserTest('save', function (t) {
 
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [],
+    children: []
   })
 
   t.plan(1 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     newrelic.interaction().save()
     cb()
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.save, 'should be set to save')
     validator.validate(t, interaction)
     t.end()
@@ -789,20 +789,20 @@ jil.browserTest('save with ignore', function (t) {
 
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [],
+    children: []
   })
 
   t.plan(2 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     newrelic.interaction().ignore()
     newrelic.interaction().save()
     cb()
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.save, 'should be set to save')
     t.ok(interaction.save, 'should be set to ignore')
     validator.validate(t, interaction)
@@ -815,20 +815,20 @@ jil.browserTest('save with ignore after', function (t) {
 
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [],
+    children: []
   })
 
   t.plan(2 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     newrelic.interaction().save()
     newrelic.interaction().ignore()
     cb()
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.save, 'should be set to save')
     t.ok(interaction.save, 'should be set to ignore')
     validator.validate(t, interaction)
@@ -845,18 +845,18 @@ jil.browserTest('interaction outside interaction', function (t) {
       trigger: 'api',
       custom: {
         included: true,
-        delayed: true,
-      },
+        delayed: true
+      }
     },
     children: [
       {
         type: 'customTracer',
         attrs: {
-          name: 'timeout',
+          name: 'timeout'
         },
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(3 + validator.count)
@@ -866,7 +866,7 @@ jil.browserTest('interaction outside interaction', function (t) {
 
     helpers.startInteraction(onInteractionStart, afterInteractionDone, {
       eventType: 'api',
-      handle: interaction,
+      handle: interaction
     })
   }, 0)
 
@@ -874,7 +874,7 @@ jil.browserTest('interaction outside interaction', function (t) {
     newrelic.interaction().setAttribute('excluded', true)
   })
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     newrelic.interaction().setAttribute('included', true)
     setTimeout(function () {
       newrelic.interaction().setAttribute('delayed', true)
@@ -882,7 +882,7 @@ jil.browserTest('interaction outside interaction', function (t) {
     }, 50)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     t.notok(interaction.ignored, 'interaction should not be ignored')
@@ -900,26 +900,26 @@ jil.browserTest('interaction outside wrapped function', function (t) {
       trigger: 'api',
       custom: {
         delayed: true,
-        included: true,
-      },
+        included: true
+      }
     },
     children: [
       {
         type: 'customTracer',
         attrs: {
-          name: 'outer',
+          name: 'outer'
         },
         children: [
           {
             type: 'customTracer',
             attrs: {
-              name: 'timeout',
+              name: 'timeout'
             },
-            children: [],
-          },
-        ],
-      },
-    ],
+            children: []
+          }
+        ]
+      }
+    ]
   })
 
   t.plan(3 + validator.count)
@@ -931,10 +931,10 @@ jil.browserTest('interaction outside wrapped function', function (t) {
 
       helpers.startInteraction(onInteractionStart, afterInteractionDone, {
         eventType: 'api',
-        handle: interaction,
+        handle: interaction
       })
 
-      function onInteractionStart(cb) {
+      function onInteractionStart (cb) {
         newrelic.interaction().setAttribute('alsoExcluded', true)
         interaction.setAttribute('included', true)
         setTimeout(
@@ -953,7 +953,7 @@ jil.browserTest('interaction outside wrapped function', function (t) {
     newrelic.interaction().setAttribute('excluded', true)
   })
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     t.notok(interaction.ignored, 'interaction should not be ignored')
@@ -969,24 +969,24 @@ jil.browserTest('set trigger', function (t) {
     name: 'interaction',
     attrs: {
       trigger: 'bar',
-      customName: 'foo',
+      customName: 'foo'
     },
     children: [
       {
         type: 'customTracer',
         attrs: {
-          name: 'timeout',
+          name: 'timeout'
         },
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(3 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     newrelic.interaction().setName('foo', 'foo')
     setTimeout(
       newrelic.interaction().createTracer('timeout', function () {
@@ -1001,7 +1001,7 @@ jil.browserTest('set trigger', function (t) {
     newrelic.interaction().setAttribute('excluded', true)
   })
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     t.notok(interaction.ignored, 'interaction should not be ignored')
@@ -1017,25 +1017,25 @@ jil.browserTest('createTracer no name', function (t) {
     name: 'interaction',
     attrs: {
       custom: {
-        foo: 'bar',
-      },
+        foo: 'bar'
+      }
     },
     children: [
       {
         type: 'customTracer',
         attrs: {
-          name: 'timeout',
+          name: 'timeout'
         },
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(3 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     setTimeout(
       newrelic.interaction().createTracer(null, function () {
         setTimeout(
@@ -1049,7 +1049,7 @@ jil.browserTest('createTracer no name', function (t) {
     )
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     t.notok(interaction.ignored, 'interaction should not be ignored')
@@ -1063,14 +1063,14 @@ jil.browserTest('createTracer no name, no callback', function (t) {
 
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [],
+    children: []
   })
 
   t.plan(5 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     var start = helpers.now()
     cb()
     setTimeout['nr@original'].call(window, newrelic.interaction().createTracer(), 50)
@@ -1079,7 +1079,7 @@ jil.browserTest('createTracer no name, no callback', function (t) {
     })
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(
       interaction.root.end - interaction.root.start < 50,
       'should not include duration of no name, no callback tracer'
@@ -1099,10 +1099,10 @@ jil.browserTest('reuse handle from outside interaction', function (t) {
     name: 'interaction',
     attrs: {
       custom: {
-        foo: 'baz',
-      },
+        foo: 'baz'
+      }
     },
-    children: [],
+    children: []
   })
 
   t.plan(3 + validator.count)
@@ -1111,7 +1111,7 @@ jil.browserTest('reuse handle from outside interaction', function (t) {
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     interactionHandle = newrelic.interaction()
     cb()
 
@@ -1119,7 +1119,7 @@ jil.browserTest('reuse handle from outside interaction', function (t) {
     newrelic.interaction().setAttribute('foo', 'baz')
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     t.notok(interaction.ignored, 'interaction should not be ignored')

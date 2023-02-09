@@ -3,30 +3,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require('../../../tools/jil/index');
-const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require('./assertion-helpers');
+const testDriver = require('../../../tools/jil/index')
+const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require('./assertion-helpers')
 
-let supported = testDriver.Matcher.withFeature('reliableUnloadEvent');
+let supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 
 testDriver.test('reporting errors from setInterval callbacks', supported, function (t, browser, router) {
   let assetURL = router.assetURL('set-interval-error.html', {
     init: {
       page_view_timing: {
-        enabled: false,
+        enabled: false
       },
       metrics: {
-        enabled: false,
-      },
-    },
-  });
+        enabled: false
+      }
+    }
+  })
 
-  let rumPromise = router.expectRumAndConditionAndErrors('window.intervalFired');
-  let loadPromise = browser.get(assetURL);
+  let rumPromise = router.expectRumAndConditionAndErrors('window.intervalFired')
+  let loadPromise = browser.get(assetURL)
 
   Promise.all([rumPromise, loadPromise])
     .then(([response]) => {
-      assertErrorAttributes(t, response.query);
-      const actualErrors = getErrorsFromResponse(response, browser);
+      assertErrorAttributes(t, response.query)
+      const actualErrors = getErrorsFromResponse(response, browser)
       let expectedErrors = [
         {
           name: 'Error',
@@ -34,19 +34,19 @@ testDriver.test('reporting errors from setInterval callbacks', supported, functi
           stack: [
             {
               u: router.assetURL('js/set-interval-error.js').split('?')[0],
-              l: 10,
-            },
-          ],
-        },
-      ];
+              l: 10
+            }
+          ]
+        }
+      ]
 
-      assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL);
-      t.end();
+      assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL)
+      t.end()
     })
-    .catch(fail);
+    .catch(fail)
 
-  function fail(err) {
-    t.error(err);
-    t.end();
+  function fail (err) {
+    t.error(err)
+    t.end()
   }
-});
+})

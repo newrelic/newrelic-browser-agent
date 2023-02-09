@@ -24,7 +24,7 @@ var fileLocation = {
   origin: 'file://',
   pathname: '/Users/jporter/Documents/Code/test.html',
   port: '',
-  protocol: 'file:',
+  protocol: 'file:'
 }
 
 var validationCases = [
@@ -32,49 +32,49 @@ var validationCases = [
     name: 'Invalid: missing regex',
     expected: false,
     rule: {
-      replacement: 'missing-regex-field',
-    },
+      replacement: 'missing-regex-field'
+    }
   },
   {
     // this case is okay because when replacement is null, replacement defaults to '*'
     name: 'Valid: missing replacement',
     expected: true,
     rule: {
-      regex: 'missing-replacment-field',
-    },
+      regex: 'missing-replacment-field'
+    }
   },
   {
     name: 'Invalid regex type (must be string or RegExp)',
     expected: false,
     rule: {
       regex: {},
-      replacement: 'invalid regex type',
-    },
+      replacement: 'invalid regex type'
+    }
   },
   {
     name: 'Invalid replacement type (must be string)',
     expected: false,
     rule: {
       regex: 'invalid-replacement-type',
-      replacement: {},
-    },
+      replacement: {}
+    }
   },
   {
     name: 'Valid string regex',
     expected: true,
     rule: {
       regex: 'pii',
-      replacement: 'obfuscated',
-    },
+      replacement: 'obfuscated'
+    }
   },
   {
     name: 'Valid RegExp regex',
     expected: true,
     rule: {
       regex: /[i]/g,
-      replacement: 'obfuscated',
-    },
-  },
+      replacement: 'obfuscated'
+    }
+  }
 ]
 
 jil.browserTest('Obfuscation validateRules input', function (t) {
@@ -89,7 +89,7 @@ jil.browserTest('Obfuscation validateRules input', function (t) {
 
 jil.browserTest('Should Obfuscate', function (t) {
   setConfiguration(agentIdentifier, {
-    obfuscate: validationCases.filter((x) => x.expected).map((x) => x.rule),
+    obfuscate: validationCases.filter((x) => x.expected).map((x) => x.rule)
   })
 
   t.ok(obfuscatorInst.shouldObfuscate(), 'When init.obfuscate is defined, shouldObfuscate is true')
@@ -102,7 +102,7 @@ jil.browserTest('Should Obfuscate', function (t) {
 
 jil.browserTest('Get Rules', function (t) {
   setConfiguration(agentIdentifier, {
-    obfuscate: validationCases.filter((x) => x.expected).map((x) => x.rule),
+    obfuscate: validationCases.filter((x) => x.expected).map((x) => x.rule)
   })
 
   t.ok(!!obfuscate.getRules(agentIdentifier).length, 'getRules should generate a list of rules from init.obfuscate')
@@ -126,7 +126,7 @@ jil.browserTest('Get Rules', function (t) {
 
 jil.browserTest('Obfuscate String Method', function (t) {
   setConfiguration(agentIdentifier, {
-    obfuscate: validationCases.filter((x) => x.expected).map((x) => x.rule),
+    obfuscate: validationCases.filter((x) => x.expected).map((x) => x.rule)
   })
 
   t.ok(

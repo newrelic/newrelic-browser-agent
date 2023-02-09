@@ -10,8 +10,8 @@ onconnect = function (event) {
       // Let errors go unhandled so bad commands crashes the tests for troubleshooting.
       let retVal = eval(e.data.fn) // run the literal string cmd
       if (typeof retVal == 'function')
-        // and if it's a function definition, invoke it
-        retVal()
+      // and if it's a function definition, invoke it
+      { retVal() }
     }
   }
 }

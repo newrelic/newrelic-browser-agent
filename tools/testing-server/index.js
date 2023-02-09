@@ -1,3 +1,3 @@
-const AssetServer = require('./asset-server');
+const AssetServer = require('./asset-server')
 
-module.exports = AssetServer;
+module.exports = AssetServer

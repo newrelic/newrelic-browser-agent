@@ -20,18 +20,18 @@ jil.browserTest('spa multiple event handlers', function (t) {
       {
         type: 'customTracer',
         attrs: {
-          name: 'timer',
+          name: 'timer'
         },
-        children: [],
+        children: []
       },
       {
         type: 'customTracer',
         attrs: {
-          name: 'timer',
+          name: 'timer'
         },
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(3 + validator.count)
@@ -58,14 +58,14 @@ jil.browserTest('spa multiple event handlers', function (t) {
   })
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone, {
-    element: el,
+    element: el
   })
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     cb()
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)

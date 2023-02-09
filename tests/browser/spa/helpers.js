@@ -75,19 +75,19 @@ module.exports = {
   emitsPopstateEventOnHashChanges,
   onAggregatorLoaded,
   now,
-  setupData,
+  setupData
 }
 
 var lastId = 0
 
-function now() {
+function now () {
   if (typeof performance === 'undefined' || !performance.now) {
     return Date.now()
   }
   return Math.round(performance.now())
 }
 
-function onWindowLoad(cb) {
+function onWindowLoad (cb) {
   if (window.addEventListener) {
     window.addEventListener('load', cb, false)
   } else {
@@ -95,25 +95,25 @@ function onWindowLoad(cb) {
   }
 }
 
-function onAggregatorLoaded(cb) {
+function onAggregatorLoaded (cb) {
   if (aggregatorLoaded) return cb()
   aggregatorLoadQueue.push(cb)
 }
 
-function emitsPopstateEventOnHashChanges() {
+function emitsPopstateEventOnHashChanges () {
   return !isEdge() && !isInternetExplorer()
 }
 
-function isEdge() {
+function isEdge () {
   return window.navigator.userAgent.match(/Edge\/\d+/)
 }
 
-function isInternetExplorer() {
+function isInternetExplorer () {
   let userAgent = window.navigator.userAgent
   return userAgent.match(/msie/i) || userAgent.match(/rv:(\d+)/)
 }
 
-function startInteraction(onInteractionStart, afterInteractionFinish, options = {}) {
+function startInteraction (onInteractionStart, afterInteractionFinish, options = {}) {
   let interactionId = null
   let done = false
   let eventType = options.eventType || 'click'
@@ -145,7 +145,7 @@ function startInteraction(onInteractionStart, afterInteractionFinish, options = 
     }
   })
 
-  function startFromUnwrappedTask() {
+  function startFromUnwrappedTask () {
     switch (eventType) {
       case 'click':
         let el = options.element || document.createElement('div')
@@ -172,7 +172,7 @@ function startInteraction(onInteractionStart, afterInteractionFinish, options = 
         break
     }
 
-    function handleInteractionEvent(event) {
+    function handleInteractionEvent (event) {
       interactionId = lastId++
       newrelic.interaction().setAttribute('__interactionId', interactionId)
       event.preventDefault()
@@ -184,13 +184,13 @@ function startInteraction(onInteractionStart, afterInteractionFinish, options = 
   }
 }
 
-function simulateClick(el, ev) {
+function simulateClick (el, ev) {
   let evt = document.createEvent('Events')
   evt.initEvent(ev || 'click', true, false)
   el.dispatchEvent(evt)
 }
 
-function simulateEvent(elType, evtType) {
+function simulateEvent (elType, evtType) {
   let el = document.createElement(elType)
   document.body.appendChild(el)
   let evt = document.createEvent('Events')
@@ -198,7 +198,7 @@ function simulateEvent(elType, evtType) {
   el.dispatchEvent(evt)
 }
 
-function InteractionValidator(json) {
+function InteractionValidator (json) {
   this.json = json
   this.count = 0
   this.initialize()
@@ -208,10 +208,10 @@ var handledKeys = ['attrs', 'children', 'jsTime', 'name', 'type']
 
 let TIMED_NODE_TYPES = ['customTracer', 'interaction', 'ajax']
 
-InteractionValidator.prototype.initialize = function initialize() {
+InteractionValidator.prototype.initialize = function initialize () {
   var validator = this
   validator.count += 2 // end time
-  this.forEachNode(null, function count(node) {
+  this.forEachNode(null, function count (node) {
     validator.count += 2 // children
     validator.count += 1 // name
     if (node.jsTime) validator.count += 1
@@ -220,12 +220,12 @@ InteractionValidator.prototype.initialize = function initialize() {
   })
 }
 
-InteractionValidator.prototype.validate = function validate(t, interaction) {
+InteractionValidator.prototype.validate = function validate (t, interaction) {
   var root = filterInternal(interaction.root)
   var totalDuration = 0
   var endTime = 0
 
-  this.forEachNode(root, function validateNode(expected, actual) {
+  this.forEachNode(root, function validateNode (expected, actual) {
     mapOwn(expected, function (key) {
       // mak sure we don't pass because of a typo
       if (handledKeys.indexOf(key) === -1) t.fail('expected unknown key ' + key)
@@ -270,10 +270,10 @@ InteractionValidator.prototype.validate = function validate(t, interaction) {
   t.equal(root.end, endTime, 'should have correct end Time')
 }
 
-InteractionValidator.prototype.forEachNode = function forEachNode(interactionNode, fn) {
+InteractionValidator.prototype.forEachNode = function forEachNode (interactionNode, fn) {
   runNode(this.json, interactionNode)
 
-  function runNode(node, interactionNode) {
+  function runNode (node, interactionNode) {
     fn(node, interactionNode)
     if (interactionNode) interactionNode.children.sort(byId)
     if (node.children) {
@@ -284,11 +284,11 @@ InteractionValidator.prototype.forEachNode = function forEachNode(interactionNod
   }
 }
 
-function byId(a, b) {
+function byId (a, b) {
   return a.id > b.id ? 1 : -1
 }
 
-function filterInternal(original) {
+function filterInternal (original) {
   var filtered = {}
 
   for (var key in original) {
@@ -299,7 +299,7 @@ function filterInternal(original) {
 
   return filtered
 
-  function filteredChildren(children) {
+  function filteredChildren (children) {
     return children.reduce((list, child) => {
       if (child.type !== 'timer' || child.attrs.method !== 'setTimeout (internal)') {
         return list.concat([filterInternal(child)])

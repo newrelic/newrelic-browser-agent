@@ -3,54 +3,54 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil');
+const jil = require('jil')
 
 jil.browserTest('basic MutationObserver instrumentation', function (t) {
-  let helpers = require('./helpers');
+  let helpers = require('./helpers')
 
   let validator = new helpers.InteractionValidator({
     attrs: {
-      trigger: 'click',
+      trigger: 'click'
     },
     name: 'interaction',
     children: [
       {
         type: 'customTracer',
         attrs: {
-          name: 'timer',
+          name: 'timer'
         },
-        children: [],
+        children: []
       },
       {
         type: 'customTracer',
         attrs: {
-          name: 'timer',
+          name: 'timer'
         },
-        children: [],
-      },
-    ],
-  });
+        children: []
+      }
+    ]
+  })
 
-  t.plan(validator.count + 2);
+  t.plan(validator.count + 2)
 
-  helpers.startInteraction(onInteractionStart, afterInteractionDone);
+  helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  var el = document.createElement('div');
+  var el = document.createElement('div')
   var observer = new MutationObserver(function () {
-    setTimeout(newrelic.interaction().createTracer('timer', function () {}));
-  });
+    setTimeout(newrelic.interaction().createTracer('timer', function () {}))
+  })
 
-  observer.observe(el, { childList: true });
+  observer.observe(el, { childList: true })
 
-  function onInteractionStart(cb) {
-    el.innerHTML = 'mutated';
-    setTimeout(newrelic.interaction().createTracer('timer', cb));
+  function onInteractionStart (cb) {
+    el.innerHTML = 'mutated'
+    setTimeout(newrelic.interaction().createTracer('timer', cb))
   }
 
-  function afterInteractionDone(interaction) {
-    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain');
-    t.ok(interaction.root.end, 'interaction should be finished');
-    validator.validate(t, interaction);
-    t.end();
+  function afterInteractionDone (interaction) {
+    t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
+    t.ok(interaction.root.end, 'interaction should be finished')
+    validator.validate(t, interaction)
+    t.end()
   }
-});
+})

@@ -14,19 +14,19 @@ jil.browserTest('callback timing', function (t) {
       {
         type: 'customTracer',
         attrs: {
-          name: 'timer',
+          name: 'timer'
         },
         jsTime: 300,
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(2 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     setTimeout(
       () =>
         newrelic.interaction().createTracer('timer', () => {
@@ -39,7 +39,7 @@ jil.browserTest('callback timing', function (t) {
     blockFor(100)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -56,16 +56,16 @@ jil.browserTest('callback timing multiple callbacks', function (t) {
       {
         name: 'ajax',
         jsTime: 400,
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(2 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     var xhr = new XMLHttpRequest()
 
     xhr.addEventListener('load', function () {
@@ -82,7 +82,7 @@ jil.browserTest('callback timing multiple callbacks', function (t) {
     blockFor(100)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -101,14 +101,14 @@ jil.browserTest('callback timing microtasks', function (t) {
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
     jsTime: 400,
-    children: [],
+    children: []
   })
 
   t.plan(2 + validator.count)
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     Promise.resolve().then(function () {
       blockFor(300)
       cb()
@@ -117,7 +117,7 @@ jil.browserTest('callback timing microtasks', function (t) {
     blockFor(100)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -125,7 +125,7 @@ jil.browserTest('callback timing microtasks', function (t) {
   }
 })
 
-function blockFor(ms) {
+function blockFor (ms) {
   let helpers = require('./helpers')
   var start = helpers.now()
   var data = 0

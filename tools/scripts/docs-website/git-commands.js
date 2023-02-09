@@ -3,148 +3,148 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
+'use strict'
 
-const { exec } = require('child_process');
+const { exec } = require('child_process')
 
-async function getPushRemotes() {
-  const stdout = await execAsPromise('git remote -v');
+async function getPushRemotes () {
+  const stdout = await execAsPromise('git remote -v')
 
-  const remotes = stdout.split('\n');
+  const remotes = stdout.split('\n')
   return remotes.reduce((remotePairs, currentRemote) => {
-    const parts = currentRemote.split('\t');
+    const parts = currentRemote.split('\t')
     if (parts.length < 2) {
-      return remotePairs;
+      return remotePairs
     }
 
-    const [name, url] = parts;
+    const [name, url] = parts
     if (url.indexOf('(push)') >= 0) {
-      remotePairs[name] = url;
+      remotePairs[name] = url
     }
 
-    return remotePairs;
-  }, {});
+    return remotePairs
+  }, {})
 }
 
-async function getCurrentBranch() {
-  const stdout = await execAsPromise('git branch --show-current');
-  return stdout.trim();
+async function getCurrentBranch () {
+  const stdout = await execAsPromise('git branch --show-current')
+  return stdout.trim()
 }
 
-async function checkoutNewBranch(name) {
-  const stdout = await execAsPromise(`git checkout -b ${name}`);
-  return stdout.trim();
+async function checkoutNewBranch (name) {
+  const stdout = await execAsPromise(`git checkout -b ${name}`)
+  return stdout.trim()
 }
 
-async function addAllFiles() {
-  const stdout = await execAsPromise(`git add . ':!${AGENT_SUB_REPO}'`);
-  return stdout.trim();
+async function addAllFiles () {
+  const stdout = await execAsPromise(`git add . ':!${AGENT_SUB_REPO}'`)
+  return stdout.trim()
 }
 
-async function addFiles(files) {
-  files = files.join(' ');
-  const stdout = await execAsPromise(`git add ${files}`);
-  return stdout.trim();
+async function addFiles (files) {
+  files = files.join(' ')
+  const stdout = await execAsPromise(`git add ${files}`)
+  return stdout.trim()
 }
 
-async function commit(message) {
-  const stdout = await execAsPromise(`git commit -m "${message}"`);
-  return stdout.trim();
+async function commit (message) {
+  const stdout = await execAsPromise(`git commit -m "${message}"`)
+  return stdout.trim()
 }
 
-async function setUpstream(remote, branchName) {
-  const stdout = await execAsPromise(`git branch --set-upstream-to=${remote}/${branchName} ${branchName}`);
-  return stdout.trim();
+async function setUpstream (remote, branchName) {
+  const stdout = await execAsPromise(`git branch --set-upstream-to=${remote}/${branchName} ${branchName}`)
+  return stdout.trim()
 }
 
-async function deleteUpstreamBranch(remote, branchName) {
-  const stdout = await execAsPromise(`git push ${remote} --delete ${branchName}`);
-  return stdout.trim();
+async function deleteUpstreamBranch (remote, branchName) {
+  const stdout = await execAsPromise(`git push ${remote} --delete ${branchName}`)
+  return stdout.trim()
 }
 
-async function setParent() {
-  const stdout = await execAsPromise(`git remote add parent https://github.com/newrelic/docs-website.git`);
-  return stdout.trim();
+async function setParent () {
+  const stdout = await execAsPromise('git remote add parent https://github.com/newrelic/docs-website.git')
+  return stdout.trim()
 }
 
-async function syncWithParent() {
-  let stdout = '';
+async function syncWithParent () {
+  let stdout = ''
   try {
-    stdout = await setParent();
+    stdout = await setParent()
   } catch (e) {}
   try {
-    stdout = await execAsPromise(`git fetch parent`);
+    stdout = await execAsPromise('git fetch parent')
   } catch (e) {}
   try {
-    stdout = await rebase();
+    stdout = await rebase()
   } catch (e) {}
-  return stdout.trim();
+  return stdout.trim()
 }
 
-async function pushToRemote(remote, branchName) {
-  const stdout = await execAsPromise(`git push -f --set-upstream ${remote} ${branchName}`);
-  return stdout.trim();
+async function pushToRemote (remote, branchName) {
+  const stdout = await execAsPromise(`git push -f --set-upstream ${remote} ${branchName}`)
+  return stdout.trim()
 }
 
-async function createAnnotatedTag(name, message) {
-  const stdout = await execAsPromise(`git tag -a ${name} -m ${message}`);
-  return stdout.trim();
+async function createAnnotatedTag (name, message) {
+  const stdout = await execAsPromise(`git tag -a ${name} -m ${message}`)
+  return stdout.trim()
 }
 
-async function pushTags() {
-  const stdout = await execAsPromise('git push --tags');
-  return stdout.trim();
+async function pushTags () {
+  const stdout = await execAsPromise('git push --tags')
+  return stdout.trim()
 }
 
-async function checkout(branchName) {
-  const stdout = await execAsPromise(`git checkout ${branchName}`);
-  return stdout.trim();
+async function checkout (branchName) {
+  const stdout = await execAsPromise(`git checkout ${branchName}`)
+  return stdout.trim()
 }
 
-async function clone(url, name, args) {
-  const argsString = args.join(' ');
-  const stdout = await execAsPromise(`git clone ${argsString} ${url} ${name}`);
-  return stdout.trim();
+async function clone (url, name, args) {
+  const argsString = args.join(' ')
+  const stdout = await execAsPromise(`git clone ${argsString} ${url} ${name}`)
+  return stdout.trim()
 }
 
-async function rebase() {
-  const stdout = await execAsPromise(`git pull --rebase`);
-  return stdout.trim();
+async function rebase () {
+  const stdout = await execAsPromise('git pull --rebase')
+  return stdout.trim()
 }
 
-async function setSparseCheckoutFolders(folders) {
-  const foldersString = folders.join(' ');
+async function setSparseCheckoutFolders (folders) {
+  const foldersString = folders.join(' ')
 
-  const stdout = await execAsPromise(`git sparse-checkout set --no-cone ${foldersString}`);
-  return stdout.trim();
+  const stdout = await execAsPromise(`git sparse-checkout set --no-cone ${foldersString}`)
+  return stdout.trim()
 }
 
-async function sparseCloneRepo(repoInfo, checkoutFiles) {
-  const { name, repository, branch } = repoInfo;
+async function sparseCloneRepo (repoInfo, checkoutFiles) {
+  const { name, repository, branch } = repoInfo
 
-  const cloneOptions = ['--filter=blob:none', '--no-checkout', '--depth 1', '--sparse', `--branch=${branch}`];
-  await clone(repository, name, cloneOptions);
-  process.chdir(name);
+  const cloneOptions = ['--filter=blob:none', '--no-checkout', '--depth 1', '--sparse', `--branch=${branch}`]
+  await clone(repository, name, cloneOptions)
+  process.chdir(name)
 
-  await setSparseCheckoutFolders(checkoutFiles);
+  await setSparseCheckoutFolders(checkoutFiles)
 
-  await checkout(branch);
+  await checkout(branch)
 
-  process.chdir('..');
+  process.chdir('..')
 }
 
-function execAsPromise(command) {
+function execAsPromise (command) {
   return new Promise((resolve, reject) => {
-    console.log(`Executing: '${command}'`);
+    console.log(`Executing: '${command}'`)
 
     exec(command, (err, stdout) => {
       if (err) {
-        return reject(err);
+        return reject(err)
       }
 
-      return resolve(stdout);
-    });
-  });
+      return resolve(stdout)
+    })
+  })
 }
 
 module.exports = {
@@ -163,5 +163,5 @@ module.exports = {
   rebase,
   setUpstream,
   deleteUpstreamBranch,
-  syncWithParent,
-};
+  syncWithParent
+}

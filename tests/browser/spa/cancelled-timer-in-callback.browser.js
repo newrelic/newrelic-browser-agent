@@ -13,9 +13,9 @@ jil.browserTest('spa cancelled timer in callback', function (t) {
     children: [
       {
         name: 'ajax',
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(3 + validator.count)
@@ -23,7 +23,7 @@ jil.browserTest('spa cancelled timer in callback', function (t) {
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     var xhr = new XMLHttpRequest()
     xhr.onload = function () {
       let t = setTimeout(() => {
@@ -36,7 +36,7 @@ jil.browserTest('spa cancelled timer in callback', function (t) {
     xhr.send()
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)

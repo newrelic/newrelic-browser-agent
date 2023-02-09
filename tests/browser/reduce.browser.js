@@ -14,7 +14,7 @@ test('reduce', function (t) {
   var objs = [
     { name: 'a', value: 33 },
     { name: 'b', value: 22 },
-    { name: 'c', value: 11 },
+    { name: 'c', value: 11 }
   ]
 
   var obj = reduce(objs, build, {})
@@ -28,11 +28,11 @@ test('reduce', function (t) {
   t.end()
 })
 
-function add(a, b) {
+function add (a, b) {
   return a + b
 }
 
-function build(result, item) {
+function build (result, item) {
   result[item.name] = item.value
   return result
 }

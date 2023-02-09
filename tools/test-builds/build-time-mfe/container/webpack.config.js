@@ -1,5 +1,5 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
   entry: './index.js',
@@ -9,20 +9,20 @@ module.exports = {
     // path: path.resolve(__dirname, './dist'),
     library: {
       name: 'container',
-      type: 'umd',
+      type: 'umd'
     },
-    chunkFormat: 'module',
+    chunkFormat: 'module'
   },
   resolve: {
-    extensions: ['.ts', '.js'],
+    extensions: ['.ts', '.js']
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './index.html',
-    }),
+      template: './index.html'
+    })
   ],
   optimization: {
-    minimize: false,
+    minimize: false
   },
   devtool: 'source-map',
   module: {
@@ -33,10 +33,10 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env'],
-          },
-        },
-      },
-    ],
-  },
-};
+            presets: ['@babel/preset-env']
+          }
+        }
+      }
+    ]
+  }
+}

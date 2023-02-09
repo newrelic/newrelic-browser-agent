@@ -30,23 +30,23 @@ jil.browserTest('spa interaction triggered by hashchange + popstate', function (
       {
         type: 'customTracer',
         attrs: {
-          name: 'onPopstate',
+          name: 'onPopstate'
         },
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   })
 
   t.plan(4 + validator.count)
 
   checkLoaded()
 
-  function checkLoaded() {
+  function checkLoaded () {
     if (loaded) {
       setTimeout(function () {
         window.location.hash = hashFragment
         helpers.startInteraction(onInteractionStart, afterInteractionDone, {
-          eventType: 'popstate',
+          eventType: 'popstate'
         })
       })
     } else {
@@ -54,11 +54,11 @@ jil.browserTest('spa interaction triggered by hashchange + popstate', function (
     }
   }
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     setTimeout(newrelic.interaction().createTracer('onPopstate', cb))
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
 

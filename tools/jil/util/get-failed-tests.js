@@ -1,15 +1,15 @@
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
 
-const { BUILD_NUMBER, NRQL_API_KEY } = process.env;
+const { BUILD_NUMBER, NRQL_API_KEY } = process.env
 
-console.log('NRQL_API_KEY', NRQL_API_KEY);
+console.log('NRQL_API_KEY', NRQL_API_KEY)
 
-if (!BUILD_NUMBER) process.exit(1);
+if (!BUILD_NUMBER) process.exit(1)
 
-let allFinished = true;
+let allFinished = true
 
 const queryNR = async () => {
-  console.log('---- FETCHING --', BUILD_NUMBER, ' ----');
+  console.log('---- FETCHING --', BUILD_NUMBER, ' ----')
   const latest = getGQLResults(
     await getDataFromNRQL(`{
         actor {
@@ -20,11 +20,11 @@ const queryNR = async () => {
             }
          }
     }`)
-  );
+  )
   if (latest.some((x) => !!x['latest.remaining'])) {
-    console.log('all tests did not finish....');
-    console.log(latest);
-    allFinished = false;
+    console.log('all tests did not finish....')
+    console.log(latest)
+    allFinished = false
     // process.exit(1)
   }
   const failures = await getDataFromNRQL(`{
@@ -35,69 +35,69 @@ const queryNR = async () => {
                }
             }
          }
-    }`);
+    }`)
   const failedTests = {
     chrome: {},
     firefox: {},
     safari: {},
     edge: {},
     android: {},
-    ios: {},
-  };
+    ios: {}
+  }
   failures?.data?.actor?.account?.nrql?.results.forEach((x) => {
     failedTests[x.browserName.toLowerCase()][x.browserVersion] = failedTests[x.browserName.toLowerCase()][
       x.browserVersion
     ]
       ? failedTests[x.browserName.toLowerCase()][x.browserVersion]
-      : new Set();
-    failedTests[x.browserName.toLowerCase()][x.browserVersion].add(x.testFileName);
-  });
+      : new Set()
+    failedTests[x.browserName.toLowerCase()][x.browserVersion].add(x.testFileName)
+  })
 
-  console.log('---- FAILED TESTS ----');
-  console.log(failedTests);
-  var isValid = true;
+  console.log('---- FAILED TESTS ----')
+  console.log(failedTests)
+  var isValid = true
   var out = failures?.data?.actor?.account?.nrql?.results?.length
     ? 'node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -s -t 85000 -b '
-    : '';
+    : ''
   Object.entries(failedTests).forEach(([key, val]) => {
-    if (!val || (typeof val === 'object' && !Object.keys(val).length)) return;
-    isValid = false;
-    const b = `${key}@`;
-    const browsers = [];
-    let tests = new Set();
+    if (!val || (typeof val === 'object' && !Object.keys(val).length)) return
+    isValid = false
+    const b = `${key}@`
+    const browsers = []
+    let tests = new Set()
     Object.entries(val).forEach(([subKey, subVal]) => {
       if (subVal.size) {
-        browsers.push(b + subKey);
+        browsers.push(b + subKey)
         for (val of subVal) {
-          tests.add(val);
+          tests.add(val)
         }
       }
-    });
-    out += browsers.join(',');
-    out += ` ${Array.from(tests).join(' ')}`;
-  });
-  console.log('---- LOCAL COMMAND ----');
-  console.log(out);
-  if (!isValid || !allFinished) process.exit(1);
-  else process.exit(0);
-};
+    })
+    out += browsers.join(',')
+    out += ` ${Array.from(tests).join(' ')}`
+  })
+  console.log('---- LOCAL COMMAND ----')
+  console.log(out)
+  if (!isValid || !allFinished) process.exit(1)
+  else process.exit(0)
+}
 
-queryNR();
+queryNR()
 
-async function getDataFromNRQL(nrqlString) {
-  const body = { query: nrqlString };
+async function getDataFromNRQL (nrqlString) {
+  const body = { query: nrqlString }
   const resp = await fetch('https://api.newrelic.com/graphql', {
     body: JSON.stringify(body),
     headers: {
       'Api-Key': `${NRQL_API_KEY}`,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     },
-    method: 'POST',
-  });
-  const json = await resp.json();
-  return json;
+    method: 'POST'
+  })
+  const json = await resp.json()
+  return json
 }
 
-function getGQLResults(gql) {
-  return gql?.data?.actor?.account?.nrql?.results;
+function getGQLResults (gql) {
+  return gql?.data?.actor?.account?.nrql?.results
 }

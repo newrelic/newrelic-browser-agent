@@ -10,7 +10,7 @@ jil.browserTest('spa cancelled timer', function (t) {
 
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [],
+    children: []
   })
 
   t.plan(3 + validator.count)
@@ -18,7 +18,7 @@ jil.browserTest('spa cancelled timer', function (t) {
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     // cancel timer1 after 5ms so that it never fires
     // do this first to avoid race conditions
     setTimeout(() => clearTimeout(timer1), 5)
@@ -31,7 +31,7 @@ jil.browserTest('spa cancelled timer', function (t) {
     setTimeout(cb, 100)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)

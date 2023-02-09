@@ -14,6 +14,6 @@
 
 // Thrown error used as a convoluted way to
 // report to the fake beacon what window.onerror returns.
-;(function onerrorReturn() {
+(function onerrorReturn () {
   throw new Error('original return ' + window.onerror.call(this, 'fake'))
 })()

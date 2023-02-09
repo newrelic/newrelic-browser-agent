@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var request = require('request');
-var yargs = require('yargs');
+var request = require('request')
+var yargs = require('yargs')
 
 var argv = yargs
   .string('environments')
@@ -29,51 +29,51 @@ var argv = yargs
   .describe('skip-upload-failures', "Don't bail out after the first failure, keep trying other requests")
 
   .help('h')
-  .alias('h', 'help').argv;
+  .alias('h', 'help').argv
 
 /**
  * An async wrapper around the execution logic
  * @returns
  */
-async function run() {
-  var loaders = await loaderFilenames();
-  var targetEnvironments = argv.environments.split(',');
+async function run () {
+  var loaders = await loaderFilenames()
+  var targetEnvironments = argv.environments.split(',')
 
-  var uploadErrors = [];
-  var uploadErrorCallback = null;
+  var uploadErrors = []
+  var uploadErrorCallback = null
   if (argv['skip-upload-failures']) {
     uploadErrorCallback = function (err) {
-      uploadErrors.push(err);
-    };
+      uploadErrors.push(err)
+    }
   }
 
-  var steps = [];
+  var steps = []
 
   targetEnvironments.forEach(function (env) {
-    console.log('Will upload loaders to ' + env);
+    console.log('Will upload loaders to ' + env)
     steps.push(function (cb) {
-      uploadAllLoadersToDB(env, cb);
-    });
-  });
+      uploadAllLoadersToDB(env, cb)
+    })
+  })
 
   asyncForEach(
     steps,
     function (fn, next) {
-      fn(next);
+      fn(next)
     },
     function (err) {
-      if (err) throw err;
-      console.log('All steps finished.');
+      if (err) throw err
+      console.log('All steps finished.')
 
       if (uploadErrorCallback && uploadErrors.length > 0) {
-        console.log('Failures:');
+        console.log('Failures:')
         uploadErrors.forEach(function (e) {
-          console.log(e);
-        });
-        process.exit(1);
+          console.log(e)
+        })
+        process.exit(1)
       }
     }
-  );
+  )
 
   /**
    * Iterate over each environment to upload loaders
@@ -81,17 +81,17 @@ async function run() {
    * @param {Function} cb
    * @returns {void}
    */
-  function uploadAllLoadersToDB(environment, cb) {
+  function uploadAllLoadersToDB (environment, cb) {
     asyncForEach(
       loaders,
       function (data, next) {
-        const filename = Object.keys(data)[0];
-        const fileData = data[filename];
-        uploadLoaderToDB(filename, fileData, environment, next);
+        const filename = Object.keys(data)[0]
+        const fileData = data[filename]
+        uploadLoaderToDB(filename, fileData, environment, next)
       },
       cb,
       uploadErrorCallback
-    );
+    )
   }
 
   /**
@@ -100,24 +100,24 @@ async function run() {
    * @param {string} fileName
    * @returns {Promise<[string, string, string]>}
    */
-  function getFile(path, fileName) {
+  function getFile (path, fileName) {
     var opts = {
       uri: path,
       method: 'GET',
-      gzip: true,
-    };
+      gzip: true
+    }
 
-    console.log('downloading ', path);
+    console.log('downloading ', path)
 
     return new Promise((resolve, reject) => {
       request(opts, (err, res, body) => {
         if (err || res.statusCode !== 200) {
-          reject(err);
-          return;
+          reject(err)
+          return
         }
-        resolve([path, fileName, body]);
-      });
-    });
+        resolve([path, fileName, body])
+      })
+    })
   }
 
   /**
@@ -127,51 +127,51 @@ async function run() {
    * @param {string} environment
    * @param {Function} cb
    */
-  function uploadLoaderToDB(filename, loader, environment, cb) {
+  function uploadLoaderToDB (filename, loader, environment, cb) {
     var baseOptions = {
       method: 'PUT',
       followAllRedirects: true,
       json: {
         js_agent_loader: {
           version: filename, // sic
-          loader,
+          loader
         },
-        set_current: false,
-      },
-    };
+        set_current: false
+      }
+    }
 
     var envOptions = {
       staging: {
         url: 'https://staging-api.newrelic.com/v2/js_agent_loaders/create.json',
         headers: {
-          'X-Api-Key': argv['staging-api-key'],
-        },
+          'X-Api-Key': argv['staging-api-key']
+        }
       },
       eu: {
         url: 'https://api.eu.newrelic.com/v2/js_agent_loaders/create.json',
         headers: {
-          'X-Api-Key': argv['eu-api-key'],
-        },
+          'X-Api-Key': argv['eu-api-key']
+        }
       },
       production: {
         url: 'https://api.newrelic.com/v2/js_agent_loaders/create.json',
         headers: {
-          'X-Api-Key': argv['production-api-key'],
-        },
-      },
-    };
+          'X-Api-Key': argv['production-api-key']
+        }
+      }
+    }
 
-    console.log('Uploading loader ' + filename + ' to ' + environment + '...');
+    console.log('Uploading loader ' + filename + ' to ' + environment + '...')
     var options = {
       ...envOptions[environment],
-      ...baseOptions,
-    };
+      ...baseOptions
+    }
 
     request(options, function (err, res, body) {
-      if (err) return cb(err);
+      if (err) return cb(err)
       if (res.statusCode === 200) {
-        console.log('Uploaded loader version ' + filename + ' to ' + environment);
-        return cb();
+        console.log('Uploaded loader version ' + filename + ' to ' + environment)
+        return cb()
       }
 
       cb(
@@ -185,29 +185,29 @@ async function run() {
             ') ' +
             JSON.stringify(body)
         )
-      );
-    });
+      )
+    })
   }
 
   /**
    * Fetches an array of loader filenames and contents from the CDN
    * @returns {Promise<{[fileName]: string}[]>} Promise contains an array of objects {[filename]: body} --> {'nr-loader-spa-1221.min.js': ...scriptContents}
    */
-  async function loaderFilenames() {
-    const loaderTypes = ['rum', 'full', 'spa'];
-    const version = argv['v'];
+  async function loaderFilenames () {
+    const loaderTypes = ['rum', 'full', 'spa']
+    const version = argv['v']
     const fileNames = loaderTypes
       .map((type) => [
         `nr-loader-${type}-${version}.min.js`,
         `nr-loader-${type}-polyfills-${version}.min.js`,
         `nr-loader-${type}-${version}.js`,
-        `nr-loader-${type}-polyfills-${version}.js`,
+        `nr-loader-${type}-polyfills-${version}.js`
       ])
-      .flat();
+      .flat()
     const loaders = (
       await Promise.all(fileNames.map((fileName) => getFile(`https://js-agent.newrelic.com/${fileName}`, fileName)))
-    ).map(([url, fileName, body]) => ({ [fileName]: body }));
-    return loaders;
+    ).map(([url, fileName, body]) => ({ [fileName]: body }))
+    return loaders
   }
 
   /**
@@ -216,26 +216,26 @@ async function run() {
    * @param {Function} done - terminal cb
    * @param {Function=} errorCallback - If not specified, processing will terminate on the first error. If specified, the errorCallback will be invoked once for each error error, and the done callback will be invoked once each item has been processed.
    */
-  function asyncForEach(list, op, done, errorCallback) {
-    var index = 0;
+  function asyncForEach (list, op, done, errorCallback) {
+    var index = 0
 
-    process.nextTick(next);
+    process.nextTick(next)
 
-    function next(err) {
+    function next (err) {
       if (err) {
         if (errorCallback) {
-          errorCallback(err);
+          errorCallback(err)
         } else {
-          return done(err);
+          return done(err)
         }
       }
 
-      if (index >= list.length) return done(null);
+      if (index >= list.length) return done(null)
       op(list[index++], function (err, result) {
-        next(err);
-      });
+        next(err)
+      })
     }
   }
 }
 
-run();
+run()

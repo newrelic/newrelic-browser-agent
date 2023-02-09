@@ -35,18 +35,18 @@ jil.browserTest('addEventListener options work when wrapped', function (t) {
 
   t.end()
 
-  function handler() {
+  function handler () {
     handlerCallCount++
   }
 })
 
-function triggerEvent(el, eventName) {
+function triggerEvent (el, eventName) {
   let evt = document.createEvent('Events')
   evt.initEvent(eventName, true, false)
   el.dispatchEvent(evt)
 }
 
-function createAndAddDomElement(tagName = 'div') {
+function createAndAddDomElement (tagName = 'div') {
   var el = document.createElement(tagName)
   document.body.appendChild(el)
   return el

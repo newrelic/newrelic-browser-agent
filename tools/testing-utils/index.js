@@ -1,1 +1,1 @@
-export { browserErrorUtils } from './browser-errors';
+export { browserErrorUtils } from './browser-errors'

@@ -13,7 +13,7 @@ test('map-own', function (t) {
     t.equal(v, 10, 'value is as expected')
   })
 
-  function F() {}
+  function F () {}
   F.prototype = { bad: 1111 }
   var extended = new F()
   extended.good = 2222
@@ -28,7 +28,7 @@ test('map-own', function (t) {
     a: 1,
     b: 2,
     c: 3,
-    d: 4,
+    d: 4
   }
 
   var str = ''

@@ -17,24 +17,24 @@ jil.browserTest('spa hashchange in second event callback', function (t) {
       trigger: 'click',
       initialPageURL: originalUrl,
       oldURL: 'placeholder',
-      newURL: 'placeholder',
+      newURL: 'placeholder'
     },
     children: [
       {
         type: 'customTracer',
         attrs: {
-          name: 'first-click',
+          name: 'first-click'
         },
-        children: [],
+        children: []
       },
       {
         type: 'customTracer',
         attrs: {
-          name: 'after-hashchange',
+          name: 'after-hashchange'
         },
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   }
 
   let validator = new helpers.InteractionValidator(expected)
@@ -59,7 +59,7 @@ jil.browserTest('spa hashchange in second event callback', function (t) {
     setTimeout(() => helpers.startInteraction(onInteractionStart, afterInteractionDone), 100)
   })
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     t.ok(true, '2nd click handler')
     window.addEventListener('hashchange', () => {
       t.ok(true, 'in hashchange handler')
@@ -75,7 +75,7 @@ jil.browserTest('spa hashchange in second event callback', function (t) {
     window.location.hash = '#' + Math.random()
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.attrs.newURL !== interaction.root.attrs.oldURL, 'old and new URLs should be different')
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')

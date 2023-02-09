@@ -17,15 +17,15 @@ jil.browserTest('spa aggregator receives complete interaction when hashchange fi
       oldURL: originalUrl,
       newURL: 'placeholder',
       custom: {
-        'after-hashchange': true,
-      },
+        'after-hashchange': true
+      }
     },
     children: [
       {
         name: 'ajax',
-        children: [],
-      },
-    ],
+        children: []
+      }
+    ]
   }
 
   let validator = new helpers.InteractionValidator(expected)
@@ -36,7 +36,7 @@ jil.browserTest('spa aggregator receives complete interaction when hashchange fi
     helpers.startInteraction(onInteractionStart, afterInteractionDone)
   })
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     let xhr = new XMLHttpRequest()
 
     xhr.onload = function () {
@@ -57,7 +57,7 @@ jil.browserTest('spa aggregator receives complete interaction when hashchange fi
     xhr.send()
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.attrs.newURL !== interaction.root.attrs.oldURL, 'old and new URLs should be different')
     t.ok(interaction.root.end, 'interaction should be finished')
     validator.validate(t, interaction)

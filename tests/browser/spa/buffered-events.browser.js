@@ -27,7 +27,7 @@ jil.browserTest('spa buffers all expected events', function (t) {
     history: ['newURL'],
     mutation: ['fn-start'],
     promise: ['propagate', 'cb-start', 'cb-end', 'executor-err', 'resolve-start'],
-    tracer: ['fn-start', 'no-fn-start'],
+    tracer: ['fn-start', 'no-fn-start']
   }
 
   Object.keys(events).forEach((key) => {
@@ -39,7 +39,7 @@ jil.browserTest('spa buffers all expected events', function (t) {
       var args = [
         {
           addEventListener: () => null,
-          1: () => null,
+          1: () => null
         },
         {
           addEventListener: () => null,
@@ -47,15 +47,15 @@ jil.browserTest('spa buffers all expected events', function (t) {
             return {
               arrayBuffer: () => {
                 return {
-                  then: () => null,
+                  then: () => null
                 }
-              },
+              }
             }
-          },
+          }
         },
         {
-          then: () => null,
-        },
+          then: () => null
+        }
       ]
       var ctx = baseEE.context()
       emitter.emit(evName, args, ctx)

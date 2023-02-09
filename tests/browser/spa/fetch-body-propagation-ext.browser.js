@@ -26,7 +26,7 @@ jil.browserTest('spa single fetch with formData', function (t) {
     runTest()
   }
 
-  function runTest() {
+  function runTest () {
     let helpers = require('./helpers')
     let validator = new helpers.InteractionValidator({
       type: 'interaction',
@@ -34,11 +34,11 @@ jil.browserTest('spa single fetch with formData', function (t) {
         {
           type: 'customTracer',
           attrs: {
-            name: 'timer',
+            name: 'timer'
           },
-          children: [],
-        },
-      ],
+          children: []
+        }
+      ]
     })
 
     t.plan(3 + validator.count)
@@ -47,10 +47,10 @@ jil.browserTest('spa single fetch with formData', function (t) {
 
     helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-    function onInteractionStart(cb) {
+    function onInteractionStart (cb) {
       var req = new Request('/formdata', {
         method: 'POST',
-        body: new FormData(),
+        body: new FormData()
       })
 
       if (req.formData) {
@@ -64,11 +64,11 @@ jil.browserTest('spa single fetch with formData', function (t) {
       }
     }
 
-    function fail(err) {
+    function fail (err) {
       t.error(err)
     }
 
-    function afterInteractionDone(interaction) {
+    function afterInteractionDone (interaction) {
       t.ok(interaction.root.end, 'interaction should be finished and have an end time')
       t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
       validator.validate(t, interaction)

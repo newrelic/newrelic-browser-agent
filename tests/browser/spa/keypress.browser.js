@@ -17,13 +17,13 @@ jil.browserTest('spa keypress trigger', function (t) {
           {
             type: 'customTracer',
             attrs: {
-              name: 'timer',
+              name: 'timer'
             },
-            children: [],
-          },
-        ],
-      },
-    ],
+            children: []
+          }
+        ]
+      }
+    ]
   })
 
   t.plan(3 + validator.count)
@@ -31,10 +31,10 @@ jil.browserTest('spa keypress trigger', function (t) {
   t.notok(helpers.currentNodeId(), 'interaction should be null at first')
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone, {
-    eventType: 'keypress',
+    eventType: 'keypress'
   })
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     let xhr = new XMLHttpRequest()
     xhr.open('GET', '/')
     xhr.onload = function () {
@@ -43,7 +43,7 @@ jil.browserTest('spa keypress trigger', function (t) {
     xhr.send()
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -63,13 +63,13 @@ jil.browserTest('spa keyup trigger', function (t) {
           {
             type: 'customTracer',
             attrs: {
-              name: 'timer',
+              name: 'timer'
             },
-            children: [],
-          },
-        ],
-      },
-    ],
+            children: []
+          }
+        ]
+      }
+    ]
   })
 
   t.plan(3 + validator.count)
@@ -77,10 +77,10 @@ jil.browserTest('spa keyup trigger', function (t) {
   t.notok(helpers.currentNodeId(), 'interaction should be null at first')
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone, {
-    eventType: 'keyup',
+    eventType: 'keyup'
   })
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     let xhr = new XMLHttpRequest()
     xhr.open('GET', '/')
     xhr.onload = function () {
@@ -89,7 +89,7 @@ jil.browserTest('spa keyup trigger', function (t) {
     xhr.send()
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)
@@ -109,13 +109,13 @@ jil.browserTest('spa keydown trigger', function (t) {
           {
             type: 'customTracer',
             attrs: {
-              name: 'timer',
+              name: 'timer'
             },
-            children: [],
-          },
-        ],
-      },
-    ],
+            children: []
+          }
+        ]
+      }
+    ]
   })
 
   t.plan(3 + validator.count)
@@ -123,10 +123,10 @@ jil.browserTest('spa keydown trigger', function (t) {
   t.notok(helpers.currentNodeId(), 'interaction should be null at first')
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone, {
-    eventType: 'keydown',
+    eventType: 'keydown'
   })
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     let xhr = new XMLHttpRequest()
     xhr.open('GET', '/')
     xhr.onload = function () {
@@ -135,7 +135,7 @@ jil.browserTest('spa keydown trigger', function (t) {
     xhr.send()
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)

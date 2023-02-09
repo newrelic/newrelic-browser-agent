@@ -4,7 +4,7 @@
  */
 
 var xhrload = new XMLHttpRequest()
-xhrload.onload = function goodxhr() {
+xhrload.onload = function goodxhr () {
   window.xhrFired = true
   throw new Error('xhr onload')
 }

@@ -24,19 +24,19 @@ bodyMethods.forEach((bodyMethod) => {
         {
           type: 'ajax',
           attrs: {
-            isFetch: true,
+            isFetch: true
           },
           children: [
             {
               type: 'customTracer',
               attrs: {
-                name: 'timer',
+                name: 'timer'
               },
-              children: [],
-            },
-          ],
-        },
-      ],
+              children: []
+            }
+          ]
+        }
+      ]
     })
 
     t.plan(4 + validator.count)
@@ -47,7 +47,7 @@ bodyMethods.forEach((bodyMethod) => {
 
     var resTime
 
-    function onInteractionStart(cb) {
+    function onInteractionStart (cb) {
       window
         .fetch('/json')
         .then(function (res) {
@@ -66,7 +66,7 @@ bodyMethods.forEach((bodyMethod) => {
       cb()
     }
 
-    function afterInteractionDone(interaction) {
+    function afterInteractionDone (interaction) {
       t.ok(interaction.root.children[0].end <= resTime, 'resTime should be after we got response')
       t.ok(interaction.root.end, 'interaction should be finished and have an end time')
       t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
@@ -85,7 +85,7 @@ jil.browserTest('Exceeding max SPA nodes', function (t) {
 
   // if test runs before window load, then the error in the try/catch below would not be caught
   // due to buffered events running in a different callstack
-  function start() {
+  function start () {
     if (loaded) {
       helpers.startInteraction(onInteractionStart, onInteractionFinished)
     } else {
@@ -93,17 +93,17 @@ jil.browserTest('Exceeding max SPA nodes', function (t) {
     }
   }
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     window.NREUM.init = {
       distributed_tracing: {
         enabled: true,
-        allowed_origins: ['localhost:3333'],
-      },
+        allowed_origins: ['localhost:3333']
+      }
     }
     window.NREUM.loader_config = {
       accountID: 1,
       agentID: 1,
-      trustKey: 1,
+      trustKey: 1
     }
 
     for (var i = 0; i <= 128; i++) {
@@ -116,7 +116,7 @@ jil.browserTest('Exceeding max SPA nodes', function (t) {
     cb()
   }
 
-  function onInteractionFinished(interaction) {
+  function onInteractionFinished (interaction) {
     t.end()
   }
 })
@@ -129,19 +129,19 @@ jil.browserTest('Response.formData', function (t) {
       {
         type: 'ajax',
         attrs: {
-          isFetch: true,
+          isFetch: true
         },
         children: [
           {
             type: 'customTracer',
             attrs: {
-              name: 'timer',
+              name: 'timer'
             },
-            children: [],
-          },
-        ],
-      },
-    ],
+            children: []
+          }
+        ]
+      }
+    ]
   })
 
   t.plan(4 + validator.count)
@@ -152,7 +152,7 @@ jil.browserTest('Response.formData', function (t) {
 
   var resTime
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     window.fetch('/formdata', { method: 'POST', body: new FormData() }).then(function (res) {
       const { now } = require('../../../src/common/timing/now')
       resTime = now()
@@ -167,7 +167,7 @@ jil.browserTest('Response.formData', function (t) {
     })
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.children[0].end <= resTime, 'resTime should be after res was received')
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
@@ -185,11 +185,11 @@ bodyMethods.forEach((bodyMethod) => {
         {
           type: 'customTracer',
           attrs: {
-            name: 'timer',
+            name: 'timer'
           },
-          children: [],
-        },
-      ],
+          children: []
+        }
+      ]
     })
 
     t.plan(3 + validator.count)
@@ -198,14 +198,14 @@ bodyMethods.forEach((bodyMethod) => {
 
     helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-    function onInteractionStart(cb) {
+    function onInteractionStart (cb) {
       var req = new Request('/json', { method: 'POST', body: '{}' })
       req[bodyMethod]().then(function () {
         setTimeout(newrelic.interaction().createTracer('timer', cb), 0)
       })
     }
 
-    function afterInteractionDone(interaction) {
+    function afterInteractionDone (interaction) {
       t.ok(interaction.root.end, 'interaction should be finished and have an end time')
       t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
       validator.validate(t, interaction)

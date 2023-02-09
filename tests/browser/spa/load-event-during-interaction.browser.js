@@ -16,7 +16,7 @@ if (process.browser) {
 jil.browserTest('load event during interaction', function (t) {
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [],
+    children: []
   })
 
   t.plan(3 + validator.count)
@@ -25,11 +25,11 @@ jil.browserTest('load event during interaction', function (t) {
 
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
-  function onInteractionStart(cb) {
+  function onInteractionStart (cb) {
     setTimeout(cb, 10)
   }
 
-  function afterInteractionDone(interaction) {
+  function afterInteractionDone (interaction) {
     t.ok(interaction.root.end, 'interaction should have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     validator.validate(t, interaction)

@@ -5,8 +5,8 @@
 
 // if (findIndexWithRegex(process.argv, /^--$/) >= 0) process.argv.splice(process.argv.indexOf('--'), 1)
 
-const yargs = require('yargs');
-const loaders = require('../util/loaders');
+const yargs = require('yargs')
+const loaders = require('../util/loaders')
 
 module.exports = yargs
   .usage('$0 file1[, filen] [options]')
@@ -123,15 +123,15 @@ module.exports = yargs
 
   .help('h')
   .alias('h', 'help')
-  .wrap(Math.min(110, yargs.terminalWidth())).argv;
+  .wrap(Math.min(110, yargs.terminalWidth())).argv
 
-function findIndexWithRegex(arr, exp) {
-  let idx = -1;
+function findIndexWithRegex (arr, exp) {
+  let idx = -1
   arr.find(function (value, i) {
     if (exp.test(value)) {
-      idx = i;
-      return;
+      idx = i
+      return
     }
-  });
-  return idx;
+  })
+  return idx
 }

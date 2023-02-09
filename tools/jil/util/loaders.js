@@ -11,11 +11,11 @@ module.exports = [
   {
     name: 'dev',
     features: ['err', 'xhr', 'stn', 'ins', 'spa'],
-    payload: 'dev',
+    payload: 'dev'
   },
   {
     name: 'spa',
     features: ['err', 'xhr', 'stn', 'ins', 'spa'],
-    payload: 'spa',
-  },
-];
+    payload: 'spa'
+  }
+]

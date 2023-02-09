@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var canonicalFunctionNameRe = /([a-z0-9]+)$/i;
-function canonicalFunctionName(orig) {
-  if (!orig) return;
+var canonicalFunctionNameRe = /([a-z0-9]+)$/i
+function canonicalFunctionName (orig) {
+  if (!orig) return
 
-  var match = orig.match(canonicalFunctionNameRe);
-  if (match) return match[1];
+  var match = orig.match(canonicalFunctionNameRe)
+  if (match) return match[1]
 
-  return;
+  return
 }
 
-module.exports = canonicalFunctionName;
+module.exports = canonicalFunctionName

@@ -15,7 +15,7 @@ var fileLocation = {
   origin: 'file://',
   pathname: '/Users/jporter/Documents/Code/test.html',
   port: '',
-  protocol: 'file:',
+  protocol: 'file:'
 }
 
 jil.browserTest('isFileProtocol returns coorectly when detecting file protocol', function (t) {

@@ -15,13 +15,13 @@ var testcases = [
   [
     'http://domain.com/path?query=5#fragment#dumb?additional_query',
     'http://domain.com/path',
-    'http://domain.com/path#fragment#dumb',
+    'http://domain.com/path#fragment#dumb'
   ],
   [
     'http://domain.com/path?query=5#fragment/silly/dumber#dumbest?additional_query=silly#what_is_this_even',
     'http://domain.com/path',
-    'http://domain.com/path#fragment/silly/dumber#dumbest',
-  ],
+    'http://domain.com/path#fragment/silly/dumber#dumbest'
+  ]
 ]
 
 test('cleanURL', function (t) {

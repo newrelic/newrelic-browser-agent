@@ -12,10 +12,10 @@ const metricsInstr = new MetricsInstrum(agentIdentifier, agg, {}, false)
 new MetricsAggreg(agentIdentifier, agg)
 const metrics = {
   recordSupportability: metricsInstr.recordSupportability,
-  recordCustom: metricsInstr.recordCustom,
+  recordCustom: metricsInstr.recordCustom
 }
 
-function sum_sq(array) {
+function sum_sq (array) {
   let sum = 0
   let i = array.length
   while (i--) sum += Math.pow(array[i], 2)

@@ -1,5 +1,17 @@
 module.exports = {
-  ignorePatterns: ['dist/**/*', 'build/**/*', 'coverage/**/*', 'tests/**/*', 'tools/**/*'],
+  ignorePatterns: [
+    'dist/**/*',
+    'build/**/*',
+    'coverage/**/*',
+    'tests/assets/frameworks/**/*',
+    'tests/assets/js/internal/**/*',
+    'tests/assets/js/vendor/**/*',
+    'tests/assets/modular/js-errors/js/vendor/**/*',
+
+    // Remove the below ignores once lint errors are fixed
+    'tools/scripts/publish-current.js',
+    'tools/scripts/upload-to-s3.js'
+  ],
   env: {
     es2022: true
   },
@@ -11,6 +23,12 @@ module.exports = {
   },
   extends: ['eslint:recommended', 'standard'],
   overrides: [
+    {
+      files: ['**/*.mjs'],
+      parserOptions: {
+        sourceType: 'module'
+      }
+    },
     {
       files: ['src/**/*.js'],
       excludedFiles: '*.test.js',
@@ -69,6 +87,20 @@ module.exports = {
     'no-use-before-define': 'off',
     'n/handle-callback-err': 'off',
     'valid-typeof': 'off',
-    'no-unmodified-loop-condition': 'off'
+    'no-unmodified-loop-condition': 'off',
+    'n/no-deprecated-api': 'off',
+    'no-undef': 'off',
+    'no-control-regex': 'off',
+    'no-prototype-builtins': 'off',
+    'array-callback-return': 'off',
+    'brace-style': 'off',
+    'no-empty': 'off',
+    'no-self-compare': 'off',
+    'getter-return': 'off',
+    'no-import-assign': 'off',
+    'prefer-promise-reject-errors': 'off',
+    'no-extend-native': 'off',
+    'no-case-declarations': 'off',
+    'no-eval': 'off'
   }
 }

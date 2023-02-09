@@ -6,7 +6,9 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
   </head>
   <body>
     <div id="initial">initial content</div>
@@ -25,7 +27,7 @@
       }
 
       function triggerCls() {
-        var newDiv = document.createElement('div')
+        var newDiv = document.createElement("div")
         newDiv.id = 'clsText'
         newDiv.innerText = 'inserted text (29 characters)'
         document.body.insertBefore(newDiv, document.body.firstChild)
@@ -35,15 +37,13 @@
 
       // simulate page hide by dispatching the event manually
       function simulatPageHide() {
-        Object.defineProperty(document, 'visibilityState', {
-          value: 'visible',
-          writable: true,
-        })
+        Object.defineProperty(document, 'visibilityState', {value: 'visible', writable: true})
         document.visibilityState = 'hidden'
-        document.dispatchEvent(new Event('visibilitychange'))
+        document.dispatchEvent(new Event("visibilitychange"))
 
         window.contentAdded = true
       }
+
     </script>
   </body>
 </html>

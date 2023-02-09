@@ -6,7 +6,9 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
   </head>
   <body>
     <div id="initial">initial content (32 characters)</div>
@@ -24,7 +26,7 @@
       }
 
       function triggerCls() {
-        var newDiv = document.createElement('div')
+        var newDiv = document.createElement("div")
         newDiv.id = 'clsText'
         newDiv.innerText = 'inserted text (29 characters)'
         document.body.insertBefore(newDiv, document.body.firstChild)
@@ -34,10 +36,9 @@
       }
 
       function triggerLcp() {
-        var newDiv = document.createElement('div')
+        var newDiv = document.createElement("div");
         newDiv.id = 'lcpText'
-        newDiv.innerText =
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
+        newDiv.innerText = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
         document.body.appendChild(newDiv)
         window.contentAdded = true
       }

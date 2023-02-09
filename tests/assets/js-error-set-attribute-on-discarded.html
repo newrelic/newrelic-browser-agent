@@ -5,11 +5,13 @@
 -->
 <html>
   <head>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
 
     <script>
       function triggerError() {
-        NREUM.noticeError(new Error('My error'))
+        NREUM.noticeError(new Error("My error"))
         newrelic.interaction().setAttribute('customParamKey', 1)
         // not changing the URL means that the interaction will be discarded
       }
@@ -20,7 +22,7 @@
   <body>
     This page throws a new error with a caught exception when the click event fires
     <button id="trigger">trigger</button>
-    <br /><br />
+    <br/><br/>
     <button>Trigger error</button>
     <script>
       var btn = document.getElementById('trigger')

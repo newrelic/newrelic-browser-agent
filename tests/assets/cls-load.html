@@ -6,7 +6,9 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
   </head>
   <body>
     <div id="initial">initial content</div>
@@ -15,6 +17,7 @@
     <img src="/slowimage?delay=1000" />
 
     <script>
+
       run()
 
       function run() {
@@ -23,7 +26,7 @@
       }
 
       function triggerCls() {
-        var newDiv = document.createElement('div')
+        var newDiv = document.createElement("div")
         newDiv.id = 'clsText'
         newDiv.innerText = 'inserted text'
         document.body.insertBefore(newDiv, document.body.firstChild)

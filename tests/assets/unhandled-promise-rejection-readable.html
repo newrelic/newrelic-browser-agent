@@ -11,35 +11,35 @@
 
   <body>
     <script>
-      new Promise((res, rej) => rej('Test'))
-      new Promise((res, rej) => rej(1))
-      new Promise((res, rej) => rej({ a: 1, b: { a: 1 } }))
-      new Promise((res, rej) => rej([1, 2, 3]))
-      new Promise((res, rej) => rej(new Error('test')))
-      new Promise((res, rej) => rej())
-      new Promise((res, rej) => rej(null))
-      new Promise((res, rej) => rej(new Error()))
-      new Promise((res, rej) => rej(new Map()))
+      new Promise((res, rej) => rej("Test"));
+      new Promise((res, rej) => rej(1));
+      new Promise((res, rej) => rej({ a: 1, b: { a: 1 } }));
+      new Promise((res, rej) => rej([1, 2, 3]));
+      new Promise((res, rej) => rej(new Error("test")));
+      new Promise((res, rej) => rej());
+      new Promise((res, rej) => rej(null));
+      new Promise((res, rej) => rej(new Error()));
+      new Promise((res, rej) => rej(new Map()));
       new Promise((res, rej) => {
         function Foo() {
-          this.abc = 'Hello'
+          this.abc = "Hello";
         }
-        rej(new Foo())
-      })
+        rej(new Foo());
+      });
       new Promise((res, rej) => {
         function Foo() {
-          this.abc = 'Hello'
-          this.circular = this
+          this.abc = "Hello";
+          this.circular = this;
         }
-        rej(Foo)
-      })
+        rej(Foo);
+      });
       new Promise((res, rej) => {
         function Foo() {
-          this.abc = 'Hello'
-          this.circular = this
+          this.abc = "Hello";
+          this.circular = this;
         }
-        rej(new Foo())
-      })
+        rej(new Foo());
+      });
     </script>
     this is a generic page that is instrumented by the JS agent
   </body>

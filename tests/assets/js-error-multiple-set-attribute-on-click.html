@@ -5,26 +5,28 @@
 -->
 <html>
   <head>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
 
     <script>
       function triggerError() {
         try {
-          throw new Error('My error 1')
+          throw new Error("My error 1")
         } catch (err) {
           newrelic.noticeError(err)
         }
         newrelic.interaction().setAttribute('customParamKey', 1)
 
         try {
-          throw new Error('My error 2')
+          throw new Error("My error 2")
         } catch (err) {
           newrelic.noticeError(err)
         }
         newrelic.interaction().setAttribute('customParamKey', 2)
 
         try {
-          throw new Error('My error 3')
+          throw new Error("My error 3")
         } catch (err) {
           newrelic.noticeError(err)
         }
@@ -39,7 +41,7 @@
   <body>
     This page throws multiple errors with a caught exception when the click event fires
     <button id="trigger">trigger</button>
-    <br /><br />
+    <br/><br/>
     <button>Trigger error</button>
     <script>
       var btn = document.getElementById('trigger')

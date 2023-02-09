@@ -6,27 +6,30 @@
 <html>
   <head>
     <title>Basic XHR test</title>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
     <script type="text/javascript">
-      var count = 0
-      function sendHello() {
-        var xhr = new XMLHttpRequest()
-        xhr.open('GET', '/json')
-        xhr.setRequestHeader('Content-Type', 'text/plain')
-        xhr.onload = function (e) {
-          if (count < 50) {
-            count++
-            sendHello()
-          }
+        var count = 0;
+        function sendHello() {
+          var xhr = new XMLHttpRequest()
+              xhr.open('GET', '/json')
+              xhr.setRequestHeader('Content-Type', 'text/plain')
+              xhr.onload = function (e) {
+                  if (count < 50) {
+                      count++
+                      sendHello();
+                  }
+              }
+              xhr.send()
         }
-        xhr.send()
-      }
-      setTimeout(function () {
-        sendHello()
-      }, 2000)
+        setTimeout(function() {
+              sendHello()
+        }, 2000)
     </script>
   </head>
   <body>
     This page sends 3000 XHRs after the window has loaded.
+    
   </body>
 </html>

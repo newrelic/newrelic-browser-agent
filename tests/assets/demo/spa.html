@@ -1,20 +1,24 @@
 <html>
-  <head>
-    <script>
-      const loader = 'spa'
-      const url = new URL(window.location)
-      const params = url.searchParams
-      if (params.get('loader') !== loader) {
-        params.set('loader', loader)
-        window.location = `${url.origin}${url.pathname}?${params.toString()}`
-      }
-    </script>
-    {init} {config} {loader}
-  </head>
 
-  <body>
+<head>
     <script>
-      fetch('/json')
+        const loader = 'spa'
+        const url = new URL(window.location)
+        const params = url.searchParams
+        if (params.get('loader') !== loader) {
+            params.set('loader', loader)
+            window.location = `${url.origin}${url.pathname}?${params.toString()}`
+        }
     </script>
-  </body>
+    {init}
+    {config}
+    {loader}
+</head>
+
+<body>
+<script>
+    fetch('/json')
+</script>
+</body>
+
 </html>

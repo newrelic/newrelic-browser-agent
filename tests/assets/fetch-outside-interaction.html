@@ -6,12 +6,14 @@
 <html>
   <head>
     <title>Basic fetch test</title>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
     <script type="text/javascript">
       window.addEventListener('load', function () {
         setTimeout(function () {
           fetch('/json')
-        }, 2000)
+        }, 2000)  
       })
     </script>
   </head>

@@ -4,19 +4,22 @@
   PDX-License-Identifier: Apache-2.0
 -->
 <html>
-  <head>
-    <script>
-      if (window.sessionStorage) {
-        window.sessionStorage.clear()
-        window.sessionStorage.setItem = function () {
-          throw new Error('session storage not allowed')
-        }
+<head>
+  <script>
+    if (window.sessionStorage) {
+      window.sessionStorage.clear();
+      window.sessionStorage.setItem = function () {
+        throw new Error('session storage not allowed')
       }
-    </script>
-    <title>RUM Unit Test</title>
-    {init} {config} {loader}
-  </head>
-  <body>
-    Api test!
-  </body>
+    }
+  </script>
+  <title>RUM Unit Test</title>
+  {init}
+  {config}
+  {loader}
+</head>
+<body>
+Api test!
+</body>
 </html>
+

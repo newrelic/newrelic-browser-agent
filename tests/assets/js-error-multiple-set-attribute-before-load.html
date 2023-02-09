@@ -5,25 +5,27 @@
 -->
 <html>
   <head>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
 
     <script>
       try {
-        throw new Error('My error 1')
+        throw new Error("My error 1")
       } catch (e) {
         NREUM.noticeError(e)
       }
       newrelic.interaction().setAttribute('customParamKey', 1)
 
       try {
-        throw new Error('My error 2')
+        throw new Error("My error 2")
       } catch (e) {
         NREUM.noticeError(e)
       }
       newrelic.interaction().setAttribute('customParamKey', 2)
 
       try {
-        throw new Error('My error 3')
+        throw new Error("My error 3")
       } catch (e) {
         NREUM.noticeError(e)
       }

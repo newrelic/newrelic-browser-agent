@@ -1,40 +1,39 @@
 <html>
-  <head>
-    <meta name="issue link" content="https://issues.newrelic.com/browse/NR-40043" />
-    <title>Test recreation for NR-40443</title>
-    {init} {config} {loader}
-  </head>
-  <body>
-    <h1>Issue Reproduction Attempt</h1>
-    This page attempts to reproduce an issue seen when calling
-    <a
-      href="https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api/noticeerror-browser-agent-api"
-      >noticeError</a
-    >
-    in quick succession 8 times with unique error messages.
-    <h3>Expected</h3>
-    Each of the error messages should be logged.
-    <h3>Observed</h3>
-    In the customer's app, only the first error message was logged, overwriting each subsequent error message. All
-    errors were timestamped with the same second, despite the Chrome debugger holding execution with a breakpoint on the
-    `noticeError` call, creating many seconds difference.
+    <head>
+        <meta name="issue link" content="https://issues.newrelic.com/browse/NR-40043">
+        <title>Test recreation for NR-40443</title>
+        {init}
+        {config}
+        {loader}
+    </head>
+    <body>
+        <h1>Issue Reproduction Attempt</h1>
+        This page attempts to reproduce an issue seen when calling
+        <a href="https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api/noticeerror-browser-agent-api">noticeError</a>
+        in quick succession 8 times with unique error messages.
+        <h3>Expected</h3>
+        Each of the error messages should be logged.
+        <h3>Observed</h3>
+        In the customer's app, only the first error message was logged, overwriting each subsequent error message. All errors
+        were timestamped with the same second, despite the Chrome debugger holding execution with a breakpoint on the
+        `noticeError` call, creating many seconds difference.
 
-    <script>
-      const uniqueErrorMessages = [
-        'Error message 1',
-        'Error message 2',
-        'Error message 3',
-        'Error message 4',
-        'Error message 5',
-        'Error message 6',
-        'Error message 7',
-        'Error message 8',
-      ]
+        <script>
+            const uniqueErrorMessages = [
+                "Error message 1",
+                "Error message 2",
+                "Error message 3",
+                "Error message 4",
+                "Error message 5",
+                "Error message 6",
+                "Error message 7",
+                "Error message 8"
+            ];
 
-      uniqueErrorMessages.forEach((message) => {
-        const error = new Error(message)
-        newrelic.noticeError(error)
-      })
-    </script>
-  </body>
+            uniqueErrorMessages.forEach(message => {
+                const error = new Error(message);
+                newrelic.noticeError(error);
+            });
+        </script>
+    </body>
 </html>

@@ -6,7 +6,9 @@
 <html>
   <head>
     <title>RUM inline hit test</title>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
   </head>
   <body>
     <div>This page has 3 things to click on!</div>
@@ -14,13 +16,9 @@
     <input id="two" type="submit" value="#2" />
     <a id="three" title="#3">decoy</a>
     <script type="text/javascript">
-      document.addEventListener(
-        'click',
-        function () {
-          window.location.hash = Math.random()
-        },
-        false
-      )
+    document.addEventListener('click', function () {
+      window.location.hash = Math.random()
+    }, false)
     </script>
   </body>
 </html>

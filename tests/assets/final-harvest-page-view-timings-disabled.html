@@ -9,14 +9,15 @@
     {init}
     <script>
       // disable the page view timings feature
-      window.NREUM || (NREUM = {})
+      window.NREUM||(NREUM={});
       NREUM.init = {
         page_view_timing: {
-          enabled: false,
-        },
+          enabled: false
+        }
       }
     </script>
-    {config} {loader}
+    {config}
+    {loader}
   </head>
   <body>
     <div>This page is used for generating harvest data.</div>
@@ -33,10 +34,10 @@
         var count = 0
         loop()
 
-        function loop() {
+        function loop () {
           count++
           // resources are sent only when 30 or more events happen
-          if (count > 100) return (window.timerLoopDone = true)
+          if (count > 100) return window.timerLoopDone = true
           setTimeout(loop, 0)
         }
       }

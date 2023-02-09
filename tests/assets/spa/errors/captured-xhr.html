@@ -4,31 +4,31 @@
   PDX-License-Identifier: Apache-2.0
 -->
 <html>
-  <head>
-    <title>Error in interaction</title>
-    {init} {config} {loader}
-  </head>
 
-  <body>
-    Tests the interaction between Browser Interactions and Errors
+<head>
+  <title>Error in interaction</title>
+  {init}
+  {config}
+  {loader}
+</head>
 
-    <script>
-      // click starts interaction
-      document.addEventListener('click', function () {
-        var xhr = new XMLHttpRequest()
-        xhr.open('POST', '/echo')
-        xhr.send('123')
+<body>
+  Tests the interaction between Browser Interactions and Errors
 
-        xhr.addEventListener(
-          'load',
-          function () {
-            // change hash to capture interaction
-            window.location.hash = Math.random()
-            throw new Error('some error')
-          },
-          true
-        )
-      })
-    </script>
-  </body>
+  <script>
+    // click starts interaction
+    document.addEventListener('click', function () {
+      var xhr = new XMLHttpRequest()
+      xhr.open('POST', '/echo')
+      xhr.send('123')
+
+      xhr.addEventListener('load', function() {
+      // change hash to capture interaction
+        window.location.hash = Math.random()
+        throw new Error('some error')
+      }, true)
+    })
+  </script>
+</body>
+
 </html>

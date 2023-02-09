@@ -6,7 +6,9 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
     <script>
       newrelic.setPageViewName('foo')
     </script>
@@ -17,7 +19,7 @@
       newrelic.noticeError(new Error('no free taco coupons'))
       setTimeout(function () {
         newrelic.finished(new Date().getTime())
-      }, 0)
+      },0)
     </script>
   </body>
 </html>

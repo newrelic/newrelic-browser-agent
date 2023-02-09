@@ -4,25 +4,27 @@
   PDX-License-Identifier: Apache-2.0
 -->
 <html>
-  <head>
-    <title>RUM Unit Test</title>
-    {config} {loader}
-  </head>
 
-  <body>
-    This page creates a timer loop that will call setTimeout 30 times in order to force ST to be harvested. It also
-    generates an error, which should be sent with the ST.
-    <script>
-      newrelic.setCustomAttribute('errorsinsessiontraces', 'yeswehaveerrors')
+<head>
+  <title>RUM Unit Test</title>
+  {config}
+  {loader}
+</head>
 
-      // there must be at last 30 nodes in order for ST to be harvested
-      for (var i = 0; i < 30; i++) {
-        setTimeout(function () {}, 0)
-      }
+<body>
+  This page creates a timer loop that will call setTimeout 30 times in order to force ST to be harvested. It also generates an error, which should be sent with the ST.
+  <script>
+    newrelic.setCustomAttribute('errorsinsessiontraces', 'yeswehaveerrors')
 
-      // even though the error happens before the call to /resources,
-      // it is not collected until the second cycle
-      throw new Error('hello session traces i am error')
-    </script>
-  </body>
+    // there must be at last 30 nodes in order for ST to be harvested
+    for (var i = 0; i < 30; i++) {
+      setTimeout(function () {}, 0)
+    }
+
+    // even though the error happens before the call to /resources,
+    // it is not collected until the second cycle
+    throw new Error("hello session traces i am error")
+  </script>
+</body>
+
 </html>

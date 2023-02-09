@@ -6,7 +6,9 @@
 <html>
   <head>
     <title>Final Harvest Test</title>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
   </head>
   <body>
     <div>This page is used for generating harvest data.</div>
@@ -23,10 +25,10 @@
         var count = 0
         loop()
 
-        function loop() {
+        function loop () {
           count++
           // resources are sent only when 30 or more events happen
-          if (count > 30) return (window.timerLoopDone = true)
+          if (count > 30) return window.timerLoopDone = true
           setTimeout(loop, 0)
         }
       }

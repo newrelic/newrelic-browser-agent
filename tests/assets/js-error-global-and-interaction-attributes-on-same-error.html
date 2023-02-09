@@ -5,12 +5,14 @@
 -->
 <html>
   <head>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
 
     <script>
       newrelic.setCustomAttribute('globalKey', 1)
       try {
-        throw new Error('My error')
+        throw new Error("My error")
       } catch (e) {
         NREUM.noticeError(e)
       }

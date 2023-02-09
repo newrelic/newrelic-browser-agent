@@ -4,18 +4,23 @@
   PDX-License-Identifier: Apache-2.0
 -->
 <html>
-  <head>
-    <title>Initial Page Load Error</title>
-    {init} {config} {loader}
-  </head>
 
-  <body>
-    <p>Tests the interaction between Browser Interactions and Errors on the initial page load.</p>
+<head>
+  <title>Initial Page Load Error</title>
+  {init}
+  {config}
+  {loader}
+</head>
 
-    <script>
-      newrelic.interaction().createTracer('custom', function () {
-        throw new Error('initial page load error')
-      })()
-    </script>
-  </body>
+<body>
+  <p>Tests the interaction between Browser Interactions and Errors on the initial
+  page load.</p>
+
+  <script>
+    newrelic.interaction().createTracer('custom', function() {
+      throw new Error('initial page load error')
+    })()
+  </script>
+</body>
+
 </html>

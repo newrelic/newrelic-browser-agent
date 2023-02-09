@@ -7,23 +7,26 @@
 <html>
   <head>
     <title>Ignrore error Test</title>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
 
     <script type="text/javascript">
-      var count = 0
-      setTimeout(function () {
-        throw new Error('ignore')
-      }, 0)
+    var count = 0
+    setTimeout(function () {
+      throw new Error('ignore')
+    }, 0)
 
-      setTimeout(function () {
-        throw new Error('report')
-      }, 0)
+    setTimeout(function () {
+      throw new Error('report')
+    }, 0)
 
-      newrelic.setErrorHandler(function (err) {
-        if (++count === 2) window.errorsThrown = true
-        return err.message === 'ignore'
-      })
+    newrelic.setErrorHandler(function (err) {
+      if (++count === 2) window.errorsThrown = true
+      return err.message === 'ignore'
+    })
     </script>
   </head>
-  <body></body>
+  <body>
+  </body>
 </html>

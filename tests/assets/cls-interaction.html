@@ -6,7 +6,9 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
   </head>
   <body>
     <div id="initial">initial content</div>
@@ -24,12 +26,13 @@
       }
 
       function triggerCls() {
-        var newDiv = document.createElement('div')
+        var newDiv = document.createElement("div")
         newDiv.id = 'clsText'
         newDiv.innerText = 'inserted text (29 characters)'
         document.body.insertBefore(newDiv, document.body.firstChild)
         window.contentAdded = true
       }
+
     </script>
   </body>
 </html>

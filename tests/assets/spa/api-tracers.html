@@ -6,27 +6,25 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
   </head>
   <body>
     <p>here is some text</p>
     <script type="text/javascript">
-      window.firedCallbacks = {}
-      document.addEventListener(
-        'click',
-        function () {
-          var wrappedCb = newrelic.interaction().createTracer('some other name', noteCallbackFired)
-          wrappedCb('syncCallback')
-          setTimeout(function () {
-            wrappedCb('asyncCallback')
-          }, 0)
+    window.firedCallbacks = {}
+    document.addEventListener('click', function () {
+      var wrappedCb = newrelic.interaction().createTracer('some other name', noteCallbackFired)
+      wrappedCb('syncCallback')
+      setTimeout(function () {
+        wrappedCb('asyncCallback')
+      }, 0)
 
-          function noteCallbackFired(name) {
-            window.firedCallbacks[name] = 1
-          }
-        },
-        false
-      )
+      function noteCallbackFired(name) {
+        window.firedCallbacks[name] = 1
+      }
+    }, false)
     </script>
   </body>
 </html>

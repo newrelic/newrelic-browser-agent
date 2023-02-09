@@ -4,21 +4,25 @@
   PDX-License-Identifier: Apache-2.0
 -->
 <html>
-  <head>
-    <title>Error in interaction</title>
-    {init} {config} {loader}
-  </head>
 
-  <body>
-    Tests the interaction between Browser Interactions and Errors
+<head>
+  <title>Error in interaction</title>
+  {init}
+  {config}
+  {loader}
+</head>
 
-    <script>
-      document.addEventListener('click', function () {
-        var i = setInterval(function () {
-          clearInterval(i)
-          throw new Error('some error')
-        }, 100)
-      })
-    </script>
-  </body>
+<body>
+  Tests the interaction between Browser Interactions and Errors
+
+  <script>
+    document.addEventListener('click', function () {
+      var i = setInterval(function() {
+        clearInterval(i)
+        throw new Error('some error')
+      }, 100)
+    })
+  </script>
+</body>
+
 </html>

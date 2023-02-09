@@ -6,7 +6,9 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
   </head>
   <body>
     <div id="initial">initial content</div>
@@ -20,13 +22,11 @@
 
       function run() {
         // simulate page hide by dispatching the event manually
-        Object.defineProperty(document, 'visibilityState', {
-          value: 'visible',
-          writable: true,
-        })
+        Object.defineProperty(document, 'visibilityState', {value: 'visible', writable: true})
         document.visibilityState = 'hidden'
-        document.dispatchEvent(new Event('visibilitychange'))
+        document.dispatchEvent(new Event("visibilitychange"))
       }
+
     </script>
   </body>
 </html>

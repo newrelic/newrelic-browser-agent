@@ -6,25 +6,27 @@
 <html>
   <head>
     <title>Fetch Unit Test</title>
-    {init} {config}
+    {init}
+    {config}
 
-    <!-- Any injection tag with 'packages/<PATH>' will automatically be
+     <!-- Any injection tag with 'packages/<PATH>' will automatically be
       replaced with that file -->
     {tests/assets/js/internal/modular/index.js}
     <script>
-      const { default: NR } = NRBA
+      const {default: NR} = NRBA;
       const opts = {
         ...NREUM.init,
         ...NREUM.info,
         ...NREUM.loader_config,
-        applicationID: 1,
-      }
+        applicationID: 1
+      };
       const agent = new NR()
       agent.start(opts).then(() => {
         let err = 'hello'
         agent.noticeError(err)
-      })
+      });
     </script>
   </head>
-  <body></body>
+  <body>
+  </body>
 </html>

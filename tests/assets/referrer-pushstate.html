@@ -6,7 +6,9 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init} {config} {loader}
+    {init}
+    {config}
+    {loader}
 
     <script>
       // change the url to force a different referrer value
@@ -14,7 +16,6 @@
     </script>
   </head>
   <body>
-    This page changes the URL using the pushState() history API. It is used to test that the referrer values that the
-    agent collects.
+    This page changes the URL using the pushState() history API.  It is used to test that the referrer values that the agent collects.
   </body>
 </html>

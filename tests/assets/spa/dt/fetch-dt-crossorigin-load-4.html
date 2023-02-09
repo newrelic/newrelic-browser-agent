@@ -5,9 +5,11 @@
 -->
 <html>
   <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8">
     <title>Example Page</title>
-    {config} {init} {loader}
+    {config}
+    {init}
+    {loader}
     <script type="text/javascript">
       var testId = window.location.search.match(/testId=([^&]*)/)[1]
       var urlString = 'http://' + NREUM.info.beacon + '/dt/' + testId
@@ -15,5 +17,6 @@
       window.fetch(url)
     </script>
   </head>
-  <body></body>
+  <body>
+  </body>
 </html>

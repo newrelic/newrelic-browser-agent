@@ -6,15 +6,16 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {loader} {config}
+    {loader}
+    {config}
   </head>
   <body>
     <script>
-      document.addEventListener('click', function () {
-        setTimeout(function () {
-          window.history.replaceState({}, '', window.location.pathname + '#' + Math.random())
-        }, 500)
-      })
+    document.addEventListener('click', function () {
+      setTimeout(function () {
+        window.history.replaceState({}, '', window.location.pathname + '#' + Math.random())
+      }, 500)
+    })
     </script>
   </body>
 </html>

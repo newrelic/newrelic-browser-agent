@@ -5,9 +5,10 @@
 -->
 <html>
   <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8">
     <title>interaction collision</title>
-    {loader} {config}
+    {loader}
+    {config}
   </head>
   <body>
     <a id="pushStateButton" href="#">click me to start interaction</a>
@@ -16,14 +17,14 @@
     <script type="text/javascript">
       var counter = 0
       setInterval(function () {
-        var text = counter++ + ' ' + window.location.hash
+        var text = (counter++ + ' ' + window.location.hash)
         document.getElementById('counter').textContent = text
-        setTimeout(function () {})
+        setTimeout(function() {})
       }, 0)
 
       document.getElementById('pushStateButton').addEventListener('click', changeUrl)
 
-      function changeUrl(ev) {
+      function changeUrl (ev) {
         ev.preventDefault()
         var start = Date.now()
 

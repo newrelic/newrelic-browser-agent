@@ -21,7 +21,7 @@ module.exports = {
     NREUM: true,
     newrelic: true
   },
-  extends: ['eslint:recommended', 'standard'],
+  extends: ['standard'],
   overrides: [
     {
       files: ['**/*.mjs'],

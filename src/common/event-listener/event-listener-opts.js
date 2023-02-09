@@ -4,7 +4,7 @@ var supportsPassive = false
 try {
   var opts = Object.defineProperty({}, 'passive', {
     // eslint-disable-next-line
-    get: function () {
+    get: function() {
       supportsPassive = true
     }
   })

@@ -31,9 +31,7 @@ export class Aggregate extends AggregateBase {
     // Exposes these methods to browser test files -- future TO DO: can be removed once these fns are extracted from the constructor into class func
     this.storeXhr = storeXhr
     this.prepareHarvest = prepareHarvest
-    this.getStoredEvents = function () {
-      return { ajaxEvents, spaAjaxEvents }
-    }
+    this.getStoredEvents = function () { return { ajaxEvents, spaAjaxEvents } }
 
     ee.on('interactionSaved', (interaction) => {
       if (!spaAjaxEvents[interaction.id]) return
@@ -56,18 +54,12 @@ export class Aggregate extends AggregateBase {
     register('xhr', storeXhr, this.featureName, this.ee)
 
     if (allAjaxIsEnabled()) {
-      scheduler = new HarvestScheduler(
-        'events',
-        {
-          onFinished: onEventsHarvestFinished,
-          getPayload: prepareHarvest
-        },
-        this
-      )
+      scheduler = new HarvestScheduler('events', {
+        onFinished: onEventsHarvestFinished,
+        getPayload: prepareHarvest
+      }, this)
 
-      ee.on(`drain-${this.featureName}`, () => {
-        if (!this.blocked) scheduler.startTimer(harvestTimeSeconds)
-      })
+      ee.on(`drain-${this.featureName}`, () => { if (!this.blocked) scheduler.startTimer(harvestTimeSeconds) })
     }
 
     function storeXhr (params, metrics, startTime, endTime, type) {
@@ -214,8 +206,8 @@ export class Aggregate extends AggregateBase {
           event.type === 'fetch' ? 1 : '',
           this.addString(0), // nodeId
           nullable(event.spanId, this.addString, true) + // guid
-            nullable(event.traceId, this.addString, true) + // traceId
-            nullable(event.spanTimestamp, numeric, false) // timestamp
+          nullable(event.traceId, this.addString, true) + // traceId
+          nullable(event.spanTimestamp, numeric, false) // timestamp
         ]
 
         var insert = '2,'
@@ -230,7 +222,7 @@ export class Aggregate extends AggregateBase {
           insert += ';' + attrParts.join(';')
         }
 
-        if (i + 1 < events.length) insert += ';'
+        if ((i + 1) < events.length) insert += ';'
 
         this.payload += insert
       }

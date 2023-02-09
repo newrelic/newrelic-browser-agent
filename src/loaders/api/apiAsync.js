@@ -12,7 +12,7 @@ export function setAPI (agentIdentifier) {
   var instanceEE = ee.get(agentIdentifier)
   var cycle = 0
 
-  var scheme = getConfigurationValue(agentIdentifier, 'ssl') === false ? 'http' : 'https'
+  var scheme = (getConfigurationValue(agentIdentifier, 'ssl') === false) ? 'http' : 'https'
 
   var api = {
     finished: single(finished),
@@ -33,11 +33,7 @@ export function setAPI (agentIdentifier) {
   function finished (t, providedTime) {
     var time = providedTime ? providedTime - getRuntime(agentIdentifier).offset : t
     handle('record-custom', ['finished', { time }], undefined, FEATURE_NAMES.metrics, instanceEE)
-    addToTrace(t, {
-      name: 'finished',
-      start: time + getRuntime(agentIdentifier).offset,
-      origin: 'nr'
-    })
+    addToTrace(t, { name: 'finished', start: time + getRuntime(agentIdentifier).offset, origin: 'nr' })
     handle('api-addPageAction', [time, 'finished'], undefined, FEATURE_NAMES.pageAction, instanceEE)
   }
 

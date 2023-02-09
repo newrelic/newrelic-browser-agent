@@ -16,7 +16,9 @@ const model = {
   account: undefined,
   product: undefined,
   extra: undefined,
-  jsAttributes: {},
+  jsAttributes: {
+
+  },
   userAttributes: undefined,
   atts: undefined,
   transactionName: undefined,
@@ -28,7 +30,7 @@ const _cache = {}
 export function isValid (id) {
   try {
     const info = getInfo(id)
-    return !!info.licenseKey && !!info.errorBeacon && !!info.applicationID
+    return (!!info.licenseKey && !!info.errorBeacon && !!info.applicationID)
   } catch (err) {
     return false
   }

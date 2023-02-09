@@ -1,3 +1,4 @@
+
 import { warn } from '../util/console'
 
 const model = {

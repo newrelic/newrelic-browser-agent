@@ -84,13 +84,9 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     ctx.params = this.params || {}
     ctx.metrics = this.metrics || {}
 
-    xhr.addEventListener(
-      'load',
-      function (event) {
-        captureXhrData(ctx, xhr)
-      },
-      eventListenerOpts(false)
-    )
+    xhr.addEventListener('load', function (event) {
+      captureXhrData(ctx, xhr)
+    }, eventListenerOpts(false))
 
     // In Firefox 34+, XHR ProgressEvents report pre-content-decoding sizes via
     // their 'loaded' property, rather than post-decoding sizes. We want
@@ -106,13 +102,9 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
 
     if (ffVersion && (ffVersion > 34 || ffVersion < 10)) return
 
-    xhr.addEventListener(
-      'progress',
-      function (event) {
-        ctx.lastSize = event.loaded
-      },
-      eventListenerOpts(false)
-    )
+    xhr.addEventListener('progress', function (event) {
+      ctx.lastSize = event.loaded
+    }, eventListenerOpts(false))
   }
 
   function onOpenXhrStart (args) {
@@ -161,15 +153,10 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
 
     this.listener = function (evt) {
       try {
-        if (evt.type === 'abort' && !context.loadCaptureCalled) {
+        if (evt.type === 'abort' && !(context.loadCaptureCalled)) {
           context.params.aborted = true
         }
-        if (
-          evt.type !== 'load' ||
-          (context.called === context.totalCbs &&
-            (context.onloadCalled || typeof xhr.onload !== 'function') &&
-            typeof context.end === 'function')
-        ) { context.end(xhr) }
+        if (evt.type !== 'load' || (context.called === context.totalCbs) && (context.onloadCalled || typeof (xhr.onload) !== 'function') && typeof context.end === 'function') context.end(xhr)
       } catch (e) {
         try {
           ee.emit('internal-error', [e])
@@ -188,11 +175,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     this.cbTime += time
     if (onload) this.onloadCalled = true
     else this.called += 1
-    if (
-      this.called === this.totalCbs &&
-      (this.onloadCalled || typeof xhr.onload !== 'function') &&
-      typeof this.end === 'function'
-    ) { this.end(xhr) }
+    if ((this.called === this.totalCbs) && (this.onloadCalled || typeof (xhr.onload) !== 'function') && typeof this.end === 'function') this.end(xhr)
   }
 
   function onXhrLoadAdded (cb, useCapture) {
@@ -325,9 +308,8 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     }
     addUrl(this, url)
 
-    var method = (
-      '' + ((target && target instanceof origRequest && target.method) || opts.method || 'GET')
-    ).toUpperCase()
+    var method = ('' + ((target && target instanceof origRequest && target.method) ||
+      opts.method || 'GET')).toUpperCase()
     this.params.method = method
 
     this.txSize = dataSize(opts.body) || 0

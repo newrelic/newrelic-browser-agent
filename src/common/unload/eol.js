@@ -12,8 +12,7 @@ if (isWorkerScope) {
   globalScope.cleanupTasks = [] // create new list on WorkerGlobalScope to track funcs to run before exiting thread
 
   const origClose = globalScope.close
-  globalScope.close = () => {
-    // on worker's EoL signal, execute all "listeners", e.g. final harvests
+  globalScope.close = () => { // on worker's EoL signal, execute all "listeners", e.g. final harvests
     for (let task of globalScope.cleanupTasks) {
       task()
     }
@@ -56,7 +55,8 @@ export function subscribeToEOL (cb, allowBFCache) {
       }
       windowAddEventListener('unload', oneCall)
     }
-  } else if (isWorkerScope) {
+  }
+  else if (isWorkerScope) {
     globalScope.cleanupTasks.push(cb) // close() should run these tasks before quitting thread
   }
   // By default (for other env), this fn has no effect.

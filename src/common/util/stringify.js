@@ -7,8 +7,7 @@ import { mapOwn } from './map-own'
 import { ee } from '../event-emitter/contextual-ee'
 import { globalScope } from '../util/global-scope'
 
-var escapable =
-  /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g // eslint-disable-line
+var escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g // eslint-disable-line
 var meta = {
   '\b': '\\b',
   '\t': '\\t',
@@ -34,12 +33,10 @@ export function stringify (val) {
 function quote (string) {
   escapable.lastIndex = 0
   return escapable.test(string)
-    ? '"' +
-        string.replace(escapable, function (a) {
-          var c = meta[a]
-          return typeof c === 'string' ? c : '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4)
-        }) +
-        '"'
+    ? '"' + string.replace(escapable, function (a) {
+      var c = meta[a]
+      return typeof c === 'string' ? c : '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4)
+    }) + '"'
     : '"' + string + '"'
 }
 
@@ -54,9 +51,7 @@ function str (key, holder) {
     case 'boolean':
       return String(value)
     case 'object':
-      if (!value) {
-        return 'null'
-      }
+      if (!value) { return 'null' }
       var partial = []
 
       // The value is an array. Stringify every element. Use null as a placeholder

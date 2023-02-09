@@ -27,8 +27,7 @@ export class Serializer extends SharedContext {
     var addString = getAddStringContext(this.sharedContext.agentIdentifier)
     var serialized = 'bel.7'
     interactions.forEach((interaction) => {
-      serialized +=
-        ';' + this.serializeInteraction(interaction.root, offset, navTiming, interaction.routeChange, addString, info)
+      serialized += ';' + this.serializeInteraction(interaction.root, offset, navTiming, interaction.routeChange, addString, info)
     })
     this.firstTimestamp = undefined
     return serialized
@@ -95,12 +94,13 @@ export class Serializer extends SharedContext {
             addString(attrs.customName),
             isInitialPage ? '' : isRouteChange ? 1 : 2,
             nullable(isInitialPage && queueTime, numeric, true) +
-              nullable(isInitialPage && appTime, numeric, true) +
-              nullable(attrs.oldRoute, addString, true) +
-              nullable(attrs.newRoute, addString, true) +
-              addString(attrs.id),
+            nullable(isInitialPage && appTime, numeric, true) +
+            nullable(attrs.oldRoute, addString, true) +
+            nullable(attrs.newRoute, addString, true) +
+            addString(attrs.id),
             addString(node.id),
-            nullable(attrs.firstPaint, numeric, true) + nullable(attrs.firstContentfulPaint, numeric, false)
+            nullable(attrs.firstPaint, numeric, true) +
+            nullable(attrs.firstContentfulPaint, numeric, false)
           )
 
           var attrParts = addCustomAttributes(attrs.custom, addString)
@@ -122,17 +122,21 @@ export class Serializer extends SharedContext {
             addString(params.pathname),
             numeric(metrics.txSize),
             numeric(metrics.rxSize),
-            attrs.isFetch ? 1 : attrs.isJSONP ? 2 : '',
+            attrs.isFetch ? 1 : (attrs.isJSONP ? 2 : ''),
             addString(node.id),
             nullable(node.dt && node.dt.spanId, addString, true) +
-              nullable(node.dt && node.dt.traceId, addString, true) +
-              nullable(node.dt && node.dt.timestamp, numeric, false)
+            nullable(node.dt && node.dt.traceId, addString, true) +
+            nullable(node.dt && node.dt.timestamp, numeric, false)
           )
           break
 
         case 4:
           var tracedTime = attrs.tracedTime
-          fields.push(addString(attrs.name), nullable(tracedTime, numeric, true) + addString(node.id))
+          fields.push(
+            addString(attrs.name),
+            nullable(tracedTime, numeric, true) +
+            addString(node.id)
+          )
           break
       }
 
@@ -140,7 +144,10 @@ export class Serializer extends SharedContext {
         addNode(node.children[i], children)
       }
 
-      fields.unshift(numeric(typeId), numeric((childCount += attrCount)))
+      fields.unshift(
+        numeric(typeId),
+        numeric(childCount += attrCount)
+      )
 
       nodeList.push(fields)
 

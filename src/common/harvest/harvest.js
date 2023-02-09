@@ -28,11 +28,9 @@ export class Harvest extends SharedContext {
   constructor (parent) {
     super(parent) // gets any allowed properties from the parent and stores them in `sharedContext`
 
-    this.tooManyRequestsDelay =
-      getConfigurationValue(this.sharedContext.agentIdentifier, 'harvest.tooManyRequestsDelay') || 60
+    this.tooManyRequestsDelay = getConfigurationValue(this.sharedContext.agentIdentifier, 'harvest.tooManyRequestsDelay') || 60
     this.obfuscator = new Obfuscator(this.sharedContext)
-    this.getScheme = () =>
-      getConfigurationValue(this.sharedContext.agentIdentifier, 'ssl') === false ? 'http' : 'https'
+    this.getScheme = () => (getConfigurationValue(this.sharedContext.agentIdentifier, 'ssl') === false) ? 'http' : 'https'
 
     this._events = {}
   }
@@ -53,26 +51,24 @@ export class Harvest extends SharedContext {
     var options = {
       retry: submitMethod.method === submitData.xhr
     }
-    return this.obfuscator.shouldObfuscate()
-      ? this.obfuscateAndSend(endpoint, this.createPayload(endpoint, options), opts, submitMethod, cbFinished)
-      : this._send(endpoint, this.createPayload(endpoint, options), opts, submitMethod, cbFinished)
+    return this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend(endpoint, this.createPayload(endpoint, options), opts, submitMethod, cbFinished) : this._send(endpoint, this.createPayload(endpoint, options), opts, submitMethod, cbFinished)
   }
 
   /**
-   * Initiate a harvest call.
-   *
-   * @param {string} endpoint - The endpoint of the harvest (jserrors, events, resources etc.)
-   * @param {object} nr - The loader singleton.
-   *
-   * @param {object} singlePayload - Object representing payload.
-   * @param {object} singlePayload.qs - Map of values that should be sent as part of the request query string.
-   * @param {string} singlePayload.body - String that should be sent as the body of the request.
-   * @param {string} singlePayload.body.e - Special case of body used for browser interactions.
-   *
-   * @param {object} opts
-   * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
-   * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
-   */
+ * Initiate a harvest call.
+ *
+ * @param {string} endpoint - The endpoint of the harvest (jserrors, events, resources etc.)
+ * @param {object} nr - The loader singleton.
+ *
+ * @param {object} singlePayload - Object representing payload.
+ * @param {object} singlePayload.qs - Map of values that should be sent as part of the request query string.
+ * @param {string} singlePayload.body - String that should be sent as the body of the request.
+ * @param {string} singlePayload.body.e - Special case of body used for browser interactions.
+ *
+ * @param {object} opts
+ * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
+ * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
+ */
   send (endpoint, singlePayload, opts, submitMethod, cbFinished) {
     var makeBody = createAccumulator()
     var makeQueryString = createAccumulator()
@@ -80,9 +76,7 @@ export class Harvest extends SharedContext {
     if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
 
     var payload = { body: makeBody(), qs: makeQueryString() }
-    var caller = this.obfuscator.shouldObfuscate()
-      ? (...args) => this.obfuscateAndSend(...args)
-      : (...args) => this._send(...args)
+    var caller = this.obfuscator.shouldObfuscate() ? (...args) => this.obfuscateAndSend(...args) : (...args) => this._send(...args)
 
     return caller(endpoint, payload, opts, submitMethod, cbFinished)
   }
@@ -98,8 +92,7 @@ export class Harvest extends SharedContext {
 
     var agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
 
-    if (!payload.body) {
-      // no payload body? nothing to send, just run onfinish stuff and return
+    if (!payload.body) { // no payload body? nothing to send, just run onfinish stuff and return
       if (cbFinished) {
         cbFinished({ sent: false })
       }
@@ -108,8 +101,7 @@ export class Harvest extends SharedContext {
 
     if (!opts) opts = {}
 
-    var url =
-      this.getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + this.baseQueryString()
+    var url = this.getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + this.baseQueryString()
     if (payload.qs) url += encodeObj(payload.qs, agentRuntime.maxBytes)
 
     if (!submitMethod) {
@@ -135,24 +127,20 @@ export class Harvest extends SharedContext {
 
     if (cbFinished && method === submitData.xhr) {
       var xhr = result
-      xhr.addEventListener(
-        'load',
-        function () {
-          var result = { sent: true }
-          if (this.status === 429) {
-            result.retry = true
-            result.delay = this.tooManyRequestsDelay
-          } else if (this.status === 408 || this.status === 500 || this.status === 503) {
-            result.retry = true
-          }
+      xhr.addEventListener('load', function () {
+        var result = { sent: true }
+        if (this.status === 429) {
+          result.retry = true
+          result.delay = this.tooManyRequestsDelay
+        } else if (this.status === 408 || this.status === 500 || this.status === 503) {
+          result.retry = true
+        }
 
-          if (opts.needResponse) {
-            result.responseText = this.responseText
-          }
-          cbFinished(result)
-        },
-        eventListenerOpts(false)
-      )
+        if (opts.needResponse) {
+          result.responseText = this.responseText
+        }
+        cbFinished(result)
+      }, eventListenerOpts(false))
     }
 
     // if beacon request failed, retry with an alternative method -- will not happen for workers
@@ -172,9 +160,9 @@ export class Harvest extends SharedContext {
     var location = cleanURL(getLocation())
     var ref = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateString(location) : location
 
-    return [
+    return ([
       '?a=' + info.applicationID,
-      encodeParam('sa', info.sa ? '' + info.sa : ''),
+      encodeParam('sa', (info.sa ? '' + info.sa : '')),
       encodeParam('v', VERSION),
       transactionNameParam(info),
       encodeParam('ct', runtime.customTransaction),
@@ -182,14 +170,14 @@ export class Harvest extends SharedContext {
       '&ck=0', // ck param DEPRECATED - still expected by backend
       '&s=' + (runtime.sessionId || '0'), // the 0 id encaps all untrackable and default traffic
       encodeParam('ref', ref),
-      encodeParam('ptid', runtime.ptid ? '' + runtime.ptid : '')
-    ].join('')
+      encodeParam('ptid', (runtime.ptid ? '' + runtime.ptid : ''))
+    ].join(''))
   }
 
   createPayload (type, options) {
     var makeBody = createAccumulator()
     var makeQueryString = createAccumulator()
-    var listeners = (this._events[type] && this._events[type]) || []
+    var listeners = (this._events[type] && this._events[type] || [])
 
     for (var i = 0; i < listeners.length; i++) {
       var singlePayload = listeners[i](options)
@@ -201,7 +189,7 @@ export class Harvest extends SharedContext {
   }
 
   on (type, listener) {
-    var listeners = this._events[type] || (this._events[type] = [])
+    var listeners = (this._events[type] || (this._events[type] = []))
     listeners.push(listener)
   }
 
@@ -212,33 +200,28 @@ export class Harvest extends SharedContext {
   }
 }
 
-function or (a, b) {
-  return a || b
-}
+function or (a, b) { return a || b }
 
 export function getSubmitMethod (endpoint, opts) {
   opts = opts || {}
   var method
   var useBody
 
-  if (opts.needResponse) {
-    // currently: only STN needs a response
+  if (opts.needResponse) { // currently: only STN needs a response
     if (xhrUsable) {
       useBody = true
       method = submitData.xhr
     } else {
       return false
     }
-  } else if (opts.unload && isBrowserScope) {
-    // all the features' final harvest; neither methods work outside window context
+  } else if (opts.unload && isBrowserScope) { // all the features' final harvest; neither methods work outside window context
     useBody = haveSendBeacon
     method = haveSendBeacon ? submitData.beacon : submitData.img // really only IE doesn't have Beacon API for web browsers
   } else {
     // `submitData.beacon` was removed, there is an upper limit to the
     // number of data allowed before it starts failing, so we save it for
     // unload data
-    if (xhrUsable) {
-      // this is practically every browser-version in use today, including all workers
+    if (xhrUsable) { // this is practically every browser-version in use today, including all workers
       useBody = true
       method = submitData.xhr
     } else if (endpoint === 'events' || endpoint === 'jserrors') {

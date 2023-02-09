@@ -16,23 +16,14 @@ export class Aggregate extends AggregateBase {
     var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'metrics.harvestTimeSeconds') || 30
 
     var scheduler = new HarvestScheduler('jserrors', {}, this)
-    scheduler.harvest.on('jserrors', () => ({
-      body: this.aggregator.take(['cm', 'sm'])
-    }))
-    this.ee.on(`drain-${this.featureName}`, () => {
-      if (!this.blocked) scheduler.startTimer(harvestTimeSeconds)
-    })
+    scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
+    this.ee.on(`drain-${this.featureName}`, () => { if (!this.blocked) scheduler.startTimer(harvestTimeSeconds) })
 
     // if rum response determines that customer lacks entitlements for ins endpoint, block it
-    registerHandler(
-      'block-err',
-      () => {
-        this.blocked = true
-        scheduler.stopTimer()
-      },
-      this.featureName,
-      this.ee
-    )
+    registerHandler('block-err', () => {
+      this.blocked = true
+      scheduler.stopTimer()
+    }, this.featureName, this.ee)
 
     drain(this.agentIdentifier, this.featureName)
   }

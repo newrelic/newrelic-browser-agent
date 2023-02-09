@@ -27,6 +27,7 @@ export function wrapPromise (sharedEE) {
     Object.defineProperty(globalScope.Promise, 'name', {
       value: 'Promise'
     })
+
     ;['all', 'race'].forEach(function (method) {
       var original = OriginalPromise[method]
       OriginalPromise[method] = function (subPromises) {
@@ -49,6 +50,7 @@ export function wrapPromise (sharedEE) {
         }
       }
     })
+
     ;['resolve', 'reject'].forEach(function (method) {
       var original = OriginalPromise[method]
       OriginalPromise[method] = function (val) {
@@ -65,9 +67,7 @@ export function wrapPromise (sharedEE) {
       return this.then(null, fn)
     }
 
-    Object.assign(OriginalPromise.prototype, {
-      constructor: { value: WrappedPromise }
-    })
+    Object.assign(OriginalPromise.prototype, { constructor: { value: WrappedPromise } })
 
     mapOwn(Object.getOwnPropertyNames(OriginalPromise), function copy (i, key) {
       try {

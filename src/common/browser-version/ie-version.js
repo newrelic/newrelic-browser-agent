@@ -10,8 +10,7 @@ let len
 if (isBrowserScope) {
   const div = document.createElement('div')
 
-  div.innerHTML =
-    '<!--[if lte IE 6]><div></div><![endif]-->' +
+  div.innerHTML = '<!--[if lte IE 6]><div></div><![endif]-->' +
     '<!--[if lte IE 7]><div></div><![endif]-->' +
     '<!--[if lte IE 8]><div></div><![endif]-->' +
     '<!--[if lte IE 9]><div></div><![endif]-->'

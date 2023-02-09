@@ -61,11 +61,11 @@ export class Aggregate extends AggregateBase {
     chunksForQueryString.push(param('pr', info.product))
     chunksForQueryString.push(param('af', Object.keys(agentRuntime.features).join(',')))
 
-    if (window.performance && typeof window.performance.timing !== 'undefined') {
-      var navTimingApiData = {
+    if (window.performance && typeof (window.performance.timing) !== 'undefined') {
+      var navTimingApiData = ({
         timing: addPT(window.performance.timing, {}),
         navigation: addPN(window.performance.navigation, {})
-      }
+      })
       chunksForQueryString.push(param('perf', stringify(navTimingApiData)))
     }
 
@@ -76,9 +76,11 @@ export class Aggregate extends AggregateBase {
           if (!entry.startTime || entry.startTime <= 0) return
 
           if (entry.name === 'first-paint') {
-            chunksForQueryString.push(param('fp', String(Math.floor(entry.startTime))))
+            chunksForQueryString.push(param('fp',
+              String(Math.floor(entry.startTime))))
           } else if (entry.name === 'first-contentful-paint') {
-            chunksForQueryString.push(param('fcp', String(Math.floor(entry.startTime))))
+            chunksForQueryString.push(param('fcp',
+              String(Math.floor(entry.startTime))))
           }
           addPaintMetric(entry.name, Math.floor(entry.startTime))
         })

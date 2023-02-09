@@ -26,5 +26,5 @@ function truncateStackLines (stackLines) {
 
 // truncates stack string to limit what is sent to backend
 export function truncateSize (stackString) {
-  return stackString.length > MAX_STACK_TRACE_LENGTH ? stackString.substr(0, MAX_STACK_TRACE_LENGTH) : stackString
+  return (stackString.length > MAX_STACK_TRACE_LENGTH) ? stackString.substr(0, MAX_STACK_TRACE_LENGTH) : stackString
 }

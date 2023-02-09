@@ -79,105 +79,61 @@ export class Aggregate extends AggregateBase {
     this.laststart = 0
     findStartTime(agentIdentifier)
 
-    registerHandler(
-      'feat-stn',
-      () => {
-        this.storeTiming(window.performance.timing)
+    registerHandler('feat-stn', () => {
+      this.storeTiming(window.performance.timing)
 
-        var scheduler = new HarvestScheduler(
-          'resources',
-          {
-            onFinished: onHarvestFinished.bind(this),
-            retryDelay: this.harvestTimeSeconds
-          },
-          this
-        )
-        scheduler.harvest.on('resources', prepareHarvest.bind(this))
-        scheduler.runHarvest({ needResponse: true })
+      var scheduler = new HarvestScheduler('resources', {
+        onFinished: onHarvestFinished.bind(this),
+        retryDelay: this.harvestTimeSeconds
+      }, this)
+      scheduler.harvest.on('resources', prepareHarvest.bind(this))
+      scheduler.runHarvest({ needResponse: true })
 
-        function onHarvestFinished (result) {
-          // start timer only if ptid was returned by server
-          if (result.sent && result.responseText && !this.ptid) {
-            this.ptid = result.responseText
-            getRuntime(this.agentIdentifier).ptid = this.ptid
-            scheduler.startTimer(this.harvestTimeSeconds)
-          }
-
-          if (result.sent && result.retry && this.sentTrace) {
-            mapOwn(this.sentTrace, (name, nodes) => {
-              this.mergeSTNs(name, nodes)
-            })
-            this.sentTrace = null
-          }
+      function onHarvestFinished (result) {
+        // start timer only if ptid was returned by server
+        if (result.sent && result.responseText && !this.ptid) {
+          this.ptid = result.responseText
+          getRuntime(this.agentIdentifier).ptid = this.ptid
+          scheduler.startTimer(this.harvestTimeSeconds)
         }
 
-        function prepareHarvest (options) {
-          if (now() > 15 * 60 * 1000) {
-            // been collecting for over 15 min, empty trace object and bail
-            scheduler.stopTimer()
-            this.trace = {}
-            return
-          }
-
-          // only send when there are more than 30 nodes to send
-          if (this.ptid && this.nodeCount <= 30) return
-
-          return this.takeSTNs(options.retry)
+        if (result.sent && result.retry && this.sentTrace) {
+          mapOwn(this.sentTrace, (name, nodes) => {
+            this.mergeSTNs(name, nodes)
+          })
+          this.sentTrace = null
         }
-        handlerCache.decide(true)
-      },
-      this.featureName,
-      this.ee
-    )
+      }
 
-    registerHandler(
-      'block-stn',
-      () => {
-        handlerCache.decide(false)
-      },
-      this.featureName,
-      this.ee
-    )
+      function prepareHarvest (options) {
+        if ((now()) > (15 * 60 * 1000)) {
+          // been collecting for over 15 min, empty trace object and bail
+          scheduler.stopTimer()
+          this.trace = {}
+          return
+        }
+
+        // only send when there are more than 30 nodes to send
+        if (this.ptid && this.nodeCount <= 30) return
+
+        return this.takeSTNs(options.retry)
+      }
+      handlerCache.decide(true)
+    }, this.featureName, this.ee)
+
+    registerHandler('block-stn', () => {
+      handlerCache.decide(false)
+    }, this.featureName, this.ee)
 
     // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...
     registerHandler('bst', (...args) => handlerCache.settle(() => this.storeEvent(...args)), this.featureName, this.ee)
-    registerHandler(
-      'bstTimer',
-      (...args) => handlerCache.settle(() => this.storeTimer(...args)),
-      this.featureName,
-      this.ee
-    )
-    registerHandler(
-      'bstResource',
-      (...args) => handlerCache.settle(() => this.storeResources(...args)),
-      this.featureName,
-      this.ee
-    )
-    registerHandler(
-      'bstHist',
-      (...args) => handlerCache.settle(() => this.storeHist(...args)),
-      this.featureName,
-      this.ee
-    )
-    registerHandler(
-      'bstXhrAgg',
-      (...args) => handlerCache.settle(() => this.storeXhrAgg(...args)),
-      this.featureName,
-      this.ee
-    )
+    registerHandler('bstTimer', (...args) => handlerCache.settle(() => this.storeTimer(...args)), this.featureName, this.ee)
+    registerHandler('bstResource', (...args) => handlerCache.settle(() => this.storeResources(...args)), this.featureName, this.ee)
+    registerHandler('bstHist', (...args) => handlerCache.settle(() => this.storeHist(...args)), this.featureName, this.ee)
+    registerHandler('bstXhrAgg', (...args) => handlerCache.settle(() => this.storeXhrAgg(...args)), this.featureName, this.ee)
     registerHandler('bstApi', (...args) => handlerCache.settle(() => this.storeSTN(...args)), this.featureName, this.ee)
-    registerHandler(
-      'errorAgg',
-      (...args) => handlerCache.settle(() => this.storeErrorAgg(...args)),
-      this.featureName,
-      this.ee
-    )
-    registerHandler(
-      'pvtAdded',
-      (...args) => handlerCache.settle(() => this.processPVT(...args)),
-      this.featureName,
-      this.ee
-    )
+    registerHandler('errorAgg', (...args) => handlerCache.settle(() => this.storeErrorAgg(...args)), this.featureName, this.ee)
+    registerHandler('pvtAdded', (...args) => handlerCache.settle(() => this.processPVT(...args)), this.featureName, this.ee)
     drain(this.agentIdentifier, this.featureName)
   }
 
@@ -185,7 +141,7 @@ export class Aggregate extends AggregateBase {
     var t = {}
     t[name] = value
     this.storeTiming(t, true)
-    if (this.hasFID(name, attrs)) { this.storeEvent({ type: 'fid', target: 'document' }, 'document', value, value + attrs.fid) }
+    if (this.hasFID(name, attrs)) this.storeEvent({ type: 'fid', target: 'document' }, 'document', value, value + attrs.fid)
   }
 
   storeTiming (_t, ignoreOffset) {
@@ -200,7 +156,7 @@ export class Aggregate extends AggregateBase {
 
       // ignore inherited methods, meaningless 0 values, and bogus timestamps
       // that are in the future (Microsoft Edge seems to sometimes produce these)
-      if (!(typeof val === 'number' && val > 0 && val < dateNow)) continue
+      if (!(typeof (val) === 'number' && val > 0 && val < dateNow)) continue
 
       timeOffset = !ignoreOffset ? _t[key] - getRuntime(this.agentIdentifier).offset : _t[key]
 
@@ -267,7 +223,7 @@ export class Aggregate extends AggregateBase {
       var params = this.ee.context(t).params
       if (!params || !params.status || !params.method || !params.host || !params.pathname) return 'xhrOriginMissing'
       origin = params.status + ' ' + params.method + ': ' + params.host + params.pathname
-    } else if (t && typeof t.tagName === 'string') {
+    } else if (t && typeof (t.tagName) === 'string') {
       origin = t.tagName.toLowerCase()
       if (t.id) origin += '#' + t.id
       if (t.className) origin += '.' + slice(t.classList).join('.')
@@ -369,19 +325,11 @@ export class Aggregate extends AggregateBase {
       this.storeResources(window.performance.getEntriesByType('resource'))
     }
 
-    var stns = reduce(
-      mapOwn(this.trace, (name, nodes) => {
-        if (!(name in this.toAggregate)) return nodes
+    var stns = reduce(mapOwn(this.trace, (name, nodes) => {
+      if (!(name in this.toAggregate)) return nodes
 
-        return reduce(
-          mapOwn(reduce(nodes.sort(this.byStart), this.smearEvtsByOrigin(name), {}), this.val),
-          this.flatten,
-          []
-        )
-      }),
-      this.flatten,
-      []
-    )
+      return reduce(mapOwn(reduce(nodes.sort(this.byStart), this.smearEvtsByOrigin(name), {}), this.val), this.flatten, [])
+    }), this.flatten, [])
 
     if (stns.length === 0) return {}
 
@@ -426,7 +374,7 @@ export class Aggregate extends AggregateBase {
         lastO[evt.o] = null
         evt.n = 'scroll'
         lastArr.push(evt)
-      } else if (last && evt.s - last.s < maxLen && last.e > evt.s - maxGap) {
+      } else if (last && (evt.s - last.s) < maxLen && last.e > (evt.s - maxGap)) {
         last.e = evt.e
       } else {
         lastO[evt.o] = evt
@@ -451,7 +399,7 @@ export class Aggregate extends AggregateBase {
 
   trivial (node) {
     var limit = 4
-    if (node && typeof node.e === 'number' && typeof node.s === 'number' && node.e - node.s < limit) return true
+    if (node && typeof node.e === 'number' && typeof node.s === 'number' && (node.e - node.s) < limit) return true
     else return false
   }
 

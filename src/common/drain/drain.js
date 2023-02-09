@@ -49,8 +49,7 @@ export function drain (agentIdentifier = '', featureName = 'feature') {
     var groupHandlers = handlers[group]
     if (groupHandlers) {
       // don't cache length, buffer can grow while processing
-      for (var i = 0; bufferedEventsInGroup && i < bufferedEventsInGroup.length; ++i) {
-        // eslint-disable-line no-unmodified-loop-condition
+      for (var i = 0; bufferedEventsInGroup && i < bufferedEventsInGroup.length; ++i) { // eslint-disable-line no-unmodified-loop-condition
         emitEvent(bufferedEventsInGroup[i], groupHandlers)
       }
 

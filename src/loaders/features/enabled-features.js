@@ -9,7 +9,7 @@ function isEnabled (name, agentIdentifier) {
 
 export function getEnabledFeatures (agentIdentifier) {
   const enabledFeatures = {}
-  featureNames.forEach((featureName) => {
+  featureNames.forEach(featureName => {
     enabledFeatures[featureName] = isEnabled(featureName, agentIdentifier)
   })
   return enabledFeatures

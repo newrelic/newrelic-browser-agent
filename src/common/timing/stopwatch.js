@@ -8,7 +8,7 @@ import { now, getOffset } from './now'
 var marks = {}
 
 export function mark (agentId, markName, markTime) {
-  if (typeof markTime === 'undefined') markTime = now() + getOffset()
+  if (typeof markTime === 'undefined') markTime = (now() + getOffset())
   marks[agentId] = marks[agentId] || {}
   marks[agentId][markName] = markTime
 }

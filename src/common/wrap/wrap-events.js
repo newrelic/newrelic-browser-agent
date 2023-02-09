@@ -22,7 +22,8 @@ export function wrapEvents (sharedEE) {
 
   // Guard against instrumenting environments w/o necessary features
   if ('getPrototypeOf' in Object) {
-    if (isBrowserScope) findAndWrapNode(document)
+    if (isBrowserScope)
+    { findAndWrapNode(document) }
     findAndWrapNode(globalScope)
     findAndWrapNode(XHR.prototype)
     // eslint-disable-next-line
@@ -33,7 +34,9 @@ export function wrapEvents (sharedEE) {
 
   ee.on(ADD_EVENT_LISTENER + '-start', function (args, target) {
     var originalListener = args[1]
-    if (originalListener === null || (typeof originalListener !== 'function' && typeof originalListener !== 'object')) {
+    if (originalListener === null ||
+      (typeof originalListener !== 'function' && typeof originalListener !== 'object')
+    ) {
       return
     }
 
@@ -43,7 +46,7 @@ export function wrapEvents (sharedEE) {
         function: originalListener
       }[typeof originalListener]
 
-      return listener ? wrapFn(listener, 'fn-', null, listener.name || 'anonymous') : originalListener
+      return listener ? wrapFn(listener, 'fn-', null, (listener.name || 'anonymous')) : originalListener
 
       function wrapHandleEvent () {
         if (typeof originalListener.handleEvent !== 'function') return
@@ -61,12 +64,8 @@ export function wrapEvents (sharedEE) {
   function findAndWrapNode (object) {
     var step = object
     // eslint-disable-next-line
-    while (step && !step.hasOwnProperty(ADD_EVENT_LISTENER)) {
-      step = Object.getPrototypeOf(step)
-    }
-    if (step) {
-      wrapNode(step)
-    }
+    while (step && !step.hasOwnProperty(ADD_EVENT_LISTENER)) { step = Object.getPrototypeOf(step) }
+    if (step) { wrapNode(step) }
   }
 
   function wrapNode (node) {

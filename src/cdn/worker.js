@@ -6,6 +6,11 @@ import { Instrument as InstrumentXhr } from '../features/ajax/instrument'
 import { Instrument as InstrumentPageAction } from '../features/page_action/instrument'
 
 new Agent({
-  features: [InstrumentMetrics, InstrumentErrors, InstrumentXhr, InstrumentPageAction],
+  features: [
+    InstrumentMetrics,
+    InstrumentErrors,
+    InstrumentXhr,
+    InstrumentPageAction
+  ],
   loaderType: 'worker'
 })

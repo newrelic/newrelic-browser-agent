@@ -30,7 +30,7 @@ export function Interaction (eventName, timestamp, url, routeName, onFinished, a
   this.onFinished = onFinished
   this.done = false
 
-  var root = (this.root = new InteractionNode(this, null, 'interaction', timestamp))
+  var root = this.root = new InteractionNode(this, null, 'interaction', timestamp)
   var attrs = root.attrs
 
   attrs.trigger = eventName

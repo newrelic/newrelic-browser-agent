@@ -11,14 +11,16 @@ var hasOwnProp = Object.prototype.hasOwnProperty
 var MAX_ATTRIBUTES = 64
 
 export function nullable (val, fn, comma) {
-  return val || val === 0 || val === '' ? fn(val) + (comma ? ',' : '') : '!'
+  return val || val === 0 || val === ''
+    ? fn(val) + (comma ? ',' : '')
+    : '!'
 }
 
 export function numeric (n, noDefault) {
   if (noDefault) {
     return Math.floor(n).toString(36)
   }
-  return n === undefined || n === 0 ? '' : Math.floor(n).toString(36)
+  return (n === undefined || n === 0) ? '' : Math.floor(n).toString(36)
 }
 
 export function getAddStringContext (agentIdentifier) {

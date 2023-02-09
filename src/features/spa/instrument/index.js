@@ -1,17 +1,8 @@
 /*
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
- */
-import {
-  wrapMutation,
-  wrapPromise,
-  wrapHistory,
-  wrapEvents,
-  wrapTimer,
-  wrapFetch,
-  wrapXhr,
-  wrapJson
-} from '../../../common/wrap'
+*/
+import { wrapMutation, wrapPromise, wrapHistory, wrapEvents, wrapTimer, wrapFetch, wrapXhr, wrapJson } from '../../../common/wrap'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { getRuntime } from '../../../common/config/config'
@@ -20,19 +11,8 @@ import * as CONSTANTS from '../constants'
 import { isBrowserScope } from '../../../common/util/global-scope'
 
 const {
-  FEATURE_NAME,
-  START,
-  END,
-  BODY,
-  CB_END,
-  JS_TIME,
-  FETCH,
-  ADD_EVENT_LISTENER,
-  WIN: win,
-  LOCATION: location,
-  FN_START,
-  CB_START,
-  FN_END
+  FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, ADD_EVENT_LISTENER,
+  WIN: win, LOCATION: location, FN_START, CB_START, FN_END
 } = CONSTANTS
 
 export class Instrument extends InstrumentBase {
@@ -88,13 +68,9 @@ export class Instrument extends InstrumentBase {
 
     win[ADD_EVENT_LISTENER]('hashchange', trackURLChange, eventListenerOpts(true))
     win[ADD_EVENT_LISTENER]('load', trackURLChange, eventListenerOpts(true))
-    win[ADD_EVENT_LISTENER](
-      'popstate',
-      function () {
-        trackURLChange(0, depth > 1)
-      },
-      eventListenerOpts(true)
-    )
+    win[ADD_EVENT_LISTENER]('popstate', function () {
+      trackURLChange(0, depth > 1)
+    }, eventListenerOpts(true))
 
     function trackURLChange (unusedArgs, hashChangedDuringCb) {
       historyEE.emit('newURL', ['' + location, hashChangedDuringCb])
@@ -113,7 +89,7 @@ export class Instrument extends InstrumentBase {
       }
 
       var time = now()
-      this[JS_TIME] = ~~this[JS_TIME] + time - this[FN_START]
+      this[JS_TIME] = (~~this[JS_TIME]) + time - this[FN_START]
       this[FN_END] = time
     }
 

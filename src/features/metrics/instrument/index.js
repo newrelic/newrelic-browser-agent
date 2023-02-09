@@ -31,24 +31,34 @@ export class Instrument extends InstrumentBase {
   }
 
   /**
-   * Records a supportabilityMetric (sm) using the value of a named property or as a counter without a value.
-   * @param {string} name - Name of the metric, this will be used to create the parent name of the metric.
-   * @param {number} [value] - The value of the metric, if none, will increment counter
-   * @returns void
-   */
+     * Records a supportabilityMetric (sm) using the value of a named property or as a counter without a value.
+     * @param {string} name - Name of the metric, this will be used to create the parent name of the metric.
+     * @param {number} [value] - The value of the metric, if none, will increment counter
+     * @returns void
+     */
   recordSupportability (name, value) {
-    var opts = [SUPPORTABILITY_METRIC, name, { name: name }, value]
+    var opts = [
+      SUPPORTABILITY_METRIC,
+      name,
+      { name: name },
+      value
+    ]
     handle('storeMetric', opts, null, this.featureName, this.ee)
     return opts
   }
   /**
-   * Records a customMetric (cm) using the value of a named property or as a counter without a value.
-   * @param {string} name - Name of the metric, this will be used to create the parent name of the metric.
-   * @param {Object.<string, number>} [value] - The named property upon which to aggregate values. This will generate the substring of the metric name. If none, will incrememnt counter
-   * @returns void
-   */
+     * Records a customMetric (cm) using the value of a named property or as a counter without a value.
+     * @param {string} name - Name of the metric, this will be used to create the parent name of the metric.
+     * @param {Object.<string, number>} [value] - The named property upon which to aggregate values. This will generate the substring of the metric name. If none, will incrememnt counter
+     * @returns void
+     */
   recordCustom (name, metrics) {
-    var opts = [CUSTOM_METRIC, name, { name: name }, metrics]
+    var opts = [
+      CUSTOM_METRIC,
+      name,
+      { name: name },
+      metrics
+    ]
 
     handle('storeEventMetrics', opts, null, this.featureName, this.ee)
     return opts
@@ -63,13 +73,11 @@ export class Instrument extends InstrumentBase {
     if (loaderType) this.recordSupportability(`Generic/LoaderType/${loaderType}/Detected`)
 
     // frameworks on page
-    if (isBrowserScope) {
-      onDOMContentLoaded(() => {
-        getFrameworks().forEach((framework) => {
-          this.recordSupportability('Framework/' + framework + '/Detected')
-        })
+    if (isBrowserScope) { onDOMContentLoaded(() => {
+      getFrameworks().forEach(framework => {
+        this.recordSupportability('Framework/' + framework + '/Detected')
       })
-    }
+    }) }
 
     // file protocol detection
     if (protocol.isFileProtocol()) {
@@ -101,13 +109,11 @@ export class Instrument extends InstrumentBase {
 
     // [Temporary] Report restores from BFCache to NR1 while feature flag is in place in lieu of sending pageshow events.
     windowAddEventListener('pageshow', (evt) => {
-      if (evt.persisted) this.recordSupportability('Generic/BFCache/PageRestored')
+      if (evt.persisted)
+      { this.recordSupportability('Generic/BFCache/PageRestored') }
       return
     })
   }
 }
 
-export var constants = {
-  SUPPORTABILITY_METRIC: SUPPORTABILITY_METRIC,
-  CUSTOM_METRIC: CUSTOM_METRIC
-}
+export var constants = { SUPPORTABILITY_METRIC: SUPPORTABILITY_METRIC, CUSTOM_METRIC: CUSTOM_METRIC }

@@ -44,8 +44,7 @@ export class Aggregator extends SharedContext {
       // handling the case where newMetric is a single-value first
       if (newMetric && !newMetric.c) {
         oldMetrics[key] = updateMetric(newMetric.t, oldMetric)
-      } else {
-        // newMetric is a metric object
+      } else { // newMetric is a metric object
         oldMetrics[key] = mergeMetric(newMetric, oldMetrics[key])
       }
     })

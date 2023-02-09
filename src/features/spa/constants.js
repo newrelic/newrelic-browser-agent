@@ -3,7 +3,14 @@ import { globalScope } from '../../common/util/global-scope'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const FEATURE_NAME = FEATURE_NAMES.spa
-export const INTERACTION_EVENTS = ['click', 'submit', 'keypress', 'keydown', 'keyup', 'change']
+export const INTERACTION_EVENTS = [
+  'click',
+  'submit',
+  'keypress',
+  'keydown',
+  'keyup',
+  'change'
+]
 
 export const MAX_TIMER_BUDGET = 999
 export const FN_START = 'fn-start'

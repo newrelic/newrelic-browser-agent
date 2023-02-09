@@ -19,7 +19,5 @@ export function id (obj) {
   if (!obj || !(type === 'object' || type === 'function')) return -1
   if (obj === globalScope) return 0
 
-  return getOrSet(obj, prop, function () {
-    return index++
-  })
+  return getOrSet(obj, prop, function () { return index++ })
 }

@@ -7,20 +7,17 @@ const baseMockError = {
   name: 'RangeError',
   constructor: 'function RangeError() { [native code] }',
   message: 'Invalid array length',
-  stack:
-    'RangeError: Invalid array length\n    at errorTest (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:74:16)\n    at captureError (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:9)\n    at onload (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:70:5)'
+  stack: 'RangeError: Invalid array length\n    at errorTest (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:74:16)\n    at captureError (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:17:9)\n    at onload (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html?loader=spa:70:5)'
 }
 
 test('parsing should return a failure for a null error object', () => {
   const result = computeStackTrace(null)
 
-  expect(result).toEqual(
-    expect.objectContaining({
-      mode: 'failed',
-      stackString: '',
-      frames: []
-    })
-  )
+  expect(result).toEqual(expect.objectContaining({
+    mode: 'failed',
+    stackString: '',
+    frames: []
+  }))
 })
 
 describe('errors with stack property', () => {
@@ -33,14 +30,12 @@ describe('errors with stack property', () => {
 
     const result = computeStackTrace(mockError)
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        mode: 'stack',
-        name: 'unknown',
-        message: mockError.message,
-        stackString: mockError.stack
-      })
-    )
+    expect(result).toEqual(expect.objectContaining({
+      mode: 'stack',
+      name: 'unknown',
+      message: mockError.message,
+      stackString: mockError.stack
+    }))
   })
 
   test('parsed stack should not contain nrWrapper', () => {
@@ -51,19 +46,15 @@ describe('errors with stack property', () => {
 
     const result = computeStackTrace(mockError)
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        mode: 'stack',
-        name: mockError.name,
-        message: mockError.message,
-        stackString: expect.not.stringContaining('nrWrapper')
-      })
-    )
-    expect(result.frames).not.toContainEqual(
-      expect.objectContaining({
-        func: 'nrWrapper'
-      })
-    )
+    expect(result).toEqual(expect.objectContaining({
+      mode: 'stack',
+      name: mockError.name,
+      message: mockError.message,
+      stackString: expect.not.stringContaining('nrWrapper')
+    }))
+    expect(result.frames).not.toContainEqual(expect.objectContaining({
+      func: 'nrWrapper'
+    }))
   })
 
   test('stack should still parse when column numbers are missing', () => {
@@ -75,57 +66,46 @@ describe('errors with stack property', () => {
 
     const result = computeStackTrace(mockError)
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        mode: 'stack',
-        name: mockError.name,
-        message: mockError.message,
-        stackString: mockError.stack
-      })
-    )
+    expect(result).toEqual(expect.objectContaining({
+      mode: 'stack',
+      name: mockError.name,
+      message: mockError.message,
+      stackString: mockError.stack
+    }))
     expect(result.frames.length).toEqual(3)
-    expect(result.frames).toContainEqual(
-      expect.objectContaining({
-        func: 'errorTest',
-        column: null
-      })
-    )
-    expect(result.frames).toContainEqual(
-      expect.objectContaining({
-        func: 'captureError',
-        column: null
-      })
-    )
-    expect(result.frames).toContainEqual(
-      expect.objectContaining({
-        func: 'onload',
-        column: null
-      })
-    )
+    expect(result.frames).toContainEqual(expect.objectContaining({
+      func: 'errorTest',
+      column: null
+    }))
+    expect(result.frames).toContainEqual(expect.objectContaining({
+      func: 'captureError',
+      column: null
+    }))
+    expect(result.frames).toContainEqual(expect.objectContaining({
+      func: 'onload',
+      column: null
+    }))
   })
 
   test('parser can handle chrome eval stack', () => {
     const mockError = browserErrorUtils.constructError({
       ...baseMockError,
-      stack: '    at foobar (eval at foobar (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html))'
+      stack:
+        '    at foobar (eval at foobar (http://bam-test-1.nr-local.net:3334/tests/assets/instrumented.html))'
     })
 
     const result = computeStackTrace(mockError)
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        mode: 'stack',
-        name: mockError.name,
-        message: mockError.message,
-        stackString: mockError.stack
-      })
-    )
+    expect(result).toEqual(expect.objectContaining({
+      mode: 'stack',
+      name: mockError.name,
+      message: mockError.message,
+      stackString: mockError.stack
+    }))
     expect(result.frames.length).toEqual(1)
-    expect(result.frames).toContainEqual(
-      expect.objectContaining({
-        func: 'evaluated code'
-      })
-    )
+    expect(result.frames).toContainEqual(expect.objectContaining({
+      func: 'evaluated code'
+    }))
   })
 
   test('parser can handle ie eval stack', () => {
@@ -134,49 +114,43 @@ describe('errors with stack property', () => {
       name: 'TypeError',
       constructor: '\nfunction TypeError() {\n    [native code]\n}\n',
       message: 'Permission denied',
-      stack: '    at Function code (Function code:23:23)'
+      stack:
+        '    at Function code (Function code:23:23)'
     })
 
     const result = computeStackTrace(mockError)
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        mode: 'stack',
-        name: mockError.name,
-        message: mockError.message,
-        stackString: mockError.stack
-      })
-    )
+    expect(result).toEqual(expect.objectContaining({
+      mode: 'stack',
+      name: mockError.name,
+      message: mockError.message,
+      stackString: mockError.stack
+    }))
     expect(result.frames.length).toEqual(1)
-    expect(result.frames).toContainEqual(
-      expect.objectContaining({
-        func: 'evaluated code'
-      })
-    )
+    expect(result.frames).toContainEqual(expect.objectContaining({
+      func: 'evaluated code'
+    }))
   })
 
   test('parser can handle stack with anonymous function', () => {
     const mockError = browserErrorUtils.constructError({
       ...baseMockError,
-      stack: 'anonymous'
+      stack:
+        'anonymous'
     })
 
     const result = computeStackTrace(mockError)
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        mode: 'stack',
-        name: mockError.name,
-        message: mockError.message,
-        stackString: mockError.stack
-      })
-    )
+    expect(result).toEqual(expect.objectContaining({
+      mode: 'stack',
+      name: mockError.name,
+      message: mockError.message,
+      stackString: mockError.stack
+    }))
     expect(result.frames.length).toEqual(1)
-    expect(result.frames).toContainEqual(
-      expect.objectContaining({
-        func: 'evaluated code'
-      })
-    )
+    expect(result.frames).toContainEqual(expect.objectContaining({
+      func: 'evaluated code'
+    }))
   })
 })
 
@@ -195,21 +169,17 @@ describe('errors without stack property and with line property', () => {
 
     const result = computeStackTrace(mockError)
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        mode: 'sourceline',
-        name: mockError.name,
-        message: mockError.message,
-        stackString: `${mockError.name}: ${mockError.message}\n    at ${sourceURL}:${mockError.line}`
-      })
-    )
+    expect(result).toEqual(expect.objectContaining({
+      mode: 'sourceline',
+      name: mockError.name,
+      message: mockError.message,
+      stackString: `${mockError.name}: ${mockError.message}\n    at ${sourceURL}:${mockError.line}`
+    }))
     expect(result.frames.length).toEqual(1)
-    expect(result.frames).toContainEqual(
-      expect.objectContaining({
-        url: sourceURL,
-        line: mockError.line
-      })
-    )
+    expect(result.frames).toContainEqual(expect.objectContaining({
+      url: sourceURL,
+      line: mockError.line
+    }))
   })
 
   /**
@@ -227,22 +197,18 @@ describe('errors without stack property and with line property', () => {
 
     const result = computeStackTrace(mockError)
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        mode: 'sourceline',
-        name: mockError.name,
-        message: mockError.message,
-        stackString: `${mockError.name}: ${mockError.message}\n    at ${sourceURL}:${mockError.line}:${mockError.column}`
-      })
-    )
+    expect(result).toEqual(expect.objectContaining({
+      mode: 'sourceline',
+      name: mockError.name,
+      message: mockError.message,
+      stackString: `${mockError.name}: ${mockError.message}\n    at ${sourceURL}:${mockError.line}:${mockError.column}`
+    }))
     expect(result.frames.length).toEqual(1)
-    expect(result.frames).toContainEqual(
-      expect.objectContaining({
-        url: sourceURL,
-        line: mockError.line,
-        column: mockError.column
-      })
-    )
+    expect(result.frames).toContainEqual(expect.objectContaining({
+      url: sourceURL,
+      line: mockError.line,
+      column: mockError.column
+    }))
   })
 
   test('parsed stack should contain "evaluated code" if sourceURL property is not present', () => {
@@ -255,20 +221,16 @@ describe('errors without stack property and with line property', () => {
 
     const result = computeStackTrace(mockError)
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        mode: 'sourceline',
-        name: mockError.name,
-        message: mockError.message,
-        stackString: `RangeError: ${mockError.message}\n    in evaluated code`
-      })
-    )
+    expect(result).toEqual(expect.objectContaining({
+      mode: 'sourceline',
+      name: mockError.name,
+      message: mockError.message,
+      stackString: `RangeError: ${mockError.message}\n    in evaluated code`
+    }))
     expect(result.frames.length).toEqual(1)
-    expect(result.frames).toContainEqual(
-      expect.objectContaining({
-        func: 'evaluated code'
-      })
-    )
+    expect(result.frames).toContainEqual(expect.objectContaining({
+      func: 'evaluated code'
+    }))
   })
 
   // TODO: computeStackTraceBySourceAndLine does not respect firefox lineNumber and columnNumber properties when stack is empty
@@ -287,14 +249,12 @@ describe('errors that are messages only or primitives', () => {
 
     const result = computeStackTrace(mockError)
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        mode: 'nameonly',
-        name: 'Number',
-        stackString: 'Number: undefined',
-        frames: []
-      })
-    )
+    expect(result).toEqual(expect.objectContaining({
+      mode: 'nameonly',
+      name: 'Number',
+      stackString: 'Number: undefined',
+      frames: []
+    }))
   })
 
   test('parser should get error name from name property', () => {
@@ -306,14 +266,12 @@ describe('errors that are messages only or primitives', () => {
 
     const result = computeStackTrace(mockError)
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        mode: 'nameonly',
-        name: mockError.name,
-        stackString: `${mockError.name}: undefined`,
-        frames: []
-      })
-    )
+    expect(result).toEqual(expect.objectContaining({
+      mode: 'nameonly',
+      name: mockError.name,
+      stackString: `${mockError.name}: undefined`,
+      frames: []
+    }))
   })
 
   test('parser should include the message property', () => {
@@ -326,15 +284,13 @@ describe('errors that are messages only or primitives', () => {
 
     const result = computeStackTrace(mockError)
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        mode: 'nameonly',
-        name: mockError.name,
-        message: mockError.message,
-        stackString: `${mockError.name}: ${mockError.message}`,
-        frames: []
-      })
-    )
+    expect(result).toEqual(expect.objectContaining({
+      mode: 'nameonly',
+      name: mockError.name,
+      message: mockError.message,
+      stackString: `${mockError.name}: ${mockError.message}`,
+      frames: []
+    }))
   })
 })
 

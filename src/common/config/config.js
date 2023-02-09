@@ -9,16 +9,4 @@ function isConfigured (agentIdentifier) {
 }
 
 // This module acts as a hub that bundles the static and dynamic properties used by each agent instance into one single interface
-export {
-  getInfo,
-  setInfo,
-  getConfiguration,
-  getConfigurationValue,
-  setConfiguration,
-  getLoaderConfig,
-  setLoaderConfig,
-  originals,
-  getRuntime,
-  setRuntime,
-  isConfigured
-}
+export { getInfo, setInfo, getConfiguration, getConfigurationValue, setConfiguration, getLoaderConfig, setLoaderConfig, originals, getRuntime, setRuntime, isConfigured }

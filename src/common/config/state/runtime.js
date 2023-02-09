@@ -11,26 +11,25 @@ import { VERSION } from '../../constants/environment-variables'
 var XHR = globalScope?.XMLHttpRequest
 var XHR_PROTO = XHR && XHR.prototype
 
-const model = (agentId) => {
-  return {
-    customTransaction: undefined,
-    disabled: false,
-    features: {},
-    isolatedBacklog: false,
-    loaderType: undefined,
-    maxBytes: ieVersion === 6 ? 2000 : 30000,
-    offset: getLastTimestamp(),
-    onerror: undefined,
-    origin: '' + globalScope?.location,
-    ptid: undefined,
-    releaseIds: {},
-    sessionId:
-      getConfigurationValue(agentId, 'privacy.cookies_enabled') == true ? getCurrentSessionIdOrMakeNew() : null, // if cookies (now session tracking) is turned off or can't get session ID, this is null
-    xhrWrappable: XHR && XHR_PROTO && XHR_PROTO['addEventListener'],
-    userAgent,
-    version: VERSION
-  }
-}
+const model = agentId => { return {
+  customTransaction: undefined,
+  disabled: false,
+  features: {},
+  isolatedBacklog: false,
+  loaderType: undefined,
+  maxBytes: ieVersion === 6 ? 2000 : 30000,
+  offset: getLastTimestamp(),
+  onerror: undefined,
+  origin: '' + globalScope?.location,
+  ptid: undefined,
+  releaseIds: {},
+  sessionId: getConfigurationValue(agentId, 'privacy.cookies_enabled') == true
+    ? getCurrentSessionIdOrMakeNew()
+    : null, // if cookies (now session tracking) is turned off or can't get session ID, this is null
+  xhrWrappable: XHR && XHR_PROTO && XHR_PROTO['addEventListener'],
+  userAgent,
+  version: VERSION
+} }
 
 const _cache = {}
 

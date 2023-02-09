@@ -47,26 +47,15 @@ export class Aggregate extends AggregateBase {
 
     var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'jserrors.harvestTimeSeconds') || 10
 
-    this.scheduler = new HarvestScheduler(
-      'jserrors',
-      { onFinished: (...args) => this.onHarvestFinished(...args) },
-      this
-    )
+    this.scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
     this.scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
-    this.ee.on(`drain-${this.featureName}`, () => {
-      if (!this.blocked) this.scheduler.startTimer(harvestTimeSeconds)
-    })
+    this.ee.on(`drain-${this.featureName}`, () => { if (!this.blocked) this.scheduler.startTimer(harvestTimeSeconds) })
 
     // if rum response determines that customer lacks entitlements for jserrors endpoint, block it
-    register(
-      'block-err',
-      () => {
-        this.blocked = true
-        this.scheduler.stopTimer()
-      },
-      this.featureName,
-      this.ee
-    )
+    register('block-err', () => {
+      this.blocked = true
+      this.scheduler.stopTimer()
+    }, this.featureName, this.ee)
 
     drain(this.agentIdentifier, this.featureName)
   }
@@ -107,9 +96,7 @@ export class Aggregate extends AggregateBase {
   }
 
   nameHash (params) {
-    return stringHashCode(
-      `${params.exceptionClass}_${params.message}_${params.stack_trace || params.browser_stack_hash}`
-    )
+    return stringHashCode(`${params.exceptionClass}_${params.message}_${params.stack_trace || params.browser_stack_hash}`)
   }
 
   getBucketName (params, customParams) {
@@ -240,7 +227,7 @@ export class Aggregate extends AggregateBase {
     }
 
     function setCustom (key, val) {
-      customParams[key] = val && typeof val === 'object' ? stringify(val) : val
+      customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
   }
 
@@ -272,7 +259,7 @@ export class Aggregate extends AggregateBase {
       this.aggregator.store(item[0], aggregateHash, params, item[3], customParams)
 
       function setCustom (key, val) {
-        customParams[key] = val && typeof val === 'object' ? stringify(val) : val
+        customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)
       }
     })
     delete this.errorCache[interaction.id]
@@ -301,7 +288,7 @@ export class Aggregate extends AggregateBase {
       this.aggregator.store(item[0], aggregateHash, item[2], item[3], customParams)
 
       function setCustom (key, val) {
-        customParams[key] = val && typeof val === 'object' ? stringify(val) : val
+        customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)
       }
     })
     delete this.errorCache[interaction.id]

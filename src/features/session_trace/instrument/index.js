@@ -14,20 +14,8 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { isBrowserScope } from '../../../common/util/global-scope'
 
 const {
-  ADD_EVENT_LISTENER,
-  BST_RESOURCE,
-  BST_TIMER,
-  END,
-  FEATURE_NAME,
-  FN_END,
-  FN_START,
-  learResourceTimings,
-  PUSH_STATE,
-  REMOVE_EVENT_LISTENER,
-  RESOURCE,
-  RESOURCE_TIMING_BUFFER_FULL,
-  START,
-  ORIG_EVENT: origEvent
+  ADD_EVENT_LISTENER, BST_RESOURCE, BST_TIMER, END, FEATURE_NAME, FN_END, FN_START, learResourceTimings,
+  PUSH_STATE, REMOVE_EVENT_LISTENER, RESOURCE, RESOURCE_TIMING_BUFFER_FULL, START, ORIG_EVENT: origEvent
 } = CONSTANTS
 
 export class Instrument extends InstrumentBase {
@@ -36,7 +24,10 @@ export class Instrument extends InstrumentBase {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     if (!isBrowserScope) return // session traces not supported outside web env
 
-    if (!(window.performance && window.performance.timing && window.performance.getEntriesByType)) return
+    if (!(window.performance &&
+      window.performance.timing &&
+      window.performance.getEntriesByType
+    )) return
 
     getRuntime(this.agentIdentifier).features.stn = true
 
@@ -77,13 +68,7 @@ export class Instrument extends InstrumentBase {
     })
 
     this.rafEE.on(FN_END, function (args, target) {
-      handle(
-        BST_TIMER,
-        [target, this.bstStart, now(), 'requestAnimationFrame'],
-        undefined,
-        FEATURE_NAMES.sessionTrace,
-        ee
-      )
+      handle(BST_TIMER, [target, this.bstStart, now(), 'requestAnimationFrame'], undefined, FEATURE_NAMES.sessionTrace, ee)
     })
 
     this.ee.on(PUSH_STATE + START, function (args) {
@@ -91,13 +76,7 @@ export class Instrument extends InstrumentBase {
       this.startPath = location.pathname + location.hash
     })
     this.ee.on(PUSH_STATE + END, function (args) {
-      handle(
-        'bstHist',
-        [location.pathname + location.hash, this.startPath, this.time],
-        undefined,
-        FEATURE_NAMES.sessionTrace,
-        ee
-      )
+      handle('bstHist', [location.pathname + location.hash, this.startPath, this.time], undefined, FEATURE_NAMES.sessionTrace, ee)
     })
 
     if (supportsPerformanceObserver()) {
@@ -109,24 +88,15 @@ export class Instrument extends InstrumentBase {
       // collect resource timings once when buffer is full
       if (ADD_EVENT_LISTENER in window.performance) {
         if (window.performance['c' + learResourceTimings]) {
-          window.performance[ADD_EVENT_LISTENER](
-            RESOURCE_TIMING_BUFFER_FULL,
-            onResourceTimingBufferFull,
-            eventListenerOpts(false)
-          )
+          window.performance[ADD_EVENT_LISTENER](RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, eventListenerOpts(false))
         } else {
-          window.performance[ADD_EVENT_LISTENER](
-            'webkit' + RESOURCE_TIMING_BUFFER_FULL,
-            onResourceTimingBufferFull,
-            eventListenerOpts(false)
-          )
+          window.performance[ADD_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, eventListenerOpts(false))
         }
       }
     }
 
     function observeResourceTimings () {
-      var observer = new PerformanceObserver((list, observer) => {
-        // eslint-disable-line no-undef
+      var observer = new PerformanceObserver((list, observer) => { // eslint-disable-line no-undef
         var entries = list.getEntries()
 
         handle(BST_RESOURCE, [entries], undefined, FEATURE_NAMES.sessionTrace, ee)
@@ -151,11 +121,7 @@ export class Instrument extends InstrumentBase {
         }
       } else {
         try {
-          window.performance[REMOVE_EVENT_LISTENER](
-            'webkit' + RESOURCE_TIMING_BUFFER_FULL,
-            onResourceTimingBufferFull,
-            false
-          )
+          window.performance[REMOVE_EVENT_LISTENER]('webkit' + RESOURCE_TIMING_BUFFER_FULL, onResourceTimingBufferFull, false)
         } catch (e) {
           // do nothing
         }
@@ -169,7 +135,5 @@ export class Instrument extends InstrumentBase {
     this.importAggregator()
   }
 
-  noOp (e) {
-    /* no-op */
-  }
+  noOp (e) { /* no-op */ }
 }

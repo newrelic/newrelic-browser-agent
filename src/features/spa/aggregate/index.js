@@ -24,22 +24,8 @@ import { isBrowserScope } from '../../../common/util/global-scope'
 import { onWindowLoad } from '../../../common/window/load'
 
 const {
-  FEATURE_NAME,
-  INTERACTION_EVENTS,
-  MAX_TIMER_BUDGET,
-  FN_START,
-  FN_END,
-  CB_START,
-  INTERACTION_API,
-  REMAINING,
-  INTERACTION,
-  SPA_NODE,
-  JSONP_NODE,
-  FETCH_START,
-  FETCH_DONE,
-  FETCH_BODY,
-  JSONP_END,
-  originalSetTimeout
+  FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
+  INTERACTION, SPA_NODE, JSONP_NODE, FETCH_START, FETCH_DONE, FETCH_BODY, JSONP_END, originalSetTimeout
 } = CONSTANTS
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -81,14 +67,10 @@ export class Aggregate extends AggregateBase {
     const xhrEE = baseEE.get('xhr')
     const tracerEE = baseEE.get('tracer')
 
-    const scheduler = new HarvestScheduler(
-      'events',
-      {
-        onFinished: onHarvestFinished,
-        retryDelay: state.harvestTimeSeconds
-      },
-      { agentIdentifier }
-    )
+    const scheduler = new HarvestScheduler('events', {
+      onFinished: onHarvestFinished,
+      retryDelay: state.harvestTimeSeconds
+    }, { agentIdentifier })
     scheduler.harvest.on('events', onHarvestStarted)
 
     // childTime is used when calculating exclusive time for a cb duration.
@@ -124,26 +106,14 @@ export class Aggregate extends AggregateBase {
     // click fn-end                       |   70  |    0     |    0   |     70    |     20    |
 
     // if rum response determines that customer lacks entitlements for spa endpoint, block it
-    register(
-      'block-spa',
-      () => {
-        blocked = true
-        scheduler.stopTimer()
-      },
-      this.featureName,
-      baseEE
-    )
+    register('block-spa', () => {
+      blocked = true
+      scheduler.stopTimer()
+    }, this.featureName, baseEE)
 
     if (!isEnabled()) return
 
-    state.initialPageLoad = new Interaction(
-      'initialPageLoad',
-      0,
-      state.lastSeenUrl,
-      state.lastSeenRouteName,
-      onInteractionFinished,
-      agentIdentifier
-    )
+    state.initialPageLoad = new Interaction('initialPageLoad', 0, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
     state.initialPageLoad.save = true
     state.prevInteraction = state.initialPageLoad
     state.currentNode = state.initialPageLoad.root // hint
@@ -159,16 +129,11 @@ export class Aggregate extends AggregateBase {
       setCurrentNode: setCurrentNode
     }
 
-    register(
-      'spa-register',
-      function (init) {
-        if (typeof init === 'function') {
-          init(pluginApi)
-        }
-      },
-      FEATURE_NAMES.spa,
-      baseEE
-    )
+    register('spa-register', function (init) {
+      if (typeof init === 'function') {
+        init(pluginApi)
+      }
+    }, FEATURE_NAMES.spa, baseEE)
 
     function callbackStart () {
       state.depth++
@@ -201,75 +166,63 @@ export class Aggregate extends AggregateBase {
       state.timerBudget = MAX_TIMER_BUDGET
     }
 
-    register(
-      FN_START,
-      function (args, eventSource) {
-        var ev = args[0]
-        var evName = ev.type
-        var eventNode = ev.__nrNode
+    register(FN_START, function (args, eventSource) {
+      var ev = args[0]
+      var evName = ev.type
+      var eventNode = ev.__nrNode
 
-        if (!state.pageLoaded && evName === 'load' && eventSource === window) {
-          state.pageLoaded = true
-          // set to null so prevNode is set correctly
-          this.prevNode = state.currentNode = null
-          if (state.initialPageLoad) {
-            eventNode = state.initialPageLoad.root
+      if (!state.pageLoaded && evName === 'load' && eventSource === window) {
+        state.pageLoaded = true
+        // set to null so prevNode is set correctly
+        this.prevNode = state.currentNode = null
+        if (state.initialPageLoad) {
+          eventNode = state.initialPageLoad.root
 
-            // Even if initialPageLoad has remaining callbacks, force the initialPageLoad
-            // interaction to complete when the page load event occurs.
-            state.initialPageLoad[REMAINING] = 0
+          // Even if initialPageLoad has remaining callbacks, force the initialPageLoad
+          // interaction to complete when the page load event occurs.
+          state.initialPageLoad[REMAINING] = 0
 
-            originalSetTimeout(function () {
-              INTERACTION_EVENTS.push('popstate')
-            })
-          }
+          originalSetTimeout(function () {
+            INTERACTION_EVENTS.push('popstate')
+          })
         }
+      }
 
-        if (eventNode) {
-          // If we've already seen a previous handler for this specific event object,
-          // just restore that. We want multiple handlers for the same event to share
-          // a node.
-          setCurrentNode(eventNode)
-        } else if (evName === 'hashchange') {
-          setCurrentNode(state.nodeOnLastHashUpdate)
-          state.nodeOnLastHashUpdate = null
-        } else if (eventSource instanceof XMLHttpRequest) {
-          // If this event was emitted by an XHR, restore the node ID associated with
-          // that XHR.
-          setCurrentNode(baseEE.context(eventSource).spaNode)
-        } else if (!state.currentNode) {
-          // Otherwise, if no interaction is currently active, create a new node ID,
-          // and let the aggregator know that we entered a new event handler callback
-          // so that it has a chance to possibly start an interaction.
-          if (INTERACTION_EVENTS.indexOf(evName) !== -1) {
-            var ixn = new Interaction(
-              evName,
-              this[FN_START],
-              state.lastSeenUrl,
-              state.lastSeenRouteName,
-              onInteractionFinished,
-              agentIdentifier
-            )
+      if (eventNode) {
+        // If we've already seen a previous handler for this specific event object,
+        // just restore that. We want multiple handlers for the same event to share
+        // a node.
+        setCurrentNode(eventNode)
+      } else if (evName === 'hashchange') {
+        setCurrentNode(state.nodeOnLastHashUpdate)
+        state.nodeOnLastHashUpdate = null
+      } else if (eventSource instanceof XMLHttpRequest) {
+        // If this event was emitted by an XHR, restore the node ID associated with
+        // that XHR.
+        setCurrentNode(baseEE.context(eventSource).spaNode)
+      } else if (!state.currentNode) {
+        // Otherwise, if no interaction is currently active, create a new node ID,
+        // and let the aggregator know that we entered a new event handler callback
+        // so that it has a chance to possibly start an interaction.
+        if (INTERACTION_EVENTS.indexOf(evName) !== -1) {
+          var ixn = new Interaction(evName, this[FN_START], state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
 
-            // Store the interaction as prevInteraction in case it is prematurely discarded
-            state.prevInteraction = ixn
+          // Store the interaction as prevInteraction in case it is prematurely discarded
+          state.prevInteraction = ixn
 
-            setCurrentNode(ixn.root)
+          setCurrentNode(ixn.root)
 
-            if (evName === 'click') {
-              var value = getActionText(ev.target)
-              if (value) {
-                state.currentNode.attrs.custom['actionText'] = value
-              }
+          if (evName === 'click') {
+            var value = getActionText(ev.target)
+            if (value) {
+              state.currentNode.attrs.custom['actionText'] = value
             }
           }
         }
+      }
 
-        ev.__nrNode = state.currentNode
-      },
-      this.featureName,
-      eventsEE
-    )
+      ev.__nrNode = state.currentNode
+    }, this.featureName, eventsEE)
 
     /**
      * *** TIMERS ***
@@ -279,49 +232,34 @@ export class Aggregate extends AggregateBase {
 
     // The context supplied to this callback will be shared with the fn-start/fn-end
     // callbacks that fire around the callback passed to setTimeout originally.
-    register(
-      'setTimeout-end',
-      function saveId (args, obj, timerId) {
-        if (!state.currentNode || state.timerBudget - this.timerDuration < 0) return
-        if (args && !(args[0] instanceof Function)) return
-        state.currentNode[INTERACTION][REMAINING]++
-        this.timerId = timerId
-        state.timerMap[timerId] = state.currentNode
-        this.timerBudget = state.timerBudget - 50
-      },
-      this.featureName,
-      timerEE
-    )
+    register('setTimeout-end', function saveId (args, obj, timerId) {
+      if (!state.currentNode || (state.timerBudget - this.timerDuration) < 0) return
+      if (args && !(args[0] instanceof Function)) return
+      state.currentNode[INTERACTION][REMAINING]++
+      this.timerId = timerId
+      state.timerMap[timerId] = state.currentNode
+      this.timerBudget = state.timerBudget - 50
+    }, this.featureName, timerEE)
 
-    register(
-      'clearTimeout-start',
-      function clear (args) {
-        var timerId = args[0]
-        var node = state.timerMap[timerId]
-        if (node) {
-          var interaction = node[INTERACTION]
-          interaction[REMAINING]--
-          interaction.checkFinish()
-          delete state.timerMap[timerId]
-        }
-      },
-      this.featureName,
-      timerEE
-    )
+    register('clearTimeout-start', function clear (args) {
+      var timerId = args[0]
+      var node = state.timerMap[timerId]
+      if (node) {
+        var interaction = node[INTERACTION]
+        interaction[REMAINING]--
+        interaction.checkFinish()
+        delete state.timerMap[timerId]
+      }
+    }, this.featureName, timerEE)
 
-    register(
-      FN_START,
-      function () {
-        state.timerBudget = this.timerBudget || MAX_TIMER_BUDGET
-        var id = this.timerId
-        var node = state.timerMap[id]
-        setCurrentNode(node)
-        delete state.timerMap[id]
-        if (node) node[INTERACTION][REMAINING]--
-      },
-      this.featureName,
-      timerEE
-    )
+    register(FN_START, function () {
+      state.timerBudget = this.timerBudget || MAX_TIMER_BUDGET
+      var id = this.timerId
+      var node = state.timerMap[id]
+      setCurrentNode(node)
+      delete state.timerMap[id]
+      if (node) node[INTERACTION][REMAINING]--
+    }, this.featureName, timerEE)
 
     /**
      * *** XHR ***
@@ -338,20 +276,116 @@ export class Aggregate extends AggregateBase {
      */
 
     // context is shared with new-xhr event, and is stored on the xhr iteself.
-    register(
-      FN_START,
-      function () {
-        setCurrentNode(this[SPA_NODE])
-      },
-      this.featureName,
-      xhrEE
-    )
+    register(FN_START, function () {
+      setCurrentNode(this[SPA_NODE])
+    }, this.featureName, xhrEE)
 
     // context is stored on the xhr and is shared with all callbacks associated
     // with the new xhr
-    register(
-      'new-xhr',
-      function () {
+    register('new-xhr', function () {
+      if (!state.currentNode && state.prevInteraction && !state.prevInteraction.ignored) {
+        /*
+         * The previous interaction was discarded before a route change. Restore the interaction
+         * in case this XHR is associated with a route change.
+         */
+        const interaction = state.prevInteraction
+        state.currentNode = interaction.root
+        interaction.root.end = null
+      }
+
+      if (state.currentNode) {
+        this[SPA_NODE] = state.currentNode.child('ajax', null, null, true)
+      }
+    }, this.featureName, xhrEE)
+
+    register('send-xhr-start', function () {
+      var node = this[SPA_NODE]
+      if (node && !this.sent) {
+        this.sent = true
+        node.dt = this.dt
+        node.jsEnd = node.start = this.startTime
+        node[INTERACTION][REMAINING]++
+      }
+    }, this.featureName, xhrEE)
+
+    register('xhr-resolved', function () {
+      var node = this[SPA_NODE]
+      if (node) {
+        if (!shouldCollectEvent(this.params)) {
+          node.cancel()
+          return
+        }
+
+        var attrs = node.attrs
+        attrs.params = this.params
+        attrs.metrics = this.metrics
+
+        node.finish(this.endTime)
+        if (!!this.currentNode && !!this.currentNode.interaction) this.currentNode.interaction.checkFinish()
+      }
+    }, this.featureName, baseEE)
+
+    /**
+     * *** JSONP ***
+     *
+     */
+
+    register('new-jsonp', function (url) {
+      if (state.currentNode) {
+        var node = this[JSONP_NODE] = state.currentNode.child('ajax', this[FETCH_START])
+        node.start = this['new-jsonp']
+        this.url = url
+        this.status = null
+      }
+    }, this.featureName, jsonpEE)
+
+    register('cb-start', function (args) {
+      var node = this[JSONP_NODE]
+      if (node) {
+        setCurrentNode(node)
+        this.status = 200
+      }
+    }, this.featureName, jsonpEE)
+
+    register('jsonp-error', function () {
+      var node = this[JSONP_NODE]
+      if (node) {
+        setCurrentNode(node)
+        this.status = 0
+      }
+    }, this.featureName, jsonpEE)
+
+    register(JSONP_END, function () {
+      var node = this[JSONP_NODE]
+      if (node) {
+        // if no status is set then cb never fired - so it's not a valid JSONP
+        if (this.status === null) {
+          node.cancel()
+          return
+        }
+        var attrs = node.attrs
+        var params = attrs.params = {}
+
+        var parsed = parseUrl(this.url)
+        params.method = 'GET'
+        params.pathname = parsed.pathname
+        params.host = parsed.hostname + ':' + parsed.port
+        params.status = this.status
+
+        attrs.metrics = {
+          txSize: 0,
+          rxSize: 0
+        }
+
+        attrs.isJSONP = true
+        node.jsEnd = this[JSONP_END]
+        node.jsTime = this[CB_START] ? (this[JSONP_END] - this[CB_START]) : 0
+        node.finish(node.jsEnd)
+      }
+    }, this.featureName, jsonpEE)
+
+    register(FETCH_START, function (fetchArguments, dtPayload) {
+      if (fetchArguments) {
         if (!state.currentNode && state.prevInteraction && !state.prevInteraction.ignored) {
           /*
            * The previous interaction was discarded before a route change. Restore the interaction
@@ -363,232 +397,71 @@ export class Aggregate extends AggregateBase {
         }
 
         if (state.currentNode) {
-          this[SPA_NODE] = state.currentNode.child('ajax', null, null, true)
+          this[SPA_NODE] = state.currentNode.child('ajax', this[FETCH_START])
+          if (dtPayload && this[SPA_NODE]) this[SPA_NODE].dt = dtPayload
         }
-      },
-      this.featureName,
-      xhrEE
-    )
+      }
+    }, this.featureName, fetchEE)
 
-    register(
-      'send-xhr-start',
-      function () {
-        var node = this[SPA_NODE]
-        if (node && !this.sent) {
-          this.sent = true
-          node.dt = this.dt
-          node.jsEnd = node.start = this.startTime
-          node[INTERACTION][REMAINING]++
-        }
-      },
-      this.featureName,
-      xhrEE
-    )
+    register(FETCH_BODY + 'start', function (args) {
+      if (state.currentNode) {
+        this[SPA_NODE] = state.currentNode
+        state.currentNode[INTERACTION][REMAINING]++
+      }
+    }, this.featureName, fetchEE)
 
-    register(
-      'xhr-resolved',
-      function () {
-        var node = this[SPA_NODE]
-        if (node) {
-          if (!shouldCollectEvent(this.params)) {
-            node.cancel()
-            return
-          }
+    register(FETCH_BODY + 'end', function (args, ctx, bodyPromise) {
+      var node = this[SPA_NODE]
+      if (node) node[INTERACTION][REMAINING]--
+    }, this.featureName, fetchEE)
 
-          var attrs = node.attrs
-          attrs.params = this.params
-          attrs.metrics = this.metrics
-
-          node.finish(this.endTime)
-          if (!!this.currentNode && !!this.currentNode.interaction) this.currentNode.interaction.checkFinish()
-        }
-      },
-      this.featureName,
-      baseEE
-    )
-
-    /**
-     * *** JSONP ***
-     *
-     */
-
-    register(
-      'new-jsonp',
-      function (url) {
-        if (state.currentNode) {
-          var node = (this[JSONP_NODE] = state.currentNode.child('ajax', this[FETCH_START]))
-          node.start = this['new-jsonp']
-          this.url = url
-          this.status = null
-        }
-      },
-      this.featureName,
-      jsonpEE
-    )
-
-    register(
-      'cb-start',
-      function (args) {
-        var node = this[JSONP_NODE]
-        if (node) {
-          setCurrentNode(node)
-          this.status = 200
-        }
-      },
-      this.featureName,
-      jsonpEE
-    )
-
-    register(
-      'jsonp-error',
-      function () {
-        var node = this[JSONP_NODE]
-        if (node) {
-          setCurrentNode(node)
-          this.status = 0
-        }
-      },
-      this.featureName,
-      jsonpEE
-    )
-
-    register(
-      JSONP_END,
-      function () {
-        var node = this[JSONP_NODE]
-        if (node) {
-          // if no status is set then cb never fired - so it's not a valid JSONP
-          if (this.status === null) {
-            node.cancel()
-            return
-          }
-          var attrs = node.attrs
-          var params = (attrs.params = {})
-
-          var parsed = parseUrl(this.url)
-          params.method = 'GET'
-          params.pathname = parsed.pathname
-          params.host = parsed.hostname + ':' + parsed.port
-          params.status = this.status
-
-          attrs.metrics = {
-            txSize: 0,
-            rxSize: 0
-          }
-
-          attrs.isJSONP = true
-          node.jsEnd = this[JSONP_END]
-          node.jsTime = this[CB_START] ? this[JSONP_END] - this[CB_START] : 0
-          node.finish(node.jsEnd)
-        }
-      },
-      this.featureName,
-      jsonpEE
-    )
-
-    register(
-      FETCH_START,
-      function (fetchArguments, dtPayload) {
-        if (fetchArguments) {
-          if (!state.currentNode && state.prevInteraction && !state.prevInteraction.ignored) {
-            /*
-             * The previous interaction was discarded before a route change. Restore the interaction
-             * in case this XHR is associated with a route change.
-             */
-            const interaction = state.prevInteraction
-            state.currentNode = interaction.root
-            interaction.root.end = null
-          }
-
-          if (state.currentNode) {
-            this[SPA_NODE] = state.currentNode.child('ajax', this[FETCH_START])
-            if (dtPayload && this[SPA_NODE]) this[SPA_NODE].dt = dtPayload
-          }
-        }
-      },
-      this.featureName,
-      fetchEE
-    )
-
-    register(
-      FETCH_BODY + 'start',
-      function (args) {
-        if (state.currentNode) {
-          this[SPA_NODE] = state.currentNode
-          state.currentNode[INTERACTION][REMAINING]++
-        }
-      },
-      this.featureName,
-      fetchEE
-    )
-
-    register(
-      FETCH_BODY + 'end',
-      function (args, ctx, bodyPromise) {
-        var node = this[SPA_NODE]
-        if (node) node[INTERACTION][REMAINING]--
-      },
-      this.featureName,
-      fetchEE
-    )
-
-    register(
-      FETCH_DONE,
-      function (err, res) {
-        var node = this[SPA_NODE]
-        if (node) {
-          if (err) {
-            node.cancel()
-            return
-          }
-
-          var attrs = node.attrs
-          attrs.params = this.params
-          attrs.metrics = {
-            txSize: this.txSize,
-            rxSize: this.rxSize
-          }
-          attrs.isFetch = true
-
-          node.finish(this[FETCH_DONE])
-        }
-      },
-      this.featureName,
-      fetchEE
-    )
-
-    register(
-      'newURL',
-      function (url, hashChangedDuringCb) {
-        if (state.currentNode) {
-          state.currentNode[INTERACTION].setNewURL(url)
-        } else if (state.prevInteraction && !state.prevInteraction.ignored) {
-          /*
-           * The previous interaction was discarded before the route was changed. This can happen in SPA
-           * frameworks when using lazy loading. We have also seen this in version 11+ of Nextjs where
-           * some route changes re-use cached resolved promises.
-           */
-          const interaction = state.prevInteraction
-          interaction.setNewURL(url)
-          interaction.root.end = null
-
-          setCurrentNode(interaction.root)
+    register(FETCH_DONE, function (err, res) {
+      var node = this[SPA_NODE]
+      if (node) {
+        if (err) {
+          node.cancel()
+          return
         }
 
-        if (state.currentNode) {
-          if (state.lastSeenUrl !== url) {
-            state.currentNode[INTERACTION].routeChange = true
-          }
-          if (hashChangedDuringCb) {
-            state.nodeOnLastHashUpdate = state.currentNode
-          }
+        var attrs = node.attrs
+        attrs.params = this.params
+        attrs.metrics = {
+          txSize: this.txSize,
+          rxSize: this.rxSize
         }
+        attrs.isFetch = true
 
-        state.lastSeenUrl = url
-      },
-      this.featureName,
-      historyEE
-    )
+        node.finish(this[FETCH_DONE])
+      }
+    }, this.featureName, fetchEE)
+
+    register('newURL', function (url, hashChangedDuringCb) {
+      if (state.currentNode) {
+        state.currentNode[INTERACTION].setNewURL(url)
+      } else if (state.prevInteraction && !state.prevInteraction.ignored) {
+        /*
+         * The previous interaction was discarded before the route was changed. This can happen in SPA
+         * frameworks when using lazy loading. We have also seen this in version 11+ of Nextjs where
+         * some route changes re-use cached resolved promises.
+         */
+        const interaction = state.prevInteraction
+        interaction.setNewURL(url)
+        interaction.root.end = null
+
+        setCurrentNode(interaction.root)
+      }
+
+      if (state.currentNode) {
+        if (state.lastSeenUrl !== url) {
+          state.currentNode[INTERACTION].routeChange = true
+        }
+        if (hashChangedDuringCb) {
+          state.nodeOnLastHashUpdate = state.currentNode
+        }
+      }
+
+      state.lastSeenUrl = url
+    }, this.featureName, historyEE)
 
     /**
      * SCRIPTS
@@ -612,7 +485,7 @@ export class Aggregate extends AggregateBase {
       if (!state.currentNode) return
 
       var el = args[0]
-      var isScript = el && el.nodeName === 'SCRIPT' && el.src !== ''
+      var isScript = (el && el.nodeName === 'SCRIPT' && el.src !== '')
       var interaction = state.currentNode.interaction
 
       if (isScript) {
@@ -643,134 +516,73 @@ export class Aggregate extends AggregateBase {
       }
     })
 
-    register(
-      FN_START,
-      function () {
-        setCurrentNode(state.prevNode)
-      },
-      this.featureName,
-      mutationEE
-    )
+    register(FN_START, function () {
+      setCurrentNode(state.prevNode)
+    }, this.featureName, mutationEE)
 
     register('resolve-start', resolvePromise, this.featureName, promiseEE)
     register('executor-err', resolvePromise, this.featureName, promiseEE)
 
     register('propagate', saveNode, this.featureName, promiseEE)
 
-    register(
-      CB_START,
-      function () {
-        var ctx = this.getCtx ? this.getCtx() : this
-        setCurrentNode(ctx[SPA_NODE])
-      },
-      this.featureName,
-      promiseEE
-    )
+    register(CB_START, function () {
+      var ctx = this.getCtx ? this.getCtx() : this
+      setCurrentNode(ctx[SPA_NODE])
+    }, this.featureName, promiseEE)
 
-    register(
-      INTERACTION_API + 'get',
-      function (t) {
-        var interaction
-        if (state?.currentNode?.[INTERACTION]) interaction = this.ixn = state.currentNode[INTERACTION]
-        else if (
-          state?.prevNode?.end === null &&
-          state?.prevNode?.[INTERACTION]?.root?.[INTERACTION]?.eventName != 'initialPageLoad'
-        ) { interaction = this.ixn = state.prevNode[INTERACTION] } else {
-          interaction = this.ixn = new Interaction(
-            'api',
-            t,
-            state.lastSeenUrl,
-            state.lastSeenRouteName,
-            onInteractionFinished,
-            agentIdentifier
-          )
-        }
-        if (!state.currentNode) {
-          interaction.checkFinish()
-          if (state.depth) setCurrentNode(interaction.root)
-        }
-      },
-      this.featureName,
-      baseEE
-    )
+    register(INTERACTION_API + 'get', function (t) {
+      var interaction
+      if (state?.currentNode?.[INTERACTION]) interaction = this.ixn = state.currentNode[INTERACTION]
+      else if (state?.prevNode?.end === null && state?.prevNode?.[INTERACTION]?.root?.[INTERACTION]?.eventName != 'initialPageLoad') interaction = this.ixn = state.prevNode[INTERACTION]
+      else interaction = this.ixn = new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
+      if (!state.currentNode) {
+        interaction.checkFinish()
+        if (state.depth) setCurrentNode(interaction.root)
+      }
+    }, this.featureName, baseEE)
 
-    register(
-      INTERACTION_API + 'actionText',
-      function (t, actionText) {
-        var customAttrs = this.ixn.root.attrs.custom
-        if (actionText) customAttrs.actionText = actionText
-      },
-      this.featureName,
-      baseEE
-    )
+    register(INTERACTION_API + 'actionText', function (t, actionText) {
+      var customAttrs = this.ixn.root.attrs.custom
+      if (actionText) customAttrs.actionText = actionText
+    }, this.featureName, baseEE)
 
-    register(
-      INTERACTION_API + 'setName',
-      function (t, name, trigger) {
-        var attrs = this.ixn.root.attrs
-        if (name) attrs.customName = name
-        if (trigger) attrs.trigger = trigger
-      },
-      this.featureName,
-      baseEE
-    )
+    register(INTERACTION_API + 'setName', function (t, name, trigger) {
+      var attrs = this.ixn.root.attrs
+      if (name) attrs.customName = name
+      if (trigger) attrs.trigger = trigger
+    }, this.featureName, baseEE)
 
-    register(
-      INTERACTION_API + 'setAttribute',
-      function (t, name, value) {
-        this.ixn.root.attrs.custom[name] = value
-      },
-      this.featureName,
-      baseEE
-    )
+    register(INTERACTION_API + 'setAttribute', function (t, name, value) {
+      this.ixn.root.attrs.custom[name] = value
+    }, this.featureName, baseEE)
 
-    register(
-      INTERACTION_API + 'end',
-      function (timestamp) {
-        var interaction = this.ixn
-        var node = activeNodeFor(interaction)
-        setCurrentNode(null)
-        node.child('customEnd', timestamp).finish(timestamp)
-        interaction.finish()
-      },
-      this.featureName,
-      baseEE
-    )
+    register(INTERACTION_API + 'end', function (timestamp) {
+      var interaction = this.ixn
+      var node = activeNodeFor(interaction)
+      setCurrentNode(null)
+      node.child('customEnd', timestamp).finish(timestamp)
+      interaction.finish()
+    }, this.featureName, baseEE)
 
-    register(
-      INTERACTION_API + 'ignore',
-      function (t) {
-        this.ixn.ignored = true
-      },
-      this.featureName,
-      baseEE
-    )
+    register(INTERACTION_API + 'ignore', function (t) {
+      this.ixn.ignored = true
+    }, this.featureName, baseEE)
 
-    register(
-      INTERACTION_API + 'save',
-      function (t) {
-        this.ixn.save = true
-      },
-      this.featureName,
-      baseEE
-    )
+    register(INTERACTION_API + 'save', function (t) {
+      this.ixn.save = true
+    }, this.featureName, baseEE)
 
-    register(
-      INTERACTION_API + 'tracer',
-      function (timestamp, name, store) {
-        var interaction = this.ixn
-        var parent = activeNodeFor(interaction)
-        var ctx = baseEE.context(store)
-        if (!name) {
-          ctx.inc = ++interaction[REMAINING]
+    register(INTERACTION_API + 'tracer', function (timestamp, name, store) {
+      var interaction = this.ixn
+      var parent = activeNodeFor(interaction)
+      var ctx = baseEE.context(store)
+      if (!name) {
+        ctx.inc = ++interaction[REMAINING]
 
-          return (ctx[SPA_NODE] = parent)
-        }
-        ctx[SPA_NODE] = parent.child('customTracer', timestamp, name)
-      },
-      this.featureName,
-      baseEE
-    )
+        return (ctx[SPA_NODE] = parent)
+      }
+      ctx[SPA_NODE] = parent.child('customTracer', timestamp, name)
+    }, this.featureName, baseEE)
 
     register(FN_START, tracerDone, this.featureName, tracerEE)
     register('no-' + FN_START, tracerDone, this.featureName, tracerEE)
@@ -789,39 +601,24 @@ export class Aggregate extends AggregateBase {
       hasCb ? setCurrentNode(node) : interaction.checkFinish()
     }
 
-    register(
-      INTERACTION_API + 'getContext',
-      function (t, cb) {
-        var store = this.ixn.root.attrs.store
-        setTimeout(function () {
-          cb(store)
-        }, 0)
-      },
-      this.featureName,
-      baseEE
-    )
+    register(INTERACTION_API + 'getContext', function (t, cb) {
+      var store = this.ixn.root.attrs.store
+      setTimeout(function () {
+        cb(store)
+      }, 0)
+    }, this.featureName, baseEE)
 
-    register(
-      INTERACTION_API + 'onEnd',
-      function (t, cb) {
-        this.ixn.handlers.push(cb)
-      },
-      this.featureName,
-      baseEE
-    )
+    register(INTERACTION_API + 'onEnd', function (t, cb) {
+      this.ixn.handlers.push(cb)
+    }, this.featureName, baseEE)
 
-    register(
-      'api-routeName',
-      function (t, currentRouteName) {
-        state.lastSeenRouteName = currentRouteName
-        if (state.currentNode) state.currentNode[INTERACTION].setNewRoute(currentRouteName)
-      },
-      this.featureName,
-      baseEE
-    )
+    register('api-routeName', function (t, currentRouteName) {
+      state.lastSeenRouteName = currentRouteName
+      if (state.currentNode) state.currentNode[INTERACTION].setNewRoute(currentRouteName)
+    }, this.featureName, baseEE)
 
     function activeNodeFor (interaction) {
-      return state.currentNode && state.currentNode[INTERACTION] === interaction ? state.currentNode : interaction.root
+      return (state.currentNode && state.currentNode[INTERACTION] === interaction) ? state.currentNode : interaction.root
     }
 
     function saveNode (val, overwrite) {
@@ -846,7 +643,7 @@ export class Aggregate extends AggregateBase {
       }
 
       state.prevNode = state.currentNode
-      state.currentNode = newNode && !newNode[INTERACTION].root.end ? newNode : null
+      state.currentNode = (newNode && !newNode[INTERACTION].root.end) ? newNode : null
     }
 
     function onInteractionFinished (interaction) {

@@ -1,7 +1,7 @@
 import { windowAddEventListener, documentAddEventListener } from '../event-listener/event-listener-opts'
 
 function checkState () {
-  return typeof document === 'undefined' || document.readyState === 'complete'
+  return (typeof document === 'undefined' || document.readyState === 'complete')
 }
 
 export function onWindowLoad (cb, useCapture) {

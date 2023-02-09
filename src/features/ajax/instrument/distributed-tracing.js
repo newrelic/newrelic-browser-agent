@@ -44,22 +44,17 @@ export class DT {
       timestamp: timestamp
     }
 
-    if (parsedOrigin.sameOrigin || (this.isAllowedOrigin(parsedOrigin) && this.useTraceContextHeadersForCors())) {
+    if (parsedOrigin.sameOrigin ||
+        (this.isAllowedOrigin(parsedOrigin) && this.useTraceContextHeadersForCors())) {
       payload.traceContextParentHeader = this.generateTraceContextParentHeader(spanId, traceId)
-      payload.traceContextStateHeader = this.generateTraceContextStateHeader(
-        spanId,
-        timestamp,
-        accountId,
-        agentId,
-        trustKey
-      )
+      payload.traceContextStateHeader = this.generateTraceContextStateHeader(spanId, timestamp,
+        accountId, agentId, trustKey)
     }
 
-    if (
-      (parsedOrigin.sameOrigin && !this.excludeNewrelicHeader()) ||
-      (!parsedOrigin.sameOrigin && this.isAllowedOrigin(parsedOrigin) && this.useNewrelicHeaderForCors())
-    ) {
-      payload.newrelicHeader = this.generateTraceHeader(spanId, traceId, timestamp, accountId, agentId, trustKey)
+    if ((parsedOrigin.sameOrigin && !this.excludeNewrelicHeader()) ||
+        (!parsedOrigin.sameOrigin && this.isAllowedOrigin(parsedOrigin) && this.useNewrelicHeaderForCors())) {
+      payload.newrelicHeader = this.generateTraceHeader(spanId, traceId, timestamp, accountId,
+        agentId, trustKey)
     }
 
     return payload
@@ -76,31 +71,12 @@ export class DT {
     var sampled = ''
     var priority = ''
 
-    return (
-      trustKey +
-      '@nr=' +
-      version +
-      '-' +
-      parentType +
-      '-' +
-      accountId +
-      '-' +
-      appId +
-      '-' +
-      spanId +
-      '-' +
-      transactionId +
-      '-' +
-      sampled +
-      '-' +
-      priority +
-      '-' +
-      timestamp
-    )
+    return trustKey + '@nr=' + version + '-' + parentType + '-' + accountId +
+      '-' + appId + '-' + spanId + '-' + transactionId + '-' + sampled + '-' + priority + '-' + timestamp
   }
 
   generateTraceHeader (spanId, traceId, timestamp, accountId, appId, trustKey) {
-    var hasBtoa = typeof globalScope?.btoa === 'function'
+    var hasBtoa = (typeof globalScope?.btoa === 'function')
     if (!hasBtoa) {
       return null
     }
@@ -143,11 +119,9 @@ export class DT {
     } else if (dtConfig.allowed_origins instanceof Array) {
       for (var i = 0; i < dtConfig.allowed_origins.length; i++) {
         var allowedOrigin = parseUrl(dtConfig.allowed_origins[i])
-        if (
-          parsedOrigin.hostname === allowedOrigin.hostname &&
-          parsedOrigin.protocol === allowedOrigin.protocol &&
-          parsedOrigin.port === allowedOrigin.port
-        ) {
+        if (parsedOrigin.hostname === allowedOrigin.hostname &&
+            parsedOrigin.protocol === allowedOrigin.protocol &&
+            parsedOrigin.port === allowedOrigin.port) {
           allowed = true
           break
         }

@@ -38,42 +38,33 @@ function insertSupportMetrics (report) {
     return // similarly, if dedicated is n/a, none of them are supported so quit
   } else {
     origWorker = Worker
-    try {
-      globalScope.Worker = extendWorkerConstructor(origWorker, 'Dedicated')
-    } catch (e) {
-      handleInsertionError(e, 'Dedicated')
-    }
+    try { globalScope.Worker = extendWorkerConstructor(origWorker, 'Dedicated') }
+    catch (e) { handleInsertionError(e, 'Dedicated') }
   }
 
   if (!workersApiIsSupported.shared) {
     reportUnavailable('Shared')
   } else {
     origSharedWorker = SharedWorker
-    try {
-      globalScope.SharedWorker = extendWorkerConstructor(origSharedWorker, 'Shared')
-    } catch (e) {
-      handleInsertionError(e, 'Shared')
-    }
+    try { globalScope.SharedWorker = extendWorkerConstructor(origSharedWorker, 'Shared') }
+    catch (e) { handleInsertionError(e, 'Shared') }
   }
   if (!workersApiIsSupported.service) {
     reportUnavailable('Service')
   } else {
     origServiceWorkerCreate = navigator.serviceWorker.register
-    try {
-      globalScope.navigator.serviceWorker.register = extendServiceCreation(origServiceWorkerCreate)
-    } catch (e) {
-      handleInsertionError(e, 'Service')
-    }
+    try { globalScope.navigator.serviceWorker.register = extendServiceCreation(origServiceWorkerCreate) }
+    catch (e) { handleInsertionError(e, 'Service') }
   }
   return
 
   // Internal helpers - Core
   /**
-   * Report each time a Worker or SharedWorker is created in page execution. Note the current trap is set for only "new" and Reflect.construct operations.
-   * @param {func obj} origClass - Worker() or SharedWorker()
-   * @param {string} workerType - 'Dedicated' or 'Shared'
-   * @returns Proxy worker that intercepts the original constructor
-   */
+     * Report each time a Worker or SharedWorker is created in page execution. Note the current trap is set for only "new" and Reflect.construct operations.
+     * @param {func obj} origClass - Worker() or SharedWorker()
+     * @param {string} workerType - 'Dedicated' or 'Shared'
+     * @returns Proxy worker that intercepts the original constructor
+     */
   function extendWorkerConstructor (origClass, workerType) {
     if (typeof Proxy === 'undefined') {
       return origClass
@@ -86,13 +77,13 @@ function insertSupportMetrics (report) {
       }
     }
     // eslint-disable-next-line
-    return new Proxy(origClass, newHandler)
+        return new Proxy(origClass, newHandler);
   }
   /**
-   * Report each time a ServiceWorkerRegistration is created or updated in page execution.
-   * @param {func} origFunc - method responsible for creating a ServiceWorker
-   * @returns Refer to ServiceWorkerContainer.register()
-   */
+     * Report each time a ServiceWorkerRegistration is created or updated in page execution.
+     * @param {func} origFunc - method responsible for creating a ServiceWorker
+     * @returns Refer to ServiceWorkerContainer.register()
+     */
   function extendServiceCreation (origFunc) {
     return (...args) => {
       reportWorkerCreationAttempt('Service', args[1]?.type)
@@ -113,8 +104,7 @@ function insertSupportMetrics (report) {
       report(`Workers/${workerType}/Classic`)
     }
   }
-  function handleInsertionError (e, workerType) {
-    // indicates the browser version doesn't support how code is injected, such as Proxy API
+  function handleInsertionError (e, workerType) { // indicates the browser version doesn't support how code is injected, such as Proxy API
     report(`Workers/${workerType}/SM/Unsupported`) // expected to be niche & for older borderline-ES6 browser versions
     warn(`NR Agent: Unable to capture ${workerType} workers.`, e)
   }

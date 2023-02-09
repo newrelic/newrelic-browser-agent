@@ -18,16 +18,12 @@ export function wrapRaf (sharedEE) {
 
   var equestAnimationFrame = 'equestAnimationFrame'
 
-  wrapFn.inPlace(
-    window,
-    [
-      'r' + equestAnimationFrame,
-      'mozR' + equestAnimationFrame,
-      'webkitR' + equestAnimationFrame,
-      'msR' + equestAnimationFrame
-    ],
-    'raf-'
-  )
+  wrapFn.inPlace(window, [
+    'r' + equestAnimationFrame,
+    'mozR' + equestAnimationFrame,
+    'webkitR' + equestAnimationFrame,
+    'msR' + equestAnimationFrame
+  ], 'raf-')
 
   ee.on('raf-start', function (args) {
     // Wrap the callback handed to requestAnimationFrame

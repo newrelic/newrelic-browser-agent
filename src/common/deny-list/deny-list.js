@@ -26,7 +26,8 @@ export function shouldCollectEvent (params) {
       return false
     }
 
-    if (domainMatchesPattern(parsed.hostname, params.hostname) && comparePath(parsed.pathname, params.pathname)) {
+    if (domainMatchesPattern(parsed.hostname, params.hostname) &&
+      comparePath(parsed.pathname, params.pathname)) {
       return false
     }
   }
@@ -80,7 +81,7 @@ function domainMatchesPattern (pattern, domain) {
     return false
   }
 
-  if (domain.indexOf(pattern) === domain.length - pattern.length) {
+  if (domain.indexOf(pattern) === (domain.length - pattern.length)) {
     return true
   }
 

@@ -8,16 +8,8 @@ describe('formatStackTrace', () => {
       expected: 'line 1\nline 2\nline 3\nline 4',
       title: 'Appends all stack lines together'
     },
-    {
-      input: ['', 'line 1', 'line 2'],
-      expected: 'line 1\nline 2',
-      title: 'Strips leading empty stack frame'
-    },
-    {
-      input: ['line 1', 'line 2', ''],
-      expected: 'line 1\nline 2',
-      title: 'Strips ending empty stack frame'
-    }
+    { input: ['', 'line 1', 'line 2'], expected: 'line 1\nline 2', title: 'Strips leading empty stack frame' },
+    { input: ['line 1', 'line 2', ''], expected: 'line 1\nline 2', title: 'Strips ending empty stack frame' }
   ])('$title', ({ input, expected }) => {
     const result = formatStackTrace(input)
 
@@ -25,11 +17,9 @@ describe('formatStackTrace', () => {
   })
 
   test('truncates the middle of the stack lines when more than 100', () => {
-    const input = Array.apply(null, Array(200)).map(() => faker.datatype.uuid())
-    const expected =
-      input.slice(0, 50).join('\n') +
-      `\n< ...truncated ${input.length - 100} lines... >\n` +
-      input.slice(-50).join('\n')
+    const input = Array.apply(null, Array(200))
+      .map(() => faker.datatype.uuid())
+    const expected = input.slice(0, 50).join('\n') + `\n< ...truncated ${input.length - 100} lines... >\n` + input.slice(-50).join('\n')
 
     const result = formatStackTrace(input)
 

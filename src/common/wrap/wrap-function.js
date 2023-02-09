@@ -71,7 +71,7 @@ export function createWrapperWithEmitter (emitter, always) {
     if (!prefix) prefix = ''
     // If prefix starts with '-' set this boolean to add the method name to
     // the prefix before passing each one to wrap.
-    var prependMethodPrefix = prefix.charAt(0) === '-'
+    var prependMethodPrefix = (prefix.charAt(0) === '-')
     var fn
     var method
     var i
@@ -84,7 +84,7 @@ export function createWrapperWithEmitter (emitter, always) {
       // so we don't add extra properties with undefined values.
       if (notWrappable(fn)) continue
 
-      obj[method] = wrapFn(fn, prependMethodPrefix ? method + prefix : prefix, getContext, method, bubble)
+      obj[method] = wrapFn(fn, (prependMethodPrefix ? method + prefix : prefix), getContext, method, bubble)
     }
   }
 
@@ -118,13 +118,9 @@ function copy (from, to, emitter) {
       // eslint-disable-next-line
       keys.forEach(function (key) {
         Object.defineProperty(to, key, {
-          get: function () {
-            return from[key]
-          },
+          get: function () { return from[key] },
           // eslint-disable-next-line
-          set: function (val) {
-            from[key] = val
-          }
+          set: function (val) { from[key] = val; return val }
         })
       })
       return to

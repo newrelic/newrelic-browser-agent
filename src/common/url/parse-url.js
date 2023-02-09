@@ -27,7 +27,8 @@ export function parseUrl (url) {
     // Use an anchor dom element to resolve the url natively.
     urlEl = document.createElement('a')
     urlEl.href = url
-  } else {
+  }
+  else {
     try {
       urlEl = new URL(url, location.href)
     } catch (err) {
@@ -42,10 +43,10 @@ export function parseUrl (url) {
   if (!ret.port && firstSplit[1]) {
     ret.port = firstSplit[1].split('/')[0].split('@').pop().split(':')[1]
   }
-  if (!ret.port || ret.port === '0') ret.port = firstSplit[0] === 'https' ? '443' : '80'
+  if (!ret.port || ret.port === '0') ret.port = (firstSplit[0] === 'https' ? '443' : '80')
 
   // Host not provided in IE for relative urls
-  ret.hostname = urlEl.hostname || location.hostname
+  ret.hostname = (urlEl.hostname || location.hostname)
 
   ret.pathname = urlEl.pathname
 

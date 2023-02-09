@@ -60,8 +60,7 @@ export class HarvestScheduler extends SharedContext {
   runHarvest (opts) {
     var scheduler = this
 
-    if (this.opts.getPayload) {
-      // Ajax & PVT
+    if (this.opts.getPayload) { // Ajax & PVT
       var submitMethod = getSubmitMethod(this.endpoint, opts)
       if (!submitMethod) return false
 

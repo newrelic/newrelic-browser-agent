@@ -19,7 +19,7 @@ export function generateUuid () {
       // same as % 16
       return randomVals[rvIndex++] & 15
     } else {
-      return (Math.random() * 16) | 0
+      return Math.random() * 16 | 0
     }
   }
 
@@ -34,7 +34,7 @@ export function generateUuid () {
     } else if (c === 'y') {
       // this is the uuid variant per spec (8, 9, a, b)
       // % 4, then shift to get values 8-11
-      c = (getRandomValue() & 0x3) | 0x8
+      c = getRandomValue() & 0x3 | 0x8
       id += c.toString(16)
     } else {
       id += c
@@ -75,7 +75,7 @@ export function generateRandomHexString (length) {
       // same as % 16
       return randomVals[rvIndex++] & 15
     } else {
-      return (Math.random() * 16) | 0
+      return Math.random() * 16 | 0
     }
   }
 }

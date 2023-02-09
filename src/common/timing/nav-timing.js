@@ -63,7 +63,7 @@ export function addPN (pn, v) {
 
 export function addRel (value, offset, obj, prop) {
   var relativeValue
-  if (typeof value === 'number' && value > 0) {
+  if (typeof (value) === 'number' && (value > 0)) {
     relativeValue = Math.round(value - offset)
     obj[prop] = relativeValue
   }

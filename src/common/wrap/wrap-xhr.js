@@ -15,7 +15,7 @@ import { warn } from '../util/console'
 
 const wrapped = {}
 // eslint-disable-next-line
-export function wrapXhr(sharedEE) {
+export function wrapXhr (sharedEE) {
   var baseEE = sharedEE || contextualEE
   const ee = scopedEE(baseEE)
   if (wrapped[ee.debugId]) return ee
@@ -35,7 +35,7 @@ export function wrapXhr(sharedEE) {
 
   var activeListeners = globalScope.XMLHttpRequest.listeners
 
-  var XHR = (globalScope.XMLHttpRequest = newXHR)
+  var XHR = globalScope.XMLHttpRequest = newXHR
 
   function newXHR (opts) {
     var xhr = new OrigXHR(opts)
@@ -53,7 +53,7 @@ export function wrapXhr(sharedEE) {
         }
       }
     }
-    this.listeners.forEach((listener) => listener())
+    this.listeners.forEach(listener => listener())
     return xhr
   }
 
@@ -140,12 +140,9 @@ export function wrapXhr(sharedEE) {
     if (!setImmediate && !Promise) {
       var toggle = 1
       var dummyNode = document.createTextNode(toggle)
-      new MutationObserver(drainPendingXhrs).observe(dummyNode, {
-        characterData: true
-      })
+      new MutationObserver(drainPendingXhrs).observe(dummyNode, { characterData: true })
     }
-  } else {
-    // this below case applies to web workers too
+  } else { // this below case applies to web workers too
     baseEE.on('fn-end', function (args) {
       // We don't want to try to wrap onreadystatechange from within a
       // readystatechange callback.

@@ -15,8 +15,7 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
     api = nr
   }
 
-  if (isWorkerScope) {
-    // add a default attr to all worker payloads
+  if (isWorkerScope) { // add a default attr to all worker payloads
     info.jsAttributes = { ...info.jsAttributes, isWorker: true }
   }
 

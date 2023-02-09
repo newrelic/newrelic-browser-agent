@@ -13,9 +13,7 @@ import { warn } from '../common/util/console'
 export class Agent {
   constructor (options, agentIdentifier = generateRandomHexString(16)) {
     this.agentIdentifier = agentIdentifier
-    this.sharedAggregator = new Aggregator({
-      agentIdentifier: this.agentIdentifier
-    })
+    this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
 
     this.desiredFeatures = options.features || []
@@ -38,17 +36,11 @@ export class Agent {
   start () {
     try {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
-      this.desiredFeatures.forEach((f) => {
+      this.desiredFeatures.forEach(f => {
         if (enabledFeatures[f.featureName]) {
           const dependencies = getFeatureDependencyNames(f.featureName)
-          const hasAllDeps = dependencies.every((x) => enabledFeatures[x])
-          if (!hasAllDeps) {
-            warn(
-              `${f.featureName} is enabled but one or more dependent features has been disabled (${JSON.stringify(
-                dependencies
-              )}). This may cause unintended consequences or missing data...`
-            )
-          }
+          const hasAllDeps = dependencies.every(x => enabledFeatures[x])
+          if (!hasAllDeps) warn(`${f.featureName} is enabled but one or more dependent features has been disabled (${JSON.stringify(dependencies)}). This may cause unintended consequences or missing data...`)
           this.features[f.featureName] = new f(this.agentIdentifier, this.sharedAggregator)
         }
       })

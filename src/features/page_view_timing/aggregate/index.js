@@ -35,29 +35,24 @@ export class Aggregate extends AggregateBase {
     try {
       this.clsSupported = PerformanceObserver.supportedEntryTypes.includes('layout-shift')
     } catch (e) {
-      // do nothing
+    // do nothing
     }
 
     var maxLCPTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.maxLCPTimeSeconds') || 60
-    var initialHarvestSeconds =
-      getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
+    var initialHarvestSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
     var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
 
-    this.scheduler = new HarvestScheduler(
-      'events',
-      {
-        onFinished: (...args) => this.onHarvestFinished(...args),
-        getPayload: (...args) => this.prepareHarvest(...args),
-        onUnload: () => this.recordLcp() // send whatever available LCP we have, if one hasn't already been sent when current window session ends
-      },
-      this
-    )
+    this.scheduler = new HarvestScheduler('events', {
+      onFinished: (...args) => this.onHarvestFinished(...args),
+      getPayload: (...args) => this.prepareHarvest(...args),
+      onUnload: () => this.recordLcp() // send whatever available LCP we have, if one hasn't already been sent when current window session ends
+    }, this)
 
     registerHandler('timing', (...args) => this.processTiming(...args), this.featureName, this.ee)
     registerHandler('lcp', (...args) => this.updateLatestLcp(...args), this.featureName, this.ee)
     registerHandler('cls', (...args) => this.updateClsScore(...args), this.featureName, this.ee)
-    registerHandler('docHidden', (msTimestamp) => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
-    registerHandler('winPagehide', (msTimestamp) => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
+    registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
+    registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
 
     // After 1 minute has passed, record LCP value if no user interaction has occurred first
     setTimeout(() => {
@@ -66,9 +61,7 @@ export class Aggregate extends AggregateBase {
     }, maxLCPTimeSeconds * 1000)
 
     // send initial data sooner, then start regular
-    this.ee.on(`drain-${this.featureName}`, () => {
-      if (!this.blocked) this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)
-    })
+    this.ee.on(`drain-${this.featureName}`, () => { if (!this.blocked) this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds) })
 
     drain(this.agentIdentifier, this.featureName)
   }
@@ -121,17 +114,11 @@ export class Aggregate extends AggregateBase {
   }
 
   updateClsScore (clsEntry) {
-    // this used to be cumulative for the whole page, now we need to split it to a
-    // new CLS measurement after 1s between shifts or 5s total
-    if (
-      clsEntry.startTime - this.clsSession.lastEntryTime > 1000 ||
-      clsEntry.startTime - this.clsSession.firstEntryTime > 5000
-    ) {
-      this.clsSession = {
-        value: 0,
-        firstEntryTime: clsEntry.startTime,
-        lastEntryTime: clsEntry.startTime
-      }
+  // this used to be cumulative for the whole page, now we need to split it to a
+  // new CLS measurement after 1s between shifts or 5s total
+    if ((clsEntry.startTime - this.clsSession.lastEntryTime) > 1000 ||
+      (clsEntry.startTime - this.clsSession.firstEntryTime) > 5000) {
+      this.clsSession = { value: 0, firstEntryTime: clsEntry.startTime, lastEntryTime: clsEntry.startTime }
     }
 
     this.clsSession.value += clsEntry.value
@@ -146,8 +133,7 @@ export class Aggregate extends AggregateBase {
    * @param {number} timestamp
    */
   endCurrentSession (timestamp) {
-    if (!this.curSessEndRecorded) {
-      // TO DO: stage 2 - we don't want to capture this timing twice on page navigating away, but it should run again if we return to page and away *again*
+    if (!this.curSessEndRecorded) { // TO DO: stage 2 - we don't want to capture this timing twice on page navigating away, but it should run again if we return to page and away *again*
       this.addTiming('pageHide', timestamp, null, true)
       this.curSessEndRecorded = true
     }
@@ -180,8 +166,8 @@ export class Aggregate extends AggregateBase {
   }
 
   processTiming (name, value, attrs) {
-    // Upon user interaction, the Browser stops executing LCP logic, so we can send here
-    // We're using setTimeout to give the Browser time to finish collecting LCP value
+  // Upon user interaction, the Browser stops executing LCP logic, so we can send here
+  // We're using setTimeout to give the Browser time to finish collecting LCP value
     if (name === 'fi') {
       setTimeout((...args) => this.recordLcp(...args), 0)
     }
@@ -202,19 +188,8 @@ export class Aggregate extends AggregateBase {
     var timingAttributes = timing.attrs || {}
     var customAttributes = getInfo(this.agentIdentifier).jsAttributes || {}
 
-    var reservedAttributes = [
-      'size',
-      'eid',
-      'cls',
-      'type',
-      'fid',
-      'elTag',
-      'elUrl',
-      'net-type',
-      'net-etype',
-      'net-rtt',
-      'net-dlink'
-    ]
+    var reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
+      'net-etype', 'net-rtt', 'net-dlink']
     mapOwn(customAttributes, function (key, val) {
       if (reservedAttributes.indexOf(key) < 0) {
         timingAttributes[key] = val
@@ -256,7 +231,7 @@ export class Aggregate extends AggregateBase {
         payload += numeric(attrParts.length) + ';' + attrParts.join(';')
       }
 
-      if (i + 1 < data.length) payload += ';'
+      if ((i + 1) < data.length) payload += ';'
     }
 
     return payload

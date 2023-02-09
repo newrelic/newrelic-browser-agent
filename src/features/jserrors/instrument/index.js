@@ -142,7 +142,7 @@ function UncaughtException (message, filename, lineno) {
 function notice (err, doNotStamp, ee) {
   // by default add timestamp, unless specifically told not to
   // this is to preserve existing behavior
-  var time = !doNotStamp ? now() : null
+  var time = (!doNotStamp) ? now() : null
   handle('err', [err, time], undefined, FEATURE_NAMES.jserrors, ee)
 }
 

@@ -16,9 +16,7 @@ var charMap = {
   '%3B': ';'
 }
 
-var charList = mapOwn(charMap, function (k) {
-  return k
-})
+var charList = mapOwn(charMap, function (k) { return k })
 var safeEncoded = new RegExp(charList.join('|'), 'g')
 
 function real (c) {
@@ -70,7 +68,7 @@ export function obj (payload, maxBytes) {
 
 // Constructs an HTTP parameter to add to the BAM router URL
 export function param (name, value) {
-  if (value && typeof value === 'string') {
+  if (value && typeof (value) === 'string') {
     return '&' + name + '=' + qs(value)
   }
   return ''

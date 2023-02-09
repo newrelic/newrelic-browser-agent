@@ -23,7 +23,7 @@ if (nr.ee) {
 
 export { globalInstance as ee }
 
-function EventContext () {}
+function EventContext () { }
 
 function ee (old, debugId) {
   var handlers = {}
@@ -51,6 +51,7 @@ function ee (old, debugId) {
     isBuffering: isBuffering,
     debugId,
     backlog: isolatedBacklog ? {} : old && typeof old.backlog === 'object' ? old.backlog : {}
+
   }
 
   return emitter
@@ -67,9 +68,7 @@ function ee (old, debugId) {
 
   function emit (type, args, contextOrStore, force, bubble) {
     if (bubble !== false) bubble = true
-    if (globalInstance.aborted && !force) {
-      return
-    }
+    if (globalInstance.aborted && !force) { return }
     if (old && bubble) old.emit(type, args, contextOrStore)
 
     var ctx = context(contextOrStore)

@@ -50,11 +50,7 @@ function detectReact () {
 function detectAngularJs () {
   try {
     if (window.angular) return true
-    if (
-      document.querySelector(
-        '.ng-binding, [ng-app], [data-ng-app], [ng-controller], [data-ng-controller], [ng-repeat], [data-ng-repeat]'
-      )
-    ) { return true }
+    if (document.querySelector('.ng-binding, [ng-app], [data-ng-app], [ng-controller], [data-ng-controller], [ng-repeat], [data-ng-repeat]')) return true
     if (document.querySelector('script[src*="angular.js"], script[src*="angular.min.js"]')) return true
     return false
   } catch (err) {
@@ -66,11 +62,7 @@ function detectAngularJs () {
 function detectAngular () {
   try {
     // eslint-disable-next-line
-    if (
-      Object.prototype.hasOwnProperty.call(window, 'ng') &&
-      Object.prototype.hasOwnProperty.call(window.ng, 'coreTokens') &&
-      Object.prototype.hasOwnProperty.call(window.ng.coreTokens, 'NgZone')
-    ) { return true }
+    if (window.hasOwnProperty('ng') && window.ng.hasOwnProperty('coreTokens') && window.ng.coreTokens.hasOwnProperty('NgZone')) return true
     return !!document.querySelectorAll('[ng-version]').length
   } catch (err) {
     // not supported?

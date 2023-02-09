@@ -15,24 +15,16 @@ import { isWorkerScope } from '../../common/util/global-scope'
 
 function setTopLevelCallers (nr) {
   const funcs = [
-    'setErrorHandler',
-    'finished',
-    'addToTrace',
-    'inlineHit',
-    'addRelease',
-    'addPageAction',
-    'setCurrentRouteName',
-    'setPageViewName',
-    'setCustomAttribute',
-    'interaction',
-    'noticeError'
+    'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
+    'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
+    'interaction', 'noticeError'
   ]
-  funcs.forEach((f) => {
+  funcs.forEach(f => {
     nr[f] = (...args) => caller(f, ...args)
   })
 
   function caller (fnName, ...args) {
-    Object.values(nr.initializedAgents).forEach((val) => {
+    Object.values(nr.initializedAgents).forEach(val => {
       if (val.exposed && val.api[fnName]) val.api[fnName](...args)
     })
   }
@@ -44,7 +36,13 @@ export function setAPI (agentIdentifier, nr, forceDrain) {
   var instanceEE = ee.get(agentIdentifier)
   var tracerEE = instanceEE.get('tracer')
 
-  var asyncApiFns = ['setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease']
+  var asyncApiFns = [
+    'setErrorHandler',
+    'finished',
+    'addToTrace',
+    'inlineHit',
+    'addRelease'
+  ]
 
   var prefix = 'api-'
   var spaPrefix = prefix + 'ixn-'
@@ -66,10 +64,7 @@ export function setAPI (agentIdentifier, nr, forceDrain) {
 
   nr.setCustomAttribute = function (name, value) {
     const currentInfo = getInfo(agentIdentifier)
-    setInfo(agentIdentifier, {
-      ...currentInfo,
-      jsAttributes: { ...currentInfo.jsAttributes, [name]: value }
-    })
+    setInfo(agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [name]: value } })
     return apiCall(prefix, 'setCustomAttribute', true, 'api')()
   }
 
@@ -77,9 +72,9 @@ export function setAPI (agentIdentifier, nr, forceDrain) {
     return new InteractionHandle().get()
   }
 
-  function InteractionHandle () {}
+  function InteractionHandle () { }
 
-  var InteractionApiProto = (InteractionHandle.prototype = {
+  var InteractionApiProto = InteractionHandle.prototype = {
     createTracer: function (name, cb) {
       var contextStore = {}
       var ixn = this
@@ -100,7 +95,7 @@ export function setAPI (agentIdentifier, nr, forceDrain) {
         }
       }
     }
-  })
+  }
 
   mapOwn('actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get'.split(','), function addApi (n, name) {
     InteractionApiProto[name] = apiCall(spaPrefix, name, undefined, FEATURE_NAMES.spa)

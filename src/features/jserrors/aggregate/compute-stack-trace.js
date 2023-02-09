@@ -62,10 +62,8 @@ import { formatStackTrace } from './format-stack-trace'
 var debug = false
 
 var classNameRegex = /function (.+?)\s*\(/
-var chrome =
-  /^\s*at (?:((?:\[object object\])?(?:[^(]*\([^)]*\))*[^()]*(?: \[as \S+\])?) )?\(?((?:file|http|https|chrome-extension):.*?)?:(\d+)(?::(\d+))?\)?\s*$/i
-var gecko =
-  /^\s*(?:(\S*|global code)(?:\(.*?\))?@)?((?:file|http|https|chrome|safari-extension).*?):(\d+)(?::(\d+))?\s*$/i
+var chrome = /^\s*at (?:((?:\[object object\])?(?:[^(]*\([^)]*\))*[^()]*(?: \[as \S+\])?) )?\(?((?:file|http|https|chrome-extension):.*?)?:(\d+)(?::(\d+))?\)?\s*$/i
+var gecko = /^\s*(?:(\S*|global code)(?:\(.*?\))?@)?((?:file|http|https|chrome|safari-extension).*?):(\d+)(?::(\d+))?\s*$/i
 var chrome_eval = /^\s*at .+ \(eval at \S+ \((?:(?:file|http|https):[^)]+)?\)(?:, [^:]*:\d+:\d+)?\)$/i
 var ie_eval = /^\s*at Function code \(Function code:\d+:\d+\)\s*/i
 
@@ -123,11 +121,11 @@ function computeStackTraceFromStackProp (ex) {
     return null
   }
 
-  var errorInfo = reduce(ex.stack.split('\n'), parseStackProp, {
-    frames: [],
-    stackLines: [],
-    wrapperSeen: false
-  })
+  var errorInfo = reduce(
+    ex.stack.split('\n'),
+    parseStackProp,
+    { frames: [], stackLines: [], wrapperSeen: false }
+  )
 
   if (!errorInfo.frames.length) return null
 
@@ -160,12 +158,12 @@ function getElement (line) {
   if (!parts) parts = line.match(chrome)
 
   if (parts) {
-    return {
+    return ({
       url: parts[2],
       func: (parts[1] !== 'Anonymous function' && parts[1] !== 'global code' && parts[1]) || null,
       line: +parts[3],
       column: parts[4] ? +parts[4] : null
-    }
+    })
   }
 
   if (line.match(chrome_eval) || line.match(ie_eval) || line === 'anonymous') {
@@ -180,17 +178,15 @@ function computeStackTraceBySourceAndLine (ex) {
 
   // Safari does not provide a URL for errors in eval'd code
   if (!ex.sourceURL) {
-    return {
+    return ({
       mode: 'sourceline',
       name: className,
       message: ex.message,
       stackString: getClassName(ex) + ': ' + ex.message + '\n    in evaluated code',
-      frames: [
-        {
-          func: 'evaluated code'
-        }
-      ]
-    }
+      frames: [{
+        func: 'evaluated code'
+      }]
+    })
   }
 
   var stackString = className + ': ' + ex.message + '\n    at ' + ex.sourceURL
@@ -201,33 +197,37 @@ function computeStackTraceBySourceAndLine (ex) {
     }
   }
 
-  return {
+  return ({
     mode: 'sourceline',
     name: className,
     message: ex.message,
     stackString: stackString,
-    frames: [{ url: ex.sourceURL, line: ex.line, column: ex.column }]
-  }
+    frames: [{
+      url: ex.sourceURL,
+      line: ex.line,
+      column: ex.column
+    }]
+  })
 }
 
 function computeStackTraceWithMessageOnly (ex) {
   var className = ex.name || getClassName(ex)
   if (!className) return null
 
-  return {
+  return ({
     mode: 'nameonly',
     name: className,
     message: ex.message,
     stackString: className + ': ' + ex.message,
     frames: []
-  }
+  })
 }
 
 function getClassName (obj) {
   var results = classNameRegex.exec(String(obj.constructor))
-  return results && results.length > 1 ? results[1] : 'unknown'
+  return (results && results.length > 1) ? results[1] : 'unknown'
 }
 
 function isWrapper (functionName) {
-  return functionName && functionName.indexOf('nrWrapper') >= 0
+  return (functionName && functionName.indexOf('nrWrapper') >= 0)
 }

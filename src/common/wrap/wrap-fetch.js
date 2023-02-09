@@ -64,16 +64,13 @@ export function wrapFetch (sharedEE) {
 
         ee.emit(prefix + 'start', [args, dtPayload], promise)
 
-        return promise.then(
-          function (val) {
-            ee.emit(prefix + 'end', [null, val], promise)
-            return val
-          },
-          function (err) {
-            ee.emit(prefix + 'end', [err], promise)
-            throw err
-          }
-        )
+        return promise.then(function (val) {
+          ee.emit(prefix + 'end', [null, val], promise)
+          return val
+        }, function (err) {
+          ee.emit(prefix + 'end', [err], promise)
+          throw err
+        })
       }
     }
   }

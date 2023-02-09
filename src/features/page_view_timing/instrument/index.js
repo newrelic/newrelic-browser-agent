@@ -35,19 +35,14 @@ export class Instrument extends InstrumentBase {
 
       this.lcpPerformanceObserver = new PerformanceObserver((...args) => this.lcpObserver(...args))
       try {
-        this.lcpPerformanceObserver.observe({
-          entryTypes: ['largest-contentful-paint']
-        })
+        this.lcpPerformanceObserver.observe({ entryTypes: ['largest-contentful-paint'] })
       } catch (e) {
         // do nothing
       }
 
       this.clsPerformanceObserver = new PerformanceObserver((...args) => this.clsObserver(...args))
       try {
-        this.clsPerformanceObserver.observe({
-          type: 'layout-shift',
-          buffered: true
-        })
+        this.clsPerformanceObserver.observe({ type: 'layout-shift', buffered: true })
       } catch (e) {
         // do nothing
       }
@@ -68,9 +63,7 @@ export class Instrument extends InstrumentBase {
     }, true)
 
     // Window fires its pagehide event (typically on navigation; this occurrence is a *subset* of vis change)
-    windowAddEventListener('pagehide', () =>
-      handle('winPagehide', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
-    )
+    windowAddEventListener('pagehide', () => handle('winPagehide', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee))
 
     // page visibility events
     this.importAggregator()

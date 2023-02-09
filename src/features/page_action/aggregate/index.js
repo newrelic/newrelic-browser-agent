@@ -19,11 +19,8 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     this.eventsPerMinute = 240
-    this.harvestTimeSeconds =
-      getConfigurationValue(this.agentIdentifier, 'page_action.harvestTimeSeconds') ||
-      getConfigurationValue(this.agentIdentifier, 'ins.harvestTimeSeconds') ||
-      30
-    this.eventsPerHarvest = (this.eventsPerMinute * this.harvestTimeSeconds) / 60
+    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_action.harvestTimeSeconds') || getConfigurationValue(this.agentIdentifier, 'ins.harvestTimeSeconds') || 30
+    this.eventsPerHarvest = this.eventsPerMinute * this.harvestTimeSeconds / 60
     this.referrerUrl
     this.currentEvents
 
@@ -37,27 +34,20 @@ export class Aggregate extends AggregateBase {
 
     var scheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
     scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
-    this.ee.on(`drain-${this.featureName}`, () => {
-      if (!this.blocked) scheduler.startTimer(this.harvestTimeSeconds, 0)
-    })
+    this.ee.on(`drain-${this.featureName}`, () => { if (!this.blocked) scheduler.startTimer(this.harvestTimeSeconds, 0) })
 
     // if rum response determines that customer lacks entitlements for ins endpoint, block it
-    register(
-      'block-ins',
-      () => {
-        this.blocked = true
-        scheduler.stopTimer()
-      },
-      this.featureName,
-      this.ee
-    )
+    register('block-ins', () => {
+      this.blocked = true
+      scheduler.stopTimer()
+    }, this.featureName, this.ee)
 
     drain(this.agentIdentifier, this.featureName)
   }
 
   onHarvestStarted (options) {
     const { userAttributes, atts } = getInfo(this.agentIdentifier)
-    var payload = {
+    var payload = ({
       qs: {
         ua: userAttributes,
         at: atts
@@ -65,7 +55,7 @@ export class Aggregate extends AggregateBase {
       body: {
         ins: this.events
       }
-    }
+    })
 
     if (options.retry) {
       this.currentEvents = this.events
@@ -117,7 +107,7 @@ export class Aggregate extends AggregateBase {
     this.events.push(eventAttributes)
 
     function set (key, val) {
-      eventAttributes[key] = val && typeof val === 'object' ? stringify(val) : val
+      eventAttributes[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
   }
 }

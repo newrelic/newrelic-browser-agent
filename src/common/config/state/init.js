@@ -1,3 +1,4 @@
+
 import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { Configurable } from './configurable'
 

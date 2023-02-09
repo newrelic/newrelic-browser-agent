@@ -20,24 +20,11 @@ try {
   // no op
 }
 
-if (flags.nrDev) {
-  ee.on('internal-error', function (err) {
-    log(err.stack)
-  })
-}
-if (flags.dev) {
-  ee.on('fn-err', function (args, origThis, err) {
-    log(err.stack)
-  })
-}
+if (flags.nrDev) ee.on('internal-error', function (err) { log(err.stack) })
+if (flags.dev) ee.on('fn-err', function (args, origThis, err) { log(err.stack) })
 if (flags.dev) {
   log('NR AGENT IN DEVELOPMENT MODE')
-  log(
-    'flags: ' +
-      mapOwn(flags, function (key, val) {
-        return key
-      }).join(', ')
-  )
+  log('flags: ' + mapOwn(flags, function (key, val) { return key }).join(', '))
 }
 
 function log (message) {

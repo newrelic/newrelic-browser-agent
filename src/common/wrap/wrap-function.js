@@ -5,14 +5,14 @@
 
 import { ee } from '../event-emitter/contextual-ee'
 import slice from 'lodash._slice'
-var flag = 'nr@original'
+export const flag = 'nr@original'
 var has = Object.prototype.hasOwnProperty
 var inWrapper = false
 
 // eslint-disable-next-line
 export default createWrapperWithEmitter
 
-export function createWrapperWithEmitter (emitter, always) {
+export function createWrapperWithEmitter(emitter, always) {
   emitter || (emitter = ee)
 
   wrapFn.inPlace = inPlace
@@ -141,23 +141,21 @@ function notWrappable (fn) {
   return !(fn && fn instanceof Function && fn.apply && !fn[flag])
 }
 
-export function wrapFunction (fn, wrapper) {
+export function wrapFunction(fn, wrapper) {
   var wrapped = wrapper(fn)
   wrapped[flag] = fn
   copy(fn, wrapped, ee)
   return wrapped
 }
 
-export function wrapInPlace (obj, fnName, wrapper) {
+export function wrapInPlace(obj, fnName, wrapper) {
   var fn = obj[fnName]
   obj[fnName] = wrapFunction(fn, wrapper)
 }
 
-export function argsToArray () {
-  var len = arguments.length
-  var arr = new Array(len)
-  for (var i = 0; i < len; ++i) {
-    arr[i] = arguments[i]
+/** If a func-property on an object, e.g. window, was previously wrapped (by this module), this will remove that layer. */
+export function unwrapFunction(obj, fnName) {
+  if (obj?.[fnName]?.[flag]) {  // previous state of the function property is stored under our wrapper's "flag"; we don't wrap properties that *were* undefined to begin with
+    obj[fnName] = obj[fnName][flag];
   }
-  return arr
 }

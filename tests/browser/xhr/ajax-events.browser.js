@@ -9,19 +9,18 @@ import { getRuntime, setInfo, setConfiguration } from '../../../src/common/confi
 import { Aggregate as AjaxAggreg } from '../../../src/features/ajax/aggregate/index'
 const qp = require('@newrelic/nr-querypack')
 
-const { baseEE, agentIdentifier, aggregator } = setup()
-getRuntime(agentIdentifier).features.xhr = true
-setInfo(agentIdentifier, {})
+const { baseEE, agentIdentifier, aggregator } = setup();
+setInfo(agentIdentifier, {});
 setConfiguration(agentIdentifier, {
-  ajax: { enabled: true }
-})
+  ajax: {enabled: true}
+});
 
-const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator)
-const storeXhr = ajaxTestAgg.storeXhr
-const prepareHarvest = ajaxTestAgg.prepareHarvest
-const getStoredEvents = ajaxTestAgg.getStoredEvents
+const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator);
+const storeXhr = ajaxTestAgg.storeXhr;
+const prepareHarvest = ajaxTestAgg.prepareHarvest;
+const getStoredEvents = ajaxTestAgg.getStoredEvents;
 
-function exceedsSizeLimit (payload, maxPayloadSize) {
+function exceedsSizeLimit(payload, maxPayloadSize) {
   return payload.length * 2 > maxPayloadSize
 }
 
@@ -186,9 +185,9 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
 
   setInfo(agentIdentifier, {
     jsAttributes: expectedCustomAttributes
-  })
+  });
 
-  const serializedPayload = prepareHarvest({ retry: false })
+  const serializedPayload = prepareHarvest({retry: false})
   // serializedPayload from ajax comes back as an array of bodies now, so we just need to decode each one and flatten
   // this decoding does not happen elsewhere in the app so this only needs to happen here in this specific test
   const decodedEvents = serializedPayload.map(sp => qp.decode(sp.body.e))
@@ -282,11 +281,11 @@ test('prepareHarvest correctly serializes a very large AjaxRequest events payloa
 
   setInfo(agentIdentifier, {
     jsAttributes: expectedCustomAttributes
-  })
+  });
 
   const maxPayloadSize = 500
 
-  const serializedPayload = prepareHarvest({ retry: false, maxPayloadSize })
+  const serializedPayload = prepareHarvest({retry: false, maxPayloadSize})
   const decodedEvents = serializedPayload.map(sp => qp.decode(sp.body.e))
 
   // we just want to check that the list of AJAX events to be sent contains multiple items because it exceeded the allowed byte limit,
@@ -372,12 +371,12 @@ test('prepareHarvest correctly exits if maxPayload is too small', function (t) {
 
   setInfo(agentIdentifier, {
     jsAttributes: expectedCustomAttributes
-  })
+  });
 
   // this is too small for any AJAX payload to fit in
   const maxPayloadSize = 10
 
-  const serializedPayload = prepareHarvest({ retry: false, maxPayloadSize })
+  const serializedPayload = prepareHarvest({retry: false, maxPayloadSize})
 
   // we just want to check that the list of AJAX events to be sent contains multiple items because it exceeded the allowed byte limit,
   // and that each list item is smaller than the limit

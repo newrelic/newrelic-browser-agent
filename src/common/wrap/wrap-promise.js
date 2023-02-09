@@ -2,112 +2,104 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { createWrapperWithEmitter as wrapFn, wrapInPlace, argsToArray } from './wrap-function'
-import { ee as baseEE, getOrSetContext } from '../event-emitter/contextual-ee'
-import { mapOwn } from '../util/map-own'
-import { originals } from '../config/config'
-import { globalScope } from '../util/global-scope'
+/**
+ * This module is used by: spa
+ */
+ import { createWrapperWithEmitter as wrapFn } from './wrap-function'
+ import { ee as baseEE, getOrSetContext } from '../event-emitter/contextual-ee'
+ import { originals } from '../config/config'
+ import { globalScope } from '../util/global-scope'
+ 
+ const wrapped = {}
+ 
+ export function wrapPromise(sharedEE){
+   const promiseEE = scopedEE(sharedEE)
+ 
+   if (wrapped[promiseEE.debugId])
+     return promiseEE
+   wrapped[promiseEE.debugId] = true
+ 
+   var getContext = getOrSetContext
+   var promiseWrapper = wrapFn(promiseEE)
+   var prevPromiseObj = originals.PR
+ 
+   if (prevPromiseObj) {  // ensure there's a Promise API (native or otherwise) to even wrap
+     wrap()
+   }
 
-const wrapped = {}
+  function wrap() {
+    globalScope.Promise = WrappedPromise;
 
-export function wrapPromise (sharedEE) {
-  const promiseEE = scopedEE(sharedEE)
-  if (wrapped[promiseEE.debugId]) return promiseEE
-  wrapped[promiseEE.debugId] = true
-  var getContext = getOrSetContext
-  var promiseWrapper = wrapFn(promiseEE)
-  var OriginalPromise = originals.PR
-
-  if (OriginalPromise) {
-    wrap()
-  }
-
-  function wrap () {
-    globalScope.Promise = WrappedPromise
-    Object.defineProperty(globalScope.Promise, 'name', {
+    // Renamed from "WrappedPromise" back to "Promise" & toString() so that we appear "native" to TP libraries...
+    Object.defineProperty(WrappedPromise, 'name', {
       value: 'Promise'
     })
-
-    ;['all', 'race'].forEach(function (method) {
-      var original = OriginalPromise[method]
-      OriginalPromise[method] = function (subPromises) {
-        var finalized = false
-        mapOwn(subPromises, function (i, sub) {
-          // eslint-disable-next-line
-          Promise.resolve(sub).then(setNrId(method === 'all'), setNrId(false))
-        })
-
-        var originalReturnValue = original.apply(OriginalPromise, arguments)
-        var promise = OriginalPromise.resolve(originalReturnValue)
-
-        return promise
-
-        function setNrId (overwrite) {
-          return function () {
-            promiseEE.emit('propagate', [null, !finalized], originalReturnValue, false, false)
-            finalized = finalized || !overwrite
-          }
-        }
-      }
-    })
-
-    ;['resolve', 'reject'].forEach(function (method) {
-      var original = OriginalPromise[method]
-      OriginalPromise[method] = function (val) {
-        var returnVal = original.apply(OriginalPromise, arguments)
-        if (val !== returnVal) {
-          promiseEE.emit('propagate', [val, true], returnVal, false, false)
-        }
-
-        return returnVal
-      }
-    })
-
-    OriginalPromise.prototype['catch'] = function wrappedCatch (fn) {
-      return this.then(null, fn)
-    }
-
-    Object.assign(OriginalPromise.prototype, { constructor: { value: WrappedPromise } })
-
-    mapOwn(Object.getOwnPropertyNames(OriginalPromise), function copy (i, key) {
-      try {
-        WrappedPromise[key] = OriginalPromise[key]
-      } catch (err) {
-        // ignore properties we can't copy
-      }
-    })
+    WrappedPromise.toString = function() { return prevPromiseObj.toString() }
 
     function WrappedPromise (executor) {
       var ctx = promiseEE.context()
       var wrappedExecutor = promiseWrapper(executor, 'executor-', ctx, null, false)
 
-      var promise = new OriginalPromise(wrappedExecutor)
+      const newCustomPromiseInst = Reflect.construct(prevPromiseObj, [wrappedExecutor], WrappedPromise);  // extend the orig Promise constructor as super
 
-      promiseEE.context(promise).getCtx = function () {
+      promiseEE.context(newCustomPromiseInst).getCtx = function () {
         return ctx
       }
-
-      return promise
+      return newCustomPromiseInst;
     }
+    // Make WrappedPromise inherit statics from the orig Promise.
+    Object.setPrototypeOf(WrappedPromise, prevPromiseObj);
 
-    wrapInPlace(OriginalPromise.prototype, 'then', function wrapThen (original) {
-      return function wrappedThen () {
-        var originalThis = this
-        var args = argsToArray.apply(this, arguments)
+    ['all', 'race'].forEach(function (method) {
+      const prevStaticFn = prevPromiseObj[method];
+      WrappedPromise[method] = function (subPromises) {  // use our own wrapped version of "Promise.all" and ".race" static fns
+        let finalized = false;
+        subPromises?.forEach(sub => {
+          // eslint-disable-next-line
+          this.resolve(sub).then(setNrId(method === 'all'), setNrId(false));
+        });
 
-        var ctx = getContext(originalThis)
-        ctx.promise = originalThis
-        args[0] = promiseWrapper(args[0], 'cb-', ctx, null, false)
-        args[1] = promiseWrapper(args[1], 'cb-', ctx, null, false)
+        const origFnCallWithThis = prevStaticFn.apply(this, arguments);
+        return origFnCallWithThis;
 
-        var result = original.apply(this, args)
-
-        ctx.nextPromise = result
-        promiseEE.emit('propagate', [originalThis, true], result, false, false)
-
-        return result
+        function setNrId (overwrite) {
+          return function () {
+            promiseEE.emit('propagate', [null, !finalized], origFnCallWithThis, false, false)
+            finalized = finalized || !overwrite
+          }
+        }
       }
-    })
+    });
+
+    ['resolve', 'reject'].forEach(function (method) {
+      const prevStaticFn = prevPromiseObj[method];
+      WrappedPromise[method] = function (val) {  // and the same for ".resolve" and ".reject"
+        const origFnCallWithThis = prevStaticFn.apply(this, arguments);
+
+        if (val !== origFnCallWithThis) {
+          promiseEE.emit('propagate', [val, true], origFnCallWithThis, false, false)
+        }
+        return origFnCallWithThis;
+      }
+    });
+
+    // Mirror the orig Promise's prototype (catch, try, then, etc.) but with our own methods.
+    WrappedPromise.prototype = Object.create(prevPromiseObj.prototype);
+    WrappedPromise.prototype.constructor = WrappedPromise; // calls to "new Promise()" should use our custom Promise
+    WrappedPromise.prototype.then = function (...args) {
+      var originalThis = this
+      var ctx = getContext(originalThis)
+      ctx.promise = originalThis
+      args[0] = promiseWrapper(args[0], 'cb-', ctx, null, false)
+      args[1] = promiseWrapper(args[1], 'cb-', ctx, null, false)
+
+      const origFnCallWithThis = prevPromiseObj.prototype.then.apply(this, args);
+
+      ctx.nextPromise = origFnCallWithThis
+      promiseEE.emit('propagate', [originalThis, true], origFnCallWithThis, false, false)
+
+      return origFnCallWithThis;
+    };
 
     promiseEE.on('executor-start', function (args) {
       args[0] = promiseWrapper(args[0], 'resolve-', this, null, false)
@@ -134,15 +126,17 @@ export function wrapPromise (sharedEE) {
         }
       }
     })
-
-    WrappedPromise.toString = function () {
-      return '' + OriginalPromise
-    }
   }
-
-  return promiseEE
+  return promiseEE;
 }
-
-export function scopedEE (sharedEE) {
+export function unwrapPromise(sharedEE) {
+  const ee = scopedEE(sharedEE);
+  if (wrapped[ee.debugId] === true) {
+    // Since nothing about the original aka previous Promise was altered, this is simply...
+    globalScope.Promise = originals.PR;
+    wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
+  }
+}
+export function scopedEE(sharedEE){
   return (sharedEE || baseEE).get('promise')
 }

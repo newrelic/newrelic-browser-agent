@@ -60,21 +60,21 @@ jil.browserTest('fetch body.reject', function (t) {
       attrs: {
         isFetch: true
       },
+      children: []
+    }, {
+      type: 'customTracer',
+      attrs: {
+        name: 'promise'
+      },
       children: [{
         type: 'customTracer',
         attrs: {
-          name: 'promise'
+          name: 'timer'
         },
-        children: [{
-          type: 'customTracer',
-          attrs: {
-            name: 'timer'
-          },
-          children: []
-        }]
+        children: []
       }]
     }]
-  })
+  });
 
   t.plan(4 + validator.count)
 

@@ -9,7 +9,7 @@ import { ffVersion } from '../../../common/browser-version/firefox-version'
 import { dataSize } from '../../../common/util/data-size'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
-import { wrapFetch, wrapXhr } from '../../../common/wrap'
+import { wrapFetch, wrapXhr, unwrapFetch, unwrapXhr } from '../../../common/wrap'
 import { parseUrl } from '../../../common/url/parse-url'
 import { DT } from './distributed-tracing'
 import { responseSizeFromXhr } from './response-size'
@@ -22,38 +22,37 @@ var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
 
 var origRequest = originals.REQ
-var origXHR = globalScope?.XMLHttpRequest
+var origXHR = globalScope.XMLHttpRequest
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
+  constructor(agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    const agentRuntime = getRuntime(this.agentIdentifier)
 
-    // Don't instrument Chrome for iOS, it is buggy and acts like there are URL verification issues
-    if (!agentRuntime.xhrWrappable) return
+    // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
+    if (!getRuntime(agentIdentifier).xhrWrappable) return
 
-    agentRuntime.features.xhr = true // declare that we are using xhr instrumentation
-
-    this.dt = new DT(this.agentIdentifier)
+    this.dt = new DT(agentIdentifier)
 
     this.handler = (type, args, ctx, group) => handle(type, args, ctx, group, this.ee)
-    this.wrappedFetch = getWrappedFetch(this.ee)
+    wrapFetch(this.ee)
     wrapXhr(this.ee)
-    subscribeToEvents(this.agentIdentifier, this.ee, this.handler, this.dt)
+    subscribeToEvents(agentIdentifier, this.ee, this.handler, this.dt)
 
-    this.importAggregator()
+    this.abortHandler = this.#abort;
+    this.importAggregator();
+  }
+
+  /** Restoration and resource release tasks to be done if Ajax loader is being aborted. */
+  #abort() {
+    // (Much of this module affects specific XHR instances.)
+    unwrapFetch(this.ee);
+    unwrapXhr(this.ee);
+    this.abortHandler = undefined; // weakly allow this abort op to run only once
   }
 }
 
-// TODO update all of this to go into class and use this.ee for ee, handle, and register
-
-export function getWrappedFetch (ee, handler) {
-  var wrappedFetch = wrapFetch(ee)
-  return wrappedFetch
-}
-
-function subscribeToEvents (agentIdentifier, ee, handler, dt) {
+function subscribeToEvents(agentIdentifier, ee, handler, dt) {
   ee.on('new-xhr', onNewXhr)
   ee.on('open-xhr-start', onOpenXhrStart)
   ee.on('open-xhr-end', onOpenXhrEnd)
@@ -71,7 +70,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   ee.on('fetch-done', onFetchDone)
 
   // Setup the context for each new xhr object
-  function onNewXhr (xhr) {
+  function onNewXhr(xhr) {
     var ctx = this
     ctx.totalCbs = 0
     ctx.called = 0
@@ -88,32 +87,26 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
       captureXhrData(ctx, xhr)
     }, eventListenerOpts(false))
 
-    // In Firefox 34+, XHR ProgressEvents report pre-content-decoding sizes via
+    // In Firefox (v34+), XHR ProgressEvents report pre-content-decoding sizes via
     // their 'loaded' property, rather than post-decoding sizes. We want
     // post-decoding sizes for consistency with browsers where that's all we have.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1227674
     //
-    // In really old versions of Firefox (older than somewhere between 5 and 10),
-    // we don't reliably get a final XHR ProgressEvent which reflects the full
-    // size of the transferred resource.
-    //
-    // So, in both of these cases, we fall back to not using ProgressEvents to
-    // measure XHR sizes.
-
-    if (ffVersion && (ffVersion > 34 || ffVersion < 10)) return
+    // So we don't use ProgressEvents to measure XHR sizes for FF.
+    if (ffVersion) return;
 
     xhr.addEventListener('progress', function (event) {
       ctx.lastSize = event.loaded
     }, eventListenerOpts(false))
   }
 
-  function onOpenXhrStart (args) {
+  function onOpenXhrStart(args) {
     this.params = { method: args[0] }
     addUrl(this, args[1])
     this.metrics = {}
   }
 
-  function onOpenXhrEnd (args, xhr) {
+  function onOpenXhrEnd(args, xhr) {
     var loader_config = getLoaderConfig(agentIdentifier)
     if ('xpid' in loader_config && this.sameOrigin) {
       xhr.setRequestHeader('X-NewRelic-ID', loader_config.xpid)
@@ -139,7 +132,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     }
   }
 
-  function onSendXhrStart (args, xhr) {
+  function onSendXhrStart(args, xhr) {
     var metrics = this.metrics
     var data = args[0]
     var context = this
@@ -171,14 +164,14 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     }
   }
 
-  function onXhrCbTime (time, onload, xhr) {
+  function onXhrCbTime(time, onload, xhr) {
     this.cbTime += time
     if (onload) this.onloadCalled = true
     else this.called += 1
     if ((this.called === this.totalCbs) && (this.onloadCalled || typeof (xhr.onload) !== 'function') && typeof this.end === 'function') this.end(xhr)
   }
 
-  function onXhrLoadAdded (cb, useCapture) {
+  function onXhrLoadAdded(cb, useCapture) {
     // Ignore if the same arguments are passed to addEventListener twice
     var idString = '' + id(cb) + !!useCapture
     if (!this.xhrGuids || this.xhrGuids[idString]) return
@@ -187,7 +180,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     this.totalCbs += 1
   }
 
-  function onXhrLoadRemoved (cb, useCapture) {
+  function onXhrLoadRemoved(cb, useCapture) {
     // Ignore if event listener didn't exist for this xhr object
     var idString = '' + id(cb) + !!useCapture
     if (!this.xhrGuids || !this.xhrGuids[idString]) return
@@ -196,33 +189,33 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     this.totalCbs -= 1
   }
 
-  function onXhrResolved () {
+  function onXhrResolved() {
     this.endTime = now()
   }
 
   // Listen for load listeners to be added to xhr objects
-  function onAddEventListenerEnd (args, xhr) {
+  function onAddEventListenerEnd(args, xhr) {
     if (xhr instanceof origXHR && args[0] === 'load') ee.emit('xhr-load-added', [args[1], args[2]], xhr)
   }
 
-  function onRemoveEventListenerEnd (args, xhr) {
+  function onRemoveEventListenerEnd(args, xhr) {
     if (xhr instanceof origXHR && args[0] === 'load') ee.emit('xhr-load-removed', [args[1], args[2]], xhr)
   }
 
   // Listen for those load listeners to be called.
-  function onFnStart (args, xhr, methodName) {
+  function onFnStart(args, xhr, methodName) {
     if (xhr instanceof origXHR) {
       if (methodName === 'onload') this.onload = true
       if ((args[0] && args[0].type) === 'load' || this.onload) this.xhrCbStart = now()
     }
   }
 
-  function onFnEnd (args, xhr) {
+  function onFnEnd(args, xhr) {
     if (this.xhrCbStart) ee.emit('xhr-cb-time', [now() - this.xhrCbStart, this.onload, xhr], xhr)
   }
 
   // this event only handles DT
-  function onFetchBeforeStart (args) {
+  function onFetchBeforeStart(args) {
     var opts = args[1] || {}
     var url
     // argument is USVString
@@ -269,7 +262,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
       }
     }
 
-    function addHeaders (headersObj, payload) {
+    function addHeaders(headersObj, payload) {
       var added = false
       if (payload.newrelicHeader) {
         headersObj.set('newrelic', payload.newrelicHeader)
@@ -286,7 +279,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     }
   }
 
-  function onFetchStart (fetchArguments, dtPayload) {
+  function onFetchStart(fetchArguments, dtPayload) {
     this.params = {}
     this.metrics = {}
     this.startTime = now()
@@ -317,7 +310,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
 
   // we capture failed call as status 0, the actual error is ignored
   // eslint-disable-next-line handle-callback-err
-  function onFetchDone (err, res) {
+  function onFetchDone(err, res) {
     this.endTime = now()
     if (!this.params) {
       this.params = {}
@@ -340,7 +333,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   }
 
   // Create report for XHR request that has finished
-  function end (xhr) {
+  function end(xhr) {
     var params = this.params
     var metrics = this.metrics
 
@@ -365,7 +358,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this, FEATURE_NAMES.ajax)
   }
 
-  function addUrl (ctx, url) {
+  function addUrl(ctx, url) {
     var parsed = parseUrl(url)
     var params = ctx.params
 
@@ -378,7 +371,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     ctx.sameOrigin = parsed.sameOrigin
   }
 
-  function captureXhrData (ctx, xhr) {
+  function captureXhrData(ctx, xhr) {
     ctx.params.status = xhr.status
 
     var size = responseSizeFromXhr(xhr, ctx.lastSize)

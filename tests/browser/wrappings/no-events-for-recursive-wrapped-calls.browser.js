@@ -5,7 +5,7 @@
 
 import { setup } from '../utils/setup'
 import createWrapperWithEmitter from '../../../src/common/wrap/wrap-function'
-import test from '../../../tools/jil/browser-test.js'
+import test from 'jil/browser-test'
 
 const { baseEE } = setup()
 

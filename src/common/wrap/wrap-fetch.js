@@ -2,38 +2,39 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
+/**
+ * This module is used by: ajax, spa
+ */
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import slice from 'lodash._slice'
-import { mapOwn } from '../util/map-own'
 import { globalScope } from '../util/global-scope'
+import { flag, unwrapFunction } from './wrap-function'
 
-var win = globalScope
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
 var bodyMethods = ['arrayBuffer', 'blob', 'json', 'text', 'formData']
-var Req = win.Request
-var Res = win.Response
+var Req = globalScope.Request
+var Res = globalScope.Response
 var proto = 'prototype'
 var ctxId = 'nr@context'
 
 const wrapped = {}
 
-export function wrapFetch (sharedEE) {
+export function wrapFetch(sharedEE){
   const ee = scopedEE(sharedEE)
-  if (!(Req && Res && win.fetch)) {
+  if (!(Req && Res && globalScope.fetch)) {
     return ee
   }
 
-  if (wrapped[ee.debugId]) return ee
-  wrapped[ee.debugId] = true
+  if (wrapped[ee.debugId]++)  // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
+    return ee;                // then we increment the count to track # of feats using this at runtime.
+  wrapped[ee.debugId] = 1;
 
-  mapOwn(bodyMethods, function (i, name) {
-    wrapPromiseMethod(Req[proto], name, bodyPrefix)
-    wrapPromiseMethod(Res[proto], name, bodyPrefix)
-  })
-
-  wrapPromiseMethod(win, 'fetch', prefix)
+  bodyMethods.forEach(method => {
+    wrapPromiseMethod(Req[proto], method, bodyPrefix)
+    wrapPromiseMethod(Res[proto], method, bodyPrefix)
+  });
+  wrapPromiseMethod(globalScope, 'fetch', prefix)
 
   ee.on(prefix + 'end', function (err, res) {
     var ctx = this
@@ -60,24 +61,40 @@ export function wrapFetch (sharedEE) {
         var dtPayload
         if (ctx[ctxId] && ctx[ctxId].dt) dtPayload = ctx[ctxId].dt
 
-        var promise = fn.apply(this, args)
+        var origPromiseFromFetch = fn.apply(this, args)
 
-        ee.emit(prefix + 'start', [args, dtPayload], promise)
+        ee.emit(prefix + 'start', [args, dtPayload], origPromiseFromFetch)
 
-        return promise.then(function (val) {
-          ee.emit(prefix + 'end', [null, val], promise)
+        // Note we need to cast the returned (orig) Promise from native APIs into the current global Promise, which may or may not be our WrappedPromise. 
+        return globalScope.Promise.resolve(origPromiseFromFetch).then(function (val) {
+          ee.emit(prefix + 'end', [null, val], origPromiseFromFetch)
           return val
         }, function (err) {
-          ee.emit(prefix + 'end', [err], promise)
+          ee.emit(prefix + 'end', [err], origPromiseFromFetch)
           throw err
         })
       }
+      target[name][flag] = fn;  // track original similar to in wrap-function.js, so that they can be unwrapped with ease
     }
   }
 
   return ee
 }
+export function unwrapFetch(sharedEE) {
+  const ee = scopedEE(sharedEE);
 
-export function scopedEE (sharedEE) {
+  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this.
+  if (wrapped[ee.debugId] == 1) {
+    bodyMethods.forEach(fnName => {
+      unwrapFunction(Req[proto], fnName);
+      unwrapFunction(Res[proto], fnName);
+    });
+    unwrapFunction(globalScope, "fetch");
+    wrapped[ee.debugId] = Infinity; // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
+  } else {
+    wrapped[ee.debugId]--;
+  }
+}
+export function scopedEE(sharedEE){
   return (sharedEE || baseEE).get('fetch')
 }

@@ -135,13 +135,6 @@ features.setImmediate = new BrowserMatcher()
   .exclude('*', '*')
   .include('ie@>=10')
 
-/** DEPRECATED */
-features.xhr = new BrowserMatcher()
-  .exclude('ie@<9')
-
-/** DEPRECATED -- just use xhr instead */
-features.xhrWithAddEventListener = features.xhr
-
 // requires window.perfomance.getEntriesByType
 features.stn = new BrowserMatcher()
   .exclude('chrome', '<6')

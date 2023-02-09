@@ -1,6 +1,6 @@
-import { originals } from '../../common/config/config'
-import { globalScope } from '../../common/util/global-scope'
-import { FEATURE_NAMES } from '../../loaders/features/features'
+import { originals } from "../../common/config/config"
+import { globalScope } from "../../common/util/global-scope"
+import { FEATURE_NAMES } from "../../loaders/features/features"
 
 export const FEATURE_NAME = FEATURE_NAMES.spa
 export const INTERACTION_EVENTS = [
@@ -34,7 +34,3 @@ export const BODY = '-body'
 export const CB_END = 'cb' + END
 export const JS_TIME = 'jsTime'
 export const FETCH = 'fetch'
-export const ADD_EVENT_LISTENER = 'addEventListener'
-
-export const WIN = globalScope
-export const LOCATION = WIN.location

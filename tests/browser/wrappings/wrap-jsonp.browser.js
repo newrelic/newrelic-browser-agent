@@ -5,9 +5,9 @@
 
 const jil = require('jil')
 
-const { setup } = require('./utils/setup')
-const { wrapJsonP } = require('../../src/common/wrap/wrap-jsonp')
-const { baseEE } = setup()
+const {setup} = require('../utils/setup')
+const {wrapJsonP} = require('../../../src/common/wrap/wrap-jsonp')
+const {baseEE} = setup()
 
 function removeListener (type, fn) {
   const handlers = this.listeners(type)

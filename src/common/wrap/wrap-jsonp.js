@@ -2,40 +2,33 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
+/**
+ * This module is used by: spa
+ */
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { ee as baseEE } from '../event-emitter/contextual-ee'
-import { createWrapperWithEmitter as wfn } from './wrap-function'
+import { createWrapperWithEmitter as wfn, unwrapFunction } from './wrap-function'
 import { isBrowserScope } from '../util/global-scope'
 
 const wrapped = {}
+const domInsertMethods = ['appendChild', 'insertBefore', 'replaceChild'];
 
-export function wrapJsonP (sharedEE) {
+export function wrapJsonP(sharedEE){
   const ee = scopedEE(sharedEE)
-  if (wrapped[ee.debugId] || !isBrowserScope) return ee // JSONP deals with DOM tags
-  wrapped[ee.debugId] = true
+
+  if (!isBrowserScope || wrapped[ee.debugId]) // JSONP deals with DOM tags so browser window env is req'd
+    return ee;
+  wrapped[ee.debugId] = true;
+
   var wrapFn = wfn(ee)
 
   var CALLBACK_REGEX = /[?&](?:callback|cb)=([^&#]+)/
   var PARENT_REGEX = /(.*)\.([^.]+)/
   var VALUE_REGEX = /^(\w+)(\.|$)(.*)$/
-  var domInsertMethods = ['appendChild', 'insertBefore', 'replaceChild']
 
-  if (shouldWrap()) {
-    wrap()
-  }
-
-  function wrap () {
-    // JSONP works by dynamically inserting <script> elements - wrap DOM methods for
-    // inserting elements to detect insertion of JSONP-specific elements.
-    if (Node && Node.prototype && Node.prototype.appendChild) {
-      wrapFn.inPlace(Node.prototype, domInsertMethods, 'dom-')
-    } else {
-      wrapFn.inPlace(HTMLElement.prototype, domInsertMethods, 'dom-')
-      wrapFn.inPlace(HTMLHeadElement.prototype, domInsertMethods, 'dom-')
-      wrapFn.inPlace(HTMLBodyElement.prototype, domInsertMethods, 'dom-')
-    }
-  }
+  // JSONP works by dynamically inserting <script> elements - wrap DOM methods for
+  // inserting elements to detect insertion of JSONP-specific elements.
+  wrapFn.inPlace(Node.prototype, domInsertMethods, 'dom-')
 
   ee.on('dom-start', function (args) {
     wrapElement(args[0])
@@ -90,10 +83,6 @@ export function wrapJsonP (sharedEE) {
     }
   }
 
-  function shouldWrap () {
-    return 'addEventListener' in window
-  }
-
   function extractCallbackName (src) {
     var matches = src.match(CALLBACK_REGEX)
     return matches ? matches[1] : null
@@ -124,7 +113,13 @@ export function wrapJsonP (sharedEE) {
   }
   return ee
 }
-
-export function scopedEE (sharedEE) {
+export function unwrapJsonP(sharedEE) {
+  const ee = scopedEE(sharedEE);
+  if (wrapped[ee.debugId] === true) {
+    domInsertMethods.forEach(fnName => unwrapFunction(Node.prototype, fnName));
+    wrapped[ee.debugId] = "unwrapped";  // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
+  }
+}
+export function scopedEE(sharedEE){
   return (sharedEE || baseEE).get('jsonp')
 }

@@ -12,8 +12,9 @@ import { now } from '../../common/timing/now'
 import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
 import { isWorkerScope } from '../../common/util/global-scope'
+import { warn } from '../../common/util/console'
 
-function setTopLevelCallers (nr) {
+function setTopLevelCallers(nr) {
   const funcs = [
     'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
     'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
@@ -23,14 +24,14 @@ function setTopLevelCallers (nr) {
     nr[f] = (...args) => caller(f, ...args)
   })
 
-  function caller (fnName, ...args) {
+  function caller(fnName, ...args) {
     Object.values(nr.initializedAgents).forEach(val => {
       if (val.exposed && val.api[fnName]) val.api[fnName](...args)
     })
   }
 }
 
-export function setAPI (agentIdentifier, nr, forceDrain) {
+export function setAPI(agentIdentifier, nr, forceDrain) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
   setTopLevelCallers(nr)
   var instanceEE = ee.get(agentIdentifier)
@@ -72,7 +73,7 @@ export function setAPI (agentIdentifier, nr, forceDrain) {
     return new InteractionHandle().get()
   }
 
-  function InteractionHandle () { }
+  function InteractionHandle() { }
 
   var InteractionApiProto = InteractionHandle.prototype = {
     createTracer: function (name, cb) {
@@ -97,11 +98,11 @@ export function setAPI (agentIdentifier, nr, forceDrain) {
     }
   }
 
-  mapOwn('actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get'.split(','), function addApi (n, name) {
+  mapOwn('actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get'.split(','), function addApi(n, name) {
     InteractionApiProto[name] = apiCall(spaPrefix, name, undefined, FEATURE_NAMES.spa)
   })
 
-  function apiCall (prefix, name, notSpa, bufferGroup) {
+  function apiCall(prefix, name, notSpa, bufferGroup) {
     return function () {
       handle('record-supportability', ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
       handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup, instanceEE)
@@ -115,21 +116,16 @@ export function setAPI (agentIdentifier, nr, forceDrain) {
     handle('err', [err, now(), false, customAttributes], undefined, FEATURE_NAMES.jserrors, instanceEE)
   }
 
+
   // theres no window.load event on non-browser scopes, lazy load immediately
   if (isWorkerScope) lazyLoad()
   // try to stay out of the way of the window.load event, lazy load once that has finished.
   else onWindowLoad(() => lazyLoad(), true)
 
-  function lazyLoad () {
-    import('./apiAsync').then(({ setAPI }) => {
+  function lazyLoad() {
+    import(/* webpackChunkName: "async-api" */'./apiAsync').then(({ setAPI }) => {
       setAPI(agentIdentifier)
       drain(agentIdentifier, 'api')
-    })
+    }).catch(() => warn("Downloading runtime APIs failed..."));
   }
-
-  // experimental feature -- not ready
-  // nr.BrowserAgentInstance = async function (){
-  //   const { BrowserAgent } = await import('@newrelic/browser-agent')
-  //   return new BrowserAgent()
-  // }
 }

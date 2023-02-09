@@ -5,9 +5,9 @@
 
 const jil = require('jil')
 
-const { setup } = require('./utils/setup')
-const { wrapJsonP } = require('../../src/common/wrap/wrap-jsonp')
-const { baseEE } = setup()
+const {setup} = require('../utils/setup')
+const {wrapJsonP} = require('../../../src/common/wrap/wrap-jsonp')
+const {baseEE} = setup()
 
 jil.browserTest('functions are wrapped', function (t) {
   t.plan(9)
@@ -39,6 +39,6 @@ jil.browserTest('new property is not added to HTMLElement', function (t) {
   t.end()
 })
 
-function isWrapped (fn) {
+function isWrapped(fn) {
   return fn && (typeof fn['nr@original'] === 'function')
 }

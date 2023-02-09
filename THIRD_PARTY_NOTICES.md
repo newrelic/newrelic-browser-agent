@@ -106,10 +106,10 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 
 ### core-js
 
-This product includes source derived from [core-js](https://github.com/zloirock/core-js) ([v3.26.1](https://github.com/zloirock/core-js/tree/v3.26.1)), distributed under the [MIT License](https://github.com/zloirock/core-js/blob/v3.26.1/LICENSE):
+This product includes source derived from [core-js](https://github.com/zloirock/core-js) ([v3.27.2](https://github.com/zloirock/core-js/tree/v3.27.2)), distributed under the [MIT License](https://github.com/zloirock/core-js/blob/v3.27.2/LICENSE):
 
 ```
-Copyright (c) 2014-2022 Denis Pushkarev
+Copyright (c) 2014-2023 Denis Pushkarev
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -195,7 +195,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/core
 
-This product includes source derived from [@babel/core](https://github.com/babel/babel) ([v7.20.2](https://github.com/babel/babel/tree/v7.20.2)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.20.2/LICENSE):
+This product includes source derived from [@babel/core](https://github.com/babel/babel) ([v7.20.12](https://github.com/babel/babel/tree/v7.20.12)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.20.12/LICENSE):
 
 ```
 MIT License
@@ -285,7 +285,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/plugin-transform-modules-commonjs
 
-This product includes source derived from [@babel/plugin-transform-modules-commonjs](https://github.com/babel/babel) ([v7.19.6](https://github.com/babel/babel/tree/v7.19.6)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.19.6/LICENSE):
+This product includes source derived from [@babel/plugin-transform-modules-commonjs](https://github.com/babel/babel) ([v7.20.11](https://github.com/babel/babel/tree/v7.20.11)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.20.11/LICENSE):
 
 ```
 MIT License
@@ -949,12 +949,12 @@ This product includes source derived from [@types/node](https://github.com/Defin
 
 ### @typescript-eslint/eslint-plugin
 
-This product includes source derived from [@typescript-eslint/eslint-plugin](https://github.com/typescript-eslint/typescript-eslint) ([v5.43.0](https://github.com/typescript-eslint/typescript-eslint/tree/v5.43.0)), distributed under the [MIT License](https://github.com/typescript-eslint/typescript-eslint/blob/v5.43.0/LICENSE):
+This product includes source derived from [@typescript-eslint/eslint-plugin](https://github.com/typescript-eslint/typescript-eslint) ([v5.50.0](https://github.com/typescript-eslint/typescript-eslint/tree/v5.50.0)), distributed under the [MIT License](https://github.com/typescript-eslint/typescript-eslint/blob/v5.50.0/LICENSE):
 
 ```
 MIT License
 
-Copyright (c) 2019 TypeScript ESLint and other contributors
+Copyright (c) 2019 typescript-eslint and other contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -978,7 +978,7 @@ SOFTWARE.
 
 ### @typescript-eslint/parser
 
-This product includes source derived from [@typescript-eslint/parser](https://github.com/typescript-eslint/typescript-eslint) ([v5.43.0](https://github.com/typescript-eslint/typescript-eslint/tree/v5.43.0)), distributed under the [BSD-2-Clause License](https://github.com/typescript-eslint/typescript-eslint/blob/v5.43.0/LICENSE):
+This product includes source derived from [@typescript-eslint/parser](https://github.com/typescript-eslint/typescript-eslint) ([v5.50.0](https://github.com/typescript-eslint/typescript-eslint/tree/v5.50.0)), distributed under the [BSD-2-Clause License](https://github.com/typescript-eslint/typescript-eslint/blob/v5.50.0/LICENSE):
 
 ```
 TypeScript ESLint Parser
@@ -987,11 +987,11 @@ Copyright JS Foundation and other contributors, https://js.foundation
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
-  * Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
-  * Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
+- Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+- Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -1008,7 +1008,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### aws-sdk
 
-This product includes source derived from [aws-sdk](https://github.com/aws/aws-sdk-js) ([v2.1254.0](https://github.com/aws/aws-sdk-js/tree/v2.1254.0)), distributed under the [Apache-2.0 License](https://github.com/aws/aws-sdk-js/blob/v2.1254.0/LICENSE.txt):
+This product includes source derived from [aws-sdk](https://github.com/aws/aws-sdk-js) ([v2.1309.0](https://github.com/aws/aws-sdk-js/tree/v2.1309.0)), distributed under the [Apache-2.0 License](https://github.com/aws/aws-sdk-js/blob/v2.1309.0/LICENSE.txt):
 
 ```
 
@@ -1450,7 +1450,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### chalk
 
-This product includes source derived from [chalk](https://github.com/chalk/chalk) ([v5.1.2](https://github.com/chalk/chalk/tree/v5.1.2)), distributed under the [MIT License](https://github.com/chalk/chalk/blob/v5.1.2/license):
+This product includes source derived from [chalk](https://github.com/chalk/chalk) ([v5.2.0](https://github.com/chalk/chalk/tree/v5.2.0)), distributed under the [MIT License](https://github.com/chalk/chalk/blob/v5.2.0/license):
 
 ```
 MIT License
@@ -1688,7 +1688,7 @@ SOFTWARE.
 
 ### eslint-plugin-import
 
-This product includes source derived from [eslint-plugin-import](https://github.com/import-js/eslint-plugin-import) ([v2.26.0](https://github.com/import-js/eslint-plugin-import/tree/v2.26.0)), distributed under the [MIT License](https://github.com/import-js/eslint-plugin-import/blob/v2.26.0/LICENSE):
+This product includes source derived from [eslint-plugin-import](https://github.com/import-js/eslint-plugin-import) ([v2.27.5](https://github.com/import-js/eslint-plugin-import/tree/v2.27.5)), distributed under the [MIT License](https://github.com/import-js/eslint-plugin-import/blob/v2.27.5/LICENSE):
 
 ```
 The MIT License (MIT)
@@ -1718,7 +1718,7 @@ SOFTWARE.
 
 ### eslint
 
-This product includes source derived from [eslint](https://github.com/eslint/eslint) ([v8.31.0](https://github.com/eslint/eslint/tree/v8.31.0)), distributed under the [MIT License](https://github.com/eslint/eslint/blob/v8.31.0/LICENSE):
+This product includes source derived from [eslint](https://github.com/eslint/eslint) ([v8.33.0](https://github.com/eslint/eslint/tree/v8.33.0)), distributed under the [MIT License](https://github.com/eslint/eslint/blob/v8.33.0/LICENSE):
 
 ```
 Copyright OpenJS Foundation and other contributors, <www.openjsf.org>
@@ -1802,7 +1802,7 @@ https://creativecommons.org/licenses/by-sa/4.0/
 
 ### husky
 
-This product includes source derived from [husky](https://github.com/typicode/husky) ([v8.0.2](https://github.com/typicode/husky/tree/v8.0.2)), distributed under the [MIT License](https://github.com/typicode/husky/blob/v8.0.2/LICENSE):
+This product includes source derived from [husky](https://github.com/typicode/husky) ([v8.0.3](https://github.com/typicode/husky/tree/v8.0.3)), distributed under the [MIT License](https://github.com/typicode/husky/blob/v8.0.3/LICENSE):
 
 ```
 MIT License
@@ -2038,7 +2038,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### minimatch
 
-This product includes source derived from [minimatch](https://github.com/isaacs/minimatch) ([v3.0.5](https://github.com/isaacs/minimatch/tree/v3.0.5)), distributed under the [ISC License](https://github.com/isaacs/minimatch/blob/v3.0.5/LICENSE):
+This product includes source derived from [minimatch](https://github.com/isaacs/minimatch) ([v3.1.2](https://github.com/isaacs/minimatch/tree/v3.1.2)), distributed under the [ISC License](https://github.com/isaacs/minimatch/blob/v3.1.2/LICENSE):
 
 ```
 The ISC License
@@ -2467,7 +2467,7 @@ SOFTWARE.
 
 ### object-inspect
 
-This product includes source derived from [object-inspect](https://github.com/inspect-js/object-inspect) ([v1.12.2](https://github.com/inspect-js/object-inspect/tree/v1.12.2)), distributed under the [MIT License](https://github.com/inspect-js/object-inspect/blob/v1.12.2/LICENSE):
+This product includes source derived from [object-inspect](https://github.com/inspect-js/object-inspect) ([v1.12.3](https://github.com/inspect-js/object-inspect/tree/v1.12.3)), distributed under the [MIT License](https://github.com/inspect-js/object-inspect/blob/v1.12.3/LICENSE):
 
 ```
 MIT License
@@ -2547,7 +2547,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ### prettier
 
-This product includes source derived from [prettier](https://github.com/prettier/prettier) ([v2.8.1](https://github.com/prettier/prettier/tree/v2.8.1)), distributed under the [MIT License](https://github.com/prettier/prettier/blob/v2.8.1/LICENSE):
+This product includes source derived from [prettier](https://github.com/prettier/prettier) ([v2.8.3](https://github.com/prettier/prettier/tree/v2.8.3)), distributed under the [MIT License](https://github.com/prettier/prettier/blob/v2.8.3/LICENSE):
 
 ```
 # Prettier license
@@ -2577,7 +2577,7 @@ Repository: <https://github.com/angular/angular.git>
 
 ----------------------------------------
 
-### @babel/code-frame@v7.16.7
+### @babel/code-frame@v7.18.6
 
 License: MIT
 By: The Babel Team
@@ -2608,7 +2608,7 @@ Repository: <https://github.com/babel/babel.git>
 
 ----------------------------------------
 
-### @babel/helper-validator-identifier@v7.18.6
+### @babel/helper-validator-identifier@v7.19.1
 
 License: MIT
 By: The Babel Team
@@ -2639,7 +2639,7 @@ Repository: <https://github.com/babel/babel.git>
 
 ----------------------------------------
 
-### @babel/highlight@v7.16.10
+### @babel/highlight@v7.18.6
 
 License: MIT
 By: The Babel Team
@@ -2670,7 +2670,7 @@ Repository: <https://github.com/babel/babel.git>
 
 ----------------------------------------
 
-### @babel/parser@v7.20.1
+### @babel/parser@v7.20.7
 
 License: MIT
 By: The Babel Team
@@ -2981,7 +2981,7 @@ Repository: <https://github.com/typescript-eslint/typescript-eslint.git>
 
 ----------------------------------------
 
-### acorn@v8.8.0
+### acorn@v8.8.1
 
 License: MIT
 Repository: <https://github.com/acornjs/acorn.git>
@@ -3795,14 +3795,15 @@ By: Jon Schlinkert
 
 ----------------------------------------
 
-### defaults@v1.0.3
+### defaults@v1.0.4
 
 License: MIT
 By: Elijah Insua
-Repository: <git://github.com/tmpvar/defaults.git>
+Repository: <git://github.com/sindresorhus/node-defaults.git>
 
 > The MIT License (MIT)
 >
+> Copyright (c) 2022 Sindre Sorhus
 > Copyright (c) 2015 Elijah Insua
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -3825,7 +3826,7 @@ Repository: <git://github.com/tmpvar/defaults.git>
 
 ----------------------------------------
 
-### del@v6.0.0
+### del@v6.1.1
 
 License: MIT
 By: Sindre Sorhus
@@ -4263,7 +4264,7 @@ By: Toru Nagashima
 
 ----------------------------------------
 
-### espree@v9.4.0
+### espree@v9.4.1
 
 License: BSD-2-Clause
 By: Nicholas C. Zakas
@@ -4371,7 +4372,7 @@ Repository: <https://github.com/justmoon/node-extend.git>
 
 ----------------------------------------
 
-### fast-glob@v3.2.11
+### fast-glob@v3.2.12
 
 License: MIT
 By: Denis Malinochkin
@@ -4430,7 +4431,7 @@ Repository: <git://github.com/epoberezkin/fast-json-stable-stringify.git>
 
 ----------------------------------------
 
-### fastq@v1.13.0
+### fastq@v1.14.0
 
 License: ISC
 By: Matteo Collina
@@ -4604,7 +4605,7 @@ By: Roy Riojas
 
 ----------------------------------------
 
-### flatted@v3.2.5
+### flatted@v3.2.7
 
 License: ISC
 By: Andrea Giammarchi
@@ -4779,7 +4780,7 @@ By: Sindre Sorhus
 
 ----------------------------------------
 
-### glob@v7.2.0
+### glob@v7.2.3
 
 License: ISC
 By: Isaac Z. Schlueter
@@ -4849,14 +4850,14 @@ By: Sindre Sorhus
 
 ----------------------------------------
 
-### graceful-fs@v4.2.9
+### graceful-fs@v4.2.10
 
 License: ISC
 Repository: <https://github.com/isaacs/node-graceful-fs>
 
 > The ISC License
 >
-> Copyright (c) Isaac Z. Schlueter, Ben Noordhuis, and Contributors
+> Copyright (c) 2011-2022 Isaac Z. Schlueter, Ben Noordhuis, and Contributors
 >
 > Permission to use, copy, modify, and/or distribute this software for any
 > purpose with or without fee is hereby granted, provided that the above
@@ -5278,6 +5279,36 @@ Repository: <git@github.com:kaelzhang/node-ignore.git>
 
 ----------------------------------------
 
+### ignore@v5.2.4
+
+License: MIT
+By: kael
+Repository: <git@github.com:kaelzhang/node-ignore.git>
+
+> Copyright (c) 2013 Kael Zhang <i@kael.me>, contributors
+> http://kael.me/
+>
+> Permission is hereby granted, free of charge, to any person obtaining
+> a copy of this software and associated documentation files (the
+> "Software"), to deal in the Software without restriction, including
+> without limitation the rights to use, copy, modify, merge, publish,
+> distribute, sublicense, and/or sell copies of the Software, and to
+> permit persons to whom the Software is furnished to do so, subject to
+> the following conditions:
+>
+> The above copyright notice and this permission notice shall be
+> included in all copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+> EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+> MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+> NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+> LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+> OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+> WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+----------------------------------------
+
 ### import-fresh@v3.3.0
 
 License: MIT
@@ -5509,7 +5540,7 @@ Repository: <git://github.com/feross/is-buffer.git>
 
 ----------------------------------------
 
-### is-core-module@v2.8.1
+### is-core-module@v2.11.0
 
 License: MIT
 By: Jordan Harband
@@ -5945,7 +5976,7 @@ By: Kat Marchán
 
 ----------------------------------------
 
-### json5@v2.2.1
+### json5@v2.2.2
 
 License: MIT
 By: Aseem Kishore
@@ -7209,7 +7240,7 @@ By: Jon Schlinkert
 
 ----------------------------------------
 
-### resolve@v1.22.0
+### resolve@v1.22.1
 
 License: MIT
 By: James Halliday
@@ -7395,6 +7426,30 @@ License: ISC
 ----------------------------------------
 
 ### semver@v7.3.7
+
+License: ISC
+By: GitHub Inc.
+Repository: <https://github.com/npm/node-semver.git>
+
+> The ISC License
+>
+> Copyright (c) Isaac Z. Schlueter and Contributors
+>
+> Permission to use, copy, modify, and/or distribute this software for any
+> purpose with or without fee is hereby granted, provided that the above
+> copyright notice and this permission notice appear in all copies.
+>
+> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+> ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+> ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
+> IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+----------------------------------------
+
+### semver@v7.3.8
 
 License: ISC
 By: GitHub Inc.
@@ -8685,7 +8740,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### tape
 
-This product includes source derived from [tape](https://github.com/ljharb/tape) ([v4.16.1](https://github.com/ljharb/tape/tree/v4.16.1)), distributed under the [MIT License](https://github.com/ljharb/tape/blob/v4.16.1/LICENSE):
+This product includes source derived from [tape](https://github.com/ljharb/tape) ([v4.16.2](https://github.com/ljharb/tape/tree/v4.16.2)), distributed under the [MIT License](https://github.com/ljharb/tape/blob/v4.16.2/LICENSE):
 
 ```
 MIT License
@@ -8812,12 +8867,12 @@ SOFTWARE.
 
 ### ts-loader
 
-This product includes source derived from [ts-loader](https://github.com/TypeStrong/ts-loader) ([v9.4.1](https://github.com/TypeStrong/ts-loader/tree/v9.4.1)), distributed under the [MIT License](https://github.com/TypeStrong/ts-loader/blob/v9.4.1/LICENSE):
+This product includes source derived from [ts-loader](https://github.com/TypeStrong/ts-loader) ([v9.4.2](https://github.com/TypeStrong/ts-loader/tree/v9.4.2)), distributed under the [MIT License](https://github.com/TypeStrong/ts-loader/blob/v9.4.2/LICENSE):
 
 ```
 The MIT License (MIT)
 
-Copyright (c) 2015 TypeStrong
+Copyright (c) 2015-present TypeStrong
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8871,7 +8926,7 @@ THE SOFTWARE.
 
 ### typescript
 
-This product includes source derived from [typescript](https://github.com/Microsoft/TypeScript) ([v4.8.4](https://github.com/Microsoft/TypeScript/tree/v4.8.4)), distributed under the [Apache-2.0 License](https://github.com/Microsoft/TypeScript/blob/v4.8.4/LICENSE.txt):
+This product includes source derived from [typescript](https://github.com/Microsoft/TypeScript) ([v4.9.5](https://github.com/Microsoft/TypeScript/tree/v4.9.5)), distributed under the [Apache-2.0 License](https://github.com/Microsoft/TypeScript/blob/v4.9.5/LICENSE.txt):
 
 ```
 Apache License

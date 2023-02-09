@@ -18,9 +18,10 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
     .then(([eventsResult]) => {
       let {body, query} = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      const apiChildren = interactionTree.children.filter(child => child.type === 'ajax' && child.path === '/json');
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
-      t.equal(interactionTree.children.length, 2, 'expect 2 xhr children')
+      t.equal(apiChildren.length, 2, 'expect 2 xhr children')
       t.equal(interactionTree.children[0].type, 'ajax', 'first child should be an ajax')
       t.equal(interactionTree.children[1].type, 'ajax', 'second child should be an ajax')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')

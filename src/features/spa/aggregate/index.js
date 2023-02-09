@@ -204,7 +204,10 @@ export class Aggregate extends AggregateBase {
         // so that it has a chance to possibly start an interaction.
         if (INTERACTION_EVENTS.indexOf(evName) !== -1) {
           var ixn = new Interaction(evName, this[FN_START], state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
+
+          // Store the interaction as prevInteraction in case it is prematurely discarded
           state.prevInteraction = ixn
+
           setCurrentNode(ixn.root)
 
           if (evName === 'click') {
@@ -278,6 +281,16 @@ export class Aggregate extends AggregateBase {
     // context is stored on the xhr and is shared with all callbacks associated
     // with the new xhr
     register('new-xhr', function () {
+      if (!state.currentNode && state.prevInteraction && !state.prevInteraction.ignored) {
+        /*
+         * The previous interaction was discarded before a route change. Restore the interaction
+         * in case this XHR is associated with a route change.
+         */
+        const interaction = state.prevInteraction
+        state.currentNode = interaction.root;
+        interaction.root.end = null
+      }
+
       if (state.currentNode) {
         this[SPA_NODE] = state.currentNode.child('ajax', null, null, true)
       }
@@ -370,9 +383,21 @@ export class Aggregate extends AggregateBase {
     },  this.featureName, jsonpEE)
 
     register(FETCH_START, function (fetchArguments, dtPayload) {
-      if (state.currentNode && fetchArguments) {
-        this[SPA_NODE] = state.currentNode.child('ajax', this[FETCH_START])
-        if (dtPayload && this[SPA_NODE]) this[SPA_NODE].dt = dtPayload
+      if (fetchArguments) {
+        if (!state.currentNode && state.prevInteraction && !state.prevInteraction.ignored) {
+          /*
+           * The previous interaction was discarded before a route change. Restore the interaction
+           * in case this XHR is associated with a route change.
+           */
+          const interaction = state.prevInteraction
+          state.currentNode = interaction.root;
+          interaction.root.end = null
+        }
+
+        if (state.currentNode) {
+          this[SPA_NODE] = state.currentNode.child('ajax', this[FETCH_START])
+          if (dtPayload && this[SPA_NODE]) this[SPA_NODE].dt = dtPayload
+        }
       }
     },  this.featureName, fetchEE)
 
@@ -689,6 +714,7 @@ export class Aggregate extends AggregateBase {
         // recursive loop issue.
         state.prevInteraction = null;
       }
+
       // assign unique id, this is serialized and used to link interactions with errors
       interaction.root.attrs.id = generateUuid()
 

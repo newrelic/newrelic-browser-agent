@@ -8,9 +8,7 @@ const jil = require('jil')
 if (process.browser) {
   var helpers = require('./helpers')
   var loaded = false
-  helpers.onWindowLoad(() => {
-    loaded = true
-  })
+  helpers.onWindowLoad(() => { loaded = true })
 }
 
 jil.browserTest('spa interaction triggered by pushstate + popstate', function (t) {
@@ -24,15 +22,13 @@ jil.browserTest('spa interaction triggered by pushstate + popstate', function (t
 
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
-      }
-    ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: []
+    }]
   })
 
   t.plan(5 + validator.count)
@@ -42,9 +38,7 @@ jil.browserTest('spa interaction triggered by pushstate + popstate', function (t
   function checkLoaded () {
     if (loaded) {
       window.history.pushState({}, '', '/newurl')
-      helpers.startInteraction(onInteractionStart, afterInteractionDone, {
-        eventType: 'popstate'
-      })
+      helpers.startInteraction(onInteractionStart, afterInteractionDone, { eventType: 'popstate' })
     } else {
       setTimeout(checkLoaded, 100)
     }
@@ -60,11 +54,7 @@ jil.browserTest('spa interaction triggered by pushstate + popstate', function (t
     t.ok(interaction.routeChange, 'should be a route change')
 
     let root = interaction.root
-    t.equal(
-      root.attrs.oldURL,
-      window.location.protocol + '//' + window.location.host + '/newurl',
-      'old url should be the url navigated from'
-    )
+    t.equal(root.attrs.oldURL, window.location.protocol + '//' + window.location.host + '/newurl', 'old url should be the url navigated from')
     t.equal(root.attrs.newURL, originalURL, 'new url should be the current url')
     validator.validate(t, interaction)
     t.end()

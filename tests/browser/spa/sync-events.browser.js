@@ -29,43 +29,34 @@ jil.browserTest('sync event in timer', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: [
-          {
-            name: 'ajax',
-            children: [
-              {
-                type: 'customTracer',
-                attrs: {
-                  name: 'timer'
-                },
-                children: [
-                  {
-                    type: 'customTracer',
-                    attrs: {
-                      name: 'timer'
-                    },
-                    children: []
-                  }
-                ]
-              }
-            ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: [{
+        name: 'ajax',
+        children: [{
+          type: 'customTracer',
+          attrs: {
+            name: 'timer'
           },
-          {
+          children: [{
             type: 'customTracer',
             attrs: {
               name: 'timer'
             },
             children: []
-          }
-        ]
-      }
-    ]
+          }]
+        }]
+      }, {
+        type: 'customTracer',
+        attrs: {
+          name: 'timer'
+        },
+        children: []
+      }]
+    }]
   })
 
   t.plan(2 + validator.count)
@@ -75,27 +66,22 @@ jil.browserTest('sync event in timer', function (t) {
   })
 
   function onInteractionStart (cb) {
-    setTimeout(
-      newrelic.interaction().createTracer('timer', () => {
-        var first = true
-        var xhr = new XMLHttpRequest()
+    setTimeout(newrelic.interaction().createTracer('timer', () => {
+      var first = true
+      var xhr = new XMLHttpRequest()
 
-        xhr.onreadystatechange = function () {
-          if (!first) return
-          first = false
-          setTimeout(
-            newrelic.interaction().createTracer('timer', function () {
-              setTimeout(newrelic.interaction().createTracer('timer', cb))
-            })
-          )
-        }
+      xhr.onreadystatechange = function () {
+        if (!first) return
+        first = false
+        setTimeout(newrelic.interaction().createTracer('timer', function () {
+          setTimeout(newrelic.interaction().createTracer('timer', cb))
+        }))
+      }
 
-        xhr.open('GET', '/')
-        xhr.send()
-        setTimeout(newrelic.interaction().createTracer('timer', function () {}))
-      }),
-      0
-    )
+      xhr.open('GET', '/')
+      xhr.send()
+      setTimeout(newrelic.interaction().createTracer('timer', function () {}))
+    }), 0)
   }
 
   function afterInteractionDone (interaction) {
@@ -110,35 +96,28 @@ jil.browserTest('sync event in click', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [
-      {
-        name: 'ajax',
-        children: [
-          {
-            type: 'customTracer',
-            attrs: {
-              name: 'timer'
-            },
-            children: [
-              {
-                type: 'customTracer',
-                attrs: {
-                  name: 'timer'
-                },
-                children: []
-              }
-            ]
-          }
-        ]
-      },
-      {
+    children: [{
+      name: 'ajax',
+      children: [{
         type: 'customTracer',
         attrs: {
           name: 'timer'
         },
-        children: []
-      }
-    ]
+        children: [{
+          type: 'customTracer',
+          attrs: {
+            name: 'timer'
+          },
+          children: []
+        }]
+      }]
+    }, {
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: []
+    }]
   })
 
   t.plan(2 + validator.count)
@@ -154,11 +133,9 @@ jil.browserTest('sync event in click', function (t) {
     xhr.onreadystatechange = function () {
       if (!first) return
       first = false
-      setTimeout(
-        newrelic.interaction().createTracer('timer', function () {
-          setTimeout(newrelic.interaction().createTracer('timer', cb))
-        })
-      )
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        setTimeout(newrelic.interaction().createTracer('timer', cb))
+      }))
     }
 
     xhr.open('GET', '/')

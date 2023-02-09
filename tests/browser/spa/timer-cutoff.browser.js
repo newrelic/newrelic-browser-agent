@@ -16,15 +16,13 @@ jil.browserTest('timer cutoff', function (t) {
         custom: true
       }
     },
-    children: [
-      {
-        type: 'customTracer',
-        children: [],
-        attrs: {
-          name: 'custom-long-timer'
-        }
+    children: [{
+      type: 'customTracer',
+      children: [],
+      attrs: {
+        name: 'custom-long-timer'
       }
-    ]
+    }]
   })
 
   t.plan(3 + validator.count)
@@ -39,13 +37,10 @@ jil.browserTest('timer cutoff', function (t) {
         newrelic.interaction().setAttribute('excluded', true)
       }, 999)
 
-      setTimeout(
-        newrelic.interaction().createTracer('custom-long-timer', function () {
-          newrelic.interaction().setAttribute('custom', true)
-          cb()
-        }),
-        600
-      )
+      setTimeout(newrelic.interaction().createTracer('custom-long-timer', function () {
+        newrelic.interaction().setAttribute('custom', true)
+        cb()
+      }), 600)
 
       setTimeout(function () {
         newrelic.interaction().setAttribute('included', true)

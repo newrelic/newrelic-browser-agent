@@ -102,6 +102,9 @@ module.exports = {
     'no-extend-native': 'off',
     'no-case-declarations': 'off',
     'no-eval': 'off',
-    'no-mixed-operators': 'off'
+    'no-mixed-operators': 'off',
+    'no-tabs': 'off',
+    'no-mixed-spaces-and-tabs': 'off',
+    'no-return-assign': 'off'
   }
 }

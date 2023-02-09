@@ -13,8 +13,8 @@ import { HarvestScheduler } from '../../src/common/harvest/harvest-scheduler'
 
 const { agentIdentifier, aggregator } = setup()
 const nrInfo = { errorBeacon: 'foo', licenseKey: 'bar' }
-const nrOrigin = 'http://foo.com?bar=crunchy#bacon'
-;(() => {
+const nrOrigin = 'http://foo.com?bar=crunchy#bacon';
+(() => {
   setInfo(agentIdentifier, nrInfo)
   setRuntime(agentIdentifier, { origin: nrOrigin })
 })()
@@ -64,11 +64,7 @@ test('after calling startTimer, periodically invokes harvest', function (t) {
   resetSpies()
   var calls = 0
 
-  var scheduler = new HarvestScheduler(
-    'endpoint',
-    { onFinished: onFinished, getPayload: getPayload },
-    aggregator.sharedContext
-  )
+  var scheduler = new HarvestScheduler('endpoint', { onFinished: onFinished, getPayload: getPayload }, aggregator.sharedContext)
   scheduler.startTimer(0.1)
 
   function getPayload () {
@@ -109,11 +105,7 @@ test('scheduleHarvest invokes harvest once', function (t) {
 
 test('when getPayload is provided, calls harvest.send', function (t) {
   resetSpies()
-  var scheduler = new HarvestScheduler(
-    'endpoint',
-    { onFinished: onFinished, getPayload: getPayload },
-    aggregator.sharedContext
-  )
+  var scheduler = new HarvestScheduler('endpoint', { onFinished: onFinished, getPayload: getPayload }, aggregator.sharedContext)
   scheduler.startTimer(0.1)
 
   function getPayload () {
@@ -183,11 +175,7 @@ test('when retrying, uses delay provided by harvest response', function (t) {
   })
   sinon.spy(HarvestScheduler.prototype, 'scheduleHarvest')
 
-  var scheduler = new HarvestScheduler(
-    'endpoint',
-    { onFinished: onFinished, getPayload: getPayload },
-    aggregator.sharedContext
-  )
+  var scheduler = new HarvestScheduler('endpoint', { onFinished: onFinished, getPayload: getPayload }, aggregator.sharedContext)
   scheduler.scheduleHarvest(0.1)
 
   var count = 0

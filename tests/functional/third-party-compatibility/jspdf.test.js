@@ -28,24 +28,18 @@ const init = {
   }
 }
 
-var timedPromiseAll = (promises, ms) =>
-  Promise.race([
-    new Promise((resolve) => {
-      setTimeout(() => resolve(), ms)
-    }),
-    Promise.all(promises)
-  ])
+var timedPromiseAll = (promises, ms) => Promise.race([
+  new Promise((resolve) => {
+    setTimeout(() => resolve(), ms)
+  }),
+  Promise.all(promises)
+])
 
 testDriver.test('jspdf generation should not cause error', supported, function (t, browser, router) {
   // t.plan(1)
 
   // This only works with the full loader. With the SPA loader, an internal error is still generated but the PDF is now generating.
-  let loadPromise = browser.get(
-    router.assetURL('third-party-compatibility/jspdf.html', {
-      loader: 'full',
-      init
-    })
-  )
+  let loadPromise = browser.get(router.assetURL('third-party-compatibility/jspdf.html', { loader: 'full', init }))
   let rumPromise = router.expectRum()
   let errPromise = router.expectErrors()
 
@@ -65,6 +59,5 @@ testDriver.test('jspdf generation should not cause error', supported, function (
         t.pass('Did not generate "error" payload')
       }
       t.end()
-    })
-    .catch(fail)
+    }).catch(fail)
 })

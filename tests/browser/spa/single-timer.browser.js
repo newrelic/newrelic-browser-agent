@@ -9,15 +9,13 @@ jil.browserTest('spa single timer', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
-      }
-    ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: []
+    }]
   })
 
   t.plan(3 + validator.count)
@@ -26,12 +24,9 @@ jil.browserTest('spa single timer', function (t) {
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
   function onInteractionStart (cb) {
-    setTimeout(
-      newrelic.interaction().createTracer('timer', () => {
-        cb()
-      }),
-      5
-    )
+    setTimeout(newrelic.interaction().createTracer('timer', () => {
+      cb()
+    }), 5)
   }
 
   function afterInteractionDone (interaction) {

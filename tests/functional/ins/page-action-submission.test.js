@@ -85,7 +85,9 @@ testDriver.test('PageAction submission on final harvest', function (t, browser, 
     .then(({ req, query, body }) => {
       let insPromise = router.expectIns()
 
-      let loadPromise = browser.safeEval('newrelic.addPageAction("DummyEvent", { free: "tacos" })').get(url)
+      let loadPromise = browser
+        .safeEval('newrelic.addPageAction("DummyEvent", { free: "tacos" })')
+        .get(url)
 
       return Promise.all([insPromise, loadPromise]).then(([ins, load]) => {
         return ins
@@ -124,9 +126,7 @@ testDriver.test('precedence', function (t, browser, router) {
       return browser.safeEval('newrelic.setCustomAttribute("browserHeight", 705)')
     })
     .then(() => {
-      browser
-        .safeEval('newrelic.addPageAction("MyEvent", { referrerUrl: "http://test.com", foo: {bar: "baz"} })')
-        .catch(fail(t))
+      browser.safeEval('newrelic.addPageAction("MyEvent", { referrerUrl: "http://test.com", foo: {bar: "baz"} })').catch(fail(t))
       return router.expectIns()
     })
     .then(({ req, query, body }) => {

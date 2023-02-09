@@ -18,8 +18,7 @@ testDriver.test('ensure scroll listener IS passive if supported', stn.and(suppor
   Promise.all([rumPromise, resourcePromise, loadPromise])
     .then(() => {
       return browser.safeEval('window.isPassive && window.gotScroll')
-    })
-    .then((value) => {
+    }).then((value) => {
       t.ok(value)
       t.end()
     })
@@ -31,32 +30,27 @@ testDriver.test('ensure scroll listener IS passive if supported', stn.and(suppor
   }
 })
 
-testDriver.test(
-  'ensure scroll listener IS NOT passive if not supported',
-  stn.and(supported.inverse()),
-  function (t, browser, router) {
-    t.plan(1)
+testDriver.test('ensure scroll listener IS NOT passive if not supported', stn.and(supported.inverse()), function (t, browser, router) {
+  t.plan(1)
 
-    let resourcePromise = router.expectResources()
-    let rumPromise = router.expectRum()
-    let loadPromise = browser.get(router.assetURL('stn/ensure-passive.html'))
+  let resourcePromise = router.expectResources()
+  let rumPromise = router.expectRum()
+  let loadPromise = browser.get(router.assetURL('stn/ensure-passive.html'))
 
-    Promise.all([rumPromise, resourcePromise, loadPromise])
-      .then(() => {
-        return browser.safeEval('!window.isPassive && window.gotScroll')
-      })
-      .then((value) => {
-        t.ok(value)
-        t.end()
-      })
-      .catch(fail)
-
-    function fail (err) {
-      t.error(err, 'unexpected error')
+  Promise.all([rumPromise, resourcePromise, loadPromise])
+    .then(() => {
+      return browser.safeEval('!window.isPassive && window.gotScroll')
+    }).then((value) => {
+      t.ok(value)
       t.end()
-    }
+    })
+    .catch(fail)
+
+  function fail (err) {
+    t.error(err, 'unexpected error')
+    t.end()
   }
-)
+})
 
 testDriver.test('does not support session traces', stn.inverse(), function (t, browser, router) {
   t.end()

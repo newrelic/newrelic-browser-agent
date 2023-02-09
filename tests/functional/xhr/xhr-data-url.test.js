@@ -22,13 +22,12 @@ const init = {
  * @param {number} ms - milliseconds before resolving with undefined.
  * @returns
  */
-var timedPromiseAll = (promises, ms) =>
-  Promise.race([
-    new Promise((resolve) => {
-      setTimeout(() => resolve(), ms)
-    }),
-    Promise.all(promises)
-  ])
+var timedPromiseAll = (promises, ms) => Promise.race([
+  new Promise((resolve) => {
+    setTimeout(() => resolve(), ms)
+  }),
+  Promise.all(promises)
+])
 
 /**
  * Data URLs should not be included in XHR collection. In addition, because these are not typical URLs with a hostname,
@@ -44,9 +43,7 @@ testDriver.test('Ignoring data url XHR events.', function (t, browser, router) {
   Promise.all([loadPromise, rumPromise])
     .then(() => {
       // XHR events harvest every 1 second. If 2 seconds pass and the promise is not resolved, no XHR response was received.
-      const ajaxPromise = router.expectSpecificEvents({
-        condition: (e) => e.type === 'ajax' && e.domain === 'undefined:undefined'
-      })
+      const ajaxPromise = router.expectSpecificEvents({ condition: (e) => e.type === 'ajax' && e.domain === 'undefined:undefined' })
       return timedPromiseAll([ajaxPromise], 2000)
     })
     .then((response) => {
@@ -57,9 +54,7 @@ testDriver.test('Ignoring data url XHR events.', function (t, browser, router) {
         t.pass('Did not receive an XHR event for data URL.')
       }
       // XHR events harvest every 1 second. If 2 seconds pass and the promise is not resolved, no XHR response was received.
-      const harvestPromise = router.expectSpecificEvents({
-        condition: (e) => e.type === 'ajax' && e.path.substring(0, 7) === '/events'
-      })
+      const harvestPromise = router.expectSpecificEvents({ condition: (e) => e.type === 'ajax' && e.path.substring(0, 7) === '/events' })
       return timedPromiseAll([harvestPromise], 2000)
     })
     .then((response) => {

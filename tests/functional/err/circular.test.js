@@ -12,29 +12,25 @@ testDriver.test('encoding error where message contains a circular reference', su
   t.plan(2)
 
   let rumPromise = router.expectRumAndErrors()
-  let loadPromise = browser.get(
-    router.assetURL('circular.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        metrics: {
-          enabled: false
-        }
+  let loadPromise = browser.get(router.assetURL('circular.html', {
+    init: {
+      page_view_timing: {
+        enabled: false
+      },
+      metrics: {
+        enabled: false
       }
-    })
-  )
+    }
+  }))
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([response]) => {
-      const actualErrors = getErrorsFromResponse(response, browser)
+  Promise.all([rumPromise, loadPromise]).then(([response]) => {
+    const actualErrors = getErrorsFromResponse(response, browser)
 
-      t.equal(actualErrors.length, 1, 'exactly one error')
+    t.equal(actualErrors.length, 1, 'exactly one error')
 
-      let actualError = actualErrors[0]
-      t.equal(actualError.params.message, expectedErrorForBrowser(browser), 'has the expected message')
-    })
-    .catch(fail)
+    let actualError = actualErrors[0]
+    t.equal(actualError.params.message, expectedErrorForBrowser(browser), 'has the expected message')
+  }).catch(fail)
 
   function fail (err) {
     t.error(err)

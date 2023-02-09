@@ -33,7 +33,7 @@ test('api', function (t) {
       var aggs = agg.take(['cm'])
       cm = aggs.cm
       finishedTime = cm[0].metrics.time.t
-    } catch (e) {}
+    } catch (e) { }
 
     t.ok(finishedTime > 0, `Set custom metric for finished time: ${finishedTime} > 0`)
     t.equal(typeof cm[1], 'undefined', 'only finish once')

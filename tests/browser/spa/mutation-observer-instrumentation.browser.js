@@ -13,22 +13,19 @@ jil.browserTest('basic MutationObserver instrumentation', function (t) {
       trigger: 'click'
     },
     name: 'interaction',
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
       },
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
-      }
-    ]
+      children: []
+    }, {
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: []
+    }]
   })
 
   t.plan(validator.count + 2)

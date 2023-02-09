@@ -269,9 +269,7 @@ jil.browserTest('removeEventListener works when same callback is passed for diff
 
   t.end()
 
-  function handler () {
-    handlerCallCount++
-  }
+  function handler () { handlerCallCount++ }
 })
 
 jil.browserTest('removeEventListener works when same callback is passed for different elements', function (t) {
@@ -302,9 +300,7 @@ jil.browserTest('removeEventListener works when same callback is passed for diff
 
   t.end()
 
-  function handler () {
-    handlerCallCount++
-  }
+  function handler () { handlerCallCount++ }
 })
 
 function triggerEvent (el, eventName) {

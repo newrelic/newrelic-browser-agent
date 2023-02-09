@@ -23,27 +23,21 @@ testDriver.test('reporting errors from setTimeout callbacks', supported, functio
   let rumPromise = router.expectRumAndConditionAndErrors('window.setTimeoutFired')
   let loadPromise = browser.get(assetURL)
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([response]) => {
-      assertErrorAttributes(t, response.query)
-      const actualErrors = getErrorsFromResponse(response, browser)
-      let expectedErrors = [
-        {
-          name: 'Error',
-          message: 'timeout callback',
-          stack: [
-            {
-              u: router.assetURL('js/set-timeout-error.js').split('?')[0],
-              l: 9
-            }
-          ]
-        }
-      ]
+  Promise.all([rumPromise, loadPromise]).then(([response]) => {
+    assertErrorAttributes(t, response.query)
+    const actualErrors = getErrorsFromResponse(response, browser)
+    let expectedErrors = [{
+      name: 'Error',
+      message: 'timeout callback',
+      stack: [{
+        u: router.assetURL('js/set-timeout-error.js').split('?')[0],
+        l: 9
+      }]
+    }]
 
-      assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL)
-      t.end()
-    })
-    .catch(fail)
+    assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL)
+    t.end()
+  }).catch(fail)
 
   function fail (err) {
     t.error(err)

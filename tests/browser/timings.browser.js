@@ -213,9 +213,9 @@ var testCases = [
 // In the agent, however, we store timing attributes as a map.
 function getAgentInternalFormat (inputInQueryPackDecodedFormat) {
   var agentFormat = JSON.parse(JSON.stringify(inputInQueryPackDecodedFormat))
-  agentFormat.forEach((timingNode) => {
+  agentFormat.forEach(timingNode => {
     timingNode.attrs = {}
-    timingNode.attributes.forEach((attr) => {
+    timingNode.attributes.forEach(attr => {
       timingNode.attrs[attr.key] = attr.value
     })
     delete timingNode.attributes
@@ -224,16 +224,16 @@ function getAgentInternalFormat (inputInQueryPackDecodedFormat) {
 }
 
 function haveCustomAttributes (timings) {
-  return timings.every((timing) => {
-    return timing.attributes.some((attr) => {
+  return timings.every(timing => {
+    return timing.attributes.some(attr => {
       return attr.key === 'custom' && attr.value === 'val'
     })
   })
 }
 
 function overriddenReservedAttributes (timings) {
-  return timings.some((timing) => {
-    return timing.attributes.some((attr) => {
+  return timings.some(timing => {
+    return timing.attributes.some(attr => {
       return attr.key === 'cls' && attr.value === 'customVal'
     })
   })
@@ -261,7 +261,7 @@ jil.browserTest('page-view-timing serializer default attributes', function (t) {
   waitForWindowLoad(startTest)
 
   function startTest () {
-    testCases.forEach((testCase) => {
+    testCases.forEach(testCase => {
       var expectedPayload = qp.encode(testCase.input, schema)
       var payload = pvtAgg.getPayload(getAgentInternalFormat(testCase.input))
       t.equal(payload, expectedPayload, testCase.name)
@@ -278,11 +278,9 @@ jil.browserTest('page-view-timing serializer handles custom attributes', functio
 
   function startTest () {
     // should add custom, should not add cls (reserved)
-    setInfo(agentIdentifier, {
-      jsAttributes: { custom: 'val', cls: 'customVal' }
-    })
+    setInfo(agentIdentifier, { jsAttributes: { custom: 'val', cls: 'customVal' } })
 
-    testCases.forEach((testCase) => {
+    testCases.forEach(testCase => {
       var payload = pvtAgg.getPayload(getAgentInternalFormat(testCase.input))
       var events = qp.decode(payload)
       var hasReserved = overriddenReservedAttributes(events)

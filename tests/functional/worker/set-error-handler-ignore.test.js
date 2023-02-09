@@ -16,7 +16,7 @@ const init = {
   }
 }
 
-workerTypes.forEach((type) => {
+workerTypes.forEach(type => {
   ignoreErrorsTest(type, typeToMatcher(type))
 })
 
@@ -40,28 +40,26 @@ function ignoreErrorsTest (type, matcher) {
             return err.message === 'ignore'
           })
         }
-      ].map((x) => x.toString())
+      ].map(x => x.toString())
     })
 
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise])
-      .then(([response]) => {
-        assertErrorAttributes(t, response.query, 'has errors')
+    Promise.all([errPromise, loadPromise]).then(([response]) => {
+      assertErrorAttributes(t, response.query, 'has errors')
 
-        const actualErrors = getErrorsFromResponse(response, browser)
-        t.equal(actualErrors.length, 1, 'exactly one error')
+      const actualErrors = getErrorsFromResponse(response, browser)
+      t.equal(actualErrors.length, 1, 'exactly one error')
 
-        let actualError = actualErrors[0]
-        t.equal(actualError.metrics.count, 1, 'Should have seen 1 error')
-        t.ok(actualError.metrics.time.t > 0, 'Should have a valid timestamp')
-        t.equal(actualError.params.exceptionClass, 'Error', 'Should be Error class')
-        t.equal(actualError.params.message, 'report', 'Should have correct message')
-        t.ok(actualError.params.stack_trace, 'Should have a stack trace')
-        t.end()
-      })
-      .catch(fail)
+      let actualError = actualErrors[0]
+      t.equal(actualError.metrics.count, 1, 'Should have seen 1 error')
+      t.ok(actualError.metrics.time.t > 0, 'Should have a valid timestamp')
+      t.equal(actualError.params.exceptionClass, 'Error', 'Should be Error class')
+      t.equal(actualError.params.message, 'report', 'Should have correct message')
+      t.ok(actualError.params.stack_trace, 'Should have a stack trace')
+      t.end()
+    }).catch(fail)
 
     function fail (err) {
       t.error(err)

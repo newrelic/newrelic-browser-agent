@@ -7,7 +7,8 @@ const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
 
 let notSafariWithSeleniumBug = testDriver.Matcher.withFeature('notSafariWithSeleniumBug')
-let supported = testDriver.Matcher.withFeature('hasInnerText').and(notSafariWithSeleniumBug)
+let supported = testDriver.Matcher.withFeature('hasInnerText')
+  .and(notSafariWithSeleniumBug)
 
 const init = {
   ajax: {
@@ -31,7 +32,9 @@ testDriver.test('captures innerText', supported, function (t, browser, router) {
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
       let eventPromise = router.expectEvents()
-      let domPromise = browser.elementByCssSelector('#one').click()
+      let domPromise = browser
+        .elementByCssSelector('#one')
+        .click()
 
       return Promise.all([eventPromise, domPromise]).then(([eventData]) => {
         return eventData
@@ -70,7 +73,9 @@ testDriver.test('captures value', supported, function (t, browser, router) {
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
       let eventPromise = router.expectEvents()
-      let domPromise = browser.elementByCssSelector('#two').click()
+      let domPromise = browser
+        .elementByCssSelector('#two')
+        .click()
 
       return Promise.all([eventPromise, domPromise]).then(([eventData]) => {
         return eventData
@@ -109,7 +114,9 @@ testDriver.test('captures title', supported, function (t, browser, router) {
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
       let eventPromise = router.expectEvents()
-      let domPromise = browser.elementByCssSelector('#three').click()
+      let domPromise = browser
+        .elementByCssSelector('#three')
+        .click()
 
       return Promise.all([eventPromise, domPromise]).then(([eventData]) => {
         return eventData

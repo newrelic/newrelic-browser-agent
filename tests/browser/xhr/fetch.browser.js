@@ -29,11 +29,10 @@ var testCases = [
       t.equals(params.pathname, '/json', 'pathname')
       t.equals(metrics.txSize, 0, 'request size')
       t.equals(metrics.rxSize, 14, 'response size')
-      t.ok(metrics.duration >= 0, 'duration is a positive number')
-      t.ok(start >= 0, 'start is a positive number')
+      t.ok(metrics.duration > 1, 'duration is a positive number')
+      t.ok(start > 0, 'start is a positive number')
     }
-  },
-  {
+  }, {
     name: 'fetch with Request parameter',
     invoke: function () {
       var request = new Request('/json')
@@ -46,11 +45,10 @@ var testCases = [
       t.equals(params.pathname, '/json', 'pathname')
       t.equals(metrics.txSize, 0, 'request size')
       t.equals(metrics.rxSize, 14, 'response size')
-      t.ok(metrics.duration >= 0, 'duration is a positive number')
-      t.ok(start >= 0, 'start is a positive number')
+      t.ok(metrics.duration > 1, 'duration is a positive number')
+      t.ok(start > 0, 'start is a positive number')
     }
-  },
-  {
+  }, {
     name: 'fetch with URL parameter',
     invoke: function () {
       var request = new URL('http://' + assetServerHostname + ':' + assetServerPort + '/json')
@@ -63,8 +61,8 @@ var testCases = [
       t.equals(params.pathname, '/json', 'pathname')
       t.equals(metrics.txSize, 0, 'request size')
       t.equals(metrics.rxSize, 14, 'response size')
-      t.ok(metrics.duration >= 0, 'duration is a positive number')
-      t.ok(start >= 0, 'start is a positive number')
+      t.ok(metrics.duration > 1, 'duration is a positive number')
+      t.ok(start > 0, 'start is a positive number')
     }
   },
   {
@@ -80,8 +78,8 @@ var testCases = [
       t.equals(params.pathname, '/paththatdoesnotexist', 'pathname')
       t.equals(metrics.txSize, 0, 'request size')
       t.ok(!metrics.rxSize, 'response size is not defined')
-      t.ok(metrics.duration >= 0, 'duration is a positive number')
-      t.ok(start >= 0, 'start is a positive number')
+      t.ok(metrics.duration > 1, 'duration is a positive number')
+      t.ok(start > 0, 'start is a positive number')
     }
   }
 ]

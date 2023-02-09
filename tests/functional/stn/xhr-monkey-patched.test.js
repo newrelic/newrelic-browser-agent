@@ -14,13 +14,11 @@ testDriver.test('posts session traces when xhr is monkey patched', supported, fu
   let resourcePromise = router.expectResources()
   let loadPromise = browser.get(router.assetURL('xhr-monkey-patched.html'))
 
-  Promise.all([resourcePromise, rumPromise, loadPromise])
-    .then(([{ query }]) => {
-      t.ok(+query.st > 1408126770885, `Got start time ${query.st}`)
-      t.notok(query.ptid, 'No ptid on first harvest')
-      t.end()
-    })
-    .catch(fail)
+  Promise.all([resourcePromise, rumPromise, loadPromise]).then(([{ query }]) => {
+    t.ok(+query.st > 1408126770885, `Got start time ${query.st}`)
+    t.notok(query.ptid, 'No ptid on first harvest')
+    t.end()
+  }).catch(fail)
 
   function fail (err) {
     t.error(err, 'unexpected error')

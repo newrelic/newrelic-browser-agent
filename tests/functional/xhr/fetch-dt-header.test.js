@@ -4,14 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {
-  fail,
-  testCases,
-  validateNewrelicHeader,
-  validateNoNewrelicHeader,
-  validateTraceContextHeaders,
-  validateNoTraceContextHeaders
-} = require('./helpers')
+const { fail, testCases, validateNewrelicHeader, validateNoNewrelicHeader, validateTraceContextHeaders, validateNoTraceContextHeaders } = require('./helpers')
 
 let fetchBrowsers = testDriver.Matcher.withFeature('fetch')
 
@@ -72,21 +65,8 @@ testCases.forEach((testCase) => {
           htmlFile = scenario.crossOriginFile
         }
 
-        let loadPromise = browser.get(
-          router.assetURL(
-            htmlFile,
-            {
-              testId: router.testID,
-              injectUpdatedLoaderConfig: true,
-              config,
-              init
-            },
-            useRouterUrl
-          )
-        )
-        let fetchPromise = router.expectCustomGet('/dt/{key}', (req, res) => {
-          res.end('ok')
-        })
+        let loadPromise = browser.get(router.assetURL(htmlFile, { testId: router.testID, injectUpdatedLoaderConfig: true, config, init }, useRouterUrl))
+        let fetchPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') })
 
         Promise.all([fetchPromise, loadPromise])
           .then(([{ headers }]) => {

@@ -49,12 +49,8 @@ jil.browserTest('eventListener methods work as expected after abort', function (
 
   t.end()
 
-  function handler1 () {
-    handler1CallCount++
-  }
-  function handler2 () {
-    handler2CallCount++
-  }
+  function handler1 () { handler1CallCount++ }
+  function handler2 () { handler2CallCount++ }
 })
 
 function triggerEvent (el, eventName) {

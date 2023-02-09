@@ -56,27 +56,25 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
     }
   ]
 
-  cases.forEach((testCase) => {
+  cases.forEach(testCase => {
     t.test(testCase.name, function (t) {
       let rumPromise = router.expectRum()
       let eventsPromise = router.expectEvents()
-      let loadPromise = browser.safeGet(
-        router.assetURL('spa/ajax-deny-list.html', {
-          loader: 'spa',
-          init: {
-            ajax: {
-              deny_list: testCase.denyList,
-              enabled: true
-            },
-            page_view_timing: {
-              enabled: false
-            },
-            metrics: {
-              enabled: false
-            }
+      let loadPromise = browser.safeGet(router.assetURL('spa/ajax-deny-list.html', {
+        loader: 'spa',
+        init: {
+          ajax: {
+            deny_list: testCase.denyList,
+            enabled: true
+          },
+          page_view_timing: {
+            enabled: false
+          },
+          metrics: {
+            enabled: false
           }
-        })
-      )
+        }
+      }))
 
       Promise.all([eventsPromise, rumPromise, loadPromise])
         .then(([eventsResult]) => {

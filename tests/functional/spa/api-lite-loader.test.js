@@ -38,7 +38,9 @@ testDriver.test('sends interaction id and nodeId', supported, function (t, brows
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
       let eventPromise = router.expectEvents()
-      let domPromise = browser.elementByCssSelector('body').click()
+      let domPromise = browser
+        .elementByCssSelector('body')
+        .click()
 
       return Promise.all([eventPromise, domPromise]).then(([eventData]) => {
         return eventData

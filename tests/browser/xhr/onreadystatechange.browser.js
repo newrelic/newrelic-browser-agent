@@ -23,10 +23,7 @@ jil.browserTest('xhr with onreadystatechange assigned after send', async functio
 
     xhr.onreadystatechange = function (e) {
       if (ffVersion > 10) {
-        t.ok(
-          xhr.onreadystatechange['nr@original'],
-          'onreadystatechange should be wrapped for readyState ' + xhr.readyState
-        )
+        t.ok(xhr.onreadystatechange['nr@original'], 'onreadystatechange should be wrapped for readyState ' + xhr.readyState)
       }
 
       if (xhr.readyState === 1) {
@@ -83,10 +80,7 @@ jil.browserTest('multiple XHRs with onreadystatechange assigned after send', asy
 
     function handleReadyStateChange (e) {
       if (ffVersion > 10) {
-        t.ok(
-          this.onreadystatechange['nr@original'],
-          'onreadystatechange should be wrapped for readyState ' + this.readyState
-        )
+        t.ok(this.onreadystatechange['nr@original'], 'onreadystatechange should be wrapped for readyState ' + this.readyState)
       }
 
       if (this.readyState === 1) {

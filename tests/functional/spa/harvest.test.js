@@ -38,22 +38,19 @@ testDriver.test('events are retried when collector returns 429', supported, func
 
   let firstBody
 
-  Promise.all([eventsPromise, loadPromise, rumPromise])
-    .then(([eventsResult]) => {
-      t.equal(eventsResult.res.statusCode, 429, 'server responded with 429')
-      firstBody = eventsResult.body
-      return router.expectEvents()
-    })
-    .then((result) => {
-      let secondBody = result.body
+  Promise.all([eventsPromise, loadPromise, rumPromise]).then(([eventsResult]) => {
+    t.equal(eventsResult.res.statusCode, 429, 'server responded with 429')
+    firstBody = eventsResult.body
+    return router.expectEvents()
+  }).then(result => {
+    let secondBody = result.body
 
-      t.equal(result.res.statusCode, 200, 'server responded with 200')
-      t.equal(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
-      t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
+    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.equal(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
+    t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
 
-      t.end()
-    })
-    .catch(fail)
+    t.end()
+  }).catch(fail)
 
   function fail (err) {
     t.error(err)
@@ -87,26 +84,18 @@ testDriver.test('multiple custom interactions have correct customEnd value', sup
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
 
-  Promise.all([eventsPromise, loadPromise, rumPromise])
-    .then(([eventsResult]) => {
-      const qpData = querypack.decode(eventsResult.body)
+  Promise.all([eventsPromise, loadPromise, rumPromise]).then(([eventsResult]) => {
+    const qpData = querypack.decode(eventsResult.body)
 
-      t.ok(qpData.length === 3, 'three interactions should have been captured')
-      qpData.forEach((interaction) => {
-        t.ok(
-          ['interaction1', 'interaction2', 'interaction4'].indexOf(interaction.customName) > -1,
-          'interaction has expected custom name'
-        )
-        const customEndTime = interaction.children.find((child) => child.type === 'customEnd')
-        t.ok(
-          customEndTime.time >= interaction.end,
-          'interaction custom end time is equal to or greater than interaction end time'
-        )
-      })
-
-      t.end()
+    t.ok(qpData.length === 3, 'three interactions should have been captured')
+    qpData.forEach(interaction => {
+      t.ok(['interaction1', 'interaction2', 'interaction4'].indexOf(interaction.customName) > -1, 'interaction has expected custom name')
+      const customEndTime = interaction.children.find(child => child.type === 'customEnd')
+      t.ok(customEndTime.time >= interaction.end, 'interaction custom end time is equal to or greater than interaction end time')
     })
-    .catch(fail)
+
+    t.end()
+  }).catch(fail)
 
   function fail (err) {
     t.error(err)

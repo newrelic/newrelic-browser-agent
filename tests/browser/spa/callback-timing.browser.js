@@ -10,16 +10,14 @@ jil.browserTest('callback timing', function (t) {
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
     jsTime: 100,
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        jsTime: 300,
-        children: []
-      }
-    ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      jsTime: 300,
+      children: []
+    }]
   })
 
   t.plan(2 + validator.count)
@@ -27,14 +25,10 @@ jil.browserTest('callback timing', function (t) {
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
   function onInteractionStart (cb) {
-    setTimeout(
-      () =>
-        newrelic.interaction().createTracer('timer', () => {
-          blockFor(300)
-          cb()
-        })(),
-      200
-    )
+    setTimeout(() => newrelic.interaction().createTracer('timer', () => {
+      blockFor(300)
+      cb()
+    })(), 200)
 
     blockFor(100)
   }
@@ -52,13 +46,11 @@ jil.browserTest('callback timing multiple callbacks', function (t) {
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
     jsTime: 100,
-    children: [
-      {
-        name: 'ajax',
-        jsTime: 400,
-        children: []
-      }
-    ]
+    children: [{
+      name: 'ajax',
+      jsTime: 400,
+      children: []
+    }]
   })
 
   t.plan(2 + validator.count)

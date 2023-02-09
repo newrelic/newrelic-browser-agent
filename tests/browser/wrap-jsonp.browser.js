@@ -15,9 +15,19 @@ function removeListener (type, fn) {
   handlers.splice(index, 1)
 }
 
-var validUrls = ['/jsonp?cb=foo', '/jsonp?cb=foo#abc', '/jsonp?callback=foo', '/jsonp?callback=foo#abc']
+var validUrls = [
+  '/jsonp?cb=foo',
+  '/jsonp?cb=foo#abc',
+  '/jsonp?callback=foo',
+  '/jsonp?callback=foo#abc'
+]
 
-var invalidUrls = ['/jsonp?mycb=foo', '/jsonp?ab=1&mycb=foo', '/jsonp?mycallback=foo', '/jsonp?ab=1&mycallback=foo']
+var invalidUrls = [
+  '/jsonp?mycb=foo',
+  '/jsonp?ab=1&mycb=foo',
+  '/jsonp?mycallback=foo',
+  '/jsonp?ab=1&mycallback=foo'
+]
 
 validUrls.forEach((url) => {
   shouldWork(url)

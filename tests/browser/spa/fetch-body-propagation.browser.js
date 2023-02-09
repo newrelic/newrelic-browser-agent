@@ -20,23 +20,19 @@ bodyMethods.forEach((bodyMethod) => {
     let helpers = require('./helpers')
     let validator = new helpers.InteractionValidator({
       type: 'interaction',
-      children: [
-        {
-          type: 'ajax',
+      children: [{
+        type: 'ajax',
+        attrs: {
+          isFetch: true
+        },
+        children: [{
+          type: 'customTracer',
           attrs: {
-            isFetch: true
+            name: 'timer'
           },
-          children: [
-            {
-              type: 'customTracer',
-              attrs: {
-                name: 'timer'
-              },
-              children: []
-            }
-          ]
-        }
-      ]
+          children: []
+        }]
+      }]
     })
 
     t.plan(4 + validator.count)
@@ -48,20 +44,15 @@ bodyMethods.forEach((bodyMethod) => {
     var resTime
 
     function onInteractionStart (cb) {
-      window
-        .fetch('/json')
+      window.fetch('/json')
         .then(function (res) {
           const { now } = require('../../../src/common/timing/now')
           resTime = now()
           return res[bodyMethod]()
-        })
-        .then(function () {
-          setTimeout(
-            newrelic.interaction().createTracer('timer', function () {
-              cb()
-            }),
-            0
-          )
+        }).then(function () {
+          setTimeout(newrelic.interaction().createTracer('timer', function () {
+            cb()
+          }), 0)
         })
       cb()
     }
@@ -125,23 +116,19 @@ jil.browserTest('Response.formData', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     type: 'interaction',
-    children: [
-      {
-        type: 'ajax',
+    children: [{
+      type: 'ajax',
+      attrs: {
+        isFetch: true
+      },
+      children: [{
+        type: 'customTracer',
         attrs: {
-          isFetch: true
+          name: 'timer'
         },
-        children: [
-          {
-            type: 'customTracer',
-            attrs: {
-              name: 'timer'
-            },
-            children: []
-          }
-        ]
-      }
-    ]
+        children: []
+      }]
+    }]
   })
 
   t.plan(4 + validator.count)
@@ -181,15 +168,13 @@ bodyMethods.forEach((bodyMethod) => {
     let helpers = require('./helpers')
     let validator = new helpers.InteractionValidator({
       type: 'interaction',
-      children: [
-        {
-          type: 'customTracer',
-          attrs: {
-            name: 'timer'
-          },
-          children: []
-        }
-      ]
+      children: [{
+        type: 'customTracer',
+        attrs: {
+          name: 'timer'
+        },
+        children: []
+      }]
     })
 
     t.plan(3 + validator.count)

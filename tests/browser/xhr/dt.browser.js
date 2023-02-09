@@ -13,7 +13,7 @@ const distributedTracing = new DT(agentIdentifier)
 const generateTracePayload = distributedTracing.generateTracePayload
 const shouldGenerateTrace = distributedTracing.shouldGenerateTrace
 
-var supportsBase64 = 'atob' in window
+var supportsBase64 = ('atob' in window)
 var parsedOrigin = {
   sameOrigin: true
 }
@@ -399,7 +399,7 @@ test('agentID is missing - no header generated', function (t) {
   t.end()
 })
 
-test("trustKey is missing - header generated, trustKey won't be in header", function (t) {
+test('trustKey is missing - header generated, trustKey won\'t be in header', function (t) {
   if (!supportsBase64) {
     t.skip('atob function is required for this test')
     t.end()

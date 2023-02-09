@@ -9,30 +9,25 @@ jil.browserTest('spa parallel XHRs and timers', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [
-      {
-        name: 'ajax',
-        children: []
+    children: [{
+      name: 'ajax',
+      children: []
+    }, {
+      name: 'ajax',
+      children: []
+    }, {
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
       },
-      {
-        name: 'ajax',
-        children: []
+      children: []
+    }, {
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
       },
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
-      },
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
-      }
-    ]
+      children: []
+    }]
   })
 
   t.plan(2 + validator.count)

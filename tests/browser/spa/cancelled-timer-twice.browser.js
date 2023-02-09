@@ -31,12 +31,9 @@ jil.browserTest('spa cancelled timer in callback', function (t) {
   function onInteractionStart (cb) {
     var xhr = new XMLHttpRequest()
     xhr.onload = function () {
-      setTimeout(
-        newrelic.interaction().createTracer('timer', function () {
-          t.ok(true, 'first timer fired')
-        }),
-        100
-      )
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        t.ok(true, 'first timer fired')
+      }), 100)
 
       let timer = setTimeout(() => {
         t.fail('cancelled timer should never fire')

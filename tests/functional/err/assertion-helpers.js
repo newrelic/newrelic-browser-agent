@@ -8,15 +8,13 @@ const canonicalFunctionName = require('../../lib/canonical-function-name')
 const stringHashCode = require('../../lib/string-hash-code')
 
 function computeExpectedCanonicalStack (expectedStack) {
-  let canonicalStack = expectedStack
-    .map((frame) => {
-      let line = ''
-      if (frame.f) line += `${canonicalFunctionName(frame.f)}@`
-      if (frame.u) line += frame.u
-      if (frame.l) line += `:${frame.l}`
-      return line
-    })
-    .join('\n')
+  let canonicalStack = expectedStack.map((frame) => {
+    let line = ''
+    if (frame.f) line += `${canonicalFunctionName(frame.f)}@`
+    if (frame.u) line += frame.u
+    if (frame.l) line += `:${frame.l}`
+    return line
+  }).join('\n')
 
   return canonicalStack
 }
@@ -134,12 +132,4 @@ function fail (t) {
   }
 }
 
-module.exports = {
-  fail,
-  assertErrorAttributes,
-  verifyStackTraceOmits,
-  assertExpectedErrors,
-  getErrorsFromResponse,
-  getMetricsFromResponse,
-  getAppIdFromResponse
-}
+module.exports = { fail, assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse, getMetricsFromResponse, getAppIdFromResponse }

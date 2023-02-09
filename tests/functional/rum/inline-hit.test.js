@@ -5,7 +5,8 @@
 
 const testDriver = require('../../../tools/jil/index')
 
-let supported = new testDriver.Matcher().exclude('ie@<8') // IE 6 & 7 sometimes fail this test, and we don't know why.
+let supported = new testDriver.Matcher()
+  .exclude('ie@<8') // IE 6 & 7 sometimes fail this test, and we don't know why.
 
 testDriver.test('inline hit api', supported, function (t, browser, router) {
   t.plan(17)
@@ -15,18 +16,10 @@ testDriver.test('inline hit api', supported, function (t, browser, router) {
 
   Promise.all([
     loadPromise,
-    router.expectRum().then((data) => {
-      rumData[data.query.t] = data
-    }),
-    router.expectRum().then((data) => {
-      rumData[data.query.t] = data
-    }),
-    router.expectRum().then((data) => {
-      rumData[data.query.t] = data
-    }),
-    router.expectRum().then((data) => {
-      rumData[data.query.t] = data
-    })
+    router.expectRum().then((data) => { rumData[data.query.t] = data }),
+    router.expectRum().then((data) => { rumData[data.query.t] = data }),
+    router.expectRum().then((data) => { rumData[data.query.t] = data }),
+    router.expectRum().then((data) => { rumData[data.query.t] = data })
   ])
     .then(checkResults)
     .catch(fail)

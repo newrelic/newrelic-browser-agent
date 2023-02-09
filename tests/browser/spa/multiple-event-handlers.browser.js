@@ -16,22 +16,19 @@ jil.browserTest('spa multiple event handlers', function (t) {
 
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
       },
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
-      }
-    ]
+      children: []
+    }, {
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: []
+    }]
   })
 
   t.plan(3 + validator.count)
@@ -47,9 +44,7 @@ jil.browserTest('spa multiple event handlers', function (t) {
   el.addEventListener('click', () => {
     let deadline = helpers.now() + 1000
     let x = 0
-    while (helpers.now() <= deadline) {
-      x++
-    }
+    while (helpers.now() <= deadline) { x++ }
     // do something with x to prevent the loop from being optimized out
     let div = document.createElement('div')
     document.body.appendChild(div)
@@ -57,9 +52,7 @@ jil.browserTest('spa multiple event handlers', function (t) {
     setTimeout(newrelic.interaction().createTracer('timer', function () {}))
   })
 
-  helpers.startInteraction(onInteractionStart, afterInteractionDone, {
-    element: el
-  })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone, { element: el })
 
   function onInteractionStart (cb) {
     cb()

@@ -12,15 +12,13 @@ jil.browserTest('promise.reject', function (t) {
       trigger: 'click'
     },
     name: 'interaction',
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
-      }
-    ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: []
+    }]
   })
 
   t.plan(validator.count + 3)
@@ -31,13 +29,11 @@ jil.browserTest('promise.reject', function (t) {
     var promise = Promise.reject(10)
 
     promise.catch(function (val) {
-      setTimeout(
-        newrelic.interaction().createTracer('timer', function () {
-          t.equal(val, 10, 'promise should yield correct value')
-          window.location.hash = '#' + Math.random()
-          cb()
-        })
-      )
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        t.equal(val, 10, 'promise should yield correct value')
+        window.location.hash = '#' + Math.random()
+        cb()
+      }))
     })
   }
 

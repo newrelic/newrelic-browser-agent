@@ -16,18 +16,16 @@ let fetchSupported = fetchBrowsers.intersect(reliableUnload)
 testDriver.test('capturing XHR metrics', workingSendBeacon, function (t, browser, router) {
   let rumPromise = router.expectRum()
   let metricsPromise = router.expectXHRMetrics()
-  let loadPromise = browser.get(
-    router.assetURL('xhr.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        metrics: {
-          enabled: false
-        }
+  let loadPromise = browser.get(router.assetURL('xhr.html', {
+    init: {
+      page_view_timing: {
+        enabled: false
+      },
+      metrics: {
+        enabled: false
       }
-    })
-  )
+    }
+  }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
     .then(([response]) => {
@@ -52,18 +50,16 @@ testDriver.test('capturing XHR metrics', workingSendBeacon, function (t, browser
 testDriver.test('capturing fetch metrics', fetchSupported, function (t, browser, router) {
   let rumPromise = router.expectRum()
   let metricsPromise = router.expectXHRMetrics()
-  let loadPromise = browser.get(
-    router.assetURL('fetch.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        metrics: {
-          enabled: false
-        }
+  let loadPromise = browser.get(router.assetURL('fetch.html', {
+    init: {
+      page_view_timing: {
+        enabled: false
+      },
+      metrics: {
+        enabled: false
       }
-    })
-  )
+    }
+  }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
     .then(([response]) => {
@@ -76,7 +72,7 @@ testDriver.test('capturing fetch metrics', fetchSupported, function (t, browser,
       }
 
       const parsedXhrs = getXhrFromResponse(response, browser)
-      var fetchData = parsedXhrs.find((xhr) => xhr.params.pathname === '/json')
+      var fetchData = parsedXhrs.find(xhr => xhr.params.pathname === '/json')
       t.ok(fetchData, 'has xhr data')
       t.deepEqual(['metrics', 'params'], Object.keys(fetchData).sort(), 'XHR record has correct keys')
       t.end()

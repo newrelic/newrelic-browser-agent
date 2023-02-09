@@ -26,31 +26,25 @@ jil.browserTest('basic promise chain', function (t) {
       }
     },
     name: 'interaction',
-    children: [
-      {
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer-in-first-promise'
+      },
+      children: [{
         type: 'customTracer',
         attrs: {
-          name: 'timer-in-first-promise'
+          name: 'timer-in-second-promise'
         },
-        children: [
-          {
-            type: 'customTracer',
-            attrs: {
-              name: 'timer-in-second-promise'
-            },
-            children: [
-              {
-                type: 'customTracer',
-                attrs: {
-                  name: 'timer'
-                },
-                children: []
-              }
-            ]
-          }
-        ]
-      }
-    ]
+        children: [{
+          type: 'customTracer',
+          attrs: {
+            name: 'timer'
+          },
+          children: []
+        }]
+      }]
+    }]
   })
 
   t.plan(validator.count + 2)
@@ -59,26 +53,18 @@ jil.browserTest('basic promise chain', function (t) {
 
   function onInteractionStart (cb) {
     new Promise(function (resolve, reject) {
-      setTimeout(
-        newrelic.interaction().createTracer('timer-in-first-promise', function () {
-          resolve(1)
-        }),
-        1
-      )
+      setTimeout(newrelic.interaction().createTracer('timer-in-first-promise', function () {
+        resolve(1)
+      }), 1)
     })
       .then(() => {
         return new Promise(function (resolve, reject) {
-          setTimeout(
-            newrelic.interaction().createTracer('timer-in-second-promise', function () {
-              reject(2)
-            }),
-            2
-          )
+          setTimeout(newrelic.interaction().createTracer('timer-in-second-promise', function () {
+            reject(2)
+          }), 2)
         })
       })
-      .catch(function () {})
-      .catch(function () {})
-      .then(() => {
+      .catch(function () {}).catch(function () {}).then(() => {
         newrelic.interaction().setAttribute('in-catch', true)
         setTimeout(newrelic.interaction().createTracer('timer', cb), 3)
       })
@@ -111,15 +97,13 @@ jil.browserTest('Promise throw in executor', function (t) {
       trigger: 'click'
     },
     name: 'interaction',
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
-      }
-    ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: []
+    }]
   })
 
   t.plan(validator.count + 3)
@@ -133,13 +117,11 @@ jil.browserTest('Promise throw in executor', function (t) {
     })
 
     promise.catch(function (val) {
-      setTimeout(
-        newrelic.interaction().createTracer('timer', function () {
-          t.equal(val, thrownError, 'promise should yield the error that was thrown in executor')
-          window.location.hash = '#' + Math.random()
-          cb()
-        })
-      )
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        t.equal(val, thrownError, 'promise should yield the error that was thrown in executor')
+        window.location.hash = '#' + Math.random()
+        cb()
+      }))
     })
   }
 

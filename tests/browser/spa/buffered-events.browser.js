@@ -36,41 +36,32 @@ jil.browserTest('spa buffers all expected events', function (t) {
 
     eventNames.forEach((evName) => {
       plan += 3
-      var args = [
-        {
-          addEventListener: () => null,
-          1: () => null
-        },
-        {
-          addEventListener: () => null,
-          clone: () => {
-            return {
-              arrayBuffer: () => {
-                return {
-                  then: () => null
-                }
+      var args = [{
+        addEventListener: () => null,
+        1: () => null
+      }, {
+        addEventListener: () => null,
+        clone: () => {
+          return {
+            arrayBuffer: () => {
+              return {
+                then: () => null
               }
             }
           }
-        },
-        {
-          then: () => null
         }
-      ]
+      }, {
+        then: () => null
+      }]
       var ctx = baseEE.context()
       emitter.emit(evName, args, ctx)
-      registerHandler(
-        evName,
-        function (a, b) {
-          // filter out non test events
-          if (this !== ctx) return
-          t.equal(a, args[0])
-          t.equal(b, args[1])
-          t.equal(this, ctx)
-        },
-        'spa',
-        emitter
-      )
+      registerHandler(evName, function (a, b) {
+        // filter out non test events
+        if (this !== ctx) return
+        t.equal(a, args[0])
+        t.equal(b, args[1])
+        t.equal(this, ctx)
+      }, 'spa', emitter)
     })
   })
 

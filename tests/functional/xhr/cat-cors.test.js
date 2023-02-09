@@ -10,9 +10,7 @@ testDriver.test('does not set CAT headers on outbound XHRs to different origin',
   t.plan(1)
 
   let loadPromise = browser.get(router.assetURL('cat-cors.html', { testId: router.testID }))
-  let meowPromise = router.expectCustomGet('/cat-cors/{key}', (req, res) => {
-    res.end('ok')
-  })
+  let meowPromise = router.expectCustomGet('/cat-cors/{key}', (req, res) => { res.end('ok') })
 
   Promise.all([meowPromise, loadPromise])
     .then(([req]) => {

@@ -42,7 +42,7 @@ test('Wrap Function', function (t) {
   })
 
   baseEE.on('time-end', function (args, self, result) {
-    t.ok(new Date().getTime() - this.start > 9, 'start and end fired at least as far apart as fn took')
+    t.ok((new Date().getTime() - this.start) > 9, 'start and end fired at least as far apart as fn took')
   })
 
   baseEE.on('errFn-err', function (args, self, err) {
@@ -118,8 +118,8 @@ function args (a, b, c) {
 }
 
 function takesTime () {
-  var start = new Date().getTime()
-  while (new Date().getTime() < start + 10) {
+  var start = (new Date()).getTime()
+  while ((new Date()).getTime() < start + 10) {
     // hack to prevent the loop below from being optimized out on safari 8
     try {
       throw new Error()
@@ -136,9 +136,7 @@ function errors () {
 }
 
 function makeError (msg) {
-  return function () {
-    throw new Error(msg)
-  }
+  return function () { throw new Error(msg) }
 }
 
 function thisCtx (args, obj) {

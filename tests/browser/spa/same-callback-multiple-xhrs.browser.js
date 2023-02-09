@@ -16,12 +16,10 @@ jil.browserTest('multiple XHRs with the same callback function', function (t) {
 
   var validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [
-      {
-        name: 'ajax',
-        children: []
-      }
-    ]
+    children: [{
+      name: 'ajax',
+      children: []
+    }]
   })
 
   setTimeout(() => helpers.startInteraction(onInteractionStart, afterInteractionFinish), 0)

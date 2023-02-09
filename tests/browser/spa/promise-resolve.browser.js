@@ -13,15 +13,13 @@ jil.browserTest('Promise.resolve', function (t) {
       trigger: 'click'
     },
     name: 'interaction',
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
-      }
-    ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: []
+    }]
   })
 
   t.plan(validator.count + 3)
@@ -32,13 +30,11 @@ jil.browserTest('Promise.resolve', function (t) {
     var promise = Promise.resolve(10)
 
     promise.then(function (val) {
-      setTimeout(
-        newrelic.interaction().createTracer('timer', function () {
-          t.equal(val, 10, 'promise should yield correct value')
-          window.location.hash = '#' + Math.random()
-          cb()
-        })
-      )
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        t.equal(val, 10, 'promise should yield correct value')
+        window.location.hash = '#' + Math.random()
+        cb()
+      }))
     })
   }
 
@@ -58,23 +54,19 @@ jil.browserTest('promise.resolve with Promise argument', function (t) {
       trigger: 'click'
     },
     name: 'interaction',
-    children: [
-      {
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: [{
         type: 'customTracer',
         attrs: {
           name: 'timer'
         },
-        children: [
-          {
-            type: 'customTracer',
-            attrs: {
-              name: 'timer'
-            },
-            children: []
-          }
-        ]
-      }
-    ]
+        children: []
+      }]
+    }]
   })
 
   t.plan(validator.count + 3)
@@ -83,21 +75,17 @@ jil.browserTest('promise.resolve with Promise argument', function (t) {
 
   function onInteractionStart (cb) {
     var p0 = new Promise(function (resolve, reject) {
-      setTimeout(
-        newrelic.interaction().createTracer('timer', function () {
-          resolve(123)
-        })
-      )
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        resolve(123)
+      }))
     })
 
     Promise.resolve(p0).then(function (val) {
-      setTimeout(
-        newrelic.interaction().createTracer('timer', function () {
-          t.equal(val, 123, 'promise should yield correct value')
-          window.location.hash = '#' + Math.random()
-          cb()
-        })
-      )
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        t.equal(val, 123, 'promise should yield correct value')
+        window.location.hash = '#' + Math.random()
+        cb()
+      }))
     })
   }
 

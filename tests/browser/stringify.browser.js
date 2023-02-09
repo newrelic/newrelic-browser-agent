@@ -26,33 +26,18 @@ test('fake stringify', function (t) {
   t.equal(stringify(obj), '{"a":123,"c":"b","f":"asdf","n":null}', 'obj')
   t.equal(stringify(obj2), '{"other":222}', 'obj w/ prototype')
   t.equal(stringify(F), undefined, 'function')
-  t.ok(
-    stringify(obj3) === '{"stringified":"{\\"a\\":123,\\"c\\":\\"b\\",\\"f\\":\\"asdf\\",\\"n\\":null}"}',
-    'stringified object'
-  )
+  t.ok(stringify(obj3) === '{"stringified":"{\\"a\\":123,\\"c\\":\\"b\\",\\"f\\":\\"asdf\\",\\"n\\":null}"}', 'stringified object')
 
   var a = {}
   a.a = a
   t.equal(stringify(a), undefined, 'Stringifying a circular object returns empty string')
 
-  Array.prototype.toJSON = function () {
-    return 'bad!'
-  }
-  String.prototype.toJSON = function () {
-    return 'bad!'
-  }
-  Number.prototype.toJSON = function () {
-    return 'bad!'
-  }
-  Date.prototype.toJSON = function () {
-    return 'bad!'
-  }
-  Object.prototype.toJSON = function () {
-    return 'bad!'
-  }
-  Object.prototype.toString = function () {
-    return 'bad!'
-  }
+  Array.prototype.toJSON = function () { return 'bad!' }
+  String.prototype.toJSON = function () { return 'bad!' }
+  Number.prototype.toJSON = function () { return 'bad!' }
+  Date.prototype.toJSON = function () { return 'bad!' }
+  Object.prototype.toJSON = function () { return 'bad!' }
+  Object.prototype.toString = function () { return 'bad!' }
 
   t.equal(stringify([1, 2, 3]), '[1,2,3]', 'array detection w/o toString')
 
@@ -63,10 +48,7 @@ test('fake stringify', function (t) {
   t.equal(stringify(obj), '{"a":123,"c":"b","f":"asdf","n":null}', 'obj with bad toJSON')
   t.equal(stringify(obj2), '{"other":222}', 'obj w/ prototype with bad toJSON')
   t.equal(stringify(F), undefined, 'function with bad toJSON')
-  t.ok(
-    stringify(obj3) === '{"stringified":"{\\"a\\":123,\\"c\\":\\"b\\",\\"f\\":\\"asdf\\",\\"n\\":null}"}',
-    'stringified object with bad toJSON'
-  )
+  t.ok(stringify(obj3) === '{"stringified":"{\\"a\\":123,\\"c\\":\\"b\\",\\"f\\":\\"asdf\\",\\"n\\":null}"}', 'stringified object with bad toJSON')
 
   delete Array.prototype.toJSON
   delete String.prototype.toJSON

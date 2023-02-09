@@ -14,19 +14,21 @@ testDriver.test('customTransactionName 1 arg', function (t, browser, router) {
   t.plan(1)
 
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(
-    router.assetURL('api.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        }
+  let loadPromise = browser.get(router.assetURL('api.html', {
+    init: {
+      page_view_timing: {
+        enabled: false
       }
-    })
-  )
+    }
+  }))
 
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
-      t.equal(data.query.ct, 'http://custom.transaction/foo', 'Custom Transaction Name (1 arg)')
+      t.equal(
+        data.query.ct,
+        'http://custom.transaction/foo',
+        'Custom Transaction Name (1 arg)'
+      )
 
       t.end()
     })
@@ -38,20 +40,22 @@ testDriver.test('customTransactionName 1 arg unload', withUnload, function (t, b
 
   let rumPromise = router.expectRum()
   let metricsPromise = router.expectMetrics()
-  let loadPromise = browser.get(
-    router.assetURL('api.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        }
+  let loadPromise = browser.get(router.assetURL('api.html', {
+    init: {
+      page_view_timing: {
+        enabled: false
       }
-    })
-  )
+    }
+  }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
     .then(([{ body, query }]) => {
       const time = getTime(body ? JSON.parse(body)?.cm : JSON.parse(query.cm))
-      t.equal(query.ct, 'http://custom.transaction/foo', 'Custom Transaction Name (1 arg)')
+      t.equal(
+        query.ct,
+        'http://custom.transaction/foo',
+        'Custom Transaction Name (1 arg)'
+      )
       t.equal(typeof time, 'number', 'Finished exists XHR (1 arg)')
       t.ok(time > 0, 'Finished time XHR > 0 (1 arg)')
       t.end()
@@ -64,23 +68,25 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
 
   let rumPromise = router.expectRum()
   let metricsPromise = router.expectMetrics()
-  let loadPromise = browser.get(
-    router.assetURL('api2.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        jserrors: {
-          enabled: false
-        }
+  let loadPromise = browser.get(router.assetURL('api2.html', {
+    init: {
+      page_view_timing: {
+        enabled: false
+      },
+      jserrors: {
+        enabled: false
       }
-    })
-  )
+    }
+  }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
     .then(([{ body, query }]) => {
       const time = getTime(body ? JSON.parse(body).cm : JSON.parse(query.cm))
-      t.equal(query.ct, 'http://bar.baz/foo', 'Custom Transaction Name (2 arg)')
+      t.equal(
+        query.ct,
+        'http://bar.baz/foo',
+        'Custom Transaction Name (2 arg)'
+      )
       t.equal(typeof time, 'number', 'Finished exists XHR (2 arg)')
 
       if (browser.match('firefox@<=19')) {
@@ -96,18 +102,16 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
 testDriver.test('noticeError takes an error object', withUnload, function (t, browser, router) {
   t.plan(2)
   let rumPromise = router.expectRumAndErrors()
-  let loadPromise = browser.get(
-    router.assetURL('api.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        metrics: {
-          enabled: false
-        }
+  let loadPromise = browser.get(router.assetURL('api.html', {
+    init: {
+      page_view_timing: {
+        enabled: false
+      },
+      metrics: {
+        enabled: false
       }
-    })
-  )
+    }
+  }))
 
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
@@ -129,18 +133,16 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
 testDriver.test('noticeError takes a string', withUnload, function (t, browser, router) {
   t.plan(2)
   let rumPromise = router.expectRumAndErrors()
-  let loadPromise = browser.get(
-    router.assetURL('api/noticeError.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        metrics: {
-          enabled: false
-        }
+  let loadPromise = browser.get(router.assetURL('api/noticeError.html', {
+    init: {
+      page_view_timing: {
+        enabled: false
+      },
+      metrics: {
+        enabled: false
       }
-    })
-  )
+    }
+  }))
 
   Promise.all([rumPromise, loadPromise])
     .then(([data]) => {
@@ -162,18 +164,16 @@ testDriver.test('noticeError takes a string', withUnload, function (t, browser, 
 testDriver.test('finished records a PageAction when called before RUM message', function (t, browser, router) {
   let rumPromise = router.expectRum()
   let insPromise = router.expectIns()
-  let loadPromise = browser.get(
-    router.assetURL('api/finished.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        ins: {
-          harvestTimeSeconds: 2
-        }
+  let loadPromise = browser.get(router.assetURL('api/finished.html', {
+    init: {
+      page_view_timing: {
+        enabled: false
+      },
+      ins: {
+        harvestTimeSeconds: 2
       }
-    })
-  )
+    }
+  }))
 
   Promise.all([insPromise, rumPromise, loadPromise])
     .then(([insData, rumData]) => {
@@ -194,18 +194,16 @@ testDriver.test('finished records a PageAction when called before RUM message', 
 
 testDriver.test('release api adds releases to jserrors', withUnload, function (t, browser, router) {
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(
-    router.assetURL('api/release.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        metrics: {
-          enabled: false
-        }
+  let loadPromise = browser.get(router.assetURL('api/release.html', {
+    init: {
+      page_view_timing: {
+        enabled: false
+      },
+      metrics: {
+        enabled: false
       }
-    })
-  )
+    }
+  }))
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
@@ -225,18 +223,16 @@ testDriver.test('release api adds releases to jserrors', withUnload, function (t
 
 testDriver.test('release api limits releases to jserrors', withUnload, function (t, browser, router) {
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(
-    router.assetURL('api/release-too-many.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        metrics: {
-          enabled: false
-        }
+  let loadPromise = browser.get(router.assetURL('api/release-too-many.html', {
+    init: {
+      page_view_timing: {
+        enabled: false
+      },
+      metrics: {
+        enabled: false
       }
-    })
-  )
+    }
+  }))
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
@@ -269,18 +265,16 @@ testDriver.test('release api limits releases to jserrors', withUnload, function 
 
 testDriver.test('release api limits release size to jserrors', withUnload, function (t, browser, router) {
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(
-    router.assetURL('api/release-too-long.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        metrics: {
-          enabled: false
-        }
+  let loadPromise = browser.get(router.assetURL('api/release-too-long.html', {
+    init: {
+      page_view_timing: {
+        enabled: false
+      },
+      metrics: {
+        enabled: false
       }
-    })
-  )
+    }
+  }))
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
@@ -292,10 +286,8 @@ testDriver.test('release api limits release size to jserrors', withUnload, funct
       })
     })
     .then(({ query, body }) => {
-      const ninetyNineY =
-        'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy'
-      const oneHundredX =
-        'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+      const ninetyNineY = 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy'
+      const oneHundredX = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
       const twoHundredCharacterString = ninetyNineY + oneHundredX + 'q'
       const ri = {
         one: '201',
@@ -303,11 +295,7 @@ testDriver.test('release api limits release size to jserrors', withUnload, funct
       }
       ri[twoHundredCharacterString] = '2'
       const queryRi = JSON.parse(query.ri)
-      t.equal(
-        twoHundredCharacterString.length,
-        200,
-        'twoHundredCharacterString should be 200 characters but is ' + twoHundredCharacterString.length
-      )
+      t.equal(twoHundredCharacterString.length, 200, 'twoHundredCharacterString should be 200 characters but is ' + twoHundredCharacterString.length)
       t.deepEqual(queryRi, ri, `${JSON.stringify(ri)} is expected but got ${JSON.stringify(queryRi)}`)
       t.end()
     })
@@ -316,18 +304,16 @@ testDriver.test('release api limits release size to jserrors', withUnload, funct
 
 testDriver.test('no query param when release is not set', withUnload, function (t, browser, router) {
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(
-    router.assetURL('api/no-release.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        metrics: {
-          enabled: false
-        }
+  let loadPromise = browser.get(router.assetURL('api/no-release.html', {
+    init: {
+      page_view_timing: {
+        enabled: false
+      },
+      metrics: {
+        enabled: false
       }
-    })
-  )
+    }
+  }))
 
   Promise.all([loadPromise, rumPromise])
     .then(() => {
@@ -350,8 +336,9 @@ testDriver.test('api is available when sessionStorage is not', function (t, brow
   let loadPromise = browser.get(router.assetURL('api/session-storage-disallowed.html'))
 
   Promise.all([loadPromise, rumPromise])
-    .then(() => browser.waitFor(asserters.jsCondition("typeof window.newrelic.addToTrace === 'function'")))
-    .then((result) => {
+    .then(() =>
+      browser.waitFor(asserters.jsCondition('typeof window.newrelic.addToTrace === \'function\''))
+    ).then((result) => {
       t.ok(result)
       t.end()
     })

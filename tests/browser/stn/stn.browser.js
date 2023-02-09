@@ -26,7 +26,9 @@ drain(agentIdentifier, 'api')
 
 let originalPath = window.location.pathname
 
-if (window.performance && window.performance.timing && window.performance.getEntriesByType) {
+if ((window.performance &&
+  window.performance.timing &&
+  window.performance.getEntriesByType)) {
   runTests()
 } else {
   test('unsupported browser', function (t) {
@@ -84,64 +86,50 @@ function runTests () {
     t.ok(+qs.st > 1404952055986 && Date.now() > +qs.st, 'Start time is between recent time and now ' + qs.st)
 
     t.test('stn DOMContentLoaded', function (t) {
-      let node = res.filter(function (node) {
-        return node.n === 'DOMContentLoaded'
-      })[0]
+      let node = res.filter(function (node) { return node.n === 'DOMContentLoaded' })[0]
       t.ok(node, 'DOMContentLoaded node created')
       t.ok(node.s > 10, 'DOMContentLoaded node has start time ' + node.s)
       t.equal(node.o, 'document', 'DOMContentLoaded node origin ' + node.o)
       t.end()
     })
     t.test('stn document load', function (t) {
-      let node = res.filter(function (node) {
-        return node.n === 'load' && node.o === 'document'
-      })[0]
+      let node = res.filter(function (node) { return node.n === 'load' && node.o === 'document' })[0]
       t.ok(node, 'load node created')
       t.ok(node.s > 10, 'load node has start time ' + node.s)
       t.equal(node.o, 'document', 'load node origin ' + node.o)
       t.end()
     })
     t.test('stn timer', function (t) {
-      let node = res.filter(function (node) {
-        return node.n === 'setInterval'
-      })[0]
+      let node = res.filter(function (node) { return node.n === 'setInterval' })[0]
       t.ok(node, 'timer node created')
       t.ok(node.s > 10, 'timer node has start time ' + node.s)
       t.equal(node.o, 'window', 'setInterval origin ' + node.o)
       t.end()
     })
     t.test('stn-raf', function (t) {
-      let node = res.filter(function (node) {
-        return node.n === 'requestAnimationFrame'
-      })[0]
+      let node = res.filter(function (node) { return node.n === 'requestAnimationFrame' })[0]
       t.ok(node, 'raf node created')
       t.ok(node.s > 10, 'raf node has start time ' + node.s)
       t.equal(node.o, 'window', 'requestAnimationFrame origin ' + node.o)
       t.end()
     })
     t.test('stn error', function (t) {
-      let errorNode = res.filter(function (node) {
-        return node.o === 'raf error'
-      })[0]
+      let errorNode = res.filter(function (node) { return node.o === 'raf error' })[0]
       t.ok(errorNode, 'error node created')
       t.ok(errorNode.s > 10, 'error node has start time ' + errorNode.s)
       t.equal(errorNode.s, errorNode.e, 'error node has no duration')
       t.end()
     })
     t.test('stn ajax', function (t) {
-      let ajax = res.filter(function (node) {
-        return node.t === 'ajax'
-      })[0]
+      let ajax = res.filter(function (node) { return node.t === 'ajax' })[0]
       t.ok(ajax, 'ajax node created')
-      t.ok(ajax.e - ajax.s > 1, 'Ajax has some duration')
+      t.ok((ajax.e - ajax.s) > 1, 'Ajax has some duration')
       t.equal(ajax.n, 'Ajax', 'Ajax name')
       t.equal(ajax.t, 'ajax', 'Ajax type')
       t.end()
     })
     t.test('stn history', function (t) {
-      let hist = res.filter(function (node) {
-        return node.n === 'history.pushState'
-      })[1]
+      let hist = res.filter(function (node) { return node.n === 'history.pushState' })[1]
       t.ok(hist, 'hist node created')
       t.equal(hist.s, hist.e, 'hist node has no duration')
       t.equal(hist.n, 'history.pushState', 'hist name')
@@ -150,9 +138,7 @@ function runTests () {
       t.end()
     })
     t.test('stn pvt items', function (t) {
-      let pvtItems = res.filter(function (node) {
-        return node.n === 'fi' || node.n === 'fid'
-      })
+      let pvtItems = res.filter(function (node) { return node.n === 'fi' || node.n === 'fid' })
       t.ok(pvtItems.length === 2, 'all pvt items exist')
 
       for (let i = 0; i < pvtItems.length; i++) {
@@ -170,9 +156,7 @@ function runTests () {
       }
       t.end()
     })
-    let unknown = res.filter(function (n) {
-      return n.o === 'unknown'
-    })
+    let unknown = res.filter(function (n) { return n.o === 'unknown' })
     t.equal(unknown.length, 0, 'No events with unknown origin')
 
     t.end()

@@ -22,10 +22,7 @@ jil.browserTest('isFileProtocol returns coorectly when detecting file protocol',
   setScope({ location: fileLocation })
 
   t.ok(protocol.isFileProtocol(), 'Returned true when protocol is file protocol')
-  t.ok(
-    protocol.supportabilityMetricSent,
-    'isFileProtocol should send supportability metric if file protocol is detected'
-  )
+  t.ok(protocol.supportabilityMetricSent, 'isFileProtocol should send supportability metric if file protocol is detected')
 
   resetScope()
 

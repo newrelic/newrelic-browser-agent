@@ -8,10 +8,12 @@ import { parseUrl } from '../../../src/common/url/parse-url'
 import { setDenyList, shouldCollectEvent } from '../../../src/common/deny-list/deny-list'
 
 /* NOTE: This file contains pure unit tests that has no need for the agent at all.
- */
+*/
 
 test('domain-only blocks all subdomains and all paths', function (t) {
-  setDenyList(['foo.com'])
+  setDenyList([
+    'foo.com'
+  ])
 
   t.equals(shouldCollectEvent(parseUrl('http://foo.com')), false)
   t.equals(shouldCollectEvent(parseUrl('http://foo.com/')), false)
@@ -30,7 +32,9 @@ test('domain-only blocks all subdomains and all paths', function (t) {
 })
 
 test('subdomain blocks further subdomains, but not parent domain', function (t) {
-  setDenyList(['bar.foo.com'])
+  setDenyList([
+    'bar.foo.com'
+  ])
 
   // deny
   t.equals(shouldCollectEvent(parseUrl('http://bar.foo.com')), false)
@@ -44,7 +48,9 @@ test('subdomain blocks further subdomains, but not parent domain', function (t) 
 })
 
 test('* blocks all domains', function (t) {
-  setDenyList(['*'])
+  setDenyList([
+    '*'
+  ])
 
   // deny
   t.equals(shouldCollectEvent(parseUrl('http://foo.com')), false)
@@ -56,14 +62,18 @@ test('* blocks all domains', function (t) {
 })
 
 test('path is blocking only with exact match', function (t) {
-  setDenyList(['foo.com/a'])
+  setDenyList([
+    'foo.com/a'
+  ])
 
   t.equals(shouldCollectEvent(parseUrl('http://foo.com/a')), false)
   t.equals(shouldCollectEvent(parseUrl('http://foo.com')), true)
   t.equals(shouldCollectEvent(parseUrl('http://foo.com/b')), true)
   t.equals(shouldCollectEvent(parseUrl('http://foo.com/a/b')), true)
 
-  setDenyList(['foo.com/a/b'])
+  setDenyList([
+    'foo.com/a/b'
+  ])
   t.equals(shouldCollectEvent(parseUrl('http://foo.com/a/b')), false)
   t.equals(shouldCollectEvent(parseUrl('http://foo.com/a')), true)
 
@@ -71,7 +81,9 @@ test('path is blocking only with exact match', function (t) {
 })
 
 test('* blocks all domains', function (t) {
-  setDenyList(['*'])
+  setDenyList([
+    '*'
+  ])
 
   // deny
   t.equals(shouldCollectEvent(parseUrl('http://foo.com')), false)
@@ -83,7 +95,9 @@ test('* blocks all domains', function (t) {
 })
 
 test('protocol is ignored when not specified', function (t) {
-  setDenyList(['foo.com'])
+  setDenyList([
+    'foo.com'
+  ])
 
   t.equals(shouldCollectEvent(parseUrl('http://foo.com')), false)
   t.equals(shouldCollectEvent(parseUrl('https://foo.com')), false)
@@ -92,7 +106,9 @@ test('protocol is ignored when not specified', function (t) {
 })
 
 test('port is ignored when not specified', function (t) {
-  setDenyList(['foo.com'])
+  setDenyList([
+    'foo.com'
+  ])
 
   t.equals(shouldCollectEvent(parseUrl('http://foo.com:8080')), false)
   t.equals(shouldCollectEvent(parseUrl('http://foo.com:8181')), false)
@@ -102,11 +118,16 @@ test('port is ignored when not specified', function (t) {
 
 // test unexpected strings that don't represent URLs
 test('invalid values', function (t) {
-  setDenyList(['!@$%^*'])
+  setDenyList([
+    '!@$%^*'
+  ])
   t.equals(shouldCollectEvent(parseUrl('http://foo.com')), true)
   t.equals(shouldCollectEvent(parseUrl('http://bar.com')), true)
 
-  setDenyList(['!@$%^*', 'foo.com'])
+  setDenyList([
+    '!@$%^*',
+    'foo.com'
+  ])
   t.equals(shouldCollectEvent(parseUrl('http://foo.com')), false)
   t.equals(shouldCollectEvent(parseUrl('http://bar.com')), true)
 
@@ -114,12 +135,16 @@ test('invalid values', function (t) {
 })
 
 test('URL that contains protocol multiple times', function (t) {
-  setDenyList(['https://example.com/http://foo.bar/'])
+  setDenyList([
+    'https://example.com/http://foo.bar/'
+  ])
 
   t.equals(shouldCollectEvent(parseUrl('https://example.com/http://foo.bar/')), false)
   t.equals(shouldCollectEvent(parseUrl('https://example.com')), true)
 
-  setDenyList(['example.com'])
+  setDenyList([
+    'example.com'
+  ])
 
   t.equals(shouldCollectEvent(parseUrl('https://example.com/http://foo.bar/')), false)
 

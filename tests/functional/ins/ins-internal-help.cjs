@@ -23,12 +23,6 @@ function validatePageActionData (t, pageActionData, query) {
   let eventTimeSinceLoad = event.timeSinceLoad * 1000
   let estimatedEventTime = eventTimeSinceLoad + estimatedPageLoad
 
-  t.ok(
-    relativeHarvestTime > eventTimeSinceLoad,
-    'harvest time (' + relativeHarvestTime + ') should always be bigger than event time (' + eventTimeSinceLoad + ')'
-  )
-  t.ok(
-    estimatedEventTime < receiptTime,
-    'estimated event time (' + estimatedEventTime + ') < receipt time (' + receiptTime + ')'
-  )
+  t.ok(relativeHarvestTime > eventTimeSinceLoad, 'harvest time (' + relativeHarvestTime + ') should always be bigger than event time (' + eventTimeSinceLoad + ')')
+  t.ok(estimatedEventTime < receiptTime, 'estimated event time (' + estimatedEventTime + ') < receipt time (' + receiptTime + ')')
 }

@@ -26,14 +26,8 @@ function runTest (title, htmlPage, supported) {
       .then(({ query, body }) => {
         let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
         t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
-        t.ok(
-          interactionTree.callbackEnd >= interactionTree.start,
-          'interaaction callback end should be >= interaction start'
-        )
-        t.ok(
-          interactionTree.callbackEnd <= interactionTree.end,
-          'interaction callback end should be <= interaction end'
-        )
+        t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')
+        t.ok(interactionTree.callbackEnd <= interactionTree.end, 'interaction callback end should be <= interaction end')
         t.equal(interactionTree.children.length, 1, 'expected one child node')
 
         var xhr = interactionTree.children[0]
@@ -68,15 +62,12 @@ testDriver.test('JSONP on initial page load', supported, function (t, browser, r
 
   waitForPageLoad(browser, router, 'spa/jsonp/load.html')
     .then((result) => {
-      let query, body;
+      let query, body
       ({ query, body } = result[1])
 
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
-      t.ok(
-        interactionTree.callbackEnd >= interactionTree.start,
-        'interaaction callback end should be >= interaction start'
-      )
+      t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')
       t.ok(interactionTree.callbackEnd <= interactionTree.end, 'interaction callback end should be <= interaction end')
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
@@ -120,10 +111,7 @@ testDriver.test('two JSONP events', supported, function (t, browser, router) {
     .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
-      t.ok(
-        interactionTree.callbackEnd >= interactionTree.start,
-        'interaaction callback end should be >= interaction start'
-      )
+      t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')
       t.ok(interactionTree.callbackEnd <= interactionTree.end, 'interaction callback end should be <= interaction end')
       t.equal(interactionTree.children.length, 2, 'expected two child nodes')
 
@@ -243,19 +231,15 @@ function waitForPageLoad (browser, router, urlPath) {
   return Promise.all([
     router.expectRum(),
     router.expectEvents(),
-    browser.safeGet(
-      router.assetURL(urlPath, {
-        loader: 'spa',
-        init: { session_trace: { enabled: false } }
-      })
-    )
+    browser.safeGet(router.assetURL(urlPath, { loader: 'spa', init: { session_trace: { enabled: false } } }))
   ])
 }
 
 function clickPageAndWaitForEvents (browser, router) {
-  return Promise.all([router.expectEvents(), browser.elementByCssSelector('body').click()]).then(
-    ([eventData, domData]) => {
-      return eventData
-    }
-  )
+  return Promise.all([
+    router.expectEvents(),
+    browser.elementByCssSelector('body').click()
+  ]).then(([eventData, domData]) => {
+    return eventData
+  })
 }

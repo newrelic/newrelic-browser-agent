@@ -15,9 +15,7 @@ testDriver.test('interactions wait for external scripts to complete', supported,
     .then(() => {
       // click, wait for global callback to be called, and route interaction to finish
       let eventPromise = router.expectEvents()
-      let domPromise = browser
-        .elementByCssSelector('body')
-        .click()
+      let domPromise = browser.elementByCssSelector('body').click()
         .waitFor(asserters.jsCondition('window.globalCallbackDone', true), testDriver.timeout)
       return Promise.all([eventPromise, domPromise]).then(([eventData, domData]) => {
         return eventData
@@ -91,11 +89,12 @@ function loadAndWaitForLoad (router, browser, url) {
 }
 
 function loadClickAndGetInteraction (router, browser, url) {
-  return loadAndWaitForLoad(router, browser, url).then(() => {
-    let eventPromise = router.expectEvents()
-    let domPromise = browser.elementByCssSelector('body').click()
-    return Promise.all([eventPromise, domPromise]).then(([eventData, domData]) => {
-      return eventData
+  return loadAndWaitForLoad(router, browser, url)
+    .then(() => {
+      let eventPromise = router.expectEvents()
+      let domPromise = browser.elementByCssSelector('body').click()
+      return Promise.all([eventPromise, domPromise]).then(([eventData, domData]) => {
+        return eventData
+      })
     })
-  })
 }

@@ -10,20 +10,16 @@ jil.browserTest('spa change trigger', function (t) {
   let validator = new helpers.InteractionValidator({
     attrs: { trigger: 'change' },
     name: 'interaction',
-    children: [
-      {
-        name: 'ajax',
-        children: [
-          {
-            type: 'customTracer',
-            attrs: {
-              name: 'timer'
-            },
-            children: []
-          }
-        ]
-      }
-    ]
+    children: [{
+      name: 'ajax',
+      children: [{
+        type: 'customTracer',
+        attrs: {
+          name: 'timer'
+        },
+        children: []
+      }]
+    }]
   })
 
   t.plan(3 + validator.count)

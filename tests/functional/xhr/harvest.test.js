@@ -37,28 +37,25 @@ testDriver.test('ajax events harvests are retried when collector returns 429', f
 
   let firstBody
 
-  Promise.all([ajaxPromise, loadPromise, rumPromise])
-    .then(([result]) => {
-      t.equal(result.res.statusCode, 429, 'server responded with 429')
-      firstBody = querypack.decode(result.body)
-      return router.expectAjaxEvents()
-    })
-    .then((result) => {
-      const secondBody = querypack.decode(result.body)
+  Promise.all([ajaxPromise, loadPromise, rumPromise]).then(([result]) => {
+    t.equal(result.res.statusCode, 429, 'server responded with 429')
+    firstBody = querypack.decode(result.body)
+    return router.expectAjaxEvents()
+  }).then(result => {
+    const secondBody = querypack.decode(result.body)
 
-      const secondContainsFirst = firstBody.every((firstElement) => {
-        return secondBody.find((secondElement) => {
-          return secondElement.path === firstElement.path && secondElement.start === firstElement.start
-        })
+    const secondContainsFirst = firstBody.every(firstElement => {
+      return secondBody.find(secondElement => {
+        return secondElement.path === firstElement.path && secondElement.start === firstElement.start
       })
-
-      t.equal(result.res.statusCode, 200, 'server responded with 200')
-      t.ok(secondContainsFirst, 'second body should include the contents of the first retried harvest')
-      t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
-
-      t.end()
     })
-    .catch(fail(t))
+
+    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.ok(secondContainsFirst, 'second body should include the contents of the first retried harvest')
+    t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
+
+    t.end()
+  }).catch(fail(t))
 })
 
 // NOTE: we do not test 408 response in a functional test because some browsers automatically retry

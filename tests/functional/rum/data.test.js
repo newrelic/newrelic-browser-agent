@@ -26,29 +26,28 @@ testDriver.test('rum data', withTls, function (t, browser, router) {
   let rumPromise = router.expectRum()
   let loadPromise = browser.get(router.assetURL('rum-data.html', { config }))
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([{ query }]) => {
-      t.equal(+query.ap, 382, 'Application time')
-      t.equal(+query.qt, 837, 'Queue time')
-      t.ok(+query.fe >= +query.dc, 'Front end time')
-      t.equal(query.ac, 'test_account', 'Account name')
-      t.equal(query.us, 'test_user', 'User name')
-      t.equal(query.pr, 'test_product', 'Product name')
-      t.equal(query.tt, '21EC2020-3AEA-1069-A2DD-08002B30309D', 'TT GUID')
-      t.equal(query.a, 'test_app_id', 'APP ID')
-      t.equal(query.xx, 'test_extra', 'extra params')
-      t.equal(query.ua, 'test_userAttributes', 'userAttributes params')
-      t.equal(query.at, 'test_atts', 'atts params')
-      t.equal(query.ja, '{"foo":"bar"}', 'custom javascript attributes params')
+  Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {
+    t.equal(+query.ap, 382, 'Application time')
+    t.equal(+query.qt, 837, 'Queue time')
+    t.ok(+query.fe >= +query.dc, 'Front end time')
+    t.equal(query.ac, 'test_account', 'Account name')
+    t.equal(query.us, 'test_user', 'User name')
+    t.equal(query.pr, 'test_product', 'Product name')
+    t.equal(query.tt, '21EC2020-3AEA-1069-A2DD-08002B30309D', 'TT GUID')
+    t.equal(query.a, 'test_app_id', 'APP ID')
+    t.equal(query.xx, 'test_extra', 'extra params')
+    t.equal(query.ua, 'test_userAttributes', 'userAttributes params')
+    t.equal(query.at, 'test_atts', 'atts params')
+    t.equal(query.ja, '{"foo":"bar"}', 'custom javascript attributes params')
 
-      if (browser.match('firefox@<=10')) {
-        t.skip('old version of firefox dont report Dom content loaded correctly')
-      } else {
-        t.ok(+query.dc > 0, 'DOM content loaded time of ' + query.dc + ' is > 0')
-      }
+    if (browser.match('firefox@<=10')) {
+      t.skip('old version of firefox dont report Dom content loaded correctly')
+    } else {
+      t.ok(+query.dc > 0, 'DOM content loaded time of ' + query.dc + ' is > 0')
+    }
 
-      t.end()
-    })
+    t.end()
+  })
     .catch(fail)
 
   function fail (err) {
@@ -65,11 +64,10 @@ testDriver.test('rum data with multiple app IDs', withTls, function (t, browser,
   let rumPromise = router.expectRum()
   let loadPromise = browser.get(router.assetURL('rum-data.html', { config }))
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([{ query }]) => {
-      t.equal(query.a, '1234,5678', 'APP ID')
-      t.end()
-    })
+  Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {
+    t.equal(query.a, '1234,5678', 'APP ID')
+    t.end()
+  })
     .catch(fail)
 
   function fail (err) {
@@ -82,36 +80,30 @@ testDriver.test('rum data using loader_config data', withTls, function (t, brows
   t.plan(13)
 
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(
-    router.assetURL('rum-data.html', {
-      config,
-      injectUpdatedLoaderConfig: true
-    })
-  )
+  let loadPromise = browser.get(router.assetURL('rum-data.html', { config, injectUpdatedLoaderConfig: true }))
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([{ query }]) => {
-      t.equal(+query.ap, 382, 'Application time')
-      t.equal(+query.qt, 837, 'Queue time')
-      t.ok(+query.fe >= +query.dc, 'Front end time')
-      t.equal(query.ac, 'test_account', 'Account name')
-      t.equal(query.us, 'test_user', 'User name')
-      t.equal(query.pr, 'test_product', 'Product name')
-      t.equal(query.tt, '21EC2020-3AEA-1069-A2DD-08002B30309D', 'TT GUID')
-      t.equal(query.a, 'test_app_id', 'APP ID')
-      t.equal(query.xx, 'test_extra', 'extra params')
-      t.equal(query.ua, 'test_userAttributes', 'userAttributes params')
-      t.equal(query.at, 'test_atts', 'atts params')
-      t.equal(query.ja, '{"foo":"bar"}', 'custom javascript attributes params')
+  Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {
+    t.equal(+query.ap, 382, 'Application time')
+    t.equal(+query.qt, 837, 'Queue time')
+    t.ok(+query.fe >= +query.dc, 'Front end time')
+    t.equal(query.ac, 'test_account', 'Account name')
+    t.equal(query.us, 'test_user', 'User name')
+    t.equal(query.pr, 'test_product', 'Product name')
+    t.equal(query.tt, '21EC2020-3AEA-1069-A2DD-08002B30309D', 'TT GUID')
+    t.equal(query.a, 'test_app_id', 'APP ID')
+    t.equal(query.xx, 'test_extra', 'extra params')
+    t.equal(query.ua, 'test_userAttributes', 'userAttributes params')
+    t.equal(query.at, 'test_atts', 'atts params')
+    t.equal(query.ja, '{"foo":"bar"}', 'custom javascript attributes params')
 
-      if (browser.match('firefox@<=10')) {
-        t.skip('old version of firefox dont report Dom content loaded correctly')
-      } else {
-        t.ok(+query.dc > 0, 'DOM content loaded time of ' + query.dc + ' is > 0')
-      }
+    if (browser.match('firefox@<=10')) {
+      t.skip('old version of firefox dont report Dom content loaded correctly')
+    } else {
+      t.ok(+query.dc > 0, 'DOM content loaded time of ' + query.dc + ' is > 0')
+    }
 
-      t.end()
-    })
+    t.end()
+  })
     .catch(fail)
 
   function fail (err) {
@@ -126,18 +118,12 @@ testDriver.test('rum data with multiple app IDs using loader_config data', withT
   }
 
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(
-    router.assetURL('rum-data.html', {
-      config,
-      injectUpdatedLoaderConfig: true
-    })
-  )
+  let loadPromise = browser.get(router.assetURL('rum-data.html', { config, injectUpdatedLoaderConfig: true }))
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([{ query }]) => {
-      t.equal(query.a, '1234,5678', 'APP ID')
-      t.end()
-    })
+  Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {
+    t.equal(query.a, '1234,5678', 'APP ID')
+    t.end()
+  })
     .catch(fail)
 
   function fail (err) {

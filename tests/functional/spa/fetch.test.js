@@ -31,7 +31,9 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
       let eventPromise = router.expectEvents()
-      let domPromise = browser.elementByCssSelector('body').click()
+      let domPromise = browser
+        .elementByCssSelector('body')
+        .click()
 
       return Promise.all([eventPromise, domPromise]).then(([eventData]) => {
         return eventData
@@ -44,10 +46,7 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
       t.ok(interactionTree.id, 'interaction has id attribute')
       t.ok(interactionTree.nodeId, 'interaction has nodeId attribute')
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
-      t.ok(
-        interactionTree.callbackEnd >= interactionTree.start,
-        'interaaction callback end should be >= interaction start'
-      )
+      t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')
       t.ok(interactionTree.callbackEnd <= interactionTree.end, 'interaction callback end should be <= interaction end')
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
@@ -101,7 +100,9 @@ testDriver.test('response size', supported, function (t, browser, router) {
       Promise.all([rumPromise, loadPromise, eventsPromise])
         .then(() => {
           let eventPromise = router.expectEvents()
-          let domPromise = browser.elementByCssSelector('body').click()
+          let domPromise = browser
+            .elementByCssSelector('body')
+            .click()
 
           return Promise.all([eventPromise, domPromise]).then(([eventData]) => {
             return eventData

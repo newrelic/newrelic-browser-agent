@@ -15,10 +15,7 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  const asset = router.assetURL('spa/xhr.html', {
-    loader: 'spa',
-    init: { session_trace: { enabled: false } }
-  })
+  const asset = router.assetURL('spa/xhr.html', { loader: 'spa', init: { session_trace: { enabled: false } } })
   let loadPromise = browser.safeGet(asset)
 
   rumPromise.then(({ query }) => {
@@ -47,17 +44,12 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
       t.ok(interactionTree.id != null, 'interaction has id')
-      t.ok(
-        interactionTree.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/),
-        'interaction id is in uuid format'
-      )
+      t.ok(interactionTree.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/),
+        'interaction id is in uuid format')
       t.ok(interactionTree.nodeId, 'interaction has nodeId attribute')
 
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
-      t.ok(
-        interactionTree.callbackEnd >= interactionTree.start,
-        'interaaction callback end should be >= interaction start'
-      )
+      t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')
       t.ok(interactionTree.callbackEnd <= interactionTree.end, 'interaction callback end should be <= interaction end')
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
@@ -94,13 +86,7 @@ testDriver.test('capturing SPA interactions using loader_config data', supported
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(
-    router.assetURL('spa/xhr.html', {
-      loader: 'spa',
-      injectUpdatedLoaderConfig: true,
-      init: { session_trace: { enabled: false } }
-    })
-  )
+  let loadPromise = browser.safeGet(router.assetURL('spa/xhr.html', { loader: 'spa', injectUpdatedLoaderConfig: true, init: { session_trace: { enabled: false } } }))
 
   rumPromise.then(({ query }) => {
     t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa')
@@ -128,17 +114,12 @@ testDriver.test('capturing SPA interactions using loader_config data', supported
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
       t.ok(interactionTree.id != null, 'interaction has id')
-      t.ok(
-        interactionTree.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/),
-        'interaction id is in uuid format'
-      )
+      t.ok(interactionTree.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/),
+        'interaction id is in uuid format')
       t.ok(interactionTree.nodeId, 'interaction has nodeId attribute')
 
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
-      t.ok(
-        interactionTree.callbackEnd >= interactionTree.start,
-        'interaaction callback end should be >= interaction start'
-      )
+      t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')
       t.ok(interactionTree.callbackEnd <= interactionTree.end, 'interaction callback end should be <= interaction end')
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
@@ -189,7 +170,9 @@ testDriver.test('child nodes in SPA interaction does not exceed set limit', supp
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
       let eventPromise = router.expectEvents()
-      let domPromise = browser.elementByCssSelector('body').click()
+      let domPromise = browser
+        .elementByCssSelector('body')
+        .click()
 
       return Promise.all([eventPromise, domPromise]).then(([eventData]) => {
         return eventData

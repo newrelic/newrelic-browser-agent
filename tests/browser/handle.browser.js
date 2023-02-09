@@ -37,15 +37,11 @@ test('Handler', function (t) {
   })
   handle('many', [5, 4, 3, 3], ctx)
   drain(null, 'feature')
-  registerHandler(
-    'noq',
-    function (foo) {
-      t.equal(this, ctx, 'should have right context')
-      t.equal(foo, 'bar', count + ' handler added before any events')
-      count += 1
-    },
-    'other'
-  )
+  registerHandler('noq', function (foo) {
+    t.equal(this, ctx, 'should have right context')
+    t.equal(foo, 'bar', count + ' handler added before any events')
+    count += 1
+  }, 'other')
 
   handle('noq', ['bar'], ctx, 'other')
   setTimeout(function () {

@@ -9,17 +9,13 @@ jil.browserTest('spa nested XHR', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [
-      {
+    children: [{
+      name: 'ajax',
+      children: [{
         name: 'ajax',
-        children: [
-          {
-            name: 'ajax',
-            children: []
-          }
-        ]
-      }
-    ]
+        children: []
+      }]
+    }]
   })
 
   t.plan(2 + validator.count)

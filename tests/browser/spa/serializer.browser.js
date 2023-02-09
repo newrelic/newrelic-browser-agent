@@ -15,7 +15,9 @@ const { baseEE, agentIdentifier, aggregator } = setupData
 let supported = matcher.withFeature('wrappableAddEventListener')
 var qp = require('@newrelic/nr-querypack')
 let testCases = require('@newrelic/nr-querypack/examples/all.json').filter((testCase) => {
-  return testCase.schema.name === 'bel' && testCase.schema.version === 7 && JSON.parse(testCase.json).length === 1
+  return testCase.schema.name === 'bel' &&
+    testCase.schema.version === 7 &&
+    JSON.parse(testCase.json).length === 1
 })
 
 if (process.browser) {
@@ -42,93 +44,56 @@ _forEach(testCases, function (testCase) {
   })
 })
 
-jil.browserTest(
-  'spa interaction serializer attributes',
-  supported,
-  function (t) {
-    let interaction = new Interaction(
-      'click',
-      1459358524622,
-      'http://example.com/',
-      undefined,
-      undefined,
-      agentIdentifier
-    )
-    interaction.root.attrs.custom['undefined'] = void 0
-    interaction.root.attrs.custom['function'] = function foo (bar) {
-      return 123
+jil.browserTest('spa interaction serializer attributes', supported, function (t) {
+  let interaction = new Interaction('click', 1459358524622, 'http://example.com/', undefined, undefined, agentIdentifier)
+  interaction.root.attrs.custom['undefined'] = void 0
+  interaction.root.attrs.custom['function'] = function foo (bar) {
+    return 123
+  }
+
+  var decoded = qp.decode(serializer.serializeSingle(interaction.root))[0]
+  var attrs = decoded.children.reduce((map, attr) => {
+    map[attr.key] = attr
+    return map
+  }, {})
+
+  // Firefox inserts a "use strict"; as the first line of our test function, so
+  // strip it out if present for comparison purposes.
+  attrs['function']['value'] = attrs['function']['value'].replace(/"use strict";\n\n/, '')
+
+  t.deepEqual(attrs, {
+    undefined: {
+      key: 'undefined',
+      type: 'nullAttribute'
+    },
+    function: {
+      key: 'function',
+      type: 'stringAttribute',
+      value: 'function foo(bar) {\n    return 123;\n  }'
     }
+  }, 'should have expected attributes')
+  t.end()
+}, 'attributes should be correct')
 
-    var decoded = qp.decode(serializer.serializeSingle(interaction.root))[0]
-    var attrs = decoded.children.reduce((map, attr) => {
-      map[attr.key] = attr
-      return map
-    }, {})
+jil.browserTest('spa interaction serializer attributes', supported, function (t) {
+  let interaction = new Interaction('click', 1459358524622, 'http://example.com/', undefined, undefined, agentIdentifier)
 
-    // Firefox inserts a "use strict"; as the first line of our test function, so
-    // strip it out if present for comparison purposes.
-    attrs['function']['value'] = attrs['function']['value'].replace(/"use strict";\n\n/, '')
+  for (var i = 1; i < 100; ++i) {
+    interaction.root.attrs.custom['attr ' + i] = i
+  }
 
-    t.deepEqual(
-      attrs,
-      {
-        undefined: {
-          key: 'undefined',
-          type: 'nullAttribute'
-        },
-        function: {
-          key: 'function',
-          type: 'stringAttribute',
-          value: 'function foo(bar) {\n    return 123;\n  }'
-        }
-      },
-      'should have expected attributes'
-    )
-    t.end()
-  },
-  'attributes should be correct'
-)
+  var decoded = qp.decode(serializer.serializeSingle(interaction.root, 0, interaction.root.attrs.trigger === 'initialPageLoad'))[0]
+  var attrs = decoded.children.reduce((map, attr) => {
+    map[attr.key] = attr
+    return map
+  }, {})
 
-jil.browserTest(
-  'spa interaction serializer attributes',
-  supported,
-  function (t) {
-    let interaction = new Interaction(
-      'click',
-      1459358524622,
-      'http://example.com/',
-      undefined,
-      undefined,
-      agentIdentifier
-    )
-
-    for (var i = 1; i < 100; ++i) {
-      interaction.root.attrs.custom['attr ' + i] = i
-    }
-
-    var decoded = qp.decode(
-      serializer.serializeSingle(interaction.root, 0, interaction.root.attrs.trigger === 'initialPageLoad')
-    )[0]
-    var attrs = decoded.children.reduce((map, attr) => {
-      map[attr.key] = attr
-      return map
-    }, {})
-
-    t.equal(Object.keys(attrs).length, 64, 'should only have 64 attributes')
-    t.end()
-  },
-  'attributes should be limited'
-)
+  t.equal(Object.keys(attrs).length, 64, 'should only have 64 attributes')
+  t.end()
+}, 'attributes should be limited')
 
 jil.browserTest('spa interaction serializer with undefined string values', supported, function (t) {
-  var interaction = new Interaction(
-    'click',
-    1459358524622,
-    'http://domain/path',
-    undefined,
-    undefined,
-    agentIdentifier
-  )
+  var interaction = new Interaction('click', 1459358524622, 'http://domain/path', undefined, undefined, agentIdentifier)
   let decoded = qp.decode(serializer.serializeSingle(interaction.root))
   t.equal(decoded[0].customName, null, 'customName (which was undefined originally) should have default value')
   t.end()
@@ -262,12 +227,8 @@ function runTest (testCase, t) {
           navTiming.push(node.navTiming.responseEnd ? node.navTiming.responseEnd - offset : void 0)
           navTiming.push(node.navTiming.domLoading ? node.navTiming.domLoading - offset : void 0)
           navTiming.push(node.navTiming.domInteractive ? node.navTiming.domInteractive - offset : void 0)
-          navTiming.push(
-            node.navTiming.domContentLoadedEventStart ? node.navTiming.domContentLoadedEventStart - offset : void 0
-          )
-          navTiming.push(
-            node.navTiming.domContentLoadedEventEnd ? node.navTiming.domContentLoadedEventEnd - offset : void 0
-          )
+          navTiming.push(node.navTiming.domContentLoadedEventStart ? node.navTiming.domContentLoadedEventStart - offset : void 0)
+          navTiming.push(node.navTiming.domContentLoadedEventEnd ? node.navTiming.domContentLoadedEventEnd - offset : void 0)
           navTiming.push(node.navTiming.domComplete ? node.navTiming.domComplete - offset : void 0)
           navTiming.push(node.navTiming.loadEventStart ? node.navTiming.loadEventStart - offset : void 0)
           navTiming.push(node.navTiming.loadEventEnd ? node.navTiming.loadEventEnd - offset : void 0)

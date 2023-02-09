@@ -23,15 +23,13 @@ const jsErrorsAgg = new JserrorsAggregate(agentIdentifier, aggregator)
 
 const ee = baseEE
 
-var raf =
-  window.requestAnimationFrame ||
-  window.mozRequestAnimationFrame ||
-  window.webkitRequestAnimationFrame ||
-  window.msRequestAnimationFrame
+var raf = window.requestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.msRequestAnimationFrame
 
-var setTimeoutWrapped = !!setTimeout['nr@wrapper']
-var shouldExpectXHRErrors =
-  setTimeoutWrapped && XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener
+var setTimeoutWrapped = !!(setTimeout['nr@wrapper'])
+var shouldExpectXHRErrors = setTimeoutWrapped && (XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener)
 
 // Old versions of FF don't fire readystatechange on the document
 var hasReadyStateChange = !(ffVersion && ffVersion <= 3.6)
@@ -47,7 +45,7 @@ throwsRemaining += setupRAFError()
 throwsRemaining += setupXHRError()
 
 // This gets overridden in the test below
-window.onAllErrorsThrown = function () {}
+window.onAllErrorsThrown = function () { }
 
 function decrementRemainingAndCheckDone (label) {
   throwsRemaining--
@@ -55,7 +53,7 @@ function decrementRemainingAndCheckDone (label) {
 }
 
 function setupCustomEventError () {
-  if (typeof document.addEventListener !== 'function') return 0
+  if (typeof (document.addEventListener) !== 'function') return 0
 
   document.addEventListener('foo', callback, false)
   return 1
@@ -82,7 +80,7 @@ function setupReadyStateChangeError () {
 
   var fired = false
 
-  if (typeof document.addEventListener === 'function') {
+  if (typeof (document.addEventListener) === 'function') {
     document.addEventListener('readystatechange', callback, false)
   } else {
     document.attachEvent('onreadystatechange', callback)
@@ -99,7 +97,7 @@ function setupReadyStateChangeError () {
 }
 
 function setupDOMContentLoadedError () {
-  if (typeof document.addEventListener === 'function') {
+  if (typeof (document.addEventListener) === 'function') {
     document.addEventListener('DOMContentLoaded', callback, false)
   } else {
     document.attachEvent('onDOMContentLoaded', callback)
@@ -149,14 +147,10 @@ function setupXHRError () {
   if (!shouldExpectXHRErrors) return 0
 
   var xhr = new XMLHttpRequest()
-  xhr.addEventListener(
-    'load',
-    function () {
-      decrementRemainingAndCheckDone('xhr')
-      throw new Error('xhr on load event listener')
-    },
-    false
-  )
+  xhr.addEventListener('load', function () {
+    decrementRemainingAndCheckDone('xhr')
+    throw new Error('xhr on load event listener')
+  }, false)
   xhr.open('DELETE', '/test-xhr-error')
   xhr.send()
   return 1
@@ -212,13 +206,12 @@ if (!setTimeoutWrapped) {
       // uncaught error
       t.ok(
         errors['Script error.'] ||
-          errors['Uncaught error with no additional information'] ||
-          errors['Uncaught exception: Error: Uncaught Thrown'] ||
-          errors['Error: Uncaught Thrown'] ||
-          errors['Uncaught Thrown'] ||
-          errors['[object Event]'],
-        'got an uncaught error'
-      )
+        errors['Uncaught error with no additional information'] ||
+        errors['Uncaught exception: Error: Uncaught Thrown'] ||
+        errors['Error: Uncaught Thrown'] ||
+        errors['Uncaught Thrown'] ||
+        errors['[object Event]']
+        , 'got an uncaught error')
 
       if (!eventsWrapped) return
 
@@ -240,11 +233,7 @@ if (!setTimeoutWrapped) {
       // timer errors
       t.ok(errors['TO error'], 'TO error')
       t.ok(errors['Interval Error'], 'Interval error >= 1')
-      t.equal(
-        typeof shouldUseGlobalContext,
-        'number',
-        'Variable assigned inside string passed to setTimeout had its context changed'
-      )
+      t.equal(typeof shouldUseGlobalContext, 'number', 'Variable assigned inside string passed to setTimeout had its context changed')
 
       // Request Animation Frame error
       if (raf) {
@@ -253,11 +242,7 @@ if (!setTimeoutWrapped) {
 
       if (hasReadyStateChange) {
         try {
-          t.equal(
-            errors['document readystatechange'].params.pageview,
-            1,
-            'document readystatechange error pageview is 1'
-          )
+          t.equal(errors['document readystatechange'].params.pageview, 1, 'document readystatechange error pageview is 1')
         } catch (e) {
           t.fail('document readystatechange error pageview is 1 (' + e + ')')
         }

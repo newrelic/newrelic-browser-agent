@@ -35,9 +35,7 @@ jil.browserTest('addEventListener options work when wrapped', function (t) {
 
   t.end()
 
-  function handler () {
-    handlerCallCount++
-  }
+  function handler () { handlerCallCount++ }
 })
 
 function triggerEvent (el, eventName) {

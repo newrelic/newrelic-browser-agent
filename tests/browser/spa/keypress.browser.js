@@ -10,20 +10,16 @@ jil.browserTest('spa keypress trigger', function (t) {
   let validator = new helpers.InteractionValidator({
     attrs: { trigger: 'keypress' },
     name: 'interaction',
-    children: [
-      {
-        name: 'ajax',
-        children: [
-          {
-            type: 'customTracer',
-            attrs: {
-              name: 'timer'
-            },
-            children: []
-          }
-        ]
-      }
-    ]
+    children: [{
+      name: 'ajax',
+      children: [{
+        type: 'customTracer',
+        attrs: {
+          name: 'timer'
+        },
+        children: []
+      }]
+    }]
   })
 
   t.plan(3 + validator.count)
@@ -56,20 +52,16 @@ jil.browserTest('spa keyup trigger', function (t) {
   let validator = new helpers.InteractionValidator({
     attrs: { trigger: 'keyup' },
     name: 'interaction',
-    children: [
-      {
-        name: 'ajax',
-        children: [
-          {
-            type: 'customTracer',
-            attrs: {
-              name: 'timer'
-            },
-            children: []
-          }
-        ]
-      }
-    ]
+    children: [{
+      name: 'ajax',
+      children: [{
+        type: 'customTracer',
+        attrs: {
+          name: 'timer'
+        },
+        children: []
+      }]
+    }]
   })
 
   t.plan(3 + validator.count)
@@ -102,20 +94,16 @@ jil.browserTest('spa keydown trigger', function (t) {
   let validator = new helpers.InteractionValidator({
     attrs: { trigger: 'keydown' },
     name: 'interaction',
-    children: [
-      {
-        name: 'ajax',
-        children: [
-          {
-            type: 'customTracer',
-            attrs: {
-              name: 'timer'
-            },
-            children: []
-          }
-        ]
-      }
-    ]
+    children: [{
+      name: 'ajax',
+      children: [{
+        type: 'customTracer',
+        attrs: {
+          name: 'timer'
+        },
+        children: []
+      }]
+    }]
   })
 
   t.plan(3 + validator.count)

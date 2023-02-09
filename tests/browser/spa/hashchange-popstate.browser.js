@@ -9,9 +9,7 @@ let cleanUrl = require('../../../src/common/url/clean-url').cleanURL
 if (process.browser) {
   var helpers = require('./helpers')
   var loaded = false
-  helpers.onWindowLoad(() => {
-    loaded = true
-  })
+  helpers.onWindowLoad(() => { loaded = true })
 }
 
 jil.browserTest('spa interaction triggered by hashchange + popstate', function (t) {
@@ -26,15 +24,13 @@ jil.browserTest('spa interaction triggered by hashchange + popstate', function (
 
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'onPopstate'
-        },
-        children: []
-      }
-    ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'onPopstate'
+      },
+      children: []
+    }]
   })
 
   t.plan(4 + validator.count)
@@ -45,9 +41,7 @@ jil.browserTest('spa interaction triggered by hashchange + popstate', function (
     if (loaded) {
       setTimeout(function () {
         window.location.hash = hashFragment
-        helpers.startInteraction(onInteractionStart, afterInteractionDone, {
-          eventType: 'popstate'
-        })
+        helpers.startInteraction(onInteractionStart, afterInteractionDone, { eventType: 'popstate' })
       })
     } else {
       setTimeout(checkLoaded, 100)
@@ -66,8 +60,7 @@ jil.browserTest('spa interaction triggered by hashchange + popstate', function (
     let actualOldUrl = cleanUrl(root.attrs.oldURL, true)
     let actualNewUrl = cleanUrl(root.attrs.newURL, true)
 
-    let expectedOldUrl =
-      window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + hashFragment
+    let expectedOldUrl = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + hashFragment
     let expectedNewUrl = cleanUrl(originalURL, true)
 
     t.equal(actualOldUrl, expectedOldUrl, 'old url should be the url navigated from')

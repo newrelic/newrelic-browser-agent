@@ -46,11 +46,7 @@ test('xhr timing', function (t) {
     return
   }
 
-  if (oldFF) {
-    test.log(
-      "Can't instrument 'xhr.onload' handlers because they become not functions when assigned in FF " + ffVersion
-    )
-  }
+  if (oldFF) test.log("Can't instrument 'xhr.onload' handlers because they become not functions when assigned in FF " + ffVersion)
 
   baseEE.emit('feat-err', [])
   /*
@@ -79,8 +75,8 @@ test('xhr timing', function (t) {
     plan += testCase.plan
 
     let fullURL = (testCase.host || '') + url + (testCase.qs || '')
-    let payload = typeof testCase.payload === 'function' ? testCase.payload() : testCase.payload
-    let xhr = (testCase.xhr = new XMLHttpRequest())
+    let payload = (typeof testCase.payload === 'function') ? testCase.payload() : testCase.payload
+    let xhr = testCase.xhr = new XMLHttpRequest()
     xhr.open(testCase.method || 'GET', fullURL)
     fire('afterOpen', testCase, [t])
     xhr.send(payload)
@@ -89,21 +85,16 @@ test('xhr timing', function (t) {
 
   t.plan(plan)
 
-  registerHandler(
-    'xhr',
-    async function (params, metrics, start) {
-      const { Aggregate: AjaxAggreg } = await import('../../../src/features/ajax/aggregate/index')
-      const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator)
-      ajaxTestAgg.storeXhr(params, metrics, start)
+  registerHandler('xhr', async function (params, metrics, start) {
+    const { Aggregate: AjaxAggreg } = await import('../../../src/features/ajax/aggregate/index')
+    const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator)
+    ajaxTestAgg.storeXhr(params, metrics, start)
 
-      if ('pathname' in params) fire('check', urls[params.pathname], [params, metrics, t])
-      else if (params.method === 'GET') fire('check', urls['/'], [params, metrics, t])
-      else if (params.method === 'PUT') fire('check', urls['/timeout'], [params, metrics, t])
-      else if (params.method === 'POST') fire('check', urls['/asdf'], [params, metrics, t])
-    },
-    undefined,
-    baseEE
-  )
+    if ('pathname' in params) fire('check', urls[params.pathname], [params, metrics, t])
+    else if (params.method === 'GET') fire('check', urls['/'], [params, metrics, t])
+    else if (params.method === 'PUT') fire('check', urls['/timeout'], [params, metrics, t])
+    else if (params.method === 'POST') fire('check', urls['/asdf'], [params, metrics, t])
+  }, undefined, baseEE)
 
   drain(agentIdentifier, 'feature')
 
@@ -129,10 +120,7 @@ var urls = {
       if (oldFF) {
         t.skip('old firefox has inconsistent timing')
       } else {
-        t.ok(
-          metrics.cbTime >= onloadtime + loadeventtime,
-          'Callbacks Took some time for /xhr_with_cat, one load and onload : ' + metrics.cbTime
-        )
+        t.ok(metrics.cbTime >= onloadtime + loadeventtime, 'Callbacks Took some time for /xhr_with_cat, one load and onload : ' + metrics.cbTime)
       }
       t.skip(params.pathname, 'does not have pathname when CAT data present for /xhr_with_cat')
     },
@@ -146,9 +134,7 @@ var urls = {
     check: function (params, metrics, t) {
       t.fail('aborted XHR reported')
     },
-    afterSend: function () {
-      this.xhr.abort()
-    },
+    afterSend: function () { this.xhr.abort() },
     plan: 0
   },
   '/timeout': {
@@ -159,9 +145,7 @@ var urls = {
     },
     method: 'PUT',
     payload: '',
-    afterOpen: function () {
-      this.xhr.timeout = 10
-    },
+    afterOpen: function () { this.xhr.timeout = 10 },
     plan: 2
   },
   '/echo': {
@@ -191,21 +175,12 @@ var urls = {
       if (oldFF) {
         t.skip('old firefox has inconsistent timing')
       } else {
-        t.ok(
-          metrics.cbTime >= 4 && metrics.cbTime < 2000,
-          'Callbacks Took some time for /xhr_no_cat, two load handlers: ' + metrics.cbTime
-        )
+        t.ok(metrics.cbTime >= 4 && metrics.cbTime < 2000, 'Callbacks Took some time for /xhr_no_cat, two load handlers: ' + metrics.cbTime)
       }
     },
     afterOpen: function () {
       this.xhr.addEventListener('load', waitTwice, false)
-      this.xhr.addEventListener(
-        'load',
-        function () {
-          waitTwice()
-        },
-        false
-      )
+      this.xhr.addEventListener('load', function () { waitTwice() }, false)
 
       // This should not fire because it has the same arguments as an addEventListener call above. If it is
       // called, then it will cause the cbTime to be too great. However, if our load event counting is wrong,
@@ -263,7 +238,7 @@ var urls = {
   '/postwithhi/arraybufferxhr': {
     gate: function () {
       void new Int8Array([104, 105, 33])
-      return new XMLHttpRequest().responseType === ''
+      return ((new XMLHttpRequest()).responseType === '')
     },
     method: 'POST',
     afterOpen: function (t) {
@@ -275,9 +250,7 @@ var urls = {
         t.deepEqual(new Int8Array(xhr.response), buffer, 'arraybuffer content matches')
       }
     },
-    payload: function () {
-      return new Int8Array([104, 105, 33]).buffer
-    }, // 'hi!'
+    payload: function () { return (new Int8Array([104, 105, 33])).buffer }, // 'hi!'
     check: function (params, metrics, t) {
       t.equal(metrics.txSize, 3, 'correct size for sent arraybuffer objects')
       t.equal(metrics.rxSize, 3, 'correct size for received arraybuffer objects')
@@ -289,7 +262,7 @@ var urls = {
       var xhr = new XMLHttpRequest()
       if (xhr.responseType !== '') return false
       xhr.responseType = 'json'
-      return xhr.responseType === 'json'
+      return (xhr.responseType === 'json')
     },
     afterOpen: function (t) {
       let xhr = this.xhr
@@ -327,7 +300,7 @@ var urls = {
   },
   '/formdata': {
     gate: function () {
-      return !!new FormData()
+      return !!(new FormData())
     },
     method: 'POST',
     payload: function () {
@@ -376,15 +349,11 @@ var urls = {
     },
     afterOpen: function (t) {
       let xhr = this.xhr
-      xhr.addEventListener(
-        'load',
-        function () {
-          let transferEncoding = xhr.getResponseHeader('transfer-encoding')
-          if (transferEncoding) transferEncoding = transferEncoding.toLowerCase()
-          t.notok(xhr.getResponseHeader('content-length'), 'content-length header should not be present')
-        },
-        false
-      )
+      xhr.addEventListener('load', function () {
+        let transferEncoding = xhr.getResponseHeader('transfer-encoding')
+        if (transferEncoding) transferEncoding = transferEncoding.toLowerCase()
+        t.notok(xhr.getResponseHeader('content-length'), 'content-length header should not be present')
+      }, false)
     }
   }
 }

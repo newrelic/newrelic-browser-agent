@@ -9,23 +9,19 @@ jil.browserTest('fetch.reject', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     type: 'interaction',
-    children: [
-      {
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'promise'
+      },
+      children: [{
         type: 'customTracer',
         attrs: {
-          name: 'promise'
+          name: 'timer'
         },
-        children: [
-          {
-            type: 'customTracer',
-            attrs: {
-              name: 'timer'
-            },
-            children: []
-          }
-        ]
-      }
-    ]
+        children: []
+      }]
+    }]
   })
 
   t.plan(4 + validator.count)
@@ -35,22 +31,16 @@ jil.browserTest('fetch.reject', function (t) {
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
   function onInteractionStart (cb) {
-    window
-      .fetch('http://not.a.real.website')
-      .catch(function (err) {
-        t.ok(err, 'should get error')
-        return newrelic.interaction().createTracer('promise', () => {
-          return Promise.resolve()
-        })()
-      })
-      .then(function () {
-        setTimeout(
-          newrelic.interaction().createTracer('timer', function () {
-            cb()
-          }),
-          100
-        )
-      })
+    window.fetch('http://not.a.real.website').catch(function (err) {
+      t.ok(err, 'should get error')
+      return newrelic.interaction().createTracer('promise', () => {
+        return Promise.resolve()
+      })()
+    }).then(function () {
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        cb()
+      }), 100)
+    })
   }
 
   function afterInteractionDone (interaction) {
@@ -65,31 +55,25 @@ jil.browserTest('fetch body.reject', function (t) {
   let helpers = require('./helpers')
   let validator = new helpers.InteractionValidator({
     type: 'interaction',
-    children: [
-      {
-        type: 'ajax',
+    children: [{
+      type: 'ajax',
+      attrs: {
+        isFetch: true
+      },
+      children: [{
+        type: 'customTracer',
         attrs: {
-          isFetch: true
+          name: 'promise'
         },
-        children: [
-          {
-            type: 'customTracer',
-            attrs: {
-              name: 'promise'
-            },
-            children: [
-              {
-                type: 'customTracer',
-                attrs: {
-                  name: 'timer'
-                },
-                children: []
-              }
-            ]
-          }
-        ]
-      }
-    ]
+        children: [{
+          type: 'customTracer',
+          attrs: {
+            name: 'timer'
+          },
+          children: []
+        }]
+      }]
+    }]
   })
 
   t.plan(4 + validator.count)
@@ -99,24 +83,18 @@ jil.browserTest('fetch body.reject', function (t) {
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
   function onInteractionStart (cb) {
-    window
-      .fetch('/')
-      .then(function (res) {
-        return res.json().catch((err) => {
-          t.ok(err, 'should get error')
-          return newrelic.interaction().createTracer('promise', () => {
-            return Promise.resolve()
-          })()
-        })
+    window.fetch('/').then(function (res) {
+      return res.json().catch((err) => {
+        t.ok(err, 'should get error')
+        return newrelic.interaction().createTracer('promise', () => {
+          return Promise.resolve()
+        })()
       })
-      .then(function () {
-        setTimeout(
-          newrelic.interaction().createTracer('timer', function () {
-            cb()
-          }),
-          0
-        )
-      })
+    }).then(function () {
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        cb()
+      }), 0)
+    })
     cb()
   }
 

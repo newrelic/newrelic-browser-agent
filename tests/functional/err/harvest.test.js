@@ -34,22 +34,19 @@ testDriver.test('jserrors are retried when collector returns 429', supported, fu
 
   let firstBody
 
-  Promise.all([errPromise, loadPromise, rumPromise])
-    .then(([errResult]) => {
-      t.equal(errResult.res.statusCode, 429, 'server responded with 429')
-      firstBody = JSON.parse(errResult.body).err
-      return router.expectErrors()
-    })
-    .then((result) => {
-      let secondBody = JSON.parse(result.body).err
+  Promise.all([errPromise, loadPromise, rumPromise]).then(([errResult]) => {
+    t.equal(errResult.res.statusCode, 429, 'server responded with 429')
+    firstBody = JSON.parse(errResult.body).err
+    return router.expectErrors()
+  }).then(result => {
+    let secondBody = JSON.parse(result.body).err
 
-      t.equal(result.res.statusCode, 200, 'server responded with 200')
-      t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
-      t.equal(router.seenRequests.errors_post, 2, 'got two jserrors harvest requests')
+    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
+    t.equal(router.seenRequests.errors_post, 2, 'got two jserrors harvest requests')
 
-      t.end()
-    })
-    .catch(fail)
+    t.end()
+  }).catch(fail)
 
   function fail (err) {
     t.error(err)

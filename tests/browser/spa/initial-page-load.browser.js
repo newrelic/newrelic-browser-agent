@@ -22,16 +22,12 @@ jil.browserTest('initial page load timing', function (t) {
 
   t.notok(helpers.currentNodeId(), 'interaction should be null at first')
 
-  helpers.startInteraction(onInteractionStart, afterInteractionDone, {
-    eventType: 'initialPageLoad'
-  })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone, { eventType: 'initialPageLoad' })
 
   function onInteractionStart (cb) {
     let x = 0
     let deadline = helpers.now() + 75
-    while (helpers.now() <= deadline) {
-      x++
-    }
+    while (helpers.now() <= deadline) { x++ }
     let e = window.document.createElement('div')
     e.innerHTML = x
     newrelic.interaction().setAttribute('from-start', true)

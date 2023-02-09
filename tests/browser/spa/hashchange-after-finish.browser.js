@@ -20,12 +20,10 @@ jil.browserTest('spa aggregator receives complete interaction when hashchange fi
         'after-hashchange': true
       }
     },
-    children: [
-      {
-        name: 'ajax',
-        children: []
-      }
-    ]
+    children: [{
+      name: 'ajax',
+      children: []
+    }]
   }
 
   let validator = new helpers.InteractionValidator(expected)

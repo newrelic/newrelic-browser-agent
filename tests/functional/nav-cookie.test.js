@@ -23,7 +23,9 @@ testDriver.test('agent set nav cookie when page is unloading', function (t, brow
 
       let insPromise = router.expectIns()
 
-      let loadPromise = browser.safeEval('newrelic.addPageAction("hello", { a: 1 })').get(router.assetURL('/'))
+      let loadPromise = browser
+        .safeEval('newrelic.addPageAction("hello", { a: 1 })')
+        .get(router.assetURL('/'))
 
       return Promise.all([insPromise, loadPromise]).then(([ins, load]) => {
         return ins

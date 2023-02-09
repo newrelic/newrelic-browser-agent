@@ -8,11 +8,9 @@ let originalSetTimeout = global.setTimeout
 const jil = require('jil')
 const { getInfo } = require('../../../src/common/config/config')
 
-let raf =
-  global.reqiestAnimationFrame ||
-  function (fn) {
-    return originalSetTimeout(fn, 16)
-  }
+let raf = global.reqiestAnimationFrame || function (fn) {
+  return originalSetTimeout(fn, 16)
+}
 
 jil.browserTest('simple sync api test', function (t) {
   let helpers = require('./helpers')
@@ -399,17 +397,14 @@ jil.browserTest('simple sync api test with throw and sibling', function (t) {
         attrs: {
           name: 'function 1'
         },
-        children: [
-          {
-            type: 'customTracer',
-            attrs: {
-              name: 'nested-child'
-            },
-            children: []
-          }
-        ]
-      },
-      {
+        children: [{
+          type: 'customTracer',
+          attrs: {
+            name: 'nested-child'
+          },
+          children: []
+        }]
+      }, {
         type: 'customTracer',
         attrs: {
           name: 'sibling-child'
@@ -457,12 +452,10 @@ jil.browserTest('end interaction', function (t) {
 
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [
-      {
-        name: 'customEnd',
-        children: []
-      }
-    ]
+    children: [{
+      name: 'customEnd',
+      children: []
+    }]
   })
 
   t.plan(2 + validator.count)
@@ -712,14 +705,12 @@ jil.browserTest('context store and onEnd', function (t) {
         otherFoo: 'bar'
       }
     },
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'setTimeout'
-        }
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'setTimeout'
       }
-    ]
+    }]
   })
 
   t.plan(5 + validator.count)
@@ -732,18 +723,15 @@ jil.browserTest('context store and onEnd', function (t) {
       contextStore = ctx
       contextStore.foo = 'bar'
     })
-    setTimeout(
-      newrelic.interaction().createTracer('setTimeout', function () {
+    setTimeout(newrelic.interaction().createTracer('setTimeout', function () {
+      newrelic.interaction().getContext(function (ctx) {
+        t.equal(contextStore, ctx, 'should get right context in timeout')
         newrelic.interaction().getContext(function (ctx) {
-          t.equal(contextStore, ctx, 'should get right context in timeout')
-          newrelic.interaction().getContext(function (ctx) {
-            newrelic.interaction().setAttribute('foo', ctx.foo)
-            cb()
-          })
+          newrelic.interaction().setAttribute('foo', ctx.foo)
+          cb()
         })
-      }),
-      5
-    )
+      })
+    }), 5)
 
     newrelic.interaction().onEnd((ctx) => {
       t.equal(contextStore, ctx, 'should get right context on end')
@@ -848,15 +836,13 @@ jil.browserTest('interaction outside interaction', function (t) {
         delayed: true
       }
     },
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timeout'
-        },
-        children: []
-      }
-    ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timeout'
+      },
+      children: []
+    }]
   })
 
   t.plan(3 + validator.count)
@@ -903,51 +889,40 @@ jil.browserTest('interaction outside wrapped function', function (t) {
         included: true
       }
     },
-    children: [
-      {
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'outer'
+      },
+      children: [{
         type: 'customTracer',
         attrs: {
-          name: 'outer'
+          name: 'timeout'
         },
-        children: [
-          {
-            type: 'customTracer',
-            attrs: {
-              name: 'timeout'
-            },
-            children: []
-          }
-        ]
-      }
-    ]
+        children: []
+      }]
+    }]
   })
 
   t.plan(3 + validator.count)
 
-  setTimeout['nr@original'].call(
-    window,
-    function () {
-      var interaction = newrelic.interaction()
+  setTimeout['nr@original'].call(window, function () {
+    var interaction = newrelic.interaction()
 
-      helpers.startInteraction(onInteractionStart, afterInteractionDone, {
-        eventType: 'api',
-        handle: interaction
-      })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone, {
+      eventType: 'api',
+      handle: interaction
+    })
 
-      function onInteractionStart (cb) {
-        newrelic.interaction().setAttribute('alsoExcluded', true)
-        interaction.setAttribute('included', true)
-        setTimeout(
-          interaction.createTracer('outer', function () {
-            newrelic.interaction().setAttribute('delayed', true)
-            setTimeout(newrelic.interaction().createTracer('timeout', cb))
-          }),
-          50
-        )
-      }
-    },
-    0
-  )
+    function onInteractionStart (cb) {
+      newrelic.interaction().setAttribute('alsoExcluded', true)
+      interaction.setAttribute('included', true)
+      setTimeout(interaction.createTracer('outer', function () {
+        newrelic.interaction().setAttribute('delayed', true)
+        setTimeout(newrelic.interaction().createTracer('timeout', cb))
+      }), 50)
+    }
+  }, 0)
 
   setTimeout(function () {
     newrelic.interaction().setAttribute('excluded', true)
@@ -971,15 +946,13 @@ jil.browserTest('set trigger', function (t) {
       trigger: 'bar',
       customName: 'foo'
     },
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timeout'
-        },
-        children: []
-      }
-    ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timeout'
+      },
+      children: []
+    }]
   })
 
   t.plan(3 + validator.count)
@@ -988,13 +961,10 @@ jil.browserTest('set trigger', function (t) {
 
   function onInteractionStart (cb) {
     newrelic.interaction().setName('foo', 'foo')
-    setTimeout(
-      newrelic.interaction().createTracer('timeout', function () {
-        newrelic.interaction().setName(null, 'bar')
-        cb()
-      }),
-      50
-    )
+    setTimeout(newrelic.interaction().createTracer('timeout', function () {
+      newrelic.interaction().setName(null, 'bar')
+      cb()
+    }), 50)
   }
 
   setTimeout(function () {
@@ -1020,15 +990,13 @@ jil.browserTest('createTracer no name', function (t) {
         foo: 'bar'
       }
     },
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timeout'
-        },
-        children: []
-      }
-    ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timeout'
+      },
+      children: []
+    }]
   })
 
   t.plan(3 + validator.count)
@@ -1036,17 +1004,12 @@ jil.browserTest('createTracer no name', function (t) {
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
   function onInteractionStart (cb) {
-    setTimeout(
-      newrelic.interaction().createTracer(null, function () {
-        setTimeout(
-          newrelic.interaction().createTracer('timeout', function () {
-            newrelic.interaction().setAttribute('foo', 'bar')
-            cb()
-          })
-        )
-      }),
-      50
-    )
+    setTimeout(newrelic.interaction().createTracer(null, function () {
+      setTimeout(newrelic.interaction().createTracer('timeout', function () {
+        newrelic.interaction().setAttribute('foo', 'bar')
+        cb()
+      }))
+    }), 50)
   }
 
   function afterInteractionDone (interaction) {
@@ -1080,10 +1043,7 @@ jil.browserTest('createTracer no name, no callback', function (t) {
   }
 
   function afterInteractionDone (interaction) {
-    t.ok(
-      interaction.root.end - interaction.root.start < 50,
-      'should not include duration of no name, no callback tracer'
-    )
+    t.ok(interaction.root.end - interaction.root.start < 50, 'should not include duration of no name, no callback tracer')
     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
     t.notok(interaction.ignored, 'interaction should not be ignored')

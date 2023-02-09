@@ -15,9 +15,7 @@ const { FEATURE_NAMES } = require('../../src/loaders/features/features')
 const { agentIdentifier, aggregator } = setup()
 
 jil.browserTest('LCP is not collected on unload when the LCP value occurs after max timeout', function (t) {
-  setConfiguration(agentIdentifier, {
-    page_view_timing: { maxLCPTimeSeconds: 0.5 }
-  })
+  setConfiguration(agentIdentifier, { page_view_timing: { maxLCPTimeSeconds: 0.5 } })
 
   const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
 

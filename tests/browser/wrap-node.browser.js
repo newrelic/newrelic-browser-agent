@@ -40,5 +40,5 @@ jil.browserTest('new property is not added to HTMLElement', function (t) {
 })
 
 function isWrapped (fn) {
-  return fn && typeof fn['nr@original'] === 'function'
+  return fn && (typeof fn['nr@original'] === 'function')
 }

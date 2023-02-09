@@ -157,14 +157,4 @@ function validateNoTraceContextHeaders (t, headers) {
   t.notOk(headers['tracestate'], 'tracestate header should not be present')
 }
 
-module.exports = {
-  getXhrFromResponse,
-  fail,
-  condition,
-  querypack,
-  testCases,
-  validateNewrelicHeader,
-  validateNoNewrelicHeader,
-  validateTraceContextHeaders,
-  validateNoTraceContextHeaders
-}
+module.exports = { getXhrFromResponse, fail, condition, querypack, testCases, validateNewrelicHeader, validateNoNewrelicHeader, validateTraceContextHeaders, validateNoTraceContextHeaders }

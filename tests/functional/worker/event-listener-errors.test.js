@@ -16,45 +16,37 @@ const init = {
   }
 }
 
-workerTypes.forEach((type) => {
+workerTypes.forEach(type => {
   eventListenerTest(type, typeToMatcher(type))
 })
 
 function eventListenerTest (type, matcher) {
-  testDriver.test(
-    `${type} - an error in eventListener is noticed and harvested`,
-    matcher,
-    function (t, browser, router) {
-      let assetURL = router.assetURL(`worker/${type}-worker.html`, {
-        init,
-        workerCommands: [
-          `${type == workerTypes[2] ? 'port' : 'self'}.addEventListener('message', () => {
+  testDriver.test(`${type} - an error in eventListener is noticed and harvested`, matcher, function (t, browser, router) {
+    let assetURL = router.assetURL(`worker/${type}-worker.html`, {
+      init,
+      workerCommands: [
+        `${type == workerTypes[2] ? 'port' : 'self'}.addEventListener('message', () => {
             throw new Error('test')
         })`,
-          () => {
-            console.log('sent another message so that the eventListener would trigger')
-          }
-        ].map((x) => x.toString())
-      })
+        () => { console.log('sent another message so that the eventListener would trigger') }
+      ].map(x => x.toString())
+    })
 
-      let loadPromise = browser.get(assetURL)
-      let errPromise = router.expectErrors()
+    let loadPromise = browser.get(assetURL)
+    let errPromise = router.expectErrors()
 
-      Promise.all([errPromise, loadPromise])
-        .then(([response]) => {
-          const actualErrors = getErrorsFromResponse(response, browser)
+    Promise.all([errPromise, loadPromise]).then(([response]) => {
+      const actualErrors = getErrorsFromResponse(response, browser)
 
-          t.equal(actualErrors.length, 1, 'exactly one error')
+      t.equal(actualErrors.length, 1, 'exactly one error')
 
-          let actualError = actualErrors[0]
-          t.equal(actualError.metrics.count, 1, 'Should have seen 1 error')
-          t.ok(actualError.metrics.time.t > 0, 'Should have a valid timestamp')
-          t.equal(actualError.params.exceptionClass, 'Error', 'Should be Error class')
-          t.equal(actualError.params.message, 'test', 'Should have correct message')
-          t.ok(actualError.params.stack_trace, 'Should have a stack trace')
-          t.end()
-        })
-        .catch(fail(t))
-    }
-  )
+      let actualError = actualErrors[0]
+      t.equal(actualError.metrics.count, 1, 'Should have seen 1 error')
+      t.ok(actualError.metrics.time.t > 0, 'Should have a valid timestamp')
+      t.equal(actualError.params.exceptionClass, 'Error', 'Should be Error class')
+      t.equal(actualError.params.message, 'test', 'Should have correct message')
+      t.ok(actualError.params.stack_trace, 'Should have a stack trace')
+      t.end()
+    }).catch(fail(t))
+  })
 }

@@ -15,21 +15,20 @@ jil.browserTest('timer between cb and microtasks', function (t) {
 
   let validator = new helpers.InteractionValidator({
     name: 'interaction',
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
-      }
-    ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: []
+    }]
   })
 
   t.plan(2 + validator.count)
 
   setTimeout(function () {
-    setTimeout(function () {}, 50)
+    setTimeout(function () {
+    }, 50)
 
     helpers.startInteraction(onInteractionStart, afterInteractionDone)
   }, 0)
@@ -38,9 +37,7 @@ jil.browserTest('timer between cb and microtasks', function (t) {
     // Perform some work to block the event loop
     let x = 0
     let deadline = helpers.now() + 75
-    while (helpers.now() <= deadline) {
-      x++
-    }
+    while (helpers.now() <= deadline) { x++ }
     let e = document.createElement('div')
     e.innerHTML = x
 

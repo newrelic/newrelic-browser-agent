@@ -12,12 +12,8 @@ const { baseEE, agentIdentifier } = setup()
 test('activate features ', function (t) {
   var featFooCallbacks = 0
   var featBarCallbacks = 0
-  baseEE.on('feat-foo', function () {
-    featFooCallbacks += 1
-  })
-  baseEE.on('feat-bar', function () {
-    featBarCallbacks += 1
-  })
+  baseEE.on('feat-foo', function () { featFooCallbacks += 1 })
+  baseEE.on('feat-bar', function () { featBarCallbacks += 1 })
 
   t.plan(2)
   activateFeatures(null, agentIdentifier) // should trigger nothing

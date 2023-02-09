@@ -7,7 +7,11 @@ const testDriver = require('../../../tools/jil/index')
 
 let supported = testDriver.Matcher.withFeature('stn')
 
-testDriver.test('errors get to session traces', supported, function (t, browser, router) {
+testDriver.test('errors get to session traces', supported, function (
+  t,
+  browser,
+  router
+) {
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
   let loadPromise = browser.get(router.assetURL('sessiontraceerror.html'))

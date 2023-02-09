@@ -21,11 +21,8 @@ const { drain } = require('../../../src/common/drain/drain')
 const { mapOwn } = require('../../../src/common/util/map-own')
 
 var currentNodeId = () => {
-  try {
-    return spaAgg.state.currentNode && spaAgg.state.currentNode.id
-  } catch (err) {
-    return undefined
-  }
+  try { return spaAgg.state.currentNode && spaAgg.state.currentNode.id }
+  catch (err) { return undefined }
 }
 var aggregatorLoadQueue = []
 var aggregatorLoaded = false
@@ -101,7 +98,7 @@ function onAggregatorLoaded (cb) {
 }
 
 function emitsPopstateEventOnHashChanges () {
-  return !isEdge() && !isInternetExplorer()
+  return (!isEdge() && !isInternetExplorer())
 }
 
 function isEdge () {
@@ -119,15 +116,11 @@ function startInteraction (onInteractionStart, afterInteractionFinish, options =
   let eventType = options.eventType || 'click'
 
   if (eventType === 'initialPageLoad') {
-    onInteractionStart(() => {
-      done = true
-    })
+    onInteractionStart(() => { done = true })
   } else if (eventType === 'api') {
     interactionId = lastId++
     options.handle.setAttribute('__interactionId', interactionId)
-    onInteractionStart(() => {
-      done = true
-    })
+    onInteractionStart(() => { done = true })
   } else {
     originalSetTimeout(startFromUnwrappedTask, 100)
   }
@@ -177,9 +170,7 @@ function startInteraction (onInteractionStart, afterInteractionFinish, options =
       newrelic.interaction().setAttribute('__interactionId', interactionId)
       event.preventDefault()
       event.stopPropagation()
-      onInteractionStart(() => {
-        done = true
-      })
+      onInteractionStart(() => { done = true })
     }
   }
 }
@@ -206,7 +197,11 @@ function InteractionValidator (json) {
 
 var handledKeys = ['attrs', 'children', 'jsTime', 'name', 'type']
 
-let TIMED_NODE_TYPES = ['customTracer', 'interaction', 'ajax']
+let TIMED_NODE_TYPES = [
+  'customTracer',
+  'interaction',
+  'ajax'
+]
 
 InteractionValidator.prototype.initialize = function initialize () {
   var validator = this
@@ -246,7 +241,11 @@ InteractionValidator.prototype.validate = function validate (t, interaction) {
 
     t.ok(actual.children, 'node should have children')
     t.equal(actual.type, expected.type || expected.name, 'type should match')
-    t.equal(actual.children.length, expectedChildCount, 'node should have expected number of children')
+    t.equal(
+      actual.children.length,
+      expectedChildCount,
+      'node should have expected number of children'
+    )
 
     if (TIMED_NODE_TYPES.indexOf(actual.type) !== -1) {
       if (actual.type === 'interaction' && actual.attrs.trigger === 'initialPageLoad') {
@@ -258,15 +257,12 @@ InteractionValidator.prototype.validate = function validate (t, interaction) {
       t.ok(actual.end >= actual.start, actual.type + ' node has end time >= start')
       t.ok(actual.jsTime >= 0, actual.type + ' node has a callback time >= 0')
       t.ok(actual.jsEnd >= actual.start, actual.type + ' node has a callback end time >= start')
-      t.ok(actual.jsEnd >= actual.start + actual.jsTime, actual.type + ' jsEnd - jsTime <= start')
+      t.ok(actual.jsEnd >= (actual.start + actual.jsTime), actual.type + ' jsEnd - jsTime <= start')
       endTime = Math.max(endTime, actual.jsEnd, actual.end)
     }
   })
 
-  t.ok(
-    root.end >= root.start + totalDuration,
-    'root node should have an end time >= than its start time + all sync js time'
-  )
+  t.ok(root.end >= root.start + totalDuration, 'root node should have an end time >= than its start time + all sync js time')
   t.equal(root.end, endTime, 'should have correct end Time')
 }
 

@@ -24,29 +24,23 @@ testDriver.test('ignoring errors works', supported, function (t, browser, router
   let errorsPromise = router.expectErrors()
   let loadPromise = browser.get(assetURL)
 
-  Promise.all([errorsPromise, rumPromise, loadPromise])
-    .then(([response]) => {
-      assertErrorAttributes(t, response.query, 'has errors')
+  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([response]) => {
+    assertErrorAttributes(t, response.query, 'has errors')
 
-      const actualErrors = getErrorsFromResponse(response, browser)
+    const actualErrors = getErrorsFromResponse(response, browser)
 
-      let expectedErrors = [
-        {
-          name: 'Error',
-          message: 'report',
-          stack: [
-            {
-              u: '<inline>',
-              l: 21
-            }
-          ]
-        }
-      ]
+    let expectedErrors = [{
+      name: 'Error',
+      message: 'report',
+      stack: [{
+        u: '<inline>',
+        l: 23
+      }]
+    }]
 
-      assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL)
-      t.end()
-    })
-    .catch(fail)
+    assertExpectedErrors(t, browser, actualErrors, expectedErrors, assetURL)
+    t.end()
+  }).catch(fail)
 
   function fail (err) {
     t.error(err)

@@ -7,7 +7,8 @@ const testDriver = require('../../../tools/jil/index')
 
 const asserters = testDriver.asserters
 
-var supported = testDriver.Matcher.withFeature('reliableUnloadEvent').exclude('ie@<9') // need addEventListener too
+var supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
+  .exclude('ie@<9') // need addEventListener too
 
 testDriver.test('slow XHR submission should not delay next page load', supported, function (t, browser, router) {
   let routerResponded = false
@@ -20,19 +21,17 @@ testDriver.test('slow XHR submission should not delay next page load', supported
   router.responders['POST /jserrors/1/{key}'] = handleErrors
 
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(
-    router.assetURL('xhr.html', {
-      testId: router.testID,
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        metrics: {
-          enabled: false
-        }
+  let loadPromise = browser.get(router.assetURL('xhr.html', {
+    testId: router.testID,
+    init: {
+      page_view_timing: {
+        enabled: false
+      },
+      metrics: {
+        enabled: false
       }
-    })
-  )
+    }
+  }))
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
@@ -44,7 +43,11 @@ testDriver.test('slow XHR submission should not delay next page load', supported
       if (browser.match('firefox@<31')) {
         return navigatePromise
       } else {
-        return Promise.all([navigatePromise, router.expectXHRMetrics()]).then(([feat, err]) => err)
+        return Promise.all([
+          navigatePromise,
+          router.expectXHRMetrics()
+        ])
+          .then(([feat, err]) => err)
       }
     })
     .then(() => {

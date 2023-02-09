@@ -12,15 +12,13 @@ jil.browserTest('promise.catch', function (t) {
       trigger: 'click'
     },
     name: 'interaction',
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
-      }
-    ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: []
+    }]
   })
 
   t.plan(validator.count + 3)
@@ -33,13 +31,11 @@ jil.browserTest('promise.catch', function (t) {
     })
 
     promise.catch(function (val) {
-      setTimeout(
-        newrelic.interaction().createTracer('timer', function () {
-          t.equal(val, 10, 'promise should yield correct value')
-          window.location.hash = '#' + Math.random()
-          cb()
-        })
-      )
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        t.equal(val, 10, 'promise should yield correct value')
+        window.location.hash = '#' + Math.random()
+        cb()
+      }))
     })
   }
 
@@ -65,23 +61,19 @@ jil.browserTest('promise.catch chain with async', function (t) {
       trigger: 'click'
     },
     name: 'interaction',
-    children: [
-      {
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: [{
         type: 'customTracer',
         attrs: {
           name: 'timer'
         },
-        children: [
-          {
-            type: 'customTracer',
-            attrs: {
-              name: 'timer'
-            },
-            children: []
-          }
-        ]
-      }
-    ]
+        children: []
+      }]
+    }]
   })
 
   t.plan(validator.count + 4)
@@ -93,24 +85,19 @@ jil.browserTest('promise.catch chain with async', function (t) {
     promise
       .catch(function (val) {
         return new Promise(function wait (resolve, reject) {
-          setTimeout(
-            newrelic.interaction().createTracer('timer', function () {
-              t.strictEqual(val, 10, 'should get reject value in first catch')
-              reject(123)
-            }),
-            5
-          )
+          setTimeout(newrelic.interaction().createTracer('timer', function () {
+            t.strictEqual(val, 10, 'should get reject value in first catch')
+            reject(123)
+          }), 5)
         })
       })
       .catch(function validate (val) {
         t.strictEqual(val, 123, 'should get reject value in 2nd catch')
 
-        setTimeout(
-          newrelic.interaction().createTracer('timer', function () {
-            window.location.hash = '#' + Math.random()
-            cb()
-          })
-        )
+        setTimeout(newrelic.interaction().createTracer('timer', function () {
+          window.location.hash = '#' + Math.random()
+          cb()
+        }))
       })
   }
 
@@ -130,15 +117,13 @@ jil.browserTest('throw in promise.catch', function (t) {
       trigger: 'click'
     },
     name: 'interaction',
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
-      }
-    ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: []
+    }]
   })
 
   t.plan(validator.count + 3)
@@ -151,19 +136,15 @@ jil.browserTest('throw in promise.catch', function (t) {
       reject(10)
     })
 
-    promise
-      .catch(function (val) {
-        throw thrownError
-      })
-      .catch(function (val) {
-        t.equal(val, thrownError, 'should be resolved with thrown error')
-        setTimeout(
-          newrelic.interaction().createTracer('timer', function () {
-            window.location.hash = '#' + Math.random()
-            cb()
-          })
-        )
-      })
+    promise.catch(function (val) {
+      throw thrownError
+    }).catch(function (val) {
+      t.equal(val, thrownError, 'should be resolved with thrown error')
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        window.location.hash = '#' + Math.random()
+        cb()
+      }))
+    })
   }
 
   function afterInteractionDone (interaction) {

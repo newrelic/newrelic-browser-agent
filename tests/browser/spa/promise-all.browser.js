@@ -13,14 +13,12 @@ jil.browserTest('Promise.all', function (t) {
       trigger: 'click'
     },
     name: 'interaction',
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        }
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
       }
-    ]
+    }]
   })
 
   t.plan(validator.count + 3)
@@ -33,13 +31,11 @@ jil.browserTest('Promise.all', function (t) {
     var promise = Promise.all([a, b])
 
     promise.then(function (val) {
-      setTimeout(
-        newrelic.interaction().createTracer('timer', function () {
-          t.deepEqual(val, [123, 456], 'promise should yield correct value')
-          window.location.hash = '#' + Math.random()
-          cb()
-        })
-      )
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        t.deepEqual(val, [123, 456], 'promise should yield correct value')
+        window.location.hash = '#' + Math.random()
+        cb()
+      }))
     })
   }
 
@@ -65,15 +61,13 @@ jil.browserTest('Promise.all async resolve after rejected', function (t) {
         attrs: {
           name: 'timer'
         },
-        children: [
-          {
-            type: 'customTracer',
-            attrs: {
-              name: 'timer'
-            },
-            children: []
-          }
-        ]
+        children: [{
+          type: 'customTracer',
+          attrs: {
+            name: 'timer'
+          },
+          children: []
+        }]
       },
       {
         type: 'customTracer',
@@ -93,34 +87,26 @@ jil.browserTest('Promise.all async resolve after rejected', function (t) {
     var a = Promise.reject(123)
     var idOnReject
     var b = new Promise(function (resolve) {
-      setTimeout(
-        newrelic.interaction().createTracer('timer', function () {
-          resolve(456)
-          setTimeout(
-            newrelic.interaction().createTracer('timer', function () {
-              promise.catch(function (val) {
-                t.equal(val, 123, 'should get reject value in delayed catch')
-                t.equal(helpers.currentNodeId(), idOnReject, 'should have same node id as other catch')
-                cb()
-              })
-            }),
-            20
-          )
-        }),
-        10
-      )
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        resolve(456)
+        setTimeout(newrelic.interaction().createTracer('timer', function () {
+          promise.catch(function (val) {
+            t.equal(val, 123, 'should get reject value in delayed catch')
+            t.equal(helpers.currentNodeId(), idOnReject, 'should have same node id as other catch')
+            cb()
+          })
+        }), 20)
+      }), 10)
     })
 
     var promise = Promise.all([a, b])
 
     promise.catch(function (val) {
       idOnReject = helpers.currentNodeId()
-      setTimeout(
-        newrelic.interaction().createTracer('timer', function () {
-          t.equal(val, 123, 'should get reject value in fist catch')
-          window.location.hash = '#' + Math.random()
-        })
-      )
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        t.equal(val, 123, 'should get reject value in fist catch')
+        window.location.hash = '#' + Math.random()
+      }))
     })
   }
 

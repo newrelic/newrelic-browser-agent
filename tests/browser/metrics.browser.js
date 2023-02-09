@@ -32,7 +32,7 @@ const createAndStoreMetric = (value, isSupportability = true) => {
 
 test('recordSupportability with no value creates a metric with just a count', function (t) {
   createAndStoreMetric()
-  const record = agg.take([sLabel])[sLabel].find((x) => x?.params?.name === metricName)
+  const record = agg.take([sLabel])[sLabel].find(x => x?.params?.name === metricName)
   t.ok(record, 'An aggregated record exists')
   t.ok(record.stats && record.stats.c === 1, 'Props has singular c metric')
   t.end()
@@ -61,7 +61,7 @@ test('recordSupportability with a value aggregates stats section', function (t) 
 
 test('recordSupportability with a value aggregates stats section and increments correctly', function (t) {
   const values = [Math.random(), Math.random(), Math.random()]
-  values.forEach((v) => createAndStoreMetric(v))
+  values.forEach(v => createAndStoreMetric(v))
 
   const [record] = agg.take([sLabel])[sLabel]
   t.ok(record, 'An aggregated record exists')
@@ -96,10 +96,7 @@ test('recordCustom with no value creates a metric with just a count', function (
   t.ok(record, 'An aggregated record exists')
   t.equals(record.params.name, metricName, 'Name is correct')
   t.ok(record, JSON.stringify(record))
-  t.ok(
-    record.metrics && Object.keys(record.metrics).length === 1 && record.metrics.count === 1,
-    'Props only has count metric and it should have incremented once'
-  )
+  t.ok(record.metrics && Object.keys(record.metrics).length === 1 && record.metrics.count === 1, 'Props only has count metric and it should have incremented once')
   t.end()
 })
 
@@ -111,10 +108,7 @@ test('recordCustom with no value increments multiple times correctly', function 
   const [record] = agg.take([cLabel])[cLabel]
   t.ok(record, 'An aggregated record exists')
   t.equals(record.params.name, metricName, 'Name is correct')
-  t.ok(
-    record.metrics && Object.keys(record.metrics).length === 1 && record.metrics.count === 3,
-    'Props only has count metric and it should have incremented thrice'
-  )
+  t.ok(record.metrics && Object.keys(record.metrics).length === 1 && record.metrics.count === 3, 'Props only has count metric and it should have incremented thrice')
   t.end()
 })
 
@@ -123,25 +117,19 @@ test('recordCustom with a value creates a named metric object in metrics section
   const [record] = agg.take([cLabel])[cLabel]
   t.ok(record, 'An aggregated record exists')
   t.equals(record.params.name, metricName, 'Name is correct')
-  t.ok(
-    record.metrics && Object.keys(record.metrics).length > 1 && record.metrics.count === 1,
-    'it should have incremented once'
-  )
+  t.ok(record.metrics && Object.keys(record.metrics).length > 1 && record.metrics.count === 1, 'it should have incremented once')
   t.ok(record.metrics.time && record.metrics.time.t === 500)
   t.end()
 })
 
 test('recordCustom with a value creates a named metric object in metrics section and increments correctly', function (t) {
   const values = [Math.random(), Math.random(), Math.random()]
-  values.forEach((v) => createAndStoreMetric({ time: v }, false))
+  values.forEach(v => createAndStoreMetric({ time: v }, false))
 
   const [record] = agg.take([cLabel])[cLabel]
   t.ok(record, 'An aggregated record exists')
   t.equals(record.params.name, metricName, 'Name is correct')
-  t.ok(
-    record.metrics && Object.keys(record.metrics).length > 1 && record.metrics.count === 3,
-    'it should have incremented once'
-  )
+  t.ok(record.metrics && Object.keys(record.metrics).length > 1 && record.metrics.count === 3, 'it should have incremented once')
   const { time } = record.metrics
   t.ok(!!time, 'named metric exists')
   t.ok(time.t === values.reduce((curr, next) => curr + next, 0), 'aggregated totals sum correctly')
@@ -157,10 +145,7 @@ test('recordCustom with an invalid value type does not create a named metric obj
   const [record] = agg.take([cLabel])[cLabel]
   t.ok(record, 'An aggregated record exists')
   t.equals(record.params.name, metricName, 'Name is correct')
-  t.ok(
-    record.metrics && Object.keys(record.metrics).length === 1 && record.metrics.count === 1,
-    'Props only has count metric and it should have incremented once'
-  )
+  t.ok(record.metrics && Object.keys(record.metrics).length === 1 && record.metrics.count === 1, 'Props only has count metric and it should have incremented once')
   t.end()
 })
 

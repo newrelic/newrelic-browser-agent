@@ -42,5 +42,5 @@ jil.browserTest('two modified properties are shown on the history object', funct
 })
 
 function isWrapped (fn) {
-  return fn && typeof fn['nr@original'] === 'function'
+  return fn && (typeof fn['nr@original'] === 'function')
 }

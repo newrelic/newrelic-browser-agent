@@ -24,31 +24,22 @@ jil.browserTest('xhr with blob request body', async function (t) {
   xhr.onload = function (e) {
     var xhr = e.target
     var reader = new FileReader()
-    reader.addEventListener(
-      'loadend',
-      function () {
-        t.equal(reader.result, 'hi!', 'blob content matches')
-      },
-      false
-    )
+    reader.addEventListener('loadend', function () {
+      t.equal(reader.result, 'hi!', 'blob content matches')
+    }, false)
     reader.readAsText(xhr.response)
   }
 
   xhr.send(new Blob(['hi!']))
 
-  registerHandler(
-    'xhr',
-    async function (params, metrics, start) {
-      const { Aggregate: AjaxAggreg } = await import('../../../src/features/ajax/aggregate/index')
-      const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator)
-      ajaxTestAgg.storeXhr(params, metrics, start)
+  registerHandler('xhr', async function (params, metrics, start) {
+    const { Aggregate: AjaxAggreg } = await import('../../../src/features/ajax/aggregate/index')
+    const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator)
+    ajaxTestAgg.storeXhr(params, metrics, start)
 
-      t.equal(metrics.txSize, 3, 'correct size for sent blob objects')
-      t.equal(metrics.rxSize, 3, 'correct size for received blob objects')
-    },
-    undefined,
-    baseEE
-  )
+    t.equal(metrics.txSize, 3, 'correct size for sent blob objects')
+    t.equal(metrics.rxSize, 3, 'correct size for received blob objects')
+  }, undefined, baseEE)
 
   drain(agentIdentifier, 'feature')
 })

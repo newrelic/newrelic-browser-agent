@@ -89,7 +89,7 @@ jil.browserTest('Obfuscation validateRules input', function (t) {
 
 jil.browserTest('Should Obfuscate', function (t) {
   setConfiguration(agentIdentifier, {
-    obfuscate: validationCases.filter((x) => x.expected).map((x) => x.rule)
+    obfuscate: validationCases.filter(x => x.expected).map(x => x.rule)
   })
 
   t.ok(obfuscatorInst.shouldObfuscate(), 'When init.obfuscate is defined, shouldObfuscate is true')
@@ -102,23 +102,17 @@ jil.browserTest('Should Obfuscate', function (t) {
 
 jil.browserTest('Get Rules', function (t) {
   setConfiguration(agentIdentifier, {
-    obfuscate: validationCases.filter((x) => x.expected).map((x) => x.rule)
+    obfuscate: validationCases.filter(x => x.expected).map(x => x.rule)
   })
 
   t.ok(!!obfuscate.getRules(agentIdentifier).length, 'getRules should generate a list of rules from init.obfuscate')
 
   //delete win.getWindowOrWorkerGlobScope().NREUM.init.obfuscate
   setConfiguration(agentIdentifier, {}) // note this'll reset the *whole* config to the default values
-  t.ok(
-    !obfuscate.getRules(agentIdentifier).length,
-    'getRules should generate an empty list if init.obfuscate is undefined'
-  )
+  t.ok(!obfuscate.getRules(agentIdentifier).length, 'getRules should generate an empty list if init.obfuscate is undefined')
 
   setScope({ location: fileLocation })
-  t.ok(
-    !!obfuscate.getRules(agentIdentifier).filter((x) => x.regex.source.includes('file')).length,
-    'getRules should generate a rule for file obfuscation if file protocol is detected'
-  )
+  t.ok(!!obfuscate.getRules(agentIdentifier).filter(x => x.regex.source.includes('file')).length, 'getRules should generate a rule for file obfuscation if file protocol is detected')
 
   resetScope()
   t.end()
@@ -126,29 +120,17 @@ jil.browserTest('Get Rules', function (t) {
 
 jil.browserTest('Obfuscate String Method', function (t) {
   setConfiguration(agentIdentifier, {
-    obfuscate: validationCases.filter((x) => x.expected).map((x) => x.rule)
+    obfuscate: validationCases.filter(x => x.expected).map(x => x.rule)
   })
 
-  t.ok(
-    !obfuscatorInst
-      .obfuscateString('http://example.com/missing-replacement-field/123')
-      .includes('missing-replacement-field'),
-    'Successfully obfuscates missing replacement field'
-  )
+  t.ok(!obfuscatorInst.obfuscateString('http://example.com/missing-replacement-field/123').includes('missing-replacement-field'), 'Successfully obfuscates missing replacement field')
   t.ok(!obfuscatorInst.obfuscateString('http://example.com/pii/123').includes('pii'), 'Successfully obfuscates string')
-  t.ok(
-    !obfuscatorInst.obfuscateString('http://example.com/abcdefghijklmnopqrstuvwxyz/123').includes('i'),
-    'Successfully obfuscates regex'
-  )
+  t.ok(!obfuscatorInst.obfuscateString('http://example.com/abcdefghijklmnopqrstuvwxyz/123').includes('i'), 'Successfully obfuscates regex')
 
   setScope({ location: fileLocation })
   //delete win.getWindowOrWorkerGlobScope().NREUM.init.obfuscate
   setConfiguration(agentIdentifier, {}) // note this'll reset the *whole* config to the default values
-  t.ok(
-    obfuscatorInst.obfuscateString('file:///Users/jporter/Documents/Code/scratch/noticeErrorTest.html') ===
-      'file://OBFUSCATED',
-    'Successfully obfuscates file protocol'
-  )
+  t.ok(obfuscatorInst.obfuscateString('file:///Users/jporter/Documents/Code/scratch/noticeErrorTest.html') === 'file://OBFUSCATED', 'Successfully obfuscates file protocol')
 
   resetScope()
   t.end()

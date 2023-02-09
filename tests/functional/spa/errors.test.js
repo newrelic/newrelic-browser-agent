@@ -12,7 +12,11 @@ testDriver.test('error on the initial page load', function (t, browser, router) 
     .then(([rumData, eventData, domData]) => {
       var p = clickAndRedirect(browser, router)
 
-      return Promise.all([Promise.resolve(eventData), router.expectErrors(), p])
+      return Promise.all([
+        Promise.resolve(eventData),
+        router.expectErrors(),
+        p
+      ])
     })
     .then(([eventData, errorData]) => {
       // check that errors payload did not include the error
@@ -256,24 +260,36 @@ testDriver.test('same error in multiple interactions', function (t, browser, rou
 
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-custom.html')
     .then(() => {
-      return Promise.all([browser.elementByCssSelector('body').click(), router.expectEvents()])
+      return Promise.all([
+        browser.elementByCssSelector('body').click(),
+        router.expectEvents()
+      ])
     })
-    .then((result) => {
+    .then(result => {
       event1 = result[1]
-      return Promise.all([browser.elementByCssSelector('body').click(), router.expectEvents()])
+      return Promise.all([
+        browser.elementByCssSelector('body').click(),
+        router.expectEvents()
+      ])
     })
-    .then((result) => {
+    .then(result => {
       event2 = result[1]
-      return Promise.all([leavePage(browser, router), router.expectErrors()]).then((result) => {
-        return result[1]
-      })
+      return Promise.all([
+        leavePage(browser, router),
+        router.expectErrors()
+      ])
+        .then(result => {
+          return result[1]
+        })
     })
-    .then((errorData) => {
-      let interaction1 = querypack.decode(event1.body && event1.body.length ? event1.body : event1.query.e)[0]
+    .then(errorData => {
+      let interaction1 = querypack.decode(
+        event1.body && event1.body.length ? event1.body : event1.query.e)[0]
       var interactionId1 = interaction1.id
       t.ok(interactionId1 != null, 'interaction 1 id should not be null')
 
-      let interaction2 = querypack.decode(event2.body && event2.body.length ? event2.body : event2.query.e)[0]
+      let interaction2 = querypack.decode(
+        event2.body && event2.body.length ? event2.body : event2.query.e)[0]
       var interactionId2 = interaction2.id
       t.ok(interactionId2 != null, 'interaction 2 id should not be null')
 
@@ -286,11 +302,8 @@ testDriver.test('same error in multiple interactions', function (t, browser, rou
       var error2 = errors[1]
       t.equal(error1.params.browserInteractionId, interactionId1)
       t.equal(error2.params.browserInteractionId, interactionId2)
-      t.notEqual(
-        error1.params.browserInteractionId,
-        error2.params.browserInteractionId,
-        'should be linked to two different browser interactions'
-      )
+      t.notEqual(error1.params.browserInteractionId, error2.params.browserInteractionId,
+        'should be linked to two different browser interactions')
 
       t.end()
     })
@@ -306,46 +319,46 @@ function waitForPageLoadAnInitialCalls (browser, router, urlPath) {
   return Promise.all([
     router.expectRum(),
     router.expectEvents(),
-    browser.safeGet(
-      router.assetURL(urlPath, {
-        loader: 'spa',
-        init: {
-          metrics: { enabled: false },
-          session_trace: { enabled: false }
-        }
-      })
-    )
+    browser.safeGet(router.assetURL(urlPath, {
+      loader: 'spa',
+      init: {
+        metrics: { enabled: false },
+        session_trace: { enabled: false }
+      }
+    }))
   ])
 }
 
 function clickPageAndWaitForEventsAndErrors (t, browser, router) {
-  return clickPageAndWaitForEvents(t, browser, router).then((eventData) => {
-    return Promise.all([
-      // leave page to force final harvest (faster than waiting 60s for errors
-      // to be harvested)
-      leavePage(browser, router),
-      router.expectErrors()
-    ]).then(([domData, errorData]) => {
-      return Promise.resolve([eventData, errorData])
+  return clickPageAndWaitForEvents(t, browser, router)
+    .then(eventData => {
+      return Promise.all([
+        // leave page to force final harvest (faster than waiting 60s for errors
+        // to be harvested)
+        leavePage(browser, router),
+        router.expectErrors()
+      ])
+        .then(([domData, errorData]) => {
+          return Promise.resolve([eventData, errorData])
+        })
     })
-  })
 }
 
 function clickPageAndWaitForEvents (t, browser, router) {
-  return Promise.all([browser.elementByCssSelector('body').click(), router.expectEvents()]).then(
-    ([domData, eventData]) => {
+  return Promise.all([
+    browser.elementByCssSelector('body').click(),
+    router.expectEvents()
+  ])
+    .then(([domData, eventData]) => {
       return eventData
-    }
-  )
+    })
 }
 
 // Click page (which triggers interaction to test), and then immediately load
 // a different page, which triggers final harvest.
 // This way the test is faster than waiting 60s for errors to be harvested.
 function clickAndRedirect (browser, router, wait) {
-  return browser
-    .elementByCssSelector('body')
-    .click()
+  return browser.elementByCssSelector('body').click()
     .then(function () {
       if (wait) {
         return sleep(wait).then(() => {

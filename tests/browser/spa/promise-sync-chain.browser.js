@@ -12,15 +12,13 @@ jil.browserTest('promise.then sync chains', function (t) {
       trigger: 'click'
     },
     name: 'interaction',
-    children: [
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
-      }
-    ]
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: []
+    }]
   })
 
   helpers.onAggregatorLoaded(function () {
@@ -63,12 +61,10 @@ jil.browserTest('promise.then sync chains', function (t) {
       .then(function (val) {
         t.equal(val, 5, 'should get correct value in then callback 6')
         t.equal(helpers.currentNodeId(), rootId, 'id should be rootId')
-        setTimeout(
-          newrelic.interaction().createTracer('timer', function () {
-            window.location.hash = '#' + Math.random()
-            cb()
-          })
-        )
+        setTimeout(newrelic.interaction().createTracer('timer', function () {
+          window.location.hash = '#' + Math.random()
+          cb()
+        }))
       })
   }
 

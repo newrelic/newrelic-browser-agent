@@ -16,9 +16,7 @@ const { agentIdentifier, aggregator } = setup()
 
 jil.browserTest('sends expected attributes when available', function (t) {
   // timeout causes LCP to be added to the queue of timings for next harvest
-  setConfiguration(agentIdentifier, {
-    page_view_timing: { maxLCPTimeSeconds: 0.5 }
-  })
+  setConfiguration(agentIdentifier, { page_view_timing: { maxLCPTimeSeconds: 0.5 } })
 
   const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
 

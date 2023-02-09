@@ -8,10 +8,10 @@ const concat = require('concat-stream')
 
 const TestHarness = require('../driver/harness')
 
-tape('outputs well-formatted TAP', (t) => {
+tape('outputs well-formatted TAP', t => {
   const harness = new TestHarness()
 
-  const concatStream = concat((data) => {
+  const concatStream = concat(data => {
     // assert that the TAP output is correct
     const tapLines = data.split('\n')
 
@@ -29,12 +29,12 @@ tape('outputs well-formatted TAP', (t) => {
 
   harness.stream.pipe(concatStream)
 
-  harness.addTest('first fake test', null, (t) => {
+  harness.addTest('first fake test', null, t => {
     t.ok('first fake test passed')
     t.end()
   })
 
-  harness.addTest('second fake test', null, (t) => {
+  harness.addTest('second fake test', null, t => {
     t.ok('second fake test passed')
     t.end()
   })
@@ -46,10 +46,10 @@ tape('outputs well-formatted TAP', (t) => {
   })
 })
 
-tape('maintains test numbering when the harness is paused', (t) => {
+tape('maintains test numbering when the harness is paused', t => {
   const harness = new TestHarness()
 
-  const concatStream = concat((data) => {
+  const concatStream = concat(data => {
     const tapLines = data.split('\n')
 
     t.ok(tapLines[1] === '# first fake test', 'first test name in output')
@@ -64,7 +64,7 @@ tape('maintains test numbering when the harness is paused', (t) => {
 
   harness.stream.pipe(concatStream)
 
-  harness.addTest('first fake test', null, (t) => {
+  harness.addTest('first fake test', null, t => {
     t.ok('first assertion')
     t.ok('second assertion')
     t.end()
@@ -72,7 +72,7 @@ tape('maintains test numbering when the harness is paused', (t) => {
     harness.pause()
   })
 
-  harness.addTest('second fake test', null, (t) => {
+  harness.addTest('second fake test', null, t => {
     t.ok('first assertion')
     t.ok('second assertion')
     t.end()
@@ -80,7 +80,7 @@ tape('maintains test numbering when the harness is paused', (t) => {
     harness.resume()
   })
 
-  harness.addTest('third fake test', null, (t) => {
+  harness.addTest('third fake test', null, t => {
     t.ok('first assertion')
     t.ok('second assertion')
     t.end()

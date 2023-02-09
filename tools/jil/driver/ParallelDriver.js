@@ -123,7 +123,7 @@ class ParallelDriver extends Driver {
       }
 
       function enoughTests (tests) {
-        return tests.length / sessionCount > limitToStartNewSession
+        return (tests.length / sessionCount) > limitToStartNewSession
       }
     }
 
@@ -164,7 +164,7 @@ class ParallelDriver extends Driver {
 
       if (result.passed) {
         runNextTest(testRun)
-      } else if (result.retry === numberOfAttempts - 1) {
+      } else if (result.retry === (numberOfAttempts - 1)) {
         if (driver.config.retry) {
           testRun.harness.clear()
           driver.output.log(`# storing failed test for later retry: ${testRun.browserSpec.toString()} - ${test.name}`)

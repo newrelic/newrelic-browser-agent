@@ -1,3 +1,4 @@
+
 function observe (t, finishedCallback, resultCallback) {
   var allOk = true
   observeTapeTest(t, false)

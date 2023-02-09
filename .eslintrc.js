@@ -101,6 +101,7 @@ module.exports = {
     'prefer-promise-reject-errors': 'off',
     'no-extend-native': 'off',
     'no-case-declarations': 'off',
-    'no-eval': 'off'
+    'no-eval': 'off',
+    'no-mixed-operators': 'off'
   }
 }

@@ -35,23 +35,21 @@ let tunnelIdentifier = process.env.USER + '@' + os.hostname()
 let commandLineTestFiles = config._
 
 let relativeMainFile = path.relative(__dirname, require.main.filename)
-let launchedFromCli = relativeMainFile === '../bin/cli.js'
-let launchedFromJilServer = relativeMainFile === '../bin/server.js'
+let launchedFromCli = (relativeMainFile === '../bin/cli.js')
+let launchedFromJilServer = (relativeMainFile === '../bin/server.js')
 
 if (launchedFromCli) {
   if (!process.stdin.isTTY) {
-    process.stdin.pipe(
-      concat((data) => {
-        let filesFromStdin = data.toString('utf-8').split('\n').filter(Boolean)
-        let testFiles = commandLineTestFiles.concat(filesFromStdin)
+    process.stdin.pipe(concat((data) => {
+      let filesFromStdin = data.toString('utf-8').split('\n').filter(Boolean)
+      let testFiles = commandLineTestFiles.concat(filesFromStdin)
 
-        if (testFiles.length === 0) {
-          loadDefaultFiles(loadBrowsersAndRunTests)
-        } else {
-          loadFiles(testFiles, loadBrowsersAndRunTests)
-        }
-      })
-    )
+      if (testFiles.length === 0) {
+        loadDefaultFiles(loadBrowsersAndRunTests)
+      } else {
+        loadFiles(testFiles, loadBrowsersAndRunTests)
+      }
+    }))
   } else if (commandLineTestFiles.length) {
     loadFiles(commandLineTestFiles, loadBrowsersAndRunTests)
   } else {
@@ -67,12 +65,8 @@ function loadDefaultFiles (cb) {
   let globOpts = { cwd: path.resolve(__dirname, '../../..') }
 
   let fileGlob = 'tests/@(browser|functional)/**/*.@(browser|test).js'
-  if (config.u) {
-    fileGlob = 'tests/@(browser)/**/*.@(browser|test).js'
-  }
-  if (config.F) {
-    fileGlob = 'tests/@(functional)/**/*.@(test).js'
-  }
+  if (config.u) { fileGlob = 'tests/@(browser)/**/*.@(browser|test).js' }
+  if (config.F) { fileGlob = 'tests/@(functional)/**/*.@(test).js' }
 
   glob(fileGlob, globOpts, (er, files) => {
     if (er) throw er
@@ -110,11 +104,6 @@ function getBuildIdentifier () {
 
 function loadBrowsersAndRunTests () {
   let browsers = browserList(config.browsers)
-  if (config.browsers === '*@*') {
-    browsers = browsers.filter((b) => {
-      return b.desired.platform !== 'linux'
-    })
-  }
   if (!browsers || browsers.length === 0) {
     console.log('No browsers matched: ' + config.browsers)
     return process.exit(1)

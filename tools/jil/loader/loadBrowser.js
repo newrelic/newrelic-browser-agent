@@ -15,8 +15,7 @@ function loadBrowser (testDriver, file, name, spec) {
       .safeEval('$("#tap").text()')
       .then((text) => {
         parse(t, text, path, browser.stream)
-      })
-      .catch(fail)
+      }).catch(fail)
 
     function fail (err) {
       t.error(err)

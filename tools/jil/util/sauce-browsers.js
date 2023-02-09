@@ -11,10 +11,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
     }
   })
   const json = await r.json()
-  console.log(
-    'Browser Types Found:',
-    json.reduce((prev, next) => prev.add(next.api_name), new Set())
-  )
+  console.log('Browser Types Found:', json.reduce((prev, next) => prev.add(next.api_name), new Set()))
   console.log(`fetched ${json.length} browsers from saucelabs`)
 
   // Filter list down to a sample of supported browsers and write metadata to a file for testing.
@@ -39,7 +36,7 @@ const browsers = {
  * @param {string} name - The name of a supported browser.
  * @returns {string} The SauceLabs `api_name` associated with the specified browser.
  */
-const browserName = (name) => {
+const browserName = name => {
   switch (name) {
     case 'edge':
       return 'MicrosoftEdge'
@@ -55,7 +52,7 @@ const browserName = (name) => {
  * @param {string} query - A {@link https://browsersl.ist|properly formatted} browserslist query.
  * @returns {number} The smallest version number of browsers matching the specified query.
  */
-const browserslistMinVersion = (query) => {
+const browserslistMinVersion = query => {
   const list = browserslist(query)
   const version = list[list.length - 1].split(' ')[1] // browserslist returns id version pairs like 'ios_saf 16.1'
   return Number(version.split('-')[0]) // versions might be a range (e.g. 14.0-14.4), and we want the low end.
@@ -66,7 +63,7 @@ const browserslistMinVersion = (query) => {
  * @param {string} apiName - a SauceLabs browser name (corresponding to the `api_name` property).
  * @returns {number} The minimum version we support of the specified browser name.
  */
-const minSupportedVersion = (apiName) => {
+const minSupportedVersion = apiName => {
   switch (apiName) {
     case 'chrome':
       return browserslistMinVersion('last 10 Chrome versions')
@@ -94,7 +91,7 @@ const minSupportedVersion = (apiName) => {
  * @param {string} apiName - a SauceLabs browser name (corresponding to the `api_name` property).
  * @returns {number} The maximum version we support of the specified browser name.
  */
-const maxSupportedVersion = (apiName) => {
+const maxSupportedVersion = apiName => {
   switch (apiName) {
     case 'ios':
     case 'iphone': // Sauce only uses Appium 2.0 for ios16 which requires W3C that we don't comply with yet
@@ -112,19 +109,17 @@ const maxSupportedVersion = (apiName) => {
  * @returns {Object} - A set of SauceLabs browser-platform definitions eligible for testing.
  */
 function getBrowsers (sauceBrowsers) {
-  Object.keys(browsers).forEach((browser) => {
+  Object.keys(browsers).forEach(browser => {
     const name = browserName(browser)
-    const versListForBrowser = sauceBrowsers.filter(
-      platformSelector(name, minSupportedVersion(name), maxSupportedVersion(name))
-    )
+    const versListForBrowser = sauceBrowsers.filter(platformSelector(name, minSupportedVersion(name), maxSupportedVersion(name)))
     versListForBrowser.sort((a, b) => Number(a.short_version) - Number(b.short_version)) // in ascending version order
 
     // Remove duplicate version numbers.
-    let uniques = []
-    let versionsSeen = new Set()
+    let uniques = []; let versionsSeen = new Set()
     while (versListForBrowser.length) {
       let nextLatest = versListForBrowser.pop()
-      if (versionsSeen.has(nextLatest.short_version)) continue
+      if (versionsSeen.has(nextLatest.short_version))
+      { continue }
       uniques.push(nextLatest)
       versionsSeen.add(nextLatest.short_version)
     }
@@ -133,28 +128,17 @@ function getBrowsers (sauceBrowsers) {
     uniques = evenlySampleArray(uniques, 4)
 
     // Compose metadata for testing each filtered supported browser.
-    uniques.forEach((sauceBrowser) => {
+    uniques.forEach(sauceBrowser => {
       const metadata = {
         browserName: mobileBrowserName(sauceBrowser),
         platform: mobilePlatformName(sauceBrowser),
-        ...(!['safari', 'firefox'].includes(sauceBrowser.api_name) && {
-          platformName: mobilePlatformName(sauceBrowser)
-        }),
+        ...(!['safari', 'firefox'].includes(sauceBrowser.api_name) && { platformName: mobilePlatformName(sauceBrowser) }),
         version: sauceBrowser.short_version,
-        ...(sauceBrowser.automation_backend !== 'appium' &&
-          !['safari', 'firefox'].includes(sauceBrowser.api_name) && {
-          browserVersion: sauceBrowser.short_version
-        }),
+        ...(sauceBrowser.automation_backend !== 'appium' && !['safari', 'firefox'].includes(sauceBrowser.api_name) && { browserVersion: sauceBrowser.short_version }),
         ...(sauceBrowser.device && { device: sauceBrowser.device }),
-        ...(sauceBrowser.automation_backend === 'appium' && {
-          'appium:deviceName': sauceBrowser.long_name
-        }),
-        ...(sauceBrowser.automation_backend === 'appium' && {
-          'appium:platformVersion': sauceBrowser.short_version
-        }),
-        ...(sauceBrowser.automation_backend === 'appium' && {
-          'appium:automationName': sauceBrowser.api_name === 'android' ? 'UiAutomator2' : 'XCUITest'
-        }),
+        ...(sauceBrowser.automation_backend === 'appium' && { 'appium:deviceName': sauceBrowser.long_name }),
+        ...(sauceBrowser.automation_backend === 'appium' && { 'appium:platformVersion': sauceBrowser.short_version }),
+        ...(sauceBrowser.automation_backend === 'appium' && { 'appium:automationName': sauceBrowser.api_name === 'android' ? 'UiAutomator2' : 'XCUITest' }),
         ...(sauceBrowser.automation_backend === 'appium' && {
           'sauce:options': {
             appiumVersion: sauceBrowser.recommended_backend_version
@@ -188,7 +172,7 @@ function platformSelector (desiredBrowser, minVersion = 0, maxVersion = 9999) {
       case 'android':
         if (sauceBrowser.automation_backend !== 'appium') return false
         break
-      // NOTE: the following platform limitation per browser is FRAGILE -- will have to update this in the future!
+        // NOTE: the following platform limitation per browser is FRAGILE -- will have to update this in the future!
       case 'firefox':
         if (sauceBrowser.os !== 'Windows 10') return false // we're only testing FF on Win10
         break
@@ -196,7 +180,7 @@ function platformSelector (desiredBrowser, minVersion = 0, maxVersion = 9999) {
       case 'chrome':
         if (!sauceBrowser.os.startsWith('Windows 1')) return false // exclude Linux, Mac, and pre-Win10
         break
-      // 'safari' will only ever be on MacOS
+        // 'safari' will only ever be on MacOS
       case 'safari':
         if (sauceBrowser.short_version == 12 && sauceBrowser.os == 'Mac 10.13') return false // this OS+safari combo has issues with functional/XHR tests
         break
@@ -213,12 +197,8 @@ function platformSelector (desiredBrowser, minVersion = 0, maxVersion = 9999) {
  */
 function evenlySampleArray (arr, n = 4) {
   if (arr.length < 2 || arr.length <= n) return arr
-  if (n === 1) {
-    return [arr[0]]
-  }
-  if (n === 0) {
-    return []
-  }
+  if (n === 1) { return [arr[0]] }
+  if (n === 0) { return [] }
 
   const lastIndex = arr.length - 1
   const slicePercentage = 1 / (n - 1)

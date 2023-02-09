@@ -21,12 +21,12 @@ tape('basic', function (t) {
     assertCount++
   })
 
-  harness('test1', (t2) => {
+  harness('test1', t2 => {
     t2.ok(true)
     t2.end()
   })
 
-  harness('test2', (t2) => {
+  harness('test2', t2 => {
     t2.ok(true)
     t2.end()
   })

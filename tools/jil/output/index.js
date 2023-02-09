@@ -46,9 +46,7 @@ class Output {
   }
 
   finish () {
-    this.formatter.finish(
-      this.children.reduce((ok, next) => (ok && next.ok) || next.results.pass === next.results.count, true)
-    )
+    this.formatter.finish(this.children.reduce((ok, next) => ok && next.ok || (next.results.pass === next.results.count), true))
   }
 }
 

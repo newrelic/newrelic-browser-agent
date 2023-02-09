@@ -30,7 +30,7 @@ class BaseFormatter {
     var formatter = this
     this.stream.queue(null)
     process.on('exit', function () {
-      process.exit(formatter.ok && ok ? 0 : 1)
+      process.exit((formatter.ok && ok) ? 0 : 1)
     })
   }
 

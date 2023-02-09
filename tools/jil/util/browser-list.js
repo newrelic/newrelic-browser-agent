@@ -4,21 +4,14 @@
  */
 
 const browsersPolyfill = require('./browsers-polyfill.json')
-const browsersSelenium = require('./browsers-selenium.json')
 const browsersSupported = require('./browsers-supported.json')
 const semver = require('semver')
 const BrowserMatcher = require('./browser-matcher')
 var config = require('../runner/args')
 
 // list of pre-defined browsers = require(test matrix
-var allowedBrowsers = browsersSupported
+var allowedBrowsers = config.polyfills ? browsersPolyfill : browsersSupported
 const latestVersStringRe = /latest(?:-[1-9])?$/
-
-if (config.polyfills) {
-  allowedBrowsers = browsersPolyfill
-} else if (config.seleniumServer) {
-  allowedBrowsers = browsersSelenium
-}
 
 class BrowserSpec {
   constructor (desired) {
@@ -91,9 +84,7 @@ function resetBrowserList () {
 }
 
 function browserList (pattern = 'chrome@latest') {
-  let requested = pattern
-    .trim()
-    .split(/\s*,\s*/)
+  let requested = pattern.trim().split(/\s*,\s*/)
     .map(parse)
     .reduce((a, b) => a.concat(b), [])
 
@@ -110,19 +101,18 @@ function browserList (pattern = 'chrome@latest') {
 }
 
 function parse (pattern) {
-  let [browserFull, platform] = pattern.split('/')
-  let [browser, range] = browserFull.split('@')
-  return getBrowsersFor(browser || 'chrome', range, platform)
+  let [browser, range] = pattern.split('@')
+  return getBrowsersFor(browser || 'chrome', range)
 }
 
-function getBrowsersFor (browser, range, platform) {
+function getBrowsersFor (browser, range) {
   let list = []
   if (allowedBrowsers[browser]) list = allowedBrowsers[browser].slice()
   else if (browser === '*') list = Object.keys(allowedBrowsers).reduce(merge, [])
 
   list.sort(byVersion)
 
-  if (!range && !platform) {
+  if (!range) {
     return list
   } else if (range === 'beta') {
     return list.filter(findBetaVersions)
@@ -138,22 +128,16 @@ function getBrowsersFor (browser, range, platform) {
     if (option.platformVersion === 'beta' || option.version === 'beta') {
       return false
     }
-    if (platform && option.platform.toLowerCase() !== platform.toLowerCase()) {
-      return false
-    }
     // NOTE: 'range' itself needs to be sanitized as semver will not accept "latest - 73" or even "9999 - 73"
     return semver.satisfies(cleanVersion(option.platformVersion || option.version), range)
   }
 
   function findBetaVersions (option) {
-    return option.platformVersion === 'beta' || option.version === 'beta'
+    return (option.platformVersion === 'beta' || option.version === 'beta')
   }
 
   function findLatestVersions (option) {
-    if (platform && option.platform.toLowerCase() !== platform.toLowerCase()) {
-      return false
-    }
-    return option.version === this.valueOf() // 'this' should be bound to the lastest version string (object)
+    return (option.version === this.valueOf()) // 'this' should be bound to the lastest version string (object)
   }
 }
 
@@ -165,9 +149,12 @@ function cleanVersion (version) {
   // assign to high number, so that it is high in the list when sorted (i.e. beta is highest)
   if (!version || latestVersStringRe.test(version)) {
     let prevVersionOffset = !!version && version.split('-')[1]
-    if (prevVersionOffset) version = '9999' - prevVersionOffset
-    else version = '9999' // undefined 'version' (e.g., mobile) will be set to 'latest' too
-  } else if (version === 'beta') version = '10000'
+    if (prevVersionOffset)
+    { version = '9999' - prevVersionOffset }
+    else
+    { version = '9999' } // undefined 'version' (e.g., mobile) will be set to 'latest' too
+  }
+  else if (version === 'beta') version = '10000'
   version = version + '.0.0'
   return version.split('.', 3).join('.')
 }

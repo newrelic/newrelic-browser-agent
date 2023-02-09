@@ -42,7 +42,7 @@ module.exports = yargs
 
   .boolean('C')
   .alias('C', 'ci')
-  .describe('C', "don't attempt to use sauceconnect when talking to sauce labs")
+  .describe('C', 'don\'t attempt to use sauceconnect when talking to sauce labs')
   .default('C', false)
 
   .string('f')
@@ -79,10 +79,7 @@ module.exports = yargs
   .alias('l', 'loader')
   .describe('l', 'default loader to inject')
   .default('l', 'full')
-  .choices(
-    'l',
-    loaders.map((l) => l.name)
-  )
+  .choices('l', loaders.map((l) => l.name))
 
   .alias('o', 'outputFile')
   .describe('o', 'if set output will also be written to this file location')
@@ -123,7 +120,8 @@ module.exports = yargs
 
   .help('h')
   .alias('h', 'help')
-  .wrap(Math.min(110, yargs.terminalWidth())).argv
+  .wrap(Math.min(110, yargs.terminalWidth()))
+  .argv
 
 function findIndexWithRegex (arr, exp) {
   let idx = -1

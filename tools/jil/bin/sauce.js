@@ -8,7 +8,8 @@
 var argv = require('yargs')
   .boolean('v')
   .alias('v', 'verbose')
-  .describe('v', 'enable detailed debugging output from sauce-connect').argv
+  .describe('v', 'enable detailed debugging output from sauce-connect')
+  .argv
 
 var externalServices = require('../util/external-services')
 var opts = { verbose: argv.verbose }

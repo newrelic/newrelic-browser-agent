@@ -134,18 +134,9 @@ class DefaultFormatter extends BaseFormatter {
   }
 
   renderRowStatus (parser) {
-    if (!parser.done && parser.started) {
-      return `${this.withColor('yellow', 'Running...')} - [${this.withColor('green', 'Passed')}, ${this.withColor(
-        'red',
-        'Failed'
-      )}]`
-    } else if (!parser.done) return `${this.withColor('yellow', 'Pending...')}`
-    else {
-      return `${this.withColor('yellow', 'Done')} - [${this.withColor('green', 'Passed')}, ${this.withColor(
-        'red',
-        'Failed'
-      )}]`
-    }
+    if (!parser.done && parser.started) return `${this.withColor('yellow', 'Running...')} - [${this.withColor('green', 'Passed')}, ${this.withColor('red', 'Failed')}]`
+    else if (!parser.done) return `${this.withColor('yellow', 'Pending...')}`
+    else return `${this.withColor('yellow', 'Done')} - [${this.withColor('green', 'Passed')}, ${this.withColor('red', 'Failed')}]`
   }
 
   renderCounts (asserts, countWidth) {

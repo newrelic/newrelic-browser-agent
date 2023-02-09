@@ -27,8 +27,7 @@ tape('returns BrowserSpec instances', function (t) {
   t.end()
 })
 
-tape('returns only browsers defined in config file', (t) => {
-  // "config file" == browsers.json
+tape('returns only browsers defined in config file', (t) => { // "config file" == browsers.json
   var browserSpecs = browserList('chrome@latest')
   t.ok(browserSpecs.length === 1, 'got defined browser')
 
@@ -41,7 +40,7 @@ tape('returns only browsers defined in config file', (t) => {
 tape('`*` returns all non-beta versions', (t) => {
   // note that beta browsers are excluded, since they are allowed to fail
   // unreleased should be tested separately
-  t.ok(browsers.chrome.find((b) => b.version === 'beta') != null, 'chrome beta is defined')
+  t.ok(browsers.chrome.find(b => b.version === 'beta') != null, 'chrome beta is defined')
   var browserSpecs = browserList('chrome@*')
   t.ok(browserSpecs.length === browsers.chrome.length - 1, 'got all browsers')
   t.end()
@@ -56,8 +55,8 @@ tape('no range returns all versions', (t) => {
 tape('multiple browsers', (t) => {
   var browserSpecs = browserList('chrome@*,firefox@*')
   var expected = browsers.chrome.length + browsers.firefox.length
-  expected -= browsers.chrome.filter((b) => b.version === 'beta')
-  expected -= browsers.firefox.filter((b) => b.version === 'beta')
+  expected -= browsers.chrome.filter(b => b.version === 'beta')
+  expected -= browsers.firefox.filter(b => b.version === 'beta')
   t.ok(browserSpecs.length, expected, 'got both browsers')
   t.end()
 })
@@ -72,7 +71,7 @@ tape('beta returns labeled `beta` if defined', function (t) {
 tape('*@beta returns all browser versions labeled `beta`', function (t) {
   var browserSpecs = browserList('*@beta')
   t.equal(browserSpecs.length, 1)
-  browserSpecs.forEach((b) => {
+  browserSpecs.forEach(b => {
     t.equal(b.version, 'beta', 'got the right one')
   })
   t.end()

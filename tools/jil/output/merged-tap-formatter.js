@@ -64,14 +64,11 @@ class MergedTapFormatter extends BaseFormatter {
   }
 
   fixYaml (yaml) {
-    return yaml
-      .split('\n')
-      .map((line) => {
-        // allow opening, closing, and line with keys on them
-        if (line.match(/^\s{2,4}(?:\w+:|```|---).*/)) return line
-        return line.replace(/\[|\||-|\?|:/g, '?')
-      })
-      .join('\n')
+    return yaml.split('\n').map((line) => {
+      // allow opening, closing, and line with keys on them
+      if (line.match(/^\s{2,4}(?:\w+:|```|---).*/)) return line
+      return line.replace(/\[|\||-|\?|:/g, '?')
+    }).join('\n')
   }
 
   finish (ok) {

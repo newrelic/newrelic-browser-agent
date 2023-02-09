@@ -25,13 +25,7 @@ class Driver {
     this.testEnvs = []
     this.browserTestMatchers = {}
 
-    let agentConfig = {
-      licenseKey: 'asdf',
-      applicationID: 42,
-      accountID: 123,
-      agentID: 456,
-      trustKey: 789
-    }
+    let agentConfig = { licenseKey: 'asdf', applicationID: 42, accountID: 123, agentID: 456, trustKey: 789 }
     this.browserTests = []
     this.assetServer = new AssetServer(config, agentConfig, this.browserTests, output)
     this.assetServer.start(config.port)
@@ -51,13 +45,11 @@ class Driver {
     if (isSauceConnected()) {
       browser.sauceJobStatus(ok)
     }
-    browser
-      .quit(() => {
-        done()
-      })
-      .catch((err) => {
-        done(err)
-      })
+    browser.quit(() => {
+      done()
+    }).catch((err) => {
+      done(err)
+    })
   }
 
   test (name, spec, test) {
@@ -143,7 +135,9 @@ class Driver {
     }
 
     let driver = this
-    browser.then(queueTests).catch(done)
+    browser
+      .then(queueTests)
+      .catch(done)
 
     browser.match = (spec) => browserSpec.match(spec)
     browser.hasFeature = (feature) => browserSpec.hasFeature(feature)
@@ -202,7 +196,7 @@ class Driver {
                 build: browserSpec.desired.build,
                 testName: name,
                 testFileName: fileName,
-                retry: attempt - 1,
+                retry: (attempt - 1),
                 retryRun: isRetry,
                 name: result.name,
                 ok: result.ok,
@@ -255,7 +249,7 @@ class Driver {
               build: browserSpec.desired.build,
               testName: name,
               testFileName: fileName,
-              retry: attempt - 1,
+              retry: (attempt - 1),
               retryRun: isRetry,
               passed: plannedOk && allAssertsOk,
               duration: endTime - startTime,
@@ -350,10 +344,9 @@ class Driver {
     }
 
     function findUniqueTestEnvs (tests) {
-      return tests
-        .map((test) => {
-          return test.browserSpec
-        })
+      return tests.map((test) => {
+        return test.browserSpec
+      })
         .reduce((reduced, spec) => {
           let found = false
           reduced.forEach((s) => {
@@ -374,10 +367,9 @@ class Driver {
     }
 
     function findTests (tests, browserSpec) {
-      return tests
-        .filter((test) => {
-          return test.browserSpec.same(browserSpec)
-        })
+      return tests.filter((test) => {
+        return test.browserSpec.same(browserSpec)
+      })
         .map((deviceTest) => {
           return deviceTest.test
         })

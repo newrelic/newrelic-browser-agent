@@ -108,7 +108,8 @@ features.reliableUnloadEvent = new BrowserMatcher()
   .exclude('ios')
 
 /** DEPRECATED */
-features.addEventListener = new BrowserMatcher().exclude('ie', '<9')
+features.addEventListener = new BrowserMatcher()
+  .exclude('ie', '<9')
 
 /** DEPRECATED */
 features.wrappableAddEventListener = features.addEventListener
@@ -130,10 +131,13 @@ features.uncaughtErrorObject = new BrowserMatcher()
   .exclude('safari', '<10')
   .exclude('edge')
 
-features.setImmediate = new BrowserMatcher().exclude('*', '*').include('ie@>=10')
+features.setImmediate = new BrowserMatcher()
+  .exclude('*', '*')
+  .include('ie@>=10')
 
 /** DEPRECATED */
-features.xhr = new BrowserMatcher().exclude('ie@<9')
+features.xhr = new BrowserMatcher()
+  .exclude('ie@<9')
 
 /** DEPRECATED -- just use xhr instead */
 features.xhrWithAddEventListener = features.xhr
@@ -156,7 +160,8 @@ features.navTiming = new BrowserMatcher()
   .exclude('ios', '<9')
 
 /** DEPRECATED */
-features.cors = new BrowserMatcher().exclude('ie@<10')
+features.cors = new BrowserMatcher()
+  .exclude('ie@<10')
 
 features.promise = new BrowserMatcher()
   .exclude('ie', '<=11')
@@ -187,8 +192,9 @@ features.fetch = new BrowserMatcher()
 // e.g. arrayBuffer on ios@10 generates an error when used with FormData instance
 // MDN shows this function as not supported
 // https://developer.mozilla.org/en-US/docs/Web/API/Body/arrayBuffer
-features.fetchExt = features.fetch.and(
-  new BrowserMatcher().exclude('ios', '<11.3').exclude('safari', '<11.1') // MDN says no support (11.1 currently latest), but 11.1 is accounted for in the tests
+features.fetchExt = features.fetch.and(new BrowserMatcher()
+  .exclude('ios', '<11.3')
+  .exclude('safari', '<11.1') // MDN says no support (11.1 currently latest), but 11.1 is accounted for in the tests
 )
 
 features.requestAnimationFrame = new BrowserMatcher()
@@ -211,7 +217,10 @@ features.sendBeacon = new BrowserMatcher()
 // Safari on macOS 11.1 - 12.2 have a bug in the sendBeacon API during pgehide event listener -- fixed in ios 12.3
 // The agent falls back to using image
 // https://bugs.webkit.org/show_bug.cgi?id=188329
-features.brokenSendBeacon = new BrowserMatcher().exclude('*').include('safari', '<12.3').include('ios', '<13.0')
+features.brokenSendBeacon = new BrowserMatcher()
+  .exclude('*')
+  .include('safari', '<12.3')
+  .include('ios', '<13.0')
 
 features.workingSendBeacon = features.sendBeacon.and(features.brokenSendBeacon.inverse())
 
@@ -224,7 +233,8 @@ features.blob = new BrowserMatcher()
   .exclude('android')
 
 /** DEPRECATED */
-features.tls = new BrowserMatcher().exclude('ie', '<7')
+features.tls = new BrowserMatcher()
+  .exclude('ie', '<7')
 
 features.addEventListenerOptions = new BrowserMatcher()
   .exclude('firefox', '<49')
@@ -235,7 +245,11 @@ features.addEventListenerOptions = new BrowserMatcher()
   .exclude('ios')
   .exclude('ie')
 
-features.firstPaint = new BrowserMatcher().exclude('*').include('chrome', '>=60').include('android').include('edge')
+features.firstPaint = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', '>=60')
+  .include('android')
+  .include('edge')
 
 features.firstContentfulPaint = new BrowserMatcher()
   .exclude('*')
@@ -245,23 +259,34 @@ features.firstContentfulPaint = new BrowserMatcher()
   .include('android')
   .include('edge')
 
-features.largestContentfulPaint = new BrowserMatcher().exclude('*').include('chrome', '>=77')
+features.largestContentfulPaint = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', '>=77')
 
-features.cumulativeLayoutShift = new BrowserMatcher().exclude('*').include('chrome', '>=84')
+features.cumulativeLayoutShift = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', '>=84')
 
-features.unsupportedCumulativeLayoutShift = new BrowserMatcher().exclude('*').include('chrome', '<77')
+features.unsupportedCumulativeLayoutShift = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', '<77')
 
 // btoa() is used to base-64-encode Distributed Tracing header data.
 // https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/btoa#Browser_compatibility
-features.btoa = new BrowserMatcher().exclude('ie', '<=9')
+features.btoa = new BrowserMatcher()
+  .exclude('ie', '<=9')
 
 // https://github.com/SeleniumHQ/selenium/issues/7649
 // once latest Safari does not have this bug, we can remove this
-features.notSafariWithSeleniumBug = new BrowserMatcher().exclude('safari', '>=13')
+features.notSafariWithSeleniumBug = new BrowserMatcher()
+  .exclude('safari', '>=13')
 
-features.notInternetExplorer = new BrowserMatcher().exclude('ie')
+features.notInternetExplorer = new BrowserMatcher()
+  .exclude('ie')
 
-features.testPageHide = new BrowserMatcher().exclude('*').include('chrome')
+features.testPageHide = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome')
 
 // Some old browsers have absolute unix timestamps instead of relative to navigation start in the Event web API
 // (addEventListener argument). We use the EventTarget.timeStamp value to calculate FID.
@@ -280,7 +305,8 @@ features.unreliableEvtTimestamp = new BrowserMatcher()
   .include('edge', '14')
   .include('ie', '>9')
 
-features.supportsFirstInteraction = features.addEventListener.exclude('ie', '9')
+features.supportsFirstInteraction = features.addEventListener
+  .exclude('ie', '9')
 
 features.originOnlyReferer = new BrowserMatcher()
   .exclude('*')
@@ -329,10 +355,14 @@ features.customElements = new BrowserMatcher()
   .include('firefox', '>=63')
   .include('edge', '>=79')
 
-features.latestSmoke = new BrowserMatcher().exclude('*').include('chrome', 'latest').include('firefox', 'latest')
+features.latestSmoke = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', 'latest')
+  .include('firefox', 'latest')
 
 // TODO -- Enable this and add appropriate browsers when NPM is fixed
-features.mfe = new BrowserMatcher().exclude('*')
+features.mfe = new BrowserMatcher()
+  .exclude('*')
 
 features.polyfillsNeeded = new BrowserMatcher()
   .exclude('*')
@@ -341,7 +371,8 @@ features.polyfillsNeeded = new BrowserMatcher()
   .include('edge', '<=79')
   .include('safari', '<=11.3')
 
-features.workerStackSizeGeneratesError = new BrowserMatcher().exclude('firefox')
+features.workerStackSizeGeneratesError = new BrowserMatcher()
+  .exclude('firefox')
 
 features.unhandledPromiseRejection = new BrowserMatcher()
   .exclude('*')
@@ -357,12 +388,11 @@ features.bfcache = new BrowserMatcher()
   .include('firefox')
   .include('safari')
   .include('ios')
-//.include('android', '>=9.0') -- does not work on android 9.0 emulator (v100 Chrome) for unknown precise reason;
+  //.include('android', '>=9.0') -- does not work on android 9.0 emulator (v100 Chrome) for unknown precise reason;
 
 /* vvv--- Workers API support ---vvv
- */
-features.workers = new BrowserMatcher([
-  // NOTE: module type workers have different (higher) compatibility versions, excluding IE11
+  */
+features.workers = new BrowserMatcher([ // NOTE: module type workers have different (higher) compatibility versions, excluding IE11
   new MatcherRule(TYPE_EXCLUDE, '*@*'),
   new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
   new MatcherRule(TYPE_INCLUDE, 'edge@>=12'),
@@ -371,8 +401,7 @@ features.workers = new BrowserMatcher([
   new MatcherRule(TYPE_INCLUDE, 'android@>=4.4'),
   new MatcherRule(TYPE_INCLUDE, 'ios@>=5')
 ])
-features.supportESMWorkers = new BrowserMatcher([
-  // not avail in Firefox browsers, or Safari below 15
+features.supportESMWorkers = new BrowserMatcher([ // not avail in Firefox browsers, or Safari below 15
   new MatcherRule(TYPE_EXCLUDE, '*@*'),
   new MatcherRule(TYPE_INCLUDE, 'chrome@>=80'),
   new MatcherRule(TYPE_INCLUDE, 'edge@>=80'),
@@ -390,8 +419,7 @@ features.nestedWorkers = new BrowserMatcher([
   // safari & ios does not yet support nested (dedicated) workers, current v16 *cli 10/22
 ])
 
-features.sharedWorkers = new BrowserMatcher([
-  // not avail android, or Safari below 16
+features.sharedWorkers = new BrowserMatcher([ // not avail android, or Safari below 16
   new MatcherRule(TYPE_EXCLUDE, '*@*'),
   new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
   new MatcherRule(TYPE_INCLUDE, 'edge@>=79'),

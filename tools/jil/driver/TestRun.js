@@ -40,24 +40,28 @@ class TestRun extends EventEmitter {
     let browserSpec = this.browserSpec
     let numberOfRetries = 4
 
-    let browser = this._initializeBrowser(this.connectionInfo, this.browserSpec, rootUrl, numberOfRetries)
+    let browser = this._initializeBrowser(
+      this.connectionInfo,
+      this.browserSpec,
+      rootUrl,
+      numberOfRetries
+    )
 
     browser.browserSpec = this.browserSpec
     browser.stream = this.stream
 
-    browser
-      .then(() => {
-        browser.match = (spec) => browserSpec.match(spec)
-        browser.hasFeature = (feature) => browserSpec.hasFeature(feature)
-        self.browser = browser
+    browser.then(() => {
+      browser.match = (spec) => browserSpec.match(spec)
+      browser.hasFeature = (feature) => browserSpec.hasFeature(feature)
+      self.browser = browser
 
-        self.harness = new TestHarness(false)
-        self.harness.stream.pipe(self.browser.stream)
+      self.harness = new TestHarness(false)
+      self.harness.stream.pipe(self.browser.stream)
 
-        self.initialized = true
-        cb(null)
-      })
-      .catch((err) => {
+      self.initialized = true
+      cb(null)
+    })
+      .catch(err => {
         newrelic.noticeError(err, self.browserSpec.desired)
         cb(err)
       })
@@ -130,7 +134,7 @@ class TestRun extends EventEmitter {
             platformVersion: browserSpec.desired.platformVersion || null,
             build: browserSpec.desired.build,
             testName: name,
-            retry: attempt - 1,
+            retry: (attempt - 1),
             name: result.name,
             ok: result.ok,
             operator: result.operator,
@@ -146,7 +150,7 @@ class TestRun extends EventEmitter {
       function notifyTestFinished (passed, duration) {
         self.emit('testFinished', self, test, {
           passed: passed,
-          retry: attempt - 1,
+          retry: (attempt - 1),
           duration: duration
         })
       }
@@ -181,15 +185,13 @@ class TestRun extends EventEmitter {
     if (isSauceConnected()) {
       self.browser.sauceJobStatus(self.allOk)
     }
-    self.browser
-      .quit(() => {
-        self.emit('closed', self)
-        if (done) done()
-      })
-      .catch((err) => {
-        self.emit('closed', self)
-        if (done) done(err)
-      })
+    self.browser.quit(() => {
+      self.emit('closed', self)
+      if (done) done()
+    }).catch((err) => {
+      self.emit('closed', self)
+      if (done) done(err)
+    })
   }
 
   _initializeBrowser (connectionInfo, browserSpec, rootURL, numberOfRetries, retry) {
@@ -205,7 +207,13 @@ class TestRun extends EventEmitter {
           throw err
         }
 
-        return this._initializeBrowser(connectionInfo, browserSpec, rootURL, numberOfRetries, retry)
+        return this._initializeBrowser(
+          connectionInfo,
+          browserSpec,
+          rootURL,
+          numberOfRetries,
+          retry
+        )
       })
   }
 

@@ -20,7 +20,9 @@ function browserTest (name, spec, test) {
   testDriver(name, test)
 }
 
-window.addEventListener ? window.addEventListener('load', loaded, false) : window.attachEvent('onload', loaded)
+window.addEventListener
+  ? window.addEventListener('load', loaded, false)
+  : window.attachEvent('onload', loaded)
 
 function loaded () {
   module.exports.loaded = true

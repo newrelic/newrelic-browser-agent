@@ -16,7 +16,8 @@ wd.addAsyncMethod('initNewSession', function (browserSpec, testDriver, cb) {
 wd.addAsyncMethod('newSession', function (cb) {
   this.quit((err) => {
     if (err) return cb(err)
-    return this.init(this.browserSpec.desired, cb).get(this._testDriver.router.assetURL('/'))
+    return this.init(this.browserSpec.desired, cb)
+      .get(this._testDriver.router.assetURL('/'))
   })
 })
 
@@ -31,9 +32,7 @@ wd.addAsyncMethod('safeGet', function (url, cb) {
 wd.addAsyncMethod('waitForFeature', function (feat, cb) {
   this.waitFor(
     // condition for webpack built agent
-    asserters.jsCondition(
-      `window.NREUM && window.NREUM.activatedFeatures && window.NREUM.activatedFeatures['${feat}']`
-    ),
+    asserters.jsCondition(`window.NREUM && window.NREUM.activatedFeatures && window.NREUM.activatedFeatures['${feat}']`),
     this._testDriver.timeout || 60000,
     cb
   )

@@ -101,9 +101,7 @@ class TestHarness extends EventEmitter {
       while (t) {
         t.run()
         if (!t.ended) {
-          return t.once('end', function () {
-            nextTick(next)
-          })
+          return t.once('end', function () { nextTick(next) })
         }
         t = getNextTest()
       }
@@ -145,9 +143,7 @@ class TestHarness extends EventEmitter {
       }
     })
 
-    t.on('test', function (st) {
-      self._watch(st)
-    })
+    t.on('test', function (st) { self._watch(st) })
 
     t.once('end', function () {
       ended = true
@@ -238,8 +234,7 @@ class TestHarness extends EventEmitter {
       output += inner + 'at: ' + res.at + '\n'
     }
 
-    var actualStack =
-      res.actual && (typeof res.actual === 'object' || typeof res.actual === 'function') ? res.actual.stack : undefined
+    var actualStack = res.actual && (typeof res.actual === 'object' || typeof res.actual === 'function') ? res.actual.stack : undefined
     var errorStack = res.error && res.error.stack
     var stack = defined(actualStack, errorStack)
     if (stack) {

@@ -12,6 +12,7 @@ import { now } from '../../common/timing/now'
 import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
 import { isWorkerScope } from '../../common/util/global-scope'
+import { warn } from '../../common/util/console'
 
 function setTopLevelCallers(nr) {
   const funcs = [
@@ -125,7 +126,7 @@ export function setAPI(agentIdentifier, nr, forceDrain) {
     import('./apiAsync').then(({ setAPI }) => {
       setAPI(agentIdentifier)
       drain(agentIdentifier, 'api')
-    })
+    }).catch((err) => warn("A problem was encountered while attempting to setup post-load API interface."));
   }
 
   // experimental feature -- not ready

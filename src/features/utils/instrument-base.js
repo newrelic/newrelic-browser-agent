@@ -7,10 +7,6 @@ import { warn } from '../../common/util/console'
 export class InstrumentBase extends FeatureBase {
   constructor(agentIdentifier, aggregator, featureName, auto = true) {
     super(agentIdentifier, aggregator, featureName)
-    this.completed = new Promise((resolve, reject) => {
-      this.resolve = resolve
-      this.reject = reject
-    })
     this.hasAggregator = false
     this.auto = auto
 
@@ -30,11 +26,9 @@ export class InstrumentBase extends FeatureBase {
       try {
         const { Aggregate } = await import(`../../features/${this.featureName}/aggregate`)
         new Aggregate(this.agentIdentifier, this.aggregator)
-        this.resolve();
       } catch (e) {
         warn(`Failed to execute aggregator module for ${this.featureName} -`, e);
         this.abortHandler?.();  // undo any important alterations made to the page
-        this.reject(e);
       }
     }
 

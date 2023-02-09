@@ -9,6 +9,7 @@ import { ee } from '../../../common/event-emitter/contextual-ee'
 import { InteractionNode } from './interaction-node'
 import { now } from '../../../common/timing/now'
 
+console.log("originalSetTimeout (interaction)")
 var originalSetTimeout = originals.ST
 var originalClearTimeout = originals.CT
 

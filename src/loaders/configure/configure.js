@@ -7,12 +7,10 @@ import { isWorkerScope } from '../../common/util/global-scope'
 export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   let { init, info, loader_config, runtime = { loaderType }, exposed = true } = opts
   const nr = gosCDN()
-  let api = {}
   if (!info) {
     init = nr.init
     info = nr.info
     loader_config = nr.loader_config
-    api = nr
   }
 
   if (isWorkerScope) { // add a default attr to all worker payloads
@@ -31,5 +29,13 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   addToNREUM('activatedFeatures', activatedFeatures)
   addToNREUM('setToken', (flags) => activateFeatures(flags, agentIdentifier))
 
-  return api
+  const api = setAPI(agentIdentifier, forceDrain)
+  gosNREUMInitializedAgents(agentIdentifier, api, 'api')
+  gosNREUMInitializedAgents(agentIdentifier, exposed, 'exposed')
+  if (!isWorkerScope) {
+    addToNREUM('activatedFeatures', activatedFeatures)
+    addToNREUM('setToken', (flags) => activateFeatures(flags, agentIdentifier))
+  }
+
+  return nr
 }

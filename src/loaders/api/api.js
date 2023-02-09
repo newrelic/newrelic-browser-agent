@@ -123,15 +123,9 @@ export function setAPI(agentIdentifier, nr, forceDrain) {
   else onWindowLoad(() => lazyLoad(), true)
 
   function lazyLoad() {
-    import('./apiAsync').then(({ setAPI }) => {
+    import(/* webpackChunkName: "async-api" */'./apiAsync').then(({ setAPI }) => {
       setAPI(agentIdentifier)
       drain(agentIdentifier, 'api')
     }).catch(() => warn("Downloading runtime APIs failed..."));
   }
-
-  // experimental feature -- not ready
-  // nr.BrowserAgentInstance = async function (){
-  //   const { BrowserAgent } = await import('@newrelic/browser-agent')
-  //   return new BrowserAgent()
-  // }
 }

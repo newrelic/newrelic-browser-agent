@@ -36,19 +36,12 @@ class PuppyComponent extends HTMLElement {
   }
 
   fetchImg = async () => {
-    const params = {
-      api_key: 'TMWFkdtKTv6To8CjL9OqC2KBNQTM8D3N',
-      q: 'puppy',
-      limit: 100
-    }
+    const params = { api_key: 'TMWFkdtKTv6To8CjL9OqC2KBNQTM8D3N', q: 'puppy', limit: 100 }
     const url = new URL('https://api.giphy.com/v1/gifs/search')
-    Object.keys(params).forEach((key) => url.searchParams.append(key, params[key]))
+    Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
     const resp = await fetch(url)
     const json = await resp.json()
-    const result =
-      json.data.length > 0
-        ? json.data[Math.floor(Math.random() * json.data.length)].images.downsized.url
-        : 'https://media.giphy.com/media/3zhxq2ttgN6rEw8SDx/giphy.gif'
+    const result = json.data.length > 0 ? json.data[Math.floor(Math.random() * json.data.length)].images.downsized.url : 'https://media.giphy.com/media/3zhxq2ttgN6rEw8SDx/giphy.gif'
     return result
   }
 
@@ -77,5 +70,5 @@ export function mount (elem) {
 }
 
 export function unmount () {
-  document.querySelectorAll(PuppyComponent.name).forEach((component) => component.remove())
+  document.querySelectorAll(PuppyComponent.name).forEach(component => component.remove())
 }

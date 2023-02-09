@@ -33,18 +33,13 @@ function build (folder) {
   const cmd = /^win/.test(process.platform) ? 'npm.cmd' : 'npm'
   print(`Building ./${path.relative(root, folder)}`)
 
-  child_process.execSync('npm run build', {
-    cwd: folder,
-    env: process.env,
-    stdio: 'inherit'
-  })
+  child_process.execSync('npm run build', { cwd: folder, env: process.env, stdio: 'inherit' })
 }
 
 // Lists subfolders in a folder
 function subfolders (folder) {
-  return fs
-    .readdirSync(folder)
-    .filter((subfolder) => fs.statSync(path.join(folder, subfolder)).isDirectory())
-    .filter((subfolder) => subfolder !== 'node_modules' && subfolder[0] !== '.')
-    .map((subfolder) => path.join(folder, subfolder))
+  return fs.readdirSync(folder)
+    .filter(subfolder => fs.statSync(path.join(folder, subfolder)).isDirectory())
+    .filter(subfolder => subfolder !== 'node_modules' && subfolder[0] !== '.')
+    .map(subfolder => path.join(folder, subfolder))
 }

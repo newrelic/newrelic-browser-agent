@@ -10,7 +10,6 @@ const querypack = require('@newrelic/nr-querypack')
 let supported = testDriver.Matcher.withFeature('fetch')
 
 testDriver.test('capturing fetch in SPA interactions', supported, function (t, browser, router) {
-  t.plan(21)
   let testStartTime = now()
 
   let rumPromise = router.expectRum()
@@ -64,6 +63,8 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
       let estimatedInteractionTimestamp = interactionTree.start + fixup
       t.ok(estimatedInteractionTimestamp > testStartTime, 'estimated ixn start after test start')
       t.ok(estimatedInteractionTimestamp < receiptTime, 'estimated ixn start before receipt time')
+
+      t.end();
     })
     .catch(fail)
 

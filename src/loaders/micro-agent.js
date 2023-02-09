@@ -43,15 +43,19 @@ export class MicroAgent {
             const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
             autoFeatures.forEach(f => {
                 if (enabledFeatures[f]) {
-                    import(`../features/${f}/instrument`).then(({ Instrument }) => {
+                    import(/* webpackChunkName: "lazy-loader" */ '../features/utils/lazy-loader').then(({lazyLoader}) => {
+                        return lazyLoader(f, 'instrument')
+                    }).then(({ Instrument }) => {
                         this.features[f] = new Instrument(this.agentIdentifier, this.sharedAggregator)
-                    }).catch(err => 
+                    }).catch(err =>
                         warn('Something prevented the agent from being downloaded.'))
                 }
             })
             nonAutoFeatures.forEach(f => {
                 if (enabledFeatures[f]) {
-                    import(`../features/${f}/aggregate`).then(({ Aggregate }) => {
+                    import(/* webpackChunkName: "lazy-loader" */ '../features/utils/lazy-loader').then(({lazyLoader}) => {
+                        return lazyLoader(f, 'aggregate')
+                    }).then(({ Aggregate }) => {
                         this.features[f] = new Aggregate(this.agentIdentifier, this.sharedAggregator)
                     }).catch(err =>
                         warn('Something prevented the agent from being downloaded.'))

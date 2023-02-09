@@ -24,10 +24,14 @@ export function lazyLoader(featureName, featurePart) {
         return import(/* webpackChunkName: "page_action-aggregate" */ '../page_action/aggregate');
       case FEATURE_NAMES.pageViewEvent:
         return import(/* webpackChunkName: "page_view_event-aggregate" */ '../page_view_event/aggregate');
+      case FEATURE_NAMES.pageViewTiming:
+        return import(/* webpackChunkName: "page_view_timing-aggregate" */ '../page_view_timing/aggregate');
       case FEATURE_NAMES.sessionTrace:
         return import(/* webpackChunkName: "session_trace-aggregate" */ '../session_trace/aggregate');
       case FEATURE_NAMES.spa:
         return import(/* webpackChunkName: "spa-aggregate" */ '../spa/aggregate');
+      default:
+        throw new Error(`Attempted to load unsupported agent feature: ${featureName} ${featurePart}`);
     }
   } else if (featurePart === 'instrument') {
     switch (featureName) {
@@ -41,10 +45,14 @@ export function lazyLoader(featureName, featurePart) {
         return import(/* webpackChunkName: "page_action-instrument" */ '../page_action/instrument');
       case FEATURE_NAMES.pageViewEvent:
         return import(/* webpackChunkName: "page_view_event-instrument" */ '../page_view_event/instrument');
+      case FEATURE_NAMES.pageViewTiming:
+        return import(/* webpackChunkName: "page_view_timing-instrument" */ '../page_view_timing/instrument');
       case FEATURE_NAMES.sessionTrace:
         return import(/* webpackChunkName: "session_trace-instrument" */ '../session_trace/instrument');
       case FEATURE_NAMES.spa:
         return import(/* webpackChunkName: "spa-instrument" */ '../spa/instrument');
+      default:
+        throw new Error(`Attempted to load unsupported agent feature: ${featureName} ${featurePart}`);
     }
   }
 }

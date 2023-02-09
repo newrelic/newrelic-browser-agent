@@ -20,7 +20,7 @@ jil.browserTest('node is not restored for ended interaction', function (t) {
 
   start()
 
-  function start() {
+  function start () {
     if (loaded) {
       helpers.startInteraction(onInteractionStart, afterInteractionDone, {
         eventType: 'click'
@@ -32,7 +32,7 @@ jil.browserTest('node is not restored for ended interaction', function (t) {
 
   function onInteractionStart (cb) {
     t.ok(helpers.currentNodeId(), 'should be inside an interaction at the beginning')
-    setTimeout(function() {
+    setTimeout(function () {
       t.ok(helpers.currentNodeId(), 'should be inside an interaction in timeout 1')
       newrelic.interaction().end()
     }, 100)
@@ -40,7 +40,7 @@ jil.browserTest('node is not restored for ended interaction', function (t) {
     // even though the setTimeout callback is associated with the interaction,
     // at the time it is called, the interaction node should not be restored
     // since it runs after the interaction has already finished
-    setTimeout(function() {
+    setTimeout(function () {
       t.notOk(helpers.currentNodeId(), 'should not be inside an interaction in timeout 2')
     }, 200)
 

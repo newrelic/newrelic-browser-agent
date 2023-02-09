@@ -23,16 +23,16 @@ if (nr.ee) {
 
 export { globalInstance as ee }
 
-function EventContext() { }
+function EventContext () { }
 
-function ee(old, debugId) {
+function ee (old, debugId) {
   var handlers = {}
   var bufferGroupMap = {}
   var emitters = {}
   // backlog must be isolated if multiple agents can run on page. MFE loader packages sets this to true. only check this for feature emitters (length = 16)
-  var isolatedBacklog = false 
-  try{
-    isolatedBacklog = debugId.length !== 16 ? false : getRuntime(debugId).isolatedBacklog 
+  var isolatedBacklog = false
+  try {
+    isolatedBacklog = debugId.length !== 16 ? false : getRuntime(debugId).isolatedBacklog
   } catch (err) {
     // do nothing for now
   }
@@ -56,7 +56,7 @@ function ee(old, debugId) {
 
   return emitter
 
-  function context(contextOrStore) {
+  function context (contextOrStore) {
     if (contextOrStore && contextOrStore instanceof EventContext) {
       return contextOrStore
     } else if (contextOrStore) {
@@ -66,7 +66,7 @@ function ee(old, debugId) {
     }
   }
 
-  function emit(type, args, contextOrStore, force, bubble) {
+  function emit (type, args, contextOrStore, force, bubble) {
     if (bubble !== false) bubble = true
     if (globalInstance.aborted && !force) { return }
     if (old && bubble) old.emit(type, args, contextOrStore)
@@ -90,12 +90,12 @@ function ee(old, debugId) {
     return ctx
   }
 
-  function addEventListener(type, fn) {
+  function addEventListener (type, fn) {
     // Retrieve type from handlers, if it doesn't exist assign the default and retrieve it.
     handlers[type] = listeners(type).concat(fn)
   }
 
-  function removeEventListener(type, fn) {
+  function removeEventListener (type, fn) {
     var listeners = handlers[type]
     if (!listeners) return
     for (var i = 0; i < listeners.length; i++) {
@@ -105,15 +105,15 @@ function ee(old, debugId) {
     }
   }
 
-  function listeners(type) {
+  function listeners (type) {
     return handlers[type] || []
   }
 
-  function getOrCreate(name) {
+  function getOrCreate (name) {
     return (emitters[name] = emitters[name] || ee(emitter, name))
   }
 
-  function bufferEventsByGroup(types, group) {
+  function bufferEventsByGroup (types, group) {
     var eventBuffer = getBuffer()
 
     // do not buffer events if agent has been aborted
@@ -127,31 +127,31 @@ function ee(old, debugId) {
     })
   }
 
-  function isBuffering(type) {
+  function isBuffering (type) {
     var bufferGroup = getBuffer()[bufferGroupMap[type]]
     return !!bufferGroup
   }
 
   // buffer is associated with a base emitter, since there are two
   // (global and scoped to the current bundle), it is now part of the emitter
-  function getBuffer() {
+  function getBuffer () {
     return emitter.backlog
   }
 }
 
 // get context object from store object, or create if does not exist
-export function getOrSetContext(obj) {
+export function getOrSetContext (obj) {
   return getOrSet(obj, ctxId, getNewContext)
 }
 
-function getNewContext() {
+function getNewContext () {
   return new EventContext()
 }
 
 // abort should be called 30 seconds after the page has started running
 // We should drop our data and stop collecting if we still have a backlog, which
 // signifies the rest of the agent wasn't loaded
-function abortIfNotLoaded() {
+function abortIfNotLoaded () {
   if (globalInstance.backlog.api || globalInstance.backlog.feature) {
     globalInstance.aborted = true
     globalInstance.backlog = {}

@@ -9,7 +9,7 @@ testDriver.test('XHR ajax events deny bam server', function (t, browser, router)
       ajax: {
         harvestTimeSeconds: 2,
         enabled: true,
-        deny_list:[router.router.assetServer.host]
+        deny_list: [router.router.assetServer.host]
       }
     },
     scriptString: `
@@ -28,13 +28,13 @@ testDriver.test('XHR ajax events deny bam server', function (t, browser, router)
         t.fail('Should not have seen another ajax event')
       }).catch(() => {})
 
-      const ajaxData = JSON.parse(response.body).xhr;
+      const ajaxData = JSON.parse(response.body).xhr
       t.ok(ajaxData.length === 1, 'XMLHttpRequest ajax event was harvested')
 
       return newAjaxPromise
     })
     .then(() => {
-      t.end();
+      t.end()
     })
 })
 
@@ -46,7 +46,7 @@ testDriver.test('Fetch ajax events deny bam server', fetchBrowsers, function (t,
       ajax: {
         harvestTimeSeconds: 2,
         enabled: true,
-        deny_list:[router.router.assetServer.host]
+        deny_list: [router.router.assetServer.host]
       }
     },
     scriptString: `
@@ -63,12 +63,12 @@ testDriver.test('Fetch ajax events deny bam server', fetchBrowsers, function (t,
         t.fail('Should not have seen another ajax event')
       }).catch(() => {})
 
-      const ajaxData = JSON.parse(response.body).xhr;
+      const ajaxData = JSON.parse(response.body).xhr
       t.ok(ajaxData.length === 1, 'Fetch ajax event was harvested')
 
       return newAjaxPromise
     })
     .then(() => {
-      t.end();
+      t.end()
     })
 })

@@ -9,11 +9,11 @@ var denyList = []
  * @param {Object} params - object with properties of the XHR event
  * @returns {boolean} `true` if request does not match any entries of {@link denyList|deny list}; else `false`
  */
-export function shouldCollectEvent(params) {
+export function shouldCollectEvent (params) {
   if (denyList.length === 0) {
     return true
   }
-  
+
   // XHR requests with an undefined hostname (e.g., data URLs) should not be collected.
   if (params.hostname === undefined) {
     return false
@@ -25,9 +25,9 @@ export function shouldCollectEvent(params) {
     if (parsed.hostname === '*') {
       return false
     }
-    
-    if (domainMatchesPattern(parsed.hostname, params.hostname)
-      && comparePath(parsed.pathname, params.pathname)) {
+
+    if (domainMatchesPattern(parsed.hostname, params.hostname) &&
+      comparePath(parsed.pathname, params.pathname)) {
       return false
     }
   }
@@ -39,7 +39,7 @@ export function shouldCollectEvent(params) {
  * Initializes the {@link denyList|XHR deny list} by extracting hostname and pathname from an array of filter strings.
  * @param {string[]} denyListConfig - array of URL filters to identify XHR requests to be excluded from collection
  */
-export function setDenyList(denyListConfig) {
+export function setDenyList (denyListConfig) {
   denyList = []
 
   if (!denyListConfig || !denyListConfig.length) {
@@ -76,7 +76,7 @@ export function setDenyList(denyListConfig) {
  * @param {string} domain - a domain string with no protocol or path (e.g., app1.example.com)
  * @returns {boolean} `true` if domain matches pattern; else `false`
  */
-function domainMatchesPattern(pattern, domain) {
+function domainMatchesPattern (pattern, domain) {
   if (pattern.length > domain.length) {
     return false
   }
@@ -94,7 +94,7 @@ function domainMatchesPattern(pattern, domain) {
  * @param {string} path - a string representing a URL path (e.g., /api/v1)
  * @returns {boolean} `true` if path and pattern are an exact string match (except for leading slashes); else `false`
  */
-function comparePath(pattern, path) {
+function comparePath (pattern, path) {
   if (pattern.indexOf('/') === 0) {
     pattern = pattern.substring(1)
   }

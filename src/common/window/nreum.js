@@ -7,7 +7,7 @@ export const defaults = {
   errorBeacon: 'bam.nr-data.net'
 }
 
-export function gosNREUM() {
+export function gosNREUM () {
   if (!globalScope.NREUM) {
     globalScope.NREUM = {}
   }
@@ -15,7 +15,7 @@ export function gosNREUM() {
   return globalScope.NREUM
 }
 
-export function gosNREUMInfo() {
+export function gosNREUMInfo () {
   let nr = gosNREUM()
   const externallySupplied = nr.info || {}
 
@@ -28,7 +28,7 @@ export function gosNREUMInfo() {
   return nr
 }
 
-export function gosNREUMLoaderConfig() {
+export function gosNREUMLoaderConfig () {
   let nr = gosNREUM()
   const externallySupplied = nr.loader_config || {}
 
@@ -39,7 +39,7 @@ export function gosNREUMLoaderConfig() {
   return nr
 }
 
-export function gosNREUMInit() {
+export function gosNREUMInit () {
   let nr = gosNREUM()
   const externallySupplied = nr.init || {}
 
@@ -50,7 +50,7 @@ export function gosNREUMInit() {
   return nr
 }
 
-export function gosNREUMOriginals() {
+export function gosNREUMOriginals () {
   let nr = gosNREUM()
   if (!nr.o) {
     nr.o = {
@@ -68,7 +68,7 @@ export function gosNREUMOriginals() {
   return nr
 }
 
-export function gosNREUMInitializedAgents(id, obj, target) {
+export function gosNREUMInitializedAgents (id, obj, target) {
   let nr = gosNREUM()
   const externallySupplied = nr.initializedAgents || {}
   const curr = externallySupplied[id] || {}
@@ -91,17 +91,17 @@ export function gosNREUMInitializedAgents(id, obj, target) {
   return nr
 }
 
-export function addToNREUM(fnName, fn) {
+export function addToNREUM (fnName, fn) {
   let nr = gosNREUM()
   nr[fnName] = fn
 }
 
-export function NREUMinitialized() {
+export function NREUMinitialized () {
   const nr = gosNREUM()
   nr.initialized = true
 }
 
-export function gosCDN() {
+export function gosCDN () {
   gosNREUMInfo()
   gosNREUMInit()
   gosNREUMOriginals()

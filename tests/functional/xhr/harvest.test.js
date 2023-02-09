@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {fail, querypack} = require('./helpers')
+const { fail, querypack } = require('./helpers')
 
 testDriver.test('ajax events harvests are retried when collector returns 429', function (t, browser, router) {
   let assetURL = router.assetURL('xhr-outside-interaction.html', {

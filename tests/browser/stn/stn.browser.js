@@ -4,17 +4,17 @@
  */
 
 const test = require('../../../tools/jil/browser-test.js')
-const {setup} = require('../utils/setup')
+const { setup } = require('../utils/setup')
 
-const {Instrument: StnInstrument} = require('../../../src/features/session_trace/instrument/index')
-const {Instrument: AjaxInstrument} = require('../../../src/features/ajax/instrument/index')
-const {Aggregate: AjaxAggregate} = require('../../../src/features/ajax/aggregate/index')
-const {Instrument: JsErrorsInstrument} = require('../../../src/features/jserrors/instrument/index')
-const {Aggregate: JsErrorsAggregate} = require('../../../src/features/jserrors/aggregate/index')
+const { Instrument: StnInstrument } = require('../../../src/features/session_trace/instrument/index')
+const { Instrument: AjaxInstrument } = require('../../../src/features/ajax/instrument/index')
+const { Aggregate: AjaxAggregate } = require('../../../src/features/ajax/aggregate/index')
+const { Instrument: JsErrorsInstrument } = require('../../../src/features/jserrors/instrument/index')
+const { Aggregate: JsErrorsAggregate } = require('../../../src/features/jserrors/aggregate/index')
 
-const {drain} = require('../../../src/common/drain/drain')
+const { drain } = require('../../../src/common/drain/drain')
 
-const {agentIdentifier, baseEE, aggregator} = setup()
+const { agentIdentifier, baseEE, aggregator } = setup()
 
 new StnInstrument(agentIdentifier, aggregator, false)
 new AjaxInstrument(agentIdentifier, aggregator, false)
@@ -65,16 +65,16 @@ function runTests () {
   })
 
   test('session trace nodes', function (t) {
-    const {Aggregate: StnAggregate} = require('../../../src/features/session_trace/aggregate/index')
+    const { Aggregate: StnAggregate } = require('../../../src/features/session_trace/aggregate/index')
     const stnAgg = new StnAggregate(agentIdentifier, aggregator)
-    const {Aggregate: PvtAggregate} = require('../../../src/features/page_view_timing/aggregate/index')
+    const { Aggregate: PvtAggregate } = require('../../../src/features/page_view_timing/aggregate/index')
     const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
 
     let fiVal = 30
     let fidVal = 8
 
     pvtAgg.addTiming('load', 20)
-    pvtAgg.addTiming('fi', fiVal, {fid: fidVal})
+    pvtAgg.addTiming('fi', fiVal, { fid: fidVal })
 
     ee.emit('feat-stn', [])
 

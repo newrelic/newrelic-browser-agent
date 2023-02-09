@@ -1,5 +1,5 @@
-import { originals } from "../../common/config/config"
-import { FEATURE_NAMES } from "../../loaders/features/features";
+import { originals } from '../../common/config/config'
+import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const FEATURE_NAME = FEATURE_NAMES.sessionTrace
 export const RESOURCE_TIMING_BUFFER_FULL = 'resourcetimingbufferfull'

@@ -10,7 +10,7 @@ class TestEnv {
     this.browserSpec = browserSpec
   }
 
-  toString() {
+  toString () {
     return this.browserSpec.toString()
   }
 }

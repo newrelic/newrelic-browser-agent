@@ -1,19 +1,15 @@
-
 const babelEnv = require('./babel-env-vars')
 
 const presets = [
   [
-    "@babel/preset-env",
+    '@babel/preset-env',
     {
-      "targets": {
-        "node": true
+      targets: {
+        node: true
       }
     }
   ]
 ]
-const plugins = [
-  babelEnv()
-]
-
+const plugins = [babelEnv()]
 
 module.exports = { presets, plugins }

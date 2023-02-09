@@ -45,14 +45,14 @@ testDriver.test('unhandledPromiseRejections are caught and are readable', suppor
       const targetError = expectedErrorMessages.find(x => !x.tested && x.message === err.params.message)
       if (targetError) targetError.tested = true
       t.ok(!!targetError, `expected ${targetError?.meta} message exists (${err.params.message})`)
-      t.ok(!!err.params.stack_trace, `stack_trace exists`)
-      t.ok(!!err.params.stackHash, `stackHash exists`)
+      t.ok(!!err.params.stack_trace, 'stack_trace exists')
+      t.ok(!!err.params.stackHash, 'stackHash exists')
     })
     t.ok(expectedErrorMessages.every(x => x.tested), 'All expected error messages were found')
     t.end()
   }).catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }

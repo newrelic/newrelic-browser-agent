@@ -20,7 +20,7 @@ workerTypes.forEach(type => {
   ignoreErrorsTest(type, typeToMatcher(type))
 })
 
-function ignoreErrorsTest(type, matcher) {
+function ignoreErrorsTest (type, matcher) {
   testDriver.test(`${type} - setErrorHandler ignores error`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
@@ -61,7 +61,7 @@ function ignoreErrorsTest(type, matcher) {
       t.end()
     }).catch(fail)
 
-    function fail(err) {
+    function fail (err) {
       t.error(err)
       t.end()
     }

@@ -30,7 +30,7 @@ testDriver.test('reporting errors from setImmediate callbacks', supported, funct
     t.end()
   }).catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }

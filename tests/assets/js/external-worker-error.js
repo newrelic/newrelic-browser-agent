@@ -4,5 +4,5 @@
  */
 
 self.externalFunction = () => { // eslint-disable-line
-  throw new Error("worker error")
+  throw new Error('worker error')
 }

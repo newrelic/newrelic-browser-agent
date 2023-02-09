@@ -84,7 +84,7 @@ function assertExpectedErrors (t, browser, actualErrors, expectedErrors, assetUR
   }
 }
 
-function getErrorsFromResponse(response, browser) {
+function getErrorsFromResponse (response, browser) {
   if (response.body) {
     try {
       var parsedBody = JSON.parse(response.body)
@@ -102,11 +102,11 @@ function getErrorsFromResponse(response, browser) {
   return null
 }
 
-function getAppIdFromResponse(response) {
+function getAppIdFromResponse (response) {
   return response.query ? response.query.a : null
 }
 
-function getMetricsFromResponse(response, isSupportability) {
+function getMetricsFromResponse (response, isSupportability) {
   var attr = isSupportability ? 'sm' : 'cm'
   if (response.body) {
     try {
@@ -125,11 +125,11 @@ function getMetricsFromResponse(response, isSupportability) {
   return null
 }
 
-function fail(t) {
-	return (err) => {
-    t.error(err);
-    t.end();
-	}
+function fail (t) {
+  return (err) => {
+    t.error(err)
+    t.end()
+  }
 }
 
-module.exports = {fail, assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse, getMetricsFromResponse, getAppIdFromResponse}
+module.exports = { fail, assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse, getMetricsFromResponse, getAppIdFromResponse }

@@ -8,16 +8,16 @@ var fileProtocolRule = {
   replacement: 'file://OBFUSCATED'
 }
 export class Obfuscator extends SharedContext {
-  constructor(parent) {
+  constructor (parent) {
     super(parent) // gets any allowed properties from the parent and stores them in `sharedContext`
   }
 
-  shouldObfuscate() {
+  shouldObfuscate () {
     return getRules(this.sharedContext.agentIdentifier).length > 0
   }
 
   // applies all regex obfuscation rules to provided URL string and returns the result
-  obfuscateString(string) {
+  obfuscateString (string) {
     // if string is empty string, null or not a string, return unmodified
     if (!string || typeof string !== 'string') return string
 
@@ -35,7 +35,7 @@ export class Obfuscator extends SharedContext {
 }
 
 // TO DO: this function should be inside the Obfuscator class since its context relates to agentID
-export function getRules(agentIdentifier) {
+export function getRules (agentIdentifier) {
   var rules = []
   var configRules = getConfigurationValue(agentIdentifier, 'obfuscate') || []
 
@@ -48,7 +48,7 @@ export function getRules(agentIdentifier) {
 }
 
 // takes array of rule objects, logs warning and returns false if any portion of rule is invalid
-export function validateRules(rules) {
+export function validateRules (rules) {
   var invalidReplacementDetected = false
   var invalidRegexDetected = false
   for (var i = 0; i < rules.length; i++) {

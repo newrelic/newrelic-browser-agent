@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-;(function intervalCallback () {
+(function intervalCallback () {
   var timer = window.setInterval(function () {
     window.clearInterval(timer)
     window.intervalFired = true

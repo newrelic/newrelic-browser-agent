@@ -12,8 +12,8 @@ var FRAMEWORKS = {
   JQUERY: 'Jquery'
 }
 
-export function getFrameworks() {
-  if (!isBrowserScope) return [];  // don't bother detecting frameworks if not in the main window context
+export function getFrameworks () {
+  if (!isBrowserScope) return [] // don't bother detecting frameworks if not in the main window context
 
   var frameworks = []
   try {
@@ -32,7 +32,7 @@ export function getFrameworks() {
   return frameworks
 }
 
-function detectReact() {
+function detectReact () {
   try {
     if (!!window.React || !!window.ReactDOM || !!window.ReactRedux) return true
     if (document.querySelector('[data-reactroot], [data-reactid]')) return true
@@ -47,7 +47,7 @@ function detectReact() {
   }
 }
 
-function detectAngularJs() {
+function detectAngularJs () {
   try {
     if (window.angular) return true
     if (document.querySelector('.ng-binding, [ng-app], [data-ng-app], [ng-controller], [data-ng-controller], [ng-repeat], [data-ng-repeat]')) return true
@@ -59,7 +59,7 @@ function detectAngularJs() {
   }
 }
 
-function detectAngular() {
+function detectAngular () {
   try {
     // eslint-disable-next-line
     if (window.hasOwnProperty('ng') && window.ng.hasOwnProperty('coreTokens') && window.ng.coreTokens.hasOwnProperty('NgZone')) return true
@@ -69,4 +69,3 @@ function detectAngular() {
     return false
   }
 }
-

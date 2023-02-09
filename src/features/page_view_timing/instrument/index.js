@@ -14,11 +14,11 @@ import { isBrowserScope } from '../../../common/util/global-scope'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor(agentIdentifier, aggregator, auto=true) {
+  constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    if (!isBrowserScope) return;  // CWV is irrelevant outside web context
+    if (!isBrowserScope) return // CWV is irrelevant outside web context
 
-    this.pageHiddenTime = initializeHiddenTime()  // synonymous with initial visibilityState
+    this.pageHiddenTime = initializeHiddenTime() // synonymous with initial visibilityState
     this.performanceObserver
     this.lcpPerformanceObserver
     this.clsPerformanceObserver
@@ -52,25 +52,25 @@ export class Instrument extends InstrumentBase {
     this.fiRecorded = false
     var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart']
     allowedEventTypes.forEach((e) => {
-      documentAddEventListener(e, (...args) => this.captureInteraction(...args));
+      documentAddEventListener(e, (...args) => this.captureInteraction(...args))
     })
 
     // Document visibility state becomes hidden
     subscribeToVisibilityChange(() => {
       // time is only recorded to be used for short-circuit logic in the observer callbacks
       this.pageHiddenTime = now()
-      handle('docHidden', [this.pageHiddenTime], undefined, FEATURE_NAMES.pageViewTiming, this.ee);
-    }, true);
+      handle('docHidden', [this.pageHiddenTime], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
+    }, true)
 
     // Window fires its pagehide event (typically on navigation; this occurrence is a *subset* of vis change)
-    windowAddEventListener('pagehide', () => handle('winPagehide', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee) );
-    
+    windowAddEventListener('pagehide', () => handle('winPagehide', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee))
+
     // page visibility events
     this.importAggregator()
   }
 
   // paint metrics
-  perfObserver(list, observer) {
+  perfObserver (list, observer) {
     var entries = list.getEntries()
     entries.forEach((entry) => {
       if (entry.name === 'first-paint') {
@@ -82,13 +82,13 @@ export class Instrument extends InstrumentBase {
   }
 
   // largest contentful paint
-  lcpObserver(list, observer) {
+  lcpObserver (list, observer) {
     var entries = list.getEntries()
     if (entries.length > 0) {
       var entry = entries[entries.length - 1]
 
       // metrics become inflated if the page was ever hidden, so they aren't sent
-      if (this.pageHiddenTime < entry.startTime) return;
+      if (this.pageHiddenTime < entry.startTime) return
 
       var payload = [entry]
 
@@ -99,7 +99,7 @@ export class Instrument extends InstrumentBase {
     }
   }
 
-  clsObserver(list) {
+  clsObserver (list) {
     list.getEntries().forEach((entry) => {
       if (!entry.hadRecentInput) {
         handle('cls', [entry], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
@@ -108,8 +108,8 @@ export class Instrument extends InstrumentBase {
   }
 
   // takes an attributes object and appends connection attributes if available
-  addConnectionAttributes(attributes) {
-    var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection; // to date, both window & worker shares the same support for connection
+  addConnectionAttributes (attributes) {
+    var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection // to date, both window & worker shares the same support for connection
     if (!connection) return
 
     if (connection.type) attributes['net-type'] = connection.type
@@ -120,7 +120,7 @@ export class Instrument extends InstrumentBase {
     return attributes
   }
 
-  captureInteraction(evt) {
+  captureInteraction (evt) {
     // if (evt instanceof origEvent && !fiRecorded) {
     if (evt instanceof originals.EV && !this.fiRecorded) {
       var fi = Math.round(evt.timeStamp)

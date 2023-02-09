@@ -5,24 +5,24 @@
 
 const jil = require('jil')
 
-const {setup} = require('./utils/setup')
-const {drain} = require('../../src/common/drain/drain')
-const {handle} = require('../../src/common/event-emitter/handle')
-const {Aggregate: PvtAggregate} = require('../../src/features/page_view_timing/aggregate/index')
-const {FEATURE_NAMES} = require('../../src/loaders/features/features')
+const { setup } = require('./utils/setup')
+const { drain } = require('../../src/common/drain/drain')
+const { handle } = require('../../src/common/event-emitter/handle')
+const { Aggregate: PvtAggregate } = require('../../src/features/page_view_timing/aggregate/index')
+const { FEATURE_NAMES } = require('../../src/loaders/features/features')
 
-const {agentIdentifier, aggregator} = setup()
+const { agentIdentifier, aggregator } = setup()
 
-jil.browserTest('sends expected attributes when available', function(t) {
+jil.browserTest('sends expected attributes when available', function (t) {
   const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
 
   // override harvest calls, so that no network calls are made
-  pvtAgg.scheduler.harvest.send = function() {
+  pvtAgg.scheduler.harvest.send = function () {
     return {}
   }
 
   // prevent prepareHarvest from clearing timings
-  pvtAgg.prepareHarvest = function() {
+  pvtAgg.prepareHarvest = function () {
     return {}
   }
 

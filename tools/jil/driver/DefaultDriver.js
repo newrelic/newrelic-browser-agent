@@ -70,7 +70,7 @@ class DefaultDriver extends Driver {
       driver.output.log('# stopping asset server')
       driver.assetServer.stop()
       driver.output.finish()
-      newrelic.shutdown({collectPendingData: true, timeout: 3000}, done)
+      newrelic.shutdown({ collectPendingData: true, timeout: 3000 }, done)
     }
   }
 }

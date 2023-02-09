@@ -16,7 +16,7 @@ const init = {
   }
 }
 
-testDriver.test(`Loading RequireJS does not cause errors.`, matcher, function (t, browser, router) {
+testDriver.test('Loading RequireJS does not cause errors.', matcher, function (t, browser, router) {
   t.plan(1)
 
   let rumPromise = router.expectRum()

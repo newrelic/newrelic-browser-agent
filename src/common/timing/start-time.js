@@ -10,7 +10,7 @@ import { mark } from './stopwatch'
 import { ffVersion } from '../browser-version/firefox-version'
 import { setOffset } from './now'
 import { exists as performanceCheckExists } from './performance-check'
-import { globalScope } from '../util/global-scope';
+import { globalScope } from '../util/global-scope'
 
 export let navCookie = true
 
@@ -18,7 +18,7 @@ export let navCookie = true
 
 export function findStartTime (agentId) {
   // findStartCookie is used for FF7/8 & browsers which do not support window.performance.timing.navigationStart
-  var starttime = findStartWebTiming(); // || findStartCookie() -- now redundant *cli oct'22, TO DO: slated for removal
+  var starttime = findStartWebTiming() // || findStartCookie() -- now redundant *cli oct'22, TO DO: slated for removal
   if (!starttime) return
 
   mark(agentId, 'starttime', starttime)

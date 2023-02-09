@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const {ee} = require('../../src/common/event-emitter/contextual-ee')
+const { ee } = require('../../src/common/event-emitter/contextual-ee')
 var test = require('../../tools/jil/browser-test.js')
 
 test('Contextual EE', function (t) {
@@ -29,7 +29,7 @@ test('Contextual EE', function (t) {
     t.equal(this.count, 2, 'Multiple handlers fired, in correct order')
   })
 
-  ee.emit('args-test', [ 'a', 'b', 'c' ])
+  ee.emit('args-test', ['a', 'b', 'c'])
 
   var fooObj = {}
   var aContext = ee.emit('context-test-a', [], fooObj)

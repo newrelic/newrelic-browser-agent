@@ -7,7 +7,7 @@ import { setup } from '../utils/setup'
 import createWrapperWithEmitter from '../../../src/common/wrap/wrap-function'
 import test from 'jil/browser-test'
 
-const { baseEE } = setup();
+const { baseEE } = setup()
 
 var eeId = 0
 

@@ -8,15 +8,15 @@ import { parseUrl } from '../../../common/url/parse-url'
 import { globalScope } from '../../../common/util/global-scope'
 
 export class DT {
-  constructor(agentIdentifier) {
+  constructor (agentIdentifier) {
     this.agentIdentifier = agentIdentifier
     // Binds this class instance context to the following fn used in an external module (exported);
     //  Alternatively, can make them class field arrow functions, but requires experimental features/plugin for eslint.
-    this.generateTracePayload = this.generateTracePayload.bind(this);
-    this.shouldGenerateTrace = this.shouldGenerateTrace.bind(this);
+    this.generateTracePayload = this.generateTracePayload.bind(this)
+    this.shouldGenerateTrace = this.shouldGenerateTrace.bind(this)
   }
 
-  generateTracePayload(parsedOrigin) {
+  generateTracePayload (parsedOrigin) {
     if (!this.shouldGenerateTrace(parsedOrigin)) {
       return null
     }
@@ -60,11 +60,11 @@ export class DT {
     return payload
   }
 
-  generateTraceContextParentHeader(spanId, traceId) {
+  generateTraceContextParentHeader (spanId, traceId) {
     return '00-' + traceId + '-' + spanId + '-01'
   }
 
-  generateTraceContextStateHeader(spanId, timestamp, accountId, appId, trustKey) {
+  generateTraceContextStateHeader (spanId, timestamp, accountId, appId, trustKey) {
     var version = 0
     var transactionId = ''
     var parentType = 1
@@ -101,11 +101,11 @@ export class DT {
 
   // return true if DT is enabled and the origin is allowed, either by being
   // same-origin, or included in the allowed list
-  shouldGenerateTrace(parsedOrigin) {
+  shouldGenerateTrace (parsedOrigin) {
     return this.isDtEnabled() && this.isAllowedOrigin(parsedOrigin)
   }
 
-  isAllowedOrigin(parsedOrigin) {
+  isAllowedOrigin (parsedOrigin) {
     var allowed = false
     var dtConfig = {}
     var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
@@ -130,7 +130,7 @@ export class DT {
     return allowed
   }
 
-  isDtEnabled() {
+  isDtEnabled () {
     var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
     if (dt) {
       return !!dt.enabled
@@ -139,7 +139,7 @@ export class DT {
   }
 
   // exclude the newrelic header for same-origin calls
-  excludeNewrelicHeader() {
+  excludeNewrelicHeader () {
     var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
     if (dt) {
       return !!dt.exclude_newrelic_header
@@ -147,7 +147,7 @@ export class DT {
     return false
   }
 
-  useNewrelicHeaderForCors() {
+  useNewrelicHeaderForCors () {
     var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
     if (dt) {
       return dt.cors_use_newrelic_header !== false
@@ -155,7 +155,7 @@ export class DT {
     return false
   }
 
-  useTraceContextHeadersForCors() {
+  useTraceContextHeadersForCors () {
     var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
     if (dt) {
       return !!dt.cors_use_tracecontext_headers

@@ -39,7 +39,7 @@ testDriver.test('Error objects are sent via noticeError from core module', suppo
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -68,7 +68,7 @@ testDriver.test('Strings are converted to errors via noticeError from core modul
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -89,18 +89,16 @@ testDriver.test('Error objects with custom attributes can be sent via noticeErro
       if (!params) return fail('No error data was received.')
       if (!custom) return fail('No custom params were detected')
 
-
       var exceptionClass = params.exceptionClass
       var message = params.message
       t.equal('Error', exceptionClass, 'The agent passes an error class instead of a string.')
       t.equal('hello', message, 'Params contain the right error message.')
       t.equal('hi', custom.customAttr, 'Error has custom metric')
       t.end()
-
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -124,7 +122,6 @@ testDriver.test('Errors are sent from multiple instances to isolated targets via
           var message = params.message
           t.equal('Error', exceptionClass, 'The agent passes an error class instead of a string.')
           t.equal('agent' + errorResult.query.a, message, 'Params contain the right error message.')
-
         } else {
           fail('No error data was received.')
         }
@@ -133,7 +130,7 @@ testDriver.test('Errors are sent from multiple instances to isolated targets via
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -162,12 +159,11 @@ testDriver.test('Error objects are sent via thrown error from core module if aut
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
 })
-
 
 testDriver.test('encoding error where message contains a circular reference', supported, function (t, browser, router) {
   t.plan(2)
@@ -184,12 +180,12 @@ testDriver.test('encoding error where message contains a circular reference', su
     t.equal(actualError.params.message, expectedErrorForBrowser(browser), 'has the expected message')
   }).catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }
 
-  function expectedErrorForBrowser(browser) {
+  function expectedErrorForBrowser (browser) {
     if (browser.match('ie@<11, edge')) {
       return 'asdf'
     } else if (browser.match('firefox@<35')) {
@@ -219,15 +215,15 @@ testDriver.test('reporting errors from event listener callbacks', supported, fun
       {
         message: 'document addEventListener listener',
         stack: [
-          {f: 'Object.handleEvent', u: eventListenersURL, l: 15},
-          {f: 'e', u: '<inline>', l: 11}
+          { f: 'Object.handleEvent', u: eventListenersURL, l: 15 },
+          { f: 'e', u: '<inline>', l: 11 }
         ]
       },
       {
         message: 'global addEventListener listener',
         stack: [
-          {f: 'handleEvent', u: eventListenersURL, l: 8},
-          {f: 'e', u: '<inline>', l: 9}
+          { f: 'handleEvent', u: eventListenersURL, l: 8 },
+          { f: 'e', u: '<inline>', l: 9 }
         ]
       }
     ]
@@ -288,7 +284,6 @@ testDriver.test('reporting uncaught errors from inline scripts', supported, func
   }
 })
 
-
 testDriver.test('reporting errors from setInterval callbacks', supported, function (t, browser, router) {
   let assetURL = router.assetURL('modular/js-errors/set-interval-error.html', opts)
 
@@ -312,12 +307,11 @@ testDriver.test('reporting errors from setInterval callbacks', supported, functi
     t.end()
   }).catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }
 })
-
 
 testDriver.test('reporting errors from setTimeout callbacks', supported, function (t, browser, router) {
   let assetURL = router.assetURL('modular/js-errors/set-timeout-error.html', opts)
@@ -342,12 +336,11 @@ testDriver.test('reporting errors from setTimeout callbacks', supported, functio
     t.end()
   }).catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }
 })
-
 
 testDriver.test('reporting errors from XHR callbacks', supported, function (t, browser, router) {
   let assetURL = router.assetURL('modular/js-errors/xhr-error.html', opts)
@@ -374,13 +367,11 @@ testDriver.test('reporting errors from XHR callbacks', supported, function (t, b
     t.end()
   }).catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }
 })
-
-
 
 testDriver.test('Errors are not sent if agent is not initialized', supported, function (t, browser, router) {
   setRouterTimeout(10000)
@@ -397,16 +388,15 @@ testDriver.test('Errors are not sent if agent is not initialized', supported, fu
     .catch(fail)
     .finally(() => setRouterTimeout(32000))
 
-  function fail() {
+  function fail () {
     t.ok(true, 'Errors Promise did not execute because agent was not initialized')
     t.end()
   }
 
-  function setRouterTimeout(ms) {
+  function setRouterTimeout (ms) {
     router.timeout = router.router.timeout = ms
   }
 })
-
 
 testDriver.test('Errors are not sent if feature is disabled', supported, function (t, browser, router) {
   setRouterTimeout(10000)
@@ -423,13 +413,12 @@ testDriver.test('Errors are not sent if feature is disabled', supported, functio
     .catch(fail)
     .finally(() => setRouterTimeout(32000))
 
-  function fail() {
+  function fail () {
     t.ok(true, 'Errors Promise did not execute because errors feature was disabled')
     t.end()
   }
 
-  function setRouterTimeout(ms) {
+  function setRouterTimeout (ms) {
     router.timeout = router.router.timeout = ms
   }
 })
-

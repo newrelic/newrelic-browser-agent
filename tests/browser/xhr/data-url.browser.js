@@ -7,12 +7,12 @@ import test from '../../../tools/jil/browser-test'
 import { setup } from '../utils/setup'
 import { Instrument as AjaxInstrum } from '../../../src/features/ajax/instrument/index'
 
-const { baseEE, agentIdentifier, aggregator } = setup();
-const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false); // attach instrumentation event handlers to agent's events (baseEE)
-const handleEE = baseEE.get('handle');
-const hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener;
+const { baseEE, agentIdentifier, aggregator } = setup()
+const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false) // attach instrumentation event handlers to agent's events (baseEE)
+const handleEE = baseEE.get('handle')
+const hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener
 
-test('XHR request for Data URL does not generate telemetry', function(t) {
+test('XHR request for Data URL does not generate telemetry', function (t) {
   if (!hasXhr) {
     t.skip('XHR is not supported in this browser')
     t.end()
@@ -56,7 +56,7 @@ test('XHR request for Data URL does not generate telemetry', function(t) {
   }
 })
 
-test('Data URL Fetch requests do not generate telemetry', function(t) {
+test('Data URL Fetch requests do not generate telemetry', function (t) {
   if (!window.fetch) {
     t.pass('fetch is not supported in this browser')
     t.end()
@@ -81,7 +81,7 @@ test('Data URL Fetch requests do not generate telemetry', function(t) {
     }, 100)
   }
 
-  function failCase(params, metrics, start) {
+  function failCase (params, metrics, start) {
     t.fail('Data URL Fetch requests should not generate telemetry')
     handleEE.removeEventListener('xhr', failCase)
     baseEE.removeEventListener('fetch-done', validate)

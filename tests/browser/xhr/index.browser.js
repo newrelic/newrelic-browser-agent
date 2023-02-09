@@ -14,13 +14,13 @@ import { Instrument as AjaxInstrum } from '../../../src/features/ajax/instrument
 import { Instrument as JsErrInstrum } from '../../../src/features/jserrors/instrument/index'
 import { Aggregate as JsErrAggreg } from '../../../src/features/jserrors/aggregate/index'
 
-const { baseEE, agentIdentifier, aggregator, nr } = setup();
-const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false);
-const jserrTestInstr = new JsErrInstrum(agentIdentifier, aggregator, false);
-const jserrTestAgg = new JsErrAggreg(agentIdentifier, aggregator);
+const { baseEE, agentIdentifier, aggregator, nr } = setup()
+const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false)
+const jserrTestInstr = new JsErrInstrum(agentIdentifier, aggregator, false)
+const jserrTestAgg = new JsErrAggreg(agentIdentifier, aggregator)
 
 import ffVersion from '../../../src/common/browser-version/firefox-version'
-const hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener;
+const hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener
 
 let onloadtime = 2
 let loadeventtime = 2
@@ -85,17 +85,17 @@ test('xhr timing', function (t) {
   t.plan(plan)
 
   registerHandler('xhr', async function (params, metrics, start) {
-    const { Aggregate: AjaxAggreg } = await import('../../../src/features/ajax/aggregate/index');
-    const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator);
-    ajaxTestAgg.storeXhr(params, metrics, start);
+    const { Aggregate: AjaxAggreg } = await import('../../../src/features/ajax/aggregate/index')
+    const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator)
+    ajaxTestAgg.storeXhr(params, metrics, start)
 
     if ('pathname' in params) fire('check', urls[params.pathname], [params, metrics, t])
     else if (params.method === 'GET') fire('check', urls['/'], [params, metrics, t])
     else if (params.method === 'PUT') fire('check', urls['/timeout'], [params, metrics, t])
     else if (params.method === 'POST') fire('check', urls['/asdf'], [params, metrics, t])
-  }, undefined, baseEE);
+  }, undefined, baseEE)
 
-  drain(agentIdentifier, 'feature');
+  drain(agentIdentifier, 'feature')
 
   function fire (fn, obj, args) {
     if (obj && obj[fn]) return obj[fn].apply(obj, args)
@@ -267,7 +267,7 @@ var urls = {
       let xhr = this.xhr
       xhr.responseType = 'json'
       xhr.onload = function (e) {
-        t.deepEqual(e.target.response, {text: 'hi!'}, 'JSON content matches')
+        t.deepEqual(e.target.response, { text: 'hi!' }, 'JSON content matches')
 
         let brokenFF = ffVersion && ffVersion > 33
 

@@ -4,20 +4,20 @@
  */
 
 const jil = require('jil')
-const {setup} = require('../utils/setup')
+const { setup } = require('../utils/setup')
 
 jil.browserTest('parameters not modified', async function (t) {
-  const {drain} =  require('../../../src/common/drain/drain')
-  const {Aggregate} = require('../../../src/features/page_action/aggregate/index')
+  const { drain } = require('../../../src/common/drain/drain')
+  const { Aggregate } = require('../../../src/features/page_action/aggregate/index')
 
-  const {agentIdentifier, baseEE, aggregator} = setup()
+  const { agentIdentifier, baseEE, aggregator } = setup()
 
   new Aggregate(agentIdentifier, aggregator)
 
   let name = 'MyEvent'
   let args = {
     foo: 'bar',
-    hello: {world: 'again'}
+    hello: { world: 'again' }
   }
 
   baseEE.emit('feat-ins', [])
@@ -26,7 +26,7 @@ jil.browserTest('parameters not modified', async function (t) {
 
   t.deepEqual(args, {
     foo: 'bar',
-    hello: {world: 'again'}
+    hello: { world: 'again' }
   })
 
   t.end()

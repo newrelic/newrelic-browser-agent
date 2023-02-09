@@ -20,14 +20,14 @@ testDriver.test('incorrect timer', supported, function (t, browser, router) {
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.category, 'Route change', 'got route change harvest call')
       t.end()
     })
     .catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }

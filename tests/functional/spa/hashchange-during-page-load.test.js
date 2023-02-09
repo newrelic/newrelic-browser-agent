@@ -22,7 +22,7 @@ testDriver.test('', supported, function (t, browser, router) {
   // /events submission, for the initial page load.
   router.expectEvents()
     .then((eventsResult) => {
-      let {body, query} = eventsResult
+      let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.fail('got second /events submission with interaction of type ' + interactionTree.trigger)
     })
@@ -32,7 +32,7 @@ testDriver.test('', supported, function (t, browser, router) {
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
-      let {body, query} = eventsResult
+      let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
     })

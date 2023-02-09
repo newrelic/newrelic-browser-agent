@@ -10,7 +10,7 @@ import { setDenyList, shouldCollectEvent } from '../../../src/common/deny-list/d
 /* NOTE: This file contains pure unit tests that has no need for the agent at all.
 */
 
-test('domain-only blocks all subdomains and all paths', function(t) {
+test('domain-only blocks all subdomains and all paths', function (t) {
   setDenyList([
     'foo.com'
   ])
@@ -31,7 +31,7 @@ test('domain-only blocks all subdomains and all paths', function(t) {
   t.end()
 })
 
-test('subdomain blocks further subdomains, but not parent domain', function(t) {
+test('subdomain blocks further subdomains, but not parent domain', function (t) {
   setDenyList([
     'bar.foo.com'
   ])
@@ -47,7 +47,7 @@ test('subdomain blocks further subdomains, but not parent domain', function(t) {
   t.end()
 })
 
-test('* blocks all domains', function(t) {
+test('* blocks all domains', function (t) {
   setDenyList([
     '*'
   ])
@@ -61,7 +61,7 @@ test('* blocks all domains', function(t) {
   t.end()
 })
 
-test('path is blocking only with exact match', function(t) {
+test('path is blocking only with exact match', function (t) {
   setDenyList([
     'foo.com/a'
   ])
@@ -80,7 +80,7 @@ test('path is blocking only with exact match', function(t) {
   t.end()
 })
 
-test('* blocks all domains', function(t) {
+test('* blocks all domains', function (t) {
   setDenyList([
     '*'
   ])
@@ -94,7 +94,7 @@ test('* blocks all domains', function(t) {
   t.end()
 })
 
-test('protocol is ignored when not specified', function(t) {
+test('protocol is ignored when not specified', function (t) {
   setDenyList([
     'foo.com'
   ])
@@ -105,7 +105,7 @@ test('protocol is ignored when not specified', function(t) {
   t.end()
 })
 
-test('port is ignored when not specified', function(t) {
+test('port is ignored when not specified', function (t) {
   setDenyList([
     'foo.com'
   ])
@@ -117,7 +117,7 @@ test('port is ignored when not specified', function(t) {
 })
 
 // test unexpected strings that don't represent URLs
-test('invalid values', function(t) {
+test('invalid values', function (t) {
   setDenyList([
     '!@$%^*'
   ])
@@ -134,7 +134,7 @@ test('invalid values', function(t) {
   t.end()
 })
 
-test('URL that contains protocol multiple times', function(t) {
+test('URL that contains protocol multiple times', function (t) {
   setDenyList([
     'https://example.com/http://foo.bar/'
   ])

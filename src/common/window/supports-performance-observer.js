@@ -6,5 +6,5 @@
 import { globalScope } from '../util/global-scope'
 
 export function supportsPerformanceObserver () {
-  return (typeof globalScope?.PerformanceObserver === 'function');
+  return (typeof globalScope?.PerformanceObserver === 'function')
 }

@@ -18,7 +18,7 @@ const model = {
   jserrors: { enabled: true, harvestTimeSeconds: 10 },
   metrics: { enabled: true, harvestTimeSeconds: 10 },
   page_action: { enabled: true, harvestTimeSeconds: 30 },
-  page_view_event: { enabled: true, },
+  page_view_event: { enabled: true },
   page_view_timing: { enabled: true, harvestTimeSeconds: 30 },
   session_trace: { enabled: true, harvestTimeSeconds: 10 },
   spa: { enabled: true, harvestTimeSeconds: 10 }
@@ -26,19 +26,19 @@ const model = {
 
 const _cache = {}
 
-export function getConfiguration(id) {
+export function getConfiguration (id) {
   if (!id) throw new Error('All configuration objects require an agent identifier!')
   if (!_cache[id]) throw new Error(`Configuration for ${id} was never set`)
   return _cache[id]
 }
 
-export function setConfiguration(id, obj) {
+export function setConfiguration (id, obj) {
   if (!id) throw new Error('All configuration objects require an agent identifier!')
   _cache[id] = new Configurable(obj, model)
   gosNREUMInitializedAgents(id, _cache[id], 'config')
 }
 
-export function getConfigurationValue(id, path) {
+export function getConfigurationValue (id, path) {
   if (!id) throw new Error('All configuration objects require an agent identifier!')
   var val = getConfiguration(id)
   if (val) {
@@ -52,5 +52,5 @@ export function getConfigurationValue(id, path) {
   return val
 }
 
-// TO DO: a setConfigurationValue equivalent may be nice so individual 
+// TO DO: a setConfigurationValue equivalent may be nice so individual
 //  properties can be tuned instead of reseting the whole model per call to `setConfiguration(agentIdentifier, {})`

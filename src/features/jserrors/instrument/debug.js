@@ -27,7 +27,7 @@ if (flags.dev) {
   log('flags: ' + mapOwn(flags, function (key, val) { return key }).join(', '))
 }
 
-function log(message) {
+function log (message) {
   try {
     if (flags.console) log(message)
   } catch (err) {

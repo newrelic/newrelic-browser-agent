@@ -342,39 +342,39 @@ features.es6 = new BrowserMatcher()
   .include('edge', '>79')
   .include('ios', '>=11.3')
 
-  features.customElements = new BrowserMatcher()
+features.customElements = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=67')
   .include('firefox', '>=63')
   .include('edge', '>=79')
 
-  features.latestSmoke = new BrowserMatcher()
+features.latestSmoke = new BrowserMatcher()
   .exclude('*')
   .include('chrome', 'latest')
   .include('firefox', 'latest')
 
-  // TODO -- Enable this and add appropriate browsers when NPM is fixed
-  features.mfe = new BrowserMatcher()
+// TODO -- Enable this and add appropriate browsers when NPM is fixed
+features.mfe = new BrowserMatcher()
   .exclude('*')
 
-  features.polyfillsNeeded = new BrowserMatcher()
-  .exclude("*")
-  .include("chrome", "<=63")
-  .include("firefox", "<=67")
-  .include("edge", "<=79")
-  .include("safari", "<=11.3")
+features.polyfillsNeeded = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', '<=63')
+  .include('firefox', '<=67')
+  .include('edge', '<=79')
+  .include('safari', '<=11.3')
 
-  features.workerStackSizeGeneratesError = new BrowserMatcher()
-  .exclude("firefox")
+features.workerStackSizeGeneratesError = new BrowserMatcher()
+  .exclude('firefox')
 
-  features.unhandledPromiseRejection = new BrowserMatcher()
+features.unhandledPromiseRejection = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>49')
   .include('edge', '>79')
   .include('safari', '>12')
   .include('firefox', '>69')
 
-  features.bfcache = new BrowserMatcher()
+features.bfcache = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>100') // included in v96+, but either not enabled by default until later or Sauce doesn't enable the flag
   //.include('edge', '>=89') -- not enabled by default still (current v109); user must set flag
@@ -383,51 +383,51 @@ features.es6 = new BrowserMatcher()
   .include('ios')
   //.include('android', '>=9.0') -- does not work on android 9.0 emulator (v100 Chrome) for unknown precise reason;
 
-  /* vvv--- Workers API support ---vvv
+/* vvv--- Workers API support ---vvv
   */
-  features.workers = new BrowserMatcher([ // NOTE: module type workers have different (higher) compatibility versions, excluding IE11
-    new MatcherRule(TYPE_EXCLUDE, '*@*'),
-    new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
-    new MatcherRule(TYPE_INCLUDE, 'edge@>=12'),
-    new MatcherRule(TYPE_INCLUDE, 'safari@>=4'),
-    new MatcherRule(TYPE_INCLUDE, 'firefox@>=3.5'),
-    new MatcherRule(TYPE_INCLUDE, 'android@>=4.4'),
-    new MatcherRule(TYPE_INCLUDE, 'ios@>=5')
-  ]);
-  features.supportESMWorkers = new BrowserMatcher([ // not avail in Firefox browsers, or Safari below 15
-    new MatcherRule(TYPE_EXCLUDE, '*@*'),
-    new MatcherRule(TYPE_INCLUDE, 'chrome@>=80'),
-    new MatcherRule(TYPE_INCLUDE, 'edge@>=80'),
-    new MatcherRule(TYPE_INCLUDE, 'safari@>=15'),
-    new MatcherRule(TYPE_INCLUDE, 'android@>=9.0'),
-    new MatcherRule(TYPE_INCLUDE, 'ios@>=15.0')
-  ]);
-  features.workersFull = features.workers.and(features.supportESMWorkers);  // use this to filter versions that support both default & module
-  features.nestedWorkers = new BrowserMatcher([
-    new MatcherRule(TYPE_EXCLUDE, '*@*'),
-    new MatcherRule(TYPE_INCLUDE, 'chrome@>=69'),
-    new MatcherRule(TYPE_INCLUDE, 'edge@>=69'),   // specific support line for edge unclear, using chrome's since based off chromium
-    new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'),  // specific support line for ff unclear, using serviceWorker line
-    new MatcherRule(TYPE_INCLUDE, 'android@>=9.0')  // not sure if android supports it at all? -- testing currently disabled
-    // safari & ios does not yet support nested (dedicated) workers, current v16 *cli 10/22
-  ]);
+features.workers = new BrowserMatcher([ // NOTE: module type workers have different (higher) compatibility versions, excluding IE11
+  new MatcherRule(TYPE_EXCLUDE, '*@*'),
+  new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
+  new MatcherRule(TYPE_INCLUDE, 'edge@>=12'),
+  new MatcherRule(TYPE_INCLUDE, 'safari@>=4'),
+  new MatcherRule(TYPE_INCLUDE, 'firefox@>=3.5'),
+  new MatcherRule(TYPE_INCLUDE, 'android@>=4.4'),
+  new MatcherRule(TYPE_INCLUDE, 'ios@>=5')
+])
+features.supportESMWorkers = new BrowserMatcher([ // not avail in Firefox browsers, or Safari below 15
+  new MatcherRule(TYPE_EXCLUDE, '*@*'),
+  new MatcherRule(TYPE_INCLUDE, 'chrome@>=80'),
+  new MatcherRule(TYPE_INCLUDE, 'edge@>=80'),
+  new MatcherRule(TYPE_INCLUDE, 'safari@>=15'),
+  new MatcherRule(TYPE_INCLUDE, 'android@>=9.0'),
+  new MatcherRule(TYPE_INCLUDE, 'ios@>=15.0')
+])
+features.workersFull = features.workers.and(features.supportESMWorkers) // use this to filter versions that support both default & module
+features.nestedWorkers = new BrowserMatcher([
+  new MatcherRule(TYPE_EXCLUDE, '*@*'),
+  new MatcherRule(TYPE_INCLUDE, 'chrome@>=69'),
+  new MatcherRule(TYPE_INCLUDE, 'edge@>=69'), // specific support line for edge unclear, using chrome's since based off chromium
+  new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'), // specific support line for ff unclear, using serviceWorker line
+  new MatcherRule(TYPE_INCLUDE, 'android@>=9.0') // not sure if android supports it at all? -- testing currently disabled
+  // safari & ios does not yet support nested (dedicated) workers, current v16 *cli 10/22
+])
 
-  features.sharedWorkers = new BrowserMatcher([ // not avail android, or Safari below 16
-    new MatcherRule(TYPE_EXCLUDE, '*@*'),
-    new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
-    new MatcherRule(TYPE_INCLUDE, 'edge@>=79'),
-    new MatcherRule(TYPE_INCLUDE, 'safari@>=16.0'),
-    new MatcherRule(TYPE_INCLUDE, 'firefox@>=29'),
-    new MatcherRule(TYPE_INCLUDE, 'ios@>=16.0')
-  ]);
-  features.sharedWorkersFull = features.sharedWorkers.and(features.supportESMWorkers);
+features.sharedWorkers = new BrowserMatcher([ // not avail android, or Safari below 16
+  new MatcherRule(TYPE_EXCLUDE, '*@*'),
+  new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
+  new MatcherRule(TYPE_INCLUDE, 'edge@>=79'),
+  new MatcherRule(TYPE_INCLUDE, 'safari@>=16.0'),
+  new MatcherRule(TYPE_INCLUDE, 'firefox@>=29'),
+  new MatcherRule(TYPE_INCLUDE, 'ios@>=16.0')
+])
+features.sharedWorkersFull = features.sharedWorkers.and(features.supportESMWorkers)
 
-  features.serviceWorkers = new BrowserMatcher([
-    new MatcherRule(TYPE_EXCLUDE, '*@*'),
-    new MatcherRule(TYPE_INCLUDE, 'chrome@>60'),  // v60 has unexpected behavior of working on unsecured HTTP tests
-    new MatcherRule(TYPE_INCLUDE, 'edge@>=17'),
-    new MatcherRule(TYPE_INCLUDE, 'safari@>=11.1'),
-    new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'),
-    new MatcherRule(TYPE_INCLUDE, 'android@>=9.0'),
-    new MatcherRule(TYPE_INCLUDE, 'ios@>=11.3')
-  ]);
+features.serviceWorkers = new BrowserMatcher([
+  new MatcherRule(TYPE_EXCLUDE, '*@*'),
+  new MatcherRule(TYPE_INCLUDE, 'chrome@>60'), // v60 has unexpected behavior of working on unsecured HTTP tests
+  new MatcherRule(TYPE_INCLUDE, 'edge@>=17'),
+  new MatcherRule(TYPE_INCLUDE, 'safari@>=11.1'),
+  new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'),
+  new MatcherRule(TYPE_INCLUDE, 'android@>=9.0'),
+  new MatcherRule(TYPE_INCLUDE, 'ios@>=11.3')
+])

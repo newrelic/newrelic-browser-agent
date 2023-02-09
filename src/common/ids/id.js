@@ -6,7 +6,7 @@
 // Start assigning ids at 1 so 0 can always be used for WindowOrWorkerGlobalScope, without
 // actually setting it (which would create a global variable).
 import { getOrSet } from '../util/get-or-set'
-import { globalScope } from '../util/global-scope';
+import { globalScope } from '../util/global-scope'
 
 var index = 1
 var prop = 'nr@id'

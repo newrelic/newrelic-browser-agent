@@ -54,7 +54,7 @@ testDriver.test('final harvest happens on page unload -- new unload BFC work', f
       let loadPromise2 = browser
         .safeEval('newrelic.addPageAction("hello", { a: 1 })')
         .safeEval('newrelic.noticeError("test")')
-        .get(router.assetURL('/')); // test that navigation away aka redirect triggers final harvest
+        .get(router.assetURL('/')) // test that navigation away aka redirect triggers final harvest
 
       return Promise.all([insPromise, errPromise, loadPromise2]).then((respArr) => {
         return respArr
@@ -63,11 +63,11 @@ testDriver.test('final harvest happens on page unload -- new unload BFC work', f
     .then(() => {
       t.equal(router.seenRequests.ins, 1, 'received one ins harvest')
       t.equal(router.seenRequests.errors, 1, 'received one err harvest')
-      t.end();
+      t.end()
     })
     .catch(fail(t))
 })
-/** iOS or mobile doesn't like the way the (wd) new tab is driven, so this test almost always timeout for iOS. 
+/** iOS or mobile doesn't like the way the (wd) new tab is driven, so this test almost always timeout for iOS.
  *  WD's .newWindow causes later tests to fail. JWP mapping is complicated to figure out how to solve this. Can reassess this test with webdriveio later. */
 /*testDriver.test('final harvest happens on doc hide -- new unload BFC work', reliablePageUnload, function (t, browser, router) {
   let url = router.assetURL('final-harvest.html', {
@@ -109,7 +109,7 @@ testDriver.test('final harvest happens on page unload -- new unload BFC work', f
     .catch(fail(t))
 })*/
 
-function fail(t, err) {
+function fail (t, err) {
   return (err) => {
     t.error(err)
     t.end()
@@ -184,7 +184,7 @@ testDriver.test('final harvest sends pageHide if not already recorded', workingS
     })
     .catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }
@@ -215,7 +215,7 @@ testDriver.test('final harvest doesnt append pageHide if already previously reco
     })
     .catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }
@@ -247,7 +247,7 @@ testDriver.test('final harvest sends js errors', workingSendBeacon, function (t,
     })
     .catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }
@@ -281,7 +281,7 @@ testDriver.test('final harvest sends resources', reliableResourcesHarvest.and(st
     })
     .catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }
@@ -317,7 +317,7 @@ testDriver.test('final harvest sends timings data', workingSendBeacon, function 
     })
     .catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }
@@ -359,14 +359,14 @@ testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stn
     })
     .catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }
 })
 
 testDriver.test('final harvest sends ajax events', workingSendBeacon.and(doNotSupportWaitForConditionInBrowser), function (t, browser, router) {
-  let url = router.assetURL('final-harvest-ajax.html', { loader: 'spa', init: { ajax: {enabled: true} }})
+  let url = router.assetURL('final-harvest-ajax.html', { loader: 'spa', init: { ajax: { enabled: true } } })
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
 
@@ -393,7 +393,7 @@ testDriver.test('final harvest sends ajax events', workingSendBeacon.and(doNotSu
     })
     .catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }

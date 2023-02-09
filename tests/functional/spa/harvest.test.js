@@ -4,9 +4,9 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const querypack = require("@newrelic/nr-querypack");
+const querypack = require('@newrelic/nr-querypack')
 
-let corsSupported = testDriver.Matcher.withFeature('cors');
+let corsSupported = testDriver.Matcher.withFeature('cors')
 
 testDriver.test('events are retried when collector returns 429', corsSupported, function (t, browser, router) {
   let assetURL = router.assetURL('instrumented.html', {
@@ -82,16 +82,16 @@ testDriver.test('multiple custom interactions have correct customEnd value', cor
   let eventsPromise = router.expectEvents()
 
   Promise.all([eventsPromise, loadPromise, rumPromise]).then(([eventsResult]) => {
-    const qpData = querypack.decode(eventsResult.body);
+    const qpData = querypack.decode(eventsResult.body)
 
     t.ok(qpData.length === 3, 'three interactions should have been captured')
     qpData.forEach(interaction => {
       t.ok(['interaction1', 'interaction2', 'interaction4'].indexOf(interaction.customName) > -1, 'interaction has expected custom name')
-      const customEndTime = interaction.children.find(child => child.type === 'customEnd');
+      const customEndTime = interaction.children.find(child => child.type === 'customEnd')
       t.ok(customEndTime.time >= interaction.end, 'interaction custom end time is equal to or greater than interaction end time')
     })
 
-    t.end();
+    t.end()
   }).catch(fail)
 
   function fail (err) {

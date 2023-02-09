@@ -1,14 +1,14 @@
-import { FEATURE_NAMES } from "../features/features"
-import { getConfigurationValue, getInfo, getRuntime } from "../../common/config/config"
-import { ee } from "../../common/event-emitter/contextual-ee"
-import { handle } from "../../common/event-emitter/handle"
-import { registerHandler } from "../../common/event-emitter/register-handler"
-import { mapOwn } from "../../common/util/map-own"
-import { single } from "../../common/util/single"
-import { submitData } from "../../common/util/submit-data"
+import { FEATURE_NAMES } from '../features/features'
+import { getConfigurationValue, getInfo, getRuntime } from '../../common/config/config'
+import { ee } from '../../common/event-emitter/contextual-ee'
+import { handle } from '../../common/event-emitter/handle'
+import { registerHandler } from '../../common/event-emitter/register-handler'
+import { mapOwn } from '../../common/util/map-own'
+import { single } from '../../common/util/single'
+import { submitData } from '../../common/util/submit-data'
 import { isBrowserScope } from '../../common/util/global-scope'
 
-export function setAPI(agentIdentifier) {
+export function setAPI (agentIdentifier) {
   var instanceEE = ee.get(agentIdentifier)
   var cycle = 0
 
@@ -30,15 +30,14 @@ export function setAPI(agentIdentifier) {
   // All API functions get passed the time they were called as their
   // first parameter. These functions can be called asynchronously.
 
-
-  function finished(t, providedTime) {
+  function finished (t, providedTime) {
     var time = providedTime ? providedTime - getRuntime(agentIdentifier).offset : t
     handle('record-custom', ['finished', { time }], undefined, FEATURE_NAMES.metrics, instanceEE)
     addToTrace(t, { name: 'finished', start: time + getRuntime(agentIdentifier).offset, origin: 'nr' })
     handle('api-addPageAction', [time, 'finished'], undefined, FEATURE_NAMES.pageAction, instanceEE)
   }
 
-  function addToTrace(t, evt) {
+  function addToTrace (t, evt) {
     if (!(evt && typeof evt === 'object' && evt.name && evt.start)) return
 
     var report = {
@@ -60,14 +59,13 @@ export function setAPI(agentIdentifier) {
   // total_be_time - the total roundtrip time of the remote service call
   // dom_time - the time spent processing the result of the service call (or user defined)
   // fe_time - the time spent rendering the result of the service call (or user defined)
-  function inlineHit(t, request_name, queue_time, app_time, total_be_time, dom_time, fe_time) {
+  function inlineHit (t, request_name, queue_time, app_time, total_be_time, dom_time, fe_time) {
     if (!isBrowserScope) return
 
     request_name = window.encodeURIComponent(request_name)
     cycle += 1
 
-
-    const agentInfo = getInfo(agentIdentifier);
+    const agentInfo = getInfo(agentIdentifier)
     if (!agentInfo.beacon) return
 
     var url = scheme + '://' + agentInfo.beacon + '/1/' + agentInfo.licenseKey
@@ -84,12 +82,12 @@ export function setAPI(agentIdentifier) {
     submitData.img(url)
   }
 
-  function setErrorHandler(t, handler) {
+  function setErrorHandler (t, handler) {
     getRuntime(agentIdentifier).onerror = handler
   }
 
   var releaseCount = 0
-  function addRelease(t, name, id) {
+  function addRelease (t, name, id) {
     if (++releaseCount > 10) return
     getRuntime(agentIdentifier).releaseIds[name.slice(-200)] = ('' + id).slice(-200)
   }

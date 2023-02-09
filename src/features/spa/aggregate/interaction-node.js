@@ -57,7 +57,7 @@ InteractionNodePrototype.callback = function addCallbackTime (exclusiveTime, end
   }
 }
 
-InteractionNodePrototype.cancel = function cancel() {
+InteractionNodePrototype.cancel = function cancel () {
   this.cancelled = true
   var interaction = this.interaction
   interaction.remaining--

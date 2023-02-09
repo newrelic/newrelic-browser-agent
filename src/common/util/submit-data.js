@@ -6,8 +6,8 @@ export const submitData = {}
 
 /**
  * Send via JSONP. Do NOT call this function outside of a guaranteed web window environment.
- * @param {string} url 
- * @param {string} jsonp 
+ * @param {string} url
+ * @param {string} jsonp
  * @returns {Element}
  */
 submitData.jsonp = function jsonp (url, jsonp) {
@@ -21,9 +21,9 @@ submitData.jsonp = function jsonp (url, jsonp) {
 
 /**
  * Send via XHR
- * @param {string} url 
- * @param {string} body 
- * @param {boolean} sync 
+ * @param {string} url
+ * @param {string} body
+ * @param {boolean} sync
  * @returns {XMLHttpRequest}
  */
 submitData.xhr = function xhr (url, body, sync) {
@@ -51,7 +51,7 @@ submitData.xhr = function xhr (url, body, sync) {
 
 /**
  * Send by appending an <img> element to the page. Do NOT call this function outside of a guaranteed web window environment.
- * @param {string} url 
+ * @param {string} url
  * @returns {Element}
  */
 submitData.img = function img (url) {
@@ -62,8 +62,8 @@ submitData.img = function img (url) {
 
 /**
  * Send via sendBeacon. Do NOT call this function outside of a guaranteed web window environment.
- * @param {string} url 
- * @param {string} body 
+ * @param {string} url
+ * @param {string} body
  * @returns {boolean}
  */
 submitData.beacon = function (url, body) {

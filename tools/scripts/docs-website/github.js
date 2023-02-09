@@ -16,12 +16,12 @@ const octokit = new Octokit({
 })
 
 class Github {
-  constructor(repoOwner = 'newrelic', repository = 'newrelic-browser-agent') {
+  constructor (repoOwner = 'newrelic', repository = 'newrelic-browser-agent') {
     this.repoOwner = repoOwner
     this.repository = repository
   }
 
-  async getLatestRelease() {
+  async getLatestRelease () {
     const result = await octokit.repos.getLatestRelease({
       owner: this.repoOwner,
       repo: this.repository
@@ -30,7 +30,7 @@ class Github {
     return result.data
   }
 
-  async createRelease(tag, name, body) {
+  async createRelease (tag, name, body) {
     const result = await octokit.repos.createRelease({
       owner: this.repoOwner,
       repo: this.repository,
@@ -42,7 +42,7 @@ class Github {
     return result.data
   }
 
-  async getTagByName(name) {
+  async getTagByName (name) {
     const perPage = 100
 
     let pageNum = 1
@@ -70,7 +70,7 @@ class Github {
     return null
   }
 
-  async getCommit(sha) {
+  async getCommit (sha) {
     const result = await octokit.repos.getCommit({
       owner: this.repoOwner,
       repo: this.repository,
@@ -80,7 +80,7 @@ class Github {
     return result.data
   }
 
-  async getMergedPullRequestsSince(date) {
+  async getMergedPullRequestsSince (date) {
     const perPage = 50
 
     const comparisonDate = new Date(date)
@@ -118,7 +118,7 @@ class Github {
     return mergedPullRequests
   }
 
-  async getLatestWorkflowRun(nameOrId, branch) {
+  async getLatestWorkflowRun (nameOrId, branch) {
     // Appears to return in latest order.
     const runs = await octokit.actions.listWorkflowRuns({
       owner: this.repoOwner,
@@ -131,7 +131,7 @@ class Github {
     return runs.data.workflow_runs[0]
   }
 
-  async createPR(options) {
+  async createPR (options) {
     const { head, base, title, body, draft } = options
 
     await octokit.pulls.create({

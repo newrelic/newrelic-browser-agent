@@ -17,7 +17,7 @@ testDriver.test('sends SPA interactions even if endInteraction() is called befor
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
-      let {body, query} = eventsResult
+      let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
@@ -32,7 +32,7 @@ testDriver.test('sends SPA interactions even if endInteraction() is called befor
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
       t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')

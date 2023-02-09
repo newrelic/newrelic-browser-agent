@@ -6,10 +6,10 @@
 const jil = require('jil')
 const matcher = require('../../../tools/jil/util/browser-matcher')
 const { setup } = require('../utils/setup')
-const { getInfo, setInfo } = require("../../../src/common/config/config")
+const { getInfo, setInfo } = require('../../../src/common/config/config')
 
 const setupData = setup()
-const {baseEE, agentIdentifier, aggregator} = setupData
+const { baseEE, agentIdentifier, aggregator } = setupData
 
 // TO DO(?) - this file doesn't run correctly if it's cleaned up under pull #243, i.e. remove `matcher` and `supported`
 let supported = matcher.withFeature('wrappableAddEventListener')
@@ -21,10 +21,10 @@ let testCases = require('@newrelic/nr-querypack/examples/all.json').filter((test
 })
 
 if (process.browser) {
-  var {Serializer} = require('../../../src/features/spa/aggregate/serializer')
-  var {Interaction} = require('../../../src/features/spa/aggregate/interaction')
+  var { Serializer } = require('../../../src/features/spa/aggregate/serializer')
+  var { Interaction } = require('../../../src/features/spa/aggregate/interaction')
 
-  var serializer = new Serializer({agentIdentifier})
+  var serializer = new Serializer({ agentIdentifier })
   setInfo(agentIdentifier, {})
 }
 
@@ -62,11 +62,11 @@ jil.browserTest('spa interaction serializer attributes', supported, function (t)
   attrs['function']['value'] = attrs['function']['value'].replace(/"use strict";\n\n/, '')
 
   t.deepEqual(attrs, {
-    'undefined': {
+    undefined: {
       key: 'undefined',
       type: 'nullAttribute'
     },
-    'function': {
+    function: {
       key: 'function',
       type: 'stringAttribute',
       value: 'function foo(bar) {\n    return 123;\n  }'
@@ -99,7 +99,7 @@ jil.browserTest('spa interaction serializer with undefined string values', suppo
   t.end()
 })
 
-jil.browserTest('serializing multiple interactions', supported, function(t) {
+jil.browserTest('serializing multiple interactions', supported, function (t) {
   var ixn = new Interaction('initialPageLoad', 0, 'http://some-domain', undefined, undefined, agentIdentifier)
   addAjaxNode(ixn.root)
 
@@ -119,7 +119,7 @@ jil.browserTest('serializing multiple interactions', supported, function(t) {
   t.ok(true)
   t.end()
 
-  function addAjaxNode(parentNode) {
+  function addAjaxNode (parentNode) {
     var ajaxNode = parentNode.child('ajax', null, null, true)
     ajaxNode.attrs.params = {}
     ajaxNode.attrs.metrics = {}
@@ -239,7 +239,7 @@ function runTest (testCase, t) {
         }
 
         if (fieldSpec.name === 'appTime') {
-         info.applicationTime = node.appTime
+          info.applicationTime = node.appTime
         }
 
         if (fieldSpec.name === 'tracedCallbackDuration') {

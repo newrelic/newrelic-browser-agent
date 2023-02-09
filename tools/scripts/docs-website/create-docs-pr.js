@@ -19,43 +19,43 @@ const TAG_VALID_REGEX = /v\d+/
 const BASE_BRANCH = 'develop'
 
 var options = require('yargs')
-    .usage('$0 [options]')
+  .usage('$0 [options]')
 
-    .string('t')
-    .alias('t', 'tag')
-    .describe('t', 'tag name to get version of released agent')
+  .string('t')
+  .alias('t', 'tag')
+  .describe('t', 'tag name to get version of released agent')
 
-    .string('r')
-    .alias('r', 'remote')
-    .describe('r', 'remote to push branch to')
-    .default('r', 'origin')
+  .string('r')
+  .alias('r', 'remote')
+  .describe('r', 'remote to push branch to')
+  .default('r', 'origin')
 
-    .string('u')
-    .alias('u', 'username')
-    .describe('u', 'Owner of the fork of docs-website')
-    .default('u', 'metal-messiah')
+  .string('u')
+  .alias('u', 'username')
+  .describe('u', 'Owner of the fork of docs-website')
+  .default('u', 'metal-messiah')
 
-    .string('c')
-    .alias('c', 'changelog')
-    .describe('c', 'Name of changelog(defaults to CHANGELOG.md)')
-    .default('c', DEFAULT_FILE_NAME)
+  .string('c')
+  .alias('c', 'changelog')
+  .describe('c', 'Name of changelog(defaults to CHANGELOG.md)')
+  .default('c', DEFAULT_FILE_NAME)
 
-    .boolean('f')
-    .alias('f', 'force')
-    .describe('f', 'bypass validation')
-    .default('f', false)
+  .boolean('f')
+  .alias('f', 'force')
+  .describe('f', 'bypass validation')
+  .default('f', false)
 
-    .boolean('d')
-    .alias('d', 'dry-run')
-    .describe('d', 'executes script but does not commit nor create PR')
-    .default('d', false)
+  .boolean('d')
+  .alias('d', 'dry-run')
+  .describe('d', 'executes script but does not commit nor create PR')
+  .default('d', false)
 
-    .string('R')
-    .alias('R', 'repo-path')
-    .describe('R', 'Path to the docs-website form on local machine')
-    .default('R', 'docs-website')
+  .string('R')
+  .alias('R', 'repo-path')
+  .describe('R', 'Path to the docs-website form on local machine')
+  .default('R', 'docs-website')
 
-    .argv
+  .argv
 
 const FORKED_DOCS_SITE = 'https://github.com/newrelic-forks/browser-agent-docs-website.git'
 
@@ -69,48 +69,47 @@ New Relic recommends that you upgrade the agent regularly to ensure that you're 
 New Browser Agent releases are rolled out to customers in small stages over a period of time. Because of this, the date the release becomes accessible to your account may not match the original publish date. Please see this [status dashboard](https://newrelic.github.io/newrelic-browser-agent-release/) for more information.`
 
 if (!process.env.GITHUB_TOKEN) {
-    console.log("NO GITHUB TOKEN FOUND!")
-    process.exit(1)
+  console.log('NO GITHUB TOKEN FOUND!')
+  process.exit(1)
 }
 
-async function createReleaseNotesPr() {
+async function createReleaseNotesPr () {
+  console.log(`Script running with following options: ${JSON.stringify(options)}`)
 
-    console.log(`Script running with following options: ${JSON.stringify(options)}`)
+  try {
+    const version = options.tag.replace('refs/tags/', '')
+    console.log(`Getting version from tag: ${version}`)
 
-    try {
-        const version = options.tag.replace('refs/tags/', '')
-        console.log(`Getting version from tag: ${version}`)
+    logStep('Validation')
+    validateTag(version, options.force)
+    logStep('Get Release Notes from File')
+    const { body, releaseDate } = await getReleaseNotes(version, options.changelog)
+    logStep('Branch Creation')
+    const branchName = await createBranch(options.repoPath, options.remote, version, options.dryRun)
+    logStep('Format release notes file')
+    const releaseNotesBody = formatReleaseNotes(releaseDate, version, body)
+    logStep('Create Release Notes')
+    await addReleaseNotesFile(releaseNotesBody, version)
+    logStep('Commit Release Notes')
+    await commitReleaseNotes(version, options.remote, branchName, options.d)
 
-        logStep('Validation')
-        validateTag(version, options.force)
-        logStep('Get Release Notes from File')
-        const { body, releaseDate } = await getReleaseNotes(version, options.changelog)
-        logStep('Branch Creation')
-        const branchName = await createBranch(options.repoPath, options.remote, version, options.dryRun)
-        logStep('Format release notes file')
-        const releaseNotesBody = formatReleaseNotes(releaseDate, version, body)
-        logStep('Create Release Notes')
-        await addReleaseNotesFile(releaseNotesBody, version)
-        logStep('Commit Release Notes')
-        await commitReleaseNotes(version, options.remote, branchName, options.d)
+    // TODO -- Add EOL Update
+    // logStep('Update EOL')
+    // logStep('Commit EOL')
 
-        // TODO -- Add EOL Update
-        // logStep('Update EOL')
-        // logStep('Commit EOL')
-
-        logStep('Create Pull Request')
-        await createPR(options.username, version, branchName, options.dryRun)
-        console.log('*** Full Run Successful ***')
-    } catch (err) {
-        if (err.status && err.status === 404) {
-            console.log('404 status error detected. For octokit, this may mean insufficient permissions.')
-            console.log('Ensure you have a valid GITHUB_TOKEN set in your env vars.')
-        }
-
-        stopOnError(err)
-    } finally {
-        process.chdir('..')
+    logStep('Create Pull Request')
+    await createPR(options.username, version, branchName, options.dryRun)
+    console.log('*** Full Run Successful ***')
+  } catch (err) {
+    if (err.status && err.status === 404) {
+      console.log('404 status error detected. For octokit, this may mean insufficient permissions.')
+      console.log('Ensure you have a valid GITHUB_TOKEN set in your env vars.')
     }
+
+    stopOnError(err)
+  } finally {
+    process.chdir('..')
+  }
 }
 
 /**
@@ -119,16 +118,16 @@ async function createReleaseNotesPr() {
  * @param {string} version string to validate
  * @param {boolean} force flag to skip validation of tag
  */
-function validateTag(version, force) {
-    if (force) {
-        console.log('--force set. Skipping validation logic')
-        return
-    }
+function validateTag (version, force) {
+  if (force) {
+    console.log('--force set. Skipping validation logic')
+    return
+  }
 
-    if (!TAG_VALID_REGEX.exec(version)) {
-        console.log('Tag arg invalid (%s). Valid tags in form: v#.#.# (e.g. v7.2.1)', version)
-        stopOnError()
-    }
+  if (!TAG_VALID_REGEX.exec(version)) {
+    console.log('Tag arg invalid (%s). Valid tags in form: v#.#.# (e.g. v7.2.1)', version)
+    stopOnError()
+  }
 }
 
 /**
@@ -137,20 +136,20 @@ function validateTag(version, force) {
  * @param {string} version the new version
  * @param {string} releaseNotesFile the filename where the release notes are stored
  */
-async function getReleaseNotes(version, releaseNotesFile) {
-    console.log('Retrieving release notes from file: ', releaseNotesFile)
+async function getReleaseNotes (version, releaseNotesFile) {
+  console.log('Retrieving release notes from file: ', releaseNotesFile)
 
-    const data = await readReleaseNoteFile(process.cwd() + '/' + releaseNotesFile)
+  const data = await readReleaseNoteFile(process.cwd() + '/' + releaseNotesFile)
 
-    const sections = data.split('\n## ')
-    // Iterate over all past releases to find the version we want
-    const versionChangeLog = sections.find((section) => section.startsWith(version))
-    // e.g. v7.1.2 (2021-02-24)\n\n
-    const body = versionChangeLog + SUPPORT_STATEMENT
-    //   const [, releaseDate] = headingRegex.exec(versionChangeLog)
-    const releaseDate = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`
+  const sections = data.split('\n## ')
+  // Iterate over all past releases to find the version we want
+  const versionChangeLog = sections.find((section) => section.startsWith(version))
+  // e.g. v7.1.2 (2021-02-24)\n\n
+  const body = versionChangeLog + SUPPORT_STATEMENT
+  //   const [, releaseDate] = headingRegex.exec(versionChangeLog)
+  const releaseDate = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`
 
-    return { body, releaseDate }
+  return { body, releaseDate }
 }
 
 /**
@@ -158,16 +157,16 @@ async function getReleaseNotes(version, releaseNotesFile) {
  *
  * @param {string} file path to NEWS.md
  */
-async function readReleaseNoteFile(file) {
-    return new Promise((resolve, reject) => {
-        fs.readFile(file, 'utf8', (err, data) => {
-            if (err) {
-                return reject(err)
-            }
+async function readReleaseNoteFile (file) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(file, 'utf8', (err, data) => {
+      if (err) {
+        return reject(err)
+      }
 
-            return resolve(data)
-        })
+      return resolve(data)
     })
+  })
 }
 
 /**
@@ -178,29 +177,28 @@ async function readReleaseNoteFile(file) {
  * @param {string} version newest version of agent
  * @param {boolean} dryRun skip branch creation
  */
-async function createBranch(filePath, remote, version, dryRun) {
-    fs.rmSync(filePath, { recursive: true, force: true })
-    fs.mkdirSync(filePath);
-    filePath = path.resolve(filePath)
-    console.log(`Changing to ${filePath}`)
-    process.chdir(filePath)
-    const branchName = `add-browser-agent-${version}`
-    if (dryRun) {
-        console.log(`Dry run indicated (--dry-run), not creating branch ${branchName}`)
-    } else {
-        try {
-            await git.deleteUpstreamBranch(remote, branchName)
-        } catch (e) {
-            // repo and/or branch does not exist, no action needed
-        }
-        await git.clone(FORKED_DOCS_SITE, filePath, [])
-        await git.checkout(BASE_BRANCH)
-        await git.syncWithParent(remote, branchName)
-        await git.checkoutNewBranch(branchName)
-
+async function createBranch (filePath, remote, version, dryRun) {
+  fs.rmSync(filePath, { recursive: true, force: true })
+  fs.mkdirSync(filePath)
+  filePath = path.resolve(filePath)
+  console.log(`Changing to ${filePath}`)
+  process.chdir(filePath)
+  const branchName = `add-browser-agent-${version}`
+  if (dryRun) {
+    console.log(`Dry run indicated (--dry-run), not creating branch ${branchName}`)
+  } else {
+    try {
+      await git.deleteUpstreamBranch(remote, branchName)
+    } catch (e) {
+      // repo and/or branch does not exist, no action needed
     }
+    await git.clone(FORKED_DOCS_SITE, filePath, [])
+    await git.checkout(BASE_BRANCH)
+    await git.syncWithParent(remote, branchName)
+    await git.checkoutNewBranch(branchName)
+  }
 
-    return branchName
+  return branchName
 }
 
 /**
@@ -212,20 +210,20 @@ async function createBranch(filePath, remote, version, dryRun) {
  * @param {string} body list of changes
  * @returns {string} appropriately formatted release notes
  */
-function formatReleaseNotes(releaseDate, version, body) {
-    const releaseNotesBody = [
-        '---',
-        'subject: Browser agent',
+function formatReleaseNotes (releaseDate, version, body) {
+  const releaseNotesBody = [
+    '---',
+    'subject: Browser agent',
         `releaseDate: '${releaseDate}'`,
-        `version: ${version.substr(1)}`, // remove the `v` from start of version    
+        `version: ${version.substr(1)}`, // remove the `v` from start of version
         '---',
         '',
         '## ' +
         body
-    ].join('\n')
+  ].join('\n')
 
-    console.log(`Release Notes Body \n${releaseNotesBody}`)
-    return releaseNotesBody
+  console.log(`Release Notes Body \n${releaseNotesBody}`)
+  return releaseNotesBody
 }
 
 /**
@@ -234,25 +232,25 @@ function formatReleaseNotes(releaseDate, version, body) {
  * @param {string} body contents of the .mdx
  * @param {string} version version number
  */
-function addReleaseNotesFile(body, version) {
-    const FILE = getFileName(version)
-    return new Promise((resolve, reject) => {
-        fs.writeFile(FILE, body, 'utf8', (writeErr) => {
-            if (writeErr) {
-                reject(writeErr)
-            }
+function addReleaseNotesFile (body, version) {
+  const FILE = getFileName(version)
+  return new Promise((resolve, reject) => {
+    fs.writeFile(FILE, body, 'utf8', (writeErr) => {
+      if (writeErr) {
+        reject(writeErr)
+      }
 
-            console.log(`Added new release notes ${FILE}`)
-            resolve()
-        })
+      console.log(`Added new release notes ${FILE}`)
+      resolve()
     })
+  })
 }
 
-function getFileName(version) {
-    // change `v0.0.0` to `0-0-0`
-    // version = version.substr(1).replace(/\./g, '-')
-    const FILE = `browser-agent-${version}.mdx`
-    return `${RELEASE_NOTES_PATH}/${FILE}`
+function getFileName (version) {
+  // change `v0.0.0` to `0-0-0`
+  // version = version.substr(1).replace(/\./g, '-')
+  const FILE = `browser-agent-${version}.mdx`
+  return `${RELEASE_NOTES_PATH}/${FILE}`
 }
 
 /**
@@ -263,18 +261,18 @@ function getFileName(version) {
  * @param {string} branch github branch
  * @param {boolean} dryRun whether or not we should actually update the repo
  */
-async function commitReleaseNotes(version, remote, branch, dryRun) {
-    if (dryRun) {
-        console.log('Dry run indicated (--dry-run), skipping committing release notes.')
-        return
-    }
+async function commitReleaseNotes (version, remote, branch, dryRun) {
+  if (dryRun) {
+    console.log('Dry run indicated (--dry-run), skipping committing release notes.')
+    return
+  }
 
-    console.log(`Adding release notes for ${version}`)
-    const files = [getFileName(version)]
-    await git.addFiles(files)
-    await git.commit(`chore: Add Browser agent ${version} release notes.`)
-    console.log(`Pushing branch to remote ${remote}`)
-    await git.pushToRemote(remote, branch)
+  console.log(`Adding release notes for ${version}`)
+  const files = [getFileName(version)]
+  await git.addFiles(files)
+  await git.commit(`chore: Add Browser agent ${version} release notes.`)
+  console.log(`Pushing branch to remote ${remote}`)
+  await git.pushToRemote(remote, branch)
 }
 
 /**
@@ -285,29 +283,29 @@ async function commitReleaseNotes(version, remote, branch, dryRun) {
  * @param {string} branch github branch
  * @param {boolean} dryRun whether or not we should actually create the PR
  */
-async function createPR(username, version, branch, dryRun) {
-    if (!process.env.GITHUB_TOKEN) {
-        console.log('GITHUB_TOKEN required to create a pull request')
-        stopOnError()
-    }
+async function createPR (username, version, branch, dryRun) {
+  if (!process.env.GITHUB_TOKEN) {
+    console.log('GITHUB_TOKEN required to create a pull request')
+    stopOnError()
+  }
 
-    const github = new Github('newrelic', 'docs-website')
-    const title = `Browser Agent ${version} Release Notes`
-    const prOptions = {
-        head: `${username}:${branch}`,
-        base: BASE_BRANCH,
-        title,
-        body: title
-    }
+  const github = new Github('newrelic', 'docs-website')
+  const title = `Browser Agent ${version} Release Notes`
+  const prOptions = {
+    head: `${username}:${branch}`,
+    base: BASE_BRANCH,
+    title,
+    body: title
+  }
 
-    console.log(`Creating PR with following options: ${JSON.stringify(prOptions)}\n\n`)
+  console.log(`Creating PR with following options: ${JSON.stringify(prOptions)}\n\n`)
 
-    if (dryRun) {
-        console.log('Dry run indicated (--dry-run), skipping creating pull request.')
-        return
-    }
+  if (dryRun) {
+    console.log('Dry run indicated (--dry-run), skipping creating pull request.')
+    return
+  }
 
-    return await github.createPR(prOptions)
+  return await github.createPR(prOptions)
 }
 
 /**
@@ -315,13 +313,13 @@ async function createPR(username, version, branch, dryRun) {
  *
  * @param {Error} err If present, an error that occurred during script execution
  */
-function stopOnError(err) {
-    if (err) {
-        console.error(err)
-    }
+function stopOnError (err) {
+  if (err) {
+    console.error(err)
+  }
 
-    console.log('Halting execution with exit code: 1')
-    process.exit(1)
+  console.log('Halting execution with exit code: 1')
+  process.exit(1)
 }
 
 /**
@@ -329,8 +327,8 @@ function stopOnError(err) {
  *
  * @param {string} step the current step of the script
  */
-function logStep(step) {
-    console.log(`\n ----- [Step]: ${step} -----\n`)
+function logStep (step) {
+  console.log(`\n ----- [Step]: ${step} -----\n`)
 }
 
 createReleaseNotesPr()

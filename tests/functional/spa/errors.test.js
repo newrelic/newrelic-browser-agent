@@ -51,7 +51,7 @@ testDriver.test('error on the initial page load', function (t, browser, router) 
     })
     .catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }
@@ -278,9 +278,9 @@ testDriver.test('same error in multiple interactions', function (t, browser, rou
         leavePage(browser, router),
         router.expectErrors()
       ])
-      .then(result => {
-        return result[1]
-      })
+        .then(result => {
+          return result[1]
+        })
     })
     .then(errorData => {
       let interaction1 = querypack.decode(
@@ -315,7 +315,7 @@ testDriver.test('same error in multiple interactions', function (t, browser, rou
   }
 })
 
-function waitForPageLoadAnInitialCalls(browser, router, urlPath) {
+function waitForPageLoadAnInitialCalls (browser, router, urlPath) {
   return Promise.all([
     router.expectRum(),
     router.expectEvents(),
@@ -329,7 +329,7 @@ function waitForPageLoadAnInitialCalls(browser, router, urlPath) {
   ])
 }
 
-function clickPageAndWaitForEventsAndErrors(t, browser, router) {
+function clickPageAndWaitForEventsAndErrors (t, browser, router) {
   return clickPageAndWaitForEvents(t, browser, router)
     .then(eventData => {
       return Promise.all([
@@ -338,13 +338,13 @@ function clickPageAndWaitForEventsAndErrors(t, browser, router) {
         leavePage(browser, router),
         router.expectErrors()
       ])
-      .then(([domData, errorData]) => {
-        return Promise.resolve([eventData, errorData])
-      })
+        .then(([domData, errorData]) => {
+          return Promise.resolve([eventData, errorData])
+        })
     })
 }
 
-function clickPageAndWaitForEvents(t, browser, router) {
+function clickPageAndWaitForEvents (t, browser, router) {
   return Promise.all([
     browser.elementByCssSelector('body').click(),
     router.expectEvents()
@@ -357,7 +357,7 @@ function clickPageAndWaitForEvents(t, browser, router) {
 // Click page (which triggers interaction to test), and then immediately load
 // a different page, which triggers final harvest.
 // This way the test is faster than waiting 60s for errors to be harvested.
-function clickAndRedirect(browser, router, wait) {
+function clickAndRedirect (browser, router, wait) {
   return browser.elementByCssSelector('body').click()
     .then(function () {
       if (wait) {
@@ -369,7 +369,7 @@ function clickAndRedirect(browser, router, wait) {
       }
     })
 
-  function sleep(duration) {
+  function sleep (duration) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         resolve()
@@ -378,6 +378,6 @@ function clickAndRedirect(browser, router, wait) {
   }
 }
 
-function leavePage(browser, router) {
+function leavePage (browser, router) {
   return browser.safeGet(router.assetURL('_blank.html'))
 }

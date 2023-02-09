@@ -1,5 +1,5 @@
 const testDriver = require('../../../tools/jil/index')
-const {fail, condition} = require('./helpers')
+const { fail, condition } = require('./helpers')
 
 const fetchBrowsers = testDriver.Matcher.withFeature('fetch')
 
@@ -24,7 +24,7 @@ testDriver.test('Disabled ajax events', function (t, browser, router) {
       t.end()
     }).catch(fail)
 
-  function fail() {
+  function fail () {
     router.timeout = router.router.timeout = 32000
     t.ok(true, 'AJAX Promise did not execute because enabled was false')
     t.end()
@@ -49,7 +49,7 @@ testDriver.test('capturing XHR ajax events', function (t, browser, router) {
       t.ok(response.length, 'XMLHttpRequest ajax event was harvested')
 
       t.end()
-    }).catch(fail(t));
+    }).catch(fail(t))
 })
 
 testDriver.test('capturing large payload of XHR ajax events', function (t, browser, router) {
@@ -73,7 +73,7 @@ testDriver.test('capturing large payload of XHR ajax events', function (t, brows
     .then(([responses]) => {
       t.ok(responses)
       t.end()
-    }).catch(fail(t));
+    }).catch(fail(t))
 })
 
 testDriver.test('capturing Fetch ajax events', fetchBrowsers, function (t, browser, router) {
@@ -94,7 +94,7 @@ testDriver.test('capturing Fetch ajax events', fetchBrowsers, function (t, brows
       t.ok(response.length, 'Fetch ajax event was harvested')
 
       t.end()
-    }).catch(fail(t));
+    }).catch(fail(t))
 })
 
 testDriver.test('Distributed Tracing info is added to XHR ajax events', function (t, browser, router) {
@@ -131,7 +131,7 @@ testDriver.test('Distributed Tracing info is added to XHR ajax events', function
       })
 
       t.end()
-    }).catch(fail(t));
+    }).catch(fail(t))
 })
 
 testDriver.test('Distributed Tracing info is added to Fetch ajax events', fetchBrowsers, function (t, browser, router) {

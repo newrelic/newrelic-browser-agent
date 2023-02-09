@@ -8,18 +8,18 @@ const querypack = require('@newrelic/nr-querypack')
 
 const condition = (e) => e.type === 'ajax' && e.path === '/json'
 
-function getXhrFromResponse(response, browser) {
+function getXhrFromResponse (response, browser) {
   const target = response?.body || response?.query || null
   if (!target) return null
   const parsed = typeof target === 'string' ? JSON.parse(target).xhr : target.xhr
   return typeof parsed === 'string' ? JSON.parse(parsed) : parsed
 }
 
-function fail(t, addlMsg = undefined) {
-	return (err) => {
-    t.error(err, addlMsg);
-    t.end();
-	}
+function fail (t, addlMsg = undefined) {
+  return (err) => {
+    t.error(err, addlMsg)
+    t.end()
+  }
 }
 // DT-header test helpers
 
@@ -102,7 +102,7 @@ const testCases = [
   }
 ]
 
-function validateNewrelicHeader(t, headers, config) {
+function validateNewrelicHeader (t, headers, config) {
   t.ok(headers['newrelic'], 'newrelic header should be present')
 
   let buffer = Buffer.from(headers['newrelic'], 'base64')
@@ -119,11 +119,11 @@ function validateNewrelicHeader(t, headers, config) {
   t.ok(dtPayload.d.ti)
 }
 
-function validateNoNewrelicHeader(t, headers) {
+function validateNoNewrelicHeader (t, headers) {
   t.notOk(headers['newrelic'], 'newrelic header should not be present')
 }
 
-function validateTraceContextHeaders(t, headers, config) {
+function validateTraceContextHeaders (t, headers, config) {
   t.ok(headers['traceparent'], 'traceparent header should be present')
   t.ok(headers['tracestate'], 'tracestate header should be present')
 
@@ -152,7 +152,7 @@ function validateTraceContextHeaders(t, headers, config) {
   t.ok(parts[8], 'timestamp is there')
 }
 
-function validateNoTraceContextHeaders(t, headers) {
+function validateNoTraceContextHeaders (t, headers) {
   t.notOk(headers['traceparent'], 'traceparent header should not be present')
   t.notOk(headers['tracestate'], 'tracestate header should not be present')
 }

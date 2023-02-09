@@ -7,7 +7,7 @@
 
 const { exec } = require('child_process')
 
-async function getPushRemotes() {
+async function getPushRemotes () {
   const stdout = await execAsPromise('git remote -v')
 
   const remotes = stdout.split('\n')
@@ -26,94 +26,94 @@ async function getPushRemotes() {
   }, {})
 }
 
-async function getCurrentBranch() {
+async function getCurrentBranch () {
   const stdout = await execAsPromise('git branch --show-current')
   return stdout.trim()
 }
 
-async function checkoutNewBranch(name) {
+async function checkoutNewBranch (name) {
   const stdout = await execAsPromise(`git checkout -b ${name}`)
   return stdout.trim()
 }
 
-async function addAllFiles() {
+async function addAllFiles () {
   const stdout = await execAsPromise(`git add . ':!${AGENT_SUB_REPO}'`)
   return stdout.trim()
 }
 
-async function addFiles(files) {
+async function addFiles (files) {
   files = files.join(' ')
   const stdout = await execAsPromise(`git add ${files}`)
   return stdout.trim()
 }
 
-async function commit(message) {
+async function commit (message) {
   const stdout = await execAsPromise(`git commit -m "${message}"`)
   return stdout.trim()
 }
 
-async function setUpstream(remote, branchName) {
+async function setUpstream (remote, branchName) {
   const stdout = await execAsPromise(`git branch --set-upstream-to=${remote}/${branchName} ${branchName}`)
   return stdout.trim()
 }
 
-async function deleteUpstreamBranch(remote, branchName) {
+async function deleteUpstreamBranch (remote, branchName) {
   const stdout = await execAsPromise(`git push ${remote} --delete ${branchName}`)
   return stdout.trim()
 }
 
-async function setParent() {
-  const stdout = await execAsPromise(`git remote add parent https://github.com/newrelic/docs-website.git`)
+async function setParent () {
+  const stdout = await execAsPromise('git remote add parent https://github.com/newrelic/docs-website.git')
   return stdout.trim()
 }
 
-async function syncWithParent() {
+async function syncWithParent () {
   let stdout = ''
   try { stdout = await setParent() } catch (e) { }
-  try { stdout = await execAsPromise(`git fetch parent`) } catch (e) { }
+  try { stdout = await execAsPromise('git fetch parent') } catch (e) { }
   try { stdout = await rebase() } catch (e) { }
   return stdout.trim()
 }
 
-async function pushToRemote(remote, branchName) {
+async function pushToRemote (remote, branchName) {
   const stdout = await execAsPromise(`git push -f --set-upstream ${remote} ${branchName}`)
   return stdout.trim()
 }
 
-async function createAnnotatedTag(name, message) {
+async function createAnnotatedTag (name, message) {
   const stdout = await execAsPromise(`git tag -a ${name} -m ${message}`)
   return stdout.trim()
 }
 
-async function pushTags() {
+async function pushTags () {
   const stdout = await execAsPromise('git push --tags')
   return stdout.trim()
 }
 
-async function checkout(branchName) {
+async function checkout (branchName) {
   const stdout = await execAsPromise(`git checkout ${branchName}`)
   return stdout.trim()
 }
 
-async function clone(url, name, args) {
+async function clone (url, name, args) {
   const argsString = args.join(' ')
   const stdout = await execAsPromise(`git clone ${argsString} ${url} ${name}`)
   return stdout.trim()
 }
 
-async function rebase() {
-  const stdout = await execAsPromise(`git pull --rebase`)
+async function rebase () {
+  const stdout = await execAsPromise('git pull --rebase')
   return stdout.trim()
 }
 
-async function setSparseCheckoutFolders(folders) {
+async function setSparseCheckoutFolders (folders) {
   const foldersString = folders.join(' ')
 
   const stdout = await execAsPromise(`git sparse-checkout set --no-cone ${foldersString}`)
   return stdout.trim()
 }
 
-async function sparseCloneRepo(repoInfo, checkoutFiles) {
+async function sparseCloneRepo (repoInfo, checkoutFiles) {
   const { name, repository, branch } = repoInfo
 
   const cloneOptions = [
@@ -133,7 +133,7 @@ async function sparseCloneRepo(repoInfo, checkoutFiles) {
   process.chdir('..')
 }
 
-function execAsPromise(command) {
+function execAsPromise (command) {
   return new Promise((resolve, reject) => {
     console.log(`Executing: '${command}'`)
 

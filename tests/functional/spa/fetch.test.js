@@ -18,7 +18,7 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
-      let {body, query} = eventsResult
+      let { body, query } = eventsResult
 
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -34,7 +34,7 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({ query, body }) => {
       let receiptTime = now()
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -64,7 +64,7 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
       t.ok(estimatedInteractionTimestamp > testStartTime, 'estimated ixn start after test start')
       t.ok(estimatedInteractionTimestamp < receiptTime, 'estimated ixn start before receipt time')
 
-      t.end();
+      t.end()
     })
     .catch(fail)
 
@@ -105,7 +105,7 @@ testDriver.test('response size', supported, function (t, browser, router) {
             return eventData
           })
         })
-        .then(({query, body}) => {
+        .then(({ query, body }) => {
           let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
           var fetchNode = interactionTree.children.find((node) => node.type === 'ajax')
           t.equal(fetchNode.responseBodySize, testCase.responseBodySize, 'should have correct responseBodySize')

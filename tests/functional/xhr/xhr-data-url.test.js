@@ -20,7 +20,7 @@ const init = {
  * single promise that fulfills with a value of `undefined`.
  * @param {Promise[]} promises - iterable (e.g. array) of promises to be resolved.
  * @param {number} ms - milliseconds before resolving with undefined.
- * @returns 
+ * @returns
  */
 var timedPromiseAll = (promises, ms) => Promise.race([
   new Promise((resolve) => {
@@ -49,9 +49,9 @@ testDriver.test('Ignoring data url XHR events.', function (t, browser, router) {
     .then((response) => {
       if (response) {
         // A payload here is unwanted because data URLs should not be included in XHR collection.
-        t.fail(`Should not have received an XHR event with undefined hostname.`)
+        t.fail('Should not have received an XHR event with undefined hostname.')
       } else {
-        t.pass(`Did not receive an XHR event for data URL.`)
+        t.pass('Did not receive an XHR event for data URL.')
       }
       // XHR events harvest every 1 second. If 2 seconds pass and the promise is not resolved, no XHR response was received.
       const harvestPromise = router.expectSpecificEvents({ condition: (e) => e.type === 'ajax' && e.path.substring(0, 7) === '/events' })
@@ -60,9 +60,9 @@ testDriver.test('Ignoring data url XHR events.', function (t, browser, router) {
     .then((response) => {
       if (response) {
         // A payload here is wanted.
-        t.pass(`Received events harvest.`)
+        t.pass('Received events harvest.')
       } else {
-        t.fail(`Did not receive events harvest.`)
+        t.fail('Did not receive events harvest.')
       }
       t.end()
     })

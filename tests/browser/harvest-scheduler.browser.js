@@ -11,15 +11,15 @@ import * as harv from '../../src/common/harvest/harvest'
 import { submitData } from '../../src/common/util/submit-data'
 import { HarvestScheduler } from '../../src/common/harvest/harvest-scheduler'
 
-const { agentIdentifier, aggregator } = setup();
+const { agentIdentifier, aggregator } = setup()
 const nrInfo = { errorBeacon: 'foo', licenseKey: 'bar' }
 const nrOrigin = 'http://foo.com?bar=crunchy#bacon';
 (() => {
-  setInfo(agentIdentifier, nrInfo);
-  setRuntime(agentIdentifier, { origin: nrOrigin });
-})();
+  setInfo(agentIdentifier, nrInfo)
+  setRuntime(agentIdentifier, { origin: nrOrigin })
+})()
 
-function resetSpies(options) {
+function resetSpies (options) {
   options = options || {}
 
   if (harv.Harvest.prototype.send.isSinonProxy) {
@@ -39,21 +39,21 @@ function resetSpies(options) {
   sinon.stub(harv.Harvest.prototype, 'sendX', fakeSendX)
   sinon.stub(harv, 'getSubmitMethod', fakeGetSubmitMethod)
 
-  function fakeSend(endpoint, payload, opts, submitMethod, cbFinished) {
-    setTimeout(function() {
+  function fakeSend (endpoint, payload, opts, submitMethod, cbFinished) {
+    setTimeout(function () {
       var response = options.response || { sent: true }
       cbFinished(response)
     }, 0)
   }
 
-  function fakeSendX(endpoint, opts, cbFinished) {
-    setTimeout(function() {
+  function fakeSendX (endpoint, opts, cbFinished) {
+    setTimeout(function () {
       var response = options.response || { sent: true }
       cbFinished(response)
     }, 0)
   }
 
-  function fakeGetSubmitMethod() {
+  function fakeGetSubmitMethod () {
     return {
       method: options.submitMethod || submitData.beacon
     }
@@ -67,11 +67,11 @@ test('after calling startTimer, periodically invokes harvest', function (t) {
   var scheduler = new HarvestScheduler('endpoint', { onFinished: onFinished, getPayload: getPayload }, aggregator.sharedContext)
   scheduler.startTimer(0.1)
 
-  function getPayload() {
+  function getPayload () {
     return { body: {} }
   }
 
-  function onFinished() {
+  function onFinished () {
     calls++
     if (calls > 1) {
       scheduler.stopTimer()
@@ -79,7 +79,7 @@ test('after calling startTimer, periodically invokes harvest', function (t) {
     }
   }
 
-  function validate() {
+  function validate () {
     t.equal(harv.Harvest.prototype.send.callCount, 2, 'harvest was initiated more than once')
     t.end()
   }
@@ -91,28 +91,28 @@ test('scheduleHarvest invokes harvest once', function (t) {
   var scheduler = new HarvestScheduler('endpoint', { getPayload: getPayload }, aggregator.sharedContext)
   scheduler.scheduleHarvest(0.1)
 
-  function getPayload() {
+  function getPayload () {
     return { body: {} }
   }
 
   setTimeout(validate, 1000)
 
-  function validate() {
+  function validate () {
     t.equal(harv.Harvest.prototype.send.callCount, 1, 'harvest was initiated once')
     t.end()
   }
 })
 
-test('when getPayload is provided, calls harvest.send', function(t) {
+test('when getPayload is provided, calls harvest.send', function (t) {
   resetSpies()
   var scheduler = new HarvestScheduler('endpoint', { onFinished: onFinished, getPayload: getPayload }, aggregator.sharedContext)
   scheduler.startTimer(0.1)
 
-  function getPayload() {
+  function getPayload () {
     return { body: {} }
   }
 
-  function onFinished() {
+  function onFinished () {
     scheduler.stopTimer()
     t.ok(harv.Harvest.prototype.send.called, 'harvest.send was called')
     t.notOk(harv.Harvest.prototype.sendX.called, 'harvest.sendX was not called')
@@ -120,12 +120,12 @@ test('when getPayload is provided, calls harvest.send', function(t) {
   }
 })
 
-test('when getPayload is not provided, calls harvest.sendX', function(t) {
+test('when getPayload is not provided, calls harvest.sendX', function (t) {
   resetSpies()
   var scheduler = new HarvestScheduler('endpoint', { onFinished: onFinished }, aggregator.sharedContext)
   scheduler.startTimer(0.1)
 
-  function onFinished() {
+  function onFinished () {
     scheduler.stopTimer()
     t.notOk(harv.Harvest.prototype.send.called, 'harvest.send was not called')
     t.ok(harv.Harvest.prototype.sendX.called, 'harvest.sendX was called')
@@ -133,17 +133,17 @@ test('when getPayload is not provided, calls harvest.sendX', function(t) {
   }
 })
 
-test('does not call harvest.send when payload is null', function(t) {
+test('does not call harvest.send when payload is null', function (t) {
   resetSpies()
   var scheduler = new HarvestScheduler('endpoint', { getPayload: getPayload }, aggregator.sharedContext)
   scheduler.startTimer(0.1)
 
-  function getPayload() {
+  function getPayload () {
     setTimeout(validate, 0)
     return null
   }
 
-  function validate() {
+  function validate () {
     scheduler.stopTimer()
     t.notOk(harv.Harvest.prototype.send.called, 'harvest.send was not called')
     t.notOk(harv.Harvest.prototype.sendX.called, 'harvest.sendX was not called')
@@ -151,15 +151,15 @@ test('does not call harvest.send when payload is null', function(t) {
   }
 })
 
-test('provides retry to getPayload when submit method is xhr', function(t) {
+test('provides retry to getPayload when submit method is xhr', function (t) {
   resetSpies({ submitMethod: submitData.xhr })
 
   var scheduler = new HarvestScheduler('endpoint', { getPayload: getPayload }, aggregator.sharedContext)
   scheduler.startTimer(0.1)
 
-  function getPayload(opts) {
+  function getPayload (opts) {
     scheduler.stopTimer()
-    setTimeout(function() {
+    setTimeout(function () {
       var call = harv.Harvest.prototype.send.getCall(0)
       t.equal(call.args[3].method, submitData.xhr, 'method was xhr')
       t.ok(opts.retry, 'retry was set to true')
@@ -169,7 +169,7 @@ test('provides retry to getPayload when submit method is xhr', function(t) {
   }
 })
 
-test('when retrying, uses delay provided by harvest response', function(t) {
+test('when retrying, uses delay provided by harvest response', function (t) {
   resetSpies({
     response: { sent: true, retry: true, delay: 0.2 }
   })
@@ -179,11 +179,11 @@ test('when retrying, uses delay provided by harvest response', function(t) {
   scheduler.scheduleHarvest(0.1)
 
   var count = 0
-  function getPayload() {
+  function getPayload () {
     return { body: {} }
   }
 
-  function onFinished(result) {
+  function onFinished (result) {
     count++
     if (count > 1) {
       scheduler.stopTimer()
@@ -191,7 +191,7 @@ test('when retrying, uses delay provided by harvest response', function(t) {
     }
   }
 
-  function validate() {
+  function validate () {
     t.equal(HarvestScheduler.prototype.scheduleHarvest.callCount, 2)
     var call = HarvestScheduler.prototype.scheduleHarvest.getCall(0)
     t.equal(call.args[0], 0.1)

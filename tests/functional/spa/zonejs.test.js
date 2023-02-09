@@ -26,7 +26,7 @@ testDriver.test('capturing SPA interactions with zone.js', supported, function (
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
-      let {body, query} = eventsResult
+      let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
@@ -48,7 +48,7 @@ testDriver.test('capturing SPA interactions with zone.js', supported, function (
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({ query, body }) => {
       let receiptTime = now()
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')

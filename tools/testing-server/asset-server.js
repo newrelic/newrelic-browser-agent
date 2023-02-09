@@ -28,20 +28,20 @@ const babelEnv = require('../../babel-env-vars')
 mime.types['es6'] = 'application/javascript'
 
 const assetsDir = path.resolve(__dirname, '../../')
-const REGEXP_REPLACEMENT_REGEX = /"new RegExp\('(.*?)','(.*?)'\)"/g;
+const REGEXP_REPLACEMENT_REGEX = /"new RegExp\('(.*?)','(.*?)'\)"/g
 
 class AssetTransform {
-  test(params) {
+  test (params) {
     return true
   }
 
-  execute() {
+  execute () {
     throw new Error('execute method of transforms must be implemented in subclasses')
   }
 }
 
 class AgentInjectorTransform extends AssetTransform {
-  constructor(buildDir, assetServer, router) {
+  constructor (buildDir, assetServer, router) {
     super()
     this.buildDir = buildDir
     this.defaultAgentConfig = {}
@@ -51,14 +51,14 @@ class AgentInjectorTransform extends AssetTransform {
     this.polyfills = runnerArgs.polyfills ? fs.readFileSync(`${this.buildDir}/nr-polyfills.min.js`) : ''
   }
 
-  parseConfigFromQueryString(params) {
+  parseConfigFromQueryString (params) {
     if (!params.config) return
     let configString = Buffer.from(params.config, 'base64').toString()
     return JSON.parse(configString)
   }
 
-  generateConfig(loaderName, params, ssl, injectUpdatedLoaderConfig) {
-    let loaderSpec = [...loaders, ...[{name: 'mfe'}, {name: 'prebuilt'}]].find((spec) => spec.name === loaderName)
+  generateConfig (loaderName, params, ssl, injectUpdatedLoaderConfig) {
+    let loaderSpec = [...loaders, ...[{ name: 'mfe' }, { name: 'prebuilt' }]].find((spec) => spec.name === loaderName)
     let payloadSuffix = loaderSpec.payload
     let payloadFilename = payloadSuffix ? `nr-${payloadSuffix}.js` : 'nr.js'
 
@@ -86,8 +86,8 @@ class AgentInjectorTransform extends AssetTransform {
     ]
 
     let updatedConfig = {
-      'info': {},
-      'loaderConfig': {}
+      info: {},
+      loaderConfig: {}
     }
 
     let configKeys = Object.keys(config)
@@ -114,11 +114,11 @@ class AgentInjectorTransform extends AssetTransform {
     return updatedConfig
   }
 
-  getAjaxDenyListString(){
-    return runnerArgs.denyListBam ? `window.NREUM||(NREUM={init:{}});NREUM.init.ajax=NREUM.init.ajax||{};NREUM.init.ajax.deny_list=NREUM.init.ajax.deny_list||[];NREUM.init.ajax.deny_list.push('bam-test-1.nr-local.net');` : ''
+  getAjaxDenyListString () {
+    return runnerArgs.denyListBam ? 'window.NREUM||(NREUM={init:{}});NREUM.init.ajax=NREUM.init.ajax||{};NREUM.init.ajax.deny_list=NREUM.init.ajax.deny_list||[];NREUM.init.ajax.deny_list.push(\'bam-test-1.nr-local.net\');' : ''
   }
 
-  generateConfigString(loaderName, params, ssl, injectUpdatedLoaderConfig) {
+  generateConfigString (loaderName, params, ssl, injectUpdatedLoaderConfig) {
     let config = this.generateConfig(loaderName, params, ssl, injectUpdatedLoaderConfig)
     let infoJSON = JSON.stringify(config.info)
     let loaderConfigJSON = JSON.stringify(config.loaderConfig)
@@ -129,19 +129,19 @@ class AgentInjectorTransform extends AssetTransform {
     return `window.NREUM||(NREUM={});NREUM.info=${infoJSON};${loaderConfigAssignment}${debugShim}`
   }
 
-  generateInit(initFromQueryString) {
+  generateInit (initFromQueryString) {
     let initString = Buffer.from(initFromQueryString, 'base64').toString()
-    if (initString.includes('new RegExp'))  // de-serialize RegExp obj from router
-      initString = initString.replace(REGEXP_REPLACEMENT_REGEX, '/$1/$2');
+    if (initString.includes('new RegExp')) // de-serialize RegExp obj from router
+    { initString = initString.replace(REGEXP_REPLACEMENT_REGEX, '/$1/$2') }
     return `window.NREUM||(NREUM={});NREUM.init=${initString};NREUM.init.ssl=false;`
   }
 
-  generateWorkerCommands(wcFromQueryString) {
+  generateWorkerCommands (wcFromQueryString) {
     let wcString = Buffer.from(wcFromQueryString, 'base64').toString()
     return `workerCommands=${wcString};`
   }
 
-  getDebugShim() {
+  getDebugShim () {
     if (!this.assetServer.debugShim) return ''
 
     return `
@@ -189,13 +189,13 @@ class AgentInjectorTransform extends AssetTransform {
     `
   }
 
-  getLoaderContent(loader, dir, callback) {
+  getLoaderContent (loader, dir, callback) {
     let loaderFilename = `nr-loader-${loader}${runnerArgs.polyfills ? '-polyfills' : ''}.min.js`
     let loaderPath = path.join(dir, loaderFilename)
     fs.readFile(loaderPath, callback)
   }
 
-  getBuiltPackages(pkgPaths) {
+  getBuiltPackages (pkgPaths) {
     return new Promise((resolve, reject) => {
       if (!pkgPaths || !pkgPaths.length) resolve([])
       const proms = []
@@ -215,7 +215,7 @@ class AgentInjectorTransform extends AssetTransform {
     })
   }
 
-  execute(params, assetPath, ssl, callback) {
+  execute (params, assetPath, ssl, callback) {
     fs.readFile(assetPath, 'utf-8', async (err, rawContent) => {
       if (err) return callback(err)
 
@@ -290,7 +290,7 @@ class AgentInjectorTransform extends AssetTransform {
 
           callback(null, rspData)
 
-          function tagify(s) {
+          function tagify (s) {
             return `<script type="text/javascript">${s}</script>`
           }
         }
@@ -300,53 +300,55 @@ class AgentInjectorTransform extends AssetTransform {
 }
 
 class BrowserifyTransform extends AssetTransform {
-  constructor(config) {
+  constructor (config) {
     super()
     this.browserifyCache = {}
     this.config = config
   }
 
-  test(params) {
+  test (params) {
     return params.browserify
   }
 
-  execute(params, assetPath, ssl, callback) {
+  execute (params, assetPath, ssl, callback) {
     let result = this.browserifyCache[assetPath]
     if (result) return callback(null, result)
 
     browserify(assetPath)
-      .transform("babelify", {
+      .transform('babelify', {
         presets: [
-          ["@babel/preset-env", {
+          ['@babel/preset-env', {
             loose: true,
             targets: {
-              browsers: runnerArgs.polyfills ? [
-                "ie >= 11"
-              ] : [
-                "last 10 Chrome versions",
-                "last 10 Safari versions",
-                "last 10 Firefox versions",
-                "last 10 Edge versions",
-                "last 10 ChromeAndroid versions",
-                "last 10 iOS versions"
-              ]
+              browsers: runnerArgs.polyfills
+                ? [
+                    'ie >= 11'
+                  ]
+                : [
+                    'last 10 Chrome versions',
+                    'last 10 Safari versions',
+                    'last 10 Firefox versions',
+                    'last 10 Edge versions',
+                    'last 10 ChromeAndroid versions',
+                    'last 10 iOS versions'
+                  ]
             }
           }]
         ],
         plugins: [
-          "@babel/plugin-syntax-dynamic-import",
+          '@babel/plugin-syntax-dynamic-import',
           '@babel/plugin-transform-modules-commonjs',
-          "@babel/plugin-proposal-optional-chaining",
+          '@babel/plugin-proposal-optional-chaining',
           // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
           // assigning to a variable, which conflicts with template literals.
-          "@babel/plugin-transform-template-literals",
+          '@babel/plugin-transform-template-literals',
           babelEnv('VERSION')
         ],
         global: true
       })
       .transform(preprocessify())
       .bundle((err, buf) => {
-        if (err) console.log("error at ", assetPath)
+        if (err) console.log('error at ', assetPath)
         if (err) return callback(err)
 
         let content = buf.toString()
@@ -359,19 +361,19 @@ class BrowserifyTransform extends AssetTransform {
 }
 
 class Route {
-  constructor(method, glob, handler) {
+  constructor (method, glob, handler) {
     this.method = method
     this.glob = glob
     this.handler = handler
   }
 
-  match(req) {
+  match (req) {
     if (req.method.toUpperCase() !== this.method.toUpperCase()) return false
     let path = url.parse(req.url).pathname
     return minimatch(path, this.glob)
   }
 
-  service(req, res) {
+  service (req, res) {
     this.handler(req, res)
   }
 }
@@ -502,21 +504,21 @@ const testRoutes = [
     res.end('x'.repeat(10000))
   }),
   new Route('GET', '/web-worker-agent', (req, res) => {
-    fs.readFile( path.resolve(__dirname, '../../build/nr-loader-worker.min.js'), 'utf-8', (err, data) => {
-      res.writeHead(200, {"Content-Type": "text/javascript"}) //Solution!
+    fs.readFile(path.resolve(__dirname, '../../build/nr-loader-worker.min.js'), 'utf-8', (err, data) => {
+      res.writeHead(200, { 'Content-Type': 'text/javascript' }) //Solution!
       res.write(data)
       res.end()
     })
   })
 ]
 
-function parseParams(req) {
+function parseParams (req) {
   let query = url.parse(req.url).query
   if (!query) return {}
   return querystring.parse(query)
 }
 
-function resolveAssetPath(relativePath, baseDir) {
+function resolveAssetPath (relativePath, baseDir) {
   if (relativePath[0] === '/') relativePath = relativePath.slice(1)
 
   let resolvedAbsolutePath = path.resolve(baseDir, relativePath)
@@ -526,13 +528,13 @@ function resolveAssetPath(relativePath, baseDir) {
 }
 
 class TestServer extends BaseServer {
-  constructor() {
+  constructor () {
     super()
     this.routes = testRoutes
     this.addHandler(this.serviceRequest.bind(this))
   }
 
-  serviceRequest(req, rsp, ssl) {
+  serviceRequest (req, rsp, ssl) {
     for (let route of this.routes) {
       if (route.match(req)) {
         route.service(req, rsp, ssl)
@@ -545,7 +547,7 @@ class TestServer extends BaseServer {
 }
 
 class AssetServer extends BaseServer {
-  constructor(testConfig, defaultAgentConfig = {}, browserTests, output, renderIndex = false) {
+  constructor (testConfig, defaultAgentConfig = {}, browserTests, output, renderIndex = false) {
     super()
     this.host = testConfig.host
     this.timeout = testConfig.timeout
@@ -572,29 +574,29 @@ class AssetServer extends BaseServer {
     this.routes = testRoutes
   }
 
-  findDynamicRoute(req) {
+  findDynamicRoute (req) {
     for (let route of this.routes) {
       if (route.match(req)) return route
     }
   }
 
-  start(port, sslPort, routerPort = 0, routerSslPort = null) {
+  start (port, sslPort, routerPort = 0, routerSslPort = null) {
     this.router.start(routerPort, routerSslPort)
     this.corsServer.start(0)
     super.start(port, sslPort)
   }
 
-  stop() {
+  stop () {
     this.router.stop()
     this.corsServer.stop()
     super.stop()
   }
 
-  get defaultAgentConfig() {
+  get defaultAgentConfig () {
     return this.agentTransform.defaultAgentConfig
   }
 
-  serviceRequest(req, rsp, ssl) {
+  serviceRequest (req, rsp, ssl) {
     let parsedUrl = url.parse(req.url)
 
     if (parsedUrl.pathname === '/') {
@@ -609,7 +611,7 @@ class AssetServer extends BaseServer {
     }
   }
 
-  serveBuiltAsset(req, rsp, ssl) {
+  serveBuiltAsset (req, rsp, ssl) {
     let relativePath = url.parse(req.url).pathname.replace(/^\/build/, '')
     let assetPath = resolveAssetPath(relativePath, this.buildDir)
 
@@ -621,7 +623,7 @@ class AssetServer extends BaseServer {
     })
   }
 
-  serveAsset(req, rsp, parsedUrl, ssl) {
+  serveAsset (req, rsp, parsedUrl, ssl) {
     let assetPath = resolveAssetPath(parsedUrl.pathname, this.assetsDir)
 
     if (assetPath) {
@@ -632,13 +634,13 @@ class AssetServer extends BaseServer {
     }
   }
 
-  writeError(rsp, errorMessage) {
+  writeError (rsp, errorMessage) {
     console.log('WRITE ERROR!', errorMessage)
     rsp.writeHead(500)
     rsp.end(errorMessage)
   }
 
-  serveAssetFromPath(req, rsp, assetPath, ssl) {
+  serveAssetFromPath (req, rsp, assetPath, ssl) {
     let mimeType = mime.lookup(assetPath)
     let exists = fs.existsSync(assetPath)
 
@@ -667,7 +669,7 @@ class AssetServer extends BaseServer {
     }
   }
 
-  serveIndex(req, res) {
+  serveIndex (req, res) {
     res.writeHead(200, {
       'Content-Type': 'text/html'
     })
@@ -682,7 +684,7 @@ class AssetServer extends BaseServer {
     })
   }
 
-  generateIndex(done) {
+  generateIndex (done) {
     let server = this
     let files = this.browserTests.filter(unique).map((file) => ({
       name: path.relative(server.assetsDir, file),
@@ -713,7 +715,7 @@ class AssetServer extends BaseServer {
       })
     }, gotFiles))
 
-    function unitTestTarget(file) {
+    function unitTestTarget (file) {
       let script = `/${path.relative(server.assetsDir, file)}?browserify=true`
       return server.urlFor('/tests/assets/browser.html', {
         config: Buffer.from(JSON.stringify({
@@ -725,11 +727,11 @@ class AssetServer extends BaseServer {
       })
     }
 
-    function gotFiles() {
+    function gotFiles () {
       if (!--remaining) buildResponse()
     }
 
-    function buildResponse() {
+    function buildResponse () {
       let response = '<html><head></head><body><ul>\n'
       files.forEach((entry) => {
         response += `<li><a href="${entry.target}">${entry.name}</a></li>\n`
@@ -740,7 +742,7 @@ class AssetServer extends BaseServer {
     }
   }
 
-  urlFor(relativePath, options, ssl = false) {
+  urlFor (relativePath, options, ssl = false) {
     let query = querystring.encode(options)
     return url.resolve(
       `${ssl ? 'https' : 'http'}://${this.host}:${ssl ? this.sslPort : this.port}`,
@@ -749,7 +751,7 @@ class AssetServer extends BaseServer {
   }
 }
 
-function unique(item, i, list) {
+function unique (item, i, list) {
   return list.indexOf(item) === i
 }
 

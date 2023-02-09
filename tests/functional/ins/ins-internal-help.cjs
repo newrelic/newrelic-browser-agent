@@ -1,12 +1,12 @@
-const now = require('../../lib/now.js');
+const now = require('../../lib/now.js')
 
-module.exports = {fail, validatePageActionData};
+module.exports = { fail, validatePageActionData }
 
-function fail(t) {
-	return (err) => {
-    t.error(err);
-    t.end();
-	}
+function fail (t) {
+  return (err) => {
+    t.error(err)
+    t.end()
+  }
 }
 
 function validatePageActionData (t, pageActionData, query) {

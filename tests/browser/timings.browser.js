@@ -36,9 +36,9 @@ var testCases = [
         value: 123,
         attributes: [
           {
-            'type': 'stringAttribute',
-            'key': 'eventType',
-            'value': 'click'
+            type: 'stringAttribute',
+            key: 'eventType',
+            value: 'click'
           }
         ]
       }
@@ -53,14 +53,14 @@ var testCases = [
         value: 256,
         attributes: [
           {
-            'type': 'doubleAttribute',
-            'key': 'size',
-            'value': 600.32
+            type: 'doubleAttribute',
+            key: 'size',
+            value: 600.32
           },
           {
-            'type': 'stringAttribute',
-            'key': 'eid',
-            'value': 'header-image'
+            type: 'stringAttribute',
+            key: 'eid',
+            value: 'header-image'
           }
         ]
       }
@@ -75,14 +75,14 @@ var testCases = [
         value: 123,
         attributes: [
           {
-            'type': 'stringAttribute',
-            'key': 'eventType',
-            'value': 'click'
+            type: 'stringAttribute',
+            key: 'eventType',
+            value: 'click'
           },
           {
-            'type': 'doubleAttribute',
-            'key': 'fid',
-            'value': 12.34
+            type: 'doubleAttribute',
+            key: 'fid',
+            value: 12.34
           }
         ]
       }
@@ -114,14 +114,14 @@ var testCases = [
         value: 35,
         attributes: [
           {
-            'type': 'stringAttribute',
-            'key': 'eventType',
-            'value': 'click'
+            type: 'stringAttribute',
+            key: 'eventType',
+            value: 'click'
           },
           {
-            'type': 'doubleAttribute',
-            'key': 'fid',
-            'value': 12.34
+            type: 'doubleAttribute',
+            key: 'fid',
+            value: 12.34
           }
         ]
       },
@@ -131,14 +131,14 @@ var testCases = [
         value: 305,
         attributes: [
           {
-            'type': 'stringAttribute',
-            'key': 'eventType',
-            'value': 'click'
+            type: 'stringAttribute',
+            key: 'eventType',
+            value: 'click'
           },
           {
-            'type': 'doubleAttribute',
-            'key': 'fid',
-            'value': 12.34
+            type: 'doubleAttribute',
+            key: 'fid',
+            value: 12.34
           }
         ]
       }
@@ -153,54 +153,54 @@ var testCases = [
         value: 305,
         attributes: [
           {
-            'type': 'stringAttribute',
-            'key': 'attr1',
-            'value': '1'
+            type: 'stringAttribute',
+            key: 'attr1',
+            value: '1'
           },
           {
-            'type': 'stringAttribute',
-            'key': 'attr2',
-            'value': '1'
+            type: 'stringAttribute',
+            key: 'attr2',
+            value: '1'
           },
           {
-            'type': 'stringAttribute',
-            'key': 'attr3',
-            'value': '1'
+            type: 'stringAttribute',
+            key: 'attr3',
+            value: '1'
           },
           {
-            'type': 'stringAttribute',
-            'key': 'attr4',
-            'value': '1'
+            type: 'stringAttribute',
+            key: 'attr4',
+            value: '1'
           },
           {
-            'type': 'stringAttribute',
-            'key': 'attr5',
-            'value': '1'
+            type: 'stringAttribute',
+            key: 'attr5',
+            value: '1'
           },
           {
-            'type': 'stringAttribute',
-            'key': 'attr6',
-            'value': '1'
+            type: 'stringAttribute',
+            key: 'attr6',
+            value: '1'
           },
           {
-            'type': 'stringAttribute',
-            'key': 'attr7',
-            'value': '1'
+            type: 'stringAttribute',
+            key: 'attr7',
+            value: '1'
           },
           {
-            'type': 'stringAttribute',
-            'key': 'attr8',
-            'value': '1'
+            type: 'stringAttribute',
+            key: 'attr8',
+            value: '1'
           },
           {
-            'type': 'stringAttribute',
-            'key': 'attr9',
-            'value': '1'
+            type: 'stringAttribute',
+            key: 'attr9',
+            value: '1'
           },
           {
-            'type': 'stringAttribute',
-            'key': 'attr10',
-            'value': '1'
+            type: 'stringAttribute',
+            key: 'attr10',
+            value: '1'
           }
         ]
       }
@@ -211,7 +211,7 @@ var testCases = [
 // The querypack encoder/decoder represents the JSON decoded values in the format
 // as they are defined in the test cases (using arrays of objects).
 // In the agent, however, we store timing attributes as a map.
-function getAgentInternalFormat(inputInQueryPackDecodedFormat) {
+function getAgentInternalFormat (inputInQueryPackDecodedFormat) {
   var agentFormat = JSON.parse(JSON.stringify(inputInQueryPackDecodedFormat))
   agentFormat.forEach(timingNode => {
     timingNode.attrs = {}
@@ -223,7 +223,7 @@ function getAgentInternalFormat(inputInQueryPackDecodedFormat) {
   return agentFormat
 }
 
-function haveCustomAttributes(timings) {
+function haveCustomAttributes (timings) {
   return timings.every(timing => {
     return timing.attributes.some(attr => {
       return attr.key === 'custom' && attr.value === 'val'
@@ -231,7 +231,7 @@ function haveCustomAttributes(timings) {
   })
 }
 
-function overriddenReservedAttributes(timings) {
+function overriddenReservedAttributes (timings) {
   return timings.some(timing => {
     return timing.attributes.some(attr => {
       return attr.key === 'cls' && attr.value === 'customVal'
@@ -247,11 +247,11 @@ function waitForWindowLoad (fn) {
   }
 }
 
-const {setup} = require('./utils/setup')
-const {setInfo} = require("../../src/common/config/config")
-const {Aggregate: PvtAggregate} = require('../../src/features/page_view_timing/aggregate/index')
+const { setup } = require('./utils/setup')
+const { setInfo } = require('../../src/common/config/config')
+const { Aggregate: PvtAggregate } = require('../../src/features/page_view_timing/aggregate/index')
 
-const {agentIdentifier, aggregator} = setup()
+const { agentIdentifier, aggregator } = setup()
 
 jil.browserTest('page-view-timing serializer default attributes', function (t) {
   const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
@@ -278,7 +278,7 @@ jil.browserTest('page-view-timing serializer handles custom attributes', functio
 
   function startTest () {
     // should add custom, should not add cls (reserved)
-    setInfo(agentIdentifier, { jsAttributes: {'custom': 'val', 'cls': 'customVal'} })
+    setInfo(agentIdentifier, { jsAttributes: { custom: 'val', cls: 'customVal' } })
 
     testCases.forEach(testCase => {
       var payload = pvtAgg.getPayload(getAgentInternalFormat(testCase.input))

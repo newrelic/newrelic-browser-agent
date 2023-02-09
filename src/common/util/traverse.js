@@ -4,12 +4,12 @@
  */
 
 // traverses an object and applies a fn to property values of a certain type
-export function applyFnToProps(obj, fn, type, ignoreKeys) {
+export function applyFnToProps (obj, fn, type, ignoreKeys) {
   if (!obj || typeof obj !== 'object') return obj
   type = type || 'string'
   ignoreKeys = ignoreKeys || []
   return traverse(obj)
-  function traverse(obj) {
+  function traverse (obj) {
     for (var property in obj) {
       // eslint-disable-next-line
       if (obj.hasOwnProperty(property)) {
@@ -23,7 +23,7 @@ export function applyFnToProps(obj, fn, type, ignoreKeys) {
     return obj
   }
 
-  function shouldIgnore(key) {
+  function shouldIgnore (key) {
     var ignore = false
     for (var i = 0; i < ignoreKeys.length; i++) {
       if (ignoreKeys[i] === key) {

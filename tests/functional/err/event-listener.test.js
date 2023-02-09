@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse} = require('./assertion-helpers')
+const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require('./assertion-helpers')
 
 let reliableUnloadEvent = testDriver.Matcher.withFeature('reliableUnloadEvent')
 
@@ -36,15 +36,15 @@ testDriver.test('reporting errors from event listener callbacks', supported, fun
       {
         message: 'document addEventListener listener',
         stack: [
-          {f: 'Object.handleEvent', u: eventListenersURL, l: 15},
-          {f: 'HTMLDocument.object', u: '<inline>', l: 13}
+          { f: 'Object.handleEvent', u: eventListenersURL, l: 15 },
+          { f: 'HTMLDocument.object', u: '<inline>', l: 13 }
         ]
       },
       {
         message: 'global addEventListener listener',
         stack: [
-          {f: 'Object.handleEvent', u: eventListenersURL, l: 8},
-          {f: 'object', u: '<inline>', l: 13}
+          { f: 'Object.handleEvent', u: eventListenersURL, l: 8 },
+          { f: 'object', u: '<inline>', l: 13 }
         ]
       }
     ]

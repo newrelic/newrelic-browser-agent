@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {getErrorsFromResponse} = require('./assertion-helpers')
+const { getErrorsFromResponse } = require('./assertion-helpers')
 
 let supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 

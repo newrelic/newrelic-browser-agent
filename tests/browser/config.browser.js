@@ -7,10 +7,10 @@ import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
 import { setConfiguration, getConfigurationValue } from '../../src/common/config/config'
 
-const { agentIdentifier } = setup();
+const { agentIdentifier } = setup()
 
 test('getConfiguration', function (t) {
-  t.test('returns value from NREUM.init using provided path', function(t) {
+  t.test('returns value from NREUM.init using provided path', function (t) {
     setConfiguration(agentIdentifier, { a: 123 })
     t.equal(getConfigurationValue(agentIdentifier, 'a'), 123)
 
@@ -23,7 +23,7 @@ test('getConfiguration', function (t) {
     t.end()
   })
 
-  t.test('returns undefined when path does not match', function(t) {
+  t.test('returns undefined when path does not match', function (t) {
     setConfiguration(agentIdentifier, { a: 123 })
     t.equal(getConfigurationValue(agentIdentifier, 'b', 456), undefined)
 
@@ -33,7 +33,7 @@ test('getConfiguration', function (t) {
     t.end()
   })
 
-  t.test('returns undefined when configuration is missing', function(t) {
+  t.test('returns undefined when configuration is missing', function (t) {
     //delete NREUM.init
     // DEPRECATED case: the underlying config storage is not exposed and it has no deletion method (yet).
     //  Any alternative would be equivalent to the test immediately below.

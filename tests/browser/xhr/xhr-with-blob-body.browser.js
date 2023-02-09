@@ -10,7 +10,7 @@ const { agentIdentifier, baseEE, aggregator } = setup()
 
 jil.browserTest('xhr with blob request body', async function (t) {
   const { Instrument: AjaxInstrum } = await import('../../../src/features/ajax/instrument/index')
-  const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false);
+  const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false)
   const { drain } = await import('../../../src/common/drain/drain')
   const { registerHandler } = await import('../../../src/common/event-emitter/register-handler')
 
@@ -33,13 +33,13 @@ jil.browserTest('xhr with blob request body', async function (t) {
   xhr.send(new Blob(['hi!']))
 
   registerHandler('xhr', async function (params, metrics, start) {
-    const { Aggregate: AjaxAggreg } = await import('../../../src/features/ajax/aggregate/index');
-    const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator);
-    ajaxTestAgg.storeXhr(params, metrics, start);
+    const { Aggregate: AjaxAggreg } = await import('../../../src/features/ajax/aggregate/index')
+    const ajaxTestAgg = new AjaxAggreg(agentIdentifier, aggregator)
+    ajaxTestAgg.storeXhr(params, metrics, start)
 
     t.equal(metrics.txSize, 3, 'correct size for sent blob objects')
     t.equal(metrics.rxSize, 3, 'correct size for received blob objects')
-  }, undefined, baseEE);
+  }, undefined, baseEE)
 
   drain(agentIdentifier, 'feature')
 })

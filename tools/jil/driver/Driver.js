@@ -4,7 +4,7 @@
  */
 
 const path = require('path')
-const {asserters} = require('wd')
+const { asserters } = require('wd')
 var newrelic = require('newrelic')
 const Matcher = require('../util/browser-matcher')
 const AssetServer = require('../../testing-server/index')
@@ -15,8 +15,8 @@ const TestEnv = require('./TestEnv')
 const TestRun = require('./TestRun')
 const TestHarness = require('./harness')
 const DeviceTest = require('./DeviceTest')
-const {BrowserSpec} = require('../util/browser-list')
-const {isSauceConnected} = require('../util/external-services')
+const { BrowserSpec } = require('../util/browser-list')
+const { isSauceConnected } = require('../util/external-services')
 
 class Driver {
   constructor (config, output) {
@@ -25,7 +25,7 @@ class Driver {
     this.testEnvs = []
     this.browserTestMatchers = {}
 
-    let agentConfig = {licenseKey: 'asdf', applicationID: 42, accountID: 123, agentID: 456, trustKey: 789}
+    let agentConfig = { licenseKey: 'asdf', applicationID: 42, accountID: 123, agentID: 456, trustKey: 789 }
     this.browserTests = []
     this.assetServer = new AssetServer(config, agentConfig, this.browserTests, output)
     this.assetServer.start(config.port)
@@ -104,7 +104,7 @@ class Driver {
       if (err) {
         newrelic.noticeError(err)
         // exit early if an environment is not available
-        newrelic.shutdown({collectPendingData: true, timeout: 3000}, function() {
+        newrelic.shutdown({ collectPendingData: true, timeout: 3000 }, function () {
           process.exit(1)
         })
         return
@@ -186,7 +186,7 @@ class Driver {
 
           let ended = false
 
-          t.on('result', function(result) {
+          t.on('result', function (result) {
             if (!result.ok) {
               var eventData = {
                 browserName: browserSpec.desired.browserName,
@@ -312,7 +312,7 @@ class Driver {
    * @param {Array.<DeviceTest>}  tests
    * @param {function} cb
    */
-  runDeviceTests(tests, cb) {
+  runDeviceTests (tests, cb) {
     let driver = this
     // find unique Browsers
     let testEnvs = findUniqueTestEnvs(tests)
@@ -343,7 +343,7 @@ class Driver {
       }
     }
 
-    function findUniqueTestEnvs(tests) {
+    function findUniqueTestEnvs (tests) {
       return tests.map((test) => {
         return test.browserSpec
       })
@@ -366,7 +366,7 @@ class Driver {
         })
     }
 
-    function findTests(tests, browserSpec) {
+    function findTests (tests, browserSpec) {
       return tests.filter((test) => {
         return test.browserSpec.same(browserSpec)
       })

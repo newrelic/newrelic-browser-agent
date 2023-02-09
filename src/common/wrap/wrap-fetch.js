@@ -20,20 +20,20 @@ var ctxId = 'nr@context'
 
 const wrapped = {}
 
-export function wrapFetch(sharedEE){
+export function wrapFetch (sharedEE) {
   const ee = scopedEE(sharedEE)
   if (!(Req && Res && globalScope.fetch)) {
     return ee
   }
 
-  if (wrapped[ee.debugId]++)  // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
-    return ee;                // then we increment the count to track # of feats using this at runtime.
-  wrapped[ee.debugId] = 1;
+  if (wrapped[ee.debugId]++) // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
+  { return ee } // then we increment the count to track # of feats using this at runtime.
+  wrapped[ee.debugId] = 1
 
   bodyMethods.forEach(method => {
     wrapPromiseMethod(Req[proto], method, bodyPrefix)
     wrapPromiseMethod(Res[proto], method, bodyPrefix)
-  });
+  })
   wrapPromiseMethod(globalScope, 'fetch', prefix)
 
   ee.on(prefix + 'end', function (err, res) {
@@ -65,7 +65,7 @@ export function wrapFetch(sharedEE){
 
         ee.emit(prefix + 'start', [args, dtPayload], origPromiseFromFetch)
 
-        // Note we need to cast the returned (orig) Promise from native APIs into the current global Promise, which may or may not be our WrappedPromise. 
+        // Note we need to cast the returned (orig) Promise from native APIs into the current global Promise, which may or may not be our WrappedPromise.
         return globalScope.Promise.resolve(origPromiseFromFetch).then(function (val) {
           ee.emit(prefix + 'end', [null, val], origPromiseFromFetch)
           return val
@@ -74,27 +74,27 @@ export function wrapFetch(sharedEE){
           throw err
         })
       }
-      target[name][flag] = fn;  // track original similar to in wrap-function.js, so that they can be unwrapped with ease
+      target[name][flag] = fn // track original similar to in wrap-function.js, so that they can be unwrapped with ease
     }
   }
 
   return ee
 }
-export function unwrapFetch(sharedEE) {
-  const ee = scopedEE(sharedEE);
+export function unwrapFetch (sharedEE) {
+  const ee = scopedEE(sharedEE)
 
   // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this.
   if (wrapped[ee.debugId] == 1) {
     bodyMethods.forEach(fnName => {
-      unwrapFunction(Req[proto], fnName);
-      unwrapFunction(Res[proto], fnName);
-    });
-    unwrapFunction(globalScope, "fetch");
-    wrapped[ee.debugId] = Infinity; // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
+      unwrapFunction(Req[proto], fnName)
+      unwrapFunction(Res[proto], fnName)
+    })
+    unwrapFunction(globalScope, 'fetch')
+    wrapped[ee.debugId] = Infinity // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
   } else {
-    wrapped[ee.debugId]--;
+    wrapped[ee.debugId]--
   }
 }
-export function scopedEE(sharedEE){
+export function scopedEE (sharedEE) {
   return (sharedEE || baseEE).get('fetch')
 }

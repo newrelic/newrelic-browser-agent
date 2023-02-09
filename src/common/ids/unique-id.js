@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { globalScope } from '../util/global-scope';
+import { globalScope } from '../util/global-scope'
 
 export function generateUuid () {
   var randomVals = null
@@ -50,11 +50,11 @@ export function generateSpanId () {
 }
 
 // 32-character hex string (per DT spec)
-export function generateTraceId() {
+export function generateTraceId () {
   return generateRandomHexString(32)
 }
 
-export function generateRandomHexString(length) {
+export function generateRandomHexString (length) {
   var randomVals = null
   var rvIndex = 0
   var crypto = self.crypto || self.msCrypto

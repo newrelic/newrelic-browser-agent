@@ -4,10 +4,9 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {validatePageActionData, fail} = require('./ins-internal-help.cjs')
+const { validatePageActionData, fail } = require('./ins-internal-help.cjs')
 
-const workingSendBeacon = testDriver.Matcher.withFeature('workingSendBeacon');
-
+const workingSendBeacon = testDriver.Matcher.withFeature('workingSendBeacon')
 
 testDriver.test('PageAction submission', function (t, browser, router) {
   let url = router.assetURL('instrumented.html')
@@ -20,7 +19,7 @@ testDriver.test('PageAction submission', function (t, browser, router) {
       browser.safeEval('newrelic.addPageAction("DummyEvent", { free: "tacos" })')
       return router.expectIns()
     })
-    .then(({req, query, body}) => {
+    .then(({ req, query, body }) => {
       t.equal(req.method, 'POST', 'first PageAction submission is a POST')
       t.notOk(query.ins, 'query string does not include ins parameter')
       validatePageActionData(t, JSON.parse(body).ins, query)
@@ -83,7 +82,7 @@ testDriver.test('PageAction submission on final harvest', function (t, browser, 
   let loadPromise = browser.get(url)
 
   Promise.all([rumPromise, loadPromise])
-    .then(({req, query, body}) => {
+    .then(({ req, query, body }) => {
       let insPromise = router.expectIns()
 
       let loadPromise = browser
@@ -94,7 +93,7 @@ testDriver.test('PageAction submission on final harvest', function (t, browser, 
         return ins
       })
     })
-    .then(({req, query, body}) => {
+    .then(({ req, query, body }) => {
       let insData
 
       if (workingSendBeacon.match(browser)) {
@@ -130,7 +129,7 @@ testDriver.test('precedence', function (t, browser, router) {
       browser.safeEval('newrelic.addPageAction("MyEvent", { referrerUrl: "http://test.com", foo: {bar: "baz"} })').catch(fail(t))
       return router.expectIns()
     })
-    .then(({req, query, body}) => {
+    .then(({ req, query, body }) => {
       validatePageActionData(JSON.parse(body).ins, query)
       t.end()
     })

@@ -75,7 +75,7 @@ function startSauce (config, cb) {
   })
 }
 
-function isSauceConnected() {
+function isSauceConnected () {
   for (let item of externalServices.values()) {
     if (item.spawnfile.indexOf('sauce-connect-launcher') > -1) {
       return true
@@ -84,4 +84,4 @@ function isSauceConnected() {
   return false
 }
 
-module.exports = {getSauceLabsCreds, startExternalServices, stopExternalServices, startSauce, isSauceConnected}
+module.exports = { getSauceLabsCreds, startExternalServices, stopExternalServices, startSauce, isSauceConnected }

@@ -4,26 +4,26 @@
  */
 
 const test = require('../../tools/jil/browser-test.js')
-const {handle, handleEE} = require('../../src/common/event-emitter/handle')
-const {registerHandler} = require('../../src/common/event-emitter/register-handler')
-const {drain} = require('../../src/common/drain/drain')
+const { handle, handleEE } = require('../../src/common/event-emitter/handle')
+const { registerHandler } = require('../../src/common/event-emitter/register-handler')
+const { drain } = require('../../src/common/drain/drain')
 
 test('Handler', function (t) {
   var count = 0
   var ctx = handleEE.context()
 
   t.plan(18)
-  handle('asdf', [{a: 0}], ctx)
-  handle('asdf', [{a: 1}], ctx)
-  handle('asdf', [{a: 2}], ctx)
-  handle('asdf', [{a: 3}], ctx)
+  handle('asdf', [{ a: 0 }], ctx)
+  handle('asdf', [{ a: 1 }], ctx)
+  handle('asdf', [{ a: 2 }], ctx)
+  handle('asdf', [{ a: 3 }], ctx)
   registerHandler('asdf', function (asdf) {
     t.equal(this, ctx, 'should have right context')
     t.equal(asdf.a, count, count + ' event triggered in order')
     count += 1
   })
-  handle('asdf', [{a: 4}], ctx)
-  handle('asdf', [{a: 5}], ctx)
+  handle('asdf', [{ a: 4 }], ctx)
+  handle('asdf', [{ a: 5 }], ctx)
 
   handle('many', [1, 2, 3, 4, 5], ctx)
   registerHandler('many', function () {

@@ -7,7 +7,7 @@ import { SharedContext } from '../context/shared-context'
 import { mapOwn } from '../util/map-own'
 
 export class Aggregator extends SharedContext {
-  constructor(parent) {
+  constructor (parent) {
     super(parent)
     this.aggregatedData = {}
   }
@@ -16,13 +16,13 @@ export class Aggregator extends SharedContext {
   // params are example data from the aggregated items
   // metrics are the numeric values to be aggregated
 
-  store(type, name, params, newMetrics, customParams) {
+  store (type, name, params, newMetrics, customParams) {
     var bucket = this.getBucket(type, name, params, customParams)
     bucket.metrics = aggregateMetrics(newMetrics, bucket.metrics)
     return bucket
   }
 
-  merge(type, name, metrics, params, customParams) {
+  merge (type, name, metrics, params, customParams) {
     var bucket = this.getBucket(type, name, params, customParams)
 
     if (!bucket.metrics) {
@@ -50,13 +50,13 @@ export class Aggregator extends SharedContext {
     })
   }
 
-  storeMetric(type, name, params, value) {
+  storeMetric (type, name, params, value) {
     var bucket = this.getBucket(type, name, params)
     bucket.stats = updateMetric(value, bucket.stats)
     return bucket
   }
 
-  getBucket(type, name, params, customParams) {
+  getBucket (type, name, params, customParams) {
     if (!this.aggregatedData[type]) this.aggregatedData[type] = {}
     var bucket = this.aggregatedData[type][name]
     if (!bucket) {
@@ -68,7 +68,7 @@ export class Aggregator extends SharedContext {
     return bucket
   }
 
-  get(type, name) {
+  get (type, name) {
     // if name is passed, get a single bucket
     if (name) return this.aggregatedData[type] && this.aggregatedData[type][name]
     // else, get all buckets of that type
@@ -76,7 +76,7 @@ export class Aggregator extends SharedContext {
   }
 
   // Like get, but for many types and it deletes the retrieved content from the aggregatedData
-  take(types) {
+  take (types) {
     var results = {}
     var type = ''
     var hasData = false
@@ -90,7 +90,7 @@ export class Aggregator extends SharedContext {
   }
 }
 
-function aggregateMetrics(newMetrics, oldMetrics) {
+function aggregateMetrics (newMetrics, oldMetrics) {
   if (!oldMetrics) oldMetrics = { count: 0 }
   oldMetrics.count += 1
   mapOwn(newMetrics, function (key, value) {
@@ -99,7 +99,7 @@ function aggregateMetrics(newMetrics, oldMetrics) {
   return oldMetrics
 }
 
-function updateMetric(value, metric) {
+function updateMetric (value, metric) {
   // when there is no value, then send only count
   if (value == null) {
     return updateCounterMetric(metric)
@@ -123,7 +123,7 @@ function updateMetric(value, metric) {
   return metric
 }
 
-function updateCounterMetric(metric) {
+function updateCounterMetric (metric) {
   if (!metric) {
     metric = { c: 1 }
   } else {
@@ -132,7 +132,7 @@ function updateCounterMetric(metric) {
   return metric
 }
 
-function mergeMetric(newMetric, oldMetric) {
+function mergeMetric (newMetric, oldMetric) {
   if (!oldMetric) return newMetric
 
   if (!oldMetric.c) {
@@ -150,7 +150,7 @@ function mergeMetric(newMetric, oldMetric) {
 }
 
 // take a value and create a metric object
-function createMetricObject(value) {
+function createMetricObject (value) {
   return {
     t: value,
     min: value,
@@ -160,12 +160,12 @@ function createMetricObject(value) {
   }
 }
 
-function toArray(obj) {
+function toArray (obj) {
   if (typeof obj !== 'object') return []
 
   return mapOwn(obj, getValue)
 }
 
-function getValue(key, value) {
+function getValue (key, value) {
   return value
 }

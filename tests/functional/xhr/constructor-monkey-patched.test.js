@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {fail} = require('./helpers')
+const { fail } = require('./helpers')
 
 var supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 let sendBeaconBrowsers = testDriver.Matcher.withFeature('workingSendBeacon')
@@ -25,7 +25,7 @@ testDriver.test('xhr instrumentation works with bad XHR constructor monkey-patch
     }
   }))
 
-  Promise.all([xhrMetricsPromise, rumPromise, loadPromise]).then(([{query, body}]) => {
+  Promise.all([xhrMetricsPromise, rumPromise, loadPromise]).then(([{ query, body }]) => {
     if (sendBeaconBrowsers.match(browser)) {
       t.ok(JSON.parse(body).xhr, 'got XHR data')
     } else {

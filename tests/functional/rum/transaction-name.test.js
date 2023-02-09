@@ -11,10 +11,10 @@ testDriver.test('RUM transactionName', withTls, function (t, browser, router) {
   t.plan(2)
 
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(router.assetURL('instrumented.html', {config: {transactionName: 'abc'}}))
+  let loadPromise = browser.get(router.assetURL('instrumented.html', { config: { transactionName: 'abc' } }))
 
   Promise.all([rumPromise, loadPromise])
-    .then(([{query}]) => {
+    .then(([{ query }]) => {
       t.equal(query.to, 'abc', 'has correct obfuscated transactionName')
       t.equal(query.t, undefined, 'tNamePlain excluded')
     })
@@ -30,10 +30,10 @@ testDriver.test('RUM tNamePlain', withTls, function (t, browser, router) {
   t.plan(2)
 
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(router.assetURL('instrumented.html', {config: {tNamePlain: 'abc'}}))
+  let loadPromise = browser.get(router.assetURL('instrumented.html', { config: { tNamePlain: 'abc' } }))
 
   Promise.all([rumPromise, loadPromise])
-    .then(([{query}]) => {
+    .then(([{ query }]) => {
       t.equal(query.t, 'abc', 'has correct tNamePlain')
       t.equal(query.to, undefined, 'transactionName param excluded')
     })
@@ -47,13 +47,13 @@ testDriver.test('RUM tNamePlain', withTls, function (t, browser, router) {
 
 testDriver.test('RUM transactionName and tNamePlain', withTls, function (t, browser, router) {
   t.plan(2)
-  let options = {config: {transactionName: 'abc', tNamePlain: 'def'}}
+  let options = { config: { transactionName: 'abc', tNamePlain: 'def' } }
 
   let rumPromise = router.expectRum()
   let loadPromise = browser.get(router.assetURL('instrumented.html', options))
 
   Promise.all([rumPromise, loadPromise])
-    .then(([{query}]) => {
+    .then(([{ query }]) => {
       t.equal(query.to, 'abc', 'has correct obfuscated transactionName')
       t.equal(query.t, undefined, 'tNamePlain excluded')
     })

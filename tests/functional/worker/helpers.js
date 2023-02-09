@@ -11,21 +11,21 @@ const workerTypes = ['classic', 'module']
  * @returns BrowserMatcher for the versions that support the type of worker
  */
 const typeToMatcher = (type) => {
-	switch (type) {
-		case 'classic':
-			return browserMatcher.withFeature('workers');
-		case 'module':
-			return browserMatcher.withFeature('workersFull');
-		case 'shared':
-			return browserMatcher.withFeature('sharedWorkers');
-	}
+  switch (type) {
+    case 'classic':
+      return browserMatcher.withFeature('workers')
+    case 'module':
+      return browserMatcher.withFeature('workersFull')
+    case 'shared':
+      return browserMatcher.withFeature('sharedWorkers')
+  }
 }
 
 /**
  * @property {boolean} isWorker - A custom attribute that gets set at configure() to denote if the global scope is a worker
  */
 const workerCustomAttrs = {
-	isWorker: true
+  isWorker: true
 }
 
 module.exports = { workerTypes, typeToMatcher, workerCustomAttrs }

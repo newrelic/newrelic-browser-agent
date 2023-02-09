@@ -5,34 +5,40 @@
 
 const browsersPolyfill = require('./browsers-polyfill.json')
 const browsersSupported = require('./browsers-supported.json')
+const browsersSelenium = require('./browsers-selenium.json')
 const semver = require('semver')
 const BrowserMatcher = require('./browser-matcher')
 var config = require('../runner/args')
 
 // list of pre-defined browsers = require(test matrix
 var allowedBrowsers = config.polyfills ? browsersPolyfill : browsersSupported
-const latestVersStringRe = /latest(?:-[1-9])?$/;
+const latestVersStringRe = /latest(?:-[1-9])?$/
 
+if (config.polyfills) {
+  allowedBrowsers = browsersPolyfill
+} else if (config.seleniumServer) {
+  allowedBrowsers = browsersSelenium
+}
 class BrowserSpec {
-  constructor(desired) {
+  constructor (desired) {
     this.desired = desired
   }
 
-  allowsExtendedDebugging() {
+  allowsExtendedDebugging () {
     return ['chrome', 'firefox'].includes(this.desired.browserName) && this.version === 'latest'
   }
 
-  toString() {
+  toString () {
     return `${this.browserName}@${this.version} (${this.platformName})`
   }
 
-  match(specString) {
+  match (specString) {
     let list = browserList(specString)
     var result = !!Array.from(list).filter((b) => this.same(b)).length
     return result
   }
 
-  same(other) {
+  same (other) {
     return (
       this.desired.platformName === other.desired.platformName &&
       this.desired.platformVersion === other.desired.platformVersion &&
@@ -42,16 +48,16 @@ class BrowserSpec {
     )
   }
 
-  hasFeature(feature) {
+  hasFeature (feature) {
     let matcher = BrowserMatcher.withFeature(feature)
     return matcher.match(this)
   }
 
-  get isMobile() {
+  get isMobile () {
     return !!(this.desired.platformName && this.desired.platformVersion)
   }
 
-  get platformName() {
+  get platformName () {
     if (this.desired.platformName) {
       return this.desired.platformName.toLowerCase()
     }
@@ -61,29 +67,29 @@ class BrowserSpec {
     return ''
   }
 
-  get platformVersion() {
+  get platformVersion () {
     return this.desired.platformVersion
   }
 
-  get browserName() {
+  get browserName () {
     return this.isMobile ? this.platformName : this.desired.browserName
   }
 
-  get version() {
+  get version () {
     return this.isMobile ? this.platformVersion : this.desired.version
   }
 }
 
 // used for testing
-function setBrowserList(newBrowsers) {
+function setBrowserList (newBrowsers) {
   allowedBrowsers = newBrowsers
 }
 
-function resetBrowserList() {
+function resetBrowserList () {
   allowedBrowsers = browsers
 }
 
-function browserList(pattern = 'chrome@latest') {
+function browserList (pattern = 'chrome@latest') {
   let requested = pattern.trim().split(/\s*,\s*/)
     .map(parse)
     .reduce((a, b) => a.concat(b), [])
@@ -100,31 +106,35 @@ function browserList(pattern = 'chrome@latest') {
   return sortedSpecs
 }
 
-function parse(pattern) {
-  let [browser, range] = pattern.split('@')
-  return getBrowsersFor(browser || 'chrome', range)
+function parse (pattern) {
+  let [browserFull, platform] = pattern.split('/')
+  let [browser, range] = browserFull.split('@')
+  return getBrowsersFor(browser || 'chrome', range, platform)
 }
 
-function getBrowsersFor(browser, range) {
+function getBrowsersFor (browser, range, platform) {
   let list = []
   if (allowedBrowsers[browser]) list = allowedBrowsers[browser].slice()
   else if (browser === '*') list = Object.keys(allowedBrowsers).reduce(merge, [])
 
   list.sort(byVersion)
 
-  if (!range) {
+  if (!range && !platform) {
     return list
   } else if (range === 'beta') {
     return list.filter(findBetaVersions)
   } else if (latestVersStringRe.test(range)) {
-    var latestX = list.filter(findLatestVersions, range);
-    return latestX.length ? latestX : list.slice(0, 1)  // default to the highest version if latest-# cannot be found
+    var latestX = list.filter(findLatestVersions, range)
+    return latestX.length ? latestX : list.slice(0, 1) // default to the highest version if latest-# cannot be found
+  }
+  if (platform && option.platform.toLowerCase() !== platform.toLowerCase()) {
+    return false
   }
 
   list = list.filter(inRange)
   return list
 
-  function inRange(option) {
+  function inRange (option) {
     if (option.platformVersion === 'beta' || option.version === 'beta') {
       return false
     }
@@ -132,34 +142,37 @@ function getBrowsersFor(browser, range) {
     return semver.satisfies(cleanVersion(option.platformVersion || option.version), range)
   }
 
-  function findBetaVersions(option) {
+  function findBetaVersions (option) {
     return (option.platformVersion === 'beta' || option.version === 'beta')
   }
 
-  function findLatestVersions(option) {
-    return (option.version === this.valueOf())  // 'this' should be bound to the lastest version string (object)
+  function findLatestVersions (option) {
+    if (platform && option.platform.toLowerCase() !== platform.toLowerCase()) {
+      return false
+    }
+    return (option.version === this.valueOf()) // 'this' should be bound to the lastest version string (object)
   }
 }
 
-function byVersion(left, right) {
+function byVersion (left, right) {
   return semver.lt(cleanVersion(left.version), cleanVersion(right.version)) ? 1 : -1
 }
 
-function cleanVersion(version) {
+function cleanVersion (version) {
   // assign to high number, so that it is high in the list when sorted (i.e. beta is highest)
   if (!version || latestVersStringRe.test(version)) {
-    let prevVersionOffset = !!version && version.split('-')[1];
+    let prevVersionOffset = !!version && version.split('-')[1]
     if (prevVersionOffset)
-      version = '9999' - prevVersionOffset;
+    { version = '9999' - prevVersionOffset }
     else
-      version = '9999'; // undefined 'version' (e.g., mobile) will be set to 'latest' too
+    { version = '9999' } // undefined 'version' (e.g., mobile) will be set to 'latest' too
   }
-  else if (version === 'beta') version = '10000';
+  else if (version === 'beta') version = '10000'
   version = version + '.0.0'
   return version.split('.', 3).join('.')
 }
 
-function merge(list, browser) {
+function merge (list, browser) {
   return list.concat(allowedBrowsers[browser])
 }
 
@@ -167,4 +180,4 @@ module.exports = browserList
 module.exports.BrowserSpec = BrowserSpec
 module.exports.setBrowserList = setBrowserList
 module.exports.resetBrowserList = resetBrowserList
-module.exports.latestVersStringRe = latestVersStringRe;
+module.exports.latestVersStringRe = latestVersStringRe

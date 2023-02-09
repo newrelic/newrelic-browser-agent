@@ -17,7 +17,7 @@ const model = {
   product: undefined,
   extra: undefined,
   jsAttributes: {
-    
+
   },
   userAttributes: undefined,
   atts: undefined,
@@ -27,7 +27,7 @@ const model = {
 
 const _cache = {}
 
-export function isValid(id){
+export function isValid (id) {
   try {
     const info = getInfo(id)
     return (!!info.licenseKey && !!info.errorBeacon && !!info.applicationID)
@@ -36,13 +36,13 @@ export function isValid(id){
   }
 }
 
-export function getInfo(id) {
+export function getInfo (id) {
   if (!id) throw new Error('All info objects require an agent identifier!')
   if (!_cache[id]) throw new Error(`Info for ${id} was never set`)
   return _cache[id]
 }
 
-export function setInfo(id, obj) {
+export function setInfo (id, obj) {
   if (!id) throw new Error('All info objects require an agent identifier!')
   _cache[id] = new Configurable(obj, model)
   gosNREUMInitializedAgents(id, _cache[id], 'info')

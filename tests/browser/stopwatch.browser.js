@@ -7,7 +7,7 @@ import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
 import * as stopwatch from '../../src/common/timing/stopwatch'
 
-const { aggregator: agg, agentIdentifier } = setup();
+const { aggregator: agg, agentIdentifier } = setup()
 
 test('stopwatch', function (t) {
   stopwatch.mark(agentIdentifier, 'a', 0)

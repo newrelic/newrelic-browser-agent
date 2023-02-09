@@ -26,7 +26,7 @@ import { onWindowLoad } from '../../../common/window/load'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor(agentIdentifier, aggregator) {
+  constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     this.stackReported = {}
@@ -49,18 +49,18 @@ export class Aggregate extends AggregateBase {
 
     this.scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
     this.scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
-    this.ee.on(`drain-${this.featureName}`, () => {if (!this.blocked) this.scheduler.startTimer(harvestTimeSeconds)})
+    this.ee.on(`drain-${this.featureName}`, () => { if (!this.blocked) this.scheduler.startTimer(harvestTimeSeconds) })
 
     // if rum response determines that customer lacks entitlements for jserrors endpoint, block it
     register('block-err', () => {
       this.blocked = true
       this.scheduler.stopTimer()
     }, this.featureName, this.ee)
-    
+
     drain(this.agentIdentifier, this.featureName)
   }
 
-  onHarvestStarted(options) {
+  onHarvestStarted (options) {
     // this gets rid of dependency in AJAX module
     var body = this.aggregator.take(['err', 'ierr', 'xhr'])
 
@@ -82,7 +82,7 @@ export class Aggregate extends AggregateBase {
     return payload
   }
 
-  onHarvestFinished(result) {
+  onHarvestFinished (result) {
     if (result.retry && this.currentBody) {
       mapOwn(this.currentBody, (key, value) => {
         for (var i = 0; i < value.length; i++) {
@@ -95,15 +95,15 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  nameHash(params) {
+  nameHash (params) {
     return stringHashCode(`${params.exceptionClass}_${params.message}_${params.stack_trace || params.browser_stack_hash}`)
   }
 
-  getBucketName(params, customParams) {
+  getBucketName (params, customParams) {
     return this.nameHash(params) + ':' + stringHashCode(stringify(customParams))
   }
 
-  canonicalizeURL(url, cleanedOrigin) {
+  canonicalizeURL (url, cleanedOrigin) {
     if (typeof url !== 'string') return ''
 
     var cleanedURL = cleanURL(url)
@@ -114,7 +114,7 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  buildCanonicalStackString(stackInfo, cleanedOrigin) {
+  buildCanonicalStackString (stackInfo, cleanedOrigin) {
     var canonicalStack = ''
 
     for (var i = 0; i < stackInfo.frames.length; i++) {
@@ -137,7 +137,7 @@ export class Aggregate extends AggregateBase {
   // Any URLs that are equivalent to the cleaned version of the origin will also
   // be replaced with the string '<inline>'.
   //
-  canonicalizeStackURLs(stackInfo) {
+  canonicalizeStackURLs (stackInfo) {
     // Currently, loader.origin might contain a fragment, but we don't want to use it
     // for comparing with frame URLs.
     var cleanedOrigin = cleanURL(getRuntime(this.agentIdentifier).origin)
@@ -155,7 +155,7 @@ export class Aggregate extends AggregateBase {
     return stackInfo
   }
 
-  storeError(err, time, internal, customAttributes) {
+  storeError (err, time, internal, customAttributes) {
     // are we in an interaction
     time = time || now()
     if (!internal && getRuntime(this.agentIdentifier).onerror && getRuntime(this.agentIdentifier).onerror(err)) return
@@ -226,7 +226,7 @@ export class Aggregate extends AggregateBase {
       this.aggregator.store(type, aggregateHash, params, newMetrics, customParams)
     }
 
-    function setCustom(key, val) {
+    function setCustom (key, val) {
       customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
   }
@@ -258,7 +258,7 @@ export class Aggregate extends AggregateBase {
 
       this.aggregator.store(item[0], aggregateHash, params, item[3], customParams)
 
-      function setCustom(key, val) {
+      function setCustom (key, val) {
         customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)
       }
     })
@@ -287,11 +287,10 @@ export class Aggregate extends AggregateBase {
 
       this.aggregator.store(item[0], aggregateHash, item[2], item[3], customParams)
 
-      function setCustom(key, val) {
+      function setCustom (key, val) {
         customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)
       }
     })
     delete this.errorCache[interaction.id]
   }
 }
-

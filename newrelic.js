@@ -32,12 +32,12 @@ const defaultConfig = {
   },
   rules: {
     name: [
-      {pattern: /^\/1\/.*$/, name: 'rum'},
-      {pattern: /^\/events\/1\/.*$/, name: 'events'},
-      {pattern: /^\/jserrors\/1\/.*$/, name: 'jserrors'},
-      {pattern: /^\/ins\/1\/.*$/, name: 'ins'},
-      {pattern: /^\/resources\/1\/.*$/, name: 'resources'},
-      {pattern: /^\/tests\/browser\/.*$/, name: 'browser-test'}
+      { pattern: /^\/1\/.*$/, name: 'rum' },
+      { pattern: /^\/events\/1\/.*$/, name: 'events' },
+      { pattern: /^\/jserrors\/1\/.*$/, name: 'jserrors' },
+      { pattern: /^\/ins\/1\/.*$/, name: 'ins' },
+      { pattern: /^\/resources\/1\/.*$/, name: 'resources' },
+      { pattern: /^\/tests\/browser\/.*$/, name: 'browser-test' }
     ]
   }
 }

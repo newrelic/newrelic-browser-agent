@@ -7,10 +7,10 @@ const jil = require('jil')
 
 jil.browserTest('history functions are wrapped', function (t) {
   // wrap
-  const {setup} = require('../utils/setup')
-  const {wrapHistory} = require('../../../src/common/wrap/wrap-history')
+  const { setup } = require('../utils/setup')
+  const { wrapHistory } = require('../../../src/common/wrap/wrap-history')
 
-  const {baseEE} = setup()
+  const { baseEE } = setup()
   wrapHistory(baseEE)
 
   if (window.history && window.history.pushState) {
@@ -25,12 +25,11 @@ jil.browserTest('history functions are wrapped', function (t) {
 
 jil.browserTest('two modified properties are shown on the history object', function (t) {
   // wrap
-  const {setup} = require('../utils/setup')
-  const {wrapHistory} = require('../../../src/common/wrap/wrap-history')
+  const { setup } = require('../utils/setup')
+  const { wrapHistory } = require('../../../src/common/wrap/wrap-history')
 
-  const {baseEE} = setup()
+  const { baseEE } = setup()
   wrapHistory(baseEE)
-
 
   if (window.history && window.history.pushState) {
     t.equal(window.history.hasOwnProperty('pushState'), true)
@@ -41,7 +40,7 @@ jil.browserTest('two modified properties are shown on the history object', funct
 
   t.end()
 })
- 
-function isWrapped(fn) {
+
+function isWrapped (fn) {
   return fn && (typeof fn['nr@original'] === 'function')
 }

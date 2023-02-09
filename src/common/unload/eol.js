@@ -3,20 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { ffVersion } from '../browser-version/firefox-version'
-import { windowAddEventListener } from '../event-listener/event-listener-opts';
+import { windowAddEventListener } from '../event-listener/event-listener-opts'
 import { single } from '../util/single'
 import { globalScope, isWorkerScope, isBrowserScope } from '../util/global-scope'
-import { subscribeToVisibilityChange } from '../window/page-visibility';
+import { subscribeToVisibilityChange } from '../window/page-visibility'
 
 if (isWorkerScope) {
-  globalScope.cleanupTasks = []; // create new list on WorkerGlobalScope to track funcs to run before exiting thread
+  globalScope.cleanupTasks = [] // create new list on WorkerGlobalScope to track funcs to run before exiting thread
 
-  const origClose = globalScope.close;
-  globalScope.close = () => {  // on worker's EoL signal, execute all "listeners", e.g. final harvests
+  const origClose = globalScope.close
+  globalScope.close = () => { // on worker's EoL signal, execute all "listeners", e.g. final harvests
     for (let task of globalScope.cleanupTasks) {
-      task();
+      task()
     }
-    origClose();
+    origClose()
   }
 }
 
@@ -29,11 +29,11 @@ if (isWorkerScope) {
 export function subscribeToEOL (cb, allowBFCache) {
   if (isBrowserScope) {
     if (allowBFCache) {
-      subscribeToVisibilityChange(cb, true);  // when user switches tab or hides window, esp. mobile scenario
-      windowAddEventListener('pagehide', cb); // when user navigates away, and because safari iOS v14.4- doesn't fully support vis change
-                                                // --this ought to be removed once support for version below 14.5 phases out
+      subscribeToVisibilityChange(cb, true) // when user switches tab or hides window, esp. mobile scenario
+      windowAddEventListener('pagehide', cb) // when user navigates away, and because safari iOS v14.4- doesn't fully support vis change
+      // --this ought to be removed once support for version below 14.5 phases out
     } else {
-      var oneCall = single(cb);
+      var oneCall = single(cb)
 
       // Firefox has a bug wherein a slow-loading resource loaded from the 'pagehide'
       // or 'unload' event will delay the 'load' event firing on the next page load.
@@ -57,7 +57,7 @@ export function subscribeToEOL (cb, allowBFCache) {
     }
   }
   else if (isWorkerScope) {
-    globalScope.cleanupTasks.push(cb); // close() should run these tasks before quitting thread
+    globalScope.cleanupTasks.push(cb) // close() should run these tasks before quitting thread
   }
   // By default (for other env), this fn has no effect.
 }

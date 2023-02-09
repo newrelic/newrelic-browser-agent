@@ -6,7 +6,7 @@ const model = {
 }
 
 export class SharedContext {
-  constructor(context) {
+  constructor (context) {
     try {
       if (typeof context !== 'object') return warn('shared context requires an object as input')
       this.sharedContext = {}

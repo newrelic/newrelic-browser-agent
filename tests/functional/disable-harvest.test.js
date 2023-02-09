@@ -14,7 +14,7 @@ var timedPromiseAll = (promises, ms = 5000) => Promise.race([
 testDriver.test('METRICS, ERRORS - Kills feature if entitlements flag is 0', supported, function (t, browser, router) {
   const init = {
     metrics: { enabled: true, harvestTimeSeconds: 5 },
-    jserrors: { enabled: true, harvestTimeSeconds: 5 },
+    jserrors: { enabled: true, harvestTimeSeconds: 5 }
   }
 
   router.flags.err = 0
@@ -34,7 +34,7 @@ testDriver.test('METRICS, ERRORS - Kills feature if entitlements flag is 0', sup
     })
   }).catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }
@@ -43,8 +43,8 @@ testDriver.test('METRICS, ERRORS - Kills feature if entitlements flag is 0', sup
 testDriver.test('SPA - Kills feature if entitlements flag is 0', supported, function (t, browser, router) {
   const init = {
     ajax: { enabled: false, harvestTimeSeconds: 5 },
-    spa: {enabled: true, harvestTimeSeconds: 5},
-    page_view_timing: {enabled: false, harvestTimeSeconds: 5}
+    spa: { enabled: true, harvestTimeSeconds: 5 },
+    page_view_timing: { enabled: false, harvestTimeSeconds: 5 }
   }
 
   router.flags.spa = 0
@@ -63,16 +63,15 @@ testDriver.test('SPA - Kills feature if entitlements flag is 0', supported, func
     })
   }).catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }
 })
 
-
 testDriver.test('PAGE ACTIONS - Kills feature if entitlements flag is 0', supported, function (t, browser, router) {
   const init = {
-    page_action: {enabled: true, harvestTimeSeconds: 5}
+    page_action: { enabled: true, harvestTimeSeconds: 5 }
   }
 
   router.flags.ins = 0
@@ -91,7 +90,7 @@ testDriver.test('PAGE ACTIONS - Kills feature if entitlements flag is 0', suppor
     })
   }).catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }

@@ -3,6 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export function getLocation() {
+export function getLocation () {
   return '' + location
 }

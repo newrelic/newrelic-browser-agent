@@ -10,7 +10,7 @@ const inspect = require('object-inspect')
 const defined = require('defined')
 const has = require('has')
 const bind = require('function-bind')
-const {EventEmitter} = require('events')
+const { EventEmitter } = require('events')
 const { Test } = require('tape')
 
 var regexpTest = bind.call(Function.call, RegExp.prototype.test)
@@ -219,8 +219,8 @@ class TestHarness extends EventEmitter {
     output += inner + 'operator: ' + res.operator + '\n'
 
     if (has(res, 'expected') || has(res, 'actual')) {
-      var ex = inspect(res.expected, {depth: res.objectPrintDepth})
-      var ac = inspect(res.actual, {depth: res.objectPrintDepth})
+      var ex = inspect(res.expected, { depth: res.objectPrintDepth })
+      var ac = inspect(res.actual, { depth: res.objectPrintDepth })
 
       if (Math.max(ex.length, ac.length) > 65 || invalidYaml(ex) || invalidYaml(ac)) {
         output += inner + 'expected: |-\n' + inner + '  ' + ex + '\n'

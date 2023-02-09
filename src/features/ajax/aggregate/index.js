@@ -16,7 +16,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor(agentIdentifier, aggregator) {
+  constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     let ajaxEvents = []
     let spaAjaxEvents = {}
@@ -29,9 +29,9 @@ export class Aggregate extends AggregateBase {
     const MAX_PAYLOAD_SIZE = getConfigurationValue(agentIdentifier, 'ajax.maxPayloadSize') || 1000000
 
     // Exposes these methods to browser test files -- future TO DO: can be removed once these fns are extracted from the constructor into class func
-    this.storeXhr = storeXhr;
-    this.prepareHarvest = prepareHarvest;
-    this.getStoredEvents = function () { return { ajaxEvents, spaAjaxEvents } };
+    this.storeXhr = storeXhr
+    this.prepareHarvest = prepareHarvest
+    this.getStoredEvents = function () { return { ajaxEvents, spaAjaxEvents } }
 
     ee.on('interactionSaved', (interaction) => {
       if (!spaAjaxEvents[interaction.id]) return
@@ -59,10 +59,10 @@ export class Aggregate extends AggregateBase {
         getPayload: prepareHarvest
       }, this)
 
-      ee.on(`drain-${this.featureName}`, () => {if (!this.blocked) scheduler.startTimer(harvestTimeSeconds)})
+      ee.on(`drain-${this.featureName}`, () => { if (!this.blocked) scheduler.startTimer(harvestTimeSeconds) })
     }
 
-    function storeXhr(params, metrics, startTime, endTime, type) {
+    function storeXhr (params, metrics, startTime, endTime, type) {
       metrics.time = startTime
 
       // send to session traces
@@ -121,7 +121,7 @@ export class Aggregate extends AggregateBase {
       }
     }
 
-    function prepareHarvest(options) {
+    function prepareHarvest (options) {
       options = options || {}
 
       if (ajaxEvents.length === 0) {
@@ -144,7 +144,7 @@ export class Aggregate extends AggregateBase {
       return payloadObjs
     }
 
-    function getPayload(events, maxPayloadSize, chunks) {
+    function getPayload (events, maxPayloadSize, chunks) {
       chunks = chunks || 1
       var payload = []
       var chunkSize = events.length / chunks
@@ -169,14 +169,14 @@ export class Aggregate extends AggregateBase {
       return tooBig ? getPayload(events, maxPayloadSize, ++chunks) : payload
     }
 
-    function onEventsHarvestFinished(result) {
+    function onEventsHarvestFinished (result) {
       if (result.retry && sentAjaxEvents.length > 0 && allAjaxIsEnabled()) {
         ajaxEvents = ajaxEvents.concat(sentAjaxEvents)
         sentAjaxEvents = []
       }
     }
 
-    function splitChunks(arr, chunkSize) {
+    function splitChunks (arr, chunkSize) {
       chunkSize = chunkSize || arr.length
       var chunks = []
       for (var i = 0, len = arr.length; i < len; i += chunkSize) {
@@ -185,7 +185,7 @@ export class Aggregate extends AggregateBase {
       return chunks
     }
 
-    function Chunk(events) {
+    function Chunk (events) {
       this.addString = getAddStringContext(agentIdentifier) // pass agentIdentifier here
       this.events = events
       this.payload = 'bel.7;'
@@ -233,7 +233,7 @@ export class Aggregate extends AggregateBase {
       }
     }
 
-    function allAjaxIsEnabled() {
+    function allAjaxIsEnabled () {
       var enabled = getConfigurationValue(agentIdentifier, 'ajax.enabled')
       if (enabled === false) {
         return false

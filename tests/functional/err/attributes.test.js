@@ -20,9 +20,10 @@ const init = {
   }
 }
 
-function runTests(loader, supported) {
+function runTests (loader, supported) {
   const opts = {
-    loader: loader, init: {
+    loader: loader,
+    init: {
       metrics: {
         enabled: false
       }
@@ -57,7 +58,7 @@ function runTests(loader, supported) {
       })
       .catch(fail)
 
-    function fail(e) {
+    function fail (e) {
       t.error(e)
       t.end()
     }
@@ -85,7 +86,7 @@ function runTests(loader, supported) {
       })
       .catch(fail)
 
-    function fail(e) {
+    function fail (e) {
       t.error(e)
       t.end()
     }
@@ -111,12 +112,11 @@ function runTests(loader, supported) {
       })
       .catch(fail)
 
-    function fail(e) {
+    function fail (e) {
       t.error(e)
       t.end()
     }
   })
-
 
   testDriver.test(`set custom attribute with pre-existing attributes before page load after loader before info (${loader})`, supported, function (t, browser, router) {
     let url = router.assetURL('pre-existing-custom-attribute-race-condition.html', opts)
@@ -139,7 +139,7 @@ function runTests(loader, supported) {
       })
       .catch(fail)
 
-    function fail(e) {
+    function fail (e) {
       t.error(e)
       t.end()
     }
@@ -165,7 +165,7 @@ function runTests(loader, supported) {
       })
       .catch(fail)
 
-    function fail(e) {
+    function fail (e) {
       t.error(e)
       t.end()
     }
@@ -199,7 +199,7 @@ function runTests(loader, supported) {
       })
       .catch(fail)
 
-    function fail(e) {
+    function fail (e) {
       t.error(e)
       t.end()
     }
@@ -228,7 +228,7 @@ function runTests(loader, supported) {
       })
       .catch(fail)
 
-    function fail(e) {
+    function fail (e) {
       t.error(e)
       t.end()
     }
@@ -257,7 +257,7 @@ testDriver.test('initial load interaction: simple case - single error', notSafar
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -287,7 +287,7 @@ testDriver.test('initial load interaction: muliple errors - different attribute 
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -318,7 +318,7 @@ testDriver.test('click interaction: simple case - single error', notSafariWithSe
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -351,7 +351,7 @@ testDriver.test('click interaction: multiple errors - different attribute values
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -382,7 +382,7 @@ testDriver.test('click interaction: attributes captured in discarded interaction
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -411,7 +411,7 @@ testDriver.test('global and interaction attributes on same error', notSafariWith
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -439,7 +439,7 @@ testDriver.test('setAttribute takes precedence over setCustomAttribute', notSafa
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }

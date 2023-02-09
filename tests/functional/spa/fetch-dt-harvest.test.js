@@ -24,7 +24,7 @@ testDriver.test('DT payload is NOT added when the feature is not enabled (defaul
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
@@ -57,7 +57,7 @@ testDriver.test('fetch request using string URL with two parameters on same orig
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
@@ -90,7 +90,7 @@ testDriver.test('fetch request using string URL with one parameter on same origi
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
@@ -123,7 +123,7 @@ testDriver.test('fetch request using object URL on same origin has AJAX request 
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
@@ -157,7 +157,7 @@ testDriver.test('fetch request on different origin has no AJAX request with DT p
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 

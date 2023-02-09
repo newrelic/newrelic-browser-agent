@@ -8,11 +8,11 @@ const jil = require('jil')
 const { setup } = require('../utils/setup')
 
 const setupData = setup()
-const {agentIdentifier, aggregator, nr} = setupData
+const { agentIdentifier, aggregator, nr } = setupData
 
 jil.browserTest('MutationObserver instanceof check', function (t) {
   var origMutationObserver = MutationObserver
-  const {Instrument} = require('../../../src/features/spa/instrument/index.js')
+  const { Instrument } = require('../../../src/features/spa/instrument/index.js')
   new Instrument(agentIdentifier, aggregator, false)
 
   var observer = new MutationObserver(function () {})
@@ -24,7 +24,7 @@ jil.browserTest('MutationObserver instanceof check', function (t) {
 
 jil.browserTest('MutationObserver double-instrumentation', function (t) {
   var OrigMutationObserver = MutationObserver
-  const {Instrument} = require('../../../src/features/spa/instrument/index.js')
+  const { Instrument } = require('../../../src/features/spa/instrument/index.js')
   new Instrument(agentIdentifier, aggregator, false)
 
   // This simulates what zone.js does when they wrap MutationObserver
@@ -40,7 +40,7 @@ jil.browserTest('MutationObserver double-instrumentation', function (t) {
 })
 
 jil.browserTest('MutationObserver functionality check', function (t) {
-  const {Instrument} = require('../../../src/features/spa/instrument/index.js')
+  const { Instrument } = require('../../../src/features/spa/instrument/index.js')
   new Instrument(agentIdentifier, aggregator, false)
   let callbackInvocations = 0
 

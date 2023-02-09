@@ -11,8 +11,6 @@ const { setup } = require('./utils/setup')
 const { baseEE, agentIdentifier } = setup()
 
 jil.browserTest('drain', function (t) {
-
-
   let eventId = 0
   let bufferId = 0
 

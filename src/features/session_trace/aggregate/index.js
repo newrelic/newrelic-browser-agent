@@ -20,7 +20,7 @@ import { HandlerCache } from '../../utils/handler-cache'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor(agentIdentifier, aggregator) {
+  constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
@@ -87,7 +87,7 @@ export class Aggregate extends AggregateBase {
       scheduler.harvest.on('resources', prepareHarvest.bind(this))
       scheduler.runHarvest({ needResponse: true })
 
-      function onHarvestFinished(result) {
+      function onHarvestFinished (result) {
         // start timer only if ptid was returned by server
         if (result.sent && result.responseText && !this.ptid) {
           this.ptid = result.responseText
@@ -103,7 +103,7 @@ export class Aggregate extends AggregateBase {
         }
       }
 
-      function prepareHarvest(options) {
+      function prepareHarvest (options) {
         if ((now()) > (15 * 60 * 1000)) {
           // been collecting for over 15 min, empty trace object and bail
           scheduler.stopTimer()
@@ -135,14 +135,14 @@ export class Aggregate extends AggregateBase {
     drain(this.agentIdentifier, this.featureName)
   }
 
-  processPVT(name, value, attrs) {
+  processPVT (name, value, attrs) {
     var t = {}
     t[name] = value
     this.storeTiming(t, true)
     if (this.hasFID(name, attrs)) this.storeEvent({ type: 'fid', target: 'document' }, 'document', value, value + attrs.fid)
   }
 
-  storeTiming(_t, ignoreOffset) {
+  storeTiming (_t, ignoreOffset) {
     var key
     var val
     var timeOffset
@@ -168,7 +168,7 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  storeTimer(target, start, end, type) {
+  storeTimer (target, start, end, type) {
     var category = 'timer'
     if (type === 'requestAnimationFrame') category = type
 
@@ -183,7 +183,7 @@ export class Aggregate extends AggregateBase {
     this.storeSTN(evt)
   }
 
-  storeEvent(currentEvent, target, start, end) {
+  storeEvent (currentEvent, target, start, end) {
     if (this.shouldIgnoreEvent(currentEvent, target)) return false
 
     var evt = {
@@ -204,7 +204,7 @@ export class Aggregate extends AggregateBase {
     this.storeSTN(evt)
   }
 
-  evtName(type) {
+  evtName (type) {
     var name = type
 
     mapOwn(this.rename, function (key, val) {
@@ -214,7 +214,7 @@ export class Aggregate extends AggregateBase {
     return name
   }
 
-  evtOrigin(t, target) {
+  evtOrigin (t, target) {
     var origin = 'unknown'
 
     if (t && t instanceof XMLHttpRequest) {
@@ -237,7 +237,7 @@ export class Aggregate extends AggregateBase {
     return origin
   }
 
-  storeHist(path, old, time) {
+  storeHist (path, old, time) {
     var node = {
       n: 'history.pushState',
       s: time,
@@ -249,7 +249,7 @@ export class Aggregate extends AggregateBase {
     this.storeSTN(node)
   }
 
-  storeResources(resources) {
+  storeResources (resources) {
     if (!resources || resources.length === 0) return
 
     resources.forEach((currentResource) => {
@@ -271,7 +271,7 @@ export class Aggregate extends AggregateBase {
     this.laststart = resources[resources.length - 1].fetchStart | 0
   }
 
-  storeErrorAgg(type, name, params, metrics) {
+  storeErrorAgg (type, name, params, metrics) {
     if (type !== 'err') return
     var node = {
       n: 'error',
@@ -283,7 +283,7 @@ export class Aggregate extends AggregateBase {
     this.storeSTN(node)
   }
 
-  storeXhrAgg(type, name, params, metrics) {
+  storeXhrAgg (type, name, params, metrics) {
     if (type !== 'xhr') return
     var node = {
       n: 'Ajax',
@@ -295,7 +295,7 @@ export class Aggregate extends AggregateBase {
     this.storeSTN(node)
   }
 
-  storeSTN(stn) {
+  storeSTN (stn) {
     // limit the number of data that is stored
     if (this.nodeCount >= this.maxNodesPerHarvest) return
 
@@ -306,7 +306,7 @@ export class Aggregate extends AggregateBase {
     this.nodeCount++
   }
 
-  mergeSTNs(key, nodes) {
+  mergeSTNs (key, nodes) {
     // limit the number of data that is stored
     if (this.nodeCount >= this.maxNodesPerHarvest) return
 
@@ -317,7 +317,7 @@ export class Aggregate extends AggregateBase {
     this.nodeCount += nodes.length
   }
 
-  takeSTNs(retry) {
+  takeSTNs (retry) {
     // if the observer is not being used, this checks resourcetiming buffer every harvest
     if (!supportsPerformanceObserver()) {
       this.storeResources(window.performance.getEntriesByType('resource'))
@@ -352,11 +352,11 @@ export class Aggregate extends AggregateBase {
     return stnInfo
   }
 
-  byStart(a, b) {
+  byStart (a, b) {
     return a.s - b.s
   }
 
-  smearEvtsByOrigin(name) {
+  smearEvtsByOrigin (name) {
     var maxGap = this.toAggregate[name][0]
     var maxLen = this.toAggregate[name][1]
     var lastO = {}
@@ -383,25 +383,25 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  val(key, value) {
+  val (key, value) {
     return value
   }
 
-  flatten(a, b) {
+  flatten (a, b) {
     return a.concat(b)
   }
 
-  hasFID(name, attrs) {
+  hasFID (name, attrs) {
     return name === 'fi' && !!attrs && typeof attrs.fid === 'number'
   }
 
-  trivial(node) {
+  trivial (node) {
     var limit = 4
     if (node && typeof node.e === 'number' && typeof node.s === 'number' && (node.e - node.s) < limit) return true
     else return false
   }
 
-  shouldIgnoreEvent(event, target) {
+  shouldIgnoreEvent (event, target) {
     var origin = this.evtOrigin(event.target, target)
     if (event.type in this.ignoredEvents.global) return true
     if (!!this.ignoredEvents[origin] && this.ignoredEvents[origin].ignoreAll) return true

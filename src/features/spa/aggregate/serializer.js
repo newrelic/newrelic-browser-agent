@@ -9,7 +9,7 @@ import { SharedContext } from '../../../common/context/shared-context'
 import { getInfo } from '../../../common/config/config'
 
 export class Serializer extends SharedContext {
-  constructor(parent) {
+  constructor (parent) {
     super(parent)
 
     /**
@@ -19,10 +19,10 @@ export class Serializer extends SharedContext {
      * See https://issues.newrelic.com/browse/NEWRELIC-5498
      * @type {number|undefined}
      */
-    this.firstTimestamp = undefined;
+    this.firstTimestamp = undefined
   }
 
-  serializeMultiple(interactions, offset, navTiming) {
+  serializeMultiple (interactions, offset, navTiming) {
     const info = getInfo(this.sharedContext.agentIdentifier)
     var addString = getAddStringContext(this.sharedContext.agentIdentifier)
     var serialized = 'bel.7'
@@ -33,7 +33,7 @@ export class Serializer extends SharedContext {
     return serialized
   }
 
-  serializeSingle(root, offset, navTiming, isRouteChange) {
+  serializeSingle (root, offset, navTiming, isRouteChange) {
     const info = getInfo(this.sharedContext.agentIdentifier)
     var addString = getAddStringContext(this.sharedContext.agentIdentifier)
     var serialized = 'bel.7;' + this.serializeInteraction(root, offset, navTiming, isRouteChange, addString, info)
@@ -41,7 +41,7 @@ export class Serializer extends SharedContext {
     return serialized
   }
 
-  serializeInteraction(root, offset, navTiming, isRouteChange, addString, info) {
+  serializeInteraction (root, offset, navTiming, isRouteChange, addString, info) {
     offset = offset || 0
     var isInitialPage = root.attrs.trigger === 'initialPageLoad'
     var typeIdsByName = {

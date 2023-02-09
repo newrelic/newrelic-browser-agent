@@ -14,7 +14,7 @@ var originalClearTimeout = originals.CT
 
 var lastId = {}
 
-export function Interaction(eventName, timestamp, url, routeName, onFinished, agentIdentifier) {
+export function Interaction (eventName, timestamp, url, routeName, onFinished, agentIdentifier) {
   this.agentIdentifier = agentIdentifier
   this.ee = ee.get(agentIdentifier)
 
@@ -43,7 +43,7 @@ export function Interaction(eventName, timestamp, url, routeName, onFinished, ag
 
 var InteractionPrototype = Interaction.prototype
 
-InteractionPrototype.checkFinish = function checkFinish() {
+InteractionPrototype.checkFinish = function checkFinish () {
   var interaction = this
 
   if (interaction.remaining > 0) {
@@ -69,19 +69,19 @@ InteractionPrototype.checkFinish = function checkFinish() {
   }, 0)
 }
 
-InteractionPrototype.setNewURL = function setNewURL(url){
+InteractionPrototype.setNewURL = function setNewURL (url) {
   this.root.attrs.newURL = url
 }
 
-InteractionPrototype.setNewRoute = function setNewRoute(route){
+InteractionPrototype.setNewRoute = function setNewRoute (route) {
   this.root.attrs.newRoute = route
 }
 
-InteractionPrototype.onNodeAdded = function onNodeAdded() {
+InteractionPrototype.onNodeAdded = function onNodeAdded () {
   this._resetFinishCheck()
 }
 
-InteractionPrototype._resetFinishCheck = function _resetFinishCheck() {
+InteractionPrototype._resetFinishCheck = function _resetFinishCheck () {
   if (this.finishTimer) {
     originalClearTimeout(this.finishTimer)
     this.finishTimer = null
@@ -90,7 +90,7 @@ InteractionPrototype._resetFinishCheck = function _resetFinishCheck() {
 }
 
 // serialize report and remove nodes from map
-InteractionPrototype.finish = function finishInteraction() {
+InteractionPrototype.finish = function finishInteraction () {
   var interaction = this
   var root = interaction.root
   if (root.end !== null) return

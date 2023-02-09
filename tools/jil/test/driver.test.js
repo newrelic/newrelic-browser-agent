@@ -13,7 +13,7 @@ var Output = require('../output')
 
 // mocks
 TestRun.prototype._initializeBrowser = _initializeBrowser
-function _initializeBrowser(connectionInfo, browserSpec, rootURL, numberOfRetries, retry) {
+function _initializeBrowser (connectionInfo, browserSpec, rootURL, numberOfRetries, retry) {
   let retVal = Promise.resolve({})
   retVal.sauceJobStatus = () => {}
   retVal.quit = (fn) => {
@@ -26,7 +26,7 @@ function _initializeBrowser(connectionInfo, browserSpec, rootURL, numberOfRetrie
 runTests('DefaultDriver')
 runTests('ParallelDriver')
 
-function runTests(driverClass) {
+function runTests (driverClass) {
   test('basic', function (t) {
     // run a fake test so we can assert on the output
     runTest(t, function (driver) {
@@ -42,8 +42,8 @@ function runTests(driverClass) {
   test('basic with two browsers', function (t) {
     // run a fake test so we can assert on the output
     runTest(t, function (driver) {
-      driver.addBrowser(null, {browserName: 'chrome'})
-      driver.addBrowser(null, {browserName: 'firefox'})
+      driver.addBrowser(null, { browserName: 'chrome' })
+      driver.addBrowser(null, { browserName: 'firefox' })
 
       driver.test('a test', null, (t, browser, router) => {
         t.ok(true)
@@ -259,7 +259,7 @@ function runTests(driverClass) {
   })
 }
 
-function runTest(t, setup, inspect, driverName) {
+function runTest (t, setup, inspect, driverName) {
   // configs
   const config = {
     host: 'bam-test-1.nr-local.net',
@@ -283,7 +283,7 @@ function runTest(t, setup, inspect, driverName) {
       })
   })
 
-  function runDriverTest(driver) {
+  function runDriverTest (driver) {
     var mainResolve
     var promise = new Promise((resolve) => {
       mainResolve = resolve
@@ -302,10 +302,10 @@ function runTest(t, setup, inspect, driverName) {
 
     // add one browser if test did not specify
     if (driver.testEnvs.length === 0) {
-      driver.addBrowser(null, {browserName: 'chrome'})
+      driver.addBrowser(null, { browserName: 'chrome' })
     }
 
-    driver.run(function() {
+    driver.run(function () {
       // t.ok(true)
       // t.end()
     })

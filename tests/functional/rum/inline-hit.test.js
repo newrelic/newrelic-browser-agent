@@ -30,7 +30,7 @@ testDriver.test('inline hit api', supported, function (t, browser, router) {
     inlineHit3(rumData[encodeURIComponent('maliciouse&foo')])
   }
 
-  function inlineHit1 ({query}) {
+  function inlineHit1 ({ query }) {
     t.equal(query.a, '42', 'inlineHit app id')
     t.equal(query.t, '/inline-hit-1', 'inlineHit request name')
     t.equal(+query.qt, 378, 'inlineHit queue time')
@@ -41,11 +41,11 @@ testDriver.test('inline hit api', supported, function (t, browser, router) {
     t.equal(+query.c, 1, 'inlineHit cycle 1')
   }
 
-  function inlineHit2 ({query}) {
+  function inlineHit2 ({ query }) {
     t.equal(+query.c, 2, 'inlineHit cycle 2')
   }
 
-  function inlineHit3 ({query}) {
+  function inlineHit3 ({ query }) {
     t.equal(query.a, '42', 'inlineHit app id')
     t.equal(query.t, encodeURIComponent('maliciouse&foo'), 'inlineHit request name')
     t.equal(+query.qt, 0, 'inlineHit queue time')

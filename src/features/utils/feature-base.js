@@ -4,7 +4,7 @@ import { configure } from '../../loaders/configure/configure'
 import { gosCDN } from '../../common/window/nreum'
 
 export class FeatureBase {
-  constructor(agentIdentifier, aggregator, featureName) {
+  constructor (agentIdentifier, aggregator, featureName) {
     /** @type {string} */
     this.agentIdentifier = agentIdentifier
     /** @type {Aggregator} */
@@ -16,14 +16,14 @@ export class FeatureBase {
     /**
      * Blocked can be used to prevent aggregation and harvest after inititalization time of the feature.
      * This can currently happen if rum response setToken flag is 0, which is tied to ingest account entitlement info.
-     * @type {boolean} 
+     * @type {boolean}
      */
     this.blocked = false
 
     this.checkConfiguration()
   }
 
-  checkConfiguration() {
+  checkConfiguration () {
     // try to support backwards compat with patter of some loader configs present after loader
     // would need the same jsAttributes handling as the main branch
     if (!isConfigured(this.agentIdentifier)) {

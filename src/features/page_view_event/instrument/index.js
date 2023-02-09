@@ -11,27 +11,27 @@ import { isBrowserScope } from '../../../common/util/global-scope'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor(agentIdentifier, aggregator, auto=true) {
+  constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    if (!isBrowserScope) return; // initial page view times non applicable outside web env
+    if (!isBrowserScope) return // initial page view times non applicable outside web env
 
     findStartTime(agentIdentifier)
     mark(agentIdentifier, 'firstbyte', getLastTimestamp())
 
-    onDOMContentLoaded(() => this.measureDomContentLoaded());
-    onWindowLoad(() => this.measureWindowLoaded(), true); // we put this in the front of load listeners (useCapture=true) for better precision on measuring when it fires!
-    this.importAggregator();  // the measureWindowLoaded cb should run *before* the page_view_event agg runs
+    onDOMContentLoaded(() => this.measureDomContentLoaded())
+    onWindowLoad(() => this.measureWindowLoaded(), true) // we put this in the front of load listeners (useCapture=true) for better precision on measuring when it fires!
+    this.importAggregator() // the measureWindowLoaded cb should run *before* the page_view_event agg runs
   }
 
   // should be called on window.load or window.onload, will not be called if agent is loaded after window load
-  measureWindowLoaded() {
+  measureWindowLoaded () {
     var ts = now()
-    mark(this.agentIdentifier, 'onload', ts + getOffset());
+    mark(this.agentIdentifier, 'onload', ts + getOffset())
     handle('timing', ['load', ts], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
   }
 
   // should be called on DOMContentLoaded, will not be called if agent is loaded after DOMContentLoaded
-  measureDomContentLoaded() {
-    mark(this.agentIdentifier, 'domContent', now() + getOffset());
+  measureDomContentLoaded () {
+    mark(this.agentIdentifier, 'domContent', now() + getOffset())
   }
 }

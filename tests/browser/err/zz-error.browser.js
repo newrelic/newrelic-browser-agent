@@ -15,7 +15,7 @@ import { Instrument as StnInstrument } from '../../../src/features/session_trace
 import { Instrument as JserrorsInstrument } from '../../../src/features/jserrors/instrument/index'
 import { Aggregate as JserrorsAggregate } from '../../../src/features/jserrors/aggregate/index'
 
-const {agentIdentifier, aggregator, baseEE} = setup()
+const { agentIdentifier, aggregator, baseEE } = setup()
 
 const stnInst = new StnInstrument(agentIdentifier, aggregator, false)
 const jsErrorsInst = new JserrorsInstrument(agentIdentifier, aggregator, false)

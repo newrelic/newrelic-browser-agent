@@ -34,25 +34,24 @@ var argv = require('yargs')
   .default('dry', false)
   .argv
 
-
 const { env, appId, licenseKey, bucket, role, current, next, dry } = argv
 
 let counter = 1
 
 if (!env || !appId || !licenseKey || !bucket || !role) {
-  console.log("missing required param")
-  if (!env) console.log("env")
-  if (!appId) console.log("appId")
-  if (!licenseKey) console.log("licenseKey")
-  if (!bucket) console.log("bucket")
-  if (!role) console.log("role")
+  console.log('missing required param')
+  if (!env) console.log('env')
+  if (!appId) console.log('appId')
+  if (!licenseKey) console.log('licenseKey')
+  if (!bucket) console.log('bucket')
+  if (!role) console.log('role')
   process.exit(1)
 }
 
 const config = {
   init: {
     distributed_tracing: {
-      enabled: true,
+      enabled: true
     },
     ajax: {
       deny_list: [
@@ -69,7 +68,7 @@ const config = {
     trustKey: '1',
     agentID: `${appId}`,
     licenseKey: '0986481b53',
-    applicationID: `${appId}`,
+    applicationID: `${appId}`
   },
 
   info: {
@@ -78,14 +77,14 @@ const config = {
     licenseKey: `${licenseKey}`,
     applicationID: `${appId}`,
     sa: 1,
-    agent: `https://js-agent.newrelic.com/nr-spa-1216.min.js` // legacy remnant for backwards compat
-  },
-};
+    agent: 'https://js-agent.newrelic.com/nr-spa-1216.min.js' // legacy remnant for backwards compat
+  }
+}
 
-function getIdFromUrl(url) {
-  if (url.includes("PR-")) return 'PR-' + url.split('/').find(x => x.includes("PR-")).split("-")[1]
-  if (url.includes("/dev/")) return "dev"
-  if (url.includes("-current")) return "current"
+function getIdFromUrl (url) {
+  if (url.includes('PR-')) return 'PR-' + url.split('/').find(x => x.includes('PR-')).split('-')[1]
+  if (url.includes('/dev/')) return 'dev'
+  if (url.includes('-current')) return 'current'
   if (url.match(/\d+/)) return url.match(/\d+/)[0]
   return `${counter++}`
 }
@@ -94,7 +93,7 @@ function getIdFromUrl(url) {
   const filePaths = [
     ...(env !== 'dev' ? [current] : []), // defaults to current build
     next, // defaults to dev build
-    ...(env === 'dev' && await getOpenPrNums() || []).map(num => `https://js-agent.newrelic.com/pr/PR-${num}/nr-loader-spa.min.js`),
+    ...(env === 'dev' && await getOpenPrNums() || []).map(num => `https://js-agent.newrelic.com/pr/PR-${num}/nr-loader-spa.min.js`)
   ]
 
   Promise.all(filePaths.map(fp => getFile(fp))).then((contents) => {
@@ -123,12 +122,11 @@ function getIdFromUrl(url) {
       process.exit(1)
     })
   }).catch(err => {
-    console.log("error getting all files... ", err)
+    console.log('error getting all files... ', err)
   })
-
 })()
 
-function wrapAgent(agent, id) {
+function wrapAgent (agent, id) {
   return `
         ids['${id}'] = () => {
             ${agent}
@@ -137,7 +135,7 @@ function wrapAgent(agent, id) {
     `
 }
 
-function randomExecutor(ids) {
+function randomExecutor (ids) {
   let output = `
         (function (){
           const params = new Proxy(new URLSearchParams(window.location.search), {
@@ -157,7 +155,7 @@ function randomExecutor(ids) {
   return output
 }
 
-function getFile(path) {
+function getFile (path) {
   var opts = {
     uri: path,
     method: 'GET',
@@ -177,7 +175,7 @@ function getFile(path) {
   })
 }
 
-function getOpenPrNums() {
+function getOpenPrNums () {
   var opts = {
     uri: 'https://api.github.com/repos/newrelic/newrelic-browser-agent/pulls?state=open',
     method: 'GET',

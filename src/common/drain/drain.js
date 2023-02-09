@@ -10,23 +10,23 @@ import { featurePriority } from '../../loaders/features/features'
 
 const registry = {}
 
-export function registerDrain(agentIdentifier, group) {
+export function registerDrain (agentIdentifier, group) {
   const item = { staged: false, priority: featurePriority[group] || 0 }
   curateRegistry(agentIdentifier)
   if (!registry[agentIdentifier].get(group)) registry[agentIdentifier].set(group, item)
 }
 
-function curateRegistry(agentIdentifier) {
+function curateRegistry (agentIdentifier) {
   if (!agentIdentifier) return
   if (!registry[agentIdentifier]) registry[agentIdentifier] = new Map()
 }
 
 /**
  * Drain buffered events out of the EE. Each feature **should** have its events bucket into a "group".  The feature should drain this group explicitly
- * @param {string} agentIdentifier 
- * @param {string} group 
+ * @param {string} agentIdentifier
+ * @param {string} group
  */
-export function drain(agentIdentifier = "", featureName = 'feature') {
+export function drain (agentIdentifier = '', featureName = 'feature') {
   curateRegistry(agentIdentifier)
   // if its not in the registry, that means the instrument file was bypassed.  This could happen in tests, or loaders that directly import the agg
   if (!agentIdentifier || !registry[agentIdentifier].get(featureName)) return drainGroup(featureName)
@@ -40,7 +40,7 @@ export function drain(agentIdentifier = "", featureName = 'feature') {
     })
   }
 
-  function drainGroup(group) {
+  function drainGroup (group) {
     const baseEE = agentIdentifier ? ee.get(agentIdentifier) : ee
     const handlers = defaultRegister.handlers
     if (!baseEE.backlog || !handlers) return
@@ -68,7 +68,7 @@ export function drain(agentIdentifier = "", featureName = 'feature') {
   }
 }
 
-function emitEvent(evt, groupHandlers) {
+function emitEvent (evt, groupHandlers) {
   var type = evt[1]
   mapOwn(groupHandlers[type], function (i, registration) {
     var sourceEE = evt[0]

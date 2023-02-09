@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {fail, getXhrFromResponse} = require('./helpers')
+const { fail, getXhrFromResponse } = require('./helpers')
 
 var supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 

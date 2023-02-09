@@ -5,7 +5,7 @@
 
 const testDriver = require('../../../tools/jil/index')
 
-let corsSupported = testDriver.Matcher.withFeature('cors');
+let corsSupported = testDriver.Matcher.withFeature('cors')
 
 testDriver.test('jserrors are retried when collector returns 429', corsSupported, function (t, browser, router) {
   let assetURL = router.assetURL('external-uncaught-error.html', {

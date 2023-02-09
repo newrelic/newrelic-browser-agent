@@ -18,10 +18,10 @@ import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/environment-variables'
 import { isBrowserScope, isWorkerScope } from '../util/global-scope'
 
-const haveSendBeacon = !!navigator.sendBeacon;  // only the web window obj has sendBeacon at this time, so 'false' for other envs
+const haveSendBeacon = !!navigator.sendBeacon // only the web window obj has sendBeacon at this time, so 'false' for other envs
 
 export class Harvest extends SharedContext {
-  constructor(parent) {
+  constructor (parent) {
     super(parent) // gets any allowed properties from the parent and stores them in `sharedContext`
 
     this.tooManyRequestsDelay = getConfigurationValue(this.sharedContext.agentIdentifier, 'harvest.tooManyRequestsDelay') || 60
@@ -41,7 +41,7 @@ export class Harvest extends SharedContext {
    * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
    * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
    */
-  sendX(endpoint, opts, cbFinished) {
+  sendX (endpoint, opts, cbFinished) {
     var submitMethod = getSubmitMethod(endpoint, opts)
     if (!submitMethod) return false
     var options = {
@@ -65,7 +65,7 @@ export class Harvest extends SharedContext {
  * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
  * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
  */
-  send(endpoint, singlePayload, opts, submitMethod, cbFinished) {
+  send (endpoint, singlePayload, opts, submitMethod, cbFinished) {
     var makeBody = createAccumulator()
     var makeQueryString = createAccumulator()
     if (singlePayload.body) mapOwn(singlePayload.body, makeBody)
@@ -77,18 +77,18 @@ export class Harvest extends SharedContext {
     return caller(endpoint, payload, opts, submitMethod, cbFinished)
   }
 
-  obfuscateAndSend(endpoint, payload, opts, submitMethod, cbFinished) {
+  obfuscateAndSend (endpoint, payload, opts, submitMethod, cbFinished) {
     applyFnToProps(payload, (...args) => this.obfuscator.obfuscateString(...args), 'string', ['e'])
     return this._send(endpoint, payload, opts, submitMethod, cbFinished)
   }
 
-  _send(endpoint, payload, opts, submitMethod, cbFinished) {
+  _send (endpoint, payload, opts, submitMethod, cbFinished) {
     var info = getInfo(this.sharedContext.agentIdentifier)
     if (!info.errorBeacon) return false
 
     var agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
 
-    if (!payload.body) {  // no payload body? nothing to send, just run onfinish stuff and return
+    if (!payload.body) { // no payload body? nothing to send, just run onfinish stuff and return
       if (cbFinished) {
         cbFinished({ sent: false })
       }
@@ -119,7 +119,7 @@ export class Harvest extends SharedContext {
     /* Since workers don't support sendBeacon right now, or Image(), they can only use XHR method.
         Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
         we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon. */
-    var result = method(fullUrl, body, opts.unload && isWorkerScope);
+    var result = method(fullUrl, body, opts.unload && isWorkerScope)
 
     if (cbFinished && method === submitData.xhr) {
       var xhr = result
@@ -149,7 +149,7 @@ export class Harvest extends SharedContext {
   }
 
   // The stuff that gets sent every time.
-  baseQueryString() {
+  baseQueryString () {
     var runtime = getRuntime(this.sharedContext.agentIdentifier)
     var info = getInfo(this.sharedContext.agentIdentifier)
 
@@ -163,14 +163,14 @@ export class Harvest extends SharedContext {
       transactionNameParam(info),
       encodeParam('ct', runtime.customTransaction),
       '&rst=' + now(),
-      '&ck=0',  // ck param DEPRECATED - still expected by backend
+      '&ck=0', // ck param DEPRECATED - still expected by backend
       '&s=' + (runtime.sessionId || '0'), // the 0 id encaps all untrackable and default traffic
       encodeParam('ref', ref),
       encodeParam('ptid', (runtime.ptid ? '' + runtime.ptid : ''))
     ].join(''))
   }
 
-  createPayload(type, options) {
+  createPayload (type, options) {
     var makeBody = createAccumulator()
     var makeQueryString = createAccumulator()
     var listeners = (this._events[type] && this._events[type] || [])
@@ -184,31 +184,31 @@ export class Harvest extends SharedContext {
     return { body: makeBody(), qs: makeQueryString() }
   }
 
-  on(type, listener) {
+  on (type, listener) {
     var listeners = (this._events[type] || (this._events[type] = []))
     listeners.push(listener)
   }
 
-  resetListeners() {
+  resetListeners () {
     mapOwn(this._events, (key) => {
       this._events[key] = []
     })
   }
 }
 
-function or(a, b) { return a || b }
+function or (a, b) { return a || b }
 
-export function getSubmitMethod(endpoint, opts) {
+export function getSubmitMethod (endpoint, opts) {
   opts = opts || {}
   var method
   var useBody
 
-  if (opts.needResponse) {  // currently: only STN needs a response
+  if (opts.needResponse) { // currently: only STN needs a response
     useBody = true
     method = submitData.xhr
   } else if (opts.unload && isBrowserScope) { // all the features' final harvest; neither methods work outside window context
     useBody = haveSendBeacon
-    method = haveSendBeacon ? submitData.beacon : submitData.img  // really only IE doesn't have Beacon API for web browsers
+    method = haveSendBeacon ? submitData.beacon : submitData.img // really only IE doesn't have Beacon API for web browsers
   } else {
     // `submitData.beacon` was removed, there is an upper limit to the
     // number of data allowed before it starts failing, so we save it only for page unloading
@@ -225,14 +225,14 @@ export function getSubmitMethod(endpoint, opts) {
 // Constructs the transaction name param for the beacon URL.
 // Prefers the obfuscated transaction name over the plain text.
 // Falls back to making up a name.
-function transactionNameParam(info) {
+function transactionNameParam (info) {
   if (info.transactionName) return encodeParam('to', info.transactionName)
   return encodeParam('t', info.tNamePlain || 'Unnamed Transaction')
 }
 
 // returns a function that can be called to accumulate values to a single object
 // when the function is called without parameters, then the accumulator is returned
-function createAccumulator() {
+function createAccumulator () {
   var accumulator = {}
   var hasData = false
   return function (key, val) {

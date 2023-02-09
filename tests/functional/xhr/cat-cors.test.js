@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {fail} = require('./helpers')
+const { fail } = require('./helpers')
 
 testDriver.test('does not set CAT headers on outbound XHRs to different origin', function (t, browser, router) {
   t.plan(1)

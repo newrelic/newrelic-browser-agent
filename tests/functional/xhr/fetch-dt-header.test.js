@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {fail, testCases, validateNewrelicHeader, validateNoNewrelicHeader, validateTraceContextHeaders, validateNoTraceContextHeaders} = require('./helpers')
+const { fail, testCases, validateNewrelicHeader, validateNoNewrelicHeader, validateTraceContextHeaders, validateNoTraceContextHeaders } = require('./helpers')
 
 let fetchBrowsers = testDriver.Matcher.withFeature('fetch')
 
@@ -69,7 +69,7 @@ testCases.forEach((testCase) => {
         let fetchPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') })
 
         Promise.all([fetchPromise, loadPromise])
-          .then(([{headers}]) => {
+          .then(([{ headers }]) => {
             if (testCase.newrelicHeader) {
               validateNewrelicHeader(t, headers, config)
             } else {

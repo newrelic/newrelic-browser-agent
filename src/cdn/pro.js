@@ -1,4 +1,4 @@
-import { Agent } from "../loaders/agent";
+import { Agent } from '../loaders/agent'
 
 import { Instrument as InstrumentPageViewEvent } from '../features/page_view_event/instrument'
 import { Instrument as InstrumentPageViewTiming } from '../features/page_view_timing/instrument'
@@ -9,13 +9,14 @@ import { Instrument as InstrumentSessionTrace } from '../features/session_trace/
 import { Instrument as InstrumentPageAction } from '../features/page_action/instrument'
 
 new Agent({
-    features: [
-        InstrumentPageViewEvent,
-        InstrumentPageViewTiming,
-        InstrumentSessionTrace,
-        InstrumentXhr,
-        InstrumentMetrics,
-        InstrumentPageAction,
-        InstrumentErrors
-    ], loaderType: 'pro'
+  features: [
+    InstrumentPageViewEvent,
+    InstrumentPageViewTiming,
+    InstrumentSessionTrace,
+    InstrumentXhr,
+    InstrumentMetrics,
+    InstrumentPageAction,
+    InstrumentErrors
+  ],
+  loaderType: 'pro'
 })

@@ -4,7 +4,7 @@ const webpack = require('webpack')
 const pkg = require('../../package.json')
 
 module.exports = {
-  entry: path.join(__dirname, "../../dist/mjs/index.mjs"),
+  entry: path.join(__dirname, '../../dist/mjs/index.mjs'),
   module: {
     rules: [
       {
@@ -14,7 +14,7 @@ module.exports = {
           loader: 'babel-loader',
           options: {
             presets: [
-              ['@babel/preset-env', { targets: "defaults" }]
+              ['@babel/preset-env', { targets: 'defaults' }]
             ]
           }
         }
@@ -23,7 +23,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, '../../tests/assets/js/internal/modular'),
-    publicPath: "/tests/assets/js/internal/modular/",
+    publicPath: '/tests/assets/js/internal/modular/',
     filename: 'index.js',
     library: {
       name: 'NRBA',

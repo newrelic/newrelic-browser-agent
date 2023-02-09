@@ -20,7 +20,7 @@ workerTypes.forEach(type => {
   setTimeoutErrorTest(type, typeToMatcher(type))
 })
 
-function setTimeoutErrorTest(type, matcher) {
+function setTimeoutErrorTest (type, matcher) {
   testDriver.test(`${type} - an error in setTimeout is noticed and harvested`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
@@ -50,7 +50,7 @@ function setTimeoutErrorTest(type, matcher) {
       t.end()
     }).catch(fail)
 
-    function fail(err) {
+    function fail (err) {
       t.error(err)
       t.end()
     }

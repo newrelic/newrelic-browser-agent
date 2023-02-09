@@ -104,9 +104,9 @@ export function computeStackTrace (ex) {
   }
 
   return {
-    'mode': 'failed',
-    'stackString': '',
-    'frames': []
+    mode: 'failed',
+    stackString: '',
+    frames: []
   }
 }
 
@@ -124,17 +124,17 @@ function computeStackTraceFromStackProp (ex) {
   var errorInfo = reduce(
     ex.stack.split('\n'),
     parseStackProp,
-    {frames: [], stackLines: [], wrapperSeen: false}
+    { frames: [], stackLines: [], wrapperSeen: false }
   )
 
   if (!errorInfo.frames.length) return null
 
   return {
-    'mode': 'stack',
-    'name': ex.name || getClassName(ex),
-    'message': ex.message,
-    'stackString': formatStackTrace(errorInfo.stackLines),
-    'frames': errorInfo.frames
+    mode: 'stack',
+    name: ex.name || getClassName(ex),
+    message: ex.message,
+    stackString: formatStackTrace(errorInfo.stackLines),
+    frames: errorInfo.frames
   }
 }
 
@@ -159,15 +159,15 @@ function getElement (line) {
 
   if (parts) {
     return ({
-      'url': parts[2],
-      'func': (parts[1] !== 'Anonymous function' && parts[1] !== 'global code' && parts[1]) || null,
-      'line': +parts[3],
-      'column': parts[4] ? +parts[4] : null
+      url: parts[2],
+      func: (parts[1] !== 'Anonymous function' && parts[1] !== 'global code' && parts[1]) || null,
+      line: +parts[3],
+      column: parts[4] ? +parts[4] : null
     })
   }
 
   if (line.match(chrome_eval) || line.match(ie_eval) || line === 'anonymous') {
-    return { 'func': 'evaluated code' }
+    return { func: 'evaluated code' }
   }
 }
 
@@ -179,12 +179,12 @@ function computeStackTraceBySourceAndLine (ex) {
   // Safari does not provide a URL for errors in eval'd code
   if (!ex.sourceURL) {
     return ({
-      'mode': 'sourceline',
-      'name': className,
-      'message': ex.message,
-      'stackString': getClassName(ex) + ': ' + ex.message + '\n    in evaluated code',
-      'frames': [{
-        'func': 'evaluated code'
+      mode: 'sourceline',
+      name: className,
+      message: ex.message,
+      stackString: getClassName(ex) + ': ' + ex.message + '\n    in evaluated code',
+      frames: [{
+        func: 'evaluated code'
       }]
     })
   }
@@ -198,13 +198,14 @@ function computeStackTraceBySourceAndLine (ex) {
   }
 
   return ({
-    'mode': 'sourceline',
-    'name': className,
-    'message': ex.message,
-    'stackString': stackString,
-    'frames': [{ 'url': ex.sourceURL,
-      'line': ex.line,
-      'column': ex.column
+    mode: 'sourceline',
+    name: className,
+    message: ex.message,
+    stackString: stackString,
+    frames: [{
+      url: ex.sourceURL,
+      line: ex.line,
+      column: ex.column
     }]
   })
 }
@@ -214,11 +215,11 @@ function computeStackTraceWithMessageOnly (ex) {
   if (!className) return null
 
   return ({
-    'mode': 'nameonly',
-    'name': className,
-    'message': ex.message,
-    'stackString': className + ': ' + ex.message,
-    'frames': []
+    mode: 'nameonly',
+    name: className,
+    message: ex.message,
+    stackString: className + ': ' + ex.message,
+    frames: []
   })
 }
 

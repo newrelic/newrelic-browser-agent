@@ -16,7 +16,7 @@ import { isBrowserScope } from '../../../common/util/global-scope'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor(agentIdentifier, aggregator) {
+  constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     this.eventsPerMinute = 240
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_action.harvestTimeSeconds') || getConfigurationValue(this.agentIdentifier, 'ins.harvestTimeSeconds') || 30
@@ -26,7 +26,7 @@ export class Aggregate extends AggregateBase {
 
     this.events = []
 
-    this.att = getInfo(this.agentIdentifier).jsAttributes;  // per-agent, aggregators-shared info context
+    this.att = getInfo(this.agentIdentifier).jsAttributes // per-agent, aggregators-shared info context
 
     if (isBrowserScope && document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
@@ -34,8 +34,8 @@ export class Aggregate extends AggregateBase {
 
     var scheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
     scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
-    this.ee.on(`drain-${this.featureName}`, () => {if (!this.blocked) scheduler.startTimer(this.harvestTimeSeconds, 0)})
-    
+    this.ee.on(`drain-${this.featureName}`, () => { if (!this.blocked) scheduler.startTimer(this.harvestTimeSeconds, 0) })
+
     // if rum response determines that customer lacks entitlements for ins endpoint, block it
     register('block-ins', () => {
       this.blocked = true
@@ -45,7 +45,7 @@ export class Aggregate extends AggregateBase {
     drain(this.agentIdentifier, this.featureName)
   }
 
-  onHarvestStarted(options) {
+  onHarvestStarted (options) {
     const { userAttributes, atts } = getInfo(this.agentIdentifier)
     var payload = ({
       qs: {
@@ -65,7 +65,7 @@ export class Aggregate extends AggregateBase {
     return payload
   }
 
-  onHarvestFinished(result) {
+  onHarvestFinished (result) {
     if (result && result.sent && result.retry && this.currentEvents) {
       this.events = this.events.concat(this.currentEvents)
       this.currentEvents = null
@@ -73,7 +73,7 @@ export class Aggregate extends AggregateBase {
   }
 
   // WARNING: Insights times are in seconds. EXCEPT timestamp, which is in ms.
-  addPageAction(t, name, attributes) {
+  addPageAction (t, name, attributes) {
     if (this.events.length >= this.eventsPerHarvest || this.blocked) return
     var width
     var height
@@ -106,9 +106,8 @@ export class Aggregate extends AggregateBase {
 
     this.events.push(eventAttributes)
 
-    function set(key, val) {
+    function set (key, val) {
       eventAttributes[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
   }
 }
-

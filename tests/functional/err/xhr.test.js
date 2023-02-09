@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse} = require('./assertion-helpers')
+const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require('./assertion-helpers')
 
 let supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
   .exclude('ie@8')
@@ -32,7 +32,7 @@ testDriver.test('reporting errors from XHR callbacks', supported, function (t, b
       name: 'Error',
       message: 'xhr onload',
       stack: [
-        {f: 'XMLHttpRequest.goodxhr', u: xhrJSURL, l: 9}
+        { f: 'XMLHttpRequest.goodxhr', u: xhrJSURL, l: 9 }
       ]
     }]
 

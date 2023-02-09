@@ -20,7 +20,7 @@ var meta = {
 
 export function stringify (val) {
   try {
-    return str('', {'': val})
+    return str('', { '': val })
   } catch (e) {
     try {
       ee.emit('internal-error', [e])
@@ -32,10 +32,12 @@ export function stringify (val) {
 
 function quote (string) {
   escapable.lastIndex = 0
-  return escapable.test(string) ? '"' + string.replace(escapable, function (a) {
-    var c = meta[a]
-    return typeof c === 'string' ? c : '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4)
-  }) + '"' : '"' + string + '"'
+  return escapable.test(string)
+    ? '"' + string.replace(escapable, function (a) {
+      var c = meta[a]
+      return typeof c === 'string' ? c : '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4)
+    }) + '"'
+    : '"' + string + '"'
 }
 
 function str (key, holder) {

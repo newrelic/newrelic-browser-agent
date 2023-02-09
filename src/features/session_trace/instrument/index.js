@@ -16,15 +16,15 @@ const {
   BST_RESOURCE, BST_TIMER, END, FEATURE_NAME, FN_END, FN_START, ADD_EVENT_LISTENER,
   PUSH_STATE, RESOURCE, RESOURCE_TIMING_BUFFER_FULL, START, ORIG_EVENT: origEvent
 } = CONSTANTS
-const CRT = "clearResourceTimings";
+const CRT = 'clearResourceTimings'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor(agentIdentifier, aggregator, auto=true) {
+  constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    if (!isBrowserScope) return; // session traces not supported outside web env
+    if (!isBrowserScope) return // session traces not supported outside web env
 
-    const thisInstrumentEE = this.ee;
+    const thisInstrumentEE = this.ee
     this.timerEE = wrapTimer(thisInstrumentEE)
     this.rafEE = wrapRaf(thisInstrumentEE)
     wrapHistory(thisInstrumentEE)
@@ -40,7 +40,6 @@ export class Instrument extends InstrumentBase {
     thisInstrumentEE.on(FN_END, function (args, target) {
       var evt = args[0]
       if (evt instanceof origEvent) {
-
         // ISSUE: when target is XMLHttpRequest, nr@context should have params so we can calculate event origin
         // When ajax is disabled, this may fail without making ajax a dependency of session_trace
         handle('bst', [evt, target, this.bstStart, now()], undefined, FEATURE_NAMES.sessionTrace, thisInstrumentEE)
@@ -80,10 +79,10 @@ export class Instrument extends InstrumentBase {
     } else {
       // collect resource timings once when buffer is full
       if (window.performance[CRT] && window.performance[ADD_EVENT_LISTENER])
-        window.performance.addEventListener(RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, eventListenerOpts(false));
+      { window.performance.addEventListener(RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, eventListenerOpts(false)) }
     }
 
-    function observeResourceTimings() {
+    function observeResourceTimings () {
       var observer = new PerformanceObserver((list, observer) => { // eslint-disable-line no-undef
         var entries = list.getEntries()
 
@@ -101,30 +100,30 @@ export class Instrument extends InstrumentBase {
     document.addEventListener('keypress', this.noOp, eventListenerOpts(false))
     document.addEventListener('click', this.noOp, eventListenerOpts(false))
 
-    this.abortHandler = this.#abort;
-    this.importAggregator();
+    this.abortHandler = this.#abort
+    this.importAggregator()
   }
 
   /** Restoration and resource release tasks to be done if Session trace loader is being aborted. Unwind changes to globals. */
-  #abort() {
-    window.performance.removeEventListener(RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false);
+  #abort () {
+    window.performance.removeEventListener(RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false)
     // The doc interaction noOp listeners are harmless--cannot buffer data into EE.
-    unwrapTimer(this.ee);
-    unwrapRaf(this.ee);
-    unwrapHistory(this.ee);
-    unwrapEvents(this.ee);
-    this.abortHandler = undefined; // weakly allow this abort op to run only once
+    unwrapTimer(this.ee)
+    unwrapRaf(this.ee)
+    unwrapHistory(this.ee)
+    unwrapEvents(this.ee)
+    this.abortHandler = undefined // weakly allow this abort op to run only once
   }
 
-  noOp(e) { /* no-op */ }
+  noOp (e) { /* no-op */ }
 
-  onResourceTimingBufferFull(evt) {
-    handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)], undefined, FEATURE_NAMES.sessionTrace, this.ee);
+  onResourceTimingBufferFull (evt) {
+    handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)], undefined, FEATURE_NAMES.sessionTrace, this.ee)
 
     // stop recording once buffer is full
     if (window.performance[CRT]) {
       try {
-        window.performance.removeEventListener(RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false);
+        window.performance.removeEventListener(RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false)
       } catch (e) {}
     }
   }

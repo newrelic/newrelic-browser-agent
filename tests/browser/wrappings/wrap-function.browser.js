@@ -7,13 +7,13 @@ import { setup } from '../utils/setup'
 import createWrapperWithEmitter from '../../../src/common/wrap/wrap-function'
 import test from 'jil/browser-test'
 
-const { baseEE } = setup();
-const wrapFn = createWrapperWithEmitter(baseEE);
+const { baseEE } = setup()
+const wrapFn = createWrapperWithEmitter(baseEE)
 
 // set a prop to make sure it gets copied (nonenumerable on modern platforms)
 args.foobar = 100
 
-var obj = {args: args, takesTime: takesTime, errors: errors}
+var obj = { args: args, takesTime: takesTime, errors: errors }
 
 test('Wrap Function', function (t) {
   var wArgs = wrapFn(args)
@@ -22,7 +22,7 @@ test('Wrap Function', function (t) {
 
   t.equal(wArgs.foobar, 100, 'Props coppied from original fn')
 
-  wrapFn.inPlace(obj, [ 'args', 'takesTime', 'errors' ], '-', thisCtx)
+  wrapFn.inPlace(obj, ['args', 'takesTime', 'errors'], '-', thisCtx)
 
   if (Object.defineProperty && Object.keys) {
     wArgs.foobar = 2

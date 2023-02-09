@@ -24,7 +24,7 @@ testDriver.test('spa page urls include the hash fragment', supported, function (
         return eventData
       })
     })
-    .then(({query, body}) => {
+    .then(({ query, body }) => {
       // make sure the newURL has the hash change
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.ok(/#\d/.test(interactionTree.newURL), 'the url should contain the hash fragment')

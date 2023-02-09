@@ -4,8 +4,8 @@
  */
 
 const testDriver = require('../../tools/jil/index')
-const {fail, getTime} = require('./uncat-internal-help.cjs')
-const {getErrorsFromResponse} = require('./err/assertion-helpers')
+const { fail, getTime } = require('./uncat-internal-help.cjs')
+const { getErrorsFromResponse } = require('./err/assertion-helpers')
 
 const asserters = testDriver.asserters
 let withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
@@ -32,7 +32,7 @@ testDriver.test('customTransactionName 1 arg', function (t, browser, router) {
 
       t.end()
     })
-    .catch(fail(t));
+    .catch(fail(t))
 })
 
 testDriver.test('customTransactionName 1 arg unload', withUnload, function (t, browser, router) {
@@ -49,7 +49,7 @@ testDriver.test('customTransactionName 1 arg unload', withUnload, function (t, b
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([{body, query}]) => {
+    .then(([{ body, query }]) => {
       const time = getTime(body ? JSON.parse(body)?.cm : JSON.parse(query.cm))
       t.equal(
         query.ct,
@@ -60,7 +60,7 @@ testDriver.test('customTransactionName 1 arg unload', withUnload, function (t, b
       t.ok(time > 0, 'Finished time XHR > 0 (1 arg)')
       t.end()
     })
-    .catch(fail(t));
+    .catch(fail(t))
 })
 
 testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser, router) {
@@ -80,7 +80,7 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([{body, query}]) => {
+    .then(([{ body, query }]) => {
       const time = getTime(body ? JSON.parse(body).cm : JSON.parse(query.cm))
       t.equal(
         query.ct,
@@ -96,9 +96,8 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
       }
       t.end()
     })
-    .catch(fail(t));
+    .catch(fail(t))
 })
-
 
 testDriver.test('noticeError takes an error object', withUnload, function (t, browser, router) {
   t.plan(2)
@@ -128,7 +127,7 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
         fail(t)('No error data was received.')
       }
     })
-    .catch(fail(t));
+    .catch(fail(t))
 })
 
 testDriver.test('noticeError takes a string', withUnload, function (t, browser, router) {
@@ -159,7 +158,7 @@ testDriver.test('noticeError takes a string', withUnload, function (t, browser, 
         fail(t)('No error data was received.')
       }
     })
-    .catch(fail(t));
+    .catch(fail(t))
 })
 
 testDriver.test('finished records a PageAction when called before RUM message', function (t, browser, router) {
@@ -190,7 +189,7 @@ testDriver.test('finished records a PageAction when called before RUM message', 
       t.equal(insData[0].actionName, 'finished', 'PageAction has actionName = finished')
       t.end()
     })
-    .catch(fail(t));
+    .catch(fail(t))
 })
 
 testDriver.test('release api adds releases to jserrors', withUnload, function (t, browser, router) {
@@ -215,11 +214,11 @@ testDriver.test('release api adds releases to jserrors', withUnload, function (t
         return errorData
       })
     })
-    .then(({query, body}) => {
+    .then(({ query, body }) => {
       t.equal(query.ri, '{"example":"123","other":"456"}', 'should have expected value for ri query param')
       t.end()
     })
-    .catch(fail(t));
+    .catch(fail(t))
 })
 
 testDriver.test('release api limits releases to jserrors', withUnload, function (t, browser, router) {
@@ -244,7 +243,7 @@ testDriver.test('release api limits releases to jserrors', withUnload, function 
         return errorData
       })
     })
-    .then(({query, body}) => {
+    .then(({ query, body }) => {
       const queryRi = JSON.parse(query.ri)
       const ri = {
         one: '1',
@@ -261,7 +260,7 @@ testDriver.test('release api limits releases to jserrors', withUnload, function 
       t.deepEqual(queryRi, ri, `${JSON.stringify(ri)} is expected but got ${JSON.stringify(queryRi)}`)
       t.end()
     })
-    .catch(fail(t));
+    .catch(fail(t))
 })
 
 testDriver.test('release api limits release size to jserrors', withUnload, function (t, browser, router) {
@@ -286,7 +285,7 @@ testDriver.test('release api limits release size to jserrors', withUnload, funct
         return errorData
       })
     })
-    .then(({query, body}) => {
+    .then(({ query, body }) => {
       const ninetyNineY = 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy'
       const oneHundredX = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
       const twoHundredCharacterString = ninetyNineY + oneHundredX + 'q'
@@ -300,7 +299,7 @@ testDriver.test('release api limits release size to jserrors', withUnload, funct
       t.deepEqual(queryRi, ri, `${JSON.stringify(ri)} is expected but got ${JSON.stringify(queryRi)}`)
       t.end()
     })
-    .catch(fail(t));
+    .catch(fail(t))
 })
 
 testDriver.test('no query param when release is not set', withUnload, function (t, browser, router) {
@@ -325,16 +324,16 @@ testDriver.test('no query param when release is not set', withUnload, function (
         return errorData
       })
     })
-    .then(({query, body}) => {
+    .then(({ query, body }) => {
       t.notOk('ri' in query, 'should not have ri query param')
       t.end()
     })
-    .catch(fail(t));
+    .catch(fail(t))
 })
 
 testDriver.test('api is available when sessionStorage is not', function (t, browser, router) {
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(router.assetURL('api/session-storage-disallowed.html'));
+  let loadPromise = browser.get(router.assetURL('api/session-storage-disallowed.html'))
 
   Promise.all([loadPromise, rumPromise])
     .then(() =>
@@ -343,5 +342,5 @@ testDriver.test('api is available when sessionStorage is not', function (t, brow
       t.ok(result)
       t.end()
     })
-    .catch(fail(t));
+    .catch(fail(t))
 })

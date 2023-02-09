@@ -9,4 +9,4 @@
 //     Stores the uncaught error.
 //     Calls the original window.onerror handler.
 //       Throws the error that reports back that it was called.
-;(function uncaughtError () { throw new Error('uncaught error') })()
+(function uncaughtError () { throw new Error('uncaught error') })()

@@ -61,7 +61,7 @@ if (launchedFromCli) {
   loadBrowsersAndRunTests()
 }
 
-function loadDefaultFiles(cb) {
+function loadDefaultFiles (cb) {
   let globOpts = { cwd: path.resolve(__dirname, '../../..') }
 
   let fileGlob = 'tests/@(browser|functional)/**/*.@(browser|test).js'
@@ -74,7 +74,7 @@ function loadDefaultFiles(cb) {
   })
 }
 
-function loadFiles(testFiles, cb) {
+function loadFiles (testFiles, cb) {
   for (let file of testFiles) {
     file = resolve(process.cwd(), file)
     if (file.slice(-11) === '.browser.js') {
@@ -93,7 +93,7 @@ function loadFiles(testFiles, cb) {
   if (cb) cb()
 }
 
-function getBuildIdentifier() {
+function getBuildIdentifier () {
   let buildIdentifier = process.env.BUILD_NUMBER
   if (!buildIdentifier) {
     let identifier = Math.random().toString(16).slice(2)
@@ -102,7 +102,7 @@ function getBuildIdentifier() {
   return buildIdentifier
 }
 
-function loadBrowsersAndRunTests() {
+function loadBrowsersAndRunTests () {
   let browsers = browserList(config.browsers)
   if (!browsers || browsers.length === 0) {
     console.log('No browsers matched: ' + config.browsers)
@@ -111,7 +111,7 @@ function loadBrowsersAndRunTests() {
 
   startExternalServices(browsers, config, runTests)
 
-  function runTests(err) {
+  function runTests (err) {
     if (err) throw err
     for (let browser of browsers) {
       makeChild(browser)
@@ -120,7 +120,7 @@ function loadBrowsersAndRunTests() {
     testDriver.run(stopExternalServices)
   }
 
-  function makeChild(browser) {
+  function makeChild (browser) {
     let desired = browser.desired
     let connectionInfo = {}
 
@@ -133,7 +133,7 @@ function loadBrowsersAndRunTests() {
       connectionInfo = `http://${sauceCreds.username}:${sauceCreds.accessKey}@ondemand.saucelabs.com/wd/hub`
     }
 
-    if (browser.allowsExtendedDebugging()) desired.extendedDebugging = true;  // turn on JS console logs & HAR files in SauceLabs
+    if (browser.allowsExtendedDebugging()) desired.extendedDebugging = true // turn on JS console logs & HAR files in SauceLabs
 
     desired.build = buildIdentifier
     desired.name = `${buildIdentifier}-${browser.toString()}`
@@ -155,4 +155,3 @@ function loadBrowsersAndRunTests() {
     testDriver.addBrowser(connectionInfo, desired)
   }
 }
-

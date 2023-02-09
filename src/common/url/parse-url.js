@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { globalScope, isBrowserScope } from '../util/global-scope';
+import { globalScope, isBrowserScope } from '../util/global-scope'
 
 var stringsToParsedUrls = {}
 
-export function parseUrl(url) {
+export function parseUrl (url) {
   if (url in stringsToParsedUrls) {
     return stringsToParsedUrls[url]
   }
@@ -19,7 +19,7 @@ export function parseUrl(url) {
     }
   }
 
-  let urlEl;
+  let urlEl
   var location = globalScope?.location
   var ret = {}
 

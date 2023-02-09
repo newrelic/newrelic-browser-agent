@@ -7,7 +7,7 @@ const charm = require('charm')
 const encode = require('charm/lib/encode')
 const BaseFormatter = require('./base-formatter')
 const debounce = require('just-debounce')
-const {format} = require('util')
+const { format } = require('util')
 
 let colorCodes = {
   red: 31,
@@ -185,7 +185,7 @@ class DefaultFormatter extends BaseFormatter {
     let assertionCountWidth = maxAssertions.toString().length
 
     // write test status
-    for (let {parser, data} of this.rows) {
+    for (let { parser, data } of this.rows) {
       this.lines += 1
       let line = this.renderRowStatus(parser) + ' ' + this.renderCounts(data, assertionCountWidth)
       output += this.computeLine(parser.name, line)

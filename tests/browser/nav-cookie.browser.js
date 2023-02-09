@@ -9,12 +9,12 @@ import { setConfiguration } from '../../src/common/config/config'
 import * as navCookie from '../../src/common/cookie/nav-cookie'
 import * as startTime from '../../src/common/timing/start-time'
 
-const { agentIdentifier } = setup();
-startTime.findStartTime(agentIdentifier);
+const { agentIdentifier } = setup()
+startTime.findStartTime(agentIdentifier)
 
 test('nav cookie is set by default', function (t) {
   var called = false
-  navCookie.setCookie = function() {
+  navCookie.setCookie = function () {
     called = true
   }
 
@@ -27,7 +27,7 @@ test('nav cookie is set by default', function (t) {
 
 test('nav cookie is set if user tracking is enabled', function (t) {
   var called = false
-  navCookie.setCookie = function() {
+  navCookie.setCookie = function () {
     called = true
   }
 
@@ -35,7 +35,7 @@ test('nav cookie is set if user tracking is enabled', function (t) {
     privacy: {
       cookies_enabled: true
     }
-  });
+  })
 
   startTime.navCookie = true
   navCookie.conditionallySet(agentIdentifier)
@@ -46,7 +46,7 @@ test('nav cookie is set if user tracking is enabled', function (t) {
 
 test('nav cookie is not set if user tracking is disabled', function (t) {
   var called = false
-  navCookie.setCookie = function() {
+  navCookie.setCookie = function () {
     called = true
   }
 
@@ -54,7 +54,7 @@ test('nav cookie is not set if user tracking is disabled', function (t) {
     privacy: {
       cookies_enabled: false
     }
-  });
+  })
 
   startTime.navCookie = true
   navCookie.conditionallySet(agentIdentifier)
@@ -65,7 +65,7 @@ test('nav cookie is not set if user tracking is disabled', function (t) {
 
 test('nav cookie is not set if performance API is available ', function (t) {
   var called = false
-  navCookie.setCookie = function() {
+  navCookie.setCookie = function () {
     called = true
   }
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {exists} from './performance-check'
+import { exists } from './performance-check'
 
 var lastTimestamp = new Date().getTime()
 var offset = lastTimestamp
@@ -16,7 +16,7 @@ export function now () {
   return (lastTimestamp = Math.max(new Date().getTime(), lastTimestamp)) - offset
 }
 
-export function getLastTimestamp() {
+export function getLastTimestamp () {
   return lastTimestamp
 }
 

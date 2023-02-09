@@ -5,7 +5,7 @@
 
 var jil = require('jil')
 import { protocol } from '../../src/common/url/protocol'
-import { setScope, resetScope } from '../../src/common/util/global-scope';
+import { setScope, resetScope } from '../../src/common/util/global-scope'
 
 var fileLocation = {
   hash: '',

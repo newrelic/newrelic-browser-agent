@@ -21,7 +21,7 @@ testDriver.test('DT headers are NOT added when the feature is not enabled (defau
   let meowPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') })
 
   Promise.all([meowPromise, loadPromise])
-    .then(([{headers}]) => {
+    .then(([{ headers }]) => {
       t.notOk(headers['newrelic'], 'newrelic header should not be present')
       t.notOk(headers['traceparent'], 'traceparent header should not be present')
       t.notOk(headers['tracestate'], 'tracestate header should not be present')
@@ -54,7 +54,7 @@ testDriver.test('XHR request on same origin has DT headers', supported, function
   let meowPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') })
 
   Promise.all([meowPromise, loadPromise])
-    .then(([{headers}]) => {
+    .then(([{ headers }]) => {
       t.ok(headers['newrelic'], 'newrelic header should be present')
 
       // newrelic header
@@ -129,7 +129,7 @@ testDriver.test('XHR request on same origin has no newrelic header when disabled
     { testId: router.testID, injectUpdatedLoaderConfig: true, config, init }, true))
 
   Promise.all([meowPromise, loadPromise])
-    .then(([{headers}]) => {
+    .then(([{ headers }]) => {
       t.notOk(headers['newrelic'], 'newrelic header should not be present')
       t.ok(headers['traceparent'], 'traceparent header should be present')
       t.ok(headers['tracestate'], 'tracestate header should be present')
@@ -166,7 +166,7 @@ testDriver.test('XHR request on different origin has no DT headers', supported, 
   let meowPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') })
 
   Promise.all([meowPromise, loadPromise])
-    .then(([{headers}]) => {
+    .then(([{ headers }]) => {
       t.notOk(headers['newrelic'], 'newrelic header should not be present')
       t.notOk(headers['traceparent'], 'traceparent header should not be present')
       t.notOk(headers['tracestate'], 'tracestate header should not be present')

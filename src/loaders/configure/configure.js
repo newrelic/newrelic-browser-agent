@@ -22,20 +22,11 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   setLoaderConfig(agentIdentifier, loader_config || {})
   setRuntime(agentIdentifier, runtime)
 
-  setAPI(agentIdentifier, api, forceDrain)
-  gosNREUMInitializedAgents(agentIdentifier, nr, 'api')
-  gosNREUMInitializedAgents(agentIdentifier, exposed, 'exposed')
-
-  addToNREUM('activatedFeatures', activatedFeatures)
-  addToNREUM('setToken', (flags) => activateFeatures(flags, agentIdentifier))
-
   const api = setAPI(agentIdentifier, forceDrain)
   gosNREUMInitializedAgents(agentIdentifier, api, 'api')
   gosNREUMInitializedAgents(agentIdentifier, exposed, 'exposed')
-  if (!isWorkerScope) {
-    addToNREUM('activatedFeatures', activatedFeatures)
-    addToNREUM('setToken', (flags) => activateFeatures(flags, agentIdentifier))
-  }
+  addToNREUM('activatedFeatures', activatedFeatures)
+  addToNREUM('setToken', (flags) => activateFeatures(flags, agentIdentifier))
 
   return api
 }

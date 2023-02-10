@@ -7,7 +7,7 @@ import { mapOwn } from '../../common/util/map-own'
 import { single } from '../../common/util/single'
 import { submitData } from '../../common/util/submit-data'
 import { isBrowserScope } from '../../common/util/global-scope'
-import { CUSTOM_METRIC_CHANNEL } from "../../features/metrics/constants"
+import { CUSTOM_METRIC_CHANNEL } from '../../features/metrics/constants'
 
 export function setAPI (agentIdentifier) {
   var instanceEE = ee.get(agentIdentifier)

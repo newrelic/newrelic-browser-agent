@@ -7,8 +7,8 @@ const metricName = 'test'
 const sLabel = constants.SUPPORTABILITY_METRIC
 const cLabel = constants.CUSTOM_METRIC
 
-const { aggregator: agg, agentIdentifier } = setup();
-const metricsAggreg = new MetricsAggreg(agentIdentifier, agg);
+const { aggregator: agg, agentIdentifier } = setup()
+const metricsAggreg = new MetricsAggreg(agentIdentifier, agg)
 
 function sum_sq (array) {
   let sum = 0

@@ -61,11 +61,13 @@ export class Aggregate extends AggregateBase {
     if (loaderType) this.storeSupportabilityMetrics(`Generic/LoaderType/${loaderType}/Detected`)
 
     // frameworks on page
-    if (isBrowserScope) { onDOMContentLoaded(() => {
-      getFrameworks().forEach(framework => {
-        this.storeSupportabilityMetrics('Framework/' + framework + '/Detected')
+    if (isBrowserScope) {
+      onDOMContentLoaded(() => {
+        getFrameworks().forEach(framework => {
+          this.storeSupportabilityMetrics('Framework/' + framework + '/Detected')
+        })
       })
-    }) }
+    }
 
     // file protocol detection
     if (protocol.isFileProtocol()) {
@@ -93,8 +95,7 @@ export class Aggregate extends AggregateBase {
 
     // [Temporary] Report restores from BFCache to NR1 while feature flag is in place in lieu of sending pageshow events.
     windowAddEventListener('pageshow', (evt) => {
-      if (evt.persisted)
-      { this.storeSupportabilityMetrics('Generic/BFCache/PageRestored') }
+      if (evt.persisted) { this.storeSupportabilityMetrics('Generic/BFCache/PageRestored') }
       return
     })
   }

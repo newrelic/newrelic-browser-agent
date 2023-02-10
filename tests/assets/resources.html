@@ -1,12 +1,25 @@
 <html>
   <head>
     {init} {config} {loader}
-    <script src="https://api.publicapis.org/entries"></script>
+    <!-- internal, should only count toward 'all' -->
+    <script src="/js"></script>
   </head>
   <body>
-    <img src="https://images.dog.ceo/breeds/basenji/n02110806_2630.jpg" />
-    <audio>
-      <source src="http://www.example.com/horse.ogg" type="audio/ogg" />
-    </audio>
+    <!-- internal, should only count toward 'all' -->
+    <img src="/image" />
+    <!-- external, should count toward 'all' and 'external' -->
+    <img
+      src="https://media.giphy.com/media/Y4pAQv58ETJgRwoLxj/giphy-downsized-large.gif"
+    />
+    <!-- external, should count toward 'all' and 'external' -->
+    <iframe
+      width="560"
+      height="315"
+      src="https://www.youtube.com/embed/Jjql2hBR7Dw"
+      title="YouTube video player"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen
+    ></iframe>
   </body>
 </html>

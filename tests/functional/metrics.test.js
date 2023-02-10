@@ -42,13 +42,12 @@ function loaderTypeSupportabilityMetric (loaderType) {
 }
 
 testDriver.test('agent tracks resources seen', withUnload, function (t, browser, router) {
-  let rumPromise = router.expectRum()
   let metricsPromise = router.expectMetrics()
   const loadPromise = browser.safeGet(router.assetURL('resources.html', {
-    init
+    init: { ...init, page_view_event: { enabled: false } }
   }))
 
-  Promise.all([metricsPromise, rumPromise, loadPromise])
+  Promise.all([metricsPromise, loadPromise])
     .then(([data]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       const external = supportabilityMetrics.find(x => x.params.name.includes('Resources/External'))
@@ -56,8 +55,12 @@ testDriver.test('agent tracks resources seen', withUnload, function (t, browser,
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
       t.ok(!!external, 'External was captured')
       t.ok(!!all, 'All was captured')
+
+      t.ok(!!external.stats.t, 'External has a value')
+      t.ok(!!all.stats.t, 'All has a value')
+
       t.ok(external.stats.t <= all.stats.t, 'External should not exceed all')
-      t.ok(external.stats.t === 3, 'Page has 3 external resources that should be observed')
+      t.ok(external.stats.t === 2, 'Page has 2 external resources that should be observed')
       t.end()
     })
     .catch(failWithEndTimeout(t))
@@ -81,12 +84,9 @@ testDriver.test('Calling a newrelic[api] fn creates a supportability metric', wi
         const match = asyncApiFns.find(x => x === sm.params.name)
         if (match) observedAPImetrics.push(match)
 
-        if (sm.params.name === multipleApiCalls)
-        { t.equal(sm.stats.c, 5, sm.params.name + ' count was incremented by 1 until reached 5') }
-        else if (sm.params.name.startsWith('Workers/'))
-        { continue } // these metrics have an unreliable count dependent & are tested separately anyways
-        else
-        { t.equal(sm.stats.c, 1, sm.params.name + ' count was incremented by 1') }
+        if (sm.params.name === multipleApiCalls) { t.equal(sm.stats.c, 5, sm.params.name + ' count was incremented by 1 until reached 5') }
+        else if (sm.params.name.startsWith('Workers/')) { continue } // these metrics have an unreliable count dependent & are tested separately anyways
+        else { t.equal(sm.stats.c, 1, sm.params.name + ' count was incremented by 1') }
       }
 
       t.ok(observedAPImetrics.length === asyncApiFns.length, 'Saw all asyncApiFns')

@@ -9,7 +9,7 @@ import { getConfigurationValue, getInfo, getRuntime } from '../../../common/conf
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
-import { getFeatureFlags } from './initialized-features'
+import { getActivatedFeaturesFlags } from './initialized-features'
 
 const jsonp = 'NREUM.setToken'
 
@@ -59,7 +59,7 @@ export class Aggregate extends AggregateBase {
     chunksForQueryString.push(param('us', info.user))
     chunksForQueryString.push(param('ac', info.account))
     chunksForQueryString.push(param('pr', info.product))
-    chunksForQueryString.push(param('af', getFeatureFlags(this.agentIdentifier).join(',')))
+    chunksForQueryString.push(param('af', getActivatedFeaturesFlags(this.agentIdentifier).join(',')))
 
     if (window.performance && typeof (window.performance.timing) !== 'undefined') {
       var navTimingApiData = ({

@@ -6,7 +6,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
  * @param {String} agentId - the ID of the initialized agent on the page, mapping to the one under the global 'newrelic' object
  * @returns {String[]} Up to 5 short strings corresponding to ingest mapping of features.
  */
-export function getFeatureFlags (agentId) {
+export function getActivatedFeaturesFlags (agentId) {
   const flagArr = []
 
   Object.keys(newrelic.initializedAgents[agentId].features).forEach(featName => {

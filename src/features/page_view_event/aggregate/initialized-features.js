@@ -4,7 +4,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
  * Get an array of flags required by downstream (NR UI) based on the features initialized in this agent
  * (aka what is running on the page).
  * @param {String} agentId - the ID of the initialized agent on the page, mapping to the one under the global 'newrelic' object
- * @returns {Array} Up to 5 short strings corresponding to ingest mapping of features.
+ * @returns {String[]} Up to 5 short strings corresponding to ingest mapping of features.
  */
 export function getFeatureFlags (agentId) {
   const flagArr = []

@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 . "$(dirname -- "$0")/_/husky.sh"
 
+# enable colored output in terminal
+export FORCE_COLOR=1
+
 npm run lint
 npm run unit -- --onlyChanged
 

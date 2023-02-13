@@ -11,15 +11,15 @@ const supportedFirstContentfulPaint = testDriver.Matcher.withFeature('firstConte
 const supportedLcp = testDriver.Matcher.withFeature('largestContentfulPaint')
 const supportedCls = testDriver.Matcher.withFeature('cumulativeLayoutShift')
 const supportsFirstInteraction = testDriver.Matcher.withFeature('supportsFirstInteraction')
-const supportsINP = testDriver.Matcher.withFeature('interactionToNextPaint');
-const supportsLT = testDriver.Matcher.withFeature('longTaskTiming');
+const supportsINP = testDriver.Matcher.withFeature('interactionToNextPaint')
+const supportsLT = testDriver.Matcher.withFeature('longTaskTiming')
 
 const isClickInteractionType = type => type === 'pointerdown' || type === 'mousedown' || type === 'click'
 function fail (t) {
   return (err) => {
-    t.error(err);
-    t.end();
-  };
+    t.error(err)
+    t.end()
+  }
 }
 
 runPaintTimingsTests('spa')
@@ -249,7 +249,7 @@ function runWindowUnloadTests (loader) {
   })
 }
 
-function runPageHideTests(loader) {
+function runPageHideTests (loader) {
   testDriver.test(`Timings on pagehide for ${loader} agent`, function (t, browser, router) {
     let start = Date.now()
     let url = router.assetURL('pagehide.html', { loader: loader })
@@ -276,15 +276,15 @@ function runPageHideTests(loader) {
         t.ok(timing.value <= duration, 'value should not be larger than time since start of the test')
 
         if (supportsINP.match(browser)) {
-          timing = timings.find(t => t.name === 'inp');
+          timing = timings.find(t => t.name === 'inp')
           t.ok(timing, 'there should be an INP timing')
-          t.ok(timing.value >= 8, 'value should be a positive number')  // the minimum INP value whenever any interaction occurs is 8 (ms) -- rounded up
+          t.ok(timing.value >= 8, 'value should be a positive number') // the minimum INP value whenever any interaction occurs is 8 (ms) -- rounded up
           t.ok(timing.value <= duration, 'value should not be larger than time since start of the test')
         }
 
         t.end()
       })
-      .catch(fail(t));
+      .catch(fail(t))
   })
 }
 
@@ -680,36 +680,36 @@ function runLcpTests (loader) {
   })
 }
 
-function runLongTasksTest(loader) {
+function runLongTasksTest (loader) {
   testDriver.test(`${loader}: emits long task timings when observed`, supportsLT, function (t, browser, router) {
     const rumPromise = router.expectRum()
     const loadPromise = browser.safeGet(router.assetURL('long-tasks.html', { loader: loader }))
-      .waitForConditionInBrowser('window.tasksDone === true');
+      .waitForConditionInBrowser('window.tasksDone === true')
 
     Promise.all([rumPromise, loadPromise])
       .then(() => {
-        let timingsPromise = router.expectTimings();
-        let domPromise = browser.get(router.assetURL('/'));
+        let timingsPromise = router.expectTimings()
+        let domPromise = browser.get(router.assetURL('/'))
         return Promise.all([timingsPromise, domPromise])
       })
       .then(({ request: timingsResult }) => {
         const {body, query} = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 
-        const ltEvents = timings.filter(t => t.name === 'lt');
-        t.ok(ltEvents.length == 2, "expected number of long tasks (2) observed");
+        const ltEvents = timings.filter(t => t.name === 'lt')
+        t.ok(ltEvents.length == 2, 'expected number of long tasks (2) observed')
 
         ltEvents.forEach((lt) => {
-          t.ok(lt.value >= 59, "task duration is roughly as expected")  // defined in some-long-task.js -- duration should be at least that value +/- 1ms
+          t.ok(lt.value >= 59, 'task duration is roughly as expected') // defined in some-long-task.js -- duration should be at least that value +/- 1ms
           // Attributes array should start with: [ltFrame, ltStart, ltCtr, (ltCtrSrc, ltCtrId, ltCtrName, )...]
-          t.ok(lt.attributes.length >= 3, "performancelongtasktiming properties are attached");
-          t.equal(lt.attributes[1].type, 'doubleAttribute', "entry startTime is a doubleAttribute");
+          t.ok(lt.attributes.length >= 3, 'performancelongtasktiming properties are attached')
+          t.equal(lt.attributes[1].type, 'doubleAttribute', 'entry startTime is a doubleAttribute')
           if (lt.attributes[2].value !== 'window')
-            t.equal(lt.attributes.length >= 6, "longtask attribution properties are attached");
-        });
+          { t.equal(lt.attributes.length >= 6, 'longtask attribution properties are attached') }
+        })
 
         t.end()
       })
-      .catch(fail(t));
-  });
+      .catch(fail(t))
+  })
 }

@@ -58,13 +58,13 @@ export class Instrument extends InstrumentBase {
     })
 
     /** Interaction-to-Next-Paint */
-    onINP(({name, value}) => {
-      handle('timing', [name.toLowerCase(), value], undefined, undefined, this.ee);
-    });
+    onINP(({ name, value }) => {
+      handle('timing', [name.toLowerCase(), value], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
+    })
 
-    onLongTask(({name, value, info}) => {
-      handle('timing', [name.toLowerCase(), value, info], undefined, undefined, this.ee); // lt context is passed as attrs in the timing node
-    });
+    onLongTask(({ name, value, info }) => {
+      handle('timing', [name.toLowerCase(), value, info], undefined, FEATURE_NAMES.pageViewTiming, this.ee) // lt context is passed as attrs in the timing node
+    })
 
     // Document visibility state becomes hidden
     subscribeToVisibilityChange(() => {

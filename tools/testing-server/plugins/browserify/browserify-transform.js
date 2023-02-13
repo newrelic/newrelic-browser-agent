@@ -1,7 +1,7 @@
 const { Transform } = require('stream')
 const browserify = require('browserify')
-const runnerArgs = require('jil/runner/args')
 const preprocessify = require('preprocessify')
+const babelEnv = require('../../../../babel-env-vars')
 
 function browserifyScript (scriptPath, enablePolyfills) {
   return new Promise((resolve, reject) => {
@@ -31,15 +31,10 @@ function browserifyScript (scriptPath, enablePolyfills) {
           '@babel/plugin-syntax-dynamic-import',
           '@babel/plugin-transform-modules-commonjs',
           '@babel/plugin-proposal-optional-chaining',
-          [
-            'module-resolver',
-            {
-              alias: {
-                '@newrelic/browser-agent-core/src':
-                  './dist/packages/browser-agent-core/src'
-              }
-            }
-          ]
+          // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
+          // assigning to a variable, which conflicts with template literals.
+          '@babel/plugin-transform-template-literals',
+          babelEnv('VERSION')
         ],
         global: true
       })

@@ -4,15 +4,19 @@ const { paths } = require('../../constants')
 const fs = require('fs')
 
 /**
- * Transforms requests for HTML files that contain the \{script\} string with the
- * deserialized script query param. If a script query param is not provided, the
- * string will simply be removed.
+ * Transforms requests for HTML files that contain string matchers for the injection
+ * of scripts.
+ *
+ * {script-injection} will be replaced with base64 decoded script query parameter
+ * {script} will be replaced with a script tag where the src attribute is the script query parameter
+ * {tests/assets/.*} will be replaced with file contents of the given path
  */
 module.exports = function (request, reply, testServer) {
   return new Transform({
     async transform (chunk, encoding, done) {
       let chunkString = chunk.toString()
 
+      // Replace {tests/assets/.*}
       const testScriptInjections = chunkString.matchAll(
         new RegExp(
           `{(${path.relative(paths.rootDir, paths.testsAssetsDir)}/.*?)}`,
@@ -34,19 +38,25 @@ module.exports = function (request, reply, testServer) {
         )
       }
 
+      // Replace {script}
       if (chunkString.indexOf('{script}') > -1) {
-        done(
-          null,
-          chunkString.replace(
-            '{script}',
-            `<script type="text/javascript" src="${
-              request.query.script || ''
-            }"></script>`
-          )
+        chunkString = chunkString.replace(
+          '{script}',
+          `<script type="text/javascript" src="${
+            request.query.script || ''
+          }"></script>`
         )
-      } else {
-        done(null, chunkString)
       }
+
+      // Replace {script-injection}
+      if (chunkString.indexOf('{script-injection}') > -1) {
+        chunkString = chunkString.replace(
+          '{script-injection}',
+          `<script type="text/javascript">${Buffer.from(request.query.scriptString || '', 'base64').toString()}</script>`
+        )
+      }
+
+      done(null, chunkString)
     }
   })
 }

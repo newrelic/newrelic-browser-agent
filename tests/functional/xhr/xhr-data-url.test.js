@@ -45,26 +45,26 @@ testDriver.test('Ignoring data url XHR events.', function (t, browser, router) {
     .then(() => {
       return router.expectAjaxEvents()
     })
-    .then(({request}) => {
+    .then(({ request }) => {
       const qpData = querypack.decode(request.body)
       const ajaxEvent = qpData.find(qpd => qpd.type === 'ajax' && qpd.domain === 'undefined:undefined')
       if (ajaxEvent) {
         // A payload here is unwanted because data URLs should not be included in XHR collection.
-        t.fail(`Should not have received an XHR event with undefined hostname.`)
+        t.fail('Should not have received an XHR event with undefined hostname.')
       } else {
-        t.pass(`Did not receive an XHR event for data URL.`)
+        t.pass('Did not receive an XHR event for data URL.')
       }
 
       return router.expectAjaxEvents()
     })
-    .then(({request}) => {
+    .then(({ request }) => {
       const qpData = querypack.decode(request.body)
       const harvestEvent = qpData.find(qpd => qpd.type === 'ajax' && qpd.path.startsWith('/events'))
       if (harvestEvent) {
         // A payload here is wanted.
-        t.pass(`Received events harvest.`)
+        t.pass('Received events harvest.')
       } else {
-        t.fail(`Did not receive events harvest.`)
+        t.fail('Did not receive events harvest.')
       }
       t.end()
     })

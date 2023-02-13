@@ -4,16 +4,15 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {fail, getXhrFromResponse} = require('./helpers')
+const { fail, getXhrFromResponse } = require('./helpers')
 
-const asserters = testDriver.asserters
 var supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 
 testDriver.test('no abort call in xhr request', supported, function (t, browser, router) {
   t.plan(12)
 
-  let rumPromise = router.expectRum()
-  let ajaxPromise = router.expectAjaxTimeSlices()
+  let rumPromise = router.expectRumAndCondition('window.xhrDone')
+  let xhrMetricsPromise = router.expectXHRMetrics()
   let loadPromise = browser.get(router.assetURL('xhr.html', {
     init: {
       page_view_timing: {
@@ -23,10 +22,10 @@ testDriver.test('no abort call in xhr request', supported, function (t, browser,
         enabled: false
       }
     }
-  })).waitFor(asserters.jsCondition('window.xhrDone'))
+  }))
 
-  Promise.all([ajaxPromise, rumPromise, loadPromise]).then(([{request}]) => {
-    const parsedXhrs = getXhrFromResponse(request, browser)
+  Promise.all([xhrMetricsPromise, rumPromise, loadPromise]).then(([response]) => {
+    const parsedXhrs = getXhrFromResponse(response, browser)
     t.ok(parsedXhrs, 'got XHR data')
     t.ok(parsedXhrs.length >= 1, 'has at least one XHR record')
     t.ok(parsedXhrs.find(function (xhr) {
@@ -51,8 +50,8 @@ testDriver.test('no abort call in xhr request', supported, function (t, browser,
 testDriver.test('xhr.abort() called in load callback', supported, function (t, browser, router) {
   t.plan(13)
 
-  let rumPromise = router.expectRum()
-  let ajaxPromise = router.expectAjaxTimeSlices()
+  let rumPromise = router.expectRumAndCondition('window.xhrDone')
+  let xhrMetricsPromise = router.expectXHRMetrics()
   let loadPromise = browser.get(router.assetURL('xhr-abort-onload.html', {
     init: {
       page_view_timing: {
@@ -62,10 +61,10 @@ testDriver.test('xhr.abort() called in load callback', supported, function (t, b
         enabled: false
       }
     }
-  })).waitFor(asserters.jsCondition('window.xhrDone'))
+  }))
 
-  Promise.all([ajaxPromise, rumPromise, loadPromise]).then(([{request}]) => {
-    const parsedXhrs = getXhrFromResponse(request, browser)
+  Promise.all([xhrMetricsPromise, rumPromise, loadPromise]).then(([response]) => {
+    const parsedXhrs = getXhrFromResponse(response, browser)
     t.ok(parsedXhrs, 'got XHR data')
     t.ok(parsedXhrs.length >= 1, 'has at least one XHR record')
     t.ok(parsedXhrs.find(function (xhr) {

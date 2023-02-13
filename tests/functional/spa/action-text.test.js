@@ -20,11 +20,11 @@ testDriver.test('captures innerText', supported, function (t, browser, router) {
   t.plan(5)
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init })).waitForFeature('loaded')
+  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([{request: eventsResult}]) => {
-      let {body, query} = eventsResult
+    .then(([eventsResult]) => {
+      let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
@@ -40,13 +40,13 @@ testDriver.test('captures innerText', supported, function (t, browser, router) {
         return eventData
       })
     })
-    .then(({request: {query, body}}) => {
+    .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
       t.deepEqual(interactionTree.children[0], {
-        'type': 'stringAttribute',
-        'key': 'actionText',
-        'value': '#1'
+        type: 'stringAttribute',
+        key: 'actionText',
+        value: '#1'
       })
     })
     .catch(fail)
@@ -61,11 +61,11 @@ testDriver.test('captures value', supported, function (t, browser, router) {
   t.plan(5)
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init })).waitForFeature('loaded')
+  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([{request: eventsResult}]) => {
-      let {body, query} = eventsResult
+    .then(([eventsResult]) => {
+      let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
@@ -81,13 +81,13 @@ testDriver.test('captures value', supported, function (t, browser, router) {
         return eventData
       })
     })
-    .then(({request: {query, body}}) => {
+    .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
       t.deepEqual(interactionTree.children[0], {
-        'type': 'stringAttribute',
-        'key': 'actionText',
-        'value': '#2'
+        type: 'stringAttribute',
+        key: 'actionText',
+        value: '#2'
       })
     })
     .catch(fail)
@@ -102,11 +102,11 @@ testDriver.test('captures title', supported, function (t, browser, router) {
   t.plan(5)
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init })).waitForFeature('loaded')
+  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([{request: eventsResult}]) => {
-      let {body, query} = eventsResult
+    .then(([eventsResult]) => {
+      let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
@@ -122,13 +122,13 @@ testDriver.test('captures title', supported, function (t, browser, router) {
         return eventData
       })
     })
-    .then(({request: {query, body}}) => {
+    .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
       t.deepEqual(interactionTree.children[0], {
-        'type': 'stringAttribute',
-        'key': 'actionText',
-        'value': '#3'
+        type: 'stringAttribute',
+        key: 'actionText',
+        value: '#3'
       })
     })
     .catch(fail)
@@ -143,11 +143,11 @@ testDriver.test('does not capture body text', supported, function (t, browser, r
   t.plan(4)
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init })).waitForFeature('loaded')
+  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([{request: eventsResult}]) => {
-      let {body, query} = eventsResult
+    .then(([eventsResult]) => {
+      let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
@@ -169,7 +169,7 @@ testDriver.test('does not capture body text', supported, function (t, browser, r
         return eventData
       })
     })
-    .then(({request: {query, body}}) => {
+    .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 0, 'expected no child nodes')
     })

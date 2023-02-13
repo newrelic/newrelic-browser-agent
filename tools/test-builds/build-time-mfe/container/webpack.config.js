@@ -25,7 +25,6 @@ module.exports = {
     minimize: false
   },
   devtool: 'source-map',
-  target: "es5", // include this!!
   module: {
     rules: [
       {

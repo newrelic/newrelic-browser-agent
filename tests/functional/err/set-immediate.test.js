@@ -15,7 +15,7 @@ testDriver.test('reporting errors from setImmediate callbacks', supported, funct
   let errorsPromise = router.expectErrors()
   let loadPromise = browser.get(assetURL).waitForConditionInBrowser('window.setImmediateFired')
 
-  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{request: {body, query}}]) => {
+  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{ request: { body, query } }]) => {
     assertErrorAttributes(t, query)
 
     let actualErrors = JSON.parse(body).err
@@ -31,7 +31,7 @@ testDriver.test('reporting errors from setImmediate callbacks', supported, funct
     t.end()
   }).catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }

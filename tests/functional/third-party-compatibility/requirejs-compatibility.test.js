@@ -16,7 +16,7 @@ const init = {
   }
 }
 
-testDriver.test(`Loading RequireJS does not cause errors.`, matcher, function (t, browser, router) {
+testDriver.test('Loading RequireJS does not cause errors.', matcher, function (t, browser, router) {
   t.plan(1)
 
   let rumPromise = router.expectRum()
@@ -29,7 +29,7 @@ testDriver.test(`Loading RequireJS does not cause errors.`, matcher, function (t
   })
   let loadPromise = browser.get(assetUrl)
 
-  Promise.all([rumPromise, loadPromise]).then(() => {
+  Promise.all([rumPromise, loadPromise]).then(([response]) => {
     t.pass()
     t.end()
   }).catch((err) => {

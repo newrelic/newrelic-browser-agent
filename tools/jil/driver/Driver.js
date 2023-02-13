@@ -4,7 +4,7 @@
  */
 
 const path = require('path')
-const {asserters} = require('wd')
+const { asserters } = require('wd')
 var newrelic = require('newrelic')
 const Matcher = require('../util/browser-matcher')
 const AssetServer = require('../../testing-server/index')
@@ -15,8 +15,8 @@ const TestEnv = require('./TestEnv')
 const TestRun = require('./TestRun')
 const TestHarness = require('./harness')
 const DeviceTest = require('./DeviceTest')
-const {BrowserSpec} = require('../util/browser-list')
-const {isSauceConnected} = require('../util/external-services')
+const { BrowserSpec } = require('../util/browser-list')
+const { isSauceConnected } = require('../util/external-services')
 const { v4: uuidV4 } = require('uuid')
 
 class Driver {
@@ -26,10 +26,10 @@ class Driver {
     this.testEnvs = []
     this.browserTestMatchers = {}
 
-    let agentConfig = {licenseKey: 'asdf', applicationID: 42, accountID: 123, agentID: 456, trustKey: 789}
+    let agentConfig = { licenseKey: 'asdf', applicationID: 42, accountID: 123, agentID: 456, trustKey: 789 }
     this.browserTests = []
     this.assetServer = new AssetServer(config, agentConfig, output)
-    this.serverStartPromise = this.assetServer.start(config.port);
+    this.serverStartPromise = this.assetServer.start(config.port)
     this.router = this.assetServer.router
     this.timeout = config.timeout = config.timeout || 32000
     this.output = output
@@ -38,13 +38,13 @@ class Driver {
     this.asserters = asserters
   }
 
-  ready(cb) {
+  ready (cb) {
     // Ensure the servers are up before starting the tests
     return this.serverStartPromise.then(() => {
       if (typeof cb === 'function') {
-        cb();
+        cb()
       }
-    });
+    })
   }
 
   addBrowser (connectionInfo, desired) {
@@ -90,7 +90,7 @@ class Driver {
   }
 
   generateID () {
-    return uuidV4();
+    return uuidV4()
   }
 
   // runs tests based on an array of DeviceTest objects
@@ -114,7 +114,7 @@ class Driver {
       if (err) {
         newrelic.noticeError(err)
         // exit early if an environment is not available
-        newrelic.shutdown({collectPendingData: true, timeout: 3000}, function() {
+        newrelic.shutdown({ collectPendingData: true, timeout: 3000 }, function () {
           process.exit(1)
         })
         return
@@ -198,7 +198,7 @@ class Driver {
           const handle = router.createTestHandle(id)
           let ended = false
 
-          t.on('result', function(result) {
+          t.on('result', function (result) {
             if (!result.ok) {
               var eventData = {
                 browserName: browserSpec.desired.browserName,
@@ -324,7 +324,7 @@ class Driver {
    * @param {Array.<DeviceTest>}  tests
    * @param {function} cb
    */
-  runDeviceTests(tests, cb) {
+  runDeviceTests (tests, cb) {
     let driver = this
     // find unique Browsers
     let testEnvs = findUniqueTestEnvs(tests)
@@ -339,7 +339,7 @@ class Driver {
       driver.output.log(`# retrying ${testsToRun.length} tests for ${browserSpec.toString()}`)
       this.ready(() => {
         this.runTestRun(testRun, testsToRun, true, onBrowserFinished)
-      });
+      })
       running.add(testRun)
     }
 
@@ -357,7 +357,7 @@ class Driver {
       }
     }
 
-    function findUniqueTestEnvs(tests) {
+    function findUniqueTestEnvs (tests) {
       return tests.map((test) => {
         return test.browserSpec
       })
@@ -380,7 +380,7 @@ class Driver {
         })
     }
 
-    function findTests(tests, browserSpec) {
+    function findTests (tests, browserSpec) {
       return tests.filter((test) => {
         return test.browserSpec.same(browserSpec)
       })

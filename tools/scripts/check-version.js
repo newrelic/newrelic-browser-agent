@@ -38,15 +38,14 @@ var config = require('yargs')
   .wrap(Math.min(110, yargs.terminalWidth()))
   .argv
 
-
 const buildDir = path.resolve(__dirname, '../../build/')
-const builtFileNames = fs.readdirSync(buildDir).filter(x => !config.m ? !x.endsWith('.map') : x )
+const builtFileNames = fs.readdirSync(buildDir).filter(x => !config.m ? !x.endsWith('.map') : x)
 const version = getVersionFromFilenames(builtFileNames)
 var errors = []
 
 validate()
 
-async function validate() {
+async function validate () {
   var checks = []
   for (var filename of builtFileNames) {
     checks.push(getFile(filename))
@@ -59,15 +58,15 @@ async function validate() {
   checkErrorsAndExit()
 }
 
-function getVersionFromFilenames(fileNames){
+function getVersionFromFilenames (fileNames) {
   return Array.from(fileNames.reduce((prev, next) => {
-    const parts = next.split(".")
-    if (parts.length === 2 && parts[1] === 'js') prev.add(parts[0].split("-")[parts[0].split("-").length - 1])
+    const parts = next.split('.')
+    if (parts.length === 2 && parts[1] === 'js') prev.add(parts[0].split('-')[parts[0].split('-').length - 1])
     return prev
   }, new Set()))[0]
 }
 
-function checkErrorsAndExit() {
+function checkErrorsAndExit () {
   if (errors.length > 0) {
     console.log('Validation failed:', errors)
     process.exit(1)
@@ -77,7 +76,7 @@ function checkErrorsAndExit() {
   }
 }
 
-function validateResponse(url, res, body) {
+function validateResponse (url, res, body) {
   if (config.exists === 'yes') {
     if (res.statusCode !== 200) {
       errors.push(url + ' does not exist, ' + res.statusCode)
@@ -93,7 +92,7 @@ function validateResponse(url, res, body) {
   }
 }
 
-function getFile(filename) {
+function getFile (filename) {
   var url = 'https://js-agent.newrelic.com/'
   if (config.d) url += 'dev/'
   else if (config.pr) url += 'pr/' + config.pr + '/'
@@ -103,7 +102,6 @@ function getFile(filename) {
     method: 'GET',
     gzip: true
   }
-
 
   console.log('checking ', url)
 

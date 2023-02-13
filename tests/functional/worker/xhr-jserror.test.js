@@ -4,11 +4,11 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {fail, getErrorsFromResponse} = require('../err/assertion-helpers')
-const {getXhrFromResponse} = require('../xhr/helpers')
-const {workerTypes, typeToMatcher} = require('./helpers')
+const { fail, getErrorsFromResponse } = require('../err/assertion-helpers')
+const { getXhrFromResponse } = require('../xhr/helpers')
+const { workerTypes, typeToMatcher } = require('./helpers')
 
-const supportsFetch = testDriver.Matcher.withFeature('fetch');
+const supportsFetch = testDriver.Matcher.withFeature('fetch')
 const init = {
   jserrors: {
     harvestTimeSeconds: 5
@@ -19,22 +19,22 @@ const init = {
 }
 
 workerTypes.forEach(type => {
-  const browsersWithOrWithoutModuleSupport = typeToMatcher(type);
-  xhrErrorTest(type, browsersWithOrWithoutModuleSupport);
+  const browsersWithOrWithoutModuleSupport = typeToMatcher(type)
+  xhrErrorTest(type, browsersWithOrWithoutModuleSupport)
 
-  submissionXhr(type, browsersWithOrWithoutModuleSupport);
-  submissionFetch(type, browsersWithOrWithoutModuleSupport.and(supportsFetch));
+  submissionXhr(type, browsersWithOrWithoutModuleSupport)
+  submissionFetch(type, browsersWithOrWithoutModuleSupport.and(supportsFetch))
 })
 
 // --- Tests ---
-function xhrErrorTest(type, matcher) {
+function xhrErrorTest (type, matcher) {
   testDriver.test(`${type} - an error in xhr callback is noticed and harvested`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
         () => {
           var xhrload = new XMLHttpRequest()
-          xhrload.onload = function goodxhr() {
+          xhrload.onload = function goodxhr () {
             throw new Error('xhr onload')
           }
           xhrload.open('GET', '/bogus')
@@ -46,8 +46,8 @@ function xhrErrorTest(type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{request}]) => {
-      const actualErrors = getErrorsFromResponse(request, browser)
+    Promise.all([errPromise, loadPromise]).then(([response]) => {
+      const actualErrors = getErrorsFromResponse(response, browser)
 
       t.equal(actualErrors.length, 1, 'exactly one error')
 
@@ -58,62 +58,62 @@ function xhrErrorTest(type, matcher) {
       t.equal(actualError.params.message, 'xhr onload', 'Should have correct message')
       t.ok(actualError.params.stack_trace, 'Should have a stack trace')
       t.end()
-    }).catch(fail(t));
+    }).catch(fail(t))
   })
 }
 
 function submissionXhr (type, browserVersionMatcher) {
-	testDriver.test(`${type} - capturing XHR metrics`, browserVersionMatcher,
-		function (t, browser, router) {
-			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
-				init,
-				workerCommands: [() => {
+  testDriver.test(`${type} - capturing XHR metrics`, browserVersionMatcher,
+    function (t, browser, router) {
+      let assetURL = router.assetURL(`worker/${type}-worker.html`, {
+        init,
+        workerCommands: [() => {
           var xhr = new XMLHttpRequest()
           xhr.open('GET', '/json')
           xhr.onload = function () { self.xhrDone = true }
           xhr.send()
-				}].map(x => x.toString())
-			});
+        }].map(x => x.toString())
+      })
 
-			const loadPromise = browser.get(assetURL);
-			const xhrPromise = router.expectAjaxTimeSlices();
+      const loadPromise = browser.get(assetURL)
+      const xhrPromise = router.expectXHRMetrics()
 
-			Promise.all([xhrPromise, loadPromise])
-			.then(( [result] ) => {
-        t.equal(result.request.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
-        t.ok(result.request.body, 'request body should not be empty')
+      Promise.all([xhrPromise, loadPromise])
+        .then(([response]) => {
+          t.equal(response.req.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
+          t.ok(response.body, 'request body should not be empty')
 
-        const parsedXhrs = getXhrFromResponse(result.request, browser)
-        t.ok(parsedXhrs, 'has xhr data')
-        t.ok(parsedXhrs.length >= 1, 'has at least one XHR record')
-        t.deepEqual(['metrics', 'params'], Object.keys(parsedXhrs[0]).sort(), 'XHR record has correct keys')
-        t.end()
-			}).catch(fail(t));
-		}
-	);
+          const parsedXhrs = getXhrFromResponse(response, browser)
+          t.ok(parsedXhrs, 'has xhr data')
+          t.ok(parsedXhrs.length >= 1, 'has at least one XHR record')
+          t.deepEqual(['metrics', 'params'], Object.keys(parsedXhrs[0]).sort(), 'XHR record has correct keys')
+          t.end()
+        }).catch(fail(t))
+    }
+  )
 }
 function submissionFetch (type, browserVersionMatcher) {
-	testDriver.test(`${type} - capturing fetch metrics`, browserVersionMatcher,
-		function (t, browser, router) {
-			let assetURL = router.assetURL(`worker/${type}-worker.html`, {
-				init,
-				workerCommands: [`fetch('/json')`]
-			});
+  testDriver.test(`${type} - capturing fetch metrics`, browserVersionMatcher,
+    function (t, browser, router) {
+      let assetURL = router.assetURL(`worker/${type}-worker.html`, {
+        init,
+        workerCommands: ['fetch(\'/json\')']
+      })
 
-			const loadPromise = browser.get(assetURL);
-			const xhrPromise = router.expectAjaxTimeSlices();
+      const loadPromise = browser.get(assetURL)
+      const xhrPromise = router.expectXHRMetrics()
 
-			Promise.all([xhrPromise, loadPromise])
-			.then(( [result] ) => {
-        t.equal(result.request.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
-        t.ok(result.request.body, 'request body should not be empty')
+      Promise.all([xhrPromise, loadPromise])
+        .then(([response]) => {
+          t.equal(response.req.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
+          t.ok(response.body, 'request body should not be empty')
 
-        const parsedXhrs = getXhrFromResponse(result.request, browser)
-        var fetchData = parsedXhrs.find(xhr => xhr.params.pathname === '/json')
-        t.ok(fetchData, 'has xhr data')
-        t.deepEqual(['metrics', 'params'], Object.keys(fetchData).sort(), 'XHR record has correct keys')
-        t.end()
-			}).catch(fail(t));
-		}
-	);
+          const parsedXhrs = getXhrFromResponse(response, browser)
+          var fetchData = parsedXhrs.find(xhr => xhr.params.pathname === '/json')
+          t.ok(fetchData, 'has xhr data')
+          t.deepEqual(['metrics', 'params'], Object.keys(fetchData).sort(), 'XHR record has correct keys')
+          t.end()
+        }).catch(fail(t))
+    }
+  )
 }

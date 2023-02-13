@@ -4,24 +4,24 @@
  */
 
 import test from '../../tools/jil/browser-test'
-import { reduce } from '@newrelic/browser-agent-core/src/common/util/reduce.js'
+import { reduce } from '../../src/common/util/reduce.js'
 
 test('reduce', function (t) {
-  var nums = [ 1, 5, 10 ]
+  var nums = [1, 5, 10]
   t.equal(reduce(nums, add, 0), 16)
   t.equal(reduce(nums, add), 16, 'implicit starting value')
 
   var objs = [
-    {name: 'a', value: 33},
-    {name: 'b', value: 22},
-    {name: 'c', value: 11}
+    { name: 'a', value: 33 },
+    { name: 'b', value: 22 },
+    { name: 'c', value: 11 }
   ]
 
   var obj = reduce(objs, build, {})
 
   t.equal(obj.b, 22, 'object reduce')
 
-  var strs = [ 'a', 'b', 'c' ]
+  var strs = ['a', 'b', 'c']
 
   t.equal(reduce(strs, add, ''), 'abc', 'correct order')
 

@@ -5,7 +5,7 @@
 
 const tapParser = require('tap-parser')
 const formatters = require('./formatters')
-const {EventEmitter} = require('events')
+const { EventEmitter } = require('events')
 const util = require('util')
 const fs = require('fs')
 
@@ -45,7 +45,7 @@ class Output {
     return parser
   }
 
-  finish() {
+  finish () {
     this.formatter.finish(this.children.reduce((ok, next) => ok && next.ok || (next.results.pass === next.results.count), true))
   }
 }

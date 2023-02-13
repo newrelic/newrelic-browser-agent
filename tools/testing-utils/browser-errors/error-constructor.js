@@ -20,21 +20,21 @@
  * @param {MockErrorData} errorData
  * @returns {Error}
  */
-export function constructError(errorData) {
-  const error = Object.create(new Error(errorData.message));
+export function constructError (errorData) {
+  const error = Object.create(new Error(errorData.message))
 
   const errorProxy = new Proxy(error, {
-    get(target, prop) {
-      if (prop === "toString") {
-        return () => errorData[prop];
+    get (target, prop) {
+      if (prop === 'toString') {
+        return () => errorData[prop]
       }
 
-      return errorData[prop];
+      return errorData[prop]
     },
-    has(target, key) {
-      return key in target || key in errorData;
+    has (target, key) {
+      return key in target || key in errorData
     }
-  });
+  })
 
-  return errorProxy;
+  return errorProxy
 }

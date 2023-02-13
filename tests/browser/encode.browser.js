@@ -4,7 +4,7 @@
  */
 
 import test from '../../tools/jil/browser-test'
-import * as encode from '@newrelic/browser-agent-core/src/common/url/encode'
+import * as encode from '../../src/common/url/encode'
 
 test('encode.qs', function (t) {
   t.equal(encode.qs('Asdf:, :, /@$;'), 'Asdf:,%20:,%20/@$;', 'Escapes and unescapes')
@@ -23,15 +23,15 @@ test('encode.fromArray', function (t) {
 })
 
 test('encode.obj', function (t) {
-  var obj1 = {foo: [1, 2, 3]}
+  var obj1 = { foo: [1, 2, 3] }
   t.equal(encode.obj(obj1, 12), '&foo=%5B1,2%5D', 'Cut off cleanly')
 
-  var obj2 = {bar: ['a', 'b', 'c']}
+  var obj2 = { bar: ['a', 'b', 'c'] }
   t.equal(encode.obj(obj2, 30), '&bar=%5B%22a%22,%22b%22%5D', 'Fall back to largest whole chunk that wokrs')
 
   var circular = {}
   circular.circular = circular
-  var obj3 = {bar: ['a', circular, 'c']}
+  var obj3 = { bar: ['a', circular, 'c'] }
   t.equal(encode.obj(obj3, 1000), '&bar=%5B%22a%22,null,%22c%22%5D', 'Handle bad objects')
 
   t.end()

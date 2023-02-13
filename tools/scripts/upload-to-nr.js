@@ -22,8 +22,8 @@ var argv = yargs
   .string('eu-api-key')
   .describe('eu-api-key', 'API key to use for talking to EU RPM site to upload loaders')
 
-  .string('version')
-  .describe('version', 'Browser Agent version number')
+  .string('v')
+  .describe('v', 'Browser Agent version number')
 
   .boolean('skip-upload-failures')
   .describe('skip-upload-failures', "Don't bail out after the first failure, keep trying other requests")
@@ -37,7 +37,7 @@ var argv = yargs
  * An async wrapper around the execution logic
  * @returns
  */
-async function run() {
+async function run () {
   var loaders = await loaderFilenames()
   var targetEnvironments = argv.environments.split(',')
 
@@ -73,13 +73,13 @@ async function run() {
     }
   })
 
-/**
+  /**
  * Iterate over each environment to upload loaders
- * @param {string} environment 
- * @param {Function} cb 
+ * @param {string} environment
+ * @param {Function} cb
  * @returns {void}
  */
-  function uploadAllLoadersToDB(environment, cb) {
+  function uploadAllLoadersToDB (environment, cb) {
     asyncForEach(loaders, function (data, next) {
       const filename = Object.keys(data)[0]
       const fileData = data[filename]
@@ -89,11 +89,11 @@ async function run() {
 
   /**
    * Download a file
-   * @param {string} path 
-   * @param {string} fileName 
+   * @param {string} path
+   * @param {string} fileName
    * @returns {Promise<[string, string, string]>}
    */
-  function getFile(path, fileName) {
+  function getFile (path, fileName) {
     var opts = {
       uri: path,
       method: 'GET',
@@ -115,12 +115,12 @@ async function run() {
 
   /**
    * Upload a loader to NRDB
-   * @param {string} filename 
-   * @param {string} loader 
-   * @param {string} environment 
-   * @param {Function} cb 
+   * @param {string} filename
+   * @param {string} loader
+   * @param {string} environment
+   * @param {Function} cb
    */
-  function uploadLoaderToDB(filename, loader, environment, cb) {
+  function uploadLoaderToDB (filename, loader, environment, cb) {
     var baseOptions = {
       method: 'PUT',
       followAllRedirects: true,
@@ -175,14 +175,14 @@ async function run() {
    * Fetches an array of loader filenames and contents from the CDN
    * @returns {Promise<{[fileName]: string}[]>} Promise contains an array of objects {[filename]: body} --> {'nr-loader-spa-1221.min.js': ...scriptContents}
    */
-  async function loaderFilenames() {
+  async function loaderFilenames () {
     const loaderTypes = ['rum', 'full', 'spa']
-    const version = argv['version']
+    const version = argv['v']
     const fileNames = loaderTypes.map(type => [
-      `nr-loader-${type}-${version}.min.js`, 
+      `nr-loader-${type}-${version}.min.js`,
       `nr-loader-${type}-polyfills-${version}.min.js`,
-      `nr-loader-${type}-${version}.js`, 
-      `nr-loader-${type}-polyfills-${version}.js`,
+      `nr-loader-${type}-${version}.js`,
+      `nr-loader-${type}-polyfills-${version}.js`
     ]).flat()
     const loaders = (await Promise.all(fileNames.map(fileName => getFile(`https://js-agent.newrelic.com/${fileName}`, fileName)))).map(([url, fileName, body]) => ({ [fileName]: body }))
     return loaders
@@ -194,12 +194,12 @@ async function run() {
    * @param {Function} done - terminal cb
    * @param {Function=} errorCallback - If not specified, processing will terminate on the first error. If specified, the errorCallback will be invoked once for each error error, and the done callback will be invoked once each item has been processed.
   */
-  function asyncForEach(list, op, done, errorCallback) {
+  function asyncForEach (list, op, done, errorCallback) {
     var index = 0
 
     process.nextTick(next)
 
-    function next(err) {
+    function next (err) {
       if (err) {
         if (errorCallback) {
           errorCallback(err)

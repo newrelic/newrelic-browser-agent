@@ -13,11 +13,11 @@ testDriver.test('navTiming on initialPageLoad', supported, function (t, browser,
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/xhr.html', { loader: 'spa', init: {session_trace: {enabled: false}} })).waitForFeature('loaded')
+  let loadPromise = browser.safeGet(router.assetURL('spa/xhr.html', { loader: 'spa', init: { session_trace: { enabled: false } } }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([{request: eventsResult}]) => {
-      let {body, query} = eventsResult
+    .then(([eventsResult]) => {
+      let { body, query } = eventsResult
 
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -32,7 +32,7 @@ testDriver.test('navTiming on initialPageLoad', supported, function (t, browser,
         return eventData
       })
     })
-    .then(({request: {query, body}}) => {
+    .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.trigger, 'click', 'should be triggered by click')
       t.notOk(interactionTree.navTiming, 'should not have navTiming')

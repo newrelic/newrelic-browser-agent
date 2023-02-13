@@ -8,12 +8,12 @@ const jil = require('jil')
 const { setup } = require('../utils/setup')
 
 const setupData = setup()
-const {baseEE} = setupData
+const { baseEE } = setupData
 
 jil.browserTest('fn-start events for MutationObserver callbacks should have args', function (t) {
   t.plan(3)
 
-  const {wrapMutation} = require('@newrelic/browser-agent-core/src/common/wrap/index')
+  const { wrapMutation } = require('../../../src/common/wrap/index')
 
   wrapMutation(baseEE)
 

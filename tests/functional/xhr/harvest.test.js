@@ -4,8 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {fail, querypack} = require('./helpers')
-const {testErrorsRequest, testEventsRequest} = require("../../../tools/testing-server/utils/expect-tests");
+const { fail, querypack } = require('./helpers')
 
 testDriver.test('ajax events harvests are retried when collector returns 429', function (t, browser, router) {
   let assetURL = router.assetURL('xhr-outside-interaction.html', {
@@ -30,23 +29,20 @@ testDriver.test('ajax events harvests are retried when collector returns 429', f
     }
   })
 
-  router.scheduleReply('bamServer', {
-    test: testEventsRequest,
-    statusCode: 429
-  })
+  router.scheduleResponse('events', 429)
 
   let ajaxPromise = router.expectAjaxEvents()
   let rumPromise = router.expectRum()
-  let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
+  let loadPromise = browser.safeGet(assetURL)
 
   let firstBody
 
   Promise.all([ajaxPromise, loadPromise, rumPromise]).then(([result]) => {
-    t.equal(result.reply.statusCode, 429, 'server responded with 429')
-    firstBody = querypack.decode(result.request.body)
+    t.equal(result.res.statusCode, 429, 'server responded with 429')
+    firstBody = querypack.decode(result.body)
     return router.expectAjaxEvents()
   }).then(result => {
-    const secondBody = querypack.decode(result.request.body)
+    const secondBody = querypack.decode(result.body)
 
     const secondContainsFirst = firstBody.every(firstElement => {
       return secondBody.find(secondElement => {
@@ -54,8 +50,9 @@ testDriver.test('ajax events harvests are retried when collector returns 429', f
       })
     })
 
-    t.equal(result.reply.statusCode, 200, 'server responded with 200')
+    t.equal(result.res.statusCode, 200, 'server responded with 200')
     t.ok(secondContainsFirst, 'second body should include the contents of the first retried harvest')
+    t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
 
     t.end()
   }).catch(fail(t))

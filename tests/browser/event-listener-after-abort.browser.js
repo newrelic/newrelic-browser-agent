@@ -6,10 +6,10 @@
 const jil = require('jil')
 
 jil.browserTest('eventListener methods work as expected after abort', function (t) {
-  const {setup} = require('./utils/setup')
-  const {wrapEvents} = require('@newrelic/browser-agent-core/src/common/wrap/wrap-events.js')
+  const { setup } = require('./utils/setup')
+  const { wrapEvents } = require('../../src/common/wrap/wrap-events.js')
 
-  const {baseEE} = setup()
+  const { baseEE } = setup()
   wrapEvents(baseEE)
   const ee = baseEE
 

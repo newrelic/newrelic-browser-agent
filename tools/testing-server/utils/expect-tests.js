@@ -13,257 +13,257 @@
  */
 
 module.exports.testRumRequest = function (request) {
-  const url = new URL(request.url, "resolve://");
-  return url.pathname === `/1/${this.testId}`;
-};
+  const url = new URL(request.url, 'resolve://')
+  return url.pathname === `/1/${this.testId}`
+}
 
 module.exports.testEventsRequest = function (request) {
-  const url = new URL(request.url, "resolve://");
+  const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/events/1/${this.testId}`) {
-    return false;
+    return false
   }
 
   if (Array.isArray(request.body) && request.body.length > 0) {
-    return true;
+    return true
   }
 
   if (request?.query?.e) {
     try {
-      const events = require("@newrelic/nr-querypack").decode(request.query.e);
-      return Array.isArray(events) && events.length > 0;
+      const events = require('@newrelic/nr-querypack').decode(request.query.e)
+      return Array.isArray(events) && events.length > 0
     } catch (error) {
-      return false;
+      return false
     }
   }
-};
+}
 
 module.exports.testTimingEventsRequest = function (request) {
-  const url = new URL(request.url, "resolve://");
+  const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/events/1/${this.testId}`) {
-    return false;
+    return false
   }
 
   if (
     Array.isArray(request.body) &&
-    request.body.findIndex((qpData) => qpData.type === "timing") > -1
+    request.body.findIndex((qpData) => qpData.type === 'timing') > -1
   ) {
-    return true;
+    return true
   }
 
   if (request?.query?.e) {
     try {
-      const events = require("@newrelic/nr-querypack").decode(request.query.e);
+      const events = require('@newrelic/nr-querypack').decode(request.query.e)
       return (
         Array.isArray(events) &&
-        events.findIndex((qpData) => qpData.type === "timing") > -1
-      );
+        events.findIndex((qpData) => qpData.type === 'timing') > -1
+      )
     } catch (error) {
-      return false;
+      return false
     }
   }
-};
+}
 
 module.exports.testAjaxEventsRequest = function (request) {
-  const url = new URL(request.url, "resolve://");
+  const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/events/1/${this.testId}`) {
-    return false;
+    return false
   }
 
   if (
     Array.isArray(request.body) &&
-    request.body.findIndex((qpData) => qpData.type === "ajax") > -1
+    request.body.findIndex((qpData) => qpData.type === 'ajax') > -1
   ) {
-    return true;
+    return true
   }
 
   if (request?.query?.e) {
     try {
-      const events = require("@newrelic/nr-querypack").decode(request.query.e);
+      const events = require('@newrelic/nr-querypack').decode(request.query.e)
       return (
         Array.isArray(events) &&
-        events.findIndex((qpData) => qpData.type === "ajax") > -1
-      );
+        events.findIndex((qpData) => qpData.type === 'ajax') > -1
+      )
     } catch (error) {
-      return false;
+      return false
     }
   }
-};
+}
 
 module.exports.testInteractionEventsRequest = function (request) {
-  const url = new URL(request.url, "resolve://");
+  const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/events/1/${this.testId}`) {
-    return false;
+    return false
   }
 
   if (
     Array.isArray(request.body) &&
-    request.body.findIndex((qpData) => qpData.type === "interaction") > -1
+    request.body.findIndex((qpData) => qpData.type === 'interaction') > -1
   ) {
-    return true;
+    return true
   }
 
   if (request?.query?.e) {
     try {
-      const events = require("@newrelic/nr-querypack").decode(request.query.e);
+      const events = require('@newrelic/nr-querypack').decode(request.query.e)
       return (
         Array.isArray(events) &&
-        events.findIndex((qpData) => qpData.type === "interaction") > -1
-      );
+        events.findIndex((qpData) => qpData.type === 'interaction') > -1
+      )
     } catch (error) {
-      return false;
+      return false
     }
   }
-};
+}
 
 module.exports.testMetricsRequest = function (request) {
-  const url = new URL(request.url, "resolve://");
+  const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {
-    return false;
+    return false
   }
 
   if (Array.isArray(request?.body?.cm) && request.body.cm.length > 0) {
-    return true;
+    return true
   }
 
   if (Array.isArray(request?.body?.sm) && request.body.sm.length > 0) {
-    return true;
+    return true
   }
 
   if (request?.query?.cm) {
     try {
-      const customMetrics = JSON.parse(request.query.cm);
-      return Array.isArray(customMetrics) && customMetrics.length > 0;
+      const customMetrics = JSON.parse(request.query.cm)
+      return Array.isArray(customMetrics) && customMetrics.length > 0
     } catch (error) {
-      return false;
+      return false
     }
   }
 
   if (request?.query?.sm) {
     try {
-      const supportMetrics = JSON.parse(request.query.sm);
-      return Array.isArray(supportMetrics) && supportMetrics.length > 0;
+      const supportMetrics = JSON.parse(request.query.sm)
+      return Array.isArray(supportMetrics) && supportMetrics.length > 0
     } catch (error) {
-      return false;
+      return false
     }
   }
-};
+}
 
 module.exports.testCustomMetricsRequest = function (request) {
-  const url = new URL(request.url, "resolve://");
+  const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {
-    return false;
+    return false
   }
 
   if (Array.isArray(request?.body?.cm) && request.body.cm.length > 0) {
-    return true;
+    return true
   }
 
   if (request?.query?.cm) {
     try {
-      const customMetrics = JSON.parse(request.query.cm);
-      return Array.isArray(customMetrics) && customMetrics.length > 0;
+      const customMetrics = JSON.parse(request.query.cm)
+      return Array.isArray(customMetrics) && customMetrics.length > 0
     } catch (error) {
-      return false;
+      return false
     }
   }
-};
+}
 
 module.exports.testSupportMetricsRequest = function (request) {
-  const url = new URL(request.url, "resolve://");
+  const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {
-    return false;
+    return false
   }
 
   if (Array.isArray(request?.body?.sm) && request.body.sm.length > 0) {
-    return true;
+    return true
   }
 
   if (request?.query?.sm) {
     try {
-      const supportMetrics = JSON.parse(request.query.sm);
-      return Array.isArray(supportMetrics) && supportMetrics.length > 0;
+      const supportMetrics = JSON.parse(request.query.sm)
+      return Array.isArray(supportMetrics) && supportMetrics.length > 0
     } catch (error) {
-      return false;
+      return false
     }
   }
-};
+}
 
 module.exports.testErrorsRequest = function (request) {
-  const url = new URL(request.url, "resolve://");
+  const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {
-    return false;
+    return false
   }
 
   if (Array.isArray(request?.body?.err) && request.body.err.length > 0) {
-    return true;
+    return true
   }
 
   if (request?.query?.err) {
     try {
-      const jserrors = JSON.parse(request.query.err);
-      return Array.isArray(jserrors) && jserrors.length > 0;
+      const jserrors = JSON.parse(request.query.err)
+      return Array.isArray(jserrors) && jserrors.length > 0
     } catch (error) {
-      return false;
+      return false
     }
   }
-};
+}
 
 module.exports.testAjaxTimeSlicesRequest = function (request) {
-  const url = new URL(request.url, "resolve://");
+  const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {
-    return false;
+    return false
   }
 
   if (Array.isArray(request?.body?.xhr) && request.body.xhr.length > 0) {
-    return true;
+    return true
   }
 
   if (request?.query?.xhr) {
     try {
-      const ajaxCalls = JSON.parse(request.query.xhr);
-      return Array.isArray(ajaxCalls) && ajaxCalls.length > 0;
+      const ajaxCalls = JSON.parse(request.query.xhr)
+      return Array.isArray(ajaxCalls) && ajaxCalls.length > 0
     } catch (error) {
-      return false;
+      return false
     }
   }
-};
+}
 
 module.exports.testInsRequest = function (request) {
-  const url = new URL(request.url, "resolve://");
+  const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/ins/1/${this.testId}`) {
-    return false;
+    return false
   }
 
   if (Array.isArray(request?.body?.ins) && request.body.ins.length > 0) {
-    return true;
+    return true
   }
 
   if (request?.query?.ins) {
     try {
-      const ins = JSON.parse(request.query.ins);
-      return Array.isArray(ins) && ins.length > 0;
+      const ins = JSON.parse(request.query.ins)
+      return Array.isArray(ins) && ins.length > 0
     } catch (error) {
-      return false;
+      return false
     }
   }
-};
+}
 
 module.exports.testResourcesRequest = function (request) {
-  const url = new URL(request.url, "resolve://");
+  const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/resources/1/${this.testId}`) {
-    return false;
+    return false
   }
 
   if (Array.isArray(request?.body?.res) && request.body.res.length > 0) {
-    return true;
+    return true
   }
 
   if (request?.query?.res) {
     try {
-      const res = JSON.parse(request.query.res);
-      return Array.isArray(res) && res.length > 0;
+      const res = JSON.parse(request.query.res)
+      return Array.isArray(res) && res.length > 0
     } catch (error) {
-      return false;
+      return false
     }
   }
-};
+}

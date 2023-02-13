@@ -5,7 +5,6 @@
 
 const jil = require('jil')
 
-
 jil.browserTest('setCurrentRouteName', function (t) {
   let helpers = require('./helpers')
 

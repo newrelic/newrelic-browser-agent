@@ -5,38 +5,39 @@
 
 const jil = require('jil')
 
-const {setup} = require('./utils/setup')
-const {drain} = require('@newrelic/browser-agent-core/src/common/drain/drain')
-const {handle} = require('@newrelic/browser-agent-core/src/common/event-emitter/handle')
-const {Aggregate: PvtAggregate} = require('@newrelic/browser-agent-core/src/features/page-view-timing/aggregate/index')
+const { setup } = require('./utils/setup')
+const { drain } = require('../../src/common/drain/drain')
+const { handle } = require('../../src/common/event-emitter/handle')
+const { Aggregate: PvtAggregate } = require('../../src/features/page_view_timing/aggregate/index')
+const { FEATURE_NAMES } = require('../../src/loaders/features/features')
 
-const {agentIdentifier, aggregator} = setup()
+const { agentIdentifier, aggregator } = setup()
 
 jil.browserTest('LCP event with CLS attribute', function (t) {
   const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
 
   // override harvest calls, so that no network calls are made
-  pvtAgg.scheduler.harvest.send = function() {
+  pvtAgg.scheduler.harvest.send = function () {
     return {}
   }
 
   // prevent prepareHarvest from clearing timings
-  pvtAgg.prepareHarvest = function() {
+  pvtAgg.prepareHarvest = function () {
     return {}
   }
 
   // drain adds `timing` and `lcp` event listeners in the agent/timings module
   drain(agentIdentifier, 'feature')
 
-  handle('cls', [{ value: 1 }], undefined, undefined, pvtAgg.ee)
-  handle('lcp', [{ size: 1, startTime: 1 }], undefined, undefined, pvtAgg.ee)
-  handle('cls', [{ value: 2 }], undefined, undefined, pvtAgg.ee)
+  handle('cls', [{ value: 1 }], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
+  handle('lcp', [{ size: 1, startTime: 1 }], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
+  handle('cls', [{ value: 2 }], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
 
   // invoke final harvest, which includes harvesting LCP
-  pvtAgg.recordLcp();
-  pvtAgg.recordPageUnload(Date.now());
+  pvtAgg.recordLcp()
+  pvtAgg.recordPageUnload(Date.now())
 
-  var timing = find(pvtAgg.timings, function(t) {
+  var timing = find(pvtAgg.timings, function (t) {
     return t.name === 'lcp'
   })
 
@@ -45,12 +46,12 @@ jil.browserTest('LCP event with CLS attribute', function (t) {
   t.end()
 })
 
-function find(arr, fn) {
+function find (arr, fn) {
   if (arr.find) {
     return arr.find(fn)
   }
   var match = null
-  arr.forEach(function(t) {
+  arr.forEach(function (t) {
     if (fn(t)) {
       match = t
     }

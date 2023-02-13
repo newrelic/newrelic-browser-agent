@@ -10,12 +10,12 @@ print('Bundling "Test Builds"')
 
 recurse(root)
 
-function print(msg) {
+function print (msg) {
   console.log(`\n================================\n${msg}\n================================\n`)
 }
 
 // Recurses into a folder
-function recurse(folder) {
+function recurse (folder) {
   const has_package_json = fs.existsSync(path.join(folder, 'package.json'))
   // If there is `package.json` in this folder then perform `npm install`.
   if (has_package_json && folder !== root) {
@@ -29,15 +29,15 @@ function recurse(folder) {
 }
 
 // Performs `npm install`
-function build(folder) {
-  const cmd = /^win/.test(process.platform) ? 'npm.cmd' : 'npm';
+function build (folder) {
+  const cmd = /^win/.test(process.platform) ? 'npm.cmd' : 'npm'
   print(`Building ./${path.relative(root, folder)}`)
 
-  child_process.execSync(`npm run build`, { cwd: folder, env: process.env, stdio: 'inherit' })
+  child_process.execSync('npm run build', { cwd: folder, env: process.env, stdio: 'inherit' })
 }
 
 // Lists subfolders in a folder
-function subfolders(folder) {
+function subfolders (folder) {
   return fs.readdirSync(folder)
     .filter(subfolder => fs.statSync(path.join(folder, subfolder)).isDirectory())
     .filter(subfolder => subfolder !== 'node_modules' && subfolder[0] !== '.')

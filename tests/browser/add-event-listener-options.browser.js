@@ -5,18 +5,20 @@
 
 const jil = require('jil')
 import { setup } from './utils/setup'
-import { wrapEvents } from '@newrelic/browser-agent-core/src/common/wrap/wrap-events'
+import { wrapEvents } from '../../src/common/wrap/wrap-events'
 
 const { baseEE } = setup()
 
 jil.browserTest('addEventListener options work when wrapped', function (t) {
+  console.log('baseEE', baseEE)
+
   wrapEvents(baseEE)
 
   let handlerCallCount = 0
   let el = createAndAddDomElement()
 
-  el.addEventListener('click', handler, {capture: true})
-  el.addEventListener('click', handler, {capture: false})
+  el.addEventListener('click', handler, { capture: true })
+  el.addEventListener('click', handler, { capture: false })
   triggerEvent(el, 'click')
 
   t.equal(handlerCallCount, 2, 'should have seen handler calls both phases')

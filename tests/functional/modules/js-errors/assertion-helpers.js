@@ -38,12 +38,12 @@ function assertExpectedErrors (t, browser, actualErrors, expectedErrors, assetUR
         t.equal(errorClass, 'UncaughtException', 'Uncaught error class is UncaughtException')
       }
     }
-    
+
     t.equal(actualError.params['request_uri'], expectedPath, 'has correct request_uri attribute')
   }
 }
 
-function getErrorsFromResponse(response, browser) {
+function getErrorsFromResponse (response, browser) {
   if (response.body) {
     try {
       var parsedBody = JSON.parse(response.body)
@@ -61,11 +61,11 @@ function getErrorsFromResponse(response, browser) {
   return null
 }
 
-function getAppIdFromResponse(response) {
+function getAppIdFromResponse (response) {
   return response.query ? response.query.a : null
 }
 
-function getMetricsFromResponse(response, isSupportability) {
+function getMetricsFromResponse (response, isSupportability) {
   var attr = isSupportability ? 'sm' : 'cm'
   if (response.body) {
     try {
@@ -84,4 +84,4 @@ function getMetricsFromResponse(response, isSupportability) {
   return null
 }
 
-module.exports = {assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse, getMetricsFromResponse, getAppIdFromResponse}
+module.exports = { assertErrorAttributes, verifyStackTraceOmits, assertExpectedErrors, getErrorsFromResponse, getMetricsFromResponse, getAppIdFromResponse }

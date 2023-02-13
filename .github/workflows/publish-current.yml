@@ -22,4 +22,6 @@ jobs:
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }}
       - name: check files exist
-        run: node tools/scripts/check-version.js -e yes
+        run: |
+          node tools/scripts/check-version.js \
+            -e yes

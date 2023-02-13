@@ -9,7 +9,7 @@ const TestRun = require('./TestRun')
 const DeviceTest = require('./DeviceTest')
 
 class ParallelDriver extends Driver {
-  run(cb) {
+  run (cb) {
     const driver = this
     const maxConcurrentRuns = driver.concurrent || this.testEnvs.length
     const limitToStartNewSession = this.config.sessionTestThreshold || 10
@@ -34,7 +34,7 @@ class ParallelDriver extends Driver {
     let testRuns = new Set()
     check()
 
-    function check() {
+    function check () {
       if (testRuns.size >= maxConcurrentRuns) return
 
       let env = getEnvNotStarted()
@@ -65,7 +65,7 @@ class ParallelDriver extends Driver {
     }
 
     // find an environment that has not been started yet
-    function getEnvNotStarted() {
+    function getEnvNotStarted () {
       for (let [env, tests] of testsMap) {
         if (tests.length > 0 && getEnvSessionCount(env) === 0) {
           return env
@@ -75,7 +75,7 @@ class ParallelDriver extends Driver {
     }
 
     // find an environment that can be parallelized
-    function getEnvToParallelize() {
+    function getEnvToParallelize () {
       // sort by number of remaining tests
       testsMap.sort((a, b) => b[1].length - a[1].length)
       for (let [env] of testsMap) {
@@ -86,7 +86,7 @@ class ParallelDriver extends Driver {
       return null
     }
 
-    function getEnvSessionCount(env) {
+    function getEnvSessionCount (env) {
       let count = 0
       for (let testRun of testRuns.values()) {
         if (testRun.browserSpec.same(env.browserSpec)) {
@@ -96,7 +96,7 @@ class ParallelDriver extends Driver {
       return count
     }
 
-    function canParallelize(env) {
+    function canParallelize (env) {
       let tests = getEnvTests(env)
       let sessionCount = getEnvSessionCount(env)
       let hasEnoughTests = enoughTests(tests)
@@ -118,16 +118,16 @@ class ParallelDriver extends Driver {
         return true
       }
 
-      function isMobile(env) {
+      function isMobile (env) {
         return env.browserSpec.platformName === 'ios' || env.browserSpec.platformName === 'android'
       }
 
-      function enoughTests(tests) {
+      function enoughTests (tests) {
         return (tests.length / sessionCount) > limitToStartNewSession
       }
     }
 
-    function startEnv(env) {
+    function startEnv (env) {
       driver.output.log(`# starting ${env.toString()}`)
       let testRun = new TestRun(env, driver)
 
@@ -148,7 +148,7 @@ class ParallelDriver extends Driver {
       })
     }
 
-    function onTestFinished(testRun, test, result) {
+    function onTestFinished (testRun, test, result) {
       let browserSpec = testRun.browserSpec
       var eventData = {
         browserName: browserSpec.desired.browserName,
@@ -177,7 +177,7 @@ class ParallelDriver extends Driver {
       }
     }
 
-    function runNextTest(testRun) {
+    function runNextTest (testRun) {
       let tests = getEnvTests(testRun.env)
       if (tests.length > 0) {
         let test = tests.shift()
@@ -187,11 +187,11 @@ class ParallelDriver extends Driver {
       }
     }
 
-    function getRemaining(env) {
+    function getRemaining (env) {
       return getEnvTests(env).length
     }
 
-    function getEnvTests(env) {
+    function getEnvTests (env) {
       for (let [key, tests] of testsMap) {
         if (key === env) {
           return tests
@@ -200,7 +200,7 @@ class ParallelDriver extends Driver {
       return null
     }
 
-    function onClosed(testRun) {
+    function onClosed (testRun) {
       driver.output.log(`# closed ${testRun.env.toString()}`)
       testRuns.delete(testRun)
       check()
@@ -210,7 +210,7 @@ class ParallelDriver extends Driver {
       driver.output.log('# stopping asset server')
       driver.assetServer.stop()
       driver.output.finish()
-      newrelic.shutdown({collectPendingData: true, timeout: 3000}, cb)
+      newrelic.shutdown({ collectPendingData: true, timeout: 3000 }, cb)
     }
   }
 }

@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {testResourcesRequest} = require("../../../tools/testing-server/utils/expect-tests");
+const { testResourcesRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 let supported = testDriver.Matcher.withFeature('stn')
 
@@ -158,7 +158,7 @@ testDriver.test('session traces are retried when collector returns 429 during sc
   }
 })
 
-function containsAll(targetPayload, subsetPayload) {
+function containsAll (targetPayload, subsetPayload) {
   let allFound = true
   subsetPayload.res.forEach(node => {
     const found = targetPayload.res.find(getFindCallback(node))
@@ -167,7 +167,7 @@ function containsAll(targetPayload, subsetPayload) {
   return allFound
 }
 
-function intersectPayloads(target, subset) {
+function intersectPayloads (target, subset) {
   var nodes = []
   subset.res.forEach(node => {
     var found = target.res.find(getFindCallback(node))
@@ -178,8 +178,8 @@ function intersectPayloads(target, subset) {
   return nodes
 }
 
-function getFindCallback(node) {
-  return function(el) {
+function getFindCallback (node) {
+  return function (el) {
     return el.n === node.n &&
       el.s === node.s &&
       el.e === node.e &&

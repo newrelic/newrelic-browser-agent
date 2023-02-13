@@ -1,5 +1,5 @@
-const { URL } = require("url");
-const fp = require("fastify-plugin");
+const { URL } = require('url')
+const fp = require('fastify-plugin')
 
 /**
  * Fastify plugin to decorate the fastify instance with bam test handle methods.
@@ -7,32 +7,32 @@ const fp = require("fastify-plugin");
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify, testServer) {
-  fastify.decorateRequest("scheduledReply", null);
-  fastify.decorateRequest("resolvingExpect", null);
-  fastify.addHook("preHandler", async (request) => {
-    let testHandle;
-    const url = new URL(request.url, "resolve://");
-    const urlTestId = url.pathname.match(/.*\/(.*$)/);
+  fastify.decorateRequest('scheduledReply', null)
+  fastify.decorateRequest('resolvingExpect', null)
+  fastify.addHook('preHandler', async (request) => {
+    let testHandle
+    const url = new URL(request.url, 'resolve://')
+    const urlTestId = url.pathname.match(/.*\/(.*$)/)
 
     if (Array.isArray(urlTestId) && urlTestId.length > 1) {
-      testHandle = testServer.getTestHandle(urlTestId[1]);
+      testHandle = testServer.getTestHandle(urlTestId[1])
     }
 
     if (!testHandle && request.query.testId) {
-      testHandle = testServer.getTestHandle(request.query.testId);
+      testHandle = testServer.getTestHandle(request.query.testId)
     }
 
     if (testHandle) {
-      testHandle.processRequest(fastify.testServerId, fastify, request);
+      testHandle.processRequest(fastify.testServerId, fastify, request)
     }
-  });
-  fastify.addHook("onSend", (request, reply, payload, done) => {
+  })
+  fastify.addHook('onSend', (request, reply, payload, done) => {
     if (request.scheduledReply) {
       if (request.scheduledReply.statusCode) {
-        reply.code(request.scheduledReply.statusCode);
+        reply.code(request.scheduledReply.statusCode)
       }
       if (request.scheduledReply.body) {
-        payload = request.scheduledReply.body;
+        payload = request.scheduledReply.body
       }
     }
 
@@ -42,15 +42,15 @@ module.exports = fp(async function (fastify, testServer) {
           body: request.body,
           query: request.query,
           headers: request.headers,
-          method: request.method.toUpperCase(),
+          method: request.method.toUpperCase()
         },
         reply: {
           statusCode: reply.statusCode,
-          body: payload,
-        },
-      });
+          body: payload
+        }
+      })
     }
 
-    done(null, payload);
-  });
-});
+    done(null, payload)
+  })
+})

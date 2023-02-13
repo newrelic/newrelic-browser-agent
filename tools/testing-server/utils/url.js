@@ -1,4 +1,4 @@
-const path = require("path");
+const path = require('path')
 
 /**
  * Resolves the path of a file and provides a URL that can be used to load that
@@ -9,50 +9,50 @@ const path = require("path");
  * @return {string}
  * @todo Need to remove the use of querystring in this method.
  */
-module.exports.urlFor = function urlFor(relativePath, query, testServer) {
-  if (relativePath.indexOf("%") > -1) {
+module.exports.urlFor = function urlFor (relativePath, query, testServer) {
+  if (relativePath.indexOf('%') > -1) {
     // Double-encode the file path part that contains a percent symbol
     // to allow files like tests/assets/symbols%20in&referrer.html to
     // be properly served from fastify
     relativePath = relativePath
-      .split("/")
+      .split('/')
       .map((part) => encodeURIComponent(encodeURIComponent(part)))
-      .join("/");
+      .join('/')
   }
 
-  if (query?.hasOwnProperty("config") && typeof query.config !== "string") {
-    query.config = Buffer.from(JSON.stringify(query.config)).toString("base64");
+  if (query?.hasOwnProperty('config') && typeof query.config !== 'string') {
+    query.config = Buffer.from(JSON.stringify(query.config)).toString('base64')
   }
 
-  if (query?.hasOwnProperty("init") && typeof query.init !== "string") {
+  if (query?.hasOwnProperty('init') && typeof query.init !== 'string') {
     query.init = Buffer.from(
       JSON.stringify(query.init, (k, v) => {
-        if (typeof v == "object" && v instanceof RegExp) {
-          let m = v.toString().match(/\/(.*)\/(\w*)/);
-          return `new RegExp('${m[1]}','${m[2] || ""}')`; // serialize regex in a way our test server can receive it
+        if (typeof v == 'object' && v instanceof RegExp) {
+          let m = v.toString().match(/\/(.*)\/(\w*)/)
+          return `new RegExp('${m[1]}','${m[2] || ''}')` // serialize regex in a way our test server can receive it
         }
-        return v;
+        return v
       })
-    ).toString("base64");
+    ).toString('base64')
   }
 
   if (
-    query?.hasOwnProperty("workerCommands") &&
-    typeof query.workerCommands !== "string"
+    query?.hasOwnProperty('workerCommands') &&
+    typeof query.workerCommands !== 'string'
   ) {
     query.workerCommands = Buffer.from(
       JSON.stringify(query.workerCommands)
-    ).toString("base64");
+    ).toString('base64')
   }
 
   return new URL(
     `${relativePath}?${new URLSearchParams(query).toString()}`,
     new URL(
       `http://${testServer.assetServer.host}:${testServer.assetServer.port}`,
-      "resolve://"
+      'resolve://'
     )
-  ).toString();
-};
+  ).toString()
+}
 
 /**
  * Resolves the URL for a browser (unit) test so it can be accessed from the test
@@ -61,23 +61,23 @@ module.exports.urlFor = function urlFor(relativePath, query, testServer) {
  * @param testServerConfig
  * @return {string}
  */
-function urlForBrowserTest(filePath, testServerConfig) {
+function urlForBrowserTest (filePath, testServerConfig) {
   return urlFor(
-    "/tests/assets/browser.html",
+    '/tests/assets/browser.html',
     {
-      loader: "full",
+      loader: 'full',
       config: Buffer.from(
         JSON.stringify({
           licenseKey: 1234,
           assetServerPort: testServerConfig.serverConfig.assetServerPort,
-          corsServerPort: testServerConfig.serverConfig.corsServerPort,
+          corsServerPort: testServerConfig.serverConfig.corsServerPort
         })
-      ).toString("base64"),
+      ).toString('base64'),
       script:
-        "/" +
+        '/' +
         path.relative(testServerConfig.paths.rootDir, filePath) +
-        "?browserify=true",
+        '?browserify=true'
     },
     testServerConfig
-  );
+  )
 }

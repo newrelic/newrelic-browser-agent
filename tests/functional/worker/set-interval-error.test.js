@@ -20,7 +20,7 @@ workerTypes.forEach(type => {
   setIntervalErrorTest(type, typeToMatcher(type))
 })
 
-function setIntervalErrorTest(type, matcher) {
+function setIntervalErrorTest (type, matcher) {
   testDriver.test(`${type} - an error in setInterval is noticed and harvested`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
@@ -37,7 +37,7 @@ function setIntervalErrorTest(type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{request}]) => {
+    Promise.all([errPromise, loadPromise]).then(([{ request }]) => {
       const actualErrors = getErrorsFromResponse(request, browser)
 
       t.equal(actualErrors.length, 1, 'exactly one error')
@@ -51,7 +51,7 @@ function setIntervalErrorTest(type, matcher) {
       t.end()
     }).catch(fail)
 
-    function fail(err) {
+    function fail (err) {
       t.error(err)
       t.end()
     }

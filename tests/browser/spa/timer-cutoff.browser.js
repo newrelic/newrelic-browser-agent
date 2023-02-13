@@ -11,9 +11,9 @@ jil.browserTest('timer cutoff', function (t) {
     name: 'interaction',
     attrs: {
       custom: {
-        'outer': true,
-        'included': true,
-        'custom': true
+        outer: true,
+        included: true,
+        custom: true
       }
     },
     children: [{
@@ -62,7 +62,7 @@ jil.browserTest('string values for duration', function (t) {
     name: 'interaction',
     attrs: {
       custom: {
-        'included': true
+        included: true
       }
     }
   })

@@ -1,8 +1,8 @@
-const { Transform } = require("stream");
-const path = require("path");
-const fs = require("fs");
-const sslShim = require("./ssl-shim");
-const { paths } = require("../../constants");
+const { Transform } = require('stream')
+const path = require('path')
+const fs = require('fs')
+const sslShim = require('./ssl-shim')
+const { paths } = require('../../constants')
 
 /**
  * Constructs the agent script block based on the loader query and default
@@ -12,21 +12,21 @@ const { paths } = require("../../constants");
  * @param {TestServer} testServer
  * @return {Promise<string>}
  */
-async function getLoaderContent(request, reply, testServer) {
-  const loader = request.query.loader || testServer.config.loader;
+async function getLoaderContent (request, reply, testServer) {
+  const loader = request.query.loader || testServer.config.loader
   const loaderFilePath = path.join(
     paths.builtAssetsDir,
     `nr-loader-${loader}${
-      testServer.config.polyfills ? "-polyfills" : ""
+      testServer.config.polyfills ? '-polyfills' : ''
     }.min.js`
-  );
-  const loaderFileStats = await fs.promises.stat(loaderFilePath);
+  )
+  const loaderFileStats = await fs.promises.stat(loaderFilePath)
 
   if (!loaderFileStats.isFile()) {
-    throw new Error(`Could not find loader file ${loaderFilePath}`);
+    throw new Error(`Could not find loader file ${loaderFilePath}`)
   }
 
-  return (await fs.promises.readFile(loaderFilePath)).toString();
+  return (await fs.promises.readFile(loaderFilePath)).toString()
 }
 
 /**
@@ -37,21 +37,21 @@ async function getLoaderContent(request, reply, testServer) {
  */
 module.exports = function (request, reply, testServer) {
   return new Transform({
-    async transform(chunk, encoding, done) {
-      const chunkString = chunk.toString();
+    async transform (chunk, encoding, done) {
+      const chunkString = chunk.toString()
 
-      if (chunkString.indexOf("{loader}") > -1) {
-        const replacement = await getLoaderContent(request, reply, testServer);
+      if (chunkString.indexOf('{loader}') > -1) {
+        const replacement = await getLoaderContent(request, reply, testServer)
         done(
           null,
           chunkString.replace(
-            "{loader}",
+            '{loader}',
             `<script type="text/javascript">${sslShim}${replacement}</script>`
           )
-        );
+        )
       } else {
-        done(null, chunkString);
+        done(null, chunkString)
       }
-    },
-  });
-};
+    }
+  })
+}

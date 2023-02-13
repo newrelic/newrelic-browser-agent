@@ -1,11 +1,11 @@
-const { Transform } = require("stream");
-const debugShim = require("./debug-shim");
-const sslShim = require("./ssl-shim");
+const { Transform } = require('stream')
+const debugShim = require('./debug-shim')
+const sslShim = require('./ssl-shim')
 const {
   defaultAgentConfig,
   loaderConfigKeys,
-  loaderOnlyConfigKeys,
-} = require("../../constants");
+  loaderOnlyConfigKeys
+} = require('../../constants')
 
 /**
  * Constructs the agent config script block based on the config query and default
@@ -15,61 +15,61 @@ const {
  * @param {TestServer} testServer
  * @return {string}
  */
-function getConfigContent(request, reply, testServer) {
+function getConfigContent (request, reply, testServer) {
   const queryConfig = (() => {
     try {
       return JSON.parse(
-        Buffer.from(request.query.config || "e30=", "base64").toString()
-      );
+        Buffer.from(request.query.config || 'e30=', 'base64').toString()
+      )
     } catch (error) {
       testServer.config.logger.error(
         `Invalid config query parameter for request ${request.url}`
-      );
-      testServer.config.logger.error(error);
-      return {};
+      )
+      testServer.config.logger.error(error)
+      return {}
     }
-  })();
+  })()
   const config = {
     agent: `${testServer.assetServer.host}:${testServer.assetServer.port}/build/nr.js`,
     beacon: `${testServer.bamServer.host}:${testServer.bamServer.port}`,
     errorBeacon: `${testServer.bamServer.host}:${testServer.bamServer.port}`,
     ...defaultAgentConfig,
-    ...queryConfig,
-  };
+    ...queryConfig
+  }
 
   let updatedConfig = {
     info: {},
-    loaderConfig: {},
-  };
+    loaderConfig: {}
+  }
 
   for (const key in config) {
-    if (request.query.injectUpdatedLoaderConfig === "true") {
+    if (request.query.injectUpdatedLoaderConfig === 'true') {
       if (loaderConfigKeys.includes(key)) {
         // this simulates the collector injects only the primary app ID
-        if (key === "applicationID") {
-          const primaryAppId = config[key].toString().split(",")[0];
-          updatedConfig.loaderConfig[key] = primaryAppId;
+        if (key === 'applicationID') {
+          const primaryAppId = config[key].toString().split(',')[0]
+          updatedConfig.loaderConfig[key] = primaryAppId
         } else {
-          updatedConfig.loaderConfig[key] = config[key];
+          updatedConfig.loaderConfig[key] = config[key]
         }
       }
     }
 
     // add all keys to `info` except the ones that exist only in `loader_config`
     if (!loaderOnlyConfigKeys.includes(key)) {
-      updatedConfig.info[key] = config[key];
+      updatedConfig.info[key] = config[key]
     }
   }
 
-  const infoJSON = JSON.stringify(updatedConfig.info);
-  const loaderConfigJSON = JSON.stringify(updatedConfig.loaderConfig);
+  const infoJSON = JSON.stringify(updatedConfig.info)
+  const loaderConfigJSON = JSON.stringify(updatedConfig.loaderConfig)
   const loaderConfigAssignment = request.query.injectUpdatedLoaderConfig
     ? `NREUM.loader_config=${loaderConfigJSON};`
-    : "";
+    : ''
 
   return `${sslShim}window.NREUM||(NREUM={});NREUM.info=${infoJSON};${loaderConfigAssignment}${
-    testServer.config.debugShim ? debugShim : ""
-  }`;
+    testServer.config.debugShim ? debugShim : ''
+  }`
 }
 
 /**
@@ -80,21 +80,21 @@ function getConfigContent(request, reply, testServer) {
  */
 module.exports = function (request, reply, testServer) {
   return new Transform({
-    transform(chunk, encoding, done) {
-      const chunkString = chunk.toString();
+    transform (chunk, encoding, done) {
+      const chunkString = chunk.toString()
 
-      if (chunkString.indexOf("{config}") > -1) {
-        const replacement = getConfigContent(request, reply, testServer);
+      if (chunkString.indexOf('{config}') > -1) {
+        const replacement = getConfigContent(request, reply, testServer)
         done(
           null,
           chunkString.replace(
-            "{config}",
+            '{config}',
             `<script type="text/javascript">${replacement}</script>`
           )
-        );
+        )
       } else {
-        done(null, chunkString);
+        done(null, chunkString)
       }
-    },
-  });
-};
+    }
+  })
+}

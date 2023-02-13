@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../tools/jil/index')
-const {fail, checkPayload} = require('./uncat-internal-help.cjs')
+const { fail, checkPayload } = require('./uncat-internal-help.cjs')
 
 const browsers = testDriver.Matcher.withFeature('fetchExt')
 
@@ -62,13 +62,13 @@ testDriver.test('Obfuscate All Events', browsers, function (t, browser, router) 
     loadPromise
   ])
     .then(([
-      {request: ajaxResponse},
-      {request: errorsResponse},
-      {request: insResponse},
-      {request: resourceResponse},
-      {request: spaResponse},
-      {request: timingsResponse},
-      {request: rumResponse}
+      { request: ajaxResponse },
+      { request: errorsResponse },
+      { request: insResponse },
+      { request: resourceResponse },
+      { request: spaResponse },
+      { request: timingsResponse },
+      { request: rumResponse }
     ]) => {
       checkPayload(t, ajaxResponse.body, 'AJAX')
       checkPayload(t, errorsResponse.body, 'Errors')
@@ -84,5 +84,5 @@ testDriver.test('Obfuscate All Events', browsers, function (t, browser, router) 
       checkPayload(t, spaResponse.query, 'SPA query')
       checkPayload(t, timingsResponse.query, 'Timings query')
       t.end()
-    }).catch(fail(t));
+    }).catch(fail(t))
 })

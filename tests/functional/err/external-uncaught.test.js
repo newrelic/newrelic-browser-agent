@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {assertErrorAttributes, verifyStackTraceOmits, getErrorsFromResponse} = require('./assertion-helpers')
+const { assertErrorAttributes, verifyStackTraceOmits, getErrorsFromResponse } = require('./assertion-helpers')
 
 let supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 
@@ -22,7 +22,7 @@ testDriver.test('reporting uncaught errors from external scripts', supported, fu
     }
   }))
 
-  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{request}]) => {
+  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{ request }]) => {
     assertErrorAttributes(t, request.query)
     const actualErrors = getErrorsFromResponse(request, browser)
     verifyStackTraceOmits(t, actualErrors, 'secretValue')

@@ -1,8 +1,8 @@
-const { v4: uuidV4 } = require("uuid");
-const { paths } = require("./constants");
-const { urlFor } = require("./utils/url");
-const path = require("path");
-const { deepmerge } = require("deepmerge-ts");
+const { v4: uuidV4 } = require('uuid')
+const { paths } = require('./constants')
+const { urlFor } = require('./utils/url')
+const path = require('path')
+const { deepmerge } = require('deepmerge-ts')
 const {
   testRumRequest,
   testEventsRequest,
@@ -15,8 +15,8 @@ const {
   testInsRequest,
   testAjaxTimeSlicesRequest,
   testResourcesRequest,
-  testInteractionEventsRequest,
-} = require("./utils/expect-tests");
+  testInteractionEventsRequest
+} = require('./utils/expect-tests')
 
 /**
  * Scheduled reply options
@@ -52,36 +52,36 @@ module.exports = class TestHandle {
   /**
    * @type TestServer
    */
-  #testServer;
+  #testServer
 
   /**
    * @type string
    */
-  #testId;
+  #testId
 
   /**
    * List of scheduled replies keyed to a server id {'assetServer'|'bamServer'}
    * @type {Map<string, Set<ScheduledReply>>}
    */
-  #scheduledReplies = new Map();
+  #scheduledReplies = new Map()
 
   /**
    * List of pending expects keyed to a server id {'assetServer'|'bamServer'}
    * @type {Map<string, Set<Deferred>>}
    */
-  #pendingExpects = new Map();
+  #pendingExpects = new Map()
 
-  constructor(testServer, testId) {
-    this.#testServer = testServer;
-    this.#testId = testId || uuidV4();
+  constructor (testServer, testId) {
+    this.#testServer = testServer
+    this.#testId = testId || uuidV4()
   }
 
-  get testServer() {
-    return this.#testServer;
+  get testServer () {
+    return this.#testServer
   }
 
-  get testId() {
-    return this.#testId;
+  get testId () {
+    return this.#testId
   }
 
   /**
@@ -90,72 +90,74 @@ module.exports = class TestHandle {
    * @param {module:fastify.FastifyInstance} fastify fastify server the request was received on
    * @param {module:fastify.FastifyRequest} request the incoming request
    */
-  processRequest(serverId, fastify, request) {
+  processRequest (serverId, fastify, request) {
     if (this.#scheduledReplies.has(serverId)) {
-      const scheduledReplies = this.#scheduledReplies.get(serverId);
+      const scheduledReplies = this.#scheduledReplies.get(serverId)
 
       for (const scheduledReply of scheduledReplies) {
-        let test = scheduledReply.test;
+        let test = scheduledReply.test
 
-        if (typeof test === "string") {
-          test = new Function(test);
+        if (typeof test === 'string') {
+          // eslint-disable-next-line no-new-func
+          test = new Function(test)
         }
 
         if (test.call(this, request)) {
-          request.scheduledReply = scheduledReply;
-          scheduledReplies.delete(scheduledReply);
-          break;
+          request.scheduledReply = scheduledReply
+          scheduledReplies.delete(scheduledReply)
+          break
         }
       }
     }
 
     if (this.#pendingExpects.has(serverId)) {
-      const pendingExpects = this.#pendingExpects.get(serverId);
+      const pendingExpects = this.#pendingExpects.get(serverId)
 
       for (const pendingExpect of pendingExpects) {
-        let test = pendingExpect.test;
+        let test = pendingExpect.test
 
-        if (typeof test === "string") {
-          test = new Function(test);
+        if (typeof test === 'string') {
+          // eslint-disable-next-line no-new-func
+          test = new Function(test)
         }
 
         if (test.call(this, request)) {
-          request.resolvingExpect = pendingExpect;
-          pendingExpects.delete(pendingExpect);
-          break;
+          request.resolvingExpect = pendingExpect
+          pendingExpects.delete(pendingExpect)
+          break
         }
       }
     }
   }
 
-  scheduleReply(serverId, scheduledReply) {
+  scheduleReply (serverId, scheduledReply) {
     if (!this.#scheduledReplies.has(serverId)) {
-      this.#scheduledReplies.set(serverId, new Set());
+      this.#scheduledReplies.set(serverId, new Set())
     }
 
-    this.#scheduledReplies.get(serverId).add(scheduledReply);
+    this.#scheduledReplies.get(serverId).add(scheduledReply)
   }
 
-  expect(serverId, testServerExpect) {
+  expect (serverId, testServerExpect) {
     if (!this.#pendingExpects.has(serverId)) {
-      this.#pendingExpects.set(serverId, new Set());
+      this.#pendingExpects.set(serverId, new Set())
     }
 
-    const deferred = this.#createDeferred();
-    deferred.test = testServerExpect.test;
+    const deferred = this.#createDeferred()
+    deferred.test = testServerExpect.test
 
     if (testServerExpect.timeout !== false) {
       setTimeout(() => {
         deferred.reject(
           `Expect for ${serverId} timed out for test ${this.#testId}`,
           testServerExpect.test.toString()
-        );
-      }, testServerExpect.timeout || this.#testServer.config.timeout);
+        )
+      }, testServerExpect.timeout || this.#testServer.config.timeout)
     }
 
-    this.#pendingExpects.get(serverId).add(deferred);
+    this.#pendingExpects.get(serverId).add(deferred)
 
-    return deferred.promise;
+    return deferred.promise
   }
 
   /**
@@ -164,7 +166,7 @@ module.exports = class TestHandle {
    * @param {object} query
    * @returns {string}
    */
-  assetURL(assetFile, query = {}) {
+  assetURL (assetFile, query = {}) {
     return urlFor(
       path.relative(
         paths.rootDir,
@@ -172,132 +174,132 @@ module.exports = class TestHandle {
       ),
       deepmerge(
         {
-          loader: "full",
+          loader: 'full',
           config: {
-            licenseKey: this.#testId,
-          },
+            licenseKey: this.#testId
+          }
         },
         query
       ),
       this.#testServer
-    );
+    )
   }
 
-  urlForBrowserTest(testFile) {
+  urlForBrowserTest (testFile) {
     return urlFor(
-      "/tests/assets/browser.html",
+      '/tests/assets/browser.html',
       {
-        loader: "full",
+        loader: 'full',
         config: {
           licenseKey: this.#testId,
           assetServerPort: this.testServer.assetServer.port,
-          corsServerPort: this.testServer.corsServer.port,
+          corsServerPort: this.testServer.corsServer.port
         },
         script:
-          "/" + path.relative(paths.rootDir, testFile) + "?browserify=true",
+          '/' + path.relative(paths.rootDir, testFile) + '?browserify=true'
       },
       this.#testServer
-    );
+    )
   }
 
   /**
    * Creates a basic deferred object
    * @returns {Deferred}
    */
-  #createDeferred() {
-    let resolve;
-    let reject;
-    let promise = new Promise((res, rej) => {
-      resolve = res;
-      reject = rej;
-    });
+  #createDeferred () {
+    let capturedResolve
+    let capturedReject
+    let promise = new Promise((resolve, reject) => {
+      capturedResolve = resolve
+      capturedReject = reject
+    })
 
-    return { promise, resolve, reject };
+    return { promise, resolve: capturedResolve, reject: capturedReject }
   }
 
   /****** BAM Expect Shortcut Methods ******/
 
-  expectRum(timeout) {
-    return this.expect("bamServer", {
+  expectRum (timeout) {
+    return this.expect('bamServer', {
       timeout,
-      test: testRumRequest,
-    });
+      test: testRumRequest
+    })
   }
 
-  expectEvents(timeout) {
-    return this.expect("bamServer", {
+  expectEvents (timeout) {
+    return this.expect('bamServer', {
       timeout,
-      test: testEventsRequest,
-    });
+      test: testEventsRequest
+    })
   }
 
-  expectTimings(timeout) {
-    return this.expect("bamServer", {
+  expectTimings (timeout) {
+    return this.expect('bamServer', {
       timeout,
-      test: testTimingEventsRequest,
-    });
+      test: testTimingEventsRequest
+    })
   }
 
-  expectAjaxEvents(timeout) {
-    return this.expect("bamServer", {
+  expectAjaxEvents (timeout) {
+    return this.expect('bamServer', {
       timeout,
-      test: testAjaxEventsRequest,
-    });
+      test: testAjaxEventsRequest
+    })
   }
 
-  expectInteractionEvents(timeout) {
-    return this.expect("bamServer", {
+  expectInteractionEvents (timeout) {
+    return this.expect('bamServer', {
       timeout,
-      test: testInteractionEventsRequest,
-    });
+      test: testInteractionEventsRequest
+    })
   }
 
-  expectMetrics(timeout) {
-    return this.expect("bamServer", {
+  expectMetrics (timeout) {
+    return this.expect('bamServer', {
       timeout,
-      test: testMetricsRequest,
-    });
+      test: testMetricsRequest
+    })
   }
 
-  expectSupportMetrics(timeout) {
-    return this.expect("bamServer", {
+  expectSupportMetrics (timeout) {
+    return this.expect('bamServer', {
       timeout,
-      test: testSupportMetricsRequest,
-    });
+      test: testSupportMetricsRequest
+    })
   }
 
-  expectCustomMetrics(timeout) {
-    return this.expect("bamServer", {
+  expectCustomMetrics (timeout) {
+    return this.expect('bamServer', {
       timeout,
-      test: testCustomMetricsRequest,
-    });
+      test: testCustomMetricsRequest
+    })
   }
 
-  expectErrors(timeout) {
-    return this.expect("bamServer", {
+  expectErrors (timeout) {
+    return this.expect('bamServer', {
       timeout,
-      test: testErrorsRequest,
-    });
+      test: testErrorsRequest
+    })
   }
 
-  expectAjaxTimeSlices(timeout) {
-    return this.expect("bamServer", {
+  expectAjaxTimeSlices (timeout) {
+    return this.expect('bamServer', {
       timeout,
-      test: testAjaxTimeSlicesRequest,
-    });
+      test: testAjaxTimeSlicesRequest
+    })
   }
 
-  expectIns(timeout) {
-    return this.expect("bamServer", {
+  expectIns (timeout) {
+    return this.expect('bamServer', {
       timeout,
-      test: testInsRequest,
-    });
+      test: testInsRequest
+    })
   }
 
-  expectResources(timeout) {
-    return this.expect("bamServer", {
+  expectResources (timeout) {
+    return this.expect('bamServer', {
       timeout,
-      test: testResourcesRequest,
-    });
+      test: testResourcesRequest
+    })
   }
-};
+}

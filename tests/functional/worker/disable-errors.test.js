@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {workerTypes, typeToMatcher} = require('./helpers')
+const { workerTypes, typeToMatcher } = require('./helpers')
 
 const init = {
   jserrors: {
@@ -23,12 +23,11 @@ var timedPromiseAll = (promises, ms) => Promise.race([
   Promise.all(promises)
 ])
 
-
 workerTypes.forEach(type => {
   disabledJsErrorsTest(type, typeToMatcher(type))
 })
 
-function disabledJsErrorsTest(type, matcher){
+function disabledJsErrorsTest (type, matcher) {
   testDriver.test(`${type} - disabled jserrors should not generate errors`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
@@ -36,22 +35,22 @@ function disabledJsErrorsTest(type, matcher){
         () => newrelic.noticeError(new Error('test'))
       ].map(x => x.toString())
     })
-  
+
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
-  
+
     timedPromiseAll([errPromise, loadPromise], 6000).then((response) => {
-      if (response) { 
+      if (response) {
         // will be null if timed out, so a payload here means it sent and error
-        t.fail(`Should not have generated "error" payload`)
+        t.fail('Should not have generated "error" payload')
       } else {
         // errors harvest every 5 seconds, if 6 seconds pass and Promise is not resolved, that means it was never generated
-        t.pass(`Did not generate "error" payload`)
+        t.pass('Did not generate "error" payload')
       }
       t.end()
     }).catch(fail)
-  
-    function fail(err) {
+
+    function fail (err) {
       t.error(err)
       t.end()
     }

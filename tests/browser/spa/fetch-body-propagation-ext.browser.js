@@ -7,7 +7,7 @@ const jil = require('jil')
 
 jil.browserTest('spa single fetch with formData', function (t) {
   // check if Request.formData errors, see comment below
-  var req = new Request('/formdata', {method: 'POST', body: new FormData()})
+  var req = new Request('/formdata', { method: 'POST', body: new FormData() })
   if (req.formData) {
     req.formData().then(function () {
       runTest()
@@ -43,7 +43,7 @@ jil.browserTest('spa single fetch with formData', function (t) {
     helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
     function onInteractionStart (cb) {
-      var req = new Request('/formdata', {method: 'POST', body: new FormData()})
+      var req = new Request('/formdata', { method: 'POST', body: new FormData() })
 
       if (req.formData) {
         req.formData().then(function () {

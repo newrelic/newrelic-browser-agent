@@ -18,7 +18,7 @@ testDriver.test('error on the initial page load', function (t, browser, router) 
         p
       ])
     })
-    .then(([{request: eventData}, {request: errorData}]) => {
+    .then(([eventData, errorData]) => {
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
@@ -45,13 +45,13 @@ testDriver.test('error on the initial page load', function (t, browser, router) 
       var error = errors[0]
       t.equal(error.params.message, 'initial page load error')
       t.equal(error.params.browserInteractionId, interactionId, 'should have the correct interaction id')
-      t.equal(error.params.parentNodeId, tracer.nodeId, 'should not have parent id')
+      t.ok(!error.params.parentNodeId, 'should not have parent id')
 
       t.end()
     })
     .catch(fail)
 
-  function fail(err) {
+  function fail (err) {
     t.error(err)
     t.end()
   }
@@ -62,7 +62,7 @@ testDriver.test('error in root node', function (t, browser, router) {
     .then(() => {
       return clickPageAndWaitForEventsAndErrors(t, browser, router)
     })
-    .then(([{request: eventData}, {request: errorData}]) => {
+    .then(([eventData, errorData]) => {
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
@@ -96,7 +96,7 @@ testDriver.test('error in xhr', function (t, browser, router) {
     .then(() => {
       return clickPageAndWaitForEventsAndErrors(t, browser, router)
     })
-    .then(([{request: eventData}, {request: errorData}]) => {
+    .then(([eventData, errorData]) => {
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
@@ -131,7 +131,7 @@ testDriver.test('error in custom tracer', function (t, browser, router) {
     .then(() => {
       return clickPageAndWaitForEventsAndErrors(t, browser, router)
     })
-    .then(([{request: eventData}, {request: errorData}]) => {
+    .then(([eventData, errorData]) => {
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
@@ -169,7 +169,7 @@ testDriver.test('string error in custom tracer', function (t, browser, router) {
     .then(() => {
       return clickPageAndWaitForEventsAndErrors(t, browser, router)
     })
-    .then(([{request: eventData}, {request: errorData}]) => {
+    .then(([eventData, errorData]) => {
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
@@ -206,7 +206,7 @@ testDriver.test('errors in discarded SPA interactions', function (t, browser, ro
       var p = clickAndRedirect(browser, router, 200) // wait 200ms because the test page itself waits 100ms before throwing error
       return Promise.all([p, router.expectErrors()])
     })
-    .then(([domData, {request: errorData}]) => {
+    .then(([domData, errorData]) => {
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
@@ -233,7 +233,7 @@ testDriver.test('errors outside of interaction', function (t, browser, router) {
       var p = clickAndRedirect(browser, router, 200) // wait 200ms because the test page itself waits 100ms before throwing error
       return Promise.all([p, router.expectErrors()])
     })
-    .then(([domData, {request: errorData}]) => {
+    .then(([domData, errorData]) => {
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
@@ -266,23 +266,23 @@ testDriver.test('same error in multiple interactions', function (t, browser, rou
       ])
     })
     .then(result => {
-      event1 = result[1].request
+      event1 = result[1]
       return Promise.all([
         browser.elementByCssSelector('body').click(),
         router.expectEvents()
       ])
     })
     .then(result => {
-      event2 = result[1].request
+      event2 = result[1]
       return Promise.all([
         leavePage(browser, router),
         router.expectErrors()
       ])
-      .then(result => {
-        return result[1]
-      })
+        .then(result => {
+          return result[1]
+        })
     })
-    .then(({request: errorData}) => {
+    .then(errorData => {
       let interaction1 = querypack.decode(
         event1.body && event1.body.length ? event1.body : event1.query.e)[0]
       var interactionId1 = interaction1.id
@@ -315,7 +315,7 @@ testDriver.test('same error in multiple interactions', function (t, browser, rou
   }
 })
 
-function waitForPageLoadAnInitialCalls(browser, router, urlPath) {
+function waitForPageLoadAnInitialCalls (browser, router, urlPath) {
   return Promise.all([
     router.expectRum(),
     router.expectEvents(),
@@ -325,11 +325,11 @@ function waitForPageLoadAnInitialCalls(browser, router, urlPath) {
         metrics: { enabled: false },
         session_trace: { enabled: false }
       }
-    })).waitForFeature('loaded')
+    }))
   ])
 }
 
-function clickPageAndWaitForEventsAndErrors(t, browser, router) {
+function clickPageAndWaitForEventsAndErrors (t, browser, router) {
   return clickPageAndWaitForEvents(t, browser, router)
     .then(eventData => {
       return Promise.all([
@@ -338,13 +338,13 @@ function clickPageAndWaitForEventsAndErrors(t, browser, router) {
         leavePage(browser, router),
         router.expectErrors()
       ])
-      .then(([domData, errorData]) => {
-        return Promise.resolve([eventData, errorData])
-      })
+        .then(([domData, errorData]) => {
+          return Promise.resolve([eventData, errorData])
+        })
     })
 }
 
-function clickPageAndWaitForEvents(t, browser, router) {
+function clickPageAndWaitForEvents (t, browser, router) {
   return Promise.all([
     browser.elementByCssSelector('body').click(),
     router.expectEvents()
@@ -357,7 +357,7 @@ function clickPageAndWaitForEvents(t, browser, router) {
 // Click page (which triggers interaction to test), and then immediately load
 // a different page, which triggers final harvest.
 // This way the test is faster than waiting 60s for errors to be harvested.
-function clickAndRedirect(browser, router, wait) {
+function clickAndRedirect (browser, router, wait) {
   return browser.elementByCssSelector('body').click()
     .then(function () {
       if (wait) {
@@ -369,7 +369,7 @@ function clickAndRedirect(browser, router, wait) {
       }
     })
 
-  function sleep(duration) {
+  function sleep (duration) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         resolve()
@@ -378,6 +378,6 @@ function clickAndRedirect(browser, router, wait) {
   }
 }
 
-function leavePage(browser, router) {
-  return browser.get(router.assetURL('_blank.html'))
+function leavePage (browser, router) {
+  return browser.safeGet(router.assetURL('_blank.html'))
 }

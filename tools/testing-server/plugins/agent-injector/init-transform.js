@@ -1,5 +1,5 @@
-const { Transform } = require("stream");
-const { regexReplacementRegex } = require("../../constants");
+const { Transform } = require('stream')
+const { regexReplacementRegex } = require('../../constants')
 
 /**
  * Constructs the agent init script block based on the init query.
@@ -8,28 +8,28 @@ const { regexReplacementRegex } = require("../../constants");
  * @param {TestServer} testServer
  * @return {string}
  */
-function getInitContent(request, reply, testServer) {
+function getInitContent (request, reply, testServer) {
   const queryInit = (() => {
     try {
       return JSON.parse(
-        Buffer.from(request.query.init || "e30=", "base64").toString()
-      );
+        Buffer.from(request.query.init || 'e30=', 'base64').toString()
+      )
     } catch (error) {
       testServer.config.logger.error(
         `Invalid init query parameter for request ${request.url}`
-      );
-      testServer.config.logger.error(error);
-      return {};
+      )
+      testServer.config.logger.error(error)
+      return {}
     }
-  })();
+  })()
 
-  let initJSON = JSON.stringify(queryInit);
-  if (initJSON.includes("new RegExp")) {
+  let initJSON = JSON.stringify(queryInit)
+  if (initJSON.includes('new RegExp')) {
     // de-serialize RegExp obj from router
-    initJSON = initJSON.replace(regexReplacementRegex, "/$1/$2");
+    initJSON = initJSON.replace(regexReplacementRegex, '/$1/$2')
   }
 
-  return `window.NREUM||(NREUM={});NREUM.init=${initJSON};NREUM.init.ssl=false;`;
+  return `window.NREUM||(NREUM={});NREUM.init=${initJSON};NREUM.init.ssl=false;`
 }
 
 /**
@@ -40,21 +40,21 @@ function getInitContent(request, reply, testServer) {
  */
 module.exports = function (request, reply, testServer) {
   return new Transform({
-    transform(chunk, encoding, done) {
-      const chunkString = chunk.toString();
+    transform (chunk, encoding, done) {
+      const chunkString = chunk.toString()
 
-      if (chunkString.indexOf("{init}") > -1) {
-        const replacement = getInitContent(request, reply, testServer);
+      if (chunkString.indexOf('{init}') > -1) {
+        const replacement = getInitContent(request, reply, testServer)
         done(
           null,
           chunkString.replace(
-            "{init}",
+            '{init}',
             `<script type="text/javascript">${replacement}</script>`
           )
-        );
+        )
       } else {
-        done(null, chunkString);
+        done(null, chunkString)
       }
-    },
-  });
-};
+    }
+  })
+}

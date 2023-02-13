@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {fail, testCases, validateNewrelicHeader, validateNoNewrelicHeader, validateTraceContextHeaders, validateNoTraceContextHeaders} = require('./helpers')
+const { fail, testCases, validateNewrelicHeader, validateNoNewrelicHeader, validateTraceContextHeaders, validateNoTraceContextHeaders } = require('./helpers')
 
 let fetchBrowsers = testDriver.Matcher.withFeature('fetch')
 
@@ -33,7 +33,7 @@ const scenarios = [
   }
 ]
 
-testCases.forEach((testCase, tcIndex) => {
+testCases.forEach((testCase) => {
   testDriver.test(testCase.name, fetchBrowsers, (t, browser, router) => {
     let config = {
       accountID: '1234',
@@ -48,12 +48,16 @@ testCases.forEach((testCase, tcIndex) => {
         distributed_tracing: testCase.configuration
       }
       if (testCase.addRouterToAllowedOrigins) {
-        init.distributed_tracing.allowed_origins.push("http://" + router.testServer.bamServer.host + ":" + router.testServer.bamServer.port)
+        init.distributed_tracing.allowed_origins.push(router.beaconURL())
       }
     }
 
-    scenarios.forEach((scenario, index) => {
-      t.test(scenario.name, (nestedTest) => {
+    // when testing same origin, serve the HTML file from the same URL (port) as
+    // the router, so that the XHR call can be inspected (while being on same origin)
+    const useRouterUrl = testCase.sameOrigin
+
+    scenarios.forEach((scenario) => {
+      t.test(scenario.name, (t) => {
         let htmlFile
         if (testCase.sameOrigin) {
           htmlFile = scenario.sameOriginFile
@@ -61,33 +65,25 @@ testCases.forEach((testCase, tcIndex) => {
           htmlFile = scenario.crossOriginFile
         }
 
-        const ajaxPromiseServer = testCase.sameOrigin
-          ? 'assetServer'
-          : 'bamServer'
-        const ajaxPromise = router.expect(ajaxPromiseServer, {
-          test: function(request) {
-            const url = new URL(request.url, 'resolve://');
-            return url.pathname === `/dt/${router.testId}`
-          }
-        })
-        let loadPromise = browser.get(router.assetURL(htmlFile, { testId: router.testId, injectUpdatedLoaderConfig: true, config, init }))
+        let loadPromise = browser.get(router.assetURL(htmlFile, { testId: router.testID, injectUpdatedLoaderConfig: true, config, init }, useRouterUrl))
+        let fetchPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') })
 
-        Promise.all([ajaxPromise, loadPromise])
-          .then(([{request}]) => {
+        Promise.all([fetchPromise, loadPromise])
+          .then(([{ headers }]) => {
             if (testCase.newrelicHeader) {
-              validateNewrelicHeader(nestedTest, request.headers, config)
+              validateNewrelicHeader(t, headers, config)
             } else {
-              validateNoNewrelicHeader(nestedTest, request.headers)
+              validateNoNewrelicHeader(t, headers)
             }
 
             if (testCase.traceContextHeaders) {
-              validateTraceContextHeaders(nestedTest, request.headers, config)
+              validateTraceContextHeaders(t, headers, config)
             } else {
-              validateNoTraceContextHeaders(nestedTest, request.headers)
+              validateNoTraceContextHeaders(t, headers)
             }
-            nestedTest.end()
+            t.end()
           })
-          .catch(fail(nestedTest))
+          .catch(fail(t))
       })
     })
   })

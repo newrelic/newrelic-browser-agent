@@ -7,17 +7,17 @@ var tape = require('tape')
 var browsers = require('../../util/browsers-supported.json')
 var browserList = require('../../util/browser-list')
 var BrowserSpec = require('../../util/browser-list').BrowserSpec
-const latestVersStringRe = require('../../util/browser-list').latestVersStringRe;
+const latestVersStringRe = require('../../util/browser-list').latestVersStringRe
 
-tape("Regex for latest versions works", function(t) {
-  t.ok(latestVersStringRe.test("latest"), "latest -- should pass");
-  t.notOk(latestVersStringRe.test("latest-0"), "latest-0 -- should not pass");
-  t.ok(latestVersStringRe.test("latest-1"), "latest-1 -- should pass");
-  t.ok(latestVersStringRe.test("latest-9"), "latest-9 -- should pass");
-  t.notOk(latestVersStringRe.test("latest-10"), "latest-10 -- should not pass");
-  t.notOk(latestVersStringRe.test("latest-"), "latest- -- should not pass");
-  t.notOk(latestVersStringRe.test("latest-X"), "latest-X -- should not pass");
-  t.end();
+tape('Regex for latest versions works', function (t) {
+  t.ok(latestVersStringRe.test('latest'), 'latest -- should pass')
+  t.notOk(latestVersStringRe.test('latest-0'), 'latest-0 -- should not pass')
+  t.ok(latestVersStringRe.test('latest-1'), 'latest-1 -- should pass')
+  t.ok(latestVersStringRe.test('latest-9'), 'latest-9 -- should pass')
+  t.notOk(latestVersStringRe.test('latest-10'), 'latest-10 -- should not pass')
+  t.notOk(latestVersStringRe.test('latest-'), 'latest- -- should not pass')
+  t.notOk(latestVersStringRe.test('latest-X'), 'latest-X -- should not pass')
+  t.end()
 })
 
 tape('returns BrowserSpec instances', function (t) {

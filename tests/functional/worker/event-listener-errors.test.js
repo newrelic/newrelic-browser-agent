@@ -20,22 +20,22 @@ workerTypes.forEach(type => {
   eventListenerTest(type, typeToMatcher(type))
 })
 
-function eventListenerTest(type, matcher) {
+function eventListenerTest (type, matcher) {
   testDriver.test(`${type} - an error in eventListener is noticed and harvested`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
-        `${type == workerTypes[2]? 'port':'self'}.addEventListener('message', () => {
+        `${type == workerTypes[2] ? 'port' : 'self'}.addEventListener('message', () => {
             throw new Error('test')
         })`,
-        () => { console.log("sent another message so that the eventListener would trigger") }
+        () => { console.log('sent another message so that the eventListener would trigger') }
       ].map(x => x.toString())
     })
 
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{request}]) => {
+    Promise.all([errPromise, loadPromise]).then(([{ request }]) => {
       const actualErrors = getErrorsFromResponse(request, browser)
 
       t.equal(actualErrors.length, 1, 'exactly one error')
@@ -47,6 +47,6 @@ function eventListenerTest(type, matcher) {
       t.equal(actualError.params.message, 'test', 'Should have correct message')
       t.ok(actualError.params.stack_trace, 'Should have a stack trace')
       t.end()
-    }).catch(fail(t));
+    }).catch(fail(t))
   })
 }

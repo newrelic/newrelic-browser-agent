@@ -4,8 +4,8 @@
  */
 
 var jil = require('jil')
-import { protocol } from '@newrelic/browser-agent-core/src/common/url/protocol'
-import { setScope, resetScope } from '@newrelic/browser-agent-core/src/common/util/global-scope';
+import { protocol } from '../../src/common/url/protocol'
+import { setScope, resetScope } from '../../src/common/util/global-scope'
 
 var fileLocation = {
   hash: '',

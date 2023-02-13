@@ -4,9 +4,9 @@
  */
 
 import test from '../../../tools/jil/browser-test'
-import { responseSizeFromXhr } from '@newrelic/browser-agent-core/src/features/ajax/instrument/response-size'
+import { responseSizeFromXhr } from '../../../src/features/ajax/instrument/response-size'
 
-test('ms-stream has undefined size', function(t) {
+test('ms-stream has undefined size', function (t) {
   var xhrRequest = {
     responseType: 'ms-stream',
     response: '12345',
@@ -18,7 +18,7 @@ test('ms-stream has undefined size', function(t) {
   t.end()
 })
 
-test('arraybuffer returns response size', function(t) {
+test('arraybuffer returns response size', function (t) {
   if (typeof ArrayBuffer !== 'function') {
     t.comment('ArrayBuffer constructor is not supported in this browser, skipping')
     t.end()
@@ -37,7 +37,7 @@ test('arraybuffer returns response size', function(t) {
   t.end()
 })
 
-test('blob returns response size', function(t) {
+test('blob returns response size', function (t) {
   if (typeof Blob !== 'function') {
     t.comment('Blob constructor is not supported in this browser, skipping')
     t.end()
@@ -45,7 +45,7 @@ test('blob returns response size', function(t) {
   }
 
   var text = ['<a id="a"><b id="b">hey!</b></a>']
-  var blob = new Blob(text, {type: 'text/html'})
+  var blob = new Blob(text, { type: 'text/html' })
 
   var xhrRequest = {
     responseType: 'blob',
@@ -58,7 +58,7 @@ test('blob returns response size', function(t) {
   t.end()
 })
 
-test('json returns response size', function(t) {
+test('json returns response size', function (t) {
   var obj = JSON.parse('{"hello": "world"}')
 
   var xhrRequest = {
@@ -72,7 +72,7 @@ test('json returns response size', function(t) {
   t.end()
 })
 
-test('text returns responseText size', function(t) {
+test('text returns responseText size', function (t) {
   var text = 'responseText'
 
   var xhrRequest = {
@@ -86,7 +86,7 @@ test('text returns responseText size', function(t) {
   t.end()
 })
 
-test('default empty string type returns responseText size', function(t) {
+test('default empty string type returns responseText size', function (t) {
   var text = 'responseText'
 
   var xhrRequest = {

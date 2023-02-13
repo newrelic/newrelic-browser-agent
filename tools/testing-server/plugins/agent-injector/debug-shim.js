@@ -45,4 +45,4 @@ module.exports = `
     NRDEBUG(\`console.error: \${JSON.stringify(arguments)}\`)
     origErr(arguments)
   }
-`;
+`

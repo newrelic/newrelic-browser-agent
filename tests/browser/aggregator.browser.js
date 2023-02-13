@@ -6,11 +6,11 @@
 import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
 
-const { aggregator: agg } = setup();
+const { aggregator: agg } = setup()
 
 test('aggregator', function (t) {
   // Test condensed metric data when there is only one data point
-  agg.store('foo', 'bar', {misc: 'params'}, {value: 1})
+  agg.store('foo', 'bar', { misc: 'params' }, { value: 1 })
   t.equal(agg.get('foo', 'bar').params.misc, 'params', 'params set first time')
   t.equal(agg.get('foo', 'bar').metrics.value.min, undefined, 'condensed undefined min')
   t.equal(agg.get('foo', 'bar').metrics.value.max, undefined, 'condensed undefined max')
@@ -20,10 +20,10 @@ test('aggregator', function (t) {
   t.equal(agg.get('foo', 'bar').metrics.count, 1, 'condensed count set')
 
   // Test metric data aggregation
-  agg.store('foo', 'bar', {other: 'blah'}, {value: 2})
-  agg.store('foo', 'bar', null, {value: 3})
-  agg.store('foo', 'bar', {misc: 'stomp'}, {value: 5})
-  agg.store('foo', 'bar', {}, {value: 4})
+  agg.store('foo', 'bar', { other: 'blah' }, { value: 2 })
+  agg.store('foo', 'bar', null, { value: 3 })
+  agg.store('foo', 'bar', { misc: 'stomp' }, { value: 5 })
+  agg.store('foo', 'bar', {}, { value: 4 })
   t.equal(agg.get('foo', 'bar').metrics.value.min, 1, 'min value')
   t.equal(agg.get('foo', 'bar').metrics.value.max, 5, 'max value')
   t.equal(agg.get('foo', 'bar').metrics.value.t, 15, 'total value')
@@ -31,7 +31,7 @@ test('aggregator', function (t) {
   t.equal(agg.get('foo', 'bar').metrics.value.c, 5, 'c value')
   t.equal(agg.get('foo', 'bar').metrics.count, 5, 'total count')
 
-  agg.store('foo', 'asdf', {blah: 2}, {value: 'asd'})
+  agg.store('foo', 'asdf', { blah: 2 }, { value: 'asd' })
   agg.store('foo', 'qwerty')
 
   t.equal(agg.get('foo').bar, agg.get('foo', 'bar'), 'get type')
@@ -52,8 +52,8 @@ test('aggregator', function (t) {
 var singleValueMetric = {
   type: 'condensed',
   name: 'bar',
-  metrics: {count: 1, value: {t: 4}},
-  params: {other: 'blah'}
+  metrics: { count: 1, value: { t: 4 } },
+  params: { other: 'blah' }
 }
 
 var metric = {
@@ -61,9 +61,9 @@ var metric = {
   name: 'bar',
   metrics: {
     count: 2,
-    value: {t: 6, min: 3, max: 3, sos: 18, c: 2}
+    value: { t: 6, min: 3, max: 3, sos: 18, c: 2 }
   },
-  params: {other: 'blah'}
+  params: { other: 'blah' }
 }
 
 test('params set when metric merged', function (t) {
@@ -85,11 +85,11 @@ test('get and take return the same data', function (t) {
   t.plan(8)
 
   // plan count is the sum of unique type/name combinations (first 2 store arguments)
-  agg.store('foo', 'bar', {name: 'bar'}, {value: 3})
-  agg.store('foo', 'bar', {name: 'bar'}, {value: 4})
-  agg.store('foo', 'foo', {name: 'foo'}, {value: 2})
-  agg.store('bar', 'foo', {name: 'foo'}, {value: 3})
-  agg.store('bar', 'bar', {name: 'bar'}, {value: 4})
+  agg.store('foo', 'bar', { name: 'bar' }, { value: 3 })
+  agg.store('foo', 'bar', { name: 'bar' }, { value: 4 })
+  agg.store('foo', 'foo', { name: 'foo' }, { value: 2 })
+  agg.store('bar', 'foo', { name: 'foo' }, { value: 3 })
+  agg.store('bar', 'bar', { name: 'bar' }, { value: 4 })
 
   var getMetrics = {
     foo: agg.get('foo'),
@@ -150,7 +150,7 @@ test('merge single-value metric into single-value metric', function (t) {
   agg.take(['merge'])
 
   // merge[singleValueMetric -> singleValueMetric]
-  agg.store('merge', 'bar', {other: 'blah'}, {value: 2})
+  agg.store('merge', 'bar', { other: 'blah' }, { value: 2 })
   agg.merge('merge', 'bar', singleValueMetric.metrics, singleValueMetric.params)
 
   // validate
@@ -170,7 +170,7 @@ test('merge metric into single-value metric', function (t) {
   agg.take(['merge'])
 
   // merge[metric -> singleValueMetric]
-  agg.store('merge', 'bar', {other: 'blah'}, {value: 3})
+  agg.store('merge', 'bar', { other: 'blah' }, { value: 3 })
   agg.merge('merge', 'bar', metric.metrics, metric.params)
 
   // validate
@@ -190,8 +190,8 @@ test('merge single-value metric into metric', function (t) {
   agg.take(['merge'])
 
   // merge[singleValueMetric -> metric]
-  agg.store('merge', 'bar', {other: 'blah'}, {value: 2})
-  agg.store('merge', 'bar', {other: 'blah'}, {value: 3})
+  agg.store('merge', 'bar', { other: 'blah' }, { value: 2 })
+  agg.store('merge', 'bar', { other: 'blah' }, { value: 3 })
   agg.merge('merge', 'bar', singleValueMetric.metrics, singleValueMetric.params)
 
   // validate
@@ -211,8 +211,8 @@ test('merge metric into metric', function (t) {
   agg.take(['merge'])
 
   // merge[metric -> metric]
-  agg.store('merge', 'bar', {other: 'blah'}, {value: 1})
-  agg.store('merge', 'bar', {other: 'blah'}, {value: 2})
+  agg.store('merge', 'bar', { other: 'blah' }, { value: 1 })
+  agg.store('merge', 'bar', { other: 'blah' }, { value: 2 })
   agg.merge('merge', 'bar', metric.metrics, metric.params)
 
   // validate

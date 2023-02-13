@@ -15,7 +15,6 @@ testDriver.test('using SPA API with the lite loader', supported, function (t, br
 
   browser
     .safeGet(router.assetURL('spa/api-tracers.html', { loader: 'rum' }))
-    .waitForFeature('loaded')
     .elementByCssSelector('body')
     .click()
     .waitFor(asserters.jsCondition('window.firedCallbacks.syncCallback'))
@@ -34,7 +33,7 @@ testDriver.test('sends interaction id and nodeId', supported, function (t, brows
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/api-tracers-captured.html', { loader: 'spa' })).waitForFeature('loaded')
+  let loadPromise = browser.safeGet(router.assetURL('spa/api-tracers-captured.html', { loader: 'spa' }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
@@ -47,7 +46,7 @@ testDriver.test('sends interaction id and nodeId', supported, function (t, brows
         return eventData
       })
     })
-    .then(({request: {query, body}}) => {
+    .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.ok(interactionTree.id, 'interaction has id')
       t.ok(interactionTree.nodeId, 'interaction has nodeId')

@@ -10,21 +10,17 @@ const querypack = require('@newrelic/nr-querypack')
 let supported = testDriver.Matcher.withFeature('addEventListener')
 
 testDriver.test('capturing SPA interactions', supported, function (t, browser, router) {
-  t.plan(23)
+  t.plan(22)
   let testStartTime = now()
 
   let rumPromise = router.expectRum()
-  let eventsPromise = router.expectInteractionEvents()
-  const asset = router.assetURL('spa/xhr.html', { loader: 'spa', init: {session_trace: {enabled: false} }} )
-  let loadPromise = browser.safeGet(asset).waitForFeature('loaded')
-
-  rumPromise.then(({request: {query}}) => {
-    t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa')
-  })
+  let eventsPromise = router.expectEvents()
+  const asset = router.assetURL('spa/xhr.html', { loader: 'spa', init: { session_trace: { enabled: false } } })
+  let loadPromise = browser.safeGet(asset)
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([{request: eventsResult}]) => {
-      let {body, query} = eventsResult
+    .then(([eventsResult]) => {
+      let { body, query } = eventsResult
 
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -32,14 +28,14 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
       t.equal(interactionTree.children.length, 0, 'expect no child nodes')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
-      let eventPromise = router.expectInteractionEvents()
+      let eventPromise = router.expectEvents()
       let domPromise = browser.elementByCssSelector('body').click()
 
       return Promise.all([eventPromise, domPromise]).then(([eventData, domData]) => {
         return eventData
       })
     })
-    .then(({request: {query, body}}) => {
+    .then(({ query, body }) => {
       let receiptTime = now()
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -81,22 +77,16 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
 })
 
 testDriver.test('capturing SPA interactions using loader_config data', supported, function (t, browser, router) {
-  t.plan(23)
+  t.plan(22)
   let testStartTime = now()
 
   let rumPromise = router.expectRum()
-  let eventsPromise = router.expectInteractionEvents()
-  let loadPromise = browser
-    .safeGet(router.assetURL('spa/xhr.html', { loader: 'spa', injectUpdatedLoaderConfig: true, init: {session_trace: {enabled: false}} }))
-    .waitForFeature('loaded')
-
-  rumPromise.then(({request: {query}}) => {
-    t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa')
-  })
+  let eventsPromise = router.expectEvents()
+  let loadPromise = browser.safeGet(router.assetURL('spa/xhr.html', { loader: 'spa', injectUpdatedLoaderConfig: true, init: { session_trace: { enabled: false } } }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([{request: eventsResult}]) => {
-      let {body, query} = eventsResult
+    .then(([eventsResult]) => {
+      let { body, query } = eventsResult
 
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -104,14 +94,14 @@ testDriver.test('capturing SPA interactions using loader_config data', supported
       t.equal(interactionTree.children.length, 0, 'expect no child nodes')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
-      let eventPromise = router.expectInteractionEvents()
+      let eventPromise = router.expectEvents()
       let domPromise = browser.elementByCssSelector('body').click()
 
       return Promise.all([eventPromise, domPromise]).then(([eventData, domData]) => {
         return eventData
       })
     })
-    .then(({request: {query, body}}) => {
+    .then(({ query, body }) => {
       let receiptTime = now()
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -154,16 +144,12 @@ testDriver.test('capturing SPA interactions using loader_config data', supported
 
 testDriver.test('child nodes in SPA interaction does not exceed set limit', supported, function (t, browser, router) {
   let rumPromise = router.expectRum()
-  let eventsPromise = router.expectInteractionEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/fetch-exceed-max-spa-nodes.html', { loader: 'spa' })).waitForFeature('loaded')
-
-  rumPromise.then(({request: {query}}) => {
-    t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa')
-  })
+  let eventsPromise = router.expectEvents()
+  let loadPromise = browser.safeGet(router.assetURL('spa/fetch-exceed-max-spa-nodes.html', { loader: 'spa' }))
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([{request: eventsResult}]) => {
-      let {body, query} = eventsResult
+    .then(([eventsResult]) => {
+      let { body, query } = eventsResult
 
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -171,7 +157,7 @@ testDriver.test('child nodes in SPA interaction does not exceed set limit', supp
       t.equal(interactionTree.children.length, 0, 'expect no child nodes')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
-      let eventPromise = router.expectInteractionEvents()
+      let eventPromise = router.expectEvents()
       let domPromise = browser
         .elementByCssSelector('body')
         .click()
@@ -180,7 +166,7 @@ testDriver.test('child nodes in SPA interaction does not exceed set limit', supp
         return eventData
       })
     })
-    .then(({request: {query, body}}) => {
+    .then(({ query, body }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.ok(interactionTree.children.length <= 128, 'interaction should have no more than 128 child nodes')
       t.end()

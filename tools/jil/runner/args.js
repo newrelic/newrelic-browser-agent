@@ -124,7 +124,7 @@ module.exports = yargs
   .wrap(Math.min(110, yargs.terminalWidth()))
   .argv
 
-function findIndexWithRegex(arr, exp) {
+function findIndexWithRegex (arr, exp) {
   let idx = -1
   arr.find(function (value, i) {
     if (exp.test(value)) {

@@ -40,22 +40,21 @@ runPvtInStnTests('spa')
 
 testDriver.test('Disabled timings feature', function (t, browser, router) {
   let url = router.assetURL('final-harvest-page-view-timings-disabled.html', { loader: 'rum' })
-  let loadPromise = browser.safeGet(url).catch(fail)
+  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
-      t.equal(router.seenRequests.events, 0, 'no events harvest yet')
-
-      let domPromise = browser
+      const eventsPromise = router.expectEvents(8000).then(() => t.error('Events should not have been harvested')).catch(() => {})
+      const domPromise = browser
         .elementById('standardBtn')
         .click()
         .get(router.assetURL('/'))
 
-      return domPromise
+      return Promise.all([eventsPromise, domPromise])
     })
-    .then(() => {
-      t.equal(router.seenRequests.events, 0, 'no events harvest')
+    .then(([results]) => {
+      t.ok(!results, 'no events harvest')
       t.end()
     })
     .catch(fail)
@@ -72,10 +71,10 @@ function runPaintTimingsTests (loader) {
 
     const rumPromise = router.expectRum()
     const timingsPromise = router.expectTimings()
-    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: 'spa' }))
+    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: 'spa' })).waitForFeature('loaded')
 
     Promise.all([timingsPromise, rumPromise, loadPromise])
-      .then(([timingsResult]) => {
+      .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
         let timing = timings.find(t => t.name === 'fp')
@@ -95,10 +94,10 @@ function runPaintTimingsTests (loader) {
 
     const rumPromise = router.expectRum()
     const timingsPromise = router.expectTimings()
-    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: 'spa' }))
+    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: 'spa' })).waitForFeature('loaded')
 
     Promise.all([timingsPromise, rumPromise, loadPromise])
-      .then(([timingsResult]) => {
+      .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
         let timing = timings.find(t => t.name === 'fcp')
@@ -117,18 +116,18 @@ function runPaintTimingsTests (loader) {
 function runFirstInteractionTests (loader) {
   testDriver.test(`First interaction and first input delay for ${loader} agent`, supportsFirstInteraction, function (t, browser, router) {
     const rumPromise = router.expectRum()
-    const loadPromise = browser.safeGet(router.assetURL('basic-click-tracking.html', { loader: loader }))
+    const loadPromise = browser.safeGet(router.assetURL('basic-click-tracking.html', { loader: loader })).waitForFeature('loaded')
 
     const start = Date.now()
 
     Promise.all([rumPromise, loadPromise])
-      .then(request => {
+      .then(() => {
         const domPromise = browser.elementById('free_tacos').click()
           .get(router.assetURL('/'))
         const timingsPromise = router.expectTimings()
         return Promise.all([timingsPromise, domPromise])
       })
-      .then(([timingsResult]) => {
+      .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 
@@ -169,7 +168,7 @@ function runLargestContentfulPaintFromInteractionTests (loader) {
   testDriver.test(`Largest Contentful Paint from first interaction event for ${loader} agent`, supportedLcp, function (t, browser, router) {
     t.plan(9)
     const rumPromise = router.expectRum()
-    const loadPromise = browser.safeGet(router.assetURL('basic-click-tracking.html', { loader: loader }))
+    const loadPromise = browser.safeGet(router.assetURL('basic-click-tracking.html', { loader: loader })).waitForFeature('loaded')
 
     Promise.all([rumPromise, loadPromise])
       .then(() => {
@@ -178,7 +177,7 @@ function runLargestContentfulPaintFromInteractionTests (loader) {
         const timingsPromise = router.expectTimings()
         return Promise.all([timingsPromise, domPromise])
       })
-      .then(([timingsResult]) => {
+      .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 
@@ -217,17 +216,17 @@ function runWindowLoadTests (loader) {
 
     let start = Date.now()
     let url = router.assetURL('instrumented.html', { loader: loader })
-    let loadPromise = browser.safeGet(url).catch(fail)
+    let loadPromise = browser.safeGet(url).waitForFeature('loaded')
 
     Promise.all([loadPromise, router.expectRum()])
       .then(() => {
         let timingsPromise = router.expectTimings()
         let domPromise = browser.get(router.assetURL('/'))
-        return Promise.all([timingsPromise, domPromise]).then(([data, clicked]) => {
+        return Promise.all([timingsPromise, domPromise]).then(([data]) => {
           return data
         })
       })
-      .then(({ body, query }) => {
+      .then(({ request: { body, query } }) => {
         let duration = Date.now() - start
 
         const timings = querypack.decode(body && body.length ? body : query.e)
@@ -255,7 +254,7 @@ function runWindowUnloadTests (loader) {
 
     let start = Date.now()
     let url = router.assetURL('instrumented.html', { loader: loader })
-    let loadPromise = browser.safeGet(url).catch(fail)
+    let loadPromise = browser.safeGet(url).waitForFeature('loaded')
 
     Promise.all([loadPromise, router.expectRum()])
       .then(() => {
@@ -265,7 +264,7 @@ function runWindowUnloadTests (loader) {
           return data
         })
       })
-      .then(({ body, query }) => {
+      .then(({ request: { body, query } }) => {
         let duration = Date.now() - start
 
         const timings = querypack.decode(body && body.length ? body : query.e)
@@ -293,7 +292,7 @@ function runPageHideTests (loader) {
 
     let start = Date.now()
     let url = router.assetURL('pagehide.html', { loader: loader })
-    let loadPromise = browser.safeGet(url).catch(fail)
+    let loadPromise = browser.safeGet(url).waitForFeature('loaded')
 
     Promise.all([loadPromise, router.expectRum()])
       .then(() => {
@@ -303,7 +302,7 @@ function runPageHideTests (loader) {
         const timingsPromise = router.expectTimings()
         return Promise.all([timingsPromise, clickPromise])
       })
-      .then(([timingsResult]) => {
+      .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
         let duration = Date.now() - start
@@ -331,6 +330,7 @@ function runPvtInStnTests (loader) {
     const rumPromise = router.expectRum()
     const loadPromise = browser
       .safeGet(router.assetURL('cls-lcp.html', { loader: loader }))
+      .waitForFeature('loaded')
       .waitForConditionInBrowser('window.contentAdded === true')
 
     Promise.all([rumPromise, loadPromise])
@@ -343,7 +343,7 @@ function runPvtInStnTests (loader) {
         const resourcesPromise = router.expectResources()
         return Promise.all([resourcesPromise, clickPromise])
       })
-      .then(([resourcesResult]) => {
+      .then(([{ request: resourcesResult }]) => {
         const expectedPVTItems = ['fi', 'fid', 'lcp', 'pageHide', 'fcp', 'load', 'unload']
         const stnItems = !!resourcesResult && !!resourcesResult.body ? JSON.parse(resourcesResult.body).res : []
         t.ok(stnItems.length, 'STN items were generated')
@@ -365,6 +365,7 @@ function runClsTests (loader) {
     const rumPromise = router.expectRum()
     const loadPromise = browser
       .safeGet(router.assetURL('cls-lcp.html', { loader: loader }))
+      .waitForFeature('loaded')
       .waitForConditionInBrowser('window.contentAdded === true')
 
     Promise.all([rumPromise, loadPromise])
@@ -377,7 +378,7 @@ function runClsTests (loader) {
         const timingsPromise = router.expectTimings()
         return Promise.all([timingsPromise, clickPromise])
       })
-      .then(([timingsResult]) => {
+      .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 
@@ -401,6 +402,7 @@ function runClsTests (loader) {
     const rumPromise = router.expectRum()
     const loadPromise = browser
       .safeGet(router.assetURL('cls-basic.html', { loader: loader }))
+      .waitForFeature('loaded')
       .waitForConditionInBrowser('window.contentAdded === true')
 
     Promise.all([rumPromise, loadPromise])
@@ -409,7 +411,7 @@ function runClsTests (loader) {
         let domPromise = browser.get(router.assetURL('/'))
         return Promise.all([timingsPromise, domPromise])
       })
-      .then(([timingsResult]) => {
+      .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 
@@ -433,7 +435,7 @@ function runClsTests (loader) {
 
     // load page without any expected layout shifts
     let url = router.assetURL('instrumented.html', { loader: loader })
-    let loadPromise = browser.safeGet(url).catch(fail)
+    let loadPromise = browser.safeGet(url).waitForFeature('loaded')
 
     Promise.all([loadPromise, router.expectRum()])
       .then(() => {
@@ -443,7 +445,7 @@ function runClsTests (loader) {
           return data
         })
       })
-      .then(({ body, query }) => {
+      .then(({ request: { body, query } }) => {
         const timings = querypack.decode(body && body.length ? body : query.e)
 
         var unload = timings.find(t => t.name === 'unload')
@@ -470,6 +472,7 @@ function runClsTests (loader) {
       // in older browsers, the default timeout appeared to be 0 causing tests to fail instantly
       .setAsyncScriptTimeout(10000)
       .safeGet(router.assetURL('cls-basic.html', { loader: loader }))
+      .waitForFeature('loaded')
       .waitForConditionInBrowser('window.contentAdded === true')
 
     Promise.all([rumPromise, loadPromise])
@@ -478,7 +481,7 @@ function runClsTests (loader) {
         let domPromise = browser.get(router.assetURL('/'))
         return Promise.all([timingsPromise, domPromise])
       })
-      .then(([timingsResult]) => {
+      .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 
@@ -502,7 +505,7 @@ function runClsTests (loader) {
     t.plan(2)
 
     const rumPromise = router.expectRum()
-    const loadPromise = browser.safeGet(router.assetURL('cls-interaction.html', { loader: loader }))
+    const loadPromise = browser.safeGet(router.assetURL('cls-interaction.html', { loader: loader })).waitForFeature('loaded')
 
     Promise.all([rumPromise, loadPromise])
       .then(request => {
@@ -511,7 +514,7 @@ function runClsTests (loader) {
         const timingsPromise = router.expectTimings()
         return Promise.all([timingsPromise, domPromise])
       })
-      .then(([timingsResult]) => {
+      .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 
@@ -536,6 +539,7 @@ function runClsTests (loader) {
     const rumPromise = router.expectRum()
     const loadPromise = browser
       .safeGet(router.assetURL('cls-load.html', { loader: loader }))
+      .waitForFeature('loaded')
       .waitForConditionInBrowser('window.contentAdded === true')
 
     Promise.all([rumPromise, loadPromise])
@@ -544,7 +548,7 @@ function runClsTests (loader) {
         let domPromise = browser.get(router.assetURL('/'))
         return Promise.all([timingsPromise, domPromise])
       })
-      .then(([timingsResult]) => {
+      .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 
@@ -567,7 +571,7 @@ function runClsTests (loader) {
     t.plan(2)
 
     const rumPromise = router.expectRum()
-    const loadPromise = browser.safeGet(router.assetURL('cls-pagehide.html', { loader: loader }))
+    const loadPromise = browser.safeGet(router.assetURL('cls-pagehide.html', { loader: loader })).waitForFeature('loaded')
 
     Promise.all([rumPromise, loadPromise])
       .then(request => {
@@ -580,7 +584,7 @@ function runClsTests (loader) {
         const timingsPromise = router.expectTimings()
         return Promise.all([timingsPromise, domPromise])
       })
-      .then(([timingsResult]) => {
+      .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 
@@ -603,6 +607,7 @@ function runClsTests (loader) {
     const rumPromise = router.expectRum()
     const loadPromise = browser
       .safeGet(router.assetURL('cls-multiple-small-then-big.html', { loader: loader }))
+      .waitForFeature('loaded')
       .waitForConditionInBrowser('window.contentAdded === true', 10000)
       .eval('window.allCls')
 
@@ -612,7 +617,7 @@ function runClsTests (loader) {
         let domPromise = browser.get(router.assetURL('/'))
         return Promise.all([timingsPromise, domPromise, loadPromise])
       })
-      .then(([timingsResult, domResult, loadResult]) => {
+      .then(([{ request: timingsResult }, domResult, loadResult]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 
@@ -636,6 +641,7 @@ function runClsTests (loader) {
     const rumPromise = router.expectRum()
     const loadPromise = browser
       .safeGet(router.assetURL('cls-multiple-big-then-small.html', { loader: loader }))
+      .waitForFeature('loaded')
       .waitForConditionInBrowser('window.contentAdded === true', 10000)
       .eval('window.allCls')
 
@@ -645,7 +651,7 @@ function runClsTests (loader) {
         let domPromise = browser.get(router.assetURL('/'))
         return Promise.all([timingsPromise, domPromise, loadPromise])
       })
-      .then(([timingsResult, domResult, loadResult]) => {
+      .then(([{ request: timingsResult }, domResult, loadResult]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 
@@ -691,7 +697,7 @@ function runCustomAttributeTests (loader) {
       newrelic.setCustomAttribute('net-rtt', 'invalid')
       newrelic.setCustomAttribute('net-dlink', 'invalid')`
     })
-    let loadPromise = browser.safeGet(url).catch(fail)
+    let loadPromise = browser.safeGet(url).waitForFeature('loaded')
     var reservedTimingAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elUrl', 'elTag',
       'net-type', 'net-etype', 'net-rtt', 'net-dlink']
 
@@ -703,7 +709,7 @@ function runCustomAttributeTests (loader) {
           return data
         })
       })
-      .then(({ body, query }) => {
+      .then(({ request: { body, query } }) => {
         const timings = querypack.decode(body && body.length ? body : query.e)
         t.ok(timings.length > 0, 'there should be at least one timing metric')
 
@@ -744,13 +750,13 @@ function runLcpTests (loader) {
     })
 
     const rumPromise = router.expectRum()
-    const loadPromise = browser.safeGet(assetURL)
+    const loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
 
     Promise.all([rumPromise, loadPromise])
       .then(() => {
         return router.expectTimings()
       })
-      .then((timingsResult) => {
+      .then(({ request: timingsResult }) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 
@@ -784,13 +790,13 @@ function runLcpTests (loader) {
     })
 
     const rumPromise = router.expectRum()
-    const loadPromise = browser.safeGet(assetURL)
+    const loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
 
     Promise.all([rumPromise, loadPromise])
       .then(() => {
         return router.expectTimings()
       })
-      .then((timingsResult) => {
+      .then(({ request: timingsResult }) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 

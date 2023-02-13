@@ -20,10 +20,10 @@ testDriver.test('captures innerText', supported, function (t, browser, router) {
   t.plan(5)
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init })).waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([eventsResult]) => {
+    .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -40,7 +40,7 @@ testDriver.test('captures innerText', supported, function (t, browser, router) {
         return eventData
       })
     })
-    .then(({ query, body }) => {
+    .then(({ request: { query, body } }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
       t.deepEqual(interactionTree.children[0], {
@@ -61,10 +61,10 @@ testDriver.test('captures value', supported, function (t, browser, router) {
   t.plan(5)
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init })).waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([eventsResult]) => {
+    .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -81,7 +81,7 @@ testDriver.test('captures value', supported, function (t, browser, router) {
         return eventData
       })
     })
-    .then(({ query, body }) => {
+    .then(({ request: { query, body } }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
       t.deepEqual(interactionTree.children[0], {
@@ -102,10 +102,10 @@ testDriver.test('captures title', supported, function (t, browser, router) {
   t.plan(5)
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init })).waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([eventsResult]) => {
+    .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -122,7 +122,7 @@ testDriver.test('captures title', supported, function (t, browser, router) {
         return eventData
       })
     })
-    .then(({ query, body }) => {
+    .then(({ request: { query, body } }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
       t.deepEqual(interactionTree.children[0], {
@@ -143,10 +143,10 @@ testDriver.test('does not capture body text', supported, function (t, browser, r
   t.plan(4)
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/action-text.html', { loader: 'spa', init })).waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([eventsResult]) => {
+    .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -169,7 +169,7 @@ testDriver.test('does not capture body text', supported, function (t, browser, r
         return eventData
       })
     })
-    .then(({ query, body }) => {
+    .then(({ request: { query, body } }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.children.length, 0, 'expected no child nodes')
     })

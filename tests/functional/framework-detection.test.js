@@ -21,7 +21,7 @@ testDriver.test('Agent detects a page built with REACT and sends a supportabilit
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([data]) => {
+    .then(([{ request: data }]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics objects were generated')
       const sm = supportabilityMetrics.find(x => x.params.name.includes('Framework'))
@@ -51,7 +51,7 @@ testDriver.test('Agent detects a page built with ANGULAR and sends a supportabil
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([data]) => {
+    .then(([{ request: data }]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics objects were generated')
       const sm = supportabilityMetrics.find(x => x.params.name.includes('Framework'))
@@ -81,7 +81,7 @@ testDriver.test('Agent detects a page built with NO FRAMEWORK and DOES NOT send 
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([data]) => {
+    .then(([{ request: data }]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       if (!supportabilityMetrics) {
         t.ok(1 === 1, 'FRAMEWORK SupportabilityMetrics object(s) were NOT generated')

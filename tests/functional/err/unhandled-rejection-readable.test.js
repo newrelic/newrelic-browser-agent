@@ -24,9 +24,9 @@ testDriver.test('unhandledPromiseRejections are caught and are readable', suppor
   let errorPromise = router.expectErrors()
   let loadPromise = browser.get(assetURL)
 
-  Promise.all([errorPromise, rumPromise, loadPromise]).then(([response]) => {
-    assertErrorAttributes(t, response.query)
-    const actualErrors = getErrorsFromResponse(response, browser)
+  Promise.all([errorPromise, rumPromise, loadPromise]).then(([{ request }]) => {
+    assertErrorAttributes(t, request.query)
+    const actualErrors = getErrorsFromResponse(request, browser)
     const expectedErrorMessages = [
       { message: 'Unhandled Promise Rejection: "Test"', tested: false, meta: 'string' },
       { message: 'Unhandled Promise Rejection: 1', tested: false, meta: 'number' },

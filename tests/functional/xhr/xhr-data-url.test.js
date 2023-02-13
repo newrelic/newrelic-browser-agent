@@ -16,21 +16,6 @@ const init = {
 }
 
 /**
- * Takes an iterable (e.g., array) of promises and returns a single promise that fulfills when all
- * the input's promises fulfill; or if the specified milliseconds have elapsed first, returns a
- * single promise that fulfills with a value of `undefined`.
- * @param {Promise[]} promises - iterable (e.g. array) of promises to be resolved.
- * @param {number} ms - milliseconds before resolving with undefined.
- * @returns
- */
-var timedPromiseAll = (promises, ms) => Promise.race([
-  new Promise((resolve) => {
-    setTimeout(() => resolve(), ms)
-  }),
-  Promise.all(promises)
-])
-
-/**
  * Data URLs should not be included in XHR collection. In addition, because these are not typical URLs with a hostname,
  * the agent must be able to handle them gracefully. This test confirms that no event is collected for the page's XHR
  * call to a data URL and that the the data URL does not cause the agent to fail before the next harvest.

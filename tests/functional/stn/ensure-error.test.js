@@ -14,7 +14,7 @@ testDriver.test('errors get to session traces', supported, function (
 ) {
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
-  let loadPromise = browser.get(router.assetURL('sessiontraceerror.html'))
+  let loadPromise = browser.get(router.assetURL('sessiontraceerror.html')).waitForFeature('loaded')
 
   Promise.all([resourcePromise, rumPromise, loadPromise])
     .then(() => {

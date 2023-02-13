@@ -24,7 +24,7 @@ function loaderTypeSupportabilityMetric (loaderType) {
     }))
 
     Promise.all([metricsPromise, rumPromise, loadPromise])
-      .then(([data]) => {
+      .then(([{ request: data }]) => {
         var supportabilityMetrics = getMetricsFromResponse(data, true)
         const loaderTypeSM = supportabilityMetrics.find(x => x.params.name.includes('LoaderType'))
         t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
@@ -45,7 +45,7 @@ testDriver.test('Calling a newrelic[api] fn creates a supportability metric', wi
   const observedAPImetrics = []
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([data]) => {
+    .then(([{ request: data }]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       var customMetrics = getMetricsFromResponse(data, false)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
@@ -79,7 +79,7 @@ testDriver.test('a valid obfuscationRule creates detected supportability metric'
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([data]) => {
+    .then(([{ request: data }]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
       supportabilityMetrics.forEach(sm => {
@@ -98,7 +98,7 @@ testDriver.test('an invalid obfuscation regex type creates invalid supportabilit
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([data]) => {
+    .then(([{ request: data }]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
       let invalidDetected = false
@@ -120,7 +120,7 @@ testDriver.test('an invalid obfuscation regex undefined creates invalid supporta
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([data]) => {
+    .then(([{ request: data }]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
       let invalidDetected = false
@@ -142,7 +142,7 @@ testDriver.test('an invalid obfuscation replacement type creates invalid support
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([data]) => {
+    .then(([{ request: data }]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
       let invalidDetected = false
@@ -168,7 +168,7 @@ testDriver.test('workers creation generates sm', function (t, browser, router) {
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([data]) => {
+    .then(([{ request: data }]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, `${supportabilityMetrics.length} SupportabilityMetrics object(s) were generated`)
 

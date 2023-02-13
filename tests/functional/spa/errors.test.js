@@ -18,7 +18,7 @@ testDriver.test('error on the initial page load', function (t, browser, router) 
         p
       ])
     })
-    .then(([eventData, errorData]) => {
+    .then(([{ request: eventData }, { request: errorData }]) => {
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
@@ -62,7 +62,7 @@ testDriver.test('error in root node', function (t, browser, router) {
     .then(() => {
       return clickPageAndWaitForEventsAndErrors(t, browser, router)
     })
-    .then(([eventData, errorData]) => {
+    .then(([{ request: eventData }, { request: errorData }]) => {
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
@@ -96,7 +96,7 @@ testDriver.test('error in xhr', function (t, browser, router) {
     .then(() => {
       return clickPageAndWaitForEventsAndErrors(t, browser, router)
     })
-    .then(([eventData, errorData]) => {
+    .then(([{ request: eventData }, { request: errorData }]) => {
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
@@ -131,7 +131,7 @@ testDriver.test('error in custom tracer', function (t, browser, router) {
     .then(() => {
       return clickPageAndWaitForEventsAndErrors(t, browser, router)
     })
-    .then(([eventData, errorData]) => {
+    .then(([{ request: eventData }, { request: errorData }]) => {
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
@@ -169,7 +169,7 @@ testDriver.test('string error in custom tracer', function (t, browser, router) {
     .then(() => {
       return clickPageAndWaitForEventsAndErrors(t, browser, router)
     })
-    .then(([eventData, errorData]) => {
+    .then(([{ request: eventData }, { request: errorData }]) => {
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
@@ -206,7 +206,7 @@ testDriver.test('errors in discarded SPA interactions', function (t, browser, ro
       var p = clickAndRedirect(browser, router, 200) // wait 200ms because the test page itself waits 100ms before throwing error
       return Promise.all([p, router.expectErrors()])
     })
-    .then(([domData, errorData]) => {
+    .then(([domData, { request: errorData }]) => {
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
@@ -233,7 +233,7 @@ testDriver.test('errors outside of interaction', function (t, browser, router) {
       var p = clickAndRedirect(browser, router, 200) // wait 200ms because the test page itself waits 100ms before throwing error
       return Promise.all([p, router.expectErrors()])
     })
-    .then(([domData, errorData]) => {
+    .then(([domData, { request: errorData }]) => {
       // check that errors payload did not include the error
       const errors = getErrorsFromResponse(errorData, browser)
 
@@ -266,14 +266,14 @@ testDriver.test('same error in multiple interactions', function (t, browser, rou
       ])
     })
     .then(result => {
-      event1 = result[1]
+      event1 = result[1].request
       return Promise.all([
         browser.elementByCssSelector('body').click(),
         router.expectEvents()
       ])
     })
     .then(result => {
-      event2 = result[1]
+      event2 = result[1].request
       return Promise.all([
         leavePage(browser, router),
         router.expectErrors()
@@ -282,7 +282,7 @@ testDriver.test('same error in multiple interactions', function (t, browser, rou
           return result[1]
         })
     })
-    .then(errorData => {
+    .then(({ request: errorData }) => {
       let interaction1 = querypack.decode(
         event1.body && event1.body.length ? event1.body : event1.query.e)[0]
       var interactionId1 = interaction1.id
@@ -325,7 +325,7 @@ function waitForPageLoadAnInitialCalls (browser, router, urlPath) {
         metrics: { enabled: false },
         session_trace: { enabled: false }
       }
-    }))
+    })).waitForFeature('loaded')
   ])
 }
 

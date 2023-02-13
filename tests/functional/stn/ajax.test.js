@@ -23,12 +23,12 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
     }
   })
 
-  let loadPromise = browser.safeGet(assetURL)
+  let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
 
   Promise.all([resourcePromise, loadPromise, rumPromise]).then(([result]) => {
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
     // trigger an XHR call after
     var clickPromise = browser
@@ -40,9 +40,9 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
     return Promise.all([resourcePromise, clickPromise])
   })
     .then(([result]) => {
-      t.equal(result.res.statusCode, 200, 'server responded with 200')
+      t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
-      const body = result.body
+      const body = result.request.body
       const harvestBody = JSON.parse(body).res
       const loadNodes = harvestBody.filter(function (node) { return node.t === 'event' && node.n === 'load' || node.n === 'readystatechange' })
       t.notOk(loadNodes.length > 0, 'XMLHttpRequest nodes not captured when ajax instrumentation is disabled')
@@ -66,7 +66,7 @@ testDriver.test('session trace ajax deny list', supported, function (t, browser,
       ajax: {
         harvestTimeSeconds: 2,
         enabled: true,
-        deny_list: [router.router.assetServer.host]
+        deny_list: [router.testServer.assetServer.host]
       },
       page_view_timing: {
         enabled: false
@@ -74,18 +74,15 @@ testDriver.test('session trace ajax deny list', supported, function (t, browser,
     }
   })
 
-  let loadPromise = browser.safeGet(assetURL)
+  let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
-  const ajaxPromise = router.expectBeaconRequest(
-    router.beaconRequests.errors,
-    8000
-  ).then(() => {
+  const ajaxPromise = router.expectAjaxTimeSlices(8000).then(() => {
     t.fail('Should not have seen the ajax event')
   }).catch(() => {})
 
   Promise.all([resourcePromise, ajaxPromise, loadPromise, rumPromise]).then(([result]) => {
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
     // trigger an XHR call after
     var clickPromise = browser
@@ -97,9 +94,9 @@ testDriver.test('session trace ajax deny list', supported, function (t, browser,
     return Promise.all([resourcePromise, clickPromise])
   })
     .then(([result]) => {
-      t.equal(result.res.statusCode, 200, 'server responded with 200')
+      t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
-      const body = result.body
+      const body = result.request.body
       const harvestBody = JSON.parse(body).res
       const loadNodes = harvestBody.filter(function (node) { return node.t === 'ajax' })
       t.ok(loadNodes.length > 0, 'XMLHttpRequest nodes captured even with ajax deny list')

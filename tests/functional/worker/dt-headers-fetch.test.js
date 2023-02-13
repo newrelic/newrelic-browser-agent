@@ -28,7 +28,7 @@ function fetchDTHeader (type, testCase, browserVersionMatcher) {
       if (testCase.configuration) {
         init.distributed_tracing = testCase.configuration
         if (testCase.addRouterToAllowedOrigins) {
-          init.distributed_tracing.allowed_origins.push(router.beaconURL())
+          init.distributed_tracing.allowed_origins.push('http://' + router.testServer.bamServer.host + ':' + router.testServer.bamServer.port)
         }
       }
       const scenarios = [
@@ -71,19 +71,24 @@ function fetchDTHeader (type, testCase, browserVersionMatcher) {
           let assetURL = router.assetURL(`worker/${type}-worker.html`, {
             config,
             init,
-            testId: router.testID,
+            testId: router.testId,
             injectUpdatedLoaderConfig: true,
             workerCommands: [
-							`self.testId = '${router.testID}'`,
+							`self.testId = '${router.testId}'`,
 							scenario.fetchTest
             ].map(x => x.toString())
           })
 
           const loadPromise = browser.get(assetURL)
-          const fetchPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') })
+          const ajaxPromise = router.expect('bamServer', {
+            test: function (request) {
+              const url = new URL(request.url, 'resolve://')
+              return url.pathname === `/dt/${router.testId}`
+            }
+          })
 
-          Promise.all([fetchPromise, loadPromise])
-            .then(([{ headers }]) => {
+          Promise.all([ajaxPromise, loadPromise])
+            .then(([{ request: { headers } }]) => {
               if (testCase.newrelicHeader) {
                 validateNewrelicHeader(t, headers, config)
               } else {

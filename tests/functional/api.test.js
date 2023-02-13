@@ -23,9 +23,9 @@ testDriver.test('customTransactionName 1 arg', function (t, browser, router) {
   }))
 
   Promise.all([rumPromise, loadPromise])
-    .then(([data]) => {
+    .then(([{ request }]) => {
       t.equal(
-        data.query.ct,
+        request.query.ct,
         'http://custom.transaction/foo',
         'Custom Transaction Name (1 arg)'
       )
@@ -49,7 +49,7 @@ testDriver.test('customTransactionName 1 arg unload', withUnload, function (t, b
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([{ body, query }]) => {
+    .then(([{ request: { body, query } }]) => {
       const time = getTime(body ? JSON.parse(body)?.cm : JSON.parse(query.cm))
       t.equal(
         query.ct,
@@ -80,7 +80,7 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
   }))
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([{ body, query }]) => {
+    .then(([{ request: { body, query } }]) => {
       const time = getTime(body ? JSON.parse(body).cm : JSON.parse(query.cm))
       t.equal(
         query.ct,
@@ -101,7 +101,8 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
 
 testDriver.test('noticeError takes an error object', withUnload, function (t, browser, router) {
   t.plan(2)
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let errorsPromise = router.expectErrors()
   let loadPromise = browser.get(router.assetURL('api.html', {
     init: {
       page_view_timing: {
@@ -113,9 +114,9 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
     }
   }))
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([data]) => {
-      var errorData = getErrorsFromResponse(data, browser)
+  Promise.all([errorsPromise, rumPromise, loadPromise])
+    .then(([{ request }]) => {
+      var errorData = getErrorsFromResponse(request, browser)
       var params = errorData[0] && errorData[0]['params']
       if (params) {
         var exceptionClass = params.exceptionClass
@@ -132,7 +133,8 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
 
 testDriver.test('noticeError takes a string', withUnload, function (t, browser, router) {
   t.plan(2)
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let errorsPromise = router.expectErrors()
   let loadPromise = browser.get(router.assetURL('api/noticeError.html', {
     init: {
       page_view_timing: {
@@ -144,9 +146,9 @@ testDriver.test('noticeError takes a string', withUnload, function (t, browser, 
     }
   }))
 
-  Promise.all([rumPromise, loadPromise])
-    .then(([data]) => {
-      var errorData = getErrorsFromResponse(data, browser)
+  Promise.all([errorsPromise, rumPromise, loadPromise])
+    .then(([{ request }]) => {
+      var errorData = getErrorsFromResponse(request, browser)
       var params = errorData[0] && errorData[0]['params']
       if (params) {
         var exceptionClass = params.exceptionClass
@@ -176,9 +178,9 @@ testDriver.test('finished records a PageAction when called before RUM message', 
   }))
 
   Promise.all([insPromise, rumPromise, loadPromise])
-    .then(([insData, rumData]) => {
-      const query = insData.query
-      const body = insData.body
+    .then(([{ request }]) => {
+      const query = request.query
+      const body = request.body
       if (query.ins) {
         insData = JSON.parse(query.ins)
       } else {
@@ -214,8 +216,8 @@ testDriver.test('release api adds releases to jserrors', withUnload, function (t
         return errorData
       })
     })
-    .then(({ query, body }) => {
-      t.equal(query.ri, '{"example":"123","other":"456"}', 'should have expected value for ri query param')
+    .then(({ request }) => {
+      t.equal(request.query.ri, '{"example":"123","other":"456"}', 'should have expected value for ri query param')
       t.end()
     })
     .catch(fail(t))
@@ -243,8 +245,8 @@ testDriver.test('release api limits releases to jserrors', withUnload, function 
         return errorData
       })
     })
-    .then(({ query, body }) => {
-      const queryRi = JSON.parse(query.ri)
+    .then(({ request }) => {
+      const queryRi = JSON.parse(request.query.ri)
       const ri = {
         one: '1',
         two: '2',
@@ -285,7 +287,7 @@ testDriver.test('release api limits release size to jserrors', withUnload, funct
         return errorData
       })
     })
-    .then(({ query, body }) => {
+    .then(({ request }) => {
       const ninetyNineY = 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy'
       const oneHundredX = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
       const twoHundredCharacterString = ninetyNineY + oneHundredX + 'q'
@@ -294,7 +296,7 @@ testDriver.test('release api limits release size to jserrors', withUnload, funct
         three: twoHundredCharacterString
       }
       ri[twoHundredCharacterString] = '2'
-      const queryRi = JSON.parse(query.ri)
+      const queryRi = JSON.parse(request.query.ri)
       t.equal(twoHundredCharacterString.length, 200, 'twoHundredCharacterString should be 200 characters but is ' + twoHundredCharacterString.length)
       t.deepEqual(queryRi, ri, `${JSON.stringify(ri)} is expected but got ${JSON.stringify(queryRi)}`)
       t.end()
@@ -324,8 +326,8 @@ testDriver.test('no query param when release is not set', withUnload, function (
         return errorData
       })
     })
-    .then(({ query, body }) => {
-      t.notOk('ri' in query, 'should not have ri query param')
+    .then(({ request }) => {
+      t.notOk('ri' in request.query, 'should not have ri query param')
       t.end()
     })
     .catch(fail(t))

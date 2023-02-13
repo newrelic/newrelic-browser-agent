@@ -21,7 +21,7 @@ testDriver.test('interactions wait for external scripts to complete', supported,
         return eventData
       })
     })
-    .then(({ query, body }) => {
+    .then(({ request: { query, body } }) => {
       let i = querypack.decode(body && body.length ? body : query.e)[0]
       t.ok(i.start, 'start is present')
       t.ok(i.end, 'end is present')
@@ -40,7 +40,7 @@ testDriver.test('interactions wait for external scripts to complete', supported,
 
 testDriver.test('ajax call in loaded script extends interaction', supported, function (t, browser, router) {
   loadClickAndGetInteraction(router, browser, 'spa/external-scripts/script-with-ajax.html')
-    .then(({ query, body }) => {
+    .then(({ request: { query, body } }) => {
       let i = querypack.decode(body && body.length ? body : query.e)[0]
 
       t.equal(i.children.length, 1, 'should have one child for ajax')
@@ -62,7 +62,7 @@ testDriver.test('ajax call in loaded script extends interaction', supported, fun
 
 testDriver.test('errored script', supported, function (t, browser, router) {
   loadClickAndGetInteraction(router, browser, 'spa/external-scripts/aborted-script.html')
-    .then(({ query, body }) => {
+    .then(({ request: { query, body } }) => {
       let i = querypack.decode(body && body.length ? body : query.e)[0]
 
       t.ok(i.start, 'start is present')
@@ -82,6 +82,7 @@ testDriver.test('errored script', supported, function (t, browser, router) {
 
 function loadAndWaitForLoad (router, browser, url) {
   let loadPromise = browser.safeGet(router.assetURL(url, { loader: 'spa' }))
+    .waitForFeature('loaded')
   let rumPromise = router.expectRum()
   let eventPromise = router.expectEvents()
 

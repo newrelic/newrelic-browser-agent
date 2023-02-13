@@ -15,7 +15,7 @@ testDriver.test('referrer attribute is sent in the query string', notSafariWithS
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
   let rumPromise = router.expectRum()
 
-  Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {
+  Promise.all([rumPromise, loadPromise]).then(([{ request: { query } }]) => {
     t.ok(query.ref, 'The query string should include the ref attribute.')
   }).catch(fail(t, FAIL_MSG))
 })
@@ -25,7 +25,7 @@ testDriver.test('referrer sent in query does not include query parameters', notS
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
   let rumPromise = router.expectRum()
 
-  Promise.all([rumPromise, loadPromise]).then(([{ query, headers }]) => {
+  Promise.all([rumPromise, loadPromise]).then(([{ request: { query } }]) => {
     var queryRefUrl = url.parse(query.ref)
     t.ok(queryRefUrl.query == null, 'url in ref query param does not contain query parameters')
   }).catch(fail(t, FAIL_MSG))
@@ -36,7 +36,7 @@ testDriver.test('referrer sent in referer header includes path', originOnlyRefer
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
   let rumPromise = router.expectRum()
 
-  Promise.all([rumPromise, loadPromise]).then(([{ query, headers }]) => {
+  Promise.all([rumPromise, loadPromise]).then(([{ request: { headers } }]) => {
     var headerUrl = url.parse(headers.referer)
     t.ok(headerUrl.query != null, 'url in referer header contains query parameters')
   }).catch(fail(t, FAIL_MSG))
@@ -58,7 +58,7 @@ testDriver.test('when url is changed using pushState during load', notSafariWith
     let loadPromise = browser.get(originalUrl)
     let rumPromise = router.expectRum()
 
-    Promise.all([rumPromise, loadPromise]).then(([{ query, headers }]) => {
+    Promise.all([rumPromise, loadPromise]).then(([{ request: { headers } }]) => {
       var headerUrl = url.parse(headers.referer)
       t.equal(headerUrl.pathname, redirectedPath, 'referer header contains the redirected URL')
     }).catch(fail(t, FAIL_MSG))
@@ -69,7 +69,7 @@ testDriver.test('when url is changed using pushState during load', notSafariWith
     let loadPromise = browser.get(originalUrl)
     let rumPromise = router.expectRum()
 
-    Promise.all([rumPromise, loadPromise]).then(([{ query, headers }]) => {
+    Promise.all([rumPromise, loadPromise]).then(([{ request: { query } }]) => {
       var queryRefUrl = url.parse(query.ref)
       t.equal(queryRefUrl.pathname, redirectedPath, 'ref param contains the redirected URL')
     }).catch(fail(t, FAIL_MSG))
@@ -92,7 +92,7 @@ testDriver.test('when url is changed using replaceState during load', notSafariW
     let loadPromise = browser.get(originalUrl)
     let rumPromise = router.expectRum()
 
-    Promise.all([rumPromise, loadPromise]).then(([{ query, headers }]) => {
+    Promise.all([rumPromise, loadPromise]).then(([{ request: { headers } }]) => {
       var headerUrl = url.parse(headers.referer)
       t.equal(headerUrl.pathname, redirectedPath, 'referer header contains the redirected URL')
     }).catch(fail(t, FAIL_MSG))
@@ -104,7 +104,7 @@ testDriver.test('when url is changed using replaceState during load', notSafariW
     let loadPromise = browser.get(originalUrl)
     let rumPromise = router.expectRum()
 
-    Promise.all([rumPromise, loadPromise]).then(([{ query, headers }]) => {
+    Promise.all([rumPromise, loadPromise]).then(([{ request: { query } }]) => {
       var queryRefUrl = url.parse(query.ref)
       t.equal(queryRefUrl.pathname, redirectedPath, 'ref param contains the redirected URL')
     }).catch(fail(t, FAIL_MSG))
@@ -117,7 +117,7 @@ testDriver.test('browsers that do not decode the url when accessing window.locat
   let loadPromise = browser.safeGet(assetURL).catch(fail(t, FAIL_MSG))
   let rumPromise = router.expectRum()
 
-  Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {
+  Promise.all([rumPromise, loadPromise]).then(([{ request: { query } }]) => {
     let cleanAssetURL = cleanURL(assetURL)
     t.ok(query.ref, 'The query string should include the ref attribute.')
     t.equal(query.ref, cleanAssetURL, 'The ref attribute should be the same as the assetURL')
@@ -131,7 +131,7 @@ testDriver.test('cookie disabled: query string attributes', notSafariWithSeleniu
   }))
   let rumPromise = router.expectRum()
 
-  Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {
+  Promise.all([rumPromise, loadPromise]).then(([{ request: { query } }]) => {
     t.equal(query.ck, '0', "The cookie flag ('ck') should equal 0.")
     t.equal(query.s, '0', "The session id attr 's' should be 0.")
   }).catch(fail(t, FAIL_MSG))
@@ -142,7 +142,7 @@ testDriver.test('cookie enabled by default: query string attributes', notSafariW
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
   let rumPromise = router.expectRum()
 
-  Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {
+  Promise.all([rumPromise, loadPromise]).then(([{ request: { query } }]) => {
     t.equal(query.ck, '0', "The cookie flag ('ck') should equal 0.")
     t.notEqual(query.s, '0', "The session id ('s') should NOT be 0.")
   }).catch(fail(t, FAIL_MSG))

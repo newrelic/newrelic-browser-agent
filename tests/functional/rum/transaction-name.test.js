@@ -14,7 +14,7 @@ testDriver.test('RUM transactionName', withTls, function (t, browser, router) {
   let loadPromise = browser.get(router.assetURL('instrumented.html', { config: { transactionName: 'abc' } }))
 
   Promise.all([rumPromise, loadPromise])
-    .then(([{ query }]) => {
+    .then(([{ request: { query } }]) => {
       t.equal(query.to, 'abc', 'has correct obfuscated transactionName')
       t.equal(query.t, undefined, 'tNamePlain excluded')
     })
@@ -33,7 +33,7 @@ testDriver.test('RUM tNamePlain', withTls, function (t, browser, router) {
   let loadPromise = browser.get(router.assetURL('instrumented.html', { config: { tNamePlain: 'abc' } }))
 
   Promise.all([rumPromise, loadPromise])
-    .then(([{ query }]) => {
+    .then(([{ request: { query } }]) => {
       t.equal(query.t, 'abc', 'has correct tNamePlain')
       t.equal(query.to, undefined, 'transactionName param excluded')
     })
@@ -53,7 +53,7 @@ testDriver.test('RUM transactionName and tNamePlain', withTls, function (t, brow
   let loadPromise = browser.get(router.assetURL('instrumented.html', options))
 
   Promise.all([rumPromise, loadPromise])
-    .then(([{ query }]) => {
+    .then(([{ request: { query } }]) => {
       t.equal(query.to, 'abc', 'has correct obfuscated transactionName')
       t.equal(query.t, undefined, 'tNamePlain excluded')
     })

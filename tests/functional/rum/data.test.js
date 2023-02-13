@@ -26,7 +26,7 @@ testDriver.test('rum data', withTls, function (t, browser, router) {
   let rumPromise = router.expectRum()
   let loadPromise = browser.get(router.assetURL('rum-data.html', { config }))
 
-  Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {
+  Promise.all([rumPromise, loadPromise]).then(([{ request: { query } }]) => {
     t.equal(+query.ap, 382, 'Application time')
     t.equal(+query.qt, 837, 'Queue time')
     t.ok(+query.fe >= +query.dc, 'Front end time')
@@ -64,7 +64,7 @@ testDriver.test('rum data with multiple app IDs', withTls, function (t, browser,
   let rumPromise = router.expectRum()
   let loadPromise = browser.get(router.assetURL('rum-data.html', { config }))
 
-  Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {
+  Promise.all([rumPromise, loadPromise]).then(([{ request: { query } }]) => {
     t.equal(query.a, '1234,5678', 'APP ID')
     t.end()
   })
@@ -82,7 +82,7 @@ testDriver.test('rum data using loader_config data', withTls, function (t, brows
   let rumPromise = router.expectRum()
   let loadPromise = browser.get(router.assetURL('rum-data.html', { config, injectUpdatedLoaderConfig: true }))
 
-  Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {
+  Promise.all([rumPromise, loadPromise]).then(([{ request: { query } }]) => {
     t.equal(+query.ap, 382, 'Application time')
     t.equal(+query.qt, 837, 'Queue time')
     t.ok(+query.fe >= +query.dc, 'Front end time')
@@ -120,7 +120,7 @@ testDriver.test('rum data with multiple app IDs using loader_config data', withT
   let rumPromise = router.expectRum()
   let loadPromise = browser.get(router.assetURL('rum-data.html', { config, injectUpdatedLoaderConfig: true }))
 
-  Promise.all([rumPromise, loadPromise]).then(([{ query }]) => {
+  Promise.all([rumPromise, loadPromise]).then(([{ request: { query } }]) => {
     t.equal(query.a, '1234,5678', 'APP ID')
     t.end()
   })

@@ -22,4 +22,4 @@ setTimeout(() => {
   console.log('asset server: http://' + hostname + ':' + driver.assetServer.assetServer.port)
   console.log('cors server: http://' + hostname + ':' + driver.assetServer.corsServer.port)
   console.log('bam server: http://' + hostname + ':' + driver.assetServer.bamServer.port)
-}, 500);
+}, 500)

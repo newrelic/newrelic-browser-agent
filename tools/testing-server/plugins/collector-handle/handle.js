@@ -1,20 +1,20 @@
 
 class CollectorHandle {
-  #handleId;
-  #logger;
+  #handleId
+  #logger
 
-  constructor(handleId, logger) {
-    this.#handleId = handleId;
-    this.#logger = logger;
+  constructor (handleId, logger) {
+    this.#handleId = handleId
+    this.#logger = logger
   }
 
-  async handle(request, reply) {
+  async handle (request, reply) {
 
   }
 
-  async destroy() {
+  async destroy () {
 
   }
 }
 
-module.exports = CollectorHandle;
+module.exports = CollectorHandle

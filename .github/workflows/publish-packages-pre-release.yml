@@ -34,8 +34,8 @@ jobs:
       - name: version
         run: node tools/scripts/version.mjs prerelease --no-git-tag-version --force
 
-      - name: build
-        run: npx nx run-many --target=build
+      # - name: build
+        # run: npx nx run-many --target=build
 
       - name: tag
         run: |

@@ -10,9 +10,9 @@ var setBrowserList = require('../../util/browser-list').setBrowserList
 
 tape('by default includes everything', function (t) {
   setBrowserList({
-    'safari': [
-      { 'browserName': 'safari', 'version': '11' },
-      { 'browserName': 'safari', 'version': '10' }
+    safari: [
+      { browserName: 'safari', version: '11' },
+      { browserName: 'safari', version: '10' }
     ]
   })
 
@@ -34,9 +34,9 @@ tape('by default includes everything', function (t) {
 
 tape('exclude all', function (t) {
   setBrowserList({
-    'safari': [
-      { 'browserName': 'safari', 'version': '11' },
-      { 'browserName': 'safari', 'version': '10' }
+    safari: [
+      { browserName: 'safari', version: '11' },
+      { browserName: 'safari', version: '10' }
     ]
   })
 
@@ -58,9 +58,9 @@ tape('exclude all', function (t) {
 
 tape('include takes precedence', function (t) {
   setBrowserList({
-    'safari': [
-      { 'browserName': 'safari', 'version': '11' },
-      { 'browserName': 'safari', 'version': '10' }
+    safari: [
+      { browserName: 'safari', version: '11' },
+      { browserName: 'safari', version: '10' }
     ]
   })
 
@@ -87,9 +87,9 @@ tape('include takes precedence', function (t) {
 
 tape('inverse', function (t) {
   setBrowserList({
-    'safari': [
-      { 'browserName': 'safari', 'version': '11' },
-      { 'browserName': 'safari', 'version': '10' }
+    safari: [
+      { browserName: 'safari', version: '11' },
+      { browserName: 'safari', version: '10' }
     ]
   })
 
@@ -112,9 +112,9 @@ tape('inverse', function (t) {
 
 tape('and operator', function (t) {
   setBrowserList({
-    'chrome': [
-      { 'browserName': 'chrome', 'version': '1' },
-      { 'browserName': 'chrome', 'version': '2' }
+    chrome: [
+      { browserName: 'chrome', version: '1' },
+      { browserName: 'chrome', version: '2' }
     ]
   })
 
@@ -143,9 +143,9 @@ tape('and operator', function (t) {
 
 tape('or operator', function (t) {
   setBrowserList({
-    'chrome': [
-      { 'browserName': 'chrome', 'version': '1' },
-      { 'browserName': 'chrome', 'version': '2' }
+    chrome: [
+      { browserName: 'chrome', version: '1' },
+      { browserName: 'chrome', version: '2' }
     ]
   })
 
@@ -174,11 +174,11 @@ tape('or operator', function (t) {
 
 tape('intersect combines rules together', function (t) {
   setBrowserList({
-    'chrome': [
-      { 'browserName': 'chrome', 'version': '1' }
+    chrome: [
+      { browserName: 'chrome', version: '1' }
     ],
-    'safari': [
-      { 'browserName': 'safari', 'version': '1' }
+    safari: [
+      { browserName: 'safari', version: '1' }
     ]
   })
 

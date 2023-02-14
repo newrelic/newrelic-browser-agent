@@ -1,4 +1,4 @@
-const { Transform } = require("stream");
+const { Transform } = require('stream')
 
 /**
  * Constructs the worker commands script block based on the workerCommands query.
@@ -7,16 +7,16 @@ const { Transform } = require("stream");
  * @param {TestServer} testServer
  * @return {string}
  */
-function getWorkerCommandsContent(request, reply, testServer) {
+function getWorkerCommandsContent (request, reply, testServer) {
   if (!request.query.workerCommands) {
-    return "[]";
+    return '[]'
   }
 
   const workerCommands = Buffer.from(
     request.query.workerCommands,
-    "base64"
-  ).toString();
-  return `workerCommands=${workerCommands};`;
+    'base64'
+  ).toString()
+  return `workerCommands=${workerCommands};`
 }
 
 /**
@@ -26,25 +26,25 @@ function getWorkerCommandsContent(request, reply, testServer) {
  */
 module.exports = function (request, reply, testServer) {
   return new Transform({
-    transform(chunk, encoding, done) {
-      const chunkString = chunk.toString();
+    transform (chunk, encoding, done) {
+      const chunkString = chunk.toString()
 
-      if (chunkString.indexOf("{worker-commands}") > -1) {
+      if (chunkString.indexOf('{worker-commands}') > -1) {
         const replacement = getWorkerCommandsContent(
           request,
           reply,
           testServer
-        );
+        )
         done(
           null,
           chunkString.replace(
-            "{worker-commands}",
+            '{worker-commands}',
             `<script type="text/javascript">${replacement}</script>`
           )
-        );
+        )
       } else {
-        done(null, chunkString);
+        done(null, chunkString)
       }
-    },
-  });
-};
+    }
+  })
+}

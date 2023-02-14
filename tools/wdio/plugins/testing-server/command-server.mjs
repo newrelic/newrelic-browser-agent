@@ -1,7 +1,7 @@
-import grpc from "@grpc/grpc-js";
-import protoLoader from "@grpc/proto-loader";
-import { v4 as uuidv4 } from 'uuid';
-import { protoPath, protoLoaderOptions } from "./constants.mjs";
+import grpc from '@grpc/grpc-js'
+import protoLoader from '@grpc/proto-loader'
+import { v4 as uuidv4 } from 'uuid'
+import { protoPath, protoLoaderOptions } from './constants.mjs'
 
 /**
  * Creates a new gRPC server that allows WDIO child processes to communicate with the
@@ -11,58 +11,58 @@ import { protoPath, protoLoaderOptions } from "./constants.mjs";
  * @param logger Output logger that has methods like log, warn, error, etc
  * @returns {Promise<{commandServer: Server, commandPort}>} gRPC server instance
  */
-export default async function startServer(testingServer, logger) {
-  grpc.setLogger(logger);
+export default async function startServer (testingServer, logger) {
+  grpc.setLogger(logger)
   grpc.setLogVerbosity(0)
 
-  const packageDefinition  = await protoLoader.load(protoPath, protoLoaderOptions);
-  const TestingCommandService = grpc.loadPackageDefinition(packageDefinition).TestingCommandService;
-  const commandServer = new grpc.Server();
+  const packageDefinition = await protoLoader.load(protoPath, protoLoaderOptions)
+  const TestingCommandService = grpc.loadPackageDefinition(packageDefinition).TestingCommandService
+  const commandServer = new grpc.Server()
 
   commandServer.addService(TestingCommandService.service, {
-    createHandle(_, callback) {
+    createHandle (_, callback) {
       try {
-        const handleId = uuidv4();
-        testingServer.collectorServer.server.createCollectorHandle(handleId);
-        callback(null, { handleId });
+        const handleId = uuidv4()
+        testingServer.collectorServer.server.createCollectorHandle(handleId)
+        callback(null, { handleId })
       } catch (error) {
-        callback(error);
+        callback(error)
       }
     },
-    destroyHandle({ request }, callback) {
+    destroyHandle ({ request }, callback) {
       try {
-        testingServer.collectorServer.server.destroyCollectorHandle(request.handleId);
-        callback(null, {});
+        testingServer.collectorServer.server.destroyCollectorHandle(request.handleId)
+        callback(null, {})
       } catch (error) {
-        callback(error);
+        callback(error)
       }
     },
-    getAssetUrl({ request }, callback) {
+    getAssetUrl ({ request }, callback) {
       try {
-        const assetUrl = testingServer.urlFor(`tests/assets/${request.assetPath}`, JSON.parse(request.query));
-        callback(null, { assetUrl });
+        const assetUrl = testingServer.urlFor(`tests/assets/${request.assetPath}`, JSON.parse(request.query))
+        callback(null, { assetUrl })
       } catch (error) {
-        callback(error);
+        callback(error)
       }
     }
   })
 
-  let commandPort;
+  let commandPort
   await new Promise((resolve, reject) => {
     commandServer.bindAsync(
-      "0.0.0.0:0",
+      '0.0.0.0:0',
       grpc.ServerCredentials.createInsecure(),
       (error, port) => {
         if (error) {
-          return reject(error);
+          return reject(error)
         }
 
-        commandPort = port;
-        commandServer.start();
-        resolve();
+        commandPort = port
+        commandServer.start()
+        resolve()
       }
-    );
-  });
+    )
+  })
 
-  return { commandServer, commandPort };
+  return { commandServer, commandPort }
 }

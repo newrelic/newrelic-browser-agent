@@ -12,13 +12,12 @@ let supported = testDriver.Matcher.withFeature('wrappableAddEventListener').and(
 testDriver.test('onreadystatechange only called once with zone.js', supported, function (t, browser, router) {
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
-  let loadPromise = browser
-    .safeGet(router.assetURL('spa/zonejs-on-ready-state-change.html', { loader: 'spa', init: { ajax: { deny_list: ['nr-local.net'] }} }))
+  let loadPromise = browser.safeGet(router.assetURL('spa/zonejs-on-ready-state-change.html', { loader: 'spa', init: { ajax: { deny_list: ['nr-local.net'] } } }))
     .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([{request: eventsResult}]) => {
-      let {body, query} = eventsResult
+    .then(([{ request: eventsResult }]) => {
+      let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
       const interactionAttr = interactionTree.children.find(x => x.key === 'counts')

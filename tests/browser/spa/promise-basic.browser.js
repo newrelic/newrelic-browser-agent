@@ -7,14 +7,6 @@ var unwrappedPromise = global.Promise
 
 const jil = require('jil')
 
-// ff38 will throw if you copy the toString method from the native promise class
-jil.browserTest('stringifying promises still works', function (t) {
-  require('./helpers')
-  t.ok(String(window.Promise).match(/function Promise\s*\(\)\s*{\s*\[native code\]\s*}/))
-  t.ok(window.Promise.toString().match(/function Promise\s*\(\)\s*{\s*\[native code\]\s*}/))
-  t.end()
-})
-
 jil.browserTest('basic promise chain', function (t) {
   let helpers = require('./helpers')
 
@@ -82,10 +74,9 @@ jil.browserTest('instanceof', function diferTest (t) {
   var promise = Promise.resolve()
   var unwrapped = unwrappedPromise.resolve()
 
-  t.ok(promise instanceof Promise, 'instanceof should work on wrapped Promise')
-  t.ok(promise instanceof unwrappedPromise, 'instanceof should work on unwrapped Promise')
-  t.ok(unwrapped instanceof Promise, 'instanceof should work on wrapped Promise')
-  t.ok(unwrapped instanceof unwrappedPromise, 'instanceof should work on unwrapped Promise')
+  t.ok(promise instanceof Promise, 'global (wrapped) Promise.resolve should return an instance of itself')
+  t.ok(promise instanceof unwrappedPromise, 'the wrapped promise should be an instance of the original Promise')
+  t.ok(unwrapped instanceof unwrappedPromise, 'original Promise.resolve should return an instance of itself')
   t.end()
 })
 

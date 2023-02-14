@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {fail, testCases, validateNewrelicHeader, validateNoNewrelicHeader, validateTraceContextHeaders, validateNoTraceContextHeaders} = require('./helpers')
+const { fail, testCases, validateNewrelicHeader, validateNoNewrelicHeader, validateTraceContextHeaders, validateNoTraceContextHeaders } = require('./helpers')
 
 let fetchBrowsers = testDriver.Matcher.withFeature('fetch')
 
@@ -33,7 +33,7 @@ const scenarios = [
   }
 ]
 
-testCases.forEach((testCase, tcIndex) => {
+testCases.forEach((testCase) => {
   testDriver.test(testCase.name, fetchBrowsers, (t, browser, router) => {
     let config = {
       accountID: '1234',
@@ -48,11 +48,11 @@ testCases.forEach((testCase, tcIndex) => {
         distributed_tracing: testCase.configuration
       }
       if (testCase.addRouterToAllowedOrigins) {
-        init.distributed_tracing.allowed_origins.push("http://" + router.testServer.bamServer.host + ":" + router.testServer.bamServer.port)
+        init.distributed_tracing.allowed_origins.push('http://' + router.testServer.bamServer.host + ':' + router.testServer.bamServer.port)
       }
     }
 
-    scenarios.forEach((scenario, index) => {
+    scenarios.forEach((scenario) => {
       t.test(scenario.name, (nestedTest) => {
         let htmlFile
         if (testCase.sameOrigin) {
@@ -65,15 +65,15 @@ testCases.forEach((testCase, tcIndex) => {
           ? 'assetServer'
           : 'bamServer'
         const ajaxPromise = router.expect(ajaxPromiseServer, {
-          test: function(request) {
-            const url = new URL(request.url, 'resolve://');
+          test: function (request) {
+            const url = new URL(request.url, 'resolve://')
             return url.pathname === `/dt/${router.testId}`
           }
         })
         let loadPromise = browser.get(router.assetURL(htmlFile, { testId: router.testId, injectUpdatedLoaderConfig: true, config, init }))
 
         Promise.all([ajaxPromise, loadPromise])
-          .then(([{request}]) => {
+          .then(([{ request }]) => {
             if (testCase.newrelicHeader) {
               validateNewrelicHeader(nestedTest, request.headers, config)
             } else {

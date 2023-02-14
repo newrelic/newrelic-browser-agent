@@ -6,8 +6,7 @@
 let originalSetTimeout = global.setTimeout
 
 const jil = require('jil')
-const {getInfo} = require('@newrelic/browser-agent-core/src/common/config/config')
-
+const { getInfo } = require('../../../src/common/config/config')
 
 let raf = global.reqiestAnimationFrame || function (fn) {
   return originalSetTimeout(fn, 16)

@@ -33,8 +33,6 @@ var argv = yargs
 
   .argv
 
-
-
 var loaders = []
 var fileData = {}
 
@@ -51,13 +49,12 @@ while (v++ < 1216) {
 }
 
 Promise.all(proms).then((files) => {
-  console.log(files.length, "files", ", checked:", checked)
+  console.log(files.length, 'files', ', checked:', checked)
   files.forEach(f => {
-
     const [url, res, body] = f
-    if (res.statusCode !== 200) console.log("res status was not 200...", res.statusCode, url)
+    if (res.statusCode !== 200) console.log('res status was not 200...', res.statusCode, url)
     else {
-      const uploadUrl = url.split(".com/")[1].split('-').map(x => isNaN(Number(x.substr(0, 4))) ? x : ['polyfills', x]).flat().join("-")
+      const uploadUrl = url.split('.com/')[1].split('-').map(x => isNaN(Number(x.substr(0, 4))) ? x : ['polyfills', x]).flat().join('-')
       loaders.push(uploadUrl)
       fileData[uploadUrl] = body
     }
@@ -79,15 +76,13 @@ Promise.all(proms).then((files) => {
   })
 })
 
-
-function getFile(path) {
+function getFile (path) {
   var url = path
   var opts = {
     uri: url,
     method: 'GET',
     gzip: true
   }
-
 
   console.log('checking ', url)
 
@@ -110,7 +105,6 @@ uploadErrorCallback = function (err) {
   uploadErrors.push(err)
 }
 
-
 var steps = []
 
 targetEnvironments.forEach(function (env) {
@@ -120,14 +114,12 @@ targetEnvironments.forEach(function (env) {
   })
 })
 
-
-
-function loadFiles(cb) {
+function loadFiles (cb) {
   var allFiles = loaders
 
   asyncForEach(allFiles, readFile, cb)
 
-  function readFile(file, next) {
+  function readFile (file, next) {
     fs.readFile(path.resolve(__dirname, '../../build/', file), function (err, data) {
       if (err) return next(err)
       fileData[file] = data
@@ -136,13 +128,13 @@ function loadFiles(cb) {
   }
 }
 
-function uploadAllLoadersToDB(environment, cb) {
+function uploadAllLoadersToDB (environment, cb) {
   asyncForEach(loaders, function (filename, next) {
     uploadLoaderToDB(filename, fileData[filename], environment, next)
   }, cb, uploadErrorCallback)
 }
 
-function uploadLoaderToDB(filename, loader, environment, cb) {
+function uploadLoaderToDB (filename, loader, environment, cb) {
   var baseOptions = {
     method: 'PUT',
     followAllRedirects: true,
@@ -190,7 +182,7 @@ function uploadLoaderToDB(filename, loader, environment, cb) {
   })
 }
 
-function loaderFilenames() {
+function loaderFilenames () {
   const buildDir = path.resolve(__dirname, '../../build/')
   return fs.readdirSync(buildDir).filter(x => x.startsWith('nr-loader') && x.endsWith('.js'))
 }
@@ -199,12 +191,12 @@ function loaderFilenames() {
 // If not specified, processing will terminate on the first error.
 // If specified, the errorCallback will be invoked once for each error error,
 // and the done callback will be invoked once each item has been processed.
-function asyncForEach(list, op, done, errorCallback) {
+function asyncForEach (list, op, done, errorCallback) {
   var index = 0
 
   process.nextTick(next)
 
-  function next(err) {
+  function next (err) {
     if (err) {
       if (errorCallback) {
         errorCallback(err)

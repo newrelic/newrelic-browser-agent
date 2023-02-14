@@ -20,9 +20,10 @@ const init = {
   }
 }
 
-function runTests(loader, supported) {
+function runTests (loader, supported) {
   const opts = {
-    loader: loader, init: {
+    loader: loader,
+    init: {
       metrics: {
         enabled: false
       }
@@ -45,7 +46,7 @@ function runTests(loader, supported) {
           .get(url)
         return Promise.all([errorsPromise, domPromise])
       })
-      .then(([{request}]) => {
+      .then(([{ request }]) => {
         const errorsFromPayload = getErrorsFromResponse(request, browser)
         t.equal(errorsFromPayload.length, 3, 'exactly three errors')
 
@@ -57,7 +58,7 @@ function runTests(loader, supported) {
       })
       .catch(fail)
 
-    function fail(e) {
+    function fail (e) {
       t.error(e)
       t.end()
     }
@@ -75,7 +76,7 @@ function runTests(loader, supported) {
         var domPromise = browser.get(url) // forces harvest
         return Promise.all([errorsPromise, domPromise])
       })
-      .then(([{request}]) => {
+      .then(([{ request }]) => {
         const errorsFromPayload = getErrorsFromResponse(request, browser)
         t.equal(errorsFromPayload.length, 1, 'exactly one error')
 
@@ -85,7 +86,7 @@ function runTests(loader, supported) {
       })
       .catch(fail)
 
-    function fail(e) {
+    function fail (e) {
       t.error(e)
       t.end()
     }
@@ -96,14 +97,14 @@ function runTests(loader, supported) {
 
     let loadPromise = browser.get(url)
     let rumPromise = router.expectRum()
+    var errorsPromise = router.expectErrors()
 
     Promise.all([rumPromise, loadPromise])
       .then(() => {
-        var errorsPromise = router.expectErrors()
         var domPromise = browser.get(url) // forces harvest
         return Promise.all([errorsPromise, domPromise])
       })
-      .then(([{request}]) => {
+      .then(([{ request }]) => {
         const errorsFromPayload = getErrorsFromResponse(request, browser)
         t.equal(errorsFromPayload[0].custom.customParamKey, 0, 'first error should have a custom parameter set with the expected value')
 
@@ -111,12 +112,11 @@ function runTests(loader, supported) {
       })
       .catch(fail)
 
-    function fail(e) {
+    function fail (e) {
       t.error(e)
       t.end()
     }
   })
-
 
   testDriver.test(`set custom attribute with pre-existing attributes before page load after loader before info (${loader})`, supported, function (t, browser, router) {
     let url = router.assetURL('pre-existing-custom-attribute-race-condition.html', opts)
@@ -130,7 +130,7 @@ function runTests(loader, supported) {
         var domPromise = browser.get(url) // forces harvest
         return Promise.all([errorsPromise, domPromise])
       })
-      .then(([{request}]) => {
+      .then(([{ request }]) => {
         const errorsFromPayload = getErrorsFromResponse(request, browser)
         t.equal(errorsFromPayload[0].custom.customParamKey, 0, 'first error should have a custom parameter set with the expected value')
         t.equal(errorsFromPayload[0].custom['hi'], 'mom', 'first error should have a custom parameter set with the expected value')
@@ -139,7 +139,7 @@ function runTests(loader, supported) {
       })
       .catch(fail)
 
-    function fail(e) {
+    function fail (e) {
       t.error(e)
       t.end()
     }
@@ -157,7 +157,7 @@ function runTests(loader, supported) {
         var domPromise = browser.get(url) // forces harvest
         return Promise.all([errorsPromise, domPromise])
       })
-      .then(([{request}]) => {
+      .then(([{ request }]) => {
         const errorsFromPayload = getErrorsFromResponse(request, browser)
         t.equal(errorsFromPayload[0].custom.customParamKey, 0, 'first error should have a custom parameter set with the expected value')
 
@@ -165,7 +165,7 @@ function runTests(loader, supported) {
       })
       .catch(fail)
 
-    function fail(e) {
+    function fail (e) {
       t.error(e)
       t.end()
     }
@@ -189,7 +189,7 @@ function runTests(loader, supported) {
           .get(url) // forces harvest
         return Promise.all([errorsPromise, domPromise])
       })
-      .then(([{request}]) => {
+      .then(([{ request }]) => {
         const errorsFromPayload = getErrorsFromResponse(request, browser)
         t.equal(errorsFromPayload.length, 1, 'exactly one error')
         t.equal(errorsFromPayload[0].custom.customParamKey, 2, 'first error should have a custom parameter set with the expected value')
@@ -199,7 +199,7 @@ function runTests(loader, supported) {
       })
       .catch(fail)
 
-    function fail(e) {
+    function fail (e) {
       t.error(e)
       t.end()
     }
@@ -217,7 +217,7 @@ function runTests(loader, supported) {
         var domPromise = browser.get(url) // forces harvest
         return Promise.all([errorsPromise, domPromise])
       })
-      .then(([{request}]) => {
+      .then(([{ request }]) => {
         const errorsFromPayload = getErrorsFromResponse(request, browser)
         t.equal(errorsFromPayload.length, 1, 'exactly one error')
 
@@ -228,7 +228,7 @@ function runTests(loader, supported) {
       })
       .catch(fail)
 
-    function fail(e) {
+    function fail (e) {
       t.error(e)
       t.end()
     }
@@ -247,7 +247,7 @@ testDriver.test('initial load interaction: simple case - single error', notSafar
       var domPromise = browser.get(url) // forces harvest
       return Promise.all([errorsPromise, domPromise])
     })
-    .then(([{request}]) => {
+    .then(([{ request }]) => {
       const errorsFromPayload = getErrorsFromResponse(request, browser)
       t.equal(errorsFromPayload.length, 1, 'exactly one error')
 
@@ -257,7 +257,7 @@ testDriver.test('initial load interaction: simple case - single error', notSafar
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -275,7 +275,7 @@ testDriver.test('initial load interaction: muliple errors - different attribute 
       var domPromise = browser.get(url) // forces harvest
       return Promise.all([errorsPromise, domPromise])
     })
-    .then(([{request}]) => {
+    .then(([{ request }]) => {
       const errorsFromPayload = getErrorsFromResponse(request, browser)
       t.equal(errorsFromPayload.length, 3, 'exactly three errors')
 
@@ -287,7 +287,7 @@ testDriver.test('initial load interaction: muliple errors - different attribute 
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -308,7 +308,7 @@ testDriver.test('click interaction: simple case - single error', notSafariWithSe
         .get(url) // forces harvest
       return Promise.all([errorsPromise, domPromise])
     })
-    .then(([{request}]) => {
+    .then(([{ request }]) => {
       const errorsFromPayload = getErrorsFromResponse(request, browser)
       t.equal(errorsFromPayload.length, 1, 'exactly one error')
 
@@ -318,7 +318,7 @@ testDriver.test('click interaction: simple case - single error', notSafariWithSe
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -339,7 +339,7 @@ testDriver.test('click interaction: multiple errors - different attribute values
         .get(url) // forces harvest
       return Promise.all([errorsPromise, domPromise])
     })
-    .then(([{request}]) => {
+    .then(([{ request }]) => {
       const errorsFromPayload = getErrorsFromResponse(request, browser)
       t.equal(errorsFromPayload.length, 3, 'exactly three errors')
 
@@ -351,7 +351,7 @@ testDriver.test('click interaction: multiple errors - different attribute values
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -372,7 +372,7 @@ testDriver.test('click interaction: attributes captured in discarded interaction
         .get(url) // forces harvest
       return Promise.all([errorsPromise, domPromise])
     })
-    .then(([{request}]) => {
+    .then(([{ request }]) => {
       const errorsFromPayload = getErrorsFromResponse(request, browser)
       t.equal(errorsFromPayload.length, 1, 'exactly one error')
 
@@ -382,7 +382,7 @@ testDriver.test('click interaction: attributes captured in discarded interaction
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -400,7 +400,7 @@ testDriver.test('global and interaction attributes on same error', notSafariWith
       var domPromise = browser.get(url) // forces harvest
       return Promise.all([errorsPromise, domPromise])
     })
-    .then(([{request}]) => {
+    .then(([{ request }]) => {
       const errorsFromPayload = getErrorsFromResponse(request, browser)
       t.equal(errorsFromPayload.length, 1, 'exactly one error')
 
@@ -411,7 +411,7 @@ testDriver.test('global and interaction attributes on same error', notSafariWith
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -429,7 +429,7 @@ testDriver.test('setAttribute takes precedence over setCustomAttribute', notSafa
       var domPromise = browser.get(url) // forces harvest
       return Promise.all([errorsPromise, domPromise])
     })
-    .then(([{request}]) => {
+    .then(([{ request }]) => {
       const errorsFromPayload = getErrorsFromResponse(request, browser)
       t.equal(errorsFromPayload.length, 1, 'exactly one error')
 
@@ -439,7 +439,7 @@ testDriver.test('setAttribute takes precedence over setCustomAttribute', notSafa
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }
@@ -457,7 +457,7 @@ testDriver.test('noticeError takes precedence over setAttribute', notSafariWithS
       var domPromise = browser.get(url) // forces harvest
       return Promise.all([errorsPromise, domPromise])
     })
-    .then(([{request}]) => {
+    .then(([{ request }]) => {
       const errorsFromPayload = getErrorsFromResponse(request, browser)
       t.equal(errorsFromPayload.length, 1, 'exactly one error')
 
@@ -488,7 +488,7 @@ testDriver.test('noticeError takes precedence over setAttribute in discarded int
         .get(url) // forces harvest
       return Promise.all([errorsPromise, domPromise])
     })
-    .then(([{request}]) => {
+    .then(([{ request }]) => {
       const errorsFromPayload = getErrorsFromResponse(request, browser)
       t.equal(errorsFromPayload.length, 1, 'exactly one error')
 

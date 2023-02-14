@@ -47,7 +47,7 @@ testDriver.test('sends interaction id and nodeId', supported, function (t, brows
         return eventData
       })
     })
-    .then(({request: {query, body}}) => {
+    .then(({ request: { query, body } }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.ok(interactionTree.id, 'interaction has id')
       t.ok(interactionTree.nodeId, 'interaction has nodeId')

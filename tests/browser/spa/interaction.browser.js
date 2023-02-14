@@ -5,30 +5,30 @@
 
 const jil = require('jil')
 const { setup } = require('../utils/setup')
-const { setInfo } = require('@newrelic/browser-agent-core/src/common/config/config')
+const { setInfo } = require('../../../src/common/config/config')
 
 const setupData = setup()
-const {agentIdentifier, nr} = setupData
+const { agentIdentifier, nr } = setupData
 
 jil.browserTest('checkFinish', function (t) {
   setInfo(agentIdentifier, {})
 
   var clearTimeoutCalls = 0
-  nr.o.CT = function() {
+  nr.o.CT = function () {
     clearTimeoutCalls++
   }
 
   var setTimeoutCalls = 0
   var executeTimeoutCallback = true
-  nr.o.ST = function(cb) {
+  nr.o.ST = function (cb) {
     setTimeoutCalls++
     if (executeTimeoutCallback) cb()
     return setTimeoutCalls
   }
 
-  var { Interaction } = require('@newrelic/browser-agent-core/src/features/spa/aggregate/interaction')
+  var { Interaction } = require('../../../src/features/spa/aggregate/interaction')
 
-  t.test('checkFinish sets timers', function(t) {
+  t.test('checkFinish sets timers', function (t) {
     var interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, agentIdentifier)
     var setTimeoutCallsStart = setTimeoutCalls
 
@@ -38,7 +38,7 @@ jil.browserTest('checkFinish', function (t) {
     t.end()
   })
 
-  t.test('checkFinish does not set timers when there is work in progress', function(t) {
+  t.test('checkFinish does not set timers when there is work in progress', function (t) {
     var interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, agentIdentifier)
     var setTimeoutCallsStart = setTimeoutCalls
 
@@ -50,7 +50,7 @@ jil.browserTest('checkFinish', function (t) {
     t.end()
   })
 
-  t.test('assigns url and routename to attributes', function(t) {
+  t.test('assigns url and routename to attributes', function (t) {
     var interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, agentIdentifier)
 
     t.ok(interaction.root.attrs.newURL === undefined, 'url is undefined initially')
@@ -65,7 +65,7 @@ jil.browserTest('checkFinish', function (t) {
     t.end()
   })
 
-  t.test('does not reset finishTimer if it has already been set', function(t) {
+  t.test('does not reset finishTimer if it has already been set', function (t) {
     var setTimeoutCallsStart = setTimeoutCalls
     executeTimeoutCallback = false
     var interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, agentIdentifier)
@@ -80,7 +80,7 @@ jil.browserTest('checkFinish', function (t) {
     t.end()
   })
 
-  t.test('if timer is in progress and there is work remaining, timer should be cancelled', function(t) {
+  t.test('if timer is in progress and there is work remaining, timer should be cancelled', function (t) {
     var clearTimeoutCallsStart = clearTimeoutCalls
     executeTimeoutCallback = false
     var interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, agentIdentifier)

@@ -22,7 +22,7 @@
     var args = [function(api) {
       spaApi = api
     }]
-    scopedEE.buffer([type])
+    scopedEE.buffer([type], 'spa')
     scopedEE.emit(type, args)
     // var handle = __nr_require('handle')
     // handle('spa-register', [function(api) {
@@ -35,6 +35,7 @@
       // restore spa node in order to include the ajax below in the interaction
       // this is easier than instrumenting this function for the purpose of this test
       var previousNode = spaApi.getCurrentNode()
+      console.log(previousNode)
       spaApi.setCurrentNode(node)
 
       makeAjaxCall()
@@ -55,7 +56,6 @@
 
       // store current node
       node = spaApi.getCurrentNode()
-      console.log("node", node)
     }, false)
 
     function makeAjaxCall() {

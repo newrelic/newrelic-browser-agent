@@ -4,14 +4,11 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {testErrorsRequest, testTimingEventsRequest} = require("../../../tools/testing-server/utils/expect-tests");
+const { testErrorsRequest, testTimingEventsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
-// we use XHR for harvest calls only if browser support XHR
-let cors = testDriver.Matcher.withFeature('cors')
-let xhrWithAddEventListener = testDriver.Matcher.withFeature('xhrWithAddEventListener')
-let supported = cors.and(xhrWithAddEventListener)
+let corsSupported = testDriver.Matcher.withFeature('cors')
 
-testDriver.test('timings are retried when collector returns 429', supported, function (t, browser, router) {
+testDriver.test('timings are retried when collector returns 429', corsSupported, function (t, browser, router) {
   let assetURL = router.assetURL('instrumented.html', {
     loader: 'spa',
     init: {

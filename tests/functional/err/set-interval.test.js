@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse} = require('./assertion-helpers')
+const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require('./assertion-helpers')
 
 let supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 
@@ -24,7 +24,7 @@ testDriver.test('reporting errors from setInterval callbacks', supported, functi
   let errorsPromise = router.expectErrors()
   let loadPromise = browser.get(assetURL).waitForConditionInBrowser('window.intervalFired')
 
-  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{request}]) => {
+  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{ request }]) => {
     assertErrorAttributes(t, request.query)
     const actualErrors = getErrorsFromResponse(request, browser)
     let expectedErrors = [{

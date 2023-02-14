@@ -4,8 +4,8 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {fail, querypack} = require('./helpers')
-const {testErrorsRequest, testEventsRequest} = require("../../../tools/testing-server/utils/expect-tests");
+const { fail, querypack } = require('./helpers')
+const { testEventsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 testDriver.test('ajax events harvests are retried when collector returns 429', function (t, browser, router) {
   let assetURL = router.assetURL('xhr-outside-interaction.html', {
@@ -60,6 +60,3 @@ testDriver.test('ajax events harvests are retried when collector returns 429', f
     t.end()
   }).catch(fail(t))
 })
-
-// NOTE: we do not test 408 response in a functional test because some browsers automatically retry
-// 408 responses, which makes it difficult to distinguish browser retries from the agent retries

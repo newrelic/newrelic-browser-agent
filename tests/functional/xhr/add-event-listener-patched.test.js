@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {fail} = require('./helpers')
+const { fail } = require('./helpers')
 const asserters = require('wd').asserters
 
 const supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
@@ -25,9 +25,9 @@ testDriver.test('xhr instrumentation works with EventTarget.prototype.addEventLi
     }
   })).waitFor(asserters.jsCondition('window.xhrDone && window.wrapperInvoked', true))
 
-  Promise.all([ajaxPromise, rumPromise, loadPromise]).then(([{request: {query, body}}]) => {
+  Promise.all([ajaxPromise, rumPromise, loadPromise]).then(([{ request: { query, body } }]) => {
     try {
-      const parsedBody = JSON.parse(body);
+      const parsedBody = JSON.parse(body)
       t.ok(parsedBody.xhr, 'got XHR data')
     } catch (err) {
       t.ok(query.xhr, 'got XHR data')

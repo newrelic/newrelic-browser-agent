@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {fail, getXhrFromResponse} = require('./helpers')
+const { fail, getXhrFromResponse } = require('./helpers')
 
 const asserters = testDriver.asserters
 var supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
@@ -25,7 +25,7 @@ testDriver.test('no abort call in xhr request', supported, function (t, browser,
     }
   })).waitFor(asserters.jsCondition('window.xhrDone'))
 
-  Promise.all([ajaxPromise, rumPromise, loadPromise]).then(([{request}]) => {
+  Promise.all([ajaxPromise, rumPromise, loadPromise]).then(([{ request }]) => {
     const parsedXhrs = getXhrFromResponse(request, browser)
     t.ok(parsedXhrs, 'got XHR data')
     t.ok(parsedXhrs.length >= 1, 'has at least one XHR record')
@@ -64,7 +64,7 @@ testDriver.test('xhr.abort() called in load callback', supported, function (t, b
     }
   })).waitFor(asserters.jsCondition('window.xhrDone'))
 
-  Promise.all([ajaxPromise, rumPromise, loadPromise]).then(([{request}]) => {
+  Promise.all([ajaxPromise, rumPromise, loadPromise]).then(([{ request }]) => {
     const parsedXhrs = getXhrFromResponse(request, browser)
     t.ok(parsedXhrs, 'got XHR data')
     t.ok(parsedXhrs.length >= 1, 'has at least one XHR record')

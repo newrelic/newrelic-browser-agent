@@ -1,46 +1,45 @@
 
-
 export class RouterModel {
-  #testingServerClient;
-  #logger;
-  #handleId;
+  #testingServerClient
+  #logger
+  #handleId
 
-  constructor(testingServerClient, logger) {
-    this.#testingServerClient = testingServerClient;
-    this.#logger = logger;
+  constructor (testingServerClient, logger) {
+    this.#testingServerClient = testingServerClient
+    this.#logger = logger
   }
 
-  async connect() {
+  async connect () {
     await new Promise((resolve, reject) => {
       this.#testingServerClient.createHandle({}, (error, data) => {
         if (error) {
-          return reject(error);
+          return reject(error)
         }
 
-        this.#handleId = data.handleId;
-        resolve();
-      });
-    });
+        this.#handleId = data.handleId
+        resolve()
+      })
+    })
   }
 
-  async disconnect() {
+  async disconnect () {
     if (!this.#handleId) {
-      return;
+      return
     }
 
     await new Promise((resolve, reject) => {
-      this.#testingServerClient.destroyHandle({handleId: this.#handleId}, (error) => {
+      this.#testingServerClient.destroyHandle({ handleId: this.#handleId }, (error) => {
         if (error) {
-          return reject(error);
+          return reject(error)
         }
 
         this.#handleId = null
-        resolve();
-      });
-    });
+        resolve()
+      })
+    })
   }
 
-  async getAssetUrl(assetPath, query) {
+  async getAssetUrl (assetPath, query) {
     return await new Promise((resolve, reject) => {
       this.#testingServerClient.getAssetUrl({
         handleId: this.#handleId,
@@ -48,11 +47,11 @@ export class RouterModel {
         query: JSON.stringify(query)
       }, (error, data) => {
         if (error) {
-          return reject(error);
+          return reject(error)
         }
 
-        resolve(data.assetUrl);
+        resolve(data.assetUrl)
       })
-    });
+    })
   }
 }

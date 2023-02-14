@@ -33,7 +33,7 @@ workerTypes.forEach(type => {
   memoryLeakTest(type, typeToMatcher(type))
 })
 
-function referenceErrorTest(type, matcher) {
+function referenceErrorTest (type, matcher) {
   testDriver.test(`${type} - a reference error generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
@@ -45,7 +45,7 @@ function referenceErrorTest(type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{request: errResponse}]) => {
+    Promise.all([errPromise, loadPromise]).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -57,26 +57,26 @@ function referenceErrorTest(type, matcher) {
       t.end()
     }).catch(fail)
 
-    function fail(err) {
+    function fail (err) {
       t.error(err)
       t.end()
     }
   })
 }
 
-function unhandledPromiseRejectionTest(type, matcher) {
+function unhandledPromiseRejectionTest (type, matcher) {
   testDriver.test(`${type} - unhandledPromise generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
-        () => { new Promise(() => { throw new Error("unhandledPromiseRejection") }) }
+        () => { new Promise(() => { throw new Error('unhandledPromiseRejection') }) }
       ].map(x => x.toString())
     })
 
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    timedPromiseAll([errPromise, loadPromise], 6000).then(([{request: errResponse}]) => {
+    timedPromiseAll([errPromise, loadPromise], 6000).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -88,15 +88,15 @@ function unhandledPromiseRejectionTest(type, matcher) {
       t.end()
     }).catch(fail)
 
-    function fail(err) {
-      if (!browser.hasFeature('unhandledPromiseRejection')) t.pass("Browser does not support unhandledPromiseRejections")
+    function fail (err) {
+      if (!browser.hasFeature('unhandledPromiseRejection')) t.pass('Browser does not support unhandledPromiseRejections')
       else t.error(err)
       t.end()
     }
   })
 }
 
-function rangeErrorTest(type, matcher) {
+function rangeErrorTest (type, matcher) {
   testDriver.test(`${type} - RangeError generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
@@ -111,7 +111,7 @@ function rangeErrorTest(type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{request: errResponse}]) => {
+    Promise.all([errPromise, loadPromise]).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -119,18 +119,18 @@ function rangeErrorTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'RangeError', 'Should be RangeError class')
       t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { ...workerCustomAttrs, }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
-    function fail(err) {
+    function fail (err) {
       t.error(err)
       t.end()
     }
   })
 }
 
-function typeErrorTest(type, matcher) {
+function typeErrorTest (type, matcher) {
   testDriver.test(`${type} - TypeError generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
@@ -145,7 +145,7 @@ function typeErrorTest(type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{request: errResponse}]) => {
+    Promise.all([errPromise, loadPromise]).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -153,24 +153,24 @@ function typeErrorTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'TypeError', 'Should be TypeError class')
       t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { ...workerCustomAttrs, }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
-    function fail(err) {
+    function fail (err) {
       t.error(err)
       t.end()
     }
   })
 }
 
-function uriErrorTest(type, matcher) {
+function uriErrorTest (type, matcher) {
   testDriver.test(`${type} - URIError generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
         () => {
-          decodeURI("%")
+          decodeURI('%')
         }
       ].map(x => x.toString())
     })
@@ -178,7 +178,7 @@ function uriErrorTest(type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{request: errResponse}]) => {
+    Promise.all([errPromise, loadPromise]).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -186,29 +186,29 @@ function uriErrorTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'URIError', 'Should be URIError class')
       t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { ...workerCustomAttrs, }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
-    function fail(err) {
+    function fail (err) {
       t.error(err)
       t.end()
     }
   })
 }
 
-function memoryLeakTest(type, matcher) {
+function memoryLeakTest (type, matcher) {
   testDriver.test(`${type} - max call stack size generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
       workerCommands: [
         () => {
           let i = 0
-          function foo() {
+          function foo () {
             i += 1
             foo()
           }
-          foo();
+          foo()
         }
       ].map(x => x.toString())
     })
@@ -216,7 +216,7 @@ function memoryLeakTest(type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    timedPromiseAll([errPromise, loadPromise], 6000).then(([{request: errResponse}]) => {
+    timedPromiseAll([errPromise, loadPromise], 6000).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -224,11 +224,11 @@ function memoryLeakTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'RangeError', 'Should be RangeError class')
       t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { ...workerCustomAttrs, }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
-    function fail(err) {
+    function fail (err) {
       if (browser.hasFeature('workerStackSizeGeneratesError')) t.pass('This browser version does not throw errors in worker when max stack size is reached')
       else t.error(err)
       t.end()
@@ -236,7 +236,7 @@ function memoryLeakTest(type, matcher) {
   })
 }
 
-function syntaxErrorTest(type, matcher) {
+function syntaxErrorTest (type, matcher) {
   testDriver.test(`${type} - SyntaxError generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
@@ -250,7 +250,7 @@ function syntaxErrorTest(type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{request: errResponse}]) => {
+    Promise.all([errPromise, loadPromise]).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -258,18 +258,18 @@ function syntaxErrorTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'SyntaxError', 'Should be SyntaxError class')
       t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { ...workerCustomAttrs, }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
-    function fail(err) {
+    function fail (err) {
       t.error(err)
       t.end()
     }
   })
 }
 
-function thrownErrorTest(type, matcher) {
+function thrownErrorTest (type, matcher) {
   testDriver.test(`${type} - a thrown error generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
@@ -281,7 +281,7 @@ function thrownErrorTest(type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{request: errResponse}]) => {
+    Promise.all([errPromise, loadPromise]).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -289,11 +289,11 @@ function thrownErrorTest(type, matcher) {
       t.equal(err[0].params.exceptionClass, 'Error', 'Should be Error class')
       t.ok(!!err[0].params.message, 'Should have message')
       t.ok(err[0].params.stack_trace, 'Should have a stack trace')
-      t.deepEqual(err[0].custom, { ...workerCustomAttrs, }, 'Should have correct custom attributes')
+      t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should have correct custom attributes')
       t.end()
     }).catch(fail)
 
-    function fail(err) {
+    function fail (err) {
       t.error(err)
       t.end()
     }

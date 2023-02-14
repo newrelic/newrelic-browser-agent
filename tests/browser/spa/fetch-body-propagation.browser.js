@@ -25,13 +25,14 @@ bodyMethods.forEach((bodyMethod) => {
         attrs: {
           isFetch: true
         },
-        children: [{
-          type: 'customTracer',
-          attrs: {
-            name: 'timer'
-          },
-          children: []
-        }]
+        children: []
+      },
+      {
+        type: 'customTracer',
+        attrs: {
+          name: 'timer'
+        },
+        children: []
       }]
     })
 
@@ -46,7 +47,7 @@ bodyMethods.forEach((bodyMethod) => {
     function onInteractionStart (cb) {
       window.fetch('/json')
         .then(function (res) {
-          const {now} = require('@newrelic/browser-agent-core/src/common/timing/now')
+          const { now } = require('../../../src/common/timing/now')
           resTime = now()
           return res[bodyMethod]()
         }).then(function () {
@@ -76,7 +77,7 @@ jil.browserTest('Exceeding max SPA nodes', function (t) {
 
   // if test runs before window load, then the error in the try/catch below would not be caught
   // due to buffered events running in a different callstack
-  function start() {
+  function start () {
     if (loaded) {
       helpers.startInteraction(onInteractionStart, onInteractionFinished)
     } else {
@@ -107,7 +108,7 @@ jil.browserTest('Exceeding max SPA nodes', function (t) {
     cb()
   }
 
-  function onInteractionFinished(interaction) {
+  function onInteractionFinished (interaction) {
     t.end()
   }
 })
@@ -121,13 +122,14 @@ jil.browserTest('Response.formData', function (t) {
       attrs: {
         isFetch: true
       },
-      children: [{
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
-      }]
+      children: []
+    },
+    {
+      type: 'customTracer',
+      attrs: {
+        name: 'timer'
+      },
+      children: []
     }]
   })
 
@@ -140,8 +142,8 @@ jil.browserTest('Response.formData', function (t) {
   var resTime
 
   function onInteractionStart (cb) {
-    window.fetch('/formdata', {method: 'POST', body: new FormData()}).then(function (res) {
-      const {now} = require('@newrelic/browser-agent-core/src/common/timing/now')
+    window.fetch('/formdata', { method: 'POST', body: new FormData() }).then(function (res) {
+      const { now } = require('../../../src/common/timing/now')
       resTime = now()
       if (res.formData) {
         res.formData().catch(function () {
@@ -184,7 +186,7 @@ bodyMethods.forEach((bodyMethod) => {
     helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
     function onInteractionStart (cb) {
-      var req = new Request('/json', {method: 'POST', body: '{}'})
+      var req = new Request('/json', { method: 'POST', body: '{}' })
       req[bodyMethod]().then(function () {
         setTimeout(newrelic.interaction().createTracer('timer', cb), 0)
       })

@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {getErrorsFromResponse} = require('./assertion-helpers')
+const { getErrorsFromResponse } = require('./assertion-helpers')
 
 let supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 
@@ -24,7 +24,7 @@ testDriver.test('encoding error where message contains a circular reference', su
     }
   }))
 
-  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{request}]) => {
+  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{ request }]) => {
     const actualErrors = getErrorsFromResponse(request, browser)
 
     t.equal(actualErrors.length, 1, 'exactly one error')

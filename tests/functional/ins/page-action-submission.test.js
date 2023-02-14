@@ -4,8 +4,10 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {validatePageActionData, fail} = require('./ins-internal-help.cjs')
-const {testInsRequest} = require("../../../tools/testing-server/utils/expect-tests");
+const { validatePageActionData, fail } = require('./ins-internal-help.cjs')
+const { testInsRequest } = require('../../../tools/testing-server/utils/expect-tests')
+
+const workingSendBeacon = testDriver.Matcher.withFeature('workingSendBeacon')
 
 testDriver.test('PageAction submission', function (t, browser, router) {
   let assetURL = router.assetURL('instrumented.html', {
@@ -27,7 +29,7 @@ testDriver.test('PageAction submission', function (t, browser, router) {
       browser.safeEval('newrelic.addPageAction("DummyEvent", { free: "tacos" })')
       return router.expectIns()
     })
-    .then(({request}) => {
+    .then(({ request }) => {
       let insData
       if (request.body) {
         insData = JSON.parse(request.body).ins
@@ -55,7 +57,7 @@ testDriver.test('PageActions are retried when collector returns 429', function (
 
   let loadPromise = browser.get(assetURL)
   let rumPromise = router.expectRum()
-  let firstInsData
+  let firstBody
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
@@ -63,12 +65,11 @@ testDriver.test('PageActions are retried when collector returns 429', function (
         test: testInsRequest,
         statusCode: 429
       })
-      const insPromise = router.expectIns();
       browser.safeEval('newrelic.addPageAction("exampleEvent", {param: "value"})')
 
-      return insPromise
+      return router.expectIns()
     })
-    .then(({request, reply}) => {
+    .then(({ request, reply }) => {
       t.equal(reply.statusCode, 429, 'server responded with 429')
 
       if (request.body) {
@@ -79,8 +80,8 @@ testDriver.test('PageActions are retried when collector returns 429', function (
 
       return router.expectIns()
     })
-    .then(({request, reply}) => {
-      let secondBody;
+    .then(({ request, reply }) => {
+      let secondBody
 
       if (request.body) {
         secondBody = JSON.parse(request.body).ins
@@ -126,8 +127,9 @@ testDriver.test('PageAction submission on final harvest', function (t, browser, 
         return ins
       })
     })
-    .then(({request}) => {
+    .then(({ request }) => {
       let insData
+
       if (request.body) {
         insData = JSON.parse(request.body).ins
       } else {
@@ -165,7 +167,7 @@ testDriver.test('precedence', function (t, browser, router) {
 
       return Promise.all([insPromise, apiPromise])
     })
-    .then(([{request}]) => {
+    .then(([{ request }]) => {
       let insData
       if (request.body) {
         insData = JSON.parse(request.body).ins
@@ -178,7 +180,7 @@ testDriver.test('precedence', function (t, browser, router) {
     })
     .catch(fail(t))
 
-  function validatePageActionData(pageActionData) {
+  function validatePageActionData (pageActionData) {
     t.equal(pageActionData.length, 1, 'should have 1 event')
 
     let event = pageActionData[0]

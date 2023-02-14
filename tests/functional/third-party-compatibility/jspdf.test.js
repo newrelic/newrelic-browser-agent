@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {fail} = require('../uncat-internal-help.cjs')
+const { fail } = require('../uncat-internal-help.cjs')
 
 let supported = testDriver.Matcher.withFeature('notInternetExplorer')
 const init = {
@@ -53,10 +53,10 @@ testDriver.test('jspdf generation should not cause error', supported, function (
     .then((response) => {
       if (response) {
         // will be null if timed out, so a payload here means it sent and error
-        t.fail(`Should not have generated "error" payload`)
+        t.fail('Should not have generated "error" payload')
       } else {
         // errors harvest every 5 seconds, if 6 seconds pass and Promise is not resolved, that means it was never generated
-        t.pass(`Did not generate "error" payload`)
+        t.pass('Did not generate "error" payload')
       }
       t.end()
     }).catch(fail)

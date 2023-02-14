@@ -9,7 +9,7 @@ testDriver.test('RUM ', function (t, browser, router) {
   t.plan(1)
 
   setTimeout(() => {
-    t.ok(1===1, "The agent was unconfigured, so no rum event fired!")
+    t.ok(1 === 1, 'The agent was unconfigured, so no rum event fired!')
     t.end()
   }, 5000)
 
@@ -17,8 +17,7 @@ testDriver.test('RUM ', function (t, browser, router) {
   let loadPromise = browser.get(router.assetURL('unconfigured-on-load.html'))
 
   Promise.all([rumPromise, loadPromise])
-  .then(() => fail("should not have recieved rum call!"))
-
+    .then(() => fail('should not have recieved rum call!'))
 
   function fail (e) {
     t.error(e)

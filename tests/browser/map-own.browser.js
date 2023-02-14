@@ -4,10 +4,10 @@
  */
 
 import test from '../../tools/jil/browser-test'
-import { mapOwn } from '@newrelic/browser-agent-core/src/common/util/map-own'
+import { mapOwn } from '../../src/common/util/map-own'
 
 test('map-own', function (t) {
-  var obj = {a: 10}
+  var obj = { a: 10 }
   mapOwn(obj, function (k, v) {
     t.equal(k, 'a', 'key is as expected')
     t.equal(v, 10, 'value is as expected')

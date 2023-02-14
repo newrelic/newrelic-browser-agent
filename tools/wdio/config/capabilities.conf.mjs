@@ -1,46 +1,46 @@
-import browserList from "../util/browser-list.mjs";
-import jilArgs from "../runner/args.mjs";
-import { getSauceConnectTunnelName } from "../util/saucelabs.mjs";
+import browserList from '../util/browser-list.mjs'
+import jilArgs from '../runner/args.mjs'
+import { getSauceConnectTunnelName } from '../util/saucelabs.mjs'
 
-function seleniumCapabilities() {
+function seleniumCapabilities () {
   // We only add one entry per browser so we don't have to mess with versions
-  const browsersAdded = new Set();
+  const browsersAdded = new Set()
 
   return browserList(jilArgs.browsers)
     .filter((browserSpec) => {
       if (!browsersAdded.has(browserSpec.desired.browserName)) {
-        browsersAdded.add(browserSpec.desired.browserName);
-        return true;
+        browsersAdded.add(browserSpec.desired.browserName)
+        return true
       }
-      return false;
+      return false
     })
     .map((browserSpec) => ({
-      browserName: browserSpec.desired.browserName,
-    }));
+      browserName: browserSpec.desired.browserName
+    }))
 }
 
-function sauceCapabilities() {
+function sauceCapabilities () {
   return browserList(jilArgs.browsers).map((browserSpec) => {
     const capability = {
       browserName: browserSpec.desired.browserName,
       platformName: browserSpec.desired.platformName,
-      browserVersion: browserSpec.desired.browserVersion,
-    };
-
-    if (!jilArgs.sauce) {
-      capability["sauce:options"] = {
-        tunnelName: getSauceConnectTunnelName(),
-      };
+      browserVersion: browserSpec.desired.browserVersion
     }
 
-    return capability;
-  });
+    if (!jilArgs.sauce) {
+      capability['sauce:options'] = {
+        tunnelName: getSauceConnectTunnelName()
+      }
+    }
+
+    return capability
+  })
 }
 
-export default function config() {
+export default function config () {
   if (jilArgs.selenium) {
-    return { capabilities: seleniumCapabilities() };
+    return { capabilities: seleniumCapabilities() }
   } else {
-    return { capabilities: sauceCapabilities() };
+    return { capabilities: sauceCapabilities() }
   }
 }

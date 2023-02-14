@@ -24,7 +24,7 @@
     var xhrDone = false
     var xhr = new XMLHttpRequest()
     xhr.open('GET', '/json')
-    xhr.onload = function () { xhrDone = true }
+    xhr.onload = function () { window.xhrDone = true }
     xhr.send()
     </script>
   </head>

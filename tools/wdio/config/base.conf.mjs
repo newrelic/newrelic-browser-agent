@@ -1,33 +1,33 @@
-import jilArgs from "../args.mjs";
-import url from "url";
-import path from "path";
+import jilArgs from '../args.mjs'
+import url from 'url'
+import path from 'path'
 
-const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
-export default function config() {
+export default function config () {
   return {
-    runner: "local",
+    runner: 'local',
     maxInstances: jilArgs.concurrency || 1,
     maxInstancesPerCapability: 100,
     capabilities: [],
-    logLevel: jilArgs.verbose ? "debug" : jilArgs.silent ? "silent" : "error",
+    logLevel: jilArgs.verbose ? 'debug' : jilArgs.silent ? 'silent' : 'error',
     waitforTimeout: 10000,
     connectionRetryTimeout: 120000,
     connectionRetryCount: 3,
     services: [
-      path.resolve(__dirname, "../plugins/newrelic-instrumentation.mjs"),
-      [path.resolve(__dirname, "../plugins/testing-server/index.mjs"), jilArgs],
+      path.resolve(__dirname, '../plugins/newrelic-instrumentation.mjs'),
+      [path.resolve(__dirname, '../plugins/testing-server/index.mjs'), jilArgs]
     ],
-    framework: "mocha",
+    framework: 'mocha',
     specFileRetriesDeferred: true,
     reporters: [
-      "spec",
-      path.resolve(__dirname, "../plugins/newrelic-reporter.mjs"),
+      'spec',
+      path.resolve(__dirname, '../plugins/newrelic-reporter.mjs')
     ],
     mochaOpts: {
-      ui: "bdd",
+      ui: 'bdd',
       timeout: 60000,
-      retries: 3,
-    },
-  };
+      retries: 3
+    }
+  }
 }

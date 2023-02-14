@@ -20,3 +20,7 @@ tests/assets/test-builds/**/*
 packages/browser-agent-core/cjs
 **/webpack-analysis*.html
 /cdn/build
+**/cdn/webpack-analysis-polyfills.html
+**/cdn/webpack-analysis-standard.html
+**/cdn/webpack-analysis-worker.html
+./docs-website

@@ -1,5 +1,5 @@
 const testDriver = require('../../../tools/jil/index')
-const {fail, condition} = require('./helpers')
+const { fail, condition } = require('./helpers')
 const querypack = require('@newrelic/nr-querypack')
 
 const fetchBrowsers = testDriver.Matcher.withFeature('fetch')
@@ -18,12 +18,12 @@ testDriver.test('Disabled ajax events', function (t, browser, router) {
   })).waitForFeature('loaded')
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
-    .then(() => {
+    .then(([response]) => {
       t.error()
       t.end()
     }).catch(fail)
 
-  function fail() {
+  function fail () {
     t.ok(true, 'AJAX Promise did not execute because enabled was false')
     t.end()
   }
@@ -43,18 +43,18 @@ testDriver.test('capturing XHR ajax events', function (t, browser, router) {
   })).waitForFeature('loaded')
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
-    .then(async ([{request}]) => {
+    .then(async ([{ request }]) => {
       const ajaxRequests = querypack.decode(request.body)
       t.ok(ajaxRequests.length, 'XMLHttpRequest ajax event was harvested')
 
       t.end()
-    }).catch(fail(t));
+    }).catch(fail(t))
 })
 
 testDriver.test('capturing large payload of XHR ajax events', function (t, browser, router) {
   const ajaxPromises = Promise.all([
     router.expectAjaxEvents(8000),
-    router.expectAjaxEvents(8000)
+    router.expectAjaxEvents(16000)
   ])
   const rumPromise = router.expectRum()
   const loadPromise = browser.safeGet(router.assetURL('xhr-large-payload.html', {
@@ -69,13 +69,13 @@ testDriver.test('capturing large payload of XHR ajax events', function (t, brows
   })).waitForFeature('loaded')
 
   Promise.all([ajaxPromises, loadPromise, rumPromise])
-    .then(([[{request: request1}, {request: request2}]]) => {
+    .then(([[{ request: request1 }, { request: request2 }]]) => {
       const ajax1Requests = querypack.decode(request1.body)
       const ajax2Requests = querypack.decode(request2.body)
       t.ok(ajax1Requests)
       t.ok(ajax2Requests)
       t.end()
-    }).catch(fail(t));
+    }).catch(fail(t))
 })
 
 testDriver.test('capturing Fetch ajax events', fetchBrowsers, function (t, browser, router) {
@@ -92,12 +92,12 @@ testDriver.test('capturing Fetch ajax events', fetchBrowsers, function (t, brows
   })).waitForFeature('loaded')
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
-    .then(([{request}]) => {
+    .then(([{ request }]) => {
       const ajaxRequests = querypack.decode(request.body)
       t.ok(ajaxRequests.length, 'Fetch ajax event was harvested')
 
       t.end()
-    }).catch(fail(t));
+    }).catch(fail(t))
 })
 
 testDriver.test('Distributed Tracing info is added to XHR ajax events', function (t, browser, router) {
@@ -125,7 +125,7 @@ testDriver.test('Distributed Tracing info is added to XHR ajax events', function
   })).waitForFeature('loaded')
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
-    .then(([{request}]) => {
+    .then(([{ request }]) => {
       const ajaxRequests = querypack.decode(request.body)
       t.ok(ajaxRequests.length, 'XMLHttpRequest ajax event was harvested')
 
@@ -136,7 +136,7 @@ testDriver.test('Distributed Tracing info is added to XHR ajax events', function
       t.ok(expectedAjaxRequest.requestedWith === 'XMLHttpRequest', 'requested with XMLHttpRequest')
 
       t.end()
-    }).catch(fail(t));
+    }).catch(fail(t))
 })
 
 testDriver.test('Distributed Tracing info is added to Fetch ajax events', fetchBrowsers, function (t, browser, router) {
@@ -164,7 +164,7 @@ testDriver.test('Distributed Tracing info is added to Fetch ajax events', fetchB
   })).waitForFeature('loaded')
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
-    .then(([{request}]) => {
+    .then(([{ request }]) => {
       const ajaxRequests = querypack.decode(request.body)
       t.ok(ajaxRequests.length, 'Fetch ajax event was harvested')
 

@@ -1,5 +1,5 @@
-const fp = require("fastify-plugin");
-const { rumFlags } = require("../constants");
+const fp = require('fastify-plugin')
+const { rumFlags } = require('../constants')
 
 /**
  * Fastify plugin to apply routes to the bam server.
@@ -8,49 +8,49 @@ const { rumFlags } = require("../constants");
  */
 module.exports = fp(async function (fastify, testServer) {
   fastify.route({
-    method: ["GET", "POST"],
-    url: "/1/:testId",
+    method: ['GET', 'POST'],
+    url: '/1/:testId',
     handler: async function (request, reply) {
       if (!request.query.jsonp) {
         return reply
-          .header("content-type", "application/json")
+          .header('content-type', 'application/json')
           .code(200)
-          .send(JSON.stringify(rumFlags));
+          .send(JSON.stringify(rumFlags))
       } else {
         return reply
-          .header("content-type", "application/javascript")
+          .header('content-type', 'application/javascript')
           .code(200)
-          .send(`${request.query.jsonp}(${JSON.stringify(rumFlags)})`);
+          .send(`${request.query.jsonp}(${JSON.stringify(rumFlags)})`)
       }
-    },
-  });
+    }
+  })
   fastify.route({
-    method: ["GET", "POST"],
-    url: "/events/1/:testId",
+    method: ['GET', 'POST'],
+    url: '/events/1/:testId',
     handler: async function (request, reply) {
-      return reply.code(200).send("");
-    },
-  });
+      return reply.code(200).send('')
+    }
+  })
   fastify.route({
-    method: ["GET", "POST"],
-    url: "/jserrors/1/:testId",
+    method: ['GET', 'POST'],
+    url: '/jserrors/1/:testId',
     handler: async function (request, reply) {
-      return reply.code(200).send("");
-    },
-  });
+      return reply.code(200).send('')
+    }
+  })
   fastify.route({
-    method: ["GET", "POST"],
-    url: "/ins/1/:testId",
+    method: ['GET', 'POST'],
+    url: '/ins/1/:testId',
     handler: async function (request, reply) {
-      return reply.code(200).send("");
-    },
-  });
+      return reply.code(200).send('')
+    }
+  })
   fastify.route({
-    method: ["GET", "POST"],
-    url: "/resources/1/:testId",
+    method: ['GET', 'POST'],
+    url: '/resources/1/:testId',
     handler: async function (request, reply) {
       // This endpoint must reply with some text in the body or further resource harvests will be disabled
-      return reply.code(200).send("123-456");
-    },
-  });
-});
+      return reply.code(200).send('123-456')
+    }
+  })
+})

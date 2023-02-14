@@ -1,0 +1,160 @@
+name: Push Release To All Platforms
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: node:14
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+      BUILD_NUMBER: Release${{ github.event.number }}-${{ github.run_number }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: install
+        run: npm ci
+      - name: build:all
+        run: npm run build:all
+      - name: run tests
+        run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=10
+  publish-to-s3:
+    runs-on: ubuntu-latest
+    container: node:14
+    needs: [test]
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+      BUILD_NUMBER: Release${{ github.event.number }}-${{ github.run_number }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: install
+        run: npm ci
+      - name: build:prod
+        run: npm run cdn:build:prod
+      - name: check files don't exist already
+        run: node tools/scripts/check-version.js -e no
+      - name: upload artifacts to S3
+        run: |
+          node tools/scripts/upload-to-s3.js \
+            --bucket ${{ secrets.AWS_BUCKET }} \
+            --role ${{ secrets.AWS_ROLE_ARN }}
+      - name: check files exist
+        run: node tools/scripts/check-version.js -e yes -m
+  publish-to-internal-prod:
+    runs-on: ubuntu-latest
+    container: node:14
+    needs: [publish-to-s3]
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: install
+        run: npm ci
+      - name: re-publish internal loader (prod)
+        run: |
+          node ./tools/scripts/upload-ab-to-s3.js \
+            --env prod \
+            --current https://js-agent.newrelic.com/nr-loader-spa-current.min.js \
+            --next https://js-agent.newrelic.com/nr-loader-spa-$(cat VERSION).min.js \
+            --appId ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }} \
+            --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
+            --bucket ${{ secrets.AWS_BUCKET }} \
+            --role ${{ secrets.AWS_ROLE_ARN }}
+      - name: re-publish internal loader (eu-prod)
+        run: |
+          node ./tools/scripts/upload-ab-to-s3.js \
+            --env eu-prod \
+            --current https://js-agent.newrelic.com/nr-loader-spa-current.min.js \
+            --next https://js-agent.newrelic.com/nr-loader-spa-$(cat VERSION).min.js \
+            --appId ${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }} \
+            --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
+            --bucket ${{ secrets.AWS_BUCKET }} \
+            --role ${{ secrets.AWS_ROLE_ARN }}
+      - name: purge fastly cache url
+        run: |
+          node ./tools/scripts/fastly.js \
+            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
+            --env prod \
+            --purge-internal
+      - name: purge fastly cache url
+        run: |
+          node ./tools/scripts/fastly.js \
+            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
+            --env eu-prod \
+            --purge-internal
+  publish-to-nrdb:
+    runs-on: ubuntu-latest
+    container: node:14
+    needs: [publish-to-s3]
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+      BUILD_NUMBER: Release${{ github.event.number }}-${{ github.run_number }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: install
+        run: npm ci
+      - name: upload artifacts to NR
+        run: |
+          node tools/scripts/upload-to-nr.js \
+            --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
+            --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
+            --eu-api-key=${{ secrets.NR_API_KEY_EU }} \
+            --v=$(cat VERSION)
+      - name: validate file
+        run: |
+          node tools/scripts/check-nrdb.js -v $(cat VERSION)
+  raise-release-notes-pr:
+    runs-on: ubuntu-latest
+    container: node:14
+    needs: [publish-to-nrdb]
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      GITHUB_TOKEN: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: install
+        run: npm ci
+      - name: Build and raise PR to docs-website
+        run: |
+          node tools/scripts/docs-website/create-docs-pr.js \
+            -t=v$(cat VERSION)
+  publish-current-to-s3:
+    runs-on: ubuntu-latest
+    container: node:14
+    needs: [publish-to-nrdb]
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: install
+        run: npm ci
+      - name: build
+        run: npm run cdn:build:current
+      - name: upload artifacts to S3
+        run: |
+          node tools/scripts/upload-to-s3.js \
+            --bucket ${{ secrets.AWS_BUCKET }} \
+            --role ${{ secrets.AWS_ROLE_ARN }}
+      - name: check files exist
+        run: |
+          node tools/scripts/check-version.js \
+            -e yes

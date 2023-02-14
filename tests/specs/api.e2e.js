@@ -1,12 +1,12 @@
 describe('API', () => {
-  let router;
+  let router
 
   beforeEach(async () => {
-    router = await browser.getRouter();
+    router = await browser.getRouter()
   })
 
   afterEach(async () => {
-    await router.disconnect();
+    await router.disconnect()
   })
 
   it('customTransactionName 1 arg', async () => {
@@ -16,7 +16,7 @@ describe('API', () => {
           enabled: false
         }
       }
-    });
+    })
 
     console.log(url)
   })

@@ -32,25 +32,25 @@ const defaultConfig = {
   },
   rules: {
     name: [
-      {pattern: /^\/1\/.*$/, name: 'rum'},
-      {pattern: /^\/events\/1\/.*$/, name: 'events'},
-      {pattern: /^\/jserrors\/1\/.*$/, name: 'jserrors'},
-      {pattern: /^\/ins\/1\/.*$/, name: 'ins'},
-      {pattern: /^\/resources\/1\/.*$/, name: 'resources'},
-      {pattern: /^\/tests\/browser\/.*$/, name: 'browser-test'}
+      { pattern: /^\/1\/.*$/, name: 'rum' },
+      { pattern: /^\/events\/1\/.*$/, name: 'events' },
+      { pattern: /^\/jserrors\/1\/.*$/, name: 'jserrors' },
+      { pattern: /^\/ins\/1\/.*$/, name: 'ins' },
+      { pattern: /^\/resources\/1\/.*$/, name: 'resources' },
+      { pattern: /^\/tests\/browser\/.*$/, name: 'browser-test' }
     ]
   }
 }
 
 const envConfigs = {
   default: {
-    agent_enabled: false,
+    agent_enabled: false
   },
   staging: {
     agent_enabled: true,
     app_name: ['jil-staging'],
     license_key: process.env.JIL_NODE_NEW_RELIC_LICENSE_KEY,
-    host: 'staging-collector.newrelic.com',
+    host: 'staging-collector.newrelic.com'
   },
   ci: {
     agent_enabled: true,

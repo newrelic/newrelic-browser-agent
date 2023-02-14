@@ -5,7 +5,7 @@
 
 const testDriver = require('../../../tools/jil/index')
 const { getErrorsFromResponse } = require('../err/assertion-helpers')
-const {workerTypes, typeToMatcher} = require('./helpers')
+const { workerTypes, typeToMatcher } = require('./helpers')
 
 const init = {
   jserrors: {
@@ -20,7 +20,7 @@ workerTypes.forEach(type => {
   circularTest(type, typeToMatcher(type))
 })
 
-function circularTest(type, matcher) {
+function circularTest (type, matcher) {
   testDriver.test(`${type} - a circular reference error generates and sends an error object`, matcher, function (t, browser, router) {
     let assetURL = router.assetURL(`worker/${type}-worker.html`, {
       init,
@@ -38,7 +38,7 @@ function circularTest(type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{request}]) => {
+    Promise.all([errPromise, loadPromise]).then(([{ request }]) => {
       const actualErrors = getErrorsFromResponse(request, browser)
 
       t.equal(actualErrors.length, 1, 'exactly one error')
@@ -48,7 +48,7 @@ function circularTest(type, matcher) {
       t.end()
     }).catch(fail)
 
-    function fail(err) {
+    function fail (err) {
       t.error(err)
       t.end()
     }

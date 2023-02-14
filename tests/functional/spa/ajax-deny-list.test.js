@@ -30,7 +30,7 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
     },
     {
       name: 'node at the end of tree branch',
-      denyList: [ 'bam-test-1.nr-local.net/text' ],
+      denyList: ['bam-test-1.nr-local.net/text'],
       expected: {
         type: 'interaction',
         children: [
@@ -43,7 +43,7 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
     },
     {
       name: 'node in the middle of tree branch',
-      denyList: [ 'bam-test-1.nr-local.net/json' ],
+      denyList: ['bam-test-1.nr-local.net/json'],
       expected: {
         type: 'interaction',
         children: [
@@ -57,7 +57,7 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
   ]
 
   cases.forEach(testCase => {
-    t.test(testCase.name, function(t) {
+    t.test(testCase.name, function (t) {
       let rumPromise = router.expectRum()
       let eventsPromise = router.expectInteractionEvents()
       let loadPromise = browser.safeGet(router.assetURL('spa/ajax-deny-list.html', {
@@ -67,6 +67,9 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
             deny_list: testCase.denyList,
             enabled: true
           },
+          page_view_timing: {
+            enabled: false
+          },
           metrics: {
             enabled: false
           }
@@ -74,7 +77,7 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
       })).waitForFeature('loaded')
 
       Promise.all([eventsPromise, rumPromise, loadPromise])
-        .then(([{request: eventsResult}]) => {
+        .then(([{ request: eventsResult }]) => {
           var query = eventsResult.query
           var body = eventsResult.body
           let interaction = querypack.decode(body && body.length ? body : query.e)[0]
@@ -85,7 +88,7 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
         })
         .catch(fail)
 
-      function fail(err) {
+      function fail (err) {
         t.error(err)
         t.end()
       }
@@ -95,7 +98,7 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
 
 // validates only keys defined in the expected object
 // validates children recursively, including children not present
-function validateNode(t, expected, actual) {
+function validateNode (t, expected, actual) {
   for (var key in expected) {
     var expectedVal = expected[key]
 

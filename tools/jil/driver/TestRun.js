@@ -6,9 +6,9 @@
 var newrelic = require('newrelic')
 const wd = require('wd')
 const through = require('through')
-const {EventEmitter} = require('events')
+const { EventEmitter } = require('events')
 const TestHarness = require('./harness')
-const {isSauceConnected} = require('../util/external-services')
+const { isSauceConnected } = require('../util/external-services')
 const observeTapeTest = require('./TapeTestObserver')
 const { v4: uuidV4 } = require('uuid')
 
@@ -69,7 +69,7 @@ class TestRun extends EventEmitter {
       })
   }
 
-  run() {
+  run () {
     if (!this.initialized) {
       throw new Error('Not initialized')
     }
@@ -117,7 +117,7 @@ class TestRun extends EventEmitter {
       harness.pause()
       observeTapeTest(t, onTestFinished, onTestResult)
 
-      function onTestFinished(passed) {
+      function onTestFinished (passed) {
         self.allOk = self.allOk && (passed || attempt < numberOfAttempts)
         self.currentTest = null
         let endTime = Date.now()
@@ -132,7 +132,7 @@ class TestRun extends EventEmitter {
         notifyTestFinished(passed, endTime - startTime)
       }
 
-      function onTestResult(result) {
+      function onTestResult (result) {
         if (!result.ok) {
           var eventData = {
             browserName: browserSpec.desired.browserName,
@@ -154,7 +154,7 @@ class TestRun extends EventEmitter {
         }
       }
 
-      function notifyTestFinished(passed, duration) {
+      function notifyTestFinished (passed, duration) {
         self.emit('testFinished', self, test, {
           passed: passed,
           retry: (attempt - 1),
@@ -162,7 +162,7 @@ class TestRun extends EventEmitter {
         })
       }
 
-      function scheduleRetry() {
+      function scheduleRetry () {
         if (attempt < numberOfAttempts) {
           harness.clear()
           self._queueTest(deviceTest, attempt + 1)
@@ -179,11 +179,11 @@ class TestRun extends EventEmitter {
     })
   }
 
-  addTest(test) {
+  addTest (test) {
     this._queueTest(test)
   }
 
-  close(done) {
+  close (done) {
     let self = this
 
     self.harness.close()
@@ -225,7 +225,7 @@ class TestRun extends EventEmitter {
   }
 
   _generateID () {
-    return uuidV4();
+    return uuidV4()
   }
 }
 

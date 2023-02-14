@@ -48,7 +48,7 @@ testDriver.test('Error objects are sent to separate apps via noticeError from np
 
   const errorPromises = appsOnPage.map(app => router.expectErrors(app.appID))
 
-  function testError(appID, exceptionClass, message) {
+  function testError (appID, exceptionClass, message) {
     const app = appsOnPage.find(x => Number(x.appID) === Number(appID))
     if (app) app.seen = true
     t.ok(!!app, 'App ID is expected -- ' + app.appID)
@@ -76,7 +76,7 @@ testDriver.test('Error objects are sent to separate apps via noticeError from np
     })
     .catch(fail)
 
-  function fail(e) {
+  function fail (e) {
     t.error(e)
     t.end()
   }

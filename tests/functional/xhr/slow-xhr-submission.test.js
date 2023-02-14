@@ -4,7 +4,6 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {testEventsRequest, testErrorsRequest} = require("../../../tools/testing-server/utils/expect-tests");
 
 const asserters = testDriver.asserters
 
@@ -13,22 +12,15 @@ var supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 
 testDriver.test('slow XHR submission should not delay next page load', supported, function (t, browser, router) {
   let bamServerResponded = false
-  let oldFirefox = browser.match('firefox@<31')
 
   t.plan(1)
 
-  // make the bam server response artificially slow
-  router.scheduleReply('bamServer', {
-    test: testErrorsRequest,
-    delay: 20000
-  })
-  router.scheduleReply('bamServer', {
-    test: testErrorsRequest,
-    delay: 20000
-  })
+  // make the router's response artificially slow
+  router.scheduleReply('jserrors', { delay: 20000 })
+  router.scheduleReply('jserrors', { delay: 20000 })
   router.expectErrors().then(() => {
-    bamServerResponded = true;
-  }).catch(() => {});
+    bamServerResponded = true
+  }).catch(() => {})
 
   let rumPromise = router.expectRum()
   let loadPromise = browser.get(router.assetURL('xhr.html', {
@@ -52,7 +44,6 @@ testDriver.test('slow XHR submission should not delay next page load', supported
     })
     .then(() => {
       t.notok(bamServerResponded, 'next page should have loaded before bam server responded')
-      t.end()
     })
     .catch(fail)
 

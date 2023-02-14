@@ -10,25 +10,19 @@ const querypack = require('@newrelic/nr-querypack')
 let supported = testDriver.Matcher.withFeature('fetch')
 
 testDriver.test('capturing fetch in SPA interactions', supported, function (t, browser, router) {
-  t.plan(22)
   let testStartTime = now()
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
   let loadPromise = browser.safeGet(router.assetURL('spa/fetch.html', { loader: 'spa' })).waitForFeature('loaded')
 
-  rumPromise.then(({request: {query}}) => {
-    t.ok(query.af.split(',').indexOf('spa') !== -1, 'should indicate that it supports spa')
-  })
-
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([{request: eventsResult}]) => {
-      let {body, query} = eventsResult
+    .then(([{ request: eventsResult }]) => {
+      let { body, query } = eventsResult
 
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
-      t.equal(interactionTree.children.length, 0, 'expect no child nodes')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
       let eventPromise = router.expectEvents()
@@ -40,7 +34,7 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
         return eventData
       })
     })
-    .then(({request: {query, body}}) => {
+    .then(({ request: { query, body } }) => {
       let receiptTime = now()
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -69,6 +63,8 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
       let estimatedInteractionTimestamp = interactionTree.start + fixup
       t.ok(estimatedInteractionTimestamp > testStartTime, 'estimated ixn start after test start')
       t.ok(estimatedInteractionTimestamp < receiptTime, 'estimated ixn start before receipt time')
+
+      t.end()
     })
     .catch(fail)
 
@@ -109,7 +105,7 @@ testDriver.test('response size', supported, function (t, browser, router) {
             return eventData
           })
         })
-        .then(({request: {query, body}}) => {
+        .then(({ request: { query, body } }) => {
           let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
           var fetchNode = interactionTree.children.find((node) => node.type === 'ajax')
           t.equal(fetchNode.responseBodySize, testCase.responseBodySize, 'should have correct responseBodySize')

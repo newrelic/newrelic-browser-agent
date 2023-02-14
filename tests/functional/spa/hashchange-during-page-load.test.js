@@ -14,12 +14,14 @@ testDriver.test('hash change during page load', supported, function (t, browser,
 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectInteractionEvents()
-  let loadPromise = browser.safeGet(targetUrl).waitForFeature('loaded')
+  let loadPromise = browser.safeGet(targetUrl)
 
   // This promise should never be fulfilled, because we should only get one
   // /events submission, for the initial page load.
   let secondEventsPromise = router.expectInteractionEvents(5000)
-    .then(({request: eventsResult}) => {
+    .then(({ request: eventsResult }) => {
+      let { body, query } = eventsResult
+      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.fail('got second /events submission with interaction of type ' + interactionTree.trigger)
     })
     .catch(() => {
@@ -27,8 +29,8 @@ testDriver.test('hash change during page load', supported, function (t, browser,
     })
 
   Promise.all([eventsPromise, rumPromise, loadPromise, secondEventsPromise])
-    .then(([{request: eventsResult}]) => {
-      let {body, query} = eventsResult
+    .then(([{ request: eventsResult }]) => {
+      let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
     })

@@ -37,7 +37,7 @@ jil.browserTest('basic MutationObserver instrumentation', function (t) {
     setTimeout(newrelic.interaction().createTracer('timer', function () {}))
   })
 
-  observer.observe(el, {childList: true})
+  observer.observe(el, { childList: true })
 
   function onInteractionStart (cb) {
     el.innerHTML = 'mutated'

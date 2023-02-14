@@ -4,7 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
-const {assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse} = require('./assertion-helpers')
+const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require('./assertion-helpers')
 
 let supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 
@@ -24,7 +24,7 @@ testDriver.test('ignoring errors works', supported, function (t, browser, router
   let errorsPromise = router.expectErrors()
   let loadPromise = browser.get(assetURL).waitForConditionInBrowser('window.errorsThrown')
 
-  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{request}]) => {
+  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{ request }]) => {
     assertErrorAttributes(t, request.query, 'has errors')
 
     const actualErrors = getErrorsFromResponse(request, browser)

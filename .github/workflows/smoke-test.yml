@@ -1,16 +1,18 @@
 name: Smoke Test
 
 on:
-  pull_request_target:
-    types: [labeled]
   workflow_dispatch:
+  schedule:
+    # Runs every day at 3AM
+    - cron: '0 3 * * *'
+
 
 env:
-  BUILD_NUMBER: PR${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+  BUILD_NUMBER: event-${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
 
 jobs:
   chrome:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'smoke test')
+    if: contains(fromJson('["schedule"]'), github.event_name) || contains(fromJson('["workflow_dispatch"]'), github.event_name)
     runs-on: ubuntu-latest
     container: node:14
     
@@ -26,5 +28,6 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=30
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=10
+
   

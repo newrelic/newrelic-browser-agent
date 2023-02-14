@@ -21,7 +21,7 @@
     try {
       throw new Error("My error")
     } catch (e) {
-      NREUM.noticeError(e)
+      newrelic.noticeError(e)
     }
   </script>
 </body>

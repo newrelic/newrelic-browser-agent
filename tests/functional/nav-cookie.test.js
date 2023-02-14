@@ -27,7 +27,7 @@ testDriver.test('agent set nav cookie when page is unloading', function (t, brow
 
       return Promise.all([insPromise, loadPromise])
     })
-    .then(([{request: {body, query}}]) => {
+    .then(([{ request: { body, query } }]) => {
       if (body) {
         t.ok(JSON.parse(body).ins, 'received ins harvest')
       } else {

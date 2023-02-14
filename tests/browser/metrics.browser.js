@@ -1,21 +1,21 @@
 import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
-import { Instrument as MetricsInstrum, constants } from '@newrelic/browser-agent-core/src/features/metrics/instrument/index'
-import { Aggregate as MetricsAggreg } from '@newrelic/browser-agent-core/src/features/metrics/aggregate/index'
+import { Instrument as MetricsInstrum, constants } from '../../src/features/metrics/instrument/index'
+import { Aggregate as MetricsAggreg } from '../../src/features/metrics/aggregate/index'
 
 const metricName = 'test'
 const sLabel = constants.SUPPORTABILITY_METRIC
 const cLabel = constants.CUSTOM_METRIC
 
-const { aggregator: agg, agentIdentifier } = setup();
-const metricsInstr = new MetricsInstrum(agentIdentifier);
-new MetricsAggreg(agentIdentifier, agg);
+const { aggregator: agg, agentIdentifier } = setup()
+const metricsInstr = new MetricsInstrum(agentIdentifier, agg, {}, false)
+new MetricsAggreg(agentIdentifier, agg)
 const metrics = {
   recordSupportability: metricsInstr.recordSupportability,
-  recordCustom: metricsInstr.recordCustom,
-};
+  recordCustom: metricsInstr.recordCustom
+}
 
-function sum_sq(array) {
+function sum_sq (array) {
   let sum = 0
   let i = array.length
   while (i--) sum += Math.pow(array[i], 2)
@@ -30,16 +30,15 @@ const createAndStoreMetric = (value, isSupportability = true) => {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~ RECORD SUPPORTABILITY METRIC ~~~~~~~~~~~~~~~~~~~~~~~~~`
 
-test('recordSupportability with no value creates a metric with just a count', function(t) {
+test('recordSupportability with no value creates a metric with just a count', function (t) {
   createAndStoreMetric()
-  const [record] = agg.take([sLabel])[sLabel]
+  const record = agg.take([sLabel])[sLabel].find(x => x?.params?.name === metricName)
   t.ok(record, 'An aggregated record exists')
-  t.equals(record.params.name, metricName, 'Name is correct')
   t.ok(record.stats && record.stats.c === 1, 'Props has singular c metric')
   t.end()
 })
 
-test('recordSupportability with no value increments multiple times correctly', function(t) {
+test('recordSupportability with no value increments multiple times correctly', function (t) {
   createAndStoreMetric()
   createAndStoreMetric()
   createAndStoreMetric()
@@ -51,7 +50,7 @@ test('recordSupportability with no value increments multiple times correctly', f
   t.end()
 })
 
-test('recordSupportability with a value aggregates stats section', function(t) {
+test('recordSupportability with a value aggregates stats section', function (t) {
   createAndStoreMetric(500)
   const [record] = agg.take([sLabel])[sLabel]
   t.ok(record, 'An aggregated record exists')
@@ -60,7 +59,7 @@ test('recordSupportability with a value aggregates stats section', function(t) {
   t.end()
 })
 
-test('recordSupportability with a value aggregates stats section and increments correctly', function(t) {
+test('recordSupportability with a value aggregates stats section and increments correctly', function (t) {
   const values = [Math.random(), Math.random(), Math.random()]
   values.forEach(v => createAndStoreMetric(v))
 
@@ -68,7 +67,7 @@ test('recordSupportability with a value aggregates stats section and increments 
   t.ok(record, 'An aggregated record exists')
   t.equals(record.params.name, metricName, 'Name is correct')
 
-  const {stats} = record
+  const { stats } = record
   t.ok(stats.t === values.reduce((curr, next) => curr + next, 0), 'aggregated totals sum correctly')
   t.ok(stats.min === Math.min(...values), 'min value is as expected')
   t.ok(stats.max === Math.max(...values), 'max value is as expected')
@@ -77,7 +76,7 @@ test('recordSupportability with a value aggregates stats section and increments 
   t.end()
 })
 
-test('recordSupportability does not create a customMetric (cm) item', function(t) {
+test('recordSupportability does not create a customMetric (cm) item', function (t) {
   createAndStoreMetric(Math.random())
   try {
     const record = agg.take([cLabel])[cLabel]
@@ -91,7 +90,7 @@ test('recordSupportability does not create a customMetric (cm) item', function(t
 
 // ~~~~~~~~~~~~~~~~~~~~~~~ RECORD CUSTOM METRIC ~~~~~~~~~~~~~~~~~~~~~~~~~`
 
-test('recordCustom with no value creates a metric with just a count', function(t) {
+test('recordCustom with no value creates a metric with just a count', function (t) {
   createAndStoreMetric(undefined, false)
   const [record] = agg.take([cLabel])[cLabel]
   t.ok(record, 'An aggregated record exists')
@@ -101,7 +100,7 @@ test('recordCustom with no value creates a metric with just a count', function(t
   t.end()
 })
 
-test('recordCustom with no value increments multiple times correctly', function(t) {
+test('recordCustom with no value increments multiple times correctly', function (t) {
   createAndStoreMetric(undefined, false)
   createAndStoreMetric(undefined, false)
   createAndStoreMetric(undefined, false)
@@ -113,8 +112,8 @@ test('recordCustom with no value increments multiple times correctly', function(
   t.end()
 })
 
-test('recordCustom with a value creates a named metric object in metrics section', function(t) {
-  createAndStoreMetric({time: 500}, false)
+test('recordCustom with a value creates a named metric object in metrics section', function (t) {
+  createAndStoreMetric({ time: 500 }, false)
   const [record] = agg.take([cLabel])[cLabel]
   t.ok(record, 'An aggregated record exists')
   t.equals(record.params.name, metricName, 'Name is correct')
@@ -123,15 +122,15 @@ test('recordCustom with a value creates a named metric object in metrics section
   t.end()
 })
 
-test('recordCustom with a value creates a named metric object in metrics section and increments correctly', function(t) {
+test('recordCustom with a value creates a named metric object in metrics section and increments correctly', function (t) {
   const values = [Math.random(), Math.random(), Math.random()]
-  values.forEach(v => createAndStoreMetric({time: v}, false))
+  values.forEach(v => createAndStoreMetric({ time: v }, false))
 
   const [record] = agg.take([cLabel])[cLabel]
   t.ok(record, 'An aggregated record exists')
   t.equals(record.params.name, metricName, 'Name is correct')
   t.ok(record.metrics && Object.keys(record.metrics).length > 1 && record.metrics.count === 3, 'it should have incremented once')
-  const {time} = record.metrics
+  const { time } = record.metrics
   t.ok(!!time, 'named metric exists')
   t.ok(time.t === values.reduce((curr, next) => curr + next, 0), 'aggregated totals sum correctly')
   t.ok(time.min === Math.min(...values), 'min value is as expected')
@@ -141,7 +140,7 @@ test('recordCustom with a value creates a named metric object in metrics section
   t.end()
 })
 
-test('recordCustom with an invalid value type does not create a named metric object in metrics section', function(t) {
+test('recordCustom with an invalid value type does not create a named metric object in metrics section', function (t) {
   createAndStoreMetric(Math.random(), false)
   const [record] = agg.take([cLabel])[cLabel]
   t.ok(record, 'An aggregated record exists')
@@ -150,7 +149,7 @@ test('recordCustom with an invalid value type does not create a named metric obj
   t.end()
 })
 
-test('recordCustom does not create a supportabilityMetric (sm) item', function(t) {
+test('recordCustom does not create a supportabilityMetric (sm) item', function (t) {
   createAndStoreMetric(Math.random(), false)
   try {
     const record = agg.take([sLabel])[sLabel]

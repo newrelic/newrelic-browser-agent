@@ -3,6 +3,54 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1225
+
+### Gracefully abort agent if not fully instantiated
+When importing of agent code fails, as when content gets blocked, the agent will clean up memory, the global scope, and any wrapped or modified APIs as much as feasible.
+
+### Refactor wrapping of Promise object
+The agent's wrapping of the `Promise` object has been refactored to address conflicts with third party libraries and to add newer methods available on the native object. The new wrapping implementation is more conventional and less error-prone.
+
+### Fix uncaught promise error introduced in v1223
+In some cases of failure to import agent script chunk "629", an error was thrown rather than caught and logged as a warning. The uncaught promise error responsible for this unintended behavior has been fixed.
+
+### Resolve Google indexing of agent relative paths
+In previous versions, the agent script included relative paths to its lazy-loaded chunks, which Googlebot picked up and attempted to index as pages. This change removes those relatives paths from the loader and centralizes our lazy chunk loading of agent features.
+
+## v1224
+
+### Support SPA, XHR, and session trace features on Chrome for iOS
+Previously, the agent didn't collect SPA browser interactions, XHR events, or session trace data in Chrome for iOS, which uses the webkit engine with modifications. The agent now collects the same data in Chrome for iOS as in other supported browsers.
+
+### Fix multiple custom interaction end times
+Fixed an issue where multiple custom interactions harvested at the same time would result in only one interaction being persisted in New Relic.
+
+### Prevent AJAX time slice metrics based on deny list
+Prevent time slice metric collection for AJAX calls when such a call matches an entry in the AJAX deny list.
+
+### Bind navigator scope to sendBeacon
+Some browser versions will throw errors if sendBeacon doesn't have the navigator scope bound to it. A fail-safe action of binding the navigator scope to sendBeacon was added to try to support those browsers.
+
+### Expose build version to newrelic global
+The build version is exposed to the `newrelic` global object. You can access it with `newrelic.intializedAgents[<agentID>].runtime.version`.
+
+### Add automation for documentation site updates on new releases
+A new release of the browser agent will automatically raise a PR to the documentation site with the relevant changelog items.
+
+### Preserve unhandledPromiseRejection reasons as human-readable strings in error payloads
+The agent will attempt to preserve `unhandledPromiseRejection` reasons as human-readable messages on the Error payload that gets harvested. The previous strategy didn't always work, because `Promise.reject` can pass any value, not just strings.
+
+### Fix missing interactions for dynamic routes in Next/React
+Fixed an issue where when using the SPA loader with Next/React, route changes that lazy loaded components wouldn't be captured. While the issue specifically called out Next/React, this should apply to Nuxt/Vue and Angular.
+
+### Fix interactions missing API calls in Angular
+Fixed an issue where when using the SPA loader with Angular, route changes that contained API calls, via Angular resolver, wouldn't capture the xhr/fetch on the interaction. This works with eager and lazy routes in an Angular SPA.
+
+## v1223
+
+### Refactor loader architecture for improved developer experience
+This architectural release simplifies file structure and refactors the way features are composed, in preparation for future developer experience improvements. These changes are not anticipated to have impact on agent behavior or functionality.
+
 ## v1222
 
 ### EXPERIMENTAL - Unblock instrumented pages from the back/forward cache (w/ feature flag)
@@ -22,6 +70,9 @@ Restoring previous functionality whereby the `nrWrapper` agent method should be 
 
 ### Fix errors with global self redefinition
 Fixing an issue where external code redefining the `self` global variable causes the agent async loading to fail and the agent to crash.
+
+### Fix check for sessionStorage object
+Ensure the agent does not crash when sessionStorage is not available or when the quota has been exceeded or set to 0. Safari has been known to set the sessionStorage quota to 0 in private browsing windows.
 
 ## v1221
 

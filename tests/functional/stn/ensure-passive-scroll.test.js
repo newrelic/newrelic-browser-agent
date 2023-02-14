@@ -13,7 +13,7 @@ testDriver.test('ensure scroll listener IS passive if supported', stn.and(suppor
 
   let resourcePromise = router.expectResources()
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(router.assetURL('stn/ensure-passive.html'))
+  let loadPromise = browser.get(router.assetURL('stn/ensure-passive.html')).waitForFeature('loaded')
 
   Promise.all([rumPromise, resourcePromise, loadPromise])
     .then(() => {
@@ -35,7 +35,7 @@ testDriver.test('ensure scroll listener IS NOT passive if not supported', stn.an
 
   let resourcePromise = router.expectResources()
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(router.assetURL('stn/ensure-passive.html'))
+  let loadPromise = browser.get(router.assetURL('stn/ensure-passive.html')).waitForFeature('loaded')
 
   Promise.all([rumPromise, resourcePromise, loadPromise])
     .then(() => {
@@ -50,8 +50,4 @@ testDriver.test('ensure scroll listener IS NOT passive if not supported', stn.an
     t.error(err, 'unexpected error')
     t.end()
   }
-})
-
-testDriver.test('does not support session traces', stn.inverse(), function (t, browser, router) {
-  t.end()
 })

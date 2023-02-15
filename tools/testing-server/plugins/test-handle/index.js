@@ -26,18 +26,13 @@ module.exports = fp(async function (fastify, testServer) {
       testHandle.processRequest(fastify.testServerId, fastify, request)
     }
   })
-  fastify.addHook('onSend', async (request, reply, payload) => {
+  fastify.addHook('onSend', (request, reply, payload, done) => {
     if (request.scheduledReply) {
       if (request.scheduledReply.statusCode) {
         reply.code(request.scheduledReply.statusCode)
       }
       if (request.scheduledReply.body) {
         payload = request.scheduledReply.body
-      }
-      if (request.scheduledReply.delay) {
-        await new Promise(resolve => {
-          setTimeout(resolve, request.scheduledReply.delay)
-        })
       }
     }
 
@@ -56,6 +51,10 @@ module.exports = fp(async function (fastify, testServer) {
       })
     }
 
-    return Promise.resolve(payload)
+    if (request.scheduledReply && request.scheduledReply.delay) {
+      setTimeout(() => done(null, payload), request.scheduledReply.delay)
+    } else {
+      done(null, payload)
+    }
   })
 })

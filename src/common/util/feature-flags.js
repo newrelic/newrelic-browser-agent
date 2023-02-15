@@ -20,7 +20,7 @@ export function activateFeatures (flags, agentIdentifier) {
   if (!(flags && typeof flags === 'object')) return
   mapOwn(flags, function (flag, val) {
     if (!val) {
-      return bucketMap[flag].forEach(feat => {
+      return (bucketMap[flag] || []).forEach(feat => {
         handle('block-' + flag, [], undefined, feat, sharedEE)
       })
     }

@@ -10,7 +10,7 @@ module.exports = fp(async function (fastify) {
     reply.header('Surrogate-Control', 'no-store')
     reply.header(
       'Cache-Control',
-      'no-store, no-cache, must-revalidate, proxy-revalidate'
+      'no-cache, must-revalidate, proxy-revalidate'
     )
     reply.header('Pragma', 'no-cache')
     reply.header('Expires', '0')

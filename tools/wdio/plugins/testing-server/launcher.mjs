@@ -1,12 +1,10 @@
 import logger from '@wdio/logger'
 import TestServer from '../../../testing-server/index.js'
-import startCommandServer from './command-server.mjs'
 
 const log = logger('jil-testing-server')
 
 /**
- * This is a WDIO launcher plugin that starts the testing servers and command server
- * that allows WDIO child processes to communicate with the testing servers.
+ * This is a WDIO launcher plugin that starts the testing servers.
  */
 export default class TestingServerLauncher {
   static #defaultAgentConfig = {
@@ -19,7 +17,6 @@ export default class TestingServerLauncher {
   #opts
   #testingServer
   #commandServer
-  #commandPort
 
   constructor (opts) {
     this.#opts = opts
@@ -32,10 +29,6 @@ export default class TestingServerLauncher {
 
   async onPrepare (_, capabilities) {
     await this.#testingServer.start()
-    const { commandServer, commandPort } = await startCommandServer(
-      this.#testingServer,
-      log
-    )
 
     log.info(`Asset server started on http://${this.#testingServer.assetServer.host}:${this.#testingServer.assetServer.port}`)
     log.info(`CORS server started on http://${this.#testingServer.corsServer.host}:${this.#testingServer.corsServer.port}`)
@@ -43,16 +36,11 @@ export default class TestingServerLauncher {
     log.info(`Command server started on http://${this.#testingServer.commandServer.host}:${this.#testingServer.commandServer.port}`)
 
     capabilities.forEach((capability) => {
-      capability['jil:testServerCommandPort'] = commandPort
+      capability['jil:testServerCommandPort'] = this.#testingServer.commandServer.port
     })
-
-    this.#commandServer = commandServer
-    this.#commandPort = commandPort
-    log.info(`Command server started on http://localhost:${commandPort}`)
   }
 
   async onComplete () {
     await this.#testingServer.stop()
-    this.#commandServer.forceShutdown()
   }
 }

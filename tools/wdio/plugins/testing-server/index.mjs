@@ -1,22 +1,18 @@
-import logger from '@wdio/logger'
 import TestingServerLauncher from './launcher.mjs'
-import createClient from './command-client.mjs'
-import { RouterModel } from './router-model.mjs'
-
-const log = logger('jil-testing-server')
+import { TestHandleConnector } from './test-handle-connector.mjs'
 
 /**
- * This is a WDIO worker plugin provides access to the mockBAM server model
- * via a custom command.
+ * This is a WDIO worker plugin that provides access to the testing server via
+ * a test handle connector.
  */
 export default class TestingServerWorker {
   async before (capabilities, context, browser) {
-    const testingServerClient = await createClient(capabilities['jil:testServerCommandPort'])
+    const commandServerPort = capabilities['jil:testServerCommandPort']
 
-    browser.addCommand('getRouter', async function () {
-      const routerModel = new RouterModel(testingServerClient, log)
-      await routerModel.connect()
-      return routerModel
+    browser.addCommand('getTestHandle', async function () {
+      const testHandle = new TestHandleConnector(commandServerPort)
+      await testHandle.ready()
+      return testHandle
     })
   }
 }

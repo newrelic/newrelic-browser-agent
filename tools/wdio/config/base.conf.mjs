@@ -15,6 +15,7 @@ export default function config () {
     connectionRetryTimeout: 120000,
     connectionRetryCount: 3,
     services: [
+      path.resolve(__dirname, '../plugins/jil-commands.mjs'),
       path.resolve(__dirname, '../plugins/newrelic-instrumentation.mjs'),
       [path.resolve(__dirname, '../plugins/testing-server/index.mjs'), jilArgs]
     ],
@@ -28,6 +29,17 @@ export default function config () {
       ui: 'bdd',
       timeout: 60000,
       retries: 3
+    },
+    autoCompileOpts: {
+      babelOpts: {
+        presets: [
+          ['@babel/preset-env', {
+            targets: {
+              node: '14'
+            }
+          }]
+        ]
+      }
     }
   }
 }

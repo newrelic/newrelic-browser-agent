@@ -17,4 +17,5 @@ driver.ready(function () {
   console.log('asset server: http://' + config.host + ':' + driver.assetServer.assetServer.port)
   console.log('cors server: http://' + config.host + ':' + driver.assetServer.corsServer.port)
   console.log('bam server: http://' + config.host + ':' + driver.assetServer.bamServer.port)
+  console.log('command server: http://' + config.host + ':' + driver.assetServer.commandServer.port)
 })

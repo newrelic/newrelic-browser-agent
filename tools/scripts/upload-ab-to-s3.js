@@ -34,7 +34,7 @@ var argv = require('yargs')
   .default('dry', false)
   .argv
 
-const { env, appId, licenseKey, bucket, role, current, next, dry } = argv
+const { env, appId, licenseKey, bucket, role, current, next, dry, sha } = argv
 
 let counter = 1
 
@@ -89,6 +89,14 @@ function getIdFromUrl (url) {
   return `${counter++}`
 }
 
+function getSha () {
+  return process.env.GITHUB_SHA
+}
+
+function getWorkflow () {
+  return process.env.GITHUB_WORKFLOW
+}
+
 (async function () {
   const filePaths = [
     ...(env !== 'dev' ? [current] : []), // defaults to current build
@@ -130,7 +138,9 @@ function wrapAgent (agent, id) {
   return `
         ids['${id}'] = () => {
             ${agent}
-            newrelic.setCustomAttribute('buildID', '${id}')
+            ;newrelic.setCustomAttribute('buildID', '${id}')
+            ;newrelic.setCustomAttribute('SHA', '${getSha()}')
+            ;newrelic.setCustomAttribute('workflow', '${getWorkflow()}');
         }
     `
 }

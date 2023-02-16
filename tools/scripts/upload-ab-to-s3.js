@@ -30,11 +30,19 @@ var argv = require('yargs')
   .string('role')
   .describe('role', 'S3 role ARN')
 
+  .string('sha')
+  .describe('sha', 'github action SHA')
+  .default('sha', '')
+
+  .string('workflow')
+  .describe('workflow', 'github action workflow')
+  .default('workflow', '')
+
   .boolean('dry')
   .default('dry', false)
   .argv
 
-const { env, appId, licenseKey, bucket, role, current, next, dry, sha } = argv
+const { env, appId, licenseKey, bucket, role, current, next, dry, sha, workflow } = argv
 
 let counter = 1
 
@@ -89,14 +97,6 @@ function getIdFromUrl (url) {
   return `${counter++}`
 }
 
-function getSha () {
-  return process.env.GITHUB_SHA
-}
-
-function getWorkflow () {
-  return process.env.GITHUB_WORKFLOW
-}
-
 (async function () {
   const filePaths = [
     ...(env !== 'dev' ? [current] : []), // defaults to current build
@@ -135,12 +135,14 @@ function getWorkflow () {
 })()
 
 function wrapAgent (agent, id) {
+  console.log('sha...', sha)
+  console.log('workflow', workflow)
   return `
         ids['${id}'] = () => {
             ${agent}
             ;newrelic.setCustomAttribute('buildID', '${id}')
-            ;newrelic.setCustomAttribute('SHA', '${getSha()}')
-            ;newrelic.setCustomAttribute('workflow', '${getWorkflow()}');
+            ;newrelic.setCustomAttribute('SHA', '${sha}')
+            ;newrelic.setCustomAttribute('workflow', '${workflow}');
         }
     `
 }

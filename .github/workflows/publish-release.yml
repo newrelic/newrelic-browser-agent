@@ -135,7 +135,9 @@ jobs:
       - name: Build and raise PR to docs-website
         run: |
           node tools/scripts/docs-website/create-docs-pr.js \
-            -t=v$(cat VERSION)
+            -t=v$(cat VERSION) \
+            --docs-site-name=${{ secrets.DOCS_SITE_USER_NAME }} \
+            --docs-site-email=${{ secrets.DOCS_SITE_USER_EMAIL }}
   publish-current-to-s3:
     runs-on: ubuntu-latest
     container: node:14

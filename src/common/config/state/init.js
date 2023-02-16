@@ -3,7 +3,7 @@ import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { Configurable } from './configurable'
 
 const model = {
-  allow_bfcache: false, // *cli - temporary feature flag for BFCache work; disabled by default for stage 1
+  allow_bfcache: true, // *cli - temporary feature flag for BFCache work
   privacy: { cookies_enabled: true }, // *cli - per discussion, default should be true
   ajax: { deny_list: undefined, enabled: true, harvestTimeSeconds: 10 },
   distributed_tracing: {

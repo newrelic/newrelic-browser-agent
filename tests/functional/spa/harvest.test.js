@@ -44,6 +44,8 @@ testDriver.test('events are retried when collector returns 429', corsSupported, 
     firstBody = eventsResult.request.body
     return router.expectEvents()
   }).then(result => {
+    t.equal(router.requestCounts.bamServer.events, 2, 'got two events harvest requests')
+
     let secondBody = result.request.body
 
     t.equal(result.reply.statusCode, 200, 'server responded with 200')

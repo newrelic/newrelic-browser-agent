@@ -75,6 +75,7 @@ testDriver.test('NR-40043: Multiple errors with noticeError and unique messages 
 
     t.equal(errors.reply.statusCode, 200, 'server responded with 200')
     t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
+    t.equal(router.requestCounts.bamServer.jserrors, 2, 'got two jserrors harvest requests')
 
     t.end()
   }).catch(fail)
@@ -129,6 +130,7 @@ testDriver.test('NEWRELIC-3788: Multiple identical errors from the same line but
 
     t.equal(errors.reply.statusCode, 200, 'server responded with 200')
     t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
+    t.equal(router.requestCounts.bamServer.jserrors, 2, 'got two jserrors harvest requests')
 
     t.end()
   }).catch(fail)

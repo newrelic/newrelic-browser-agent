@@ -60,6 +60,8 @@ function paRetry (type, supportRegOrESMWorker) {
         return router.expectIns()
       })
       .then((insResult) => {
+        t.equal(router.requestCounts.bamServer.ins, 2, 'got two ins harvest requests')
+
         const secondBody = JSON.parse(insResult.request.body)
 
         t.equal(insResult.reply.statusCode, 200, 'server responded with 200')

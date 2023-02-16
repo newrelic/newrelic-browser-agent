@@ -1,5 +1,5 @@
-const { URL } = require('url')
 const fp = require('fastify-plugin')
+const { testIdFromRequest } = require('../../utils/fastify-request')
 
 /**
  * Fastify plugin to decorate the fastify instance with bam test handle methods.
@@ -9,20 +9,13 @@ const fp = require('fastify-plugin')
 module.exports = fp(async function (fastify, testServer) {
   fastify.decorateRequest('scheduledReply', null)
   fastify.decorateRequest('resolvingExpect', null)
+  fastify.decorateRequest('testHandle', null)
   fastify.addHook('preHandler', async (request) => {
-    let testHandle
-    const url = new URL(request.url, 'resolve://')
-    const urlTestId = url.pathname.match(/.*\/(.*$)/)
-
-    if (Array.isArray(urlTestId) && urlTestId.length > 1) {
-      testHandle = testServer.getTestHandle(urlTestId[1])
-    }
-
-    if (!testHandle && request.query.testId) {
-      testHandle = testServer.getTestHandle(request.query.testId)
-    }
+    const testId = testIdFromRequest(request)
+    const testHandle = testServer.getTestHandle(testId)
 
     if (testHandle) {
+      request.testHandle = testHandle
       testHandle.processRequest(fastify.testServerId, fastify, request)
     }
   })

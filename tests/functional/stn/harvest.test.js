@@ -37,6 +37,8 @@ testDriver.test('session traces are retried when collector returns 429 during fi
     firstBody = result.request.body
     return router.expectResources()
   }).then(result => {
+    t.equal(router.requestCounts.bamServer.resources, 2, 'got two harvest requests')
+
     let secondBody = result.request.body
 
     const firstParsed = JSON.parse(firstBody)
@@ -131,6 +133,8 @@ testDriver.test('session traces are retried when collector returns 429 during sc
     secondBody = result.request.body
     return router.expectResources()
   }).then(result => {
+    t.equal(router.requestCounts.bamServer.resources, 3, 'got three harvest requests')
+
     let thirdBody = result.request.body
 
     const firstParsed = JSON.parse(firstBody)

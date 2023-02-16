@@ -170,14 +170,6 @@ class TestServer {
    * Backwards compatibility with JIL
    * @deprecated
    */
-  serveAsset (req, res) {
-    this.#assetServer.routing(req, res)
-  }
-
-  /**
-   * Backwards compatibility with JIL
-   * @deprecated
-   */
   urlFor (relativePath, options) {
     return urlFor(relativePath, options, this)
   }
@@ -220,6 +212,7 @@ class TestServer {
       logger: this.#config.logRequests ? this.#config.logger : false
     })
 
+    this.#corsServer.decorate('testServerId', 'corsServer')
     this.#corsServer.register(require('@fastify/multipart'), {
       addToBody: true
     })

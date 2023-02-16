@@ -81,6 +81,8 @@ testDriver.test('PageActions are retried when collector returns 429', function (
       return router.expectIns()
     })
     .then(({ request, reply }) => {
+      t.equal(router.requestCounts.bamServer.ins, 2, 'got two ins harvest requests')
+
       let secondBody
 
       if (request.body) {

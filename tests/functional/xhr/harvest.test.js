@@ -46,6 +46,8 @@ testDriver.test('ajax events harvests are retried when collector returns 429', f
     firstBody = querypack.decode(result.request.body)
     return router.expectAjaxEvents()
   }).then(result => {
+    t.equal(router.requestCounts.bamServer.events, 2, 'got two events harvest requests')
+
     const secondBody = querypack.decode(result.request.body)
 
     const secondContainsFirst = firstBody.every(firstElement => {

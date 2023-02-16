@@ -1,4 +1,5 @@
 const path = require('path')
+const { URL } = require('url')
 
 /**
  * Resolves the path of a file and provides a URL that can be used to load that
@@ -59,32 +60,4 @@ module.exports.urlFor = function urlFor (relativePath, query, testServer) {
       'resolve://'
     )
   ).toString()
-}
-
-/**
- * Resolves the URL for a browser (unit) test so it can be accessed from the test
- * server and the tests will execute.
- * @param filePath Browser test file path
- * @param testServerConfig
- * @return {string}
- */
-function urlForBrowserTest (filePath, testServerConfig) {
-  return urlFor(
-    '/tests/assets/browser.html',
-    {
-      loader: 'full',
-      config: Buffer.from(
-        JSON.stringify({
-          licenseKey: 1234,
-          assetServerPort: testServerConfig.serverConfig.assetServerPort,
-          corsServerPort: testServerConfig.serverConfig.corsServerPort
-        })
-      ).toString('base64'),
-      script:
-        '/' +
-        path.relative(testServerConfig.paths.rootDir, filePath) +
-        '?browserify=true'
-    },
-    testServerConfig
-  )
 }

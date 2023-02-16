@@ -4,6 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
+const { testAjaxTimeSlicesRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 const asserters = testDriver.asserters
 
@@ -16,8 +17,14 @@ testDriver.test('slow XHR submission should not delay next page load', supported
   t.plan(1)
 
   // make the router's response artificially slow
-  router.scheduleReply('jserrors', { delay: 20000 })
-  router.scheduleReply('jserrors', { delay: 20000 })
+  router.scheduleReply('bamServer', {
+    test: testAjaxTimeSlicesRequest,
+    delay: 20000
+  })
+  router.scheduleReply('bamServer', {
+    test: testAjaxTimeSlicesRequest,
+    delay: 20000
+  })
   router.expectErrors().then(() => {
     bamServerResponded = true
   }).catch(() => {})

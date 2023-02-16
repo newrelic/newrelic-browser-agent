@@ -36,6 +36,8 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
 
     return Promise.all([resourcePromise, clickPromise])
   }).then(([result]) => {
+    t.equal(router.requestCounts.bamServer.resources, 2, 'got two harvest requests')
+
     const body = result.request.body
 
     t.equal(result.reply.statusCode, 200, 'server responded with 200')

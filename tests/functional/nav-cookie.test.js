@@ -19,6 +19,8 @@ testDriver.test('agent set nav cookie when page is unloading', function (t, brow
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
+      t.equal(router.requestCounts.bamServer.ins, undefined, 'no ins harvest yet')
+
       let insPromise = router.expectIns()
 
       let loadPromise = browser
@@ -28,6 +30,8 @@ testDriver.test('agent set nav cookie when page is unloading', function (t, brow
       return Promise.all([insPromise, loadPromise])
     })
     .then(([{ request: { body, query } }]) => {
+      t.equal(router.requestCounts.bamServer.ins, 1, 'received one ins harvest')
+
       if (body) {
         t.ok(JSON.parse(body).ins, 'received ins harvest')
       } else {

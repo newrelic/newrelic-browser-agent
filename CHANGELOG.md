@@ -8,6 +8,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Enable back/forward cache
 Updating the agent default configuration to enable the back/forward cache feature previously released in version 1222 by default.
 
+### Handle unhandledPromiseRejections more gracefully
+The agent will attempt to handle niche objects throw from `unhandledPromiseRejection` events more gracefully. These cases could include objects with frozen or static properties, or custom extensions of the Error class without a `set` method in place.
+
 ## v1225
 
 ### Gracefully abort agent if not fully instantiated

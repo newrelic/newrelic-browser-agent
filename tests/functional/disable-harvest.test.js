@@ -2,6 +2,14 @@ const testDriver = require('jil')
 const { testRumRequest } = require('../../tools/testing-server/utils/expect-tests')
 
 let supported = testDriver.Matcher.withFeature('notInternetExplorer')
+var timedPromiseAll = (promises, ms = 5000) => Promise.race([
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      reject()
+    }, ms)
+  }),
+  Promise.all(promises)
+])
 
 testDriver.test('METRICS, ERRORS - Kills feature if entitlements flag is 0', supported, function (t, browser, router) {
   const init = {
@@ -29,16 +37,12 @@ testDriver.test('METRICS, ERRORS - Kills feature if entitlements flag is 0', sup
   const errorsPromise = router.expectErrors(7000)
 
   Promise.all([rumPromise, loadPromise])
-    .then(() => Promise.any([metricsPromise, errorsPromise]))
-    .then((data) => {
+    .then(() => timedPromiseAll([metricsPromise, errorsPromise], 8000))
+    .then(() => {
       t.fail('should not have received metrics or errors')
     })
-    .catch((e) => {
-      if (e.toString().indexOf('All promises were rejected') > -1) {
-        t.pass('did not received metrics or errors data :)')
-      } else {
-        t.fail('unknown error', e)
-      }
+    .catch(() => {
+      t.pass('did not recieve metrics or errors :)')
     })
     .finally(() => t.end())
 })

@@ -14,9 +14,10 @@ testDriver.test('sends SPA interactions even if endInteraction() is called befor
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
   let loadPromise = browser.safeGet(router.assetURL('spa/initial-page-load-with-end-interaction.html', { loader: 'spa' }))
+    .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([eventsResult]) => {
+    .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -32,7 +33,7 @@ testDriver.test('sends SPA interactions even if endInteraction() is called befor
         return eventData
       })
     })
-    .then(({ query, body }) => {
+    .then(({ request: { query, body } }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
       t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')

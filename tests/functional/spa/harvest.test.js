@@ -5,6 +5,7 @@
 
 const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
+const { testEventsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 let corsSupported = testDriver.Matcher.withFeature('cors')
 
@@ -27,7 +28,10 @@ testDriver.test('events are retried when collector returns 429', corsSupported, 
     }
   })
 
-  router.scheduleResponse('events', 429)
+  router.scheduleReply('bamServer', {
+    test: testEventsRequest,
+    statusCode: 429
+  })
 
   let loadPromise = browser.safeGet(assetURL)
   let rumPromise = router.expectRum()
@@ -36,15 +40,16 @@ testDriver.test('events are retried when collector returns 429', corsSupported, 
   let firstBody
 
   Promise.all([eventsPromise, loadPromise, rumPromise]).then(([eventsResult]) => {
-    t.equal(eventsResult.res.statusCode, 429, 'server responded with 429')
-    firstBody = eventsResult.body
+    t.equal(eventsResult.reply.statusCode, 429, 'server responded with 429')
+    firstBody = eventsResult.request.body
     return router.expectEvents()
   }).then(result => {
-    let secondBody = result.body
+    t.equal(router.requestCounts.bamServer.events, 2, 'got two events harvest requests')
 
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    let secondBody = result.request.body
+
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
     t.equal(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
-    t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
 
     t.end()
   }).catch(fail)
@@ -82,7 +87,7 @@ testDriver.test('multiple custom interactions have correct customEnd value', cor
   let eventsPromise = router.expectEvents()
 
   Promise.all([eventsPromise, loadPromise, rumPromise]).then(([eventsResult]) => {
-    const qpData = querypack.decode(eventsResult.body)
+    const qpData = querypack.decode(eventsResult.request.body)
 
     t.ok(qpData.length === 3, 'three interactions should have been captured')
     qpData.forEach(interaction => {

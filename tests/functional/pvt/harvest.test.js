@@ -4,6 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
+const { testErrorsRequest, testTimingEventsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 let corsSupported = testDriver.Matcher.withFeature('cors')
 
@@ -25,22 +26,25 @@ testDriver.test('timings are retried when collector returns 429', corsSupported,
     }
   })
 
-  router.scheduleResponse('timings', 429)
+  router.scheduleReply('bamServer', {
+    test: testTimingEventsRequest,
+    statusCode: 429
+  })
 
-  let loadPromise = browser.safeGet(assetURL)
+  let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
   let timingsPromise = router.expectTimings()
 
   let firstBody
 
   Promise.all([timingsPromise, loadPromise, rumPromise]).then(([timingsResult]) => {
-    t.equal(timingsResult.res.statusCode, 429, 'server responded with 429')
-    firstBody = timingsResult.body
-    return router.expectTimings(undefined, 80000)
+    t.equal(timingsResult.reply.statusCode, 429, 'server responded with 429')
+    firstBody = timingsResult.request.body
+    return router.expectTimings()
   }).then(result => {
-    let secondBody = result.body
+    let secondBody = result.request.body
 
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
     t.equal(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
 
     t.end()

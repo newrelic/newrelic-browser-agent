@@ -4,6 +4,7 @@
  */
 
 const testDriver = require('../../../tools/jil/index')
+const { testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 let corsSupported = testDriver.Matcher.withFeature('cors')
 
@@ -23,7 +24,10 @@ testDriver.test('jserrors are retried when collector returns 429', corsSupported
   })
 
   // simulate 429 response for the first jserrors request
-  router.scheduleResponse('jserrors', 429)
+  router.scheduleReply('bamServer', {
+    test: testErrorsRequest,
+    statusCode: 429
+  })
 
   let loadPromise = browser.get(assetURL)
   let rumPromise = router.expectRum()
@@ -32,15 +36,15 @@ testDriver.test('jserrors are retried when collector returns 429', corsSupported
   let firstBody
 
   Promise.all([errPromise, loadPromise, rumPromise]).then(([errResult]) => {
-    t.equal(errResult.res.statusCode, 429, 'server responded with 429')
-    firstBody = JSON.parse(errResult.body).err
+    t.equal(errResult.reply.statusCode, 429, 'server responded with 429')
+    firstBody = JSON.parse(errResult.request.body).err
     return router.expectErrors()
   }).then(result => {
-    let secondBody = JSON.parse(result.body).err
+    let secondBody = JSON.parse(result.request.body).err
 
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
     t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
-    t.equal(router.seenRequests.errors_post, 2, 'got two jserrors harvest requests')
+    t.equal(router.requestCounts.bamServer.jserrors, 2, 'got two jserrors harvest requests')
 
     t.end()
   }).catch(fail)

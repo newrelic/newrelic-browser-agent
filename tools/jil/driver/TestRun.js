@@ -10,6 +10,7 @@ const { EventEmitter } = require('events')
 const TestHarness = require('./harness')
 const { isSauceConnected } = require('../util/external-services')
 const observeTapeTest = require('./TapeTestObserver')
+const { v4: uuidV4 } = require('uuid')
 
 /**
  * Runs tests on a specific browser session (represented by TestRun instance)
@@ -19,12 +20,13 @@ class TestRun extends EventEmitter {
    * @param {string}  Selenium server URL
    * @param {Object}  Object representing the browser and platform
    */
-  constructor (env, router, config) {
+  constructor (env, driver) {
     super()
 
     this.env = env
-    this.router = router
-    this.config = config
+    this.driver = driver
+    this.router = driver.router
+    this.config = driver.config
     this.connectionInfo = env.connectionInfo
     this.browserSpec = env.browserSpec
     this.stream = through()
@@ -109,6 +111,9 @@ class TestRun extends EventEmitter {
     harness.addTest(testName, opts, (t) => {
       let startTime = Date.now()
 
+      const id = self._generateID()
+      const handle = router.createTestHandle(id)
+
       harness.pause()
       observeTapeTest(t, onTestFinished, onTestResult)
 
@@ -116,6 +121,8 @@ class TestRun extends EventEmitter {
         self.allOk = self.allOk && (passed || attempt < numberOfAttempts)
         self.currentTest = null
         let endTime = Date.now()
+
+        router.destroyTestHandle(handle.testId)
 
         if (passed) {
           harness.resume()
@@ -162,9 +169,8 @@ class TestRun extends EventEmitter {
         }
       }
 
-      let id = self._generateID()
       try {
-        fn(t, browser, router.handle(id, false, browser))
+        fn(t, browser, handle)
       } catch (e) {
         newrelic.noticeError(e)
         t.error(e)
@@ -199,6 +205,7 @@ class TestRun extends EventEmitter {
     return wd
       .promiseChainRemote(connectionInfo)
       .init(browserSpec.desired)
+      .resolve(this.driver.ready())
       .initNewSession(browserSpec, this)
       .get(rootURL)
       .catch((err) => {
@@ -218,7 +225,7 @@ class TestRun extends EventEmitter {
   }
 
   _generateID () {
-    return Math.random().toString(36).slice(2)
+    return uuidV4()
   }
 }
 

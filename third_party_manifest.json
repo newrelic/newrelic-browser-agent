@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Thu Feb 09 2023 16:50:11 GMT-0600 (Central Standard Time)",
+  "lastUpdated": "Mon Feb 13 2023 08:52:26 GMT-0600 (Central Standard Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -135,6 +135,44 @@
       "licenseFile": "node_modules/@faker-js/faker/LICENSE",
       "licenseUrl": "https://github.com/faker-js/faker/blob/v7.6.0/LICENSE",
       "licenseTextSource": "file"
+    },
+    "@fastify/cors@8.2.0": {
+      "name": "@fastify/cors",
+      "version": "8.2.0",
+      "range": "^8.2.0",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/fastify/fastify-cors",
+      "versionedRepoUrl": "https://github.com/fastify/fastify-cors/tree/v8.2.0",
+      "licenseFile": "node_modules/@fastify/cors/LICENSE",
+      "licenseUrl": "https://github.com/fastify/fastify-cors/blob/v8.2.0/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Tomas Della Vedova - @delvedor",
+      "url": "http://delved.org"
+    },
+    "@fastify/multipart@7.4.0": {
+      "name": "@fastify/multipart",
+      "version": "7.4.0",
+      "range": "^7.3.0",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/fastify/fastify-multipart",
+      "versionedRepoUrl": "https://github.com/fastify/fastify-multipart/tree/v7.4.0",
+      "licenseFile": "node_modules/@fastify/multipart/LICENSE",
+      "licenseUrl": "https://github.com/fastify/fastify-multipart/blob/v7.4.0/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Matteo Collina",
+      "email": "hello@matteocollina.com"
+    },
+    "@fastify/static@6.9.0": {
+      "name": "@fastify/static",
+      "version": "6.9.0",
+      "range": "^6.6.0",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/fastify/fastify-static",
+      "versionedRepoUrl": "https://github.com/fastify/fastify-static/tree/v6.9.0",
+      "licenseFile": "node_modules/@fastify/static/LICENSE",
+      "licenseUrl": "https://github.com/fastify/fastify-static/blob/v6.9.0/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Tommaso Allevi - @allevo"
     },
     "@newrelic/newrelic-oss-cli@0.1.2": {
       "name": "@newrelic/newrelic-oss-cli",
@@ -351,6 +389,19 @@
       "licenseTextSource": "file",
       "publisher": "Jake Champion"
     },
+    "deepmerge-ts@4.3.0": {
+      "name": "deepmerge-ts",
+      "version": "4.3.0",
+      "range": "^4.2.2",
+      "licenses": "BSD-3-Clause",
+      "repoUrl": "https://github.com/RebeccaStevens/deepmerge-ts",
+      "versionedRepoUrl": "https://github.com/RebeccaStevens/deepmerge-ts/tree/v4.3.0",
+      "licenseFile": "node_modules/deepmerge-ts/LICENSE",
+      "licenseUrl": "https://github.com/RebeccaStevens/deepmerge-ts/blob/v4.3.0/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Rebecca Stevens",
+      "email": "rebecca.stevens@outlook.co.nz"
+    },
     "defined@1.0.1": {
       "name": "defined",
       "version": "1.0.1",
@@ -468,6 +519,32 @@
       "licenseTextSource": "file",
       "publisher": "Nicholas C. Zakas",
       "email": "nicholas+npm@nczconsulting.com"
+    },
+    "fastify-plugin@4.5.0": {
+      "name": "fastify-plugin",
+      "version": "4.5.0",
+      "range": "^4.4.0",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/fastify/fastify-plugin",
+      "versionedRepoUrl": "https://github.com/fastify/fastify-plugin/tree/v4.5.0",
+      "licenseFile": "node_modules/fastify-plugin/LICENSE",
+      "licenseUrl": "https://github.com/fastify/fastify-plugin/blob/v4.5.0/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Tomas Della Vedova - @delvedor",
+      "url": "http://delved.org"
+    },
+    "fastify@4.13.0": {
+      "name": "fastify",
+      "version": "4.13.0",
+      "range": "^4.10.2",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/fastify/fastify",
+      "versionedRepoUrl": "https://github.com/fastify/fastify/tree/v4.13.0",
+      "licenseFile": "node_modules/fastify/LICENSE",
+      "licenseUrl": "https://github.com/fastify/fastify/blob/v4.13.0/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Matteo Collina",
+      "email": "hello@matteocollina.com"
     },
     "function-bind@1.1.1": {
       "name": "function-bind",
@@ -840,6 +917,17 @@
       "email": "mihai.bazon@gmail.com",
       "url": "http://lisperator.net/"
     },
+    "uuid@9.0.0": {
+      "name": "uuid",
+      "version": "9.0.0",
+      "range": "^9.0.0",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/uuidjs/uuid",
+      "versionedRepoUrl": "https://github.com/uuidjs/uuid/tree/v9.0.0",
+      "licenseFile": "node_modules/uuid/LICENSE.md",
+      "licenseUrl": "https://github.com/uuidjs/uuid/blob/v9.0.0/LICENSE.md",
+      "licenseTextSource": "file"
+    },
     "vinyl-buffer@1.0.1": {
       "name": "vinyl-buffer",
       "version": "1.0.1",
@@ -867,6 +955,19 @@
       "publisher": "Hugh Kennedy",
       "email": "hughskennedy@gmail.com",
       "url": "http://hughsk.io/"
+    },
+    "wait-on@7.0.1": {
+      "name": "wait-on",
+      "version": "7.0.1",
+      "range": "^7.0.1",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/jeffbski/wait-on",
+      "versionedRepoUrl": "https://github.com/jeffbski/wait-on/tree/v7.0.1",
+      "licenseFile": "node_modules/wait-on/LICENSE",
+      "licenseUrl": "https://github.com/jeffbski/wait-on/blob/v7.0.1/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Jeff Barczewski",
+      "email": "info@codewinds.com"
     },
     "watchify@3.11.1": {
       "name": "watchify",

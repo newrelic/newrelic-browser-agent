@@ -129,7 +129,7 @@ class ParallelDriver extends Driver {
 
     function startEnv (env) {
       driver.output.log(`# starting ${env.toString()}`)
-      let testRun = new TestRun(env, driver.router, driver.config)
+      let testRun = new TestRun(env, driver)
 
       testRun.on('testFinished', onTestFinished)
       testRun.on('closed', onClosed)
@@ -137,12 +137,14 @@ class ParallelDriver extends Driver {
       driver.output.addChild(testRun.browserSpec.toString(), testRun.stream)
       testRuns.add(testRun)
 
-      testRun.initialize(driver.assetServer.urlFor('/'), (err) => {
-        if (err) {
-          return cb(err)
-        }
-        testRun.run()
-        runNextTest(testRun)
+      driver.ready(() => {
+        testRun.initialize(driver.assetServer.urlFor('/'), (err) => {
+          if (err) {
+            return cb(err)
+          }
+          testRun.run()
+          runNextTest(testRun)
+        })
       })
     }
 

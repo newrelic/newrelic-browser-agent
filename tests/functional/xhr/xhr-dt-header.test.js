@@ -17,11 +17,16 @@ testDriver.test('DT headers are NOT added when the feature is not enabled (defau
   }
 
   let loadPromise = browser.get(router.assetURL('spa/dt/xhr-dt-sameorigin-load.html',
-    { testId: router.testID, injectUpdatedLoaderConfig: true, config }, true))
-  let meowPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') })
+    { testId: router.testId, injectUpdatedLoaderConfig: true, config }, true))
+  const ajaxPromise = router.expect('assetServer', {
+    test: function (request) {
+      const url = new URL(request.url, 'resolve://')
+      return url.pathname === `/dt/${router.testId}`
+    }
+  })
 
-  Promise.all([meowPromise, loadPromise])
-    .then(([{ headers }]) => {
+  Promise.all([ajaxPromise, loadPromise])
+    .then(([{ request: { headers } }]) => {
       t.notOk(headers['newrelic'], 'newrelic header should not be present')
       t.notOk(headers['traceparent'], 'traceparent header should not be present')
       t.notOk(headers['tracestate'], 'tracestate header should not be present')
@@ -50,11 +55,16 @@ testDriver.test('XHR request on same origin has DT headers', supported, function
   }
 
   let loadPromise = browser.get(router.assetURL('spa/dt/xhr-dt-sameorigin-load.html',
-    { testId: router.testID, injectUpdatedLoaderConfig: true, config, init }, true))
-  let meowPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') })
+    { testId: router.testId, injectUpdatedLoaderConfig: true, config, init }, true))
+  const ajaxPromise = router.expect('assetServer', {
+    test: function (request) {
+      const url = new URL(request.url, 'resolve://')
+      return url.pathname === `/dt/${router.testId}`
+    }
+  })
 
-  Promise.all([meowPromise, loadPromise])
-    .then(([{ headers }]) => {
+  Promise.all([ajaxPromise, loadPromise])
+    .then(([{ request: { headers } }]) => {
       t.ok(headers['newrelic'], 'newrelic header should be present')
 
       // newrelic header
@@ -124,12 +134,17 @@ testDriver.test('XHR request on same origin has no newrelic header when disabled
     }
   }
 
-  let meowPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') })
+  const ajaxPromise = router.expect('assetServer', {
+    test: function (request) {
+      const url = new URL(request.url, 'resolve://')
+      return url.pathname === `/dt/${router.testId}`
+    }
+  })
   let loadPromise = browser.get(router.assetURL('spa/dt/xhr-dt-sameorigin-load.html',
-    { testId: router.testID, injectUpdatedLoaderConfig: true, config, init }, true))
+    { testId: router.testId, injectUpdatedLoaderConfig: true, config, init }, true))
 
-  Promise.all([meowPromise, loadPromise])
-    .then(([{ headers }]) => {
+  Promise.all([ajaxPromise, loadPromise])
+    .then(([{ request: { headers } }]) => {
       t.notOk(headers['newrelic'], 'newrelic header should not be present')
       t.ok(headers['traceparent'], 'traceparent header should be present')
       t.ok(headers['tracestate'], 'tracestate header should be present')
@@ -162,11 +177,16 @@ testDriver.test('XHR request on different origin has no DT headers', supported, 
   }
 
   let loadPromise = browser.get(router.assetURL('spa/dt/xhr-dt-crossorigin-load.html',
-    { testId: router.testID, injectUpdatedLoaderConfig: true, config, init }))
-  let meowPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') })
+    { testId: router.testId, injectUpdatedLoaderConfig: true, config, init }))
+  const ajaxPromise = router.expect('bamServer', {
+    test: function (request) {
+      const url = new URL(request.url, 'resolve://')
+      return url.pathname === `/dt/${router.testId}`
+    }
+  })
 
-  Promise.all([meowPromise, loadPromise])
-    .then(([{ headers }]) => {
+  Promise.all([ajaxPromise, loadPromise])
+    .then(([{ request: { headers } }]) => {
       t.notOk(headers['newrelic'], 'newrelic header should not be present')
       t.notOk(headers['traceparent'], 'traceparent header should not be present')
       t.notOk(headers['tracestate'], 'tracestate header should not be present')
@@ -190,7 +210,7 @@ testDriver.test('default headers on XHR request to allowed cross-origin call', s
     distributed_tracing: {
       enabled: true,
       allowed_origins: [
-        router.beaconURL()
+        'http://' + router.testServer.bamServer.host + ':' + router.testServer.bamServer.port
       ]
     },
     metrics: {
@@ -199,11 +219,16 @@ testDriver.test('default headers on XHR request to allowed cross-origin call', s
   }
 
   let loadPromise = browser.get(router.assetURL('spa/dt/xhr-dt-crossorigin-load.html',
-    { testId: router.testID, injectUpdatedLoaderConfig: true, config, init }))
-  let meowPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') })
+    { testId: router.testId, injectUpdatedLoaderConfig: true, config, init }))
+  const ajaxPromise = router.expect('bamServer', {
+    test: function (request) {
+      const url = new URL(request.url, 'resolve://')
+      return url.pathname === `/dt/${router.testId}`
+    }
+  })
 
-  Promise.all([meowPromise, loadPromise])
-    .then(([{ headers }]) => {
+  Promise.all([ajaxPromise, loadPromise])
+    .then(([{ request: { headers } }]) => {
       t.ok(headers['newrelic'] != null, 'newrelic header should be present')
       t.ok(headers['traceparent'] == null, 'traceparent header should not be present')
       t.ok(headers['tracestate'] == null, 'tracestate header should not be present')
@@ -229,7 +254,7 @@ testDriver.test('headers configuration for cross-origin calls is respected', sup
       cors_use_newrelic_header: false,
       cors_use_tracecontext_headers: true,
       allowed_origins: [
-        router.beaconURL()
+        'http://' + router.testServer.bamServer.host + ':' + router.testServer.bamServer.port
       ]
     },
     metrics: {
@@ -238,11 +263,16 @@ testDriver.test('headers configuration for cross-origin calls is respected', sup
   }
 
   let loadPromise = browser.get(router.assetURL('spa/dt/xhr-dt-crossorigin-load.html',
-    { testId: router.testID, injectUpdatedLoaderConfig: true, config, init }))
-  let meowPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') })
+    { testId: router.testId, injectUpdatedLoaderConfig: true, config, init }))
+  const ajaxPromise = router.expect('bamServer', {
+    test: function (request) {
+      const url = new URL(request.url, 'resolve://')
+      return url.pathname === `/dt/${router.testId}`
+    }
+  })
 
-  Promise.all([meowPromise, loadPromise])
-    .then(([{ headers }]) => {
+  Promise.all([ajaxPromise, loadPromise])
+    .then(([{ request: { headers } }]) => {
       t.ok(headers['newrelic'] == null, 'newrelic header should not be present')
       t.ok(headers['traceparent'] != null, 'traceparent header should be present')
       t.ok(headers['tracestate'] != null, 'tracestate header should be present')

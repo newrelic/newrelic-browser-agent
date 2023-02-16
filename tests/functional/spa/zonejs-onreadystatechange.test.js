@@ -13,9 +13,10 @@ testDriver.test('onreadystatechange only called once with zone.js', supported, f
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
   let loadPromise = browser.safeGet(router.assetURL('spa/zonejs-on-ready-state-change.html', { loader: 'spa', init: { ajax: { deny_list: ['nr-local.net'] } } }))
+    .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([eventsResult]) => {
+    .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 

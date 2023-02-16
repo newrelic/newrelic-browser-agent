@@ -12,6 +12,7 @@ module.exports = {
     'tools/scripts/publish-current.js',
     'tools/scripts/upload-to-s3.js'
   ],
+  parser: '@babel/eslint-parser',
   env: {
     es2022: true
   },
@@ -105,6 +106,7 @@ module.exports = {
     'no-mixed-operators': 'off',
     'no-tabs': 'off',
     'no-mixed-spaces-and-tabs': 'off',
-    'no-return-assign': 'off'
+    'no-return-assign': 'off',
+    'no-unreachable-loop': 'off'
   }
 }

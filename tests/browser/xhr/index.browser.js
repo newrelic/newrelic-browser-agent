@@ -242,6 +242,7 @@ var urls = {
     method: 'POST',
     afterOpen: function (t) {
       this.xhr.responseType = 'arraybuffer'
+      this.xhr.setRequestHeader('Content-Type', 'text/plain')
       this.xhr.onload = function (e) {
         var buffer = new Int8Array([104, 105, 33]) // 'hi!'
 

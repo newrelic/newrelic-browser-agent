@@ -5,6 +5,7 @@
 
 const testDriver = require('jil')
 const { assertErrorAttributes, assertExpectedErrors, getErrorsFromResponse } = require('./assertion-helpers')
+const { testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 let supported = testDriver.Matcher.withFeature('notInternetExplorer')
 const init = {
@@ -26,7 +27,7 @@ testDriver.test('NR-40043: Multiple errors with noticeError and unique messages 
   const loadPromise = browser.get(assetURL)
   const errPromise = router.expectErrors()
 
-  Promise.all([errPromise, rumPromise, loadPromise]).then(([errors]) => {
+  Promise.all([errPromise, rumPromise, loadPromise]).then(([{ request: errors }]) => {
     assertErrorAttributes(t, errors.query, 'has errors')
 
     const actualErrors = getErrorsFromResponse(errors, browser)
@@ -54,7 +55,10 @@ testDriver.test('NR-40043: Multiple errors with noticeError and unique messages 
 })
 
 testDriver.test('NR-40043: Multiple errors with noticeError and unique messages should not bucket when retrying due to 429', supported, function (t, browser, router) {
-  router.scheduleResponse('jserrors', 429)
+  router.scheduleReply('bamServer', {
+    test: testErrorsRequest,
+    statusCode: 429
+  })
 
   const assetURL = router.assetURL('js-errors-noticeerror-bucketing.html', { loader: 'full', init })
   const rumPromise = router.expectRum()
@@ -63,15 +67,15 @@ testDriver.test('NR-40043: Multiple errors with noticeError and unique messages 
   let firstBody
 
   Promise.all([errPromise, rumPromise, loadPromise]).then(([errors]) => {
-    t.equal(errors.res.statusCode, 429, 'server responded with 429')
-    firstBody = JSON.parse(errors.body).err
+    t.equal(errors.reply.statusCode, 429, 'server responded with 429')
+    firstBody = JSON.parse(errors.request.body).err
     return router.expectErrors()
   }).then(errors => {
-    let secondBody = JSON.parse(errors.body).err
+    let secondBody = JSON.parse(errors.request.body).err
 
-    t.equal(errors.res.statusCode, 200, 'server responded with 200')
+    t.equal(errors.reply.statusCode, 200, 'server responded with 200')
     t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
-    t.equal(router.seenRequests.errors_post, 2, 'got two jserrors harvest requests')
+    t.equal(router.requestCounts.bamServer.jserrors, 2, 'got two jserrors harvest requests')
 
     t.end()
   }).catch(fail)
@@ -88,7 +92,7 @@ testDriver.test('NEWRELIC-3788: Multiple identical errors from the same line but
   const loadPromise = browser.get(assetURL)
   const errPromise = router.expectErrors()
 
-  Promise.all([errPromise, rumPromise, loadPromise]).then(([errors]) => {
+  Promise.all([errPromise, rumPromise, loadPromise]).then(([{ request: errors }]) => {
     assertErrorAttributes(t, errors.query, 'has errors')
 
     const actualErrors = getErrorsFromResponse(errors, browser)
@@ -106,7 +110,10 @@ testDriver.test('NEWRELIC-3788: Multiple identical errors from the same line but
 })
 
 testDriver.test('NEWRELIC-3788: Multiple identical errors from the same line but different columns should not be bucketed when retrying due to 429', supported, function (t, browser, router) {
-  router.scheduleResponse('jserrors', 429)
+  router.scheduleReply('bamServer', {
+    test: testErrorsRequest,
+    statusCode: 429
+  })
 
   const assetURL = router.assetURL('js-error-column-bucketing.html', { loader: 'full', init })
   const rumPromise = router.expectRum()
@@ -115,15 +122,15 @@ testDriver.test('NEWRELIC-3788: Multiple identical errors from the same line but
   let firstBody
 
   Promise.all([errPromise, rumPromise, loadPromise]).then(([errors]) => {
-    t.equal(errors.res.statusCode, 429, 'server responded with 429')
-    firstBody = JSON.parse(errors.body).err
+    t.equal(errors.reply.statusCode, 429, 'server responded with 429')
+    firstBody = JSON.parse(errors.request.body).err
     return router.expectErrors()
   }).then(errors => {
-    let secondBody = JSON.parse(errors.body).err
+    let secondBody = JSON.parse(errors.request.body).err
 
-    t.equal(errors.res.statusCode, 200, 'server responded with 200')
+    t.equal(errors.reply.statusCode, 200, 'server responded with 200')
     t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
-    t.equal(router.seenRequests.errors_post, 2, 'got two jserrors harvest requests')
+    t.equal(router.requestCounts.bamServer.jserrors, 2, 'got two jserrors harvest requests')
 
     t.end()
   }).catch(fail)

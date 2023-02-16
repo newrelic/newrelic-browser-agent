@@ -59,7 +59,7 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
   cases.forEach(testCase => {
     t.test(testCase.name, function (t) {
       let rumPromise = router.expectRum()
-      let eventsPromise = router.expectEvents()
+      let eventsPromise = router.expectInteractionEvents()
       let loadPromise = browser.safeGet(router.assetURL('spa/ajax-deny-list.html', {
         loader: 'spa',
         init: {
@@ -74,10 +74,10 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
             enabled: false
           }
         }
-      }))
+      })).waitForFeature('loaded')
 
       Promise.all([eventsPromise, rumPromise, loadPromise])
-        .then(([eventsResult]) => {
+        .then(([{ request: eventsResult }]) => {
           var query = eventsResult.query
           var body = eventsResult.body
           let interaction = querypack.decode(body && body.length ? body : query.e)[0]

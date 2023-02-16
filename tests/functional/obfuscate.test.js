@@ -49,7 +49,7 @@ testDriver.test('Obfuscate All Events', browsers, function (t, browser, router) 
         harvestTimeSeconds: 2
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
   Promise.all([
     ajaxPromise,
@@ -62,14 +62,13 @@ testDriver.test('Obfuscate All Events', browsers, function (t, browser, router) 
     loadPromise
   ])
     .then(([
-      ajaxResponse,
-      errorsResponse,
-      insResponse,
-      resourceResponse,
-      spaResponse,
-      timingsResponse,
-      rumResponse,
-      loadPromise
+      { request: ajaxResponse },
+      { request: errorsResponse },
+      { request: insResponse },
+      { request: resourceResponse },
+      { request: spaResponse },
+      { request: timingsResponse },
+      { request: rumResponse }
     ]) => {
       checkPayload(t, ajaxResponse.body, 'AJAX')
       checkPayload(t, errorsResponse.body, 'Errors')

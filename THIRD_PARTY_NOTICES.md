@@ -27,6 +27,9 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [@babel/plugin-transform-strict-mode](#babelplugin-transform-strict-mode)
 * [@babel/preset-env](#babelpreset-env)
 * [@faker-js/faker](#faker-jsfaker)
+* [@fastify/cors](#fastifycors)
+* [@fastify/multipart](#fastifymultipart)
+* [@fastify/static](#fastifystatic)
 * [@newrelic/newrelic-oss-cli](#newrelicnewrelic-oss-cli)
 * [@newrelic/nr-querypack](#newrelicnr-querypack)
 * [@octokit/rest](#octokitrest)
@@ -44,6 +47,7 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [concat-stream](#concat-stream)
 * [cors](#cors)
 * [create-polyfill-service-url](#create-polyfill-service-url)
+* [deepmerge-ts](#deepmerge-ts)
 * [defined](#defined)
 * [dotenv-webpack](#dotenv-webpack)
 * [eslint-config-standard](#eslint-config-standard)
@@ -53,6 +57,8 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [eslint-plugin-n](#eslint-plugin-n)
 * [eslint-plugin-promise](#eslint-plugin-promise)
 * [eslint](#eslint)
+* [fastify-plugin](#fastify-plugin)
+* [fastify](#fastify)
 * [function-bind](#function-bind)
 * [glob](#glob)
 * [husky](#husky)
@@ -82,8 +88,10 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [through](#through)
 * [transpile-webpack-plugin](#transpile-webpack-plugin)
 * [uglify-js](#uglify-js)
+* [uuid](#uuid)
 * [vinyl-buffer](#vinyl-buffer)
 * [vinyl-source-stream](#vinyl-source-stream)
+* [wait-on](#wait-on)
 * [watchify](#watchify)
 * [wd](#wd)
 * [webpack-bundle-analyzer](#webpack-bundle-analyzer)
@@ -432,6 +440,93 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+```
+
+### @fastify/cors
+
+This product includes source derived from [@fastify/cors](https://github.com/fastify/fastify-cors) ([v8.2.0](https://github.com/fastify/fastify-cors/tree/v8.2.0)), distributed under the [MIT License](https://github.com/fastify/fastify-cors/blob/v8.2.0/LICENSE):
+
+```
+MIT License
+
+Copyright (c) 2018 Fastify
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+```
+
+### @fastify/multipart
+
+This product includes source derived from [@fastify/multipart](https://github.com/fastify/fastify-multipart) ([v7.4.0](https://github.com/fastify/fastify-multipart/tree/v7.4.0)), distributed under the [MIT License](https://github.com/fastify/fastify-multipart/blob/v7.4.0/LICENSE):
+
+```
+MIT License
+
+Copyright (c) 2017 Fastify
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+```
+
+### @fastify/static
+
+This product includes source derived from [@fastify/static](https://github.com/fastify/fastify-static) ([v6.9.0](https://github.com/fastify/fastify-static/tree/v6.9.0)), distributed under the [MIT License](https://github.com/fastify/fastify-static/blob/v6.9.0/LICENSE):
+
+```
+MIT License
+
+Copyright (c) 2017-2023 Fastify
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ```
 
@@ -1461,6 +1556,43 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
+### deepmerge-ts
+
+This product includes source derived from [deepmerge-ts](https://github.com/RebeccaStevens/deepmerge-ts) ([v4.3.0](https://github.com/RebeccaStevens/deepmerge-ts/tree/v4.3.0)), distributed under the [BSD-3-Clause License](https://github.com/RebeccaStevens/deepmerge-ts/blob/v4.3.0/LICENSE):
+
+```
+BSD 3-Clause License
+
+Copyright (c) 2021, Rebecca Stevens
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+```
+
 ### defined
 
 This product includes source derived from [defined](https://github.com/inspect-js/defined) ([v1.0.1](https://github.com/inspect-js/defined/tree/v1.0.1)), distributed under the [MIT License](https://github.com/inspect-js/defined/blob/v1.0.1/LICENSE):
@@ -1695,6 +1827,67 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+```
+
+### fastify-plugin
+
+This product includes source derived from [fastify-plugin](https://github.com/fastify/fastify-plugin) ([v4.5.0](https://github.com/fastify/fastify-plugin/tree/v4.5.0)), distributed under the [MIT License](https://github.com/fastify/fastify-plugin/blob/v4.5.0/LICENSE):
+
+```
+MIT License
+
+Copyright (c) 2017 Fastify
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+```
+
+### fastify
+
+This product includes source derived from [fastify](https://github.com/fastify/fastify) ([v4.13.0](https://github.com/fastify/fastify/tree/v4.13.0)), distributed under the [MIT License](https://github.com/fastify/fastify/blob/v4.13.0/LICENSE):
+
+```
+MIT License
+
+Copyright (c) 2016-2023 The Fastify Team
+
+The Fastify team members are listed at https://github.com/fastify/fastify#team
+and in the README file.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ```
 
@@ -2790,6 +2983,23 @@ SUCH DAMAGE.
 
 ```
 
+### uuid
+
+This product includes source derived from [uuid](https://github.com/uuidjs/uuid) ([v9.0.0](https://github.com/uuidjs/uuid/tree/v9.0.0)), distributed under the [MIT License](https://github.com/uuidjs/uuid/blob/v9.0.0/LICENSE.md):
+
+```
+The MIT License (MIT)
+
+Copyright (c) 2010-2020 Robert Kieffer and other contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+```
+
 ### vinyl-buffer
 
 This product includes source derived from [vinyl-buffer](https://github.com/hughsk/vinyl-buffer) ([v1.0.1](https://github.com/hughsk/vinyl-buffer/tree/v1.0.1)), distributed under the [MIT License](https://github.com/hughsk/vinyl-buffer/blob/v1.0.1/LICENSE.md):
@@ -2846,6 +3056,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
+```
+
+### wait-on
+
+This product includes source derived from [wait-on](https://github.com/jeffbski/wait-on) ([v7.0.1](https://github.com/jeffbski/wait-on/tree/v7.0.1)), distributed under the [MIT License](https://github.com/jeffbski/wait-on/blob/v7.0.1/LICENSE):
+
+```
+The MIT License (MIT)
+
+Copyright (c) 2015 Jeff Barczewski
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
 ### watchify

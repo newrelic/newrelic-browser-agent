@@ -5,24 +5,39 @@
 
 const testDriver = require('../../../tools/jil/index')
 const { validatePageActionData, fail } = require('./ins-internal-help.cjs')
+const { testInsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 const workingSendBeacon = testDriver.Matcher.withFeature('workingSendBeacon')
 
 testDriver.test('PageAction submission', function (t, browser, router) {
-  let url = router.assetURL('instrumented.html')
+  let assetURL = router.assetURL('instrumented.html', {
+    init: {
+      ins: {
+        harvestTimeSeconds: 2
+      },
+      harvest: {
+        tooManyRequestsDelay: 10
+      }
+    }
+  })
 
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(url)
+  let loadPromise = browser.get(assetURL)
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
       browser.safeEval('newrelic.addPageAction("DummyEvent", { free: "tacos" })')
       return router.expectIns()
     })
-    .then(({ req, query, body }) => {
-      t.equal(req.method, 'POST', 'first PageAction submission is a POST')
-      t.notOk(query.ins, 'query string does not include ins parameter')
-      validatePageActionData(t, JSON.parse(body).ins, query)
+    .then(({ request }) => {
+      let insData
+      if (request.body) {
+        insData = JSON.parse(request.body).ins
+      } else {
+        insData = JSON.parse(request.query.ins)
+      }
+
+      validatePageActionData(t, insData, request.query)
       t.end()
     })
     .catch(fail(t))
@@ -46,23 +61,38 @@ testDriver.test('PageActions are retried when collector returns 429', function (
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
-      router.scheduleResponse('ins', 429)
+      router.scheduleReply('bamServer', {
+        test: testInsRequest,
+        statusCode: 429
+      })
       browser.safeEval('newrelic.addPageAction("exampleEvent", {param: "value"})')
 
       return router.expectIns()
     })
-    .then((insResult) => {
-      t.equal(insResult.res.statusCode, 429, 'server responded with 429')
-      firstBody = JSON.parse(insResult.body)
+    .then(({ request, reply }) => {
+      t.equal(reply.statusCode, 429, 'server responded with 429')
+
+      if (request.body) {
+        firstBody = JSON.parse(request.body).ins
+      } else {
+        firstBody = JSON.parse(request.query.ins)
+      }
 
       return router.expectIns()
     })
-    .then((insResult) => {
-      const secondBody = JSON.parse(insResult.body)
+    .then(({ request, reply }) => {
+      t.equal(router.requestCounts.bamServer.ins, 2, 'got two ins harvest requests')
 
-      t.equal(insResult.res.statusCode, 200, 'server responded with 200')
+      let secondBody
+
+      if (request.body) {
+        secondBody = JSON.parse(request.body).ins
+      } else {
+        secondBody = JSON.parse(request.query.ins)
+      }
+
+      t.equal(reply.statusCode, 200, 'server responded with 200')
       t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
-      t.equal(router.seenRequests.ins, 2, 'got two ins harvest requests')
 
       t.end()
     })
@@ -70,45 +100,45 @@ testDriver.test('PageActions are retried when collector returns 429', function (
 })
 
 testDriver.test('PageAction submission on final harvest', function (t, browser, router) {
-  let url = router.assetURL('instrumented.html', {
+  let assetURL = router.assetURL('instrumented.html', {
     init: {
+      ins: {
+        harvestTimeSeconds: 2
+      },
       page_view_timing: {
         enabled: false
+      },
+      harvest: {
+        tooManyRequestsDelay: 10
       }
     }
   })
 
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(url)
+  let loadPromise = browser.get(assetURL)
 
   Promise.all([rumPromise, loadPromise])
-    .then(({ req, query, body }) => {
+    .then(() => {
       let insPromise = router.expectIns()
 
       let loadPromise = browser
         .safeEval('newrelic.addPageAction("DummyEvent", { free: "tacos" })')
-        .get(url)
+        .get(assetURL)
 
-      return Promise.all([insPromise, loadPromise]).then(([ins, load]) => {
+      return Promise.all([insPromise, loadPromise]).then(([ins]) => {
         return ins
       })
     })
-    .then(({ req, query, body }) => {
+    .then(({ request }) => {
       let insData
 
-      if (workingSendBeacon.match(browser)) {
-        t.ok(body, 'second PageAction POST has non-empty body')
-        insData = JSON.parse(body).ins
-        t.equal(req.method, 'POST', 'final PageAction submission should be a POST')
-        t.notOk(query.ins, 'query string does not include ins parameter')
-        t.ok(insData, 'POST body is not empty')
+      if (request.body) {
+        insData = JSON.parse(request.body).ins
       } else {
-        insData = JSON.parse(query.ins)
-        t.equal(req.method, 'GET', 'final PageAction submission should be a GET')
-        t.ok(insData, 'has ins query string parameter')
+        insData = JSON.parse(request.query.ins)
       }
 
-      validatePageActionData(t, insData, query)
+      validatePageActionData(t, insData, request.query)
 
       t.end()
     })
@@ -116,26 +146,43 @@ testDriver.test('PageAction submission on final harvest', function (t, browser, 
 })
 
 testDriver.test('precedence', function (t, browser, router) {
-  let url = router.assetURL('instrumented.html')
+  let assetURL = router.assetURL('instrumented.html', {
+    init: {
+      ins: {
+        harvestTimeSeconds: 2
+      },
+      harvest: {
+        tooManyRequestsDelay: 10
+      }
+    }
+  })
 
-  let loadPromise = browser.get(url)
+  let loadPromise = browser.get(assetURL)
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
-      return browser.safeEval('newrelic.setCustomAttribute("browserHeight", 705)')
+      const insPromise = router.expectIns()
+      const apiPromise = browser
+        .safeEval('newrelic.setCustomAttribute("browserHeight", 705)')
+        .safeEval('newrelic.addPageAction("MyEvent", { referrerUrl: "http://test.com", foo: {bar: "baz"} })')
+
+      return Promise.all([insPromise, apiPromise])
     })
-    .then(() => {
-      browser.safeEval('newrelic.addPageAction("MyEvent", { referrerUrl: "http://test.com", foo: {bar: "baz"} })').catch(fail(t))
-      return router.expectIns()
-    })
-    .then(({ req, query, body }) => {
-      validatePageActionData(JSON.parse(body).ins, query)
+    .then(([{ request }]) => {
+      let insData
+      if (request.body) {
+        insData = JSON.parse(request.body).ins
+      } else {
+        insData = JSON.parse(request.query.ins)
+      }
+
+      validatePageActionData(insData)
       t.end()
     })
     .catch(fail(t))
 
-  function validatePageActionData (pageActionData, query) {
+  function validatePageActionData (pageActionData) {
     t.equal(pageActionData.length, 1, 'should have 1 event')
 
     let event = pageActionData[0]

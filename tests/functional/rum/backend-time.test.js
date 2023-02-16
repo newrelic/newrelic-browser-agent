@@ -19,13 +19,8 @@ testDriver.test('RUM backend time', withTls, function (t, browser, router) {
     .then(() => {
       return Promise.all([router.expectRum(), browser.get(url)])
     })
-    .then(([{ query }]) => {
-      if (browser.match('ie@<9')) {
-        // IE 6 & 7 sometimes report a backend time of 0, and we don't know why.
-        t.ok(+query.be >= 0, 'Backend time of ' + query.be + ' >= 0')
-      } else {
-        t.ok(+query.be > 0, 'Backend time of ' + query.be + ' > 0')
-      }
+    .then(([{ request: { query } }]) => {
+      t.ok(+query.be > 0, 'Backend time of ' + query.be + ' > 0')
     })
     .catch(fail)
 

@@ -9,7 +9,8 @@ const { assertErrorAttributes, verifyStackTraceOmits, getErrorsFromResponse } = 
 let supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 
 testDriver.test('reporting uncaught errors from external scripts', supported, function (t, browser, router) {
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let errorsPromise = router.expectErrors()
   let loadPromise = browser.get(router.assetURL('external-uncaught-error.html', {
     init: {
       page_view_timing: {
@@ -21,9 +22,9 @@ testDriver.test('reporting uncaught errors from external scripts', supported, fu
     }
   }))
 
-  Promise.all([rumPromise, loadPromise]).then(([response]) => {
-    assertErrorAttributes(t, response.query)
-    const actualErrors = getErrorsFromResponse(response, browser)
+  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{ request }]) => {
+    assertErrorAttributes(t, request.query)
+    const actualErrors = getErrorsFromResponse(request, browser)
     verifyStackTraceOmits(t, actualErrors, 'secretValue')
     verifyStackTraceOmits(t, actualErrors, 'secretFragment')
 

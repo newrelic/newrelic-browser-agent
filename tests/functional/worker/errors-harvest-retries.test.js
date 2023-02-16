@@ -6,6 +6,7 @@
 const testDriver = require('../../../tools/jil/index')
 const { getErrorsFromResponse } = require('../err/assertion-helpers')
 const { workerTypes, typeToMatcher } = require('./helpers')
+const { testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 const init = {
   jserrors: {
@@ -29,17 +30,20 @@ function errorRetryTest (type, matcher) {
       ].map(x => x.toString())
     })
 
-    router.scheduleResponse('jserrors', 429)
+    router.scheduleReply('bamServer', {
+      test: testErrorsRequest,
+      statusCode: 429
+    })
 
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
     Promise.all([errPromise, loadPromise]).then(([response]) => {
-      t.equal(response.res.statusCode, 429, 'server responded with 429')
-      firstBody = JSON.parse(response.body).err
+      t.equal(response.reply.statusCode, 429, 'server responded with 429')
+      firstBody = JSON.parse(response.request.body).err
       return router.expectErrors()
-    }).then(response => {
-      const actualErrors = getErrorsFromResponse(response, browser)
+    }).then(({ request }) => {
+      const actualErrors = getErrorsFromResponse(request, browser)
 
       t.equal(actualErrors.length, 1, 'exactly one error')
 

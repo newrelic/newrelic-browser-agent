@@ -1,11 +1,11 @@
 const testDriver = require('../../../tools/jil/index')
 const { fail, condition } = require('./helpers')
+const querypack = require('@newrelic/nr-querypack')
 
 const fetchBrowsers = testDriver.Matcher.withFeature('fetch')
 
 testDriver.test('Disabled ajax events', function (t, browser, router) {
-  router.timeout = router.router.timeout = 5000
-  const ajaxPromise = router.expectAjaxEvents()
+  const ajaxPromise = router.expectAjaxEvents(5000)
   const rumPromise = router.expectRum()
   const loadPromise = browser.safeGet(router.assetURL('xhr-outside-interaction.html', {
     loader: 'spa',
@@ -15,24 +15,22 @@ testDriver.test('Disabled ajax events', function (t, browser, router) {
         enabled: false
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
     .then(([response]) => {
-      router.timeout = router.router.timeout = 32000
       t.error()
       t.end()
     }).catch(fail)
 
   function fail () {
-    router.timeout = router.router.timeout = 32000
     t.ok(true, 'AJAX Promise did not execute because enabled was false')
     t.end()
   }
 })
 
 testDriver.test('capturing XHR ajax events', function (t, browser, router) {
-  const ajaxPromise = router.expectSpecificEvents({ condition })
+  const ajaxPromise = router.expectAjaxEvents(5000)
   const rumPromise = router.expectRum()
   const loadPromise = browser.safeGet(router.assetURL('xhr-outside-interaction.html', {
     loader: 'spa',
@@ -42,11 +40,12 @@ testDriver.test('capturing XHR ajax events', function (t, browser, router) {
         enabled: true
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
-    .then(async ([response]) => {
-      t.ok(response.length, 'XMLHttpRequest ajax event was harvested')
+    .then(async ([{ request }]) => {
+      const ajaxRequests = querypack.decode(request.body)
+      t.ok(ajaxRequests.length, 'XMLHttpRequest ajax event was harvested')
 
       t.end()
     }).catch(fail(t))
@@ -54,8 +53,8 @@ testDriver.test('capturing XHR ajax events', function (t, browser, router) {
 
 testDriver.test('capturing large payload of XHR ajax events', function (t, browser, router) {
   const ajaxPromises = Promise.all([
-    router.expectSpecificEvents({ condition }),
-    router.expectSpecificEvents({ condition })
+    router.expectAjaxEvents(8000),
+    router.expectAjaxEvents(16000)
   ])
   const rumPromise = router.expectRum()
   const loadPromise = browser.safeGet(router.assetURL('xhr-large-payload.html', {
@@ -67,17 +66,20 @@ testDriver.test('capturing large payload of XHR ajax events', function (t, brows
         enabled: true
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
   Promise.all([ajaxPromises, loadPromise, rumPromise])
-    .then(([responses]) => {
-      t.ok(responses)
+    .then(([[{ request: request1 }, { request: request2 }]]) => {
+      const ajax1Requests = querypack.decode(request1.body)
+      const ajax2Requests = querypack.decode(request2.body)
+      t.ok(ajax1Requests)
+      t.ok(ajax2Requests)
       t.end()
     }).catch(fail(t))
 })
 
 testDriver.test('capturing Fetch ajax events', fetchBrowsers, function (t, browser, router) {
-  const ajaxPromise = router.expectSpecificEvents({ condition })
+  const ajaxPromise = router.expectAjaxEvents(8000)
   const rumPromise = router.expectRum()
   const loadPromise = browser.safeGet(router.assetURL('fetch-outside-interaction.html', {
     loader: 'spa',
@@ -87,11 +89,12 @@ testDriver.test('capturing Fetch ajax events', fetchBrowsers, function (t, brows
         enabled: true
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
-    .then(([response]) => {
-      t.ok(response.length, 'Fetch ajax event was harvested')
+    .then(([{ request }]) => {
+      const ajaxRequests = querypack.decode(request.body)
+      t.ok(ajaxRequests.length, 'Fetch ajax event was harvested')
 
       t.end()
     }).catch(fail(t))
@@ -104,7 +107,7 @@ testDriver.test('Distributed Tracing info is added to XHR ajax events', function
     trustKey: '1'
   }
 
-  const ajaxPromise = router.expectSpecificEvents({ condition })
+  const ajaxPromise = router.expectAjaxEvents(8000)
   const rumPromise = router.expectRum()
   const loadPromise = browser.safeGet(router.assetURL('xhr-outside-interaction.html', {
     loader: 'spa',
@@ -119,16 +122,18 @@ testDriver.test('Distributed Tracing info is added to XHR ajax events', function
         enabled: true
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
-    .then(([response]) => {
-      t.ok(response.length, 'XMLHttpRequest ajax event was harvested')
-      response.forEach(r => {
-        t.ok(r.guid && r.guid.length > 0, 'should be a non-empty guid string')
-        t.ok(r.traceId && r.traceId.length > 0, 'should be a non-empty traceId string')
-        t.ok(r.timestamp != null && r.timestamp > 0, 'should be a non-zero timestamp')
-      })
+    .then(([{ request }]) => {
+      const ajaxRequests = querypack.decode(request.body)
+      t.ok(ajaxRequests.length, 'XMLHttpRequest ajax event was harvested')
+
+      const expectedAjaxRequest = ajaxRequests.find(ar => ar.path === '/json')
+      t.ok(expectedAjaxRequest.guid && expectedAjaxRequest.guid.length > 0, 'should be a non-empty guid string')
+      t.ok(expectedAjaxRequest.traceId && expectedAjaxRequest.traceId.length > 0, 'should be a non-empty traceId string')
+      t.ok(expectedAjaxRequest.timestamp != null && expectedAjaxRequest.timestamp > 0, 'should be a non-zero timestamp')
+      t.ok(expectedAjaxRequest.requestedWith === 'XMLHttpRequest', 'requested with XMLHttpRequest')
 
       t.end()
     }).catch(fail(t))
@@ -141,7 +146,7 @@ testDriver.test('Distributed Tracing info is added to Fetch ajax events', fetchB
     trustKey: '1'
   }
 
-  const ajaxPromise = router.expectSpecificEvents({ condition })
+  const ajaxPromise = router.expectAjaxEvents(8000)
   const rumPromise = router.expectRum()
   const loadPromise = browser.safeGet(router.assetURL('fetch-outside-interaction.html', {
     loader: 'spa',
@@ -156,16 +161,18 @@ testDriver.test('Distributed Tracing info is added to Fetch ajax events', fetchB
         enabled: true
       }
     }
-  }))
+  })).waitForFeature('loaded')
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
-    .then(([response]) => {
-      t.ok(response.length, 'Fetch ajax event was harvested')
-      response.forEach(r => {
-        t.ok(r.guid && r.guid.length > 0, 'should be a non-empty guid string')
-        t.ok(r.traceId && r.traceId.length > 0, 'should be a non-empty traceId string')
-        t.ok(r.timestamp != null && r.timestamp > 0, 'should be a non-zero timestamp')
-      })
+    .then(([{ request }]) => {
+      const ajaxRequests = querypack.decode(request.body)
+      t.ok(ajaxRequests.length, 'Fetch ajax event was harvested')
+
+      const expectedAjaxRequest = ajaxRequests.find(ar => ar.path === '/json')
+      t.ok(expectedAjaxRequest.guid && expectedAjaxRequest.guid.length > 0, 'should be a non-empty guid string')
+      t.ok(expectedAjaxRequest.traceId && expectedAjaxRequest.traceId.length > 0, 'should be a non-empty traceId string')
+      t.ok(expectedAjaxRequest.timestamp != null && expectedAjaxRequest.timestamp > 0, 'should be a non-zero timestamp')
+      t.ok(expectedAjaxRequest.requestedWith === 'fetch', 'requested with fetch')
 
       t.end()
     }).catch(fail(t))

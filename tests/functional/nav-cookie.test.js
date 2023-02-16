@@ -14,12 +14,12 @@ testDriver.test('agent set nav cookie when page is unloading', function (t, brow
     }
   })
 
-  let loadPromise = browser.safeGet(url).catch(fail)
+  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
   let rumPromise = router.expectRum()
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
-      t.equal(router.seenRequests.ins, 0, 'no ins harvest yet')
+      t.equal(router.requestCounts.bamServer.ins, undefined, 'no ins harvest yet')
 
       let insPromise = router.expectIns()
 
@@ -27,12 +27,16 @@ testDriver.test('agent set nav cookie when page is unloading', function (t, brow
         .safeEval('newrelic.addPageAction("hello", { a: 1 })')
         .get(router.assetURL('/'))
 
-      return Promise.all([insPromise, loadPromise]).then(([ins, load]) => {
-        return ins
-      })
+      return Promise.all([insPromise, loadPromise])
     })
-    .then(() => {
-      t.equal(router.seenRequests.ins, 1, 'received one ins harvest')
+    .then(([{ request: { body, query } }]) => {
+      t.equal(router.requestCounts.bamServer.ins, 1, 'received one ins harvest')
+
+      if (body) {
+        t.ok(JSON.parse(body).ins, 'received ins harvest')
+      } else {
+        t.ok(query.ins, 'received ins harvest')
+      }
       t.end()
     })
     .catch(fail)

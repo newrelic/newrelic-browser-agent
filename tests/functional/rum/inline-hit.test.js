@@ -16,10 +16,10 @@ testDriver.test('inline hit api', supported, function (t, browser, router) {
 
   Promise.all([
     loadPromise,
-    router.expectRum().then((data) => { rumData[data.query.t] = data }),
-    router.expectRum().then((data) => { rumData[data.query.t] = data }),
-    router.expectRum().then((data) => { rumData[data.query.t] = data }),
-    router.expectRum().then((data) => { rumData[data.query.t] = data })
+    router.expectRum().then(({ request: data }) => { rumData[data.query.t] = data }),
+    router.expectRum().then(({ request: data }) => { rumData[data.query.t] = data }),
+    router.expectRum().then(({ request: data }) => { rumData[data.query.t] = data }),
+    router.expectRum().then(({ request: data }) => { rumData[data.query.t] = data })
   ])
     .then(checkResults)
     .catch(fail)

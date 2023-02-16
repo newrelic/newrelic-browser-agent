@@ -11,7 +11,8 @@ let supported = testDriver.Matcher.withFeature('reliableUnloadEvent')
 testDriver.test('encoding error where message contains a circular reference', supported, function (t, browser, router) {
   t.plan(2)
 
-  let rumPromise = router.expectRumAndErrors()
+  let rumPromise = router.expectRum()
+  let errorsPromise = router.expectErrors()
   let loadPromise = browser.get(router.assetURL('circular.html', {
     init: {
       page_view_timing: {
@@ -23,8 +24,8 @@ testDriver.test('encoding error where message contains a circular reference', su
     }
   }))
 
-  Promise.all([rumPromise, loadPromise]).then(([response]) => {
-    const actualErrors = getErrorsFromResponse(response, browser)
+  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{ request }]) => {
+    const actualErrors = getErrorsFromResponse(request, browser)
 
     t.equal(actualErrors.length, 1, 'exactly one error')
 

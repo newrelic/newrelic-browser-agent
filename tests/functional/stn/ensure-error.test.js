@@ -14,11 +14,11 @@ testDriver.test('errors get to session traces', supported, function (
 ) {
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
-  let loadPromise = browser.get(router.assetURL('sessiontraceerror.html'))
+  let loadPromise = browser.get(router.assetURL('sessiontraceerror.html')).waitForFeature('loaded')
 
   Promise.all([resourcePromise, rumPromise, loadPromise])
-    .then(([{ query }]) => {
-      return router.expectResources().then(({ query, body }) => {
+    .then(() => {
+      return router.expectResources().then(({ request: { body } }) => {
         let parsed = JSON.parse(body)
 
         let err = parsed.res.find((node) => {

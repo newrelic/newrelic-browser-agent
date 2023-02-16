@@ -21,12 +21,13 @@ testDriver.test('reporting errors from XHR callbacks', supported, function (t, b
     }
   })
 
-  let rumPromise = router.expectRumAndConditionAndErrors('window.xhrFired')
-  let loadPromise = browser.get(assetURL)
+  let rumPromise = router.expectRum()
+  let errorsPromise = router.expectErrors()
+  let loadPromise = browser.get(assetURL).waitForConditionInBrowser('window.xhrFired')
 
-  Promise.all([rumPromise, loadPromise]).then(([response]) => {
-    assertErrorAttributes(t, response.query)
-    const actualErrors = getErrorsFromResponse(response, browser)
+  Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{ request }]) => {
+    assertErrorAttributes(t, request.query)
+    const actualErrors = getErrorsFromResponse(request, browser)
     let xhrJSURL = router.assetURL('js/xhr-error.js').split('?')[0]
     let expectedErrors = [{
       name: 'Error',

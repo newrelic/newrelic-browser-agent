@@ -14,6 +14,7 @@ testDriver.test('spa page urls include the hash fragment', supported, function (
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
   let loadPromise = browser.safeGet(router.assetURL('spa/xhr.html', { loader: 'spa' }))
+    .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
@@ -24,7 +25,7 @@ testDriver.test('spa page urls include the hash fragment', supported, function (
         return eventData
       })
     })
-    .then(({ query, body }) => {
+    .then(({ request: { query, body } }) => {
       // make sure the newURL has the hash change
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.ok(/#\d/.test(interactionTree.newURL), 'the url should contain the hash fragment')

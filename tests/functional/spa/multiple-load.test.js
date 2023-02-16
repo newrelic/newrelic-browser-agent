@@ -13,9 +13,10 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
   let loadPromise = browser.safeGet(router.assetURL('spa/multiple-load.html', { loader: 'spa' }))
+    .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([eventsResult]) => {
+    .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       const apiChildren = interactionTree.children.filter(child => child.type === 'ajax' && child.path === '/json')

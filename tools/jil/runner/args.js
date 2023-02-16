@@ -21,7 +21,8 @@ module.exports = yargs
   .requiresArg('b')
   .describe('b', 'a comma seperated list of browsers with an optional semver range. (eg. chrome@>39)')
 
-  .string('concurrent')
+  .number('concurrent')
+  .alias('concurrent', 'concurrency')
   .describe('concurrent', 'number of browser sessions to run concurrently')
 
   .string('session-test-threshold')

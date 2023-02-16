@@ -37,8 +37,8 @@ function setIntervalErrorTest (type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([response]) => {
-      const actualErrors = getErrorsFromResponse(response, browser)
+    Promise.all([errPromise, loadPromise]).then(([{ request }]) => {
+      const actualErrors = getErrorsFromResponse(request, browser)
 
       t.equal(actualErrors.length, 1, 'exactly one error')
 

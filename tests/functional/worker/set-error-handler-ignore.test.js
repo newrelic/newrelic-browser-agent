@@ -46,10 +46,10 @@ function ignoreErrorsTest (type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([response]) => {
-      assertErrorAttributes(t, response.query, 'has errors')
+    Promise.all([errPromise, loadPromise]).then(([{ request }]) => {
+      assertErrorAttributes(t, request.query, 'has errors')
 
-      const actualErrors = getErrorsFromResponse(response, browser)
+      const actualErrors = getErrorsFromResponse(request, browser)
       t.equal(actualErrors.length, 1, 'exactly one error')
 
       let actualError = actualErrors[0]

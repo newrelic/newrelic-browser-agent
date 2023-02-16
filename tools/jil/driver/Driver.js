@@ -17,6 +17,7 @@ const TestHarness = require('./harness')
 const DeviceTest = require('./DeviceTest')
 const { BrowserSpec } = require('../util/browser-list')
 const { isSauceConnected } = require('../util/external-services')
+const { v4: uuidV4 } = require('uuid')
 
 class Driver {
   constructor (config, output) {
@@ -27,14 +28,23 @@ class Driver {
 
     let agentConfig = { licenseKey: 'asdf', applicationID: 42, accountID: 123, agentID: 456, trustKey: 789 }
     this.browserTests = []
-    this.assetServer = new AssetServer(config, agentConfig, this.browserTests, output)
-    this.assetServer.start(config.port)
+    this.assetServer = new AssetServer(config, agentConfig, output)
+    this.serverStartPromise = this.assetServer.start(config.port)
     this.router = this.assetServer.router
     this.timeout = config.timeout = config.timeout || 32000
     this.output = output
     this.concurrent = config.concurrent
     this.config = config
     this.asserters = asserters
+  }
+
+  ready (cb) {
+    // Ensure the servers are up before starting the tests
+    return this.serverStartPromise.then(() => {
+      if (typeof cb === 'function') {
+        cb()
+      }
+    })
   }
 
   addBrowser (connectionInfo, desired) {
@@ -80,7 +90,7 @@ class Driver {
   }
 
   generateID () {
-    return Math.random().toString(36).slice(2)
+    return uuidV4()
   }
 
   // runs tests based on an array of DeviceTest objects
@@ -184,6 +194,8 @@ class Driver {
           let startTime = Date.now()
           harness.pause()
 
+          const id = driver.generateID()
+          const handle = router.createTestHandle(id)
           let ended = false
 
           t.on('result', function (result) {
@@ -212,6 +224,7 @@ class Driver {
 
           t.on('end', function () {
             let endTime = Date.now()
+            router.destroyTestHandle(handle.testId)
 
             let plannedOk = !t._plan || t._plan <= t.assertCount
             let allAssertsOk = t._ok
@@ -271,10 +284,9 @@ class Driver {
             }
           }
 
-          let id = driver.generateID()
           currentTest = t
           try {
-            fn(t, browser, router.handle(id, false, browser))
+            fn(t, browser, handle)
           } catch (e) {
             newrelic.noticeError(e)
             t.error(e)
@@ -320,12 +332,14 @@ class Driver {
     var running = new Set()
     for (let testEnv of testEnvs) {
       let browserSpec = testEnv.browserSpec
-      let testRun = new TestRun(testEnv, this.router, this.config)
+      let testRun = new TestRun(testEnv, this)
       this.output.addChild(browserSpec.toString(), testRun.stream)
 
       let testsToRun = findTests(tests, browserSpec)
       driver.output.log(`# retrying ${testsToRun.length} tests for ${browserSpec.toString()}`)
-      this.runTestRun(testRun, testsToRun, true, onBrowserFinished)
+      this.ready(() => {
+        this.runTestRun(testRun, testsToRun, true, onBrowserFinished)
+      })
       running.add(testRun)
     }
 

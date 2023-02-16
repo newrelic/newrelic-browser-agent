@@ -20,12 +20,12 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
     }
   })
 
-  let loadPromise = browser.safeGet(assetURL)
+  let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
 
   Promise.all([resourcePromise, loadPromise, rumPromise]).then(([result]) => {
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
     // trigger an XHR call after
     var clickPromise = browser
@@ -36,10 +36,11 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
 
     return Promise.all([resourcePromise, clickPromise])
   }).then(([result]) => {
-    const body = result.body
+    t.equal(router.requestCounts.bamServer.resources, 2, 'got two harvest requests')
 
-    t.equal(router.seenRequests.resources, 2, 'got two harvest requests')
-    t.equal(result.res.statusCode, 200, 'server responded with 200')
+    const body = result.request.body
+
+    t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
     const parsed = JSON.parse(body).res
     const harvestBody = parsed
@@ -47,7 +48,7 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
 
     t.ok(resources.length > 1, 'there is at least one resource node')
 
-    var url = 'http://' + router.router.assetServer.host + ':' + router.router.assetServer.port + '/json'
+    var url = 'http://' + router.testServer.assetServer.host + ':' + router.testServer.assetServer.port + '/json'
     const found = resources.find(element => element.o === url)
     t.ok(!!found, 'expected resource was found')
 

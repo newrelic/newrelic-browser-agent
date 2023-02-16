@@ -46,8 +46,8 @@ function xhrErrorTest (type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([response]) => {
-      const actualErrors = getErrorsFromResponse(response, browser)
+    Promise.all([errPromise, loadPromise]).then(([{ request }]) => {
+      const actualErrors = getErrorsFromResponse(request, browser)
 
       t.equal(actualErrors.length, 1, 'exactly one error')
 
@@ -76,14 +76,14 @@ function submissionXhr (type, browserVersionMatcher) {
       })
 
       const loadPromise = browser.get(assetURL)
-      const xhrPromise = router.expectXHRMetrics()
+      const xhrPromise = router.expectAjaxTimeSlices()
 
       Promise.all([xhrPromise, loadPromise])
         .then(([response]) => {
-          t.equal(response.req.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
-          t.ok(response.body, 'request body should not be empty')
+          t.equal(response.request.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
+          t.ok(response.request.body, 'request body should not be empty')
 
-          const parsedXhrs = getXhrFromResponse(response, browser)
+          const parsedXhrs = getXhrFromResponse(response.request, browser)
           t.ok(parsedXhrs, 'has xhr data')
           t.ok(parsedXhrs.length >= 1, 'has at least one XHR record')
           t.deepEqual(['metrics', 'params'], Object.keys(parsedXhrs[0]).sort(), 'XHR record has correct keys')
@@ -101,14 +101,14 @@ function submissionFetch (type, browserVersionMatcher) {
       })
 
       const loadPromise = browser.get(assetURL)
-      const xhrPromise = router.expectXHRMetrics()
+      const xhrPromise = router.expectAjaxTimeSlices()
 
       Promise.all([xhrPromise, loadPromise])
         .then(([response]) => {
-          t.equal(response.req.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
-          t.ok(response.body, 'request body should not be empty')
+          t.equal(response.request.method, 'POST', 'XHR data submitted via POST request from sendBeacon')
+          t.ok(response.request.body, 'request body should not be empty')
 
-          const parsedXhrs = getXhrFromResponse(response, browser)
+          const parsedXhrs = getXhrFromResponse(response.request, browser)
           var fetchData = parsedXhrs.find(xhr => xhr.params.pathname === '/json')
           t.ok(fetchData, 'has xhr data')
           t.deepEqual(['metrics', 'params'], Object.keys(fetchData).sort(), 'XHR record has correct keys')

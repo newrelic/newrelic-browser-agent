@@ -11,6 +11,7 @@ testDriver.test('empty fetch does not break the agent', supported, function (t, 
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
   let loadPromise = browser.safeGet(router.assetURL('spa/fetch-empty.html', { loader: 'spa' }))
+    .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {

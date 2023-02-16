@@ -16,7 +16,7 @@ testDriver.test('First paint for supported browsers', firstPaint.and(notSafariWi
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
 
   Promise.all([rumPromise, loadPromise])
-    .then(([{ query }]) => {
+    .then(([{ request: { query } }]) => {
       try {
         const firstPaint = Number(query.fp)
         t.ok(firstPaint > 0, 'firstPaint has a positive value')
@@ -39,7 +39,7 @@ testDriver.test('First contentful paint for supported browsers', firstContentful
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
 
   Promise.all([rumPromise, loadPromise])
-    .then(([{ query }]) => {
+    .then(([{ request: { query } }]) => {
       try {
         const firstContentfulPaint = Number(query.fcp)
         t.ok(firstContentfulPaint > 0, 'firstContentfulPaint has a positive value')
@@ -62,7 +62,7 @@ testDriver.test('First paint for unsupported browsers', firstPaint.inverse().and
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
 
   Promise.all([rumPromise, loadPromise])
-    .then(([{ query }]) => {
+    .then(([{ request: { query } }]) => {
       try {
         const firstPaint = query.fp
         t.ok(firstPaint === undefined, 'firstPaint should not exist')
@@ -85,7 +85,7 @@ testDriver.test('First contentful paint for unsupported browsers', firstContentf
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html'))
 
   Promise.all([rumPromise, loadPromise])
-    .then(([{ query }]) => {
+    .then(([{ request: { query } }]) => {
       try {
         const firstContentfulPaint = query.fcp
         t.ok(firstContentfulPaint === undefined, 'firstContentfulPaint should not exist')

@@ -44,7 +44,7 @@ function metricsApiCreatesSM (type, browserVersionMatcher) {
       const observedAPImetrics = []
 
       Promise.all([metricsPromise, loadPromise])
-        .then(([data]) => {
+        .then(([{ request: data }]) => {
           const supportabilityMetrics = getMetricsFromResponse(data, true)
           const customMetrics = getMetricsFromResponse(data, false)
           t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')	// extra #1
@@ -68,6 +68,7 @@ function metricsApiCreatesSM (type, browserVersionMatcher) {
     }
   )
 }
+
 function metricsValidObfuscationCreatesSM (type, browserVersionMatcher) {
   testDriver.test(`${type} - a valid obfuscationRule creates detected supportability metric`, browserVersionMatcher,
     function (t, browser, router) {
@@ -94,7 +95,7 @@ function metricsValidObfuscationCreatesSM (type, browserVersionMatcher) {
       const metricsPromise = router.expectMetrics()
 
       Promise.all([metricsPromise, loadPromise])
-        .then(([data]) => {
+        .then(([{ request: data }]) => {
           const supportabilityMetrics = getMetricsFromResponse(data, true)
           t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
           supportabilityMetrics.forEach(sm => {
@@ -105,6 +106,7 @@ function metricsValidObfuscationCreatesSM (type, browserVersionMatcher) {
     }
   )
 }
+
 function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
   const badObfusRulesArr = [{
     regex: 123,
@@ -140,7 +142,7 @@ function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
       const metricsPromise = router.expectMetrics()
 
       Promise.all([metricsPromise, loadPromise])
-        .then(([data]) => {
+        .then(([{ request: data }]) => {
           const supportabilityMetrics = getMetricsFromResponse(data, true)
           t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
           let invalidDetected = false
@@ -153,6 +155,7 @@ function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
     }
   ) }
 }
+
 function metricsWorkersCreateSM (type, browserVersionMatcher) {
   testDriver.test(`${type} - workers creation generates sm`, browserVersionMatcher,
     function (t, browser, router) {
@@ -185,7 +188,7 @@ function metricsWorkersCreateSM (type, browserVersionMatcher) {
       const metricsPromise = router.expectMetrics()
 
       Promise.all([metricsPromise, loadPromise])
-        .then(([data]) => {
+        .then(([{ request: data }]) => {
           const supportabilityMetrics = getMetricsFromResponse(data, true)
           t.ok(supportabilityMetrics && !!supportabilityMetrics.length, `${supportabilityMetrics.length} SupportabilityMetrics object(s) were generated`)
 

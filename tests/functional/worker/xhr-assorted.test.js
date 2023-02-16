@@ -1,11 +1,12 @@
 const testDriver = require('../../../tools/jil/index')
 const { workerTypes, typeToMatcher } = require('./helpers')
 const { fail, querypack, getXhrFromResponse } = require('../xhr/helpers')
+const { testEventsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 workerTypes.forEach(type => {
   const browsersWithOrWithoutModuleSupport = typeToMatcher(type)
   addEventListenerPatched(type, browsersWithOrWithoutModuleSupport)
-  constructorMonkeyPatched(type, browsersWithOrWithoutModuleSupport)
+  constructorRuntimePatched(type, browsersWithOrWithoutModuleSupport)
 
   catCors(type, browsersWithOrWithoutModuleSupport)
   harvestRetried(type, browsersWithOrWithoutModuleSupport)
@@ -56,19 +57,19 @@ function addEventListenerPatched (type, browserVersionMatcher) {
       })
 
       const loadPromise = browser.get(assetURL)
-      const xhrMetricsPromise = router.expectXHRMetrics()
+      const xhrMetricsPromise = router.expectAjaxTimeSlices()
 
       Promise.all([loadPromise, xhrMetricsPromise])
-        .then(([, response]) => {
-          t.ok(!!getXhrFromResponse(response), 'got XHR data')
+        .then(([, { request }]) => {
+          t.ok(!!getXhrFromResponse(request), 'got XHR data')
       	t.end()
         })
         .catch(fail(t, 'unexpected problem reading payload'))
     }
   )
 }
-function constructorMonkeyPatched (type, browserVersionMatcher) {
-  testDriver.test(`${type} - xhr instrumentation works with bad XHR constructor monkey-patch`, browserVersionMatcher,
+function constructorRuntimePatched (type, browserVersionMatcher) {
+  testDriver.test(`${type} - xhr instrumentation works with bad XHR constructor runtime-patch`, browserVersionMatcher,
     function (t, browser, router) {
       let assetURL = router.assetURL(`worker/${type}-worker.html`, {
         init: {
@@ -94,11 +95,11 @@ function constructorMonkeyPatched (type, browserVersionMatcher) {
       })
 
       const loadPromise = browser.get(assetURL)
-      const xhrMetricsPromise = router.expectXHRMetrics()
+      const xhrMetricsPromise = router.expectAjaxTimeSlices()
 
       Promise.all([loadPromise, xhrMetricsPromise])
-        .then(([, response]) => {
-          t.ok(!!getXhrFromResponse(response), 'got XHR data')
+        .then(([, { request }]) => {
+          t.ok(!!getXhrFromResponse(request), 'got XHR data')
       	t.end()
         })
         .catch(fail(t, 'unexpected problem reading payload'))
@@ -114,9 +115,9 @@ function catCors (type, browserVersionMatcher) {
           if (!NREUM.loader_config) NREUM.loader_config = {}
           NREUM.loader_config.xpid = '12#34'
         },
-				`self.testId = '${router.testID}'`,
+				`self.testId = '${router.testId}'`,
 				() => {
-				  var url = 'http://' + NREUM.info.beacon + '/cat-cors/' + testId
+				  var url = 'http://' + NREUM.info.beacon + '/cat-cors/' + self.testId
 				  var xhr = new XMLHttpRequest()
 				  xhr.open('GET', url)
 				  xhr.send()
@@ -124,17 +125,23 @@ function catCors (type, browserVersionMatcher) {
       })
 
       const loadPromise = browser.get(assetURL)
-      const meowPromise = router.expectCustomGet('/cat-cors/{key}', (req, res) => { res.end('ok') })
+      const ajaxPromise = router.expect('bamServer', {
+        test: function (request) {
+          const url = new URL(request.url, 'resolve://')
+          return url.pathname === `/cat-cors/${router.testId}`
+        }
+      })
 
-      Promise.all([meowPromise, loadPromise])
-        .then(([req]) => {
-          t.notok(req.headers['x-newrelic-id'], 'cross-origin XHR should not have CAT header')
+      Promise.all([ajaxPromise, loadPromise])
+        .then(([{ request }]) => {
+          t.notok(request.headers['x-newrelic-id'], 'cross-origin XHR should not have CAT header')
       	t.end()
         })
         .catch(fail(t, 'unexpected error'))
     }
   )
 }
+
 function harvestRetried (type, browserVersionMatcher) {
   testDriver.test(`${type} - ajax events harvests are retried when collector returns 429`, browserVersionMatcher,
     function (t, browser, router) {
@@ -155,7 +162,11 @@ function harvestRetried (type, browserVersionMatcher) {
           }, 2000)
         }].map(x => x.toString())
       })
-      router.scheduleResponse('events', 429)
+
+      router.scheduleReply('bamServer', {
+        test: testEventsRequest,
+        statusCode: 429
+      })
 
       const loadPromise = browser.safeGet(assetURL)
       const ajaxPromise = router.expectAjaxEvents()
@@ -163,11 +174,13 @@ function harvestRetried (type, browserVersionMatcher) {
 
       Promise.all([ajaxPromise, loadPromise])
         .then(([result]) => {
-          t.equal(result.res.statusCode, 429, 'server responded with 429')
-          firstBody = querypack.decode(result.body)
+          t.equal(result.reply.statusCode, 429, 'server responded with 429')
+          firstBody = querypack.decode(result.request.body)
           return router.expectAjaxEvents()
         }).then(result => {
-          const secondBody = querypack.decode(result.body)
+          t.equal(router.requestCounts.bamServer.events, 2, 'got two events harvest requests')
+
+          const secondBody = querypack.decode(result.request.body)
 
           const secondContainsFirst = firstBody.every(firstElement => {
             return secondBody.find(secondElement => {
@@ -175,9 +188,8 @@ function harvestRetried (type, browserVersionMatcher) {
             })
           })
 
-          t.equal(result.res.statusCode, 200, 'server responded with 200')
+          t.equal(result.reply.statusCode, 200, 'server responded with 200')
           t.ok(secondContainsFirst, 'second body should include the contents of the first retried harvest')
-          t.equal(router.seenRequests.events, 2, 'got two events harvest requests')
           t.end()
         }).catch(fail(t))
     }
@@ -204,11 +216,11 @@ function abortCalled (type, browserVersionMatcher) {
       })
 
       const loadPromise = browser.get(assetURL)
-      const xhrPromise = router.expectXHRMetrics()
+      const xhrPromise = router.expectAjaxTimeSlices()
 
       Promise.all([xhrPromise, loadPromise])
-        .then(([response]) => {
-          const parsedXhrs = getXhrFromResponse(response, browser)
+        .then(([{ request }]) => {
+          const parsedXhrs = getXhrFromResponse(request, browser)
           t.ok(parsedXhrs, 'got XHR data')
           t.ok(parsedXhrs.length >= 1, 'has at least one XHR record')
           t.ok(parsedXhrs.find(function (xhr) {

@@ -117,7 +117,10 @@ function loadBrowsersAndRunTests () {
       makeChild(browser)
     }
 
-    testDriver.run(stopExternalServices)
+    testDriver.run(function () {
+      stopExternalServices()
+      process.exit(0)
+    })
   }
 
   function makeChild (browser) {

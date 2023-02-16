@@ -23,9 +23,10 @@ testDriver.test('capturing SPA interactions with zone.js', supported, function (
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
   let loadPromise = browser.safeGet(router.assetURL('spa/zonejs.html', { loader: 'spa', init }))
+    .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
-    .then(([eventsResult]) => {
+    .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
 
@@ -48,7 +49,7 @@ testDriver.test('capturing SPA interactions with zone.js', supported, function (
         return eventData
       })
     })
-    .then(({ query, body }) => {
+    .then(({ request: { query, body } }) => {
       let receiptTime = now()
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')

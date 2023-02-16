@@ -11,6 +11,7 @@ testDriver.test('incorrect timer', supported, function (t, browser, router) {
   let rumPromise = router.expectRum()
   let eventsPromise = router.expectEvents()
   let loadPromise = browser.safeGet(router.assetURL('spa/incorrect-timer.html', { loader: 'spa' }))
+    .waitForFeature('loaded')
 
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([eventsResult]) => {
@@ -20,7 +21,7 @@ testDriver.test('incorrect timer', supported, function (t, browser, router) {
         return eventData
       })
     })
-    .then(({ query, body }) => {
+    .then(({ request: { query, body } }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.equal(interactionTree.category, 'Route change', 'got route change harvest call')
       t.end()

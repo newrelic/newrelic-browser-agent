@@ -48,16 +48,12 @@ testCases.forEach((testCase) => {
         distributed_tracing: testCase.configuration
       }
       if (testCase.addRouterToAllowedOrigins) {
-        init.distributed_tracing.allowed_origins.push(router.beaconURL())
+        init.distributed_tracing.allowed_origins.push('http://' + router.testServer.bamServer.host + ':' + router.testServer.bamServer.port)
       }
     }
 
-    // when testing same origin, serve the HTML file from the same URL (port) as
-    // the router, so that the XHR call can be inspected (while being on same origin)
-    const useRouterUrl = testCase.sameOrigin
-
     scenarios.forEach((scenario) => {
-      t.test(scenario.name, (t) => {
+      t.test(scenario.name, (nestedTest) => {
         let htmlFile
         if (testCase.sameOrigin) {
           htmlFile = scenario.sameOriginFile
@@ -65,25 +61,33 @@ testCases.forEach((testCase) => {
           htmlFile = scenario.crossOriginFile
         }
 
-        let loadPromise = browser.get(router.assetURL(htmlFile, { testId: router.testID, injectUpdatedLoaderConfig: true, config, init }, useRouterUrl))
-        let fetchPromise = router.expectCustomGet('/dt/{key}', (req, res) => { res.end('ok') })
+        const ajaxPromiseServer = testCase.sameOrigin
+          ? 'assetServer'
+          : 'bamServer'
+        const ajaxPromise = router.expect(ajaxPromiseServer, {
+          test: function (request) {
+            const url = new URL(request.url, 'resolve://')
+            return url.pathname === `/dt/${router.testId}`
+          }
+        })
+        let loadPromise = browser.get(router.assetURL(htmlFile, { testId: router.testId, injectUpdatedLoaderConfig: true, config, init }))
 
-        Promise.all([fetchPromise, loadPromise])
-          .then(([{ headers }]) => {
+        Promise.all([ajaxPromise, loadPromise])
+          .then(([{ request }]) => {
             if (testCase.newrelicHeader) {
-              validateNewrelicHeader(t, headers, config)
+              validateNewrelicHeader(nestedTest, request.headers, config)
             } else {
-              validateNoNewrelicHeader(t, headers)
+              validateNoNewrelicHeader(nestedTest, request.headers)
             }
 
             if (testCase.traceContextHeaders) {
-              validateTraceContextHeaders(t, headers, config)
+              validateTraceContextHeaders(nestedTest, request.headers, config)
             } else {
-              validateNoTraceContextHeaders(t, headers)
+              validateNoTraceContextHeaders(nestedTest, request.headers)
             }
-            t.end()
+            nestedTest.end()
           })
-          .catch(fail(t))
+          .catch(fail(nestedTest))
       })
     })
   })

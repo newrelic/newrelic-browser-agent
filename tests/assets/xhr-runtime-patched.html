@@ -5,7 +5,7 @@
 -->
 <html>
   <head>
-    <title>XHR Monkey-patching test</title>
+    <title>XHR runtime-patching test</title>
     {config}
     {loader}
     <script type="text/javascript">
@@ -16,7 +16,7 @@
     </script>
   </head>
   <body>
-    The inline JS on this page emulates bad 3rd-party code which monkey-patches
+    The inline JS on this page emulates bad 3rd-party code which runtime-patches
     XMLHttpRequest.prototype.open in such a way that it changes the default
     value of the async flag from true to undefined, making all XHRs that don't
     explicitly specify otherwise synchronous.

@@ -135,8 +135,6 @@ function getIdFromUrl (url) {
 })()
 
 function wrapAgent (agent, id) {
-  console.log('sha...', sha)
-  console.log('workflow', workflow)
   return `
         ids['${id}'] = () => {
             ${agent}

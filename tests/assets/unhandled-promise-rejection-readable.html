@@ -11,11 +11,21 @@
 
   <body>
     <script>
+      "use strict";
       new Promise((res, rej) => rej("Test"));
       new Promise((res, rej) => rej(1));
       new Promise((res, rej) => rej({ a: 1, b: { a: 1 } }));
       new Promise((res, rej) => rej([1, 2, 3]));
       new Promise((res, rej) => rej(new Error("test")));
+      new Promise((res, rej) => {
+        class MyError extends Error {
+          constructor(message){
+              super(message)
+              Object.defineProperty(this, 'message', {get: () => message});
+          }
+        }
+        rej(new MyError("test"))
+      });
       new Promise((res, rej) => rej());
       new Promise((res, rej) => rej(null));
       new Promise((res, rej) => rej(new Error()));

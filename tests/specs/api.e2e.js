@@ -1,24 +1,32 @@
 const { getTime } = require('../functional/uncat-internal-help.cjs')
 const { getErrorsFromResponse } = require('../functional/err/assertion-helpers')
 
-describe('API', () => {
-  let testHandle
+let testHandle
 
-  beforeEach(async () => {
-    testHandle = await browser.getTestHandle()
-  })
+beforeEach(async () => {
+  testHandle = await browser.getTestHandle()
+})
 
-  afterEach(async () => {
-    await testHandle.destroy()
-  })
+afterEach(async () => {
+  await testHandle.destroy()
+})
+
+describe('setPageViewName api', () => {
+  const init = {
+    ajax: { enabled: false },
+    distributed_tracing: { enabled: false },
+    jserrors: { enabled: false },
+    metrics: { enabled: true, harvestTimeSeconds: 2 },
+    page_action: { enabled: false },
+    page_view_event: { enabled: true, harvestTimeSeconds: 2 },
+    page_view_timing: { enabled: false },
+    session_trace: { enabled: false },
+    spa: { enabled: false }
+  }
 
   it('customTransactionName 1 arg', async () => {
     const url = await testHandle.assetURL('api.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        }
-      }
+      init
     })
 
     const rumPromise = testHandle.expectRum()
@@ -30,11 +38,7 @@ describe('API', () => {
 
   it('customTransactionName 1 arg unload', async () => {
     const url = await testHandle.assetURL('api.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        }
-      }
+      init
     })
 
     const metricsPromise = testHandle.expectMetrics()
@@ -49,14 +53,7 @@ describe('API', () => {
 
   it('customTransactionName 2 arg', async () => {
     const url = await testHandle.assetURL('api2.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        jserrors: {
-          enabled: false
-        }
-      }
+      init
     })
 
     const rumPromise = testHandle.expectRum()
@@ -70,17 +67,24 @@ describe('API', () => {
     expect(typeof time).toEqual('number')
     expect(time).toBeGreaterThan(0)
   })
+})
 
-  it('noticeError takes an error object', async () => {
+describe('noticeError api', () => {
+  const init = {
+    ajax: { enabled: false },
+    distributed_tracing: { enabled: false },
+    jserrors: { enabled: true, harvestTimeSeconds: 2 },
+    metrics: { enabled: false },
+    page_action: { enabled: false },
+    page_view_event: { enabled: true, harvestTimeSeconds: 2 },
+    page_view_timing: { enabled: false },
+    session_trace: { enabled: false },
+    spa: { enabled: false }
+  }
+
+  it('takes an error object', async () => {
     const url = await testHandle.assetURL('api.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        metrics: {
-          enabled: false
-        }
-      }
+      init
     })
 
     const rumPromise = testHandle.expectRum()
@@ -95,16 +99,9 @@ describe('API', () => {
     expect(params.message).toEqual('no free taco coupons')
   })
 
-  it('noticeError takes an error object', async () => {
+  it('takes an error object', async () => {
     const url = await testHandle.assetURL('api/noticeError.html', {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        metrics: {
-          enabled: false
-        }
-      }
+      init
     })
 
     const rumPromise = testHandle.expectRum()

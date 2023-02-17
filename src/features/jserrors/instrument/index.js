@@ -145,8 +145,12 @@ function notice (err, doNotStamp, ee) {
 function castReasonToError (reason) {
   let prefix = 'Unhandled Promise Rejection: '
   if (reason instanceof Error) {
-    reason.message = prefix + reason.message
-    return reason
+    try {
+      reason.message = prefix + reason.message
+      return reason
+    } catch (e) {
+      return reason
+    }
   }
   if (typeof reason === 'undefined') return new Error(prefix)
   try {

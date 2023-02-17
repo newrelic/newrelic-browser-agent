@@ -17,11 +17,11 @@
       new Promise(function(res, rej) { rej({ a: 1, b: { a: 1 } }) });
       new Promise(function(res, rej) { rej([1, 2, 3]) });
       new Promise(function(res, rej) { rej(new Error("test")) });
-      new Promise(function(res, rej) { 
+      new Promise(function(res, rej) {
         class MyError extends Error {
           constructor(message){
               super(message)
-              Object.defineProperty(this, 'message', {get: function(){ message } });
+              Object.defineProperty(this, 'message', {get: function(){ return message } });
           }
         }
         rej(new MyError("test"))

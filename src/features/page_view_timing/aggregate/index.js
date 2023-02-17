@@ -4,7 +4,6 @@
  */
 
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
-import { now } from '../../../common/timing/now'
 import { mapOwn } from '../../../common/util/map-own'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
@@ -59,7 +58,7 @@ export class Aggregate extends AggregateBase {
     }, maxLCPTimeSeconds * 1000)
 
     // send initial data sooner, then start regular
-    this.ee.on(`drain-${this.featureName}`, () => { if (!this.blocked) this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds) })
+    this.ee.on(`drain-${this.featureName}`, () => { this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds) })
 
     drain(this.agentIdentifier, this.featureName)
   }
@@ -147,7 +146,6 @@ export class Aggregate extends AggregateBase {
   }
 
   addTiming (name, value, attrs, addCls) {
-    if (this.blocked) return
     attrs = attrs || {}
     // collect 0 only when CLS is supported, since 0 is a valid score
     if ((this.cls > 0 || this.clsSupported) && addCls) {

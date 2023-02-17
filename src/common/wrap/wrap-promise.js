@@ -36,6 +36,15 @@ export function wrapPromise (sharedEE) {
     })
     WrappedPromise.toString = function () { return prevPromiseObj.toString() }
 
+    // Adds support for instanceof comparison for async functions
+    if (typeof Symbol === 'function' && typeof Symbol.hasInstance === 'symbol') {
+      Object.defineProperty(WrappedPromise, Symbol.hasInstance, {
+        value: function (instance) {
+          return instance instanceof prevPromiseObj
+        }
+      })
+    }
+
     function WrappedPromise (executor) {
       var ctx = promiseEE.context()
       var wrappedExecutor = promiseWrapper(executor, 'executor-', ctx, null, false)

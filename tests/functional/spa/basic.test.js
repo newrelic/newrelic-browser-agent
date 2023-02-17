@@ -178,3 +178,37 @@ testDriver.test('child nodes in SPA interaction does not exceed set limit', supp
     t.end()
   }
 })
+
+testDriver.test('promise wrapper should support instanceof comparison', function (t, browser, router) {
+  let rumPromise = router.expectRum()
+  let loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: 'spa' }))
+
+  Promise.all([rumPromise, loadPromise])
+    .then(async () => {
+      await browser.safeEval('var p = new Promise(function () {}); p instanceof Promise', (err, res) => {
+        t.notOk(err, 'should not get an error')
+        t.ok(res, 'wrapped promise is instance of Promise global')
+      })
+      await browser.safeEval('var p = Promise.resolve(); p instanceof Promise', (err, res) => {
+        t.notOk(err, 'should not get an error')
+        t.ok(res, 'wrapped promise is instance of Promise global')
+      })
+      await browser.safeEval('var p = Promise.reject(); p instanceof Promise', (err, res) => {
+        t.notOk(err, 'should not get an error')
+        t.ok(res, 'wrapped promise is instance of Promise global')
+      })
+      if (!browser.match('ie@*')) {
+        await browser.safeEval('async function asyncP() {}; var p = asyncP(); p instanceof Promise', (err, res) => {
+          t.notOk(err, 'should not get an error')
+          t.ok(res, 'wrapped promise is instance of Promise global')
+        })
+      }
+      t.end()
+    })
+    .catch(fail)
+
+  function fail (err) {
+    t.error(err)
+    t.end()
+  }
+})

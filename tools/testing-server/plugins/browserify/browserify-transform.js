@@ -34,12 +34,7 @@ function browserifyScript (scriptPath, enablePolyfills) {
           // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
           // assigning to a variable, which conflicts with template literals.
           '@babel/plugin-transform-template-literals',
-<<<<<<< HEAD
           babelEnv('VERSION') // babel-plugin-transform-inline-environment-variables
-=======
-          // babelEnv('VERSION')
-          babelEnv()
->>>>>>> c84edfa7 (basics in place for semver)
         ],
         global: true
       })

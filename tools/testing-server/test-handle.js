@@ -213,9 +213,23 @@ module.exports = class TestHandle {
       ),
       deepmerge(
         {
-          loader: 'full',
+          loader: 'spa',
           config: {
             licenseKey: this.#testId
+          },
+          init: {
+            harvest: {
+              tooManyRequestsDelay: 10
+            },
+            // Default all harvests to 5 seconds...this is a sweet spot between performance and race conditions
+            ajax: { enabled: true, harvestTimeSeconds: 5 },
+            jserrors: { enabled: true, harvestTimeSeconds: 5 },
+            metrics: { enabled: true, harvestTimeSeconds: 5 },
+            page_action: { enabled: true, harvestTimeSeconds: 5 },
+            page_view_event: { enabled: true },
+            page_view_timing: { enabled: true, harvestTimeSeconds: 5 },
+            session_trace: { enabled: true, harvestTimeSeconds: 5 },
+            spa: { enabled: true, harvestTimeSeconds: 5 }
           }
         },
         query
@@ -233,7 +247,7 @@ module.exports = class TestHandle {
     return urlFor(
       '/tests/assets/browser.html',
       {
-        loader: 'full',
+        loader: 'spa',
         config: {
           licenseKey: this.#testId,
           assetServerPort: this.testServer.assetServer.port,

@@ -173,7 +173,6 @@ const standardConfig = merge(commonConfig, {
               }]
             ],
             plugins: [
-              // babelEnv(VERSION, SUBVERSION),
               babelEnv(),
               // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
               // assigning to a variable, which conflicts with template literals.
@@ -223,7 +222,6 @@ const polyfillsConfig = merge(commonConfig, {
               }]
             ],
             plugins: [
-              // babelEnv(VERSION, SUBVERSION)
               babelEnv()
             ]
           }

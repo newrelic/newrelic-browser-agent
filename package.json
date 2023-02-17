@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "0.0.9",
+  "version": "1.227.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "Tests for the New Relic JavaScript agent",
@@ -52,7 +52,8 @@
     "third-party-updates": "oss third-party manifest --includeOptDeps && oss third-party notices --includeOptDeps",
     "prepare": "husky install",
     "npm:build:esm": "npx babel --config-file ./babel.npm.esm.js --out-dir dist/mjs --out-file-extension .mjs ./src",
-    "npm:build:cjs": "npx babel --config-file ./babel.npm.cjs.js --out-dir dist/cjs --out-file-extension .js ./src"
+    "npm:build:cjs": "npx babel --config-file ./babel.npm.cjs.js --out-dir dist/cjs --out-file-extension .js ./src",
+    "sync:version": "node tools/scripts/sync-version.js"
   },
   "config": {
     "unsafe-perm": true

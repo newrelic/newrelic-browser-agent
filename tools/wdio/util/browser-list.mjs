@@ -1,12 +1,17 @@
 import semver from 'semver'
 import browsersPolyfill from './browsers-polyfill.json' assert { type: "json" }
 import browsersSupported from './browsers-supported.json' assert { type: "json" }
+import browsersSelenium from 'jil/util/browsers-selenium.json' assert { type: "json" }
 import jilArgs from '../args.mjs'
 
-const allowedBrowsers = jilArgs.polyfills
-  ? browsersPolyfill
-  : browsersSupported
+let allowedBrowsers = browsersSupported
 const latestVersStringRe = /latest(?:-[1-9])?$/
+
+if (jilArgs.polyfills) {
+  allowedBrowsers = browsersPolyfill
+} else if (jilArgs.seleniumServer) {
+  allowedBrowsers = browsersSelenium
+}
 
 export class BrowserSpec {
   constructor (desired) {
@@ -94,26 +99,24 @@ export default function browserList (pattern = 'chrome@latest') {
 }
 
 function parse (pattern) {
-  const [browser, range] = pattern.split('@')
-  return getBrowsersFor(browser || 'chrome', range)
+  const [browserFull, platform] = pattern.split('/')
+  const [browser, range] = browserFull.split('@')
+  return getBrowsersFor(browser || 'chrome', range, platform)
 }
 
-function getBrowsersFor (browser, range) {
+function getBrowsersFor (browser, range, platform) {
   let list = []
-  if (allowedBrowsers[browser]) {
-    list = allowedBrowsers[browser].slice()
-  } else if (browser === '*') {
-    list = Object.keys(allowedBrowsers).reduce(
-      (list, browser) => list.concat(allowedBrowsers[browser]),
-      []
-    )
-  }
+  if (allowedBrowsers[browser]) list = allowedBrowsers[browser].slice()
+  else if (browser === '*') { list = Object.keys(allowedBrowsers).reduce(
+    (list, browser) => list.concat(allowedBrowsers[browser]),
+    []
+  ) }
 
   list.sort((a, b) =>
     semver.lt(cleanVersion(a.version), cleanVersion(b.version)) ? 1 : -1
   )
 
-  if (!range) {
+  if (!range && !platform) {
     return list
   } else if (range === 'beta') {
     return list.filter(
@@ -124,6 +127,9 @@ function getBrowsersFor (browser, range) {
       (option) => option.version === range.valueOf() // 'this' should be bound to the lastest version string (object)
     )
     return latestX.length ? latestX : list.slice(0, 1) // default to the highest version if latest-# cannot be found
+  }
+  if (platform && option.platform.toLowerCase() !== platform.toLowerCase()) {
+    return false
   }
 
   return list.filter((option) => {

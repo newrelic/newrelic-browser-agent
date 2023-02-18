@@ -9,18 +9,26 @@ import { drain } from '../drain/drain'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
 const bucketMap = {
-  stn: FEATURE_NAMES.sessionTrace,
-  err: FEATURE_NAMES.jserrors,
-  ins: FEATURE_NAMES.pageAction,
-  spa: FEATURE_NAMES.spa
+  stn: [FEATURE_NAMES.sessionTrace],
+  err: [FEATURE_NAMES.jserrors, FEATURE_NAMES.metrics],
+  ins: [FEATURE_NAMES.pageAction],
+  spa: [FEATURE_NAMES.spa]
 }
 
 export function activateFeatures (flags, agentIdentifier) {
   var sharedEE = ee.get(agentIdentifier)
   if (!(flags && typeof flags === 'object')) return
   mapOwn(flags, function (flag, val) {
-    if (!val) return handle('block-' + flag, [], undefined, bucketMap[flag], sharedEE)
-    if (!val || activatedFeatures[flag]) return
+    if (!val) {
+      return (bucketMap[flag] || []).forEach(feat => {
+        handle('block-' + flag, [], undefined, feat, sharedEE)
+      })
+    }
+
+    if (activatedFeatures[flag]) {
+      return
+    }
+
     handle('feat-' + flag, [], undefined, bucketMap[flag], sharedEE)
     activatedFeatures[flag] = true
   })

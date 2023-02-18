@@ -11,29 +11,39 @@
 
   <body>
     <script>
-      new Promise((res, rej) => rej("Test"));
-      new Promise((res, rej) => rej(1));
-      new Promise((res, rej) => rej({ a: 1, b: { a: 1 } }));
-      new Promise((res, rej) => rej([1, 2, 3]));
-      new Promise((res, rej) => rej(new Error("test")));
-      new Promise((res, rej) => rej());
-      new Promise((res, rej) => rej(null));
-      new Promise((res, rej) => rej(new Error()));
-      new Promise((res, rej) => rej(new Map()));
-      new Promise((res, rej) => {
+      "use strict";
+      new Promise(function(res, rej) { rej("Test") });
+      new Promise(function(res, rej) { rej(1) });
+      new Promise(function(res, rej) { rej({ a: 1, b: { a: 1 } }) });
+      new Promise(function(res, rej) { rej([1, 2, 3]) });
+      new Promise(function(res, rej) { rej(new Error("test")) });
+      new Promise(function(res, rej) {
+        class MyError extends Error {
+          constructor(message){
+              super(message)
+              Object.defineProperty(this, 'message', {get: function(){ return message } });
+          }
+        }
+        rej(new MyError("test"))
+      });
+      new Promise(function(res, rej) { rej() });
+      new Promise(function(res, rej) { rej(null) });
+      new Promise(function(res, rej) { rej(new Error()) });
+      new Promise(function(res, rej) { rej(new Map()) });
+      new Promise(function(res, rej) {
         function Foo() {
           this.abc = "Hello";
         }
         rej(new Foo());
       });
-      new Promise((res, rej) => {
+      new Promise(function(res, rej) {
         function Foo() {
           this.abc = "Hello";
           this.circular = this;
         }
         rej(Foo);
       });
-      new Promise((res, rej) => {
+      new Promise(function(res, rej) {
         function Foo() {
           this.abc = "Hello";
           this.circular = this;

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1226
+
+### Enable back/forward cache
+Updating the agent default configuration to enable the back/forward cache feature previously released in version 1222 by default.
+
+### Handle unhandledPromiseRejections more gracefully
+The agent will attempt to handle niche objects throw from `unhandledPromiseRejection` events more gracefully. These cases could include objects with frozen or static properties, or custom extensions of the Error class without a `set` method in place.
+
+### Disable metrics for missing entitlement
+Fixing issue where metrics harvesting was not being halted when the agent RUM call indicated the account did not have entitlement to the jserrors endpoint. Before this change, customers missing this entitlement would see network calls to the New Relic jserrors endpoint result in 403 or 409 errors.
+
 ## v1225
 
 ### Gracefully abort agent if not fully instantiated

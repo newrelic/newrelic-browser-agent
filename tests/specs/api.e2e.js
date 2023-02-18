@@ -1,118 +1,169 @@
 const { getTime } = require('../functional/uncat-internal-help.cjs')
 const { getErrorsFromResponse } = require('../functional/err/assertion-helpers')
 
-let testHandle
-
-beforeEach(async () => {
-  testHandle = await browser.getTestHandle()
-})
-
-afterEach(async () => {
-  await testHandle.destroy()
-})
-
-describe('setPageViewName api', () => {
+describe('newrelic api', () => {
+  let testHandle
   const init = {
-    ajax: { enabled: false },
-    distributed_tracing: { enabled: false },
-    jserrors: { enabled: false },
-    metrics: { enabled: true, harvestTimeSeconds: 2 },
-    page_action: { enabled: false },
-    page_view_event: { enabled: true, harvestTimeSeconds: 2 },
-    page_view_timing: { enabled: false },
-    session_trace: { enabled: false },
-    spa: { enabled: false }
+    ajax: { deny_list: [], harvestTimeSeconds: 2 },
+    jserrors: { harvestTimeSeconds: 2 },
+    metrics: { harvestTimeSeconds: 2 },
+    page_action: { harvestTimeSeconds: 2 },
+    page_view_timing: { harvestTimeSeconds: 2 },
+    session_trace: { harvestTimeSeconds: 2 },
+    spa: { harvestTimeSeconds: 2 }
   }
 
-  it('customTransactionName 1 arg', async () => {
-    const url = await testHandle.assetURL('api.html', {
-      init
-    })
-
-    const rumPromise = testHandle.expectRum()
-    await browser.url(url)
-    const { request: { query } } = await rumPromise
-
-    expect(query.ct).toEqual('http://custom.transaction/foo')
+  beforeEach(async () => {
+    testHandle = await browser.getTestHandle()
   })
 
-  it('customTransactionName 1 arg unload', async () => {
-    const url = await testHandle.assetURL('api.html', {
-      init
-    })
-
-    const metricsPromise = testHandle.expectMetrics()
-    await browser.url(url)
-    const { request: { body, query } } = await metricsPromise
-    const time = getTime(body ? JSON.parse(body)?.cm : JSON.parse(query.cm))
-
-    expect(query.ct).toEqual('http://custom.transaction/foo')
-    expect(typeof time).toEqual('number')
-    expect(time).toBeGreaterThan(0)
+  afterEach(async () => {
+    await testHandle.destroy()
   })
 
-  it('customTransactionName 2 arg', async () => {
-    const url = await testHandle.assetURL('api2.html', {
+  it('should load when sessionStorage is not available', async () => {
+    const url = await testHandle.assetURL('api/session-storage-disallowed.html', {
+      loader: 'spa',
       init
     })
 
-    const rumPromise = testHandle.expectRum()
-    const metricsPromise = testHandle.expectMetrics()
-    await browser.url(url)
-    await rumPromise
-    const { request: { body, query } } = await metricsPromise
-    const time = getTime(body ? JSON.parse(body)?.cm : JSON.parse(query.cm))
-
-    expect(query.ct).toEqual('http://bar.baz/foo')
-    expect(typeof time).toEqual('number')
-    expect(time).toBeGreaterThan(0)
-  })
-})
-
-describe('noticeError api', () => {
-  const init = {
-    ajax: { enabled: false },
-    distributed_tracing: { enabled: false },
-    jserrors: { enabled: true, harvestTimeSeconds: 2 },
-    metrics: { enabled: false },
-    page_action: { enabled: false },
-    page_view_event: { enabled: true, harvestTimeSeconds: 2 },
-    page_view_timing: { enabled: false },
-    session_trace: { enabled: false },
-    spa: { enabled: false }
-  }
-
-  it('takes an error object', async () => {
-    const url = await testHandle.assetURL('api.html', {
-      init
+    await Promise.all([
+      testHandle.expectRum(),
+      browser.url(url)
+    ])
+    console.log('Loaded')
+    const result = await browser.execute(() => {
+      return typeof window.newrelic.addToTrace === 'function'
     })
 
-    const rumPromise = testHandle.expectRum()
-    const errorsPromise = testHandle.expectErrors()
-    await browser.url(url)
-    await rumPromise
-    const { request } = await errorsPromise
-    const errorData = getErrorsFromResponse(request, browser)
-    const params = errorData[0] && errorData[0]['params']
-
-    expect(params.exceptionClass).toEqual('Error')
-    expect(params.message).toEqual('no free taco coupons')
+    expect(result).toEqual(true)
   })
 
-  it('takes an error object', async () => {
-    const url = await testHandle.assetURL('api/noticeError.html', {
-      init
+  describe('setPageViewName api', () => {
+    it('customTransactionName 1 arg', async () => {
+      const url = await testHandle.assetURL('instrumented.html', {
+        loader: 'spa',
+        init,
+        scriptString: `
+        newrelic.setPageViewName('foo')
+      `
+      })
+
+      const rumPromise = testHandle.expectRum()
+      const eventsPromise = testHandle.expectEvents()
+      const timeSlicePromise = testHandle.expectAjaxTimeSlices()
+      const resourcesPromise = testHandle.expectResources()
+
+      await Promise.all([
+        browser.url(url),
+        rumPromise,
+        eventsPromise,
+        timeSlicePromise,
+        resourcesPromise
+      ])
+
+      expect((await rumPromise).request.query.ct).toEqual('http://custom.transaction/foo')
+      expect((await eventsPromise).request.query.ct).toEqual('http://custom.transaction/foo')
+      expect((await timeSlicePromise).request.query.ct).toEqual('http://custom.transaction/foo')
+      expect((await resourcesPromise).request.query.ct).toEqual('http://custom.transaction/foo')
     })
 
-    const rumPromise = testHandle.expectRum()
-    const errorsPromise = testHandle.expectErrors()
-    await browser.url(url)
-    await rumPromise
-    const { request } = await errorsPromise
-    const errorData = getErrorsFromResponse(request, browser)
-    const params = errorData[0] && errorData[0]['params']
+    it('customTransactionName 1 arg unload', async () => {
+      const url = await testHandle.assetURL('instrumented.html', {
+        init,
+        scriptString: `
+        newrelic.setPageViewName('foo')
+        setTimeout(function () {
+          newrelic.finished(new Date().getTime())
+        },0)
+      `
+      })
 
-    expect(params.exceptionClass).toEqual('Error')
-    expect(params.message).toEqual('too many free taco coupons')
+      const metricsPromise = testHandle.expectCustomMetrics()
+      await browser.url(url)
+      const { request: { body, query } } = await metricsPromise
+      const time = getTime(body ? JSON.parse(body)?.cm : JSON.parse(query.cm))
+
+      expect(query.ct).toEqual('http://custom.transaction/foo')
+      expect(typeof time).toEqual('number')
+      expect(time).toBeGreaterThan(0)
+    })
+
+    it('customTransactionName 2 arg', async () => {
+      const url = await testHandle.assetURL('instrumented.html', {
+        init,
+        scriptString: `
+        newrelic.setPageViewName('/foo', 'http://bar.baz')
+        setTimeout(function () {
+          newrelic.finished(new Date().getTime())
+        },0)
+      `
+      })
+
+      const metricsPromise = testHandle.expectCustomMetrics()
+      await browser.url(url)
+      const { request: { body, query } } = await metricsPromise
+      const time = getTime(body ? JSON.parse(body)?.cm : JSON.parse(query.cm))
+
+      expect(query.ct).toEqual('http://bar.baz/foo')
+      expect(typeof time).toEqual('number')
+      expect(time).toBeGreaterThan(0)
+    })
+  })
+
+  describe('noticeError api', () => {
+    it('takes an error object', async () => {
+      const url = await testHandle.assetURL('instrumented.html', {
+        init,
+        scriptString: `
+        newrelic.noticeError(new Error('no free taco coupons'))
+      `
+      })
+
+      const errorsPromise = testHandle.expectErrors()
+      await browser.url(url)
+      const { request } = await errorsPromise
+      const errorData = getErrorsFromResponse(request)
+      const params = errorData[0] && errorData[0]['params']
+
+      expect(params.exceptionClass).toEqual('Error')
+      expect(params.message).toEqual('no free taco coupons')
+    })
+
+    it('takes a string', async () => {
+      const url = await testHandle.assetURL('instrumented.html', {
+        init,
+        scriptString: `
+        newrelic.noticeError('too many free taco coupons')
+      `
+      })
+
+      const errorsPromise = testHandle.expectErrors()
+      await browser.url(url)
+      const { request } = await errorsPromise
+      const errorData = getErrorsFromResponse(request)
+      const params = errorData[0] && errorData[0]['params']
+
+      expect(params.exceptionClass).toEqual('Error')
+      expect(params.message).toEqual('too many free taco coupons')
+    })
+
+    it('takes a string', async () => {
+      const url = await testHandle.assetURL('instrumented.html', {
+        init,
+        scriptString: `
+        newrelic.noticeError('too many free taco coupons')
+      `
+      })
+
+      const errorsPromise = testHandle.expectErrors()
+      await browser.url(url)
+      const { request } = await errorsPromise
+      const errorData = getErrorsFromResponse(request)
+      const params = errorData[0] && errorData[0]['params']
+
+      expect(params.exceptionClass).toEqual('Error')
+      expect(params.message).toEqual('too many free taco coupons')
+    })
   })
 })

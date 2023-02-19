@@ -1,17 +1,17 @@
 <html>
   <head>
     {init} {config} {loader}
-    <!-- internal, should only count toward 'all' -->
+    <!-- should only count toward 'non-ajax/internal' -->
     <script src="/js"></script>
   </head>
   <body>
-    <!-- internal, should only count toward 'all' -->
+    <!-- should only count toward 'non-ajax/internal' -->
     <img src="/image" />
-    <!-- external, should count toward 'all' and 'external' -->
+    <!-- should count toward 'non-ajax/external' -->
     <img
       src="https://media.giphy.com/media/Y4pAQv58ETJgRwoLxj/giphy-downsized-large.gif"
     />
-    <!-- external, should count toward 'all' and 'external' -->
+    <!-- should count toward 'non-ajax/external' -->
     <iframe
       width="560"
       height="315"
@@ -21,5 +21,15 @@
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
       allowfullscreen
     ></iframe>
+    <script>
+      // <!-- should count toward 'ajax/internal' -->
+      var internal = new XMLHttpRequest();
+      internal.open("GET", "/json");
+      internal.send();
+      // <!-- should count toward 'ajax/external' -->
+      var external = new XMLHttpRequest();
+      external.open("GET", "https://dummyjson.com/products");
+      external.send();
+    </script>
   </body>
 </html>

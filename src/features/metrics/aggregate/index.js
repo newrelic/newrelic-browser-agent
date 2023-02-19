@@ -80,14 +80,18 @@ export class Aggregate extends AggregateBase {
     if (rules.length > 0) this.storeSupportabilityMetrics('Generic/Obfuscate/Detected')
     if (rules.length > 0 && !validateRules(rules)) this.storeSupportabilityMetrics('Generic/Obfuscate/Invalid')
 
-    // don't track usage of AJAX type resources, these are already accounted for by the AJAX feature
-    // differentiate between external only and resources that include fetching the browser agent itself
-    const invalidResources = ['beacon', 'fetch', 'xmlhttprequest']
+    // differentiate between internal+external and ajax+non-ajax
+    const ajaxResources = ['beacon', 'fetch', 'xmlhttprequest']
     const internalUrls = ['nr-data.net', 'newrelic.com', 'nr-local.net']
-    const allResources = performance?.getEntriesByType('resource').filter(x => !invalidResources.includes(x.initiatorType))
-    const externalResources = allResources.filter(x => internalUrls.every(y => !x.name.includes(y)))
-    this.storeSupportabilityMetrics('Generic/Resources/External', externalResources.length)
-    this.storeSupportabilityMetrics('Generic/Resources/All', allResources.length)
+    const isInternal = x => internalUrls.some(y => x.name.includes(y))
+    const isAjax = x => ajaxResources.includes(x.initiatorType)
+
+    const allResources = performance?.getEntriesByType('resource')
+
+    this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/Internal', allResources.filter(x => isInternal(x) && !isAjax(x)).length)
+    this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/External', allResources.filter(x => !isInternal(x) && !isAjax(x)).length)
+    this.storeSupportabilityMetrics('Generic/Resources/Ajax/Internal', allResources.filter(x => isInternal(x) && isAjax(x)).length)
+    this.storeSupportabilityMetrics('Generic/Resources/Ajax/External', allResources.filter(x => !isInternal(x) && isAjax(x)).length)
   }
 
   eachSessionChecks () {

@@ -48,19 +48,24 @@ testDriver.test('agent tracks resources seen', withUnload, function (t, browser,
   }))
 
   Promise.all([metricsPromise, loadPromise])
-    .then(([data]) => {
+    .then(([{ request: data }]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
-      const external = supportabilityMetrics.find(x => x.params.name.includes('Resources/External'))
-      const all = supportabilityMetrics.find(x => x.params.name.includes('Resources/All'))
+      const nonAjaxInternal = supportabilityMetrics.find(x => x.params.name.includes('Resources/Non-Ajax/Internal'))
+      const nonAjaxExternal = supportabilityMetrics.find(x => x.params.name.includes('Resources/Non-Ajax/External'))
+      const ajaxInternal = supportabilityMetrics.find(x => x.params.name.includes('Resources/Ajax/Internal'))
+      const ajaxExternal = supportabilityMetrics.find(x => x.params.name.includes('Resources/Ajax/External'))
+
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
-      t.ok(!!external, 'External was captured')
-      t.ok(!!all, 'All was captured')
+      t.ok(!!nonAjaxInternal, 'Non-Ajax External was captured')
+      t.ok(!!nonAjaxExternal, 'Non-Ajax Internal was captured')
+      t.ok(!!ajaxInternal, 'Ajax External was captured')
+      t.ok(!!ajaxExternal, 'Ajax Internal was captured')
 
-      t.ok(!!external.stats.t, 'External has a value')
-      t.ok(!!all.stats.t, 'All has a value')
-
-      t.ok(external.stats.t <= all.stats.t, 'External should not exceed all')
-      t.ok(external.stats.t === 2, 'Page has 2 external resources that should be observed')
+      // depending on when metrics agg gets imported, this can be slightly different values.  Just test that its positive
+      t.ok(nonAjaxInternal.stats.t > 0, 'Non-Ajax External has a value')
+      t.equal(nonAjaxExternal.stats.t, 2, 'Non-Ajax Internal has the correct value')
+      t.equal(ajaxInternal.stats.t, 1, 'Ajax Internal has the correct value')
+      t.equal(ajaxExternal.stats.t, 1, 'Ajax External has the correct value')
       t.end()
     })
     .catch(failWithEndTimeout(t))
@@ -74,7 +79,7 @@ testDriver.test('Calling a newrelic[api] fn creates a supportability metric', wi
   const observedAPImetrics = []
 
   Promise.all([metricsPromise, rumPromise, loadPromise])
-    .then(([data]) => {
+    .then(([{ request: data }]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true).filter(sm => sm.params.name.toLowerCase().includes('api'))
       var customMetrics = getMetricsFromResponse(data, false)
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')

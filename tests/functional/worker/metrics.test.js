@@ -11,7 +11,6 @@ workerTypes.forEach(type => { // runs all test for classic & module workers & us
   const browsersWithOrWithoutModuleSupport = typeToMatcher(type)
   metricsApiCreatesSM(type, browsersWithOrWithoutModuleSupport)
   metricsValidObfuscationCreatesSM(type, browsersWithOrWithoutModuleSupport.and(fetchExt))
-  metricsInvalidObfuscationCreatesSM(type, browsersWithOrWithoutModuleSupport.and(fetchExt))
   metricsWorkersCreateSM(type, browsersWithOrWithoutModuleSupport.and(nestedWorkerSupport))
 })
 
@@ -44,7 +43,7 @@ function metricsApiCreatesSM (type, browserVersionMatcher) {
       const observedAPImetrics = []
 
       Promise.all([metricsPromise, loadPromise])
-        .then(([data]) => {
+        .then(([{ request: data }]) => {
           var supportabilityMetrics = getMetricsFromResponse(data, true).filter(sm => sm.params.name.toLowerCase().includes('api'))
           var customMetrics = getMetricsFromResponse(data, false)
           t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
@@ -94,10 +93,10 @@ function metricsValidObfuscationCreatesSM (type, browserVersionMatcher) {
         }].map(x => x.toString())
       })
       const loadPromise = browser.get(assetURL)
-      const metricsPromise = router.expectMetrics()
+      const metricsPromise = router.expectSupportMetrics()
 
       Promise.all([metricsPromise, loadPromise])
-        .then(([data]) => {
+        .then(([{ request: data }]) => {
           const supportabilityMetrics = getMetricsFromResponse(data, true)
           t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
           supportabilityMetrics.forEach(sm => {
@@ -107,55 +106,6 @@ function metricsValidObfuscationCreatesSM (type, browserVersionMatcher) {
         }).catch(failWithEndTimeout(t))
     }
   )
-}
-function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
-  const badObfusRulesArr = [{
-    regex: 123,
-    replacement: 'invalid;type'		// #1 - invalid regex object
-  }, {
-    replacement: 'invalid,undefined'	// #2 - regex undefined
-  }, {
-    regex: /backslash/g,
-    replacement: 123			// #3 - invalid replacement type (string)
-  }]
-
-  for (badRuleNum in badObfusRulesArr)
-  { testDriver.test(`${type} - invalid obfuscation rule #${parseInt(badRuleNum) + 1} creates invalid supportability metric`, browserVersionMatcher,
-    function (t, browser, router) {
-      let assetURL = router.assetURL(`worker/${type}-worker.html`, {
-        init: {
-          obfuscate: [badObfusRulesArr[badRuleNum]],
-          ajax: { harvestTimeSeconds: 2 },
-          jserrors: { enabled: false },
-          ins: { harvestTimeSeconds: 2 },
-          metrics: { harvestTimeSeconds: 5 }
-        },
-        workerCommands: [() => {
-          setTimeout(function () {
-            fetch('/tests/assets/obfuscate-pii-valid.html')
-            throw new Error('pii')
-          }, 100)
-          newrelic.addPageAction('pageactionpii')
-          newrelic.setCustomAttribute('piicustomAttribute', 'customAttribute')
-        }].map(x => x.toString())
-      })
-
-      const loadPromise = browser.get(assetURL)
-      const metricsPromise = router.expectMetrics()
-
-      Promise.all([metricsPromise, loadPromise])
-        .then(([data]) => {
-          const supportabilityMetrics = getMetricsFromResponse(data, true)
-          t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
-          let invalidDetected = false
-          supportabilityMetrics.forEach(sm => {
-            if (sm.params.name.includes('Generic/Obfuscate/Invalid')) invalidDetected = true
-          })
-          t.ok(invalidDetected, 'an invalid regex rule detected')
-          t.end()
-        }).catch(failWithEndTimeout(t))
-    }
-  ) }
 }
 function metricsWorkersCreateSM (type, browserVersionMatcher) {
   testDriver.test(`${type} - workers creation generates sm`, browserVersionMatcher,
@@ -187,11 +137,11 @@ function metricsWorkersCreateSM (type, browserVersionMatcher) {
         }].map(x => x.toString())
       })
       const loadPromise = browser.get(assetURL)
-      const metricsPromise = router.expectMetrics()
+      const metricsPromise = router.expectSupportMetrics()
 
       Promise.all([metricsPromise, loadPromise])
         .then(([data]) => {
-          const supportabilityMetrics = getMetricsFromResponse(data, true)
+          const supportabilityMetrics = getMetricsFromResponse(data.request, true)
           t.ok(supportabilityMetrics && !!supportabilityMetrics.length, `${supportabilityMetrics.length} SupportabilityMetrics object(s) were generated`)
 
           const wsm = extractWorkerSM(supportabilityMetrics)

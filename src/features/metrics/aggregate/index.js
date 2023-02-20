@@ -86,7 +86,7 @@ export class Aggregate extends AggregateBase {
     const isInternal = x => internalUrls.some(y => x.name.includes(y))
     const isAjax = x => ajaxResources.includes(x.initiatorType)
 
-    const allResources = performance?.getEntriesByType('resource')
+    const allResources = performance?.getEntriesByType('resource') || []
 
     this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/Internal', allResources.filter(x => isInternal(x) && !isAjax(x)).length)
     this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/External', allResources.filter(x => !isInternal(x) && !isAjax(x)).length)

@@ -42,7 +42,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=20 --functional-only
   chrome-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
@@ -62,7 +62,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=20 --unit-only
   firefox-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
@@ -82,7 +82,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=20 --functional-only
   firefox-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
@@ -102,7 +102,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=20 --unit-only
   edge-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
@@ -122,7 +122,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=20 --functional-only
   edge-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
@@ -142,7 +142,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=20 --unit-only
   safari-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
@@ -162,7 +162,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=20 --functional-only
   safari-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
@@ -182,7 +182,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=20 --unit-only
   ios-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 45
@@ -242,7 +242,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=20 --functional-only
   android-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
@@ -262,7 +262,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=20 --unit-only
 
   ie-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')

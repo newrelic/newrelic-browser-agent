@@ -42,12 +42,16 @@ function loaderTypeSupportabilityMetric (loaderType) {
 }
 
 testDriver.test('agent tracks resources seen', withUnload, function (t, browser, router) {
-  let metricsPromise = router.expectMetrics()
+  let metricsPromise = router.expectSupportMetrics()
   const loadPromise = browser.safeGet(router.assetURL('resources.html', {
     init: { ...init, page_view_event: { enabled: false } }
   }))
 
-  Promise.all([metricsPromise, loadPromise])
+  Promise.all([loadPromise])
+    .then(() => Promise.all([
+      metricsPromise,
+      browser.get(router.assetURL('resources.html')) // to conserve network traffic while trying to capture everything, resources SM harvest happens when page unloads
+    ]))
     .then(([{ request: data }]) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
       const nonAjaxInternal = supportabilityMetrics.find(x => x.params.name.includes('Resources/Non-Ajax/Internal'))

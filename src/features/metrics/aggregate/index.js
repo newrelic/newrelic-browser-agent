@@ -25,7 +25,7 @@ export class Aggregate extends AggregateBase {
 
     var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'metrics.harvestTimeSeconds') || 30
 
-    var scheduler = new HarvestScheduler('jserrors', {}, this)
+    var scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
     scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
     this.ee.on(`drain-${this.featureName}`, () => { if (!this.blocked) scheduler.startTimer(harvestTimeSeconds) })
 
@@ -79,33 +79,6 @@ export class Aggregate extends AggregateBase {
     const rules = getRules(this.agentIdentifier)
     if (rules.length > 0) this.storeSupportabilityMetrics('Generic/Obfuscate/Detected')
     if (rules.length > 0 && !validateRules(rules)) this.storeSupportabilityMetrics('Generic/Obfuscate/Invalid')
-
-    try {
-    // differentiate between internal+external and ajax+non-ajax
-      const ajaxResources = ['beacon', 'fetch', 'xmlhttprequest']
-      const internalUrls = ['nr-data.net', 'newrelic.com', 'nr-local.net']
-      const isInternal = x => internalUrls.some(y => x.name.includes(y))
-      const isAjax = x => ajaxResources.includes(x.initiatorType)
-      if (PerformanceObserver?.supportedEntryTypes?.includes('resource')) {
-        const observer = new PerformanceObserver((list) => {
-          list.getEntries().forEach((entry) => {
-            if (isInternal(entry) && !isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/Internal')
-            if (!isInternal(entry) && !isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/External')
-            if (isInternal(entry) && isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Ajax/Internal')
-            if (!isInternal(entry) && isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Ajax/External')
-          })
-        })
-        observer.observe({ type: 'resource', buffered: true })
-      } else {
-        const allResources = performance?.getEntriesByType('resource') || []
-        this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/Internal', allResources.filter(x => isInternal(x) && !isAjax(x)).length)
-        this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/External', allResources.filter(x => !isInternal(x) && !isAjax(x)).length)
-        this.storeSupportabilityMetrics('Generic/Resources/Ajax/Internal', allResources.filter(x => isInternal(x) && isAjax(x)).length)
-        this.storeSupportabilityMetrics('Generic/Resources/Ajax/External', allResources.filter(x => !isInternal(x) && isAjax(x)).length)
-      }
-    } catch (e) {
-    // do nothing
-    }
   }
 
   eachSessionChecks () {
@@ -116,5 +89,29 @@ export class Aggregate extends AggregateBase {
       if (evt.persisted) { this.storeSupportabilityMetrics('Generic/BFCache/PageRestored') }
       return
     })
+  }
+
+  unload () {
+    // Page Resources detection for estimations with resources feature work
+    // TODO - these SMs are to be removed when we implement the actual resources feature
+    try {
+      if (this.resourcesSent) return
+      // make sure this only gets sent once
+      this.resourcesSent = true
+      // differentiate between internal+external and ajax+non-ajax
+      const ajaxResources = ['beacon', 'fetch', 'xmlhttprequest']
+      const internalUrls = ['nr-data.net', 'newrelic.com', 'nr-local.net', 'localhost']
+      function isInternal (x) { return internalUrls.some(y => x.name.indexOf(y) >= 0) }
+      function isAjax (x) { return ajaxResources.includes(x.initiatorType) }
+      const allResources = performance?.getEntriesByType('resource') || []
+      allResources.forEach((entry) => {
+        if (isInternal(entry) && !isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/Internal')
+        else if (!isInternal(entry) && !isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/External')
+        else if (isInternal(entry) && isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Ajax/Internal')
+        else if (!isInternal(entry) && isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Ajax/External')
+      })
+    } catch (e) {
+      // do nothing
+    }
   }
 }

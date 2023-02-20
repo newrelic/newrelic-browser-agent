@@ -149,6 +149,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
+    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, edge-functional, edge-unit]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -169,6 +170,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
+    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, edge-functional, edge-unit]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -189,6 +191,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
+    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, edge-functional, edge-unit]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -209,6 +212,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
+    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, edge-functional, edge-unit]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -229,6 +233,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
+    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, edge-functional, edge-unit]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -249,6 +254,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
+    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, edge-functional, edge-unit]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -269,6 +275,7 @@ jobs:
     timeout-minutes: 90
     runs-on: ubuntu-latest
     container: node:14
+    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, edge-functional, edge-unit]
 
     env:
       NEWRELIC_ENVIRONMENT: ci

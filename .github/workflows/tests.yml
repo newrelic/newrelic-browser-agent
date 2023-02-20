@@ -49,6 +49,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
+    needs: [chrome-functional]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -89,6 +90,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
+    needs: [firefox-functional]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -129,6 +131,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
+    needs: [edge-functional]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -149,7 +152,6 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, edge-functional, edge-unit]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -170,7 +172,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, edge-functional, edge-unit]
+    needs: [safari-functional]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -191,7 +193,6 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, edge-functional, edge-unit]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -205,14 +206,14 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --functional-only --concurrent=20
   ios-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 45
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, edge-functional, edge-unit]
+    needs: [ios-functional]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -226,14 +227,13 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --unit-only --concurrent=20
   android-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, edge-functional, edge-unit]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -254,7 +254,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
-    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, edge-functional, edge-unit]
+    needs: [android-functional]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -275,7 +275,6 @@ jobs:
     timeout-minutes: 90
     runs-on: ubuntu-latest
     container: node:14
-    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, edge-functional, edge-unit]
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -295,6 +294,7 @@ jobs:
     timeout-minutes: 90
     runs-on: ubuntu-latest
     container: node:14
+    needs: [ie-functional]
 
     env:
       NEWRELIC_ENVIRONMENT: ci

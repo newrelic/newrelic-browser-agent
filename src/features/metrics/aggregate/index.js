@@ -80,18 +80,32 @@ export class Aggregate extends AggregateBase {
     if (rules.length > 0) this.storeSupportabilityMetrics('Generic/Obfuscate/Detected')
     if (rules.length > 0 && !validateRules(rules)) this.storeSupportabilityMetrics('Generic/Obfuscate/Invalid')
 
+    try {
     // differentiate between internal+external and ajax+non-ajax
-    const ajaxResources = ['beacon', 'fetch', 'xmlhttprequest']
-    const internalUrls = ['nr-data.net', 'newrelic.com', 'nr-local.net']
-    const isInternal = x => internalUrls.some(y => x.name.includes(y))
-    const isAjax = x => ajaxResources.includes(x.initiatorType)
-
-    const allResources = performance?.getEntriesByType('resource') || []
-
-    this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/Internal', allResources.filter(x => isInternal(x) && !isAjax(x)).length)
-    this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/External', allResources.filter(x => !isInternal(x) && !isAjax(x)).length)
-    this.storeSupportabilityMetrics('Generic/Resources/Ajax/Internal', allResources.filter(x => isInternal(x) && isAjax(x)).length)
-    this.storeSupportabilityMetrics('Generic/Resources/Ajax/External', allResources.filter(x => !isInternal(x) && isAjax(x)).length)
+      const ajaxResources = ['beacon', 'fetch', 'xmlhttprequest']
+      const internalUrls = ['nr-data.net', 'newrelic.com', 'nr-local.net']
+      const isInternal = x => internalUrls.some(y => x.name.includes(y))
+      const isAjax = x => ajaxResources.includes(x.initiatorType)
+      if (PerformanceObserver?.supportedEntryTypes?.includes('resource')) {
+        const observer = new PerformanceObserver((list) => {
+          list.getEntries().forEach((entry) => {
+            if (isInternal(entry) && !isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/Internal')
+            if (!isInternal(entry) && !isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/External')
+            if (isInternal(entry) && isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Ajax/Internal')
+            if (!isInternal(entry) && isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Ajax/External')
+          })
+        })
+        observer.observe({ type: 'resource', buffered: true })
+      } else {
+        const allResources = performance?.getEntriesByType('resource') || []
+        this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/Internal', allResources.filter(x => isInternal(x) && !isAjax(x)).length)
+        this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/External', allResources.filter(x => !isInternal(x) && !isAjax(x)).length)
+        this.storeSupportabilityMetrics('Generic/Resources/Ajax/Internal', allResources.filter(x => isInternal(x) && isAjax(x)).length)
+        this.storeSupportabilityMetrics('Generic/Resources/Ajax/External', allResources.filter(x => !isInternal(x) && isAjax(x)).length)
+      }
+    } catch (e) {
+    // do nothing
+    }
   }
 
   eachSessionChecks () {

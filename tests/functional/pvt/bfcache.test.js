@@ -35,38 +35,38 @@ testDriver.test("Agent doesn't block page from back/fwd cache", bfCacheSupport, 
   }).catch(fail(t))
 })
 
-// testDriver.test('EOL events are sent appropriately', excludeIE, function (t, browser, router) {
-//   const init = {
-//     allow_bfcache: true	// with this, all timings except "unload" event are expected to be harvested after the first time the page becomes hidden
-//   }
+testDriver.test('EOL events are sent appropriately', excludeIE, function (t, browser, router) {
+  const init = {
+    allow_bfcache: true	// with this, all timings except "unload" event are expected to be harvested after the first time the page becomes hidden
+  }
 
-//   const assetURL = router.assetURL('pagehide.html', { loader: 'rum', init })
-//   const loadPromise = browser.get(assetURL)
+  const assetURL = router.assetURL('pagehide.html', { loader: 'rum', init })
+  const loadPromise = browser.get(assetURL)
 
-//   Promise.all([loadPromise, router.expectRum()]).then(() => {
-//     const timingsListener = router.expectTimings(3000)
-//     // 1) Make an interaction and simulate visibilitychange to trigger our "pagehide" logic after loading, after which we expect "final" harvest to occur.
-//     browser.elementById('btn1').click()
-//     return timingsListener
-//   }).then(({ request: pvtPayload }) => {
-//     // 2) Verify PageViewTimings sent sufficient expected timing events, then trigger our "unload" logic.
-//     const phTimings = querypack.decode(pvtPayload?.body?.length ? pvtPayload.body : pvtPayload.query.e)
-//     t.ok(phTimings.length > 1, 'vis hidden causes PVT harvest')	// should be more timings than "pagehide" at min -- this can increase for confidence when CLS & INP are added
+  Promise.all([loadPromise, router.expectRum()]).then(() => {
+    const timingsListener = router.expectTimings(3000)
+    // 1) Make an interaction and simulate visibilitychange to trigger our "pagehide" logic after loading, after which we expect "final" harvest to occur.
+    browser.elementById('btn1').click()
+    return timingsListener
+  }).then(({ request: pvtPayload }) => {
+    // 2) Verify PageViewTimings sent sufficient expected timing events, then trigger our "unload" logic.
+    const phTimings = querypack.decode(pvtPayload?.body?.length ? pvtPayload.body : pvtPayload.query.e)
+    t.ok(phTimings.length > 1, 'vis hidden causes PVT harvest')	// should be more timings than "pagehide" at min -- this can increase for confidence when CLS & INP are added
 
-//     const phNode = phTimings.find(t => t.name === 'pageHide')
-//     t.ok(phNode.value > 0, 'vis hidden emits the pageHide event')
-//     const ulNode = phTimings.find(t => t.name === 'unload')
-//     t.equal(ulNode, undefined, "vis hidden doesn't emit unload event")
+    const phNode = phTimings.find(t => t.name === 'pageHide')
+    t.ok(phNode.value > 0, 'vis hidden emits the pageHide event')
+    const ulNode = phTimings.find(t => t.name === 'unload')
+    t.equal(ulNode, undefined, "vis hidden doesn't emit unload event")
 
-//     const timingsListener = router.expectTimings()
-//     browser.get(router.assetURL('/'))
-//     return timingsListener
-//   }).then(({ request: pvtPayload }) => {
-//     // 3) Verify PVTs aren't sent again but unload event is; (TEMPORARY) pageHide event should not be sent again
-//     const ulTimings = querypack.decode(pvtPayload?.body?.length ? pvtPayload.body : pvtPayload.query.e)
+    const timingsListener = router.expectTimings()
+    browser.get(router.assetURL('/'))
+    return timingsListener
+  }).then(({ request: pvtPayload }) => {
+    // 3) Verify PVTs aren't sent again but unload event is; (TEMPORARY) pageHide event should not be sent again
+    const ulTimings = querypack.decode(pvtPayload?.body?.length ? pvtPayload.body : pvtPayload.query.e)
 
-//     t.ok(ulTimings.length == 1, 'unloading causes PVT harvest')	// until BFC work is complete, only "unload" should be harvested here
-//     t.equal(ulTimings[0].name, 'unload', 'window pagehide emits the unload event (but not our pageHide again)')
-//     t.end()
-//   }).catch(fail(t))
-// })
+    t.ok(ulTimings.length == 1, 'unloading causes PVT harvest')	// until BFC work is complete, only "unload" should be harvested here
+    t.equal(ulTimings[0].name, 'unload', 'window pagehide emits the unload event (but not our pageHide again)')
+    t.end()
+  }).catch(fail(t))
+})

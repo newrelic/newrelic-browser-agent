@@ -17,7 +17,7 @@ module.exports = function (request, reply, testServer) {
         testServer.config.polyfills
       ) {
         const polyfills = await browserifyScript(
-          path.resolve(paths.rootDir, 'cdn/agent-loader/polyfills/polyfills.js')
+          path.resolve(paths.rootDir, 'src/cdn/polyfills.js')
         )
         done(
           null,

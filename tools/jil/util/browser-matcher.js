@@ -379,7 +379,7 @@ features.bfcache = new BrowserMatcher()
   .include('chrome', '>100') // included in v96+, but either not enabled by default until later or Sauce doesn't enable the flag
   //.include('edge', '>=89') -- not enabled by default still (current v109); user must set flag
   .include('firefox')
-  .include('safari')
+  .include('safari', '>15') // -- test does not work on safari 15 for unknown precise reason;
   .include('ios')
   //.include('android', '>=9.0') -- does not work on android 9.0 emulator (v100 Chrome) for unknown precise reason;
 

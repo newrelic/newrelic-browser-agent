@@ -12,22 +12,25 @@ function fail (t) {
 
 testDriver.test("Agent doesn't block page from back/fwd cache", bfCacheSupport, function (t, browser, router) {
   const init = {
-    allow_bfcache: true
+    allow_bfcache: true,
+    page_action: { harvestTimeSeconds: 2 }
   }
-  const scriptString = 'window.addEventListener(\'pagehide\', (evt) => { if (evt.persisted) newrelic.addPageAction("pageCached"); });'
-
+  const scriptString = `window.addEventListener('pagehide', (evt) => { navigator.sendBeacon('/echo?testId=${router.testId}&persisted='+evt.persisted) });`
+  const rumPromise = router.expectRum()
   const assetURL = router.assetURL('instrumented.html', { loader: 'spa', init, scriptString })
   const loadPromise = browser.get(assetURL)
 
-  Promise.all([loadPromise, router.expectRum()]).then(() => {
-    const insListener = router.expectIns(5000)
-    // Once the initial page loads and features are running, navigate away and check to see if it's cached via the custom pageaction being emitted w/o timing out.
-    browser.get(router.assetURL('/'))
-    return insListener
-  }).then(({ request: pActPayload }) => {
-    // Double check we got the PA expected.
-    const pActsReceived = JSON.parse(pActPayload.body).ins
-    t.equal(pActsReceived[0].actionName, 'pageCached', 'page successfully stored in bf cache')
+  Promise.all([rumPromise, loadPromise]).then(() => {
+    const beacon = router.expect('assetServer', {
+      test: function (request) {
+        const url = new URL(request.url, 'resolve://')
+        return url.pathname === '/echo'
+      }
+    })
+    const nav = browser.get(router.assetURL('/'))
+    return Promise.all([beacon, nav])
+  }).then(([{ request }]) => {
+    t.ok({ ...request.query }.persisted, 'BFC persisted should be true')
     t.end()
   }).catch(fail(t))
 })

@@ -72,6 +72,8 @@ jobs:
             --appId ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \
+            --sha $GITHUB_SHA \
+            --workflow $GITHUB_WORKFLOW \
             --role ${{ secrets.AWS_ROLE_ARN }}
       - name: re-publish internal loader (eu-prod)
         run: |
@@ -82,6 +84,8 @@ jobs:
             --appId ${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \
+            --sha $GITHUB_SHA \
+            --workflow $GITHUB_WORKFLOW \
             --role ${{ secrets.AWS_ROLE_ARN }}
       - name: purge fastly cache url
         run: |
@@ -135,7 +139,9 @@ jobs:
       - name: Build and raise PR to docs-website
         run: |
           node tools/scripts/docs-website/create-docs-pr.js \
-            -t=v$(cat VERSION)
+            -t=v$(cat VERSION) \
+            --docs-site-name=${{ secrets.DOCS_SITE_USER_NAME }} \
+            --docs-site-email=${{ secrets.DOCS_SITE_USER_EMAIL }}
   publish-current-to-s3:
     runs-on: ubuntu-latest
     container: node:14

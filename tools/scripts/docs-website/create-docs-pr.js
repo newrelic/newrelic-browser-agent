@@ -30,11 +30,6 @@ var options = require('yargs')
   .describe('r', 'remote to push branch to')
   .default('r', 'origin')
 
-  .string('u')
-  .alias('u', 'username')
-  .describe('u', 'Owner of the fork of docs-website')
-  .default('u', 'metal-messiah')
-
   .string('c')
   .alias('c', 'changelog')
   .describe('c', 'Name of changelog(defaults to CHANGELOG.md)')
@@ -54,6 +49,14 @@ var options = require('yargs')
   .alias('R', 'repo-path')
   .describe('R', 'Path to the docs-website form on local machine')
   .default('R', 'docs-website')
+
+  .string('dse')
+  .alias('dse', 'docs-site-email')
+  .describe('dse', 'Email account to use when communicating with docs site repo -- git config user.email')
+
+  .string('dsn')
+  .alias('dsn', 'docs-site-name')
+  .describe('dsn', 'Name to use when communicating with docs site repo -- git config user.name')
 
   .argv
 
@@ -85,7 +88,7 @@ async function createReleaseNotesPr () {
     logStep('Get Release Notes from File')
     const { body, releaseDate } = await getReleaseNotes(version, options.changelog)
     logStep('Branch Creation')
-    const branchName = await createBranch(options.repoPath, options.remote, version, options.dryRun)
+    const branchName = await createBranch(options.repoPath, options.remote, version, options.dryRun, options.docsSiteEmail, options.docsSiteName)
     logStep('Format release notes file')
     const releaseNotesBody = formatReleaseNotes(releaseDate, version, body)
     logStep('Create Release Notes')
@@ -98,7 +101,7 @@ async function createReleaseNotesPr () {
     // logStep('Commit EOL')
 
     logStep('Create Pull Request')
-    await createPR(options.username, version, branchName, options.dryRun)
+    await createPR(version, branchName, options.dryRun)
     console.log('*** Full Run Successful ***')
   } catch (err) {
     if (err.status && err.status === 404) {
@@ -177,7 +180,7 @@ async function readReleaseNoteFile (file) {
  * @param {string} version newest version of agent
  * @param {boolean} dryRun skip branch creation
  */
-async function createBranch (filePath, remote, version, dryRun) {
+async function createBranch (filePath, remote, version, dryRun, email, name) {
   fs.rmSync(filePath, { recursive: true, force: true })
   fs.mkdirSync(filePath)
   filePath = path.resolve(filePath)
@@ -196,6 +199,7 @@ async function createBranch (filePath, remote, version, dryRun) {
     await git.checkout(BASE_BRANCH)
     await git.syncWithParent(remote, branchName)
     await git.checkoutNewBranch(branchName)
+    await git.setUserInfo(email, name)
   }
 
   return branchName
@@ -278,12 +282,11 @@ async function commitReleaseNotes (version, remote, branch, dryRun) {
 /**
  * Creates a PR to the newrelic/docs-website with new release notes
  *
- * @param {string} username fork owner's github username
  * @param {string} version version number
  * @param {string} branch github branch
  * @param {boolean} dryRun whether or not we should actually create the PR
  */
-async function createPR (username, version, branch, dryRun) {
+async function createPR (version, branch, dryRun) {
   if (!process.env.GITHUB_TOKEN) {
     console.log('GITHUB_TOKEN required to create a pull request')
     stopOnError()
@@ -292,7 +295,7 @@ async function createPR (username, version, branch, dryRun) {
   const github = new Github('newrelic', 'docs-website')
   const title = `Browser Agent ${version} Release Notes`
   const prOptions = {
-    head: `${username}:${branch}`,
+    head: `newrelic-forks:${branch}`,
     base: BASE_BRANCH,
     title,
     body: title

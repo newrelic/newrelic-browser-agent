@@ -21,6 +21,7 @@ const model = agentId => { return {
   sessionId: getConfigurationValue(agentId, 'privacy.cookies_enabled') == true
     ? getCurrentSessionIdOrMakeNew()
     : null, // if cookies (now session tracking) is turned off or can't get session ID, this is null
+  sentRum: 0,
   xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
   userAgent,
   version: VERSION

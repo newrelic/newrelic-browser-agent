@@ -18,7 +18,7 @@ const model = {
   jserrors: { enabled: true, harvestTimeSeconds: 10 },
   metrics: { enabled: true, harvestTimeSeconds: 10 },
   page_action: { enabled: true, harvestTimeSeconds: 30 },
-  page_view_event: { enabled: true },
+  page_view_event: { enabled: true, auto: true },
   page_view_timing: { enabled: true, harvestTimeSeconds: 30 },
   session_trace: { enabled: true, harvestTimeSeconds: 10 },
   spa: { enabled: true, harvestTimeSeconds: 10 }

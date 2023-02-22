@@ -15,12 +15,9 @@ export function getFeatureDependencyNames (feature) {
 
 export function getFrozenAttributes (feature) {
   switch (feature) {
-    // right now, jserrors is the only feature that can have "on" or "off" page-level auto-instrumentation...
-    // page_action is always "off" (no instr)
-    // as new API/manual implementation methods are added, this list can likely be pruned
-    case FEATURE_NAMES.jserrors:
-      return []
+    // right now, nothing is frozen.
+    //config attributes that we dont want to be able to be easily changed from the top-level page would go here
     default:
-      return ['auto']
+      return []
   }
 }

@@ -116,6 +116,17 @@ export function setAPI (agentIdentifier, nr, forceDrain) {
     handle('err', [err, now(), false, customAttributes], undefined, FEATURE_NAMES.jserrors, instanceEE)
   }
 
+  nr.sendRum = function () {
+    handle('record-supportability', ['API/sendRum/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+    const poll = setInterval(() => {
+      if (getRuntime(agentIdentifier).sentRum) {
+        clearInterval(poll)
+        return
+      }
+      handle('send-rum', [now()], undefined, FEATURE_NAMES.pageViewEvent, instanceEE)
+    }, 100)
+  }
+
   // theres no window.load event on non-browser scopes, lazy load immediately
   if (isWorkerScope) lazyLoad()
   // try to stay out of the way of the window.load event, lazy load once that has finished.

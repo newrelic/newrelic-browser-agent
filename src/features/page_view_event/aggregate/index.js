@@ -6,10 +6,10 @@ import { stringify } from '../../../common/util/stringify'
 import { addMetric as addPaintMetric } from '../../../common/metrics/paint-metrics'
 import { submitData } from '../../../common/util/submit-data'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
+import { Harvest } from '../../../common/harvest/harvest'
 
 const jsonp = 'NREUM.setToken'
 
@@ -17,14 +17,17 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
-    this.sendRum()
+    this.auto = getConfigurationValue(this.agentIdentifier, 'page_view_event.auto') !== false
+    this.prepareRum()
+
+    if (!this.auto) this.ee.on('send-rum', this.sendRum.bind(this))
   }
 
   getScheme () {
     return getConfigurationValue(this.agentIdentifier, 'ssl') === false ? 'http' : 'https'
   }
 
-  sendRum () {
+  prepareRum () {
     const info = getInfo(this.agentIdentifier)
     if (!info.beacon) return
     if (info.queueTime) this.aggregator.store('measures', 'qt', { value: info.queueTime })
@@ -47,11 +50,9 @@ export class Aggregate extends AggregateBase {
     // if (measuresQueryString) {
     // currently we only have one version of our protocol
     // in the future we may add more
-    var protocol = '1'
+    this.protocol = '1'
 
-    var scheduler = new HarvestScheduler('page_view_event', {}, this)
-
-    var chunksForQueryString = [scheduler.harvest.baseQueryString()]
+    var chunksForQueryString = [new Harvest(this).baseQueryString()]
 
     chunksForQueryString.push(measuresQueryString)
 
@@ -94,10 +95,20 @@ export class Aggregate extends AggregateBase {
     var customJsAttributes = stringify(info.jsAttributes)
     chunksForQueryString.push(param('ja', customJsAttributes === '{}' ? null : customJsAttributes))
 
-    var queryString = fromArray(chunksForQueryString, agentRuntime.maxBytes)
+    this.queryString = fromArray(chunksForQueryString, agentRuntime.maxBytes)
 
+    console.log('queryString', this.queryString)
+    if (this.auto) this.sendRum()
+  }
+
+  sendRum () {
+    console.log('sendRum called!')
+    const runtime = getRuntime(this.agentIdentifier)
+    if (runtime.sentRum++) return
+    const info = getInfo(this.agentIdentifier)
+    if (!info.beacon || !info.licenseKey || !this.queryString) return
     submitData.jsonp(
-      this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString,
+      this.getScheme() + '://' + info.beacon + '/' + this.protocol + '/' + info.licenseKey + this.queryString,
       jsonp
     )
   }

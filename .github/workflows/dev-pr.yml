@@ -37,6 +37,8 @@ jobs:
             --appId ${{ secrets.INTERNAL_DEV_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \
+            --sha $GITHUB_SHA \
+            --workflow $GITHUB_WORKFLOW \
             --role ${{ secrets.AWS_ROLE_ARN }}
       - name: purge fastly cache url
         run: |

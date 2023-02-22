@@ -202,7 +202,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --functional-only --concurrent=10
   ios-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 45
@@ -222,7 +222,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --unit-only --concurrent=10
   android-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
@@ -242,7 +242,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=5 --functional-only
   android-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
@@ -262,11 +262,11 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=10 --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=5 --unit-only
 
   ie-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 90
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     container: node:14
 
@@ -285,7 +285,7 @@ jobs:
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=5 --functional-only
   ie-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 90
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     container: node:14
 

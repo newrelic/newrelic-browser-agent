@@ -75,18 +75,19 @@ export class Aggregate extends AggregateBase {
 
       handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, ee)
 
+      // store as metric
+      aggregator.store('xhr', hash, params, metrics)
+
+      if (!allAjaxIsEnabled()) {
+        return
+      }
+
       if (!shouldCollectEvent(params)) {
         if (params.hostname === getInfo(agentIdentifier).errorBeacon) {
           handle('record-supportability', ['Ajax/Events/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, ee)
         } else {
           handle('record-supportability', ['Ajax/Events/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee)
         }
-        return
-      }
-      // store as metric
-      aggregator.store('xhr', hash, params, metrics)
-
-      if (!allAjaxIsEnabled()) {
         return
       }
 

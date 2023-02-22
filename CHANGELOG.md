@@ -10,6 +10,9 @@ The interaction-to-next-paint metric is now calculated and reported at the end o
 
 ## v1226
 
+### Revert xhr deny list timeslice metrics 
+Customers were losing visibility into all calls on the page when denying timeslice metrics based on the deny list.  This change reverts to the behaviour seen in all previous versions of the Browser Agent.
+
 ### Enable back/forward cache
 Updating the agent default configuration to enable the back/forward cache feature previously released in version 1222 by default.
 

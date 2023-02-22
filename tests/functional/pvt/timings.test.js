@@ -260,7 +260,7 @@ function runPageHideTests (loader) {
     Promise.all([loadPromise, router.expectRum()])
       .then(() => {
         const clickPromise = browser
-          .keys('a') // we do this because of INP's first-input handling which may cause it to not trigger; this way the button click below should guarantee that it fires
+          .elementById('initial').click() // we do this because of INP's first-input handling which may cause it to not trigger; this way the button click below should guarantee that it fires
           .elementById('btn1').click()
           .get(router.assetURL('/'))
         const timingsPromise = router.expectTimings()

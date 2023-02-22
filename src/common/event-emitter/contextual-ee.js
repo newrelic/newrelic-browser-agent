@@ -46,7 +46,7 @@ function ee (old, debugId) {
     listeners: listeners,
     context: context,
     buffer: bufferEventsByGroup,
-    abort: abortIfNotLoaded,
+    abort,
     aborted: false,
     isBuffering: isBuffering,
     debugId,
@@ -148,12 +148,7 @@ function getNewContext () {
   return new EventContext()
 }
 
-// abort should be called 30 seconds after the page has started running
-// We should drop our data and stop collecting if we still have a backlog, which
-// signifies the rest of the agent wasn't loaded
-function abortIfNotLoaded () {
-  if (globalInstance.backlog.api || globalInstance.backlog.feature) {
-    globalInstance.aborted = true
-    globalInstance.backlog = {}
-  }
+function abort () {
+  globalInstance.aborted = true
+  globalInstance.backlog = {}
 }

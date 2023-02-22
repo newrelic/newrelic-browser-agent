@@ -58,7 +58,8 @@ export class Agent {
       delete newrelic.initializedAgents[this.agentIdentifier]?.[NR_FEATURES_REF_NAME] // GC mem used internally by features
       delete this.sharedAggregator
       // Keep the initialized agent object with its configs for troubleshooting purposes.
-      delete newrelic.ee?.get(this.agentIdentifier) // clear our events storage
+      newrelic.ee?.abort() // set flag and clear global backlog
+      delete newrelic.ee?.get(this.agentIdentifier) // clear this agent's own backlog too
       return false
     }
   }

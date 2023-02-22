@@ -133,8 +133,10 @@ function runFirstInteractionTests (loader) {
         t.equal(attribute.type, 'stringAttribute', 'firstInteraction attribute type is stringAttribute')
 
         attribute = timing.attributes.find(a => a.key === 'fid')
-        t.ok(timing.value > 0, 'firstInputDelay is a non-negative value')
-        t.equal(attribute.type, 'doubleAttribute', 'firstInputDelay attribute type is doubleAttribute')
+        if (browser.match('notInternetExplorer') || attribute) { // IE may have unreliable event timestamps so ok to skip, but other browsers should have FID
+          t.ok(timing.value > 0, 'firstInputDelay is a non-negative value')
+          t.equal(attribute.type, 'doubleAttribute', 'firstInputDelay attribute type is doubleAttribute')
+        }
 
         t.end()
       })

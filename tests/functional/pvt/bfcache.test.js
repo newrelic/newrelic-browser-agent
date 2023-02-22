@@ -62,8 +62,13 @@ testDriver.test('EOL events are sent appropriately', excludeIE, function (t, bro
     // 3) Verify PVTs aren't sent again but unload event is; (TEMPORARY) pageHide event should not be sent again
     const ulTimings = querypack.decode(pvtPayload?.body?.length ? pvtPayload.body : pvtPayload.query.e)
 
-    t.ok(ulTimings.length == 1, 'unloading causes PVT harvest')	// until BFC work is complete, only "unload" should be harvested here
-    t.equal(ulTimings[0].name, 'unload', 'window pagehide emits the unload event (but not our pageHide again)')
+    t.ok(ulTimings.length > 1, 'unloading causes PVT harvest')	// "unload" & ongoing CWV lib metrics like INP should be harvested here
+
+    const ulNode = ulTimings.find(t => t.name === 'unload')
+    t.ok(ulNode.value > 0, 'window pagehide emits the unload event')
+    const phNode = ulTimings.find(t => t.name === 'pageHide')
+    t.equal(phNode, undefined, 'but pageHide is not emitted again (capped at one)')
+
     t.end()
   }).catch(fail(t))
 })

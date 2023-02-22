@@ -97,15 +97,13 @@ export class Aggregate extends AggregateBase {
 
     this.queryString = fromArray(chunksForQueryString, agentRuntime.maxBytes)
 
-    console.log('queryString', this.queryString)
     if (this.auto) this.sendRum()
   }
 
   sendRum () {
-    console.log('sendRum called!')
     const runtime = getRuntime(this.agentIdentifier)
-    if (runtime.sentRum++) return
     const info = getInfo(this.agentIdentifier)
+    if (runtime.sentRum++) return
     if (!info.beacon || !info.licenseKey || !this.queryString) return
     submitData.jsonp(
       this.getScheme() + '://' + info.beacon + '/' + this.protocol + '/' + info.licenseKey + this.queryString,

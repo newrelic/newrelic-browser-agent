@@ -187,20 +187,20 @@ testDriver.test('promise wrapper should support instanceof comparison', function
     .then(async () => {
       await browser.safeEval('var p = new Promise(function () {}); p instanceof Promise', (err, res) => {
         t.notOk(err, 'should not get an error')
-        t.ok(res, 'wrapped promise is instance of Promise global')
+        t.ok(res, 'new Promise is an instance of global Promise')
       })
       await browser.safeEval('var p = Promise.resolve(); p instanceof Promise', (err, res) => {
         t.notOk(err, 'should not get an error')
-        t.ok(res, 'wrapped promise is instance of Promise global')
+        t.ok(res, 'static Promise methods return is instanceof global Promise')
       })
-      await browser.safeEval('var p = Promise.reject(); p instanceof Promise', (err, res) => {
+      await browser.safeEval('var p = fetch("example.com"); p instanceof Promise', (err, res) => {
         t.notOk(err, 'should not get an error')
-        t.ok(res, 'wrapped promise is instance of Promise global')
+        t.ok(res, 'fetch returned promise is an instance of global Promise')
       })
       if (!browser.match('ie@*')) {
         await browser.safeEval('async function asyncP() {}; var p = asyncP(); p instanceof Promise', (err, res) => {
           t.notOk(err, 'should not get an error')
-          t.ok(res, 'wrapped promise is instance of Promise global')
+          t.ok(res, 'async function returned promise is an instance of global Promise')
         })
       }
       t.end()

@@ -12,8 +12,7 @@ function fail (t) {
 
 testDriver.test("Agent doesn't block page from back/fwd cache", bfCacheSupport, function (t, browser, router) {
   const init = {
-    allow_bfcache: true,
-    page_action: { harvestTimeSeconds: 2 }
+    allow_bfcache: true
   }
   const scriptString = `window.addEventListener('pagehide', (evt) => { navigator.sendBeacon('/echo?testId=${router.testId}&persisted='+evt.persisted) });`
   const rumPromise = router.expectRum()

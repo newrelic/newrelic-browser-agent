@@ -80,6 +80,7 @@ export function wrapFetch (sharedEE) {
 
   return ee
 }
+/*
 export function unwrapFetch (sharedEE) {
   const ee = scopedEE(sharedEE)
 
@@ -95,6 +96,7 @@ export function unwrapFetch (sharedEE) {
     wrapped[ee.debugId]--
   }
 }
+*/
 export function scopedEE (sharedEE) {
   return (sharedEE || baseEE).get('fetch')
 }

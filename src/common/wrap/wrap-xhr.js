@@ -192,6 +192,7 @@ export function wrapXhr (sharedEE) {
 
   return ee
 }
+/*
 export function unwrapXhr (sharedEE) {
   const ee = scopedEE(sharedEE)
 
@@ -208,7 +209,7 @@ export function unwrapXhr (sharedEE) {
     wrapped[ee.debugId]--
   }
 }
-
+*/
 export function scopedEE (sharedEE) {
   return (sharedEE || contextualEE).get('xhr')
 }

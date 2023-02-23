@@ -85,7 +85,7 @@ function findEventListenerProtoAndCb (object, cb, ...rest) {
   }
   if (step) cb(step, ...rest)
 }
-
+/*
 export function unwrapEvents (sharedEE) {
   const ee = scopedEE(sharedEE)
 
@@ -101,6 +101,7 @@ export function unwrapEvents (sharedEE) {
     wrapped[ee.debugId]--
   }
 }
+*/
 export function scopedEE (sharedEE) {
   return (sharedEE || baseEE).get('events')
 }

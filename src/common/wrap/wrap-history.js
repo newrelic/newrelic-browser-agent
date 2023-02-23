@@ -34,6 +34,7 @@ export function wrapHistory (sharedEE) {
 
   return ee
 }
+/*
 export function unwrapHistory (sharedEE) {
   const ee = scopedEE(sharedEE)
 
@@ -45,6 +46,7 @@ export function unwrapHistory (sharedEE) {
     wrapped[ee.debugId]--
   }
 }
+*/
 /**
  * Returns an event emitter scoped specifically for the history object. This scoping is a remnant from when all the
  * features shared the same group in the event, to isolate events between features. It will likely be revisited.

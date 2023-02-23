@@ -34,6 +34,7 @@ export function wrapMutation (sharedEE) {
   }
   return ee
 }
+/*
 export function unwrapMutation (sharedEE) {
   const ee = scopedEE(sharedEE)
   if (wrapped[ee.debugId] === true) {
@@ -43,6 +44,7 @@ export function unwrapMutation (sharedEE) {
     wrapped[ee.debugId] = 'unwrapped' // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
   }
 }
+*/
 export function scopedEE (sharedEE) {
   return (sharedEE || baseEE).get('mutation')
 }

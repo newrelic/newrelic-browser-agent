@@ -30,6 +30,7 @@ export function wrapRaf (sharedEE) {
 
   return ee
 }
+/*
 export function unwrapRaf (sharedEE) {
   const ee = scopedEE(sharedEE)
 
@@ -41,6 +42,7 @@ export function unwrapRaf (sharedEE) {
     wrapped[ee.debugId]--
   }
 }
+*/
 export function scopedEE (sharedEE) {
   return (sharedEE || baseEE).get('raf')
 }

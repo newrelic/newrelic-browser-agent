@@ -45,6 +45,7 @@ export function wrapTimer(sharedEE) {
 
   return ee
 }
+/*
 export function unwrapTimer (sharedEE) {
   const ee = scopedEE(sharedEE)
 
@@ -56,6 +57,7 @@ export function unwrapTimer (sharedEE) {
     wrapped[ee.debugId]--
   }
 }
+*/
 export function scopedEE (sharedEE) {
   return (sharedEE || baseEE).get('timer')
 }

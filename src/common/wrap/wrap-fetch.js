@@ -80,23 +80,6 @@ export function wrapFetch (sharedEE) {
 
   return ee
 }
-/*
-export function unwrapFetch (sharedEE) {
-  const ee = scopedEE(sharedEE)
-
-  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this.
-  if (wrapped[ee.debugId] == 1) {
-    bodyMethods.forEach(fnName => {
-      unwrapFunction(Req[proto], fnName)
-      unwrapFunction(Res[proto], fnName)
-    })
-    unwrapFunction(globalScope, 'fetch')
-    wrapped[ee.debugId] = Infinity // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
-  } else {
-    wrapped[ee.debugId]--
-  }
-}
-*/
 export function scopedEE (sharedEE) {
   return (sharedEE || baseEE).get('fetch')
 }

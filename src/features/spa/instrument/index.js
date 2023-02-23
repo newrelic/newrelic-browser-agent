@@ -107,13 +107,6 @@ export class Instrument extends InstrumentBase {
   /** Restoration and resource release tasks to be done if SPA loader is being aborted. Unwind changes to globals and subscription to DOM events. */
   #abort () {
     this.removeOnAbort?.abort()
-    // unwrapJsonP(this.ee)
-    // unwrapPromise(this.ee)
-    // unwrapTimer(this.ee)
-    // unwrapXhr(this.ee) // this will also handle unwrapping "events"
-    // unwrapFetch(this.ee)
-    // unwrapHistory(this.ee)
-    // unwrapMutation(this.ee)
     this.abortHandler = undefined // weakly allow this abort op to run only once
   }
 }

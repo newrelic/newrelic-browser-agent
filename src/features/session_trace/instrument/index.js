@@ -108,10 +108,6 @@ export class Instrument extends InstrumentBase {
   #abort () {
     window.performance.removeEventListener(RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false)
     // The doc interaction noOp listeners are harmless--cannot buffer data into EE.
-    // unwrapTimer(this.ee)
-    // unwrapRaf(this.ee)
-    // unwrapHistory(this.ee)
-    // unwrapEvents(this.ee)
     this.abortHandler = undefined // weakly allow this abort op to run only once
   }
 

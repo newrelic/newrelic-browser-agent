@@ -39,17 +39,8 @@ export class Instrument extends InstrumentBase {
     wrapXhr(this.ee)
     subscribeToEvents(agentIdentifier, this.ee, this.handler, this.dt)
 
-    // this.abortHandler = this.#abort
     this.importAggregator()
   }
-
-  /** Restoration and resource release tasks to be done if Ajax loader is being aborted.
-  #abort () {
-    // (Much of this module affects specific XHR instances.)
-    unwrapFetch(this.ee)
-    unwrapXhr(this.ee)
-    this.abortHandler = undefined // weakly allow this abort op to run only once
-  } */
 }
 
 function subscribeToEvents (agentIdentifier, ee, handler, dt) {

@@ -76,12 +76,7 @@ export class Instrument extends InstrumentBase {
 
   /** Restoration and resource release tasks to be done if JS error loader is being aborted. Unwind changes to globals. */
   #abort () {
-    // globalScope.onerror = this.origOnerror
     this.removeOnAbort?.abort()
-    // unwrapRaf(this.ee)
-    // unwrapTimer(this.ee)
-    // unwrapEvents(this.ee)
-    // if (getRuntime(this.agentIdentifier).xhrWrappable) unwrapXhr(this.ee)
     this.abortHandler = undefined // weakly allow this abort op to run only once
   }
 

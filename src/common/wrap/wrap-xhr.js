@@ -192,24 +192,6 @@ export function wrapXhr (sharedEE) {
 
   return ee
 }
-/*
-export function unwrapXhr (sharedEE) {
-  const ee = scopedEE(sharedEE)
-
-  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this.
-  if (wrapped[ee.debugId] == 1) {
-    unwrapEvents(ee) // because in "wrapXHR", events was wrapped or incremented, we have to reverse that too
-
-    globalScope.XMLHttpRequest = originals.XHR
-    XHR_PROPS.forEach(fn => { // the original object was replaced AND its prototype was altered
-      unwrapFunction(globalScope.XMLHttpRequest.prototype, fn)
-    })
-    wrapped[ee.debugId] = Infinity // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
-  } else {
-    wrapped[ee.debugId]--
-  }
-}
-*/
 export function scopedEE (sharedEE) {
   return (sharedEE || contextualEE).get('xhr')
 }

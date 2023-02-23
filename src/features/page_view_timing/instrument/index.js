@@ -58,8 +58,8 @@ export class Instrument extends InstrumentBase {
     })
 
     /** Interaction-to-Next-Paint */
-    onINP(({ name, value }) => {
-      handle('timing', [name.toLowerCase(), value], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
+    onINP(({ name, value, id }) => {
+      handle('timing', [name.toLowerCase(), value, { metricId: id }], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     })
 
     onLongTask(({ name, value, info }) => {

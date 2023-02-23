@@ -238,9 +238,6 @@ features.addEventListenerOptions = new BrowserMatcher()
   .exclude('ios')
   .exclude('ie')
 
-features.supportsFirstInteraction = features.addEventListener
-  .exclude('ie', '9')
-
 features.firstPaint = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=60')

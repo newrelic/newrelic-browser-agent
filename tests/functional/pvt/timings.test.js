@@ -10,7 +10,6 @@ const supportedFirstPaint = testDriver.Matcher.withFeature('firstPaint')
 const supportedFirstContentfulPaint = testDriver.Matcher.withFeature('firstContentfulPaint')
 const supportedLcp = testDriver.Matcher.withFeature('largestContentfulPaint')
 const supportedCls = testDriver.Matcher.withFeature('cumulativeLayoutShift')
-const supportsFirstInteraction = testDriver.Matcher.withFeature('supportsFirstInteraction')
 const supportsINP = testDriver.Matcher.withFeature('interactionToNextPaint')
 const supportsLT = testDriver.Matcher.withFeature('longTaskTiming')
 
@@ -107,7 +106,7 @@ function runPaintTimingsTests (loader) {
 }
 
 function runFirstInteractionTests (loader) {
-  testDriver.test(`First interaction and first input delay for ${loader} agent`, supportsFirstInteraction, function (t, browser, router) {
+  testDriver.test(`First interaction and first input delay for ${loader} agent`, function (t, browser, router) {
     const rumPromise = router.expectRum()
     const loadPromise = browser.safeGet(router.assetURL('basic-click-tracking.html', { loader: loader })).waitForFeature('loaded')
 

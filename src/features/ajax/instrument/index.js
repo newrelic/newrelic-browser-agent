@@ -9,7 +9,7 @@ import { ffVersion } from '../../../common/browser-version/firefox-version'
 import { dataSize } from '../../../common/util/data-size'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
-import { wrapFetch, wrapXhr, unwrapFetch, unwrapXhr } from '../../../common/wrap'
+import { wrapFetch, wrapXhr } from '../../../common/wrap'
 import { parseUrl } from '../../../common/url/parse-url'
 import { DT } from './distributed-tracing'
 import { responseSizeFromXhr } from './response-size'
@@ -39,16 +39,7 @@ export class Instrument extends InstrumentBase {
     wrapXhr(this.ee)
     subscribeToEvents(agentIdentifier, this.ee, this.handler, this.dt)
 
-    this.abortHandler = this.#abort
     this.importAggregator()
-  }
-
-  /** Restoration and resource release tasks to be done if Ajax loader is being aborted. */
-  #abort () {
-    // (Much of this module affects specific XHR instances.)
-    unwrapFetch(this.ee)
-    unwrapXhr(this.ee)
-    this.abortHandler = undefined // weakly allow this abort op to run only once
   }
 }
 

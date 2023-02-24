@@ -113,13 +113,6 @@ export function wrapJsonP (sharedEE) {
   }
   return ee
 }
-export function unwrapJsonP (sharedEE) {
-  const ee = scopedEE(sharedEE)
-  if (wrapped[ee.debugId] === true) {
-    domInsertMethods.forEach(fnName => unwrapFunction(Node.prototype, fnName))
-    wrapped[ee.debugId] = 'unwrapped' // keeping this map marker truthy to prevent re-wrapping by this agent (unsupported)
-  }
-}
 export function scopedEE (sharedEE) {
   return (sharedEE || baseEE).get('jsonp')
 }

@@ -85,22 +85,6 @@ function findEventListenerProtoAndCb (object, cb, ...rest) {
   }
   if (step) cb(step, ...rest)
 }
-
-export function unwrapEvents (sharedEE) {
-  const ee = scopedEE(sharedEE)
-
-  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this.
-  if (wrapped[ee.debugId] == 1) {
-    [ADD_EVENT_LISTENER, REMOVE_EVENT_LISTENER].forEach(fn => {
-      if (typeof document === 'object') findEventListenerProtoAndCb(document, unwrapFunction, fn) //==> unwrapFunction(findProto(document)?, fn);
-      findEventListenerProtoAndCb(globalScope, unwrapFunction, fn)
-      findEventListenerProtoAndCb(XHR.prototype, unwrapFunction, fn)
-    })
-    wrapped[ee.debugId] = Infinity // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
-  } else {
-    wrapped[ee.debugId]--
-  }
-}
 export function scopedEE (sharedEE) {
   return (sharedEE || baseEE).get('events')
 }

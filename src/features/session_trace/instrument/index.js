@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../../common/event-emitter/handle'
-import { wrapHistory, wrapEvents, wrapTimer, wrapRaf, unwrapHistory, unwrapEvents, unwrapTimer, unwrapRaf } from '../../../common/wrap'
+import { wrapHistory, wrapEvents, wrapTimer, wrapRaf } from '../../../common/wrap'
 import { supportsPerformanceObserver } from '../../../common/window/supports-performance-observer'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
@@ -108,10 +108,6 @@ export class Instrument extends InstrumentBase {
   #abort () {
     window.performance.removeEventListener(RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false)
     // The doc interaction noOp listeners are harmless--cannot buffer data into EE.
-    unwrapTimer(this.ee)
-    unwrapRaf(this.ee)
-    unwrapHistory(this.ee)
-    unwrapEvents(this.ee)
     this.abortHandler = undefined // weakly allow this abort op to run only once
   }
 

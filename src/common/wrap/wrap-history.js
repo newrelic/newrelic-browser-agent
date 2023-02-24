@@ -34,17 +34,6 @@ export function wrapHistory (sharedEE) {
 
   return ee
 }
-export function unwrapHistory (sharedEE) {
-  const ee = scopedEE(sharedEE)
-
-  // Don't unwrap until the LAST of all features that's using this (wrapped count) no longer needs this.
-  if (wrapped[ee.debugId] == 1) {
-    HISTORY_FNS.forEach(fnName => unwrapFunction(window.history, fnName))
-    wrapped[ee.debugId] = Infinity // rather than leaving count=0, make this marker perma-truthy to prevent re-wrapping by this agent (unsupported)
-  } else {
-    wrapped[ee.debugId]--
-  }
-}
 /**
  * Returns an event emitter scoped specifically for the history object. This scoping is a remnant from when all the
  * features shared the same group in the event, to isolate events between features. It will likely be revisited.

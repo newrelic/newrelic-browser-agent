@@ -96,7 +96,7 @@ const instantiateBundleAnalyzerPlugin = (build) => {
       analyzerMode: 'static',
       openAnalyzer: false,
       defaultSizes: 'stat',
-      reportFilename: path.resolve(__dirname, `./webpack-analysis-${build}.html`)
+      reportFilename: `${build}${PATH_VERSION}.stats.html`
     }),
     new BundleAnalyzerPlugin({
       analyzerMode: 'json',

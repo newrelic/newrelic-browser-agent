@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {config}
+    {loader}
+  </head>
+  <body>
+    <div id="initial">initial content</div>
+
+    <script type="text/javascript" src="js/some-long-task.js"></script>
+    <script>
+        someLongTask();	// trigger this again a 2nd time to generate another INP timing
+        window.tasksDone = true;
+    </script>
+  </body>
+</html>

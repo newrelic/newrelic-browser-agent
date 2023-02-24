@@ -260,9 +260,15 @@ features.cumulativeLayoutShift = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=84')
 
-features.unsupportedCumulativeLayoutShift = new BrowserMatcher()
+features.interactionToNextPaint = new BrowserMatcher()
   .exclude('*')
-  .include('chrome', '<77')
+  .include('chrome', '>=96')
+  .include('edge', '>=96')
+
+features.longTaskTiming = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', '>=58')
+  .include('edge', '>=79')
 
 // btoa() is used to base-64-encode Distributed Tracing header data.
 // https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/btoa#Browser_compatibility
@@ -276,30 +282,6 @@ features.notSafariWithSeleniumBug = new BrowserMatcher()
 
 features.notInternetExplorer = new BrowserMatcher()
   .exclude('ie')
-
-features.testPageHide = new BrowserMatcher()
-  .exclude('*')
-  .include('chrome')
-
-// Some old browsers have absolute unix timestamps instead of relative to navigation start in the Event web API
-// (addEventListener argument). We use the EventTarget.timeStamp value to calculate FID.
-// https://developer.mozilla.org/en-US/docs/Web/API/Event/timeStamp
-features.badEvtTimestamp = new BrowserMatcher()
-  .exclude('*')
-  .include('chrome', '<=50')
-  .include('safari', '11')
-  .include('safari', '12')
-  .include('firefox', '<=52')
-  .include('ie', '<10')
-
-features.unreliableEvtTimestamp = new BrowserMatcher()
-  .exclude('*')
-  .include('chrome', '53')
-  .include('edge', '14')
-  .include('ie', '>9')
-
-features.supportsFirstInteraction = features.addEventListener
-  .exclude('ie', '9')
 
 features.originOnlyReferer = new BrowserMatcher()
   .exclude('*')

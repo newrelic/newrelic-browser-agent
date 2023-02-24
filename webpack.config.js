@@ -4,7 +4,6 @@ const webpack = require('webpack')
 const fs = require('fs')
 const { merge } = require('webpack-merge')
 const babelEnv = require('./babel-env-vars')
-
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 let { PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE } = process.env
@@ -89,15 +88,23 @@ const instantiateSourceMapPlugin = (filename) => {
 /**
  * Helper for instantiating a bundle analyzer plugin with some common properties.
  * @param {string} build - Tags the HTML output filename (i.e.: webpack-analysis-[build].html)
- * @returns {BundleAnalyzerPlugin} Instance of BundleAnalyzerPlugin with default configurations.
+ * @returns {BundleAnalyzerPlugin[]} Instance of BundleAnalyzerPlugin with default configurations.
  */
 const instantiateBundleAnalyzerPlugin = (build) => {
-  return new BundleAnalyzerPlugin({
-    analyzerMode: 'static',
-    openAnalyzer: false,
-    defaultSizes: 'stat',
-    reportFilename: path.resolve(__dirname, `./webpack-analysis-${build}.html`)
-  })
+  return [
+    new BundleAnalyzerPlugin({
+      analyzerMode: 'static',
+      openAnalyzer: false,
+      defaultSizes: 'stat',
+      reportFilename: `${build}${PATH_VERSION}.stats.html`
+    }),
+    new BundleAnalyzerPlugin({
+      analyzerMode: 'json',
+      openAnalyzer: false,
+      defaultSizes: 'stat',
+      reportFilename: `${build}${PATH_VERSION}.stats.json`
+    })
+  ]
 }
 
 // The exported configs (standard, polyfill, webworker) build on this common config.
@@ -185,8 +192,7 @@ const standardConfig = merge(commonConfig, {
     ]
   },
   plugins: [
-    instantiateBundleAnalyzerPlugin('standard'),
-    instantiateSourceMapPlugin()
+    ...instantiateBundleAnalyzerPlugin('standard')
   ],
   target: 'web'
 })
@@ -246,7 +252,7 @@ const polyfillsConfig = merge(commonConfig, {
     chunkFilename: SUBVERSION === 'PROD' ? `[name].[chunkhash:8]-es5${PATH_VERSION}.min.js` : `[name]-es5${PATH_VERSION}.js`
   },
   plugins: [
-    instantiateBundleAnalyzerPlugin('polyfills'),
+    ...instantiateBundleAnalyzerPlugin('polyfills'),
     // Source map outputs must also must be tagged to prevent standard/polyfill filename collisions in non-production.
     instantiateSourceMapPlugin(SUBVERSION === 'PROD' ? '[name].[chunkhash:8].map' : '[name]-es5.map')
   ],
@@ -274,7 +280,7 @@ const workerConfig = merge(commonConfig, {
     }
   },
   plugins: [
-    instantiateBundleAnalyzerPlugin('worker'),
+    ...instantiateBundleAnalyzerPlugin('worker'),
     instantiateSourceMapPlugin()
   ],
   target: 'webworker'

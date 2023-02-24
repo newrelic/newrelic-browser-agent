@@ -11,6 +11,8 @@ import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { isBrowserScope } from '../../../common/util/global-scope'
+import { onINP } from 'web-vitals'
+import { onLongTask } from './long-tasks'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -55,6 +57,15 @@ export class Instrument extends InstrumentBase {
       documentAddEventListener(e, (...args) => this.captureInteraction(...args))
     })
 
+    /** Interaction-to-Next-Paint */
+    onINP(({ name, value, id }) => {
+      handle('timing', [name.toLowerCase(), value, { metricId: id }], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
+    })
+
+    onLongTask(({ name, value, info }) => {
+      handle('timing', [name.toLowerCase(), value, info], undefined, FEATURE_NAMES.pageViewTiming, this.ee) // lt context is passed as attrs in the timing node
+    })
+
     // Document visibility state becomes hidden
     subscribeToVisibilityChange(() => {
       // time is only recorded to be used for short-circuit logic in the observer callbacks
@@ -65,7 +76,6 @@ export class Instrument extends InstrumentBase {
     // Window fires its pagehide event (typically on navigation; this occurrence is a *subset* of vis change)
     windowAddEventListener('pagehide', () => handle('winPagehide', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee))
 
-    // page visibility events
     this.importAggregator()
   }
 

@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1227
+
+### Added INP and long tasks reporting
+The interaction-to-next-paint metric is now calculated and reported at the end of user sessions, via [Google CWV](https://github.com/GoogleChrome/web-vitals) library. In addition, long continuously executed and blocking scripts detected by the PerformanceLongTaskTiming API is also forwarded to New Relic.
+
 ## v1226
 
 ### Revert xhr deny list timeslice metrics 

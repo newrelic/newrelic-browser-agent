@@ -5,16 +5,13 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## v1227
 
-<<<<<<< HEAD
 ### Added INP and long tasks reporting
 The interaction-to-next-paint metric is now calculated and reported at the end of user sessions, via [Google CWV](https://github.com/GoogleChrome/web-vitals) library. In addition, long continuously executed and blocking scripts detected by the PerformanceLongTaskTiming API is also forwarded to New Relic.
 
 ### Revert unwrapping of globals on agent abort
 Partial revert of graceful handling change made in v1225 that unwrapped modified global APIs and handlers, which caused integration issues with other wrapping libraries and code.
-=======
 ### Add internal metrics to evaluate feasibility page resource harvests
 Internal metrics were added to track the feasibility and impact of collecting page resource information using the PerformanceObserver resource timings, such as scripts, images, network calls, and more. 
->>>>>>> 6d3c7c0c (add changelog item)
 
 ## v1226
 

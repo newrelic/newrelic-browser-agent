@@ -26,6 +26,6 @@ jobs:
       - name: push
         run: |
           git add .
-          git commit -a -m "Add changelog item for PR-${{github.event.number}}"
+          git commit -m "Add changelog item for PR-${{github.event.number}}"
           git push
         

@@ -27,7 +27,7 @@ jobs:
       - name: add changelog item
         run: node scripts/create-changelog-item.js \
           -p ${{ github.event.number}} \
-          -c ${{ github.event.head_commit.message }}
+          -c "${{ github.event.head_commit.message }}"
       - name: login
         run: |
           git config user.name "${{ github.actor }}"

@@ -106,15 +106,15 @@ export class Aggregate extends AggregateBase {
       const allResources = performance?.getEntriesByType('resource') || []
       allResources.forEach((entry) => {
         if (isInternal(entry)) {
-            if (isAjax(entry))
-                this.storeSupportabilityMetrics('Generic/Resources/Ajax/Internal')
-            else
-                this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/Internal')
+          if (isAjax(entry))
+          { this.storeSupportabilityMetrics('Generic/Resources/Ajax/Internal') }
+          else
+          { this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/Internal') }
         } else {
-            if (isAjax(entry))
-                this.storeSupportabilityMetrics('Generic/Resources/Ajax/External')
-            else
-                this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/External')
+          if (isAjax(entry))
+          { this.storeSupportabilityMetrics('Generic/Resources/Ajax/External') }
+          else
+          { this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/External') }
         }
       })
     } catch (e) {

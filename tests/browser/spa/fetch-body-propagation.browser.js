@@ -25,14 +25,13 @@ bodyMethods.forEach((bodyMethod) => {
         attrs: {
           isFetch: true
         },
-        children: []
-      },
-      {
-        type: 'customTracer',
-        attrs: {
-          name: 'timer'
-        },
-        children: []
+        children: [{
+          type: 'customTracer',
+          attrs: {
+            name: 'timer'
+          },
+          children: []
+        }]
       }]
     })
 
@@ -122,14 +121,13 @@ jil.browserTest('Response.formData', function (t) {
       attrs: {
         isFetch: true
       },
-      children: []
-    },
-    {
-      type: 'customTracer',
-      attrs: {
-        name: 'timer'
-      },
-      children: []
+      children: [{
+        type: 'customTracer',
+        attrs: {
+          name: 'timer'
+        },
+        children: []
+      }]
     }]
   })
 

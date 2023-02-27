@@ -7,7 +7,7 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    insertSupportMetrics(tag => handle(SUPPORTABILITY_METRIC_CHANNEL, [tag], undefined, FEATURE_NAMES.metrics, ee))
+    insertSupportMetrics(tag => handle(SUPPORTABILITY_METRIC_CHANNEL, [tag], undefined, FEATURE_NAMES.metrics, this.ee))
     this.importAggregator()
   }
 }

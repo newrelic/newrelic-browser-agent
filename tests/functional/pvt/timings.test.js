@@ -615,14 +615,12 @@ function runCustomAttributeTests (loader) {
 
 function runLcpTests (loader) {
   testDriver.test(`${loader} loader: LCP is not collected after pageHide`, supportedLcp, function (t, browser, router) {
-    // HTML page manually sets maxLCPTimeSeconds to 5
     const assetURL = router.assetURL('lcp-pagehide.html', {
       loader: loader,
       init: {
         page_view_timing: {
           enabled: true,
-          harvestTimeSeconds: 15,
-          maxLCPTimeSeconds: 2
+          harvestTimeSeconds: 15
         }
       }
     })
@@ -648,14 +646,12 @@ function runLcpTests (loader) {
       .catch(fail(t))
   })
   testDriver.test(`${loader} loader: LCP is not collected on hidden page`, supportedLcp, function (t, browser, router) {
-    // HTML page manually sets maxLCPTimeSeconds to 5
     const assetURL = router.assetURL('pagehide-beforeload.html', {
       loader: loader,
       init: {
         page_view_timing: {
           enabled: true,
-          harvestTimeSeconds: 15,
-          maxLCPTimeSeconds: 2
+          harvestTimeSeconds: 15
         }
       }
     })

@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../../common/event-emitter/handle'
-import { subscribeToVisibilityChange, initializeHiddenTime } from '../../../common/window/page-visibility'
+import { onLCP, onINP } from 'web-vitals'
+import { onLongTask } from './long-tasks'
+import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { documentAddEventListener, windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
 import { getConfigurationValue, getRuntime, originals } from '../../../common/config/config'
@@ -11,8 +13,6 @@ import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { isBrowserScope } from '../../../common/util/global-scope'
-import { onINP } from 'web-vitals'
-import { onLongTask } from './long-tasks'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -20,9 +20,7 @@ export class Instrument extends InstrumentBase {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     if (!isBrowserScope) return // CWV is irrelevant outside web context
 
-    this.pageHiddenTime = initializeHiddenTime() // synonymous with initial visibilityState
     this.performanceObserver
-    this.lcpPerformanceObserver
     this.clsPerformanceObserver
     this.fiRecorded = false
 
@@ -31,13 +29,6 @@ export class Instrument extends InstrumentBase {
       this.performanceObserver = new PerformanceObserver((...args) => this.perfObserver(...args))
       try {
         this.performanceObserver.observe({ entryTypes: ['paint'] })
-      } catch (e) {
-        // do nothing
-      }
-
-      this.lcpPerformanceObserver = new PerformanceObserver((...args) => this.lcpObserver(...args))
-      try {
-        this.lcpPerformanceObserver.observe({ entryTypes: ['largest-contentful-paint'] })
       } catch (e) {
         // do nothing
       }
@@ -57,7 +48,15 @@ export class Instrument extends InstrumentBase {
       documentAddEventListener(e, (...args) => this.captureInteraction(...args))
     })
 
-    /** Interaction-to-Next-Paint */
+    /* Largest Contentful Paint */
+    onLCP(({ value, entries }) => {
+      // CWV will only ever report one (THE) lcp entry to us; lcp is also only reported *once* on earlier(user interaction, page hidden).
+      const lcpEntry = entries[entries.length - 1]
+      const attributes = this.addConnectionAttributes({})
+      handle('lcp', [value, lcpEntry, attributes], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
+    })
+
+    /* Interaction-to-Next-Paint */
     onINP(({ name, value, id }) => {
       handle('timing', [name.toLowerCase(), value, { metricId: id }], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     })
@@ -70,9 +69,7 @@ export class Instrument extends InstrumentBase {
 
     // Document visibility state becomes hidden
     subscribeToVisibilityChange(() => {
-      // time is only recorded to be used for short-circuit logic in the observer callbacks
-      this.pageHiddenTime = now()
-      handle('docHidden', [this.pageHiddenTime], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
+      handle('docHidden', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     }, true)
 
     // Window fires its pagehide event (typically on navigation; this occurrence is a *subset* of vis change)
@@ -91,24 +88,6 @@ export class Instrument extends InstrumentBase {
         handle('timing', ['fcp', Math.floor(entry.startTime)], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
       }
     })
-  }
-
-  // largest contentful paint
-  lcpObserver (list, observer) {
-    var entries = list.getEntries()
-    if (entries.length > 0) {
-      var entry = entries[entries.length - 1]
-
-      // metrics become inflated if the page was ever hidden, so they aren't sent
-      if (this.pageHiddenTime < entry.startTime) return
-
-      var payload = [entry]
-
-      var attributes = this.addConnectionAttributes({})
-      if (attributes) payload.push(attributes)
-
-      handle('lcp', payload, undefined, FEATURE_NAMES.pageViewTiming, this.ee)
-    }
   }
 
   clsObserver (list) {

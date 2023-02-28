@@ -22,8 +22,6 @@ export class Aggregate extends AggregateBase {
 
     this.timings = []
     this.timingsSent = []
-    this.lcpRecorded = false
-    this.lcp = null
     this.clsSupported = false
     this.cls = 0
     this.clsSession = { value: 0, firstEntryTime: 0, lastEntryTime: 0 }
@@ -35,27 +33,23 @@ export class Aggregate extends AggregateBase {
     // do nothing
     }
 
-    var maxLCPTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.maxLCPTimeSeconds') || 60
     var initialHarvestSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
     var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
 
+    /* It's important that CWV api, like "onLCP", is called before this scheduler is initialized. The reason is because they share the same
+      "final harvest" on vis change or unload logic, and we'd want ex. onLCP to record the timing before we try to send it (win the race). */
     this.scheduler = new HarvestScheduler('events', {
       onFinished: (...args) => this.onHarvestFinished(...args),
-      getPayload: (...args) => this.prepareHarvest(...args),
-      onUnload: () => this.recordLcp() // send whatever available LCP we have, if one hasn't already been sent when current window session ends
+      getPayload: (...args) => this.prepareHarvest(...args)
     }, this)
 
-    registerHandler('timing', (...args) => this.processTiming(...args), this.featureName, this.ee)
-    registerHandler('lcp', (...args) => this.updateLatestLcp(...args), this.featureName, this.ee)
+    registerHandler('lcp', (value, lcpEntry, networkInformation) => this.recordLcp(value, lcpEntry, networkInformation, this.cls),
+      this.featureName, this.ee) // notice we snapshot CLS at this specific time
     registerHandler('cls', (...args) => this.updateClsScore(...args), this.featureName, this.ee)
+
+    registerHandler('timing', (name, value, attrs) => this.addTiming(name, value, attrs, true), this.featureName, this.ee) // notice CLS is added to all timings via 4th param
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
-
-    // After 1 minute has passed, record LCP value if no user interaction has occurred first
-    setTimeout(() => {
-      this.recordLcp()
-      this.lcpRecorded = true
-    }, maxLCPTimeSeconds * 1000)
 
     // send initial data sooner, then start regular
     this.ee.on(`drain-${this.featureName}`, () => { this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds) })
@@ -63,51 +57,33 @@ export class Aggregate extends AggregateBase {
     drain(this.agentIdentifier, this.featureName)
   }
 
-  recordLcp () {
-    if (!this.lcpRecorded && this.lcp !== null) {
-      var lcpEntry = this.lcp[0]
-      var cls = this.lcp[1]
-      var networkInfo = this.lcp[2]
-
-      var attrs = {
-        size: lcpEntry.size,
-        eid: lcpEntry.id
-      }
-
-      if (networkInfo) {
-        if (networkInfo['net-type']) attrs['net-type'] = networkInfo['net-type']
-        if (networkInfo['net-etype']) attrs['net-etype'] = networkInfo['net-etype']
-        if (networkInfo['net-rtt']) attrs['net-rtt'] = networkInfo['net-rtt']
-        if (networkInfo['net-dlink']) attrs['net-dlink'] = networkInfo['net-dlink']
-      }
-
-      if (lcpEntry.url) {
-        attrs['elUrl'] = cleanURL(lcpEntry.url)
-      }
-
-      if (lcpEntry.element && lcpEntry.element.tagName) {
-        attrs['elTag'] = lcpEntry.element.tagName
-      }
-
-      // collect 0 only when CLS is supported, since 0 is a valid score
-      if (cls > 0 || this.clsSupported) {
-        attrs['cls'] = cls
-      }
-
-      this.addTiming('lcp', Math.floor(lcpEntry.startTime), attrs, false)
-      this.lcpRecorded = true
-    }
-  }
-
-  updateLatestLcp (lcpEntry, networkInformation) {
-    if (this.lcp) {
-      var previous = this.lcp[0]
-      if (previous.size >= lcpEntry.size) {
-        return
-      }
+  recordLcp (lcpValue, lcpEntry, networkInfo, cls) {
+    var attrs = {
+      size: lcpEntry.size,
+      eid: lcpEntry.id
     }
 
-    this.lcp = [lcpEntry, this.cls, networkInformation]
+    if (networkInfo) {
+      if (networkInfo['net-type']) attrs['net-type'] = networkInfo['net-type']
+      if (networkInfo['net-etype']) attrs['net-etype'] = networkInfo['net-etype']
+      if (networkInfo['net-rtt']) attrs['net-rtt'] = networkInfo['net-rtt']
+      if (networkInfo['net-dlink']) attrs['net-dlink'] = networkInfo['net-dlink']
+    }
+
+    if (lcpEntry.url) {
+      attrs['elUrl'] = cleanURL(lcpEntry.url)
+    }
+
+    if (lcpEntry.element && lcpEntry.element.tagName) {
+      attrs['elTag'] = lcpEntry.element.tagName
+    }
+
+    // collect 0 only when CLS is supported, since 0 is a valid score
+    if (cls > 0 || this.clsSupported) {
+      attrs['cls'] = cls
+    }
+
+    this.addTiming('lcp', lcpValue, attrs, false)
   }
 
   updateClsScore (clsEntry) {
@@ -159,16 +135,6 @@ export class Aggregate extends AggregateBase {
     })
 
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)
-  }
-
-  processTiming (name, value, attrs) {
-  // Upon user interaction, the Browser stops executing LCP logic, so we can send here
-  // We're using setTimeout to give the Browser time to finish collecting LCP value
-    if (name === 'fi') {
-      setTimeout((...args) => this.recordLcp(...args), 0)
-    }
-
-    this.addTiming(name, value, attrs, true)
   }
 
   onHarvestFinished (result) {

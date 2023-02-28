@@ -8,16 +8,12 @@ const jil = require('jil')
 const { setup } = require('./utils/setup')
 const { drain } = require('../../src/common/drain/drain')
 const { handle } = require('../../src/common/event-emitter/handle')
-const { setConfiguration } = require('../../src/common/config/state/init')
 const { Aggregate: PvtAggregate } = require('../../src/features/page_view_timing/aggregate/index')
 const { FEATURE_NAMES } = require('../../src/loaders/features/features')
 
 const { agentIdentifier, aggregator } = setup()
 
 jil.browserTest('sends expected attributes when available', function (t) {
-  // timeout causes LCP to be added to the queue of timings for next harvest
-  setConfiguration(agentIdentifier, { page_view_timing: { maxLCPTimeSeconds: 0.5 } })
-
   const pvtAgg = new PvtAggregate(agentIdentifier, aggregator)
 
   // override harvest calls, so that no network calls are made
@@ -51,11 +47,11 @@ jil.browserTest('sends expected attributes when available', function (t) {
   }
 
   // simulate LCP observed
-  handle('lcp', [lcpEntry, networkInfo], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
+  handle('lcp', [1, lcpEntry, networkInfo], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
 
   setTimeout(function () {
-    t.equals(pvtAgg.timings.length, 1, 'there should be only 2 timings (pageHide and unload)')
-    t.ok(pvtAgg.timings[0].name === 'lcp', 'lcp should be present')
+    t.equals(pvtAgg.timings.length, 1, 'there should be only 1 timing')
+    t.ok(pvtAgg.timings[0].name === 'lcp', 'which is lcp')
 
     const attributes = pvtAgg.timings[0].attrs
     t.equal(attributes.eid, 'some-element-id', 'eid should be present')

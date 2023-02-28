@@ -68,7 +68,7 @@ module.exports = fp(async function (fastify, testServer) {
 
   fastify.post('/session-replay', (request, reply) => {
     tempSessionReplay.push(...request.body.events)
-    console.log(tempSessionReplay)
+    console.log(tempSessionReplay.length)
   })
 
   fastify.get('/jsonp', (request, reply) => {

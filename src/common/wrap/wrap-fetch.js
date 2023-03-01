@@ -66,7 +66,7 @@ export function wrapFetch (sharedEE) {
         ee.emit(prefix + 'start', [args, dtPayload], origPromiseFromFetch)
 
         // Note we need to cast the returned (orig) Promise from native APIs into the current global Promise, which may or may not be our WrappedPromise.
-        return globalScope.Promise.resolve(origPromiseFromFetch).then(function (val) {
+        return origPromiseFromFetch.then(function (val) {
           ee.emit(prefix + 'end', [null, val], origPromiseFromFetch)
           return val
         }, function (err) {

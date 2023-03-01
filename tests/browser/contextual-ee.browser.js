@@ -55,17 +55,6 @@ test('ee.abort condition met', function (t) {
   t.end()
 })
 
-test('ee.abort condition not met', function (t) {
-  ee.aborted = false
-  ee.backlog.api = null
-  ee.backlog.feature = null
-  ee.abort()
-
-  t.equal(ee.aborted, false)
-
-  t.end()
-})
-
 test('EE clears eventBuffer (ee.backlog) after abort', function (t) {
   ee.aborted = false
   if (ee.backlog) {

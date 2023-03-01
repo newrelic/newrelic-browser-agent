@@ -11,14 +11,13 @@ jil.browserTest('spa single fetch', function (t) {
     name: 'interaction',
     children: [{
       name: 'ajax',
-      children: []
-    },
-    {
-      type: 'customTracer',
-      attrs: {
-        name: 'timer'
-      },
-      children: []
+      children: [{
+        type: 'customTracer',
+        attrs: {
+          name: 'timer'
+        },
+        children: []
+      }]
     }]
   })
 

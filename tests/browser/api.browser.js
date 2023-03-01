@@ -6,12 +6,10 @@
 import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
 import { getRuntime } from '../../src/common/config/config'
-import { Instrument as MetricsInstrum } from '../../src/features/metrics/instrument/index'
 import { Aggregate as MetricsAggreg } from '../../src/features/metrics/aggregate/index'
 
 const { aggregator: agg, agentIdentifier, nr } = setup()
 // api loads registers several event listeners, but does not have any exports
-new MetricsInstrum(agentIdentifier, agg, {}, false) // registers 'record-custom' which handles 'storeEventMetrics'
 new MetricsAggreg(agentIdentifier, agg) // registers 'storeEventMetrics'
 
 test('api', function (t) {

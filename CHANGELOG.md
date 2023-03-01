@@ -10,6 +10,8 @@ The interaction-to-next-paint metric is now calculated and reported at the end o
 
 ### Revert unwrapping of globals on agent abort
 Partial revert of graceful handling change made in v1225 that unwrapped modified global APIs and handlers, which caused integration issues with other wrapping libraries and code.
+### Add internal metrics to evaluate feasibility page resource harvests
+Internal metrics were added to track the feasibility and impact of collecting page resource information using the PerformanceObserver resource timings, such as scripts, images, network calls, and more. 
 
 ## v1226
 

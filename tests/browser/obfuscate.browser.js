@@ -6,15 +6,13 @@
 const jil = require('jil')
 import { setup } from './utils/setup'
 import { setConfiguration } from '../../src/common/config/config'
-import { Instrument as MetricsInstrum } from '../../src/features/metrics/instrument/index'
-import { Aggregate as MetricsAggreg } from '../../src/features/metrics/aggregate/index'
 import * as obfuscate from '../../src/common/util/obfuscate'
 import { setScope, resetScope } from '../../src/common/util/global-scope'
 
 const { aggregator, agentIdentifier } = setup()
-new MetricsInstrum(agentIdentifier, aggregator, {}, false)
-new MetricsAggreg(agentIdentifier, aggregator)
 const obfuscatorInst = new obfuscate.Obfuscator({ agentIdentifier })
+
+console.log('obfuscate...')
 
 var fileLocation = {
   hash: '',
@@ -79,6 +77,7 @@ var validationCases = [
 
 jil.browserTest('Obfuscation validateRules input', function (t) {
   validationCases.forEach(function (testCase) {
+    console.log('run test for ', testCase.name)
     t.test(testCase.name, function (t) {
       var result = obfuscate.validateRules([testCase.rule])
       t.equal(testCase.expected, result, 'expecting ' + testCase.expected)

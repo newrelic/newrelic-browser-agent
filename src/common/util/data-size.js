@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { stringify } from "./stringify"
+import { stringify } from './stringify'
 
 export function dataSize (data) {
   if (typeof data === 'string' && data.length) return data.length

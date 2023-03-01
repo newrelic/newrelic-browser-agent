@@ -91,9 +91,9 @@ export function wrapPromise (sharedEE) {
     /*
      * Ideally, we create a new WrappedPromise.prototype chained off the original Promise's so that we don't alter it.
      * However, there's no way to make the (native) promise returned from async functions use our WrappedPromise,
-     * so we have to modify the original prototype in essence. This ensures that "async()"" promise functions and runs the
-     * same instance methods as "new Promise()", and also that instanceof async() is the global Promise (see GH issue #409).
-     *  In addition, this affects the fetch() promise too.
+     * so we have to modify the original prototype. This ensures that promises returned from async functions execute
+     * the same instance methods as promises created with "new Promise()", and also that instanceof async() is
+     * the global Promise (see GH issue #409). This also affects the promise returned from fetch().
      */
     WrappedPromise.prototype = prevPromiseObj.prototype
 

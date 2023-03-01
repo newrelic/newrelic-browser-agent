@@ -8,6 +8,7 @@ const now = require('../../lib/now')
 const querypack = require('@newrelic/nr-querypack')
 
 let supported = testDriver.Matcher.withFeature('addEventListener')
+const notIE = testDriver.Matcher.withFeature('notInternetExplorer')
 
 testDriver.test('capturing SPA interactions', supported, function (t, browser, router) {
   t.plan(22)
@@ -179,7 +180,7 @@ testDriver.test('child nodes in SPA interaction does not exceed set limit', supp
   }
 })
 
-testDriver.test('promise wrapper should support instanceof comparison', function (t, browser, router) {
+testDriver.test('promise wrapper should support instanceof comparison', notIE, function (t, browser, router) {
   let rumPromise = router.expectRum()
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: 'spa' }))
 
@@ -193,16 +194,16 @@ testDriver.test('promise wrapper should support instanceof comparison', function
         t.notOk(err, 'should not get an error')
         t.ok(res, 'static Promise methods return is instanceof global Promise')
       })
-      await browser.safeEval('var p = fetch("example.com"); p instanceof Promise', (err, res) => {
-        t.notOk(err, 'should not get an error')
-        t.ok(res, 'fetch returned promise is an instance of global Promise')
-      })
-      if (!browser.match('ie@*')) {
-        await browser.safeEval('async function asyncP() {}; var p = asyncP(); p instanceof Promise', (err, res) => {
+      if (!browser.match('firefox@*')) { // *cli - FF over Sauce have trouble evaluating this to be 'true', even though it is when tested manually on local & SL
+        await browser.safeEval('var p = fetch("example.com"); p instanceof Promise', (err, res) => {
           t.notOk(err, 'should not get an error')
-          t.ok(res, 'async function returned promise is an instance of global Promise')
+          t.ok(res, 'fetch returned promise is an instance of global Promise')
         })
       }
+      await browser.safeEval('async function asyncP() {}; var p = asyncP(); p instanceof Promise', (err, res) => {
+        t.notOk(err, 'should not get an error')
+        t.ok(res, 'async function returned promise is an instance of global Promise')
+      })
       t.end()
     })
     .catch(fail)

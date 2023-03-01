@@ -67,11 +67,23 @@ InteractionNodePrototype.finish = function finish (timestamp) {
   var node = this
   if (node.end) return
   node.end = timestamp
-  var parent = node.parent
-  while (parent.cancelled) parent = parent.parent
-  parent.children.push(node)
-  node.parent = null
 
+  // Find the next parent node that is not cancelled
+  if (node.parent) {
+    let parent = node.parent
+    while (parent.cancelled) {
+      if (!parent.parent) break
+      parent = parent.parent
+    }
+
+    // Assign the node to the non-cancelled parent node
+    if (!parent.cancelled) {
+      parent.children.push(node)
+    }
+    node.parent = null
+  }
+
+  // Update the interaction remaining counter
   var interaction = this.interaction
   interaction.remaining--
   interaction.lastFinish = timestamp

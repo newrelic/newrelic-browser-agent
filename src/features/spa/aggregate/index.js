@@ -105,7 +105,7 @@ export class Aggregate extends AggregateBase {
     // if rum response determines that customer lacks entitlements for spa endpoint, block it
     register('block-spa', () => {
       blocked = true
-      scheduler.stopTimer()
+      scheduler.stopTimer(true)
     }, this.featureName, baseEE)
 
     if (!isEnabled()) return

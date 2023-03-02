@@ -1,4 +1,4 @@
-import { getConfigurationValue, getRuntime } from '../../../common/config/config'
+import { getRuntime } from '../../../common/config/config'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
@@ -15,27 +15,28 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
+    let scheduler
 
-    // Allow features external to the metrics feature to capture SMs and CMs through the event emitter
-    registerHandler(SUPPORTABILITY_METRIC_CHANNEL, this.storeSupportabilityMetrics.bind(this), this.featureName, this.ee)
-    registerHandler(CUSTOM_METRIC_CHANNEL, this.storeEventMetrics.bind(this), this.featureName, this.ee)
-
-    this.singleChecks() // checks that are run only one time, at script load
-    this.eachSessionChecks() // the start of every time user engages with page
-
-    var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'metrics.harvestTimeSeconds') || 30
-
-    var scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
-    scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
-    this.ee.on(`drain-${this.featureName}`, () => { if (!this.blocked) scheduler.startTimer(harvestTimeSeconds) })
-
-    // if rum response determines that customer lacks entitlements for err endpoint, block it
+    // If RUM-call's response determines that customer lacks entitlements for the /jserror ingest endpoint, don't harvest at all.
     registerHandler('block-err', () => {
       this.blocked = true
-      scheduler.stopTimer()
+      if (scheduler) scheduler.aborted = true // RUM response may or may not have happened already before scheduler initialization below
     }, this.featureName, this.ee)
 
-    drain(this.agentIdentifier, this.featureName)
+    if (!this.blocked) {
+      // Allow features external to the metrics feature to capture SMs and CMs through the event emitter
+      registerHandler(SUPPORTABILITY_METRIC_CHANNEL, this.storeSupportabilityMetrics.bind(this), this.featureName, this.ee)
+      registerHandler(CUSTOM_METRIC_CHANNEL, this.storeEventMetrics.bind(this), this.featureName, this.ee)
+
+      this.singleChecks() // checks that are run only one time, at script load
+      this.eachSessionChecks() // the start of every time user engages with page
+
+      // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
+      scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
+      scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
+    }
+
+    drain(this.agentIdentifier, this.featureName) // regardless if this is blocked or not, drain is needed to unblock other features from harvesting (counteract registerDrain)
   }
 
   storeSupportabilityMetrics (name, value) {

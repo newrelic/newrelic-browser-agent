@@ -16,17 +16,17 @@
     },
     {
       "browserName": "chrome",
-      "platform": "Windows 10",
-      "platformName": "Windows 10",
-      "version": "104",
-      "browserVersion": "104"
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
+      "version": "103",
+      "browserVersion": "103"
     },
     {
       "browserName": "chrome",
-      "platform": "Windows 10",
-      "platformName": "Windows 10",
-      "version": "101",
-      "browserVersion": "101"
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
+      "version": "100",
+      "browserVersion": "100"
     }
   ],
   "edge": [
@@ -48,15 +48,15 @@
       "browserName": "MicrosoftEdge",
       "platform": "Windows 11",
       "platformName": "Windows 11",
-      "version": "104",
-      "browserVersion": "104"
+      "version": "103",
+      "browserVersion": "103"
     },
     {
       "browserName": "MicrosoftEdge",
       "platform": "Windows 10",
       "platformName": "Windows 10",
-      "version": "101",
-      "browserVersion": "101"
+      "version": "100",
+      "browserVersion": "100"
     }
   ],
   "safari": [
@@ -87,12 +87,12 @@
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "104"
+      "version": "103"
     },
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "101"
+      "version": "100"
     }
   ],
   "android": [
@@ -106,7 +106,7 @@
       "appium:platformVersion": "9.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
-        "appiumVersion": "1.22.1"
+        "appiumVersion": "1.22.3"
       }
     }
   ],

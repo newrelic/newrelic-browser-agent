@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 /**
- * This module is used by: spa
+ * @file Wraps DOM insertion methods which in turn wrap JSONP functions that show up in the DOM.
+ * This module is used by: spa.
  */
+
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn, unwrapFunction } from './wrap-function'
@@ -13,6 +15,12 @@ import { isBrowserScope } from '../util/global-scope'
 const wrapped = {}
 const domInsertMethods = ['appendChild', 'insertBefore', 'replaceChild']
 
+/**
+ * Wraps DOM insertion methods to identify script elements containing JSONP callback functions and instruments those
+ * functions with custom events in the context of a new event emitter scoped only to JSONP.
+ * @param {Object} sharedEE - The shared event emitter on which a new scoped event emitter will be based.
+ * @returns {Object} Scoped event emitter with a debug ID of `jsonp`.
+ */
 export function wrapJsonP (sharedEE) {
   const ee = scopedEE(sharedEE)
 
@@ -113,6 +121,14 @@ export function wrapJsonP (sharedEE) {
   }
   return ee
 }
+
+/**
+ * Returns an event emitter scoped specifically for the `jsonp` context. This scoping is a remnant from when all the
+ * features shared the same group in the event, to isolate events between features. It will likely be revisited.
+ * @param {Object} sharedEE - Optional event emitter on which to base the scoped emitter.
+ *     Uses `ee` on the global scope if undefined).
+ * @returns {Object} Scoped event emitter with a debug ID of 'jsonp'.
+ */
 export function scopedEE (sharedEE) {
   return (sharedEE || baseEE).get('jsonp')
 }

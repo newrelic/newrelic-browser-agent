@@ -1,3 +1,7 @@
+/**
+ * @file Provides Babel configuration for CommonJS NPM package output.
+ */
+
 const babelEnv = require('./babel-env-vars')
 
 const presets = [

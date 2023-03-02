@@ -1,10 +1,29 @@
+/**
+ * @file Defines `InstrumentBase` to be used as the super of the Instrument classes implemented by each feature.
+ * Inherits and executes the `checkConfiguration` method from [FeatureBase]{@link ./feature-base}, which also
+ * exposes the `blocked` property.
+ */
+
 import { registerDrain } from '../../common/drain/drain'
 import { FeatureBase } from './feature-base'
 import { onWindowLoad } from '../../common/window/load'
 import { isWorkerScope } from '../../common/util/global-scope'
 import { warn } from '../../common/util/console'
 
+/**
+ * Base class for instrumenting a feature.
+ * @extends FeatureBase
+ */
 export class InstrumentBase extends FeatureBase {
+  /**
+   * Instantiate InstrumentBase.
+   * @param {string} agentIdentifier - The unique ID of the instantiated agent (relative to global scope).
+   * @param {Aggregator} aggregator - The shared Aggregator that will handle batching and reporting of data.
+   * @param {string} featureName - The name of the feature module (used to construct file path).
+   * @param {boolean} [auto=true] - Determines whether the feature should automatically register to have the draining
+   * of its pooled instrumentation data handled by the agent's centralized drain functionality, rather than draining
+   * immediately. Primarily useful for fine-grained control in tests.
+   */
   constructor (agentIdentifier, aggregator, featureName, auto = true) {
     super(agentIdentifier, aggregator, featureName)
     this.hasAggregator = false
@@ -16,7 +35,10 @@ export class InstrumentBase extends FeatureBase {
     if (auto) registerDrain(agentIdentifier, featureName)
   }
 
-  /** This is responsible for pulling in and executing the latter part of the feature--its aggregator. The first part--the instrumentation--should call this at the end of its setup. */
+  /**
+   * Lazy-load the latter part of the feature: its aggregator. This method is called by the first part of the feature
+   * (the instrumentation) when instrumentation is complete.
+   */
   importAggregator () {
     if (this.hasAggregator || !this.auto) return
     this.hasAggregator = true
@@ -38,7 +60,8 @@ export class InstrumentBase extends FeatureBase {
       }
     }
 
-    // Workers have no window load event, and so it's okay to run the feature's aggregator asap. For web UI, it should wait for the window to load first.
+    // For regular web pages, we want to wait and lazy-load the aggregator only after all page resources are loaded.
+    // Non-browser scopes (i.e. workers) have no `window.load` event, so the aggregator can be lazy-loaded immediately.
     if (isWorkerScope) importLater()
     else onWindowLoad(() => importLater(), true)
   }

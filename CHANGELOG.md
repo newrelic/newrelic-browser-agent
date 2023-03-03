@@ -17,6 +17,9 @@ Internal metrics were added to track the feasibility and impact of collecting pa
 ### Add resiliency around SPA interaction saving
 Added resiliency code around SPA interaction node save functionality to ensure a cancelled interaction node without a parent further up the interaction tree does not cause an exception to be raised from the agent.
 
+### Collect supportability metrics at the end of page life
+Collate all of the internal statistic metrics calls, which today is sent at start and periodically, into one call made when the end user is leaving the page.
+
 ## v1226
 
 ### Revert xhr deny list timeslice metrics 

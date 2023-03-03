@@ -39,7 +39,7 @@ export class Aggregate extends AggregateBase {
     // if rum response determines that customer lacks entitlements for ins endpoint, block it
     register('block-ins', () => {
       this.blocked = true
-      scheduler.stopTimer()
+      scheduler.stopTimer(true)
     }, this.featureName, this.ee)
 
     drain(this.agentIdentifier, this.featureName)

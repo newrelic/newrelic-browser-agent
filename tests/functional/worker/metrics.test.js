@@ -21,8 +21,7 @@ function metricsApiCreatesSM (type, browserVersionMatcher) {
     function (t, browser, router) {
       let assetURL = router.assetURL(`worker/${type}-worker.html`, {
         init: {
-          jserrors: { enabled: false },
-          metrics: { harvestTimeSeconds: 5 }
+          jserrors: { enabled: false }
         },
         workerCommands: [() => {
           newrelic.noticeError('too many free taco coupons')
@@ -37,10 +36,11 @@ function metricsApiCreatesSM (type, browserVersionMatcher) {
           newrelic.setPageViewName('test')
           newrelic.setPageViewName('test')
           newrelic.setPageViewName('test')
+          self.close()
         }].map(x => x.toString())
       })
       const loadPromise = browser.get(assetURL)
-      const metricsPromise = router.expectMetrics()
+      const metricsPromise = router.expectMetrics(5000)
       const observedAPImetrics = []
 
       Promise.all([metricsPromise, loadPromise])
@@ -81,11 +81,11 @@ function metricsValidObfuscationCreatesSM (type, browserVersionMatcher) {
           }],
           ajax: { harvestTimeSeconds: 2 },
           jserrors: { enabled: false },
-          ins: { harvestTimeSeconds: 2 },
-          metrics: { harvestTimeSeconds: 5 }
+          ins: { harvestTimeSeconds: 2 }
         },
         workerCommands: [() => {
           setTimeout(function () {
+            setTimeout(() => self.close(), 100)
             fetch('/tests/assets/obfuscate-pii-valid.html')
             throw new Error('pii')
           }, 100)
@@ -94,7 +94,7 @@ function metricsValidObfuscationCreatesSM (type, browserVersionMatcher) {
         }].map(x => x.toString())
       })
       const loadPromise = browser.get(assetURL)
-      const metricsPromise = router.expectSupportMetrics()
+      const metricsPromise = router.expectMetrics(5000)
 
       Promise.all([metricsPromise, loadPromise])
         .then(([{ request: data }]) => {
@@ -127,11 +127,11 @@ function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
           obfuscate: [badObfusRulesArr[badRuleNum]],
           ajax: { harvestTimeSeconds: 2 },
           jserrors: { enabled: false },
-          ins: { harvestTimeSeconds: 2 },
-          metrics: { harvestTimeSeconds: 5 }
+          ins: { harvestTimeSeconds: 2 }
         },
         workerCommands: [() => {
           setTimeout(function () {
+            setTimeout(() => self.close(), 100)
             fetch('/tests/assets/obfuscate-pii-valid.html')
             throw new Error('pii')
           }, 100)
@@ -141,7 +141,7 @@ function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
       })
 
       const loadPromise = browser.get(assetURL)
-      const metricsPromise = router.expectSupportMetrics()
+      const metricsPromise = router.expectMetrics(5000)
 
       Promise.all([metricsPromise, loadPromise])
         .then(([{ request: data }]) => {
@@ -162,8 +162,7 @@ function metricsWorkersCreateSM (type, browserVersionMatcher) {
     function (t, browser, router) {
       let assetURL = router.assetURL(`worker/${type}-worker.html`, {
         init: {
-          jserrors: { enabled: false },
-          metrics: { harvestTimeSeconds: 5 }
+          jserrors: { enabled: false }
         },
         workerCommands: [() => {
           try {
@@ -184,10 +183,11 @@ function metricsWorkersCreateSM (type, browserVersionMatcher) {
           } catch (e) {
             console.warn(e)
           }
+          self.close()
         }].map(x => x.toString())
       })
       const loadPromise = browser.get(assetURL)
-      const metricsPromise = router.expectSupportMetrics()
+      const metricsPromise = router.expectMetrics(5000)
 
       Promise.all([metricsPromise, loadPromise])
         .then(([data]) => {

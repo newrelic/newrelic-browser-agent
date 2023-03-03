@@ -32,6 +32,7 @@ export function parseUrl (url) {
     try {
       urlEl = new URL(url, location.href)
     } catch (err) {
+      // IE doesn't support URL(), so for IE non-web contexts (e.g. workers), `parseUrl` will return the default `{}`.
       return ret
     }
   }

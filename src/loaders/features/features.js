@@ -9,8 +9,10 @@ export const FEATURE_NAMES = {
   spa: 'spa'
 }
 
-// this is the instrumentation order that has been traditionally implemented.
-// unclear if there are any ramifications for the order of wrapping events, so enforcing this order intentionally for now
+/**
+ * The order in which features will be instrumented. This is the traditional order. It's unclear if the order of
+ * wrapping events has any ramifications, so we are enforcing this order intentionally for now.
+ */
 export const featurePriority = {
   [FEATURE_NAMES.pageViewEvent]: 1,
   [FEATURE_NAMES.pageViewTiming]: 2,

@@ -17,7 +17,7 @@ const wrapped = {}
 /**
  * Wraps the native Promise object so that it will emit events for start, end and error in the context of a new event
  * emitter scoped only to promise methods. Also instruments various methods, such as `all`, `race`, `resolve`,
- * `reject`, `then`, and `catch`. 
+ * `reject`, `then`, and `catch`.
  * @param {Object} sharedEE - The shared event emitter on which a new scoped event emitter will be based.
  * @returns {Object} Scoped event emitter with a debug ID of `promise`.
  */

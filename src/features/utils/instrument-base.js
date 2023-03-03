@@ -21,8 +21,8 @@ export class InstrumentBase extends FeatureBase {
    * @param {Aggregator} aggregator - The shared Aggregator that will handle batching and reporting of data.
    * @param {string} featureName - The name of the feature module (used to construct file path).
    * @param {boolean} [auto=true] - Determines whether the feature should automatically register to have the draining
-   * of its pooled instrumentation data handled by the agent's centralized drain functionality, rather than draining
-   * immediately. Primarily useful for fine-grained control in tests.
+   *     of its pooled instrumentation data handled by the agent's centralized drain functionality, rather than draining
+   *     immediately. Primarily useful for fine-grained control in tests.
    */
   constructor (agentIdentifier, aggregator, featureName, auto = true) {
     super(agentIdentifier, aggregator, featureName)

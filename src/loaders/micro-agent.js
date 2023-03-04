@@ -43,6 +43,7 @@ export class MicroAgent {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
       autoFeatures.forEach(f => {
         if (enabledFeatures[f]) {
+          // TODO - THIS does not work, the instrument switch in lazy loader increases the size of the worker build.  Needs to be revisited
           import(/* webpackChunkName: "lazy-loader" */ '../features/utils/lazy-loader').then(({ lazyLoader }) => {
             return lazyLoader(f, 'instrument')
           }).then(({ Instrument }) => {
@@ -53,6 +54,7 @@ export class MicroAgent {
       })
       nonAutoFeatures.forEach(f => {
         if (enabledFeatures[f]) {
+          // TODO - THIS does not work, the instrument switch in lazy loader increases the size of the worker build.  Needs to be revisited
           import(/* webpackChunkName: "lazy-loader" */ '../features/utils/lazy-loader').then(({ lazyLoader }) => {
             return lazyLoader(f, 'aggregate')
           }).then(({ Aggregate }) => {

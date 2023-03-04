@@ -26,10 +26,10 @@ submitData.jsonp = function jsonp (url, jsonp) {
  * @param {boolean} sync
  * @returns {XMLHttpRequest}
  */
-submitData.xhr = function xhr (url, body, sync) {
+submitData.xhr = function xhr (url, body, sync, method = 'POST') {
   var request = new XMLHttpRequest()
 
-  request.open('POST', url, !sync)
+  request.open(method, url, !sync)
   try {
     // Set cookie
     if ('withCredentials' in request) request.withCredentials = true

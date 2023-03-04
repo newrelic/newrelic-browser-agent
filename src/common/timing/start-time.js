@@ -37,6 +37,7 @@ function findStartWebTiming () {
     navCookie = false
     return globalScope?.performance?.timing?.navigationStart
   }
+  return Math.round(globalScope?.performance?.timeOrigin)
 }
 /*
 // Find the start time based on a cookie set by Episodes in the unload handler.

@@ -10,6 +10,7 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
+import { globalScope } from '../../../common/util/global-scope'
 
 const jsonp = 'NREUM.setToken'
 
@@ -44,7 +45,6 @@ export class Aggregate extends AggregateBase {
       return '&' + metricName + '=' + measure.params.value
     }).join('')
 
-    // if (measuresQueryString) {
     // currently we only have one version of our protocol
     // in the future we may add more
     var protocol = '1'
@@ -61,16 +61,16 @@ export class Aggregate extends AggregateBase {
     chunksForQueryString.push(param('pr', info.product))
     chunksForQueryString.push(param('af', getActivatedFeaturesFlags(this.agentIdentifier).join(',')))
 
-    if (window.performance && typeof (window.performance.timing) !== 'undefined') {
+    if (globalScope.performance && typeof (globalScope.performance.timing) !== 'undefined') {
       var navTimingApiData = ({
-        timing: addPT(window.performance.timing, {}),
-        navigation: addPN(window.performance.navigation, {})
+        timing: addPT(globalScope.performance.timing, {}),
+        navigation: addPN(globalScope.performance.navigation, {})
       })
       chunksForQueryString.push(param('perf', stringify(navTimingApiData)))
     }
 
-    if (window.performance && window.performance.getEntriesByType) {
-      var entries = window.performance.getEntriesByType('paint')
+    if (globalScope.performance && globalScope.performance.getEntriesByType) {
+      var entries = globalScope.performance.getEntriesByType('paint')
       if (entries && entries.length > 0) {
         entries.forEach(function (entry) {
           if (!entry.startTime || entry.startTime <= 0) return
@@ -95,10 +95,8 @@ export class Aggregate extends AggregateBase {
     chunksForQueryString.push(param('ja', customJsAttributes === '{}' ? null : customJsAttributes))
 
     var queryString = fromArray(chunksForQueryString, agentRuntime.maxBytes)
-
-    submitData.jsonp(
-      this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString,
-      jsonp
-    )
+    const url = this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString
+    if (globalScope?.document) submitData.jsonp(url, jsonp)
+    else submitData.xhr(url, undefined, undefined, 'GET')
   }
 }

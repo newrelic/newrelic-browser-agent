@@ -2,6 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import { isWorkerScope } from './global-scope'
 export const submitData = {}
 
 /**
@@ -11,12 +12,20 @@ export const submitData = {}
  * @returns {Element}
  */
 submitData.jsonp = function jsonp (url, jsonp) {
-  var element = document.createElement('script')
-  element.type = 'text/javascript'
-  element.src = url + '&jsonp=' + jsonp
-  var firstScript = document.getElementsByTagName('script')[0]
-  firstScript.parentNode.insertBefore(element, firstScript)
-  return element
+  try {
+    if (isWorkerScope) {
+      importScripts(url + '&jsonp=' + jsonp)
+    } else {
+      var element = document.createElement('script')
+      element.type = 'text/javascript'
+      element.src = url + '&jsonp=' + jsonp
+      var firstScript = document.getElementsByTagName('script')[0]
+      firstScript.parentNode.insertBefore(element, firstScript)
+      return element
+    }
+  } catch (err) {
+  // do nothing
+  }
 }
 
 /**

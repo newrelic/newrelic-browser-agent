@@ -3,6 +3,8 @@ import { getEnabledFeatures } from './features/enabled-features'
 import { configure } from './configure/configure'
 import { getFeatureDependencyNames } from './features/featureDependencies'
 import { featurePriority, FEATURE_NAMES } from './features/features'
+// required features
+import { Instrument as PageViewEvent } from '../features/page_view_event/instrument'
 // common files
 import { Aggregator } from '../common/aggregate/aggregator'
 import { gosNREUM, gosNREUMInitializedAgents } from '../common/window/nreum'
@@ -16,8 +18,12 @@ export class Agent {
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
 
-    this.desiredFeatures = options.features || [] // expected to be a list of static Instrument/InstrumentBase classes, see "spa.js" for example
-    this.desiredFeatures.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
+    this.desiredFeatures = new Set(options.features || []) // expected to be a list of static Instrument/InstrumentBase classes, see "spa.js" for example
+
+    // For Now... ALL agents must make the rum call whether the page_view_event feature was enabled or not.
+    // NR1 creates an index on the rum call, and if not seen for a few days, will remove the browser app!
+    // Future work is being planned to evaluate removing this behavior from the backend, but for now we must ensure this call is made
+    this.desiredFeatures.add(PageViewEvent)
 
     Object.assign(this, configure(this.agentIdentifier, options, options.loaderType || 'agent'))
 
@@ -38,8 +44,10 @@ export class Agent {
     // Attempt to initialize all the requested features (sequentially in prio order & synchronously), with any failure aborting the whole process.
     try {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
-      this.desiredFeatures.forEach(f => {
-        if (enabledFeatures[f.featureName]) {
+      const featuresToStart = Array.from(this.desiredFeatures)
+      featuresToStart.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
+      featuresToStart.forEach(f => {
+        if (enabledFeatures[f.featureName] || f.featureName === FEATURE_NAMES.pageViewEvent) {
           const dependencies = getFeatureDependencyNames(f.featureName)
           const hasAllDeps = dependencies.every(x => enabledFeatures[x])
           if (!hasAllDeps) warn(`${f.featureName} is enabled but one or more dependent features has been disabled (${JSON.stringify(dependencies)}). This may cause unintended consequences or missing data...`)
@@ -47,15 +55,6 @@ export class Agent {
         }
       })
       gosNREUMInitializedAgents(this.agentIdentifier, this.features, NR_FEATURES_REF_NAME)
-
-      // For Now... ALL agents must make the rum call whether the page_view_event feature is enabled or not.
-      // NR1 creates an index on the rum call, and if not seen for a few days, will remove the browser app!
-      // Future work is being planned to remove this behavior from the backend, but for now we must ensure this call is made
-      if (!this.desiredFeatures.some(x => x.featureName === FEATURE_NAMES.pageViewEvent)) {
-        import('../features/page_view_event/instrument').then(({ Instrument }) => {
-          new Instrument(this.agentIdentifier, this.sharedAggregator)
-        })
-      }
     } catch (err) {
       warn('Failed to initialize all enabled instrument classes (agent aborted) -', err)
       for (const featName in this.features) { // this.features hold only features that have been instantiated

@@ -27,10 +27,9 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   setAPI(agentIdentifier, api, forceDrain)
   gosNREUMInitializedAgents(agentIdentifier, nr, 'api')
   gosNREUMInitializedAgents(agentIdentifier, exposed, 'exposed')
-  if (!isWorkerScope) {
-    addToNREUM('activatedFeatures', activatedFeatures)
-    addToNREUM('setToken', (flags) => activateFeatures(flags, agentIdentifier))
-  }
+
+  addToNREUM('activatedFeatures', activatedFeatures)
+  addToNREUM('setToken', (flags) => activateFeatures(flags, agentIdentifier))
 
   return api
 }

@@ -96,7 +96,6 @@ export class Aggregate extends AggregateBase {
 
     var queryString = fromArray(chunksForQueryString, agentRuntime.maxBytes)
     const url = this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString
-    if (globalScope?.document) submitData.jsonp(url, jsonp)
-    else submitData.xhr(url, undefined, undefined, 'GET')
+    submitData.jsonp(url, jsonp)
   }
 }

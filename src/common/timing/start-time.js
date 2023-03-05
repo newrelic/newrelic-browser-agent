@@ -35,9 +35,8 @@ function findStartWebTiming () {
   if (performanceCheckExists) {
     // note that we don't need to use a cookie to record navigation start time
     navCookie = false
-    return globalScope?.performance?.timing?.navigationStart
+    return Math.round(globalScope?.performance?.timeOrigin)
   }
-  return Math.round(globalScope?.performance?.timeOrigin)
 }
 /*
 // Find the start time based on a cookie set by Episodes in the unload handler.

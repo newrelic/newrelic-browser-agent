@@ -95,7 +95,9 @@ export class Aggregate extends AggregateBase {
     chunksForQueryString.push(param('ja', customJsAttributes === '{}' ? null : customJsAttributes))
 
     var queryString = fromArray(chunksForQueryString, agentRuntime.maxBytes)
-    const url = this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString
-    submitData.jsonp(url, jsonp)
+    submitData.jsonp(
+      this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString,
+      jsonp
+    )
   }
 }

@@ -35,8 +35,9 @@ function ajaxEventsEnabled (type, browserVersionMatcher) {
 
       const loadPromise = browser.get(assetURL)
       const ajaxPromise = router.expectAjaxEvents(7000)
+      const rumPromise = router.expectRum()
 
-      Promise.all([ajaxPromise, loadPromise])
+      Promise.all([ajaxPromise, rumPromise, loadPromise])
         .then(([{ request }]) => {
           const requests = querypack.decode(request.body)
 
@@ -87,8 +88,9 @@ function ajaxEventsPayload (type, browserVersionMatcher) {
         router.expectAjaxEvents(7000),
         router.expectAjaxEvents(14000)
       ])
+      const rumPromise = router.expectRum()
 
-      Promise.all([ajaxPromise, loadPromise])
+      Promise.all([ajaxPromise, rumPromise, loadPromise])
         .then(([responses]) => {
           t.ok(responses)
       	t.end()
@@ -128,8 +130,9 @@ function ajaxDTInfo (type, browserVersionMatcher) {
 
       const loadPromise = browser.get(assetURL)
       const ajaxPromise = router.expectAjaxEvents(7000)
+      const rumPromise = router.expectRum()
 
-      Promise.all([ajaxPromise, loadPromise])
+      Promise.all([ajaxPromise, rumPromise, loadPromise])
         .then(([{ request }]) => {
           const requests = querypack.decode(request.body)
             .filter(r => r.path === '/json')

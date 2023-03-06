@@ -11,6 +11,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
 import { globalScope } from '../../../common/util/global-scope'
+import { drain } from '../../../common/drain/drain'
 
 const jsonp = 'NREUM.setToken'
 
@@ -95,9 +96,10 @@ export class Aggregate extends AggregateBase {
     chunksForQueryString.push(param('ja', customJsAttributes === '{}' ? null : customJsAttributes))
 
     var queryString = fromArray(chunksForQueryString, agentRuntime.maxBytes)
-    submitData.jsonp(
+    const isValidJsonp = submitData.jsonp(
       this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString,
       jsonp
     )
+    if (!isValidJsonp) drain(this.agentIdentifier, this.featureName)
   }
 }

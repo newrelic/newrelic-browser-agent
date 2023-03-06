@@ -23,7 +23,7 @@ function paSubmission (type, supportRegOrESMWorker) {
     let loadPromise = browser.get(assetURL)
     let insPromise = router.expectIns()
 
-    Promise.all([loadPromise, insPromise])
+    Promise.all([loadPromise, insPromise, router.expectRum()])
       .then(([/* loadPromise junk */, { request }]) => {
         t.equal(request.method, 'POST', 'first PageAction submission is a POST')
         t.notOk(request.query.ins, 'query string does not include ins parameter')
@@ -52,7 +52,7 @@ function paRetry (type, supportRegOrESMWorker) {
     let insPromise = router.expectIns()
     let firstBody
 
-    Promise.all([loadPromise, insPromise])
+    Promise.all([loadPromise, insPromise, router.expectRum()])
       .then(([, insResult]) => {
         t.equal(insResult.reply.statusCode, 429, 'server responded with 429')
         firstBody = JSON.parse(insResult.request.body)
@@ -87,7 +87,7 @@ function paPrecedence (type, supportRegOrESMWorker) {
     let loadPromise = browser.get(assetURL)
     let insPromise = router.expectIns()
 
-    Promise.all([loadPromise, insPromise])
+    Promise.all([loadPromise, insPromise, router.expectRum()])
       .then(([, { request }]) => {
         precValidatePageActionData(JSON.parse(request.body).ins)
         t.end()

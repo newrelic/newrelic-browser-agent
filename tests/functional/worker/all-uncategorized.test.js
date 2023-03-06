@@ -31,8 +31,9 @@ function apiFinished (type, browserVersionMatcher) {
 
       let loadPromise = browser.get(assetURL)
       let insPromise = router.expectIns()
+      const rumPromise = router.expectRum()
 
-      Promise.all([loadPromise, insPromise])
+      Promise.all([loadPromise, insPromise, rumPromise])
         .then(([/* loadPromise junk */, { request: { body } }]) => {
           let insData = JSON.parse(body).ins
           t.equal(insData.length, 1, 'exactly 1 PageAction was submitted')
@@ -61,8 +62,9 @@ function apiAddReleaseTooMany (type, browserVersionMatcher) {
 
       let loadPromise = browser.get(assetURL)
       let errPromise = router.expectErrors()
+      const rumPromise = router.expectRum()
 
-      Promise.all([loadPromise, errPromise])
+      Promise.all([loadPromise, errPromise, rumPromise])
         .then(([, { request: { query } }]) => {
           const queryRi = JSON.parse(query.ri)
           const ri = {}
@@ -97,11 +99,12 @@ function apiAddReleaseTooLong (type, browserVersionMatcher) {
 
       let loadPromise = browser.get(assetURL)
       let errPromise = router.expectErrors()
+      const rumPromise = router.expectRum()
       const ninetyNineY = 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy'
       const oneHundredX = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
       const twoHundredCharacterString = ninetyNineY + oneHundredX + 'q'
 
-      Promise.all([loadPromise, errPromise])
+      Promise.all([loadPromise, errPromise, rumPromise])
         .then(([, { request: { query } }]) => {
           const queryRi = JSON.parse(query.ri)
           const ri = {
@@ -132,8 +135,9 @@ function apiAddReleaseNotUsed (type, browserVersionMatcher) {
 
       let loadPromise = browser.get(assetURL)
       let errPromise = router.expectErrors()
+      const rumPromise = router.expectRum()
 
-      Promise.all([loadPromise, errPromise])
+      Promise.all([loadPromise, errPromise, rumPromise])
         .then(([, { request: { query } }]) => {
           t.notOk('ri' in query, 'should not have ri query param')
       	t.end()
@@ -158,7 +162,7 @@ function harvestReferrerSent (type, browserVersionMatcher) {
       const loadPromise = browser.get(assetURL)
       const ajaxPromise = router.expectAjaxEvents()	// used in place of RUM call that dne in workers
 
-      Promise.all([ajaxPromise, loadPromise])
+      Promise.all([ajaxPromise, loadPromise, router.expectRum()])
         .then(([{ request: { query } }]) => {
           t.ok(query.ref, 'The query string should include the ref attribute.')
 
@@ -186,7 +190,7 @@ function harvestSessionIsNullWhenEnabled (type, browserVersionMatcher) {
       const loadPromise = browser.get(assetURL)
       const ajaxPromise = router.expectAjaxEvents()	// used in place of RUM call that dne in workers
 
-      Promise.all([ajaxPromise, loadPromise])
+      Promise.all([ajaxPromise, loadPromise, router.expectRum()])
         .then(([{ request: { query } }]) => {
           t.equal(query.ck, '0', "The cookie flag ('ck') should equal 0.")
     		t.equal(query.s, '0', "The session id attr 's' should be 0.")
@@ -244,7 +248,7 @@ function obfuscateAll (type, browserVersionMatcher) {
       const errorsPromise = router.expectErrors()
       const insPromise = router.expectIns()
 
-      Promise.all([loadPromise, ajaxPromise, errorsPromise, insPromise])
+      Promise.all([loadPromise, ajaxPromise, errorsPromise, insPromise, router.expectRum()])
         .then(([, ajaxResponse, errorsResponse, insResponse]) => {
           checkPayload(t, ajaxResponse.request.body, 'AJAX')
           checkPayload(t, errorsResponse.request.body, 'Errors')

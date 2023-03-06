@@ -34,7 +34,7 @@ function externalTest (type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{ request }]) => {
+    Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request }]) => {
       const { err } = JSON.parse(request.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')

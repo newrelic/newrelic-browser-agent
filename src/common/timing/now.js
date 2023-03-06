@@ -3,13 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { exists } from './performance-check'
-
 var lastTimestamp = new Date().getTime()
 var offset = lastTimestamp
 
 export function now () {
-  if (exists && performance.now) {
+  if (performance?.now) {
     return Math.round(performance.now())
   }
   // ensure a new timestamp is never smaller than a previous timestamp

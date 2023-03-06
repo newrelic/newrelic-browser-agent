@@ -65,7 +65,7 @@ testDriver.test('agent tracks resources seen', withUnload, function (t, browser,
       t.ok(nonAjaxInternal.stats.c > 0, 'Non-Ajax External has a value')
       t.ok(nonAjaxExternal.stats.c >= 2, 'Non-Ajax Internal has the correct value')
       t.ok(ajaxInternal.stats.c >= 2, 'Ajax Internal has the correct value')
-      t.equal(ajaxExternal.stats.c > 0, 'Ajax External has the correct value')
+      t.ok(ajaxExternal.stats.c > 0, 'Ajax External has the correct value')
       t.end()
     })
     .catch(failWithEndTimeout(t))

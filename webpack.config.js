@@ -4,11 +4,13 @@ const webpack = require('webpack')
 const fs = require('fs')
 const { merge } = require('webpack-merge')
 const babelEnv = require('./babel-env-vars')
+const pkg = require('./package.json')
+
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 let { PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE } = process.env
 // this will change to package.json.version when it is aligned between all the packages
-let VERSION = VERSION_OVERRIDE || fs.readFileSync('./VERSION', 'utf-8')
+let VERSION = VERSION_OVERRIDE || pkg.version
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
 
 switch (PUBLISH) {

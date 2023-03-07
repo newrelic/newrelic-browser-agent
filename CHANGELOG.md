@@ -34,6 +34,9 @@ The agent will attempt to handle niche objects throw from `unhandledPromiseRejec
 ### Disable metrics for missing entitlement
 Fixing issue where metrics harvesting was not being halted when the agent RUM call indicated the account did not have entitlement to the jserrors endpoint. Before this change, customers missing this entitlement would see network calls to the New Relic jserrors endpoint result in 403 or 409 errors.
 
+### All agents must make a connect call for NR1 entity synthesis
+This change forces all agents to call ingest at runtime to ensure that entities can be synthesized in NR1.  This particularly pertains to any bespoke agent builds that did not utilize the `page_view_event` feature.
+
 ## v1225
 
 ### Gracefully abort agent if not fully instantiated

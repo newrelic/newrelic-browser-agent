@@ -47,6 +47,7 @@ export class Agent {
       const featuresToStart = Array.from(this.desiredFeatures)
       featuresToStart.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
       featuresToStart.forEach(f => {
+        // pageViewEvent must be enabled because RUM calls are not optional. See comment in constructor and PR 428.
         if (enabledFeatures[f.featureName] || f.featureName === FEATURE_NAMES.pageViewEvent) {
           const dependencies = getFeatureDependencyNames(f.featureName)
           const hasAllDeps = dependencies.every(x => enabledFeatures[x])

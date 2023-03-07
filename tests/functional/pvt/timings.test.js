@@ -685,7 +685,7 @@ function runLcpTests (loader) {
 function runLongTasksTest (loader) {
   testDriver.test(`${loader}: emits long task timings when observed`, supportsLT, function (t, browser, router) {
     const rumPromise = router.expectRum()
-    const loadPromise = browser.safeGet(router.assetURL('long-tasks.html', { loader: loader }))
+    const loadPromise = browser.safeGet(router.assetURL('long-tasks.html', { loader: loader, init: { page_view_timing: { long_task: true } } }))
       .waitForConditionInBrowser('window.tasksDone === true')
 
     Promise.all([rumPromise, loadPromise])

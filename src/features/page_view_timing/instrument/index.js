@@ -6,7 +6,7 @@ import { handle } from '../../../common/event-emitter/handle'
 import { subscribeToVisibilityChange, initializeHiddenTime } from '../../../common/window/page-visibility'
 import { documentAddEventListener, windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { getOffset, now } from '../../../common/timing/now'
-import { originals } from '../../../common/config/config'
+import { getConfigurationValue, originals } from '../../../common/config/config'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
@@ -62,9 +62,11 @@ export class Instrument extends InstrumentBase {
       handle('timing', [name.toLowerCase(), value, { metricId: id }], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     })
 
-    onLongTask(({ name, value, info }) => {
-      handle('timing', [name.toLowerCase(), value, info], undefined, FEATURE_NAMES.pageViewTiming, this.ee) // lt context is passed as attrs in the timing node
-    })
+    if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) {
+      onLongTask(({ name, value, info }) => {
+        handle('timing', [name.toLowerCase(), value, info], undefined, FEATURE_NAMES.pageViewTiming, this.ee) // lt context is passed as attrs in the timing node
+      })
+    }
 
     // Document visibility state becomes hidden
     subscribeToVisibilityChange(() => {

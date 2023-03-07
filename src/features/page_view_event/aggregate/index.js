@@ -100,6 +100,8 @@ export class Aggregate extends AggregateBase {
       this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString,
       jsonp
     )
+    // Usually `drain` is invoked automatically after processing feature flags contained in the JSONP callback from
+    // ingest (see `activateFeatures`), so when JSONP cannot execute (as with module workers), we drain manually.
     if (!isValidJsonp) drain(this.agentIdentifier, this.featureName)
   }
 }

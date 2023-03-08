@@ -6,7 +6,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## v1227
 
 ### Added INP and long tasks reporting
-The interaction-to-next-paint metric is now calculated and reported at the end of user sessions, via [Google CWV](https://github.com/GoogleChrome/web-vitals) library. In addition, long continuously executed and blocking scripts detected by the PerformanceLongTaskTiming API is also forwarded to New Relic.
+The interaction-to-next-paint metric is now calculated and reported at the end of user sessions, via the [Google CWV](https://github.com/GoogleChrome/web-vitals) library. In addition, long continuously executed and blocking scripts detected by the PerformanceLongTaskTiming API are also forwarded to New Relic. This latter functionality is `off` by default, until a curated UI experience is created to utilize this data.
 
 ### Revert unwrapping of globals on agent abort
 Partial revert of graceful handling change made in v1225 that unwrapped modified global APIs and handlers, which caused integration issues with other wrapping libraries and code.
@@ -33,6 +33,9 @@ The agent will attempt to handle niche objects throw from `unhandledPromiseRejec
 
 ### Disable metrics for missing entitlement
 Fixing issue where metrics harvesting was not being halted when the agent RUM call indicated the account did not have entitlement to the jserrors endpoint. Before this change, customers missing this entitlement would see network calls to the New Relic jserrors endpoint result in 403 or 409 errors.
+
+### All agents must make a connect call for NR1 entity synthesis
+This change forces all agents to call ingest at runtime to ensure that entities can be synthesized in NR1.  This particularly pertains to any bespoke agent builds that did not utilize the `page_view_event` feature.
 
 ## v1225
 

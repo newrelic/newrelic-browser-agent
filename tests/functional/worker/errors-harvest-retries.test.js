@@ -38,7 +38,7 @@ function errorRetryTest (type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([response]) => {
+    Promise.all([errPromise, loadPromise, router.expectRum()]).then(([response]) => {
       t.equal(response.reply.statusCode, 429, 'server responded with 429')
       firstBody = JSON.parse(response.request.body).err
       return router.expectErrors()

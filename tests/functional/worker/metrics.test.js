@@ -143,7 +143,7 @@ function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
       const loadPromise = browser.get(assetURL)
       const metricsPromise = router.expectMetrics(5000)
 
-      Promise.all([metricsPromise, loadPromise])
+      Promise.all([metricsPromise, loadPromise, router.expectRum()])
         .then(([{ request: data }]) => {
           const supportabilityMetrics = getMetricsFromResponse(data, true)
           t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')

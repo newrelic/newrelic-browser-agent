@@ -29,7 +29,7 @@ function addEventListenerPatched (type, browserVersionMatcher) {
             return function () {
               var args = Array.prototype.slice.call(arguments)
               wrapperInvoked = true
-              callback.apply(window, args)
+              callback.apply(self, args)
             }
           }
 

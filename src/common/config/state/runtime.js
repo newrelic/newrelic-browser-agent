@@ -1,4 +1,4 @@
-import { getLastTimestamp } from '../../timing/now'
+import { findStartTime } from '../../timing/start-time'
 import * as userAgent from '../../util/user-agent'
 import { Configurable } from './configurable'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
@@ -13,7 +13,7 @@ const model = agentId => { return {
   isolatedBacklog: false,
   loaderType: undefined,
   maxBytes: 30000,
-  offset: getLastTimestamp(),
+  offset: findStartTime(),
   onerror: undefined,
   origin: '' + globalScope.location,
   ptid: undefined,

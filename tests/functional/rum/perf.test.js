@@ -7,9 +7,7 @@ const testDriver = require('../../../tools/jil/index')
 
 let withTls = testDriver.Matcher.withFeature('tls')
 
-testDriver.test('RUM backend time', withTls, function (t, browser, router) {
-  t.plan(1)
-
+testDriver.test('RUM perf times should not be negative', withTls, function (t, browser, router) {
   let url = router.assetURL('instrumented.html')
 
   let rumPromise = router.expectRum()
@@ -20,7 +18,10 @@ testDriver.test('RUM backend time', withTls, function (t, browser, router) {
       return Promise.all([router.expectRum(), browser.get(url)])
     })
     .then(([{ request: { query } }]) => {
-      t.ok(+query.be > 0, 'Backend time of ' + query.be + ' > 0')
+      const perf = JSON.parse(query.perf)
+      t.ok(perf.timing && perf.navigation, 'perf object exists')
+      t.ok(Object.values(perf.timing).every(x => x >= 0), 'All perf values are positive')
+      t.end()
     })
     .catch(fail)
 

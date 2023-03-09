@@ -149,7 +149,7 @@ function harvestRetried (type, browserVersionMatcher) {
         init: {
           harvest: { tooManyRequestsDelay: 10 },
           ajax: {
-            harvestTimeSeconds: 2,
+            harvestTimeSeconds: 5,
             enabled: true
           },
           metrics: { enabled: false }

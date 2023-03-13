@@ -4,6 +4,9 @@
 npm run lint
 npm run unit -- --onlyChanged
 
+npm run sync:version
+git add package.json
+
 npm run sauce:get-browsers
 git add tools/jil/util/browsers-supported.json
 

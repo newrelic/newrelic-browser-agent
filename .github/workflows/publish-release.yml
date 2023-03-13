@@ -65,13 +65,14 @@ jobs:
         run: npm ci
       - name: get version
         run: |
-          export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./package.json').version) })()")
+          export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./package.json').version) })()") \
+          export CDN_VERSION=$(cat VERSION)
       - name: re-publish internal loader (prod)
         run: |
           node ./tools/scripts/upload-ab-to-s3.js \
             --env prod \
             --current https://js-agent.newrelic.com/nr-loader-spa-current.min.js \
-            --next https://js-agent.newrelic.com/nr-loader-spa-${PACKAGE_VERSION}.min.js \
+            --next https://js-agent.newrelic.com/nr-loader-spa-${CDN_VERSION}.min.js \
             --appId ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \
@@ -83,7 +84,7 @@ jobs:
           node ./tools/scripts/upload-ab-to-s3.js \
             --env eu-prod \
             --current https://js-agent.newrelic.com/nr-loader-spa-current.min.js \
-            --next https://js-agent.newrelic.com/nr-loader-spa-${PACKAGE_VERSION}.min.js \
+            --next https://js-agent.newrelic.com/nr-loader-spa-${CDN_VERSION}.min.js \
             --appId ${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \
@@ -120,17 +121,18 @@ jobs:
         run: npm ci
       - name: get version
         run: |
-          export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./package.json').version) })()")
+          export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./package.json').version) })()") \
+          export CDN_VERSION=$(cat VERSION)
       - name: upload artifacts to NR
         run: |
           node tools/scripts/upload-to-nr.js \
             --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
             --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
             --eu-api-key=${{ secrets.NR_API_KEY_EU }} \
-            --v=${PACKAGE_VERSION}
+            --v=${CDN_VERSION}
       - name: validate file
         run: |
-          node tools/scripts/check-nrdb.js -v ${PACKAGE_VERSION}
+          node tools/scripts/check-nrdb.js -v ${CDN_VERSION}
   raise-release-notes-pr:
     runs-on: ubuntu-latest
     container: node:14
@@ -144,13 +146,14 @@ jobs:
         run: npm ci
       - name: get version
         run: |
-          export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./package.json').version) })()")
+          export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./package.json').version) })()") \
+          export CDN_VERSION=$(cat VERSION)
       - name: Build and raise PR to docs-website
         run: |
           node tools/scripts/docs-website/create-docs-pr.js \
             --docs-site-name=${{ secrets.DOCS_SITE_USER_NAME }} \
             --docs-site-email=${{ secrets.DOCS_SITE_USER_EMAIL }} \
-            -t=${PACKAGE_VERSION}
+            -t=${CDN_VERSION}
   publish-current-to-s3:
     runs-on: ubuntu-latest
     container: node:14

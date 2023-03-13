@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "0.1.0",
+  "version": "0.1.1227",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "Tests for the New Relic JavaScript agent",
@@ -73,6 +73,7 @@
     "web-vitals": "^3.1.0"
   },
   "devDependencies": {
+    "@actions/core": "^1.10.0",
     "@babel/cli": "^7.20.7",
     "@babel/core": "^7.20.12",
     "@babel/eslint-parser": "^7.19.1",

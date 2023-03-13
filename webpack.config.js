@@ -10,7 +10,7 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 
 let { PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE } = process.env
 // this will change to package.json.version when it is aligned between all the packages
-let VERSION = VERSION_OVERRIDE || pkg.version
+let VERSION = VERSION_OVERRIDE || fs.readFileSync('./VERSION', 'utf-8')
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
 
 switch (PUBLISH) {
@@ -175,7 +175,7 @@ const standardConfig = merge(commonConfig, {
               }]
             ],
             plugins: [
-              babelEnv(),
+              babelEnv({ version: VERSION, subversion: SUBVERSION }),
               // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
               // assigning to a variable, which conflicts with template literals.
               '@babel/plugin-transform-template-literals'
@@ -224,7 +224,7 @@ const polyfillsConfig = merge(commonConfig, {
               }]
             ],
             plugins: [
-              babelEnv()
+              babelEnv({ version: VERSION, subversion: SUBVERSION })
             ]
           }
         }

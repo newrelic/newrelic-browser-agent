@@ -5,8 +5,8 @@
 import { handle } from '../../../common/event-emitter/handle'
 import { subscribeToVisibilityChange, initializeHiddenTime } from '../../../common/window/page-visibility'
 import { documentAddEventListener, windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
-import { getOffset, now } from '../../../common/timing/now'
-import { getConfigurationValue, originals } from '../../../common/config/config'
+import { now } from '../../../common/timing/now'
+import { getConfigurationValue, getRuntime, originals } from '../../../common/config/config'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
@@ -142,12 +142,13 @@ export class Instrument extends InstrumentBase {
 
       this.addConnectionAttributes(attributes)
 
+      const offset = getRuntime(this.agentIdentifier).offset
       // The value of Event.timeStamp is epoch time in some old browser, and relative
       // timestamp in newer browsers. We assume that large numbers represent epoch time.
       if (fi <= now()) {
         attributes['fid'] = now() - fi
-      } else if (fi > getOffset() && fi <= Date.now()) {
-        fi = fi - getOffset()
+      } else if (fi > offset && fi <= Date.now()) {
+        fi = fi - offset
         attributes['fid'] = now() - fi
       } else {
         fi = now()

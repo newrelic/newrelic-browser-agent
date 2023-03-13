@@ -13,7 +13,6 @@
 // * The offset is sent with the data
 // * 0's are not included unless the value is a 'relative zero'
 //
-import { getOffset } from './now'
 
 var START = 'Start'
 var END = 'End'
@@ -28,8 +27,7 @@ var DOM_CONTENT_LOAD_EVENT = 'domContentLoadedEvent'
 
 export var navTimingValues = []
 
-export function addPT (pt, v) {
-  var offset = getOffset()
+export function addPT (offset, pt, v) {
   v.of = offset
   addRel(offset, offset, v, 'n')
   addRel(pt[UNLOAD_EVENT + START], offset, v, 'u')

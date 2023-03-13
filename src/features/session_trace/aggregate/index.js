@@ -11,7 +11,6 @@ import { parseUrl } from '../../../common/url/parse-url'
 import { supportsPerformanceObserver } from '../../../common/window/supports-performance-observer'
 import slice from 'lodash._slice'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
-import { findStartTime } from '../../../common/timing/start-time'
 import { now } from '../../../common/timing/now'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
@@ -75,7 +74,6 @@ export class Aggregate extends AggregateBase {
     this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
 
     this.laststart = 0
-    findStartTime(agentIdentifier)
 
     registerHandler('feat-stn', () => {
       this.storeTiming(window.performance.timing)

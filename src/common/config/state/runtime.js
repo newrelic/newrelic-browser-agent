@@ -1,4 +1,3 @@
-import { findStartTime } from '../../timing/start-time'
 import * as userAgent from '../../util/user-agent'
 import { Configurable } from './configurable'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
@@ -13,7 +12,9 @@ const model = agentId => { return {
   isolatedBacklog: false,
   loaderType: undefined,
   maxBytes: 30000,
-  offset: findStartTime(),
+  // The "timeOrigin" property is the new standard timestamp property shared across main frame and workers, but is not supported in some early Safari browsers (safari<15) + IE
+  // ingest expects an integer value, and timeOrigin can return a float.
+  offset: Math.floor(globalScope?.performance?.timeOrigin || globalScope?.performance?.timing?.navigationStart || Date.now()),
   onerror: undefined,
   origin: '' + globalScope.location,
   ptid: undefined,

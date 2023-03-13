@@ -11,6 +11,11 @@ import { globalScope } from '../util/global-scope'
 
 export let navCookie = true
 
+/**
+ *
+ * @param {string} agentId - agentIdentifier tied to agent instance
+ * @returns {number} - Integer timestamp
+ */
 export function findStartTime (agentId) {
   var starttime = findStartWebTiming()
   if (!starttime) return
@@ -28,7 +33,7 @@ export function findStartTime (agentId) {
 function findStartWebTiming () {
   // note that we don't need to use a cookie to record navigation start time
   navCookie = false
-  const timestamp = globalScope?.performance?.timeOrigin || globalScope?.performance?.timing?.navigationStart
-  if (!timestamp) return getLastTimestamp()
+  const timestamp = globalScope?.performance?.timeOrigin || globalScope?.performance?.timing?.navigationStart || getLastTimestamp()
+  // ingest expects an integer value, and timeOrigin can return a float.
   return Math.floor(timestamp)
 }

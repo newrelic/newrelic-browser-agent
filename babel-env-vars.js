@@ -49,7 +49,7 @@ function setBuildVersion (source, subversion, isSemver) {
     else process.env['BUILD_VERSION'] = pkg.version
   }
   if (!isSemver) process.env['BUILD_VERSION'] += `.${subversion || 'LOCAL'}`
-  process.env['BUILD_VERSION'] = process.env['BUILD_VERSION'].replace(/^\s+|\s+$/g, '')
+  process.env['BUILD_VERSION'] = process.env['BUILD_VERSION']?.replace(/^\s+|\s+$/g, '') || ''
 }
 
 function setBuildEnv (subversion) {

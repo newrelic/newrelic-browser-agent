@@ -14,6 +14,6 @@ const presets = [
     }
   ]
 ]
-const plugins = [babelEnv()]
+const plugins = [babelEnv({ source: 'PACKAGE', subversion: 'NPM' })]
 
 module.exports = { presets, plugins }

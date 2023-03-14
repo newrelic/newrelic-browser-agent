@@ -116,6 +116,7 @@
     "function-bind": "^1.1.1",
     "glob": "^7.0.5",
     "husky": "^8.0.0",
+    "html-webpack-plugin": "^5.5.0",
     "jest": "^28.1.1",
     "jest-environment-jsdom": "28.1.1",
     "jquery": "1.11.3",

@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../../common/event-emitter/handle'
-import { onFID, onLCP, onINP } from 'web-vitals'
+import { onFCP, onFID, onLCP, onINP } from 'web-vitals'
+import { onFirstPaint } from './first-paint'
 import { onLongTask } from './long-tasks'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
@@ -20,18 +21,9 @@ export class Instrument extends InstrumentBase {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     if (!isBrowserScope) return // CWV is irrelevant outside web context
 
-    this.performanceObserver
     this.clsPerformanceObserver
 
     if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {
-      // passing in an unknown entry type to observer could throw an exception
-      this.performanceObserver = new PerformanceObserver((...args) => this.perfObserver(...args))
-      try {
-        this.performanceObserver.observe({ entryTypes: ['paint'] })
-      } catch (e) {
-        // do nothing
-      }
-
       this.clsPerformanceObserver = new PerformanceObserver((...args) => this.clsObserver(...args))
       try {
         this.clsPerformanceObserver.observe({ type: 'layout-shift', buffered: true })
@@ -39,6 +31,18 @@ export class Instrument extends InstrumentBase {
         // do nothing
       }
     }
+
+    /* PerformancePaintTiming API
+        This listener is deferrable BUT because it does not consider document vis state yet, unlike FID and LCP below. */
+    onFirstPaint(({ name, value }) => {
+      handle('timing', [name.toLowerCase(), Math.floor(value)], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
+    })
+
+    /* First Contentful Paint
+        This listener cannot be deferred yet maintain full functionality under v3. Reason: it relies on detecting document vis state asap from time origin. */
+    onFCP(({ name, value }) => {
+      handle('timing', [name.toLowerCase(), value], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
+    })
 
     /* First Input Delay (under "First Interaction")
         This listener cannot be deferred yet maintain full functionality under v3. Reason: it relies on detecting document vis state asap from time origin. */
@@ -69,7 +73,7 @@ export class Instrument extends InstrumentBase {
     })
 
     /* PerformanceLongTaskTiming API
-      This listener IS deferrable. */
+        This listener IS deferrable. */
     if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) {
       onLongTask(({ name, value, info }) => {
         handle('timing', [name.toLowerCase(), value, info], undefined, FEATURE_NAMES.pageViewTiming, this.ee) // lt context is passed as attrs in the timing node
@@ -85,18 +89,6 @@ export class Instrument extends InstrumentBase {
     windowAddEventListener('pagehide', () => handle('winPagehide', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee))
 
     this.importAggregator()
-  }
-
-  // paint metrics
-  perfObserver (list, observer) {
-    var entries = list.getEntries()
-    entries.forEach((entry) => {
-      if (entry.name === 'first-paint') {
-        handle('timing', ['fp', Math.floor(entry.startTime)], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
-      } else if (entry.name === 'first-contentful-paint') {
-        handle('timing', ['fcp', Math.floor(entry.startTime)], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
-      }
-    })
   }
 
   clsObserver (list) {

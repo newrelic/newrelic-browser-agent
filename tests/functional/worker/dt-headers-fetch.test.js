@@ -87,7 +87,7 @@ function fetchDTHeader (type, testCase, browserVersionMatcher) {
             }
           })
 
-          Promise.all([ajaxPromise, loadPromise])
+          Promise.all([ajaxPromise, loadPromise, router.expectRum()])
             .then(([{ request: { headers } }]) => {
               if (testCase.newrelicHeader) {
                 validateNewrelicHeader(t, headers, config)

@@ -6,7 +6,7 @@
 import { handle } from '../../../common/event-emitter/handle'
 import { now } from '../../../common/timing/now'
 import { getOrSet } from '../../../common/util/get-or-set'
-import { wrapRaf, wrapTimer, wrapEvents, wrapXhr, unwrapRaf, unwrapTimer, unwrapEvents, unwrapXhr } from '../../../common/wrap'
+import { wrapRaf, wrapTimer, wrapEvents, wrapXhr } from '../../../common/wrap'
 import slice from 'lodash._slice'
 import './debug'
 import { InstrumentBase } from '../../utils/instrument-base'
@@ -76,12 +76,7 @@ export class Instrument extends InstrumentBase {
 
   /** Restoration and resource release tasks to be done if JS error loader is being aborted. Unwind changes to globals. */
   #abort () {
-    globalScope.onerror = this.origOnerror
     this.removeOnAbort?.abort()
-    unwrapRaf(this.ee)
-    unwrapTimer(this.ee)
-    unwrapEvents(this.ee)
-    if (getRuntime(this.agentIdentifier).xhrWrappable) unwrapXhr(this.ee)
     this.abortHandler = undefined // weakly allow this abort op to run only once
   }
 

@@ -8,6 +8,7 @@ const now = require('../../lib/now')
 const querypack = require('@newrelic/nr-querypack')
 
 let supported = testDriver.Matcher.withFeature('addEventListener')
+const notIE = testDriver.Matcher.withFeature('notInternetExplorer')
 
 testDriver.test('capturing SPA interactions', supported, function (t, browser, router) {
   t.plan(22)
@@ -169,6 +170,38 @@ testDriver.test('child nodes in SPA interaction does not exceed set limit', supp
     .then(({ request: { query, body } }) => {
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
       t.ok(interactionTree.children.length <= 128, 'interaction should have no more than 128 child nodes')
+      t.end()
+    })
+    .catch(fail)
+
+  function fail (err) {
+    t.error(err)
+    t.end()
+  }
+})
+
+testDriver.test('promise wrapper should support instanceof comparison', notIE, function (t, browser, router) {
+  let rumPromise = router.expectRum()
+  let loadPromise = browser.safeGet(router.assetURL('promise-instanceof.html', { loader: 'spa' }))
+
+  Promise.all([rumPromise, loadPromise])
+    .then(async () => {
+      await browser.safeEval('window.isNewPromise', (err, res) => {
+        t.notOk(err, 'should not get an error')
+        t.ok(res, 'new Promise is an instance of global Promise')
+      })
+      await browser.safeEval('window.isPromiseResolve', (err, res) => {
+        t.notOk(err, 'should not get an error')
+        t.ok(res, 'static Promise methods return is instanceof global Promise')
+      })
+      await browser.safeEval('window.isFetchPromise', (err, res) => {
+        t.notOk(err, 'should not get an error')
+        t.ok(res, 'fetch returned promise is an instance of global Promise')
+      })
+      await browser.safeEval('window.isAsyncPromise', (err, res) => {
+        t.notOk(err, 'should not get an error')
+        t.ok(res, 'async function returned promise is an instance of global Promise')
+      })
       t.end()
     })
     .catch(fail)

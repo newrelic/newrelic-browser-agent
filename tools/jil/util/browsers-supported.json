@@ -4,8 +4,8 @@
       "browserName": "chrome",
       "platform": "Windows 11",
       "platformName": "Windows 11",
-      "version": "110",
-      "browserVersion": "110"
+      "version": "111",
+      "browserVersion": "111"
     },
     {
       "browserName": "chrome",
@@ -23,10 +23,10 @@
     },
     {
       "browserName": "chrome",
-      "platform": "Windows 10",
-      "platformName": "Windows 10",
-      "version": "101",
-      "browserVersion": "101"
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
+      "version": "100",
+      "browserVersion": "100"
     }
   ],
   "edge": [
@@ -106,7 +106,7 @@
       "appium:platformVersion": "9.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
-        "appiumVersion": "1.22.1"
+        "appiumVersion": "1.22.3"
       }
     }
   ],

@@ -46,6 +46,15 @@ module.exports = fp(async function (fastify, testServer) {
         )
     }, delay)
   })
+  fastify.get('/image', (request, reply) => {
+    reply
+      .type('image/png')
+      .send(
+        fs.createReadStream(
+          path.join(paths.testsAssetsDir, 'images/square.png')
+        )
+      )
+  })
   fastify.get('/abort', (request, reply) => {
     setTimeout(() => {
       reply.send('foo')
@@ -91,6 +100,9 @@ module.exports = fp(async function (fastify, testServer) {
   })
   fastify.get('/json', (request, reply) => {
     reply.send({ text: 'hi!' })
+  })
+  fastify.get('/js', (request, reply) => {
+    reply.type('text/javascript').send('console.log(\'hi\')')
   })
   fastify.get('/text', (request, reply) => {
     const length = parseInt(request.query.length || 10, 10)

@@ -33,26 +33,5 @@ export function lazyLoader (featureName, featurePart) {
       default:
         throw new Error(`Attempted to load unsupported agent feature: ${featureName} ${featurePart}`)
     }
-  } else if (featurePart === 'instrument') {
-    switch (featureName) {
-      case FEATURE_NAMES.ajax:
-        return import(/* webpackChunkName: "ajax-instrument" */ '../ajax/instrument')
-      case FEATURE_NAMES.jserrors:
-        return import(/* webpackChunkName: "jserrors-instrument" */ '../jserrors/instrument')
-      case FEATURE_NAMES.metrics:
-        return import(/* webpackChunkName: "metrics-instrument" */ '../metrics/instrument')
-      case FEATURE_NAMES.pageAction:
-        return import(/* webpackChunkName: "page_action-instrument" */ '../page_action/instrument')
-      case FEATURE_NAMES.pageViewEvent:
-        return import(/* webpackChunkName: "page_view_event-instrument" */ '../page_view_event/instrument')
-      case FEATURE_NAMES.pageViewTiming:
-        return import(/* webpackChunkName: "page_view_timing-instrument" */ '../page_view_timing/instrument')
-      case FEATURE_NAMES.sessionTrace:
-        return import(/* webpackChunkName: "session_trace-instrument" */ '../session_trace/instrument')
-      case FEATURE_NAMES.spa:
-        return import(/* webpackChunkName: "spa-instrument" */ '../spa/instrument')
-      default:
-        throw new Error(`Attempted to load unsupported agent feature: ${featureName} ${featurePart}`)
-    }
   }
 }

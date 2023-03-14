@@ -33,7 +33,7 @@ function finalHarvest (type, browserVersionMatcher) {
       const ajaxPromise = router.expectAjaxEvents()
       const insPromise = router.expectIns()
 
-      Promise.all([loadPromise, metrPromise, errPromise, ajaxPromise, insPromise])
+      Promise.all([loadPromise, metrPromise, errPromise, ajaxPromise, insPromise, router.expectRum()])
         .then(([, metrResponse, errResponse, ajaxResponse, insResponse]) => {
           let body
 

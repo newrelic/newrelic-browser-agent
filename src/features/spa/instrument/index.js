@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 import {
-  wrapMutation, wrapPromise, wrapHistory, wrapTimer, wrapFetch, wrapXhr, wrapJsonP,
-  unwrapJsonP, unwrapPromise, unwrapTimer, unwrapXhr, unwrapFetch, unwrapHistory, unwrapMutation
+  wrapMutation, wrapPromise, wrapHistory, wrapTimer, wrapFetch, wrapXhr, wrapJsonP
 } from '../../../common/wrap'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { InstrumentBase } from '../../utils/instrument-base'
@@ -108,13 +107,6 @@ export class Instrument extends InstrumentBase {
   /** Restoration and resource release tasks to be done if SPA loader is being aborted. Unwind changes to globals and subscription to DOM events. */
   #abort () {
     this.removeOnAbort?.abort()
-    unwrapJsonP(this.ee)
-    unwrapPromise(this.ee)
-    unwrapTimer(this.ee)
-    unwrapXhr(this.ee) // this will also handle unwrapping "events"
-    unwrapFetch(this.ee)
-    unwrapHistory(this.ee)
-    unwrapMutation(this.ee)
     this.abortHandler = undefined // weakly allow this abort op to run only once
   }
 }

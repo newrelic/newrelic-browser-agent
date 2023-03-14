@@ -14,20 +14,22 @@ testDriver.test("Agent doesn't block page from back/fwd cache", bfCacheSupport, 
   const init = {
     allow_bfcache: true
   }
-  const scriptString = 'window.addEventListener(\'pagehide\', (evt) => { if (evt.persisted) newrelic.addPageAction("pageCached"); });'
-
+  const scriptString = `window.addEventListener('pagehide', (evt) => { navigator.sendBeacon('/echo?testId=${router.testId}&persisted='+evt.persisted) });`
+  const rumPromise = router.expectRum()
   const assetURL = router.assetURL('instrumented.html', { loader: 'spa', init, scriptString })
   const loadPromise = browser.get(assetURL)
 
-  Promise.all([loadPromise, router.expectRum()]).then(() => {
-    const insListener = router.expectIns(5000)
-    // Once the initial page loads and features are running, navigate away and check to see if it's cached via the custom pageaction being emitted w/o timing out.
-    browser.get(router.assetURL('/'))
-    return insListener
-  }).then(({ request: pActPayload }) => {
-    // Double check we got the PA expected.
-    const pActsReceived = JSON.parse(pActPayload.body).ins
-    t.equal(pActsReceived[0].actionName, 'pageCached', 'page successfully stored in bf cache')
+  Promise.all([rumPromise, loadPromise]).then(() => {
+    const beacon = router.expect('assetServer', {
+      test: function (request) {
+        const url = new URL(request.url, 'resolve://')
+        return url.pathname === '/echo'
+      }
+    })
+    const nav = browser.get(router.assetURL('/'))
+    return Promise.all([beacon, nav])
+  }).then(([{ request }]) => {
+    t.ok({ ...request.query }.persisted, 'BFC persisted should be true')
     t.end()
   }).catch(fail(t))
 })
@@ -62,8 +64,13 @@ testDriver.test('EOL events are sent appropriately', excludeIE, function (t, bro
     // 3) Verify PVTs aren't sent again but unload event is; (TEMPORARY) pageHide event should not be sent again
     const ulTimings = querypack.decode(pvtPayload?.body?.length ? pvtPayload.body : pvtPayload.query.e)
 
-    t.ok(ulTimings.length == 1, 'unloading causes PVT harvest')	// until BFC work is complete, only "unload" should be harvested here
-    t.equal(ulTimings[0].name, 'unload', 'window pagehide emits the unload event (but not our pageHide again)')
+    t.ok(ulTimings.length > 0, 'unloading causes PVT harvest')	// "unload" & ongoing CWV lib metrics like INP--if supported--should be harvested here
+
+    const ulNode = ulTimings.find(t => t.name === 'unload')
+    t.ok(ulNode.value > 0, 'window pagehide emits the unload event')
+    const phNode = ulTimings.find(t => t.name === 'pageHide')
+    t.equal(phNode, undefined, 'but pageHide is not emitted again (capped at one)')
+
     t.end()
   }).catch(fail(t))
 })

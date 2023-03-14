@@ -33,7 +33,6 @@ export class Aggregate extends AggregateBase {
     this.pageviewReported = {}
     this.errorCache = {}
     this.currentBody
-
     this.errorOnPage = false
 
     // this will need to change to match whatever ee we use in the instrument
@@ -45,16 +44,20 @@ export class Aggregate extends AggregateBase {
     register('err', (...args) => this.storeError(...args), this.featureName, this.ee)
     register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee)
 
-    var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'jserrors.harvestTimeSeconds') || 10
+    const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'jserrors.harvestTimeSeconds') || 10
 
-    this.scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
-    this.scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
-    this.ee.on(`drain-${this.featureName}`, () => { if (!this.blocked) this.scheduler.startTimer(harvestTimeSeconds) })
+    const scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
+    scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
 
-    // if rum response determines that customer lacks entitlements for jserrors endpoint, block it
+    // Don't start harvesting until "drain" for this feat has been called (which currently requires RUM response).
+    this.ee.on(`drain-${this.featureName}`, () => {
+      if (!this.blocked) scheduler.startTimer(harvestTimeSeconds) // and only if ingest will accept jserror payloads
+    })
+
+    // If RUM-call's response determines that customer lacks entitlements for the /jserror ingest endpoint, don't harvest at all.
     register('block-err', () => {
       this.blocked = true
-      this.scheduler.stopTimer()
+      scheduler.stopTimer(true)
     }, this.featureName, this.ee)
 
     drain(this.agentIdentifier, this.featureName)

@@ -7,7 +7,6 @@ import { submitData } from '../util/submit-data'
 import { SharedContext } from '../context/shared-context'
 import { Harvest, getSubmitMethod } from './harvest'
 import { subscribeToEOL } from '../unload/eol'
-import { conditionallySet } from '../cookie/nav-cookie'
 import { getConfigurationValue } from '../config/config'
 
 /**
@@ -20,14 +19,16 @@ export class HarvestScheduler extends SharedContext {
     this.opts = opts || {}
     this.started = false
     this.timeoutHandle = null
+    this.aborted = false // this controls the per-interval and final harvests for the scheduler (currently per feature specific!)
 
     this.harvest = new Harvest(this.sharedContext)
 
     subscribeToEOL(() => {
+      if (this.aborted) return
+
       // If opts.onUnload is defined, these are special actions to execute before attempting to send the final payload.
       if (this.opts.onUnload) this.opts.onUnload()
       this.runHarvest({ unload: true })
-      conditionallySet(this.sharedContext.agentIdentifier)
     }, getConfigurationValue(this.sharedContext.agentIdentifier, 'allow_bfcache')) // TO DO: remove feature flag after rls stable
   }
 
@@ -37,7 +38,8 @@ export class HarvestScheduler extends SharedContext {
     this.scheduleHarvest(initialDelay != null ? initialDelay : this.interval)
   }
 
-  stopTimer () {
+  stopTimer (permanently = false) {
+    this.aborted = permanently // stopping permanently is same as aborting, but this function also cleans up the setTimeout loop
     this.started = false
     if (this.timeoutHandle) {
       clearTimeout(this.timeoutHandle)
@@ -58,6 +60,7 @@ export class HarvestScheduler extends SharedContext {
   }
 
   runHarvest (opts) {
+    if (this.aborted) return
     var scheduler = this
 
     if (this.opts.getPayload) { // Ajax & PVT

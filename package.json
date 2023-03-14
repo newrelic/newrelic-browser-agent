@@ -68,7 +68,8 @@
   },
   "dependencies": {
     "core-js": "^3.26.0",
-    "lodash._slice": "^2.4.1"
+    "lodash._slice": "^2.4.1",
+    "web-vitals": "^3.1.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.7",

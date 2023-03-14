@@ -12,11 +12,12 @@ jobs:
     timeout-minutes: 30
     container:
       image: ubuntu:latest
-      options: --user=1001
     defaults:
       run:
         shell: bash
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
@@ -31,11 +32,12 @@ jobs:
     timeout-minutes: 30
     container:
       image: ubuntu:latest
-      options: --user=1001
     defaults:
       run:
         shell: bash
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
@@ -52,7 +54,7 @@ jobs:
     timeout-minutes: 30
     container:
       image: ubuntu:latest
-      options: --user=1001 --network-alias=bam-test-1.nr-local.net
+      options: --network-alias=bam-test-1.nr-local.net
     defaults:
       run:
         shell: bash
@@ -63,6 +65,8 @@ jobs:
           - 4444:4444
         options: --shm-size=4g
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
@@ -79,7 +83,7 @@ jobs:
     timeout-minutes: 30
     container:
       image: ubuntu:latest
-      options: --user=1001 --network-alias=bam-test-1.nr-local.net
+      options: --network-alias=bam-test-1.nr-local.net
     defaults:
       run:
         shell: bash
@@ -90,6 +94,8 @@ jobs:
           - 4444:4444
         options: --shm-size=4g
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:

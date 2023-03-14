@@ -95,6 +95,14 @@ async function checkout (branchName) {
   return stdout.trim()
 }
 
+async function setUserInfo (email, name) {
+  if (!email || !name) throw new Error('Missing email or name')
+  let stdout = ''
+  try { stdout = await execAsPromise(`git config user.email "${email}"`) } catch (e) { }
+  try { stdout = await execAsPromise(`git config user.name "${name}"`) } catch (e) { }
+  return stdout.trim()
+}
+
 async function clone (url, name, args) {
   const argsString = args.join(' ')
   const stdout = await execAsPromise(`git clone ${argsString} ${url} ${name}`)
@@ -163,5 +171,6 @@ module.exports = {
   rebase,
   setUpstream,
   deleteUpstreamBranch,
-  syncWithParent
+  syncWithParent,
+  setUserInfo
 }

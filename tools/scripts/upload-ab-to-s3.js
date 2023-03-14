@@ -30,11 +30,19 @@ var argv = require('yargs')
   .string('role')
   .describe('role', 'S3 role ARN')
 
+  .string('sha')
+  .describe('sha', 'github action SHA')
+  .default('sha', '')
+
+  .string('workflow')
+  .describe('workflow', 'github action workflow')
+  .default('workflow', '')
+
   .boolean('dry')
   .default('dry', false)
   .argv
 
-const { env, appId, licenseKey, bucket, role, current, next, dry } = argv
+const { env, appId, licenseKey, bucket, role, current, next, dry, sha, workflow } = argv
 
 let counter = 1
 
@@ -130,7 +138,9 @@ function wrapAgent (agent, id) {
   return `
         ids['${id}'] = () => {
             ${agent}
-            newrelic.setCustomAttribute('buildID', '${id}')
+            ;newrelic.setCustomAttribute('buildID', '${id}')
+            ;newrelic.setCustomAttribute('SHA', '${sha}')
+            ;newrelic.setCustomAttribute('workflow', '${workflow}');
         }
     `
 }

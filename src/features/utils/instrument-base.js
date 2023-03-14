@@ -33,6 +33,8 @@ export class InstrumentBase extends FeatureBase {
       } catch (e) {
         warn(`Downloading ${this.featureName} failed...`)
         this.abortHandler?.() // undo any important alterations made to the page
+
+        // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
       }
     }
 

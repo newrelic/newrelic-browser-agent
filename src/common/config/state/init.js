@@ -16,10 +16,10 @@ const model = {
   ssl: undefined,
   obfuscate: undefined,
   jserrors: { enabled: true, harvestTimeSeconds: 10 },
-  metrics: { enabled: true, harvestTimeSeconds: 10 },
+  metrics: { enabled: true },
   page_action: { enabled: true, harvestTimeSeconds: 30 },
   page_view_event: { enabled: true },
-  page_view_timing: { enabled: true, harvestTimeSeconds: 30 },
+  page_view_timing: { enabled: true, harvestTimeSeconds: 30, long_task: false },
   session_trace: { enabled: true, harvestTimeSeconds: 10 },
   spa: { enabled: true, harvestTimeSeconds: 10 }
 }

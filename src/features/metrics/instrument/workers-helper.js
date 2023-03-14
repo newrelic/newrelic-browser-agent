@@ -1,4 +1,3 @@
-export { insertSupportMetrics } // export list
 import { globalScope, isWorkerScope } from '../../../common/util/global-scope'
 import { warn } from '../../../common/util/console'
 
@@ -26,10 +25,10 @@ function resetSupportability () {
 
 /**
  * Injects code to report Web Workers supportability and usage as metrics, replacing the native API in global scope as a side effect.
- * @param {func} report - handles reporting of supportability metrics to NR1
+ * @param {Function} report - a cb used to report data
  * @returns void
  */
-function insertSupportMetrics (report) {
+export function insertSupportMetrics (report) {
   // Of the 3, the normal worker is the most widely supported, so we can be sure metric was already inserted w/o checking other 2.
   if (origWorker) return
 

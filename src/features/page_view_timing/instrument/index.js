@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../../common/event-emitter/handle'
-import { onLCP, onINP } from 'web-vitals'
+import { onFID, onLCP, onINP } from 'web-vitals'
 import { onLongTask } from './long-tasks'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
-import { documentAddEventListener, windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
+import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
-import { getConfigurationValue, getRuntime, originals } from '../../../common/config/config'
+import { getConfigurationValue } from '../../../common/config/config'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
@@ -22,7 +22,6 @@ export class Instrument extends InstrumentBase {
 
     this.performanceObserver
     this.clsPerformanceObserver
-    this.fiRecorded = false
 
     if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {
       // passing in an unknown entry type to observer could throw an exception
@@ -41,38 +40,48 @@ export class Instrument extends InstrumentBase {
       }
     }
 
-    // first interaction and first input delay
-    this.fiRecorded = false
-    var allowedEventTypes = ['click', 'keydown', 'mousedown', 'pointerdown', 'touchstart']
-    allowedEventTypes.forEach((e) => {
-      documentAddEventListener(e, (...args) => this.captureInteraction(...args))
+    /* First Input Delay (under "First Interaction")
+        This listener cannot be deferred yet maintain full functionality under v3. Reason: it relies on detecting document vis state asap from time origin. */
+    onFID(({ value, entries }) => {
+      // CWV will only report one (THE) first-input entry to us; fid isn't reported if there are no user interactions occurs before the *first* page hiding.
+      const fiEntry = entries[0]
+      const attributes = {
+        type: fiEntry.name,
+        fid: Math.round(value)
+      }
+      this.addConnectionAttributes(attributes)
+      handle('timing', ['fi', Math.round(fiEntry.startTime), attributes], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     })
 
-    /* Largest Contentful Paint */
+    /* Largest Contentful Paint
+        This listener cannot be deferred yet maintain full functionality under v3. Reason: it relies on detecting document vis state asap from time origin. */
     onLCP(({ value, entries }) => {
       // CWV will only ever report one (THE) lcp entry to us; lcp is also only reported *once* on earlier(user interaction, page hidden).
-      const lcpEntry = entries[entries.length - 1]
+      const lcpEntry = entries[entries.length - 1] // this looks weird if we only expect one, but this is how cwv-attribution gets it so to be sure...
       const attributes = this.addConnectionAttributes({})
       handle('lcp', [value, lcpEntry, attributes], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     })
 
-    /* Interaction-to-Next-Paint */
+    /* Interaction-to-Next-Paint
+        This listener IS deferrable, though further validation required. */
     onINP(({ name, value, id }) => {
       handle('timing', [name.toLowerCase(), value, { metricId: id }], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     })
 
+    /* PerformanceLongTaskTiming API
+      This listener IS deferrable. */
     if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) {
       onLongTask(({ name, value, info }) => {
         handle('timing', [name.toLowerCase(), value, info], undefined, FEATURE_NAMES.pageViewTiming, this.ee) // lt context is passed as attrs in the timing node
       })
     }
 
-    // Document visibility state becomes hidden
+    // Document visibility state becomes hidden; cannot assume safely deferrable.
     subscribeToVisibilityChange(() => {
       handle('docHidden', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     }, true)
 
-    // Window fires its pagehide event (typically on navigation; this occurrence is a *subset* of vis change)
+    // Window fires its pagehide event (typically on navigation--this occurrence is a *subset* of vis change); cannot assume safely deferrable.
     windowAddEventListener('pagehide', () => handle('winPagehide', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee))
 
     this.importAggregator()
@@ -109,32 +118,5 @@ export class Instrument extends InstrumentBase {
     if (connection.downlink) attributes['net-dlink'] = connection.downlink
 
     return attributes
-  }
-
-  captureInteraction (evt) {
-    // if (evt instanceof origEvent && !fiRecorded) {
-    if (evt instanceof originals.EV && !this.fiRecorded) {
-      var fi = Math.round(evt.timeStamp)
-      var attributes = {
-        type: evt.type
-      }
-
-      this.addConnectionAttributes(attributes)
-
-      const offset = getRuntime(this.agentIdentifier).offset
-      // The value of Event.timeStamp is epoch time in some old browser, and relative
-      // timestamp in newer browsers. We assume that large numbers represent epoch time.
-      if (fi <= now()) {
-        attributes['fid'] = now() - fi
-      } else if (fi > offset && fi <= Date.now()) {
-        fi = fi - offset
-        attributes['fid'] = now() - fi
-      } else {
-        fi = now()
-      }
-
-      this.fiRecorded = true
-      handle('timing', ['fi', fi, attributes], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
-    }
   }
 }

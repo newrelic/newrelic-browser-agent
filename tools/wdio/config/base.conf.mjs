@@ -28,7 +28,7 @@ export default function config () {
     mochaOpts: {
       ui: 'bdd',
       timeout: 60000,
-      retries: 3
+      retries: jilArgs.retry ? 3 : 0
     },
     autoCompileOpts: {
       babelOpts: {

@@ -31,7 +31,6 @@ describe('newrelic api', () => {
       testHandle.expectRum(),
       browser.url(url)
     ])
-    console.log('Loaded')
     const result = await browser.execute(() => {
       return typeof window.newrelic.addToTrace === 'function'
     })
@@ -41,12 +40,9 @@ describe('newrelic api', () => {
 
   describe('setPageViewName api', () => {
     it('customTransactionName 1 arg', async () => {
-      const url = await testHandle.assetURL('instrumented.html', {
+      const url = await testHandle.assetURL('api.html', {
         loader: 'spa',
-        init,
-        scriptString: `
-        newrelic.setPageViewName('foo')
-      `
+        init
       })
 
       const rumPromise = testHandle.expectRum()
@@ -69,18 +65,18 @@ describe('newrelic api', () => {
     })
 
     it('customTransactionName 1 arg unload', async () => {
-      const url = await testHandle.assetURL('instrumented.html', {
-        init,
-        scriptString: `
-        newrelic.setPageViewName('foo')
-        setTimeout(function () {
-          newrelic.finished(new Date().getTime())
-        },0)
-      `
+      const url = await testHandle.assetURL('api.html', {
+        loader: 'spa',
+        init
+      })
+      const unloadUrl = await testHandle.assetURL('/', {
+        loader: 'spa',
+        init
       })
 
-      const metricsPromise = testHandle.expectCustomMetrics()
       await browser.url(url)
+      const metricsPromise = testHandle.expectCustomMetrics()
+      await browser.url(unloadUrl)
       const { request: { body, query } } = await metricsPromise
       const time = getTime(body ? JSON.parse(body)?.cm : JSON.parse(query.cm))
 
@@ -90,18 +86,18 @@ describe('newrelic api', () => {
     })
 
     it('customTransactionName 2 arg', async () => {
-      const url = await testHandle.assetURL('instrumented.html', {
-        init,
-        scriptString: `
-        newrelic.setPageViewName('/foo', 'http://bar.baz')
-        setTimeout(function () {
-          newrelic.finished(new Date().getTime())
-        },0)
-      `
+      const url = await testHandle.assetURL('api2.html', {
+        loader: 'spa',
+        init
+      })
+      const unloadUrl = await testHandle.assetURL('/', {
+        loader: 'spa',
+        init
       })
 
-      const metricsPromise = testHandle.expectCustomMetrics()
       await browser.url(url)
+      const metricsPromise = testHandle.expectCustomMetrics()
+      await browser.url(unloadUrl)
       const { request: { body, query } } = await metricsPromise
       const time = getTime(body ? JSON.parse(body)?.cm : JSON.parse(query.cm))
 
@@ -113,11 +109,9 @@ describe('newrelic api', () => {
 
   describe('noticeError api', () => {
     it('takes an error object', async () => {
-      const url = await testHandle.assetURL('instrumented.html', {
-        init,
-        scriptString: `
-        newrelic.noticeError(new Error('no free taco coupons'))
-      `
+      const url = await testHandle.assetURL('api.html', {
+        loader: 'spa',
+        init
       })
 
       const errorsPromise = testHandle.expectErrors()
@@ -131,29 +125,9 @@ describe('newrelic api', () => {
     })
 
     it('takes a string', async () => {
-      const url = await testHandle.assetURL('instrumented.html', {
-        init,
-        scriptString: `
-        newrelic.noticeError('too many free taco coupons')
-      `
-      })
-
-      const errorsPromise = testHandle.expectErrors()
-      await browser.url(url)
-      const { request } = await errorsPromise
-      const errorData = getErrorsFromResponse(request)
-      const params = errorData[0] && errorData[0]['params']
-
-      expect(params.exceptionClass).toEqual('Error')
-      expect(params.message).toEqual('too many free taco coupons')
-    })
-
-    it('takes a string', async () => {
-      const url = await testHandle.assetURL('instrumented.html', {
-        init,
-        scriptString: `
-        newrelic.noticeError('too many free taco coupons')
-      `
+      const url = await testHandle.assetURL('api/noticeError.html', {
+        loader: 'spa',
+        init
       })
 
       const errorsPromise = testHandle.expectErrors()

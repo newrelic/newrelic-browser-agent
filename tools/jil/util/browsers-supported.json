@@ -23,10 +23,10 @@
     },
     {
       "browserName": "chrome",
-      "platform": "Windows 11",
-      "platformName": "Windows 11",
-      "version": "100",
-      "browserVersion": "100"
+      "platform": "Windows 10",
+      "platformName": "Windows 10",
+      "version": "101",
+      "browserVersion": "101"
     }
   ],
   "edge": [

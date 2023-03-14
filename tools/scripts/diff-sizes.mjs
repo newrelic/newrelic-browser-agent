@@ -16,17 +16,17 @@ import { filesize } from 'filesize'
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const reportSettings = {
   standard: [
-    { name: 'nr-loader-spa', matcher: /nr-loader-spa(?:-\d*?)?\.min\.js/ },
-    { name: 'nr-loader-full', matcher: /nr-loader-full(?:-\d*?)?\.min\.js/ },
-    { name: 'nr-loader-rum', matcher: /nr-loader-rum(?:-\d*?)?\.min\.js/ }
+    { name: 'nr-loader-spa.min', matcher: /nr-loader-spa(?:-\d*?)?\.min\.js/ },
+    { name: 'nr-loader-full.min', matcher: /nr-loader-full(?:-\d*?)?\.min\.js/ },
+    { name: 'nr-loader-rum.min', matcher: /nr-loader-rum(?:-\d*?)?\.min\.js/ }
   ],
   polyfills: [
-    { name: 'nr-loader-spa-polyfills', matcher: /nr-loader-spa-polyfills(?:-\d*?)?\.min\.js/ },
-    { name: 'nr-loader-full-polyfills', matcher: /nr-loader-full-polyfills(?:-\d*?)?\.min\.js/ },
-    { name: 'nr-loader-rum-polyfills', matcher: /nr-loader-rum-polyfills(?:-\d*?)?\.min\.js/ }
+    { name: 'nr-loader-spa-polyfills.min', matcher: /nr-loader-spa-polyfills(?:-\d*?)?\.min\.js/ },
+    { name: 'nr-loader-full-polyfills.min', matcher: /nr-loader-full-polyfills(?:-\d*?)?\.min\.js/ },
+    { name: 'nr-loader-rum-polyfills.min', matcher: /nr-loader-rum-polyfills(?:-\d*?)?\.min\.js/ }
   ],
   worker: [
-    { name: 'nr-loader-worker', matcher: /nr-loader-worker(?:-\d*?)?\.min\.js/ }
+    { name: 'nr-loader-worker.min', matcher: /nr-loader-worker(?:-\d*?)?\.min\.js/ }
   ]
 }
 
@@ -73,7 +73,7 @@ async function getBuildSize (buildType) {
   let buildStatsPath = path.resolve(__dirname, `../../build/${buildType}-${version}.stats.json`)
 
   if (!(await fs.pathExists(buildStatsPath))) {
-    throw new Error('Bundle sizes can only be calculated with a production build')
+    buildStatsPath = path.resolve(__dirname, `../../build/${buildType}.stats.json`)
   }
 
   const buildStats = await fs.readJson(buildStatsPath)

@@ -629,12 +629,10 @@ function runLcpTests (loader) {
 
     const rumPromise = router.expectRum()
     const loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
+    const timingsPromise = router.expectTimings()
 
-    Promise.all([rumPromise, loadPromise])
-      .then(() => {
-        return router.expectTimings()
-      })
-      .then(({ request: timingsResult }) => {
+    Promise.all([timingsPromise, rumPromise, loadPromise])
+      .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 

@@ -64,7 +64,7 @@ export class Aggregate extends AggregateBase {
 
     if (globalScope.performance && typeof (globalScope.performance.timing) !== 'undefined') {
       var navTimingApiData = ({
-        timing: addPT(globalScope.performance.timing, {}),
+        timing: addPT(getRuntime(this.agentIdentifier).offset, globalScope.performance.timing, {}),
         navigation: addPN(globalScope.performance.navigation, {})
       })
       chunksForQueryString.push(param('perf', stringify(navTimingApiData)))

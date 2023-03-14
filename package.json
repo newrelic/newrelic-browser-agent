@@ -55,7 +55,7 @@
     "prepare": "husky install",
     "npm:build:esm": "npx babel --config-file ./babel.npm.esm.js --out-dir dist/mjs --out-file-extension .js ./src",
     "npm:build:cjs": "npx babel --config-file ./babel.npm.cjs.js --out-dir dist/cjs --out-file-extension .js ./src",
-    "npm:pack": "mkdir -p temp && npm pack --pack-destination temp",
+    "npm:pack": "mkdir -p temp && export PKG_NAME=$(npm pack --pack-destination temp)",
     "sync:version": "node tools/scripts/sync-version.js"
   },
   "config": {
@@ -153,11 +153,9 @@
     "webpack-cli": "^4.10.0",
     "yargs": "^17.6.2"
   },
-  "browser": {
-    "jil": "./tools/jil/driver/browser.js"
-  },
   "files": [
     "dist",
+    "src",
     "LICENSE",
     "README.md",
     "types.ts"

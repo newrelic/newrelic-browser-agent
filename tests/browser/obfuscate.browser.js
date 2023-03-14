@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil')
+const jil = require('../../tools/jil/driver/browser.js')
 import { setup } from './utils/setup'
 import { setConfiguration } from '../../src/common/config/config'
 import * as obfuscate from '../../src/common/util/obfuscate'

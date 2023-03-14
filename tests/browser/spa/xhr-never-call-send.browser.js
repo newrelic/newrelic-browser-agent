@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil')
+const jil = require('../../../tools/jil/driver/browser.js')
 
 jil.browserTest('interaction does not include xhrs that are not sent', function (t) {
   let helpers = require('./helpers')

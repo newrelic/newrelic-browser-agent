@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil')
+const jil = require('../../../tools/jil/driver/browser.js')
 
 jil.browserTest('multiple XHRs with the same callback function', function (t) {
   let helpers = require('./helpers')

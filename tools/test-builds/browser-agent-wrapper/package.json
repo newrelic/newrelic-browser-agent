@@ -1,0 +1,20 @@
+{
+  "name": "browser-agent-wrapper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --config webpack.config.js --mode=production --node-env=production"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "html-webpack-plugin": "^5.5.0",
+    "webpack": "^5.76.1",
+    "webpack-cli": "^5.0.1"
+  },
+  "dependencies": {
+    "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-0.1.228.tgz"
+  }
+}

@@ -1,4 +1,4 @@
-const testDriver = require('jil')
+const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
 
 const bfCacheSupport = testDriver.Matcher.withFeature('bfcache')

@@ -25,9 +25,9 @@ export class Instrument extends InstrumentBase {
       // Similar to what vitals does for ttfb, we have to factor in activation-start when calculating relative timings:
       const navEntry = entries[0]
       const respOrActivStart = Math.max(navEntry.responseStart, navEntry.activationStart || 0)
-      agentRuntime[CONSTANTS.FBTWL] = Math.max(Math.round(navEntry.loadEventStart - respOrActivStart), 0) // our "frontend" duration
-      handle('timing', ['load', Math.round(navEntry.loadEventStart)], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
-      agentRuntime[CONSTANTS.FBTDC] = Math.max(Math.round(navEntry.domContentLoadedEventStart - respOrActivStart), 0) // our "dom processing" duration
+      agentRuntime[CONSTANTS.FBTWL] = Math.max(Math.round(navEntry.loadEventEnd - respOrActivStart), 0) // our "frontend" duration
+      handle('timing', ['load', Math.round(navEntry.loadEventEnd)], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
+      agentRuntime[CONSTANTS.FBTDC] = Math.max(Math.round(navEntry.domContentLoadedEventEnd - respOrActivStart), 0) // our "dom processing" duration
     })
 
     this.importAggregator() // the measureWindowLoaded cb should run *before* the page_view_event agg runs

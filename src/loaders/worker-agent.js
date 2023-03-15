@@ -1,14 +1,15 @@
 import { Agent } from './agent'
 
+import { generateRandomHexString } from '../common/ids/unique-id'
 import { Instrument as InstrumentMetrics } from '../features/metrics/instrument'
 import { Instrument as InstrumentErrors } from '../features/jserrors/instrument'
 import { Instrument as InstrumentXhr } from '../features/ajax/instrument'
 import { Instrument as InstrumentPageAction } from '../features/page_action/instrument'
 
 export class WorkerAgent extends Agent {
-  constructor (...args) {
+  constructor (options, agentIdentifier = generateRandomHexString(16)) {
     super({
-      ...args,
+      ...options,
       features: [
         InstrumentMetrics,
         InstrumentErrors,
@@ -16,6 +17,6 @@ export class WorkerAgent extends Agent {
         InstrumentPageAction
       ],
       loaderType: 'worker-agent'
-    })
+    }, agentIdentifier)
   }
 }

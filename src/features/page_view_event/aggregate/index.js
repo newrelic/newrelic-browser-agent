@@ -1,4 +1,3 @@
-import { measure } from '../../../common/timing/stopwatch'
 import { mapOwn } from '../../../common/util/map-own'
 import { param, fromArray } from '../../../common/url/encode'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
@@ -8,7 +7,7 @@ import { submitData } from '../../../common/util/submit-data'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_NAME } from '../constants'
+import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
 import { globalScope } from '../../../common/util/global-scope'
 import { drain } from '../../../common/drain/drain'
@@ -16,9 +15,9 @@ import { drain } from '../../../common/drain/drain'
 const jsonp = 'NREUM.setToken'
 
 export class Aggregate extends AggregateBase {
-  static featureName = FEATURE_NAME
+  static featureName = CONSTANTS.FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+    super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME)
     this.sendRum()
   }
 
@@ -31,15 +30,13 @@ export class Aggregate extends AggregateBase {
     if (!info.beacon) return
     if (info.queueTime) this.aggregator.store('measures', 'qt', { value: info.queueTime })
     if (info.applicationTime) this.aggregator.store('measures', 'ap', { value: info.applicationTime })
-
-    // some time in the past some code will have called stopwatch.mark('starttime', Date.now())
-    // calling measure like this will create a metric that measures the time differential between
-    // the two marks.
-    measure(this.aggregator, 'be', 'starttime', 'firstbyte')
-    measure(this.aggregator, 'fe', 'firstbyte', 'onload')
-    measure(this.aggregator, 'dc', 'firstbyte', 'domContent')
-
     const agentRuntime = getRuntime(this.agentIdentifier)
+
+    // These values should've been recorded after load and before this func runs.
+    this.aggregator.store('measures', 'be', { value: agentRuntime[CONSTANTS.TTFB] })
+    this.aggregator.store('measures', 'fe', { value: agentRuntime[CONSTANTS.FBTWL] })
+    this.aggregator.store('measures', 'dc', { value: agentRuntime[CONSTANTS.FBTDC] })
+
     var measuresMetrics = this.aggregator.get('measures')
 
     var measuresQueryString = mapOwn(measuresMetrics, function (metricName, measure) {
@@ -64,7 +61,7 @@ export class Aggregate extends AggregateBase {
 
     if (globalScope.performance && typeof (globalScope.performance.timing) !== 'undefined') {
       var navTimingApiData = ({
-        timing: addPT(getRuntime(this.agentIdentifier).offset, globalScope.performance.timing, {}),
+        timing: addPT(agentRuntime.offset, globalScope.performance.timing, {}),
         navigation: addPN(globalScope.performance.navigation, {})
       })
       chunksForQueryString.push(param('perf', stringify(navTimingApiData)))
@@ -102,6 +99,6 @@ export class Aggregate extends AggregateBase {
     )
     // Usually `drain` is invoked automatically after processing feature flags contained in the JSONP callback from
     // ingest (see `activateFeatures`), so when JSONP cannot execute (as with module workers), we drain manually.
-    if (!isValidJsonp) drain(this.agentIdentifier, this.featureName)
+    if (!isValidJsonp) drain(this.agentIdentifier, CONSTANTS.FEATURE_NAME)
   }
 }

@@ -21,6 +21,8 @@ export class Instrument extends InstrumentBase {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     if (!isBrowserScope) return // CWV is irrelevant outside web context
 
+    /** Since we don't support timings on BFCache restores, this tracks and helps cap metrics that web-vitals report more than once. */
+    this.alreadySent = new Set()
     this.clsPerformanceObserver
 
     if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {
@@ -33,7 +35,7 @@ export class Instrument extends InstrumentBase {
     }
 
     /* PerformancePaintTiming API
-        This listener is deferrable BUT because it does not consider document vis state yet, unlike FID and LCP below. */
+        This listener is deferrable BUT because it does not consider document vis state yet, unlike FID and LCP below. BFC is also not supported. */
     onFirstPaint(({ name, value }) => {
       handle('timing', [name.toLowerCase(), Math.floor(value)], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     })
@@ -41,12 +43,18 @@ export class Instrument extends InstrumentBase {
     /* First Contentful Paint
         This listener cannot be deferred yet maintain full functionality under v3. Reason: it relies on detecting document vis state asap from time origin. */
     onFCP(({ name, value }) => {
+      if (this.alreadySent.has(name)) return
+      this.alreadySent.add(name)
+
       handle('timing', [name.toLowerCase(), value], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     })
 
     /* First Input Delay (under "First Interaction")
         This listener cannot be deferred yet maintain full functionality under v3. Reason: it relies on detecting document vis state asap from time origin. */
-    onFID(({ value, entries }) => {
+    onFID(({ name, value, entries }) => {
+      if (this.alreadySent.has(name)) return
+      this.alreadySent.add(name)
+
       // CWV will only report one (THE) first-input entry to us; fid isn't reported if there are no user interactions occurs before the *first* page hiding.
       const fiEntry = entries[0]
       const attributes = {
@@ -59,7 +67,10 @@ export class Instrument extends InstrumentBase {
 
     /* Largest Contentful Paint
         This listener cannot be deferred yet maintain full functionality under v3. Reason: it relies on detecting document vis state asap from time origin. */
-    onLCP(({ value, entries }) => {
+    onLCP(({ name, value, entries }) => {
+      if (this.alreadySent.has(name)) return
+      this.alreadySent.add(name)
+
       // CWV will only ever report one (THE) lcp entry to us; lcp is also only reported *once* on earlier(user interaction, page hidden).
       const lcpEntry = entries[entries.length - 1] // this looks weird if we only expect one, but this is how cwv-attribution gets it so to be sure...
       const attributes = this.addConnectionAttributes({})

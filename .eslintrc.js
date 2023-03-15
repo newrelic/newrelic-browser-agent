@@ -10,7 +10,6 @@ module.exports = {
     'tests/assets/js/vendor/**/*',
     'tests/assets/test-builds/**/*',
     'tests/assets/modular/js-errors/js/vendor/**/*',
-    'tools/test-builds/**/*',
 
     // Remove the below ignores once lint errors are fixed
     'tools/scripts/publish-current.js',

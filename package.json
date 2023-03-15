@@ -8,15 +8,63 @@
   "homepage": "https://docs.newrelic.com/docs/browser/browser-monitoring",
   "main": "./dist/cjs/index.js",
   "types": "./types.ts",
-  "module": "./dist/mjs/index.js",
+  "module": "./dist/esm/index.js",
   "exports": {
-    "./": {
-      "import": "./dist/mjs/",
-      "require": "./dist/cjs/"
-    },
     ".": {
-      "import": "./dist/mjs/index.js",
+      "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
+    },
+    "./custom-agent": {
+      "import": "./dist/esm/custom-agent.js",
+      "require": "./dist/cjs/custom-agent.js"
+    },
+    "./browser-agent": {
+      "import": "./dist/esm/loaders/browser-agent.js",
+      "require": "./dist/cjs/loaders/browser-agent.js"
+    },
+    "./micro-agent": {
+      "import": "./dist/esm/loaders/micro-agent.js",
+      "require": "./dist/cjs/loaders/micro-agent.js"
+    },
+    "./worker-agent": {
+      "import": "./dist/esm/loaders/worker-agent.js",
+      "require": "./dist/cjs/loaders/worker-agent.js"
+    },
+    "./features": {
+      "import": "./dist/esm/features/index.js",
+      "require": "./dist/cjs/features/index.js"
+    },
+    "./features/ajax": {
+      "import": "./dist/esm/features/ajax/index.js",
+      "require": "./dist/cjs/features/ajax/index.js"
+    },
+    "./features/jserrors": {
+      "import": "./dist/esm/features/jserrors/index.js",
+      "require": "./dist/cjs/features/jserrors/index.js"
+    },
+    "./features/metrics": {
+      "import": "./dist/esm/features/metrics/index.js",
+      "require": "./dist/cjs/features/metrics/index.js"
+    },
+    "./features/page_action": {
+      "import": "./dist/esm/features/page_action/index.js",
+      "require": "./dist/cjs/features/page_action/index.js"
+    },
+    "./features/page_view_event": {
+      "import": "./dist/esm/features/page_view_event/index.js",
+      "require": "./dist/cjs/features/page_view_event/index.js"
+    },
+    "./features/page_view_timing": {
+      "import": "./dist/esm/features/page_view_timing/index.js",
+      "require": "./dist/cjs/features/page_view_timing/index.js"
+    },
+    "./features/session_trace": {
+      "import": "./dist/esm/features/session_trace/index.js",
+      "require": "./dist/cjs/features/session_trace/index.js"
+    },
+    "./features/spa": {
+      "import": "./dist/esm/features/spa/index.js",
+      "require": "./dist/cjs/features/spa/index.js"
     }
   },
   "scripts": {
@@ -53,7 +101,7 @@
     "tools:test-builds": "npm --prefix ./tools/test-builds run build-all",
     "third-party-updates": "oss third-party manifest --includeOptDeps && oss third-party notices --includeOptDeps",
     "prepare": "husky install",
-    "npm:build:esm": "npx babel --config-file ./babel.npm.esm.js --out-dir dist/mjs --out-file-extension .js ./src",
+    "npm:build:esm": "npx babel --config-file ./babel.npm.esm.js --out-dir dist/esm --out-file-extension .js ./src",
     "npm:build:cjs": "npx babel --config-file ./babel.npm.cjs.js --out-dir dist/cjs --out-file-extension .js ./src",
     "npm:pack": "mkdir -p temp && export PKG_NAME=$(npm pack --pack-destination temp)",
     "sync:version": "node tools/scripts/sync-version.js"

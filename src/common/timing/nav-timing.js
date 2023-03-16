@@ -27,8 +27,7 @@ var DOM_CONTENT_LOAD_EVENT = 'domContentLoadedEvent'
 
 export var navTimingValues = []
 
-export function addPT (pt, v) {
-  var offset = pt['navigation' + START]
+export function addPT (offset, pt, v) {
   v.of = offset
   addRel(offset, offset, v, 'n')
   addRel(pt[UNLOAD_EVENT + START], offset, v, 'u')
@@ -64,7 +63,7 @@ export function addPN (pn, v) {
 export function addRel (value, offset, obj, prop) {
   var relativeValue
   if (typeof (value) === 'number' && (value > 0)) {
-    relativeValue = Math.round(value - offset)
+    relativeValue = Math.max(Math.round(value - offset), 0)
     obj[prop] = relativeValue
   }
   navTimingValues.push(relativeValue)

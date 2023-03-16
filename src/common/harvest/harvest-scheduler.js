@@ -7,7 +7,6 @@ import { submitData } from '../util/submit-data'
 import { SharedContext } from '../context/shared-context'
 import { Harvest, getSubmitMethod } from './harvest'
 import { subscribeToEOL } from '../unload/eol'
-import { conditionallySet } from '../cookie/nav-cookie'
 import { getConfigurationValue } from '../config/config'
 
 /**
@@ -30,7 +29,6 @@ export class HarvestScheduler extends SharedContext {
       // If opts.onUnload is defined, these are special actions to execute before attempting to send the final payload.
       if (this.opts.onUnload) this.opts.onUnload()
       this.runHarvest({ unload: true })
-      conditionallySet(this.sharedContext.agentIdentifier)
     }, getConfigurationValue(this.sharedContext.agentIdentifier, 'allow_bfcache')) // TO DO: remove feature flag after rls stable
   }
 

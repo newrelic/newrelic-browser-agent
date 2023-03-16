@@ -9,7 +9,7 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
-import { globalScope } from '../../../common/util/global-scope'
+import { globalScope, isBrowserScope } from '../../../common/util/global-scope'
 import { drain } from '../../../common/drain/drain'
 
 const jsonp = 'NREUM.setToken'
@@ -32,10 +32,12 @@ export class Aggregate extends AggregateBase {
     if (info.applicationTime) this.aggregator.store('measures', 'ap', { value: info.applicationTime })
     const agentRuntime = getRuntime(this.agentIdentifier)
 
-    // These values should've been recorded after load and before this func runs.
-    this.aggregator.store('measures', 'be', { value: agentRuntime[CONSTANTS.TTFB] })
-    this.aggregator.store('measures', 'fe', { value: agentRuntime[CONSTANTS.FBTWL] })
-    this.aggregator.store('measures', 'dc', { value: agentRuntime[CONSTANTS.FBTDC] })
+    // These 3 values should've been recorded after load and before this func runs. They are part of the minimum required for PageView events to be created.
+    // Following PR #428, which demands that all agents send RUM call, these need to be sent even outside of the main window context where PerformanceTiming
+    // or PerformanceNavigationTiming do not exists. Hence, they'll be filled in by 0s instead in, for example, worker threads that still init the PVE module.
+    this.aggregator.store('measures', 'be', { value: isBrowserScope ? agentRuntime[CONSTANTS.TTFB] : 0 })
+    this.aggregator.store('measures', 'fe', { value: isBrowserScope ? agentRuntime[CONSTANTS.FBTWL] : 0 })
+    this.aggregator.store('measures', 'dc', { value: isBrowserScope ? agentRuntime[CONSTANTS.FBTDC] : 0 })
 
     var measuresMetrics = this.aggregator.get('measures')
 

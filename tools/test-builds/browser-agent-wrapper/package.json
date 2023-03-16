@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --config webpack.config.js --mode=production --node-env=production --json=compilation-stats.json"
+    "build": "webpack --config webpack.config.js --mode=production --node-env=production"
   },
   "author": "",
   "license": "ISC",

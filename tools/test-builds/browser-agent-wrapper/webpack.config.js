@@ -14,59 +14,147 @@ const htmlTemplate = (script) => `<html>
     <h1>This is a generic page that is instrumented by the NPM agent</h1>
   </body>
 </html>`
-const config = {
-  cache: false,
-  entry: {
-    // 'browser-agent': './src/browser-agent.js',
-    'custom-agent-lite': './src/custom-agent-lite.js',
-    // 'custom-agent-pro': './src/custom-agent-pro.js',
-    // 'custom-agent-spa': './src/custom-agent-spa.js',
-    // 'micro-agent': './src/micro-agent.js',
-    // 'worker-agent': './src/worker-agent.js'
-  },
-  output: {
-    path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper'),
-    clean: true
-  },
-  module: {
-    rules: [
-      {
-        test: /\.(js|jsx)$/i,
-        exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: [
-              [
-                '@babel/preset-env',
-                {
-                  targets: {
-                    browsers: [
-                      'last 10 Chrome versions',
-                      'last 10 Safari versions',
-                      'last 10 Firefox versions',
-                      'last 10 Edge versions',
-                      'last 10 ChromeAndroid versions',
-                      'last 10 iOS versions'
-                    ]
+const workerHtmlTemplate = `<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {config}
+    {worker-commands}
+    {script-injection}
+    <script src="worker-init.js"></script>
+  </head>
+  <body>
+    <h1>This is a generic page that is instrumented by the NPM agent</h1>
+  </body>
+</html>`
+
+const config = [
+  // standard config
+  {
+    cache: false,
+    entry: {
+      'browser-agent': './src/browser-agent.js',
+      'custom-agent-lite': './src/custom-agent-lite.js',
+      'custom-agent-pro': './src/custom-agent-pro.js',
+      'custom-agent-spa': './src/custom-agent-spa.js',
+      'micro-agent': './src/micro-agent.js',
+      // worker init script
+      'worker-init': './src/worker-init.js'
+    },
+    output: {
+      path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper')
+    },
+    module: {
+      rules: [
+        {
+          test: /\.(js|jsx)$/i,
+          exclude: /node_modules/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              presets: [
+                [
+                  '@babel/preset-env',
+                  {
+                    targets: {
+                      browsers: [
+                        'last 10 Chrome versions',
+                        'last 10 Safari versions',
+                        'last 10 Firefox versions',
+                        'last 10 Edge versions',
+                        'last 10 ChromeAndroid versions',
+                        'last 10 iOS versions'
+                      ]
+                    }
                   }
-                }
+                ]
               ]
-            ]
+            }
           }
         }
-      }
+      ]
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        filename: 'browser-agent.html',
+        minify: false,
+        inject: false,
+        templateContent: htmlTemplate('browser-agent')
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'custom-agent-lite.html',
+        minify: false,
+        inject: false,
+        templateContent: htmlTemplate('custom-agent-lite')
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'custom-agent-pro.html',
+        minify: false,
+        inject: false,
+        templateContent: htmlTemplate('custom-agent-pro')
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'custom-agent-spa.html',
+        minify: false,
+        inject: false,
+        templateContent: htmlTemplate('custom-agent-spa')
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'micro-agent.html',
+        minify: false,
+        inject: false,
+        templateContent: htmlTemplate('micro-agent')
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'worker-agent.html',
+        minify: false,
+        inject: false,
+        templateContent: workerHtmlTemplate
+      })
     ]
   },
-  plugins: [
-    new HtmlWebpackPlugin({
-      filename: 'browser-agent.html',
-      minify: false,
-      inject: false,
-      templateContent: htmlTemplate('browser-agent')
-    })
-  ]
-}
+  // worker config
+  {
+    cache: false,
+    target: 'webworker',
+    entry: {
+      'worker-wrapper': './src/worker-wrapper.js'
+    },
+    output: {
+      path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper')
+    },
+    module: {
+      rules: [
+        {
+          test: /\.(js|jsx)$/i,
+          exclude: /node_modules/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              presets: [
+                [
+                  '@babel/preset-env',
+                  {
+                    targets: {
+                      browsers: [
+                        'last 10 Chrome versions',
+                        'last 10 Safari versions',
+                        'last 10 Firefox versions',
+                        'last 10 Edge versions',
+                        'last 10 ChromeAndroid versions',
+                        'last 10 iOS versions'
+                      ]
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+]
 
 module.exports = () => {
   if (isProduction) {

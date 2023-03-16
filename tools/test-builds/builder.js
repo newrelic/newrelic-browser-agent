@@ -36,11 +36,11 @@ function recurse (folder) {
 function install (folder) {
   const cmd = /^win/.test(process.platform) ? 'npm.cmd' : 'npm'
   print(`installing ./${path.relative(root, folder)}`)
-  // DO WE NEED TO CLEAR THE CACHE EVERY TIME???
+  // Clear the cached version of the npm package
   child_process.execSync('rm -rf node_modules', { cwd: folder, env: process.env, stdio: 'inherit' })
   child_process.execSync('rm -rf package-lock.json', { cwd: folder, env: process.env, stdio: 'inherit' })
-  /////
-  child_process.execSync(`npm install ${tarball}`, { cwd: folder, env: process.env, stdio: 'inherit' })
+  // Re-install node modules
+  child_process.execSync('npm install', { cwd: folder, env: process.env, stdio: 'inherit' })
 }
 
 // Performs `npm build`

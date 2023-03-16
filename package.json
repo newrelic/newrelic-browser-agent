@@ -30,10 +30,6 @@
       "import": "./dist/esm/loaders/worker-agent.js",
       "require": "./dist/cjs/loaders/worker-agent.js"
     },
-    "./features": {
-      "import": "./dist/esm/features/index.js",
-      "require": "./dist/cjs/features/index.js"
-    },
     "./features/ajax": {
       "import": "./dist/esm/features/ajax/index.js",
       "require": "./dist/cjs/features/ajax/index.js"
@@ -66,6 +62,9 @@
       "import": "./dist/esm/features/spa/index.js",
       "require": "./dist/cjs/features/spa/index.js"
     }
+  },
+  "engines": {
+    "node": ">=12.16.0 < 13.0.0 || >=13.7.0"
   },
   "scripts": {
     "start": "npm-run-all --parallel cdn:watch test-server",

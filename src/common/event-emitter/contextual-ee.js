@@ -29,12 +29,17 @@ function ee (old, debugId) {
   var handlers = {}
   var bufferGroupMap = {}
   var emitters = {}
-  // backlog must be isolated if multiple agents can run on page. MFE loader packages sets this to true. only check this for feature emitters (length = 16)
+  // In cases where multiple agents can run on a page, the event backlogs of feature event emitters must be isolated
+  // to prevent event emitter context and buffers from "bubbling up" to other agents operating in the scope.
+  // An example of this is our MicroAgent loader package, which sets this property to true to prevent overlap.
   var isolatedBacklog = false
   try {
+    // We only want to check the runtime configuration for `isolatedBacklog` if the event emitter belongs to a feature.
+    // For feature event emitters, the debugId will be an agentIdentifier with a length of 16. In contrast, some of our
+    // tests do not namespace the event emitter with an agentID and just use the parent (which has no ID).
     isolatedBacklog = debugId.length !== 16 ? false : getRuntime(debugId).isolatedBacklog
   } catch (err) {
-    // do nothing for now
+    // Do nothing for now.
   }
 
   var emitter = {

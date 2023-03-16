@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 /**
- * This module is used by: jserrors, session_trace, spa
+ * @file Wraps native timeout and interval methods for instrumentation.
+ * This module is used by: jserrors, session_trace, spa.
  */
+
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn, unwrapFunction } from './wrap-function'
 import { globalScope } from '../util/global-scope'
@@ -17,6 +19,13 @@ const START = '-start'
 const DASH = '-'
 const TIMER_FNS = [SET_TIMEOUT, 'setImmediate', SET_INTERVAL, CLEAR_TIMEOUT, 'clearImmediate']
 
+/**
+ * Wraps the global `setTimeout`, `setImmediate`, `setInterval`, `clearTimeout`, and `clearImmediate` functions to emit
+ * events on start, end, and error, in the context of a new event emitter scoped only to timer functions. Also wraps
+ * the callbacks of `setTimeout` and `setInterval`.
+ * @param {Object} sharedEE - The shared event emitter on which a new scoped event emitter will be based.
+ * @returns {Object} Scoped event emitter with a debug ID of `timer`.
+ */
 //eslint-disable-next-line
 export function wrapTimer(sharedEE) {
   const ee = scopedEE(sharedEE)
@@ -45,6 +54,14 @@ export function wrapTimer(sharedEE) {
 
   return ee
 }
+
+/**
+ * Returns an event emitter scoped specifically for the `timer` context. This scoping is a remnant from when all the
+ * features shared the same group in the event, to isolate events between features. It will likely be revisited.
+ * @param {Object} sharedEE - Optional event emitter on which to base the scoped emitter.
+ *     Uses `ee` on the global scope if undefined).
+ * @returns {Object} Scoped event emitter with a debug ID of 'timer'.
+ */
 export function scopedEE (sharedEE) {
   return (sharedEE || baseEE).get('timer')
 }

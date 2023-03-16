@@ -12,6 +12,10 @@ import { generateRandomHexString } from '../common/ids/unique-id'
 import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
 import { warn } from '../common/util/console'
 
+/**
+ * A flexible class that may be used to compose an agent from a select subset of feature modules. In applications
+ * sensitive to network load, this may result in smaller builds with slightly lower performance impact.
+ */
 export class Agent {
   constructor (options, agentIdentifier = generateRandomHexString(16)) {
     this.agentIdentifier = agentIdentifier

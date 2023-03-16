@@ -3,6 +3,7 @@ var fs = require('fs')
 var path = require('path')
 var AWS = require('aws-sdk')
 var yargs = require('yargs')
+const mime = require('mime-types');
 
 var argv = yargs
     .string('bucket')
@@ -122,7 +123,7 @@ function uploadToS3(fileName, content) {
         var params = {
             Body: content,
             Bucket: argv.bucket,
-            ContentType: 'application/javascript',
+            ContentType: mime.lookup(fileName) || 'application/javascript',
             CacheControl: 'public, max-age=3600',
             Key: fileName
         }

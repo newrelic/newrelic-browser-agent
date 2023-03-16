@@ -4,6 +4,11 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+ 
+/**
+ * @file Compares local build output files with those of a specified release version on CDN and writes JSON and
+ * markdown build size reports to a specified directory.
+ */
 
 import path from 'path'
 import url from 'url'

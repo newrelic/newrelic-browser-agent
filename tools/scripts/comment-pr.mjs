@@ -36,6 +36,8 @@ const config = yargs(hideBin(process.argv))
   })
 
   let comment
+  // If a tag argument is passed, the script will look for an existing PR comment containing the text of the tag and
+  // update that existing comment rather than creating a new one.
   if (config.tag) {
     for await (const { data: comments } of client.paginate.iterator(client.rest.issues.listComments, {
       owner: 'newrelic',

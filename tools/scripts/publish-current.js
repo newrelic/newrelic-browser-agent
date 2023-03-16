@@ -13,7 +13,7 @@ var AWS = require('aws-sdk')
 var request = require('request')
 var yargs = require('yargs')
 var loaders = require('jil/util/loaders.js')
-const mime = require("mime-types");
+const mime = require('mime-types');
 
 var argv = yargs
   .string('build-number')

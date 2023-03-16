@@ -9,6 +9,10 @@ import { Instrument as InstrumentSessionTrace } from '../features/session_trace/
 import { Instrument as InstrumentSpa } from '../features/spa/instrument'
 import { Instrument as InstrumentPageAction } from '../features/page_action/instrument'
 
+/**
+ * An agent class with all feature modules available. Features may be disabled and enabled via runtime configuration.
+ * The BrowserAgent class is the most convenient and reliable option for most use cases.
+ */
 export class BrowserAgent extends Agent {
   constructor (...args) {
     super({

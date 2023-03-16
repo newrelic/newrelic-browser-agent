@@ -1,3 +1,8 @@
+/**
+ * @file Creates a "Worker" agent loader bundle composed of the core Agent and the subset of feature modules applicable
+ * in a service worker context.
+ */
+
 import { Agent } from '../loaders/agent'
 
 import { Instrument as InstrumentMetrics } from '../features/metrics/instrument'

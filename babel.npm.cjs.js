@@ -1,3 +1,7 @@
+/**
+ * @file Provides Babel configuration for compiling src/index.js into NPM package output (CommonJS).
+ */
+
 const babelEnv = require('./babel-env-vars')
 
 const presets = [

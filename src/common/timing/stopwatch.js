@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { now, getOffset } from './now'
+import { getRuntime } from '../config/config'
+import { now } from './now'
 
 var marks = {}
 
 export function mark (agentId, markName, markTime) {
-  if (typeof markTime === 'undefined') markTime = (now() + getOffset())
+  if (typeof markTime === 'undefined') markTime = (now() + getRuntime(agentId).offset)
   marks[agentId] = marks[agentId] || {}
   marks[agentId][markName] = markTime
 }

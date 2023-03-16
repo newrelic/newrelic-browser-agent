@@ -13,6 +13,7 @@ var AWS = require('aws-sdk')
 var request = require('request')
 var yargs = require('yargs')
 var loaders = require('jil/util/loaders.js')
+const mime = require('mime-types');
 
 var argv = yargs
   .string('build-number')
@@ -70,6 +71,8 @@ var allFiles = allNames.map(add('.js'))
   .concat(allNames.map(add('.js.map')))
   .concat(allNames.map(add('.min.js')))
   .concat(allNames.map(add('.min.js.map')))
+  .concat(allNames.map(add('.stats.json')))
+  .concat(allNames.map(add('.stats.html')))
 
 var toGet = allFiles.map(setVersion(buildNum))
 var toSet = allFiles.map(setVersion('current'))
@@ -91,7 +94,7 @@ initialize(function(err) {
       }
 
       var key = toSet[idx]
-      var type = 'application/javascript'
+      var type = mime.lookup(name) || 'application/javascript'
 
       uploadToS3(key, content, type, function (e) {
         if (e) throw e

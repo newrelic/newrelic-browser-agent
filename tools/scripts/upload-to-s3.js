@@ -3,7 +3,7 @@ var fs = require('fs')
 var path = require('path')
 var AWS = require('aws-sdk')
 var yargs = require('yargs')
-const mime = require("mime-types");
+const mime = require('mime-types');
 
 var argv = yargs
     .string('bucket')

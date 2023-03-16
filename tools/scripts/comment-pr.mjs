@@ -5,6 +5,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * @file Adds the provided input text as a comment to a specified Github pull request, or if an optional tag string is
+ * provided, updates an existing comment containing that tag.
+ */
+
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import fs from 'fs-extra'

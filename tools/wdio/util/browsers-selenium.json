@@ -1,0 +1,23 @@
+{
+  "chrome": [
+    {
+      "browserName": "chrome",
+      "platform": "linux",
+      "version": "latest"
+    }
+  ],
+  "edge": [
+    {
+      "browserName": "edge",
+      "platform": "linux",
+      "version": "latest"
+    }
+  ],
+  "firefox": [
+    {
+      "browserName": "firefox",
+      "platform": "linux",
+      "version": "latest"
+    }
+  ]
+}

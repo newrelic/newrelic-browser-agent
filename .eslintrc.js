@@ -14,6 +14,14 @@ module.exports = {
     'tools/scripts/upload-to-s3.js'
   ],
   parser: '@babel/eslint-parser',
+  parserOptions: {
+    requireConfigFile: false,
+    babelOptions: {
+      plugins: [
+        '@babel/plugin-syntax-import-assertions'
+      ]
+    }
+  },
   env: {
     es2022: true
   },
@@ -48,7 +56,7 @@ module.exports = {
       }
     },
     {
-      files: ['src/**/*.test.js'],
+      files: ['src/**/*.test.js', 'tests/specs/**/*.e2e.js'],
       env: {
         browser: true,
         node: true,

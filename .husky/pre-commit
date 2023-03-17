@@ -6,6 +6,7 @@ npm run unit -- --onlyChanged
 
 npm run sauce:get-browsers
 git add tools/jil/util/browsers-supported.json
+git add tools/wdio/util/browsers-supported.json
 
 for FILE in $STAGED_FILES
 do

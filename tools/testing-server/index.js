@@ -53,6 +53,12 @@ class TestServer {
   #bamServer
 
   /**
+   * Fastify command server instance.
+   * @type module:fastify.FastifyInstance
+   */
+  #commandServer
+
+  /**
    * List of test handles keyed to a test id
    * @type {Map<string, TestHandle>}
    */
@@ -68,6 +74,7 @@ class TestServer {
     this.#createAssetServer()
     this.#createCorsServer()
     this.#createBamServer()
+    this.#createCommandServer()
   }
 
   /**
@@ -78,7 +85,8 @@ class TestServer {
     await Promise.all([
       this.#assetServer.listen({ host: '0.0.0.0', port: this.#config.port }),
       this.#corsServer.listen({ host: '0.0.0.0', port: 0 }),
-      this.#bamServer.listen({ host: '0.0.0.0', port: 0 })
+      this.#bamServer.listen({ host: '0.0.0.0', port: 0 }),
+      this.#commandServer.listen({ host: '0.0.0.0', port: 0 })
     ])
 
     await this.ready()
@@ -92,7 +100,8 @@ class TestServer {
     await Promise.all([
       this.#assetServer.close(),
       this.#corsServer.close(),
-      this.#bamServer.close()
+      this.#bamServer.close(),
+      this.#commandServer.close()
     ])
   }
 
@@ -105,7 +114,8 @@ class TestServer {
       resources: [
         `http-get://127.0.0.1:${this.assetServer.port}/`,
         `http-get://127.0.0.1:${this.corsServer.port}/json`,
-        `http-get://127.0.0.1:${this.bamServer.port}/1/${defaultAgentConfig.licenseKey}`
+        `http-get://127.0.0.1:${this.bamServer.port}/1/${defaultAgentConfig.licenseKey}`,
+        `http-get://127.0.0.1:${this.commandServer.port}/health`
       ]
     })
   }
@@ -135,6 +145,14 @@ class TestServer {
       server: this.#bamServer,
       host: this.#config.host,
       port: this.#getServerPort(this.#bamServer)
+    }
+  }
+
+  get commandServer () {
+    return {
+      server: this.#commandServer,
+      host: this.#config.host,
+      port: this.#getServerPort(this.#commandServer)
     }
   }
 
@@ -245,6 +263,18 @@ class TestServer {
     this.#bamServer.register(require('./routes/bam-apis'), this)
     this.#bamServer.register(require('./plugins/test-handle'), this)
     this.#bamServer.register(require('./plugins/no-cache'))
+  }
+
+  #createCommandServer () {
+    this.#commandServer = fastify({
+      maxParamLength: Number.MAX_SAFE_INTEGER,
+      bodyLimit: Number.MAX_SAFE_INTEGER,
+      logger: this.#config.logRequests ? this.#config.logger : false
+    })
+
+    this.#commandServer.decorate('testServerId', 'commandServer')
+    this.#commandServer.register(require('./routes/command-apis'), this)
+    this.#commandServer.register(require('./plugins/no-cache'))
   }
 
   /**

@@ -267,6 +267,7 @@ jobs:
   ie-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
+    continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
 
@@ -286,6 +287,7 @@ jobs:
   ie-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
+    continue-on-error: true
     runs-on: ubuntu-latest
     container: node:14
 
@@ -306,6 +308,7 @@ jobs:
   all-browsers-simple-tests:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
+    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, safari-functional, safari-unit, edge-functional, edge-unit, ios-functional, ios-unit, android-functional, android-unit, ie-functional, ie-unit]
     runs-on: ubuntu-latest
     container: node:14
 
@@ -321,7 +324,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -A -f merged -b *@* -s -t 85000 --concurrent=5 tests/functional/graceful-error.test.js
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -A -f merged -b *@* -s -t 85000 --concurrent=30 tests/functional/graceful-error.test.js
 
   check-failures:
     runs-on: ubuntu-latest

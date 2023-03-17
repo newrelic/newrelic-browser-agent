@@ -321,7 +321,7 @@ jobs:
         uses: ./.github/actions/test-setup
 
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -A -f merged -b ie@* -s -t 85000 --concurrent=5 tests/functional/graceful-error.test.js
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -A -f merged -b *@* -s -t 85000 --concurrent=5 tests/functional/graceful-error.test.js
 
   check-failures:
     runs-on: ubuntu-latest

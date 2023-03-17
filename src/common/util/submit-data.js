@@ -84,7 +84,7 @@ submitData.img = function img (url) {
  * Send via sendBeacon. Do NOT call this function outside of a guaranteed web window environment.
  * @param {string} url
  * @param {string} body
- * @returns {function}
+ * @returns {boolean}
  */
 submitData.beacon = function (url, body) {
   // Navigator has to be bound to ensure it does not error in some browsers
@@ -96,6 +96,6 @@ submitData.beacon = function (url, body) {
     // if sendBeacon still trys to throw an illegal invocation error,
     // we can catch here and return.  The harvest module will fallback to use
     // .img to try to send
-    return
+    return false
   }
 }

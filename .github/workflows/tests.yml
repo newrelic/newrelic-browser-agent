@@ -303,6 +303,26 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=5 --unit-only
 
+  all-browsers-simple-tests:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    container: node:14
+
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: checkout and build
+        uses: ./.github/actions/test-setup
+
+      - name: run tests
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -A -f merged -b ie@* -s -t 85000 --concurrent=5 tests/functional/graceful-error.test.js
+
   check-failures:
     runs-on: ubuntu-latest
     container: node:14

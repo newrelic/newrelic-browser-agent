@@ -241,34 +241,38 @@ features.addEventListenerOptions = new BrowserMatcher()
 features.firstPaint = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=60')
+  .include('edge', '>=79')
   .include('android')
-  .include('edge')
 
-features.firstContentfulPaint = new BrowserMatcher()
-  .exclude('*')
-  .include('chrome', '>=60')
+features.firstContentfulPaint = features.firstPaint
   .include('firefox', '>=84')
+  .include('safari', '>15') // this should be >= 14.1 but safari 15 on Sauce hates FCP, and it destroys the other tests on the same thread too...
   .include('ios', '>=14.5')
-  .include('android')
-  .include('edge')
 
-features.largestContentfulPaint = new BrowserMatcher()
+features.firstInputDelay = new BrowserMatcher()
+  .exclude('*')
+  .include('chrome', '>=76')
+  .include('edge', '>=79')
+  .include('firefox', '>=89')
+  .include('android')
+
+features.largestContentfulPaint = features.cumulativeLayoutShift = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=77')
-
-features.cumulativeLayoutShift = new BrowserMatcher()
-  .exclude('*')
-  .include('chrome', '>=84')
+  .include('edge', '>=79')
+  .include('android')
 
 features.interactionToNextPaint = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=96')
   .include('edge', '>=96')
+  .include('android', '>=9.0')
 
 features.longTaskTiming = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=58')
   .include('edge', '>=79')
+  .include('android')
 
 // btoa() is used to base-64-encode Distributed Tracing header data.
 // https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/btoa#Browser_compatibility

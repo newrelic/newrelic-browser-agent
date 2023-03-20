@@ -18,6 +18,12 @@ const getCircularReplacer = () => {
   }
 }
 
+/**
+ * The native JSON.stringify method augmented with a replacer function to handle circular references.
+ * Circular references will be excluded from the JSON output rather than triggering errors.
+ * @param {*} val - A value to be converted to a JSON string.
+ * @returns {string} A JSON string representation of the value, with circular references handled.
+ */
 export function stringify (val) {
   try {
     return JSON.stringify(val, getCircularReplacer())

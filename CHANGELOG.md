@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1228
+
+### Fix negative offset timings
+Fix an issue that caused session trace offset timings to be miscalculated in the early-page lifecycle, sometimes leading to negative "backend" timings.
+
 ## v1227
 
 ### Added INP and long tasks reporting

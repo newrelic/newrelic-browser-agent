@@ -5,6 +5,11 @@
 
 import { ee } from '../event-emitter/contextual-ee'
 
+/**
+ * Returns a function for use as a replacer parameter in JSON.stringify() to handle circular references.
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Cyclic_object_value MDN - Cyclical object value}
+ * @returns {Function} A function that filters out values it has seen before.
+ */
 const getCircularReplacer = () => {
   const seen = new WeakSet()
   return (key, value) => {

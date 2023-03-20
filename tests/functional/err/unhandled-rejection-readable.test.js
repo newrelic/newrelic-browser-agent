@@ -40,7 +40,7 @@ testDriver.test('unhandledPromiseRejections are caught and are readable', suppor
       { message: 'Unhandled Promise Rejection: {}', tested: false, meta: 'map object' },
       { message: 'Unhandled Promise Rejection: {"abc":"Hello"}', tested: false, meta: 'factory function' },
       { message: 'Unhandled Promise Rejection: undefined', tested: false, meta: 'uncalled function' },
-      { message: 'Unhandled Promise Rejection: ', tested: false, meta: 'circular object' }
+      { message: 'Unhandled Promise Rejection: {"abc":"circular"}', tested: false, meta: 'circular object' }
     ]
     actualErrors.forEach(err => {
       const targetError = expectedErrorMessages.find(x => !x.tested && x.message === err.params.message)
@@ -49,7 +49,7 @@ testDriver.test('unhandledPromiseRejections are caught and are readable', suppor
       t.ok(!!err.params.stack_trace, 'stack_trace exists')
       t.ok(!!err.params.stackHash, 'stackHash exists')
     })
-    t.ok(expectedErrorMessages.every(x => x.tested), 'All expected error messages were found')
+    t.ok(expectedErrorMessages.every(x => x.tested), `All expected error messages were found ${expectedErrorMessages.filter(x => !x.tested)}`)
     t.end()
   }).catch(fail)
 

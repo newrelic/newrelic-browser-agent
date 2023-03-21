@@ -39,10 +39,10 @@
     },
     {
       "browserName": "MicrosoftEdge",
-      "platform": "Windows 11",
-      "platformName": "Windows 11",
-      "version": "108",
-      "browserVersion": "108"
+      "platform": "Windows 10",
+      "platformName": "Windows 10",
+      "version": "107",
+      "browserVersion": "107"
     },
     {
       "browserName": "MicrosoftEdge",
@@ -82,7 +82,7 @@
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "108"
+      "version": "107"
     },
     {
       "browserName": "firefox",

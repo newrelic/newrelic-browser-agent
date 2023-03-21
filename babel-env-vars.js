@@ -7,6 +7,21 @@ const fs = require('fs')
 
 const VERSION = fs.readFileSync('./VERSION', 'utf-8')
 
+/*
+ * Version injection is currently complicated by the fact that NPM will build with package.json.version while CDN will
+ * build with the value in the VERSION file, as well as subversion attributes such as PROD, DEV, LOCAL, etc. Once
+ * aligned, this process will be simpler.
+ */
+
+/**
+ * Derives a build version based on the specified source and subversion and assigns the value to a process environment
+ * variable called `BUILD_VERSION`.
+ * @param {string} source - The desired source of the version number. Can be `VERSION` or `PACKAGE`.
+ * @param {string} subversion - A build classification suffix (e.g. `PROD` or a PR number).
+ * @returns {Array} - A configuration array with plugin configuration for
+ *     `babel-plugin-transform-inline-environment-variables`.
+ * @see https://babeljs.io/docs/en/babel-plugin-transform-inline-environment-variables
+ */
 module.exports = ({ source, subversion, isSemver = true } = {}) => {
   setBuildVersion(source, subversion, isSemver)
   setBuildEnv(subversion)

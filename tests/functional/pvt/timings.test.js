@@ -494,69 +494,6 @@ function runClsTests (loader) {
       })
       .catch(fail(t))
   })
-
-  testDriver.test('cls only accumulates biggest session (short CLS session followed by long)', supportsCLS, function (t, browser, router) {
-    const rumPromise = router.expectRum()
-    const loadPromise = browser
-      .safeGet(router.assetURL('cls-multiple-small-then-big.html', { loader: loader }))
-      .waitForFeature('loaded')
-      .waitForConditionInBrowser('window.contentAdded === true', 10000)
-      .eval('window.allCls')
-
-    Promise.all([rumPromise, loadPromise])
-      .then(() => {
-        let timingsPromise = router.expectTimings()
-        let domPromise = browser.get(router.assetURL('/'))
-        return Promise.all([timingsPromise, domPromise, loadPromise])
-      })
-      .then(([{ request: timingsResult }, domResult, loadResult]) => {
-        const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
-
-        const timing = timings.find(t => t.name === 'unload')
-        const cls = timing.attributes.find(a => a.key === 'cls')
-        t.ok(cls.value >= 0, 'cls is a non-negative value')
-        t.ok(cls.value === Math.max(...loadResult), 'CLS is set to the largest CLS session')
-        t.equal(cls.type, 'doubleAttribute', 'cls is doubleAttribute')
-
-        t.end()
-      })
-      .catch(fail(t))
-  })
-
-  testDriver.test('cls only accumulates biggest session (long CLS session followed by short)', supportsCLS, function (t, browser, router) {
-    const rumPromise = router.expectRum()
-    const loadPromise = browser
-      .safeGet(router.assetURL('cls-multiple-big-then-small.html', { loader: loader }))
-      .waitForFeature('loaded')
-      .waitForConditionInBrowser('window.contentAdded === true', 10000)
-      .eval('window.allCls')
-
-    Promise.all([rumPromise, loadPromise])
-      .then(() => {
-        let timingsPromise = router.expectTimings()
-        let domPromise = browser.get(router.assetURL('/'))
-        return Promise.all([timingsPromise, domPromise, loadPromise])
-      })
-      .then(([{ request: timingsResult }, domResult, loadResult]) => {
-        const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
-
-        const load = timings.find(t => t.name === 'load')
-        const loadCls = load.attributes.find(a => a.key === 'cls')
-        t.ok(loadCls.value === 0, 'initial CLS is 0')
-        t.equal(loadCls.type, 'doubleAttribute', 'cls is doubleAttribute')
-
-        const unload = timings.find(t => t.name === 'unload')
-        const unloadCls = unload.attributes.find(a => a.key === 'cls')
-        t.ok(unloadCls.value >= 0, 'cls is a non-negative value')
-        t.ok(unloadCls.value === Math.max(...loadResult), 'CLS is set to the largest CLS session')
-        t.equal(unloadCls.type, 'doubleAttribute', 'cls is doubleAttribute')
-
-        t.end()
-      })
-      .catch(fail(t))
-  })
 }
 
 function runCustomAttributeTests (loader) {

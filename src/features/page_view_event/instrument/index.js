@@ -45,8 +45,8 @@ export class Instrument extends InstrumentBase {
         handle('timing', ['load', timeNow], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
       })
     }
-    // Else, this is executing in a worker or some other env where these events are irrelevant. They'll get filled in with 0s in RUM call.
+    // Else, inference: inside worker or some other env where these events are irrelevant. They'll get filled in with 0s in RUM call.
 
-    this.importAggregator() // the measureWindowLoaded cb should run *before* the page_view_event agg runs
+    this.importAggregator()
   }
 }

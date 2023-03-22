@@ -22,16 +22,12 @@ export class Aggregate extends AggregateBase {
 
     this.timings = []
     this.timingsSent = []
-    this.clsSupported = false
-    this.cls = 0
-    this.clsSession = { value: 0, firstEntryTime: 0, lastEntryTime: 0 }
     this.curSessEndRecorded = false
 
-    try {
+    try { // we (only) need to track cls state because it's attached to other timing events rather than reported on change...
       this.clsSupported = PerformanceObserver.supportedEntryTypes.includes('layout-shift')
-    } catch (e) {
-    // do nothing
-    }
+      this.cls = 0
+    } catch (e) {}
 
     var initialHarvestSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
     var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
@@ -43,11 +39,10 @@ export class Aggregate extends AggregateBase {
       getPayload: (...args) => this.prepareHarvest(...args)
     }, this)
 
-    registerHandler('lcp', (value, lcpEntry, networkInformation) => this.recordLcp(value, lcpEntry, networkInformation, this.cls),
-      this.featureName, this.ee) // notice we snapshot CLS at this specific time
-    registerHandler('cls', (...args) => this.updateClsScore(...args), this.featureName, this.ee)
+    registerHandler('lcp', (value, lcpEntry, networkInformation) => this.recordLcp(value, lcpEntry, networkInformation), this.featureName, this.ee)
+    registerHandler('cls', (value) => this.cls = value, this.featureName, this.ee) // on cls change, just update the internal state value
 
-    registerHandler('timing', (name, value, attrs) => this.addTiming(name, value, attrs, true), this.featureName, this.ee) // notice CLS is added to all timings via 4th param
+    registerHandler('timing', (name, value, attrs) => this.addTiming(name, value, attrs), this.featureName, this.ee) // notice CLS is added to all timings via 4th param
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
 
@@ -57,7 +52,7 @@ export class Aggregate extends AggregateBase {
     drain(this.agentIdentifier, this.featureName)
   }
 
-  recordLcp (lcpValue, lcpEntry, networkInfo, cls) {
+  recordLcp (lcpValue, lcpEntry, networkInfo) {
     var attrs = {
       size: lcpEntry.size,
       eid: lcpEntry.id
@@ -78,27 +73,7 @@ export class Aggregate extends AggregateBase {
       attrs['elTag'] = lcpEntry.element.tagName
     }
 
-    // collect 0 only when CLS is supported, since 0 is a valid score
-    if (cls > 0 || this.clsSupported) {
-      attrs['cls'] = cls
-    }
-
-    this.addTiming('lcp', lcpValue, attrs, false)
-  }
-
-  updateClsScore (clsEntry) {
-  // this used to be cumulative for the whole page, now we need to split it to a
-  // new CLS measurement after 1s between shifts or 5s total
-    if ((clsEntry.startTime - this.clsSession.lastEntryTime) > 1000 ||
-      (clsEntry.startTime - this.clsSession.firstEntryTime) > 5000) {
-      this.clsSession = { value: 0, firstEntryTime: clsEntry.startTime, lastEntryTime: clsEntry.startTime }
-    }
-
-    this.clsSession.value += clsEntry.value
-    this.clsSession.lastEntryTime = Math.max(this.clsSession.lastEntryTime, clsEntry.startTime)
-
-    // only keep the biggest CLS we've observed
-    if (this.cls < this.clsSession.value) this.cls = this.clsSession.value
+    this.addTiming('lcp', lcpValue, attrs)
   }
 
   /**
@@ -107,7 +82,7 @@ export class Aggregate extends AggregateBase {
    */
   endCurrentSession (timestamp) {
     if (!this.curSessEndRecorded) { // TO DO: stage 2 - we don't want to capture this timing twice on page navigating away, but it should run again if we return to page and away *again*
-      this.addTiming('pageHide', timestamp, null, true)
+      this.addTiming('pageHide', timestamp, null)
       this.curSessEndRecorded = true
     }
   }
@@ -116,15 +91,17 @@ export class Aggregate extends AggregateBase {
    * Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr.
    */
   recordPageUnload (timestamp) {
-    this.addTiming('unload', timestamp, null, true)
+    this.addTiming('unload', timestamp, null)
     // Because window's pageHide commonly fires before vis change and the final harvest occurs on the earlier of the two, we also have to add that now or it won't make it into the last payload out.
     this.endCurrentSession(timestamp)
   }
 
-  addTiming (name, value, attrs, addCls) {
+  addTiming (name, value, attrs) {
     attrs = attrs || {}
-    // collect 0 only when CLS is supported, since 0 is a valid score
-    if ((this.cls > 0 || this.clsSupported) && addCls) {
+
+    // If CLS is supported, a cls value should exist and be reported, even at 0.
+    // *cli Mar'23 - At this time, it remains attached to all timings. See NEWRELIC-6143.
+    if (this.clsSupported) {
       attrs['cls'] = this.cls
     }
 

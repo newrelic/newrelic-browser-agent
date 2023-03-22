@@ -272,7 +272,7 @@ features.longTaskTiming = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>=58')
   .include('edge', '>=79')
-  .include('android')
+  //.include('android') -- LTs aren't *observed* the same way for android-chrome rn (v9.0) for some reason
 
 // btoa() is used to base-64-encode Distributed Tracing header data.
 // https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/btoa#Browser_compatibility

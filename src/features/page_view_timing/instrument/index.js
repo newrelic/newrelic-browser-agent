@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../../common/event-emitter/handle'
-import { onFCP, onFID, onLCP, onINP } from 'web-vitals'
+import { onFCP, onFID, onLCP, onCLS, onINP } from 'web-vitals'
 import { onFirstPaint } from './first-paint'
 import { onLongTask } from './long-tasks'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
@@ -21,18 +21,8 @@ export class Instrument extends InstrumentBase {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     if (!isBrowserScope) return // CWV is irrelevant outside web context
 
-    /** Since we don't support timings on BFCache restores, this tracks and helps cap metrics that web-vitals report more than once. */
+    // Since we don't support timings on BFCache restores, this tracks and helps cap metrics that web-vitals report more than once.
     this.alreadySent = new Set()
-    this.clsPerformanceObserver
-
-    if ('PerformanceObserver' in window && typeof window.PerformanceObserver === 'function') {
-      this.clsPerformanceObserver = new PerformanceObserver((...args) => this.clsObserver(...args))
-      try {
-        this.clsPerformanceObserver.observe({ type: 'layout-shift', buffered: true })
-      } catch (e) {
-        // do nothing
-      }
-    }
 
     /* PerformancePaintTiming API
         This listener is deferrable BUT because it does not consider document vis state yet, unlike FID and LCP below. BFC is also not supported. */
@@ -77,6 +67,15 @@ export class Instrument extends InstrumentBase {
       handle('lcp', [value, lcpEntry, attributes], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     })
 
+    /* Cumulative Layout Shift
+        This listener IS deferrable, though further validation required. */
+    onCLS(({ name, value }) => {
+      if (this.alreadySent.has(name)) return
+      this.alreadySent.add(name)
+
+      handle('cls', [value], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
+    })
+
     /* Interaction-to-Next-Paint
         This listener IS deferrable, though further validation required. */
     onINP(({ name, value, id }) => {
@@ -100,14 +99,6 @@ export class Instrument extends InstrumentBase {
     windowAddEventListener('pagehide', () => handle('winPagehide', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee))
 
     this.importAggregator()
-  }
-
-  clsObserver (list) {
-    list.getEntries().forEach((entry) => {
-      if (!entry.hadRecentInput) {
-        handle('cls', [entry], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
-      }
-    })
   }
 
   // takes an attributes object and appends connection attributes if available

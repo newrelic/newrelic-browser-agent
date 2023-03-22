@@ -69,10 +69,8 @@ export class Instrument extends InstrumentBase {
 
     /* Cumulative Layout Shift
         This listener IS deferrable, though further validation required. */
-    onCLS(({ name, value }) => {
-      if (this.alreadySent.has(name)) return
-      this.alreadySent.add(name)
-
+    onCLS(({ value }) => {
+      // We don't have to limit this callback since cls is stored as state var and only sent as attribute on other timings.
       handle('cls', [value], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
     })
 

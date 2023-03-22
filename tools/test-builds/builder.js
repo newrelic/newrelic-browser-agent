@@ -40,7 +40,7 @@ function install (folder) {
   child_process.execSync('rm -rf node_modules', { cwd: folder, env: process.env, stdio: 'inherit' })
   child_process.execSync('rm -rf package-lock.json', { cwd: folder, env: process.env, stdio: 'inherit' })
   // Re-install node modules
-  child_process.execSync('npm install', { cwd: folder, env: process.env, stdio: 'inherit' })
+  child_process.execSync(`npm install ${tarball}`, { cwd: folder, env: process.env, stdio: 'inherit' })
 }
 
 // Performs `npm build`

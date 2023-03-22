@@ -29,9 +29,9 @@ jil.browserTest('LCP event with CLS attribute', function (t) {
   // drain adds `timing` and `lcp` event listeners in the agent/timings module
   drain(agentIdentifier, 'feature')
 
-  handle('cls', [{ value: 1 }], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
+  handle('cls', [1], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
   handle('lcp', [1, { size: 1, startTime: 1 }], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
-  handle('cls', [{ value: 2 }], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
+  handle('cls', [2], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
 
   // invoke final harvest, which includes harvesting LCP
   pvtAgg.recordPageUnload(Date.now())

@@ -91,9 +91,7 @@ export class Instrument extends InstrumentBase {
     }
 
     // Document visibility state becomes hidden; cannot assume safely deferrable.
-    subscribeToVisibilityChange(() => {
-      handle('docHidden', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
-    }, true)
+    subscribeToVisibilityChange(() => handle('docHidden', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee), true)
 
     // Window fires its pagehide event (typically on navigation--this occurrence is a *subset* of vis change); cannot assume safely deferrable.
     windowAddEventListener('pagehide', () => handle('winPagehide', [now()], undefined, FEATURE_NAMES.pageViewTiming, this.ee))

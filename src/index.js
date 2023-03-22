@@ -1,7 +1,9 @@
 export { CustomAgent } from './custom-agent'
 export { BrowserAgent } from './browser-agent'
-export { MicroAgent } from './micro-agent'
 export { WorkerAgent } from './worker-agent'
+
+/** IN-PROGRESS -- DOES NOT CURRENTLY WORK CORRECTLY */
+// export { MicroAgent } from './micro-agent'
 
 export { Ajax } from './features/ajax'
 export { JSErrors } from './features/jserrors'

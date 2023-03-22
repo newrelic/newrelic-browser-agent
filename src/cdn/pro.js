@@ -1,3 +1,8 @@
+/**
+ * @file Creates a "Pro" agent loader bundle composed of the core Agent and all available feature modules except `spa`.
+ * This excludes collection of BrowserInteraction and BrowserTiming events.
+ */
+
 import { Agent } from '../loaders/agent'
 
 import { Instrument as InstrumentPageViewEvent } from '../features/page_view_event/instrument'

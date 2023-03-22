@@ -1,3 +1,7 @@
+/**
+ * @file Derives a "version" for injection into the bundle. Used to configure Babel for NPM, Webpack, and test server.
+ */
+
 const pkg = require('./package.json')
 const fs = require('fs')
 

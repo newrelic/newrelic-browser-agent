@@ -39,13 +39,12 @@
       new Promise(function(res, rej) {
         function Foo() {
           this.abc = "Hello";
-          this.circular = this;
         }
         rej(Foo);
       });
       new Promise(function(res, rej) {
         function Foo() {
-          this.abc = "Hello";
+          this.abc = "circular";
           this.circular = this;
         }
         rej(new Foo());

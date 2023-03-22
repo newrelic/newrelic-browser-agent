@@ -17,6 +17,7 @@ const {
   testResourcesRequest,
   testInteractionEventsRequest
 } = require('./utils/expect-tests')
+const SerAny = require('serialize-anything')
 
 /**
  * Scheduled reply options
@@ -104,17 +105,21 @@ module.exports = class TestHandle {
       const scheduledReplies = this.#scheduledReplies.get(serverId)
 
       for (const scheduledReply of scheduledReplies) {
-        let test = scheduledReply.test
+        try {
+          let test = scheduledReply.test
 
-        if (typeof test === 'string') {
-          // eslint-disable-next-line no-new-func
-          test = new Function(test)
-        }
+          if (typeof test === 'string') {
+            // eslint-disable-next-line no-new-func
+            test = SerAny.deserialize(test)
+          }
 
-        if (test.call(this, request)) {
-          request.scheduledReply = scheduledReply
+          if (test.call(this, request)) {
+            request.scheduledReply = scheduledReply
+            scheduledReplies.delete(scheduledReply)
+            break
+          }
+        } catch (e) {
           scheduledReplies.delete(scheduledReply)
-          break
         }
       }
     }
@@ -123,17 +128,22 @@ module.exports = class TestHandle {
       const pendingExpects = this.#pendingExpects.get(serverId)
 
       for (const pendingExpect of pendingExpects) {
-        let test = pendingExpect.test
+        try {
+          let test = pendingExpect.test
 
-        if (typeof test === 'string') {
-          // eslint-disable-next-line no-new-func
-          test = new Function(test)
-        }
+          if (typeof test === 'string') {
+            // eslint-disable-next-line no-new-func
+            test = SerAny.deserialize(test)
+          }
 
-        if (test.call(this, request)) {
-          request.resolvingExpect = pendingExpect
+          if (test.call(this, request)) {
+            request.resolvingExpect = pendingExpect
+            pendingExpects.delete(pendingExpect)
+            break
+          }
+        } catch (e) {
+          pendingExpect.reject(e)
           pendingExpects.delete(pendingExpect)
-          break
         }
       }
     }
@@ -164,15 +174,18 @@ module.exports = class TestHandle {
       this.#pendingExpects.set(serverId, new Set())
     }
 
+    if (!testServerExpect.test) {
+      return Promise.reject(new Error('A test function must be provided.'))
+    }
+
     const deferred = this.#createDeferred()
     deferred.test = testServerExpect.test
 
     if (testServerExpect.timeout !== false) {
       setTimeout(() => {
-        deferred.reject(
-          `Expect for ${serverId} timed out for test ${this.#testId}`,
-          testServerExpect.test.toString()
-        )
+        deferred.reject(new Error(
+          `Expect for ${serverId} timed out for test ${this.#testId}`
+        ))
       }, testServerExpect.timeout || this.#testServer.config.timeout)
     }
 

@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 /**
- * This module is used by: spa
+ * @file Wraps the native Promise object for instrumentation.
+ * This module is used by: spa.
  */
+
 import { createWrapperWithEmitter as wrapFn, flag } from './wrap-function'
 import { ee as baseEE, getOrSetContext } from '../event-emitter/contextual-ee'
 import { originals } from '../config/config'
@@ -12,6 +14,13 @@ import { globalScope } from '../util/global-scope'
 
 const wrapped = {}
 
+/**
+ * Wraps the native Promise object so that it will emit events for start, end and error in the context of a new event
+ * emitter scoped only to promise methods. Also instruments various methods, such as `all`, `race`, `resolve`,
+ * `reject`, `then`, and `catch`.
+ * @param {Object} sharedEE - The shared event emitter on which a new scoped event emitter will be based.
+ * @returns {Object} Scoped event emitter with a debug ID of `promise`.
+ */
 export function wrapPromise (sharedEE) {
   const promiseEE = scopedEE(sharedEE)
 
@@ -143,6 +152,14 @@ export function wrapPromise (sharedEE) {
   }
   return promiseEE
 }
+
+/**
+ * Returns an event emitter scoped specifically for the `promise` context. This scoping is a remnant from when all the
+ * features shared the same group in the event, to isolate events between features. It will likely be revisited.
+ * @param {Object} sharedEE - Optional event emitter on which to base the scoped emitter.
+ *     Uses `ee` on the global scope if undefined).
+ * @returns {Object} Scoped event emitter with a debug ID of 'promise'.
+ */
 export function scopedEE (sharedEE) {
   return (sharedEE || baseEE).get('promise')
 }

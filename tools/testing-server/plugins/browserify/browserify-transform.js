@@ -51,8 +51,7 @@ function browserifyScript (scriptPath, enablePolyfills) {
 }
 
 /**
- * Transforms requests for JS files by passing them through browserify for
- * transpilation.
+ * Transforms requests for JS files by passing them through browserify for transpilation.
  */
 module.exports = function (scriptPath, testServer) {
   return new Transform({

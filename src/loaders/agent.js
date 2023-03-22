@@ -11,7 +11,12 @@ import { gosNREUM, gosNREUMInitializedAgents } from '../common/window/nreum'
 import { generateRandomHexString } from '../common/ids/unique-id'
 import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
 import { warn } from '../common/util/console'
+import { stringify } from '../common/util/stringify'
 
+/**
+ * A flexible class that may be used to compose an agent from a select subset of feature modules. In applications
+ * sensitive to network load, this may result in smaller builds with slightly lower performance impact.
+ */
 export class Agent {
   constructor (options, agentIdentifier = generateRandomHexString(16)) {
     this.agentIdentifier = agentIdentifier
@@ -51,7 +56,7 @@ export class Agent {
         if (enabledFeatures[f.featureName] || f.featureName === FEATURE_NAMES.pageViewEvent) {
           const dependencies = getFeatureDependencyNames(f.featureName)
           const hasAllDeps = dependencies.every(x => enabledFeatures[x])
-          if (!hasAllDeps) warn(`${f.featureName} is enabled but one or more dependent features has been disabled (${JSON.stringify(dependencies)}). This may cause unintended consequences or missing data...`)
+          if (!hasAllDeps) warn(`${f.featureName} is enabled but one or more dependent features has been disabled (${stringify(dependencies)}). This may cause unintended consequences or missing data...`)
           this.features[f.featureName] = new f(this.agentIdentifier, this.sharedAggregator)
         }
       })

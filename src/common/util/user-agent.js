@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const isiOS = /(iPad|iPhone|iPod)/g.test(navigator.userAgent)
-
 // Feature-detection is much preferred over using User Agent to detect browser.
 // However, there are cases where feature detection is not possible, for example
 // when a specific version of a browser has a bug that requires a workaround in just
@@ -25,7 +23,7 @@ if (navigator.userAgent) {
   }
 }
 
-export { agentName as agent, agentVersion as version, isiOS }
+export { agentName as agent, agentVersion as version }
 
 export function match (name, version) {
   if (!agentName) {

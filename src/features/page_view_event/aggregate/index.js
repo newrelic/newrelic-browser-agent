@@ -1,12 +1,12 @@
 import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { isiOS } from '../../../common/util/user-agent'
+import { isiOS } from '../../../common/browser-version/ios-version'
 import { onTTFB } from 'web-vitals'
 import { mapOwn } from '../../../common/util/map-own'
 import { param, fromArray } from '../../../common/url/encode'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
-import { addMetric as addPaintMetric } from '../../../common/metrics/paint-metrics'
+import { paintMetrics } from '../../../common/metrics/paint-metrics'
 import { submitData } from '../../../common/util/submit-data'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
@@ -97,23 +97,19 @@ export class Aggregate extends AggregateBase {
       chunksForQueryString.push(param('perf', stringify(navTimingApiData)))
     }
 
-    if (globalScope.performance && globalScope.performance.getEntriesByType) {
+    try { // PVTiming sends these too, albeit using web-vitals and slightly different; it's unknown why they're duplicated, but PVT should be the truth
       var entries = globalScope.performance.getEntriesByType('paint')
-      if (entries && entries.length > 0) {
-        entries.forEach(function (entry) {
-          if (!entry.startTime || entry.startTime <= 0) return
+      entries.forEach(function (entry) {
+        if (!entry.startTime || entry.startTime <= 0) return
 
-          if (entry.name === 'first-paint') {
-            chunksForQueryString.push(param('fp',
-              String(Math.floor(entry.startTime))))
-          } else if (entry.name === 'first-contentful-paint') {
-            chunksForQueryString.push(param('fcp',
-              String(Math.floor(entry.startTime))))
-          }
-          addPaintMetric(entry.name, Math.floor(entry.startTime))
-        })
-      }
-    }
+        if (entry.name === 'first-paint') {
+          chunksForQueryString.push(param('fp', String(Math.floor(entry.startTime))))
+        } else if (entry.name === 'first-contentful-paint') {
+          chunksForQueryString.push(param('fcp', String(Math.floor(entry.startTime))))
+        }
+        paintMetrics[entry.name] = Math.floor(entry.startTime) // this is consumed by Spa module
+      })
+    } catch (e) {}
 
     chunksForQueryString.push(param('xx', info.extra))
     chunksForQueryString.push(param('ua', info.userAttributes))

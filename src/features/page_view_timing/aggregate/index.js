@@ -6,6 +6,7 @@
 import { onFCP, onFID, onLCP, onCLS, onINP } from 'web-vitals'
 import { onFirstPaint } from '../first-paint'
 import { onLongTask } from '../long-tasks'
+import { iOS_below16 } from '../../../common/browser-version/ios-version'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { mapOwn } from '../../../common/util/map-own'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
@@ -44,12 +45,24 @@ export class Aggregate extends AggregateBase {
     })
 
     /* First Contentful Paint - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
-    onFCP(({ name, value }) => {
-      if (pageStartedHidden || this.alreadySent.has(name)) return
-      this.alreadySent.add(name)
-
-      this.addTiming(name.toLowerCase(), value)
-    })
+    if (iOS_below16) {
+      try {
+        if (!pageStartedHidden) { // see ios-version.js for detail on this following bug case; tldr: buffered flag doesn't work but getEntriesByType does
+          const paintEntries = performance.getEntriesByType('paint')
+          paintEntries.forEach(entry => {
+            if (entry.name === 'first-contentful-paint') {
+              this.addTiming('fcp', Math.floor(entry.startTime))
+            }
+          })
+        }
+      } catch (e) {}
+    } else {
+      onFCP(({ name, value }) => {
+        if (pageStartedHidden || this.alreadySent.has(name)) return
+        this.alreadySent.add(name)
+        this.addTiming(name.toLowerCase(), value)
+      })
+    }
 
     /* First Input Delay (+"First Interaction") - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
     onFID(({ name, value, entries }) => {

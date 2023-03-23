@@ -247,7 +247,7 @@ features.firstPaint = new BrowserMatcher()
 features.firstContentfulPaint = features.firstPaint
   .include('firefox', '>=84')
   .include('safari', '>15') // this should be >= 14.1 but safari 15 on Sauce hates FCP, and it destroys the other tests on the same thread too...
-  //.include('ios', '>=14.5') -- *cli Mar'23 - manually verified with *jporter that onFCP works with real iPhone v16.2 but for some odd reason won't report on Sauce v14.5-15.4
+  .include('ios', '>=14.5') //-- *cli Mar'23 - FYI there's a bug associated with paint observer for version < 16, see ios-version.js
 
 features.firstInputDelay = new BrowserMatcher()
   .exclude('*')

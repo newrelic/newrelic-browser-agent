@@ -1,3 +1,7 @@
+import { handle } from '../../../common/event-emitter/handle'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { isiOS } from '../../../common/util/user-agent'
+import { onTTFB } from 'web-vitals'
 import { mapOwn } from '../../../common/util/map-own'
 import { param, fromArray } from '../../../common/url/encode'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
@@ -18,7 +22,31 @@ export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME)
-    this.sendRum()
+
+    if (typeof PerformanceNavigationTiming !== 'undefined' && !isiOS) {
+      this.alreadySent = false // we don't support timings on BFCache restores
+      const agentRuntime = getRuntime(agentIdentifier) // we'll store timing values on the runtime obj to be read by the aggregate module
+
+      /* Time To First Byte
+        This listener must record these values *before* PVE's aggregate sends RUM. */
+      onTTFB(({ value, entries }) => {
+        if (this.alreadySent) return
+        this.alreadySent = true
+
+        agentRuntime[CONSTANTS.TTFB] = Math.round(value) // this is our "backend" duration; web-vitals will ensure it's lower bounded at 0
+
+        // Similar to what vitals does for ttfb, we have to factor in activation-start when calculating relative timings:
+        const navEntry = entries[0]
+        const respOrActivStart = Math.max(navEntry.responseStart, navEntry.activationStart || 0)
+        agentRuntime[CONSTANTS.FBTWL] = Math.max(Math.round(navEntry.loadEventEnd - respOrActivStart), 0) // our "frontend" duration
+        handle('timing', ['load', Math.round(navEntry.loadEventEnd)], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
+        agentRuntime[CONSTANTS.FBTDC] = Math.max(Math.round(navEntry.domContentLoadedEventEnd - respOrActivStart), 0) // our "dom processing" duration
+
+        this.sendRum()
+      })
+    } else {
+      this.sendRum() // timings either already in runtime from instrument or is meant to get 0'd.
+    }
   }
 
   getScheme () {

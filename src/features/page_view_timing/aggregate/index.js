@@ -3,13 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { onFCP, onFID, onLCP, onCLS, onINP } from 'web-vitals'
+import { onFirstPaint } from '../first-paint'
+import { onLongTask } from '../long-tasks'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { mapOwn } from '../../../common/util/map-own'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { handle } from '../../../common/event-emitter/handle'
-import { getInfo, getConfigurationValue } from '../../../common/config/config'
+import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
@@ -29,51 +32,103 @@ export class Aggregate extends AggregateBase {
       this.cls = 0
     } catch (e) {}
 
-    var initialHarvestSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
-    var harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
+    /*! This is the section that used to be in the loader portion: !*/
+    /* ------------------------------------------------------------ */
+    const pageStartedHidden = getRuntime(agentIdentifier).initHidden // our attempt at recapturing initial vis state since this code runs post-load time
+    this.alreadySent = new Set() // since we don't support timings on BFCache restores, this tracks and helps cap metrics that web-vitals report more than once
 
-    /* It's important that CWV api, like "onLCP", is called before this scheduler is initialized. The reason is because they share the same
-      "final harvest" on vis change or unload logic, and we'd want ex. onLCP to record the timing before we try to send it (win the race). */
+    /* PerformancePaintTiming API - BFC is not yet supported. */
+    onFirstPaint(({ name, value }) => {
+      if (pageStartedHidden) return
+      this.addTiming(name.toLowerCase(), Math.floor(value))
+    })
+
+    /* First Contentful Paint - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
+    onFCP(({ name, value }) => {
+      if (pageStartedHidden || this.alreadySent.has(name)) return
+      this.alreadySent.add(name)
+
+      this.addTiming(name.toLowerCase(), value)
+    })
+
+    /* First Input Delay (+"First Interaction") - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
+    onFID(({ name, value, entries }) => {
+      if (pageStartedHidden || this.alreadySent.has(name)) return
+      this.alreadySent.add(name)
+
+      // CWV will only report one (THE) first-input entry to us; fid isn't reported if there are no user interactions occurs before the *first* page hiding.
+      const fiEntry = entries[0]
+      const attributes = {
+        type: fiEntry.name,
+        fid: Math.round(value)
+      }
+      this.addConnectionAttributes(attributes)
+      this.addTiming('fi', Math.round(fiEntry.startTime), attributes)
+    })
+
+    /* Largest Contentful Paint - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
+    onLCP(({ name, value, entries }) => {
+      if (pageStartedHidden || this.alreadySent.has(name)) return
+      this.alreadySent.add(name)
+
+      // CWV will only ever report one (THE) lcp entry to us; lcp is also only reported *once* on earlier(user interaction, page hidden).
+      const lcpEntry = entries[entries.length - 1] // this looks weird if we only expect one, but this is how cwv-attribution gets it so to be sure...
+      const attrs = {
+        size: lcpEntry.size,
+        eid: lcpEntry.id
+      }
+      this.addConnectionAttributes(attrs)
+      if (lcpEntry.url) {
+        attrs['elUrl'] = cleanURL(lcpEntry.url)
+      }
+      if (lcpEntry.element && lcpEntry.element.tagName) {
+        attrs['elTag'] = lcpEntry.element.tagName
+      }
+      this.addTiming(name.toLowerCase(), value, attrs)
+    })
+
+    /* Cumulative Layout Shift - We don't have to limit this callback since cls is stored as a state and only sent as attribute on other timings. */
+    onCLS(({ value }) => this.cls = value)
+
+    /* Interaction-to-Next-Paint */
+    onINP(({ name, value, id }) => this.addTiming(name.toLowerCase(), value, { metricId: id }))
+
+    /* PerformanceLongTaskTiming API */
+    if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) {
+      onLongTask(({ name, value, info }) => this.addTiming(name.toLowerCase(), value, info)) // lt context is passed as 'info'=attrs in the timing node
+    }
+    /* ------------------------------------End of ex-loader section */
+
+    /* It's important that CWV api, like "onLCP", is called before this scheduler is initialized. The reason is because they listen to the same
+      on vis change or pagehide events, and we'd want ex. onLCP to record the timing (win the race) before we try to send "final harvest". */
     this.scheduler = new HarvestScheduler('events', {
       onFinished: (...args) => this.onHarvestFinished(...args),
       getPayload: (...args) => this.prepareHarvest(...args)
     }, this)
 
-    registerHandler('lcp', (value, lcpEntry, networkInformation) => this.recordLcp(value, lcpEntry, networkInformation), this.featureName, this.ee)
-    registerHandler('cls', (value) => this.cls = value, this.featureName, this.ee) // on cls change, just update the internal state value
-
     registerHandler('timing', (name, value, attrs) => this.addTiming(name, value, attrs), this.featureName, this.ee) // notice CLS is added to all timings via 4th param
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
 
+    const initialHarvestSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
+    const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
     // send initial data sooner, then start regular
     this.ee.on(`drain-${this.featureName}`, () => { this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds) })
 
     drain(this.agentIdentifier, this.featureName)
   }
 
-  recordLcp (lcpValue, lcpEntry, networkInfo) {
-    var attrs = {
-      size: lcpEntry.size,
-      eid: lcpEntry.id
-    }
+  // takes an attributes object and appends connection attributes if available
+  addConnectionAttributes (attributes) {
+    var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection // to date, both window & worker shares the same support for connection
+    if (!connection) return
 
-    if (networkInfo) {
-      if (networkInfo['net-type']) attrs['net-type'] = networkInfo['net-type']
-      if (networkInfo['net-etype']) attrs['net-etype'] = networkInfo['net-etype']
-      if (networkInfo['net-rtt']) attrs['net-rtt'] = networkInfo['net-rtt']
-      if (networkInfo['net-dlink']) attrs['net-dlink'] = networkInfo['net-dlink']
-    }
+    if (connection.type) attributes['net-type'] = connection.type
+    if (connection.effectiveType) attributes['net-etype'] = connection.effectiveType
+    if (connection.rtt) attributes['net-rtt'] = connection.rtt
+    if (connection.downlink) attributes['net-dlink'] = connection.downlink
 
-    if (lcpEntry.url) {
-      attrs['elUrl'] = cleanURL(lcpEntry.url)
-    }
-
-    if (lcpEntry.element && lcpEntry.element.tagName) {
-      attrs['elTag'] = lcpEntry.element.tagName
-    }
-
-    this.addTiming('lcp', lcpValue, attrs)
+    return attributes
   }
 
   /**

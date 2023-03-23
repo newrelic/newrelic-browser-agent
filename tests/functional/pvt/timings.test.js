@@ -74,7 +74,7 @@ function runPaintTimingsTests (loader) {
 
     const rumPromise = router.expectRum()
     const timingsPromise = router.expectTimings()
-    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: 'spa' })).waitForFeature('loaded')
+    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: loader })).waitForFeature('loaded')
 
     Promise.all([timingsPromise, rumPromise, loadPromise])
       .then(([{ request: timingsResult }]) => {
@@ -92,7 +92,7 @@ function runPaintTimingsTests (loader) {
 
     const rumPromise = router.expectRum()
     const timingsPromise = router.expectTimings()
-    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: 'spa' })).waitForFeature('loaded')
+    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: loader })).waitForFeature('loaded')
 
     Promise.all([timingsPromise, rumPromise, loadPromise])
       .then(([{ request: timingsResult }]) => {

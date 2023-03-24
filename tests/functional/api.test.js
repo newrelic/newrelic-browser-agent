@@ -122,7 +122,7 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
 
   Promise.all([errorsPromise, rumPromise, loadPromise])
     .then(([{ request }]) => {
-      var errorData = getErrorsFromResponse(request, browser)
+      var errorData = getErrorsFromResponse(request)
       var params = errorData[0] && errorData[0]['params']
       if (params) {
         var exceptionClass = params.exceptionClass
@@ -154,7 +154,7 @@ testDriver.test('noticeError takes a string', withUnload, function (t, browser, 
 
   Promise.all([errorsPromise, rumPromise, loadPromise])
     .then(([{ request }]) => {
-      var errorData = getErrorsFromResponse(request, browser)
+      var errorData = getErrorsFromResponse(request)
       var params = errorData[0] && errorData[0]['params']
       if (params) {
         var exceptionClass = params.exceptionClass
@@ -348,6 +348,44 @@ testDriver.test('api is available when sessionStorage is not', function (t, brow
       browser.waitFor(asserters.jsCondition('typeof window.newrelic.addToTrace === \'function\''))
     ).then((result) => {
       t.ok(result)
+      t.end()
+    })
+    .catch(fail(t))
+})
+
+testDriver.test('setUserId adds correct attribute to jserror', function (t, browser, router) {
+  let url = router.assetURL('instrumented.html', {
+    init: {
+      jserrors: {
+        harvestTimeSeconds: 2
+      }
+    },
+    scriptString: `
+    newrelic.setUserId(456);
+    newrelic.setUserId({'foo':'bar'});
+    newrelic.noticeError('fake1')
+    setTimeout(() => {  // there's a delay with errors grabbing the jsAttributes
+    newrelic.setUserId('user123');
+    newrelic.setUserId();
+    newrelic.noticeError('fake2');
+    },500)
+    `
+  })
+  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
+  const ERRORS_INBOX_UID = 'enduser.id' // this key should not be changed without consulting EI team on the data flow
+
+  Promise.all([loadPromise, router.expectRum()])
+    .then(() => router.expectErrors(3000))
+    .then(({ request }) => {
+      const errArray = getErrorsFromResponse(request)
+
+      let errCustom = errArray[0]?.['custom']
+      if (!errCustom) throw "No 'fake1' error or custom is missing."
+      t.equal(errCustom[ERRORS_INBOX_UID], undefined, 'Invalid data type (non-string) does not set user id')
+
+      errCustom = errArray[1]?.['custom']
+      if (!errCustom) throw "No 'fake2' error or custom is missing."
+      t.equal(errCustom[ERRORS_INBOX_UID], 'user123', 'Correct enduser.id custom attr on error')
       t.end()
     })
     .catch(fail(t))

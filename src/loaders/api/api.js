@@ -15,6 +15,23 @@ import { isWorkerScope } from '../../common/util/global-scope'
 import { warn } from '../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 
+export function setTopLevelCallers (nr) {
+  const funcs = [
+    'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
+    'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
+    'interaction', 'noticeError', 'setUserId'
+  ]
+  funcs.forEach(f => {
+    nr[f] = (...args) => caller(f, ...args)
+  })
+
+  function caller (fnName, ...args) {
+    Object.values(nr.initializedAgents).forEach(val => {
+      if (val.exposed && val.api[fnName]) val.api[fnName](...args)
+    })
+  }
+}
+
 export function setAPI (agentIdentifier, forceDrain) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
   const apiInterface = {}
@@ -44,13 +61,23 @@ export function setAPI (agentIdentifier, forceDrain) {
     if (typeof name !== 'string') return
     if (name.charAt(0) !== '/') name = '/' + name
     getRuntime(agentIdentifier).customTransaction = (host || 'http://custom.transaction') + name
-    return apiCall(prefix, 'setPageViewName', true, 'api')()
+    return apiCall(prefix, 'setPageViewName', true)()
   }
 
-  apiInterface.setCustomAttribute = function (name, value) {
+  function appendJsAttribute (key, value, apiName = 'setCustomAttribute') {
     const currentInfo = getInfo(agentIdentifier)
-    setInfo(agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [name]: value } })
-    return apiCall(prefix, 'setCustomAttribute', true, 'api')()
+    setInfo(agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } })
+    return apiCall(prefix, apiName, true)()
+  }
+  apiInterface.setCustomAttribute = function (name, value) {
+    return appendJsAttribute(name, value)
+  }
+  apiInterface.setUserId = function (value) {
+    if (typeof value !== 'string') {
+      warn(`Failed to execute setUserId.\nArgument(1) must be a string type, but a type of <${typeof value}> was provided.`)
+      return
+    }
+    return appendJsAttribute('enduser.id', value, 'setUserId')
   }
 
   apiInterface.interaction = function () {
@@ -89,7 +116,7 @@ export function setAPI (agentIdentifier, forceDrain) {
   function apiCall (prefix, name, notSpa, bufferGroup) {
     return function () {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-      handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup, instanceEE)
+      if (bufferGroup) handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
       return notSpa ? void 0 : this
     }
   }

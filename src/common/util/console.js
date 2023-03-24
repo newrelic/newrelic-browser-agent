@@ -5,7 +5,7 @@
  * @returns
  */
 export function warn (message, secondary) {
-  if (!console || !console.warn || typeof console.warn !== 'function') return
+  if (typeof console.warn !== 'function') return
   console.warn(`New Relic: ${message}`)
   if (secondary) console.warn(secondary)
 }

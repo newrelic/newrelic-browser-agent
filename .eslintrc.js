@@ -78,6 +78,7 @@ module.exports = {
   ],
   rules: {
     'no-unused-vars': 'off',
+    'no-throw-literal': 0,
 
     // Disable lint rules that need code changes to re-enabled
     camelcase: 'off',

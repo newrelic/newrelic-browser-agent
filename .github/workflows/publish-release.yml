@@ -41,6 +41,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: install
         run: npm ci
+      - name: sync versions
+        run: npm run sync:version
       - name: build:prod
         run: npm run cdn:build:prod
       - name: check files don't exist already
@@ -63,16 +65,17 @@ jobs:
       - uses: actions/checkout@v3
       - name: install
         run: npm ci
+      - name: sync versions
+        run: npm run sync:version
       - name: get version
-        run: |
-          export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./package.json').version) })()") \
-          export CDN_VERSION=$(cat VERSION)
+        id: build_versions
+        run: node tools/scripts/get-build-versions.js
       - name: re-publish internal loader (prod)
         run: |
           node ./tools/scripts/upload-ab-to-s3.js \
             --env prod \
             --current https://js-agent.newrelic.com/nr-loader-spa-current.min.js \
-            --next https://js-agent.newrelic.com/nr-loader-spa-${CDN_VERSION}.min.js \
+            --next https://js-agent.newrelic.com/nr-loader-spa-${{steps.build_versions.outputs.CDN_VERSION}}.min.js \
             --appId ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \
@@ -84,7 +87,7 @@ jobs:
           node ./tools/scripts/upload-ab-to-s3.js \
             --env eu-prod \
             --current https://js-agent.newrelic.com/nr-loader-spa-current.min.js \
-            --next https://js-agent.newrelic.com/nr-loader-spa-${CDN_VERSION}.min.js \
+            --next https://js-agent.newrelic.com/nr-loader-spa-${{steps.build_versions.outputs.CDN_VERSION}}.min.js \
             --appId ${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \
@@ -119,20 +122,21 @@ jobs:
       - uses: actions/checkout@v3
       - name: install
         run: npm ci
+      - name: sync versions
+        run: npm run sync:version
       - name: get version
-        run: |
-          export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./package.json').version) })()") \
-          export CDN_VERSION=$(cat VERSION)
+        id: build_versions
+        run: node tools/scripts/get-build-versions.js
       - name: upload artifacts to NR
         run: |
           node tools/scripts/upload-to-nr.js \
             --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
             --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
             --eu-api-key=${{ secrets.NR_API_KEY_EU }} \
-            --v=${CDN_VERSION}
+            --v=${{steps.build_versions.outputs.CDN_VERSION}}
       - name: validate file
         run: |
-          node tools/scripts/check-nrdb.js -v ${CDN_VERSION}
+          node tools/scripts/check-nrdb.js -v ${{steps.build_versions.outputs.CDN_VERSION}}
   raise-release-notes-pr:
     runs-on: ubuntu-latest
     container: node:14
@@ -144,16 +148,17 @@ jobs:
       - uses: actions/checkout@v3
       - name: install
         run: npm ci
+      - name: sync versions
+        run: npm run sync:version
       - name: get version
-        run: |
-          export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./package.json').version) })()") \
-          export CDN_VERSION=$(cat VERSION)
+        id: build_versions
+        run: node tools/scripts/get-build-versions.js
       - name: Build and raise PR to docs-website
         run: |
           node tools/scripts/docs-website/create-docs-pr.js \
             --docs-site-name=${{ secrets.DOCS_SITE_USER_NAME }} \
             --docs-site-email=${{ secrets.DOCS_SITE_USER_EMAIL }} \
-            -t=${CDN_VERSION}
+            -t=${{steps.build_versions.outputs.CDN_VERSION}}}
   publish-current-to-s3:
     runs-on: ubuntu-latest
     container: node:14
@@ -165,6 +170,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: install
         run: npm ci
+      - name: sync versions
+        run: npm run sync:version
       - name: build
         run: npm run cdn:build:current
       - name: upload artifacts to S3

@@ -15,10 +15,9 @@ jobs:
       - name: install
         run: npm ci
       - name: get version
-        run: |
-          export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./package.json').version) })()") \
-          export CDN_VERSION=$(cat VERSION)
+        id: build_versions
+        run: node tools/scripts/get-build-versions.js
       - name: Build and raise PR to docs-website
         run: |
           node tools/scripts/docs-website/create-docs-pr.js \
-            -t=v${CDN_VERSION}
+            -t=v${{steps.build_versions.outputs.CDN_VERSION}}

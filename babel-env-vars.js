@@ -23,10 +23,7 @@ const VERSION = fs.readFileSync('./VERSION', 'utf-8')
  * @see https://babeljs.io/docs/en/babel-plugin-transform-inline-environment-variables
  */
 module.exports = ({ source, subversion, isSemver = true, distMethod = 'CDN' } = {}) => {
-  const envVarNames = []
-  envVarNames.push(setBuildVersion(source, subversion, isSemver))
-  envVarNames.push(setBuildEnv(subversion))
-  envVarNames.push(setDistMethod(distMethod))
+  const envVarNames = [setBuildVersion(source, subversion, isSemver), setBuildEnv(subversion), setDistMethod(distMethod)]
   return [
     'transform-inline-environment-variables',
     {

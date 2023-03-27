@@ -1,4 +1,4 @@
-import { subscribeToEOL } from '../../../common/unload/eol'
+import { subscribeToEOL } from '../../common/unload/eol'
 
 /**
  * Calls the `onReport` function for every entry reported by the PerformanceLongTaskTiming API.

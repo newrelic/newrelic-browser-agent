@@ -10,7 +10,7 @@
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent#Browser_Name
 var agentName = null
 var agentVersion = null
-var safari = /Version\/(\S+)\s+Safari/
+const safari = /Version\/(\S+)\s+Safari/
 
 if (navigator.userAgent) {
   var userAgent = navigator.userAgent

@@ -4,6 +4,8 @@ const webpack = require('webpack')
 const fs = require('fs')
 const { merge } = require('webpack-merge')
 const babelEnv = require('./babel-env-vars')
+const pkg = require('./package.json')
+
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 let { PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE } = process.env
@@ -130,15 +132,7 @@ const commonConfig = {
     path: path.resolve(__dirname, './build'),
     publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
     clean: false
-  },
-  plugins: [
-    new webpack.DefinePlugin({
-      // 'WEBPACK_MINOR_VERSION': JSON.stringify(SUBVERSION || ''),
-      // 'WEBPACK_MAJOR_VERSION': JSON.stringify(VERSION || ''),
-      'process.env.BUILD_VERSION': `${VERSION}.${SUBVERSION}`,
-      WEBPACK_DEBUG: JSON.stringify(IS_LOCAL || false)
-    })
-  ]
+  }
 }
 
 // Targets modern browsers (ES6).
@@ -181,7 +175,7 @@ const standardConfig = merge(commonConfig, {
               }]
             ],
             plugins: [
-              babelEnv(VERSION, SUBVERSION),
+              babelEnv({ source: 'VERSION', subversion: SUBVERSION }),
               // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
               // assigning to a variable, which conflicts with template literals.
               '@babel/plugin-transform-template-literals'
@@ -230,7 +224,7 @@ const polyfillsConfig = merge(commonConfig, {
               }]
             ],
             plugins: [
-              babelEnv(VERSION, SUBVERSION)
+              babelEnv({ source: 'VERSION', subversion: SUBVERSION })
             ]
           }
         }

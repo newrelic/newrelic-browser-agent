@@ -14,7 +14,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: install
         run: npm ci
+      - name: get version
+        id: build_versions
+        run: node tools/scripts/get-build-versions.js
       - name: Build and raise PR to docs-website
         run: |
           node tools/scripts/docs-website/create-docs-pr.js \
-            -t=v$(cat VERSION)
+            -t=v${{steps.build_versions.outputs.CDN_VERSION}}

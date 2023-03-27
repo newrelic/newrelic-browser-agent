@@ -28,12 +28,7 @@ jobs:
       - name: install
         run: npm ci
 
-      - name: get version
-        run: |
-          export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./package.json').version) })()") \
-          export CDN_VERSION=$(cat VERSION)
-
-      - name: force versions to sync
+      - name: sync versions
         run: npm run sync:version
 
       - name: publish

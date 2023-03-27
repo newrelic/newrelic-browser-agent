@@ -64,7 +64,7 @@
     }
   },
   "engines": {
-    "node": ">=12.16.0 < 13.0.0 || >=13.7.0"
+    "node": ">=12.17.0 < 13.0.0 || >=13.7.0"
   },
   "scripts": {
     "wdio": "node tools/wdio/bin/cli.js",

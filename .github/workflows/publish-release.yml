@@ -203,10 +203,6 @@ jobs:
           npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
       - name: install
         run: npm ci
-      - name: get version
-        run: |
-          export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./package.json').version) })()") \
-          export CDN_VERSION=$(cat VERSION)
       - name: force versions to sync
         run: npm run sync:version
       - name: publish

@@ -22,27 +22,38 @@ const VERSION = fs.readFileSync('./VERSION', 'utf-8')
  *     `babel-plugin-transform-inline-environment-variables`.
  * @see https://babeljs.io/docs/en/babel-plugin-transform-inline-environment-variables
  */
-module.exports = ({ source, subversion, isSemver = true } = {}) => {
-  setBuildVersion(source, subversion, isSemver)
-  setBuildEnv(subversion)
+module.exports = ({ source, subversion, isSemver = true, distMethod = 'CDN' } = {}) => {
+  const envVarNames = []
+  envVarNames.push(setBuildVersion(source, subversion, isSemver))
+  envVarNames.push(setBuildEnv(subversion))
+  envVarNames.push(setDistMethod(distMethod))
   return [
     'transform-inline-environment-variables',
     {
-      include: ['BUILD_VERSION', 'BUILD_ENV']
+      include: envVarNames
     }
   ]
 }
 
 function setBuildVersion (source, subversion, isSemver) {
-  if (!process.env['BUILD_VERSION']) {
-    if (source === 'VERSION') process.env['BUILD_VERSION'] = `${VERSION}`
-    else if (source && source !== 'PACKAGE') process.env['BUILD_VERSION'] = `${source}`
-    else process.env['BUILD_VERSION'] = pkg.version
+  const name = 'BUILD_VERSION'
+  if (!process.env[name]) {
+    if (source === 'VERSION') process.env[name] = `${VERSION}`
+    else if (source && source !== 'PACKAGE') process.env[name] = `${source}`
+    else process.env[name] = pkg.version
   }
-  if (!isSemver) process.env['BUILD_VERSION'] += `.${subversion || 'LOCAL'}`
-  process.env['BUILD_VERSION'] = process.env['BUILD_VERSION']?.replace(/^\s+|\s+$/g, '') || ''
+  if (!isSemver) process.env[name] += `.${subversion || 'LOCAL'}`
+  process.env[name] = process.env[name]?.replace(/^\s+|\s+$/g, '') || ''
+  return name
 }
 
 function setBuildEnv (subversion) {
   process.env['BUILD_ENV'] = subversion?.replace(/^\s+|\s+$/g, '') || ''
+  return 'BUILD_ENV'
+}
+
+function setDistMethod (distMethod) {
+  const name = 'DIST_METHOD'
+  process.env[name] = distMethod || ''
+  return name
 }

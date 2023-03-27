@@ -56,8 +56,9 @@ export class Aggregate extends AggregateBase {
     // note the browser agent version
     this.storeSupportabilityMetrics(`Generic/Version/${VERSION}/Detected`)
     // report loaderType
-    const { loaderType } = getRuntime(this.agentIdentifier)
+    const { distMethod, loaderType } = getRuntime(this.agentIdentifier)
     if (loaderType) this.storeSupportabilityMetrics(`Generic/LoaderType/${loaderType}/Detected`)
+    if (distMethod) this.storeSupportabilityMetrics(`Generic/DistMethod/${distMethod}/Detected`)
 
     // frameworks on page
     if (isBrowserScope) {

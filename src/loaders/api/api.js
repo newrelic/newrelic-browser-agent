@@ -14,34 +14,10 @@ import { onWindowLoad } from '../../common/window/load'
 import { isWorkerScope } from '../../common/util/global-scope'
 import { warn } from '../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
-import { gosCDN } from '../../common/window/nreum'
-
-function setTopLevelCallers () {
-  const nr = gosCDN()
-  const funcs = [
-    'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
-    'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
-    'interaction', 'noticeError'
-  ]
-  funcs.forEach(f => {
-    nr[f] = (...args) => caller(f, ...args)
-  })
-
-  function caller (fnName, ...args) {
-    let returnVals = []
-    Object.values(nr.initializedAgents).forEach(val => {
-      if (val.exposed && val.api[fnName]) {
-        returnVals.push(val.api[fnName](...args))
-      }
-    })
-    return returnVals.length > 1 ? returnsVals : returnVals[0]
-  }
-}
 
 export function setAPI (agentIdentifier, forceDrain) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
   const apiInterface = {}
-  setTopLevelCallers()
   var instanceEE = ee.get(agentIdentifier)
   var tracerEE = instanceEE.get('tracer')
 

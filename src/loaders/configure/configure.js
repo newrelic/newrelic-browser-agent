@@ -3,6 +3,7 @@ import { addToNREUM, gosCDN, gosNREUMInitializedAgents } from '../../common/wind
 import { setConfiguration, setInfo, setLoaderConfig, setRuntime } from '../../common/config/config'
 import { activateFeatures, activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/util/global-scope'
+import { setTopLevelCallers } from '../../common/window/top-level-callers'
 
 export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   let { init, info, loader_config, runtime = { loaderType }, exposed = true } = opts
@@ -22,6 +23,7 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   setLoaderConfig(agentIdentifier, loader_config || {})
   setRuntime(agentIdentifier, runtime)
 
+  setTopLevelCallers()
   const api = setAPI(agentIdentifier, forceDrain)
   gosNREUMInitializedAgents(agentIdentifier, api, 'api')
   gosNREUMInitializedAgents(agentIdentifier, exposed, 'exposed')

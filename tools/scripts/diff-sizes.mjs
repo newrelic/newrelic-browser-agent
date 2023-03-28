@@ -115,9 +115,9 @@ function generateDiffRows (assetSizes, buildType) {
       diffSizesResults = `-${Math.round(((1 - diffSizes.fileSizePercent) + Number.EPSILON) * 10000) / 100}%`
     }
     if (diffSizes.gzipSizePercent > 1) {
-      diffSizesResults = `${diffSizesResults} / + ${Math.round(((diffSizes.gzipSizePercent - 1) + Number.EPSILON) * 10000) / 100}% (gzip)`
+      diffSizesResults = `${diffSizesResults} / +${Math.round(((diffSizes.gzipSizePercent - 1) + Number.EPSILON) * 10000) / 100}% (gzip)`
     } else {
-      diffSizesResults = `${diffSizesResults} / - ${Math.round(((1 - diffSizes.gzipSizePercent) + Number.EPSILON) * 10000) / 100}% (gzip)`
+      diffSizesResults = `${diffSizesResults} / -${Math.round(((1 - diffSizes.gzipSizePercent) + Number.EPSILON) * 10000) / 100}% (gzip)`
     }
 
     return `|${assetName.name}|${releaseSizesResult}|${buildSizesResult}|${diffSizesResults}|`

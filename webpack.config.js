@@ -82,7 +82,7 @@ if (PR_NAME) console.log('PR_NAME', PR_NAME)
 const instantiateSourceMapPlugin = (filename) => {
   return new webpack.SourceMapDevToolPlugin({
     append: MAP_PATH, // sourceMappingURL CDN route vs local route (for sourceMappingURL)
-    filename: filename || (SUBVERSION === 'PROD' ? '[name].[chunkhash:8].map' : '[name].map'),
+    filename: filename || (['PROD', 'DEV', 'CURRENT'].includes(SUBVERSION) ? '[name].[chunkhash:8].map' : '[name].map'),
     ...(JSON.parse(SOURCEMAPS) === false && { exclude: new RegExp('.*') }) // Exclude all files if disabled.
   })
 }
@@ -128,7 +128,7 @@ const commonConfig = {
   },
   output: {
     filename: '[name].js',
-    chunkFilename: SUBVERSION === 'PROD' ? `[name].[chunkhash:8]${PATH_VERSION}.min.js` : `[name]${PATH_VERSION}.js`,
+    chunkFilename: ['PROD', 'DEV', 'CURRENT'].includes(SUBVERSION) ? `[name].[chunkhash:8]${PATH_VERSION}.min.js` : `[name]${PATH_VERSION}.js`,
     path: path.resolve(__dirname, './build'),
     publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
     clean: false
@@ -186,6 +186,7 @@ const standardConfig = merge(commonConfig, {
     ]
   },
   plugins: [
+    instantiateSourceMapPlugin(),
     ...instantiateBundleAnalyzerPlugin('standard')
   ],
   target: 'web'
@@ -243,12 +244,12 @@ const polyfillsConfig = merge(commonConfig, {
      * overwrite with either an ES5 or ES6 target. For differentiated transpilation of dynamically loaded dependencies
      * in non-production builds, we can tag output filenames for chunks of the polyfills bundle with `-es5`.
      */
-    chunkFilename: SUBVERSION === 'PROD' ? `[name].[chunkhash:8]-es5${PATH_VERSION}.min.js` : `[name]-es5${PATH_VERSION}.js`
+    chunkFilename: ['PROD', 'DEV', 'CURRENT'].includes(SUBVERSION) ? `[name].[chunkhash:8]-es5${PATH_VERSION}.min.js` : `[name]-es5${PATH_VERSION}.js`
   },
   plugins: [
     ...instantiateBundleAnalyzerPlugin('polyfills'),
     // Source map outputs must also must be tagged to prevent standard/polyfill filename collisions in non-production.
-    instantiateSourceMapPlugin(SUBVERSION === 'PROD' ? '[name].[chunkhash:8].map' : '[name]-es5.map')
+    instantiateSourceMapPlugin(['PROD', 'DEV', 'CURRENT'].includes(SUBVERSION) ? '[name].[chunkhash:8]-es5.map' : '[name]-es5.map')
   ],
   target: 'browserslist:ie >= 11' // Applies to webpack's own runtime output; babel-loader only impacts bundled modules.
 })

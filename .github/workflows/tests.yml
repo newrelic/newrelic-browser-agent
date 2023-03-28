@@ -9,7 +9,6 @@ env:
   BUILD_NUMBER: PR${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
 
 defaults:
-  if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
   timeout-minutes: 30
   continue-on-error: true
   runs-on: ubuntu-latest
@@ -17,18 +16,11 @@ defaults:
     image: ubuntu:latest
   run:
     shell: bash
-  steps:
-    - name: Setup Container
-      run: apt update && apt install -y git
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: lts/*
-    - name: Install Dependencies
-      run: npm ci
 
 jobs:
   chrome-functional:
+    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
+
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -36,9 +28,20 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Install Dependencies
+        run: npm ci
+      - uses: actions/checkout@v3
+      - name: checkout and build
+        uses: ./.github/actions/test-setup
+
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 --functional-only
-
   # chrome-unit:
   #   if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
   #   timeout-minutes: 30

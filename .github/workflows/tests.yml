@@ -8,18 +8,17 @@ on:
 env:
   BUILD_NUMBER: PR${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
 
-defaults:
-  timeout-minutes: 30
-  continue-on-error: true
-  runs-on: ubuntu-latest
-  container:
-    image: ubuntu:latest
-  run:
-    shell: bash
-
 jobs:
   chrome-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
+    timeout-minutes: 30
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -28,6 +27,7 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - uses: ./.github/actions/ci-setup
       - name: Setup Container
         run: apt update && apt install -y git
       - uses: actions/checkout@v3

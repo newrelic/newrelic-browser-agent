@@ -1,4 +1,4 @@
-import { WorkerAgent } from '@newrelic/browser-agent/worker-agent'
+import { WorkerAgent } from '@newrelic/browser-agent/loaders/worker-agent'
 
 const opts = {
   info: NREUM.info,

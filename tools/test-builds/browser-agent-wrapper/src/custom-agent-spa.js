@@ -1,4 +1,4 @@
-import { CustomAgent } from '@newrelic/browser-agent/custom-agent'
+import { Agent } from '@newrelic/browser-agent/loaders/agent'
 import { Ajax } from '@newrelic/browser-agent/features/ajax'
 import { JSErrors } from '@newrelic/browser-agent/features/jserrors'
 import { Metrics } from '@newrelic/browser-agent/features/metrics'
@@ -8,7 +8,7 @@ import { PageViewTiming } from '@newrelic/browser-agent/features/page_view_timin
 import { SessionTrace } from '@newrelic/browser-agent/features/session_trace'
 import { Spa } from '@newrelic/browser-agent/features/spa'
 
-new CustomAgent({
+new Agent({
   features: [
     Ajax,
     JSErrors,

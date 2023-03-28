@@ -20,8 +20,8 @@ const workerHtmlTemplate = `<html>
     {init}
     {config}
     {worker-commands}
-    {script-injection}
     <script src="worker-init.js"></script>
+    {script-injection}
   </head>
   <body>
     <h1>This is a generic page that is instrumented by the NPM agent</h1>
@@ -37,7 +37,7 @@ const config = [
       'custom-agent-lite': './src/custom-agent-lite.js',
       'custom-agent-pro': './src/custom-agent-pro.js',
       'custom-agent-spa': './src/custom-agent-spa.js',
-      'micro-agent': './src/micro-agent.js',
+      // 'micro-agent': './src/micro-agent.js',
       // worker init script
       'worker-init': './src/worker-init.js'
     },

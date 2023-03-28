@@ -1,4 +1,4 @@
-import { BrowserAgent } from '@newrelic/browser-agent/browser-agent'
+import { BrowserAgent } from '@newrelic/browser-agent/loaders/browser-agent'
 
 const opts = {
   info: NREUM.info,

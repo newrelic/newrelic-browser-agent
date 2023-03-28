@@ -2,7 +2,7 @@ onmessage = async function (e) {
   if (e.data.type === 'startAgent') {
     self.NREUM = e.data.payload
 
-    const { WorkerAgent } = await import(/* webpackChunkName: "nr-worker-agent" */'@newrelic/browser-agent/worker-agent')
+    const { WorkerAgent } = await import(/* webpackChunkName: "nr-worker-agent" */'@newrelic/browser-agent/loaders/worker-agent')
 
     const opts = {
       info: NREUM.info,

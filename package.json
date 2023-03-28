@@ -13,19 +13,15 @@
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
     },
-    "./custom-agent": {
-      "import": "./dist/esm/custom-agent.js",
-      "require": "./dist/cjs/custom-agent.js"
+    "./loaders/agent": {
+      "import": "./dist/esm/loaders/agent.js",
+      "require": "./dist/cjs/loaders/agent.js"
     },
-    "./browser-agent": {
+    "./loaders/browser-agent": {
       "import": "./dist/esm/loaders/browser-agent.js",
       "require": "./dist/cjs/loaders/browser-agent.js"
     },
-    "./micro-agent": {
-      "import": "./dist/esm/loaders/micro-agent.js",
-      "require": "./dist/cjs/loaders/micro-agent.js"
-    },
-    "./worker-agent": {
+    "./loaders/worker-agent": {
       "import": "./dist/esm/loaders/worker-agent.js",
       "require": "./dist/cjs/loaders/worker-agent.js"
     },

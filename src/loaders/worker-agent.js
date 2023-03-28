@@ -9,7 +9,7 @@ import { Instrument as InstrumentPageAction } from '../features/page_action/inst
  * A streamlined agent class designed for the service worker context, limited to features relevant in that scope.
  */
 export class WorkerAgent extends Agent {
-  constructor (...args) {
+  constructor (args) {
     super({
       ...args,
       features: [

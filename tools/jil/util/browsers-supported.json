@@ -115,10 +115,10 @@
       "browserName": "Safari",
       "platform": "iOS",
       "platformName": "iOS",
-      "version": "15.4",
-      "device": "iPhone 6s Plus",
-      "appium:deviceName": "iPhone 6s Plus Simulator",
-      "appium:platformVersion": "15.4",
+      "version": "15.5",
+      "device": "iPhone 7 Plus",
+      "appium:deviceName": "iPhone 7 Plus Simulator",
+      "appium:platformVersion": "15.5",
       "appium:automationName": "XCUITest",
       "sauce:options": {
         "appiumVersion": "1.22.3"
@@ -129,10 +129,10 @@
       "browserName": "Safari",
       "platform": "iOS",
       "platformName": "iOS",
-      "version": "15.2",
-      "device": "iPhone 7 Plus",
-      "appium:deviceName": "iPhone 7 Plus Simulator",
-      "appium:platformVersion": "15.2",
+      "version": "15.4",
+      "device": "iPhone 6s Plus",
+      "appium:deviceName": "iPhone 6s Plus Simulator",
+      "appium:platformVersion": "15.4",
       "appium:automationName": "XCUITest",
       "sauce:options": {
         "appiumVersion": "1.22.3"

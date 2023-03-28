@@ -124,6 +124,17 @@ function generateDiffRows (assetSizes, buildType) {
   }).join('\n')
 }
 
+function generateOtherDiffRows (assetSizes, buildType, assetGroup) {
+  const targetBuildTypeSizes = assetSizes[buildType]
+  return Object.keys(targetBuildTypeSizes[assetGroup])
+    .filter(assetName => assetName.indexOf('nr-loader') === -1)
+    .map(assetName => {
+      const buildSizes = targetBuildTypeSizes[assetGroup][assetName]
+      const buildSizesResult = `${filesize(buildSizes.fileSize)} / ${filesize(buildSizes.gzipSize)} (gzip)`
+      return `|${assetName}|${buildSizesResult}|`
+    }).join('\n')
+}
+
 async function writeDiff (assetSizes) {
   await fs.ensureDir(config.out)
   await fs.writeJson(path.join(config.out, 'size_report.json'), assetSizes, { spaces: 2 })
@@ -136,7 +147,39 @@ ${generateDiffRows(assetSizes, 'standard')}
 ${generateDiffRows(assetSizes, 'polyfills')}
 ${generateDiffRows(assetSizes, 'worker')}
 
-<sub>This report only accounts for the minified loaders. Un-minified and async-loaded assets are not included.</sub>
+<details>
+<summary>Other Standard Assets</summary>
+
+## Released Assets
+
+| Asset Name | Asset Size |
+|------------|------------|
+${generateOtherDiffRows(assetSizes, 'standard', 'releaseStats')}
+
+## Built Assets
+
+| Asset Name | Asset Size |
+|------------|------------|
+${generateOtherDiffRows(assetSizes, 'standard', 'buildStats')}
+
+</details>
+
+<details>
+<summary>Other Polyfills Assets</summary>
+
+## Released Assets
+
+| Asset Name | Asset Size |
+|------------|------------|
+${generateOtherDiffRows(assetSizes, 'polyfills', 'releaseStats')}
+
+## Built Assets
+
+| Asset Name | Asset Size |
+|------------|------------|
+${generateOtherDiffRows(assetSizes, 'polyfills', 'buildStats')}
+
+</details>
 `
   )
 }

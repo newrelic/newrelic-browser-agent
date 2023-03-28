@@ -63,12 +63,15 @@ testDriver.test('custom fingerprinting labels errors correctly', supported, func
         case "wow":
           return {group:"doge"}
         case "meh":
+          return {group:""}
+        case "such":
           return false
         default:
           return true
       }
     })
     newrelic.noticeError("much")
+    newrelic.noticeError("such")
     newrelic.noticeError("meh")
     newrelic.noticeError("wow")
     newrelic.noticeError("boop")
@@ -84,7 +87,7 @@ testDriver.test('custom fingerprinting labels errors correctly', supported, func
 
     const expectedMsgToGroup = {
       much: 'doge',
-      meh: undefined,
+      such: undefined,
       wow: 'doge'
     }
     actualErrors.forEach(({ params }) => {

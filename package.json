@@ -8,7 +8,6 @@
   "homepage": "https://docs.newrelic.com/docs/browser/browser-monitoring",
   "main": "./dist/cjs/index.js",
   "types": "./types.ts",
-  "module": "./dist/esm/index.js",
   "exports": {
     ".": {
       "import": "./dist/esm/index.js",

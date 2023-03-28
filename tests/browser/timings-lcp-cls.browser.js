@@ -7,9 +7,7 @@ const jil = require('../../tools/jil/driver/browser.js')
 
 const { setup } = require('./utils/setup')
 const { drain } = require('../../src/common/drain/drain')
-const { handle } = require('../../src/common/event-emitter/handle')
 const { Aggregate: PvtAggregate } = require('../../src/features/page_view_timing/aggregate/index')
-const { FEATURE_NAMES } = require('../../src/loaders/features/features')
 
 const { agentIdentifier, aggregator } = setup()
 
@@ -29,13 +27,9 @@ jil.browserTest('LCP event with CLS attribute', function (t) {
   // drain adds `timing` and `lcp` event listeners in the agent/timings module
   drain(agentIdentifier, 'feature')
 
-  handle('cls', [{ value: 1 }], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
-  handle('lcp', [{ size: 1, startTime: 1 }], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
-  handle('cls', [{ value: 2 }], undefined, FEATURE_NAMES.pageViewTiming, pvtAgg.ee)
-
-  // invoke final harvest, which includes harvesting LCP
-  pvtAgg.recordLcp()
-  pvtAgg.recordPageUnload(Date.now())
+  pvtAgg.cls = 1
+  pvtAgg.addTiming('lcp', 1, { size: 1, startTime: 1 })
+  pvtAgg.cls = 2
 
   var timing = find(pvtAgg.timings, function (t) {
     return t.name === 'lcp'

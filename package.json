@@ -102,7 +102,7 @@
     "prepare": "husky install",
     "npm:build:esm": "npx babel --config-file ./babel.npm.esm.js --out-dir dist/esm --out-file-extension .js ./src",
     "npm:build:cjs": "npx babel --config-file ./babel.npm.cjs.js --out-dir dist/cjs --out-file-extension .js ./src",
-    "npm:pack": "mkdir -p temp && export PKG_NAME=$(npm pack --pack-destination ./temp)",
+    "npm:pack": "mkdir -p temp && export PKG_NAME=$(npm pack --pack-destination temp) && echo ./temp/$PKG_NAME",
     "sync:version": "node tools/scripts/sync-version.js"
   },
   "config": {

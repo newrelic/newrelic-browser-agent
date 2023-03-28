@@ -24,9 +24,9 @@ export function setAPI (agentIdentifier) {
   }
 
   // Hook all of the api functions up to the queues/stubs created in loader/api.js
-  mapOwn(api, function (fnName, fn) {
-    registerHandler('api-' + fnName, fn, 'api', instanceEE)
-  })
+  for (const [fnName, fnCall] of Object.entries(api)) {
+    registerHandler('api-' + fnName, fnCall, 'api', instanceEE)
+  }
 
   // All API functions get passed the time they were called as their
   // first parameter. These functions can be called asynchronously.

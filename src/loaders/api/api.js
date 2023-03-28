@@ -50,7 +50,7 @@ export function setAPI (agentIdentifier, forceDrain) {
   var spaPrefix = prefix + 'ixn-'
 
   // Setup stub functions that queue calls for later processing.
-  mapOwn(asyncApiFns, function (num, fnName) {
+  asyncApiFns.forEach(fnName => {
     apiInterface[fnName] = apiCall(prefix, fnName, true, 'api')
   })
 

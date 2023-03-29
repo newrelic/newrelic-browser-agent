@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1.229.0
+
+### Use semantic versioning scheme
+The agent will now utilize semantic versioning for subsequent releases. The previous version -- 1228 -- will carry forward into 1.229.0, and so on.
+
+### Use `web-vitals` library for internal timing calculations
+In an effort to align and standardize timings collecthe agent now uses the `web-vitals` library to track page timings such as CLS, LCP, FCP, TTFB and more. See https://www.npmjs.com/package/web-vitals for more information.
+
+### Ship the Browser Agent repository to NPM
+The Browser Agent repository will now be available via pre-release in NPM.  See https://www.npmjs.com/package/@newrelic/browser-agent for more information.
+
 ## v1228
 
 ### Fix negative offset timings

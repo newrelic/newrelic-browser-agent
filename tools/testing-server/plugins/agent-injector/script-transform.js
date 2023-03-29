@@ -50,9 +50,21 @@ module.exports = function (request, reply, testServer) {
 
       // Replace {script-injection}
       if (chunkString.indexOf('{script-injection}') > -1) {
+        let scriptContent = ''
+        if (testServer.config.polyfills && request.query.scriptString) { // if the test is running in IE11, the test scriptString may need Babel transpilation
+          const { Readable } = require('stream')
+          const { browserifyScript } = require('../browserify/browserify-transform')
+
+          // Decode base64 string back to bytes then convert it to a stream. scriptString must not be empty.
+          const scriptStream = Readable.from(Buffer.from(request.query.scriptString, 'base64'))
+          scriptContent = await browserifyScript(scriptStream, true)
+        } else {
+          scriptContent = Buffer.from(request.query.scriptString || '', 'base64').toString()
+        }
+
         chunkString = chunkString.replace(
           '{script-injection}',
-          `<script type="text/javascript">${Buffer.from(request.query.scriptString || '', 'base64').toString()}</script>`
+          `<script type="text/javascript">${scriptContent}</script>`
         )
       }
 

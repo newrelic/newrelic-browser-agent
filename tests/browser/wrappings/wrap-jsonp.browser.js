@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil')
+const jil = require('../../../tools/jil/driver/browser.js')
 
 const { setup } = require('../utils/setup')
 const { wrapJsonP } = require('../../../src/common/wrap/wrap-jsonp')

@@ -14,7 +14,7 @@ import { Instrument as InstrumentPageAction } from '../features/page_action/inst
  * The BrowserAgent class is the most convenient and reliable option for most use cases.
  */
 export class BrowserAgent extends Agent {
-  constructor (...args) {
+  constructor (args) {
     super({
       ...args,
       features: [

@@ -5,3 +5,7 @@ export const VERSION = typeof process.env.BUILD_VERSION !== 'undefined' && proce
 // process.env.BUILD_ENV is replaced during webpack -or- npm build with environment vars supplied at build time
 // LOCAL, PROD, DEV, etc
 export const BUILD_ENV = typeof process.env.BUILD_ENV !== 'undefined' && process.env.BUILD_ENV || ''
+
+// process.env.DIST_METHOD is replaced during webpack -or- npm build with environment vars supplied at build time
+// CDN, NPM etc
+export const DIST_METHOD = typeof process.env.DIST_METHOD !== 'undefined' && process.env.DIST_METHOD || ''

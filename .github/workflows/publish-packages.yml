@@ -1,19 +1,10 @@
-name: Publish NPM Packages (Latest)
+name: Publish to NPM
 
 on:
   workflow_dispatch:
-    inputs:
-      release_type:
-        description: 'Type of release. patch or minor (major if breaking)'
-        required: true
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
 
 jobs:
-  publish-all-packages:
+  publish-npm:
     runs-on: ubuntu-latest
 
     env:
@@ -21,7 +12,6 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
       NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
       NODE_AUTH_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
-
 
     steps:
       - uses: actions/checkout@v3
@@ -38,21 +28,9 @@ jobs:
       - name: install
         run: npm ci
 
-      - name: version
-        run: node tools/scripts/version.mjs ${{ github.event.inputs.release_type }} --no-git-tag-version --force
-
-      # - name: build
-      #   run: npx nx run-many --target=build
-
-      - name: tag
-        run: |
-          export PACKAGE_VERSION=$(node -e "(function () { console.log(require('./packages/browser-agent/package.json').version) })()")
-          git add packages/**/package.json
-          git commit -a -m "Pre-Release Versioning"
-          git tag -a ${PACKAGE_VERSION}
-          git push
-          git push origin refs/tags/${PACKAGE_VERSION}
+      - name: sync versions
+        run: npm run sync:version
 
       - name: publish
         run: |
-          node tools/scripts/publish.mjs latest
+          npm publish

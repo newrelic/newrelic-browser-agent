@@ -6,14 +6,60 @@
   "description": "Tests for the New Relic JavaScript agent",
   "license": "Apache-2.0",
   "homepage": "https://docs.newrelic.com/docs/browser/browser-monitoring",
-  "main": "",
+  "main": "./dist/cjs/index.js",
   "types": "./types.ts",
-  "module": "./dist/mjs/index.mjs",
   "exports": {
     ".": {
-      "import": "./dist/mjs/index.mjs",
-      "require": "./dist/cjs/index.cjs"
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./loaders/agent": {
+      "import": "./dist/esm/loaders/agent.js",
+      "require": "./dist/cjs/loaders/agent.js"
+    },
+    "./loaders/browser-agent": {
+      "import": "./dist/esm/loaders/browser-agent.js",
+      "require": "./dist/cjs/loaders/browser-agent.js"
+    },
+    "./loaders/worker-agent": {
+      "import": "./dist/esm/loaders/worker-agent.js",
+      "require": "./dist/cjs/loaders/worker-agent.js"
+    },
+    "./features/ajax": {
+      "import": "./dist/esm/features/ajax/index.js",
+      "require": "./dist/cjs/features/ajax/index.js"
+    },
+    "./features/jserrors": {
+      "import": "./dist/esm/features/jserrors/index.js",
+      "require": "./dist/cjs/features/jserrors/index.js"
+    },
+    "./features/metrics": {
+      "import": "./dist/esm/features/metrics/index.js",
+      "require": "./dist/cjs/features/metrics/index.js"
+    },
+    "./features/page_action": {
+      "import": "./dist/esm/features/page_action/index.js",
+      "require": "./dist/cjs/features/page_action/index.js"
+    },
+    "./features/page_view_event": {
+      "import": "./dist/esm/features/page_view_event/index.js",
+      "require": "./dist/cjs/features/page_view_event/index.js"
+    },
+    "./features/page_view_timing": {
+      "import": "./dist/esm/features/page_view_timing/index.js",
+      "require": "./dist/cjs/features/page_view_timing/index.js"
+    },
+    "./features/session_trace": {
+      "import": "./dist/esm/features/session_trace/index.js",
+      "require": "./dist/cjs/features/session_trace/index.js"
+    },
+    "./features/spa": {
+      "import": "./dist/esm/features/spa/index.js",
+      "require": "./dist/cjs/features/spa/index.js"
     }
+  },
+  "engines": {
+    "node": ">=12.17.0 < 13.0.0 || >=13.7.0"
   },
   "scripts": {
     "wdio": "node tools/wdio/bin/cli.js",
@@ -22,10 +68,9 @@
     "format": "prettier -w .",
     "format:check": "prettier --check .",
     "test": "node tools/jil/bin/cli.js",
-    "build:all": "npm run cdn:build:local && npm run build:npm",
-    "build:npm": "npm run npm:build:esm && npm run npm:build:cjs",
-    "postinstall": "ln -s ../tools/jil node_modules/jil",
-    "lint": "eslint -c .eslintrc.js --ext .js,.cjs,.mjs .",
+    "build:all": "npm run cdn:build:local && npm run build:npm && npm run tools:test-builds",
+    "build:npm": "npm run npm:build:esm && npm run npm:build:cjs && npm run npm:pack",
+    "lint": "eslint -c .eslintrc.js --ext .js,.cjs,.mjs . --fix",
     "lint:fix": "eslint --ext .js -c .eslintrc . --fix",
     "test-all": "tools/jil/bin/cli.js -b *@*",
     "ci-build": "npm ci --cache ./.npm",
@@ -48,20 +93,16 @@
     "test-server": "node ./tools/jil/bin/server",
     "sauce:connect": "node ./tools/wdio/bin/sauce",
     "sauce:get-browsers": "node ./tools/jil/util/sauce-browsers && node ./tools/wdio/util/sauce-browsers",
-    "tools:test-builds": "npm --prefix ./tools/test-builds/build-time-mfe run build",
+    "tools:test-builds": "npm --prefix ./tools/test-builds run build-all",
     "third-party-updates": "oss third-party manifest --includeOptDeps && oss third-party notices --includeOptDeps",
     "prepare": "husky install",
-    "npm:build:esm": "npx babel --config-file ./babel.npm.esm.js --out-dir dist/mjs --out-file-extension .mjs ./src",
+    "npm:build:esm": "npx babel --config-file ./babel.npm.esm.js --out-dir dist/esm --out-file-extension .js ./src",
     "npm:build:cjs": "npx babel --config-file ./babel.npm.cjs.js --out-dir dist/cjs --out-file-extension .js ./src",
+    "npm:pack": "mkdir -p temp && export PKG_NAME=$(npm pack --pack-destination temp) && echo ./temp/$PKG_NAME",
     "sync:version": "node tools/scripts/sync-version.js"
   },
   "config": {
     "unsafe-perm": true
-  },
-  "bin": {
-    "jil": "./tools/jil/bin/cli.js",
-    "jil-server": "./tools/jil/bin/server.js",
-    "jil-sauce": "./tools/jil/bin/sauce.js"
   },
   "repository": {
     "type": "git",
@@ -127,6 +168,7 @@
     "function-bind": "^1.1.1",
     "glob": "^7.0.5",
     "husky": "^8.0.0",
+    "html-webpack-plugin": "^5.5.0",
     "jest": "^28.1.1",
     "jest-environment-jsdom": "28.1.1",
     "jquery": "1.11.3",
@@ -167,7 +209,10 @@
     "webpack-cli": "^4.10.0",
     "yargs": "^17.6.2"
   },
-  "browser": {
-    "jil": "./tools/jil/driver/browser.js"
-  }
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "types.ts"
+  ]
 }

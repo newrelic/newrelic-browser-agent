@@ -175,7 +175,7 @@ const standardConfig = merge(commonConfig, {
               }]
             ],
             plugins: [
-              babelEnv({ source: 'VERSION', subversion: SUBVERSION }),
+              babelEnv({ source: 'VERSION', subversion: SUBVERSION, distMethod: 'CDN' }),
               // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
               // assigning to a variable, which conflicts with template literals.
               '@babel/plugin-transform-template-literals'
@@ -225,7 +225,7 @@ const polyfillsConfig = merge(commonConfig, {
               }]
             ],
             plugins: [
-              babelEnv({ source: 'VERSION', subversion: SUBVERSION })
+              babelEnv({ source: 'VERSION', subversion: SUBVERSION, distMethod: 'CDN' })
             ]
           }
         }

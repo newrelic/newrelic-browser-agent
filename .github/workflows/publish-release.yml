@@ -183,3 +183,28 @@ jobs:
         run: |
           node tools/scripts/check-version.js \
             -e yes
+  publish-npm:
+    runs-on: ubuntu-latest
+    needs: [publish-to-nrdb]
+    env:
+      GH_TOKEN: ${{ secrets.PAT_GITHUB }}
+      GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
+      NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
+      NODE_AUTH_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_GITHUB }}
+      - name: login
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git remote set-url origin https://${{github.actor}}:${GH_TOKEN}@github.com/$GITHUB_REPOSITORY
+          npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
+      - name: install
+        run: npm ci
+      - name: force versions to sync
+        run: npm run sync:version
+      - name: publish
+        run: |
+          npm publish

@@ -1,3 +1,3 @@
 
-let matcher = require('jil/util/browser-matcher')
+let matcher = require('../../../tools/jil/util/browser-matcher')
 module.exports = matcher.withFeature('setImmediate')

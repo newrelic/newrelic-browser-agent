@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil')
+const jil = require('../../../tools/jil/driver/browser.js')
 let cleanUrl = require('../../../src/common/url/clean-url').cleanURL
 
 if (process.browser) {

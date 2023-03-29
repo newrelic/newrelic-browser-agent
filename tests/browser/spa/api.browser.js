@@ -5,7 +5,7 @@
 
 let originalSetTimeout = global.setTimeout
 
-const jil = require('jil')
+const jil = require('../../../tools/jil/driver/browser.js')
 const { getInfo } = require('../../../src/common/config/config')
 
 let raf = global.reqiestAnimationFrame || function (fn) {

@@ -15,26 +15,9 @@ import { isWorkerScope } from '../../common/util/global-scope'
 import { warn } from '../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 
-function setTopLevelCallers (nr) {
-  const funcs = [
-    'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
-    'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
-    'interaction', 'noticeError'
-  ]
-  funcs.forEach(f => {
-    nr[f] = (...args) => caller(f, ...args)
-  })
-
-  function caller (fnName, ...args) {
-    Object.values(nr.initializedAgents).forEach(val => {
-      if (val.exposed && val.api[fnName]) val.api[fnName](...args)
-    })
-  }
-}
-
-export function setAPI (agentIdentifier, nr, forceDrain) {
+export function setAPI (agentIdentifier, forceDrain) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
-  setTopLevelCallers(nr)
+  const apiInterface = {}
   var instanceEE = ee.get(agentIdentifier)
   var tracerEE = instanceEE.get('tracer')
 
@@ -51,26 +34,26 @@ export function setAPI (agentIdentifier, nr, forceDrain) {
 
   // Setup stub functions that queue calls for later processing.
   mapOwn(asyncApiFns, function (num, fnName) {
-    nr[fnName] = apiCall(prefix, fnName, true, 'api')
+    apiInterface[fnName] = apiCall(prefix, fnName, true, 'api')
   })
 
-  nr.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.pageAction)
-  nr.setCurrentRouteName = apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
+  apiInterface.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.pageAction)
+  apiInterface.setCurrentRouteName = apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
 
-  nr.setPageViewName = function (name, host) {
+  apiInterface.setPageViewName = function (name, host) {
     if (typeof name !== 'string') return
     if (name.charAt(0) !== '/') name = '/' + name
     getRuntime(agentIdentifier).customTransaction = (host || 'http://custom.transaction') + name
     return apiCall(prefix, 'setPageViewName', true, 'api')()
   }
 
-  nr.setCustomAttribute = function (name, value) {
+  apiInterface.setCustomAttribute = function (name, value) {
     const currentInfo = getInfo(agentIdentifier)
     setInfo(agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [name]: value } })
     return apiCall(prefix, 'setCustomAttribute', true, 'api')()
   }
 
-  nr.interaction = function () {
+  apiInterface.interaction = function () {
     return new InteractionHandle().get()
   }
 
@@ -111,7 +94,7 @@ export function setAPI (agentIdentifier, nr, forceDrain) {
     }
   }
 
-  nr.noticeError = function (err, customAttributes) {
+  apiInterface.noticeError = function (err, customAttributes) {
     if (typeof err === 'string') err = new Error(err)
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
     handle('err', [err, now(), false, customAttributes], undefined, FEATURE_NAMES.jserrors, instanceEE)
@@ -128,4 +111,6 @@ export function setAPI (agentIdentifier, nr, forceDrain) {
       drain(agentIdentifier, 'api')
     }).catch(() => warn('Downloading runtime APIs failed...'))
   }
+
+  return apiInterface
 }

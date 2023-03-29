@@ -4,7 +4,7 @@
  */
 
 import test from '../../../tools/jil/browser-test'
-import jil from 'jil'
+import jil from '../../../tools/jil/driver/browser.js'
 import { setup } from '../utils/setup'
 import { getLoaderConfig } from '../../../src/common/config/config'
 import { registerHandler } from '../../../src/common/event-emitter/register-handler'

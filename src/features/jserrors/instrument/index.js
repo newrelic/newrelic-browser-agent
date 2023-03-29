@@ -50,7 +50,7 @@ export class Instrument extends InstrumentBase {
 
     // Replace global error handler with our own.
     this.origOnerror = globalScope.onerror
-    globalScope.onerror = this.onerrorHandler
+    globalScope.onerror = this.onerrorHandler.bind(this)
 
     globalScope.addEventListener('unhandledrejection', (e) => {
       /** rejections can contain data of any type -- this is an effort to keep the message human readable */
@@ -84,6 +84,8 @@ export class Instrument extends InstrumentBase {
    * @returns
    */
   onerrorHandler (message, filename, lineno, column, errorObj) {
+    if (typeof this.origOnerror === 'function') this.origOnerror(...arguments)
+
     try {
       if (this.skipNext) this.skipNext -= 1
       else notice(errorObj || new UncaughtException(message, filename, lineno), true, this.ee)
@@ -94,9 +96,7 @@ export class Instrument extends InstrumentBase {
         // do nothing
       }
     }
-
-    if (typeof this.origOnerror === 'function') return this.origOnerror.apply(this, slice(arguments))
-    return false
+    return false // maintain default behavior of the error event of Window
   }
 }
 

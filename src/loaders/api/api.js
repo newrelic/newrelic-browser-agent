@@ -2,11 +2,9 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import slice from 'lodash._slice'
 import { FEATURE_NAMES } from '../features/features'
 import { getRuntime, setInfo, getInfo } from '../../common/config/config'
 import { handle } from '../../common/event-emitter/handle'
-import { mapOwn } from '../../common/util/map-own'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { now } from '../../common/timing/now'
 import { drain, registerDrain } from '../../common/drain/drain'
@@ -50,9 +48,7 @@ export function setAPI (agentIdentifier, forceDrain) {
   var spaPrefix = prefix + 'ixn-'
 
   // Setup stub functions that queue calls for later processing.
-  asyncApiFns.forEach(fnName => {
-    apiInterface[fnName] = apiCall(prefix, fnName, true, 'api')
-  })
+  asyncApiFns.forEach(fnName => apiInterface[fnName] = apiCall(prefix, fnName, true, 'api'))
 
   apiInterface.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.pageAction)
   apiInterface.setCurrentRouteName = apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
@@ -109,14 +105,14 @@ export function setAPI (agentIdentifier, forceDrain) {
     }
   }
 
-  mapOwn('actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get'.split(','), function addApi (n, name) {
+  void ['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach(name => {
     InteractionApiProto[name] = apiCall(spaPrefix, name, undefined, FEATURE_NAMES.spa)
   })
 
   function apiCall (prefix, name, notSpa, bufferGroup) {
     return function () {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-      if (bufferGroup) handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
+      if (bufferGroup) handle(prefix + name, [now(), ...arguments], notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
       return notSpa ? void 0 : this
     }
   }

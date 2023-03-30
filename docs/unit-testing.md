@@ -29,12 +29,12 @@ Once you have a test file created, follow these best practices for creating the 
 
 Each test case should focus on testing a single scenario. This could be a single set of inputs followed by a single set of `expect` clauses. Tests that instantiate or call the code under test multiple times with different `expect` clauses should typically be split up into individual test cases. This will ensure these tests run quickly and, when a test fails, isolating the failure is much easier.
 
-## Import vs Require
+## Importing source files
 
-There are two ways to pull in the source fill under test in the test file. The recommended way is to use an `import` at the top of the test file. However, when the source file under test is not stateless, the source file will need to be pulled in using `require` within the test case or within a `beforeEach`.
+There are two ways to import the source fill under test. The recommended way is to use an `import` at the top of the test file. However, when the source file under test is not stateless, you will need to use an async `import` statement within the test case or within a `beforeEach`.
 
 - **DO** use `import` at the top of the test file to pull in stateless source files
-- **DO** use `require` inside a test case or `beforeEach` to pull in a stateful source file
+- **DO** use `await import()` inside a test case or `beforeEach` to pull in a stateful source file
 - **DO** reset the jest module cache between test cases using `afterEach` when testing a stateful source file
 
 ```js
@@ -42,8 +42,8 @@ There are two ways to pull in the source fill under test in the test file. The r
 
 let methodUnderTest;
 
-beforeEach(() => {
-  methodUnderTest = require('./sourceFile').method
+beforeEach(async () => {
+  methodUnderTest = (await import('./sourceFile')).method
 })
 
 afterEach(() => {

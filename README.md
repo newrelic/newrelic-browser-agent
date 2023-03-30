@@ -17,7 +17,7 @@ The New Relic browser agent instruments your web application or site and provide
 To make the agent available to your application, install via [NPM](https://docs.npmjs.com/cli/v8/commands/npm-install) or [Yarn](https://classic.yarnpkg.com/lang/en/docs/cli/install/).
 
 ```shell
-$ npm install @newrelic/browser-agent --save-dev
+$ npm install @newrelic/browser-agent --save
 ```
 
 ```shell

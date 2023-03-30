@@ -41,7 +41,7 @@ There are two ways to import the source file under test. The recommended way is 
 ```js
 // Example for pulling in a stateful source file
 
-let methodUnderTest;
+let methodUnderTest
 
 beforeEach(async () => {
   methodUnderTest = (await import('./sourceFile')).method

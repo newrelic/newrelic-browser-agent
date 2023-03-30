@@ -21,7 +21,7 @@ $ npm install @newrelic/browser-agent --save
 ```
 
 ```shell
-$ yarn add @newrelic/browser-agent --dev
+$ yarn add @newrelic/browser-agent
 ```
 
 ## Creating an app in New Relic One

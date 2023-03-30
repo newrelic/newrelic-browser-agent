@@ -6,6 +6,11 @@ on:
 jobs:
   publish-npm:
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       GH_TOKEN: ${{ secrets.PAT_GITHUB }}

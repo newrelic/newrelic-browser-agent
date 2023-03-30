@@ -14,10 +14,14 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.PAT_GITHUB }}
-
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: login
         run: |
           git config user.name "${{ github.actor }}"

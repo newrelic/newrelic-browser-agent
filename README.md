@@ -1,217 +1,138 @@
 [![Community Plus header](https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png)](https://opensource.newrelic.com/oss-category/#community-plus)
 
-<div style="display:flex;flex-wrap:wrap;justify-content:space-evenly;align-items:top;margin:0 0 10px">
-    <div style="margin:0 5px;"><img src="https://img.shields.io/github/actions/workflow/status/newrelic/newrelic-browser-agent/smoke-test.yml?branch=main&event=schedule&style=plastic&label=Smoke%20Tests" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/github/actions/workflow/status/newrelic/newrelic-browser-agent/tests-polyfill.yml?branch=main&event=schedule&style=plastic&label=Polyfills%20Tests" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/github/v/release/newrelic/newrelic-browser-agent?label=Current%20Release&style=plastic" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/github/commits-since/newrelic/newrelic-browser-agent/latest?style=plastic&label=Next Release - Merged&color=green" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/github/issues-pr/newrelic/newrelic-browser-agent/Next%20Release?color=orange&label=Next%20Release%20-%20In%20Progress&style=plastic" /></div>
-</div>
+# New Relic Browser Agent
 
-<h3 style="text-align:center;border-top:1px solid grey;margin:0 0 5px;"><a href="https://one.newrelic.com">https://one.newrelic.com</a></h3>
-<div style="display:flex;flex-wrap:wrap;justify-content:space-evenly;align-items:top;;margin:0 0 10px">
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fcurrent-version-production.json" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fupdate-version-production.json" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fcopy-paste-version-production.json" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fgeneric-deploy-percent-production.json" /></div>
-</div>
+The New Relic browser agent instruments your web application or site and provides observability into performance, errors, and other behaviors.
 
-<h3 style="text-align:center;border-top:1px solid grey;margin:0 0 5px;"><a href="https://one.eu.newrelic.com">https://one.eu.newrelic.com</a></h3>
-<div style="display:flex;flex-wrap:wrap;justify-content:space-evenly;align-items:top;;margin:0 0 10px">
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fcurrent-version-eu.json" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fupdate-version-eu.json" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fcopy-paste-version-eu.json" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fgeneric-deploy-percent-eu.json" /></div>
-</div>
+- The instructions on this page pertain to installing the browser agent as an NPM package (currently in pre-release).
 
-# New Relic Browser agent
+- The browser agent is also generally available as a copy-paste JavaScript snippet and via auto-injection by backend apps. See *[Install the browser agent](https://docs.newrelic.com/docs/browser/browser-monitoring/installation/install-browser-monitoring-agent/)* for info on these alternatives.
 
-The New Relic Browser agent instruments your website and provides observability into the performance and behavior of your application.
+- For questions and feedback on this pre-release package, please visit the [Explorer's Hub](https://forum.newrelic.com/s/), New Relic's community support forum.
 
-## Installing and using the Browser agent
+- Looking to contribute to the browser agent code base? See [DEVELOPING.md](DEVELOPING.md) for instructions on building and testing the browser agent library, and [CONTRIBUTING.md](CONTRIBUTING.md) for general guidance.
 
-To get started using the Browser agent in your own code, our Docs site is the best place to look:
+## Adding the agent package to your project
 
-- [Installing the Browser agent](https://docs.newrelic.com/docs/browser/browser-monitoring/installation/install-browser-monitoring-agent/)
-- [Troubleshooting Browser agent installation](https://docs.newrelic.com/docs/browser/browser-monitoring/troubleshooting/troubleshoot-your-browser-monitoring-installation/)
-- [Introduction to browser monitoring](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/introduction-browser-monitoring/)
-- [Browser monitoring best practices](https://docs.newrelic.com/docs/new-relic-solutions/best-practices-guides/full-stack-observability/browser-monitoring-best-practices-guide/)
+To make the agent available to your application, install via [NPM](https://docs.npmjs.com/cli/v8/commands/npm-install) or [Yarn](https://classic.yarnpkg.com/lang/en/docs/cli/install/).
 
-## Building
-
-We use webpack to automate builds of the agent. To build:
-
-```bash
-npm ci
-npm run cdn:build:local
+```shell
+$ npm install @newrelic/browser-agent --save
 ```
 
-Build artifacts are placed in the `/build` directory.
-
-To automatically rebuild the agent on each change:
-
-```bash
-npm run cdn:watch
+```shell
+$ yarn add @newrelic/browser-agent
 ```
 
-## Running the agent locally
+## Creating an app in New Relic One
 
-The Browser agent is loaded onto a web page in two parts. To install a version of the agent build locally:
+Before instrumenting your app using the NPM package, a Browser App should be configured in New Relic One. This may be done with or without a corresponding APM agent. Once the app has been created, the Copy/Paste JavaScript code on the app's *Application settings* page will contain the configuration values needed to define options when instantiating the agent via the NPM package.
 
-- Host the assets generated in the `/build` directory via a local HTTP server (see instructions above to build the agent).
-- Insert the script below into the top of the `<head>` tag of your webpage.
+1. If a browser app does not already exist, create one:
+   - From the *New Relic One* navigation panel, click *Add Data*.
+   - Select the *Browser monitoring* data source.
+   - Choose the *APM* or *Copy/Paste* method.
+   - Select or name your app and click *Enable*.
+2. From the navigation panel, select *Browser* to view brower apps.
+3. Select the desired app and navigate to the *Application settings* page.
+4. From the *Copy/Paste JavaScript* box, copy the configuration values assigned to the `NREUM` object (`init`, `info`, and `loader_config`). You will use these configuration values when instantiating the agent using the NPM package.
 
-```html
-<!-- Browser agent configuration -->
-<script type="text/javascript">
-  window.NREUM || (NREUM = {});
-  NREUM.info = {
-    licenseKey: "example",
-    applicationID: 123,
-  };
-</script>
-<!-- Browser agent loader script -->
-<script src="http://localhost:8080/nr-loader-spa.js"></script>
+## Instantiating the agent
+
+For best results, import and instantiate the `BrowserAgent` class as close to the top of the `head` element of your app's HTML output as possible. The specific location and method will vary based on your application's architecture or framework.
+
+Populate the `options` parameter using configuration values found in the the *Copy/Paste JavaScript* box in your browser app's *Application settings* page in New Relic One.
+
+```javascript
+import { BrowserAgent } from '@newrelic/browser-agent/loaders/browser-agent'
+
+// Populate using values in copy-paste JavaScript snippet.
+const options = {
+  init: { ... }, // NREUM.init
+  info: { ... }, // NREUM.info
+  loader_config: { ...} // NREUM.loader_config
+}
+
+// The agent loader code executes immediately on instantiation.
+new BrowserAgent(options)
 ```
 
-NOTE: Your browser might cache JS scripts, which means you may not see your changes when the agent files are re-built. To turn off caching in Chrome, open DevTools and check the [Disable cache](https://developer.chrome.com/docs/devtools/network/reference/#disable-cache) checkbox.
+## Turning off features at runtime
 
-## Running a pre-configured server
+Features may be turned off at runtime, which may have a meaningful peformance impact in some cases.
 
-The prebuilt test server can serve the locally built agent files as noted under _[Debugging Tests](#debugging-tests)_ below. To use this server, run the `npm run test-server` command.
+In the example below, the `page_view_timing` and `session_trace` features are disabled.
 
-## Configure the agent
-
-The Browser agent uses a JSON configuration to set license key and application ID.
-
-### Set application ID and license key
-
-You can find the `licenseKey` and `applicationID` in the New Relic UI's Browser Application **Settings** page ([one.newrelic.com](https://one.newrelic.com) > Browser > (select an app) > Settings > Application settings.)
-
-![settings](https://user-images.githubusercontent.com/4779220/114478763-e5b18600-9bb3-11eb-98a1-7e4c2221eec4.jpg)
-
-### Set agent type
-
-Pick an agent type and update the following files from the table below:
-
-- The file loaded as the _Browser agent loader script_ from the HTML above using **loader filename**
-
-| Agent type | loader filename       |
-| ---------- | --------------------- |
-| Lite       | nr-loader-rum.min.js  |
-| Pro        | nr-loader-full.min.js |
-| Pro + SPA  | nr-loader-spa.min.js  |
-
-The agent loader will automatically import any necessary chunks of code later on the page after being successfully initialized wiht configurations.
-
-## Testing
-
-See the sections below for details about local and PR testing.
-
-### Installing
-
-The Browser agent uses a tool called the JavaScript Integration test Loader (`jil`) to run
-tests (located in `/tools/jil`).
-
-_Before running tests locally, be sure to [install and build](#building) from the root directory to ensure all dependencies are loaded and the application is properly built._
-
-```
-npm install
+```javascript
+const options = {
+  info: { ... },
+  loader_config: { ... },
+  init: {
+    page_view_timing: { enabled: false },
+    session_trace: { enabled: false },
+    ...
+  }
+}
 ```
 
-```
-npm run build:all
-```
+The following features may be disabled by adding `init` entries as shown above. Note that the `page_view_event` feature may not be disabled.
 
-### Running the test suite
+- `ajax`
+- `jserrors`
+- `metrics`
+- `page_action`
+- `page_view_timing`
+- `session_trace`
+- `spa`
 
-To run all tests on a specific browser/platform, you can either run on Saucelabs or point the testing framework to your own Selenium server.
+See the [New Relic documentation site](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/introduction-browser-monitoring/) for information on the above features.
 
-To run tests on Saucelabs, you will need your own Saucelabs account. Export your Saucelabs username and access key in these environment variables - JIL_SAUCE_LABS_USERNAME, JIL_SAUCE_LABS_ACCESS_KEY. After that you can use the following command to run tests on a specific browser. Note that the browser/platform needs to be defined in this [matrix file](tools/jil/util/browsers.json).
 
-Here is an example of running all tests on the latest version of Chrome.
+## Composing a custom agent with selected feature modules
 
-```
-npm run test -- -s -b chrome@latest
-```
+The examples above use the `BrowserAgent` class, which is the best option for most use cases. The class makes all browser agent features available but provides the ability to turn off individual features selectively.
 
-Here is an example of using your own Selenium server:
+Using the base `Agent` class, it is also possible to compose a custom agent by passing an array called `features` in the `options` object, containing only the desired feature modules. Depending on which features are included, this may yield a smaller loader script and improved performance.
 
-```
-npm run test -- -b chrome@latest --selenium-server=localhost:4444
-```
+The example below includes three feature modules: `Metrics`, `PageViewEvent`, and `PageViewTiming`.
 
-### Supported Browsers
+```javascript
+import { Agent } from '@newrelic/browser-agent/loaders/agent'
+import { Metrics } from '@newrelic/browser-agent/features/metrics'
+import { PageViewEvent } from '@newrelic/browser-agent/features/page_view_event'
+import { PageViewTiming } from '@newrelic/browser-agent/features/page_view_timing'
 
-- The browser agent is tested against this [list of browsers and environments](./tools/jil/util/browsers-supported.json). Use of the browser agent with untested browsers may lead to unexpected results.
+const options = {
+  info: { ... },
+  loader_config: { ... },
+  init: { ... }
+}
 
-**Important Notes:**
-
-- `jil` does not handle building the agent automatically;
-  either run `npm run build:all` after each change, or use `npm run watch` to automatically rebuild on each change.
-- To pass arguments to the testing suite using `npm run test` you must separate your arguments from the npm script using an empty `--` parameter as was exemplified above.
-
-### Running a single test
-
-To run a single test in isolation, pass the path to `jil`:
-
-```
-npm run test -- tests/functional/api.test.js
-```
-
-### Debugging tests
-
-To debug a unit test (`/tests/browser`) or the asset under test in a unit or functional test (`/tests/assets`), run the command below:
-
-```
-npm run test-server
+new Agent({
+  ...options,
+  features: [
+    Metrics,
+    PageViewEvent,
+    PageViewTiming
+  ]
+})
 ```
 
-Running this command starts a server, available at http://localhost:3333, with a list of all available unit tests and test HTML pages with the Browser agent installed. Select a unit test from the list to run the test itself in your browser, or select an asset from the list to debug.
+The following feature modules are available for inclusion in the `features` array:
 
-**Important**: When running `jil-server` be sure to tell HTML files which Browser agent type you want by adding a `?loader=spa` to the `querystring`. Here's an example:
-
+```javascript
+import { Ajax } from '@newrelic/browser-agent/features/ajax';
+import { JSErrors } from '@newrelic/browser-agent/features/jserrors';
+import { Metrics } from '@newrelic/browser-agent/features/metrics';
+import { PageAction } from '@newrelic/browser-agent/features/page_action';
+import { PageViewEvent } from '@newrelic/browser-agent/features/page_view_event';
+import { PageViewTiming } from '@newrelic/browser-agent/features/page_view_timing';
+import { SessionTrace } from '@newrelic/browser-agent/features/session_trace';
+import { Spa } from '@newrelic/browser-agent/features/spa';
 ```
-http://localhost:3333/tests/assets/spa/fetch.html?loader=spa
-```
-
-| Agent type    | querystring name |
-| ------------- | ---------------- |
-| Lite          | rum              |
-| Pro (default) | full             |
-| Pro + SPA     | spa              |
-
-### PR Testing
-
-When you open a PR, the agent's functional and unit test suite will be run on the latest version of Chrome, Firefox and Safari to quickly validate the new code. If that passes, the PR will run functional and unit tests again against the full matrix of browsers and browser versions that are required to pass before approving a PR.
-
-## Support
-
-New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. Like all official New Relic open source projects, there's a related Community topic in the New Relic Explorers Hub. You can find this project's topic/threads here:
-
-https://discuss.newrelic.com/c/full-stack-observability/browser
-
-## Contribute
-
-We encourage your contributions to improve the Browser agent! Keep in mind that when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
-
-If you have any questions, or to execute our corporate CLA (which is required if your contribution is on behalf of a company), drop us an email at opensource@newrelic.com.
-
-For more details on how best to contribute, see [CONTRIBUTING.md](CONTRIBUTING.md)
-
-**A note about vulnerabilities**
-
-As noted in our [security policy](https://github.com/newrelic/newrelic-browser-agent/security/policy), New Relic is committed to the privacy and security of our customers and their data. We believe that providing coordinated disclosure by security researchers and engaging with the security community are important means to achieve our security goals.
-
-If you believe you have found a security vulnerability in this project or any of New Relic's products or websites, we welcome and greatly appreciate you reporting it to New Relic through [HackerOne](https://hackerone.com/newrelic).
-
-If you would like to contribute to this project, review [these guidelines](./CONTRIBUTING.md).
-
-To all contributors, we thank you! Without your contribution, this project would not be what it is today. We also host [a community project page dedicated to the Browser agent](https://opensource.newrelic.com/projects/newrelic/newrelic-browser-agent).
 
 ## License
 
 The Browser agent is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
 
 The Browser agent also uses source code from third-party libraries. Full details on which libraries are used and the terms under which they are licensed can be found in the [third-party notices document](THIRD_PARTY_NOTICES.md).
-

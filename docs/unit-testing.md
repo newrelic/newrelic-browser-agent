@@ -23,6 +23,7 @@ Once you have a test file created, follow these best practices for creating the 
 - **DO** use `afterEach` to cleanup global state after each test
 - **DONT** use `beforeAll` or `afterAll`
 - **DO** use the `test` keyword to declare a test case
+- **DO** avoid promise chaining and use `async/await` to test asynchronous code
 - **DO** limit the focus of a test to a single scenario
 
 ### Focus each test case

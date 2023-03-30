@@ -5,7 +5,7 @@
 
 const testDriver = require('../../../tools/jil/index')
 
-const matcher = testDriver.Matcher.withFeature('notSafariWithSeleniumBug')
+const matcher = testDriver.Matcher.withFeature('notSafariWithSeleniumBug').and(testDriver.Matcher.withFeature('notInternetExplorer'))
 
 const testBuilds = [
   'browser-agent',

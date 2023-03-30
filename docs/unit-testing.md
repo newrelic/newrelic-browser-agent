@@ -1,6 +1,6 @@
 # Unit Testing
 
-We utilize [Jest](https://jestjs.io/docs/getting-started) for the purposes of writing unit tests. Unit tests are meant to be small, fast, and should focus on testing isolated pieces of code. Typically these tests will only import a single source file and test exported functions where given a certain input, a certain output is generated. This documentation will go into details on how the team expects these tests to be wrote, best practices, and general DOs and DONTs.
+We utilize [Jest](https://jestjs.io/docs/getting-started) for the purposes of writing unit tests. Unit tests are meant to be small, fast, and should focus on testing isolated pieces of code. Typically these tests will only import a single source file and test exported functions that generate a predictable output given a specific input. This documentation will go into details on how the team expects these tests to be written, best practices, and general DOs and DON'Ts.
 
 ## Running Unit Tests
 

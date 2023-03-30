@@ -34,9 +34,9 @@ Each test case should focus on testing a single scenario. This could be a single
 
 There are two ways to import the source file under test. The recommended way is to use an `import` at the top of the test file. However, when the source file under test is not stateless, you will need to use an async `import` statement within the test case or within a `beforeEach`.
 
-- **DO** use `import` at the top of the test file to pull in stateless source files
-- **DO** use `await import()` inside a test case or `beforeEach` to pull in a stateful source file
-- **DO** reset the jest module cache between test cases using `afterEach` when testing a stateful source file
+- **DO** use `import` at the top of the test file to pull in **stateless** source files.
+- **DO** use `await import()` inside a test case or `beforeEach` to pull in a **stateful** source file.
+- **DO** [reset the Jest module cache](https://jestjs.io/docs/jest-object#jestresetmodules) between test cases using `afterEach` when testing a **stateful** source file.
 
 ```js
 // Example for pulling in a stateful source file

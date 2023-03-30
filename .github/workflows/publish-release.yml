@@ -18,7 +18,12 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: install
         run: npm ci
       - name: build:all
@@ -26,8 +31,14 @@ jobs:
       - name: run tests
         run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=10
   publish-to-s3:
+
+
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
     needs: [test]
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -38,7 +49,12 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: install
         run: npm ci
       - name: sync versions
@@ -56,13 +72,22 @@ jobs:
         run: node tools/scripts/check-version.js -e yes -m
   publish-to-internal-prod:
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
     needs: [publish-to-s3]
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: install
         run: npm ci
       - name: sync versions
@@ -108,7 +133,11 @@ jobs:
             --purge-internal
   publish-to-nrdb:
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
     needs: [publish-to-s3]
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -119,7 +148,12 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: install
         run: npm ci
       - name: sync versions
@@ -139,13 +173,24 @@ jobs:
           node tools/scripts/check-nrdb.js -v ${{steps.build_versions.outputs.CDN_VERSION}}
   raise-release-notes-pr:
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
     needs: [publish-to-nrdb]
     env:
       NEWRELIC_ENVIRONMENT: ci
       GITHUB_TOKEN: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: install
         run: npm ci
       - name: sync versions
@@ -161,13 +206,22 @@ jobs:
             -t=${{steps.build_versions.outputs.CDN_VERSION}}}
   publish-current-to-s3:
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
     needs: [publish-to-nrdb]
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: install
         run: npm ci
       - name: sync versions
@@ -185,6 +239,11 @@ jobs:
             -e yes
   publish-npm:
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
     needs: [publish-to-nrdb]
     env:
       GH_TOKEN: ${{ secrets.PAT_GITHUB }}
@@ -192,9 +251,14 @@ jobs:
       NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
       NODE_AUTH_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.PAT_GITHUB }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: login
         run: |
           git config user.name "${{ github.actor }}"

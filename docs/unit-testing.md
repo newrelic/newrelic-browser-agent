@@ -10,21 +10,21 @@ After making sure you have the project dependencies installed, execute `npm test
 
 If you are create a new test file for an existing or new source file, remember these best practices:
 
-- **DO** name the test file the same as the target source file but with the `.test.js` extension
-- **DO** create the test file in the same directory as the source file
+- **DO** name the test file the same as the target source file but with the `.test.js` extension.
+- **DO** create the test file in the same directory as the source file.
 
 Once you have a test file created, follow these best practices for creating the individual test cases:
 
-- **DONT** create a global `describe` wrapper to hold all the tests
-- **DO** create a `describe` to group tests that have similar pre/post test instructions
-- **DONT** save state between individual test cases
-- **DO** write and assume that each test case will be ran in isolation, parallelized, and share no local or global state
-- **DO** use `beforeEach` to instantiate variables and state before each test
-- **DO** use `afterEach` to cleanup global state after each test
-- **DONT** use `beforeAll` or `afterAll`
-- **DO** use the `test` keyword to declare a test case
-- **DO** avoid promise chaining and use `async/await` to test asynchronous code
-- **DO** limit the focus of a test to a single scenario
+- **DON'T** create a global `describe` wrapper to hold all the tests.
+- **DO** create a `describe` to group tests that have similar pre/post test instructions.
+- **DON'T** save state between individual test cases.
+- **DO** write and assume that each test case will be run in isolation, parallelized, and share no local or global state.
+- **DO** use `beforeEach` to instantiate variables and state before each test.
+- **DO** use `afterEach` to cleanup global state after each test.
+- **DON'T** use `beforeAll` or `afterAll`.
+- **DO** use the `test` keyword to declare a test case.
+- **DO** avoid promise chaining and use `async/await` to test asynchronous code.
+- **DO** limit the focus of a test to a single scenario.
 
 ### Focus each test case
 

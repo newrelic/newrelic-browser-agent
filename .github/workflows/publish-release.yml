@@ -249,29 +249,23 @@ jobs:
         shell: bash
     needs: [publish-to-nrdb]
     env:
-      GH_TOKEN: ${{ secrets.PAT_GITHUB }}
-      GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
       NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
-      NODE_AUTH_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
     steps:
       - name: Setup Container
         run: apt update && apt install -y git
       - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PAT_GITHUB }}
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: login
+      - name: authenticate
         run: |
-          git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git remote set-url origin https://${{github.actor}}:${GH_TOKEN}@github.com/$GITHUB_REPOSITORY
           npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
       - name: install
         run: npm ci
       - name: force versions to sync
         run: npm run sync:version
+      - name: build:npm
+        run: npm run build:npm
       - name: publish
         run: |
           npm publish

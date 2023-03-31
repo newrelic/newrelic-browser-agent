@@ -87,7 +87,7 @@ async function createReleaseNotesPr () {
     logStep('Get Release Notes from File')
     const { body, releaseDate } = await getReleaseNotes(version, options.changelog)
     logStep('Branch Creation')
-    const branchName = await createBranch(options.repoPath, options.remote, version, options.dryRun, options.docsSiteEmail, options.docsSiteName)
+    const branchName = await createBranch(options.repoPath, options.remote, version, options.dryRun, options.docsSiteEmail || 'browser-agent@newrelic.com', options.docsSiteName || 'Browser Agent Team')
     logStep('Format release notes file')
     const releaseNotesBody = formatReleaseNotes(releaseDate, version, body)
     logStep('Create Release Notes')

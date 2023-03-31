@@ -27,6 +27,4 @@ jobs:
       - name: Build and raise PR to docs-website
         run: |
           node tools/scripts/docs-website/create-docs-pr.js \
-            -t=v${{steps.build_versions.outputs.CDN_VERSION}} \
-            --docs-site-email=browser-agent@newrelic.com \
-            --docs-site-name='Browser Agent Team'
+            -t=v${{steps.build_versions.outputs.CDN_VERSION}}

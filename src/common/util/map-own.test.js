@@ -41,3 +41,12 @@ test('does not iterate inherited properties', () => {
 
   expect(result.length).toEqual(1)
 })
+
+test.each([null, undefined])('returns empty array when passed object is null or undefined', (input) => {
+  const callback = jest.fn()
+  const result = mapOwn(input, callback)
+
+  expect(Array.isArray(result)).toEqual(true)
+  expect(result.length).toEqual(0)
+  expect(callback).toHaveBeenCalledTimes(0)
+})

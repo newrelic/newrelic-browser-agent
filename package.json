@@ -13,6 +13,10 @@
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
     },
+    "./src/*": {
+      "import": "./src/*",
+      "require": "./src/*"
+    },
     "./loaders/agent": {
       "import": "./dist/esm/loaders/agent.js",
       "require": "./dist/cjs/loaders/agent.js"
@@ -211,6 +215,7 @@
   },
   "files": [
     "dist",
+    "src",
     "LICENSE",
     "README.md",
     "types.ts"

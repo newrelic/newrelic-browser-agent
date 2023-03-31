@@ -14,8 +14,7 @@ const git = require('./git-commands')
 
 const DEFAULT_FILE_NAME = 'CHANGELOG.md'
 /** e.g. v7.2.1 */
-// const TAG_VALID_REGEX = /v\d+\.\d+\.\d+/
-const TAG_VALID_REGEX = /v\d+/
+const TAG_VALID_REGEX = /v\d+\.\d+\.\d+/
 const BASE_BRANCH = 'develop'
 
 var options = require('yargs')

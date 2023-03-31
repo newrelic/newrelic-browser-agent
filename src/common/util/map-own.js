@@ -3,19 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var has = Object.prototype.hasOwnProperty
+/**
+ * @typedef {function} MapOwnCallback
+ * @param {string} key Object key
+ * @param {any} value Object value
+ * @returns {any}
+ */
 
-export function mapOwn (obj, fn) {
-  var results = []
-  var key = ''
-  var i = 0
-
-  for (key in obj) {
-    if (has.call(obj, key)) {
-      results[i] = fn(key, obj[key])
-      i += 1
-    }
-  }
-
-  return results
-}
+/**
+ * Iterates the own enumerable properties of an object passing the key and value pair to a given
+ * callback function.
+ * @param {object} obj Input object to iterate
+ * @param {MapOwnCallback} fn Callback function called for each property and passed the property key and value
+ * @returns {any[]}
+ */
+export const mapOwn = (obj, fn) => Object.entries(obj)
+  .map(([key, value]) => fn(key, value))

@@ -1,3 +1,6 @@
+/**
+ * @file Wraps assorted native objects and functions for instrumentation.
+ */
 
 import { wrapFetch } from './wrap-fetch'
 import { wrapTimer } from './wrap-timer'

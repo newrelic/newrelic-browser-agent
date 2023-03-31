@@ -1,20 +1,12 @@
-const testDriver = require('jil')
+const testDriver = require('../../tools/jil/index')
 const { testRumRequest } = require('../../tools/testing-server/utils/expect-tests')
 
 let supported = testDriver.Matcher.withFeature('notInternetExplorer')
-var timedPromiseAll = (promises, ms = 5000) => Promise.race([
-  new Promise((resolve, reject) => {
-    setTimeout(() => {
-      reject()
-    }, ms)
-  }),
-  Promise.all(promises)
-])
 
 testDriver.test('METRICS, ERRORS - Kills feature if entitlements flag is 0', supported, function (t, browser, router) {
   const init = {
-    metrics: { enabled: true, harvestTimeSeconds: 5 },
-    jserrors: { enabled: true, harvestTimeSeconds: 5 }
+    metrics: { enabled: true },
+    jserrors: { enabled: true }
   }
 
   router.scheduleReply('bamServer', {
@@ -33,16 +25,17 @@ testDriver.test('METRICS, ERRORS - Kills feature if entitlements flag is 0', sup
   const assetURL = router.assetURL('obfuscate-pii.html', { loader: 'full', init })
   const rumPromise = router.expectRum()
   const loadPromise = browser.get(assetURL)
-  const metricsPromise = router.expectMetrics(7000)
-  const errorsPromise = router.expectErrors(7000)
+  const metricsPromise = router.expectMetrics(5000)
+  const errorsPromise = router.expectErrors(5000)
 
   Promise.all([rumPromise, loadPromise])
-    .then(() => timedPromiseAll([metricsPromise, errorsPromise], 8000))
+    .then(() => browser.get(router.assetURL('/'))) // metrics only harvest on EoL
+    .then(() => Promise.any([metricsPromise, errorsPromise])) // if EITHER of these resolve, then that's BAD
     .then(() => {
       t.fail('should not have received metrics or errors')
     })
     .catch(() => {
-      t.pass('did not recieve metrics or errors :)')
+      t.pass('did not receive metrics or errors :)')
     })
     .finally(() => t.end())
 })

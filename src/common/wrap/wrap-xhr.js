@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 /**
- * This module is used by: ajax, jserrors, spa
+ * @file Wraps AJAX (XHR) related methods for instrumentation.
+ * This module is used by: ajax, jserrors, spa.
  */
+
 import { wrapEvents, unwrapEvents } from './wrap-events'
 import { ee as contextualEE } from '../event-emitter/contextual-ee'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
@@ -16,6 +18,12 @@ import { warn } from '../util/console'
 const wrapped = {}
 const XHR_PROPS = ['open', 'send'] // these are the specific funcs being wrapped on all XMLHttpRequests(.prototype)
 
+/**
+ * Wraps the native XMLHttpRequest (XHR) object to emit custom events to its readystatechange event and an assortment
+ * of handlers. Adds instrumentation in context of a new event emitter scoped only to XHR.
+ * @param {Object} sharedEE - The shared event emitter on which a new scoped event emitter will be based.
+ * @returns {Object} Scoped event emitter with a debug ID of `xhr`.
+ */
 // eslint-disable-next-line
 export function wrapXhr (sharedEE) {
   var baseEE = sharedEE || contextualEE
@@ -192,6 +200,14 @@ export function wrapXhr (sharedEE) {
 
   return ee
 }
+
+/**
+ * Returns an event emitter scoped specifically for the `xhr` context. This scoping is a remnant from when all the
+ * features shared the same group in the event, to isolate events between features. It will likely be revisited.
+ * @param {Object} sharedEE - Optional event emitter on which to base the scoped emitter.
+ *     Uses `ee` on the global scope if undefined).
+ * @returns {Object} Scoped event emitter with a debug ID of 'xhr'.
+ */
 export function scopedEE (sharedEE) {
   return (sharedEE || contextualEE).get('xhr')
 }

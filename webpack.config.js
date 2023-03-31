@@ -4,6 +4,8 @@ const webpack = require('webpack')
 const fs = require('fs')
 const { merge } = require('webpack-merge')
 const babelEnv = require('./babel-env-vars')
+const pkg = require('./package.json')
+
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 let { PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE } = process.env
@@ -80,7 +82,7 @@ if (PR_NAME) console.log('PR_NAME', PR_NAME)
 const instantiateSourceMapPlugin = (filename) => {
   return new webpack.SourceMapDevToolPlugin({
     append: MAP_PATH, // sourceMappingURL CDN route vs local route (for sourceMappingURL)
-    filename: filename || (SUBVERSION === 'PROD' ? '[name].[chunkhash:8].map' : '[name].map'),
+    filename: filename || (['PROD', 'DEV', 'CURRENT'].includes(SUBVERSION) ? '[name].[chunkhash:8].map' : '[name].map'),
     ...(JSON.parse(SOURCEMAPS) === false && { exclude: new RegExp('.*') }) // Exclude all files if disabled.
   })
 }
@@ -126,19 +128,11 @@ const commonConfig = {
   },
   output: {
     filename: '[name].js',
-    chunkFilename: SUBVERSION === 'PROD' ? `[name].[chunkhash:8]${PATH_VERSION}.min.js` : `[name]${PATH_VERSION}.js`,
+    chunkFilename: ['PROD', 'DEV', 'CURRENT'].includes(SUBVERSION) ? `[name].[chunkhash:8]${PATH_VERSION}.min.js` : `[name]${PATH_VERSION}.js`,
     path: path.resolve(__dirname, './build'),
     publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
     clean: false
-  },
-  plugins: [
-    new webpack.DefinePlugin({
-      // 'WEBPACK_MINOR_VERSION': JSON.stringify(SUBVERSION || ''),
-      // 'WEBPACK_MAJOR_VERSION': JSON.stringify(VERSION || ''),
-      'process.env.BUILD_VERSION': `${VERSION}.${SUBVERSION}`,
-      WEBPACK_DEBUG: JSON.stringify(IS_LOCAL || false)
-    })
-  ]
+  }
 }
 
 // Targets modern browsers (ES6).
@@ -181,7 +175,7 @@ const standardConfig = merge(commonConfig, {
               }]
             ],
             plugins: [
-              babelEnv(VERSION, SUBVERSION),
+              babelEnv({ source: 'VERSION', subversion: SUBVERSION, distMethod: 'CDN' }),
               // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
               // assigning to a variable, which conflicts with template literals.
               '@babel/plugin-transform-template-literals'
@@ -192,6 +186,7 @@ const standardConfig = merge(commonConfig, {
     ]
   },
   plugins: [
+    instantiateSourceMapPlugin(),
     ...instantiateBundleAnalyzerPlugin('standard')
   ],
   target: 'web'
@@ -230,7 +225,7 @@ const polyfillsConfig = merge(commonConfig, {
               }]
             ],
             plugins: [
-              babelEnv(VERSION, SUBVERSION)
+              babelEnv({ source: 'VERSION', subversion: SUBVERSION, distMethod: 'CDN' })
             ]
           }
         }
@@ -249,12 +244,12 @@ const polyfillsConfig = merge(commonConfig, {
      * overwrite with either an ES5 or ES6 target. For differentiated transpilation of dynamically loaded dependencies
      * in non-production builds, we can tag output filenames for chunks of the polyfills bundle with `-es5`.
      */
-    chunkFilename: SUBVERSION === 'PROD' ? `[name].[chunkhash:8]-es5${PATH_VERSION}.min.js` : `[name]-es5${PATH_VERSION}.js`
+    chunkFilename: ['PROD', 'DEV', 'CURRENT'].includes(SUBVERSION) ? `[name].[chunkhash:8]-es5${PATH_VERSION}.min.js` : `[name]-es5${PATH_VERSION}.js`
   },
   plugins: [
     ...instantiateBundleAnalyzerPlugin('polyfills'),
     // Source map outputs must also must be tagged to prevent standard/polyfill filename collisions in non-production.
-    instantiateSourceMapPlugin(SUBVERSION === 'PROD' ? '[name].[chunkhash:8].map' : '[name]-es5.map')
+    instantiateSourceMapPlugin(['PROD', 'DEV', 'CURRENT'].includes(SUBVERSION) ? '[name].[chunkhash:8]-es5.map' : '[name]-es5.map')
   ],
   target: 'browserslist:ie >= 11' // Applies to webpack's own runtime output; babel-loader only impacts bundled modules.
 })

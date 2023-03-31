@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require('jil')
+const testDriver = require('../../../tools/jil/index')
 
 let matcher = testDriver.Matcher.withFeature('frameworks')
 

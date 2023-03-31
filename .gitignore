@@ -24,3 +24,5 @@ packages/browser-agent-core/cjs
 **/cdn/webpack-analysis-standard.html
 **/cdn/webpack-analysis-worker.html
 ./docs-website
+/temp
+tests/assets/test-builds/**/*

@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 . "$(dirname -- "$0")/_/husky.sh"
 
+# enable colored output in terminal
+export FORCE_COLOR=1
+
 npm run lint
 npm run unit -- --onlyChanged
 
+npm run sync:version
+git add package.json
+
 npm run sauce:get-browsers
 git add tools/jil/util/browsers-supported.json
+git add tools/wdio/util/browsers-supported.json
 
 for FILE in $STAGED_FILES
 do

@@ -34,7 +34,7 @@ function browserifyScript (scriptPath, enablePolyfills) {
           // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
           // assigning to a variable, which conflicts with template literals.
           '@babel/plugin-transform-template-literals',
-          babelEnv('VERSION')
+          babelEnv({ version: 'VERSION' })
         ],
         global: true
       })
@@ -51,8 +51,7 @@ function browserifyScript (scriptPath, enablePolyfills) {
 }
 
 /**
- * Transforms requests for JS files by passing them through browserify for
- * transpilation.
+ * Transforms requests for JS files by passing them through browserify for transpilation.
  */
 module.exports = function (scriptPath, testServer) {
   return new Transform({

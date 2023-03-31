@@ -1,0 +1,35 @@
+<html>
+  <head>
+    {init} {config} {loader}
+    <!-- should only count toward 'non-ajax/internal' -->
+    <script src="/js"></script>
+  </head>
+  <body>
+    <!-- should only count toward 'non-ajax/internal' -->
+    <img src="/image" />
+    <!-- should count toward 'non-ajax/external' -->
+    <img
+      src="https://media.giphy.com/media/Y4pAQv58ETJgRwoLxj/giphy-downsized-large.gif"
+    />
+    <!-- should count toward 'non-ajax/external' -->
+    <iframe
+      width="560"
+      height="315"
+      src="https://www.youtube.com/embed/Jjql2hBR7Dw"
+      title="YouTube video player"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen
+    ></iframe>
+    <script>
+      // <!-- should count toward 'ajax/internal' -->
+      var internal = new XMLHttpRequest();
+      internal.open("GET", "/json");
+      internal.send();
+      // <!-- should count toward 'ajax/external' -->
+      var external = new XMLHttpRequest();
+      external.open("GET", "https://dummyjson.com/products");
+      external.send();
+    </script>
+  </body>
+</html>

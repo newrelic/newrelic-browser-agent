@@ -22,7 +22,3 @@ export function subscribeToVisibilityChange (cb, toHiddenOnly = false) {
     cb(document.visibilityState)
   }
 }
-
-export function initializeHiddenTime () {
-  return document.visibilityState === 'hidden' ? -1 : Infinity
-}

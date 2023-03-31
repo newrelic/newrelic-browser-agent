@@ -15,7 +15,7 @@ export class FeatureBase {
     this.featureName = featureName
     /**
      * Blocked can be used to prevent aggregation and harvest after inititalization time of the feature.
-     * This can currently happen if rum response setToken flag is 0, which is tied to ingest account entitlement info.
+     * This can currently happen if RUM response setToken flag is 0, which is tied to ingest account entitlement info.
      * @type {boolean}
      */
     this.blocked = false
@@ -23,9 +23,12 @@ export class FeatureBase {
     this.checkConfiguration()
   }
 
+  /**
+   * Checks for additional `jsAttributes` items to support backward compatibility with implementations of the agent where
+   * loader configurations may appear after the loader code is executed.
+   */
   checkConfiguration () {
-    // try to support backwards compat with patter of some loader configs present after loader
-    // would need the same jsAttributes handling as the main branch
+    // NOTE: This check has to happen at aggregator load time, but could be moved to `AggregateBase`.
     if (!isConfigured(this.agentIdentifier)) {
       let jsAttributes = { ...gosCDN().info?.jsAttributes }
       try {

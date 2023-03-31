@@ -7,6 +7,7 @@ import { mapOwn } from '../../common/util/map-own'
 import { single } from '../../common/util/single'
 import { submitData } from '../../common/util/submit-data'
 import { isBrowserScope } from '../../common/util/global-scope'
+import { CUSTOM_METRIC_CHANNEL } from '../../features/metrics/constants'
 
 export function setAPI (agentIdentifier) {
   var instanceEE = ee.get(agentIdentifier)
@@ -32,7 +33,7 @@ export function setAPI (agentIdentifier) {
 
   function finished (t, providedTime) {
     var time = providedTime ? providedTime - getRuntime(agentIdentifier).offset : t
-    handle('record-custom', ['finished', { time }], undefined, FEATURE_NAMES.metrics, instanceEE)
+    handle(CUSTOM_METRIC_CHANNEL, ['finished', { time }], undefined, FEATURE_NAMES.metrics, instanceEE)
     addToTrace(t, { name: 'finished', start: time + getRuntime(agentIdentifier).offset, origin: 'nr' })
     handle('api-addPageAction', [time, 'finished'], undefined, FEATURE_NAMES.pageAction, instanceEE)
   }

@@ -29,7 +29,7 @@ function addEventListenerPatched (type, browserVersionMatcher) {
             return function () {
               var args = Array.prototype.slice.call(arguments)
               wrapperInvoked = true
-              callback.apply(window, args)
+              callback.apply(self, args)
             }
           }
 
@@ -59,7 +59,7 @@ function addEventListenerPatched (type, browserVersionMatcher) {
       const loadPromise = browser.get(assetURL)
       const xhrMetricsPromise = router.expectAjaxTimeSlices()
 
-      Promise.all([loadPromise, xhrMetricsPromise])
+      Promise.all([loadPromise, xhrMetricsPromise, router.expectRum()])
         .then(([, { request }]) => {
           t.ok(!!getXhrFromResponse(request), 'got XHR data')
       	t.end()
@@ -97,7 +97,7 @@ function constructorRuntimePatched (type, browserVersionMatcher) {
       const loadPromise = browser.get(assetURL)
       const xhrMetricsPromise = router.expectAjaxTimeSlices()
 
-      Promise.all([loadPromise, xhrMetricsPromise])
+      Promise.all([loadPromise, xhrMetricsPromise, router.expectRum()])
         .then(([, { request }]) => {
           t.ok(!!getXhrFromResponse(request), 'got XHR data')
       	t.end()
@@ -132,7 +132,7 @@ function catCors (type, browserVersionMatcher) {
         }
       })
 
-      Promise.all([ajaxPromise, loadPromise])
+      Promise.all([ajaxPromise, loadPromise, router.expectRum()])
         .then(([{ request }]) => {
           t.notok(request.headers['x-newrelic-id'], 'cross-origin XHR should not have CAT header')
       	t.end()
@@ -149,7 +149,7 @@ function harvestRetried (type, browserVersionMatcher) {
         init: {
           harvest: { tooManyRequestsDelay: 10 },
           ajax: {
-            harvestTimeSeconds: 2,
+            harvestTimeSeconds: 5,
             enabled: true
           },
           metrics: { enabled: false }
@@ -172,7 +172,7 @@ function harvestRetried (type, browserVersionMatcher) {
       const ajaxPromise = router.expectAjaxEvents()
       let firstBody
 
-      Promise.all([ajaxPromise, loadPromise])
+      Promise.all([ajaxPromise, loadPromise, router.expectRum()])
         .then(([result]) => {
           t.equal(result.reply.statusCode, 429, 'server responded with 429')
           firstBody = querypack.decode(result.request.body)
@@ -218,7 +218,7 @@ function abortCalled (type, browserVersionMatcher) {
       const loadPromise = browser.get(assetURL)
       const xhrPromise = router.expectAjaxTimeSlices()
 
-      Promise.all([xhrPromise, loadPromise])
+      Promise.all([xhrPromise, loadPromise, router.expectRum()])
         .then(([{ request }]) => {
           const parsedXhrs = getXhrFromResponse(request, browser)
           t.ok(parsedXhrs, 'got XHR data')

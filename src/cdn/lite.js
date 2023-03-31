@@ -1,3 +1,7 @@
+/**
+ * @file Creates a "Lite" agent loader bundle composed of the core Agent and a subset of available feature modules.
+ */
+
 import { Agent } from '../loaders/agent'
 
 import { Instrument as InstrumentPageViewEvent } from '../features/page_view_event/instrument'

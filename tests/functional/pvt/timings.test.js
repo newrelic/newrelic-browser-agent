@@ -6,10 +6,11 @@
 const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
 
-const supportedFirstPaint = testDriver.Matcher.withFeature('firstPaint')
-const supportedFirstContentfulPaint = testDriver.Matcher.withFeature('firstContentfulPaint')
-const supportedLcp = testDriver.Matcher.withFeature('largestContentfulPaint')
-const supportedCls = testDriver.Matcher.withFeature('cumulativeLayoutShift')
+const supportsFP = testDriver.Matcher.withFeature('firstPaint')
+const supportsFCP = testDriver.Matcher.withFeature('firstContentfulPaint')
+const supportsFID = testDriver.Matcher.withFeature('firstInputDelay')
+const supportsLCP = testDriver.Matcher.withFeature('largestContentfulPaint')
+const supportsCLS = testDriver.Matcher.withFeature('cumulativeLayoutShift')
 const supportsINP = testDriver.Matcher.withFeature('interactionToNextPaint')
 const supportsLT = testDriver.Matcher.withFeature('longTaskTiming')
 
@@ -68,12 +69,12 @@ testDriver.test('Disabled timings feature', function (t, browser, router) {
 })
 
 function runPaintTimingsTests (loader) {
-  testDriver.test(`First paint for ${loader} agent`, supportedFirstPaint, function (t, browser, router) {
+  testDriver.test(`First paint for ${loader} agent`, supportsFP, function (t, browser, router) {
     t.plan(1)
 
     const rumPromise = router.expectRum()
     const timingsPromise = router.expectTimings()
-    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: 'spa' })).waitForFeature('loaded')
+    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: loader })).waitForFeature('loaded')
 
     Promise.all([timingsPromise, rumPromise, loadPromise])
       .then(([{ request: timingsResult }]) => {
@@ -86,12 +87,12 @@ function runPaintTimingsTests (loader) {
       .catch(fail(t))
   })
 
-  testDriver.test(`First contentful paint for ${loader} agent`, supportedFirstContentfulPaint, function (t, browser, router) {
+  testDriver.test(`First contentful paint for ${loader} agent`, supportsFCP, function (t, browser, router) {
     t.plan(1)
 
     const rumPromise = router.expectRum()
     const timingsPromise = router.expectTimings()
-    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: 'spa' })).waitForFeature('loaded')
+    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: loader })).waitForFeature('loaded')
 
     Promise.all([timingsPromise, rumPromise, loadPromise])
       .then(([{ request: timingsResult }]) => {
@@ -106,7 +107,7 @@ function runPaintTimingsTests (loader) {
 }
 
 function runFirstInteractionTests (loader) {
-  testDriver.test(`First interaction and first input delay for ${loader} agent`, function (t, browser, router) {
+  testDriver.test(`First interaction and first input delay for ${loader} agent`, supportsFID, function (t, browser, router) {
     const rumPromise = router.expectRum()
     const loadPromise = browser.safeGet(router.assetURL('basic-click-tracking.html', { loader: loader })).waitForFeature('loaded')
 
@@ -132,10 +133,8 @@ function runFirstInteractionTests (loader) {
         t.equal(attribute.type, 'stringAttribute', 'firstInteraction attribute type is stringAttribute')
 
         attribute = timing.attributes.find(a => a.key === 'fid')
-        if (browser.match('notInternetExplorer') || attribute) { // IE may have unreliable event timestamps so ok to skip, but other browsers should have FID
-          t.ok(timing.value > 0, 'firstInputDelay is a non-negative value')
-          t.equal(attribute.type, 'doubleAttribute', 'firstInputDelay attribute type is doubleAttribute')
-        }
+        t.ok(timing.value > 0, 'firstInputDelay is a non-negative value')
+        t.equal(attribute.type, 'doubleAttribute', 'firstInputDelay attribute type is doubleAttribute')
 
         t.end()
       })
@@ -144,7 +143,7 @@ function runFirstInteractionTests (loader) {
 }
 
 function runLargestContentfulPaintFromInteractionTests (loader) {
-  testDriver.test(`Largest Contentful Paint from first interaction event for ${loader} agent`, supportedLcp, function (t, browser, router) {
+  testDriver.test(`Largest Contentful Paint from first interaction event for ${loader} agent`, supportsLCP, function (t, browser, router) {
     t.plan(9)
     const rumPromise = router.expectRum()
     const loadPromise = browser.safeGet(router.assetURL('basic-click-tracking.html', { loader: loader })).waitForFeature('loaded')
@@ -176,7 +175,7 @@ function runLargestContentfulPaintFromInteractionTests (loader) {
         t.equal(tagName.value, 'BUTTON', 'element.tagName is present and correct')
         t.equal(size.type, 'doubleAttribute', 'largestContentfulPaint attribute elementTagName is stringAttribute')
 
-        t.equal(timing.attributes.length, 7, 'largestContentfulPaint has seven attributes')
+        t.ok(timing.attributes.length >= 7, 'largestContentfulPaint has seven (or eight for mobile) attributes')
 
         t.end()
       })
@@ -291,7 +290,7 @@ function runPageHideTests (loader) {
 }
 
 function runPvtInStnTests (loader) {
-  testDriver.test(`Checking for PVT in STN payload for ${loader} agent`, supportedCls, function (t, browser, router) {
+  testDriver.test(`Checking for PVT in STN payload for ${loader} agent`, supportsCLS, function (t, browser, router) {
     const rumPromise = router.expectRum()
     const loadPromise = browser
       .safeGet(router.assetURL('cls-lcp.html', { loader: loader }))
@@ -321,7 +320,7 @@ function runPvtInStnTests (loader) {
 }
 
 function runClsTests (loader) {
-  testDriver.test(`LCP for ${loader} agent collects cls attribute`, supportedCls, function (t, browser, router) {
+  testDriver.test(`LCP for ${loader} agent collects cls attribute`, supportsCLS, function (t, browser, router) {
     const rumPromise = router.expectRum()
     const loadPromise = browser
       .safeGet(router.assetURL('cls-lcp.html', { loader: loader }))
@@ -351,7 +350,7 @@ function runClsTests (loader) {
       .catch(fail(t))
   })
 
-  testDriver.test(`windowUnload for ${loader} agent collects cls attribute`, supportedCls, function (t, browser, router) {
+  testDriver.test(`windowUnload for ${loader} agent collects cls attribute`, supportsCLS, function (t, browser, router) {
     t.plan(2)
 
     const rumPromise = router.expectRum()
@@ -380,7 +379,7 @@ function runClsTests (loader) {
       .catch(fail(t))
   })
 
-  testDriver.test(`${loader} agent collects cls attribute when cls is 0`, supportedCls, function (t, browser, router) {
+  testDriver.test(`${loader} agent collects cls attribute when cls is 0`, supportsCLS, function (t, browser, router) {
     t.plan(2)
 
     // load page without any expected layout shifts
@@ -409,7 +408,7 @@ function runClsTests (loader) {
       .catch(fail(t))
   })
 
-  testDriver.test(`First interaction ${loader} agent collects cls attribute`, supportedCls, function (t, browser, router) {
+  testDriver.test(`First interaction ${loader} agent collects cls attribute`, supportsCLS, function (t, browser, router) {
     t.plan(2)
 
     const rumPromise = router.expectRum()
@@ -436,7 +435,7 @@ function runClsTests (loader) {
       .catch(fail(t))
   })
 
-  testDriver.test(`window load for ${loader} agent collects cls attribute`, supportedCls, function (t, browser, router) {
+  testDriver.test(`window load for ${loader} agent collects cls attribute`, supportsCLS, function (t, browser, router) {
     t.plan(2)
 
     const rumPromise = router.expectRum()
@@ -465,7 +464,7 @@ function runClsTests (loader) {
       .catch(fail(t))
   })
 
-  testDriver.test(`pageHide event for ${loader} agent collects cls attribute`, supportedCls, function (t, browser, router) {
+  testDriver.test(`pageHide event for ${loader} agent collects cls attribute`, supportsCLS, function (t, browser, router) {
     t.plan(2)
 
     const rumPromise = router.expectRum()
@@ -490,69 +489,6 @@ function runClsTests (loader) {
         var cls = timing.attributes.find(a => a.key === 'cls')
         t.ok(cls.value >= 0, 'cls is a non-negative value')
         t.equal(cls.type, 'doubleAttribute', 'cls is doubleAttribute')
-
-        t.end()
-      })
-      .catch(fail(t))
-  })
-
-  testDriver.test('cls only accumulates biggest session (short CLS session followed by long)', supportedCls, function (t, browser, router) {
-    const rumPromise = router.expectRum()
-    const loadPromise = browser
-      .safeGet(router.assetURL('cls-multiple-small-then-big.html', { loader: loader }))
-      .waitForFeature('loaded')
-      .waitForConditionInBrowser('window.contentAdded === true', 10000)
-      .eval('window.allCls')
-
-    Promise.all([rumPromise, loadPromise])
-      .then(() => {
-        let timingsPromise = router.expectTimings()
-        let domPromise = browser.get(router.assetURL('/'))
-        return Promise.all([timingsPromise, domPromise, loadPromise])
-      })
-      .then(([{ request: timingsResult }, domResult, loadResult]) => {
-        const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
-
-        const timing = timings.find(t => t.name === 'unload')
-        const cls = timing.attributes.find(a => a.key === 'cls')
-        t.ok(cls.value >= 0, 'cls is a non-negative value')
-        t.ok(cls.value === Math.max(...loadResult), 'CLS is set to the largest CLS session')
-        t.equal(cls.type, 'doubleAttribute', 'cls is doubleAttribute')
-
-        t.end()
-      })
-      .catch(fail(t))
-  })
-
-  testDriver.test('cls only accumulates biggest session (long CLS session followed by short)', supportedCls, function (t, browser, router) {
-    const rumPromise = router.expectRum()
-    const loadPromise = browser
-      .safeGet(router.assetURL('cls-multiple-big-then-small.html', { loader: loader }))
-      .waitForFeature('loaded')
-      .waitForConditionInBrowser('window.contentAdded === true', 10000)
-      .eval('window.allCls')
-
-    Promise.all([rumPromise, loadPromise])
-      .then(() => {
-        let timingsPromise = router.expectTimings()
-        let domPromise = browser.get(router.assetURL('/'))
-        return Promise.all([timingsPromise, domPromise, loadPromise])
-      })
-      .then(([{ request: timingsResult }, domResult, loadResult]) => {
-        const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
-
-        const load = timings.find(t => t.name === 'load')
-        const loadCls = load.attributes.find(a => a.key === 'cls')
-        t.ok(loadCls.value === 0, 'initial CLS is 0')
-        t.equal(loadCls.type, 'doubleAttribute', 'cls is doubleAttribute')
-
-        const unload = timings.find(t => t.name === 'unload')
-        const unloadCls = unload.attributes.find(a => a.key === 'cls')
-        t.ok(unloadCls.value >= 0, 'cls is a non-negative value')
-        t.ok(unloadCls.value === Math.max(...loadResult), 'CLS is set to the largest CLS session')
-        t.equal(unloadCls.type, 'doubleAttribute', 'cls is doubleAttribute')
 
         t.end()
       })
@@ -614,27 +550,23 @@ function runCustomAttributeTests (loader) {
 }
 
 function runLcpTests (loader) {
-  testDriver.test(`${loader} loader: LCP is not collected after pageHide`, supportedLcp, function (t, browser, router) {
-    // HTML page manually sets maxLCPTimeSeconds to 5
+  testDriver.test(`${loader} loader: LCP is not collected after pageHide`, supportsLCP, function (t, browser, router) {
     const assetURL = router.assetURL('lcp-pagehide.html', {
       loader: loader,
       init: {
         page_view_timing: {
           enabled: true,
-          harvestTimeSeconds: 15,
-          maxLCPTimeSeconds: 2
+          harvestTimeSeconds: 15
         }
       }
     })
 
     const rumPromise = router.expectRum()
     const loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
+    const timingsPromise = router.expectTimings()
 
-    Promise.all([rumPromise, loadPromise])
-      .then(() => {
-        return router.expectTimings()
-      })
-      .then(({ request: timingsResult }) => {
+    Promise.all([timingsPromise, rumPromise, loadPromise])
+      .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
         const timings = querypack.decode(body && body.length ? body : query.e)
 
@@ -649,15 +581,13 @@ function runLcpTests (loader) {
       })
       .catch(fail(t))
   })
-  testDriver.test(`${loader} loader: LCP is not collected on hidden page`, supportedLcp, function (t, browser, router) {
-    // HTML page manually sets maxLCPTimeSeconds to 5
+  testDriver.test(`${loader} loader: LCP is not collected on hidden page`, supportsLCP, function (t, browser, router) {
     const assetURL = router.assetURL('pagehide-beforeload.html', {
       loader: loader,
       init: {
         page_view_timing: {
           enabled: true,
-          harvestTimeSeconds: 15,
-          maxLCPTimeSeconds: 2
+          harvestTimeSeconds: 15
         }
       }
     })
@@ -685,7 +615,7 @@ function runLcpTests (loader) {
 function runLongTasksTest (loader) {
   testDriver.test(`${loader}: emits long task timings when observed`, supportsLT, function (t, browser, router) {
     const rumPromise = router.expectRum()
-    const loadPromise = browser.safeGet(router.assetURL('long-tasks.html', { loader: loader }))
+    const loadPromise = browser.safeGet(router.assetURL('long-tasks.html', { loader: loader, init: { page_view_timing: { long_task: true } } }))
       .waitForConditionInBrowser('window.tasksDone === true')
 
     Promise.all([rumPromise, loadPromise])

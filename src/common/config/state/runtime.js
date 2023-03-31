@@ -1,19 +1,22 @@
-import { getLastTimestamp } from '../../timing/now'
 import * as userAgent from '../../util/user-agent'
 import { Configurable } from './configurable'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { getCurrentSessionIdOrMakeNew } from '../../window/session-storage'
 import { getConfigurationValue } from '../config'
 import { globalScope } from '../../util/global-scope'
-import { VERSION } from '../../constants/environment-variables'
+import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/environment-variables'
 
 const model = agentId => { return {
+  buildEnv: BUILD_ENV,
   customTransaction: undefined,
   disabled: false,
+  distMethod: DIST_METHOD,
   isolatedBacklog: false,
   loaderType: undefined,
   maxBytes: 30000,
-  offset: getLastTimestamp(),
+  // The "timeOrigin" property is the new standard timestamp property shared across main frame and workers, but is not supported in some early Safari browsers (safari<15) + IE
+  // ingest expects an integer value, and timeOrigin can return a float.
+  offset: Math.floor(globalScope?.performance?.timeOrigin || globalScope?.performance?.timing?.navigationStart || Date.now()),
   onerror: undefined,
   origin: '' + globalScope.location,
   ptid: undefined,

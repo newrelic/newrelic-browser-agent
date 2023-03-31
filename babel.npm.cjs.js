@@ -1,3 +1,7 @@
+/**
+ * @file Provides Babel configuration for compiling src/index.js into NPM package output (CommonJS).
+ */
+
 const babelEnv = require('./babel-env-vars')
 
 const presets = [
@@ -10,6 +14,6 @@ const presets = [
     }
   ]
 ]
-const plugins = [babelEnv()]
+const plugins = [babelEnv({ source: 'PACKAGE', subversion: 'NPM', distMethod: 'NPM' })]
 
 module.exports = { presets, plugins }

@@ -45,7 +45,7 @@ function referenceErrorTest (type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{ request: errResponse }]) => {
+    Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -76,7 +76,7 @@ function unhandledPromiseRejectionTest (type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    timedPromiseAll([errPromise, loadPromise], 6000).then(([{ request: errResponse }]) => {
+    timedPromiseAll([errPromise, loadPromise, router.expectRum()], 6000).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -111,7 +111,7 @@ function rangeErrorTest (type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{ request: errResponse }]) => {
+    Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -145,7 +145,7 @@ function typeErrorTest (type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{ request: errResponse }]) => {
+    Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -178,7 +178,7 @@ function uriErrorTest (type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{ request: errResponse }]) => {
+    Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -216,7 +216,7 @@ function memoryLeakTest (type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    timedPromiseAll([errPromise, loadPromise], 6000).then(([{ request: errResponse }]) => {
+    timedPromiseAll([errPromise, loadPromise, router.expectRum()], 6000).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -250,7 +250,7 @@ function syntaxErrorTest (type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{ request: errResponse }]) => {
+    Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
@@ -281,7 +281,7 @@ function thrownErrorTest (type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    Promise.all([errPromise, loadPromise]).then(([{ request: errResponse }]) => {
+    Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request: errResponse }]) => {
       const { err } = JSON.parse(errResponse.body)
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')

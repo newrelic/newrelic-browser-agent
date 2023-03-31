@@ -6,6 +6,7 @@ import { getConfiguration, getConfigurationValue, getLoaderConfig } from '../../
 import { generateSpanId, generateTraceId } from '../../../common/ids/unique-id'
 import { parseUrl } from '../../../common/url/parse-url'
 import { globalScope } from '../../../common/util/global-scope'
+import { stringify } from '../../../common/util/stringify'
 
 export class DT {
   constructor (agentIdentifier) {
@@ -96,7 +97,7 @@ export class DT {
       payload.d.tk = trustKey
     }
 
-    return btoa(JSON.stringify(payload))
+    return btoa(stringify(payload))
   }
 
   // return true if DT is enabled and the origin is allowed, either by being

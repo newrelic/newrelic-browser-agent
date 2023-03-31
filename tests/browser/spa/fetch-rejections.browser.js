@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil')
+const jil = require('../../../tools/jil/driver/browser.js')
 
 jil.browserTest('fetch.reject', function (t) {
   let helpers = require('./helpers')
@@ -60,18 +60,18 @@ jil.browserTest('fetch body.reject', function (t) {
       attrs: {
         isFetch: true
       },
-      children: []
-    }, {
-      type: 'customTracer',
-      attrs: {
-        name: 'promise'
-      },
       children: [{
         type: 'customTracer',
         attrs: {
-          name: 'timer'
+          name: 'promise'
         },
-        children: []
+        children: [{
+          type: 'customTracer',
+          attrs: {
+            name: 'timer'
+          },
+          children: []
+        }]
       }]
     }]
   })

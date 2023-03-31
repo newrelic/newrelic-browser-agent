@@ -1,5 +1,5 @@
 var AWS = require('aws-sdk')
-
+var mime = require('mime-types')
 var s3
 
 module.exports = {
@@ -64,7 +64,7 @@ module.exports = {
       var params = {
         Body: content,
         Bucket: bucket, // argv.bucket,
-        ContentType: 'application/javascript',
+        ContentType: mime.lookup(fileName) || 'application/javascript',
         CacheControl: `public, max-age=${maxAge}`,
         ...(!!expires && { Expires: expires }),
         Key: fileName

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil')
+const jil = require('../../../tools/jil/driver/browser.js')
 
 jil.browserTest('spa aggregator receives complete interaction when hashchange fires after finish', function (t) {
   let helpers = require('./helpers')

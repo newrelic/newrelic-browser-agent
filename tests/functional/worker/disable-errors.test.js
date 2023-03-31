@@ -39,7 +39,7 @@ function disabledJsErrorsTest (type, matcher) {
     let loadPromise = browser.get(assetURL)
     let errPromise = router.expectErrors()
 
-    timedPromiseAll([errPromise, loadPromise], 6000).then((response) => {
+    timedPromiseAll([errPromise, loadPromise, router.expectRum()], 6000).then((response) => {
       if (response) {
         // will be null if timed out, so a payload here means it sent and error
         t.fail('Should not have generated "error" payload')

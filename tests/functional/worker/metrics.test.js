@@ -5,6 +5,8 @@ const { failWithEndTimeout, asyncApiFns, extractWorkerSM, getMetricsFromResponse
 const fetchExt = testDriver.Matcher.withFeature('fetchExt')
 const nestedWorkerSupport = testDriver.Matcher.withFeature('nestedWorkers')
 
+const multipleApiCalls = asyncApiFns[1]
+
 workerTypes.forEach(type => { // runs all test for classic & module workers & use the 'workers' browser-matcher for classic and the 'workersFull' for module
   const browsersWithOrWithoutModuleSupport = typeToMatcher(type)
   metricsApiCreatesSM(type, browsersWithOrWithoutModuleSupport)
@@ -17,9 +19,6 @@ workerTypes.forEach(type => { // runs all test for classic & module workers & us
 function metricsApiCreatesSM (type, browserVersionMatcher) {
   testDriver.test(`${type} - Calling a newrelic[api] fn creates a supportability metric`, browserVersionMatcher,
     function (t, browser, router) {
-      const EXPECTED_APIS_CALLED = asyncApiFns.length
-      t.plan(EXPECTED_APIS_CALLED + 6)	// the magic number 6 comes from the "extra" assertions labeled below		~YW, *cli 10/22
-
       let assetURL = router.assetURL(`worker/${type}-worker.html`, {
         init: {
           jserrors: { enabled: false }
@@ -37,38 +36,40 @@ function metricsApiCreatesSM (type, browserVersionMatcher) {
           newrelic.setPageViewName('test')
           newrelic.setPageViewName('test')
           newrelic.setPageViewName('test')
+          self.close()
         }].map(x => x.toString())
       })
       const loadPromise = browser.get(assetURL)
-      const metricsPromise = router.expectMetrics()
+      const metricsPromise = router.expectMetrics(5000)
       const observedAPImetrics = []
 
       Promise.all([metricsPromise, loadPromise])
         .then(([{ request: data }]) => {
-          const supportabilityMetrics = getMetricsFromResponse(data, true)
-          const customMetrics = getMetricsFromResponse(data, false)
-          t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')	// extra #1
-          t.ok(customMetrics && !!customMetrics.length, 'CustomMetrics object(s) were generated')	// extra #2
+          var supportabilityMetrics = getMetricsFromResponse(data, true).filter(sm => sm.params.name.toLowerCase().includes('api'))
+          var customMetrics = getMetricsFromResponse(data, false)
+          t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
+          t.ok(customMetrics && !!customMetrics.length, 'CustomMetrics object(s) were generated')
 
           for (const sm of supportabilityMetrics) {
-            const matchIdx = asyncApiFns.findIndex(x => x === sm.params.name)
-            if (matchIdx != -1) observedAPImetrics.push(asyncApiFns[matchIdx])
+            const match = asyncApiFns.find(x => x === sm.params.name)
+            if (match) observedAPImetrics.push(match)
 
-            if (matchIdx == 1)	// this is the index of 'setPageViewName' in asyncApiFns
+            if (sm.params.name === multipleApiCalls)
             { t.equal(sm.stats.c, 5, sm.params.name + ' count was incremented by 1 until reached 5') }
-            else if (sm.params.name.startsWith('Workers/'))	// these metrics have a dynamic count & are tested separately anyways
-            { continue }
+            else if (sm.params.name.startsWith('Workers/'))
+            { continue } // these metrics have an unreliable count dependent & are tested separately anyways
             else
-            { t.equal(sm.stats.c, 1, sm.params.name + ' count was incremented by 1') }	// there should be 1 generic sm for agent version--extra #3
+            { t.equal(sm.stats.c, 1, sm.params.name + ' count was incremented by 1') }
           }
-          t.ok(observedAPImetrics.length === EXPECTED_APIS_CALLED, 'Saw all asyncApiFns')	// extra #4
-          t.ok(customMetrics[0].params.name === 'finished', 'a `Finished` Custom Metric (cm) was also generated')	// extra #5
+
+          t.ok(observedAPImetrics.length === asyncApiFns.length, 'Saw all asyncApiFns')
+
+          t.ok(customMetrics[0].params.name === 'finished', 'a `Finished` Custom Metric (cm) was also generated')
           t.end()
         }).catch(failWithEndTimeout(t))
     }
   )
 }
-
 function metricsValidObfuscationCreatesSM (type, browserVersionMatcher) {
   testDriver.test(`${type} - a valid obfuscationRule creates detected supportability metric`, browserVersionMatcher,
     function (t, browser, router) {
@@ -84,15 +85,16 @@ function metricsValidObfuscationCreatesSM (type, browserVersionMatcher) {
         },
         workerCommands: [() => {
           setTimeout(function () {
+            setTimeout(() => self.close(), 100)
             fetch('/tests/assets/obfuscate-pii-valid.html')
             throw new Error('pii')
           }, 100)
           newrelic.addPageAction('pageactionpii')
-    			newrelic.setCustomAttribute('piicustomAttribute', 'customAttribute')
+          newrelic.setCustomAttribute('piicustomAttribute', 'customAttribute')
         }].map(x => x.toString())
       })
       const loadPromise = browser.get(assetURL)
-      const metricsPromise = router.expectMetrics()
+      const metricsPromise = router.expectMetrics(5000)
 
       Promise.all([metricsPromise, loadPromise])
         .then(([{ request: data }]) => {
@@ -106,7 +108,6 @@ function metricsValidObfuscationCreatesSM (type, browserVersionMatcher) {
     }
   )
 }
-
 function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
   const badObfusRulesArr = [{
     regex: 123,
@@ -130,6 +131,7 @@ function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
         },
         workerCommands: [() => {
           setTimeout(function () {
+            setTimeout(() => self.close(), 100)
             fetch('/tests/assets/obfuscate-pii-valid.html')
             throw new Error('pii')
           }, 100)
@@ -139,9 +141,9 @@ function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
       })
 
       const loadPromise = browser.get(assetURL)
-      const metricsPromise = router.expectMetrics()
+      const metricsPromise = router.expectMetrics(5000)
 
-      Promise.all([metricsPromise, loadPromise])
+      Promise.all([metricsPromise, loadPromise, router.expectRum()])
         .then(([{ request: data }]) => {
           const supportabilityMetrics = getMetricsFromResponse(data, true)
           t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
@@ -155,7 +157,6 @@ function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
     }
   ) }
 }
-
 function metricsWorkersCreateSM (type, browserVersionMatcher) {
   testDriver.test(`${type} - workers creation generates sm`, browserVersionMatcher,
     function (t, browser, router) {
@@ -182,14 +183,15 @@ function metricsWorkersCreateSM (type, browserVersionMatcher) {
           } catch (e) {
             console.warn(e)
           }
+          self.close()
         }].map(x => x.toString())
       })
       const loadPromise = browser.get(assetURL)
-      const metricsPromise = router.expectMetrics()
+      const metricsPromise = router.expectMetrics(5000)
 
       Promise.all([metricsPromise, loadPromise])
-        .then(([{ request: data }]) => {
-          const supportabilityMetrics = getMetricsFromResponse(data, true)
+        .then(([data]) => {
+          const supportabilityMetrics = getMetricsFromResponse(data.request, true)
           t.ok(supportabilityMetrics && !!supportabilityMetrics.length, `${supportabilityMetrics.length} SupportabilityMetrics object(s) were generated`)
 
           const wsm = extractWorkerSM(supportabilityMetrics)

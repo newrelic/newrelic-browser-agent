@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil')
+const jil = require('../../../tools/jil/driver/browser.js')
 
 jil.browserTest('spa single fetch', function (t) {
   let helpers = require('./helpers')
@@ -11,14 +11,13 @@ jil.browserTest('spa single fetch', function (t) {
     name: 'interaction',
     children: [{
       name: 'ajax',
-      children: []
-    },
-    {
-      type: 'customTracer',
-      attrs: {
-        name: 'timer'
-      },
-      children: []
+      children: [{
+        type: 'customTracer',
+        attrs: {
+          name: 'timer'
+        },
+        children: []
+      }]
     }]
   })
 

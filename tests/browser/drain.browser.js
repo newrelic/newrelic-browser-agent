@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const jil = require('jil')
+const jil = require('../../tools/jil/driver/browser.js')
 const { drain, registerDrain } = require('../../src/common/drain/drain')
 var { registerHandler: register } = require('../../src/common/event-emitter/register-handler.js')
 

@@ -1,19 +1,14 @@
 import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
-import { Instrument as MetricsInstrum, constants } from '../../src/features/metrics/instrument/index'
 import { Aggregate as MetricsAggreg } from '../../src/features/metrics/aggregate/index'
+import * as constants from '../../src/features/metrics/constants'
 
 const metricName = 'test'
 const sLabel = constants.SUPPORTABILITY_METRIC
 const cLabel = constants.CUSTOM_METRIC
 
 const { aggregator: agg, agentIdentifier } = setup()
-const metricsInstr = new MetricsInstrum(agentIdentifier, agg, {}, false)
-new MetricsAggreg(agentIdentifier, agg)
-const metrics = {
-  recordSupportability: metricsInstr.recordSupportability,
-  recordCustom: metricsInstr.recordCustom
-}
+const metricsAggreg = new MetricsAggreg(agentIdentifier, agg)
 
 function sum_sq (array) {
   let sum = 0
@@ -23,9 +18,8 @@ function sum_sq (array) {
 }
 
 const createAndStoreMetric = (value, isSupportability = true) => {
-  const method = isSupportability ? 'recordSupportability' : 'recordCustom'
-  const [label, name, params, props] = metrics[method](metricName, value) //eslint-disable-line
-  isSupportability ? agg.storeMetric(label, name, params, props) : agg.store(label, name, params, props)
+  const method = isSupportability ? (...args) => metricsAggreg.storeSupportabilityMetrics(...args) : (...args) => metricsAggreg.storeEventMetrics(...args)
+  method(metricName, value)
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~ RECORD SUPPORTABILITY METRIC ~~~~~~~~~~~~~~~~~~~~~~~~~`

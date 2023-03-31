@@ -18,7 +18,17 @@ const autoFeatures = [
   FEATURE_NAMES.metrics
 ]
 
+/**
+ * A minimal agent class designed to be loaded multiple times on the same page, each instance narrowly scoped to the
+ * concerns of a particular component, as with the micro-frontend architectural pattern. This class does not
+ * automatically instrument. Instead, each MicroAgent instance may be configured to lazy-load specific
+ * instrumentations at runtime, and to report desired data, events, and errors programatically.
+ */
 export class MicroAgent {
+  /**
+   * @param {Object} options - Specifies features and runtime configuration,
+   * @param {string=} agentIdentifier - The optional unique ID of the agent.
+   */
   constructor (options, agentIdentifier = generateRandomHexString(16)) {
     this.agentIdentifier = agentIdentifier
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
@@ -43,6 +53,7 @@ export class MicroAgent {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
       autoFeatures.forEach(f => {
         if (enabledFeatures[f]) {
+          // TODO - THIS does not work, the instrument switch in lazy loader increases the size of the worker build.  Needs to be revisited
           import(/* webpackChunkName: "lazy-loader" */ '../features/utils/lazy-loader').then(({ lazyLoader }) => {
             return lazyLoader(f, 'instrument')
           }).then(({ Instrument }) => {
@@ -53,6 +64,8 @@ export class MicroAgent {
       })
       nonAutoFeatures.forEach(f => {
         if (enabledFeatures[f]) {
+          // TODO - THIS does not work, the instrument switch in lazy loader increases the size of the worker build.  Needs to be revisited
+          // Parts of the lazy-loader were removed because webpack was transpiling them into the worker build, errantly inflating the build size.
           import(/* webpackChunkName: "lazy-loader" */ '../features/utils/lazy-loader').then(({ lazyLoader }) => {
             return lazyLoader(f, 'aggregate')
           }).then(({ Aggregate }) => {

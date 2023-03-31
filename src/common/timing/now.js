@@ -3,27 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { exists } from './performance-check'
-
-var lastTimestamp = new Date().getTime()
-var offset = lastTimestamp
-
+// This is our own layer around performance.now. It's not strictly necessary, but we keep it in case of future mod-ing of the value for refactor purpose.
 export function now () {
-  if (exists && performance.now) {
-    return Math.round(performance.now())
-  }
-  // ensure a new timestamp is never smaller than a previous timestamp
-  return (lastTimestamp = Math.max(new Date().getTime(), lastTimestamp)) - offset
-}
-
-export function getLastTimestamp () {
-  return lastTimestamp
-}
-
-export function setOffset (val) {
-  offset = val
-}
-
-export function getOffset () {
-  return offset
+  return Math.round(performance.now())
 }

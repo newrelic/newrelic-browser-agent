@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  <title>RUM Unit Test</title>
+  {init}
+  {config}
+  {loader}
+  {script-injection}
+</head>
+<body>
+  this is a generic page that is instrumented by the JS agent
+  <script>
+    window.isPromiseResolve = Promise.resolve() instanceof Promise
+    window.isNewPromise = new Promise(function () {}) instanceof Promise
+    window.isFetchPromise = fetch("example") instanceof Promise
+
+    async function asyncP() {}; var p = asyncP(); 
+    window.isAsyncPromise = p instanceof Promise
+    </script>
+</body>
+</html>

@@ -11,12 +11,12 @@
     {loader}
   </head>
   <body>
-    <button id="trigger">PAGE 1</button>
+    <button id="trigger">PAGE 2</button>
 
     <script type="text/javascript">
       setInterval(() => {
         document.querySelector("#trigger").style.position = 'absolute'; 
-        document.querySelector("#trigger").style.left = Math.random()*100 + 'px';
+        document.querySelector("#trigger").style.top = Math.random()*100 + 'px';
       }, 1000)
       document.addEventListener('click', trigger)
 

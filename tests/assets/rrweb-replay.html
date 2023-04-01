@@ -9,8 +9,11 @@
   <body>
     <script>
       (async () => {
-        const events = await fetch('/session-replay').then(r => r.json());
-        console.log("events", events)
+        const params = new Proxy(new URLSearchParams(window.location.search), {
+          get: (searchParams, prop) => searchParams.get(prop),
+        });
+        const events = await fetch(`/session-replay?s=${params.s}`).then((r) => r.json());
+        console.log("events", events);
         const replayer = new rrweb.Replayer(events);
         replayer.play();
       })();

@@ -27,7 +27,7 @@ export function lazyLoader (featureName, featurePart) {
       case FEATURE_NAMES.pageViewTiming:
         return import(/* webpackChunkName: "page_view_timing-aggregate" */ '../page_view_timing/aggregate')
       case FEATURE_NAMES.sessionReplay:
-        return import(/* webpackChunkName: "session_trace-aggregate" */ '../session_replay/aggregate')
+        return import(/* webpackChunkName: "session_replay-aggregate" */ '../session_replay/aggregate')
       case FEATURE_NAMES.sessionTrace:
         return import(/* webpackChunkName: "session_trace-aggregate" */ '../session_trace/aggregate')
       case FEATURE_NAMES.spa:

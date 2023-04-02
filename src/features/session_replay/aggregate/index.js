@@ -17,7 +17,7 @@ export class Aggregate extends AggregateBase {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     this.events = []
-    this.harvestTimeSeconds = 10
+    this.harvestTimeSeconds = 30
     this.initialized = false
     this.errorNoticed = false
     this.mode = MODE.OFF
@@ -83,10 +83,6 @@ export class Aggregate extends AggregateBase {
         this.errorNoticed = true
         this.scheduler.startTimer(this.harvestTimeSeconds)
       }, this.featureName, this.ee)
-      // more handling needed for error tracking here
-      // subscribe to an error event, if receieved:
-      // set noticeerror to true
-      // start the harvest timer
     }
   }
 
@@ -107,7 +103,7 @@ export class Aggregate extends AggregateBase {
   startRecording () {
     this.stopRecording = record({
       emit: this.store.bind(this),
-      ...(this.mode === MODE.ERROR && { checkoutEveryNms: 30000 })
+      ...(this.mode === MODE.ERROR && { checkoutEveryNms: this.harvestTimeSeconds * 1000 })
     })
   }
 

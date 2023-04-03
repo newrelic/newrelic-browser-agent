@@ -124,7 +124,7 @@ export class Harvest extends SharedContext {
     if (cbFinished && method === submitData.xhr) {
       var xhr = result
       xhr.addEventListener('load', function () {
-        var result = { sent: true }
+        var result = { sent: true, status: this.status }
         if (this.status === 429) {
           result.retry = true
           result.delay = this.tooManyRequestsDelay

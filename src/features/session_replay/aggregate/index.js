@@ -4,6 +4,7 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
+import { stringify } from '../../../common/util/stringify'
 
 const MODE = {
   OFF: 0,
@@ -11,16 +12,21 @@ const MODE = {
   ERROR: 2
 }
 
+const MAX_PAYLOAD_SIZE = 1000000
+const IDEAL_PAYLOAD_SIZE = 128000
+
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     this.events = []
+    this.overflow = []
     this.harvestTimeSeconds = 30
     this.initialized = false
     this.errorNoticed = false
     this.mode = MODE.OFF
+    this.blocked = false
 
     Promise.all([
       new Promise(resolve => {
@@ -81,6 +87,7 @@ export class Aggregate extends AggregateBase {
     if (this.mode === MODE.ERROR) {
       registerHandler('err', () => {
         this.errorNoticed = true
+        this.scheduler.runHarvest({ needResponse: true })
         this.scheduler.startTimer(this.harvestTimeSeconds)
       }, this.featureName, this.ee)
     }
@@ -89,11 +96,22 @@ export class Aggregate extends AggregateBase {
   prepareHarvest (options) {
     if (this.events.length === 0) return
 
+    return this.getPayload()
+  }
+
+  getPayload () {
     return { body: { data: this.events } }
   }
 
   onHarvestFinished (result) {
-    this.clearBuffer()
+    // The mutual decision for now is to stop recording and clear buffers if ingest is experiencing 429 rate limiting
+    if (result.status === 429) {
+      this.abort()
+      return
+    }
+
+    // keep things in the buffer if they fail to send AND its not a rate limit issue
+    if (result.sent && !result.retry) this.clearBuffer()
   }
 
   clearBuffer () {
@@ -108,27 +126,47 @@ export class Aggregate extends AggregateBase {
   }
 
   store (event, isCheckout) {
+    if (this.blocked) return
+    if (this.isMaxPayloadSize(event)) return this.abort()
+
     if (this.mode === MODE.ERROR && !this.errorNoticed && isCheckout) {
+      // we are still waiting for an error to throw, so keep wiping the buffer over time
       this.clearBuffer()
     }
 
     this.events.push(event)
-    console.log(this.events.length)
+
+    if (this.isIdealPayloadSize(event)) {
+      // if we've made it to the ideal size of ~128kb before the interval timer, we should send early.
+      this.scheduler.runHarvest()
+    }
   }
 
   takeFullSnapshot () {
     record.takeFullSnapshot()
   }
-}
 
-/** RRWEB NOTES
-
-  enum EventType {
-    DomContentLoaded, - 0
-    Load, - 1
-    FullSnapshot, - 2
-    IncrementalSnapshot, - 3
-    Meta, - 4
+  isMaxPayloadSize (newData) {
+    const payload = this.getPayload()
+    if (newData) {
+      payload.body.data.push(newData)
+    }
+    return stringify(payload)?.length > MAX_PAYLOAD_SIZE
   }
 
- */
+  isIdealPayloadSize (newData) {
+    const payload = this.getPayload()
+    if (newData) {
+      payload.body.data.push(newData)
+    }
+    const bytes = stringify(payload)?.length
+    return bytes >= IDEAL_PAYLOAD_SIZE
+  }
+
+  abort () {
+    this.blocked = true
+    this.scheduler.stopTimer(true)
+    this.stopRecording()
+    this.clearBuffer()
+  }
+}

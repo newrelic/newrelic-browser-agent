@@ -353,7 +353,7 @@ testDriver.test('api is available when sessionStorage is not', function (t, brow
     .catch(fail(t))
 })
 
-testDriver.test('setUserId adds correct attribute to jserror', function (t, browser, router) {
+testDriver.test('setUserId adds correct attribute to jserror', withUnload, function (t, browser, router) {
   let url = router.assetURL('instrumented.html', {
     init: {
       jserrors: {

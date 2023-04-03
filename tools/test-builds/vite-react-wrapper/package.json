@@ -1,0 +1,25 @@
+{
+  "name": "vite-react",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-0.1.229.tgz",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "scripts": {
+    "start": "vite",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.21",
+    "@types/react": "*",
+    "@types/react-dom": "*",
+    "@vitejs/plugin-react-swc": "3.2.0",
+    "typescript": "4.9.5",
+    "vite": "4.2.0"
+  },
+  "keywords": [],
+  "description": ""
+}

@@ -247,14 +247,3 @@ export function wrapInPlace (obj, fnName, wrapper) {
   var fn = obj[fnName]
   obj[fnName] = wrapFunction(fn, wrapper)
 }
-
-/**
- * If a function property on an object (e.g. window) was previously wrapped (by this module), removes the wrapper.
- * @param {Object} obj - The object on which the named function is a property.
- * @param {string} fnName - The name of the function to be unwrapped.
- */
-export function unwrapFunction (obj, fnName) {
-  if (obj?.[fnName]?.[flag]) { // previous state of the function property is stored under our wrapper's "flag"; we don't wrap properties that *were* undefined to begin with
-    obj[fnName] = obj[fnName][flag]
-  }
-}

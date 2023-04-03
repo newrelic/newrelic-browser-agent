@@ -8,6 +8,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Fix npm package browser targets
 The previous npm package release included code that was not compatible with browsers in our [supported browser list](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types). The package exports will now default to code that matches our browser support list. The package will also include the source code for power users that would like more control over how the agent is built.
 
+### Fix npm package exports
+Fixed some bad exports in the npm package.
+
 ## v1.229.0
 
 ### Use semantic versioning scheme

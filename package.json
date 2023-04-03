@@ -7,59 +7,79 @@
   "license": "Apache-2.0",
   "homepage": "https://docs.newrelic.com/docs/browser/browser-monitoring",
   "main": "./dist/cjs/index.js",
-  "types": "./types.ts",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "typesVersions": {
+    ">=4.2": {
+      "*": [
+        "dist/types/*"
+      ]
+    }
+  },
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      "types": "./dist/types/index.d.ts",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/esm/index.js"
     },
     "./src/*": {
-      "import": "./src/*",
-      "require": "./src/*"
+      "types": "./dist/types/*",
+      "default": "./src/*"
     },
     "./loaders/agent": {
-      "import": "./dist/esm/loaders/agent.js",
-      "require": "./dist/cjs/loaders/agent.js"
+      "types": "./dist/types/loaders/agent.d.ts",
+      "require": "./dist/cjs/loaders/agent.js",
+      "default": "./dist/esm/loaders/agent.js"
     },
     "./loaders/browser-agent": {
-      "import": "./dist/esm/loaders/browser-agent.js",
-      "require": "./dist/cjs/loaders/browser-agent.js"
+      "types": "./dist/types/loaders/browser-agent.d.ts",
+      "require": "./dist/cjs/loaders/browser-agent.js",
+      "default": "./dist/esm/loaders/browser-agent.js"
     },
     "./loaders/worker-agent": {
-      "import": "./dist/esm/loaders/worker-agent.js",
-      "require": "./dist/cjs/loaders/worker-agent.js"
+      "types": "./dist/types/loaders/worker-agent.d.ts",
+      "require": "./dist/cjs/loaders/worker-agent.js",
+      "default": "./dist/esm/loaders/worker-agent.js"
     },
     "./features/ajax": {
-      "import": "./dist/esm/features/ajax/index.js",
-      "require": "./dist/cjs/features/ajax/index.js"
+      "types": "./dist/types/features/ajax/index.d.ts",
+      "require": "./dist/cjs/features/ajax/index.js",
+      "default": "./dist/esm/features/ajax/index.js"
     },
     "./features/jserrors": {
-      "import": "./dist/esm/features/jserrors/index.js",
-      "require": "./dist/cjs/features/jserrors/index.js"
+      "types": "./dist/types/features/jserrors/index.d.ts",
+      "require": "./dist/cjs/features/jserrors/index.js",
+      "default": "./dist/esm/features/jserrors/index.js"
     },
     "./features/metrics": {
-      "import": "./dist/esm/features/metrics/index.js",
-      "require": "./dist/cjs/features/metrics/index.js"
+      "types": "./dist/types/features/metrics/index.d.ts",
+      "require": "./dist/cjs/features/metrics/index.js",
+      "default": "./dist/esm/features/metrics/index.js"
     },
     "./features/page_action": {
-      "import": "./dist/esm/features/page_action/index.js",
-      "require": "./dist/cjs/features/page_action/index.js"
+      "types": "./dist/types/features/page_action/index.d.ts",
+      "require": "./dist/cjs/features/page_action/index.js",
+      "default": "./dist/esm/features/page_action/index.js"
     },
     "./features/page_view_event": {
-      "import": "./dist/esm/features/page_view_event/index.js",
-      "require": "./dist/cjs/features/page_view_event/index.js"
+      "types": "./dist/types/features/page_view_event/index.d.ts",
+      "require": "./dist/cjs/features/page_view_event/index.js",
+      "default": "./dist/esm/features/page_view_event/index.js"
     },
     "./features/page_view_timing": {
-      "import": "./dist/esm/features/page_view_timing/index.js",
-      "require": "./dist/cjs/features/page_view_timing/index.js"
+      "types": "./dist/types/features/page_view_timing/index.d.ts",
+      "require": "./dist/cjs/features/page_view_timing/index.js",
+      "default": "./dist/esm/features/page_view_timing/index.js"
     },
     "./features/session_trace": {
-      "import": "./dist/esm/features/session_trace/index.js",
-      "require": "./dist/cjs/features/session_trace/index.js"
+      "types": "./dist/types/features/session_trace/index.d.ts",
+      "require": "./dist/cjs/features/session_trace/index.js",
+      "default": "./dist/esm/features/session_trace/index.js"
     },
     "./features/spa": {
-      "import": "./dist/esm/features/spa/index.js",
-      "require": "./dist/cjs/features/spa/index.js"
+      "types": "./dist/types/features/spa/index.d.ts",
+      "require": "./dist/cjs/features/spa/index.js",
+      "default": "./dist/esm/features/spa/index.js"
     }
   },
   "engines": {
@@ -73,7 +93,7 @@
     "format:check": "prettier --check .",
     "test": "node tools/jil/bin/cli.js",
     "build:all": "npm run cdn:build:local && npm run build:npm && npm run tools:test-builds",
-    "build:npm": "npm run npm:build:esm && npm run npm:build:cjs && npm run npm:pack",
+    "build:npm": "npm run npm:build:esm && npm run npm:build:cjs && npm run npm:build:types && npm run npm:pack",
     "lint": "eslint -c .eslintrc.js --ext .js,.cjs,.mjs . --fix",
     "lint:fix": "eslint --ext .js -c .eslintrc . --fix",
     "test-all": "tools/jil/bin/cli.js -b *@*",
@@ -102,6 +122,7 @@
     "prepare": "husky install",
     "npm:build:esm": "npx babel --config-file ./babel.npm.esm.js --out-dir dist/esm --out-file-extension .js ./src",
     "npm:build:cjs": "npx babel --config-file ./babel.npm.cjs.js --out-dir dist/cjs --out-file-extension .js ./src",
+    "npm:build:types": "npx tsc -b",
     "npm:pack": "mkdir -p temp && export PKG_NAME=$(npm pack --pack-destination temp) && echo ./temp/$PKG_NAME",
     "sync:version": "node tools/scripts/sync-version.js"
   },
@@ -171,8 +192,8 @@
     "fs-extra": "^11.1.0",
     "function-bind": "^1.1.1",
     "glob": "^7.0.5",
-    "husky": "^8.0.0",
     "html-webpack-plugin": "^5.5.0",
+    "husky": "^8.0.0",
     "jest": "^28.1.1",
     "jest-environment-jsdom": "28.1.1",
     "jquery": "1.11.3",
@@ -201,6 +222,7 @@
     "through": "^2.3.8",
     "through2": "^2.0.1",
     "transpile-webpack-plugin": "^1.1.1",
+    "typescript": "^5.0.3",
     "uglify-js": "^3.15.4",
     "uuid": "^9.0.0",
     "vinyl-buffer": "^1.0.1",

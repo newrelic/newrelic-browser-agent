@@ -64,10 +64,9 @@
   "scripts": {
     "wdio": "node tools/wdio/bin/cli.js",
     "start": "npm-run-all --parallel cdn:watch test-server",
-    "unit": "jest",
-    "format": "prettier -w .",
-    "format:check": "prettier --check .",
-    "test": "node tools/jil/bin/cli.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "build:all": "npm run cdn:build:local && npm run build:npm && npm run tools:test-builds",
     "build:npm": "npm run npm:build:esm && npm run npm:build:cjs && npm run npm:pack",
     "lint": "eslint -c .eslintrc.js --ext .js,.cjs,.mjs . --fix",

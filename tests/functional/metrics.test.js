@@ -244,3 +244,37 @@ testDriver.test('workers creation generates sm', function (t, browser, router) {
     })
     .catch(failWithEndTimeout(t))
 })
+
+testDriver.test('agent captures log forwarding supportability metrics', withUnload, function (t, browser, router) {
+  let metricsPromise = router.expectSupportMetrics()
+  const loadPromise = browser.safeGet(router.assetURL('console-methods.html'))
+
+  Promise.all([loadPromise])
+    .then(() => Promise.all([
+      metricsPromise,
+      // Reload page to trigger unload. All SM harvests occur on page unload to minimize network requests.
+      browser.get(router.assetURL('console-methods.html'))
+    ]))
+    .then(([{ request: data }]) => {
+      var supportabilityMetrics = getMetricsFromResponse(data, true)
+
+      t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
+      // We want to verify the number of times each method was called and the aggregate size of the payloads.
+      for (method of [
+        { name: 'Debug', count: 2, size: 72 },
+        { name: 'Error', count: 2, size: 72 },
+        { name: 'Info', count: 2, size: 72 },
+        { name: 'Log', count: 2, size: 72 },
+        { name: 'Warn', count: 2, size: 72 },
+        { name: 'Trace', count: 2, size: 72 }
+      ]) {
+        // E.g.: {"params":{"name":"Generic/Console/Debug"},"stats":{"t":72,"min":35,"max":37,"sos":2594,"c":2}}
+        const metric = supportabilityMetrics.find(x => x.params.name.includes(`Generic/Console/${method.name}`))
+        t.ok(!!metric, `Console/${method.name} was captured`)
+        t.ok(metric.stats.c === method.count, `Generic/Console/${method.name} count is correct`) // number of calls
+        t.ok(metric.stats.t === method.size, `Generic/Console/${method.name} size is correct`) // total of values
+      }
+      t.end()
+    })
+    .catch(failWithEndTimeout(t))
+})

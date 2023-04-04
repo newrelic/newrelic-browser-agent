@@ -130,7 +130,7 @@ function getBrowsers (sauceBrowsers, sample = 4) {
 
     // Compose metadata for testing each filtered supported browser.
     uniques.forEach(sauceBrowser => {
-      if (isKnownConnectionIssue(sauceBrowser)) return
+      if (hasKnownConnectionIssue(sauceBrowser)) return
       const metadata = {
         browserName: mobileBrowserName(sauceBrowser),
         platform: mobilePlatformName(sauceBrowser),

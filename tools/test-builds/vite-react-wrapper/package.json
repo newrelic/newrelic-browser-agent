@@ -10,7 +10,7 @@
   },
   "scripts": {
     "start": "vite",
-    "build": "vite build"
+    "build": "tsc && vite build"
   },
   "devDependencies": {
     "@types/node": "^17.0.21",

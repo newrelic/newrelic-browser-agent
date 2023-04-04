@@ -7,6 +7,9 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { getRuntime } from '../../../common/config/config'
 import { onDOMContentLoaded, onWindowLoad } from '../../../common/window/load'
 import { now } from '../../../common/timing/now'
+import { wrapConsole } from '../../../common/wrap'
+import { stringify } from '../../../common/util/stringify'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 
 export class Instrument extends InstrumentBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -27,6 +30,29 @@ export class Instrument extends InstrumentBase {
       })
     }
     // Else, inference: inside worker or some other env where these events are irrelevant. They'll get filled in with 0s in RUM call.
+
+    // For now we are just capturing supportability metrics on `console` usage to assess log forwarding feature.
+    const consoleEE = wrapConsole(this.ee)
+
+    for (const method of ['Debug', 'Error', 'Info', 'Log', 'Warn', 'Trace']) {
+      consoleEE.on(`${method.toLowerCase()}-console-start`, function (args, target) {
+        // Parsing the args individually into a new array ensures that functions and Error objects are represented with
+        // useful string values. By default, functions stringify to null and Error objects stringify to empty objects.
+        // Note that stack traces printed by the console.trace method are not captured.
+        let parsedArgs = []
+        for (const arg of args) {
+          if (typeof arg === 'function' ||
+            (arg && arg.message && arg.stack) // Duck typing for Error objects
+          ) {
+            parsedArgs.push(arg.toString())
+          } else {
+            parsedArgs.push(arg)
+          }
+        }
+        const parsedArgsJSON = stringify(parsedArgs)
+        handle(SUPPORTABILITY_METRIC_CHANNEL, [`Generic/Console/${method}`, parsedArgsJSON.length], undefined, FEATURE_NAMES.metrics, consoleEE)
+      })
+    }
 
     this.importAggregator()
   }

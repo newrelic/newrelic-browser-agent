@@ -11,7 +11,8 @@ import { wrapMutation } from './wrap-mutation'
 import { wrapPromise } from './wrap-promise'
 import { wrapXhr } from './wrap-xhr'
 import { wrapEvents } from './wrap-events'
+import { wrapConsole } from './wrap-console'
 
 export {
-  wrapEvents, wrapFetch, wrapHistory, wrapJsonP, wrapMutation, wrapPromise, wrapRaf, wrapTimer, wrapXhr
+  wrapEvents, wrapFetch, wrapHistory, wrapJsonP, wrapMutation, wrapPromise, wrapRaf, wrapTimer, wrapXhr, wrapConsole
 }

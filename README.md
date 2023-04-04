@@ -135,7 +135,7 @@ import { Spa } from '@newrelic/browser-agent/features/spa';
 
 Our supported browser list can be accessed [here](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types).
 
-If you desire more control over how the agent is built, our package also includes the source code. The source code is written to target the latest ECMAScript standards (ES2022). By importing the browser agent source code instead of the transpiled distribution code, you understand that you may need to alter your project's build system to apply transformations to the browser agent source code. Without these transforms, the code produced by your project's build system may not be compatible with your desired target browsers. Below is an example of how to import the source code.
+If you desire more control over how the agent is built, our package also includes the source code. The source code is written to target the latest ECMAScript standards (ES2022). Please note that if you import the browser agent source code instead of the transpiled distribution code, you may need to alter your project's build system to apply transformations to the browser agent source code. Without these transforms, the code produced by your project's build system may not be compatible with your desired target browsers. Below is an example of how to import the source code.
 
 ```javascript
 // Note the /src/ in the import paths below

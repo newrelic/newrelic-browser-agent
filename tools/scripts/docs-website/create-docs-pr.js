@@ -264,7 +264,7 @@ function getFileName (version) {
  * @param {string} branch github branch
  * @param {boolean} dryRun whether or not we should actually update the repo
  */
-async function commitReleaseNotes (version, remote, branch, dryRun) {
+async function commitReleaseNotes (version, branch, dryRun) {
   if (dryRun) {
     console.log('Dry run indicated (--dry-run), skipping committing release notes.')
     return
@@ -274,8 +274,7 @@ async function commitReleaseNotes (version, remote, branch, dryRun) {
   const files = [getFileName(version)]
   await git.addFiles(files)
   await git.commit(`chore: Add Browser agent ${version} release notes.`)
-  console.log(`Pushing branch to remote ${remote}`)
-  await git.pushToRemote(remote, branch)
+  await git.pushToRemote(branch)
 }
 
 /**

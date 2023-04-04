@@ -616,9 +616,9 @@ jil.browserTest('custom attributes and interaction attributes', function (t) {
     attrs: {
       custom: {
         inside: 0,
-        customOutside: true,
-        customInside: true,
-        override: true
+        customOutside: 'true',
+        customInside: 'true',
+        override: 'true'
       }
     },
     children: []
@@ -626,16 +626,16 @@ jil.browserTest('custom attributes and interaction attributes', function (t) {
 
   t.plan(3 + validator.count)
 
-  newrelic.interaction().setAttribute('outside', true)
-  newrelic.setCustomAttribute('customOutside', true)
-  newrelic.setCustomAttribute('override', false)
+  newrelic.interaction().setAttribute('outside', 'true')
+  newrelic.setCustomAttribute('customOutside', 'true')
+  newrelic.setCustomAttribute('override', 'false')
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
   function onInteractionStart (cb) {
     newrelic.interaction().setAttribute('inside', 0)
     newrelic.setCustomAttribute('inside', 1)
-    newrelic.setCustomAttribute('customInside', true)
-    newrelic.setCustomAttribute('override', true)
+    newrelic.setCustomAttribute('customInside', 'true')
+    newrelic.setCustomAttribute('override', 'true')
     setTimeout(cb, 5)
   }
 
@@ -656,9 +656,9 @@ jil.browserTest('custom attributes and interaction attributes', function (t) {
     attrs: {
       custom: {
         inside: 0,
-        customOutside: true,
-        customInside: true,
-        override: true
+        customOutside: 'true',
+        customInside: 'true',
+        override: 'true'
       }
     },
     children: []
@@ -666,16 +666,16 @@ jil.browserTest('custom attributes and interaction attributes', function (t) {
 
   t.plan(3 + validator.count)
 
-  newrelic.interaction().setAttribute('outside', true)
-  newrelic.setCustomAttribute('customOutside', true)
-  newrelic.setCustomAttribute('override', false)
+  newrelic.interaction().setAttribute('outside', 'true')
+  newrelic.setCustomAttribute('customOutside', 'true')
+  newrelic.setCustomAttribute('override', 'false')
   helpers.startInteraction(onInteractionStart, afterInteractionDone)
 
   function onInteractionStart (cb) {
     newrelic.interaction().setAttribute('inside', 0)
     newrelic.setCustomAttribute('inside', 1)
-    newrelic.setCustomAttribute('customInside', true)
-    newrelic.setCustomAttribute('override', true)
+    newrelic.setCustomAttribute('customInside', 'true')
+    newrelic.setCustomAttribute('override', 'true')
     setTimeout(cb, 5)
   }
 

@@ -89,8 +89,8 @@ export function setAPI (agentIdentifier, forceDrain) {
     return apiCall(prefix, apiName, true)()
   }
   apiInterface.setCustomAttribute = function (name, value, persistAttribute = false) {
-    if (typeof key !== 'string') {
-      warn(`Failed to execute setCustomAttribute.\nName must be a string type, but a type of <${typeof key}> was provided.`)
+    if (typeof name !== 'string') {
+      warn(`Failed to execute setCustomAttribute.\nName must be a string type, but a type of <${typeof name}> was provided.`)
       return
     }
     if (!(['string', 'number'].includes(typeof value) || value === null)) {

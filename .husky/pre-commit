@@ -13,6 +13,7 @@ git add package.json
 npm run sauce:get-browsers
 git add tools/jil/util/browsers-supported.json
 git add tools/wdio/util/browsers-supported.json
+git add tools/jil/util/browsers-all.json
 
 for FILE in $STAGED_FILES
 do

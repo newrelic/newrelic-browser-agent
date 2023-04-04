@@ -10,15 +10,15 @@ import { generateRandomHexString } from '../ids/unique-id'
 const AGENT_PREFIX = 'NRBA/'
 
 /**
- * @param {string} key 
- * @param {string} value 
+ * @param {string} key
+ * @param {string} value
  * @returns true, if item was set successfully. false, if storage is full or setItem threw an exception.
  */
-export function putInBrowserStorage(key, value, subgroup = '') {
+export function putInBrowserStorage (key, value, subgroup = '') {
   try {
     window.sessionStorage.setItem(AGENT_PREFIX + subgroup + key, value)
     return true
-  } catch(ex) {
+  } catch (ex) {
     // Session storage may be full.
     return false
   }
@@ -27,10 +27,10 @@ export function putInBrowserStorage(key, value, subgroup = '') {
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Storage/getItem}
  * @param {string} key
  */
-function getFromBrowserStorage(key, subgroup = '') {
+function getFromBrowserStorage (key, subgroup = '') {
   return window.sessionStorage.getItem(AGENT_PREFIX + subgroup + key)
 }
-export function removeFromBrowserStorage(key, subgroup = '') {
+export function removeFromBrowserStorage (key, subgroup = '') {
   return window.sessionStorage.removeItem(AGENT_PREFIX + subgroup + key)
 }
 
@@ -46,7 +46,7 @@ export function getCurrentSessionIdOrMakeNew () {
       putInBrowserStorage('SESSION_ID', sessionId)
     }
     return sessionId
-  } catch(ex) {
+  } catch (ex) {
     // The agent is running in a security context that does not allow access to the sessionStorage or is not in browser window context.
     return null
   }
@@ -57,7 +57,7 @@ export function getCurrentSessionIdOrMakeNew () {
  * @param {string} [subgroup] - empty string by default, which will return all items set by browser agent
  * @returns An object of the key-value items from putInBrowserStorage calls from agents with access to the same storage space.
  */
-export function getAllStorageItemsOfGroup(subgroup = '') {
+export function getAllStorageItemsOfGroup (subgroup = '') {
   const prefixFilter = AGENT_PREFIX + subgroup
   const groupItems = {}
   try {
@@ -65,9 +65,9 @@ export function getAllStorageItemsOfGroup(subgroup = '') {
       let key = window.sessionStorage.key(i)
       if (!key.startsWith(prefixFilter)) continue
       else key = key.slice(prefixFilter.length) // this removes the "NRBA/<subgroup>" prefix so we get back the original key putInBrowserStorage
-      
+
       groupItems[key] = getFromBrowserStorage(key, subgroup)
     }
-  } catch(ex) { }
+  } catch (ex) { }
   return groupItems
 }

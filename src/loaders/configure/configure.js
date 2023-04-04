@@ -5,7 +5,6 @@ import { activateFeatures, activatedFeatures } from '../../common/util/feature-f
 import { isBrowserScope, isWorkerScope } from '../../common/util/global-scope'
 import { getAllStorageItemsOfGroup } from '../../common/window/session-storage'
 
-
 export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   let { init, info, loader_config, runtime = { loaderType }, exposed = true } = opts
   const nr = gosCDN()

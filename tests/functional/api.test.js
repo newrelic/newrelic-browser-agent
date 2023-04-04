@@ -355,25 +355,25 @@ testDriver.test('api is available when sessionStorage is not', function (t, brow
 })
 
 testDriver.test('setCustomAttribute can persist onto subsequent page loads', notIE, function (t, browser, router) {
-  let loadPromise = browser.get(router.assetURL('instrumented.html', { scriptString: `newrelic.setCustomAttribute('testing',123,true);` }))
+  let loadPromise = browser.get(router.assetURL('instrumented.html', { scriptString: 'newrelic.setCustomAttribute(\'testing\',123,true);' }))
   Promise.all([router.expectRum(), loadPromise])
-  .then(([{ request: { query } }]) => {
-    t.equal(query.ja,'{"testing":123}', 'initial page load has custom attribute')
+    .then(([{ request: { query } }]) => {
+      t.equal(query.ja, '{"testing":123}', 'initial page load has custom attribute')
 
-    loadPromise = browser.get(router.assetURL('instrumented.html'))
-  })
-  .then(() => Promise.all([router.expectRum(), loadPromise])) // testing:123 is still expected on next page load within same tab
-  .then(([{ request: { query } }]) => {
-    t.equal(query.ja,'{"testing":"123"}', '2nd page load still has custom attribute gotten from storage (but converted to string)')
+      loadPromise = browser.get(router.assetURL('instrumented.html'))
+    })
+    .then(() => Promise.all([router.expectRum(), loadPromise])) // testing:123 is still expected on next page load within same tab
+    .then(([{ request: { query } }]) => {
+      t.equal(query.ja, '{"testing":"123"}', '2nd page load still has custom attribute gotten from storage (but converted to string)')
 
-    loadPromise = browser.get(router.assetURL('instrumented.html', { scriptString: `newrelic.setCustomAttribute('testing',null);` }))
-  })
-  .then(() => Promise.all([router.expectRum(), loadPromise])) // testing should've been erased from storage
-  .then(([{ request: { query } }]) => {
-    t.equal(query.ja, undefined, '3rd page load does not retain custom attribute after unsetting (set to null)')
-    t.end()
-  })
-  .catch(fail(t))
+      loadPromise = browser.get(router.assetURL('instrumented.html', { scriptString: 'newrelic.setCustomAttribute(\'testing\',null);' }))
+    })
+    .then(() => Promise.all([router.expectRum(), loadPromise])) // testing should've been erased from storage
+    .then(([{ request: { query } }]) => {
+      t.equal(query.ja, undefined, '3rd page load does not retain custom attribute after unsetting (set to null)')
+      t.end()
+    })
+    .catch(fail(t))
 })
 
 testDriver.test('setUserId adds correct (persisted) attribute to payloads', withUnload.and(notIE), function (t, browser, router) {

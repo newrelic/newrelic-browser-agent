@@ -71,10 +71,10 @@ export function setAPI (agentIdentifier, forceDrain) {
 
   /**
    * Attach the key-value attribute onto agent payloads. All browser events in NR will be affected.
-   * @param {string} key 
-   * @param {string|number|null} value - null indicates the key should be removed or erased 
+   * @param {string} key
+   * @param {string|number|null} value - null indicates the key should be removed or erased
    * @param {string} apiName
-   * @param {boolean} addToBrowserStorage - whether this attribute should be stored in browser storage API and retrieved by the next agent context or initialization 
+   * @param {boolean} addToBrowserStorage - whether this attribute should be stored in browser storage API and retrieved by the next agent context or initialization
    * @returns @see apiCall
    */
   function appendJsAttribute (key, value, apiName, addToBrowserStorage) {
@@ -83,7 +83,7 @@ export function setAPI (agentIdentifier, forceDrain) {
       delete currentInfo.jsAttributes[key]
       if (isBrowserScope) removeFromBrowserStorage(key, CUSTOM_ATTR_GROUP) // addToBrowserStorage flag isn't needed to unset keys from storage
     } else {
-      setInfo(agentIdentifier, {...currentInfo, jsAttributes: {...currentInfo.jsAttributes, [key]: value} })
+      setInfo(agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } })
       if (isBrowserScope && addToBrowserStorage) putInBrowserStorage(key, value, CUSTOM_ATTR_GROUP)
     }
     return apiCall(prefix, apiName, true)()
@@ -93,7 +93,7 @@ export function setAPI (agentIdentifier, forceDrain) {
       warn(`Failed to execute setCustomAttribute.\nName must be a string type, but a type of <${typeof key}> was provided.`)
       return
     }
-    if ( !(['string', 'number'].includes(typeof value) || value === null) ) {
+    if (!(['string', 'number'].includes(typeof value) || value === null)) {
       warn(`Failed to execute setCustomAttribute.\nNon-null value must be a string or number type, but a type of <${typeof value}> was provided.`)
       return
     }
@@ -105,7 +105,7 @@ export function setAPI (agentIdentifier, forceDrain) {
    * @returns @see apiCall
    */
   apiInterface.setUserId = function (value) {
-    if ( !(typeof value === 'string' || value === null) ) {
+    if (!(typeof value === 'string' || value === null)) {
       warn(`Failed to execute setUserId.\nNon-null value must be a string type, but a type of <${typeof value}> was provided.`)
       return
     }

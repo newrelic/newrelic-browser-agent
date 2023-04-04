@@ -1,0 +1,23 @@
+<html>
+  <head>
+    {init}
+    {config}
+    {loader}
+  </head>
+  <body>
+    <script>
+      console.debug('0123456789', 12.345, { a: 1, b: 2 })
+      console.error('0123456789', 12.345, { a: 1, b: 2 })
+      console.info('0123456789', 12.345, { a: 1, b: 2 })
+      console.log('0123456789', 12.345, { a: 1, b: 2 })
+      console.warn('0123456789', 12.345, { a: 1, b: 2 })
+      console.trace('0123456789', 12.345, { a: 1, b: 2 })
+      console.debug(() => true, new Error('error message'))
+      console.error(() => true, new Error('error message'))
+      console.info(() => true, new Error('error message'))
+      console.log(() => true, new Error('error message'))
+      console.warn(() => true, new Error('error message'))
+      console.trace(() => true, new Error('error message'))
+    </script>
+  </body>
+</html>

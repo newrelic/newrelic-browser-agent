@@ -8,7 +8,8 @@ const { fail, getTime } = require('./uncat-internal-help.cjs')
 const { getErrorsFromResponse } = require('./err/assertion-helpers')
 
 const asserters = testDriver.asserters
-let withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
+const withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
+const notIE = testDriver.Matcher.withFeature('notInternetExplorer')
 
 testDriver.test('customTransactionName 1 arg', function (t, browser, router) {
   t.plan(1)
@@ -353,7 +354,29 @@ testDriver.test('api is available when sessionStorage is not', function (t, brow
     .catch(fail(t))
 })
 
-testDriver.test('setUserId adds correct attribute to jserror', withUnload, function (t, browser, router) {
+testDriver.test('setCustomAttribute can persist onto subsequent page loads', notIE, function (t, browser, router) {
+  let loadPromise = browser.get(router.assetURL('instrumented.html', { scriptString: `newrelic.setCustomAttribute('testing',123,true);` }))
+  Promise.all([router.expectRum(), loadPromise])
+  .then(([{ request: { query } }]) => {
+    t.equal(query.ja,'{"testing":123}', 'initial page load has custom attribute')
+
+    loadPromise = browser.get(router.assetURL('instrumented.html'))
+  })
+  .then(() => Promise.all([router.expectRum(), loadPromise])) // testing:123 is still expected on next page load within same tab
+  .then(([{ request: { query } }]) => {
+    t.equal(query.ja,'{"testing":"123"}', '2nd page load still has custom attribute gotten from storage (but converted to string)')
+
+    loadPromise = browser.get(router.assetURL('instrumented.html', { scriptString: `newrelic.setCustomAttribute('testing',null);` }))
+  })
+  .then(() => Promise.all([router.expectRum(), loadPromise])) // testing should've been erased from storage
+  .then(([{ request: { query } }]) => {
+    t.equal(query.ja, undefined, '3rd page load does not retain custom attribute after unsetting (set to null)')
+    t.end()
+  })
+  .catch(fail(t))
+})
+
+testDriver.test('setUserId adds correct (persisted) attribute to payloads', withUnload.and(notIE), function (t, browser, router) {
   let url = router.assetURL('instrumented.html', {
     init: {
       jserrors: {
@@ -371,7 +394,7 @@ testDriver.test('setUserId adds correct attribute to jserror', withUnload, funct
     },500)
     `
   })
-  let loadPromise = browser.safeGet(url).waitForFeature('loaded')
+  let loadPromise = browser.get(url)
   const ERRORS_INBOX_UID = 'enduser.id' // this key should not be changed without consulting EI team on the data flow
 
   Promise.all([loadPromise, router.expectRum()])
@@ -386,6 +409,11 @@ testDriver.test('setUserId adds correct attribute to jserror', withUnload, funct
       errCustom = errArray[1]?.['custom']
       if (!errCustom) throw "No 'fake2' error or custom is missing."
       t.equal(errCustom[ERRORS_INBOX_UID], 'user123', 'Correct enduser.id custom attr on error')
+    })
+    .then(() => Promise.all([router.expectRum(), browser.refresh()])) // we expect setUserId's attribute to be stored by the browser tab session, and retrieved on the next page load & agent init
+    .then(([{ request: { query } }]) => {
+      // If that jsattribute was persisted and retrieved properly, it should be attached to the new RUM call.
+      t.equal(query.ja, `{"${ERRORS_INBOX_UID}":"user123"}`, 'setUserId affects subsequent page loads in the same storage session')
       t.end()
     })
     .catch(fail(t))

@@ -3,8 +3,4 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export var paintMetrics = {}
-
-export function addMetric (name, value) {
-  paintMetrics[name] = value
-}
+export const paintMetrics = {}

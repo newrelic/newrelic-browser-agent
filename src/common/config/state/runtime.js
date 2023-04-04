@@ -4,11 +4,13 @@ import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { getCurrentSessionIdOrMakeNew } from '../../window/session-storage'
 import { getConfigurationValue } from '../config'
 import { globalScope } from '../../util/global-scope'
-import { VERSION } from '../../constants/environment-variables'
+import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/environment-variables'
 
 const model = agentId => { return {
+  buildEnv: BUILD_ENV,
   customTransaction: undefined,
   disabled: false,
+  distMethod: DIST_METHOD,
   isolatedBacklog: false,
   loaderType: undefined,
   maxBytes: 30000,

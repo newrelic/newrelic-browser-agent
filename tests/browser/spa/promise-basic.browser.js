@@ -5,7 +5,7 @@
 
 var unwrappedPromise = global.Promise
 
-const jil = require('jil')
+const jil = require('../../../tools/jil/driver/browser.js')
 
 jil.browserTest('basic promise chain', function (t) {
   let helpers = require('./helpers')

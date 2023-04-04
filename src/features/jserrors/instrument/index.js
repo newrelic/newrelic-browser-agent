@@ -15,6 +15,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { globalScope } from '../../../common/util/global-scope'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { getRuntime } from '../../../common/config/config'
+import { stringify } from '../../../common/util/stringify'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -149,7 +150,7 @@ function castReasonToError (reason) {
   }
   if (typeof reason === 'undefined') return new Error(prefix)
   try {
-    return new Error(prefix + JSON.stringify(reason))
+    return new Error(prefix + stringify(reason))
   } catch (err) {
     return new Error(prefix)
   }

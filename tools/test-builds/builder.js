@@ -1,6 +1,9 @@
 const path = require('path')
 const fs = require('fs')
 const child_process = require('child_process')
+const pkg = require('../../package.json')
+
+const tarball = path.resolve(__dirname, '../../temp', `${pkg.name.replace(/@/g, '').replace(/\//g, '-')}-${pkg.version}.tgz`)
 
 const root = process.cwd()
 
@@ -19,6 +22,7 @@ function recurse (folder) {
   const has_package_json = fs.existsSync(path.join(folder, 'package.json'))
   // If there is `package.json` in this folder then perform `npm install`.
   if (has_package_json && folder !== root) {
+    install(folder)
     build(folder)
   } else {
     // Recurse into subfolders
@@ -29,6 +33,17 @@ function recurse (folder) {
 }
 
 // Performs `npm install`
+function install (folder) {
+  const cmd = /^win/.test(process.platform) ? 'npm.cmd' : 'npm'
+  print(`installing ./${path.relative(root, folder)}`)
+  // Clear the cached version of the npm package
+  child_process.execSync('rm -rf node_modules', { cwd: folder, env: process.env, stdio: 'inherit' })
+  child_process.execSync('rm -rf package-lock.json', { cwd: folder, env: process.env, stdio: 'inherit' })
+  // Re-install node modules
+  child_process.execSync(`npm install ${tarball}`, { cwd: folder, env: process.env, stdio: 'inherit' })
+}
+
+// Performs `npm build`
 function build (folder) {
   const cmd = /^win/.test(process.platform) ? 'npm.cmd' : 'npm'
   print(`Building ./${path.relative(root, folder)}`)

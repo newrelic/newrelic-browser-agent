@@ -1,35 +1,33 @@
 
 import { handle } from '../../../common/event-emitter/handle'
-import { now, importTimestamp } from '../../../common/timing/now'
-import { mark } from '../../../common/timing/stopwatch'
+import { isiOS } from '../../../common/browser-version/ios-version'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { onDOMContentLoaded, onWindowLoad } from '../../../common/window/load'
-import { FEATURE_NAME } from '../constants'
+import * as CONSTANTS from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { getRuntime } from '../../../common/config/config'
+import { onDOMContentLoaded, onWindowLoad } from '../../../common/window/load'
+import { now } from '../../../common/timing/now'
 
 export class Instrument extends InstrumentBase {
-  static featureName = FEATURE_NAME
+  static featureName = CONSTANTS.FEATURE_NAME
   constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+    super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME, auto)
 
-    mark(agentIdentifier, 'starttime', getRuntime(agentIdentifier).offset)
-    mark(agentIdentifier, 'firstbyte', importTimestamp)
+    if ((typeof PerformanceNavigationTiming === 'undefined' || isiOS) && typeof PerformanceTiming !== 'undefined') {
+      // For majority browser versions in which PNT exists, we can get load timings later from the nav entry (in the aggregate portion). At minimum, PT should exist for main window.
+      // *cli Mar'23 - iOS 15.2 & 15.4 testing in Sauce still fails with onTTFB. Hence, all iOS will fallback to this for now. Unknown if this is similar in nature to iOS_below16 bug.
+      const agentRuntime = getRuntime(agentIdentifier)
 
-    onDOMContentLoaded(() => this.measureDomContentLoaded())
-    onWindowLoad(() => this.measureWindowLoaded(), true) // we put this in the front of load listeners (useCapture=true) for better precision on measuring when it fires!
-    this.importAggregator() // the measureWindowLoaded cb should run *before* the page_view_event agg runs
-  }
+      agentRuntime[CONSTANTS.TTFB] = Math.max(Date.now() - agentRuntime.offset, 0)
+      onDOMContentLoaded(() => agentRuntime[CONSTANTS.FBTDC] = Math.max(now() - agentRuntime[CONSTANTS.TTFB], 0))
+      onWindowLoad(() => {
+        const timeNow = now()
+        agentRuntime[CONSTANTS.FBTWL] = Math.max(timeNow - agentRuntime[CONSTANTS.TTFB], 0)
+        handle('timing', ['load', timeNow], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
+      })
+    }
+    // Else, inference: inside worker or some other env where these events are irrelevant. They'll get filled in with 0s in RUM call.
 
-  // should be called on window.load or window.onload, will not be called if agent is loaded after window load
-  measureWindowLoaded () {
-    var ts = now()
-    mark(this.agentIdentifier, 'onload', ts + getRuntime(this.agentIdentifier).offset)
-    handle('timing', ['load', ts], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
-  }
-
-  // should be called on DOMContentLoaded, will not be called if agent is loaded after DOMContentLoaded
-  measureDomContentLoaded () {
-    mark(this.agentIdentifier, 'domContent', now() + getRuntime(this.agentIdentifier).offset)
+    this.importAggregator()
   }
 }

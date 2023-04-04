@@ -1,4 +1,4 @@
-const testDriver = require('jil')
+const testDriver = require('../../tools/jil/index')
 const { testRumRequest } = require('../../tools/testing-server/utils/expect-tests')
 
 let supported = testDriver.Matcher.withFeature('notInternetExplorer')

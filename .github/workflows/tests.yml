@@ -9,26 +9,16 @@ env:
   BUILD_NUMBER: PR${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
 
 jobs:
-  lint:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
-    runs-on: ubuntu-latest
-    container: node:14
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: checkout and build
-        uses: ./.github/actions/test-setup
-
-      - name: lint
-        run: npm run lint
-
   chrome-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -37,18 +27,27 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 --functional-only
+
   chrome-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -57,18 +56,27 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b chrome@* -s -t 85000 --concurrent=10 --unit-only
+
   firefox-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -77,18 +85,27 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 --functional-only
+
   firefox-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -97,18 +114,27 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b firefox@* -s -t 85000 --concurrent=10 --unit-only
+
   edge-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -117,18 +143,27 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 --functional-only
+
   edge-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -137,18 +172,27 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b edge@* -s -t 85000 --concurrent=10 --unit-only
+
   safari-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -157,18 +201,27 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 --functional-only
+
   safari-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -177,18 +230,27 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b safari@* -s -t 85000 --concurrent=10 --unit-only
+
   ios-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 45
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -197,18 +259,27 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --functional-only --concurrent=10
+
   ios-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 45
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -217,18 +288,27 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b ios@* -s -t 85000 --unit-only --concurrent=10
+
   android-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -237,18 +317,27 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=5 --functional-only
+
   android-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -257,10 +346,14 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -b android@* -s -t 85000 --concurrent=5 --unit-only
 
@@ -269,7 +362,11 @@ jobs:
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -278,18 +375,27 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=5 --functional-only
+
   ie-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
     timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
 
     env:
       NEWRELIC_ENVIRONMENT: ci
@@ -298,10 +404,14 @@ jobs:
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
 
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=5 --unit-only
 
@@ -327,16 +437,28 @@ jobs:
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -A -f merged -b *@* -s -t 85000 --concurrent=30 tests/functional/graceful-error.test.js
 
   check-failures:
-    runs-on: ubuntu-latest
-    container: node:14
     if: contains(github.event.pull_request.labels.*.name, 'safe to test') && ${{ !failure() }}  # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
     needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, safari-functional, safari-unit, edge-functional, edge-unit, ios-functional, ios-unit, android-functional, android-unit, ie-functional, ie-unit]
+    timeout-minutes: 30
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
+
     env:
       NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
+
     steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: checkout and build
         uses: ./.github/actions/test-setup
-
       - name: check failed tests
         run: node --max-old-space-size=8192 ./tools/jil/util/get-failed-tests.js

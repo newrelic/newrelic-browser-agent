@@ -110,18 +110,29 @@ function generateDiffRows (assetSizes, buildType) {
 
     let diffSizesResults = ''
     if (diffSizes.fileSizePercent > 1) {
-      diffSizesResults = `+${Math.round(((diffSizes.fileSizePercent - 1) + Number.EPSILON) * 10000) / 10000}%`
+      diffSizesResults = `+${Math.round(((diffSizes.fileSizePercent - 1) + Number.EPSILON) * 10000) / 100}%`
     } else {
-      diffSizesResults = `-${Math.round(((1 - diffSizes.fileSizePercent) + Number.EPSILON) * 10000) / 10000}%`
+      diffSizesResults = `-${Math.round(((1 - diffSizes.fileSizePercent) + Number.EPSILON) * 10000) / 100}%`
     }
     if (diffSizes.gzipSizePercent > 1) {
-      diffSizesResults = `${diffSizesResults} / + ${Math.round(((diffSizes.gzipSizePercent - 1) + Number.EPSILON) * 10000) / 10000}% (gzip)`
+      diffSizesResults = `${diffSizesResults} / +${Math.round(((diffSizes.gzipSizePercent - 1) + Number.EPSILON) * 10000) / 100}% (gzip)`
     } else {
-      diffSizesResults = `${diffSizesResults} / - ${Math.round(((1 - diffSizes.gzipSizePercent) + Number.EPSILON) * 10000) / 10000}% (gzip)`
+      diffSizesResults = `${diffSizesResults} / -${Math.round(((1 - diffSizes.gzipSizePercent) + Number.EPSILON) * 10000) / 100}% (gzip)`
     }
 
     return `|${assetName.name}|${releaseSizesResult}|${buildSizesResult}|${diffSizesResults}|`
   }).join('\n')
+}
+
+function generateOtherDiffRows (assetSizes, buildType, assetGroup) {
+  const targetBuildTypeSizes = assetSizes[buildType]
+  return Object.keys(targetBuildTypeSizes[assetGroup])
+    .filter(assetName => assetName.indexOf('nr-loader') === -1)
+    .map(assetName => {
+      const buildSizes = targetBuildTypeSizes[assetGroup][assetName]
+      const buildSizesResult = `${filesize(buildSizes.fileSize)} / ${filesize(buildSizes.gzipSize)} (gzip)`
+      return `|${assetName}|${buildSizesResult}|`
+    }).join('\n')
 }
 
 async function writeDiff (assetSizes) {
@@ -136,7 +147,39 @@ ${generateDiffRows(assetSizes, 'standard')}
 ${generateDiffRows(assetSizes, 'polyfills')}
 ${generateDiffRows(assetSizes, 'worker')}
 
-<sub>This report only accounts for the minified loaders. Un-minified and async-loaded assets are not included.</sub>
+<details>
+<summary>Other Standard Assets</summary>
+
+## Released Assets
+
+| Asset Name | Asset Size |
+|------------|------------|
+${generateOtherDiffRows(assetSizes, 'standard', 'releaseStats')}
+
+## Built Assets
+
+| Asset Name | Asset Size |
+|------------|------------|
+${generateOtherDiffRows(assetSizes, 'standard', 'buildStats')}
+
+</details>
+
+<details>
+<summary>Other Polyfills Assets</summary>
+
+## Released Assets
+
+| Asset Name | Asset Size |
+|------------|------------|
+${generateOtherDiffRows(assetSizes, 'polyfills', 'releaseStats')}
+
+## Built Assets
+
+| Asset Name | Asset Size |
+|------------|------------|
+${generateOtherDiffRows(assetSizes, 'polyfills', 'buildStats')}
+
+</details>
 `
   )
 }

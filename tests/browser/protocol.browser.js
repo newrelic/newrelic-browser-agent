@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var jil = require('jil')
+var jil = require('../../tools/jil/driver/browser.js')
 import { protocol } from '../../src/common/url/protocol'
 import { setScope, resetScope } from '../../src/common/util/global-scope'
 

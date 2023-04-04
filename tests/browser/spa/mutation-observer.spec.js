@@ -1,2 +1,2 @@
-const matcher = require('jil/util/browser-matcher')
+const matcher = require('../../../tools/jil/util/browser-matcher')
 module.exports = matcher.withFeature('mutation')

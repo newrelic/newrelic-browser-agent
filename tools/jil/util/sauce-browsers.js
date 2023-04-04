@@ -130,7 +130,7 @@ function getBrowsers (sauceBrowsers, sample = 4) {
 
     // Compose metadata for testing each filtered supported browser.
     uniques.forEach(sauceBrowser => {
-      if (isKnownConnectionIssue(sauceBrowser)) return
+      if (hasKnownConnectionIssue(sauceBrowser)) return
       const metadata = {
         browserName: mobileBrowserName(sauceBrowser),
         platform: mobilePlatformName(sauceBrowser),
@@ -251,7 +251,14 @@ function mobilePlatformName (sauceBrowser) {
   }
 }
 
-function isKnownConnectionIssue (sauceBrowser) {
+/**
+ * May be used to exclude browsers known to have SauceLabs connection issues. For example, for a problem browser the
+ * Sauce Connect Proxy might report "The environment you requested was unavailable. Infrastructure Error -- The Sauce
+ * VMs failed to start the browser or device."
+ * @param {*} sauceBrowser - A SauceLabs browser-platform definition object.
+ * @returns {boolean} `true` if SauceLabs has a known issue connecting to the given browser.
+ */
+function hasKnownConnectionIssue (sauceBrowser) {
   switch (sauceBrowser.api_name) {
     case 'firefox':
       return ['59', '57', '49', '47'].includes(sauceBrowser.short_version)

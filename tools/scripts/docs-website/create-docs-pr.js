@@ -14,8 +14,7 @@ const git = require('./git-commands')
 
 const DEFAULT_FILE_NAME = 'CHANGELOG.md'
 /** e.g. v7.2.1 */
-// const TAG_VALID_REGEX = /v\d+\.\d+\.\d+/
-const TAG_VALID_REGEX = /v\d+/
+const TAG_VALID_REGEX = /v\d+\.\d+\.\d+/
 const BASE_BRANCH = 'develop'
 
 var options = require('yargs')
@@ -88,7 +87,7 @@ async function createReleaseNotesPr () {
     logStep('Get Release Notes from File')
     const { body, releaseDate } = await getReleaseNotes(version, options.changelog)
     logStep('Branch Creation')
-    const branchName = await createBranch(options.repoPath, options.remote, version, options.dryRun, options.docsSiteEmail, options.docsSiteName)
+    const branchName = await createBranch(options.repoPath, options.remote, version, options.dryRun, options.docsSiteEmail || 'browser-agent@newrelic.com', options.docsSiteName || 'Browser Agent Team')
     logStep('Format release notes file')
     const releaseNotesBody = formatReleaseNotes(releaseDate, version, body)
     logStep('Create Release Notes')
@@ -265,7 +264,7 @@ function getFileName (version) {
  * @param {string} branch github branch
  * @param {boolean} dryRun whether or not we should actually update the repo
  */
-async function commitReleaseNotes (version, remote, branch, dryRun) {
+async function commitReleaseNotes (version, branch, dryRun) {
   if (dryRun) {
     console.log('Dry run indicated (--dry-run), skipping committing release notes.')
     return
@@ -275,8 +274,7 @@ async function commitReleaseNotes (version, remote, branch, dryRun) {
   const files = [getFileName(version)]
   await git.addFiles(files)
   await git.commit(`chore: Add Browser agent ${version} release notes.`)
-  console.log(`Pushing branch to remote ${remote}`)
-  await git.pushToRemote(remote, branch)
+  await git.pushToRemote(branch)
 }
 
 /**

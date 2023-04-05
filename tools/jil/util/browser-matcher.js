@@ -417,3 +417,31 @@ features.serviceWorkers = new BrowserMatcher([
   new MatcherRule(TYPE_INCLUDE, 'android@>=9.0'),
   new MatcherRule(TYPE_INCLUDE, 'ios@>=11.3')
 ])
+
+/**
+ * Matcher based on our browser support list
+ */
+features.npmDist = new BrowserMatcher([
+  new MatcherRule(TYPE_EXCLUDE, '*@*'),
+  new MatcherRule(TYPE_INCLUDE, 'chrome@>=100'),
+  new MatcherRule(TYPE_INCLUDE, 'edge@>=100'),
+  new MatcherRule(TYPE_INCLUDE, 'firefox@>=99'),
+  new MatcherRule(TYPE_INCLUDE, 'android@>=108'),
+  new MatcherRule(TYPE_INCLUDE, 'safari@>=14.1'),
+  new MatcherRule(TYPE_INCLUDE, 'ios@>=14.0')
+])
+
+/**
+ * Matcher based on ES2022 support
+ * https://caniuse.com/?feats=mdn-javascript_builtins_array_at,mdn-javascript_builtins_regexp_hasindices,mdn-javascript_builtins_object_hasown,mdn-javascript_builtins_error_cause,mdn-javascript_operators_await_top_level,mdn-javascript_classes_private_class_fields,mdn-javascript_classes_private_class_methods,mdn-javascript_classes_static_class_fields,mdn-javascript_classes_static_initialization_blocks
+ */
+features.npmSrc = new BrowserMatcher([
+  new MatcherRule(TYPE_EXCLUDE, '*@*'),
+  new MatcherRule(TYPE_INCLUDE, 'chrome@>94'),
+  new MatcherRule(TYPE_INCLUDE, 'edge@>=94'),
+  new MatcherRule(TYPE_INCLUDE, 'firefox@>=93'),
+  new MatcherRule(TYPE_INCLUDE, 'android@>=111'),
+  // Safari does not support static class initialization blocks but we do not currently use those
+  new MatcherRule(TYPE_INCLUDE, 'safari@>=15.4'),
+  new MatcherRule(TYPE_INCLUDE, 'ios@>=15.4')
+])

@@ -31,7 +31,9 @@ function getFromBrowserStorage (key, subgroup = '') {
   return window.sessionStorage.getItem(AGENT_PREFIX + subgroup + key)
 }
 export function removeFromBrowserStorage (key, subgroup = '') {
-  return window.sessionStorage.removeItem(AGENT_PREFIX + subgroup + key)
+  try {
+    window.sessionStorage.removeItem(AGENT_PREFIX + subgroup + key)
+  } catch (e) {}
 }
 
 /**

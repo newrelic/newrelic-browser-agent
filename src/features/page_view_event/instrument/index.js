@@ -50,7 +50,7 @@ export class Instrument extends InstrumentBase {
           }
         }
         const parsedArgsJSON = stringify(parsedArgs)
-        handle(SUPPORTABILITY_METRIC_CHANNEL, [`Generic/Console/${method}`, parsedArgsJSON.length], undefined, FEATURE_NAMES.metrics, consoleEE)
+        handle(SUPPORTABILITY_METRIC_CHANNEL, [`Console/${method}/Seen`, parsedArgsJSON.length], undefined, FEATURE_NAMES.metrics, consoleEE)
       })
     }
 

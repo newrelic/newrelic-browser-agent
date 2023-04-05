@@ -4,7 +4,7 @@
  */
 /**
  * @file Wraps `debug`, `error`, `info`, `log`, `warn, and `trace` methods of the global `console` object for instrumentation.
- * This module is used by: PageViewEvent.
+ * This module is used by: metrics.
  */
 import { ee as globalEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter } from './wrap-function'

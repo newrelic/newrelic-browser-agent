@@ -56,7 +56,6 @@
 // INTERNET EXPLORER:
 // ex.message = ...
 // ex.name = ReferenceError
-import { reduce } from '../../../common/util/reduce'
 import { formatStackTrace } from './format-stack-trace'
 
 var debug = false
@@ -121,8 +120,7 @@ function computeStackTraceFromStackProp (ex) {
     return null
   }
 
-  var errorInfo = reduce(
-    ex.stack.split('\n'),
+  var errorInfo = ex.stack.split('\n').reduce(
     parseStackProp,
     { frames: [], stackLines: [], wrapperSeen: false }
   )

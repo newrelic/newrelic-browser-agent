@@ -74,11 +74,20 @@ module.exports = {
         browser: true,
         node: true
       }
+    },
+    {
+      files: ['tests/functional/**/*.test.js'],
+      env: {
+        browser: true,
+        node: true
+      },
+      rules: {
+        'no-throw-literal': 0
+      }
     }
   ],
   rules: {
     'no-unused-vars': 'off',
-    'no-throw-literal': 0,
 
     // Disable lint rules that need code changes to re-enabled
     camelcase: 'off',

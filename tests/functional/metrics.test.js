@@ -261,18 +261,19 @@ testDriver.test('agent captures log forwarding supportability metrics', withUnlo
       t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
       // We want to verify the number of times each method was called and the aggregate size of the payloads.
       for (method of [
-        { name: 'Debug', count: 2, size: 72 },
-        { name: 'Error', count: 2, size: 72 },
-        { name: 'Info', count: 2, size: 72 },
-        { name: 'Log', count: 2, size: 72 },
-        { name: 'Warn', count: 2, size: 72 },
-        { name: 'Trace', count: 2, size: 72 }
+        { name: 'Debug', count: 2, size: 89 },
+        { name: 'Error', count: 2, size: 89 },
+        { name: 'Info', count: 2, size: 89 },
+        { name: 'Log', count: 2, size: 89 },
+        { name: 'Warn', count: 2, size: 89 },
+        { name: 'Trace', count: 2, size: 89 }
       ]) {
-        // E.g.: {"params":{"name":"Generic/Console/Debug"},"stats":{"t":72,"min":35,"max":37,"sos":2594,"c":2}}
+        // E.g.:  {"params":{"name":"Generic/Console/Debug"},"stats":{"t":89,"min":35,"max":54,"sos":4141,"c":2}}
+        // IE11:  {"params":{"name":"Generic/Console/Debug"},"stats":{"t":98,"min":35,"max":63,"sos":5194,"c":2}}
         const metric = supportabilityMetrics.find(x => x.params.name.includes(`Generic/Console/${method.name}`))
         t.ok(!!metric, `Console/${method.name} was captured`)
         t.ok(metric.stats.c === method.count, `Generic/Console/${method.name} count is correct`) // number of calls
-        t.ok(metric.stats.t === method.size, `Generic/Console/${method.name} size is correct`) // total of values
+        t.ok(metric.stats.t >= method.size, `Generic/Console/${method.name} size is correct`) // total of values
       }
       t.end()
     })

@@ -414,6 +414,8 @@ testDriver.test('setUserId adds correct (persisted) attribute to payloads', with
     .then(([{ request: { query } }]) => {
       // If that jsattribute was persisted and retrieved properly, it should be attached to the new RUM call.
       t.equal(query.ja, `{"${ERRORS_INBOX_UID}":"user123"}`, 'setUserId affects subsequent page loads in the same storage session')
+
+      browser.safeEval('newrelic.setUserId(null)') // unset to not affect other tests running on same Sauce instance
       t.end()
     })
     .catch(fail(t))

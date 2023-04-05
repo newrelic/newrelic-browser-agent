@@ -26,7 +26,7 @@ function metricsApiCreatesSM (type, browserVersionMatcher) {
         workerCommands: [() => {
           newrelic.noticeError('too many free taco coupons')
           newrelic.setPageViewName('test')
-          newrelic.setCustomAttribute('test')
+          newrelic.setCustomAttribute('test','test')
           newrelic.setUserId('test')
           newrelic.setErrorHandler()
           newrelic.finished()

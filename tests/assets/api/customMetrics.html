@@ -16,8 +16,8 @@
         // should create a 'sm' object for each tracked API call
         newrelic.noticeError('too many free taco coupons')
         newrelic.setPageViewName('test')
-        newrelic.setCustomAttribute('test')
-        newrelic.setUserId('test')
+        newrelic.setCustomAttribute('test','test')
+        newrelic.setUserId(null) // this triggers supp metric count increment, but won't affect other (SPA) tests by persisting a jsAttribute
         newrelic.setErrorHandler()
         newrelic.finished()
         newrelic.addToTrace('test')

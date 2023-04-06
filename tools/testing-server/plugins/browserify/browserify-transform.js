@@ -31,6 +31,8 @@ function browserifyScript (scriptPath, enablePolyfills) {
           '@babel/plugin-syntax-dynamic-import',
           '@babel/plugin-transform-modules-commonjs',
           '@babel/plugin-proposal-optional-chaining',
+          // Addresses a problem handling static class properties.
+          '@babel/plugin-proposal-class-properties',
           // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
           // assigning to a variable, which conflicts with template literals.
           '@babel/plugin-transform-template-literals',

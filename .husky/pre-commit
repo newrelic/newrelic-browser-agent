@@ -5,7 +5,7 @@
 export FORCE_COLOR=1
 
 npm run lint
-npm run unit -- --onlyChanged
+npm run test -- --onlyChanged
 
 npm run sync:version
 git add package.json

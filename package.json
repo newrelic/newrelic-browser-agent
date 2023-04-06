@@ -24,11 +24,8 @@
     },
     "./src/*": {
       "types": "./dist/types/*",
-      "default": "./src/*"
-    },
-    "./src/*": {
       "import": "./src/*",
-      "require": "./src/*"
+      "default": "./src/*"
     },
     "./loaders/agent": {
       "types": "./dist/types/loaders/agent.d.ts",

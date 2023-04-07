@@ -21,7 +21,7 @@ export class Instrument extends InstrumentBase {
     // For now we are just capturing supportability metrics on `console` usage to assess log forwarding feature.
     const consoleEE = wrapConsole(this.ee)
 
-    for (const method of ['Debug', 'Error', 'Info', 'Log', 'Warn', 'Trace']) {
+    for (const method of ['Debug', 'Error', 'Info', 'Log', 'Trace', 'Warn']) {
       consoleEE.on(`${method.toLowerCase()}-console-start`, function (args, target) {
         // Parsing the args individually into a new array ensures that functions and Error objects are represented with
         // useful string values. By default, functions stringify to null and Error objects stringify to empty objects.

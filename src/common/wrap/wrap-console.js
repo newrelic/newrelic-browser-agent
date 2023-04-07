@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 /**
- * @file Wraps `debug`, `error`, `info`, `log`, `warn, and `trace` methods of the global `console` object for instrumentation.
+ * @file Wraps `debug`, `error`, `info`, `log`, `trace, and `warn` methods of the global `console` object for instrumentation.
  * This module is used by: metrics.
  */
 import { ee as globalEE } from '../event-emitter/contextual-ee'
@@ -11,10 +11,10 @@ import { createWrapperWithEmitter } from './wrap-function'
 import { globalScope } from '../util/global-scope'
 
 const wrapped = {}
-const CONSOLE_METHODS = ['debug', 'error', 'info', 'log', 'warn', 'trace']
+const CONSOLE_METHODS = ['debug', 'error', 'info', 'log', 'trace', 'warn']
 
 /**
- * Wraps the `debug`, `error`, `info`, `log`, `warn, and `trace` methods of global `console` object and returns a
+ * Wraps the `debug`, `error`, `info`, `log`, `trace, and `warn` methods of global `console` object and returns a
  * corresponding event emitter scoped to the console object.
  * @param {Object} sharedEE - The shared event emitter on which a new scoped event emitter will be based.
  * @returns {Object} Scoped event emitter with a debug ID of `console`.

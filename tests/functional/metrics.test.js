@@ -265,8 +265,8 @@ testDriver.test('agent captures log forwarding supportability metrics', withUnlo
         { name: 'Error', count: 2, size: 89 },
         { name: 'Info', count: 2, size: 89 },
         { name: 'Log', count: 2, size: 89 },
-        { name: 'Warn', count: 2, size: 89 },
-        { name: 'Trace', count: 2, size: 89 }
+        { name: 'Trace', count: 2, size: 89 },
+        { name: 'Warn', count: 2, size: 89 }
       ]) {
         // E.g.:  {"params":{"name":"Console/Debug/Seen"},"stats":{"t":89,"min":35,"max":54,"sos":4141,"c":2}}
         // IE11:  {"params":{"name":"Console/Debug/Seen"},"stats":{"t":98,"min":35,"max":63,"sos":5194,"c":2}}

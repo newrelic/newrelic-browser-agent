@@ -119,7 +119,7 @@ export class Aggregate extends AggregateBase {
     chunksForQueryString.push(param('ja', customJsAttributes === '{}' ? null : customJsAttributes))
 
     var queryString = fromArray(chunksForQueryString, agentRuntime.maxBytes)
-    agentRuntime.bytesSent[protocol] = (agentRuntime.bytesSent[protocol] || 0) + queryString.length
+    agentRuntime.bytesSent[protocol] = (agentRuntime.bytesSent[protocol] || 0) + queryString?.length || 0
     const isValidJsonp = submitData.jsonp(
       this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString,
       jsonp

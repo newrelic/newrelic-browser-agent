@@ -28,6 +28,7 @@ export class SessionEntity {
     try { this.abortController = new AbortController() } // this try-catch can be removed when IE11 is completely unsupported & gone
     catch (e) {}
 
+    // for browsers that do not support PO, fallback to simple event listeners
     document.addEventListener('scroll', this.refresh.bind(this), eventListenerOpts(false, this.abortController?.signal))
     document.addEventListener('keypress', this.refresh.bind(this), eventListenerOpts(false, this.abortController?.signal))
     document.addEventListener('click', this.refresh.bind(this), eventListenerOpts(false, this.abortController?.signal))
@@ -92,8 +93,8 @@ export class SessionEntity {
     }
   }
 
-  refresh () {
-    console.log('refresh the inactive timer')
+  refresh (e) {
+    console.log('refresh the inactive timer', e)
     clearTimeout(this.inactive)
     this.inactive = this.waitForInactive()
   }

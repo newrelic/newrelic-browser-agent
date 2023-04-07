@@ -11,6 +11,12 @@ import { isBrowserScope } from '../util/global-scope'
 export { getCurrentSessionIdOrMakeNew }
 
 const SESS_ID = 'NRBA_SESSION_ID' // prevents potential key collisions in session storage
+let isNew = false
+
+export function isNewSession () {
+  getCurrentSessionIdOrMakeNew()
+  return isNew
+}
 
 /**
  * @returns {string} This tab|window's session identifier, or a new ID if not found in storage
@@ -24,6 +30,7 @@ function getCurrentSessionIdOrMakeNew () {
     let sessionId
     if ((sessionId = window.sessionStorage.getItem(SESS_ID)) === null) {
       // Generate a new one if storage is empty (no previous ID was created or currently exists)
+      isNew = true
       sessionId = generateRandomHexString(16)
       window.sessionStorage.setItem(SESS_ID, sessionId)
     }

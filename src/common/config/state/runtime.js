@@ -5,6 +5,7 @@ import { getCurrentSessionIdOrMakeNew } from '../../window/session-storage'
 import { getConfigurationValue } from '../config'
 import { globalScope } from '../../util/global-scope'
 import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/environment-variables'
+import { SessionEntity } from '../../session/session-entity'
 
 const model = agentId => { return {
   buildEnv: BUILD_ENV,
@@ -21,8 +22,11 @@ const model = agentId => { return {
   origin: '' + globalScope.location,
   ptid: undefined,
   releaseIds: {},
-  sessionId: getConfigurationValue(agentId, 'privacy.cookies_enabled') == true
-    ? getCurrentSessionIdOrMakeNew()
+  // sessionId: getConfigurationValue(agentId, 'privacy.cookies_enabled') == true
+  //   ? getCurrentSessionIdOrMakeNew()
+  //   : null, // if cookies (now session tracking) is turned off or can't get session ID, this is null
+  session: getConfigurationValue(agentId, 'privacy.cookies_enabled') == true
+    ? new SessionEntity({ agentIdentifier: agentId, key: 'NRBA_SESSION' })
     : null, // if cookies (now session tracking) is turned off or can't get session ID, this is null
   xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
   userAgent,

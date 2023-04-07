@@ -13,6 +13,7 @@ const bucketMap = {
   err: [FEATURE_NAMES.jserrors, FEATURE_NAMES.metrics],
   ins: [FEATURE_NAMES.pageAction],
   spa: [FEATURE_NAMES.spa],
+  sr: [FEATURE_NAMES.sessionReplay],
   srf: [FEATURE_NAMES.sessionReplay],
   sre: [FEATURE_NAMES.sessionReplay]
 }

@@ -5,6 +5,8 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { stringify } from '../../../common/util/stringify'
+import { getRuntime } from '../../../common/config/config'
+// import { SESSION_REPLAY_ID, SESSION_REPLAY_START_TIME, getOrSet, get, isNew } from '../../../common/session/session-manager'
 
 const MODE = {
   OFF: 0,
@@ -22,24 +24,25 @@ export class Aggregate extends AggregateBase {
 
     this.events = []
     this.overflow = []
-    this.harvestTimeSeconds = 30
+    this.harvestTimeSeconds = 10
     this.initialized = false
     this.errorNoticed = false
     this.mode = MODE.OFF
     this.blocked = false
 
-    Promise.all([
-      new Promise(resolve => {
-        this.errorSample = resolve
-      }),
-      new Promise(resolve => {
-        this.fullSample = resolve
-      })
-    ]).then(([errorSample, fullSample]) => {
-      this.initializeRecording(errorSample, fullSample)
-    })
+    // set now if it doesnt already exist, read later at harvest time
+    // this.sessionReplayId = getOrSet(SESSION_REPLAY_ID)
+    // set when recording begins if it doesnt exist
+    // this.sessionReplayStartTime = get(SESSION_REPLAY_START_TIME)
+
+    console.log('sessionReplayId at startup', this.sessionReplayId)
 
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
+
+    this.ee.on('new-session', () => {
+      this.scheduler.runHarvest()
+      this.abort()
+    })
 
     document.addEventListener('visibilitychange', () => {
       if (!this.initialized || this.mode === MODE.OFF) return
@@ -56,14 +59,47 @@ export class Aggregate extends AggregateBase {
       getPayload: this.prepareHarvest.bind(this)
     }, this)
 
+    this.waitForFlags()
+
+    drain(this.agentIdentifier, this.featureName)
+  }
+
+  setupFlagResponseHandlers () {
+    const sessionReplayFlagChecks = [
+      // this must run every time
+      new Promise(resolve => {
+        this.entitlementsResponse = resolve
+      }),
+      new Promise(resolve => {
+        this.errorSample = resolve
+      }),
+      new Promise(resolve => {
+        this.fullSample = resolve
+      })
+    ]
+
+    Promise.all(sessionReplayFlagChecks).then(([entitlements, errorSample, fullSample]) => {
+      this.initializeRecording(entitlements, errorSample, fullSample)
+    })
+  }
+
+  waitForFlags () {
+    this.setupFlagResponseHandlers()
+
+    registerHandler('feat-sr', () => {
+      this.entitlementsResponse(true)
+    }, this.featureName, this.ee)
+
     registerHandler('feat-srf', () => {
-      console.log('feat-srf')
       this.fullSample(true)
     }, this.featureName, this.ee)
 
     registerHandler('feat-sre', () => {
-      console.log('feat-sre')
       this.errorSample(true)
+    }, this.featureName, this.ee)
+
+    registerHandler('block-sr', () => {
+      this.entitlementsResponse(false)
     }, this.featureName, this.ee)
 
     registerHandler('block-srf', () => {
@@ -73,13 +109,17 @@ export class Aggregate extends AggregateBase {
     registerHandler('block-sre', () => {
       this.errorSample(false)
     }, this.featureName, this.ee)
-
-    drain(this.agentIdentifier, this.featureName)
   }
 
-  initializeRecording (errorSample, fullSample) {
+  initializeRecording (entitlements, errorSample, fullSample) {
+    console.log('initialize recording')
     this.initialized = true
-    if (fullSample) this.mode = MODE.FULL
+    if (!entitlements) return
+
+    // if theres an existing session replay ID, there's no need to sample, just check the entitlements response
+    // if not, these sample flags need to be checked
+    // if (!isNew(SESSION_REPLAY_ID) || fullSample) this.mode = MODE.FULL
+    if (fullSample) this.mode = MODE.full
     else if (errorSample) this.mode = MODE.ERROR
 
     if (this.mode !== MODE.OFF) this.startRecording()
@@ -100,7 +140,7 @@ export class Aggregate extends AggregateBase {
   }
 
   getPayload () {
-    return { body: { data: this.events } }
+    return { body: { data: [...this.events] } }
   }
 
   onHarvestFinished (result) {
@@ -132,6 +172,8 @@ export class Aggregate extends AggregateBase {
     if (this.mode === MODE.ERROR && !this.errorNoticed && isCheckout) {
       // we are still waiting for an error to throw, so keep wiping the buffer over time
       this.clearBuffer()
+    } else {
+      getRuntime(this.agentIdentifier).session.sessionReplayActive = true
     }
 
     this.events.push(event)
@@ -168,5 +210,6 @@ export class Aggregate extends AggregateBase {
     this.scheduler.stopTimer(true)
     this.stopRecording()
     this.clearBuffer()
+    getRuntime(this.agentIdentifier).session.sessionReplayActive = false
   }
 }

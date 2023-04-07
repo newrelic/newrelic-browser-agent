@@ -1,4 +1,4 @@
-import { BrowserAgent } from "@newrelic/browser-agent/loaders/browser-agent";
+import { BrowserAgent } from "@newrelic/browser-agent/loaders/browser-agent"
 
 declare const NREUM: any;
 

@@ -115,7 +115,7 @@ export class Aggregate extends AggregateBase {
         }
       })
 
-      // Capture Agent Bytes Sent
+      // Capture per-agent bytes sent for each endpoint (see harvest) and RUM call (see page_view_event aggregator).
       Object.keys(agentRuntime.bytesSent).forEach(endpoint => {
         this.storeSupportabilityMetrics(
           `PageSession/Endpoint/${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)}/BytesSent`,

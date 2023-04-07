@@ -18,7 +18,7 @@
   <body>
     this is a generic page that is instrumented by the JS agent
     <script>
-      window.someOutput = true;
+      setTimeout(function(){window.someOutput = true;}, 1000)
     </script>
   </body>
 </html>

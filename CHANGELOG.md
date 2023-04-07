@@ -8,6 +8,12 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Fix npm package browser targets
 The previous npm package release included code that was not compatible with browsers in our [supported browser list](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types). The package exports will now default to code that matches our browser support list. The package will also include the source code for power users that would like more control over how the agent is built.
 
+### Fix npm package exports
+Fixed some bad exports in the npm package.
+
+### Fix npm package import for typescript projects
+Fixed an issue where typescript projects attempting to import the browser agent library would not get proper auto-complete in the import statement and would receive module declaration errors. The browser agent will not use tsc to generate type definitions from the JavaScript code at build time. The package.json has been updated with appropriate type export declarations.
+
 ## v1.229.0
 
 ### Use semantic versioning scheme

@@ -123,7 +123,7 @@ export class Aggregate extends AggregateBase {
         )
       })
 
-      // Capture STN metrics if avail
+      // Capture metrics for session trace if active (`ptid` is set when returned by replay ingest).
       if (agentRuntime.ptid) {
         this.storeSupportabilityMetrics('PageSession/Feature/SessionTrace/DurationMs', Math.round(performance.now()))
       }

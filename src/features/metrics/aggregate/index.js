@@ -96,6 +96,7 @@ export class Aggregate extends AggregateBase {
     // TODO - these SMs are to be removed when we implement the actual resources feature
     try {
       if (this.resourcesSent) return
+      const agentRuntime = getRuntime(this.agentIdentifier)
       // make sure this only gets sent once
       this.resourcesSent = true
       // differentiate between internal+external and ajax+non-ajax
@@ -113,6 +114,19 @@ export class Aggregate extends AggregateBase {
           else this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/External')
         }
       })
+
+      // Capture Agent Bytes Sent
+      Object.keys(agentRuntime.bytesSent).forEach(endpoint => {
+        this.storeSupportabilityMetrics(
+          `PageSession/Endpoint/${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)}/BytesSent`,
+          agentRuntime.bytesSent[endpoint]
+        )
+      })
+
+      // Capture STN metrics if avail
+      if (agentRuntime.ptid) {
+        this.storeSupportabilityMetrics('PageSession/Feature/SessionTrace/DurationMs', Math.round(performance.now()))
+      }
     } catch (e) {
       // do nothing
     }

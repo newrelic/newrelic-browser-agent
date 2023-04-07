@@ -5,6 +5,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## v1.230.0
 
+### Add setUserId and enhance setErrorHandler APIs
+`setUserId` is an extension of setCustomAttribute that tags a user ID attribute to all payloads. `setErrorHandler` now allows the provided callback to fingerprint and group errors by returning an object with a `group` property.
+
 ### Fix npm package browser targets
 The previous npm package release included code that was not compatible with browsers in our [supported browser list](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types). The package exports will now default to code that matches our browser support list. The package will also include the source code for power users that would like more control over how the agent is built.
 

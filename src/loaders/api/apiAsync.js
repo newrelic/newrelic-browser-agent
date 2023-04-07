@@ -3,7 +3,6 @@ import { getConfigurationValue, getInfo, getRuntime } from '../../common/config/
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { handle } from '../../common/event-emitter/handle'
 import { registerHandler } from '../../common/event-emitter/register-handler'
-import { mapOwn } from '../../common/util/map-own'
 import { single } from '../../common/util/single'
 import { submitData } from '../../common/util/submit-data'
 import { isBrowserScope } from '../../common/util/global-scope'
@@ -24,9 +23,7 @@ export function setAPI (agentIdentifier) {
   }
 
   // Hook all of the api functions up to the queues/stubs created in loader/api.js
-  mapOwn(api, function (fnName, fn) {
-    registerHandler('api-' + fnName, fn, 'api', instanceEE)
-  })
+  Object.entries(api).forEach(([fnName, fnCall]) => registerHandler('api-' + fnName, fnCall, 'api', instanceEE))
 
   // All API functions get passed the time they were called as their
   // first parameter. These functions can be called asynchronously.

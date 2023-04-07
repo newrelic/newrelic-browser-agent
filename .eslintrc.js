@@ -74,6 +74,16 @@ module.exports = {
         browser: true,
         node: true
       }
+    },
+    {
+      files: ['tests/functional/**/*.test.js'],
+      env: {
+        browser: true,
+        node: true
+      },
+      rules: {
+        'no-throw-literal': 0
+      }
     }
   ],
   rules: {

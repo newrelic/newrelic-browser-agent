@@ -8,7 +8,7 @@
  */
 
 import { ee as baseEE } from '../event-emitter/contextual-ee'
-import { createWrapperWithEmitter as wfn, unwrapFunction } from './wrap-function'
+import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { globalScope } from '../util/global-scope'
 
 const wrapped = {}

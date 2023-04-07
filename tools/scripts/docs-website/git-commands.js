@@ -75,8 +75,8 @@ async function syncWithParent () {
   return stdout.trim()
 }
 
-async function pushToRemote (remote, branchName) {
-  const stdout = await execAsPromise(`git push -f --set-upstream ${remote} ${branchName}`)
+async function pushToRemote (branchName) {
+  const stdout = await execAsPromise(`git push -f https://x-access-token:${process.env.GITHUB_TOKEN}@github.com/newrelic-forks/browser-agent-docs-website ${branchName}`)
   return stdout.trim()
 }
 

@@ -8,6 +8,7 @@ import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/environment-var
 
 const model = agentId => { return {
   buildEnv: BUILD_ENV,
+  bytesSent: {},
   customTransaction: undefined,
   disabled: false,
   distMethod: DIST_METHOD,

@@ -5,7 +5,6 @@
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { mapOwn } from '../../../common/util/map-own'
-import { reduce } from '../../../common/util/reduce'
 import { stringify } from '../../../common/util/stringify'
 import { parseUrl } from '../../../common/url/parse-url'
 import { supportsPerformanceObserver } from '../../../common/window/supports-performance-observer'
@@ -321,11 +320,13 @@ export class Aggregate extends AggregateBase {
       this.storeResources(window.performance.getEntriesByType('resource'))
     }
 
-    var stns = reduce(mapOwn(this.trace, (name, nodes) => {
+    var stns = mapOwn(this.trace, (name, nodes) => {
       if (!(name in this.toAggregate)) return nodes
 
-      return reduce(mapOwn(reduce(nodes.sort(this.byStart), this.smearEvtsByOrigin(name), {}), this.val), this.flatten, [])
-    }), this.flatten, [])
+      return mapOwn(
+        nodes.sort(this.byStart).reduce(this.smearEvtsByOrigin(name), {}), this.val
+      ).reduce(this.flatten, [])
+    }).reduce(this.flatten, [])
 
     if (stns.length === 0) return {}
 

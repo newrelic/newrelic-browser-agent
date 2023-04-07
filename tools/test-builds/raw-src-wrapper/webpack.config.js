@@ -42,15 +42,9 @@ const config = [
       'worker-init': './src/worker-init.js'
     },
     output: {
-      path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper')
+      path: path.resolve(__dirname, '../../../tests/assets/test-builds/raw-src-wrapper')
     },
     module: {
-      parser: {
-        javascript: {
-          exportsPresence: 'error',
-          importExportsPresence: 'error'
-        }
-      },
       rules: [
         {
           test: /\.(js|jsx)$/i,
@@ -124,7 +118,7 @@ const config = [
       }
     },
     output: {
-      path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper')
+      path: path.resolve(__dirname, '../../../tests/assets/test-builds/raw-src-wrapper')
     },
     module: {
       rules: [

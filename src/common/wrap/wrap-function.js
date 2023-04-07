@@ -110,7 +110,8 @@ export function createWrapperWithEmitter (emitter, always) {
    * Creates wrapper functions around each of an array of methods on a specified object.
    * @param {Object} obj - The object to which the specified methods belong.
    * @param {string[]} methods - An array of method names to be wrapped.
-   * @param {string} [prefix=''] - A prefix to add to the names of emitted events.
+   * @param {string} [prefix=''] - A prefix to add to the names of emitted events. If `-` is the first character, also
+   *     adds the method name before the prefix.
    * @param {function|object} [getContext] - The function or object that will serve as the 'this' context for handlers
    *     of events emitted by this wrapper.
    * @param {boolean} [bubble=false] - If `true`, emitted events should also bubble up to the old emitter upon which
@@ -118,8 +119,7 @@ export function createWrapperWithEmitter (emitter, always) {
    */
   function inPlace (obj, methods, prefix, getContext, bubble) {
     if (!prefix) prefix = ''
-    // If prefix starts with '-' set this boolean to add the method name to
-    // the prefix before passing each one to wrap.
+    // If prefix starts with '-' set this boolean to add the method name to the prefix before passing each one to wrap.
     var prependMethodPrefix = (prefix.charAt(0) === '-')
     var fn
     var method
@@ -129,8 +129,7 @@ export function createWrapperWithEmitter (emitter, always) {
       method = methods[i]
       fn = obj[method]
 
-      // Unless fn is both wrappable and unwrapped bail,
-      // so we don't add extra properties with undefined values.
+      // Unless fn is both wrappable and unwrapped, bail so we don't add extra properties with undefined values.
       if (notWrappable(fn)) continue
 
       obj[method] = wrapFn(fn, (prependMethodPrefix ? method + prefix : prefix), getContext, method, bubble)

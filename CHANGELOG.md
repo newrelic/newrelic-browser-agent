@@ -17,6 +17,12 @@ Fixed some bad exports in the npm package.
 ### Fix npm package import for typescript projects
 Fixed an issue where typescript projects attempting to import the browser agent library would not get proper auto-complete in the import statement and would receive module declaration errors. The browser agent will not use tsc to generate type definitions from the JavaScript code at build time. The package.json has been updated with appropriate type export declarations.
 
+### Add error catch around sendBeacon
+Added error catch logic around the sendBeacon usage. In the event sendBeacon throws an error during the final harvest, the final harvest will attempt to fallback to image data submission method.
+
+### Removed array reduce polyfill
+Removed the array reduce polyfill in favor of native browser array reduce method.
+
 ## v1.229.0
 
 ### Use semantic versioning scheme

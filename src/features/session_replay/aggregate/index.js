@@ -116,11 +116,17 @@ export class Aggregate extends AggregateBase {
     this.initialized = true
     if (!entitlements) return
 
-    // if theres an existing session replay ID, there's no need to sample, just check the entitlements response
+    const { session } = getRuntime(this.agentIdentifier)
+    console.log('both', (!session.isNew && !session.sessionReplayActive))
+    console.log('active', session.sessionReplayActive)
+    console.log('new and sample', session.isNew && fullSample)
+    // if theres an existing session replay in progress, there's no need to sample, just check the entitlements response
     // if not, these sample flags need to be checked
-    // if (!isNew(SESSION_REPLAY_ID) || fullSample) this.mode = MODE.FULL
-    if (fullSample) this.mode = MODE.full
+    if (!session.isNew && !session.sessionReplayActive) return
+    if (session.sessionReplayActive || (session.isNew && fullSample)) this.mode = MODE.FULL
     else if (errorSample) this.mode = MODE.ERROR
+
+    console.log('mode --', this.mode)
 
     if (this.mode !== MODE.OFF) this.startRecording()
     if (this.mode === MODE.FULL) this.scheduler.startTimer(this.harvestTimeSeconds)
@@ -150,6 +156,7 @@ export class Aggregate extends AggregateBase {
       return
     }
 
+    console.log(result)
     // keep things in the buffer if they fail to send AND its not a rate limit issue
     if (result.sent && !result.retry) this.clearBuffer()
   }
@@ -173,10 +180,15 @@ export class Aggregate extends AggregateBase {
       // we are still waiting for an error to throw, so keep wiping the buffer over time
       this.clearBuffer()
     } else {
-      getRuntime(this.agentIdentifier).session.sessionReplayActive = true
+      // set once
+      if (!this.recording) {
+        this.recording = true
+        getRuntime(this.agentIdentifier).session.setValues({ sessionReplayActive: true })
+      }
     }
 
     this.events.push(event)
+    console.log('this.events', this.events)
 
     if (this.isIdealPayloadSize(event)) {
       // if we've made it to the ideal size of ~128kb before the interval timer, we should send early.
@@ -210,6 +222,6 @@ export class Aggregate extends AggregateBase {
     this.scheduler.stopTimer(true)
     this.stopRecording()
     this.clearBuffer()
-    getRuntime(this.agentIdentifier).session.sessionReplayActive = false
+    getRuntime(this.agentIdentifier).session.setValues({ sessionReplayActive: true })
   }
 }

@@ -36,6 +36,6 @@ export function windowAddEventListener (event, listener, capture = false) {
   window.addEventListener(event, listener, eventListenerOpts(capture))
 }
 /** Do not use this within the worker context. */
-export function documentAddEventListener (event, listener, capture = false) {
-  document.addEventListener(event, listener, eventListenerOpts(capture))
+export function documentAddEventListener (event, listener, capture = false, abortSignal) {
+  document.addEventListener(event, listener, eventListenerOpts(capture, abortSignal))
 }

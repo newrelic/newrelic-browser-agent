@@ -1,5 +1,6 @@
 
 import { getRuntime } from '../../../common/config/config'
+import { drain } from '../../../common/drain/drain'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 
@@ -15,9 +16,10 @@ export class Instrument extends InstrumentBase {
     // session replays can continue if in progress
     if (!session.isNew && !session.sessionReplayActive) {
       console.log('session is not new and session replay is not active', session)
+      drain(this.agentIdentifier, this.featureName)
       return
     }
-    console.log('import!', session)
+    console.log('session is either new, or a replay is active! import!', session)
     this.importAggregator()
   }
 }

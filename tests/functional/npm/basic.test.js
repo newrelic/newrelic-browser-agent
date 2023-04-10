@@ -49,7 +49,7 @@ testBuilds.forEach(build => {
 // })
 
 testDriver.test('NPM agent -- vite-react-wrapper -- sends RUM call', testDriver.Matcher.withFeature('npmDist'), function (t, browser, router) {
-  let url = router.assetURL(`test-builds/vite-react-wrapper/${build}.html`)
+  let url = router.assetURL('test-builds/vite-react-wrapper/index.html')
 
   let rumPromise = router.expectRum()
   let loadPromise = browser.get(url)

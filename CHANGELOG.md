@@ -9,7 +9,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 Added the ability for custom attributes to be persisted between page loads via session storage. The API `setCustomAttribute` takes a new, third parameter. The new parameter defaults to `false`. When passed a `true` boolean, the provided attribute will be persisted in session storage and restored on subsequent page loads. Session storage is subject to the [same-origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy) of the browser.
 
 ### Add setUserId API
-Added a new API method `setUserId` that defines a custom attribute containing the provided user ID. The user ID will be included in all payloads. The `setUserId` API is an extension of the `setCustomAttribute` API and automatically persists between page loads.
+A new `setUserId` API method is now available. It defines a custom attribute containing a specified user ID, to be included in all payloads. The `setUserId` API is an extension of the `setCustomAttribute` API and automatically persists between page loads.
 
 ### Fix npm package browser targets
 The previous npm package release included code that was not compatible with browsers in our [supported browser list](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types). The package exports will now default to code that matches our browser support list. The package will also include the source code for power users that would like more control over how the agent is built.

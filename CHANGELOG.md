@@ -23,7 +23,7 @@ Fixed an issue where typescript projects attempting to import the browser agent 
 ### Add error catch around sendBeacon
 Added error catch logic around the sendBeacon usage. In the event sendBeacon throws an error during the final harvest, the final harvest will attempt to fall back to the image data submission method.
 
-### Removed array reduce polyfill
+### Remove array reduce polyfill
 Removed the array reduce polyfill in favor of the native browser array reduce method.
 
 ## v1.229.0

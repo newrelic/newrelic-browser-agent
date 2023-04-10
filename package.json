@@ -120,8 +120,8 @@
     "tools:test-builds": "npm --prefix ./tools/test-builds run build-all",
     "third-party-updates": "oss third-party manifest --includeOptDeps && oss third-party notices --includeOptDeps",
     "prepare": "husky install",
-    "npm:build:esm": "npx babel --config-file ./babel.npm.esm.js --out-dir dist/esm --out-file-extension .js ./src",
-    "npm:build:cjs": "npx babel --config-file ./babel.npm.cjs.js --out-dir dist/cjs --out-file-extension .js ./src",
+    "npm:build:esm": "npx babel --env-name npm-esm --out-dir dist/esm --out-file-extension .js ./src",
+    "npm:build:cjs": "npx babel --env-name npm-cjs --out-dir dist/cjs --out-file-extension .js ./src",
     "npm:build:types": "npx tsc -b",
     "npm:pack": "mkdir -p temp && export PKG_NAME=$(npm pack --pack-destination temp) && echo ./temp/$PKG_NAME",
     "sync:version": "node tools/scripts/sync-version.js"

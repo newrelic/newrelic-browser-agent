@@ -3,8 +3,6 @@ const TerserPlugin = require('terser-webpack-plugin')
 const webpack = require('webpack')
 const fs = require('fs')
 const { merge } = require('webpack-merge')
-const babelEnv = require('./babel-env-vars')
-const pkgJSON = require('./package.json')
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 

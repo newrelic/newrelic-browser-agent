@@ -15,7 +15,7 @@ Added a new API method `setUserId` that defines a custom attribute containing th
 The previous npm package release included code that was not compatible with browsers in our [supported browser list](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types). The package exports will now default to code that matches our browser support list. The package will also include the source code for power users that would like more control over how the agent is built.
 
 ### Fix npm package exports
-Removed some dangling, unused, and non-existent imports and exports from the source code that was causing issues with consuming the NPM package in some projects.
+Some dangling, unused, and non-existent imports and exports were causing issues with consuming the NPM package in some projects. These have been removed.
 
 ### Fix npm package import for typescript projects
 Fixed an issue where typescript projects attempting to import the browser agent library would not get proper auto-complete in the import statement and would receive module declaration errors. The browser agent will not use tsc to generate type definitions from the JavaScript code at build time. The package.json has been updated with appropriate type export declarations.

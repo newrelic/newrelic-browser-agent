@@ -93,10 +93,11 @@ async function createReleaseNotesPr () {
     logStep('Create Release Notes')
     await addReleaseNotesFile(releaseNotesBody, version)
     logStep('Commit Release Notes')
-    await commitReleaseNotes(version, options.remote, branchName, options.d)
+    await commitReleaseNotes(version, branchName, options.d)
 
     // TODO -- Add EOL Update
     // logStep('Update EOL')
+
     // logStep('Commit EOL')
 
     logStep('Create Pull Request')

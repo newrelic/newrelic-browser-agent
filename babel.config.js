@@ -11,7 +11,10 @@ module.exports = function (api) {
     '@babel/preset-env'
   ]
   const plugins = [
+    // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
+    // assigning to a variable, which conflicts with template literals.
     '@babel/plugin-transform-template-literals',
+    // Replaces `process.env.*` environment variables with actual values.
     [
       'transform-inline-environment-variables',
       {

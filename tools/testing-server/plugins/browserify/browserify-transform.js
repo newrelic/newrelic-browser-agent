@@ -1,12 +1,12 @@
 const { Transform } = require('stream')
 const browserify = require('browserify')
 const preprocessify = require('preprocessify')
-const babelEnv = require('../../../../babel-env-vars')
 
 function browserifyScript (scriptPath, enablePolyfills) {
   return new Promise((resolve, reject) => {
     browserify(scriptPath)
       .transform('babelify', {
+        envName: 'test',
         presets: [
           [
             '@babel/preset-env',
@@ -29,18 +29,12 @@ function browserifyScript (scriptPath, enablePolyfills) {
         ],
         plugins: [
           '@babel/plugin-syntax-dynamic-import',
-          '@babel/plugin-transform-modules-commonjs',
           '@babel/plugin-proposal-optional-chaining',
           '@babel/plugin-proposal-nullish-coalescing-operator',
           '@babel/plugin-proposal-logical-assignment-operators',
           '@babel/plugin-proposal-class-properties', // Addresses a problem handling static class properties.
           '@babel/plugin-proposal-private-methods', // Enables class private methods.
-          // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
-          // assigning to a variable, which conflicts with template literals.
-          '@babel/plugin-transform-template-literals',
-          babelEnv({ version: 'VERSION' })
-        ],
-        global: true
+        ]
       })
       .transform(preprocessify())
       .bundle((err, buf) => {

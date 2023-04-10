@@ -6,7 +6,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## v1.230.0
 
 ### Add persistence for custom attributes
-Added the ability for custom attributes to be persisted between page loads via session storage. The API `setCustomAttribute` takes a new, third parameter. The new parameter defaults to `false`. When passed a `true` boolean, the provided attribute will be persisted in session storage and restored on subsequent page loads. Session storage is subject to the [same-origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy) of the browser.
+Custom attributes may now optionally be persisted between page loads via session storage. The API method `setCustomAttribute` now takes a third parameter, which defaults to `false`. When `true`, this boolean indicates that the provided custom attribute should be persisted in session storage and restored on subsequent page loads. Session storage is subject to the [same-origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy) of the browser.
 
 ### Add setUserId API
 A new `setUserId` API method is now available. It defines a custom attribute containing a specified user ID, to be included in all payloads. The `setUserId` API is an extension of the `setCustomAttribute` API and automatically persists between page loads.

@@ -28,12 +28,11 @@ function browserifyScript (scriptPath, enablePolyfills) {
           ]
         ],
         plugins: [
-          '@babel/plugin-syntax-dynamic-import',
           '@babel/plugin-proposal-optional-chaining',
           '@babel/plugin-proposal-nullish-coalescing-operator',
           '@babel/plugin-proposal-logical-assignment-operators',
           '@babel/plugin-proposal-class-properties', // Addresses a problem handling static class properties.
-          '@babel/plugin-proposal-private-methods', // Enables class private methods.
+          '@babel/plugin-proposal-private-methods' // Enables class private methods.
         ]
       })
       .transform(preprocessify())

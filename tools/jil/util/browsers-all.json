@@ -2,31 +2,38 @@
   "chrome": [
     {
       "browserName": "chrome",
+      "platform": "Windows 10",
+      "platformName": "Windows 10",
+      "version": "112",
+      "browserVersion": "112"
+    },
+    {
+      "browserName": "chrome",
       "platform": "Windows 11",
       "platformName": "Windows 11",
-      "version": "111",
-      "browserVersion": "111"
+      "version": "109",
+      "browserVersion": "109"
+    },
+    {
+      "browserName": "chrome",
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
+      "version": "106",
+      "browserVersion": "106"
+    },
+    {
+      "browserName": "chrome",
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
+      "version": "103",
+      "browserVersion": "103"
     },
     {
       "browserName": "chrome",
       "platform": "Windows 10",
       "platformName": "Windows 10",
-      "version": "108",
-      "browserVersion": "108"
-    },
-    {
-      "browserName": "chrome",
-      "platform": "Windows 11",
-      "platformName": "Windows 11",
-      "version": "105",
-      "browserVersion": "105"
-    },
-    {
-      "browserName": "chrome",
-      "platform": "Windows 11",
-      "platformName": "Windows 11",
-      "version": "102",
-      "browserVersion": "102"
+      "version": "112",
+      "browserVersion": "112"
     },
     {
       "browserName": "chrome",
@@ -788,8 +795,8 @@
     },
     {
       "browserName": "MicrosoftEdge",
-      "platform": "Windows 10",
-      "platformName": "Windows 10",
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
       "version": "92",
       "browserVersion": "92"
     },
@@ -1578,10 +1585,10 @@
       "browserName": "Safari",
       "platform": "iOS",
       "platformName": "iOS",
-      "version": "15.0",
-      "device": "iPhone 11",
-      "appium:deviceName": "iPhone 11 Simulator",
-      "appium:platformVersion": "15.0",
+      "version": "15.2",
+      "device": "iPhone 7 Plus",
+      "appium:deviceName": "iPhone 7 Plus Simulator",
+      "appium:platformVersion": "15.2",
       "appium:automationName": "XCUITest",
       "sauce:options": {
         "appiumVersion": "1.22.3"
@@ -1592,10 +1599,10 @@
       "browserName": "Safari",
       "platform": "iOS",
       "platformName": "iOS",
-      "version": "14.5",
-      "device": "iPhone 12",
-      "appium:deviceName": "iPhone 12 Simulator",
-      "appium:platformVersion": "14.5",
+      "version": "15.0",
+      "device": "iPhone 11",
+      "appium:deviceName": "iPhone 11 Simulator",
+      "appium:platformVersion": "15.0",
       "appium:automationName": "XCUITest",
       "sauce:options": {
         "appiumVersion": "1.22.3"

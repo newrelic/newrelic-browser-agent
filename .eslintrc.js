@@ -52,12 +52,6 @@ module.exports = {
       }
     },
     {
-      files: ['src/common/constants/environment-variables.js'],
-      globals: {
-        process: true
-      }
-    },
-    {
       files: ['src/**/*.test.js', 'tests/specs/**/*.e2e.js'],
       env: {
         browser: true,

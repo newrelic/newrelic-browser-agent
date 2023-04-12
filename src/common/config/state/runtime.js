@@ -1,7 +1,6 @@
 import * as userAgent from '../../util/user-agent'
 import { Configurable } from './configurable'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
-import { getCurrentSessionIdOrMakeNew } from '../../window/session-storage'
 import { getConfigurationValue } from '../config'
 import { globalScope } from '../../util/global-scope'
 import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/environment-variables'
@@ -27,7 +26,7 @@ const model = agentId => { return {
   //   ? getCurrentSessionIdOrMakeNew()
   //   : null, // if cookies (now session tracking) is turned off or can't get session ID, this is null
   session: getConfigurationValue(agentId, 'privacy.cookies_enabled') == true
-    ? new SessionEntity({ agentIdentifier: agentId, key: 'NRBA_SESSION' })
+    ? new SessionEntity({ agentIdentifier: agentId, key: 'SESSION' })
     : null, // if cookies (now session tracking) is turned off or can't get session ID, this is null
   xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
   userAgent,

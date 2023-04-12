@@ -9,6 +9,7 @@ import LocalStorage from '../storage/local-storage'
 import FPC from '../storage/first-party-cookies'
 import { getConfiguration } from '../config/config'
 
+const PREFIX = 'NRBA'
 export class SessionEntity {
   constructor ({ agentIdentifier, key, value = generateRandomHexString(16), sessionReplayActive = false, sessionTraceActive = false, expiresMs = 14400000, inactiveMs = 1800000 }) {
     try {
@@ -30,8 +31,8 @@ export class SessionEntity {
     this.ee = ee.get(agentIdentifier)
 
     this.value = value
-
     this.key = key
+
     const initialRead = this.read()
     this.expiresAt = initialRead?.expiresAt || this.getFutureTimestamp(expiresMs)
     this.expireTimer = new Timer(() => this.reset(), this.expiresAt - Date.now())
@@ -70,9 +71,13 @@ export class SessionEntity {
     this.initialized = true
   }
 
+  get lookupKey () {
+    return `${PREFIX}_${this.key}_${this.agentIdentifier}`
+  }
+
   read () {
     try {
-      const val = this.storage.get(this.key)
+      const val = this.storage.get(this.lookupKey)
       if (!val) return {}
       const obj = this.decompress(JSON.parse(val))
       if (this.isInvalid(obj)) return {}
@@ -99,7 +104,7 @@ export class SessionEntity {
       Object.keys(data).forEach(k => {
         this[k] = data[k]
       })
-      this.storage.set(this.key, stringify(this.compress(data)))
+      this.storage.set(this.lookupKey, stringify(this.compress(data)))
       return data
     } catch (e) {
       // storage is inaccessible

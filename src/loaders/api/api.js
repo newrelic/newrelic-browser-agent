@@ -13,7 +13,6 @@ import { isBrowserScope, isWorkerScope } from '../../common/util/global-scope'
 import { warn } from '../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { gosCDN } from '../../common/window/nreum'
-import { putInBrowserStorage, removeFromBrowserStorage } from '../../common/window/session-storage'
 
 export const CUSTOM_ATTR_GROUP = 'CUSTOM/' // the subgroup items should be stored under in storage API
 
@@ -81,10 +80,21 @@ export function setAPI (agentIdentifier, forceDrain) {
     const currentInfo = getInfo(agentIdentifier)
     if (value === null) {
       delete currentInfo.jsAttributes[key]
-      if (isBrowserScope) removeFromBrowserStorage(key, CUSTOM_ATTR_GROUP) // addToBrowserStorage flag isn't needed to unset keys from storage
+      if (isBrowserScope) {
+        const { session } = getRuntime(agentIdentifier)
+        const curr = session.read()
+        if (curr.custom) {
+          delete curr.custom[key]
+          session.write({ ...curr })
+        }
+      }
     } else {
       setInfo(agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } })
-      if (isBrowserScope && addToBrowserStorage) putInBrowserStorage(key, value, CUSTOM_ATTR_GROUP)
+      if (isBrowserScope && addToBrowserStorage) {
+        const { session } = getRuntime(agentIdentifier)
+        const curr = session.read()
+        session.write({ ...curr, custom: { ...curr?.custom || {}, [key]: value } })
+      }
     }
     return apiCall(prefix, apiName, true)()
   }

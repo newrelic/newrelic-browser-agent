@@ -37,8 +37,7 @@ class BrowserSpec {
 
   match (specString) {
     let list = browserList(specString)
-    var result = !!Array.from(list).filter((b) => this.same(b)).length
-    return result
+    return !!Array.from(list).filter((b) => this.same(b)).length
   }
 
   same (other) {
@@ -99,14 +98,12 @@ function browserList (pattern = 'chrome@latest') {
 
   let specs = requested.map((b) => new BrowserSpec(b))
   let specSet = new Set(specs)
-  let sortedSpecs = Array.from(specSet).sort((a, b) => {
+  return Array.from(specSet).sort((a, b) => {
     if (a.browserName === b.browserName) {
       return semver.lt(cleanVersion(a.version), cleanVersion(b.version)) ? -1 : 1
     }
     return a.browserName < b.browserName ? -1 : 1
   })
-
-  return sortedSpecs
 }
 
 function parse (pattern) {

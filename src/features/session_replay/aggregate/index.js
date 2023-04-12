@@ -183,7 +183,8 @@ export class Aggregate extends AggregateBase {
       // set once
       if (!this.recording) {
         this.recording = true
-        getRuntime(this.agentIdentifier).session.setValues({ sessionReplayActive: true })
+        const { session } = getRuntime(this.agentIdentifier)
+        session.write({ ...session.read(), sessionReplayActive: true })
       }
     }
 
@@ -222,6 +223,7 @@ export class Aggregate extends AggregateBase {
     this.scheduler.stopTimer(true)
     this.stopRecording()
     this.clearBuffer()
-    getRuntime(this.agentIdentifier).session.setValues({ sessionReplayActive: true })
+    const { session } = getRuntime(this.agentIdentifier)
+    session.write({ ...session.read(), sessionReplayActive: true })
   }
 }

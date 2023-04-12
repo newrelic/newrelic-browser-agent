@@ -23,10 +23,10 @@ export class SessionEntity {
       console.log(e)
       // storage is inaccessible
       warn('Storage API is unavailable. Session information will not operate correctly.', e)
-      return Object.assign(this, { key, value, sessionReplayActive, sessionTraceActive, isNew: true, read: () => this, setValues: (vals) => Object.assign(this, vals), reset: () => new SessionEntity(this) })
+      return Object.assign(this, { key, value, sessionReplayActive, sessionTraceActive, isNew: true, read: () => this, write: (vals) => Object.assign(this, vals), reset: () => new SessionEntity(this) })
     }
 
-    this.agentIdentifier
+    this.agentIdentifier = agentIdentifier
     this.ee = ee.get(agentIdentifier)
 
     this.value = value
@@ -40,8 +40,8 @@ export class SessionEntity {
     this.inactiveAt = initialRead?.inactiveAt || this.getFutureTimestamp(inactiveMs)
     this.inactiveTimer = new Timer(() => this.reset(), inactiveMs)
 
-    this.isNew = !initialRead
-    if (this.isNew) this.setValues({ value, sessionReplayActive, sessionTraceActive, inactiveAt: this.inactiveAt, expiresAt: this.expiresAt }, true)
+    this.isNew = !Object.keys(initialRead).length
+    if (this.isNew) this.write({ value, sessionReplayActive, sessionTraceActive, inactiveAt: this.inactiveAt, expiresAt: this.expiresAt }, true)
 
     try { this.abortController = new AbortController() } // this try-catch can be removed when IE11 is completely unsupported & gone
     catch (e) {}
@@ -55,7 +55,7 @@ export class SessionEntity {
       if (state === 'hidden') {
         this.inactiveTimer.pause()
         this.inactiveAt = this.getFutureTimestamp(inactiveMs)
-        this.setValues({ inactiveAt: this.inactiveAt })
+        this.write({ ...this.read(), inactiveAt: this.inactiveAt })
       }
       else {
         if (this.expireTimer.isValid()) {
@@ -67,14 +67,16 @@ export class SessionEntity {
     }, false, false, this.abortController?.signal)
 
     console.log('session', this.key, this.value, 'expires at ', this.expiresAt, 'which is in ', (this.expiresAt - Date.now()) / 1000 / 60, 'minutes')
+    this.initialized = true
   }
 
   read () {
     try {
       const val = this.storage.get(this.key)
-      if (!val) return
+      if (!val) return {}
       const obj = this.decompress(JSON.parse(val))
-      if (this.isInvalid(obj)) return this.reset()
+      if (this.isInvalid(obj)) return {}
+      // if (this.isInvalid(obj)) return this.reset()
       if (this.isExpired(obj.expiresAt)) return this.reset()
       // if "inactive" timer is expired at "page load time" -- reset
       // otherwise, if page is "unhidden" and the expire time
@@ -90,17 +92,14 @@ export class SessionEntity {
     }
   }
 
-  setValues (data, force) {
+  write (data) {
     try {
+      console.log('WRITE DATA', data)
       if (!data || typeof data !== 'object') return
-      const existing = !force && this.read() || {}
-      const saveObj = {}
-      const allKeys = Object.keys(existing).concat(Object.keys(data))
-      allKeys.forEach(k => {
-        saveObj[k] = data[k] !== undefined ? data[k] : existing[k]
-        this[k] = saveObj[k]
+      Object.keys(data).forEach(k => {
+        this[k] = data[k]
       })
-      this.storage.set(this.key, stringify(this.compress(saveObj)))
+      this.storage.set(this.key, stringify(this.compress(data)))
       return data
     } catch (e) {
       // storage is inaccessible
@@ -110,20 +109,21 @@ export class SessionEntity {
   }
 
   reset () {
-    // this method should set off a chain of actions across the features:
+    // this method should set off a chain of actions across the features by emitting 'new-session'
     // * send off pending payloads
     // * stop recording (stn and sr)...
     // * delete the session and start over
     try {
-      this.storage.remove(this.key)
+      this.storage?.remove(this.key)
       this.abortController?.abort()
-      this.inactiveTimer.end()
-      this.expireTimer.end()
-      setTimeout(() => this.ee.emit('new-session'), 1)
-      const newSess = new SessionEntity({ key: this.key })
+      this.inactiveTimer?.end()
+      this.expireTimer?.end()
+      if (this.initialized) setTimeout(() => this.ee.emit('new-session'), 1)
+      const newSess = new SessionEntity({ agentIdentifier: this.agentIdentifier, key: this.key })
       Object.assign(this, newSess)
       return newSess.read()
     } catch (e) {
+      console.log('RESET ERROR', e)
       return null
     }
   }
@@ -134,11 +134,13 @@ export class SessionEntity {
   }
 
   isExpired (timestamp) {
+    console.log('isExpired?', Date.now() > timestamp)
     return Date.now() > timestamp
   }
 
   isInvalid (data) {
     const requiredKeys = ['value', 'expiresAt', 'inactiveAt']
+    console.log('isInvalid?', data, !requiredKeys.every(x => Object.keys(data).includes(x)))
     return !requiredKeys.every(x => Object.keys(data).includes(x))
   }
 

@@ -151,7 +151,7 @@ async function getReleaseNotes (version, releaseNotesFile) {
   //   const [, releaseDate] = headingRegex.exec(versionChangeLog)
 
   // month and day should be in 2 digit format to allow for docs-site CI to run correctly
-  const releaseDate = `${new Date().getFullYear()}-${('0' + (this.getMonth() + 1)).slice(-2)}-${('0' + this.getDate()).slice(-2)}`
+  const releaseDate = new Date().toLocaleDateString('sv')
 
   return { body, releaseDate }
 }

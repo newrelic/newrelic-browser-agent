@@ -13,7 +13,12 @@ module.exports = {
 
     // Remove the below ignores once lint errors are fixed
     'tools/scripts/publish-current.js',
-    'tools/scripts/upload-to-s3.js'
+    'tools/scripts/upload-to-s3.js',
+
+    // Ignore JIL code since it is being replaced with WDIO
+    'tools/jil/**/*',
+    'tests/browser/**/*',
+    'tests/functional/**/*'
   ],
   parser: '@babel/eslint-parser',
   parserOptions: {
@@ -88,9 +93,8 @@ module.exports = {
     }
   ],
   rules: {
-    'no-unused-vars': 'off',
-
     // Disable lint rules that need code changes to re-enabled
+    'no-unused-vars': 'off',
     camelcase: 'off',
     'no-var': 'off',
     'object-shorthand': 'off',
@@ -104,32 +108,21 @@ module.exports = {
     'dot-notation': 'off',
     'spaced-comment': 'off',
     'no-unused-expressions': 'off',
-    'import/first': 'off',
     'lines-between-class-members': 'off',
     'prefer-const': 'off',
     'no-use-before-define': 'off',
-    'n/handle-callback-err': 'off',
     'valid-typeof': 'off',
-    'no-unmodified-loop-condition': 'off',
-    'n/no-deprecated-api': 'off',
     'no-undef': 'off',
     'no-control-regex': 'off',
     'no-prototype-builtins': 'off',
-    'array-callback-return': 'off',
     'brace-style': 'off',
-    'no-empty': 'off',
-    'no-self-compare': 'off',
-    'getter-return': 'off',
-    'no-import-assign': 'off',
-    'prefer-promise-reject-errors': 'off',
-    'no-extend-native': 'off',
-    'no-case-declarations': 'off',
     'no-eval': 'off',
     'no-mixed-operators': 'off',
     'no-tabs': 'off',
-    'no-mixed-spaces-and-tabs': 'off',
     'no-return-assign': 'off',
-    'no-unreachable-loop': 'off',
+
+    'n/handle-callback-err': 'off',
+    'n/no-deprecated-api': 'off',
 
     'sonarjs/cognitive-complexity': 'off',
     'sonarjs/no-duplicate-string': 'off',
@@ -138,11 +131,8 @@ module.exports = {
     'sonarjs/no-extra-arguments': 'off',
     'sonarjs/no-small-switch': 'off',
     'sonarjs/no-redundant-jump': 'off',
-    'sonarjs/no-one-iteration-loop': 'off',
-    'sonarjs/no-unused-collection': 'off',
     'sonarjs/no-identical-expressions': 'off',
     'sonarjs/no-identical-functions': 'off',
-    'sonarjs/no-all-duplicated-branches': 'off',
     'sonarjs/prefer-object-literal': 'off',
     'sonarjs/prefer-single-boolean-return': 'off',
     'sonarjs/no-redundant-boolean': 'off',

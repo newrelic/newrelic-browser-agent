@@ -10,48 +10,86 @@ import FPC from '../storage/first-party-cookies'
 import { getConfiguration } from '../config/config'
 
 const PREFIX = 'NRBA'
+
 export class SessionEntity {
-  constructor ({ agentIdentifier, key, value = generateRandomHexString(16), sessionReplayActive = false, sessionTraceActive = false, expiresMs = 14400000, inactiveMs = 1800000 }) {
+  /**
+   * Create a self-managing Session Entity. This entity is scoped to the agent identifier which triggered it, allowing for mutliple simultaneous session objects to exist.
+   * The key is inteded to be unique, if not, existing entities in the same agent ID will overlap and overwrite.
+   * The value can be overridden in the constructor, but will default to a unique 16 character hex string
+   * expiresMs and inactiveMs are used to "expire" the session, but can be overridden in the constructor. Pass 0 to disable expiration timers.
+   */
+  constructor ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = 14400000, inactiveMs = 1800000 }) {
     try {
+      // session options configured by the customer
       const sessionConfig = getConfiguration(agentIdentifier).session
+      // subdomains is a boolean that can be specified by customer.
+      // only way to keep the session object across subdomains is using first party cookies
       if (sessionConfig.subdomains) {
+        // easiest way to get the root domain to store to the cookie is through user input
         FPC.setDomain(sessionConfig.domain)
         this.storage = FPC
       } else {
         this.storage = LocalStorage
       }
     } catch (e) {
-      console.log(e)
       // storage is inaccessible
       warn('Storage API is unavailable. Session information will not operate correctly.', e)
-      return Object.assign(this, { key, value, sessionReplayActive, sessionTraceActive, isNew: true, read: () => this, write: (vals) => Object.assign(this, vals), reset: () => new SessionEntity(this) })
+      return Object.assign(this, { key, value, sessionReplayActive: false, sessionTraceActive: false, isNew: true, read: () => this, write: (vals) => Object.assign(this, vals), reset: () => new SessionEntity(this) })
     }
 
     this.agentIdentifier = agentIdentifier
     this.ee = ee.get(agentIdentifier)
 
-    this.value = value
+    // key is intended to act as the k=v pair
     this.key = key
+    // value is intended to act as value of a k=v pair
+    this.value = value
 
+    // the first time the session entity class is instantiated, we check the storage API for an existing
+    // object. If it exists, the values inside the object are used to inform the timers that run locally.
+    // if the initial read is empty, it allows us to set a "fresh" "new" session immediately.
+    // the local timers are used after the session is running to "expire" the session, allowing for pausing timers etc.
+    // the timestamps stored in the storage API can be checked at initial run, and when the page is restored, otherwise we lean
+    // on the local timers to expire the session
     const initialRead = this.read()
-    this.expiresAt = initialRead?.expiresAt || this.getFutureTimestamp(expiresMs)
-    this.expireTimer = new Timer(() => this.reset(), this.expiresAt - Date.now())
 
+    // the set-up of the timer used to expire the session "naturally" at a certain time
+    // this gets ignored if the value is falsy, allowing for session entities that do not expire
+    if (expiresMs) {
+      this.expiresAt = initialRead?.expiresAt || this.getFutureTimestamp(expiresMs)
+      this.expireTimer = new Timer(() => this.reset(), this.expiresAt - Date.now())
+    }
+
+    // the set-up of the timer used to expire the session due to "inactivity" at a certain time
+    // this gets ignored if the value is falsy, allowing for session entities that do not expire
+    // this gets "refreshed" when "activity" is observed
     this.inactiveMs = inactiveMs
-    this.inactiveAt = initialRead?.inactiveAt || this.getFutureTimestamp(inactiveMs)
-    this.inactiveTimer = new Timer(() => this.reset(), inactiveMs)
+    if (inactiveMs) {
+      this.inactiveAt = initialRead?.inactiveAt || this.getFutureTimestamp(inactiveMs)
+      this.inactiveTimer = new Timer(() => this.reset(), inactiveMs)
+    }
 
+    // The fact that the session is "new" or pre-existing is used in some places in the agent.  Session Replay and Trace
+    // can use this info to inform whether to trust a new sampling decision vs continue a previous tracking effort.
     this.isNew = !Object.keys(initialRead).length
-    if (this.isNew) this.write({ value, sessionReplayActive, sessionTraceActive, inactiveAt: this.inactiveAt, expiresAt: this.expiresAt }, true)
+    // if its a "new" session, we write to storage API with the default values.  These values ,ay change over the lifespan of the agent run.
+    if (this.isNew) this.write({ value, sessionReplayActive: false, sessionTraceActive: false, inactiveAt: this.inactiveAt, expiresAt: this.expiresAt }, true)
 
+    // the abort controller is used to "reset" the event listeners and prevent them from duplicating when new sessions are created
     try { this.abortController = new AbortController() } // this try-catch can be removed when IE11 is completely unsupported & gone
     catch (e) {}
 
-    // for browsers that do not support PO, fallback to simple event listeners
+    // listen for "activity", if seen, "refresh" the inactivty timer
+    // "activity" also includes "page visibility - visible", but that is handled below in a different event sub
     documentAddEventListener('scroll', this.refresh.bind(this), false, this.abortController?.signal)
     documentAddEventListener('keypress', this.refresh.bind(this), false, this.abortController?.signal)
     documentAddEventListener('click', this.refresh.bind(this), false, this.abortController?.signal)
 
+    // watch for the vis state changing.  If the page is hidden, the local inactivity timer should be paused
+    // if the page is brought BACK to visibility and the timer hasnt "naturally" expired, refresh the timer...
+    // this is to support the concept that other tabs could be experiencing activity.  The thought would be that
+    // "backgrounded" tabs would pause, while "closed" tabs that "reopen" will just instantiate a new SessionEntity class if restored
+    // which will do a "hard" check of the timestamps.
     subscribeToVisibilityChange((state) => {
       if (state === 'hidden') {
         this.inactiveTimer.pause()
@@ -71,10 +109,17 @@ export class SessionEntity {
     this.initialized = true
   }
 
+  // This is the actual key appended to the storage API
+  // Appending the agent ID allows for simultaneous storage entities
+  // across multiple agents
   get lookupKey () {
     return `${PREFIX}_${this.key}_${this.agentIdentifier}`
   }
 
+  /**
+   * Fetch the stored values from the storage API tied to this entity
+   * @returns {Object}
+   */
   read () {
     try {
       const val = this.storage.get(this.lookupKey)
@@ -97,6 +142,13 @@ export class SessionEntity {
     }
   }
 
+  /**
+   * Store data to the storage API tied to this entity
+   * To preseve existing attributes, the output of ...session.read()
+   * should be appended to the data argument
+   * @param {Object} data
+   * @returns {Object}
+   */
   write (data) {
     try {
       console.log('WRITE DATA', data)
@@ -133,22 +185,35 @@ export class SessionEntity {
     }
   }
 
+  /**
+   * Refresh the inactivity timer data
+   */
   refresh () {
     this.inactiveTimer.refresh()
     this.inactiveAt = this.getFutureTimestamp(this.inactiveMs)
   }
 
+  /**
+   * @param {number} timestamp
+   * @returns {boolean}
+   */
   isExpired (timestamp) {
-    console.log('isExpired?', Date.now() > timestamp)
     return Date.now() > timestamp
   }
 
+  /**
+   * @param {Object} data
+   * @returns {boolean}
+   */
   isInvalid (data) {
     const requiredKeys = ['value', 'expiresAt', 'inactiveAt']
-    console.log('isInvalid?', data, !requiredKeys.every(x => Object.keys(data).includes(x)))
     return !requiredKeys.every(x => Object.keys(data).includes(x))
   }
 
+  /**
+   * @param {number} futureMs - The number of ms to use to generate a future timestamp
+   * @returns {Date}
+   */
   getFutureTimestamp (futureMs) {
     return new Date().setMilliseconds(new Date().getMilliseconds() + futureMs)
   }

@@ -15,7 +15,7 @@ const model = {
   },
   session: {
     domain: new URL(window.location).host, // used by first party cookies to set the top-level domain (if subdomains === true)
-    subdomains: false // triggers Session Manager to use First Party Cookies
+    subdomains: false // "true" triggers Session Manager to use First Party Cookies
   },
   ssl: undefined,
   obfuscate: undefined,

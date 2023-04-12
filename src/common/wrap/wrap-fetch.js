@@ -9,7 +9,7 @@
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import slice from 'lodash._slice'
 import { globalScope } from '../util/global-scope'
-import { flag, unwrapFunction } from './wrap-function'
+import { flag } from './wrap-function'
 
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
@@ -91,7 +91,6 @@ export function wrapFetch (sharedEE) {
           throw err
         })
       }
-      target[name][flag] = fn // track original similar to in wrap-function.js, so that they can be unwrapped with ease
     }
   }
 

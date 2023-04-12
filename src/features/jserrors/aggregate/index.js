@@ -22,7 +22,6 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { onWindowLoad } from '../../../common/window/load'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -161,19 +160,31 @@ export class Aggregate extends AggregateBase {
   storeError (err, time, internal, customAttributes) {
     // are we in an interaction
     time = time || now()
-    if (!internal && getRuntime(this.agentIdentifier).onerror && getRuntime(this.agentIdentifier).onerror(err)) return
+    const agentRuntime = getRuntime(this.agentIdentifier)
+    let filterOutput
+
+    if (!internal && agentRuntime.onerror) {
+      filterOutput = agentRuntime.onerror(err)
+      if (filterOutput && !(typeof filterOutput.group === 'string' && filterOutput.group.length)) {
+        // All truthy values mean don't report (store) the error, per backwards-compatible usage,
+        // - EXCEPT if a fingerprinting label is returned, via an object with key of 'group' and value of non-empty string
+        return
+      }
+      // Again as with previous usage, all falsey values would include the error.
+    }
 
     var stackInfo = this.canonicalizeStackURLs(computeStackTrace(err))
     var canonicalStack = this.buildCanonicalStackString(stackInfo)
 
-    var params = {
+    const params = {
       stackHash: stringHashCode(canonicalStack),
       exceptionClass: stackInfo.name,
       request_uri: globalScope?.location.pathname
     }
-    if (stackInfo.message) {
-      params.message = '' + stackInfo.message
-    }
+    if (stackInfo.message) params.message = '' + stackInfo.message
+    // Notice if filterOutput isn't false|undefined OR our specified object, this func would've returned already (so it's unnecessary to req-check group).
+    // Do not modify the name ('errorGroup') of params without DEM approval!
+    if (filterOutput?.group) params.errorGroup = filterOutput.group
 
     /**
      * The bucketHash is different from the params.stackHash because the params.stackHash is based on the canonicalized
@@ -189,7 +200,7 @@ export class Aggregate extends AggregateBase {
     } else {
       params.browser_stack_hash = stringHashCode(stackInfo.stackString)
     }
-    params.releaseIds = stringify(getRuntime(this.agentIdentifier).releaseIds)
+    params.releaseIds = stringify(agentRuntime.releaseIds)
 
     // When debugging stack canonicalization/hashing, uncomment these lines for
     // more output in the test logs

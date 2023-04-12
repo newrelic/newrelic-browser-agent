@@ -84,7 +84,7 @@ function assertExpectedErrors (t, browser, actualErrors, expectedErrors, assetUR
   }
 }
 
-function getErrorsFromResponse (response, browser) {
+function getErrorsFromResponse (response) {
   if (response.body) {
     try {
       var parsedBody = JSON.parse(response.body)

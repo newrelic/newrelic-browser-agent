@@ -110,7 +110,8 @@ export function createWrapperWithEmitter (emitter, always) {
    * Creates wrapper functions around each of an array of methods on a specified object.
    * @param {Object} obj - The object to which the specified methods belong.
    * @param {string[]} methods - An array of method names to be wrapped.
-   * @param {string} [prefix=''] - A prefix to add to the names of emitted events.
+   * @param {string} [prefix=''] - A prefix to add to the names of emitted events. If `-` is the first character, also
+   *     adds the method name before the prefix.
    * @param {function|object} [getContext] - The function or object that will serve as the 'this' context for handlers
    *     of events emitted by this wrapper.
    * @param {boolean} [bubble=false] - If `true`, emitted events should also bubble up to the old emitter upon which
@@ -118,8 +119,7 @@ export function createWrapperWithEmitter (emitter, always) {
    */
   function inPlace (obj, methods, prefix, getContext, bubble) {
     if (!prefix) prefix = ''
-    // If prefix starts with '-' set this boolean to add the method name to
-    // the prefix before passing each one to wrap.
+    // If prefix starts with '-' set this boolean to add the method name to the prefix before passing each one to wrap.
     var prependMethodPrefix = (prefix.charAt(0) === '-')
     var fn
     var method
@@ -129,8 +129,7 @@ export function createWrapperWithEmitter (emitter, always) {
       method = methods[i]
       fn = obj[method]
 
-      // Unless fn is both wrappable and unwrapped bail,
-      // so we don't add extra properties with undefined values.
+      // Unless fn is both wrappable and unwrapped, bail so we don't add extra properties with undefined values.
       if (notWrappable(fn)) continue
 
       obj[method] = wrapFn(fn, (prependMethodPrefix ? method + prefix : prefix), getContext, method, bubble)
@@ -246,15 +245,4 @@ export function wrapFunction (fn, wrapper) {
 export function wrapInPlace (obj, fnName, wrapper) {
   var fn = obj[fnName]
   obj[fnName] = wrapFunction(fn, wrapper)
-}
-
-/**
- * If a function property on an object (e.g. window) was previously wrapped (by this module), removes the wrapper.
- * @param {Object} obj - The object on which the named function is a property.
- * @param {string} fnName - The name of the function to be unwrapped.
- */
-export function unwrapFunction (obj, fnName) {
-  if (obj?.[fnName]?.[flag]) { // previous state of the function property is stored under our wrapper's "flag"; we don't wrap properties that *were* undefined to begin with
-    obj[fnName] = obj[fnName][flag]
-  }
 }

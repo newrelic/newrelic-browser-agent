@@ -8,7 +8,7 @@
  * It is also called by -> wrapXhr <-, so see "wrap-xhr.js" for features that use this indirectly.
  */
 import { ee as baseEE } from '../event-emitter/contextual-ee'
-import { createWrapperWithEmitter as wfn, unwrapFunction } from './wrap-function'
+import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { getOrSet } from '../util/get-or-set'
 import { globalScope, isBrowserScope } from '../util/global-scope'
 

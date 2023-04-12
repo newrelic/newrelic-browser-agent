@@ -47,3 +47,18 @@ testBuilds.forEach(build => {
 //     })
 //   })
 // })
+
+testDriver.test('NPM agent -- vite-react-wrapper -- sends RUM call', testDriver.Matcher.withFeature('npmDist'), function (t, browser, router) {
+  let url = router.assetURL('test-builds/vite-react-wrapper/index.html')
+
+  let rumPromise = router.expectRum()
+  let loadPromise = browser.get(url)
+
+  Promise.all([rumPromise, loadPromise]).then(() => {
+    t.pass('RUM call was sent')
+    t.end()
+  }).catch(err => {
+    t.error(err)
+    t.end()
+  })
+})

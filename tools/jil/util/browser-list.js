@@ -6,6 +6,7 @@
 const browsersPolyfill = require('./browsers-polyfill.json')
 const browsersSupported = require('./browsers-supported.json')
 const browsersSelenium = require('./browsers-selenium.json')
+const browsersAll = require('./browsers-all.json')
 const semver = require('semver')
 const BrowserMatcher = require('./browser-matcher')
 var config = require('../runner/args')
@@ -16,6 +17,8 @@ const latestVersStringRe = /latest(?:-[1-9])?$/
 
 if (config.polyfills) {
   allowedBrowsers = browsersPolyfill
+} else if (config.allBrowsers) {
+  allowedBrowsers = browsersAll
 } else if (config.seleniumServer) {
   allowedBrowsers = browsersSelenium
 }

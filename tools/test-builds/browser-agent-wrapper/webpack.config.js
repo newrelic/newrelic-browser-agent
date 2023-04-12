@@ -45,6 +45,12 @@ const config = [
       path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper')
     },
     module: {
+      parser: {
+        javascript: {
+          exportsPresence: 'error',
+          importExportsPresence: 'error'
+        }
+      },
       rules: [
         {
           test: /\.(js|jsx)$/i,

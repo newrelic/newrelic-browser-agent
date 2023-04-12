@@ -2,18 +2,42 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import slice from 'lodash._slice'
 import { FEATURE_NAMES } from '../features/features'
 import { getRuntime, setInfo, getInfo } from '../../common/config/config'
 import { handle } from '../../common/event-emitter/handle'
-import { mapOwn } from '../../common/util/map-own'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { now } from '../../common/timing/now'
 import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
-import { isWorkerScope } from '../../common/util/global-scope'
+import { isBrowserScope, isWorkerScope } from '../../common/util/global-scope'
 import { warn } from '../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
+import { gosCDN } from '../../common/window/nreum'
+import { putInBrowserStorage, removeFromBrowserStorage } from '../../common/window/session-storage'
+
+export const CUSTOM_ATTR_GROUP = 'CUSTOM/' // the subgroup items should be stored under in storage API
+
+export function setTopLevelCallers () {
+  const nr = gosCDN()
+  const funcs = [
+    'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
+    'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
+    'interaction', 'noticeError', 'setUserId'
+  ]
+  funcs.forEach(f => {
+    nr[f] = (...args) => caller(f, ...args)
+  })
+
+  function caller (fnName, ...args) {
+    let returnVals = []
+    Object.values(nr.initializedAgents).forEach(val => {
+      if (val.exposed && val.api[fnName]) {
+        returnVals.push(val.api[fnName](...args))
+      }
+    })
+    return returnVals.length > 1 ? returnsVals : returnVals[0]
+  }
+}
 
 export function setAPI (agentIdentifier, forceDrain) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
@@ -33,9 +57,7 @@ export function setAPI (agentIdentifier, forceDrain) {
   var spaPrefix = prefix + 'ixn-'
 
   // Setup stub functions that queue calls for later processing.
-  mapOwn(asyncApiFns, function (num, fnName) {
-    apiInterface[fnName] = apiCall(prefix, fnName, true, 'api')
-  })
+  asyncApiFns.forEach(fnName => apiInterface[fnName] = apiCall(prefix, fnName, true, 'api'))
 
   apiInterface.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.pageAction)
   apiInterface.setCurrentRouteName = apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
@@ -44,13 +66,50 @@ export function setAPI (agentIdentifier, forceDrain) {
     if (typeof name !== 'string') return
     if (name.charAt(0) !== '/') name = '/' + name
     getRuntime(agentIdentifier).customTransaction = (host || 'http://custom.transaction') + name
-    return apiCall(prefix, 'setPageViewName', true, 'api')()
+    return apiCall(prefix, 'setPageViewName', true)()
   }
 
-  apiInterface.setCustomAttribute = function (name, value) {
+  /**
+   * Attach the key-value attribute onto agent payloads. All browser events in NR will be affected.
+   * @param {string} key
+   * @param {string|number|null} value - null indicates the key should be removed or erased
+   * @param {string} apiName
+   * @param {boolean} addToBrowserStorage - whether this attribute should be stored in browser storage API and retrieved by the next agent context or initialization
+   * @returns @see apiCall
+   */
+  function appendJsAttribute (key, value, apiName, addToBrowserStorage) {
     const currentInfo = getInfo(agentIdentifier)
-    setInfo(agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [name]: value } })
-    return apiCall(prefix, 'setCustomAttribute', true, 'api')()
+    if (value === null) {
+      delete currentInfo.jsAttributes[key]
+      if (isBrowserScope) removeFromBrowserStorage(key, CUSTOM_ATTR_GROUP) // addToBrowserStorage flag isn't needed to unset keys from storage
+    } else {
+      setInfo(agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } })
+      if (isBrowserScope && addToBrowserStorage) putInBrowserStorage(key, value, CUSTOM_ATTR_GROUP)
+    }
+    return apiCall(prefix, apiName, true)()
+  }
+  apiInterface.setCustomAttribute = function (name, value, persistAttribute = false) {
+    if (typeof name !== 'string') {
+      warn(`Failed to execute setCustomAttribute.\nName must be a string type, but a type of <${typeof name}> was provided.`)
+      return
+    }
+    if (!(['string', 'number'].includes(typeof value) || value === null)) {
+      warn(`Failed to execute setCustomAttribute.\nNon-null value must be a string or number type, but a type of <${typeof value}> was provided.`)
+      return
+    }
+    return appendJsAttribute(name, value, 'setCustomAttribute', persistAttribute)
+  }
+  /**
+   * Attach the 'enduser.id' attribute onto agent payloads. This may be used in NR queries to group all browser events by specific users.
+   * @param {string} value - unique user identifier; a null user id suggests none should exist
+   * @returns @see apiCall
+   */
+  apiInterface.setUserId = function (value) {
+    if (!(typeof value === 'string' || value === null)) {
+      warn(`Failed to execute setUserId.\nNon-null value must be a string type, but a type of <${typeof value}> was provided.`)
+      return
+    }
+    return appendJsAttribute('enduser.id', value, 'setUserId', true)
   }
 
   apiInterface.interaction = function () {
@@ -82,14 +141,14 @@ export function setAPI (agentIdentifier, forceDrain) {
     }
   }
 
-  mapOwn('actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get'.split(','), function addApi (n, name) {
+  void ['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach(name => {
     InteractionApiProto[name] = apiCall(spaPrefix, name, undefined, FEATURE_NAMES.spa)
   })
 
   function apiCall (prefix, name, notSpa, bufferGroup) {
     return function () {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-      handle(prefix + name, [now()].concat(slice(arguments)), notSpa ? null : this, bufferGroup, instanceEE)
+      if (bufferGroup) handle(prefix + name, [now(), ...arguments], notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
       return notSpa ? void 0 : this
     }
   }

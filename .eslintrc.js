@@ -33,7 +33,8 @@ module.exports = {
     NREUM: true,
     newrelic: true
   },
-  extends: ['standard'],
+  plugins: ['sonarjs'],
+  extends: ['standard', 'plugin:sonarjs/recommended'],
   overrides: [
     {
       files: ['**/*.mjs'],
@@ -82,7 +83,7 @@ module.exports = {
         node: true
       },
       rules: {
-        'no-throw-literal': 0
+        'no-throw-literal': 'off'
       }
     }
   ],
@@ -128,6 +129,23 @@ module.exports = {
     'no-tabs': 'off',
     'no-mixed-spaces-and-tabs': 'off',
     'no-return-assign': 'off',
-    'no-unreachable-loop': 'off'
+    'no-unreachable-loop': 'off',
+
+    'sonarjs/cognitive-complexity': 'off',
+    'sonarjs/no-duplicate-string': 'off',
+    'sonarjs/no-collapsible-if': 'off',
+    'sonarjs/no-nested-template-literals': 'off',
+    'sonarjs/no-extra-arguments': 'off',
+    'sonarjs/no-small-switch': 'off',
+    'sonarjs/no-redundant-jump': 'off',
+    'sonarjs/no-one-iteration-loop': 'off',
+    'sonarjs/no-unused-collection': 'off',
+    'sonarjs/no-identical-expressions': 'off',
+    'sonarjs/no-identical-functions': 'off',
+    'sonarjs/no-all-duplicated-branches': 'off',
+    'sonarjs/prefer-object-literal': 'off',
+    'sonarjs/prefer-single-boolean-return': 'off',
+    'sonarjs/no-redundant-boolean': 'off',
+    'sonarjs/no-duplicated-branches': 'off'
   }
 }

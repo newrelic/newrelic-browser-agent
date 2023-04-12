@@ -15,11 +15,9 @@ export class Instrument extends InstrumentBase {
     // session replay samples can only be decided on the first load of a session
     // session replays can continue if in progress
     if (!session.isNew && !session.sessionReplayActive) {
-      console.log('session is not new and session replay is not active', session)
       drain(this.agentIdentifier, this.featureName)
       return
     }
-    console.log('session is either new, or a replay is active! import!', session)
     this.importAggregator()
   }
 }

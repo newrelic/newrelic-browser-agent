@@ -110,10 +110,8 @@ export class SessionEntity {
   }
 
   // This is the actual key appended to the storage API
-  // Appending the agent ID allows for simultaneous storage entities
-  // across multiple agents
   get lookupKey () {
-    return `${PREFIX}_${this.key}_${this.agentIdentifier}`
+    return `${PREFIX}_${this.key}`
   }
 
   /**

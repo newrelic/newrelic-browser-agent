@@ -7,10 +7,10 @@
  * This module is used by: ajax, jserrors, spa.
  */
 
-import { wrapEvents, unwrapEvents } from './wrap-events'
+import { wrapEvents } from './wrap-events'
 import { ee as contextualEE } from '../event-emitter/contextual-ee'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
-import { createWrapperWithEmitter as wfn, unwrapFunction } from './wrap-function'
+import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { originals } from '../config/config'
 import { globalScope } from '../util/global-scope'
 import { warn } from '../util/console'

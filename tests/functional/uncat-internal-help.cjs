@@ -31,6 +31,7 @@ const asyncApiFns = [
   'noticeError',
   'setPageViewName',
   'setCustomAttribute',
+  'setUserId',
   'setErrorHandler',
   'finished',
   'addToTrace',

@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1.230.0
+
+### Add persistence for custom attributes
+Custom attributes may now optionally be persisted between page loads via session storage. The API method `setCustomAttribute` now takes a third parameter, which defaults to `false`. When `true`, this boolean indicates that the provided custom attribute should be persisted in session storage and restored on subsequent page loads. Session storage is subject to the [same-origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy) of the browser.
+
+### Add setUserId API
+A new `setUserId` API method is now available. It defines a custom attribute containing a specified user ID, to be included in all payloads. The `setUserId` API is an extension of the `setCustomAttribute` API and automatically persists between page loads.
+
+### Fix npm package browser targets
+The previous npm package release included code that was not compatible with browsers in our [supported browser list](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types). The package exports will now default to code that matches our browser support list. The package will also include the source code for power users that would like more control over how the agent is built.
+
+### Fix npm package exports
+Some dangling, unused, and non-existent imports and exports were causing issues with consuming the NPM package in some projects. These have been removed.
+
+### Fix npm package import for typescript projects
+Fixed an issue where typescript projects attempting to import the browser agent library would not get proper auto-complete in the import statement and would receive module declaration errors. The browser agent will not use tsc to generate type definitions from the JavaScript code at build time. The package.json has been updated with appropriate type export declarations.
+
+### Add error catch around sendBeacon
+Added error catch logic around the sendBeacon usage. In the event sendBeacon throws an error during the final harvest, the final harvest will attempt to fall back to the image data submission method.
+
+### Remove array reduce polyfill
+Removed the array reduce polyfill in favor of the native browser array reduce method.
+
 ## v1.229.0
 
 ### Use semantic versioning scheme

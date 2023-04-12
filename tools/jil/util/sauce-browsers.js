@@ -16,6 +16,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 
   // Filter list down to a sample of supported browsers and write metadata to a file for testing.
   fs.writeFileSync('./tools/jil/util/browsers-supported.json', JSON.stringify(getBrowsers(json), null, 2))
+  fs.writeFileSync('./tools/jil/util/browsers-all.json', JSON.stringify(getBrowsers(json, Infinity), null, 2))
   console.log('saved saucelabs browsers to browsers-supported.json')
 })()
 
@@ -108,10 +109,10 @@ const maxSupportedVersion = apiName => {
  * @param {[Object]} sauceBrowsers - An array of SauceLabs browser-platform definitions.
  * @returns {Object} - A set of SauceLabs browser-platform definitions eligible for testing.
  */
-function getBrowsers (sauceBrowsers) {
+function getBrowsers (sauceBrowsers, sample = 4) {
   Object.keys(browsers).forEach(browser => {
     const name = browserName(browser)
-    const versListForBrowser = sauceBrowsers.filter(platformSelector(name, minSupportedVersion(name), maxSupportedVersion(name)))
+    const versListForBrowser = sauceBrowsers.filter(platformSelector(name, sample === Infinity && 1 || minSupportedVersion(name), sample === Infinity && sample || maxSupportedVersion(name), { mobile: sample === Infinity }))
     versListForBrowser.sort((a, b) => Number(a.short_version) - Number(b.short_version)) // in ascending version order
 
     // Remove duplicate version numbers.
@@ -125,10 +126,11 @@ function getBrowsers (sauceBrowsers) {
     }
 
     // We only test 4 versions, so condense the array as needed.
-    uniques = evenlySampleArray(uniques, 4)
+    uniques = evenlySampleArray(uniques, sample)
 
     // Compose metadata for testing each filtered supported browser.
     uniques.forEach(sauceBrowser => {
+      if (hasKnownConnectionIssue(sauceBrowser)) return
       const metadata = {
         browserName: mobileBrowserName(sauceBrowser),
         platform: mobilePlatformName(sauceBrowser),
@@ -159,7 +161,7 @@ function getBrowsers (sauceBrowsers) {
  * @param {number} maxVersion - The maximum browser version to include (e.g., `16`).
  * @returns {function} A filter function.
  */
-function platformSelector (desiredBrowser, minVersion = 0, maxVersion = 9999) {
+function platformSelector (desiredBrowser, minVersion = 0, maxVersion = 9999, ignore = {}) {
   return (sauceBrowser) => {
     if (sauceBrowser.api_name !== desiredBrowser) return false
     if (isNaN(Number(sauceBrowser.short_version))) return false
@@ -170,6 +172,7 @@ function platformSelector (desiredBrowser, minVersion = 0, maxVersion = 9999) {
       case 'iphone':
       case 'ipad':
       case 'android':
+        if (ignore.mobile) return false
         if (sauceBrowser.automation_backend !== 'appium') return false
         break
         // NOTE: the following platform limitation per browser is FRAGILE -- will have to update this in the future!
@@ -245,5 +248,21 @@ function mobilePlatformName (sauceBrowser) {
       return 'Android'
     default:
       return sauceBrowser.os
+  }
+}
+
+/**
+ * May be used to exclude browsers known to have SauceLabs connection issues. For example, for a problem browser the
+ * Sauce Connect Proxy might report "The environment you requested was unavailable. Infrastructure Error -- The Sauce
+ * VMs failed to start the browser or device."
+ * @param {*} sauceBrowser - A SauceLabs browser-platform definition object.
+ * @returns {boolean} `true` if SauceLabs has a known issue connecting to the given browser.
+ */
+function hasKnownConnectionIssue (sauceBrowser) {
+  switch (sauceBrowser.api_name) {
+    case 'firefox':
+      return ['59', '57', '49', '47'].includes(sauceBrowser.short_version)
+    default:
+      return false
   }
 }

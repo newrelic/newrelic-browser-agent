@@ -9,6 +9,7 @@ import { SessionEntity } from '../../session/session-entity'
 
 const model = agentId => { return {
   buildEnv: BUILD_ENV,
+  bytesSent: {},
   customTransaction: undefined,
   disabled: false,
   distMethod: DIST_METHOD,

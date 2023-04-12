@@ -45,6 +45,12 @@ const config = [
       path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper')
     },
     module: {
+      parser: {
+        javascript: {
+          exportsPresence: 'error',
+          importExportsPresence: 'error'
+        }
+      },
       rules: [
         {
           test: /\.(js|jsx)$/i,
@@ -104,12 +110,6 @@ const config = [
         minify: false,
         inject: false,
         templateContent: htmlTemplate('micro-agent')
-      }),
-      new HtmlWebpackPlugin({
-        filename: 'worker-agent.html',
-        minify: false,
-        inject: false,
-        templateContent: workerHtmlTemplate
       })
     ]
   },
@@ -118,7 +118,10 @@ const config = [
     cache: false,
     target: 'webworker',
     entry: {
-      'worker-wrapper': './src/worker-wrapper.js'
+      'worker-wrapper': {
+        import: './src/worker-wrapper.js',
+        chunkLoading: false
+      }
     },
     output: {
       path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper')
@@ -152,7 +155,15 @@ const config = [
           }
         }
       ]
-    }
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        filename: 'worker-agent.html',
+        minify: false,
+        inject: false,
+        templateContent: workerHtmlTemplate
+      })
+    ]
   }
 ]
 

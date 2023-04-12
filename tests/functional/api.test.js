@@ -8,7 +8,8 @@ const { fail, getTime } = require('./uncat-internal-help.cjs')
 const { getErrorsFromResponse } = require('./err/assertion-helpers')
 
 const asserters = testDriver.asserters
-let withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
+const withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
+const notIE = testDriver.Matcher.withFeature('notInternetExplorer')
 
 testDriver.test('customTransactionName 1 arg', function (t, browser, router) {
   t.plan(1)
@@ -122,7 +123,7 @@ testDriver.test('noticeError takes an error object', withUnload, function (t, br
 
   Promise.all([errorsPromise, rumPromise, loadPromise])
     .then(([{ request }]) => {
-      var errorData = getErrorsFromResponse(request, browser)
+      var errorData = getErrorsFromResponse(request)
       var params = errorData[0] && errorData[0]['params']
       if (params) {
         var exceptionClass = params.exceptionClass
@@ -154,7 +155,7 @@ testDriver.test('noticeError takes a string', withUnload, function (t, browser, 
 
   Promise.all([errorsPromise, rumPromise, loadPromise])
     .then(([{ request }]) => {
-      var errorData = getErrorsFromResponse(request, browser)
+      var errorData = getErrorsFromResponse(request)
       var params = errorData[0] && errorData[0]['params']
       if (params) {
         var exceptionClass = params.exceptionClass
@@ -348,6 +349,73 @@ testDriver.test('api is available when sessionStorage is not', function (t, brow
       browser.waitFor(asserters.jsCondition('typeof window.newrelic.addToTrace === \'function\''))
     ).then((result) => {
       t.ok(result)
+      t.end()
+    })
+    .catch(fail(t))
+})
+
+testDriver.test('setCustomAttribute can persist onto subsequent page loads', notIE, function (t, browser, router) {
+  let loadPromise = browser.get(router.assetURL('instrumented.html', { scriptString: 'newrelic.setCustomAttribute(\'testing\',123,true);' }))
+  Promise.all([router.expectRum(), loadPromise])
+    .then(([{ request: { query } }]) => {
+      t.equal(query.ja, '{"testing":123}', 'initial page load has custom attribute')
+
+      loadPromise = browser.get(router.assetURL('instrumented.html'))
+    })
+    .then(() => Promise.all([router.expectRum(), loadPromise])) // testing:123 is still expected on next page load within same tab
+    .then(([{ request: { query } }]) => {
+      t.equal(query.ja, '{"testing":"123"}', '2nd page load still has custom attribute gotten from storage (but converted to string)')
+
+      loadPromise = browser.get(router.assetURL('instrumented.html', { scriptString: 'newrelic.setCustomAttribute(\'testing\',null);' }))
+    })
+    .then(() => Promise.all([router.expectRum(), loadPromise])) // testing should've been erased from storage
+    .then(([{ request: { query } }]) => {
+      t.equal(query.ja, undefined, '3rd page load does not retain custom attribute after unsetting (set to null)')
+      t.end()
+    })
+    .catch(fail(t))
+})
+
+testDriver.test('setUserId adds correct (persisted) attribute to payloads', withUnload.and(notIE), function (t, browser, router) {
+  let url = router.assetURL('instrumented.html', {
+    init: {
+      jserrors: {
+        harvestTimeSeconds: 2
+      }
+    },
+    scriptString: `
+    newrelic.setUserId(456);
+    newrelic.setUserId({'foo':'bar'});
+    newrelic.noticeError('fake1')
+    setTimeout(() => {  // there's a delay with errors grabbing the jsAttributes
+    newrelic.setUserId('user123');
+    newrelic.setUserId();
+    newrelic.noticeError('fake2');
+    },500)
+    `
+  })
+  let loadPromise = browser.get(url)
+  const ERRORS_INBOX_UID = 'enduser.id' // this key should not be changed without consulting EI team on the data flow
+
+  Promise.all([loadPromise, router.expectRum()])
+    .then(() => router.expectErrors(3000))
+    .then(({ request }) => {
+      const errArray = getErrorsFromResponse(request)
+
+      let errCustom = errArray[0]?.['custom']
+      if (!errCustom) throw "No 'fake1' error or custom is missing."
+      t.equal(errCustom[ERRORS_INBOX_UID], undefined, 'Invalid data type (non-string) does not set user id')
+
+      errCustom = errArray[1]?.['custom']
+      if (!errCustom) throw "No 'fake2' error or custom is missing."
+      t.equal(errCustom[ERRORS_INBOX_UID], 'user123', 'Correct enduser.id custom attr on error')
+    })
+    .then(() => Promise.all([router.expectRum(), browser.refresh()])) // we expect setUserId's attribute to be stored by the browser tab session, and retrieved on the next page load & agent init
+    .then(([{ request: { query } }]) => {
+      // If that jsattribute was persisted and retrieved properly, it should be attached to the new RUM call.
+      t.equal(query.ja, `{"${ERRORS_INBOX_UID}":"user123"}`, 'setUserId affects subsequent page loads in the same storage session')
+
+      browser.safeEval('newrelic.setUserId(null)') // unset to not affect other tests running on same Sauce instance
       t.end()
     })
     .catch(fail(t))

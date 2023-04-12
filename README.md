@@ -131,6 +131,45 @@ import { SessionTrace } from '@newrelic/browser-agent/features/session_trace';
 import { Spa } from '@newrelic/browser-agent/features/spa';
 ```
 
+## Supported Browsers
+
+Our supported browser list can be accessed [here](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types).
+
+If you desire more control over how the agent is built, our package also includes the source code. The source code is written to target the latest ECMAScript standards (ES2022). Please note that if you import the browser agent source code instead of the transpiled distribution code, you may need to alter your project's build system to apply transformations to the browser agent source code. Without these transforms, the code produced by your project's build system may not be compatible with your desired target browsers. Below is an example of how to import the source code.
+
+```javascript
+// Note the /src/ in the import paths below
+import { Agent } from '@newrelic/browser-agent/src/loaders/agent'
+import { Metrics } from '@newrelic/browser-agent/src/features/metrics'
+import { PageViewEvent } from '@newrelic/browser-agent/src/features/page_view_event'
+import { PageViewTiming } from '@newrelic/browser-agent/src/features/page_view_timing'
+
+const options = {
+  info: { ... },
+  loader_config: { ... },
+  init: { ... }
+}
+
+new Agent({
+  ...options,
+  features: [
+    Metrics,
+    PageViewEvent,
+    PageViewTiming
+  ]
+})
+```
+
+Neither the browser agent development team nor the New Relic support teams can support the numerous build systems that exist in the JavaScript ecosystem. If you run into issues, you may be asked to revert to importing from the transpiled distribution code.
+
+**DON'T** mix imports between the browser agent source code and transpiled distribution code. The below will break.
+
+```javascript
+// THIS IS BAD - do not do this
+import { Agent } from '@newrelic/browser-agent/loaders/agent'
+import { Metrics } from '@newrelic/browser-agent/src/features/metrics'
+```
+
 ## License
 
 The Browser agent is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.

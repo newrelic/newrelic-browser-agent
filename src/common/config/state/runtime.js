@@ -1,10 +1,8 @@
 import * as userAgent from '../../util/user-agent'
 import { Configurable } from './configurable'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
-import { getConfigurationValue } from '../config'
 import { globalScope } from '../../util/global-scope'
 import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/environment-variables'
-import { SessionEntity } from '../../session/session-entity'
 
 const model = agentId => { return {
   buildEnv: BUILD_ENV,
@@ -22,9 +20,7 @@ const model = agentId => { return {
   origin: '' + globalScope.location,
   ptid: undefined,
   releaseIds: {},
-  session: getConfigurationValue(agentId, 'privacy.cookies_enabled') == true
-    ? new SessionEntity({ agentIdentifier: agentId, key: 'SESSION' })
-    : null, // if cookies (now session tracking) is turned off or can't get session ID, this is null
+  session: undefined,
   xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
   userAgent,
   version: VERSION

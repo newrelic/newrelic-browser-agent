@@ -21,12 +21,7 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   if (isWorkerScope) { // add a default attr to all worker payloads
     info.jsAttributes.isWorker = true
   }
-  if (isBrowserScope) { // retrieve & re-add all of the persisted setCustomAttribute|setUserId k-v from previous page load(s)
-    const { session } = getRuntime(agentIdentifier)
-    const customSessionData = session.read()?.custom
 
-    if (customSessionData) Object.assign(info.jsAttributes, customSessionData)
-  }
   setInfo(agentIdentifier, info)
 
   setTopLevelCallers()

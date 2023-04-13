@@ -1,22 +1,28 @@
-export let domain = ''
-
-export default {
+export class FirstPartyCookies {
+  constructor (domain) {
+    this.domain = domain
+  }
   get (name) {
-    var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
-    if (match) return match[2]
-  },
+    try {
+      var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
+      if (match) return match[2]
+    } catch (err) {
+      return ''
+    }
+  }
   set (key, value) {
-    const cookie = `${key}=${value}; Domain=${domain}; Path=/`
-    document.cookie = cookie
-  },
+    try {
+      const cookie = `${key}=${value}; Domain=${domain}; Path=/`
+      document.cookie = cookie
+    } catch (err) {
+      return
+    }
+  }
   remove (key) {
     try {
       return document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; Domain=${domain}; Path=/`
     } catch (err) {
-      return () => {}
+      return
     }
-  },
-  setDomain (d) {
-    domain = d
   }
 }

@@ -4,16 +4,23 @@ import { ee } from '../../common/event-emitter/contextual-ee'
 import { registerHandler } from '../../common/event-emitter/register-handler'
 import { isBrowserScope } from '../../common/util/global-scope'
 import { SessionEntity } from '../../common/session/session-entity'
+import { LocalStorage } from '../../common/storage/local-storage.js'
+import { FirstPartyCookies } from '../../common/storage/first-party-cookies'
 
 let ranOnce = 0
 export function setupAgentSession (agentIdentifier) {
   if (ranOnce++) return
 
-  console.log('setupAgentSession!', agentIdentifier)
-
   const agentRuntime = getRuntime(agentIdentifier)
+  // subdomains is a boolean that can be specified by customer.
+  // only way to keep the session object across subdomains is using first party cookies
+  // This determines which storage wrapper the session manager will use to keep state
+  const storageAPI = getConfigurationValue(agentIdentifier, 'session.subdomains')
+    ? new FirstPartyCookies(getConfigurationValue(agentIdentifier, 'session.domain'))
+    : new LocalStorage()
+
   agentRuntime.session = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') == true
-    ? new SessionEntity({ agentIdentifier, key: 'SESSION' })
+    ? new SessionEntity({ agentIdentifier, key: 'SESSION', storageAPI })
     : null
   // if cookies (now session tracking) is turned off or can't get session ID, this is null
 

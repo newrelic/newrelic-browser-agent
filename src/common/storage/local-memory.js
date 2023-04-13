@@ -1,22 +1,25 @@
-export class LocalStorage {
+export class LocalMemory {
+  constructor () {
+    this.state = {}
+  }
   get (key) {
     try {
-      return localStorage.getItem(key)
+      return this.state[key]
     } catch (err) {
       return ''
     }
   }
   set (key, value) {
     try {
-      if (!value) return this.remove(key)
-      return localStorage.setItem(key, value)
+      if (!value) this.delete(key)
+      this.state[key] = value
     } catch (err) {
       return
     }
   }
   remove (key) {
     try {
-      return localStorage.removeItem(key)
+      return delete this.state[key]
     } catch (err) {
       return
     }

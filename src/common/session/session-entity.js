@@ -5,11 +5,9 @@ import { documentAddEventListener } from '../event-listener/event-listener-opts'
 import { ee } from '../event-emitter/contextual-ee'
 import { subscribeToVisibilityChange } from '../window/page-visibility'
 import { Timer } from '../util/timer'
-import LocalStorage from '../storage/local-storage.js'
-import FPC from '../storage/first-party-cookies'
-import { getConfiguration } from '../config/config'
 import { isBrowserScope, isWorkerScope } from '../util/global-scope'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, PREFIX } from './constants'
+import { LocalMemory } from '../storage/local-memory'
 
 export class SessionEntity {
   /**
@@ -18,20 +16,9 @@ export class SessionEntity {
    * The value can be overridden in the constructor, but will default to a unique 16 character hex string
    * expiresMs and inactiveMs are used to "expire" the session, but can be overridden in the constructor. Pass 0 to disable expiration timers.
    */
-  constructor ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS }) {
+  constructor ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS, storageAPI = new LocalMemory() }) {
     try {
       if (isWorkerScope) return this.fallback(key, value)
-      // session options configured by the customer
-      const sessionConfig = getConfiguration(agentIdentifier).session
-      // subdomains is a boolean that can be specified by customer.
-      // only way to keep the session object across subdomains is using first party cookies
-      if (sessionConfig.subdomains) {
-        // easiest way to get the root domain to store to the cookie is through user input
-        // TODO -- need a way to set the root level domain on the cookie in an elegant way
-        this.storage = FPC
-      } else {
-        this.storage = LocalStorage
-      }
     } catch (e) {
       // storage is inaccessible
       warn('Storage API is unavailable. Session information will not operate correctly.', e)
@@ -41,9 +28,11 @@ export class SessionEntity {
     this.agentIdentifier = agentIdentifier
     this.ee = ee.get(agentIdentifier)
 
+    this.storage = storageAPI
+
     // key is intended to act as the k=v pair
     this.key = key
-    // value is intended to act as value of a k=v pair
+    // value is intended to act as the primary value of the k=v pair
     this.value = value
 
     // the first time the session entity class is instantiated, we check the storage API for an existing

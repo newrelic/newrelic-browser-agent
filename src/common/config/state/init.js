@@ -14,6 +14,7 @@ const model = {
     allowed_origins: undefined
   },
   session: {
+    domain: new URL(global.location).host, // used by first party cookies to set the top-level domain (if subdomains === true)
     subdomains: false // "true" triggers Session Manager to use First Party Cookies
   },
   ssl: undefined,

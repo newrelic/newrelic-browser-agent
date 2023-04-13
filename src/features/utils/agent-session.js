@@ -18,7 +18,7 @@ export function setupAgentSession (agentIdentifier) {
   // This determines which storage wrapper the session manager will use to keep state
   let storageAPI
   const cookiesEnabled = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true
-  if (cookiesEnabled) {
+  if (cookiesEnabled && isBrowserScope) {
     storageAPI = getConfigurationValue(agentIdentifier, 'session.subdomains')
       ? new FirstPartyCookies(getConfigurationValue(agentIdentifier, 'session.domain'))
       : new LocalStorage()

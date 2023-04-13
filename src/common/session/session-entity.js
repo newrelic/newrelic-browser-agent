@@ -70,29 +70,31 @@ export class SessionEntity {
 
     // listen for "activity", if seen, "refresh" the inactivty timer
     // "activity" also includes "page visibility - visible", but that is handled below in a different event sub
-    documentAddEventListener('scroll', this.refresh.bind(this), false, this.abortController?.signal)
-    documentAddEventListener('keypress', this.refresh.bind(this), false, this.abortController?.signal)
-    documentAddEventListener('click', this.refresh.bind(this), false, this.abortController?.signal)
+    if (!isWorkerScope) {
+      documentAddEventListener('scroll', this.refresh.bind(this), false, this.abortController?.signal)
+      documentAddEventListener('keypress', this.refresh.bind(this), false, this.abortController?.signal)
+      documentAddEventListener('click', this.refresh.bind(this), false, this.abortController?.signal)
 
-    // watch for the vis state changing.  If the page is hidden, the local inactivity timer should be paused
-    // if the page is brought BACK to visibility and the timer hasnt "naturally" expired, refresh the timer...
-    // this is to support the concept that other tabs could be experiencing activity.  The thought would be that
-    // "backgrounded" tabs would pause, while "closed" tabs that "reopen" will just instantiate a new SessionEntity class if restored
-    // which will do a "hard" check of the timestamps.
-    subscribeToVisibilityChange((state) => {
-      if (state === 'hidden') {
-        this.inactiveTimer.pause()
-        this.inactiveAt = this.getFutureTimestamp(inactiveMs)
-        this.write({ ...this.read(), inactiveAt: this.inactiveAt })
-      }
-      else {
-        if (this.expireTimer.isValid()) {
-          this.refresh()
-        } else {
-          this.reset()
+      // watch for the vis state changing.  If the page is hidden, the local inactivity timer should be paused
+      // if the page is brought BACK to visibility and the timer hasnt "naturally" expired, refresh the timer...
+      // this is to support the concept that other tabs could be experiencing activity.  The thought would be that
+      // "backgrounded" tabs would pause, while "closed" tabs that "reopen" will just instantiate a new SessionEntity class if restored
+      // which will do a "hard" check of the timestamps.
+      subscribeToVisibilityChange((state) => {
+        if (state === 'hidden') {
+          this.inactiveTimer.pause()
+          this.inactiveAt = this.getFutureTimestamp(inactiveMs)
+          this.write({ ...this.read(), inactiveAt: this.inactiveAt })
         }
-      }
-    }, false, false, this.abortController?.signal)
+        else {
+          if (this.expireTimer.isValid()) {
+            this.refresh()
+          } else {
+            this.reset()
+          }
+        }
+      }, false, false, this.abortController?.signal)
+    }
 
     console.log('session', this.key, this.value, 'expires at ', this.expiresAt, 'which is in ', (this.expiresAt - Date.now()) / 1000 / 60, 'minutes')
     this.initialized = true

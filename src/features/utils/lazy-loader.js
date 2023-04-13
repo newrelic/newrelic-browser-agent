@@ -1,4 +1,3 @@
-import { setupAgentSession } from '../../common/session/agent-session'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
 /**
@@ -12,27 +11,27 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
  * @param featurePart Name of the feature part to load; should be either instrument or aggregate
  * @returns {Promise<InstrumentBase|AggregateBase|null>}
  */
-export function lazyLoader (agentIdentifier, featureName) {
-  setupAgentSession(agentIdentifier)
-
-  switch (featureName) {
-    case FEATURE_NAMES.ajax:
-      return import(/* webpackChunkName: "ajax-aggregate" */ '../ajax/aggregate')
-    case FEATURE_NAMES.jserrors:
-      return import(/* webpackChunkName: "jserrors-aggregate" */ '../jserrors/aggregate')
-    case FEATURE_NAMES.metrics:
-      return import(/* webpackChunkName: "metrics-aggregate" */ '../metrics/aggregate')
-    case FEATURE_NAMES.pageAction:
-      return import(/* webpackChunkName: "page_action-aggregate" */ '../page_action/aggregate')
-    case FEATURE_NAMES.pageViewEvent:
-      return import(/* webpackChunkName: "page_view_event-aggregate" */ '../page_view_event/aggregate')
-    case FEATURE_NAMES.pageViewTiming:
-      return import(/* webpackChunkName: "page_view_timing-aggregate" */ '../page_view_timing/aggregate')
-    case FEATURE_NAMES.sessionTrace:
-      return import(/* webpackChunkName: "session_trace-aggregate" */ '../session_trace/aggregate')
-    case FEATURE_NAMES.spa:
-      return import(/* webpackChunkName: "spa-aggregate" */ '../spa/aggregate')
-    default:
-      throw new Error(`Attempted to load unsupported agent feature: ${featureName} ${featurePart}`)
+export function lazyLoader (featureName, featurePart) {
+  if (featurePart === 'aggregate') {
+    switch (featureName) {
+      case FEATURE_NAMES.ajax:
+        return import(/* webpackChunkName: "ajax-aggregate" */ '../ajax/aggregate')
+      case FEATURE_NAMES.jserrors:
+        return import(/* webpackChunkName: "jserrors-aggregate" */ '../jserrors/aggregate')
+      case FEATURE_NAMES.metrics:
+        return import(/* webpackChunkName: "metrics-aggregate" */ '../metrics/aggregate')
+      case FEATURE_NAMES.pageAction:
+        return import(/* webpackChunkName: "page_action-aggregate" */ '../page_action/aggregate')
+      case FEATURE_NAMES.pageViewEvent:
+        return import(/* webpackChunkName: "page_view_event-aggregate" */ '../page_view_event/aggregate')
+      case FEATURE_NAMES.pageViewTiming:
+        return import(/* webpackChunkName: "page_view_timing-aggregate" */ '../page_view_timing/aggregate')
+      case FEATURE_NAMES.sessionTrace:
+        return import(/* webpackChunkName: "session_trace-aggregate" */ '../session_trace/aggregate')
+      case FEATURE_NAMES.spa:
+        return import(/* webpackChunkName: "spa-aggregate" */ '../spa/aggregate')
+      default:
+        throw new Error(`Attempted to load unsupported agent feature: ${featureName} ${featurePart}`)
+    }
   }
 }

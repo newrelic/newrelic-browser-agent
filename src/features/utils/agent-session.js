@@ -1,13 +1,15 @@
-import { getConfigurationValue, getInfo, getRuntime, setInfo } from '../config/config'
-import { drain } from '../drain/drain'
-import { ee } from '../event-emitter/contextual-ee'
-import { registerHandler } from '../event-emitter/register-handler'
-import { isBrowserScope } from '../util/global-scope'
-import { SessionEntity } from './session-entity'
+import { getConfigurationValue, getInfo, getRuntime, setInfo } from '../../common/config/config'
+import { drain } from '../../common/drain/drain'
+import { ee } from '../../common/event-emitter/contextual-ee'
+import { registerHandler } from '../../common/event-emitter/register-handler'
+import { isBrowserScope } from '../../common/util/global-scope'
+import { SessionEntity } from '../../common/session/session-entity'
 
 let ranOnce = 0
 export function setupAgentSession (agentIdentifier) {
   if (ranOnce++) return
+
+  console.log('setupAgentSession!', agentIdentifier)
 
   const agentRuntime = getRuntime(agentIdentifier)
   agentRuntime.session = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') == true

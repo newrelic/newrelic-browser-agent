@@ -13,6 +13,10 @@ const model = {
     cors_use_tracecontext_headers: undefined,
     allowed_origins: undefined
   },
+  session: {
+    domain: new URL(window.location).host, // used by first party cookies to set the top-level domain (if subdomains === true)
+    subdomains: false // "true" triggers Session Manager to use First Party Cookies
+  },
   ssl: undefined,
   obfuscate: undefined,
   jserrors: { enabled: true, harvestTimeSeconds: 10 },

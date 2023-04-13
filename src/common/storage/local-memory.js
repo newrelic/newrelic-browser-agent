@@ -11,7 +11,7 @@ export class LocalMemory {
   }
   set (key, value) {
     try {
-      if (!value) this.delete(key)
+      if (!value) return this.delete(key)
       this.state[key] = value
     } catch (err) {
       return
@@ -19,7 +19,7 @@ export class LocalMemory {
   }
   remove (key) {
     try {
-      return delete this.state[key]
+      delete this.state[key]
     } catch (err) {
       return
     }

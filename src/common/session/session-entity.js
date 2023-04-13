@@ -124,10 +124,8 @@ export class SessionEntity {
       if (!val) return {}
       const obj = this.decompress(JSON.parse(val))
       if (this.isInvalid(obj)) return {}
-      // if (this.isInvalid(obj)) return this.reset()
       if (this.isExpired(obj.expiresAt)) return this.reset()
-      // if "inactive" timer is expired at "page load time" -- reset
-      // otherwise, if page is "unhidden" and the expire time
+      // if "inactive" timer is expired at "read" time -- esp. initial read -- reset
       if (this.isExpired(obj.inactiveAt)) return this.reset()
       Object.keys(obj).forEach(k => {
         this[k] = obj[k]
@@ -177,7 +175,6 @@ export class SessionEntity {
       Object.assign(this, newSess)
       return newSess.read()
     } catch (e) {
-      console.log('RESET ERROR', e)
       return {}
     }
   }

@@ -9,8 +9,7 @@ import LocalStorage from '../storage/local-storage.js'
 import FPC from '../storage/first-party-cookies'
 import { getConfiguration } from '../config/config'
 import { isBrowserScope, isWorkerScope } from '../util/global-scope'
-
-const PREFIX = 'NRBA'
+import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, PREFIX } from './constants'
 
 export class SessionEntity {
   /**
@@ -19,7 +18,7 @@ export class SessionEntity {
    * The value can be overridden in the constructor, but will default to a unique 16 character hex string
    * expiresMs and inactiveMs are used to "expire" the session, but can be overridden in the constructor. Pass 0 to disable expiration timers.
    */
-  constructor ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = 14400000, inactiveMs = 1800000 }) {
+  constructor ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS }) {
     try {
       if (isWorkerScope) return this.fallback(key, value)
       // session options configured by the customer

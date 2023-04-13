@@ -39,6 +39,7 @@ export class SessionEntity {
 
     // the set-up of the timer used to expire the session "naturally" at a certain time
     // this gets ignored if the value is falsy, allowing for session entities that do not expire
+    this.expiresMs = expiresMs
     if (expiresMs) {
       this.expiresAt = initialRead?.expiresAt || this.getFutureTimestamp(expiresMs)
       this.expireTimer = new Timer(() => this.reset(), this.expiresAt - Date.now())
@@ -91,10 +92,6 @@ export class SessionEntity {
 
     console.log('session', this.key, this.value, 'expires at ', this.expiresAt, 'which is in ', (this.expiresAt - Date.now()) / 1000 / 60, 'minutes')
     this.initialized = true
-  }
-
-  fallback (key, value) {
-    return Object.assign(this, { key, value, sessionReplayActive: false, sessionTraceActive: false, isNew: true, read: () => this, write: (vals) => Object.assign(this, vals), reset: () => Object.assign(this, new SessionEntity(this)) })
   }
 
   // This is the actual key appended to the storage API
@@ -159,7 +156,14 @@ export class SessionEntity {
       this.inactiveTimer?.end()
       this.expireTimer?.end()
       if (this.initialized) setTimeout(() => this.ee.emit('new-session'), 1)
-      const newSess = new SessionEntity({ agentIdentifier: this.agentIdentifier, key: this.key })
+      const newSess = new SessionEntity({
+        agentIdentifier: this.agentIdentifier,
+        key: this.key,
+        storageAPI: this.storageAPI,
+        expiresMs: this.expiresMs,
+        inactiveMs: this.inactiveMs
+        // value: value === '0' ? value : undefined // add this back in if we have to send '0' for disabled cookies
+      })
       Object.assign(this, newSess)
       return newSess.read()
     } catch (e) {

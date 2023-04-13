@@ -179,7 +179,7 @@ function harvestReferrerSent (type, browserVersionMatcher) {
   )
 }
 function harvestSessionIsNullWhenEnabled (type, browserVersionMatcher) {
-  testDriver.test(`${type} - session tracking (enabled by default) is in query string attributes and is 0`, browserVersionMatcher,
+  testDriver.test(`${type} - session tracking (enabled by default) is in query string attributes`, browserVersionMatcher,
     function (t, browser, router) {
       let assetURL = router.assetURL(`worker/${type}-worker.html`, {
         init: {
@@ -193,7 +193,7 @@ function harvestSessionIsNullWhenEnabled (type, browserVersionMatcher) {
       Promise.all([ajaxPromise, loadPromise, router.expectRum()])
         .then(([{ request: { query } }]) => {
           t.equal(query.ck, '0', "The cookie flag ('ck') should equal 0.")
-    		t.equal(query.s, '0', "The session id attr 's' should be 0.")
+    		t.ok(query.s, "The session id attr 's' should exist and have a truthy value.")
           t.end()
         }).catch(fail(t, FAIL_MSG))
     }

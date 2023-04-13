@@ -6,6 +6,7 @@ import { isBrowserScope } from '../../common/util/global-scope'
 import { SessionEntity } from '../../common/session/session-entity'
 import { LocalStorage } from '../../common/storage/local-storage.js'
 import { FirstPartyCookies } from '../../common/storage/first-party-cookies'
+import { LocalMemory } from '../../common/storage/local-memory'
 
 let ranOnce = 0
 export function setupAgentSession (agentIdentifier) {
@@ -15,21 +16,26 @@ export function setupAgentSession (agentIdentifier) {
   // subdomains is a boolean that can be specified by customer.
   // only way to keep the session object across subdomains is using first party cookies
   // This determines which storage wrapper the session manager will use to keep state
-  const storageAPI = getConfigurationValue(agentIdentifier, 'session.subdomains')
-    ? new FirstPartyCookies(getConfigurationValue(agentIdentifier, 'session.domain'))
-    : new LocalStorage()
+  let storageAPI
+  if (getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true) storageAPI = new LocalMemory()
+  else {
+    storageAPI = getConfigurationValue(agentIdentifier, 'session.subdomains')
+      ? new FirstPartyCookies(getConfigurationValue(agentIdentifier, 'session.domain'))
+      : new LocalStorage()
+  }
 
-  agentRuntime.session = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') == true
-    ? new SessionEntity({ agentIdentifier, key: 'SESSION', storageAPI })
-    : null
-  // if cookies (now session tracking) is turned off or can't get session ID, this is null
+  agentRuntime.session = new SessionEntity({
+    agentIdentifier,
+    key: 'SESSION',
+    storageAPI: cookiesEnabled ? storageAPI : new LocalMemory()
+    // ...(!cookiesEnabled && { value: '0' }) // add this back in if we have to send '0' for cookies disabled...
+  })
 
   // The first time the agent runs on a page, it should put everything
   // that's currently stored in the storage API into the local info.jsAttributes object
   if (isBrowserScope) {
     // retrieve & re-add all of the persisted setCustomAttribute|setUserId k-v from previous page load(s)
-    const customSessionData = agentRuntime.session.read()?.custom
-    console.log('customSessionData', customSessionData)
+    const customSessionData = agentRuntime.session?.read?.()?.custom
     if (customSessionData) {
       const agentInfo = getInfo(agentIdentifier)
       setInfo(agentIdentifier, { ...agentInfo, jsAttributes: { ...agentInfo.jsAttributes, ...customSessionData } })

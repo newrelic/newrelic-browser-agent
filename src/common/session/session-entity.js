@@ -17,13 +17,7 @@ export class SessionEntity {
    * expiresMs and inactiveMs are used to "expire" the session, but can be overridden in the constructor. Pass 0 to disable expiration timers.
    */
   constructor ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS, storageAPI = new LocalMemory() }) {
-    try {
-      if (isWorkerScope) return this.fallback(key, value)
-    } catch (e) {
-      // storage is inaccessible
-      warn('Storage API is unavailable. Session information will not operate correctly.', e)
-      return this.fallback(key, value)
-    }
+    if (isWorkerScope) this.storageAPI = new LocalMemory()
 
     this.agentIdentifier = agentIdentifier
     this.ee = ee.get(agentIdentifier)

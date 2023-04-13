@@ -43,6 +43,8 @@ export class SessionEntity {
     if (expiresMs) {
       this.expiresAt = initialRead?.expiresAt || this.getFutureTimestamp(expiresMs)
       this.expireTimer = new Timer(() => this.reset(), this.expiresAt - Date.now())
+    } else {
+      this.expiresAt = Infinity
     }
 
     // the set-up of the timer used to expire the session due to "inactivity" at a certain time
@@ -52,6 +54,8 @@ export class SessionEntity {
     if (inactiveMs) {
       this.inactiveAt = initialRead?.inactiveAt || this.getFutureTimestamp(inactiveMs)
       this.inactiveTimer = new Timer(() => this.reset(), inactiveMs)
+    } else {
+      this.inactiveAt = Infinity
     }
 
     // The fact that the session is "new" or pre-existing is used in some places in the agent.  Session Replay and Trace

@@ -17,17 +17,18 @@ export function setupAgentSession (agentIdentifier) {
   // only way to keep the session object across subdomains is using first party cookies
   // This determines which storage wrapper the session manager will use to keep state
   let storageAPI
-  if (getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true) storageAPI = new LocalMemory()
-  else {
+  const cookiesEnabled = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true
+  if (cookiesEnabled) {
     storageAPI = getConfigurationValue(agentIdentifier, 'session.subdomains')
       ? new FirstPartyCookies(getConfigurationValue(agentIdentifier, 'session.domain'))
       : new LocalStorage()
-  }
+  } else storageAPI = new LocalMemory()
 
   agentRuntime.session = new SessionEntity({
     agentIdentifier,
     key: 'SESSION',
-    storageAPI: cookiesEnabled ? storageAPI : new LocalMemory()
+    storageAPI,
+    ...(!cookiesEnabled && { expiresMs: 0, inactiveMs: 0 })
     // ...(!cookiesEnabled && { value: '0' }) // add this back in if we have to send '0' for cookies disabled...
   })
 

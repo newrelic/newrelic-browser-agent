@@ -1,24 +1,5 @@
-import { getConfigurationValue, getInfo, getRuntime, setInfo } from '../../common/config/config'
-import { SessionEntity } from '../../common/session/session-entity'
-import { isBrowserScope } from '../../common/util/global-scope'
+import { setupAgentSession } from '../../common/session/agent-session'
 import { FEATURE_NAMES } from '../../loaders/features/features'
-
-let sessionSet = false
-function checkSession (agentIdentifier) {
-  if (sessionSet) return
-  sessionSet = true
-  getRuntime(agentIdentifier).session = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') == true
-    ? new SessionEntity({ agentIdentifier, key: 'SESSION' })
-    : null
-  // if cookies (now session tracking) is turned off or can't get session ID, this is null
-
-  if (isBrowserScope) { // retrieve & re-add all of the persisted setCustomAttribute|setUserId k-v from previous page load(s)
-    const { session } = getRuntime(agentIdentifier)
-    const customSessionData = session.read()?.custom
-
-    if (customSessionData) setInfo(agentIdentifier, { ...getInfo(agentIdentifier), jsAttributes: { ...getInfo(agentIdentifier).jsAttributes, customSessionData } })
-  }
-}
 
 /**
  * Centralizes the lazy loading of agent feature aggregate and instrument sources.
@@ -32,7 +13,7 @@ function checkSession (agentIdentifier) {
  * @returns {Promise<InstrumentBase|AggregateBase|null>}
  */
 export function lazyLoader (agentIdentifier, featureName) {
-  checkSession(agentIdentifier)
+  setupAgentSession(agentIdentifier)
 
   switch (featureName) {
     case FEATURE_NAMES.ajax:

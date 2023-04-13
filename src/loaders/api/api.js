@@ -80,23 +80,10 @@ export function setAPI (agentIdentifier, forceDrain) {
     const currentInfo = getInfo(agentIdentifier)
     if (value === null) {
       delete currentInfo.jsAttributes[key]
-      if (isBrowserScope) {
-        const { session } = getRuntime(agentIdentifier)
-        const curr = session.read()
-        if (curr.custom) {
-          delete curr.custom[key]
-          session.write({ ...curr })
-        }
-      }
     } else {
       setInfo(agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } })
-      if (isBrowserScope && addToBrowserStorage) {
-        const { session } = getRuntime(agentIdentifier)
-        const curr = session.read()
-        session.write({ ...curr, custom: { ...curr?.custom || {}, [key]: value } })
-      }
     }
-    return apiCall(prefix, apiName, true)()
+    return apiCall(prefix, apiName, true, !!addToBrowserStorage || value === null && 'session')(key, value)
   }
   apiInterface.setCustomAttribute = function (name, value, persistAttribute = false) {
     if (typeof name !== 'string') {

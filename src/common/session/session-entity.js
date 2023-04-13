@@ -8,6 +8,7 @@ import { Timer } from '../timer/timer'
 import LocalStorage from '../storage/local-storage.js'
 import FPC from '../storage/first-party-cookies'
 import { getConfiguration } from '../config/config'
+import { isBrowserScope, isWorkerScope } from '../util/global-scope'
 
 const PREFIX = 'NRBA'
 
@@ -20,13 +21,14 @@ export class SessionEntity {
    */
   constructor ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = 14400000, inactiveMs = 1800000 }) {
     try {
+      if (isWorkerScope) return this.fallback(key, value)
       // session options configured by the customer
       const sessionConfig = getConfiguration(agentIdentifier).session
       // subdomains is a boolean that can be specified by customer.
       // only way to keep the session object across subdomains is using first party cookies
       if (sessionConfig.subdomains) {
         // easiest way to get the root domain to store to the cookie is through user input
-        FPC.setDomain(sessionConfig.domain)
+        // TODO -- need a way to set the root level domain on the cookie in an elegant way
         this.storage = FPC
       } else {
         this.storage = LocalStorage
@@ -34,7 +36,7 @@ export class SessionEntity {
     } catch (e) {
       // storage is inaccessible
       warn('Storage API is unavailable. Session information will not operate correctly.', e)
-      return Object.assign(this, { key, value, sessionReplayActive: false, sessionTraceActive: false, isNew: true, read: () => this, write: (vals) => Object.assign(this, vals), reset: () => new SessionEntity(this) })
+      return this.fallback(key, value)
     }
 
     this.agentIdentifier = agentIdentifier
@@ -107,6 +109,10 @@ export class SessionEntity {
 
     console.log('session', this.key, this.value, 'expires at ', this.expiresAt, 'which is in ', (this.expiresAt - Date.now()) / 1000 / 60, 'minutes')
     this.initialized = true
+  }
+
+  fallback (key, value) {
+    return Object.assign(this, { key, value, sessionReplayActive: false, sessionTraceActive: false, isNew: true, read: () => this, write: (vals) => Object.assign(this, vals), reset: () => Object.assign(this, new SessionEntity(this)) })
   }
 
   // This is the actual key appended to the storage API
@@ -221,5 +227,19 @@ export class SessionEntity {
   decompress (obj) {
     // no need to decompress if we aren't compressing
     return obj
+  }
+
+  syncCustomAttribute (key, value) {
+    if (!isBrowserScope) return
+    if (value === null) {
+      const curr = this.read()
+      if (curr.custom) {
+        delete curr.custom[key]
+        this.write({ ...curr })
+      }
+    } else {
+      const curr = this.read()
+      this.write({ ...curr, custom: { ...curr?.custom || {}, [key]: value } })
+    }
   }
 }

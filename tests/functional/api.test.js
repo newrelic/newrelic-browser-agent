@@ -342,7 +342,7 @@ testDriver.test('no query param when release is not set', withUnload, function (
 
 testDriver.test('api is available when sessionStorage is not', function (t, browser, router) {
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(router.assetURL('api/session-storage-disallowed.html'))
+  let loadPromise = browser.get(router.assetURL('api/local-storage-disallowed.html'))
 
   Promise.all([loadPromise, rumPromise])
     .then(() =>
@@ -355,16 +355,15 @@ testDriver.test('api is available when sessionStorage is not', function (t, brow
 })
 
 testDriver.test('setCustomAttribute can persist onto subsequent page loads', notIE, function (t, browser, router) {
-  let loadPromise = browser.get(router.assetURL('instrumented.html', { scriptString: 'newrelic.setCustomAttribute(\'testing\',123,true);' }))
+  // eslint-disable-next-line
+  let loadPromise = browser.get(router.assetURL('instrumented.html', { scriptString: `newrelic.setCustomAttribute('testing', 123, true);` }))
   Promise.all([router.expectRum(), loadPromise])
     .then(([{ request: { query } }]) => {
       t.equal(query.ja, '{"testing":123}', 'initial page load has custom attribute')
-
-      loadPromise = browser.get(router.assetURL('instrumented.html'))
     })
-    .then(() => Promise.all([router.expectRum(), loadPromise])) // testing:123 is still expected on next page load within same tab
+    .then(() => Promise.all([router.expectRum(), browser.refresh()])) // testing:123 is still expected on next page load within same tab
     .then(([{ request: { query } }]) => {
-      t.equal(query.ja, '{"testing":"123"}', '2nd page load still has custom attribute gotten from storage (but converted to string)')
+      t.equal(query.ja, '{"testing":123}', '2nd page load still has custom attribute from storage')
 
       loadPromise = browser.get(router.assetURL('instrumented.html', { scriptString: 'newrelic.setCustomAttribute(\'testing\',null);' }))
     })

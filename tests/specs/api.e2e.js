@@ -22,7 +22,7 @@ describe('newrelic api', () => {
   })
 
   it('should load when sessionStorage is not available', async () => {
-    const url = await testHandle.assetURL('api/session-storage-disallowed.html', {
+    const url = await testHandle.assetURL('api/local-storage-disallowed.html', {
       loader: 'spa',
       init
     })

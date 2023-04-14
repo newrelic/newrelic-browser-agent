@@ -5,7 +5,7 @@
 
 'use strict'
 
-const fs = require('fs')
+const fs = require('fs-extra')
 const path = require('path')
 // const { program } = require('commander')
 
@@ -188,7 +188,7 @@ async function readReleaseNoteFile (file) {
 async function getBrowserTargetStatement (version, browsersFile) {
   console.log('Retrieving supported browser targets from file: ', browsersFile)
 
-  const browserData = await readJsonFile(process.cwd() + '/' + browsersFile)
+  const browserData = await readBrowsersFile(process.cwd() + '/' + browsersFile)
 
   const min = {}
   const max = {}
@@ -216,21 +216,20 @@ async function getBrowserTargetStatement (version, browsersFile) {
 }
 
 /**
- * Reads the contents of a JSON file into a JavaScript object
+ * Reads the contents of a JSON file with data on supported browsers into a JavaScript object
  *
  * @param {string} File path to a JSON file.
  * @returns a JavaScript object representing the file
  */
-async function readJsonFile (filename) {
+async function readBrowsersFile (filename) {
   return new Promise((resolve, reject) => {
-    fs.readFile(filename, 'utf8', (err, data) => {
+    fs.readJson(filename, (err, jsonData) => {
       if (err) {
         return reject(err)
       }
 
       try {
-        const obj = JSON.parse(data)
-        return resolve(obj)
+        return resolve(jsonData)
       } catch (e) {
         return reject(e)
       }

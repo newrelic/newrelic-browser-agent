@@ -32,17 +32,17 @@
   "edge": [
     {
       "browserName": "MicrosoftEdge",
-      "platform": "Windows 11",
-      "platformName": "Windows 11",
-      "version": "111",
-      "browserVersion": "111"
+      "platform": "Windows 10",
+      "platformName": "Windows 10",
+      "version": "112",
+      "browserVersion": "112"
     },
     {
       "browserName": "MicrosoftEdge",
-      "platform": "Windows 11",
-      "platformName": "Windows 11",
-      "version": "108",
-      "browserVersion": "108"
+      "platform": "Windows 10",
+      "platformName": "Windows 10",
+      "version": "109",
+      "browserVersion": "109"
     },
     {
       "browserName": "MicrosoftEdge",
@@ -77,12 +77,12 @@
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "111"
+      "version": "112"
     },
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "108"
+      "version": "109"
     },
     {
       "browserName": "firefox",

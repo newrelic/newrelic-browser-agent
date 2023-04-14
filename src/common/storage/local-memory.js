@@ -1,6 +1,6 @@
 export class LocalMemory {
-  constructor () {
-    this.state = {}
+  constructor (initialState = {}) {
+    this.state = initialState
   }
   get (key) {
     try {

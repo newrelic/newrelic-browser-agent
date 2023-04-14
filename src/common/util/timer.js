@@ -9,11 +9,13 @@ export class Timer {
   }
 
   create (cb, ms) {
+    if (this.timer) this.clear()
     return setTimeout(cb || this.cb, ms || this.initialMs)
   }
 
   refresh (cb, ms) {
-    clearTimeout(this.timer)
+    console.log('refresh timer')
+    this.clear()
     this.timer = this.create(cb, ms)
     this.startTimestamp = Date.now()
     this.remainingMs = undefined
@@ -32,7 +34,13 @@ export class Timer {
 
   end () {
     clearTimeout(this.timer)
+    this.timer = null
     Object.assign(this, {})
+  }
+
+  clear () {
+    clearTimeout(this.timer)
+    this.timer = null
   }
 
   isValid () {

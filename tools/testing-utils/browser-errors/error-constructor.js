@@ -23,7 +23,7 @@
 export function constructError (errorData) {
   const error = Object.create(new Error(errorData.message))
 
-  const errorProxy = new Proxy(error, {
+  return new Proxy(error, {
     get (target, prop) {
       if (prop === 'toString') {
         return () => errorData[prop]
@@ -35,6 +35,4 @@ export function constructError (errorData) {
       return key in target || key in errorData
     }
   })
-
-  return errorProxy
 }

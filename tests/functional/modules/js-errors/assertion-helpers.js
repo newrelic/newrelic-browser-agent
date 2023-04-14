@@ -54,8 +54,7 @@ function getErrorsFromResponse (response, browser) {
   }
   if (response.query && response.query.err) {
     try {
-      var parsedQueryParam = JSON.parse(response.query.err)
-      return parsedQueryParam
+      return JSON.parse(response.query.err)
     } catch (e) {}
   }
   return null
@@ -77,8 +76,7 @@ function getMetricsFromResponse (response, isSupportability) {
   }
   if (response.query && response.query[attr]) {
     try {
-      var parsedQueryParam = JSON.parse(response.query[attr])
-      return parsedQueryParam
+      return JSON.parse(response.query[attr])
     } catch (e) {}
   }
   return null

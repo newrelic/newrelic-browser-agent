@@ -96,7 +96,6 @@ export class SessionEntity {
       }, false, false, this.abortController?.signal)
     }
 
-    console.log('session', this.key, this.value, 'expires at ', this.expiresAt, 'which is in ', (this.expiresAt - Date.now()) / 1000 / 60, 'minutes')
     this.initialized = true
   }
 

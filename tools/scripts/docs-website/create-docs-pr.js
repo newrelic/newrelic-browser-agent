@@ -207,11 +207,11 @@ async function getBrowserTargetStatement (version, browsersFile) {
   const ANDROID_CHROME_VERSION = 100 // SauceLabs only offers one Android Chrome version
 
   return (
-    `Version ${version} of the Browser agent was built for and tested against these browsers and version ranges: ` +
+    'Consistent with our [browser support policy](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types), ' +
+    `version ${version} of the Browser agent was built for and tested against these browsers and version ranges: ` +
     `Chrome ${min.chrome}-${max.chrome}, Edge ${min.edge}-${max.edge}, Safari ${min.safari}-${max.safari}, Firefox ${min.firefox}-${max.firefox}; ` +
     `and for mobile devices, Android Chrome ${ANDROID_CHROME_VERSION} and iOS Safari ${min.ios}-${max.ios}. ` +
-    'Instrumentation and specific features may be compatible with other browsers or versions. ' +
-    'See our list of [officially supported browsers](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types) for more info.'
+    'Instrumentation and specific features may be compatible with other browsers or versions.'
   )
 }
 

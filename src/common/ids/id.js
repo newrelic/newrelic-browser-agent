@@ -8,12 +8,12 @@
 import { getOrSet } from '../util/get-or-set'
 import { globalScope } from '../util/global-scope'
 
-var index = 1
-var prop = 'nr@id'
+let index = 1
+const prop = 'nr@id'
 
 // Always returns id of obj, may tag obj with an id in the process.
 export function id (obj) {
-  var type = typeof obj
+  const type = typeof obj
   // We can only tag objects, functions, and arrays with ids.
   // For all primitive values we instead return -1.
   if (!obj || !(type === 'object' || type === 'function')) return -1

@@ -5,43 +5,76 @@
 
 import { globalScope } from '../util/global-scope'
 
+const uuidv4Template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+
+/**
+ * Creates a random single hexadecimal value from a provided random value
+ * table and corresponding index. If a random value table is not provided,
+ * Math.random will be used to generate the value.
+ *
+ * @param {Uint8Array} valueTable Random value table typically generated using
+ * the built-in crypto engine.
+ * @param {int} tableIndex The index of the value table to use for generating
+ * the hexadecimal value.
+ * @returns {int} single hexadecimal value in decimal format
+ */
+function getRandomValue (valueTable, tableIndex) {
+  if (valueTable) {
+    /**
+     * The value table could have any number value in the given index. Use
+     * bitwise AND to ensure the value we generate is a valid hex value.
+     * x & 15 will ensure the value converted to hex using `toString(16)`
+     * falls within the range of 0 and 15 inclusively.
+     */
+    return valueTable[tableIndex] & 15
+  } else {
+    return Math.random() * 16 | 0
+  }
+}
+
+/**
+ * Generates a RFC compliant UUIDv4 using native browser crypto engine. If the browser
+ * does not support the crypto engine, the function will fallback to insecure Math.random()
+ * @returns {string} uuid version 4 string
+ */
 export function generateUuid () {
-  var randomVals = null
-  var rvIndex = 0
-  var crypto = globalScope?.crypto || globalScope?.msCrypto
+  const crypto = globalScope?.crypto || globalScope?.msCrypto
+
+  let randomValueTable
+  let randomValueIndex = 0
   if (crypto && crypto.getRandomValues) {
     // eslint-disable-next-line
-    randomVals = crypto.getRandomValues(new Uint8Array(31))
+    randomValueTable = crypto.getRandomValues(new Uint8Array(31))
   }
 
-  function getRandomValue () {
-    if (randomVals) {
-      // same as % 16
-      return randomVals[rvIndex++] & 15
-    } else {
-      return Math.random() * 16 | 0
-    }
-  }
-
-  // v4 UUID
-  var template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-  var id = ''
-  var c
-  for (var i = 0; i < template.length; i++) {
-    c = template[i]
-    if (c === 'x') {
-      id += getRandomValue().toString(16)
-    } else if (c === 'y') {
+  return uuidv4Template.split('').map(templateInput => {
+    if (templateInput === 'x') {
+      return getRandomValue(randomValueTable, ++randomValueIndex).toString(16)
+    } else if (templateInput === 'y') {
       // this is the uuid variant per spec (8, 9, a, b)
       // % 4, then shift to get values 8-11
-      c = getRandomValue() & 0x3 | 0x8
-      id += c.toString(16)
+      return (getRandomValue() & 0x3 | 0x8).toString(16)
     } else {
-      id += c
+      return templateInput
     }
+  }).join('')
+}
+
+export function generateRandomHexString (length) {
+  const crypto = globalScope?.crypto || globalScope?.msCrypto
+
+  let randomValueTable
+  let randomValueIndex = 0
+  if (crypto && crypto.getRandomValues) {
+    // eslint-disable-next-line
+    randomValueTable = crypto.getRandomValues(new Uint8Array(31))
   }
 
-  return id
+  const chars = []
+  for (var i = 0; i < length; i++) {
+    chars.push(getRandomValue(randomValueTable, ++randomValueIndex).toString(16))
+  }
+  return chars.join('')
 }
 
 // 16-character hex string (per DT spec)
@@ -52,30 +85,4 @@ export function generateSpanId () {
 // 32-character hex string (per DT spec)
 export function generateTraceId () {
   return generateRandomHexString(32)
-}
-
-export function generateRandomHexString (length) {
-  var randomVals = null
-  var rvIndex = 0
-  var crypto = self.crypto || self.msCrypto
-  // eslint-disable-next-line
-  if (crypto && crypto.getRandomValues && Uint8Array) {
-    // eslint-disable-next-line
-    randomVals = crypto.getRandomValues(new Uint8Array(31))
-  }
-
-  var chars = []
-  for (var i = 0; i < length; i++) {
-    chars.push(getRandomValue().toString(16))
-  }
-  return chars.join('')
-
-  function getRandomValue () {
-    if (randomVals) {
-      // same as % 16
-      return randomVals[rvIndex++] & 15
-    } else {
-      return Math.random() * 16 | 0
-    }
-  }
 }

@@ -1,3 +1,17 @@
+/**
+ * @file This custom babel plugin swaps out import statements. Whenever an import path is encountered, it
+ * is checked against key-value pairs of RegEx patterns defined in the plugin config options block.
+ * To understand the code (which uses the Visitor pattern to traverse an Abstract Source Tree), see the Babel
+ * [plugin handbook](https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md).
+ */
+
+/**
+ * Replaces part(s) of an import path based on key-value RegEx pairs from plugin state options.
+ *
+ * @param {string} importPath - The original import path to modify.
+ * @param {Object} state - A state object containing options to use for replacement.
+ * @returns {string} - The modified import path with the replaced value.
+ */
 function replacePath (importPath, state) {
   if (!importPath) return importPath
 

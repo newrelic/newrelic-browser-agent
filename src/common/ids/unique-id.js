@@ -60,6 +60,12 @@ export function generateUuid () {
   }).join('')
 }
 
+/**
+ * Generates a string of the given length containing only hexadecimal
+ * value 0-9 and a-f.
+ * @param {int} length length of the string to generate
+ * @returns {string} generated hex string
+ */
 export function generateRandomHexString (length) {
   const crypto = globalScope?.crypto || globalScope?.msCrypto
 
@@ -77,12 +83,22 @@ export function generateRandomHexString (length) {
   return chars.join('')
 }
 
-// 16-character hex string (per DT spec)
+/**
+ * Generates a 16 character length hexadecimal string.
+ * per DT-spec.
+ * @see generateRandomHexString
+ * @returns {string} generated hex string
+ */
 export function generateSpanId () {
   return generateRandomHexString(16)
 }
 
-// 32-character hex string (per DT spec)
+/**
+ * Generates a 32 character length hexadecimal string.
+ * per DT-spec.
+ * @see generateRandomHexString
+ * @returns {string} generated hex string
+ */
 export function generateTraceId () {
   return generateRandomHexString(32)
 }

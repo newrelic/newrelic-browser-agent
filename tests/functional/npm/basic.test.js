@@ -30,7 +30,6 @@ testBuilds.forEach(build => {
   })
 })
 
-// Commented out for now until we resolve the issue with process.env.* being in the source code
 testBuilds.forEach(build => {
   testDriver.test(`NPM agent src -- ${build} -- sends RUM call`, testDriver.Matcher.withFeature('npmSrc'), function (t, browser, router) {
     let url = router.assetURL(`test-builds/raw-src-wrapper/${build}.html`)

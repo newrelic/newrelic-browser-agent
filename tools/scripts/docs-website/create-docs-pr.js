@@ -12,7 +12,8 @@ const path = require('path')
 const Github = require('./github')
 const git = require('./git-commands')
 
-const DEFAULT_FILE_NAME = 'CHANGELOG.md'
+const DEFAULT_CHANGELOG_FILE_NAME = 'CHANGELOG.md'
+const DEFAULT_BROWSERS_FILE_NAME = 'tools/jil/util/browsers-supported.json'
 /** e.g. v7.2.1 */
 const TAG_VALID_REGEX = /v\d+\.\d+\.\d+/
 const BASE_BRANCH = 'develop'
@@ -31,8 +32,13 @@ var options = require('yargs')
 
   .string('c')
   .alias('c', 'changelog')
-  .describe('c', 'Name of changelog(defaults to CHANGELOG.md)')
-  .default('c', DEFAULT_FILE_NAME)
+  .describe('c', `Name of changelog(defaults to ${DEFAULT_CHANGELOG_FILE_NAME})`)
+  .default('c', DEFAULT_CHANGELOG_FILE_NAME)
+
+  .string('b')
+  .alias('b', 'browsers-file')
+  .describe('b', `Name of JSON file with supported browser versions (defaults to ${DEFAULT_BROWSERS_FILE_NAME})`)
+  .default('b', DEFAULT_BROWSERS_FILE_NAME)
 
   .boolean('f')
   .alias('f', 'force')
@@ -85,7 +91,8 @@ async function createReleaseNotesPr () {
     logStep('Validation')
     validateTag(version, options.force)
     logStep('Get Release Notes from File')
-    const { body, releaseDate } = await getReleaseNotes(version, options.changelog)
+    let { body, releaseDate } = await getReleaseNotes(version, options.changelog)
+    body += '\n\n' + await getBrowserTargetStatement(version, options.browsersFile)
     logStep('Branch Creation')
     const branchName = await createBranch(options.repoPath, options.remote, version, options.dryRun, options.docsSiteEmail || 'browser-agent@newrelic.com', options.docsSiteName || 'Browser Agent Team')
     logStep('Format release notes file')
@@ -149,7 +156,6 @@ async function getReleaseNotes (version, releaseNotesFile) {
   // e.g. v7.1.2 (2021-02-24)\n\n
   const body = versionChangeLog + SUPPORT_STATEMENT
   //   const [, releaseDate] = headingRegex.exec(versionChangeLog)
-
   // month and day should be in 2 digit format to allow for docs-site CI to run correctly
   const releaseDate = new Date().toLocaleDateString('sv')
 
@@ -169,6 +175,64 @@ async function readReleaseNoteFile (file) {
       }
 
       return resolve(data)
+    })
+  })
+}
+
+/**
+ * Extracts the supported browser versions from the specified JSON file and creates a support string.
+ *
+ * @param {string} version The new version.
+ * @param {string} browsersFile The filename where the supported browsers JSON is stored.
+ */
+async function getBrowserTargetStatement (version, browsersFile) {
+  console.log('Retrieving supported browser targets from file: ', browsersFile)
+
+  const browserData = await readJsonFile(process.cwd() + '/' + browsersFile)
+
+  const min = {}
+  const max = {}
+
+  for (let browser in browserData) {
+    const versions = browserData[browser]
+    min[browser] = Infinity
+    max[browser] = -Infinity
+    for (let browserVersion of versions) {
+      const versionNumber = Number(browserVersion.version)
+      min[browser] = min[browser] > versionNumber ? versionNumber : min[browser]
+      max[browser] = max[browser] < versionNumber ? versionNumber : max[browser]
+    }
+  }
+
+  const ANDROID_CHROME_VERSION = 100 // SauceLabs only offers one Android Chrome version
+
+  return (
+    `Version ${version} of the Browser agent was built for and tested against these browsers and version ranges: ` +
+    `Chrome ${min.chrome}-${max.chrome}, Edge ${min.edge}-${max.edge}, Safari ${min.safari}-${max.safari}, Firefox ${min.firefox}-${max.firefox}; ` +
+    `and for mobile devices, Android Chrome ${ANDROID_CHROME_VERSION} and iOS Safari ${min.ios}-${max.ios}. ` +
+    'Instrumentation and specific features may be compatible with other browsers or versions.'
+  )
+}
+
+/**
+ * Reads the contents of a JSON file into a JavaScript object
+ *
+ * @param {string} File path to a JSON file.
+ * @returns a JavaScript object representing the file
+ */
+async function readJsonFile (filename) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filename, 'utf8', (err, data) => {
+      if (err) {
+        return reject(err)
+      }
+
+      try {
+        const obj = JSON.parse(data)
+        return resolve(obj)
+      } catch (e) {
+        return reject(e)
+      }
     })
   })
 }

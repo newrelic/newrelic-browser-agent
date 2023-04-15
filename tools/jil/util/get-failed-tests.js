@@ -88,8 +88,7 @@ async function getDataFromNRQL (nrqlString) {
     },
     method: 'POST'
   })
-  const json = await resp.json()
-  return json
+  return await resp.json()
 }
 
 function getGQLResults (gql) {

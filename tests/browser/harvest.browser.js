@@ -12,7 +12,7 @@ import * as sinon from 'sinon'
 import * as encode from '../../src/common/url/encode'
 import * as locationUtil from '../../src/common/url/location'
 import { stringify } from '../../src/common/util/stringify'
-import { VERSION } from '../../src/common/constants/environment-variables'
+import { VERSION } from '../../src/common/constants/env'
 
 const { agentIdentifier } = setup()
 const harvesterInst = new harvest.Harvest({ agentIdentifier })

@@ -21,6 +21,16 @@ test.each([
   expect(result).toEqual(expected)
 })
 
+test('id values increment sequentially', () => {
+  const inputA = {}
+  const inputB = {}
+
+  const resultA = idFn(inputA)
+  const resultB = idFn(inputB)
+
+  expect(resultA - resultB).toEqual(-1)
+})
+
 test('id is correctly assigned to function type', () => {
   const input = jest.fn()
 

@@ -184,8 +184,7 @@ async function run () {
       `nr-loader-${type}-${version}.js`,
       `nr-loader-${type}-polyfills-${version}.js`
     ]).flat()
-    const loaders = (await Promise.all(fileNames.map(fileName => getFile(`https://js-agent.newrelic.com/${fileName}`, fileName)))).map(([url, fileName, body]) => ({ [fileName]: body }))
-    return loaders
+    return (await Promise.all(fileNames.map(fileName => getFile(`https://js-agent.newrelic.com/${fileName}`, fileName)))).map(([url, fileName, body]) => ({ [fileName]: body }))
   }
 
   /**

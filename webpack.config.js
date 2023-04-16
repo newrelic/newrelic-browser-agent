@@ -3,8 +3,6 @@ const TerserPlugin = require('terser-webpack-plugin')
 const webpack = require('webpack')
 const fs = require('fs')
 const { merge } = require('webpack-merge')
-const babelEnv = require('./babel-env-vars')
-const pkg = require('./package.json')
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
@@ -73,6 +71,8 @@ console.log('PUBLIC_PATH', PUBLIC_PATH)
 console.log('MAP_PATH', MAP_PATH)
 console.log('IS_LOCAL', IS_LOCAL)
 if (PR_NAME) console.log('PR_NAME', PR_NAME)
+process.env.BUILD_VERSION = VERSION
+process.env.BUILD_ENV = SUBVERSION
 
 /**
  * Helper for configuring a source map plugin instance with some common properties.
@@ -160,26 +160,7 @@ const standardConfig = merge(commonConfig, {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: [
-              ['@babel/preset-env', {
-                targets: {
-                  browsers: [
-                    'last 10 Chrome versions',
-                    'last 10 Safari versions',
-                    'last 10 Firefox versions',
-                    'last 10 Edge versions',
-                    'last 10 ChromeAndroid versions',
-                    'last 10 iOS versions'
-                  ]
-                }
-              }]
-            ],
-            plugins: [
-              babelEnv({ source: 'VERSION', subversion: SUBVERSION, distMethod: 'CDN' }),
-              // Replaces template literals with concatenated strings. Some customers enclose snippet in backticks when
-              // assigning to a variable, which conflicts with template literals.
-              '@babel/plugin-transform-template-literals'
-            ]
+            envName: 'webpack'
           }
         }
       }
@@ -212,21 +193,7 @@ const polyfillsConfig = merge(commonConfig, {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: [
-              ['@babel/preset-env', {
-                useBuiltIns: 'entry',
-                corejs: { version: 3.23, proposals: true },
-                loose: true,
-                targets: {
-                  browsers: [
-                    'ie >= 11' // Does not affect webpack's own runtime output; see `target` webpack config property.
-                  ]
-                }
-              }]
-            ],
-            plugins: [
-              babelEnv({ source: 'VERSION', subversion: SUBVERSION, distMethod: 'CDN' })
-            ]
+            envName: 'webpack-ie11'
           }
         }
       }

@@ -2,7 +2,7 @@ import * as userAgent from '../../util/user-agent'
 import { Configurable } from './configurable'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { globalScope } from '../../util/global-scope'
-import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/environment-variables'
+import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/env'
 
 const model = agentId => { return {
   buildEnv: BUILD_ENV,

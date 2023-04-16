@@ -93,7 +93,7 @@ async function createReleaseNotesPr () {
     logStep('Create Release Notes')
     await addReleaseNotesFile(releaseNotesBody, version)
     logStep('Commit Release Notes')
-    await commitReleaseNotes(version, options.remote, branchName, options.d)
+    await commitReleaseNotes(version, branchName, options.d)
 
     // TODO -- Add EOL Update
     // logStep('Update EOL')
@@ -149,7 +149,9 @@ async function getReleaseNotes (version, releaseNotesFile) {
   // e.g. v7.1.2 (2021-02-24)\n\n
   const body = versionChangeLog + SUPPORT_STATEMENT
   //   const [, releaseDate] = headingRegex.exec(versionChangeLog)
-  const releaseDate = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`
+
+  // month and day should be in 2 digit format to allow for docs-site CI to run correctly
+  const releaseDate = new Date().toLocaleDateString('sv')
 
   return { body, releaseDate }
 }

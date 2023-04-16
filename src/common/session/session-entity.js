@@ -1,9 +1,7 @@
 import { generateRandomHexString } from '../ids/unique-id'
 import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
-import { documentAddEventListener } from '../event-listener/event-listener-opts'
 import { ee } from '../event-emitter/contextual-ee'
-import { subscribeToVisibilityChange } from '../window/page-visibility'
 import { Timer } from '../util/timer'
 import { isBrowserScope } from '../util/global-scope'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, PREFIX } from './constants'
@@ -19,13 +17,14 @@ export class SessionEntity {
   constructor ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS, storageAPI = new LocalMemory() }) {
     if (!agentIdentifier || !key) throw new Error('Missing Required Fields')
     if (!isBrowserScope) this.storage = new LocalMemory()
+    else this.storage = storageAPI
 
-    console.log('isBrowserScope', isBrowserScope)
+    // the abort controller is used to "reset" the event listeners and prevent them from duplicating when new sessions are created
+    try { this.abortController = new AbortController() } // this try-catch can be removed when IE11 is completely unsupported & gone
+    catch (e) {}
 
     this.agentIdentifier = agentIdentifier
     this.ee = ee.get(agentIdentifier)
-
-    this.storage = storageAPI
 
     // key is intended to act as the k=v pair
     this.key = key
@@ -39,12 +38,16 @@ export class SessionEntity {
     // the timestamps stored in the storage API can be checked at initial run, and when the page is restored, otherwise we lean
     // on the local timers to expire the session
     const initialRead = this.read()
+
     // the set-up of the timer used to expire the session "naturally" at a certain time
     // this gets ignored if the value is falsy, allowing for session entities that do not expire
     this.expiresMs = expiresMs
     if (expiresMs) {
       this.expiresAt = initialRead?.expiresAt || this.getFutureTimestamp(expiresMs)
-      this.expireTimer = new Timer(() => this.reset(), this.expiresAt - Date.now())
+      this.expiresTimer = new Timer({
+        onEnd: () => this.reset()
+      }, expiresMs)
+      // this.expiresTimer = new Timer(() => this.reset(), this.expiresAt - Date.now())
     } else {
       this.expiresAt = Infinity
     }
@@ -55,7 +58,12 @@ export class SessionEntity {
     this.inactiveMs = inactiveMs
     if (inactiveMs) {
       this.inactiveAt = initialRead?.inactiveAt || this.getFutureTimestamp(inactiveMs)
-      this.inactiveTimer = new Timer(() => this.reset(), inactiveMs)
+      this.inactiveTimer = new Timer({
+        onEnd: () => this.reset(),
+        onRefresh: () => this.refresh(),
+        abortController: this.abortController,
+        expectInteractions: true
+      }, inactiveMs)
     } else {
       this.inactiveAt = Infinity
     }
@@ -69,37 +77,6 @@ export class SessionEntity {
       Object.keys(initialRead).forEach(k => {
         this[k] = initialRead[k]
       })
-    }
-    // the abort controller is used to "reset" the event listeners and prevent them from duplicating when new sessions are created
-    try { this.abortController = new AbortController() } // this try-catch can be removed when IE11 is completely unsupported & gone
-    catch (e) {}
-
-    // listen for "activity", if seen, "refresh" the inactivty timer
-    // "activity" also includes "page visibility - visible", but that is handled below in a different event sub
-    if (isBrowserScope) {
-      documentAddEventListener('scroll', this.refresh.bind(this), false, this.abortController?.signal)
-      documentAddEventListener('keypress', this.refresh.bind(this), false, this.abortController?.signal)
-      documentAddEventListener('click', this.refresh.bind(this), false, this.abortController?.signal)
-
-      // watch for the vis state changing.  If the page is hidden, the local inactivity timer should be paused
-      // if the page is brought BACK to visibility and the timer hasnt "naturally" expired, refresh the timer...
-      // this is to support the concept that other tabs could be experiencing activity.  The thought would be that
-      // "backgrounded" tabs would pause, while "closed" tabs that "reopen" will just instantiate a new SessionEntity class if restored
-      // which will do a "hard" check of the timestamps.
-      subscribeToVisibilityChange((state) => {
-        if (state === 'hidden') {
-          this.inactiveTimer.pause()
-          this.inactiveAt = this.getFutureTimestamp(inactiveMs)
-          this.write({ ...this.read(), inactiveAt: this.inactiveAt })
-        }
-        else {
-          if (this.expireTimer.isValid()) {
-            this.refresh()
-          } else {
-            this.reset()
-          }
-        }
-      }, false, false, this.abortController?.signal)
     }
 
     this.initialized = true
@@ -162,8 +139,8 @@ export class SessionEntity {
     try {
       this.storage.remove(this.lookupKey)
       this.abortController?.abort()
-      this.inactiveTimer?.end()
-      this.expireTimer?.end()
+      this.inactiveTimer?.clear?.()
+      this.expiresTimer?.clear?.()
       delete this.custom
       delete this.value
       if (this.initialized) setTimeout(() => this.ee.emit('new-session'), 1)
@@ -186,8 +163,8 @@ export class SessionEntity {
    * Refresh the inactivity timer data
    */
   refresh () {
-    this.inactiveTimer.refresh()
-    this.inactiveAt = this.getFutureTimestamp(this.inactiveMs) // 100
+    if (!this.expiresTimer.isValid()) this.reset()
+    this.inactiveAt = this.getFutureTimestamp(this.inactiveMs)
     this.write({ ...this.read(), inactiveAt: this.inactiveAt })
   }
 
@@ -210,7 +187,7 @@ export class SessionEntity {
 
   /**
    * @param {number} futureMs - The number of ms to use to generate a future timestamp
-   * @returns {Date}
+   * @returns {number}
    */
   getFutureTimestamp (futureMs) {
     return Date.now() + futureMs

@@ -1,16 +1,40 @@
+import { documentAddEventListener } from '../event-listener/event-listener-opts'
+import { subscribeToVisibilityChange } from '../window/page-visibility'
+import { isBrowserScope } from './global-scope'
+
 export class Timer {
-  constructor (cb, ms) {
-    this.cb = cb
+  constructor (opts, ms) {
+    this.onEnd = opts.onEnd
+    this.onRefresh = opts.onRefresh
     this.initialMs = ms || 0
     this.startTimestamp = Date.now()
     this.remainingMs = undefined
 
-    this.timer = this.create(cb, ms)
+    try { this.abortController = opts.abortController || new AbortController() }
+    catch (e) {}
+
+    this.timer = this.create(this.onEnd, ms)
+
+    if (isBrowserScope && opts.expectInteractions) {
+      documentAddEventListener('scroll', this.refresh.bind(this), false, this.abortController?.signal)
+      documentAddEventListener('keypress', this.refresh.bind(this), false, this.abortController?.signal)
+      documentAddEventListener('click', this.refresh.bind(this), false, this.abortController?.signal)
+
+      // watch for the vis state changing.  If the page is hidden, the local inactivity timer should be paused
+      // if the page is brought BACK to visibility and the timer hasnt "naturally" expired, refresh the timer...
+      // this is to support the concept that other tabs could be experiencing activity.  The thought would be that
+      // "backgrounded" tabs would pause, while "closed" tabs that "reopen" will just instantiate a new SessionEntity class if restored
+      // which will do a "hard" check of the timestamps.
+      subscribeToVisibilityChange((state) => {
+        if (state === 'hidden') this.pause()
+        else this.refresh()
+      }, false, false, this.abortController?.signal)
+    }
   }
 
   create (cb, ms) {
     if (this.timer) this.clear()
-    return setTimeout(cb || this.cb, ms || this.initialMs)
+    return setTimeout(() => cb ? cb() : this.onEnd(), ms || this.initialMs)
   }
 
   refresh (cb, ms) {
@@ -19,6 +43,7 @@ export class Timer {
     this.timer = this.create(cb, ms)
     this.startTimestamp = Date.now()
     this.remainingMs = undefined
+    this.onRefresh()
   }
 
   pause () {
@@ -32,15 +57,15 @@ export class Timer {
     this.remainingMs = undefined
   }
 
-  end () {
-    clearTimeout(this.timer)
-    this.timer = null
-    Object.assign(this, {})
-  }
-
   clear () {
     clearTimeout(this.timer)
     this.timer = null
+  }
+
+  end () {
+    console.log('timer end')
+    this.clear()
+    this.onEnd()
   }
 
   isValid () {

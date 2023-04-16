@@ -11,7 +11,7 @@ export class LocalMemory {
   }
   set (key, value) {
     try {
-      if (!value) return this.delete(key)
+      if (value === undefined || value === null) return this.remove(key)
       this.state[key] = value
     } catch (err) {
       return

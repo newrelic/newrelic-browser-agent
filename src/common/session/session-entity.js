@@ -61,8 +61,7 @@ export class SessionEntity {
       this.inactiveTimer = new Timer({
         onEnd: () => this.reset(),
         onRefresh: () => this.refresh(),
-        abortController: this.abortController,
-        expectInteractions: true
+        abortController: this.abortController
       }, inactiveMs)
     } else {
       this.inactiveAt = Infinity

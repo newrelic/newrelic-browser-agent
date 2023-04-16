@@ -4,10 +4,13 @@ import { isBrowserScope } from './global-scope'
 
 export class Timer {
   constructor (opts, ms) {
+    if (!opts.onEnd) throw new Error('onEnd handler is required')
+    if (!ms) throw new Error('ms duration is required')
     this.onEnd = opts.onEnd
     this.onRefresh = opts.onRefresh
-    this.initialMs = ms || 0
+    this.initialMs = ms
     this.startTimestamp = Date.now()
+    // used by pause/resume
     this.remainingMs = undefined
 
     try { this.abortController = opts.abortController || new AbortController() }
@@ -15,7 +18,7 @@ export class Timer {
 
     this.timer = this.create(this.onEnd, ms)
 
-    if (isBrowserScope && opts.expectInteractions) {
+    if (isBrowserScope && opts.onRefresh) {
       documentAddEventListener('scroll', this.refresh.bind(this), false, this.abortController?.signal)
       documentAddEventListener('keypress', this.refresh.bind(this), false, this.abortController?.signal)
       documentAddEventListener('click', this.refresh.bind(this), false, this.abortController?.signal)
@@ -38,7 +41,6 @@ export class Timer {
   }
 
   refresh (cb, ms) {
-    console.log('refresh timer')
     this.clear()
     this.timer = this.create(cb, ms)
     this.startTimestamp = Date.now()
@@ -51,11 +53,12 @@ export class Timer {
     this.remainingMs = this.initialMs - (Date.now() - this.startTimestamp)
   }
 
-  resume () {
-    if (!this.remainingMs || !this.isValid()) return
-    this.timer = this.create(this.cb, this.remainingMs)
-    this.remainingMs = undefined
-  }
+  // resume is not currently used.  "resuming" currently means setting a new fresh timer
+  // resume () {
+  //   if (!this.remainingMs || !this.isValid()) return
+  //   this.timer = this.create(this.cb, this.remainingMs)
+  //   this.remainingMs = undefined
+  // }
 
   clear () {
     clearTimeout(this.timer)
@@ -63,7 +66,6 @@ export class Timer {
   }
 
   end () {
-    console.log('timer end')
     this.clear()
     this.onEnd()
   }

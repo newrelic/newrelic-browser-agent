@@ -96,7 +96,7 @@ export class Aggregate extends AggregateBase {
           timing: addPT(agentRuntime.offset, navTimingApiData, {}),
           navigation: addPN(navTimingApiData, {})
         })
-        chunksForQueryString.push(param('perf', stringify(navTimingApiData)))
+        chunksForQueryString.push(param('perf', stringify(perf)))
       } catch (err) {
         // performance API failed for some reason
       }

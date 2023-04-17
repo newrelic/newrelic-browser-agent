@@ -146,7 +146,7 @@ export class Aggregate extends AggregateBase {
 
       // ignore size and status type nodes that do not map to timestamp metrics
       const lck = key.toLowerCase()
-      if (lck.includes('size') || lck.includes('status')) continue
+      if (lck.indexOf('size') >= 0 || lck.indexOf('status') >= 0) continue
 
       // ignore inherited methods, meaningless 0 values, and bogus timestamps
       // that are in the future (Microsoft Edge seems to sometimes produce these)

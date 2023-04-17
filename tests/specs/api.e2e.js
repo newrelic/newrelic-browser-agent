@@ -75,8 +75,10 @@ describe('newrelic api', () => {
       })
 
       await browser.url(url)
+      await browser.waitForFeature('loaded')
       const metricsPromise = testHandle.expectCustomMetrics()
-      await browser.url(unloadUrl)
+      await browser.minimizeWindow()
+      await browser.maximizeWindow()
       const { request: { body, query } } = await metricsPromise
       const time = getTime(body ? JSON.parse(body)?.cm : JSON.parse(query.cm))
 

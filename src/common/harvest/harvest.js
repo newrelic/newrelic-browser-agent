@@ -176,7 +176,7 @@ export class Harvest extends SharedContext {
   createPayload (type, options) {
     var makeBody = createAccumulator()
     var makeQueryString = createAccumulator()
-    var listeners = (this._events[type] && this._events[type] || [])
+    var listeners = ((this._events[type] && this._events[type]) || [])
 
     for (var i = 0; i < listeners.length; i++) {
       var singlePayload = listeners[i](options)

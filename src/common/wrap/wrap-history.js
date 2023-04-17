@@ -21,9 +21,12 @@ const HISTORY_FNS = ['pushState', 'replaceState']
  */
 export function wrapHistory (sharedEE) {
   const ee = scopedEE(sharedEE)
-  if (!isBrowserScope || wrapped[ee.debugId]++) // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
-  { return ee } // then we increment the count to track # of feats using this at runtime. (History API is only avail in browser DOM context.)
-  wrapped[ee.debugId] = 1
+
+  // Notice if our wrapping never ran yet, the falsy NaN will not early return; but if it has,
+  // then we increment the count to track # of feats using this at runtime. History API is only
+  // available in browser DOM context.
+  if (!isBrowserScope || wrapped[ee.debugId]++) return ee
+  wrapped[ee.debugId] = 1 // otherwise, first feature to wrap history
 
   var wrapFn = wfn(ee)
   /*

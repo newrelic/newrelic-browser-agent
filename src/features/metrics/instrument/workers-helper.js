@@ -37,23 +37,26 @@ export function insertSupportMetrics (report) {
     return // similarly, if dedicated is n/a, none of them are supported so quit
   } else {
     origWorker = Worker
-    try { globalScope.Worker = extendWorkerConstructor(origWorker, 'Dedicated') }
-    catch (e) { handleInsertionError(e, 'Dedicated') }
+    try {
+      globalScope.Worker = extendWorkerConstructor(origWorker, 'Dedicated')
+    } catch (e) { handleInsertionError(e, 'Dedicated') }
   }
 
   if (!workersApiIsSupported.shared) {
     reportUnavailable('Shared')
   } else {
     origSharedWorker = SharedWorker
-    try { globalScope.SharedWorker = extendWorkerConstructor(origSharedWorker, 'Shared') }
-    catch (e) { handleInsertionError(e, 'Shared') }
+    try {
+      globalScope.SharedWorker = extendWorkerConstructor(origSharedWorker, 'Shared')
+    } catch (e) { handleInsertionError(e, 'Shared') }
   }
   if (!workersApiIsSupported.service) {
     reportUnavailable('Service')
   } else {
     origServiceWorkerCreate = navigator.serviceWorker.register
-    try { globalScope.navigator.serviceWorker.register = extendServiceCreation(origServiceWorkerCreate) }
-    catch (e) { handleInsertionError(e, 'Service') }
+    try {
+      globalScope.navigator.serviceWorker.register = extendServiceCreation(origServiceWorkerCreate)
+    } catch (e) { handleInsertionError(e, 'Service') }
   }
   return
 

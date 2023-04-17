@@ -38,8 +38,7 @@ export function resetScope () {
     } else if (self instanceof WorkerGlobalScope) {
       globalScope = self
     }
-  }
-  else {
+  } else {
     throw new Error('New Relic browser agent shutting down due to error: Unable to locate global scope. This is possibly due to code redefining browser global variables like "self" and "window".')
   }
 }

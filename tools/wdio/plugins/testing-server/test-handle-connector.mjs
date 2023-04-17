@@ -20,7 +20,7 @@ export class TestHandleConnector {
   #testId
 
   constructor (commandServerPort) {
-    this.#commandServerBase = `http://localhost:${commandServerPort}`
+    this.#commandServerBase = `http://127.0.0.1:${commandServerPort}`
   }
 
   async ready () {

@@ -101,7 +101,7 @@ function getIdFromUrl (url) {
   const filePaths = [
     ...(env !== 'dev' ? [current] : []), // defaults to current build
     next, // defaults to dev build
-    ...(env === 'dev' && await getOpenPrNums() || []).map(num => `https://js-agent.newrelic.com/pr/PR-${num}/nr-loader-spa.min.js`)
+    ...((env === 'dev' && await getOpenPrNums()) || []).map(num => `https://js-agent.newrelic.com/pr/PR-${num}/nr-loader-spa.min.js`)
   ]
 
   Promise.all(filePaths.map(fp => getFile(fp))).then((contents) => {
@@ -155,7 +155,7 @@ function randomExecutor (ids) {
 
           const ls = localStorage.getItem("nrbaloader")
           if (ls && ids[ls]) return ids[ls]();
-          
+
           var r = Math.random();
     `
   ids.forEach((id, i) => {

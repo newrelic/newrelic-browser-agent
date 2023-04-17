@@ -109,7 +109,6 @@ module.exports = {
     'no-control-regex': 'off',
     'no-prototype-builtins': 'off',
     'no-eval': 'off',
-    'no-mixed-operators': 'off',
     'no-return-assign': 'off',
 
     'n/handle-callback-err': 'off',

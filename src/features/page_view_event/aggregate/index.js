@@ -89,12 +89,17 @@ export class Aggregate extends AggregateBase {
     chunksForQueryString.push(param('pr', info.product))
     chunksForQueryString.push(param('af', getActivatedFeaturesFlags(this.agentIdentifier).join(',')))
 
-    if (globalScope.performance && typeof (globalScope.performance.timing) !== 'undefined') {
-      var navTimingApiData = ({
-        timing: addPT(agentRuntime.offset, globalScope.performance.timing, {}),
-        navigation: addPN(globalScope.performance.navigation, {})
-      })
-      chunksForQueryString.push(param('perf', stringify(navTimingApiData)))
+    if (globalScope.performance) {
+      try {
+        const navTimingApiData = globalScope.performance?.getEntriesByType('navigation')?.[0] || {}
+        const perf = ({
+          timing: addPT(agentRuntime.offset, navTimingApiData, {}),
+          navigation: addPN(navTimingApiData, {})
+        })
+        chunksForQueryString.push(param('perf', stringify(navTimingApiData)))
+      } catch (err) {
+        // performance API failed for some reason
+      }
     }
 
     try { // PVTiming sends these too, albeit using web-vitals and slightly different; it's unknown why they're duplicated, but PVT should be the truth

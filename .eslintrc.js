@@ -102,7 +102,6 @@ module.exports = {
     'dot-notation': 'off',
     'spaced-comment': 'off',
     'no-unused-expressions': 'off',
-    'lines-between-class-members': 'off',
     'prefer-const': 'off',
     'no-use-before-define': 'off',
     'valid-typeof': 'off',

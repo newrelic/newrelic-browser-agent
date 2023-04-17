@@ -24,7 +24,6 @@ testDriver.test('RUM perf times should not be negative', withNavTiming, function
       return Promise.all([router.expectRum(), browser.get(url)])
     })
     .then(([{ request: { query } }]) => {
-      console.log(query.perf)
       const perf = JSON.parse(query.perf)
       t.ok(perf.timing && perf.navigation, 'perf object exists')
       t.ok(Object.values(perf.timing).every(x => x >= 0), 'All perf values are positive')

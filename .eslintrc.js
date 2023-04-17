@@ -112,7 +112,6 @@ module.exports = {
     'brace-style': 'off',
     'no-eval': 'off',
     'no-mixed-operators': 'off',
-    'no-tabs': 'off',
     'no-return-assign': 'off',
 
     'n/handle-callback-err': 'off',

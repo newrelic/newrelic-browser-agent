@@ -15,21 +15,21 @@ export const onLongTask = (onReport) => {
       const metric = {
         name: 'LT',
         value: entry.duration,
-        info: {	// this property deviates from CWV std interface but will hold the custom context to send to NRDB
-          ltFrame: entry.name,				// MDN: the browsing context or frame that can be attributed to the long task
-          ltStart: entry.startTime,	// MDN: a double representing the time (millisec) when the task started
-          ltCtr: entry.attribution[0].containerType			// MDN: type of frame container: 'iframe', 'embed', or 'object' ... but this can also be 'window'
+        info: { // this property deviates from CWV std interface but will hold the custom context to send to NRDB
+          ltFrame: entry.name, // MDN: the browsing context or frame that can be attributed to the long task
+          ltStart: entry.startTime, // MDN: a double representing the time (millisec) when the task started
+          ltCtr: entry.attribution[0].containerType // MDN: type of frame container: 'iframe', 'embed', or 'object' ... but this can also be 'window'
         }
       }
-      if (metric.info.ltCtr !== 'window') {	// the following properties are only of relevance & appended for html elements
+      if (metric.info.ltCtr !== 'window') { // the following properties are only of relevance & appended for html elements
         Object.assign(metric.info, {
-          ltCtrSrc: entry.attribution[0].containerSrc,		// MDN: container's 'src' attribute
-          ltCtrId: entry.attribution[0].containerId,			// MDN: container's 'id' attribute
-          ltCtrName: entry.attribution[0].containerName		// MDN: container's 'name' attribute
+          ltCtrSrc: entry.attribution[0].containerSrc, // MDN: container's 'src' attribute
+          ltCtrId: entry.attribution[0].containerId, // MDN: container's 'id' attribute
+          ltCtrName: entry.attribution[0].containerName // MDN: container's 'name' attribute
         })
       }
 
-      onReport(metric)	// report every long task observed unconditionally
+      onReport(metric) // report every long task observed unconditionally
     })
   }
 
@@ -53,7 +53,7 @@ export const onLongTask = (onReport) => {
   if (observer) {
     subscribeToEOL(() => {
       handleEntries(observer.takeRecords())
-    }, true)	// this bool is a temp arg under staged BFCache work that runs the func under the new page session logic -- tb removed w/ the feature flag later
+    }, true) // this bool is a temp arg under staged BFCache work that runs the func under the new page session logic -- tb removed w/ the feature flag later
 
     /* No work needed on BFCache restore for long task. */
   }

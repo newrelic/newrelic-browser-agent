@@ -148,7 +148,7 @@ function validateTag (version, force) {
 async function getReleaseNotes (version, releaseNotesFile) {
   console.log('Retrieving release notes from file: ', releaseNotesFile)
 
-  const data = await readReleaseNoteFile(process.cwd() + '/' + releaseNotesFile)
+  const data = await fs.readFile(process.cwd() + '/' + releaseNotesFile, 'utf8')
 
   const sections = data.split('\n## ')
   // Iterate over all past releases to find the version we want
@@ -163,23 +163,6 @@ async function getReleaseNotes (version, releaseNotesFile) {
 }
 
 /**
- * Reads the contents of NEWS.md
- *
- * @param {string} file path to NEWS.md
- */
-async function readReleaseNoteFile (file) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(file, 'utf8', (err, data) => {
-      if (err) {
-        return reject(err)
-      }
-
-      return resolve(data)
-    })
-  })
-}
-
-/**
  * Extracts the supported browser versions from the specified JSON file and creates a support string.
  *
  * @param {string} version The new version.
@@ -188,7 +171,7 @@ async function readReleaseNoteFile (file) {
 async function getBrowserTargetStatement (version, browsersFile) {
   console.log('Retrieving supported browser targets from file: ', browsersFile)
 
-  const browserData = await readBrowsersFile(process.cwd() + '/' + browsersFile)
+  const browserData = await fs.readJson(process.cwd() + '/' + browsersFile)
 
   const min = {}
   const max = {}
@@ -213,28 +196,6 @@ async function getBrowserTargetStatement (version, browsersFile) {
     `and for mobile devices, Android Chrome ${ANDROID_CHROME_VERSION} and iOS Safari ${min.ios}-${max.ios}. ` +
     'Instrumentation and specific features may be compatible with other browsers or versions.'
   )
-}
-
-/**
- * Reads the contents of a JSON file with data on supported browsers into a JavaScript object
- *
- * @param {string} File path to a JSON file.
- * @returns a JavaScript object representing the file
- */
-async function readBrowsersFile (filename) {
-  return new Promise((resolve, reject) => {
-    fs.readJson(filename, (err, jsonData) => {
-      if (err) {
-        return reject(err)
-      }
-
-      try {
-        return resolve(jsonData)
-      } catch (e) {
-        return reject(e)
-      }
-    })
-  })
 }
 
 /**

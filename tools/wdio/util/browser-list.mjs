@@ -104,10 +104,12 @@ function parse (pattern) {
 function getBrowsersFor (browser, range, platform) {
   let list = []
   if (allowedBrowsers[browser]) list = allowedBrowsers[browser].slice()
-  else if (browser === '*') { list = Object.keys(allowedBrowsers).reduce(
-    (list, browser) => list.concat(allowedBrowsers[browser]),
-    []
-  ) }
+  else if (browser === '*') {
+    list = Object.keys(allowedBrowsers).reduce(
+      (list, browser) => list.concat(allowedBrowsers[browser]),
+      []
+    )
+  }
 
   list.sort((a, b) =>
     semver.lt(cleanVersion(a.version), cleanVersion(b.version)) ? 1 : -1

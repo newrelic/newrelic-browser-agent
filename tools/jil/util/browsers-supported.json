@@ -48,15 +48,15 @@
       "browserName": "MicrosoftEdge",
       "platform": "Windows 10",
       "platformName": "Windows 10",
-      "version": "105",
-      "browserVersion": "105"
+      "version": "106",
+      "browserVersion": "106"
     },
     {
       "browserName": "MicrosoftEdge",
       "platform": "Windows 11",
       "platformName": "Windows 11",
-      "version": "102",
-      "browserVersion": "102"
+      "version": "103",
+      "browserVersion": "103"
     }
   ],
   "safari": [
@@ -87,12 +87,12 @@
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "105"
+      "version": "106"
     },
     {
       "browserName": "firefox",
       "platform": "Windows 10",
-      "version": "102"
+      "version": "103"
     }
   ],
   "android": [

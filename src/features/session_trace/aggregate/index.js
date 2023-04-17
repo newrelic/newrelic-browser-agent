@@ -75,7 +75,7 @@ export class Aggregate extends AggregateBase {
     this.laststart = 0
 
     registerHandler('feat-stn', () => {
-      this.storeTiming(window.performance.timing)
+      this.storeTiming(window.performance?.getEntriesByType('navigation')?.[0] || {})
 
       var scheduler = new HarvestScheduler('resources', {
         onFinished: onHarvestFinished.bind(this),
@@ -135,25 +135,24 @@ export class Aggregate extends AggregateBase {
   processPVT (name, value, attrs) {
     var t = {}
     t[name] = value
-    this.storeTiming(t, true)
+    this.storeTiming(t)
     if (this.hasFID(name, attrs)) this.storeEvent({ type: 'fid', target: 'document' }, 'document', value, value + attrs.fid)
   }
 
-  storeTiming (_t, ignoreOffset) {
-    var key
-    var val
-    var timeOffset
-    var dateNow = Date.now()
-
+  storeTiming (_t) {
     // loop iterates through prototype also (for FF)
-    for (key in _t) {
-      val = _t[key]
+    for (let key in _t) {
+      const val = _t[key]
+
+      // ignore size and status type nodes that do not map to timestamp metrics
+      const lck = key.toLowerCase()
+      if (lck.includes('size') || lck.includes('status')) continue
 
       // ignore inherited methods, meaningless 0 values, and bogus timestamps
       // that are in the future (Microsoft Edge seems to sometimes produce these)
-      if (!(typeof (val) === 'number' && val > 0 && val < dateNow)) continue
+      if (!(typeof (val) === 'number' && val >= 0)) continue
 
-      timeOffset = !ignoreOffset ? _t[key] - getRuntime(this.agentIdentifier).offset : _t[key]
+      const timeOffset = Math.round(_t[key])
 
       this.storeSTN({
         n: key,

@@ -63,6 +63,8 @@ switch (PUBLISH) {
 
 const IS_LOCAL = SUBVERSION === 'LOCAL'
 
+const fuzzyVersions = getFuzzyVersions(PATH_VERSION)
+
 console.log('VERSION', VERSION)
 console.log('SOURCEMAPS', SOURCEMAPS)
 console.log('PATH_VERSION', PATH_VERSION)
@@ -173,6 +175,73 @@ const standardConfig = merge(commonConfig, {
   target: 'web'
 })
 
+const fuzzyConfig = merge(commonConfig, {
+  entry: {
+    [`nr-loader-rum${fuzzyVersions.MINOR}.min`]: path.resolve(__dirname, './src/cdn/lite.js'),
+    [`nr-loader-rum${fuzzyVersions.PATCH}.min`]: path.resolve(__dirname, './src/cdn/lite.js'),
+
+    [`nr-loader-full${fuzzyVersions.MINOR}.min`]: path.resolve(__dirname, './src/cdn/pro.js'),
+    [`nr-loader-full${fuzzyVersions.PATCH}.min`]: path.resolve(__dirname, './src/cdn/pro.js'),
+
+    [`nr-loader-spa${fuzzyVersions.MINOR}.min`]: path.resolve(__dirname, './src/cdn/spa.js'),
+    [`nr-loader-spa${fuzzyVersions.PATCH}.min`]: path.resolve(__dirname, './src/cdn/spa.js'),
+
+    [`nr-loader-rum${fuzzyVersions.MINOR}`]: path.resolve(__dirname, './src/cdn/lite.js'),
+    [`nr-loader-rum${fuzzyVersions.PATCH}`]: path.resolve(__dirname, './src/cdn/lite.js'),
+
+    [`nr-loader-full${fuzzyVersions.MINOR}`]: path.resolve(__dirname, './src/cdn/pro.js'),
+    [`nr-loader-full${fuzzyVersions.PATCH}`]: path.resolve(__dirname, './src/cdn/pro.js'),
+
+    [`nr-loader-spa${fuzzyVersions.MINOR}`]: path.resolve(__dirname, './src/cdn/spa.js'),
+    [`nr-loader-spa${fuzzyVersions.PATCH}`]: path.resolve(__dirname, './src/cdn/spa.js'),
+
+    ////// POLYFILLS //////
+    [`nr-loader-rum-polyfills${fuzzyVersions.MINOR}.min`]: path.resolve(__dirname, './src/cdn/polyfills/lite.js'),
+    [`nr-loader-rum-polyfills${fuzzyVersions.PATCH}.min`]: path.resolve(__dirname, './src/cdn/polyfills/lite.js'),
+
+    [`nr-loader-full-polyfills${fuzzyVersions.MINOR}.min`]: path.resolve(__dirname, './src/cdn/polyfills/pro.js'),
+    [`nr-loader-full-polyfills${fuzzyVersions.PATCH}.min`]: path.resolve(__dirname, './src/cdn/polyfills/pro.js'),
+
+    [`nr-loader-spa-polyfills${fuzzyVersions.MINOR}.min`]: path.resolve(__dirname, './src/cdn/polyfills/spa.js'),
+    [`nr-loader-spa-polyfills${fuzzyVersions.PATCH}.min`]: path.resolve(__dirname, './src/cdn/polyfills/spa.js'),
+
+    [`nr-loader-rum-polyfills${fuzzyVersions.MINOR}`]: path.resolve(__dirname, './src/cdn/polyfills/lite.js'),
+    [`nr-loader-rum-polyfills${fuzzyVersions.PATCH}`]: path.resolve(__dirname, './src/cdn/polyfills/lite.js'),
+
+    [`nr-loader-full-polyfills${fuzzyVersions.MINOR}`]: path.resolve(__dirname, './src/cdn/polyfills/pro.js'),
+    [`nr-loader-full-polyfills${fuzzyVersions.PATCH}`]: path.resolve(__dirname, './src/cdn/polyfills/pro.js'),
+
+    [`nr-loader-spa-polyfills${fuzzyVersions.MINOR}`]: path.resolve(__dirname, './src/cdn/polyfills/spa.js'),
+    [`nr-loader-spa-polyfills${fuzzyVersions.PATCH}`]: path.resolve(__dirname, './src/cdn/polyfills/spa.js')
+  },
+  output: {
+    globalObject: 'window',
+    library: {
+      name: 'NRBA',
+      type: 'window'
+    }
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /(node_modules)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            envName: 'webpack'
+          }
+        }
+      }
+    ]
+  },
+  plugins: [
+    instantiateSourceMapPlugin(),
+    ...instantiateBundleAnalyzerPlugin('standard')
+  ],
+  target: 'web'
+})
+
 // Targets Internet Explorer 11 (ES5).
 const polyfillsConfig = merge(commonConfig, {
   entry: {
@@ -248,4 +317,15 @@ const workerConfig = merge(commonConfig, {
   target: 'webworker'
 })
 
-module.exports = [standardConfig, polyfillsConfig, workerConfig]
+function getFuzzyVersions (version) {
+  const pieces = version.split('.')
+  return {
+    MAJOR: '-x.x.x',
+    MINOR: `${pieces[0]}.x.x`,
+    PATCH: `${pieces[0]}.${pieces[1]}.x`
+  }
+}
+
+const configs = [standardConfig, polyfillsConfig, workerConfig]
+if (PUBLISH === 'PROD') configs.push(fuzzyConfig)
+module.exports = configs

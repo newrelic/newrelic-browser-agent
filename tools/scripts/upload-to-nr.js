@@ -11,7 +11,7 @@ var yargs = require('yargs')
 var argv = yargs
   .string('environments')
   .describe('environments', 'Comma-separated list of environments to upload loaders to')
-  .default('environments', 'staging,production,eu')
+  .default('environments', 'dev,staging,production,eu')
 
   .string('production-api-key')
   .describe('production-api-key', 'API key to use for talking to production RPM site to upload loaders')
@@ -134,6 +134,12 @@ async function run () {
     }
 
     var envOptions = {
+      dev: {
+        url: 'https://science-api-grape.staging-service.newrelic.com/v2/js_agent_loaders/create.json',
+        headers: {
+          'X-Api-Key': argv['staging-api-key']
+        }
+      },
       staging: {
         url: 'https://staging-api.newrelic.com/v2/js_agent_loaders/create.json',
         headers: {
@@ -178,13 +184,33 @@ async function run () {
   async function loaderFilenames () {
     const loaderTypes = ['rum', 'full', 'spa']
     const version = argv['v']
+    const fuzzyVersions = getFuzzyVersions(version)
     const fileNames = loaderTypes.map(type => [
       `nr-loader-${type}-${version}.min.js`,
       `nr-loader-${type}-polyfills-${version}.min.js`,
       `nr-loader-${type}-${version}.js`,
-      `nr-loader-${type}-polyfills-${version}.js`
+      `nr-loader-${type}-polyfills-${version}.js`,
+      // fuzzy
+      `nr-loader-${type}-${fuzzyVersions.MINOR}.min.js`,
+      `nr-loader-${type}-polyfills-${fuzzyVersions.MINOR}.min.js`,
+      `nr-loader-${type}-${fuzzyVersions.PATCH}.min.js`,
+      `nr-loader-${type}-polyfills-${fuzzyVersions.PATCH}.min.js`,
+      `nr-loader-${type}-${fuzzyVersions.MINOR}.js`,
+      `nr-loader-${type}-polyfills-${fuzzyVersions.MINOR}.js`,
+      `nr-loader-${type}-${fuzzyVersions.PATCH}.js`,
+      `nr-loader-${type}-polyfills-${fuzzyVersions.PATCH}.js`
     ]).flat()
+    console.log(fileNames)
     return (await Promise.all(fileNames.map(fileName => getFile(`https://js-agent.newrelic.com/${fileName}`, fileName)))).map(([url, fileName, body]) => ({ [fileName]: body }))
+  }
+
+  function getFuzzyVersions (version) {
+    const pieces = version.split('.')
+    return {
+      MAJOR: 'x.x.x',
+      MINOR: `${pieces[0]}.x.x`,
+      PATCH: `${pieces[0]}.${pieces[1]}.x`
+    }
   }
 
   /**

@@ -3,6 +3,14 @@ import url from 'url'
 import path from 'path'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
+const buildIdentifier = ((() => {
+  let buildIdentifier = process.env.BUILD_NUMBER
+  if (!buildIdentifier) {
+    let identifier = Math.random().toString(16).slice(2)
+    buildIdentifier = `${process.env.USER}-${identifier}`
+  }
+  return buildIdentifier
+})())
 
 export default function config () {
   return {
@@ -23,7 +31,9 @@ export default function config () {
     specFileRetriesDeferred: true,
     reporters: [
       'spec',
-      path.resolve(__dirname, '../plugins/newrelic-reporter.mjs')
+      [path.resolve(__dirname, '../plugins/newrelic-reporter.mjs'), {
+        buildIdentifier
+      }]
     ],
     mochaOpts: {
       ui: 'bdd',

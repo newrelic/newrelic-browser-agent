@@ -197,7 +197,6 @@ describe('event-emitter emit', () => {
 
   it('should return early if global event-emitter is aborted', async () => {
     const { ee } = await import('./contextual-ee')
-    const childEE = ee.get(faker.datatype.uuid())
     const mockListener = jest.fn()
     const eventType = faker.datatype.uuid()
     const eventArgs = ['a', 'b', 'c']

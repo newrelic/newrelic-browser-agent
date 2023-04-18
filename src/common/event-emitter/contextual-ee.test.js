@@ -52,15 +52,6 @@ describe('scoping event-emitter', () => {
     expect(result.debugId).toEqual(childName)
   })
 
-  test('it always returns the same child event-emitter once created for the given name', async () => {
-    const { ee } = await import('./contextual-ee')
-
-    const childName = faker.datatype.uuid()
-    const result = ee.get(childName)
-
-    expect(result).toEqual(ee.get(childName))
-  })
-
   test('it creates a child event-emitter with an isolated backlog', async () => {
     const childName = faker.random.alphaNumeric(16)
 

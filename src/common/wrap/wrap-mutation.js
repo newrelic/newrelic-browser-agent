@@ -26,7 +26,7 @@ export function wrapMutation (sharedEE) {
   // Notice if our wrapping never ran yet, the falsy NaN will not early return; but if it has,
   // then we increment the count to track # of feats using this at runtime. Mutations API is only
   // available in browser DOM context.
-  if (!isBrowserScope || wrapped[ee.debugId]++) return ee
+  if (!isBrowserScope || wrapped[ee.debugId]) return ee
   wrapped[ee.debugId] = true // otherwise, first feature to wrap mutations
 
   var wrapFn = wfn(ee)

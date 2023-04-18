@@ -91,7 +91,7 @@ export class Aggregate extends AggregateBase {
 
     if (globalScope.performance) {
       try {
-        const navTimingApiData = globalScope.performance?.getEntriesByType('navigation')?.[0]
+        const navTimingApiData = globalScope?.performance?.getEntriesByType('navigation')?.[0]
         const perf = ({
           timing: addPT(agentRuntime.offset, navTimingApiData, {}),
           navigation: addPN(navTimingApiData, {})

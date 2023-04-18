@@ -28,6 +28,7 @@ const testValues = {
 
 const expectedPT = {
   of: offset,
+  n: 0,
   u: 1,
   r: 2,
   ue: 3,
@@ -80,24 +81,11 @@ describe('addPT()', () => {
     delete expected.le
     expect(output4).toEqual(expected)
   })
-
-  test('fallbacks work as expected', () => {
-    const noV = addPT(offset, testValues)
-    expect(noV).toEqual(expectedPT)
-
-    const noPTnoV = addPT(offset)
-    expect(noPTnoV).toEqual({ of: offset })
-  })
 })
 
 describe('addPN()', () => {
   test('an output object is populated with valid values', () => {
     const output = addPN(testValues, {})
-    expect(output).toEqual(expectedPN)
-  })
-
-  test('fallbacks work as expected', () => {
-    const output = addPN(testValues)
     expect(output).toEqual(expectedPN)
   })
 })

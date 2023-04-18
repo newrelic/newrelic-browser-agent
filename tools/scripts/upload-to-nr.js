@@ -200,7 +200,6 @@ async function run () {
       `nr-loader-${type}-${fuzzyVersions.PATCH}.js`,
       `nr-loader-${type}-polyfills-${fuzzyVersions.PATCH}.js`
     ]).flat()
-    console.log(fileNames)
     return (await Promise.all(fileNames.map(fileName => getFile(`https://js-agent.newrelic.com/${fileName}`, fileName)))).map(([url, fileName, body]) => ({ [fileName]: body }))
   }
 

@@ -5,7 +5,7 @@
 
 'use strict'
 
-const fs = require('fs-extra')
+const fse = require('fs-extra')
 const path = require('path')
 // const { program } = require('commander')
 
@@ -148,7 +148,7 @@ function validateTag (version, force) {
 async function getReleaseNotes (version, releaseNotesFile) {
   console.log('Retrieving release notes from file: ', releaseNotesFile)
 
-  const data = await fs.readFile(process.cwd() + '/' + releaseNotesFile, 'utf8')
+  const data = await fse.readFile(process.cwd() + '/' + releaseNotesFile, 'utf8')
 
   const sections = data.split('\n## ')
   // Iterate over all past releases to find the version we want
@@ -171,7 +171,7 @@ async function getReleaseNotes (version, releaseNotesFile) {
 async function getBrowserTargetStatement (version, browsersFile) {
   console.log('Retrieving supported browser targets from file: ', browsersFile)
 
-  const browserData = await fs.readJson(process.cwd() + '/' + browsersFile)
+  const browserData = await fse.readJson(process.cwd() + '/' + browsersFile)
 
   const min = {}
   const max = {}
@@ -193,8 +193,7 @@ async function getBrowserTargetStatement (version, browsersFile) {
     'Consistent with our [browser support policy](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types), ' +
     `version ${version} of the Browser agent was built for and tested against these browsers and version ranges: ` +
     `Chrome ${min.chrome}-${max.chrome}, Edge ${min.edge}-${max.edge}, Safari ${min.safari}-${max.safari}, Firefox ${min.firefox}-${max.firefox}; ` +
-    `and for mobile devices, Android Chrome ${ANDROID_CHROME_VERSION} and iOS Safari ${min.ios}-${max.ios}. ` +
-    'Instrumentation and specific features may be compatible with other browsers or versions.'
+    `and for mobile devices, Android Chrome ${ANDROID_CHROME_VERSION} and iOS Safari ${min.ios}-${max.ios}.`
   )
 }
 
@@ -207,8 +206,8 @@ async function getBrowserTargetStatement (version, browsersFile) {
  * @param {boolean} dryRun skip branch creation
  */
 async function createBranch (filePath, remote, version, dryRun, email, name) {
-  fs.rmSync(filePath, { recursive: true, force: true })
-  fs.mkdirSync(filePath)
+  fse.rmSync(filePath, { recursive: true, force: true })
+  fse.mkdirSync(filePath)
   filePath = path.resolve(filePath)
   console.log(`Changing to ${filePath}`)
   process.chdir(filePath)
@@ -265,7 +264,7 @@ function formatReleaseNotes (releaseDate, version, body) {
 function addReleaseNotesFile (body, version) {
   const FILE = getFileName(version)
   return new Promise((resolve, reject) => {
-    fs.writeFile(FILE, body, 'utf8', (writeErr) => {
+    fse.writeFile(FILE, body, 'utf8', (writeErr) => {
       if (writeErr) {
         reject(writeErr)
       }

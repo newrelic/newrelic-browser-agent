@@ -6,8 +6,15 @@ import newrelic from 'newrelic'
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 export default class NewrelicReporter extends WDIOReporter {
+  #buildIdentifier
   #runner
   #suite
+
+  constructor (options) {
+    super(options)
+
+    this.#buildIdentifier = options.buildIdentifier
+  }
 
   onRunnerStart (runner) {
     this.#runner = runner
@@ -38,9 +45,7 @@ export default class NewrelicReporter extends WDIOReporter {
         this.#runner.config.capabilities.platformName ||
         this.#runner.capabilities.platformName ||
         null,
-      build:
-        this.#runner.config.capabilities['jil:buildIdentifier'] ||
-        this.#runner.capabilities['jil:buildIdentifier'],
+      build: this.#buildIdentifier,
       testSuite: this.#suite.title,
       testName: testStat.title,
       testFileName: path.relative(

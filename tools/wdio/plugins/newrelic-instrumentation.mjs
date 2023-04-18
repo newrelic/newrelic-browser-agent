@@ -1,19 +1,6 @@
-import process from 'process'
 import newrelic from 'newrelic'
 
 export default class NewrelicInstrumentation {
-  /**
-   * Runs in the scope of the main WDIO process at the start of the launcher and before any
-   * worker threads are spawned.
-   */
-  async onPrepare (_, capabilities) {
-    const buildIdentifier = this.#generateBuildIdentifier()
-
-    capabilities.forEach((capability) => {
-      capability['jil:buildIdentifier'] = buildIdentifier
-    })
-  }
-
   /**
    * Runs in the scope of the main WDIO process after all testing has completed.
    */
@@ -37,15 +24,6 @@ export default class NewrelicInstrumentation {
     await new Promise((resolve) =>
       newrelic.shutdown({ collectPendingData: true, timeout: 3000 }, resolve)
     )
-  }
-
-  #generateBuildIdentifier () {
-    let buildIdentifier = process.env.BUILD_NUMBER
-    if (!buildIdentifier) {
-      let identifier = Math.random().toString(16).slice(2)
-      buildIdentifier = `${process.env.USER}-${identifier}`
-    }
-    return buildIdentifier
   }
 }
 export const launcher = NewrelicInstrumentation

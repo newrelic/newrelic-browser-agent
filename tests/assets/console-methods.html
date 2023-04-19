@@ -18,6 +18,85 @@
       console.log(function () { return true }, new Error('error message'));
       console.trace(function () { return true }, new Error('error message'));
       console.warn(function () { return true }, new Error('error message'));
+
+      /**
+       * Efficiently generates a string of specified length (even very large strings).
+       *
+       * @param {number} size - The length of the string to generate.
+       * @return {string} The generated string.
+       */
+      function makeString(size) {
+        var str = ''
+
+        // Build up the size by repeatedly doubling a base string; then start over with whatever is left from the
+        // last doubling that doesn't exceed the remaining length; and repeat until the remaining string is smaller
+        // than or equal to the base string.
+        var base = '0123456789'
+        var remainingSize = size
+        while (remainingSize > base.length) {
+          var iterations = 0
+          var moreString = '0123456789'
+          while (10 * Math.pow(2, iterations + 1) < remainingSize) {
+            moreString += moreString
+            iterations++
+          }
+          str += moreString
+          remainingSize -= 10 * Math.pow(2, iterations)
+        }
+        // Once we've efficiently built the string as large as we can, finish with a simple iteration on the remainder.
+        for (var i = str.length; i < size; i++) {
+          str += i % 10
+        }
+        return str
+      }
+
+      /**
+       * Generates an object of the specified target size containing cascading nested objects going as deep as possible.
+       * Each nested object contains a property with a string value of approximately equal size.
+       *
+       * @param {number} targetSize - The target size in bytes of the generated object (once stringified).
+       * @returns {object} The generated object with nested objects and string properties.
+       */
+      function generateObject (targetSize) {
+        var BASE_OVERHEAD = 8; // The stringified bytes for {"d":""}
+        var NEST_OVERHEAD = 13; // The stringified bytes for ,"n":{"d":""}
+        var MAX_LEVELS = 2486; // More than this exceeds max call stack in Chrome (2490 for native JSON.stringify)
+
+        // In fact the targetSize could be as small as BASE_OVERHEAD, but because of how we calculate sizePerLevel,
+        // sizes smaller than NEST_OVERHEAD result in zero levels and infinite sizePerLevel.
+        if (targetSize < NEST_OVERHEAD) { targetSize = NEST_OVERHEAD };
+
+        // A level has a certain minimum size because of the JSON overhead.
+        var targetLevels = MAX_LEVELS;
+        while (targetSize / targetLevels < NEST_OVERHEAD) {
+          targetLevels--;
+        }
+        var sizePerLevel = Math.floor(targetSize / targetLevels);
+
+        // Start with a root object (node) and keep adding nested child objects to the calculated depth.
+        var node = { d: makeString(sizePerLevel - BASE_OVERHEAD) };
+        var root = node;
+        var nestedData = makeString(sizePerLevel - NEST_OVERHEAD);
+        for (var i = 0; i < targetLevels - 1; i++) {
+          node.n = { d: nestedData };
+          node = node.n;
+        }
+
+        // Because we rounded down the size per level, there will usually be some bytes left over.
+        // We can just add them to the deepest node.
+        var remainder = targetSize - sizePerLevel * targetLevels;
+        while (remainder > 0) {
+          node.d += remainder % 10;
+          remainder--;
+        }
+        return root;
+      }
+
+      var testObject = generateObject(1 * 1024)
+        var start = window.performance.now()
+        console.log(testObject) // invokes our wrapper
+        var end = window.performance.now()
+        document.write((end - start))
     </script>
   </body>
 </html>

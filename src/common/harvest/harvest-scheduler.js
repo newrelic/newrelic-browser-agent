@@ -23,13 +23,22 @@ export class HarvestScheduler extends SharedContext {
 
     this.harvest = new Harvest(this.sharedContext)
 
+    // unload if EOL mechanism fires
     subscribeToEOL(() => {
-      if (this.aborted) return
-
-      // If opts.onUnload is defined, these are special actions to execute before attempting to send the final payload.
-      if (this.opts.onUnload) this.opts.onUnload()
-      this.runHarvest({ unload: true })
+      this.unload()
     }, getConfigurationValue(this.sharedContext.agentIdentifier, 'allow_bfcache')) // TO DO: remove feature flag after rls stable
+
+    // unload if session resets
+    this.sharedContext.ee.on('session-reset', () => {
+      this.unload()
+    })
+  }
+
+  unload () {
+    if (this.aborted) return
+    // If opts.onUnload is defined, these are special actions to execute before attempting to send the final payload.
+    if (this.opts.onUnload) this.opts.onUnload()
+    this.runHarvest({ unload: true })
   }
 
   startTimer (interval, initialDelay) {
@@ -76,8 +85,8 @@ export class HarvestScheduler extends SharedContext {
         }
       }
     } else {
-      const runAfterSending = opts?.unload ? undefined : onHarvestFinished // don't bother running onFinish handler if this is the final harvest
-      this.harvest.sendX(this.endpoint, opts, runAfterSending)
+      // const runAfterSending = opts?.unload ? undefined : onHarvestFinished // don't bother running onFinish handler if this is the final harvest
+      this.harvest.sendX(this.endpoint, opts, onHarvestFinished)
     }
 
     if (this.started) {

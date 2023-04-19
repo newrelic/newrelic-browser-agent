@@ -28,6 +28,8 @@ export function setupAgentSession (agentIdentifier) {
     agentIdentifier,
     key: 'SESSION',
     storageAPI,
+    expiresMs: getConfigurationValue(agentIdentifier, 'session.expiresMs'),
+    inactiveMs: getConfigurationValue(agentIdentifier, 'session.inactiveMs'),
     ...(!cookiesEnabled && { expiresMs: 0, inactiveMs: 0 })
     // ...(!cookiesEnabled && { value: '0' }) // add this back in if we have to send '0' for cookies disabled...
   })

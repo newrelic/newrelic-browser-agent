@@ -135,14 +135,15 @@ export class SessionEntity {
     // * send off pending payloads
     // * stop recording (stn and sr)...
     // * delete the session and start over
+    console.log('RESET! -- used to be', this.value)
     try {
+      if (this.initialized) this.ee.emit('session-reset')
       this.storage.remove(this.lookupKey)
       this.abortController?.abort()
       this.inactiveTimer?.clear?.()
       this.expiresTimer?.clear?.()
       delete this.custom
       delete this.value
-      if (this.initialized) setTimeout(() => this.ee.emit('new-session'), 1)
       const newSess = new SessionEntity({
         agentIdentifier: this.agentIdentifier,
         key: this.key,

@@ -1,4 +1,5 @@
 
+import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS } from '../../session/constants'
 import { globalScope } from '../../util/global-scope'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { Configurable } from './configurable'
@@ -16,7 +17,9 @@ const model = {
   },
   session: {
     domain: new URL(globalScope.location).host, // used by first party cookies to set the top-level domain (if subdomains === true)
-    subdomains: false // "true" triggers Session Manager to use First Party Cookies
+    subdomains: false, // "true" triggers Session Manager to use First Party Cookies
+    expiresMs: DEFAULT_EXPIRES_MS,
+    inactiveMs: DEFAULT_INACTIVE_MS
   },
   ssl: undefined,
   obfuscate: undefined,

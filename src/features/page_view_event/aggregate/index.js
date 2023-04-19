@@ -99,6 +99,7 @@ export class Aggregate extends AggregateBase {
         chunksForQueryString.push(param('perf', stringify(perf)))
       } catch (err) {
         // performance API failed for some reason
+        this.ee.emit('internal-error', [err])
       }
     }
 

@@ -24,7 +24,7 @@ describe('console method observation', () => {
     // A good-sized console.log payload of a length suitable for reading by a human
     small: {
       size: 1 * 1024, // 1 KB
-      time_limit: 5 // ms
+      time_limit: 3 // ms
     }
   }
 
@@ -37,10 +37,10 @@ describe('console method observation', () => {
     | chrome@latest  |  2750 |     16 |     2 |
     | safari@latest  |  2438 |     19 |     2 |
     | edge@latest    |  1898 |     19 |     2 |
-    | ios@latest     |  1584 |     31 |     4 |
+    | ios@latest     |  2084 |     18 |     2 |
     | ie@11          |   866 |     47 |     2 |
     |----------------|-------|--------|-------|
-    | largest + 10%  |  3024 |     52 |     5 |
+    | largest + 10%  |  3024 |     52 |     3 |
 
     Time limits in testConfig are set to 10% more than the largest value for any browser, rounded up to the millisecond.
   */

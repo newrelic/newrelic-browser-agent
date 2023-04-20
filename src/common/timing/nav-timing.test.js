@@ -81,6 +81,18 @@ describe('addPT()', () => {
     delete expected.le
     expect(output4).toEqual(expected)
   })
+
+  test('rounds values to integers', () => {
+    const output = addPT(offset, { unloadEventStart: 3.14159 }, {})
+    expect(output.u).toEqual(3)
+  })
+
+  test('adds entries to navTimingValues', () => {
+    const beforeLength = navTimingValues.length
+    addPT(offset, { testValues }, {})
+    const afterLength = navTimingValues.length
+    expect(afterLength - beforeLength).toEqual(21) // 20 + value of n
+  })
 })
 
 describe('addPN()', () => {

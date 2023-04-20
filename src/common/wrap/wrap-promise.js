@@ -70,11 +70,9 @@ export function wrapPromise (sharedEE) {
       WrappedPromise[method] = function (subPromises) { // use our own wrapped version of "Promise.all" and ".race" static fns
         let finalized = false
 
-        if (subPromises && (Array.isArray(subPromises) || (typeof Symbol !== 'undefined' && subPromises[Symbol.iterator]) || subPromises['@@iterator'])) {
-          for (const subPromise of subPromises) {
-            this.resolve(subPromise).then(setNrId(method === 'all'), setNrId(false))
-          }
-        }
+        ;([...(subPromises || [])]).forEach(sub => {
+          this.resolve(sub).then(setNrId(method === 'all'), setNrId(false))
+        })
 
         const origFnCallWithThis = prevStaticFn.apply(this, arguments)
         return origFnCallWithThis

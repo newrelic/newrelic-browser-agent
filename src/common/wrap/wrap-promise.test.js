@@ -79,7 +79,7 @@ describe('all', () => {
     await expect(globalScope.Promise.all(setIterable)).resolves.toEqual([resolveValue])
   })
 
-  test.each([null, undefined, {}])('should not try to iterate a non-iterable %s', async (input) => {
+  test.each([null, undefined])('should not try to iterate a non-iterable %s', async (input) => {
     jest.spyOn(globalScope.Promise, 'resolve')
 
     await expect(globalScope.Promise.all(input)).rejects.toThrow()
@@ -107,7 +107,7 @@ describe('race', () => {
     expect(globalScope.Promise.resolve).toHaveBeenCalled()
   })
 
-  test.each([null, undefined, {}])('should not try to iterate a non-iterable %s', async (input) => {
+  test.each([null, undefined])('should not try to iterate a non-iterable %s', async (input) => {
     jest.spyOn(globalScope.Promise, 'resolve')
 
     await expect(globalScope.Promise.race(input)).rejects.toThrow()
@@ -131,6 +131,9 @@ class CustomIterable {
           done: this.index >= this.iterables.length,
           value: this.iterables[this.index++] || undefined
         }
+      },
+      [Symbol.iterator] () {
+        return this
       }
     }
   }

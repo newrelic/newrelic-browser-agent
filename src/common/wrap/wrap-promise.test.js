@@ -78,10 +78,19 @@ describe('all', () => {
     await expect(globalScope.Promise.all(arrayIterable)).resolves.toEqual([resolveValue])
     await expect(globalScope.Promise.all(setIterable)).resolves.toEqual([resolveValue])
   })
+
+  test.each([null, undefined, {}])('should not try to iterate a non-iterable %s', async (input) => {
+    jest.spyOn(globalScope.Promise, 'resolve')
+
+    await expect(globalScope.Promise.all(input)).rejects.toThrow()
+    expect(globalScope.Promise.resolve).not.toHaveBeenCalled()
+  })
 })
 
 describe('race', () => {
   test('should acceptable iterables', async () => {
+    jest.spyOn(globalScope.Promise, 'resolve')
+
     const resolveValue = faker.datatype.uuid()
     const customIterable = new CustomIterable([
       new globalScope.Promise(resolve => resolve(resolveValue))
@@ -95,6 +104,14 @@ describe('race', () => {
     await expect(globalScope.Promise.race(customIterable)).resolves.toEqual(resolveValue)
     await expect(globalScope.Promise.race(arrayIterable)).resolves.toEqual(resolveValue)
     await expect(globalScope.Promise.race(setIterable)).resolves.toEqual(resolveValue)
+    expect(globalScope.Promise.resolve).toHaveBeenCalled()
+  })
+
+  test.each([null, undefined, {}])('should not try to iterate a non-iterable %s', async (input) => {
+    jest.spyOn(globalScope.Promise, 'resolve')
+
+    await expect(globalScope.Promise.race(input)).rejects.toThrow()
+    expect(globalScope.Promise.resolve).not.toHaveBeenCalled()
   })
 })
 

@@ -11,6 +11,8 @@ import { VERSION } from '../../../common/constants/env'
 import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope } from '../../../common/util/global-scope'
+import { metrics, type } from './session-replay-investigation'
+
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
@@ -126,6 +128,20 @@ export class Aggregate extends AggregateBase {
       if (agentRuntime.ptid) {
         this.storeSupportabilityMetrics('PageSession/Feature/SessionTrace/DurationMs', Math.round(performance.now()))
       }
+
+      // Capture metrics for session replay, if they exist (non zero values)
+      Object.entries(metrics).forEach(([key, val]) => {
+        // PageSession/Feature/SessionReplay/Spa/Nodes/Seen
+        // PageSession/Feature/SessionReplay/Spa/Bytes/Seen
+        // PageSession/Feature/SessionReplay/Spa/InitialSnapshotBytes/Seen
+        // PageSession/Feature/SessionReplay/Spa/BytesPerMinute/Seen
+        // ---- or ----
+        // PageSession/Feature/SessionReplay/Standard/Nodes/Seen
+        // PageSession/Feature/SessionReplay/Standard/Bytes/Seen
+        // PageSession/Feature/SessionReplay/Standard/InitialSnapshotBytes/Seen
+        // PageSession/Feature/SessionReplay/Standard/BytesPerMinute/Seen
+        if (val > 0) this.storeSupportabilityMetrics(`PageSession/Feature/SessionReplay/${type}/${key}/Seen`, val)
+      })
     } catch (e) {
       // do nothing
     }

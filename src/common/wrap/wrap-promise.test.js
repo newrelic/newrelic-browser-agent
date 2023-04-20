@@ -63,7 +63,7 @@ test('should wrap promise constructor', async () => {
 })
 
 describe('all', () => {
-  test('should acceptable iterables', async () => {
+  test('should work with acceptable iterables', async () => {
     const resolveValue = faker.datatype.uuid()
     const customIterable = new CustomIterable([
       new globalScope.Promise(resolve => resolve(resolveValue))
@@ -88,7 +88,7 @@ describe('all', () => {
 })
 
 describe('race', () => {
-  test('should acceptable iterables', async () => {
+  test('should work with acceptable iterables', async () => {
     jest.spyOn(globalScope.Promise, 'resolve')
 
     const resolveValue = faker.datatype.uuid()

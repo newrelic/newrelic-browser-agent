@@ -18,9 +18,7 @@ const stopRecording = record({
     const bytes = stringify(event).length
     if (isCheckout || metrics.nodes === 1) metrics.initialSnapshotBytes += bytes
     metrics.bytes += bytes
-    metrics.bytesPerMinute = (metrics.bytes / performance.now()) / 60000
-
-    console.log(metrics)
+    metrics.bytesPerMinute = (bytes / performance.now()) / 60000
   }
 })
 

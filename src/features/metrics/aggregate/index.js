@@ -131,16 +131,18 @@ export class Aggregate extends AggregateBase {
 
       // Capture metrics for session replay, if they exist (non zero values)
       Object.entries(metrics).forEach(([key, val]) => {
-        // PageSession/Feature/SessionReplay/Spa/Nodes/Seen
-        // PageSession/Feature/SessionReplay/Spa/Bytes/Seen
-        // PageSession/Feature/SessionReplay/Spa/InitialSnapshotBytes/Seen
-        // PageSession/Feature/SessionReplay/Spa/BytesPerMinute/Seen
+        // PageSession/Feature/SessionReplay/Spa/Nodes
+        // PageSession/Feature/SessionReplay/Spa/Bytes
+        // PageSession/Feature/SessionReplay/Spa/InitialSnapshotBytes
+        // PageSession/Feature/SessionReplay/Spa/InitialSnapshotBytesCompressed
+        // PageSession/Feature/SessionReplay/Spa/BytesPerMinute
         // ---- or ----
-        // PageSession/Feature/SessionReplay/Standard/Nodes/Seen
-        // PageSession/Feature/SessionReplay/Standard/Bytes/Seen
-        // PageSession/Feature/SessionReplay/Standard/InitialSnapshotBytes/Seen
-        // PageSession/Feature/SessionReplay/Standard/BytesPerMinute/Seen
-        if (val > 0) this.storeSupportabilityMetrics(`PageSession/Feature/SessionReplay/${type}/${key}/Seen`, val)
+        // PageSession/Feature/SessionReplay/Standard/Nodes
+        // PageSession/Feature/SessionReplay/Standard/Bytes
+        // PageSession/Feature/SessionReplay/Standard/InitialSnapshotBytes
+        // PageSession/Feature/SessionReplay/Standard/InitialSnapshotBytesCompressed
+        // PageSession/Feature/SessionReplay/Standard/BytesPerMinute
+        if (val > 0) this.storeSupportabilityMetrics(`PageSession/Feature/SessionReplay/${key}/${type}`, val)
       })
     } catch (e) {
       // do nothing

@@ -1,24 +1,34 @@
 import { record } from 'rrweb'
-import { getFrameworks } from '../../../common/metrics/framework-detection'
 import { stringify } from '../../../common/util/stringify'
+import { gzip, strToU8 } from 'fflate'
 
 export const metrics = {
   Nodes: 0,
   Bytes: 0,
   InitialSnapshotBytes: 0,
+  InitialSnapshotBytesCompressed: 0,
   BytesPerMinute: 0
 }
 
-const commonSpaApps = ['React', 'Angular', 'AngularJS', 'Vue']
-export const type = commonSpaApps.some(a => getFrameworks().includes(a)) ? 'Spa' : 'Standard'
+export let type = 'Standard'
+window.addEventListener('popstate', function () {
+  type = 'Spa'
+})
 
 const stopRecording = record({
-  emit: (event, isCheckout) => {
-    metrics.nodes++
-    const bytes = stringify(event).length
-    if (isCheckout || metrics.nodes === 1) metrics.initialSnapshotBytes += bytes
-    metrics.bytes += bytes
-    metrics.bytesPerMinute = (bytes / performance.now()) / 60000
+  emit: (event) => {
+    metrics.Nodes++
+    const jsonStr = stringify(event)
+    const bytes = jsonStr.length
+    if (metrics.Nodes === 2) {
+      gzip(strToU8(jsonStr), (err, data) => {
+        if (err) return
+        metrics.InitialSnapshotBytesCompressed = data.length
+      })
+      metrics.InitialSnapshotBytes += jsonStr.length // compressed string?
+    }
+    metrics.Bytes += bytes
+    metrics.BytesPerMinute = Math.round(metrics.Bytes / performance.now() * 60000)
   }
 })
 

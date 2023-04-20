@@ -7,7 +7,8 @@ export const metrics = {
   Bytes: 0,
   InitialSnapshotBytes: 0,
   InitialSnapshotBytesCompressed: 0,
-  BytesPerMinute: 0
+  BytesPerMinute: 0,
+  NodesPerMinute: 0
 }
 
 export let type = 'Standard'
@@ -29,6 +30,7 @@ const stopRecording = record({
     }
     metrics.Bytes += bytes
     metrics.BytesPerMinute = Math.round(metrics.Bytes / performance.now() * 60000)
+    metrics.NodesPerMinute = Math.round(metrics.Nodes / performance.now() * 60000)
   }
 })
 

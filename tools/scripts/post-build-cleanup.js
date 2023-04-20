@@ -40,6 +40,33 @@ function prependSemicolon (fileName, text) {
     return removeNonASCII(fileName, content)
   }))
 
+  const fuzzyMajor = await Promise.all(files.map((f, i) => {
+    const fileName = builtFileNames[i]
+    const content = f
+    if (fileName.startsWith('nr-loader') && fileName.endsWith('.js')) {
+      const pieces = fileName.split(/-(?=\d)/).map(x => x.split('.'))
+      pieces[1] = pieces[1].map((v, i) => i === 1 || i === 2 ? 'x' : v).join('.')
+      const major = pieces.join('-')
+      return prependSemicolon(major, content)
+    }
+    return Promise.resolve()
+  }))
+
+  const fuzzyMinor = await Promise.all(files.map((f, i) => {
+    const fileName = builtFileNames[i]
+    const content = f
+    if (fileName.startsWith('nr-loader') && fileName.endsWith('.js')) {
+      const pieces = fileName.split(/-(?=\d)/).map(x => x.split('.'))
+      pieces[1] = pieces[1].map((v, i) => i === 2 ? 'x' : v).join('.')
+      const minor = pieces.join('-')
+      return prependSemicolon(minor, content)
+    }
+    return Promise.resolve()
+  }))
+
   console.log(`Removed non ascii chars from ${removals.length} files`)
   console.log(`Prepended ; to ${prepended} files`)
+
+  console.log(`Cloned ${fuzzyMajor.length} files for major fuzzy versions`)
+  console.log(`Cloned ${fuzzyMinor.length} files for minor fuzzy versions`)
 })()

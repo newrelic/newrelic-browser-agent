@@ -26,7 +26,7 @@ const stopRecording = record({
         if (err) return
         metrics.InitialSnapshotBytesCompressed = data.length
       })
-      metrics.InitialSnapshotBytes += jsonStr.length // compressed string?
+      metrics.InitialSnapshotBytes += jsonStr.length
     }
     metrics.Bytes += bytes
     metrics.BytesPerMinute = Math.round(metrics.Bytes / performance.now() * 60000)

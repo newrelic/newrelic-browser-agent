@@ -187,6 +187,7 @@
     "jest": "^28.1.1",
     "jest-environment-jsdom": "28.1.1",
     "jquery": "1.11.3",
+    "jung": "^2.1.0",
     "just-debounce": "^1.0.0",
     "mime-types": "^2.1.11",
     "newrelic": "^9.7.5",

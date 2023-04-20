@@ -27,11 +27,7 @@ export class Aggregate extends AggregateBase {
     this.timings = []
     this.timingsSent = []
     this.curSessEndRecorded = false
-
-    try { // we (only) need to track cls state because it's attached to other timing events rather than reported on change...
-      this.clsSupported = PerformanceObserver.supportedEntryTypes.includes('layout-shift')
-      this.cls = 0
-    } catch (e) {}
+    this.cls = null // this should be null unless set to a numeric value by web-vitals so that we differentiate if CLS is supported
 
     /*! This is the section that used to be in the loader portion: !*/
     /* ------------------------------------------------------------ */
@@ -167,9 +163,9 @@ export class Aggregate extends AggregateBase {
   addTiming (name, value, attrs) {
     attrs = attrs || {}
 
-    // If CLS is supported, a cls value should exist and be reported, even at 0.
-    // *cli Mar'23 - At this time, it remains attached to all timings. See NEWRELIC-6143.
-    if (this.clsSupported) {
+    // If cls was set to another value by `onCLS`, then it's supported and is attached onto any timing but is omitted until such time.
+    // *cli Apr'23 - Convert attach-to-all -> attach-if-not-null. See NEWRELIC-6143.
+    if (this.cls !== null) {
       attrs['cls'] = this.cls
     }
 

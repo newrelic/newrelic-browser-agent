@@ -137,6 +137,7 @@ export class Aggregate extends AggregateBase {
         // PageSession/Feature/SessionReplay/InitialSnapshotBytesCompressed/Spa
         // PageSession/Feature/SessionReplay/BytesPerMinute/Spa
         // PageSession/Feature/SessionReplay/NodesPerMinute/Spa
+        // PageSession/Feature/SessionReplay/MaxTimeHit/Spa
         // ---- or ----
         // PageSession/Feature/SessionReplay/Nodes/Standard
         // PageSession/Feature/SessionReplay/Bytes/Standard
@@ -144,6 +145,7 @@ export class Aggregate extends AggregateBase {
         // PageSession/Feature/SessionReplay/InitialSnapshotBytesCompressed/Standard
         // PageSession/Feature/SessionReplay/BytesPerMinute/Standard
         // PageSession/Feature/SessionReplay/NodesPerMinute/Standard
+        // PageSession/Feature/SessionReplay/MaxTimeHit/Standard
         if (val > 0) this.storeSupportabilityMetrics(`PageSession/Feature/SessionReplay/${key}/${type}`, val)
       })
     } catch (e) {

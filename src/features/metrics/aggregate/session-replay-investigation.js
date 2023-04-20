@@ -8,7 +8,8 @@ export const metrics = {
   InitialSnapshotBytes: 0,
   InitialSnapshotBytesCompressed: 0,
   BytesPerMinute: 0,
-  NodesPerMinute: 0
+  NodesPerMinute: 0,
+  MaxTimeHit: 0
 }
 
 export let type = 'Standard'
@@ -35,4 +36,7 @@ const stopRecording = record({
 })
 
 //stop recording after 5 minutes
-setTimeout(stopRecording, 300000)
+setTimeout(() => {
+  metrics.MaxTimeHit++
+  stopRecording()
+}, 300000)

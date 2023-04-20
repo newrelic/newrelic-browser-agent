@@ -88,4 +88,11 @@ describe('addPN()', () => {
     const output = addPN(testValues, {})
     expect(output).toEqual(expectedPN)
   })
+
+  test('adds entries to navTimingValues', () => {
+    const beforeLength = navTimingValues.length
+    addPN(offset, { testValues }, {})
+    const afterLength = navTimingValues.length
+    expect(afterLength - beforeLength).toEqual(2)
+  })
 })

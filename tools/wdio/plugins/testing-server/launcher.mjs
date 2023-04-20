@@ -14,12 +14,10 @@ export default class TestingServerLauncher {
     agentID: 456,
     trustKey: 789
   }
-  #opts
+
   #testingServer
-  #commandServer
 
   constructor (opts) {
-    this.#opts = opts
     this.#testingServer = new TestServer(
       opts,
       TestingServerLauncher.#defaultAgentConfig,

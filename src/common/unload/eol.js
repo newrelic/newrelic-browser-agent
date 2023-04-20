@@ -55,8 +55,7 @@ export function subscribeToEOL (cb, allowBFCache) {
       }
       windowAddEventListener('unload', oneCall)
     }
-  }
-  else if (isWorkerScope) {
+  } else if (isWorkerScope) {
     globalScope.cleanupTasks.push(cb) // close() should run these tasks before quitting thread
   }
   // By default (for other env), this fn has no effect.

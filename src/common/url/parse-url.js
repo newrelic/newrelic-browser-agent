@@ -27,8 +27,7 @@ export function parseUrl (url) {
     // Use an anchor dom element to resolve the url natively.
     urlEl = document.createElement('a')
     urlEl.href = url
-  }
-  else {
+  } else {
     try {
       urlEl = new URL(url, location.href)
     } catch (err) {

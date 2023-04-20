@@ -22,9 +22,11 @@ const RAF_NAME = 'requestAnimationFrame'
  */
 export function wrapRaf (sharedEE) {
   const ee = scopedEE(sharedEE)
-  if (!isBrowserScope || wrapped[ee.debugId]++) // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
-  { return ee } // then we increment the count to track # of feats using this at runtime. (RAF is only avail in browser DOM context.)
-  wrapped[ee.debugId] = 1
+
+  // Notice if our wrapping never ran yet, the falsy NaN will not early return; but if it has,
+  // then we increment the count to track # of feats using this at runtime.
+  if (!isBrowserScope || wrapped[ee.debugId]++) return ee
+  wrapped[ee.debugId] = 1 // otherwise, first feature to wrap RAF
 
   var wrapFn = wfn(ee)
 

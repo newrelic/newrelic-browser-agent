@@ -29,9 +29,10 @@ export function wrapXhr (sharedEE) {
   var baseEE = sharedEE || contextualEE
   const ee = scopedEE(baseEE)
 
-  if (wrapped[ee.debugId]++) // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
-  { return ee } // then we increment the count to track # of feats using this at runtime.
-  wrapped[ee.debugId] = 1 // <- otherwise, first feature to wrap XHR
+  // Notice if our wrapping never ran yet, the falsy NaN will not early return; but if it has,
+  // then we increment the count to track # of feats using this at runtime.
+  if (wrapped[ee.debugId]++) return ee
+  wrapped[ee.debugId] = 1 // otherwise, first feature to wrap XHR
 
   wrapEvents(baseEE) // wrap-events patches XMLHttpRequest.prototype.addEventListener for us
   var wrapFn = wfn(ee)

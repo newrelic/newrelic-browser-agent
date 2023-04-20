@@ -22,9 +22,12 @@ const wrapped = {}
  */
 export function wrapMutation (sharedEE) {
   const ee = scopedEE(sharedEE)
-  if (!isBrowserScope || wrapped[ee.debugId]) // relates to the DOM tree (web env only)
-  { return ee }
-  wrapped[ee.debugId] = true
+
+  // Notice if our wrapping never ran yet, the falsy NaN will not early return; but if it has,
+  // then we increment the count to track # of feats using this at runtime. Mutations API is only
+  // available in browser DOM context.
+  if (!isBrowserScope || wrapped[ee.debugId]) return ee
+  wrapped[ee.debugId] = true // otherwise, first feature to wrap mutations
 
   var wrapFn = wfn(ee)
   var OriginalObserver = originals.MO

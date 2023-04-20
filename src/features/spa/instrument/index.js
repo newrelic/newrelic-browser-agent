@@ -24,8 +24,10 @@ export class Instrument extends InstrumentBase {
 
     if (!getRuntime(agentIdentifier).xhrWrappable) return
 
-    try { this.removeOnAbort = new AbortController() }
-    catch (e) {}
+    try {
+      this.removeOnAbort = new AbortController()
+    } catch (e) {}
+
     let depth = 0
     let startHash
 

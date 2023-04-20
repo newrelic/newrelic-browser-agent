@@ -24,9 +24,10 @@ const wrapped = {}
 export function wrapPromise (sharedEE) {
   const promiseEE = scopedEE(sharedEE)
 
-  if (wrapped[promiseEE.debugId])
-  { return promiseEE }
-  wrapped[promiseEE.debugId] = true
+  // Notice if our wrapping never ran yet, the falsy NaN will not early return; but if it has,
+  // then we increment the count to track # of feats using this at runtime.
+  if (wrapped[promiseEE.debugId]) return promiseEE
+  wrapped[promiseEE.debugId] = true // otherwise, first feature to wrap promise
 
   var getContext = getOrSetContext
   var promiseWrapper = wrapFn(promiseEE)

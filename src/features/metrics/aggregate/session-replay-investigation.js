@@ -17,23 +17,32 @@ window.addEventListener('popstate', function () {
   type = 'Spa'
 })
 
-const stopRecording = record({
-  emit: (event) => {
-    metrics.Nodes++
-    const jsonStr = stringify(event)
-    const bytes = jsonStr.length
-    if (metrics.Nodes === 2) {
-      gzip(strToU8(jsonStr), (err, data) => {
-        if (err) return
-        metrics.InitialSnapshotBytesCompressed = data.length
-      })
-      metrics.InitialSnapshotBytes += jsonStr.length
+let stopRecording = () => {}
+try {
+  stopRecording = record({
+    emit: (event) => {
+      try {
+        metrics.Nodes++
+        const jsonStr = stringify(event)
+        const bytes = jsonStr.length
+        if (metrics.Nodes === 2) {
+          gzip(strToU8(jsonStr), (err, data) => {
+            if (err) return
+            metrics.InitialSnapshotBytesCompressed = data.length
+          })
+          metrics.InitialSnapshotBytes += jsonStr.length
+        }
+        metrics.Bytes += bytes
+        metrics.BytesPerMinute = Math.round(metrics.Bytes / performance.now() * 60000)
+        metrics.NodesPerMinute = Math.round(metrics.Nodes / performance.now() * 60000)
+      } catch (err) {
+        // something went wrong while emitting
+      }
     }
-    metrics.Bytes += bytes
-    metrics.BytesPerMinute = Math.round(metrics.Bytes / performance.now() * 60000)
-    metrics.NodesPerMinute = Math.round(metrics.Nodes / performance.now() * 60000)
-  }
-})
+  })
+} catch (err) {
+  // something went wrong when starting up rrweb
+}
 
 //stop recording after 5 minutes
 setTimeout(() => {

@@ -1,4 +1,4 @@
-import { addPT, addPN } from './nav-timing'
+import { addPT, addPN, navTimingValues } from './nav-timing'
 
 const offset = 123
 const testValues = {

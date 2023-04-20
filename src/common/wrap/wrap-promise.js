@@ -70,9 +70,9 @@ export function wrapPromise (sharedEE) {
       const prevStaticFn = prevPromiseObj[method]
       WrappedPromise[method] = function (subPromises) { // use our own wrapped version of "Promise.all" and ".race" static fns
         let finalized = false
-        subPromises?.forEach(sub => {
-          // eslint-disable-next-line
-          this.resolve(sub).then(setNrId(method === 'all'), setNrId(false));
+
+        Array.from(subPromises || []).forEach(sub => {
+          this.resolve(sub).then(setNrId(method === 'all'), setNrId(false))
         })
 
         const origFnCallWithThis = prevStaticFn.apply(this, arguments)

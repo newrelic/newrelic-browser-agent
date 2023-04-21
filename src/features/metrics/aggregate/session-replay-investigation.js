@@ -21,6 +21,8 @@ window.addEventListener('popstate', function () {
 let stopRecording = () => {}
 try {
   stopRecording = record({
+    maskAllInputs: true,
+    maskTextSelector: '*',
     emit: (event) => {
       try {
         metrics.Nodes++

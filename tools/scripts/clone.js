@@ -11,26 +11,20 @@ async function run () {
 
   const fuzzyMajor = await Promise.all(files.map((f, i) => {
     const fileName = builtFileNames[i]
-    const content = f
-    if (fileName.startsWith('nr-loader') && fileName.endsWith('.js')) {
-      const pieces = fileName.split(/-(?=\d)/).map(x => x.split('.'))
-      if (!pieces[1]) return Promise.resolve()
-      pieces[1] = pieces[1].map((v, i) => i === 1 || i === 2 ? 'x' : v).join('.')
-      const major = pieces.join('-')
-      return fs.promises.writeFile(`${buildDir}/${major}`, content)
+    // Assuming the filename contains a semantic version pattern, "-#.#.#.", replace the minor and patch numbers.
+    const allMinorAndPatch = fileName.replace(/(^nr-loader.*-\d+\.)(\d+)\.(\d+)(.*\.js$)/, "$1x.x$4")
+    if (allMinorAndPatch !== fileName) { // we only get a different string back if the filename has that pattern, in which case we'll create the respective "fuzzy" file
+      return fs.promises.writeFile(`${buildDir}/${allMinorAndPatch}`, f)
     }
     return Promise.resolve()
   }))
 
   const fuzzyMinor = await Promise.all(files.map((f, i) => {
     const fileName = builtFileNames[i]
-    const content = f
-    if (fileName.startsWith('nr-loader') && fileName.endsWith('.js')) {
-      const pieces = fileName.split(/-(?=\d)/).map(x => x.split('.'))
-      if (!pieces[1]) return Promise.resolve()
-      pieces[1] = pieces[1].map((v, i) => i === 2 ? 'x' : v).join('.')
-      const minor = pieces.join('-')
-      return fs.promises.writeFile(`${buildDir}/${minor}`, content)
+    // Assuming the filename contains a semantic version pattern, "-#.#.#.", replace the patch number.
+    const allPatch = fileName.replace(/(^nr-loader.*-\d+\.\d+\.)(\d+)(.*\.js$)/, "$1x$3")
+    if (allPatch !== fileName) { // we only get a different string back if the filename has that pattern, in which case we'll create the respective "fuzzy" file
+      return fs.promises.writeFile(`${buildDir}/${allPatch}`, f)
     }
     return Promise.resolve()
   }))

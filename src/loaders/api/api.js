@@ -35,7 +35,7 @@ export function setTopLevelCallers () {
         returnVals.push(val.api[fnName](...args))
       }
     })
-    return returnVals.length > 1 ? returnsVals : returnVals[0]
+    return returnVals.length > 1 ? returnVals : returnVals[0]
   }
 }
 

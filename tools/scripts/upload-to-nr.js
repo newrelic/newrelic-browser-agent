@@ -206,7 +206,7 @@ async function run () {
   function getFuzzyVersions (version) {
     const pieces = version.split('.')
     return {
-      MAJOR: 'x.x.x',
+      // MAJOR: 'x.x.x', -- synonymous with "-current.js/min.js" file
       MINOR: `${pieces[0]}.x.x`,
       PATCH: `${pieces[0]}.${pieces[1]}.x`
     }

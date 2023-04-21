@@ -54,5 +54,5 @@ jobs:
           node ./tools/scripts/comment-pr.mjs \
             --pull-request=${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }} \
             --token=${{ secrets.GITHUB_TOKEN }} \
-            --raw-text=A new build of PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }} has been shipped to NR Internal\nDashboard - https://staging.onenr.io/0M8jq5NPOjl\nCDN Link - https://js-agent.newrelic.com/pr/PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}/nr-loader-spa.min.js \
+            --raw-text="A new build of PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }} has been shipped to NR Internal\nDashboard - https://staging.onenr.io/0M8jq5NPOjl\nCDN Link - https://js-agent.newrelic.com/pr/PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}/nr-loader-spa.min.js" \
             --tag='<!-- browser_agent pr build report -->'

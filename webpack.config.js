@@ -37,7 +37,7 @@ switch (PUBLISH) {
     SUBVERSION = `${PR_NAME}`
     PUBLIC_PATH = `https://js-agent.newrelic.com/pr/${PR_NAME}/`
     MAP_PATH = `\n//# sourceMappingURL=https://js-agent.newrelic.com/pr/${PR_NAME}/[url]`
-    VERSION = (Number(VERSION) + 1).toString()
+    VERSION = `${VERSION}-${PR_NAME.toLowerCase()}`
     break
   case 'EXTENSION':
     // build for extension injection

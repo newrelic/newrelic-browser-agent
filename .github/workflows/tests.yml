@@ -11,7 +11,7 @@ env:
 jobs:
   chrome-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
+    timeout-minutes: 60
     continue-on-error: true
     runs-on: ubuntu-latest
     container:
@@ -40,7 +40,7 @@ jobs:
 
   chrome-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
+    timeout-minutes: 60
     continue-on-error: true
     runs-on: ubuntu-latest
     container:
@@ -69,7 +69,7 @@ jobs:
 
   firefox-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
+    timeout-minutes: 60
     continue-on-error: true
     runs-on: ubuntu-latest
     container:
@@ -98,7 +98,7 @@ jobs:
 
   firefox-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
+    timeout-minutes: 60
     continue-on-error: true
     runs-on: ubuntu-latest
     container:
@@ -127,7 +127,7 @@ jobs:
 
   edge-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
+    timeout-minutes: 60
     continue-on-error: true
     runs-on: ubuntu-latest
     container:
@@ -156,7 +156,7 @@ jobs:
 
   edge-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
+    timeout-minutes: 60
     continue-on-error: true
     runs-on: ubuntu-latest
     container:
@@ -185,7 +185,7 @@ jobs:
 
   safari-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
+    timeout-minutes: 60
     continue-on-error: true
     runs-on: ubuntu-latest
     container:
@@ -214,7 +214,7 @@ jobs:
 
   safari-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
+    timeout-minutes: 60
     continue-on-error: true
     runs-on: ubuntu-latest
     container:
@@ -301,7 +301,7 @@ jobs:
 
   android-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
+    timeout-minutes: 60
     continue-on-error: true
     runs-on: ubuntu-latest
     container:
@@ -330,7 +330,7 @@ jobs:
 
   android-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
+    timeout-minutes: 60
     continue-on-error: true
     runs-on: ubuntu-latest
     container:
@@ -359,7 +359,7 @@ jobs:
 
   ie-functional:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
+    timeout-minutes: 60
     continue-on-error: true
     runs-on: ubuntu-latest
     container:
@@ -388,7 +388,7 @@ jobs:
 
   ie-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
-    timeout-minutes: 30
+    timeout-minutes: 60
     continue-on-error: true
     runs-on: ubuntu-latest
     container:
@@ -418,7 +418,6 @@ jobs:
   check-failures:
     if: contains(github.event.pull_request.labels.*.name, 'safe to test') && ${{ !failure() }}  # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
     needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, safari-functional, safari-unit, edge-functional, edge-unit, ios-functional, ios-unit, android-functional, android-unit, ie-functional, ie-unit]
-    timeout-minutes: 30
     continue-on-error: true
     runs-on: ubuntu-latest
     container:

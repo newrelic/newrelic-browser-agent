@@ -1,6 +1,7 @@
 import { record } from 'rrweb'
 import { stringify } from '../../../common/util/stringify'
 import { gzip, strToU8 } from 'fflate'
+import { warn } from '../../../common/util/console'
 
 export const metrics = {
   Nodes: 0,
@@ -35,13 +36,15 @@ try {
         metrics.Bytes += bytes
         metrics.BytesPerMinute = Math.round(metrics.Bytes / performance.now() * 60000)
         metrics.NodesPerMinute = Math.round(metrics.Nodes / performance.now() * 60000)
-      } catch (err) {
+      } catch (e) {
         // something went wrong while emitting
+        warn('SR Metrics E', e)
       }
     }
   })
 } catch (err) {
   // something went wrong when starting up rrweb
+  warn('SR Metrics ERR', err)
 }
 
 //stop recording after 5 minutes

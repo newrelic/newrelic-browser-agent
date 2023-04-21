@@ -30,6 +30,12 @@ jobs:
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }} \
             --pr PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}
+      - name: purge fastly PR url
+        run: |
+          node ./tools/scripts/fastly.js \
+            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
+            --env dev \
+            --purge-path=pr/PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}/nr-loader-spa.min.js
       - name: re-publish internal loader
         run: |
           node ./tools/scripts/upload-ab-to-s3.js \
@@ -40,12 +46,16 @@ jobs:
             --sha $GITHUB_SHA \
             --workflow $GITHUB_WORKFLOW \
             --role ${{ secrets.AWS_ROLE_ARN }}
-      - name: purge fastly cache url
+      - name: purge fastly internal dev url
         run: |
           node ./tools/scripts/fastly.js \
             --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
             --env dev \
             --purge-internal
-      - name: Notify
+      - name: PR Comment
         run: |
-          curl -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/newrelic/newrelic-browser-agent/issues/${{ github.event.pull_request.number || github.event.inputs.pr_number }}/comments -d '{"body": "A new build of PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }} has been shipped to NR Internal\nDashboard - https://staging.onenr.io/0M8jq5NPOjl\nCDN Link - https://js-agent.newrelic.com/pr/PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}/nr-loader-spa.min.js"}'
+          node ./tools/scripts/comment-pr.mjs \
+            --pull-request=${{ github.event.pull_request.number }} \
+            --token=${{ secrets.GITHUB_TOKEN }} \
+            --raw-text=A new build of PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }} has been shipped to NR Internal\nDashboard - https://staging.onenr.io/0M8jq5NPOjl\nCDN Link - https://js-agent.newrelic.com/pr/PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}/nr-loader-spa.min.js \
+            --tag='<!-- browser_agent pr build report -->'

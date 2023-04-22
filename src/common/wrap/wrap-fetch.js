@@ -35,9 +35,10 @@ export function wrapFetch (sharedEE) {
     return ee
   }
 
-  if (wrapped[ee.debugId]++) // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
-  { return ee } // then we increment the count to track # of feats using this at runtime.
-  wrapped[ee.debugId] = 1
+  // Notice if our wrapping never ran yet, the falsy NaN will not early return; but if it has,
+  // then we increment the count to track # of feats using this at runtime.
+  if (wrapped[ee.debugId]++) return ee
+  wrapped[ee.debugId] = 1 // otherwise, first feature to wrap fetch
 
   bodyMethods.forEach(method => {
     wrapPromiseMethod(Req[proto], method, bodyPrefix)

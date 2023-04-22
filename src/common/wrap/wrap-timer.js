@@ -29,9 +29,11 @@ const TIMER_FNS = [SET_TIMEOUT, 'setImmediate', SET_INTERVAL, CLEAR_TIMEOUT, 'cl
 //eslint-disable-next-line
 export function wrapTimer(sharedEE) {
   const ee = scopedEE(sharedEE)
-  if (wrapped[ee.debugId]++) // Notice if our wrapping never ran yet, the falsey NaN will not early return; but if it has,
-  { return ee } // then we increment the count to track # of feats using this at runtime.
-  wrapped[ee.debugId] = 1
+
+  // Notice if our wrapping never ran yet, the falsy NaN will not early return; but if it has,
+  // then we increment the count to track # of feats using this at runtime.
+  if (wrapped[ee.debugId]++) return ee
+  wrapped[ee.debugId] = 1 // otherwise, first feature to wrap timer
 
   var wrapFn = wfn(ee)
 

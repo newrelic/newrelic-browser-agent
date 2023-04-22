@@ -6,11 +6,16 @@ import { TestHandleConnector } from './test-handle-connector.mjs'
  * a test handle connector.
  */
 export default class TestingServerWorker {
-  async before (capabilities, context, browser) {
-    const commandServerPort = capabilities['jil:testServerCommandPort']
+  #commandServerPort
 
-    browser.addCommand('getTestHandle', async function () {
-      const testHandle = new TestHandleConnector(commandServerPort)
+  beforeSession (_, capabilities) {
+    this.#commandServerPort = capabilities['jil:testServerCommandPort']
+    delete capabilities['jil:testServerCommandPort']
+  }
+
+  async before (capabilities, specs, browser) {
+    browser.addCommand('getTestHandle', async () => {
+      const testHandle = new TestHandleConnector(this.#commandServerPort)
       await testHandle.ready()
       return testHandle
     })

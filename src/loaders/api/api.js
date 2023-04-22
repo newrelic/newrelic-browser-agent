@@ -34,7 +34,7 @@ export function setTopLevelCallers () {
         returnVals.push(val.api[fnName](...args))
       }
     })
-    return returnVals.length > 1 ? returnsVals : returnVals[0]
+    return returnVals.length > 1 ? returnVals : returnVals[0]
   }
 }
 
@@ -83,7 +83,7 @@ export function setAPI (agentIdentifier, forceDrain) {
     } else {
       setInfo(agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } })
     }
-    return apiCall(prefix, apiName, true, !!addToBrowserStorage || value === null && 'session')(key, value)
+    return apiCall(prefix, apiName, true, !!addToBrowserStorage || (value === null && 'session'))(key, value)
   }
   apiInterface.setCustomAttribute = function (name, value, persistAttribute = false) {
     if (typeof name !== 'string') {

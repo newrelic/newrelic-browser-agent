@@ -31,7 +31,7 @@ describe('newrelic api', () => {
       testHandle.expectRum(),
       browser.url(url)
     ])
-    const result = await browser.execute(() => {
+    const result = await browser.execute(function () {
       return typeof window.newrelic.addToTrace === 'function'
     })
 
@@ -87,7 +87,7 @@ describe('newrelic api', () => {
       expect(time).toBeGreaterThan(0)
     })
 
-    it('customTransactionName 2 arg', async () => {
+    it('customTransactionName 2 arg unload', async () => {
       const url = await testHandle.assetURL('api2.html', {
         loader: 'spa',
         init
@@ -98,6 +98,7 @@ describe('newrelic api', () => {
       })
 
       await browser.url(url)
+      await browser.waitForFeature('loaded')
       const metricsPromise = testHandle.expectCustomMetrics()
       await browser.url(unloadUrl)
       const { request: { body, query } } = await metricsPromise

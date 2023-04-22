@@ -24,9 +24,10 @@ const wrapped = {}
 export function wrapPromise (sharedEE) {
   const promiseEE = scopedEE(sharedEE)
 
-  if (wrapped[promiseEE.debugId])
-  { return promiseEE }
-  wrapped[promiseEE.debugId] = true
+  // Notice if our wrapping never ran yet, the falsy NaN will not early return; but if it has,
+  // then we increment the count to track # of feats using this at runtime.
+  if (wrapped[promiseEE.debugId]) return promiseEE
+  wrapped[promiseEE.debugId] = true // otherwise, first feature to wrap promise
 
   var getContext = getOrSetContext
   var promiseWrapper = wrapFn(promiseEE)
@@ -69,9 +70,9 @@ export function wrapPromise (sharedEE) {
       const prevStaticFn = prevPromiseObj[method]
       WrappedPromise[method] = function (subPromises) { // use our own wrapped version of "Promise.all" and ".race" static fns
         let finalized = false
-        subPromises?.forEach(sub => {
-          // eslint-disable-next-line
-          this.resolve(sub).then(setNrId(method === 'all'), setNrId(false));
+
+        Array.from(subPromises || []).forEach(sub => {
+          this.resolve(sub).then(setNrId(method === 'all'), setNrId(false))
         })
 
         const origFnCallWithThis = prevStaticFn.apply(this, arguments)

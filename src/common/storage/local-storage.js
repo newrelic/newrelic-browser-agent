@@ -8,6 +8,7 @@ export class LocalStorage {
       return ''
     }
   }
+
   set (key, value) {
     try {
       if (value === undefined || value === null) return this.remove(key)
@@ -16,6 +17,7 @@ export class LocalStorage {
       return
     }
   }
+
   remove (key) {
     try {
       localStorage.removeItem(key)

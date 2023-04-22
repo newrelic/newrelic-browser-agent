@@ -175,8 +175,7 @@ function getBrowsers (sauceBrowsers) {
           }
         })
       }
-      if (metadata.browserName.toLowerCase() === 'safari')
-      { metadata.acceptInsecureCerts = false }
+      if (metadata.browserName.toLowerCase() === 'safari') { metadata.acceptInsecureCerts = false }
       browsers[browser].push(metadata)
     })
   })
@@ -213,8 +212,7 @@ function platformSelector (desiredBrowser, minVersion = 0, maxVersion = 9999) {
         break
       // 'safari' will only ever be on MacOS
       case 'safari':
-        if (sauceBrowser.short_version == 12 && sauceBrowser.os == 'Mac 10.13')
-        { return false } // this OS+safari combo has issues with functional/XHR tests
+        if (sauceBrowser.short_version == 12 && sauceBrowser.os == 'Mac 10.13') { return false } // this OS+safari combo has issues with functional/XHR tests
         break
     }
     return true

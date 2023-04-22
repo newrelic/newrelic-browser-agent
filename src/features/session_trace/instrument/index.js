@@ -78,8 +78,9 @@ export class Instrument extends InstrumentBase {
       observeResourceTimings()
     } else {
       // collect resource timings once when buffer is full
-      if (window.performance[CRT] && window.performance[ADD_EVENT_LISTENER])
-      { window.performance.addEventListener(RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, eventListenerOpts(false)) }
+      if (window.performance[CRT] && window.performance[ADD_EVENT_LISTENER]) {
+        window.performance.addEventListener(RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, eventListenerOpts(false))
+      }
     }
 
     function observeResourceTimings () {

@@ -20,8 +20,11 @@ export class SessionEntity {
     else this.storage = storageAPI
 
     // the abort controller is used to "reset" the event listeners and prevent them from duplicating when new sessions are created
-    try { this.abortController = new AbortController() } // this try-catch can be removed when IE11 is completely unsupported & gone
-    catch (e) {}
+    try {
+      this.abortController = new AbortController()
+    } catch (e) {
+      // this try-catch can be removed when IE11 is completely unsupported & gone
+    }
 
     this.agentIdentifier = agentIdentifier
     this.ee = ee.get(agentIdentifier)

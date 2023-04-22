@@ -24,9 +24,11 @@ const domInsertMethods = ['appendChild', 'insertBefore', 'replaceChild']
 export function wrapJsonP (sharedEE) {
   const ee = scopedEE(sharedEE)
 
-  if (!isBrowserScope || wrapped[ee.debugId]) // JSONP deals with DOM tags so browser window env is req'd
-  { return ee }
-  wrapped[ee.debugId] = true
+  // Notice if our wrapping never ran yet, the falsy NaN will not early return; but if it has,
+  // then we increment the count to track # of feats using this at runtime.  JSONP deals with DOM
+  // tags so browser window env is required.
+  if (!isBrowserScope || wrapped[ee.debugId]) return ee
+  wrapped[ee.debugId] = true // otherwise, first feature to wrap JSONP
 
   var wrapFn = wfn(ee)
 

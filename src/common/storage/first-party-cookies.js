@@ -2,6 +2,7 @@ export class FirstPartyCookies {
   constructor (domain) {
     this.domain = domain
   }
+
   get (name) {
     try {
       var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
@@ -10,6 +11,7 @@ export class FirstPartyCookies {
       return ''
     }
   }
+
   set (key, value) {
     try {
       const cookie = `${key}=${value}; Domain=${domain}; Path=/`
@@ -18,6 +20,7 @@ export class FirstPartyCookies {
       return
     }
   }
+
   remove (key) {
     try {
       return document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; Domain=${domain}; Path=/`

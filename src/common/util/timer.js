@@ -13,8 +13,7 @@ export class Timer {
     // used by pause/resume
     this.remainingMs = undefined
 
-    try { this.abortController = opts.abortController || new AbortController() }
-    catch (e) {}
+    try { this.abortController = opts.abortController || new AbortController() } catch (e) {}
 
     this.timer = this.create(this.onEnd, ms)
 

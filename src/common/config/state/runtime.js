@@ -4,7 +4,7 @@ import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { globalScope } from '../../util/global-scope'
 import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/env'
 
-const model = agentId => { return {
+const model = {
   buildEnv: BUILD_ENV,
   bytesSent: {},
   customTransaction: undefined,
@@ -24,7 +24,7 @@ const model = agentId => { return {
   xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
   userAgent,
   version: VERSION
-} }
+}
 
 const _cache = {}
 
@@ -36,6 +36,6 @@ export function getRuntime (id) {
 
 export function setRuntime (id, obj) {
   if (!id) throw new Error('All runtime objects require an agent identifier!')
-  _cache[id] = new Configurable(obj, model(id))
+  _cache[id] = new Configurable(obj, model)
   gosNREUMInitializedAgents(id, _cache[id], 'runtime')
 }

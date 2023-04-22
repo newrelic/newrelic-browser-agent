@@ -2,6 +2,7 @@ export class LocalMemory {
   constructor (initialState = {}) {
     this.state = initialState
   }
+
   get (key) {
     try {
       return this.state[key]
@@ -9,6 +10,7 @@ export class LocalMemory {
       return ''
     }
   }
+
   set (key, value) {
     try {
       if (value === undefined || value === null) return this.remove(key)
@@ -17,6 +19,7 @@ export class LocalMemory {
       return
     }
   }
+
   remove (key) {
     try {
       delete this.state[key]

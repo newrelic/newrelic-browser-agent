@@ -88,6 +88,7 @@
   },
   "scripts": {
     "wdio": "node tools/wdio/bin/cli.js",
+    "jil": "node tools/jil/bin/cli.js",
     "start": "npm-run-all --parallel cdn:watch test-server",
     "test": "jest",
     "test:watch": "jest --watch",

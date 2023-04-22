@@ -12,35 +12,37 @@ describe('console method observation', () => {
 
   const testConfigs = {
     // Similar to very-large (1st percentile largest per day) console.log payloads observed in supportability metrics
-    large: {
+    large: { // 19,608 nested objects, including 16,807 (7^5) leaf nodes with string values
       size: 500 * 1024 * 1024, // 500 MB; maximum string length in Chrome is 536.8 million characters
-      time_limit: 29 // ms
+      time_limit: 33 // ms
     },
     // Similar to ordinary-large (99th percentile largest per day) console.log payloads observed in supportability metrics
-    medium: {
+    medium: { // 1,555 nested objects, including 1,296 (6^4) leaf nodes with string values
       size: 2 * 1024 * 1024, // 2 MB
-      time_limit: 20 // ms
+      time_limit: 9 // ms
     },
     // A good-sized console.log payload of a length suitable for reading by a human
-    small: {
+    small: { // 40 nested objects, including 27 (3^3) leaf nodes with string values
       size: 1 * 1024, // 1 KB
-      time_limit: 4 // ms
+      time_limit: 7 // ms
     }
   }
 
   /*
     Benchmarks for longest times in 12 runs
 
-    | Browser        | Large | Medium | Small |
-    |----------------|-------|--------|-------|
-    | firefox@latest |    16 |     16 |     3 |
-    | chrome@latest  |     7 |      5 |     2 |
-    | safari@latest  |     7 |      4 |     3 |
-    | edge@latest    |     6 |      5 |     2 |
-    | ios@latest     |    12 |      7 |     2 |
-    | ie@11          |    26 |     18 |     2 |
-    |----------------|-------|--------|-------|
-    | largest + 10%  |    29 |     20 |     4 |
+    | Current Implementation                  | Baseline (Stringify)   |
+    |----------------|-------|--------|-------|-------|--------|-------|
+    | Browser        | Large | Medium | Small | Large | Medium | Small |
+    |----------------|-------|--------|-------|-------|--------|-------|
+    | firefox@latest |    11 |      3 |     2 |  1458 |      9 |     2 |
+    | chrome@latest  |    11 |      4 |     2 |  3288 |     21 |     2 |
+    | safari@latest  |    18 |      3 |     2 |  3969 |     12 |     2 |
+    | edge@latest    |    12 |      3 |     3 |  2666 |     11 |     2 |
+    | ios@latest     |    30 |      6 |     6 |  3184 |     20 |     4 |
+    | ie@11          |    24 |      8 |     1 |  2712 |     16 |     1 |
+    |----------------|-------|--------|-------|-------|--------|-------|
+    | largest + 10%  |    33 |      9 |     7 |  4366 |     24 |     5 |
 
     Time limits in testConfig are set to 10% more than the largest value for any browser, rounded up to the millisecond.
   */

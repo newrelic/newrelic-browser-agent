@@ -29,20 +29,20 @@ describe('console method observation', () => {
   }
 
   /*
-    Benchmarks for longest times in 12 runs
+    Performance benchmarks for longest millisecond times in 12 runs
 
-    | Current Implementation                  | Baseline (Stringify)   |
-    |----------------|-------|--------|-------|-------|--------|-------|
-    | Browser        | Large | Medium | Small | Large | Medium | Small |
-    |----------------|-------|--------|-------|-------|--------|-------|
-    | firefox@latest |    11 |      3 |     2 |  1458 |      9 |     2 |
-    | chrome@latest  |    11 |      4 |     2 |  3288 |     21 |     2 |
-    | safari@latest  |    18 |      3 |     2 |  3969 |     12 |     2 |
-    | edge@latest    |    12 |      3 |     3 |  2666 |     11 |     2 |
-    | ios@latest     |    30 |      6 |     6 |  3184 |     20 |     4 |
-    | ie@11          |    24 |      8 |     1 |  2712 |     16 |     1 |
-    |----------------|-------|--------|-------|-------|--------|-------|
-    | largest + 10%  |    33 |      9 |     7 |  4366 |     24 |     5 |
+    | Current Wrapped Performance             | Stringify Method       | Baseline (Not Wrapped) |
+    |----------------|-------|--------|-------|-------|--------|-------|-------|--------|-------|
+    | Browser        | Large | Medium | Small | Large | Medium | Small | Large | Medium | Small |
+    |----------------|-------|--------|-------|-------|--------|-------|-------|--------|-------|
+    | firefox@latest |    11 |      3 |     2 |  1458 |      9 |     2 |     0 |      0 |     0 |
+    | chrome@latest  |    11 |      4 |     2 |  3288 |     21 |     2 |     3 |      1 |     2 |
+    | safari@latest  |    18 |      3 |     2 |  3969 |     12 |     2 |     0 |      0 |     0 |
+    | edge@latest    |    12 |      3 |     3 |  2666 |     11 |     2 |     3 |      1 |     2 |
+    | ios@latest     |    30 |      6 |     6 |  3184 |     20 |     4 |     5 |      3 |     2 |
+    | ie@11          |    24 |      8 |     1 |  2712 |     16 |     1 |     1 |      1 |     1 |
+    |----------------|-------|--------|-------|-------|--------|-------|-------|--------|-------|
+    | largest + 10%  |    33 |      9 |     7 |  4366 |     24 |     5 |     6 |      4 |     3 |
 
     Time limits in testConfig are set to 10% more than the largest value for any browser, rounded up to the millisecond.
   */

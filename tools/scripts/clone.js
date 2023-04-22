@@ -12,7 +12,7 @@ async function run () {
   const fuzzyMajor = await Promise.all(files.map((f, i) => {
     const fileName = builtFileNames[i]
     // Assuming the filename contains a semantic version pattern, "-#.#.#.", replace the minor and patch numbers.
-    const allMinorAndPatch = fileName.replace(/(^nr-loader.*-\d+\.)(\d+)\.(\d+)(.*\.js$)/, "$1x.x$4")
+    const allMinorAndPatch = fileName.replace(/(^nr-loader.*-\d+\.)(\d+)\.(\d+)(.*\.js$)/, '$1x.x$4')
     if (allMinorAndPatch !== fileName) { // we only get a different string back if the filename has that pattern, in which case we'll create the respective "fuzzy" file
       return fs.promises.writeFile(`${buildDir}/${allMinorAndPatch}`, f)
     }
@@ -22,7 +22,7 @@ async function run () {
   const fuzzyMinor = await Promise.all(files.map((f, i) => {
     const fileName = builtFileNames[i]
     // Assuming the filename contains a semantic version pattern, "-#.#.#.", replace the patch number.
-    const allPatch = fileName.replace(/(^nr-loader.*-\d+\.\d+\.)(\d+)(.*\.js$)/, "$1x$3")
+    const allPatch = fileName.replace(/(^nr-loader.*-\d+\.\d+\.)(\d+)(.*\.js$)/, '$1x$3')
     if (allPatch !== fileName) { // we only get a different string back if the filename has that pattern, in which case we'll create the respective "fuzzy" file
       return fs.promises.writeFile(`${buildDir}/${allPatch}`, f)
     }

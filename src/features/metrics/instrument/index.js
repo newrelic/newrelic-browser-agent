@@ -4,7 +4,7 @@ import { FEATURE_NAME, SUPPORTABILITY_METRIC_CHANNEL } from '../constants'
 import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { wrapConsole } from '../../../common/wrap'
-import { stringify } from '../../../common/util/stringify'
+import { approximateSize } from '../../../common/util/approximate-size'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -22,11 +22,11 @@ export class Instrument extends InstrumentBase {
     const consoleEE = wrapConsole(this.ee)
 
     for (const method of ['Debug', 'Error', 'Info', 'Log', 'Trace', 'Warn']) {
-      consoleEE.on(`${method.toLowerCase()}-console-start`, function (args, target) {
+      consoleEE.on(`${method.toLowerCase()}-console-start`, function (args) {
         // Parsing the args individually into a new array ensures that functions and Error objects are represented with
         // useful string values. By default, functions stringify to null and Error objects stringify to empty objects.
         // Note that stack traces printed by the console.trace method are not captured.
-        let parsedArgs = []
+        const parsedArgs = []
         for (const arg of args) {
           if (typeof arg === 'function' ||
             (arg && arg.message && arg.stack) // Duck typing for Error objects
@@ -36,8 +36,8 @@ export class Instrument extends InstrumentBase {
             parsedArgs.push(arg)
           }
         }
-        const parsedArgsJSON = stringify(parsedArgs)
-        handle(SUPPORTABILITY_METRIC_CHANNEL, [`Console/${method}/Seen`, parsedArgsJSON.length], undefined, FEATURE_NAMES.metrics, consoleEE)
+        const parsedArgsSize = approximateSize(parsedArgs)
+        handle(SUPPORTABILITY_METRIC_CHANNEL, [`Console/${method}/Seen`, parsedArgsSize], undefined, FEATURE_NAMES.metrics, consoleEE)
       })
     }
   }

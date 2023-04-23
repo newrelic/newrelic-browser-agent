@@ -20,7 +20,24 @@ describe('newrelic session ID', () => {
     await testHandle.destroy()
   })
 
-  describe('persist across different navigations', () => {
+  describe('data is stored in storage API --', () => {
+    it('should store session data in local storage by default', async () => {
+      const url = await testHandle.assetURL('instrumented.html', { init })
+      await browser.url(url)
+      await waitForLoad(browser)
+      const storedData = await browser.execute(getLocalStorageData)
+
+      expect(storedData).toEqual(expect.objectContaining({
+        value: expect.any(String),
+        expiresAt: expect.any(Number),
+        inactiveAt: expect.any(Number),
+        sessionReplayActive: expect.any(Boolean),
+        sessionTraceActive: expect.any(Boolean)
+      }))
+    })
+  })
+
+  describe('persist across different navigations -- ', () => {
     it('should keep a session id across page loads', async () => {
       const url = await testHandle.assetURL('instrumented.html', { init })
 
@@ -82,45 +99,293 @@ describe('newrelic session ID', () => {
     })
   })
 
-  describe('session expirations', () => {
-    it('should set a new session after expiring in same load', async () => {
-      const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { expiresMs: 1000 } } })
+  describe('session expirations -- ', () => {
+    it('should set a new session after expiring', async () => {
+      const expiresMs = 2000
+      const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { expiresMs } } })
+      await browser.url(url)
+      await waitForLoad(browser)
+      await browser.execute(resetSession)
 
-      const [{ request: { query: { s: rumID } } }, { request: { query: { s: ajaxID1 } } }] = await Promise.all([
-        testHandle.expectRum(),
-        testHandle.expectAjaxEvents(),
-        browser.url(url)
-      ])
-      // the rum call happens before the 1000ms expire time
-      console.log('rumID', rumID)
-      expect(rumID).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
-      // ajax should forcefully "unload" when the session is reset at 1000ms
-      console.log('ajaxID1', ajaxID1)
-      expect(ajaxID1).toEqual(rumID)
-      expect(ajaxID1).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
-      // then... 1000 ms should have expired the session before the next default ajax harvest time (5000ms)
-      const { request: { query: { s: ajaxID2 } } } = await testHandle.expectAjaxEvents()
-      console.log('ajaxID2', ajaxID2)
-      expect(ajaxID2).not.toEqual(ajaxID1)
-      expect(ajaxID2).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      const lsData = await browser.execute(getLocalStorageData)
+      const cData = await browser.execute(getClassData)
+      expect(lsData).toEqual(cData)
+      expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(lsData.inactiveAt).toEqual(expect.any(Number))
+
+      // wait longer than the expiresMs
+      await wait(3000)
+
+      const lsData2 = await browser.execute(getLocalStorageData)
+      const cData2 = await browser.execute(getLocalStorageData)
+
+      expect(lsData2).toEqual(cData2)
+      expect(lsData2.value).not.toEqual(lsData.value)
+      expect(lsData2.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
     })
 
-    it('should set a new session after expiring on new page load', async () => {
-      const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { expiresMs: 1000 } } })
+    it('should set a new session after inactivity', async () => {
+      const inactiveMs = 2000
+      const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
+      await browser.url(url)
+      await waitForLoad(browser)
+      await browser.execute(resetSession)
 
-      const [{ request: { query: { s: firstSessionID } } }] = await Promise.all([
-        testHandle.expectRum(),
-        browser.url(url)
-      ])
-      expect(firstSessionID).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      const lsData = await browser.execute(getLocalStorageData)
+      const cData = await browser.execute(getClassData)
+      expect(lsData).toEqual(cData)
+      expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(lsData.inactiveAt).toEqual(expect.any(Number))
 
-      await wait(2000)
-      const [{ request: { query: { s: secondSessionID } } }] = await Promise.all([
-        testHandle.expectRum(),
-        browser.refresh()
-      ])
-      expect(secondSessionID).not.toEqual(firstSessionID)
-      expect(secondSessionID).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      // wait longer than the inactiveMs
+      await wait(3000)
+
+      const lsData2 = await browser.execute(getLocalStorageData)
+      const cData2 = await browser.execute(getLocalStorageData)
+
+      expect(lsData2).toEqual(cData2)
+      expect(lsData2.value).not.toEqual(lsData.value)
+      expect(lsData2.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+    })
+  })
+
+  describe('Interactivity behavior -- ', () => {
+    it('should update inactiveTimers if page is clicked', async () => {
+      const inactiveMs = 7500
+      const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
+      await browser.url(url)
+      await waitForLoad(browser)
+      await browser.execute(resetSession)
+
+      const lsData = await browser.execute(getLocalStorageData)
+      const cData = await browser.execute(getClassData)
+      expect(lsData).toEqual(cData)
+      expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(lsData.inactiveAt).toEqual(expect.any(Number))
+
+      const refreshedAt = await browser.execute(function () {
+        document.querySelector('body').click()
+        return Date.now()
+      })
+      await wait(1000)
+
+      const lsData2 = await browser.execute(getLocalStorageData)
+      const cData2 = await browser.execute(getLocalStorageData)
+
+      expect(lsData2).toEqual(cData2)
+      expect(lsData2.value).toEqual(lsData.value)
+      expect(lsData2.inactiveAt).not.toEqual(lsData.inactiveAt)
+      expect(lsData2.inactiveAt - refreshedAt).toBeGreaterThan(0)
+      expect(Math.abs(lsData2.inactiveAt - refreshedAt - 7500)).toBeLessThan(1000)
+    })
+
+    it('should update inactiveTimers if page is scrolled', async () => {
+      const inactiveMs = 7500
+      const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
+      await browser.url(url)
+      await waitForLoad(browser)
+      await browser.execute(resetSession)
+
+      const lsData = await browser.execute(getLocalStorageData)
+      const cData = await browser.execute(getClassData)
+      expect(lsData).toEqual(cData)
+      expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(lsData.inactiveAt).toEqual(expect.any(Number))
+
+      const refreshedAt = await browser.execute(function () {
+        document.dispatchEvent(new CustomEvent('scroll'))
+        return Date.now()
+      })
+      await wait(1000)
+
+      const lsData2 = await browser.execute(getLocalStorageData)
+      const cData2 = await browser.execute(getLocalStorageData)
+
+      expect(lsData2).toEqual(cData2)
+      expect(lsData2.value).toEqual(lsData.value)
+      expect(lsData2.inactiveAt).not.toEqual(lsData.inactiveAt)
+      expect(lsData2.inactiveAt - refreshedAt).toBeGreaterThan(0)
+      expect(Math.abs(lsData2.inactiveAt - refreshedAt - 7500)).toBeLessThan(1000)
+    })
+
+    it('should update inactiveTimers if page is keydowned', async () => {
+      const inactiveMs = 7500
+      const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
+      await browser.url(url)
+      await waitForLoad(browser)
+      await browser.execute(resetSession)
+
+      const lsData = await browser.execute(getLocalStorageData)
+      const cData = await browser.execute(getClassData)
+      expect(lsData).toEqual(cData)
+      expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(lsData.inactiveAt).toEqual(expect.any(Number))
+
+      const refreshedAt = await browser.execute(function () {
+        document.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Q', char: 'Q', shiftKey: true }))
+        return Date.now()
+      })
+      await wait(1000)
+
+      const lsData2 = await browser.execute(getLocalStorageData)
+      const cData2 = await browser.execute(getLocalStorageData)
+
+      expect(lsData2).toEqual(cData2)
+      expect(lsData2.value).toEqual(lsData.value)
+      expect(lsData2.inactiveAt).not.toEqual(lsData.inactiveAt)
+      expect(lsData2.inactiveAt - refreshedAt).toBeGreaterThan(0)
+      expect(Math.abs(lsData2.inactiveAt - refreshedAt - 7500)).toBeLessThan(1000)
+    })
+
+    it('inactiveAt is managed in local storage across loads', async () => {
+      const inactiveMs = 7500
+      const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
+      await browser.url(url)
+      await waitForLoad(browser)
+      await browser.execute(resetSession)
+
+      const lsData = await browser.execute(getLocalStorageData)
+      const cData = await browser.execute(getClassData)
+      expect(lsData).toEqual(cData)
+      expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(lsData.inactiveAt).toEqual(expect.any(Number))
+
+      const refreshedAt = await browser.execute(function () {
+        document.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Q', char: 'Q', shiftKey: true }))
+        return Date.now()
+      })
+      await wait(1000)
+      await browser.url(url)
+      await waitForLoad(browser)
+
+      const lsData2 = await browser.execute(getLocalStorageData)
+      const cData2 = await browser.execute(getLocalStorageData)
+
+      expect(lsData2).toEqual(cData2)
+      expect(lsData2.value).toEqual(lsData.value)
+      expect(lsData2.inactiveAt).not.toEqual(lsData.inactiveAt)
+      expect(lsData2.inactiveAt - refreshedAt).toBeGreaterThan(0)
+      expect(Math.abs(lsData2.inactiveAt - refreshedAt - 7500)).toBeLessThan(1000)
+    })
+  })
+
+  describe('Custom attributes', () => {
+    it('should be able to set custom attributes', async () => {
+      const url = await testHandle.assetURL('instrumented.html', { init })
+      await browser.url(url)
+      await waitForLoad(browser)
+      await browser.execute(resetSession)
+
+      let data = await browser.execute(getAllClassData)
+      let lsData = await browser.execute(getLocalStorageData)
+      expect(data.custom).toBeFalsy()
+      expect(data.custom).toEqual(lsData.custom)
+
+      await browser.execute(function () {
+        newrelic.setCustomAttribute('test', 1, true)
+      })
+
+      data = await browser.execute(getAllClassData)
+      expect(data.custom).toEqual({ test: 1 })
+
+      lsData = await browser.execute(getLocalStorageData)
+      expect(lsData.custom).toEqual(data.custom)
+    })
+  })
+
+  describe('Misc class attributes -- ', () => {
+    it('class should attribute for new sessions', async () => {
+      const url = await testHandle.assetURL('instrumented.html', { init })
+      await browser.url(url)
+      await waitForLoad(browser)
+      await browser.execute(resetSession)
+      let data = await browser.execute(getAllClassData)
+      expect(data.isNew).toEqual(true)
+
+      await wait(1000)
+      await browser.url(url)
+
+      data = await browser.execute(getAllClassData)
+      expect(data.isNew).toEqual(false)
+    })
+
+    it('class should flag as initialized', async () => {
+      const url = await testHandle.assetURL('instrumented.html', { init })
+      await browser.url(url)
+      await waitForLoad(browser)
+      await browser.execute(resetSession)
+
+      let data = await browser.execute(getAllClassData)
+      expect(data.initialized).toEqual(true)
+    })
+  })
+
+  describe('Reset --', () => {
+    it('should notify when resetting', async () => {
+      const url = await testHandle.assetURL('instrumented.html', { init })
+      await browser.url(url)
+      await waitForLoad(browser)
+      await browser.execute(function () {
+        window.wasReset = false
+        newrelic.ee.on('session-reset', function () {
+          window.wasReset = true
+        })
+      })
+      await browser.execute(resetSession)
+      const wasReset = await browser.execute(function () {
+        return window.wasReset
+      })
+      expect(wasReset).toEqual(true)
     })
   })
 })
+
+function getLocalStorageData () {
+  return JSON.parse(localStorage.getItem('NRBA_SESSION') || '')
+}
+
+function getClassData () {
+  var output = {}
+  try {
+    for (key in newrelic.initializedAgents) {
+      output = newrelic.initializedAgents[key].runtime.session
+    }
+  } catch (err) {}
+  return {
+    value: output.value,
+    inactiveAt: output.inactiveAt,
+    expiresAt: output.expiresAt,
+    sessionReplayActive: output.sessionReplayActive,
+    sessionTraceActive: output.sessionTraceActive
+  }
+}
+
+function getAllClassData () {
+  var output = {}
+  try {
+    for (key in newrelic.initializedAgents) {
+      output = newrelic.initializedAgents[key].runtime.session
+    }
+  } catch (err) {}
+  return output
+}
+
+function resetSession () {
+  try {
+    for (key in newrelic.initializedAgents) {
+      newrelic.initializedAgents[key].runtime.session.reset()
+    }
+  } catch (err) {
+  // do nothing
+  }
+}
+
+function waitForLoad (browser) {
+  return browser.waitUntil(
+    () => browser.execute(() => document.readyState === 'complete'),
+    {
+      timeout: 10000, // 10 seconds
+      timeoutMsg: 'Window didnt load in time'
+    }
+  )
+}

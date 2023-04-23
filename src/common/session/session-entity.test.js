@@ -37,13 +37,21 @@ describe('constructor', () => {
 
   test('top-level properties are set and exposed', () => {
     const session = new SessionEntity({ agentIdentifier, key })
-    const expectedKeys = [
-      'agentIdentifier', 'ee', 'key', 'value', 'expiresMs',
-      'expiresAt', 'expiresTimer', 'inactiveMs', 'inactiveAt',
-      'inactiveTimer', 'isNew', 'sessionReplayActive', 'sessionTraceActive',
-      'storage'
-    ]
-    expect(expectedKeys.every(k => Object.keys(session).includes(k))).toBeTruthy()
+    expect(session).toMatchObject({
+      agentIdentifier: expect.any(String),
+      key: expect.any(String),
+      value: expect.any(String),
+      expiresMs: expect.any(Number),
+      expiresAt: expect.any(Number),
+      expiresTimer: expect.any(Object),
+      inactiveMs: expect.any(Number),
+      inactiveAt: expect.any(Number),
+      inactiveTimer: expect.any(Object),
+      isNew: expect.any(Boolean),
+      sessionReplayActive: expect.any(Boolean),
+      sessionTraceActive: expect.any(Boolean),
+      storage: expect.any(Object)
+    })
   })
 
   test('can use sane defaults', () => {

@@ -1,5 +1,6 @@
 import { documentAddEventListener } from '../event-listener/event-listener-opts'
 import { subscribeToVisibilityChange } from '../window/page-visibility'
+import { debounce } from './debounce'
 import { isBrowserScope } from './global-scope'
 
 export class Timer {
@@ -18,9 +19,9 @@ export class Timer {
     this.timer = this.create(this.onEnd, ms)
 
     if (isBrowserScope && opts.onRefresh) {
-      documentAddEventListener('scroll', this.refresh.bind(this), false, this.abortController?.signal)
-      documentAddEventListener('keypress', this.refresh.bind(this), false, this.abortController?.signal)
-      documentAddEventListener('click', this.refresh.bind(this), false, this.abortController?.signal)
+      documentAddEventListener('scroll', debounce(this.refresh.bind(this)), false, this.abortController?.signal)
+      documentAddEventListener('keydown', debounce(this.refresh.bind(this)), false, this.abortController?.signal)
+      documentAddEventListener('click', debounce(this.refresh.bind(this)), false, this.abortController?.signal)
 
       // watch for the vis state changing.  If the page is hidden, the local inactivity timer should be paused
       // if the page is brought BACK to visibility and the timer hasnt "naturally" expired, refresh the timer...

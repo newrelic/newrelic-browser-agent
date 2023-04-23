@@ -27,7 +27,6 @@ export class SessionEntity {
     }
 
     this.agentIdentifier = agentIdentifier
-    this.ee = ee.get(agentIdentifier)
 
     // key is intended to act as the k=v pair
     this.key = key
@@ -138,9 +137,8 @@ export class SessionEntity {
     // * send off pending payloads
     // * stop recording (stn and sr)...
     // * delete the session and start over
-    console.log('RESET! -- used to be', this.value)
     try {
-      if (this.initialized) this.ee.emit('session-reset')
+      if (this.initialized) ee.get(this.agentIdentifier).emit('session-reset')
       this.storage.remove(this.lookupKey)
       this.abortController?.abort()
       this.inactiveTimer?.clear?.()

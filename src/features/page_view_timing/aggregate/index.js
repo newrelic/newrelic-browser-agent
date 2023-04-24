@@ -29,6 +29,8 @@ export class Aggregate extends AggregateBase {
     this.curSessEndRecorded = false
     this.cls = null // this should be null unless set to a numeric value by web-vitals so that we differentiate if CLS is supported
 
+    this.clsSupported = PerformanceObserver?.supportedEntryTypes?.includes('layout-shift') // used to push back 'pageHide' timing -- related to NEWRELIC-6143, TODO: remove after cls decoupling
+
     /*! This is the section that used to be in the loader portion: !*/
     /* ------------------------------------------------------------ */
     const pageStartedHidden = getRuntime(agentIdentifier).initHidden // our attempt at recapturing initial vis state since this code runs post-load time
@@ -112,7 +114,8 @@ export class Aggregate extends AggregateBase {
       on vis change or pagehide events, and we'd want ex. onLCP to record the timing (win the race) before we try to send "final harvest". */
     this.scheduler = new HarvestScheduler('events', {
       onFinished: (...args) => this.onHarvestFinished(...args),
-      getPayload: (...args) => this.prepareHarvest(...args)
+      getPayload: (...args) => this.prepareHarvest(...args),
+      skipPagehideCallback: Boolean(this.clsSupported) // we have to skip the first final harvest callback in order to get 'pageHide' timing w/ nonzero CLS for supported browsers
     }, this)
 
     registerHandler('timing', (name, value, attrs) => this.addTiming(name, value, attrs), this.featureName, this.ee) // notice CLS is added to all timings via 4th param
@@ -156,15 +159,32 @@ export class Aggregate extends AggregateBase {
    */
   recordPageUnload (timestamp) {
     this.addTiming('unload', timestamp, null)
-    // Because window's pageHide commonly fires before vis change and the final harvest occurs on the earlier of the two, we also have to add that now or it won't make it into the last payload out.
-    this.endCurrentSession(timestamp)
+    /*
+    Issue #1: Because window's pageHide commonly fires BEFORE vis change and "final" harvest would happen at the former in this case, we also have to add our vis-change event now or it may not be sent.
+    Affected: Safari < v14.1/.5 ; versions that don't support 'visiilitychange' event
+    Impact: For affected w/o this, NR 'pageHide' attribute may not be sent. For other browsers w/o this, NR 'pageHide' gets fragmented into its own harvest call on page unloading because of dual EoL logic.
+    Mitigation: NR 'unload' and 'pageHide' are both recorded when window pageHide fires, rather than only recording 'unload'.
+    Future: When EoL can become the singular subscribeToVisibilityChange, it's likely endCurrentSession isn't needed here as 'unload'-'pageHide' can be untangled.
+
+    Issue #2: Related to NEWRELIC-6143 & add ordering of event listeners, 'pageHide' cannot be recoded simultaneously here for CLS-supported browsers because the CLS would not be set yet when this fn executes.
+    Affected: Chromium browsers >= 77 ; versions that support web-vitals' onCLS
+    Impact: For affected, recording 'pageHide' at this point would cause CLS to be missing as an attribute -- this currently impact UI queries that calculate CLS on dashboard.
+    Mitigation: Let endCurrentSession run standalone for CLS-supported browsers, for which time the value would be set per event listener order.
+    Future: If/when CLS is decoupled from 'pageHide' timing, this "clsSupported" check becomes unnecessary. Also see 'skipPagehideCallback'.
+    */
+    if (!this.clsSupported) this.endCurrentSession(timestamp)
   }
 
   addTiming (name, value, attrs) {
     attrs = attrs || {}
 
     // If cls was set to another value by `onCLS`, then it's supported and is attached onto any timing but is omitted until such time.
-    // *cli Apr'23 - Convert attach-to-all -> attach-if-not-null. See NEWRELIC-6143.
+    /*
+    *cli Apr'23 - Convert attach-to-all -> attach-if-not-null. See NEWRELIC-6143.
+    Issue: Because NR 'pageHide' was only sent once with what is considered the "final" CLS value, in the case that 'pageHide' fires before 'load' happens, we incorrectly a final CLS of 0 for that page.
+    Mitigation: We've set initial CLS to null so that it's omitted from timings like 'pageHide' in that edge case. It should only be included if onCLS callback was executed at least once.
+    Future: onCLS value changes should be reported directly & CLS separated into its own timing node so it's not beholden to 'pageHide' firing. It'd also be possible to report the real final CLS.
+    */
     if (this.cls !== null) {
       attrs['cls'] = this.cls
     }

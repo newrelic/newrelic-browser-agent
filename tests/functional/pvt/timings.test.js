@@ -144,7 +144,6 @@ function runFirstInteractionTests (loader) {
 
 function runLargestContentfulPaintFromInteractionTests (loader) {
   testDriver.test(`Largest Contentful Paint from first interaction event for ${loader} agent`, supportsLCP, function (t, browser, router) {
-    t.plan(9)
     const rumPromise = router.expectRum()
     const loadPromise = browser.safeGet(router.assetURL('basic-click-tracking.html', { loader: loader })).waitForFeature('loaded')
 
@@ -174,8 +173,6 @@ function runLargestContentfulPaintFromInteractionTests (loader) {
         var tagName = timing.attributes.find(a => a.key === 'elTag')
         t.equal(tagName.value, 'BUTTON', 'element.tagName is present and correct')
         t.equal(size.type, 'doubleAttribute', 'largestContentfulPaint attribute elementTagName is stringAttribute')
-
-        t.ok(timing.attributes.length >= 7, 'largestContentfulPaint has seven (or eight for mobile) attributes')
 
         t.end()
       })
@@ -218,8 +215,6 @@ function runWindowLoadTests (loader) {
 
 function runWindowUnloadTests (loader) {
   testDriver.test(`unload timing for ${loader} agent`, function (t, browser, router) {
-    t.plan(4)
-
     let start = Date.now()
     let url = router.assetURL('instrumented.html', { loader: loader })
     let loadPromise = browser.safeGet(url).waitForFeature('loaded')
@@ -308,7 +303,8 @@ function runPvtInStnTests (loader) {
         return Promise.all([resourcesPromise, clickPromise])
       })
       .then(([{ request: resourcesResult }]) => {
-        const expectedPVTItems = ['fi', 'fid', 'lcp', 'pageHide', 'fcp', 'load', 'unload']
+        const expectedPVTItems = ['fi', 'fid', 'lcp', 'fcp', 'load', 'unload']
+        // ^ Browsers that supports CLS temporarily don't get 'pagehide' in final STN -- TODO: include it back when NEWRELIC-6143 is done & cls is decoupled from pagehide
         const stnItems = !!resourcesResult && !!resourcesResult.body ? JSON.parse(resourcesResult.body).res : []
         t.ok(stnItems.length, 'STN items were generated')
         const pvtInStn = stnItems.filter(x => !!expectedPVTItems.filter(y => y === x.n && x.o === 'document').length)
@@ -320,65 +316,6 @@ function runPvtInStnTests (loader) {
 }
 
 function runClsTests (loader) {
-  testDriver.test(`LCP for ${loader} agent collects cls attribute`, supportsCLS, function (t, browser, router) {
-    const rumPromise = router.expectRum()
-    const loadPromise = browser
-      .safeGet(router.assetURL('cls-lcp.html', { loader: loader }))
-      .waitForFeature('loaded')
-      .waitForConditionInBrowser('window.contentAdded === true')
-
-    Promise.all([rumPromise, loadPromise])
-      .then(() => {
-        // click to stop collecting LCP
-        const clickPromise = browser
-          .elementById('btn1')
-          .click()
-          .get(router.assetURL('/'))
-        const timingsPromise = router.expectTimings()
-        return Promise.all([timingsPromise, clickPromise])
-      })
-      .then(([{ request: timingsResult }]) => {
-        const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
-
-        const timing = timings.find(t => t.name === 'lcp')
-        var cls = timing.attributes.find(a => a.key === 'cls')
-        t.ok(cls.value >= 0, 'cls is a non-negative value')
-        t.equal(cls.type, 'doubleAttribute', 'largestContentfulPaint attribute cls is doubleAttribute')
-        t.end()
-      })
-      .catch(fail(t))
-  })
-
-  testDriver.test(`windowUnload for ${loader} agent collects cls attribute`, supportsCLS, function (t, browser, router) {
-    t.plan(2)
-
-    const rumPromise = router.expectRum()
-    const loadPromise = browser
-      .safeGet(router.assetURL('cls-basic.html', { loader: loader }))
-      .waitForFeature('loaded')
-      .waitForConditionInBrowser('window.contentAdded === true')
-
-    Promise.all([rumPromise, loadPromise])
-      .then(() => {
-        let timingsPromise = router.expectTimings()
-        let domPromise = browser.get(router.assetURL('/'))
-        return Promise.all([timingsPromise, domPromise])
-      })
-      .then(([{ request: timingsResult }]) => {
-        const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
-
-        const timing = timings.find(t => t.name === 'unload')
-        var cls = timing.attributes.find(a => a.key === 'cls')
-        t.ok(cls.value >= 0, 'cls is a non-negative value')
-        t.equal(cls.type, 'doubleAttribute', 'largestContentfulPaint attribute cls is doubleAttribute')
-
-        t.end()
-      })
-      .catch(fail(t))
-  })
-
   testDriver.test(`${loader} agent collects cls attribute when cls is 0`, supportsCLS, function (t, browser, router) {
     t.plan(2)
 
@@ -397,67 +334,11 @@ function runClsTests (loader) {
       .then(({ request: { body, query } }) => {
         const timings = querypack.decode(body && body.length ? body : query.e)
 
-        var unload = timings.find(t => t.name === 'unload')
-        var cls = unload.attributes.find(a => a.key === 'cls')
+        var pagehide = timings.find(t => t.name === 'pageHide')
+        var cls = pagehide.attributes.find(a => a.key === 'cls')
 
-        t.ok(unload, 'there should be an unload timing')
+        t.ok(pagehide, 'there should be a pageHide timing')
         t.equal(cls.value, 0, 'cls value should be a perfect score of 0')
-
-        t.end()
-      })
-      .catch(fail(t))
-  })
-
-  testDriver.test(`First interaction ${loader} agent collects cls attribute`, supportsCLS, function (t, browser, router) {
-    t.plan(2)
-
-    const rumPromise = router.expectRum()
-    const loadPromise = browser.safeGet(router.assetURL('cls-interaction.html', { loader: loader })).waitForFeature('loaded')
-
-    Promise.all([rumPromise, loadPromise])
-      .then(request => {
-        const domPromise = browser.elementById('btn1').click()
-          .get(router.assetURL('/'))
-        const timingsPromise = router.expectTimings()
-        return Promise.all([timingsPromise, domPromise])
-      })
-      .then(([{ request: timingsResult }]) => {
-        const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
-
-        let timing = timings.find(t => t.name === 'fi')
-        var cls = timing.attributes.find(a => a.key === 'cls')
-        t.ok(cls.value >= 0, 'cls is a non-negative value')
-        t.equal(cls.type, 'doubleAttribute', 'largestContentfulPaint attribute cls is doubleAttribute')
-
-        t.end()
-      })
-      .catch(fail(t))
-  })
-
-  testDriver.test(`window load for ${loader} agent collects cls attribute`, supportsCLS, function (t, browser, router) {
-    t.plan(2)
-
-    const rumPromise = router.expectRum()
-    const loadPromise = browser
-      .safeGet(router.assetURL('cls-load.html', { loader: loader }))
-      .waitForFeature('loaded')
-      .waitForConditionInBrowser('window.contentAdded === true')
-
-    Promise.all([rumPromise, loadPromise])
-      .then(() => {
-        let timingsPromise = router.expectTimings()
-        let domPromise = browser.get(router.assetURL('/'))
-        return Promise.all([timingsPromise, domPromise])
-      })
-      .then(([{ request: timingsResult }]) => {
-        const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
-
-        const timing = timings.find(t => t.name === 'load')
-        const cls = timing.attributes.find(a => a.key === 'cls')
-        t.ok(cls.value >= 0, 'cls is a non-negative value')
-        t.equal(cls.type, 'doubleAttribute', 'cls is doubleAttribute')
 
         t.end()
       })
@@ -604,7 +485,7 @@ function runLcpTests (loader) {
         const timings = querypack.decode(body && body.length ? body : query.e)
 
         const timing = timings.find(t => t.name === 'lcp')
-        t.notOk(timing, 'did NOT find an LCP timing')
+        t.notOk(timing, 'did NOT find a LCP timing')
 
         t.end()
       })

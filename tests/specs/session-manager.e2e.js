@@ -14,6 +14,7 @@ describe('newrelic session ID', () => {
 
   beforeEach(async () => {
     testHandle = await browser.getTestHandle()
+    // await browser.execute(function () { window.localStorage.clear() })
   })
 
   afterEach(async () => {
@@ -105,7 +106,6 @@ describe('newrelic session ID', () => {
       const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { expiresMs } } })
       await browser.url(url)
       await waitForLoad(browser)
-      await browser.execute(resetSession)
 
       const lsData = await browser.execute(getLocalStorageData)
       const cData = await browser.execute(getClassData)
@@ -129,7 +129,6 @@ describe('newrelic session ID', () => {
       const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
       await browser.url(url)
       await waitForLoad(browser)
-      await browser.execute(resetSession)
 
       const lsData = await browser.execute(getLocalStorageData)
       const cData = await browser.execute(getClassData)
@@ -155,7 +154,6 @@ describe('newrelic session ID', () => {
       const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
       await browser.url(url)
       await waitForLoad(browser)
-      await browser.execute(resetSession)
 
       const lsData = await browser.execute(getLocalStorageData)
       const cData = await browser.execute(getClassData)
@@ -184,7 +182,6 @@ describe('newrelic session ID', () => {
       const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
       await browser.url(url)
       await waitForLoad(browser)
-      await browser.execute(resetSession)
 
       const lsData = await browser.execute(getLocalStorageData)
       const cData = await browser.execute(getClassData)
@@ -213,7 +210,6 @@ describe('newrelic session ID', () => {
       const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
       await browser.url(url)
       await waitForLoad(browser)
-      await browser.execute(resetSession)
 
       const lsData = await browser.execute(getLocalStorageData)
       const cData = await browser.execute(getClassData)
@@ -242,7 +238,6 @@ describe('newrelic session ID', () => {
       const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
       await browser.url(url)
       await waitForLoad(browser)
-      await browser.execute(resetSession)
 
       const lsData = await browser.execute(getLocalStorageData)
       const cData = await browser.execute(getClassData)
@@ -274,7 +269,6 @@ describe('newrelic session ID', () => {
       const url = await testHandle.assetURL('instrumented.html', { init })
       await browser.url(url)
       await waitForLoad(browser)
-      await browser.execute(resetSession)
 
       let data = await browser.execute(getAllClassData)
       let lsData = await browser.execute(getLocalStorageData)
@@ -298,7 +292,7 @@ describe('newrelic session ID', () => {
       const url = await testHandle.assetURL('instrumented.html', { init })
       await browser.url(url)
       await waitForLoad(browser)
-      await browser.execute(resetSession)
+
       let data = await browser.execute(getAllClassData)
       expect(data.isNew).toEqual(true)
 
@@ -313,7 +307,6 @@ describe('newrelic session ID', () => {
       const url = await testHandle.assetURL('instrumented.html', { init })
       await browser.url(url)
       await waitForLoad(browser)
-      await browser.execute(resetSession)
 
       let data = await browser.execute(getAllClassData)
       expect(data.initialized).toEqual(true)
@@ -331,7 +324,7 @@ describe('newrelic session ID', () => {
           window.wasReset = true
         })
       })
-      await browser.execute(resetSession)
+
       const wasReset = await browser.execute(function () {
         return window.wasReset
       })
@@ -341,7 +334,7 @@ describe('newrelic session ID', () => {
 })
 
 function getLocalStorageData () {
-  return JSON.parse(localStorage.getItem('NRBA_SESSION') || '')
+  return JSON.parse(window.localStorage.getItem('NRBA_SESSION') || '{}')
 }
 
 function getClassData () {
@@ -364,7 +357,9 @@ function getAllClassData () {
   var output = {}
   try {
     for (key in newrelic.initializedAgents) {
-      output = newrelic.initializedAgents[key].runtime.session
+      for (k in newrelic.initializedAgents[key].runtime.session) {
+        if (typeof newrelic.initializedAgents[key].runtime.session[k] !== 'object') output[k] = newrelic.initializedAgents[key].runtime.session[k]
+      }
     }
   } catch (err) {}
   return output

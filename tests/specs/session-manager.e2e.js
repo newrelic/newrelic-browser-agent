@@ -1,5 +1,3 @@
-const wait = require('./test-utils/wait')
-
 describe('newrelic session ID', () => {
   let testHandle
   const init = {
@@ -14,10 +12,10 @@ describe('newrelic session ID', () => {
 
   beforeEach(async () => {
     testHandle = await browser.getTestHandle()
-    // await browser.execute(function () { window.localStorage.clear() })
   })
 
   afterEach(async () => {
+    await browser.execute(function () { window.localStorage.clear() })
     await testHandle.destroy()
   })
 
@@ -25,7 +23,7 @@ describe('newrelic session ID', () => {
     it('should store session data in local storage by default', async () => {
       const url = await testHandle.assetURL('instrumented.html', { init })
       await browser.url(url)
-      await waitForLoad(browser)
+      await browser.waitForFeature('loaded')
       const storedData = await browser.execute(getLocalStorageData)
 
       expect(storedData).toEqual(expect.objectContaining({
@@ -39,73 +37,100 @@ describe('newrelic session ID', () => {
   })
 
   describe('persist across different navigations -- ', () => {
-    it('should keep a session id across page loads', async () => {
-      const url = await testHandle.assetURL('instrumented.html', { init })
+    it('should keep a session id across page loads - Refresh', async () => {
+      await browser.url(await testHandle.assetURL('instrumented.html', { init }))
+      await browser.waitForFeature('loaded')
 
-      let [{ request: { query: firstQuery } }] = await Promise.all([
-        testHandle.expectRum(),
-        browser.url(url)
-      ])
-      const firstSessionId = firstQuery.s
-      expect(firstSessionId).toBeTruthy()
+      const ls1 = await browser.execute(getLocalStorageData)
+      console.log(ls1)
+      expect(ls1).toEqual(expect.objectContaining({
+        value: expect.any(String),
+        expiresAt: expect.any(Number),
+        inactiveAt: expect.any(Number),
+        sessionReplayActive: expect.any(Boolean),
+        sessionTraceActive: expect.any(Boolean)
+      }))
 
-      let [{ request: { query: secondQuery } }] = await Promise.all([
-        testHandle.expectRum(),
-        browser.refresh()
-      ])
-      const secondSessionId = secondQuery.s
-      expect(secondSessionId).toBeTruthy()
-      expect(secondSessionId).toEqual(firstSessionId)
+      await browser.refresh()
+      await browser.waitForFeature('loaded')
+
+      const ls2 = await browser.execute(getLocalStorageData)
+      expect(ls2).toEqual(expect.objectContaining({
+        value: expect.any(String),
+        expiresAt: expect.any(Number),
+        inactiveAt: expect.any(Number),
+        sessionReplayActive: expect.any(Boolean),
+        sessionTraceActive: expect.any(Boolean)
+      }))
+      expect(ls2.value).toEqual(ls1.value)
+      expect(ls2.expiresAt).toEqual(ls1.expiresAt)
     })
 
-    it('should keep a session id across same tab navigations', async () => {
-      const url = await testHandle.assetURL('instrumented.html', { init })
+    it('should keep a session id across page loads - Same tab navigation', async () => {
+      await browser.url(await testHandle.assetURL('instrumented.html', { init }))
+      await browser.waitForFeature('loaded')
 
-      let [{ request: { query: firstQuery } }] = await Promise.all([
-        testHandle.expectRum(),
-        browser.url(url)
-      ])
-      const firstSessionId = firstQuery.s
-      expect(firstSessionId).toBeTruthy()
+      const ls1 = await browser.execute(getLocalStorageData)
+      expect(ls1).toEqual(expect.objectContaining({
+        value: expect.any(String),
+        expiresAt: expect.any(Number),
+        inactiveAt: expect.any(Number),
+        sessionReplayActive: expect.any(Boolean),
+        sessionTraceActive: expect.any(Boolean)
+      }))
 
-      let [{ request: { query: secondQuery } }] = await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('fetch.html', { init }))
-      ])
-      const secondSessionId = secondQuery.s
-      expect(secondSessionId).toBeTruthy()
-      expect(secondSessionId).toEqual(firstSessionId)
+      await browser.url(await testHandle.assetURL('fetch.html', { init }))
+      await browser.waitForFeature('loaded')
+
+      const ls2 = await browser.execute(getLocalStorageData)
+      expect(ls2).toEqual(expect.objectContaining({
+        value: expect.any(String),
+        expiresAt: expect.any(Number),
+        inactiveAt: expect.any(Number),
+        sessionReplayActive: expect.any(Boolean),
+        sessionTraceActive: expect.any(Boolean)
+      }))
+      expect(ls2.value).toEqual(ls1.value)
+      expect(ls2.expiresAt).toEqual(ls1.expiresAt)
     })
 
-    it('should keep a session id across multi tab navigations', async () => {
-      const url = await testHandle.assetURL('instrumented.html', { init })
-      const secondUrl = await testHandle.assetURL('instrumented.html', { init })
+    it('should keep a session id across page loads - Multi tab navigation', async () => {
+      await browser.url(await testHandle.assetURL('instrumented.html', { init }))
+      await browser.waitForFeature('loaded')
 
-      let [{ request: { query: firstQuery } }] = await Promise.all([
-        testHandle.expectRum(),
-        browser.url(url)
-      ])
-      const firstSessionId = firstQuery.s
-      expect(firstSessionId).toBeTruthy()
+      const ls1 = await browser.execute(getLocalStorageData)
+      expect(ls1).toEqual(expect.objectContaining({
+        value: expect.any(String),
+        expiresAt: expect.any(Number),
+        inactiveAt: expect.any(Number),
+        sessionReplayActive: expect.any(Boolean),
+        sessionTraceActive: expect.any(Boolean)
+      }))
 
-      let [{ request: { query: secondQuery } }] = await Promise.all([
-        testHandle.expectRum(),
-        browser.newWindow(secondUrl)
-      ])
+      const load2 = await testHandle.assetURL('fetch.html', { init })
+      await browser.newWindow(load2)
+      await browser.switchWindow(load2)
+      await browser.waitForFeature('loaded')
 
-      browser.switchWindow(secondUrl)
-      const secondSessionId = secondQuery.s
-      expect(secondSessionId).toBeTruthy()
-      expect(secondSessionId).toEqual(firstSessionId)
+      const ls2 = await browser.execute(getLocalStorageData)
+      expect(ls2).toEqual(expect.objectContaining({
+        value: expect.any(String),
+        expiresAt: expect.any(Number),
+        inactiveAt: expect.any(Number),
+        sessionReplayActive: expect.any(Boolean),
+        sessionTraceActive: expect.any(Boolean)
+      }))
+      expect(ls2.value).toEqual(ls1.value)
+      expect(ls2.expiresAt).toEqual(ls1.expiresAt)
     })
   })
 
   describe('session expirations -- ', () => {
     it('should set a new session after expiring', async () => {
-      const expiresMs = 2000
+      const expiresMs = 5000
       const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { expiresMs } } })
       await browser.url(url)
-      await waitForLoad(browser)
+      await browser.waitForFeature('loaded')
 
       const lsData = await browser.execute(getLocalStorageData)
       const cData = await browser.execute(getClassData)
@@ -114,10 +139,10 @@ describe('newrelic session ID', () => {
       expect(lsData.inactiveAt).toEqual(expect.any(Number))
 
       // wait longer than the expiresMs
-      await wait(3000)
+      await browser.pause(expiresMs)
 
       const lsData2 = await browser.execute(getLocalStorageData)
-      const cData2 = await browser.execute(getLocalStorageData)
+      const cData2 = await browser.execute(getClassData)
 
       expect(lsData2).toEqual(cData2)
       expect(lsData2.value).not.toEqual(lsData.value)
@@ -125,10 +150,10 @@ describe('newrelic session ID', () => {
     })
 
     it('should set a new session after inactivity', async () => {
-      const inactiveMs = 2000
+      const inactiveMs = 5000
       const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
       await browser.url(url)
-      await waitForLoad(browser)
+      await browser.waitForFeature('loaded')
 
       const lsData = await browser.execute(getLocalStorageData)
       const cData = await browser.execute(getClassData)
@@ -137,23 +162,23 @@ describe('newrelic session ID', () => {
       expect(lsData.inactiveAt).toEqual(expect.any(Number))
 
       // wait longer than the inactiveMs
-      await wait(3000)
+      await browser.pause(inactiveMs)
 
       const lsData2 = await browser.execute(getLocalStorageData)
-      const cData2 = await browser.execute(getLocalStorageData)
+      const cData2 = await browser.execute(getClassData)
 
       expect(lsData2).toEqual(cData2)
       expect(lsData2.value).not.toEqual(lsData.value)
       expect(lsData2.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
     })
   })
-
+  ////////////
   describe('Interactivity behavior -- ', () => {
     it('should update inactiveTimers if page is clicked', async () => {
       const inactiveMs = 7500
       const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
       await browser.url(url)
-      await waitForLoad(browser)
+      await browser.waitForFeature('loaded')
 
       const lsData = await browser.execute(getLocalStorageData)
       const cData = await browser.execute(getClassData)
@@ -165,10 +190,9 @@ describe('newrelic session ID', () => {
         document.querySelector('body').click()
         return Date.now()
       })
-      await wait(1000)
-
+      await browser.pause(500)
       const lsData2 = await browser.execute(getLocalStorageData)
-      const cData2 = await browser.execute(getLocalStorageData)
+      const cData2 = await browser.execute(getClassData)
 
       expect(lsData2).toEqual(cData2)
       expect(lsData2.value).toEqual(lsData.value)
@@ -181,7 +205,7 @@ describe('newrelic session ID', () => {
       const inactiveMs = 7500
       const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
       await browser.url(url)
-      await waitForLoad(browser)
+      await browser.waitForFeature('loaded')
 
       const lsData = await browser.execute(getLocalStorageData)
       const cData = await browser.execute(getClassData)
@@ -193,10 +217,10 @@ describe('newrelic session ID', () => {
         document.dispatchEvent(new CustomEvent('scroll'))
         return Date.now()
       })
-      await wait(1000)
 
+      await browser.pause(500)
       const lsData2 = await browser.execute(getLocalStorageData)
-      const cData2 = await browser.execute(getLocalStorageData)
+      const cData2 = await browser.execute(getClassData)
 
       expect(lsData2).toEqual(cData2)
       expect(lsData2.value).toEqual(lsData.value)
@@ -209,7 +233,7 @@ describe('newrelic session ID', () => {
       const inactiveMs = 7500
       const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
       await browser.url(url)
-      await waitForLoad(browser)
+      await browser.waitForFeature('loaded')
 
       const lsData = await browser.execute(getLocalStorageData)
       const cData = await browser.execute(getClassData)
@@ -221,10 +245,10 @@ describe('newrelic session ID', () => {
         document.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Q', char: 'Q', shiftKey: true }))
         return Date.now()
       })
-      await wait(1000)
 
+      await browser.pause(500)
       const lsData2 = await browser.execute(getLocalStorageData)
-      const cData2 = await browser.execute(getLocalStorageData)
+      const cData2 = await browser.execute(getClassData)
 
       expect(lsData2).toEqual(cData2)
       expect(lsData2.value).toEqual(lsData.value)
@@ -237,7 +261,7 @@ describe('newrelic session ID', () => {
       const inactiveMs = 7500
       const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
       await browser.url(url)
-      await waitForLoad(browser)
+      await browser.waitForFeature('loaded')
 
       const lsData = await browser.execute(getLocalStorageData)
       const cData = await browser.execute(getClassData)
@@ -249,12 +273,11 @@ describe('newrelic session ID', () => {
         document.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Q', char: 'Q', shiftKey: true }))
         return Date.now()
       })
-      await wait(1000)
-      await browser.url(url)
-      await waitForLoad(browser)
+      await browser.url(await testHandle.assetURL('fetch.html', { init: { ...init, session: { inactiveMs } } }))
+      await browser.waitForFeature('loaded')
 
       const lsData2 = await browser.execute(getLocalStorageData)
-      const cData2 = await browser.execute(getLocalStorageData)
+      const cData2 = await browser.execute(getClassData)
 
       expect(lsData2).toEqual(cData2)
       expect(lsData2.value).toEqual(lsData.value)
@@ -263,15 +286,16 @@ describe('newrelic session ID', () => {
       expect(Math.abs(lsData2.inactiveAt - refreshedAt - 7500)).toBeLessThan(1000)
     })
   })
-
+  ////////////
   describe('Custom attributes', () => {
     it('should be able to set custom attributes', async () => {
       const url = await testHandle.assetURL('instrumented.html', { init })
       await browser.url(url)
-      await waitForLoad(browser)
+      await browser.waitForFeature('loaded')
 
-      let data = await browser.execute(getAllClassData)
       let lsData = await browser.execute(getLocalStorageData)
+      let data = await browser.execute(getAllClassData)
+      expect(lsData.custom).toBeFalsy()
       expect(data.custom).toBeFalsy()
       expect(data.custom).toEqual(lsData.custom)
 
@@ -279,11 +303,11 @@ describe('newrelic session ID', () => {
         newrelic.setCustomAttribute('test', 1, true)
       })
 
+      lsData = await browser.execute(getLocalStorageData)
+      expect(lsData.custom).toEqual({ test: 1 })
+
       data = await browser.execute(getAllClassData)
       expect(data.custom).toEqual({ test: 1 })
-
-      lsData = await browser.execute(getLocalStorageData)
-      expect(lsData.custom).toEqual(data.custom)
     })
   })
 
@@ -291,13 +315,13 @@ describe('newrelic session ID', () => {
     it('class should attribute for new sessions', async () => {
       const url = await testHandle.assetURL('instrumented.html', { init })
       await browser.url(url)
-      await waitForLoad(browser)
+      await browser.waitForFeature('loaded')
 
       let data = await browser.execute(getAllClassData)
       expect(data.isNew).toEqual(true)
 
-      await wait(1000)
-      await browser.url(url)
+      await browser.pause(1000)
+      await browser.url(await testHandle.assetURL('fetch.html', { init }))
 
       data = await browser.execute(getAllClassData)
       expect(data.isNew).toEqual(false)
@@ -306,7 +330,7 @@ describe('newrelic session ID', () => {
     it('class should flag as initialized', async () => {
       const url = await testHandle.assetURL('instrumented.html', { init })
       await browser.url(url)
-      await waitForLoad(browser)
+      await browser.waitForFeature('loaded')
 
       let data = await browser.execute(getAllClassData)
       expect(data.initialized).toEqual(true)
@@ -317,13 +341,15 @@ describe('newrelic session ID', () => {
     it('should notify when resetting', async () => {
       const url = await testHandle.assetURL('instrumented.html', { init })
       await browser.url(url)
-      await waitForLoad(browser)
+      await browser.waitForFeature('loaded')
       await browser.execute(function () {
         window.wasReset = false
         newrelic.ee.on('session-reset', function () {
           window.wasReset = true
         })
       })
+
+      await browser.execute(resetSession)
 
       const wasReset = await browser.execute(function () {
         return window.wasReset
@@ -349,7 +375,8 @@ function getClassData () {
     inactiveAt: output.inactiveAt,
     expiresAt: output.expiresAt,
     sessionReplayActive: output.sessionReplayActive,
-    sessionTraceActive: output.sessionTraceActive
+    sessionTraceActive: output.sessionTraceActive,
+    ...(output.custom || {})
   }
 }
 
@@ -358,7 +385,7 @@ function getAllClassData () {
   try {
     for (key in newrelic.initializedAgents) {
       for (k in newrelic.initializedAgents[key].runtime.session) {
-        if (typeof newrelic.initializedAgents[key].runtime.session[k] !== 'object') output[k] = newrelic.initializedAgents[key].runtime.session[k]
+        if (typeof newrelic.initializedAgents[key].runtime.session[k] !== 'object' || k === 'custom') output[k] = newrelic.initializedAgents[key].runtime.session[k]
       }
     }
   } catch (err) {}

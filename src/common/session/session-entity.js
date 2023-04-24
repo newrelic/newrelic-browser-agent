@@ -215,7 +215,8 @@ export class SessionEntity {
       }
     } else {
       const curr = this.read()
-      this.write({ ...curr, custom: { ...curr?.custom || {}, [key]: value } })
+      this.custom = { ...(curr?.custom || {}), [key]: value }
+      this.write({ ...curr, custom: this.custom })
     }
   }
 }

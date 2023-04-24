@@ -19,9 +19,9 @@ export class Timer {
     this.timer = this.create(this.onEnd, ms)
 
     if (isBrowserScope && opts.onRefresh) {
-      documentAddEventListener('scroll', debounce(this.refresh.bind(this)), false, this.abortController?.signal)
-      documentAddEventListener('keydown', debounce(this.refresh.bind(this)), false, this.abortController?.signal)
-      documentAddEventListener('click', debounce(this.refresh.bind(this)), false, this.abortController?.signal)
+      documentAddEventListener('scroll', debounce(this.refresh.bind(this), 500, { leading: true }), false, this.abortController?.signal)
+      documentAddEventListener('keydown', debounce(this.refresh.bind(this), 500, { leading: true }), false, this.abortController?.signal)
+      documentAddEventListener('click', debounce(this.refresh.bind(this), 500, { leading: true }), false, this.abortController?.signal)
 
       // watch for the vis state changing.  If the page is hidden, the local inactivity timer should be paused
       // if the page is brought BACK to visibility and the timer hasnt "naturally" expired, refresh the timer...
@@ -41,6 +41,7 @@ export class Timer {
   }
 
   refresh (cb, ms) {
+    console.log('refresh!')
     this.clear()
     this.timer = this.create(cb, ms)
     this.startTimestamp = Date.now()

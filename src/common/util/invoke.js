@@ -1,5 +1,5 @@
 /**
- * Reduce the execution of the supplied function so that it is only invoked
+ * Reduce the invocation of the supplied function so that it is only invoked
  * once within a given timeout.
  *
  * If `wait` is `0`, the function will be invoked during the next tick.
@@ -32,6 +32,24 @@ export function debounce (func, timeout = 500, options = {}) {
     if (!leading) {
       clearTimeout(timer)
       timer = setTimeout(() => { func.apply(this, args) }, timeout)
+    }
+  }
+}
+
+/**
+ * Reduce the invocation of the supplied function so that it is only invoked
+ * once.
+ * @param {function} func Function whose invocation should be limited so it is only invoked
+ * once.
+ * @returns {function} A wrapping function that will ensure the provided function
+ * is invoked only once.
+ */
+export function single (func) {
+  let called = false
+  return (...args) => {
+    if (!called) {
+      called = true
+      func.apply(this, args)
     }
   }
 }

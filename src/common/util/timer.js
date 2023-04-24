@@ -1,6 +1,6 @@
 import { documentAddEventListener } from '../event-listener/event-listener-opts'
 import { subscribeToVisibilityChange } from '../window/page-visibility'
-import { debounce } from './debounce'
+import { debounce } from './invoke'
 import { isBrowserScope } from './global-scope'
 
 export class Timer {

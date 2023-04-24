@@ -80,4 +80,29 @@ describe('approximateSize', () => {
     const thisSize = approximateSize(data)
     expect(thisSize).toBe(stringifySize)
   })
+  it('should support esoteric data types', () => {
+    const dataTypes = [
+      0,
+      // eslint-disable-next-line no-new-wrappers
+      new Number(0),
+      Infinity,
+      NaN,
+      'asdf"\b\t\n\f\r\\',
+      new Date(),
+      {},
+      new Error(),
+      /./,
+      false,
+      // eslint-disable-next-line no-new-wrappers
+      new Boolean(false),
+      class FooBar {},
+      class {},
+      function () {},
+      () => {},
+      Symbol.for('test'),
+      JSON.stringify({ foo: 'bar' })
+    ]
+    const thisSize = approximateSize(dataTypes)
+    expect(thisSize).toBeGreaterThan(0)
+  })
 })

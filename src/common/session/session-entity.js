@@ -2,10 +2,11 @@ import { generateRandomHexString } from '../ids/unique-id'
 import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
 import { ee } from '../event-emitter/contextual-ee'
-import { Timer } from '../util/timer'
+import { Timer } from '../timer/timer'
 import { isBrowserScope } from '../util/global-scope'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, PREFIX } from './constants'
 import { LocalMemory } from '../storage/local-memory'
+import { InteractionTimer } from '../timer/interaction-timer'
 
 export class SessionEntity {
   /**
@@ -60,7 +61,7 @@ export class SessionEntity {
     this.inactiveMs = inactiveMs
     if (inactiveMs) {
       this.inactiveAt = initialRead?.inactiveAt || this.getFutureTimestamp(inactiveMs)
-      this.inactiveTimer = new Timer({
+      this.inactiveTimer = new InteractionTimer({
         onEnd: () => this.reset(),
         onRefresh: () => this.refresh(),
         abortController: this.abortController

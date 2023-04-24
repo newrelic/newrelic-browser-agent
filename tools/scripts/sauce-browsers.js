@@ -14,10 +14,16 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
   console.log('Browser Types Found:', json.reduce((prev, next) => prev.add(next.api_name), new Set()))
   console.log(`fetched ${json.length} browsers from saucelabs`)
 
+  const sprtd = getBrowsers(json, 4)
   // Filter list down to a sample of supported browsers and write metadata to a file for testing.
-  fs.writeFileSync('./tools/jil/util/browsers-supported.json', JSON.stringify(getBrowsers(json), null, 2))
-  fs.writeFileSync('./tools/jil/util/browsers-all.json', JSON.stringify(getBrowsers(json, Infinity), null, 2))
-  console.log('saved saucelabs browsers to browsers-supported.json')
+  fs.writeFileSync('./tools/jil/util/browsers-supported.json', JSON.stringify(sprtd, null, 2))
+  fs.writeFileSync('./tools/wdio/util/browsers-supported.json', JSON.stringify(sprtd, null, 2))
+  console.log('saved all browsers to wdio + JIL browsers-supported.json')
+
+  const all = getBrowsers(json, Infinity)
+  fs.writeFileSync('./tools/jil/util/browsers-all.json', JSON.stringify(all, null, 2))
+  fs.writeFileSync('./tools/wdio/util/browsers-all.json', JSON.stringify(all, null, 2))
+  console.log('saved all browsers to wdio + JIL browsers-supported.json')
 })()
 
 /**
@@ -112,15 +118,14 @@ const maxSupportedVersion = apiName => {
 function getBrowsers (sauceBrowsers, sample = 4) {
   Object.keys(browsers).forEach(browser => {
     const name = browserName(browser)
-    const versListForBrowser = sauceBrowsers.filter(platformSelector(name, sample === Infinity && 1 || minSupportedVersion(name), sample === Infinity && sample || maxSupportedVersion(name), { mobile: sample === Infinity }))
+    const versListForBrowser = sauceBrowsers.filter(platformSelector(name, sample === Infinity ? 1 : minSupportedVersion(name), sample === Infinity ? sample : maxSupportedVersion(name), { mobile: sample === Infinity }))
     versListForBrowser.sort((a, b) => Number(a.short_version) - Number(b.short_version)) // in ascending version order
 
     // Remove duplicate version numbers.
     let uniques = []; let versionsSeen = new Set()
     while (versListForBrowser.length) {
       let nextLatest = versListForBrowser.pop()
-      if (versionsSeen.has(nextLatest.short_version))
-      { continue }
+      if (versionsSeen.has(nextLatest.short_version)) { continue }
       uniques.push(nextLatest)
       versionsSeen.add(nextLatest.short_version)
     }

@@ -1,4 +1,4 @@
-import { Timer } from './timer'
+import { InteractionTimer } from './interaction-timer'
 
 jest.useFakeTimers()
 
@@ -15,26 +15,26 @@ afterEach(() => {
 
 describe('constructor', () => {
   test('appropriate properties are set with valid values -- no refresh', () => {
-    const timer = new Timer({ onEnd: jest.fn() }, 100)
+    const timer = new InteractionTimer({ onEnd: jest.fn() }, 100)
     const requiredKeys = ['onEnd', 'initialMs', 'startTimestamp', 'timer']
     expect(requiredKeys.every(rk => !!timer[rk])).toBeTruthy()
   })
 
   test('appropriate properties are set with valid values -- with refresh', () => {
-    const timer = new Timer({ onEnd: jest.fn() }, 100)
+    const timer = new InteractionTimer({ onEnd: jest.fn() }, 100)
     const requiredKeys = ['onEnd', 'refresh', 'initialMs', 'startTimestamp', 'timer']
     expect(requiredKeys.every(rk => !!timer[rk])).toBeTruthy()
   })
 
   test('required keys are enforced', () => {
     try {
-      new Timer({}, 100)
+      new InteractionTimer({}, 100)
     } catch (e) {
       expect(e).toEqual(new Error('onEnd handler is required'))
     }
 
     try {
-      new Timer({ onEnd: jest.fn() })
+      new InteractionTimer({ onEnd: jest.fn() })
     } catch (e) {
       expect(e).toEqual(new Error('ms duration is required'))
     }
@@ -42,7 +42,7 @@ describe('constructor', () => {
 
   test('refresh type timers set event listeners', () => {
     const aelSpy = jest.spyOn(document, 'addEventListener')
-    new Timer({ onEnd: jest.fn(), onRefresh: jest.fn() }, 100)
+    new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn() }, 100)
     // scroll, keypress, click, visibilityChange
     expect(aelSpy).toHaveBeenCalledTimes(4)
   })
@@ -50,7 +50,7 @@ describe('constructor', () => {
 
 describe('create()', () => {
   test('Create sets a timeout that can execute a cb', () => {
-    const timer = new Timer({ onEnd: jest.fn() }, 100)
+    const timer = new InteractionTimer({ onEnd: jest.fn() }, 100)
     expect(timer.timer).toBeTruthy()
     expect(timer.onEnd).toHaveBeenCalledTimes(0)
     jest.runOnlyPendingTimers()
@@ -59,13 +59,13 @@ describe('create()', () => {
 
   test('Create can fallback to use defaults', () => {
     let called = 0
-    const timer1 = new Timer({ onEnd: jest.fn() }, 100)
+    const timer1 = new InteractionTimer({ onEnd: jest.fn() }, 100)
     timer1.create()
 
-    const timer2 = new Timer({ onEnd: jest.fn() }, 100)
+    const timer2 = new InteractionTimer({ onEnd: jest.fn() }, 100)
     timer2.create(timer2.onEnd)
 
-    const timer3 = new Timer({ onEnd: jest.fn() }, 100)
+    const timer3 = new InteractionTimer({ onEnd: jest.fn() }, 100)
     timer3.create(undefined, 100)
 
     jest.runAllTimers(200)
@@ -78,7 +78,7 @@ describe('create()', () => {
 
 describe('refresh()', () => {
   test('refresh prevents the callback from firing', () => {
-    const timer = new Timer({ onEnd: jest.fn(), onRefresh: jest.fn() }, 100)
+    const timer = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn() }, 100)
     expect(timer.onEnd).toHaveBeenCalledTimes(0)
     jest.advanceTimersByTime(75)
     expect(timer.onEnd).toHaveBeenCalledTimes(0)
@@ -90,7 +90,7 @@ describe('refresh()', () => {
   })
 
   test('refresh executes a callback for consumers', () => {
-    const timer = new Timer({ onEnd: jest.fn(), onRefresh: jest.fn() }, 100)
+    const timer = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn() }, 100)
     timer.refresh()
     expect(timer.onRefresh).toHaveBeenCalledTimes(1)
   })
@@ -98,7 +98,7 @@ describe('refresh()', () => {
 
 describe('pause()', () => {
   test('pause prevents the callback from firing', () => {
-    const timer = new Timer({ onEnd: jest.fn() }, 100)
+    const timer = new InteractionTimer({ onEnd: jest.fn() }, 100)
     expect(timer.onEnd).toHaveBeenCalledTimes(0)
     timer.pause()
     jest.advanceTimersByTime(150)
@@ -106,7 +106,7 @@ describe('pause()', () => {
   })
 
   test('pause sets remainingMs timestamp', () => {
-    const timer = new Timer({ onEnd: jest.fn() }, 100)
+    const timer = new InteractionTimer({ onEnd: jest.fn() }, 100)
     expect(timer.remainingMs).toEqual(undefined)
     timer.pause()
     expect(timer.remainingMs).toEqual(timer.initialMs - (now - timer.startTimestamp))
@@ -115,7 +115,7 @@ describe('pause()', () => {
 
 describe('clear()', () => {
   test('clear prevents the callback from firing and deletes the pointer', () => {
-    const timer = new Timer({ onEnd: jest.fn() }, 100)
+    const timer = new InteractionTimer({ onEnd: jest.fn() }, 100)
     expect(timer.onEnd).toHaveBeenCalledTimes(0)
     timer.clear()
     jest.advanceTimersByTime(150)
@@ -126,7 +126,7 @@ describe('clear()', () => {
 
 describe('end()', () => {
   test('end clears the callback and calls the onEnd callback', () => {
-    const timer = new Timer({ onEnd: jest.fn() }, 100)
+    const timer = new InteractionTimer({ onEnd: jest.fn() }, 100)
     expect(timer.onEnd).toHaveBeenCalledTimes(0)
     timer.end()
     expect(timer.onEnd).toHaveBeenCalledTimes(1)
@@ -136,7 +136,7 @@ describe('end()', () => {
 
 describe('isValid', () => {
   test('isValid validates timeStamps', () => {
-    const timer = new Timer({ onEnd: jest.fn() }, 100)
+    const timer = new InteractionTimer({ onEnd: jest.fn() }, 100)
     expect(timer.isValid()).toEqual(true)
     timer.startTimestamp -= 100
     expect(timer.isValid()).toEqual(false)

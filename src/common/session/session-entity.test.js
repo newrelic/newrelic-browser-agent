@@ -9,7 +9,8 @@ const agentIdentifier = 'test_agent_identifier'
 const key = 'test_key'
 const value = 'test_value'
 
-jest.mock('../util/timer')
+jest.mock('../timer/timer')
+jest.mock('../timer/interaction-timer')
 jest.useFakeTimers()
 
 const mockBrowserScope = jest.fn().mockImplementation(() => true)

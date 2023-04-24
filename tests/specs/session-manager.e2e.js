@@ -1,13 +1,14 @@
 describe('newrelic session ID', () => {
   let testHandle
+  const harvestTimeSeconds = 5
   const init = {
-    ajax: { deny_list: [], harvestTimeSeconds: 5 },
-    jserrors: { harvestTimeSeconds: 5 },
-    metrics: { harvestTimeSeconds: 5 },
-    page_action: { harvestTimeSeconds: 5 },
-    page_view_timing: { harvestTimeSeconds: 5 },
-    session_trace: { harvestTimeSeconds: 5 },
-    spa: { harvestTimeSeconds: 5 }
+    ajax: { deny_list: [], harvestTimeSeconds },
+    jserrors: { harvestTimeSeconds },
+    metrics: { harvestTimeSeconds },
+    page_action: { harvestTimeSeconds },
+    page_view_timing: { harvestTimeSeconds },
+    session_trace: { harvestTimeSeconds },
+    spa: { harvestTimeSeconds }
   }
 
   beforeEach(async () => {
@@ -42,7 +43,6 @@ describe('newrelic session ID', () => {
       await browser.waitForFeature('loaded')
 
       const ls1 = await browser.execute(getLocalStorageData)
-      console.log(ls1)
       expect(ls1).toEqual(expect.objectContaining({
         value: expect.any(String),
         expiresAt: expect.any(Number),
@@ -107,11 +107,10 @@ describe('newrelic session ID', () => {
         sessionTraceActive: expect.any(Boolean)
       }))
 
-      const load2 = await testHandle.assetURL('fetch.html', { init })
-      await browser.newWindow(load2)
-      await browser.switchWindow(load2)
+      await browser.execute(function () { window.open('/') })
       await browser.waitForFeature('loaded')
 
+      await browser.switchWindow('http://bam-test-1.nr-local.net')
       const ls2 = await browser.execute(getLocalStorageData)
       expect(ls2).toEqual(expect.objectContaining({
         value: expect.any(String),

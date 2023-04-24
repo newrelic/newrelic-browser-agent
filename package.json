@@ -117,7 +117,7 @@
     "packages:bundle": "webpack -c tools/jil/webpack.modular.js",
     "test-server": "node ./tools/jil/bin/server",
     "sauce:connect": "node ./tools/wdio/bin/sauce",
-    "sauce:get-browsers": "node ./tools/jil/util/sauce-browsers && node ./tools/wdio/util/sauce-browsers",
+    "sauce:get-browsers": "node ./tools/scripts/sauce-browsers",
     "tools:test-builds": "npm --prefix ./tools/test-builds run build-all",
     "third-party-updates": "oss third-party manifest --includeOptDeps && oss third-party notices --includeOptDeps",
     "prepare": "husky install",

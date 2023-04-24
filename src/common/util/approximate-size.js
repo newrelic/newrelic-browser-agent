@@ -17,6 +17,8 @@ export function approximateSize (object) {
       else if (typeof value === 'string') size += value.length + 2 // + ""
       else if (typeof value === 'number') size += String(value).length
       else if (value instanceof Date) size += 26 // ISO format + ""
+      else if (typeof ArrayBuffer !== 'undefined' && value instanceof ArrayBuffer && value.byteLength) size += value.byteLength // naive estimate
+      else if (typeof Blob !== 'undefined' && value instanceof Blob && value.size) size += value.size // naive estimate
       else if (typeof value === 'object' && !seen.has(value)) {
         // assuming zero bytes for circular values (but does count the key)
         seen.add(value)

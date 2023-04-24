@@ -35,6 +35,16 @@ describe('approximateSize', () => {
     expect(approximateSize(new Date())).toBe(26) // 24 characters + 2 double quotes
   })
 
+  test('calculates size of ArrayBuffer object correctly', () => {
+    const buffer = new ArrayBuffer(8)
+    expect(approximateSize(buffer)).toBe(8)
+  })
+
+  test('calculates size of Blob object correctly', () => {
+    const blob = new Blob(['Hello, world!'], { type: 'text/plain' })
+    expect(approximateSize(blob)).toBe(blob.size)
+  })
+
   it('should return the correct size for an array', () => {
     expect(approximateSize([1, 2, 'hello'])).toBe(13) // 2 brackets + 2 commas + sizes of the elements
     expect(approximateSize([])).toBe(2) // empty array
@@ -80,6 +90,7 @@ describe('approximateSize', () => {
     const thisSize = approximateSize(data)
     expect(thisSize).toBe(stringifySize)
   })
+
   it('should support esoteric data types', () => {
     const dataTypes = [
       0,
@@ -104,5 +115,29 @@ describe('approximateSize', () => {
     ]
     const thisSize = approximateSize(dataTypes)
     expect(thisSize).toBeGreaterThan(0)
+  })
+
+  test('calculates size of complex object correctly', () => {
+    const obj = {
+      str: 'Hello, world!',
+      num: 12345,
+      date: new Date(),
+      buffer: new ArrayBuffer(8),
+      blob: new Blob(['Hello, world!'], { type: 'text/plain' }),
+      nestedObj: {
+        arr: [1, 2, 3],
+        nestedArr: [[1, 2], [3, 4]]
+      }
+    }
+    const expectedSize =
+      1 + // {
+      21 + // "str":"Hello, world!"
+      12 + // ,"num":12345
+      34 + // ,"date":"2023-04-24T15:37:19.279Z"
+      18 + // ,"buffer":<byteLength of 8>
+      21 + // ,"blob":<size of 13>
+      54 + // ,"nestedObj":{"arr":[1,2,3],"nestedArr":[[1,2],[3,4]]}
+      1 // }
+    expect(approximateSize(obj)).toBe(expectedSize)
   })
 })

@@ -164,7 +164,9 @@ export class Aggregate extends AggregateBase {
     this.endCurrentSession(timestamp)
   }
 
-  addTiming (name, value, attrs = {}) {
+  addTiming (name, value, attrs) {
+    attrs = attrs || {}
+
     // If CLS is supported, a cls value should exist and be reported, even at 0.
     // *cli Mar'23 - At this time, it remains attached to all timings. See NEWRELIC-6143.
     if (this.clsSupported) {

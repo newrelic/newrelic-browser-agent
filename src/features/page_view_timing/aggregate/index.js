@@ -29,7 +29,7 @@ export class Aggregate extends AggregateBase {
     this.curSessEndRecorded = false
 
     try { // we (only) need to track cls state because it's attached to other timing events rather than reported on change...
-      this.clsSupported = PerformanceObserver.supportedEntryTypes.includes('layout-shift')
+      this.clsSupported = PerformanceObserver.supportedEntryTypes?.includes('layout-shift')
       this.cls = 0
     } catch (e) {}
 
@@ -50,7 +50,7 @@ export class Aggregate extends AggregateBase {
         if (!pageStartedHidden) { // see ios-version.js for detail on this following bug case; tldr: buffered flag doesn't work but getEntriesByType does
           const paintEntries = performance.getEntriesByType('paint')
           paintEntries.forEach(entry => {
-            if (entry.name === 'first-contentful-paint') {
+            if (entry?.name === 'first-contentful-paint') {
               this.addTiming('fcp', Math.floor(entry.startTime))
             }
           })
@@ -66,7 +66,7 @@ export class Aggregate extends AggregateBase {
 
     /* First Input Delay (+"First Interaction") - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
     onFID(({ name, value, entries }) => {
-      if (pageStartedHidden || this.alreadySent.has(name)) return
+      if (pageStartedHidden || this.alreadySent.has(name) || !Array.isArray(entries) || entries.length === 0) return
       this.alreadySent.add(name)
 
       // CWV will only report one (THE) first-input entry to us; fid isn't reported if there are no user interactions occurs before the *first* page hiding.
@@ -81,7 +81,7 @@ export class Aggregate extends AggregateBase {
 
     /* Largest Contentful Paint - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
     onLCP(({ name, value, entries }) => {
-      if (pageStartedHidden || this.alreadySent.has(name)) return
+      if (pageStartedHidden || this.alreadySent.has(name) || !Array.isArray(entries) || entries.length === 0) return
       this.alreadySent.add(name)
 
       // CWV will only ever report one (THE) lcp entry to us; lcp is also only reported *once* on earlier(user interaction, page hidden).
@@ -94,7 +94,7 @@ export class Aggregate extends AggregateBase {
       if (lcpEntry.url) {
         attrs['elUrl'] = cleanURL(lcpEntry.url)
       }
-      if (lcpEntry.element && lcpEntry.element.tagName) {
+      if (lcpEntry.element?.tagName) {
         attrs['elTag'] = lcpEntry.element.tagName
       }
       this.addTiming(name.toLowerCase(), value, attrs)
@@ -164,9 +164,7 @@ export class Aggregate extends AggregateBase {
     this.endCurrentSession(timestamp)
   }
 
-  addTiming (name, value, attrs) {
-    attrs = attrs || {}
-
+  addTiming (name, value, attrs = {}) {
     // If CLS is supported, a cls value should exist and be reported, even at 0.
     // *cli Mar'23 - At this time, it remains attached to all timings. See NEWRELIC-6143.
     if (this.clsSupported) {

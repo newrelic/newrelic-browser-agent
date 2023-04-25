@@ -8,7 +8,7 @@ describe('dataSize', () => {
 
   test('returns undefined for non-object, number, or empty string', () => {
     expect(dataSize(Infinity)).toBeUndefined()
-    expect(dataSize(12345)).toBeUndefined()
+    expect(dataSize(12345)).toBeUndefined() // might not actually be by design, but this is how it works today
     expect(dataSize('')).toBeUndefined()
   })
 

@@ -81,23 +81,26 @@ export class Aggregate extends AggregateBase {
 
     /* Largest Contentful Paint - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
     onLCP(({ name, value, entries }) => {
-      if (pageStartedHidden || this.alreadySent.has(name) || !Array.isArray(entries) || entries.length === 0) return
+      if (pageStartedHidden || this.alreadySent.has(name)) return
       this.alreadySent.add(name)
 
-      // CWV will only ever report one (THE) lcp entry to us; lcp is also only reported *once* on earlier(user interaction, page hidden).
-      const lcpEntry = entries[entries.length - 1] // this looks weird if we only expect one, but this is how cwv-attribution gets it so to be sure...
-      const attrs = {
-        size: lcpEntry.size,
-        eid: lcpEntry.id
+      const attributes = {}
+      if (entries.length > 0) {
+        // CWV will only ever report one (THE) lcp entry to us; lcp is also only reported *once* on earlier(user interaction, page hidden).
+        const lcpEntry = entries[entries.length - 1] // this looks weird if we only expect one, but this is how cwv-attribution gets it so to be sure...
+        attributes.size = lcpEntry.size
+        attributes.eid = lcpEntry.id
+
+        if (lcpEntry.url) {
+          attributes['elUrl'] = cleanURL(lcpEntry.url)
+        }
+        if (lcpEntry.element?.tagName) {
+          attributes['elTag'] = lcpEntry.element.tagName
+        }
       }
-      this.addConnectionAttributes(attrs)
-      if (lcpEntry.url) {
-        attrs['elUrl'] = cleanURL(lcpEntry.url)
-      }
-      if (lcpEntry.element?.tagName) {
-        attrs['elTag'] = lcpEntry.element.tagName
-      }
-      this.addTiming(name.toLowerCase(), value, attrs)
+
+      this.addConnectionAttributes(attributes)
+      this.addTiming(name.toLowerCase(), value, attributes)
     })
 
     /* Cumulative Layout Shift - We don't have to limit this callback since cls is stored as a state and only sent as attribute on other timings. */

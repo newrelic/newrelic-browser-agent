@@ -66,7 +66,7 @@ export class Aggregate extends AggregateBase {
 
     /* First Input Delay (+"First Interaction") - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
     onFID(({ name, value, entries }) => {
-      if (pageStartedHidden || this.alreadySent.has(name) || !Array.isArray(entries) || entries.length === 0) return
+      if (pageStartedHidden || this.alreadySent.has(name) || entries.length === 0) return
       this.alreadySent.add(name)
 
       // CWV will only report one (THE) first-input entry to us; fid isn't reported if there are no user interactions occurs before the *first* page hiding.

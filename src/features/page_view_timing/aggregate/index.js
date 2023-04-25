@@ -29,8 +29,6 @@ export class Aggregate extends AggregateBase {
     this.curSessEndRecorded = false
     this.cls = null // this should be null unless set to a numeric value by web-vitals so that we differentiate if CLS is supported
 
-    this.clsSupported = typeof PerformanceObserver !== 'undefined' && PerformanceObserver?.supportedEntryTypes?.includes('layout-shift') // used to push back 'pageHide' timing -- related to NEWRELIC-6143, TODO: remove after cls decoupling
-
     /*! This is the section that used to be in the loader portion: !*/
     /* ------------------------------------------------------------ */
     const pageStartedHidden = getRuntime(agentIdentifier).initHidden // our attempt at recapturing initial vis state since this code runs post-load time
@@ -98,8 +96,9 @@ export class Aggregate extends AggregateBase {
       this.addTiming(name.toLowerCase(), value, attrs)
     })
 
-    /* Cumulative Layout Shift - We don't have to limit this callback since cls is stored as a state and only sent as attribute on other timings. */
-    onCLS(({ value }) => this.cls = value)
+    /* Cumulative Layout Shift - We don't have to limit this callback since cls is stored as a state and only sent as attribute on other timings.
+      reportAllChanges ensures our tracked cls has the most recent rolling value to attach to 'unload' and 'pagehide'. */
+    onCLS(({ value }) => this.cls = value, { reportAllChanges: true })
 
     /* Interaction-to-Next-Paint */
     onINP(({ name, value, id }) => this.addTiming(name.toLowerCase(), value, { metricId: id }))
@@ -114,8 +113,7 @@ export class Aggregate extends AggregateBase {
       on vis change or pagehide events, and we'd want ex. onLCP to record the timing (win the race) before we try to send "final harvest". */
     this.scheduler = new HarvestScheduler('events', {
       onFinished: (...args) => this.onHarvestFinished(...args),
-      getPayload: (...args) => this.prepareHarvest(...args),
-      skipPagehideCallback: Boolean(this.clsSupported) // we have to skip the first final harvest callback in order to get 'pageHide' timing w/ nonzero CLS for supported browsers
+      getPayload: (...args) => this.prepareHarvest(...args)
     }, this)
 
     registerHandler('timing', (name, value, attrs) => this.addTiming(name, value, attrs), this.featureName, this.ee) // notice CLS is added to all timings via 4th param
@@ -160,19 +158,13 @@ export class Aggregate extends AggregateBase {
   recordPageUnload (timestamp) {
     this.addTiming('unload', timestamp, null)
     /*
-    Issue #1: Because window's pageHide commonly fires BEFORE vis change and "final" harvest would happen at the former in this case, we also have to add our vis-change event now or it may not be sent.
+    Issue: Because window's pageHide commonly fires BEFORE vis change and "final" harvest would happen at the former in this case, we also have to add our vis-change event now or it may not be sent.
     Affected: Safari < v14.1/.5 ; versions that don't support 'visiilitychange' event
     Impact: For affected w/o this, NR 'pageHide' attribute may not be sent. For other browsers w/o this, NR 'pageHide' gets fragmented into its own harvest call on page unloading because of dual EoL logic.
     Mitigation: NR 'unload' and 'pageHide' are both recorded when window pageHide fires, rather than only recording 'unload'.
     Future: When EoL can become the singular subscribeToVisibilityChange, it's likely endCurrentSession isn't needed here as 'unload'-'pageHide' can be untangled.
-
-    Issue #2: Related to NEWRELIC-6143 & add ordering of event listeners, 'pageHide' cannot be recoded simultaneously here for CLS-supported browsers because the CLS would not be set yet when this fn executes.
-    Affected: Chromium browsers >= 77 ; versions that support web-vitals' onCLS
-    Impact: For affected, recording 'pageHide' at this point would cause CLS to be missing as an attribute -- this currently impact UI queries that calculate CLS on dashboard.
-    Mitigation: Let endCurrentSession run standalone for CLS-supported browsers, for which time the value would be set per event listener order.
-    Future: If/when CLS is decoupled from 'pageHide' timing, this "clsSupported" check becomes unnecessary. Also see 'skipPagehideCallback'.
     */
-    if (!this.clsSupported) this.endCurrentSession(timestamp)
+    this.endCurrentSession(timestamp)
   }
 
   addTiming (name, value, attrs) {

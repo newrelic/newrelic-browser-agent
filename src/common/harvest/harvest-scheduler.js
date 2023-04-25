@@ -23,12 +23,8 @@ export class HarvestScheduler extends SharedContext {
 
     this.harvest = new Harvest(this.sharedContext)
 
-    subscribeToEOL((evt) => {
+    subscribeToEOL(() => {
       if (this.aborted) return
-      // Related to NEWRELIC-6143 & ordering of event listeners, the first callback for final harvest (from window pagehide event firing) should be skipped for CLS-supported browsers.
-      // This in tandem with when "endCurrentSession" is called will ensure that NR 'pageHide' timing has a meaningful CLS value attached, which is sent on the second callback for final
-      // harvest instead (from doc vis change firing). This can be removed when CLS becomes separated from 'pageHide'.
-      if (this.opts.skipPagehideCallback && evt?.type === 'pagehide') return
 
       // If opts.onUnload is defined, these are special actions to execute before attempting to send the final payload.
       if (this.opts.onUnload) this.opts.onUnload()

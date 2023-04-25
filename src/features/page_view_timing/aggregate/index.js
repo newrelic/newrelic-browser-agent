@@ -50,7 +50,7 @@ export class Aggregate extends AggregateBase {
         if (!pageStartedHidden) { // see ios-version.js for detail on this following bug case; tldr: buffered flag doesn't work but getEntriesByType does
           const paintEntries = performance.getEntriesByType('paint')
           paintEntries.forEach(entry => {
-            if (entry?.name === 'first-contentful-paint') {
+            if (entry.name === 'first-contentful-paint') {
               this.addTiming('fcp', Math.floor(entry.startTime))
             }
           })

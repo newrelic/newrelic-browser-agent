@@ -316,6 +316,33 @@ function runPvtInStnTests (loader) {
 }
 
 function runClsTests (loader) {
+  testDriver.test(`windowUnload for ${loader} agent collects cls attribute`, supportsCLS, function (t, browser, router) {
+    const rumPromise = router.expectRum()
+    const loadPromise = browser
+      .safeGet(router.assetURL('cls-basic.html', { loader: loader }))
+      .waitForFeature('loaded')
+      .waitForConditionInBrowser('window.contentAdded === true')
+
+    Promise.all([rumPromise, loadPromise])
+      .then(() => {
+        let timingsPromise = router.expectTimings()
+        let domPromise = browser.get(router.assetURL('/'))
+        return Promise.all([timingsPromise, domPromise])
+      })
+      .then(([{ request: timingsResult }]) => {
+        const { body, query } = timingsResult
+        const timings = querypack.decode(body && body.length ? body : query.e)
+
+        const timing = timings.find(t => t.name === 'unload')
+        var cls = timing.attributes.find(a => a.key === 'cls')
+        t.ok(cls.value > 0, 'cls is a positive value')
+        t.equal(cls.type, 'doubleAttribute', 'cls is doubleAttribute')
+
+        t.end()
+      })
+      .catch(fail(t))
+  })
+
   testDriver.test(`${loader} agent collects cls attribute when cls is 0`, supportsCLS, function (t, browser, router) {
     t.plan(2)
 
@@ -368,7 +395,7 @@ function runClsTests (loader) {
 
         let timing = timings.find(t => t.name === 'pageHide')
         var cls = timing.attributes.find(a => a.key === 'cls')
-        t.ok(cls.value >= 0, 'cls is a non-negative value')
+        t.ok(cls.value > 0, 'cls is a positive value')
         t.equal(cls.type, 'doubleAttribute', 'cls is doubleAttribute')
 
         t.end()

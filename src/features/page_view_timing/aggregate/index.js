@@ -29,7 +29,7 @@ export class Aggregate extends AggregateBase {
     this.curSessEndRecorded = false
     this.cls = null // this should be null unless set to a numeric value by web-vitals so that we differentiate if CLS is supported
 
-    this.clsSupported = PerformanceObserver?.supportedEntryTypes?.includes('layout-shift') // used to push back 'pageHide' timing -- related to NEWRELIC-6143, TODO: remove after cls decoupling
+    this.clsSupported = typeof PerformanceObserver !== 'undefined' && PerformanceObserver?.supportedEntryTypes?.includes('layout-shift') // used to push back 'pageHide' timing -- related to NEWRELIC-6143, TODO: remove after cls decoupling
 
     /*! This is the section that used to be in the loader portion: !*/
     /* ------------------------------------------------------------ */

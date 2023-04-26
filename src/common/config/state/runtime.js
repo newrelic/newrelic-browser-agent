@@ -1,12 +1,11 @@
 import * as userAgent from '../../util/user-agent'
 import { Configurable } from './configurable'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
-import { getConfigurationValue } from '../config'
 import { globalScope } from '../../util/global-scope'
 import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/env'
 import { SessionEntity } from '../../session/session-entity'
 
-const model = agentId => ({
+const model = {
   buildEnv: BUILD_ENV,
   bytesSent: {},
   customTransaction: undefined,
@@ -22,16 +21,11 @@ const model = agentId => ({
   origin: '' + globalScope.location,
   ptid: undefined,
   releaseIds: {},
-  // sessionId: getConfigurationValue(agentId, 'privacy.cookies_enabled') == true
-  //   ? getCurrentSessionIdOrMakeNew()
-  //   : null, // if cookies (now session tracking) is turned off or can't get session ID, this is null
-  session: getConfigurationValue(agentId, 'privacy.cookies_enabled') == true
-    ? new SessionEntity({ agentIdentifier: agentId, key: 'SESSION' })
-    : null, // if cookies (now session tracking) is turned off or can't get session ID, this is null
+  session: undefined,
   xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
   userAgent,
   version: VERSION
-})
+}
 
 const _cache = {}
 
@@ -43,6 +37,6 @@ export function getRuntime (id) {
 
 export function setRuntime (id, obj) {
   if (!id) throw new Error('All runtime objects require an agent identifier!')
-  _cache[id] = new Configurable(obj, model(id))
+  _cache[id] = new Configurable(obj, model)
   gosNREUMInitializedAgents(id, _cache[id], 'runtime')
 }

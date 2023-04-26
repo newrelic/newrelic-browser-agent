@@ -1,9 +1,11 @@
-export class LocalStorage {
+export class LocalMemory {
+  constructor (initialState = {}) {
+    this.state = initialState
+  }
+
   get (key) {
     try {
-      // localStorage strangely type-casts non-existing data to "null"...
-      // Cast it back to undefined if it doesnt exist
-      return localStorage.getItem(key) || undefined
+      return this.state[key]
     } catch (err) {
       return ''
     }
@@ -12,7 +14,7 @@ export class LocalStorage {
   set (key, value) {
     try {
       if (value === undefined || value === null) return this.remove(key)
-      return localStorage.setItem(key, value)
+      this.state[key] = value
     } catch (err) {
       return
     }
@@ -20,7 +22,7 @@ export class LocalStorage {
 
   remove (key) {
     try {
-      localStorage.removeItem(key)
+      delete this.state[key]
     } catch (err) {
       return
     }

@@ -1,42 +1,41 @@
+
 export class Timer {
-  constructor (cb, ms) {
-    this.cb = cb
-    this.initialMs = ms || 0
+  constructor (opts, ms) {
+    if (!opts.onEnd) throw new Error('onEnd handler is required')
+    if (!ms) throw new Error('ms duration is required')
+    this.onEnd = opts.onEnd
+    this.initialMs = ms
     this.startTimestamp = Date.now()
+    // used by pause/resume
     this.remainingMs = undefined
 
-    this.timer = this.create(cb, ms)
+    this.timer = this.create(this.onEnd, ms)
   }
 
   create (cb, ms) {
-    return setTimeout(cb || this.cb, ms || this.initialMs)
-  }
-
-  refresh (cb, ms) {
-    console.log('refresh the timer', this.cb)
-    clearTimeout(this.timer)
-    this.timer = this.create(cb, ms)
-    this.startTimestamp = Date.now()
-    this.remainingMs = undefined
+    if (this.timer) this.clear()
+    return setTimeout(() => cb ? cb() : this.onEnd(), ms || this.initialMs)
   }
 
   pause () {
     clearTimeout(this.timer)
     this.remainingMs = this.initialMs - (Date.now() - this.startTimestamp)
-    console.log('paused the timer with ', this.remainingMs, 'ms left')
   }
 
   resume () {
     if (!this.remainingMs || !this.isValid()) return
     this.timer = this.create(this.cb, this.remainingMs)
-    console.log('resumed the timer with ', this.remainingMs, 'ms left')
     this.remainingMs = undefined
   }
 
-  end () {
-    console.log('ended the timer for...', this.cb)
+  clear () {
     clearTimeout(this.timer)
-    Object.assign(this, {})
+    this.timer = null
+  }
+
+  end () {
+    this.clear()
+    this.onEnd()
   }
 
   isValid () {

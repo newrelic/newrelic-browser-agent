@@ -1,15 +1,12 @@
 import { generateRandomHexString } from '../ids/unique-id'
 import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
-import { documentAddEventListener } from '../event-listener/event-listener-opts'
 import { ee } from '../event-emitter/contextual-ee'
-import { subscribeToVisibilityChange } from '../window/page-visibility'
 import { Timer } from '../timer/timer'
-import LocalStorage from '../storage/local-storage'
-import FPC from '../storage/first-party-cookies'
-import { getConfiguration } from '../config/config'
-
-const PREFIX = 'NRBA'
+import { isBrowserScope } from '../util/global-scope'
+import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, PREFIX } from './constants'
+import { LocalMemory } from '../storage/local-memory'
+import { InteractionTimer } from '../timer/interaction-timer'
 
 export class SessionEntity {
   /**
@@ -18,31 +15,23 @@ export class SessionEntity {
    * The value can be overridden in the constructor, but will default to a unique 16 character hex string
    * expiresMs and inactiveMs are used to "expire" the session, but can be overridden in the constructor. Pass 0 to disable expiration timers.
    */
-  constructor ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = 14400000, inactiveMs = 1800000 }) {
+  constructor ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS, storageAPI = new LocalMemory() }) {
+    if (!agentIdentifier || !key) throw new Error('Missing Required Fields')
+    if (!isBrowserScope) this.storage = new LocalMemory()
+    else this.storage = storageAPI
+
+    // the abort controller is used to "reset" the event listeners and prevent them from duplicating when new sessions are created
     try {
-      // session options configured by the customer
-      const sessionConfig = getConfiguration(agentIdentifier).session
-      // subdomains is a boolean that can be specified by customer.
-      // only way to keep the session object across subdomains is using first party cookies
-      if (sessionConfig.subdomains) {
-        // easiest way to get the root domain to store to the cookie is through user input
-        FPC.setDomain(sessionConfig.domain)
-        this.storage = FPC
-      } else {
-        this.storage = LocalStorage
-      }
+      this.abortController = new AbortController()
     } catch (e) {
-      // storage is inaccessible
-      warn('Storage API is unavailable. Session information will not operate correctly.', e)
-      return Object.assign(this, { key, value, sessionReplayActive: false, sessionTraceActive: false, isNew: true, read: () => this, write: (vals) => Object.assign(this, vals), reset: () => new SessionEntity(this) })
+      // this try-catch can be removed when IE11 is completely unsupported & gone
     }
 
     this.agentIdentifier = agentIdentifier
-    this.ee = ee.get(agentIdentifier)
 
     // key is intended to act as the k=v pair
     this.key = key
-    // value is intended to act as value of a k=v pair
+    // value is intended to act as the primary value of the k=v pair
     this.value = value
 
     // the first time the session entity class is instantiated, we check the storage API for an existing
@@ -55,9 +44,15 @@ export class SessionEntity {
 
     // the set-up of the timer used to expire the session "naturally" at a certain time
     // this gets ignored if the value is falsy, allowing for session entities that do not expire
+    this.expiresMs = expiresMs
     if (expiresMs) {
       this.expiresAt = initialRead?.expiresAt || this.getFutureTimestamp(expiresMs)
-      this.expireTimer = new Timer(() => this.reset(), this.expiresAt - Date.now())
+      this.expiresTimer = new Timer({
+        onEnd: () => this.reset()
+      }, expiresMs)
+      // this.expiresTimer = new Timer(() => this.reset(), this.expiresAt - Date.now())
+    } else {
+      this.expiresAt = Infinity
     }
 
     // the set-up of the timer used to expire the session due to "inactivity" at a certain time
@@ -66,7 +61,13 @@ export class SessionEntity {
     this.inactiveMs = inactiveMs
     if (inactiveMs) {
       this.inactiveAt = initialRead?.inactiveAt || this.getFutureTimestamp(inactiveMs)
-      this.inactiveTimer = new Timer(() => this.reset(), inactiveMs)
+      this.inactiveTimer = new InteractionTimer({
+        onEnd: () => this.reset(),
+        onRefresh: () => this.refresh(),
+        abortController: this.abortController
+      }, inactiveMs)
+    } else {
+      this.inactiveAt = Infinity
     }
 
     // The fact that the session is "new" or pre-existing is used in some places in the agent.  Session Replay and Trace
@@ -74,38 +75,12 @@ export class SessionEntity {
     this.isNew = !Object.keys(initialRead).length
     // if its a "new" session, we write to storage API with the default values.  These values ,ay change over the lifespan of the agent run.
     if (this.isNew) this.write({ value, sessionReplayActive: false, sessionTraceActive: false, inactiveAt: this.inactiveAt, expiresAt: this.expiresAt }, true)
+    else {
+      Object.keys(initialRead).forEach(k => {
+        this[k] = initialRead[k]
+      })
+    }
 
-    // the abort controller is used to "reset" the event listeners and prevent them from duplicating when new sessions are created
-    try {
-      this.abortController = new AbortController()
-    } catch (e) {} // this try-catch can be removed when IE11 is completely unsupported & gone
-
-    // listen for "activity", if seen, "refresh" the inactivty timer
-    // "activity" also includes "page visibility - visible", but that is handled below in a different event sub
-    documentAddEventListener('scroll', this.refresh.bind(this), false, this.abortController?.signal)
-    documentAddEventListener('keypress', this.refresh.bind(this), false, this.abortController?.signal)
-    documentAddEventListener('click', this.refresh.bind(this), false, this.abortController?.signal)
-
-    // watch for the vis state changing.  If the page is hidden, the local inactivity timer should be paused
-    // if the page is brought BACK to visibility and the timer hasnt "naturally" expired, refresh the timer...
-    // this is to support the concept that other tabs could be experiencing activity.  The thought would be that
-    // "backgrounded" tabs would pause, while "closed" tabs that "reopen" will just instantiate a new SessionEntity class if restored
-    // which will do a "hard" check of the timestamps.
-    subscribeToVisibilityChange((state) => {
-      if (state === 'hidden') {
-        this.inactiveTimer.pause()
-        this.inactiveAt = this.getFutureTimestamp(inactiveMs)
-        this.write({ ...this.read(), inactiveAt: this.inactiveAt })
-      } else {
-        if (this.expireTimer.isValid()) {
-          this.refresh()
-        } else {
-          this.reset()
-        }
-      }
-    }, false, false, this.abortController?.signal)
-
-    console.log('session', this.key, this.value, 'expires at ', this.expiresAt, 'which is in ', (this.expiresAt - Date.now()) / 1000 / 60, 'minutes')
     this.initialized = true
   }
 
@@ -122,21 +97,17 @@ export class SessionEntity {
     try {
       const val = this.storage.get(this.lookupKey)
       if (!val) return {}
-      const obj = this.decompress(JSON.parse(val))
+      const obj = typeof val === 'string' ? this.decompress(JSON.parse(val)) : this.decompress(val)
       if (this.isInvalid(obj)) return {}
-      // if (this.isInvalid(obj)) return this.reset()
       if (this.isExpired(obj.expiresAt)) return this.reset()
-      // if "inactive" timer is expired at "page load time" -- reset
-      // otherwise, if page is "unhidden" and the expire time
+      // if "inactive" timer is expired at "read" time -- esp. initial read -- reset
       if (this.isExpired(obj.inactiveAt)) return this.reset()
-      Object.keys(obj).forEach(k => {
-        this[k] = obj[k]
-      })
+
       return obj
     } catch (e) {
       warn('Failed to read from storage API', e)
       // storage is inaccessible
-      return null
+      return {}
     }
   }
 
@@ -149,7 +120,6 @@ export class SessionEntity {
    */
   write (data) {
     try {
-      console.log('WRITE DATA', data)
       if (!data || typeof data !== 'object') return
       Object.keys(data).forEach(k => {
         this[k] = data[k]
@@ -169,17 +139,25 @@ export class SessionEntity {
     // * stop recording (stn and sr)...
     // * delete the session and start over
     try {
-      this.storage?.remove(this.key)
+      if (this.initialized) ee.get(this.agentIdentifier).emit('session-reset')
+      this.storage.remove(this.lookupKey)
       this.abortController?.abort()
-      this.inactiveTimer?.end()
-      this.expireTimer?.end()
-      if (this.initialized) setTimeout(() => this.ee.emit('new-session'), 1)
-      const newSess = new SessionEntity({ agentIdentifier: this.agentIdentifier, key: this.key })
+      this.inactiveTimer?.clear?.()
+      this.expiresTimer?.clear?.()
+      delete this.custom
+      delete this.value
+      const newSess = new SessionEntity({
+        agentIdentifier: this.agentIdentifier,
+        key: this.key,
+        storageAPI: this.storage,
+        expiresMs: this.expiresMs,
+        inactiveMs: this.inactiveMs
+        // value: value === '0' ? value : undefined // add this back in if we have to send '0' for disabled cookies
+      })
       Object.assign(this, newSess)
       return newSess.read()
     } catch (e) {
-      console.log('RESET ERROR', e)
-      return null
+      return {}
     }
   }
 
@@ -187,8 +165,9 @@ export class SessionEntity {
    * Refresh the inactivity timer data
    */
   refresh () {
-    this.inactiveTimer.refresh()
+    if (!this.expiresTimer.isValid()) this.reset()
     this.inactiveAt = this.getFutureTimestamp(this.inactiveMs)
+    this.write({ ...this.read(), inactiveAt: this.inactiveAt })
   }
 
   /**
@@ -210,10 +189,10 @@ export class SessionEntity {
 
   /**
    * @param {number} futureMs - The number of ms to use to generate a future timestamp
-   * @returns {Date}
+   * @returns {number}
    */
   getFutureTimestamp (futureMs) {
-    return new Date().setMilliseconds(new Date().getMilliseconds() + futureMs)
+    return Date.now() + futureMs
   }
 
   compress (obj) {
@@ -225,5 +204,20 @@ export class SessionEntity {
   decompress (obj) {
     // no need to decompress if we aren't compressing
     return obj
+  }
+
+  syncCustomAttribute (key, value) {
+    if (!isBrowserScope) return
+    if (value === null) {
+      const curr = this.read()
+      if (curr.custom) {
+        delete curr.custom[key]
+        this.write({ ...curr })
+      }
+    } else {
+      const curr = this.read()
+      this.custom = { ...(curr?.custom || {}), [key]: value }
+      this.write({ ...curr, custom: this.custom })
+    }
   }
 }

@@ -15,7 +15,7 @@ const MODE = {
 }
 
 const MAX_PAYLOAD_SIZE = 1000000
-const IDEAL_PAYLOAD_SIZE = 128000
+const IDEAL_PAYLOAD_SIZE = 64000
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -30,17 +30,22 @@ export class Aggregate extends AggregateBase {
     this.mode = MODE.OFF
     this.blocked = false
 
-    // set now if it doesnt already exist, read later at harvest time
-    // this.sessionReplayId = getOrSet(SESSION_REPLAY_ID)
-    // set when recording begins if it doesnt exist
-    // this.sessionReplayStartTime = get(SESSION_REPLAY_START_TIME)
+    const { session } = getRuntime(this.agentIdentifier)
+    // // if this isnt the FIRST load of a session AND
+    // // we are not actively recording SR... DO NOT run the aggregator
+    // // session replay samples can only be decided on the first load of a session
+    // // session replays can continue if in progress
+    if (!session.isNew && !session.sessionReplayActive) {
+      drain(this.agentIdentifier, this.featureName)
+      return
+    }
 
-    console.log('sessionReplayId at startup', this.sessionReplayId)
+    console.log('session ID at startup', session.value)
 
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
 
-    this.ee.on('new-session', () => {
-      this.scheduler.runHarvest()
+    this.ee.on('session-reset', () => {
+      console.log('session-reset.... abort it!')
       this.abort()
     })
 
@@ -152,6 +157,7 @@ export class Aggregate extends AggregateBase {
   onHarvestFinished (result) {
     // The mutual decision for now is to stop recording and clear buffers if ingest is experiencing 429 rate limiting
     if (result.status === 429) {
+      console.log('429... abort it!')
       this.abort()
       return
     }
@@ -159,6 +165,8 @@ export class Aggregate extends AggregateBase {
     console.log(result)
     // keep things in the buffer if they fail to send AND its not a rate limit issue
     if (result.sent && !result.retry) this.clearBuffer()
+
+    if (this.blocked) this.scheduler.stopTimer(true)
   }
 
   clearBuffer () {
@@ -174,7 +182,9 @@ export class Aggregate extends AggregateBase {
 
   store (event, isCheckout) {
     if (this.blocked) return
-    if (this.isMaxPayloadSize(event)) return this.abort()
+    if (this.exceedsSizeLimit(MAX_PAYLOAD_SIZE, event)) {
+      return this.abort()
+    }
 
     if (this.mode === MODE.ERROR && !this.errorNoticed && isCheckout) {
       // we are still waiting for an error to throw, so keep wiping the buffer over time
@@ -191,7 +201,7 @@ export class Aggregate extends AggregateBase {
     this.events.push(event)
     console.log('this.events', this.events)
 
-    if (this.isIdealPayloadSize(event)) {
+    if (this.exceedsSizeLimit(IDEAL_PAYLOAD_SIZE)) {
       // if we've made it to the ideal size of ~128kb before the interval timer, we should send early.
       this.scheduler.runHarvest()
     }
@@ -201,29 +211,17 @@ export class Aggregate extends AggregateBase {
     record.takeFullSnapshot()
   }
 
-  isMaxPayloadSize (newData) {
+  exceedsSizeLimit (limit, newData) {
     const payload = this.getPayload()
     if (newData) {
       payload.body.data.push(newData)
     }
-    return stringify(payload)?.length > MAX_PAYLOAD_SIZE
-  }
-
-  isIdealPayloadSize (newData) {
-    const payload = this.getPayload()
-    if (newData) {
-      payload.body.data.push(newData)
-    }
-    const bytes = stringify(payload)?.length
-    return bytes >= IDEAL_PAYLOAD_SIZE
+    return stringify(payload)?.length > limit
   }
 
   abort () {
+    console.log('ABORT SESSION REPLAY!')
     this.blocked = true
-    this.scheduler.stopTimer(true)
     this.stopRecording()
-    this.clearBuffer()
-    const { session } = getRuntime(this.agentIdentifier)
-    session.write({ ...session.read(), sessionReplayActive: true })
   }
 }

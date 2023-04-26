@@ -4,11 +4,12 @@
  * exposes the `blocked` property.
  */
 
-import { registerDrain } from '../../common/drain/drain'
+import { drain, registerDrain } from '../../common/drain/drain'
 import { FeatureBase } from './feature-base'
 import { onWindowLoad } from '../../common/window/load'
 import { isWorkerScope } from '../../common/util/global-scope'
 import { warn } from '../../common/util/console'
+import { FEATURE_NAMES } from '../../loaders/features/features'
 
 /**
  * Base class for instrumenting a feature.
@@ -51,7 +52,13 @@ export class InstrumentBase extends FeatureBase {
       try {
         // The session entity needs to be attached to the config internals before the aggregator chunk runs
         const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
-        setupAgentSession(this.agentIdentifier)
+        const session = setupAgentSession(this.agentIdentifier)
+
+        if (!shouldImportAgg(this.featureName, session)) {
+          drain(this.agentIdentifier, this.featureName)
+          return
+        }
+
         // import and instantiate the aggregator chunk
         const { lazyLoader } = await import(/* webpackChunkName: "lazy-loader" */ './lazy-loader')
         const { Aggregate } = await lazyLoader(this.featureName, 'aggregate')
@@ -69,4 +76,14 @@ export class InstrumentBase extends FeatureBase {
     if (isWorkerScope) importLater()
     else onWindowLoad(() => importLater(), true)
   }
+}
+
+function shouldImportAgg (featureName, session) {
+  // if this isnt the FIRST load of a session AND
+  // we are not actively recording SR... DO NOT run the aggregator
+  // session replay samples can only be decided on the first load of a session
+  // session replays can continue if in progress
+  if (featureName === FEATURE_NAMES.sessionReplay) return !!session.isNew || !!session.sessionReplayActive
+  // todo -- add case like above for session trace
+  return true
 }

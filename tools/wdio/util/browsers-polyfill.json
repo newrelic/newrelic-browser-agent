@@ -3,7 +3,9 @@
     {
       "browserName": "internet explorer",
       "platform": "Windows 10",
-      "version": "11"
+      "platformName": "Windows 10",
+      "version": "11",
+      "browserVersion": "11"
     }
   ]
 }

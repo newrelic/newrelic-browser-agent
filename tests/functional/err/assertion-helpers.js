@@ -8,15 +8,13 @@ const canonicalFunctionName = require('../../lib/canonical-function-name')
 const stringHashCode = require('../../lib/string-hash-code')
 
 function computeExpectedCanonicalStack (expectedStack) {
-  let canonicalStack = expectedStack.map((frame) => {
+  return expectedStack.map((frame) => {
     let line = ''
     if (frame.f) line += `${canonicalFunctionName(frame.f)}@`
     if (frame.u) line += frame.u
     if (frame.l) line += `:${frame.l}`
     return line
   }).join('\n')
-
-  return canonicalStack
 }
 
 function assertErrorAttributes (t, query) {
@@ -95,8 +93,7 @@ function getErrorsFromResponse (response) {
   }
   if (response.query && response.query.err) {
     try {
-      var parsedQueryParam = JSON.parse(response.query.err)
-      return parsedQueryParam
+      return JSON.parse(response.query.err)
     } catch (e) {}
   }
   return null
@@ -118,8 +115,7 @@ function getMetricsFromResponse (response, isSupportability) {
   }
   if (response.query && response.query[attr]) {
     try {
-      var parsedQueryParam = JSON.parse(response.query[attr])
-      return parsedQueryParam
+      return JSON.parse(response.query[attr])
     } catch (e) {}
   }
   return null

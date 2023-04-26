@@ -5,9 +5,9 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { getFrameworks } from '../../../common/metrics/framework-detection'
-import { protocol } from '../../../common/url/protocol'
+import { isFileProtocol } from '../../../common/url/protocol'
 import { getRules, validateRules } from '../../../common/util/obfuscate'
-import { VERSION } from '../../../common/constants/environment-variables'
+import { VERSION } from '../../../common/constants/env'
 import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope } from '../../../common/util/global-scope'
@@ -70,9 +70,8 @@ export class Aggregate extends AggregateBase {
     }
 
     // file protocol detection
-    if (protocol.isFileProtocol()) {
+    if (isFileProtocol()) {
       this.storeSupportabilityMetrics('Generic/FileProtocol/Detected')
-      protocol.supportabilityMetricSent = true
     }
 
     // obfuscation rules detection

@@ -76,8 +76,9 @@ export class SessionEntity {
     if (this.isNew) this.write({ value, sessionReplayActive: false, sessionTraceActive: false, inactiveAt: this.inactiveAt, expiresAt: this.expiresAt }, true)
 
     // the abort controller is used to "reset" the event listeners and prevent them from duplicating when new sessions are created
-    try { this.abortController = new AbortController() } // this try-catch can be removed when IE11 is completely unsupported & gone
-    catch (e) {}
+    try {
+      this.abortController = new AbortController()
+    } catch (e) {} // this try-catch can be removed when IE11 is completely unsupported & gone
 
     // listen for "activity", if seen, "refresh" the inactivty timer
     // "activity" also includes "page visibility - visible", but that is handled below in a different event sub
@@ -95,8 +96,7 @@ export class SessionEntity {
         this.inactiveTimer.pause()
         this.inactiveAt = this.getFutureTimestamp(inactiveMs)
         this.write({ ...this.read(), inactiveAt: this.inactiveAt })
-      }
-      else {
+      } else {
         if (this.expireTimer.isValid()) {
           this.refresh()
         } else {

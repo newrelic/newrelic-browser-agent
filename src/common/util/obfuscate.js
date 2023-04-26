@@ -1,6 +1,6 @@
 import { getConfigurationValue } from '../config/config'
 import { SharedContext } from '../context/shared-context'
-import { protocol } from '../url/protocol'
+import { isFileProtocol } from '../url/protocol'
 import { warn } from './console'
 
 var fileProtocolRule = {
@@ -41,7 +41,7 @@ export function getRules (agentIdentifier) {
 
   rules = rules.concat(configRules)
 
-  if (protocol.isFileProtocol()) rules.push(fileProtocolRule)
+  if (isFileProtocol()) rules.push(fileProtocolRule)
   // could add additional runtime/environment-specific rules here
 
   return rules

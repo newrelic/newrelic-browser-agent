@@ -15,7 +15,7 @@ import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { Obfuscator } from '../util/obfuscate'
 import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
-import { VERSION } from '../constants/environment-variables'
+import { VERSION } from '../constants/env'
 import { isBrowserScope, isWorkerScope } from '../util/global-scope'
 
 const haveSendBeacon = !!navigator.sendBeacon // only the web window obj has sendBeacon at this time, so 'false' for other envs
@@ -176,7 +176,7 @@ export class Harvest extends SharedContext {
   createPayload (type, options) {
     var makeBody = createAccumulator()
     var makeQueryString = createAccumulator()
-    var listeners = (this._events[type] && this._events[type] || [])
+    var listeners = ((this._events[type] && this._events[type]) || [])
 
     for (var i = 0; i < listeners.length; i++) {
       var singlePayload = listeners[i](options)

@@ -24,8 +24,10 @@ export class Instrument extends InstrumentBase {
     // skipNext counter to keep track of uncaught
     // errors that will be the same as caught errors.
     this.skipNext = 0
-    try { this.removeOnAbort = new AbortController() } // this try-catch can be removed when IE11 is completely unsupported & gone
-    catch (e) {}
+    try {
+      // this try-catch can be removed when IE11 is completely unsupported & gone
+      this.removeOnAbort = new AbortController()
+    } catch (e) {}
 
     const thisInstrument = this
     thisInstrument.ee.on('fn-start', function (args, obj, methodName) {

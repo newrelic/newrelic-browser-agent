@@ -140,7 +140,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
         if (evt.type === 'abort' && !(context.loadCaptureCalled)) {
           context.params.aborted = true
         }
-        if (evt.type !== 'load' || (context.called === context.totalCbs) && (context.onloadCalled || typeof (xhr.onload) !== 'function') && typeof context.end === 'function') context.end(xhr)
+        if (evt.type !== 'load' || ((context.called === context.totalCbs) && (context.onloadCalled || typeof (xhr.onload) !== 'function') && typeof context.end === 'function')) context.end(xhr)
       } catch (e) {
         try {
           ee.emit('internal-error', [e])

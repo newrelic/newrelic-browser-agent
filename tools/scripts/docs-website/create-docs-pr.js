@@ -5,14 +5,15 @@
 
 'use strict'
 
-const fs = require('fs')
+const fse = require('fs-extra')
 const path = require('path')
 // const { program } = require('commander')
 
 const Github = require('./github')
 const git = require('./git-commands')
 
-const DEFAULT_FILE_NAME = 'CHANGELOG.md'
+const DEFAULT_CHANGELOG_FILE_NAME = 'CHANGELOG.md'
+const DEFAULT_BROWSERS_FILE_NAME = 'tools/jil/util/browsers-supported.json'
 /** e.g. v7.2.1 */
 const TAG_VALID_REGEX = /v\d+\.\d+\.\d+/
 const BASE_BRANCH = 'develop'
@@ -31,8 +32,13 @@ var options = require('yargs')
 
   .string('c')
   .alias('c', 'changelog')
-  .describe('c', 'Name of changelog(defaults to CHANGELOG.md)')
-  .default('c', DEFAULT_FILE_NAME)
+  .describe('c', `Name of changelog(defaults to ${DEFAULT_CHANGELOG_FILE_NAME})`)
+  .default('c', DEFAULT_CHANGELOG_FILE_NAME)
+
+  .string('b')
+  .alias('b', 'browsers-file')
+  .describe('b', `Name of JSON file with supported browser versions (defaults to ${DEFAULT_BROWSERS_FILE_NAME})`)
+  .default('b', DEFAULT_BROWSERS_FILE_NAME)
 
   .boolean('f')
   .alias('f', 'force')
@@ -85,7 +91,8 @@ async function createReleaseNotesPr () {
     logStep('Validation')
     validateTag(version, options.force)
     logStep('Get Release Notes from File')
-    const { body, releaseDate } = await getReleaseNotes(version, options.changelog)
+    let { body, releaseDate } = await getReleaseNotes(version, options.changelog)
+    body += '\n\n' + await getBrowserTargetStatement(version, options.browsersFile)
     logStep('Branch Creation')
     const branchName = await createBranch(options.repoPath, options.remote, version, options.dryRun, options.docsSiteEmail || 'browser-agent@newrelic.com', options.docsSiteName || 'Browser Agent Team')
     logStep('Format release notes file')
@@ -93,7 +100,7 @@ async function createReleaseNotesPr () {
     logStep('Create Release Notes')
     await addReleaseNotesFile(releaseNotesBody, version)
     logStep('Commit Release Notes')
-    await commitReleaseNotes(version, options.remote, branchName, options.d)
+    await commitReleaseNotes(version, branchName, options.d)
 
     // TODO -- Add EOL Update
     // logStep('Update EOL')
@@ -141,7 +148,7 @@ function validateTag (version, force) {
 async function getReleaseNotes (version, releaseNotesFile) {
   console.log('Retrieving release notes from file: ', releaseNotesFile)
 
-  const data = await readReleaseNoteFile(process.cwd() + '/' + releaseNotesFile)
+  const data = await fse.readFile(process.cwd() + '/' + releaseNotesFile, 'utf8')
 
   const sections = data.split('\n## ')
   // Iterate over all past releases to find the version we want
@@ -149,26 +156,45 @@ async function getReleaseNotes (version, releaseNotesFile) {
   // e.g. v7.1.2 (2021-02-24)\n\n
   const body = versionChangeLog + SUPPORT_STATEMENT
   //   const [, releaseDate] = headingRegex.exec(versionChangeLog)
-  const releaseDate = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`
+  // month and day should be in 2 digit format to allow for docs-site CI to run correctly
+  const releaseDate = new Date().toLocaleDateString('sv')
 
   return { body, releaseDate }
 }
 
 /**
- * Reads the contents of NEWS.md
+ * Extracts the supported browser versions from the specified JSON file and creates a support string.
  *
- * @param {string} file path to NEWS.md
+ * @param {string} version The new version.
+ * @param {string} browsersFile The filename where the supported browsers JSON is stored.
  */
-async function readReleaseNoteFile (file) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(file, 'utf8', (err, data) => {
-      if (err) {
-        return reject(err)
-      }
+async function getBrowserTargetStatement (version, browsersFile) {
+  console.log('Retrieving supported browser targets from file: ', browsersFile)
 
-      return resolve(data)
-    })
-  })
+  const browserData = await fse.readJson(process.cwd() + '/' + browsersFile)
+
+  const min = {}
+  const max = {}
+
+  for (let browser in browserData) {
+    const versions = browserData[browser]
+    min[browser] = Infinity
+    max[browser] = -Infinity
+    for (let browserVersion of versions) {
+      const versionNumber = Number(browserVersion.version)
+      min[browser] = min[browser] > versionNumber ? versionNumber : min[browser]
+      max[browser] = max[browser] < versionNumber ? versionNumber : max[browser]
+    }
+  }
+
+  const ANDROID_CHROME_VERSION = 100 // SauceLabs only offers one Android Chrome version
+
+  return (
+    'Consistent with our [browser support policy](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types), ' +
+    `version ${version} of the Browser agent was built for and tested against these browsers and version ranges: ` +
+    `Chrome ${min.chrome}-${max.chrome}, Edge ${min.edge}-${max.edge}, Safari ${min.safari}-${max.safari}, Firefox ${min.firefox}-${max.firefox}; ` +
+    `and for mobile devices, Android Chrome ${ANDROID_CHROME_VERSION} and iOS Safari ${min.ios}-${max.ios}.`
+  )
 }
 
 /**
@@ -180,8 +206,8 @@ async function readReleaseNoteFile (file) {
  * @param {boolean} dryRun skip branch creation
  */
 async function createBranch (filePath, remote, version, dryRun, email, name) {
-  fs.rmSync(filePath, { recursive: true, force: true })
-  fs.mkdirSync(filePath)
+  fse.rmSync(filePath, { recursive: true, force: true })
+  fse.mkdirSync(filePath)
   filePath = path.resolve(filePath)
   console.log(`Changing to ${filePath}`)
   process.chdir(filePath)
@@ -238,7 +264,7 @@ function formatReleaseNotes (releaseDate, version, body) {
 function addReleaseNotesFile (body, version) {
   const FILE = getFileName(version)
   return new Promise((resolve, reject) => {
-    fs.writeFile(FILE, body, 'utf8', (writeErr) => {
+    fse.writeFile(FILE, body, 'utf8', (writeErr) => {
       if (writeErr) {
         reject(writeErr)
       }

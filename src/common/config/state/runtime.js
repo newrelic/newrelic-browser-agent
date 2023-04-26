@@ -3,10 +3,10 @@ import { Configurable } from './configurable'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { getConfigurationValue } from '../config'
 import { globalScope } from '../../util/global-scope'
-import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/environment-variables'
+import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/env'
 import { SessionEntity } from '../../session/session-entity'
 
-const model = agentId => { return {
+const model = agentId => ({
   buildEnv: BUILD_ENV,
   bytesSent: {},
   customTransaction: undefined,
@@ -31,7 +31,7 @@ const model = agentId => { return {
   xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
   userAgent,
   version: VERSION
-} }
+})
 
 const _cache = {}
 

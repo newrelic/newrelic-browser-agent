@@ -303,8 +303,7 @@ function runPvtInStnTests (loader) {
         return Promise.all([resourcesPromise, clickPromise])
       })
       .then(([{ request: resourcesResult }]) => {
-        const expectedPVTItems = ['fi', 'fid', 'lcp', 'fcp', 'load', 'unload']
-        // ^ Browsers that supports CLS temporarily don't get 'pagehide' in final STN -- TODO: include it back when NEWRELIC-6143 is done & cls is decoupled from pagehide
+        const expectedPVTItems = ['fi', 'fid', 'lcp', 'fcp', 'load', 'unload', 'pageHide']
         const stnItems = !!resourcesResult && !!resourcesResult.body ? JSON.parse(resourcesResult.body).res : []
         t.ok(stnItems.length, 'STN items were generated')
         const pvtInStn = stnItems.filter(x => !!expectedPVTItems.filter(y => y === x.n && x.o === 'document').length)

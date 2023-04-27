@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v1.231.0
+
+### Omit CLS scores before web-vitals report them
+Initial snapshots of CLS reported as 0s attached to timing metrics will be omitted, so as to denoise the aggregate CLS dataset. This also temporarily addresses an edge case of long loading pages potentially sending a "final" CLS value of 0, inaccurately.
+
 ## v1.230.0
 
 ### Add persistence for custom attributes

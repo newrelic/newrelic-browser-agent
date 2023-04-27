@@ -17,7 +17,7 @@ export function subscribeToVisibilityChange (cb, toHiddenOnly = false) {
   function handleVisibilityChange () {
     if (toHiddenOnly) { // trigger cb on change to hidden state only
       if (document.visibilityState == 'hidden') cb()
-      else return
+      return
     }
     cb(document.visibilityState)
   }

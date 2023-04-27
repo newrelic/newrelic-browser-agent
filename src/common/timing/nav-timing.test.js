@@ -26,6 +26,31 @@ const testValues = {
   redirectCount: 22
 }
 
+const legacyTestValues = {
+  unloadEventStart: offset + 1,
+  redirectStart: offset + 2,
+  unloadEventEnd: offset + 3,
+  redirectEnd: offset + 4,
+  fetchStart: offset + 5,
+  domainLookupStart: offset + 6,
+  domainLookupEnd: offset + 7,
+  connectStart: offset + 8,
+  secureConnectionStart: offset + 9,
+  connectEnd: offset + 10,
+  requestStart: offset + 11,
+  responseStart: offset + 12,
+  responseEnd: offset + 13,
+  domLoading: offset + 14,
+  domInteractive: offset + 15,
+  domContentLoadedEventStart: offset + 16,
+  domContentLoadedEventEnd: offset + 17,
+  domComplete: offset + 18,
+  loadEventStart: offset + 19,
+  loadEventEnd: offset + 20,
+  type: 'navigate',
+  redirectCount: offset + 22
+}
+
 const expectedPT = {
   of: offset,
   n: 0,
@@ -80,11 +105,32 @@ describe('addPT()', () => {
     expected = { ...expectedPT }
     delete expected.le
     expect(output4).toEqual(expected)
+
+    const legacyoutput = addPT(offset, { ...legacyTestValues, invalidValue: 'test' }, {}, true)
+    expect(legacyoutput).toEqual(expectedPT)
+
+    const legacyoutput2 = addPT(offset, { ...legacyTestValues, loadEventEnd: -1 }, {}, true)
+    let legacyexpected = { ...expectedPT }
+    delete legacyexpected.le
+    expect(legacyoutput2).toEqual(expected)
+
+    const legacyoutput3 = addPT(offset, { ...legacyTestValues, loadEventEnd: 'test' }, {}, true)
+    legacyexpected = { ...expectedPT }
+    delete legacyexpected.le
+    expect(legacyoutput3).toEqual(legacyexpected)
+
+    const legacyoutput4 = addPT(offset, { ...legacyTestValues, loadEventEnd: null }, {}, true)
+    legacyexpected = { ...expectedPT }
+    delete legacyexpected.le
+    expect(legacyoutput4).toEqual(legacyexpected)
   })
 
   test('rounds values to integers', () => {
     const output = addPT(offset, { unloadEventStart: 3.14159 }, {})
     expect(output.u).toEqual(3)
+
+    const legacyoutput = addPT(0, { unloadEventStart: 3.14159 }, {}, true)
+    expect(legacyoutput.u).toEqual(3)
   })
 
   test('adds entries to navTimingValues', () => {
@@ -92,6 +138,11 @@ describe('addPT()', () => {
     addPT(offset, { testValues }, {})
     const afterLength = navTimingValues.length
     expect(afterLength - beforeLength).toEqual(21) // 20 + value of n
+
+    const legacybeforeLength = navTimingValues.length
+    addPT(offset, { legacyTestValues }, {}, true)
+    const legacyafterLength = navTimingValues.length
+    expect(legacyafterLength - legacybeforeLength).toEqual(21) // 20 + value of n
   })
 })
 

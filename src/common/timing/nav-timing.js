@@ -37,7 +37,7 @@ const PNT_TYPES = {
 export function addPT (offset, pt, v = {}, isL1Api = false) {
   if (!pt) return
   v.of = offset
-  handleValue(0, v, 'n')
+  handleValue(v.of, v, 'n', true)
   handleValue(pt[UNLOAD_EVENT + START], v, 'u', isL1Api)
   handleValue(pt[REDIRECT + START], v, 'r', isL1Api)
   handleValue(pt[UNLOAD_EVENT + END], v, 'ue', isL1Api)
@@ -74,7 +74,7 @@ function handleValue (value, obj, prop, isOldApi) {
   For L1 (deprecated) Timing, the value is an UNIX epoch timestamp, which we will convert to a relative time using our offset.
   PNT.type is reported as undefined, 1, 2, etc -- note that zero-value properties will be recorded as 'undefined', however DEM interprets undefined "types" as "navigate"
   */
-  if (typeof value === 'number' && value >= 0) { // note that zero-value properties will be recorded as 'undefined'
+  if (typeof value === 'number' && value > 0) { // note that zero-value properties will be recorded as 'undefined'
     if (isOldApi) {
       const offset = obj?.of > 0 ? obj.of : 0 // expect an epoch timestamp, if called by addPT
       value = Math.max(value - offset, 0)

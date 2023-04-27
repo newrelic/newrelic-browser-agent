@@ -27,6 +27,13 @@ var DOM_CONTENT_LOAD_EVENT = 'domContentLoadedEvent'
 
 export var navTimingValues = []
 
+const PNT_TYPES = {
+  navigate: 0,
+  reload: 1,
+  back_forward: 2,
+  prerender: 3
+}
+
 export function addPT (offset, pt, v = {}, isLegacy) {
   if (!pt) return
   v.of = offset
@@ -56,7 +63,7 @@ export function addPT (offset, pt, v = {}, isLegacy) {
 
 // Add Performance Navigation values to the given object
 export function addPN (pn, v) {
-  handleValue(pn.type, v, 'ty')
+  handleValue(PNT_TYPES[pn.type], v, 'ty')
   handleValue(pn.redirectCount, v, 'rc')
   return v
 }

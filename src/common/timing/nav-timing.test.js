@@ -22,7 +22,7 @@ const testValues = {
   domComplete: 18,
   loadEventStart: 19,
   loadEventEnd: 20,
-  type: 21,
+  type: 'navigate',
   redirectCount: 22
 }
 
@@ -52,7 +52,7 @@ const expectedPT = {
 }
 
 const expectedPN = {
-  ty: 21,
+  ty: 0,
   rc: 22
 }
 

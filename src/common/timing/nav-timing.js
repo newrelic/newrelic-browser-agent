@@ -27,11 +27,15 @@ var DOM_CONTENT_LOAD_EVENT = 'domContentLoadedEvent'
 
 export var navTimingValues = []
 
-const PNT_TYPES = {
-  navigate: undefined,
-  reload: 1,
-  back_forward: 2,
-  prerender: 3
+function getPntType (type) {
+  if (typeof type == 'number') return type
+  const types = {
+    navigate: undefined,
+    reload: 1,
+    back_forward: 2,
+    prerender: 3
+  }
+  return types[type]
 }
 
 export function addPT (offset, pt, v = {}, isL1Api = false) {
@@ -63,7 +67,7 @@ export function addPT (offset, pt, v = {}, isL1Api = false) {
 
 // Add Performance Navigation values to the given object
 export function addPN (pn, v) {
-  handleValue(PNT_TYPES[pn.type], v, 'ty')
+  handleValue(getPntType(pn.type), v, 'ty')
   handleValue(pn.redirectCount, v, 'rc')
   return v
 }

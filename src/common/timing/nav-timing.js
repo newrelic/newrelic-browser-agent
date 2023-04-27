@@ -27,45 +27,55 @@ var DOM_CONTENT_LOAD_EVENT = 'domContentLoadedEvent'
 
 export var navTimingValues = []
 
-export function addPT (offset, pt, v = {}, isLegacy) {
+export function addPT (offset, pt, v = {}, isL1Api = false) {
   if (!pt) return
   v.of = offset
   handleValue(0, v, 'n')
-  handleValue(pt[UNLOAD_EVENT + START], v, 'u', isLegacy && offset)
-  handleValue(pt[REDIRECT + START], v, 'r', isLegacy && offset)
-  handleValue(pt[UNLOAD_EVENT + END], v, 'ue', isLegacy && offset)
-  handleValue(pt[REDIRECT + END], v, 're', isLegacy && offset)
-  handleValue(pt['fetch' + START], v, 'f', isLegacy && offset)
-  handleValue(pt[DOMAIN_LOOKUP + START], v, 'dn', isLegacy && offset)
-  handleValue(pt[DOMAIN_LOOKUP + END], v, 'dne', isLegacy && offset)
-  handleValue(pt['c' + ONNECT + START], v, 'c', isLegacy && offset)
-  handleValue(pt['secureC' + ONNECT + 'ion' + START], v, 's', isLegacy && offset)
-  handleValue(pt['c' + ONNECT + END], v, 'ce', isLegacy && offset)
-  handleValue(pt[REQUEST + START], v, 'rq', isLegacy && offset)
-  handleValue(pt[RESPONSE + START], v, 'rp', isLegacy && offset)
-  handleValue(pt[RESPONSE + END], v, 'rpe', isLegacy && offset)
-  handleValue(pt.domLoading, v, 'dl', isLegacy && offset)
-  handleValue(pt.domInteractive, v, 'di', isLegacy && offset)
-  handleValue(pt[DOM_CONTENT_LOAD_EVENT + START], v, 'ds', isLegacy && offset)
-  handleValue(pt[DOM_CONTENT_LOAD_EVENT + END], v, 'de', isLegacy && offset)
-  handleValue(pt.domComplete, v, 'dc', isLegacy && offset)
-  handleValue(pt[LOAD_EVENT + START], v, 'l', isLegacy && offset)
-  handleValue(pt[LOAD_EVENT + END], v, 'le', isLegacy && offset)
+  handleValue(pt[UNLOAD_EVENT + START], v, 'u', isL1Api)
+  handleValue(pt[REDIRECT + START], v, 'r', isL1Api)
+  handleValue(pt[UNLOAD_EVENT + END], v, 'ue', isL1Api)
+  handleValue(pt[REDIRECT + END], v, 're', isL1Api)
+  handleValue(pt['fetch' + START], v, 'f', isL1Api)
+  handleValue(pt[DOMAIN_LOOKUP + START], v, 'dn', isL1Api)
+  handleValue(pt[DOMAIN_LOOKUP + END], v, 'dne', isL1Api)
+  handleValue(pt['c' + ONNECT + START], v, 'c', isL1Api)
+  handleValue(pt['secureC' + ONNECT + 'ion' + START], v, 's', isL1Api)
+  handleValue(pt['c' + ONNECT + END], v, 'ce', isL1Api)
+  handleValue(pt[REQUEST + START], v, 'rq', isL1Api)
+  handleValue(pt[RESPONSE + START], v, 'rp', isL1Api)
+  handleValue(pt[RESPONSE + END], v, 'rpe', isL1Api)
+  handleValue(pt.domLoading, v, 'dl', isL1Api)
+  handleValue(pt.domInteractive, v, 'di', isL1Api)
+  handleValue(pt[DOM_CONTENT_LOAD_EVENT + START], v, 'ds', isL1Api)
+  handleValue(pt[DOM_CONTENT_LOAD_EVENT + END], v, 'de', isL1Api)
+  handleValue(pt.domComplete, v, 'dc', isL1Api)
+  handleValue(pt[LOAD_EVENT + START], v, 'l', isL1Api)
+  handleValue(pt[LOAD_EVENT + END], v, 'le', isL1Api)
   return v
 }
 
 // Add Performance Navigation values to the given object
-export function addPN (pn, v) {
-  handleValue(pn.type, v, 'ty')
+export function addPN (pn, v = {}) {
+  handleValue(pn.type, v, 'ty') // this is a string for NavTiming L2 and a number for L1
   handleValue(pn.redirectCount, v, 'rc')
   return v
 }
 
-function handleValue (value, obj, prop, offset) {
-  let val
-  if (typeof (value) === 'number' && (value >= 0 || (!!offset && value > 0))) {
-    val = offset ? Math.max(Math.round(value - offset), 0) : value
-    obj[prop] = Math.round(val)
+function handleValue (value, obj, prop, isOldApi) {
+  /*
+  For L2 Timing API, the value will already be a relative-to-previous-document DOMHighResTimeStamp.
+  For L1 (deprecated) Timing, the value is an UNIX epoch timestamp, which we will convert to a relative time using our offset.
+  */
+  if (typeof value === 'number' && value > 0) { // note that zero-value properties will be recorded as 'undefined'
+    if (isOldApi) {
+      const offset = obj?.of > 0 ? obj.of : 0 // expect an epoch timestamp, if called by addPT
+      value = Math.max(value - offset, 0)
+    }
+    value = Math.round(value)
+    obj[prop] = value
+  } else if (typeof value === 'string') {
+    obj[prop] = value
+    value = undefined // SPA which consumes navTimingValues arr doesn't yet handle non-numeric values
   }
-  navTimingValues.push(val)
+  navTimingValues.push(value)
 }

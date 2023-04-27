@@ -99,7 +99,7 @@ export class Aggregate extends AggregateBase {
         chunksForQueryString.push(param('perf', stringify(perf)))
       } else if (typeof PerformanceTiming !== 'undefined') { // Safari pre-15 did not support level 2 timing
         const perf = ({
-          timing: addPT(agentRuntime.offset, globalScope.performance.timing, {}),
+          timing: addPT(agentRuntime.offset, globalScope.performance.timing, {}, true),
           navigation: addPN(globalScope.performance.navigation, {})
         })
         chunksForQueryString.push(param('perf', stringify(perf)))

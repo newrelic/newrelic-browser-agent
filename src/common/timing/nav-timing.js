@@ -28,7 +28,7 @@ var DOM_CONTENT_LOAD_EVENT = 'domContentLoadedEvent'
 export var navTimingValues = []
 
 const PNT_TYPES = {
-  navigate: 0,
+  navigate: undefined,
   reload: 1,
   back_forward: 2,
   prerender: 3
@@ -72,10 +72,9 @@ function handleValue (value, obj, prop, isOldApi) {
   /*
   For L2 Timing API, the value will already be a relative-to-previous-document DOMHighResTimeStamp.
   For L1 (deprecated) Timing, the value is an UNIX epoch timestamp, which we will convert to a relative time using our offset.
-  //
-  PNT.type is reported as 0, 1, 2 -- 0 values must be honored to allow this
+  PNT.type is reported as undefined, 1, 2, etc -- note that zero-value properties will be recorded as 'undefined', however DEM interprets undefined "types" as "navigate"
   */
-  if (typeof value === 'number' && value >= 0) {
+  if (typeof value === 'number' && value >= 0) { // note that zero-value properties will be recorded as 'undefined'
     if (isOldApi) {
       const offset = obj?.of > 0 ? obj.of : 0 // expect an epoch timestamp, if called by addPT
       value = Math.max(value - offset, 0)

@@ -22,7 +22,7 @@ const testValues = {
   domComplete: 18,
   loadEventStart: 19,
   loadEventEnd: 20,
-  type: 'navigate',
+  type: 'reload',
   redirectCount: 22
 }
 
@@ -47,7 +47,7 @@ const legacyTestValues = {
   domComplete: offset + 18,
   loadEventStart: offset + 19,
   loadEventEnd: offset + 20,
-  type: 'navigate',
+  type: 'reload',
   redirectCount: offset + 22
 }
 
@@ -77,7 +77,7 @@ const expectedPT = {
 }
 
 const expectedPN = {
-  ty: 0,
+  ty: 1,
   rc: 22
 }
 

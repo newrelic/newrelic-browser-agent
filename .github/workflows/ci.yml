@@ -28,7 +28,9 @@ jobs:
       - name: Running CDN Build
         run: npm run cdn:build:dev
       - name: Running NPM Build
-        run: npm run build:npm
+        run: |
+          npm run build:npm
+          npm run tools:test-builds
       - name: Generating NPM Build Stats
         run: node ./tools/scripts/npm-build-stats.mjs
       - name: Generating Asset Size Report

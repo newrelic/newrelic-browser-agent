@@ -78,7 +78,7 @@ export class Aggregate extends AggregateBase {
       if (typeof PerformanceNavigationTiming !== 'undefined') {
         this.storeTiming(window.performance?.getEntriesByType('navigation')?.[0] || {})
       } else {
-        this.storeTiming(globalScope.performance.timing)
+        this.storeTiming(window.performance?.timing)
       }
 
       var scheduler = new HarvestScheduler('resources', {

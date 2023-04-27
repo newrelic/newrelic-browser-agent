@@ -32,7 +32,7 @@ jobs:
           npm run build:npm
           npm run tools:test-builds
       - name: Generating NPM Build Stats
-        run: node ./tools/scripts/npm-build-stats.mjs
+        run: node ./tools/scripts/npm-build-stats.js
       - name: Generating Asset Size Report
         run: node ./tools/scripts/diff-sizes.mjs -o build
       - name: Creating PR Comment

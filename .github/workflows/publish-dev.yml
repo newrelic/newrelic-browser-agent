@@ -26,7 +26,7 @@ jobs:
           npm run build:npm
           npm run tools:test-builds
       - name: Generating NPM Build Stats
-        run: node ./tools/scripts/npm-build-stats.mjs
+        run: node ./tools/scripts/npm-build-stats.js
       - name: upload artifacts to S3
         run: |
           node tools/scripts/upload-to-s3.js \

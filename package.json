@@ -183,6 +183,7 @@
     "fs-extra": "^11.1.0",
     "function-bind": "^1.1.1",
     "glob": "^7.0.5",
+    "gzip-size": "^7.0.0",
     "html-webpack-plugin": "^5.5.0",
     "husky": "^8.0.0",
     "jest": "^28.1.1",

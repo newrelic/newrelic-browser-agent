@@ -75,9 +75,9 @@ export class Aggregate extends AggregateBase {
     this.laststart = 0
 
     registerHandler('feat-stn', () => {
-      try {
+      if (typeof PerformanceNavigationTiming !== 'undefined') {
         this.storeTiming(window.performance?.getEntriesByType('navigation')?.[0] || {})
-      } catch (err) {
+      } else {
         this.storeTiming(globalScope.performance.timing)
       }
 

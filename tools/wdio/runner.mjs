@@ -30,9 +30,17 @@ if (['trace', 'debug', 'info'].indexOf(wdioConfig.logLevel) > -1) {
 // Clear the JIL CLI params before starting wdio so they are not passed to worker processes
 process.argv.splice(2)
 
+const jsonReplacer = (_, value) => {
+  if (value instanceof RegExp) {
+    return value.toString()
+  }
+
+  return value
+}
+
 fs.writeFile(
   configFilePath,
-  `export const config = JSON.parse(\`${JSON.stringify(wdioConfig)}\`)`,
+  `export const config = JSON.parse(\`${JSON.stringify(wdioConfig, jsonReplacer)}\`)`,
   (error) => {
     if (error) {
       console.error(error)

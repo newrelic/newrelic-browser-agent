@@ -41,11 +41,9 @@ export class BrowserSpec {
 
   same (other) {
     return (
-      this.desired.platformName === other.desired.platformName &&
-      this.desired.platformVersion === other.desired.platformVersion &&
-      this.desired.browserName === other.desired.browserName &&
-      this.desired.platform === other.desired.platform &&
-      this.desired.version === other.desired.version
+      this.platformName === other.platformName &&
+      this.browserName === other.browserName &&
+      this.browserVersion === other.browserVersion
     )
   }
 

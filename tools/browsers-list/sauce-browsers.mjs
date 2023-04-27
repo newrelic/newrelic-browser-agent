@@ -1,8 +1,12 @@
-const fs = require('fs')
-const browserslist = require('browserslist')
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+import fs from 'fs-extra'
+import url from 'url'
+import path from 'path'
+import browserslist from 'browserslist'
+import fetch from 'node-fetch'
 
-(async function () {
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
+
+;(async function () {
   // Fetch an unfiltered list of browser-platform definitions from Sauce Labs.
   console.log('contacting saucelabs API ...')
   const r = await fetch('https://api.us-west-1.saucelabs.com/rest/v1/info/platforms/all', {
@@ -15,9 +19,9 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
   console.log(`fetched ${json.length} browsers from saucelabs`)
 
   // Filter list down to a sample of supported browsers and write metadata to a file for testing.
-  fs.writeFileSync('./tools/jil/util/browsers-supported.json', JSON.stringify(getBrowsers(json), null, 2))
-  fs.writeFileSync('./tools/jil/util/browsers-all.json', JSON.stringify(getBrowsers(json, Infinity), null, 2))
-  console.log('saved saucelabs browsers to browsers-supported.json')
+  await fs.writeJSON(path.resolve(__dirname, 'browsers-supported.json'), getBrowsers(json), { spaces: 2 })
+  fs.writeJSON(path.resolve(__dirname, 'browsers-all.json'), getBrowsers(json, Infinity), { spaces: 2 })
+  console.log('Saved saucelabs browsers to browsers-supported.json')
 })()
 
 /**
@@ -28,7 +32,7 @@ const browsers = {
   edge: [],
   safari: [],
   firefox: [],
-  android: [], // no longer works with W3C commands.... need to change JIL or do deeper dive to get this to work
+  android: [],
   ios: []
 }
 

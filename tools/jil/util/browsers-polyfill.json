@@ -1,9 +1,0 @@
-{
-  "ie": [
-    {
-      "browserName": "internet explorer",
-      "platform": "Windows 10",
-      "version": "11"
-    }
-  ]
-}

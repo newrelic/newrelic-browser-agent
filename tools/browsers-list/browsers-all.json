@@ -4,15 +4,15 @@
       "browserName": "chrome",
       "platform": "Windows 10",
       "platformName": "Windows 10",
-      "version": "112",
-      "browserVersion": "112"
+      "version": "113",
+      "browserVersion": "113"
     },
     {
       "browserName": "chrome",
       "platform": "Windows 11",
       "platformName": "Windows 11",
-      "version": "109",
-      "browserVersion": "109"
+      "version": "110",
+      "browserVersion": "110"
     },
     {
       "browserName": "chrome",
@@ -27,6 +27,13 @@
       "platformName": "Windows 11",
       "version": "103",
       "browserVersion": "103"
+    },
+    {
+      "browserName": "chrome",
+      "platform": "Windows 10",
+      "platformName": "Windows 10",
+      "version": "113",
+      "browserVersion": "113"
     },
     {
       "browserName": "chrome",
@@ -156,8 +163,8 @@
     },
     {
       "browserName": "chrome",
-      "platform": "Windows 10",
-      "platformName": "Windows 10",
+      "platform": "Windows 11",
+      "platformName": "Windows 11",
       "version": "94",
       "browserVersion": "94"
     },

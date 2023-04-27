@@ -99,7 +99,13 @@ export class Aggregate extends AggregateBase {
         chunksForQueryString.push(param('perf', stringify(perf)))
       } catch (err) {
         // performance API failed for some reason
-        this.ee.emit('internal-error', [err])
+        if (globalScope.performance && typeof (globalScope.performance.timing) !== 'undefined') {
+          var navTimingApiData = ({
+            timing: addPT(agentRuntime.offset, globalScope.performance.timing, {}),
+            navigation: addPN(globalScope.performance.navigation, {})
+          })
+          chunksForQueryString.push(param('perf', stringify(navTimingApiData)))
+        }
       }
     }
 

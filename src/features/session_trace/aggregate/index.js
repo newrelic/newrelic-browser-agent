@@ -75,7 +75,11 @@ export class Aggregate extends AggregateBase {
     this.laststart = 0
 
     registerHandler('feat-stn', () => {
-      this.storeTiming(window.performance?.getEntriesByType('navigation')?.[0] || {})
+      try {
+        this.storeTiming(window.performance?.getEntriesByType('navigation')?.[0] || {})
+      } catch (err) {
+        this.storeTiming(globalScope.performance.timing)
+      }
 
       var scheduler = new HarvestScheduler('resources', {
         onFinished: onHarvestFinished.bind(this),

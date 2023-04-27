@@ -93,7 +93,7 @@ export class Aggregate extends AggregateBase {
       try {
         const navTimingApiData = globalScope?.performance?.getEntriesByType('navigation')?.[0]
         const perf = ({
-          timing: addPT(agentRuntime.offset, navTimingApiData, {}),
+          timing: addPT(agentRuntime.offset, navTimingApiData, {}, true),
           navigation: addPN(navTimingApiData, {})
         })
         chunksForQueryString.push(param('perf', stringify(perf)))

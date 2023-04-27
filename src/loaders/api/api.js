@@ -81,6 +81,7 @@ export function setAPI (agentIdentifier, forceDrain) {
     if (value === null) {
       delete currentInfo.jsAttributes[key]
     } else {
+      console.log('set info...', key, value)
       setInfo(agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } })
     }
     return apiCall(prefix, apiName, true, !!addToBrowserStorage || (value === null && 'session'))(key, value)

@@ -222,14 +222,16 @@ export class Aggregate extends AggregateBase {
 
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
+    var att = getInfo(this.agentIdentifier).jsAttributes
     if (params._interactionId != null) {
+      console.log('interaction...', params._interactionId)
       // hold on to the error until the interaction finishes
       this.errorCache[params._interactionId] = this.errorCache[params._interactionId] || []
       this.errorCache[params._interactionId].push([type, bucketHash, params, newMetrics, att, customAttributes])
     } else {
       // store custom attributes
       var customParams = {}
-      var att = getInfo(this.agentIdentifier).jsAttributes
+      console.log('error att...', att)
       mapOwn(att, setCustom)
       if (customAttributes) {
         mapOwn(customAttributes, setCustom)
@@ -246,6 +248,7 @@ export class Aggregate extends AggregateBase {
   }
 
   onInteractionSaved (interaction) {
+    console.log('interaction saved...')
     if (!this.errorCache[interaction.id] || this.blocked) return
 
     this.errorCache[interaction.id].forEach((item) => {
@@ -280,6 +283,7 @@ export class Aggregate extends AggregateBase {
   }
 
   onInteractionDiscarded (interaction) {
+    console.log('interaction discarded...')
     if (!this.errorCache || !this.errorCache[interaction.id] || this.blocked) return
 
     this.errorCache[interaction.id].forEach((item) => {

@@ -10,9 +10,9 @@ import { LocalMemory } from '../../common/storage/local-memory'
 
 let ranOnce = 0
 export function setupAgentSession (agentIdentifier) {
-  if (ranOnce++) return
-
   const agentRuntime = getRuntime(agentIdentifier)
+  if (ranOnce++) return agentRuntime.session
+
   // subdomains is a boolean that can be specified by customer.
   // only way to keep the session object across subdomains is using first party cookies
   // This determines which storage wrapper the session manager will use to keep state
@@ -39,8 +39,8 @@ export function setupAgentSession (agentIdentifier) {
   if (isBrowserScope) {
     // retrieve & re-add all of the persisted setCustomAttribute|setUserId k-v from previous page load(s)
     const customSessionData = agentRuntime.session?.read?.()?.custom
+    const agentInfo = getInfo(agentIdentifier)
     if (customSessionData) {
-      const agentInfo = getInfo(agentIdentifier)
       setInfo(agentIdentifier, { ...agentInfo, jsAttributes: { ...agentInfo.jsAttributes, ...customSessionData } })
     }
   }
@@ -60,4 +60,6 @@ export function setupAgentSession (agentIdentifier) {
   }, 'session', ee.get(agentIdentifier))
 
   drain(agentIdentifier, 'session')
+
+  return agentRuntime.session
 }

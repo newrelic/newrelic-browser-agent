@@ -6,7 +6,28 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## v1.231.0
 
 ### Omit CLS scores before web-vitals report them
-Initial snapshots of CLS reported as 0s attached to timing metrics will be omitted, so as to denoise the aggregate CLS dataset. This also temporarily addresses an edge case of long loading pages potentially sending a "final" CLS value of 0, inaccurately.
+Initial snapshots of CLS reported as 0s attached to timing metrics will be omitted, so as to "de-noise" the aggregate CLS dataset. This also temporarily addresses an edge case of long loading pages potentially sending a "final" CLS value of 0, inaccurately. The case of a final 0 CLS when a user only navigates away from the page has also been fixed.
+
+### Fix accepted argument type for `all` and `race` methods of `Promise`
+The wrapped Promise's static `all` and `race` methods now work with iterators per native implementation, rather than only arrays.
+
+### Upgrade Navigation Timing API in `PageView` (RUM) call
+The performance entry data sent for `PageView` now uses the Navigation Timing Level 2 API over the deprecated Level 1 API.
+
+### Fix typo in top-level API causing exception
+An an uncaught reference exception was occurring on pages with more than one initialized agent due to a typo in the name of a variable (`returnsVals`).
+
+### Add null entry checks to certain web-vitals handlers
+For LCP and FID, we will exclude the performance entry info when there are no entries given by web-vitals. This had thrown exceptions.
+
+### Remove previously added console logging measurements
+This reverses performance impacts and exceptions introduced in the prior release by serializing console API arguments.
+
+### Rectify version reported by NPM agent implementations
+Agents installed via the NPM method will report the correct semantic version in data harvests.
+
+### Fix exception when importing NPM package source code
+An error was occurring related to a missing environment variable when importing from the NPM package source directly (versus via the CJS/ESM packages).
 
 ## v1.230.0
 

@@ -373,7 +373,8 @@ async function createPR (version, branch, dryRun) {
     head: `newrelic-forks:${branch}`,
     base: BASE_BRANCH,
     title,
-    body: title
+    body: title,
+    draft: true
   }
 
   console.log(`Creating PR with following options: ${JSON.stringify(prOptions)}\n\n`)

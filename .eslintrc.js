@@ -100,7 +100,6 @@ module.exports = {
     'no-useless-return': 'off',
     'no-useless-constructor': 'off',
     'dot-notation': 'off',
-    'spaced-comment': 'off',
     'no-unused-expressions': 'off',
     'prefer-const': 'off',
     'no-use-before-define': 'off',

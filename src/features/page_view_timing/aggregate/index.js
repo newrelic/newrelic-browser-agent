@@ -88,10 +88,10 @@ export class Aggregate extends AggregateBase {
         attributes.eid = lcpEntry.id
 
         if (lcpEntry.url) {
-          attributes['elUrl'] = cleanURL(lcpEntry.url)
+          attributes.elUrl = cleanURL(lcpEntry.url)
         }
         if (lcpEntry.element?.tagName) {
-          attributes['elTag'] = lcpEntry.element.tagName
+          attributes.elTag = lcpEntry.element.tagName
         }
       }
 
@@ -181,7 +181,7 @@ export class Aggregate extends AggregateBase {
     Future: onCLS value changes should be reported directly & CLS separated into its own timing node so it's not beholden to 'pageHide' firing. It'd also be possible to report the real final CLS.
     */
     if (this.cls !== null) {
-      attrs['cls'] = this.cls
+      attrs.cls = this.cls
     }
 
     this.timings.push({

@@ -212,7 +212,7 @@ export class Aggregate extends AggregateBase {
           if (evName === 'click') {
             var value = getActionText(ev.target)
             if (value) {
-              state.currentNode.attrs.custom['actionText'] = value
+              state.currentNode.attrs.custom.actionText = value
             }
           }
         }

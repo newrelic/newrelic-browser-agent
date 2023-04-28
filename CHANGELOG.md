@@ -6,28 +6,28 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## v1.231.0
 
 ### Omit CLS scores before web-vitals report them
-Initial snapshots of CLS reported as 0s attached to timing metrics will be omitted, so as to denoise the aggregate CLS dataset. This also temporarily addresses an edge case of long loading pages potentially sending a "final" CLS value of 0, inaccurately. The case of final 0 cls when user only navigates away from the page has also been fixed.
+Initial snapshots of CLS reported as 0s attached to timing metrics will be omitted, so as to "de-noise" the aggregate CLS dataset. This also temporarily addresses an edge case of long loading pages potentially sending a "final" CLS value of 0, inaccurately. The case of a final 0 CLS when a user only navigates away from the page has also been fixed.
 
-### Fix Promise all/race accepted argument type
-The wrapped Promise's static all and race methods work with iterators per native implementation, rather than only arrays.
+### Fix accepted argument type for `all` and `race` methods of `Promise`
+The wrapped Promise's static `all` and `race` methods now work with iterators per native implementation, rather than only arrays.
 
-### Upgrade timing API in RUM call
-The performance entry data sent for PageView now uses level 2 timing API over the deprecated level 1.
+### Upgrade Navigation Timing API in `PageView` (RUM) call
+The performance entry data sent for `PageView` now uses the Navigation Timing Level 2 API over the deprecated Level 1 API.
 
 ### Fix typo in top-level API causing exception
-All APIs on pages with more than one initialized agent no longer causes an uncaught reference exception. The returned value is a list of answers from each initialized agent.
+An an uncaught reference exception was occurring on pages with more than one initialized agent due to a typo in the name of a variable (`returnsVals`).
 
-### Null entry checks added to certain web-vitals handlers
+### Add null entry checks to certain web-vitals handlers
 For LCP and FID, we will exclude the performance entry info when there are no entries given by web-vitals. This had thrown exceptions.
 
-### Remove previously added console logging initiative
-This cuts the performance impact and exceptions caused by console API arguments serialization that was introduced.
+### Remove previously added console logging measurements
+This reverses performance impacts and exceptions introduced in the prior release by serializing console API arguments.
 
-### Rectify version reported by NPM installation
-Agents installed by NPM will report the right semantic version.
+### Rectify version reported by NPM agent implementations
+Agents installed via the NPM method will report the correct semantic version in data harvests.
 
 ### Fix exception when importing NPM package source code
-Error around missing environment variable when importing from NPM package src directly over the CJS/ESM packages is fixed.
+An error was occurring related to a missing environment variable when importing from the NPM package source directly (versus via the CJS/ESM packages).
 
 ## v1.230.0
 

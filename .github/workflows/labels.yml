@@ -2,6 +2,14 @@ name: Remove labels
 on:
   pull_request_target:
     types: [synchronize, reopened]
+    # Ignore PRs from release-please.
+    # Might also ignore the rare PR containing only changes to package.json.
+    paths-ignore:
+      - 'changelog.json'
+      - 'CHANGELOG.md'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'VERSION'
 
 jobs:
   remove_safe_to_test:

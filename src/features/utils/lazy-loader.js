@@ -9,7 +9,7 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
  * should be.
  * @param featureName Name of the feature to import such as ajax or session_trace
  * @param featurePart Name of the feature part to load; should be either instrument or aggregate
- * @returns {Promise<InstrumentBase|AggregateBase|null>}
+ * @returns {Promise<InstrumentBase|FeatureBase|null>}
  */
 export function lazyLoader (featureName, featurePart) {
   if (featurePart === 'aggregate') {

@@ -1,0 +1,53 @@
+# Validates the format of a PR title and body. Because the title will become the default commit message on squash-merge,
+# it should follow the conventional commit format and be 80 characters long or fewer. Because the body will later be
+# used in creating docs-site release notes, it must have a summary paragraph (80+ characters) followed by `\n---`.
+
+name: "Validate PR"
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - labeled
+      - unlabeled
+
+jobs:
+  validate-pr-format:
+    name: Validate PR Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Parse PR Contents
+        id: parse-pr-contents
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const head = (text) => { core.info(`\u001b[36;1m${text}`) }
+            const echo = (text) => { core.info(text) }
+            head('TITLE')
+            echo('--------------------------------------------------------------------------------')
+            const title = context.payload.pull_request.title
+            if (title.length > 80) echo(title.substring(0, 80) + '\x1b[30;43m' + title.substring(80))
+            else echo(title)
+            echo('')
+            head('DESCRIPTION')
+            echo('--------------------------------------------------------------------------------')
+            const descriptionEnd = context.payload.pull_request.body.indexOf('\n---')
+            const description = context.payload.pull_request.body.substring(0, descriptionEnd).trim()
+            if (descriptionEnd === -1) echo('\x1b[30;43m[missing `---` line to terminate description header]')
+            else if (description.length === 0) echo('\x1b[30;43m[missing]')
+            else if (description.length < 80) echo(description + '\x1b[30;43m' + (new Array(80 - description.length + 1)).join('\xa0'))
+            else echo(description)
+            echo('')
+            const errors = []
+            if (context.payload.pull_request.title.length > 80) errors.push('PR title is longer than 80 characters and would be truncated. Please shorten.')
+            if (!(/(?:feat|fix|security|chore)(?:\([^)]+\))?: .*/g).test(context.payload.pull_request.title)) errors.push('Title does not start with a type of `feat`, `fix`, `security`, or `chore` followed by an optional scope then a colon and a space.')
+            if (descriptionEnd === -1) errors.push('The PR description is missing a horizontal rule (`---`) on a line by itself to terminate the header section.')
+            if (description.length === 0) errors.push('The top of the PR description must contain a summary paragraph of 80 characters or more followed by a horizontal rule (`---`) on a line by itself.');
+            if (errors.length) {
+              core.setFailed('Validation Failed')
+              echo('- ' + errors.join('\n- '))
+            } else {
+              echo('\x1b[32;1m' + 'Validation Succeeded')
+              echo('PR title and description are in a valid format for use in generating release note contents.')
+            }

@@ -7,6 +7,7 @@
 
 const fse = require('fs-extra')
 const path = require('path')
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
 
 const Github = require('./github')
 const git = require('./git-commands')
@@ -153,13 +154,17 @@ function validateVersionTag (version, force) {
  * @param {string} changelogFilename The name of the JSON file where the change details are stored.
  */
 async function extractReleaseDetails (version, changelogFilename) {
-  console.log('Extracting release details (front matter and notes body) from change log file:', changelogFilename)
+  console.log('Extracting release details from change log file:', changelogFilename)
 
   const data = await fse.readJson(process.cwd() + '/' + changelogFilename, 'utf8')
 
+  const repository = data.repository || 'newrelic/newrelic-browser-agent' // might differ on a fork
+
   const versionData = data.entries.find((entry) => entry.version.startsWith(version.substring(1))) // no leading 'v', e.g. 1.234.5 (2030-01-01)
 
+  console.log('\nExtracting date')
   const releaseDate = new Date(versionData.createTime).toLocaleDateString('sv') // 2 digit format to allow docs-site CI to run correctly
+  console.log(releaseDate)
 
   const categories = {
     feat: [],
@@ -167,13 +172,16 @@ async function extractReleaseDetails (version, changelogFilename) {
     security: []
   }
 
+  console.log('\nExtracting commit details')
   for (const change of versionData.changes) {
     if (categories[change.type]) {
-      const entry = { sha: change.sha, title: change.message, description: await git.getCommitBody(change.sha) }
+      console.log(`- ${change.message}`)
+      const entry = { sha: change.sha, title: change.message, description: await getEntryDescription(repository, change.sha) }
       categories[change.type].push(entry)
     }
   }
 
+  console.log('\nCollecting change entries and front matter')
   const frontMatter = {
     features: [],
     bugs: [],
@@ -206,13 +214,40 @@ async function extractReleaseDetails (version, changelogFilename) {
 }
 
 /**
+ * Retrieves the description of a commit from its associated pull request's header or the commit message body from git history.
+ *
+ * @param {string} repository - The name of the repository in the format 'owner/repo'.
+ * @param {string} commitHash - The SHA-1 hash of the commit to get the description for.
+ * @returns {Promise<string>} A Promise that resolves to the commit description, or an empty string if no description is found.
+ */
+async function getEntryDescription (repository, commitHash) {
+  let description = ''
+
+  // First try to get the header of the associated PR.
+  // Octokit doesn't do this and we don't need authentication.
+  const response = await fetch(`https://api.github.com/repos/${repository}/commits/${commitHash}/pulls`)
+  const relatedPRs = await response.json()
+  if (relatedPRs && relatedPRs.length) {
+    const prBody = relatedPRs[0].body
+    if (prBody.indexOf('\n---') !== -1) description = relatedPRs[0].body.split('\n---')[0].trim()
+  }
+
+  // Fall back to the body of the commit message from the git history.
+  if (description === '') {
+    description = await git.getCommitBody(commitHash)
+  }
+
+  return description
+}
+
+/**
  * Extracts the supported browser versions from the specified JSON file and creates a support string.
  *
  * @param {string} agentVersion The new agent version.
  * @param {string} browsersFile The filename where the supported browsers JSON is stored.
  */
 async function getBrowserTargetStatement (agentVersion, browsersFile) {
-  console.log('Retrieving supported browser targets from file:', browsersFile)
+  console.log('\nRetrieving supported browser targets from file:', browsersFile)
 
   const browserData = await fse.readJson(process.cwd() + '/' + browsersFile)
 

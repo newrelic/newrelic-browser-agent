@@ -3,9 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict'
-
-const { exec } = require('child_process')
+import { exec } from 'child_process'
 
 async function getPushRemotes () {
   const stdout = await execAsPromise('git remote -v')
@@ -173,7 +171,7 @@ function execAsPromise (command, silent = false) {
   })
 }
 
-module.exports = {
+export default {
   getPushRemotes,
   getCurrentBranch,
   checkoutNewBranch,

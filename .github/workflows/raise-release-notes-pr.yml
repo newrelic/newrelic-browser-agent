@@ -23,5 +23,5 @@ jobs:
         run: npm ci
       - name: Build and raise PR to docs-website
         run: |
-          node tools/scripts/docs-website/create-docs-pr.js \
+          node tools/scripts/docs-website/create-docs-pr.mjs \
             -t=v$(cat package.json | jq -r '.version')

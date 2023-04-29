@@ -3,29 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict'
+import fse from 'fs-extra'
+import path from 'path'
 
-const fse = require('fs-extra')
-const path = require('path')
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
+import Github from './github.mjs'
+import git from './git-commands.mjs'
 
-const Github = require('./github')
-const git = require('./git-commands')
+import yargs from 'yargs/yargs'
+
+import chalk from 'chalk'
 
 const DEFAULT_CHANGELOG_FILE_NAME = 'changelog.json'
 const DEFAULT_BROWSERS_FILE_NAME = 'tools/jil/util/browsers-supported.json'
 
-/** e.g. v7.2.1 */
-const TAG_VALID_REGEX = /v\d+\.\d+\.\d+/
-const BASE_BRANCH = 'develop'
-
 const DEFAULT_DOCS_SITE_USER_EMAIL = 'browser-agent@newrelic.com'
 const DEFAULT_DOCS_SITE_USER_NAME = 'Browser Agent Team'
-
-const FORKED_DOCS_SITE = 'https://github.com/newrelic-forks/browser-agent-docs-website.git'
-
-const RELEASE_NOTES_PATH =
-    './src/content/docs/release-notes/new-relic-browser-release-notes/browser-agent-release-notes'
 
 const SUPPORT_STATEMENT =
   '## Support statement:' +
@@ -34,9 +26,25 @@ const SUPPORT_STATEMENT =
   '\n\n' +
   'New Browser Agent releases are rolled out to customers in small stages over a period of time. Because of this, the date the release becomes accessible to your account may not match the original publish date. Please see this [status dashboard](https://newrelic.github.io/newrelic-browser-agent-release/) for more information.'
 
+const TAG_VALID_REGEX = /v\d+\.\d+\.\d+/ // e.g. v7.2.1
+
 const ANDROID_CHROME_VERSION = 100 // for browser target statement; SauceLabs only offers one Android Chrome version
 
-var options = require('yargs')
+const FORKED_DOCS_SITE = 'https://github.com/newrelic-forks/browser-agent-docs-website.git'
+const BASE_BRANCH = 'develop'
+
+const RELEASE_NOTES_PATH =
+    './src/content/docs/release-notes/new-relic-browser-release-notes/browser-agent-release-notes'
+
+const DOCS_SITE_GITHUB_OWNER = 'newrelic'
+const DOCS_SITE_GITHUB_REPO = 'docs-website'
+
+if (!process.env.GITHUB_TOKEN) {
+  console.log('NO GITHUB TOKEN FOUND!')
+  process.exit(1)
+}
+
+const options = yargs(process.argv.slice(2))
   .usage('$0 [options]')
 
   .string('t')
@@ -76,18 +84,20 @@ var options = require('yargs')
   .string('dse')
   .alias('dse', 'docs-site-email')
   .describe('dse', 'Email account to use when communicating with docs site repo -- git config user.email')
+  .default('dse', DEFAULT_DOCS_SITE_USER_EMAIL)
 
   .string('dsn')
   .alias('dsn', 'docs-site-name')
   .describe('dsn', 'Name to use when communicating with docs site repo -- git config user.name')
+  .default('dsn', DEFAULT_DOCS_SITE_USER_NAME)
 
   .argv
 
-if (!process.env.GITHUB_TOKEN) {
-  console.log('NO GITHUB TOKEN FOUND!')
-  process.exit(1)
-}
-
+/**
+ * Raises a pull request to the docs website for a new release.
+ *
+ * @returns {Promise<void>}
+ */
 async function raiseDocsWebsitePR () {
   console.log(`Script running with following options:\n${JSON.stringify(options)}`)
 
@@ -105,7 +115,7 @@ async function raiseDocsWebsitePR () {
     const releaseNotes = compileReleaseNotes(releaseDate, version, frontMatter, notesBody, SUPPORT_STATEMENT, browserTargetStatement)
 
     logStep('Create a branch')
-    const branchName = await createBranch(options.repoPath, options.remote, version, options.dryRun, options.docsSiteEmail || DEFAULT_DOCS_SITE_USER_EMAIL, options.docsSiteName || DEFAULT_DOCS_SITE_USER_NAME)
+    const branchName = await createBranch(options.repoPath, options.remote, version, options.dryRun, options.docsSiteEmail, options.docsSiteName)
 
     logStep('Create release notes file')
     await addReleaseNotesFile(releaseNotes, version, options.dryRun)
@@ -156,15 +166,12 @@ function validateVersionTag (version, force) {
 async function extractReleaseDetails (version, changelogFilename) {
   console.log('Extracting release details from change log file:', changelogFilename)
 
-  const data = await fse.readJson(process.cwd() + '/' + changelogFilename, 'utf8')
-
-  const repository = data.repository || 'newrelic/newrelic-browser-agent' // might differ on a fork
+  const data = await fse.readJson(process.cwd() + '/' + options.changelog, 'utf8')
 
   const versionData = data.entries.find((entry) => entry.version.startsWith(version.substring(1))) // no leading 'v', e.g. 1.234.5 (2030-01-01)
 
-  console.log('\nExtracting date')
   const releaseDate = new Date(versionData.createTime).toLocaleDateString('sv') // 2 digit format to allow docs-site CI to run correctly
-  console.log(releaseDate)
+  console.log(`\nExtracting date: ${releaseDate}`)
 
   const categories = {
     feat: [],
@@ -173,10 +180,13 @@ async function extractReleaseDetails (version, changelogFilename) {
   }
 
   console.log('\nExtracting commit details')
+
+  const [githubOwner, githubRepo] = data.repository.split('/')
+  const github = new Github(githubOwner, githubRepo)
   for (const change of versionData.changes) {
     if (categories[change.type]) {
       console.log(`- ${change.message}`)
-      const entry = { sha: change.sha, title: change.message, description: await getEntryDescription(repository, change.sha) }
+      const entry = { sha: change.sha, title: change.message, description: await getEntryDescription(github, change.sha) }
       categories[change.type].push(entry)
     }
   }
@@ -216,20 +226,18 @@ async function extractReleaseDetails (version, changelogFilename) {
 /**
  * Retrieves the description of a commit from its associated pull request's header or the commit message body from git history.
  *
- * @param {string} repository - The name of the repository in the format 'owner/repo'.
+ * @param {Github} github - An instance of the Github class constructed with the appropriate Github owner and repo.
  * @param {string} commitHash - The SHA-1 hash of the commit to get the description for.
  * @returns {Promise<string>} A Promise that resolves to the commit description, or an empty string if no description is found.
  */
-async function getEntryDescription (repository, commitHash) {
+async function getEntryDescription (github, commitHash) {
   let description = ''
 
   // First try to get the header of the associated PR.
-  // Octokit doesn't do this and we don't need authentication.
-  const response = await fetch(`https://api.github.com/repos/${repository}/commits/${commitHash}/pulls`)
-  const relatedPRs = await response.json()
-  if (relatedPRs && relatedPRs.length) {
-    const prBody = relatedPRs[0].body
-    if (prBody.indexOf('\n---') !== -1) description = relatedPRs[0].body.split('\n---')[0].trim()
+  const relatedPR = await github.getAssociatedPR(commitHash)
+  if (relatedPR) {
+    const prBody = relatedPR.body
+    if (prBody.indexOf('\n---') !== -1) description = prBody.split('\n---')[0].trim()
   }
 
   // Fall back to the body of the commit message from the git history.
@@ -299,7 +307,7 @@ function compileReleaseNotes (releaseDate, version, frontMatter, notesBody, supp
     browserTargetStatement
   ].join('\n')
 
-  console.log(releaseNotesFormatted)
+  console.log(chalk.yellow(releaseNotesFormatted))
   return releaseNotesFormatted
 }
 
@@ -322,7 +330,7 @@ async function createBranch (filePath, remote, version, dryRun, userEmail, userN
   process.chdir(filePath)
   const branchName = `add-browser-agent-${version}`
   if (dryRun) {
-    console.log(`Dry run indicated (--dry-run); not creating branch ${branchName}`)
+    console.log(`\nDry run indicated (--dry-run); not creating branch ${branchName}`)
   } else {
     try {
       await git.deleteUpstreamBranch(remote, branchName)
@@ -390,7 +398,7 @@ async function commitReleaseNotes (version, branch, dryRun) {
 }
 
 /**
- * Creates a PR to the newrelic/docs-website with new release notes.
+ * Creates a PR to the docs website repo with new release notes.
  *
  * @param {string} version - New agent version number.
  * @param {string} branch - Name of GitHub branch.
@@ -402,7 +410,7 @@ async function createPR (version, branch, dryRun) {
     stopOnError()
   }
 
-  const github = new Github('newrelic', 'docs-website')
+  const github = new Github(DOCS_SITE_GITHUB_OWNER, DOCS_SITE_GITHUB_REPO)
   const title = `Browser Agent ${version} Release Notes`
   const prOptions = {
     head: `newrelic-forks:${branch}`,
@@ -412,7 +420,7 @@ async function createPR (version, branch, dryRun) {
     draft: true
   }
 
-  console.log(`Creating PR with following options: ${JSON.stringify(prOptions)}\n\n`)
+  console.log(`Creating PR with following options: ${JSON.stringify(prOptions)}\n`)
 
   if (dryRun) {
     console.log('Dry run indicated (--dry-run); skipping creating pull request')
@@ -448,7 +456,7 @@ let currentStep = 0
  */
 function logStep (step) {
   currentStep++
-  console.log(`\n----- [Step ${currentStep}]: ${step} -----\n`)
+  console.log(chalk.cyan.bold(`\n----- [Step ${currentStep}]: ${step} -----\n`))
 }
 
 raiseDocsWebsitePR()

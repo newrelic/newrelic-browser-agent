@@ -74,7 +74,7 @@ async function getReleaseSize (buildType) {
 }
 
 async function getBuildSize (buildType) {
-  const version = (await fs.readFile(path.resolve(__dirname, '../../VERSION'))).toString().trim()
+  const version = (await fs.readFile(path.resolve(__dirname, '../../VERSION'))).toString().trim().split('//')[0]
   let buildStatsPath = path.resolve(__dirname, `../../build/${buildType}-${version}.stats.json`)
 
   if (!(await fs.pathExists(buildStatsPath))) {

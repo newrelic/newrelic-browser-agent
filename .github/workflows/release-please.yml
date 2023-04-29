@@ -1,0 +1,28 @@
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+name: release-please
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v3
+        with:
+          release-type: node
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          pull-request-header: "When this PR is merged, a new tagged release will be created with the notes below."
+          changelog-types: |
+            [
+              {"type":"feat","section":"Features"},
+              {"type":"fix","section":"Bug Fixes"},
+              {"type":"security","section":"Security Fixes"}
+            ]
+          extra-files: VERSION

@@ -8,7 +8,7 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 
 let { PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE } = process.env
 // this will change to package.json.version when it is aligned between all the packages
-let VERSION = VERSION_OVERRIDE || fs.readFileSync('./VERSION', 'utf-8')?.trim()
+let VERSION = VERSION_OVERRIDE || fs.readFileSync('./VERSION', 'utf-8')?.trim().split('//')[0]
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
 
 switch (PUBLISH) {

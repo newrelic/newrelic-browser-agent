@@ -5,7 +5,7 @@ module.exports = function (api) {
   api.cache(true)
 
   if (!process.env.BUILD_VERSION) {
-    process.env.BUILD_VERSION = process.env.VERSION_OVERRIDE || fs.readFileSync('./VERSION', 'utf-8')?.trim()
+    process.env.BUILD_VERSION = process.env.VERSION_OVERRIDE || fs.readFileSync('./VERSION', 'utf-8')?.trim().split('//')[0]
   }
 
   const presets = [

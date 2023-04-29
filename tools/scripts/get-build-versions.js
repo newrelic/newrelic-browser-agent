@@ -3,7 +3,7 @@ const pkg = require('../../package.json')
 const path = require('path')
 const fs = require('fs')
 
-const CDN_VERSION = fs.readFileSync(path.join(__dirname, '../../VERSION'), 'utf-8')
+const CDN_VERSION = fs.readFileSync(path.join(__dirname, '../../VERSION'), 'utf-8')?.trim().split('//')[0]
 
 core.setOutput('PACKAGE_VERSION', pkg.version)
 core.setOutput('CDN_VERSION', CDN_VERSION)

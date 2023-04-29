@@ -18,7 +18,7 @@ jobs:
         with:
           release-type: node
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
-          pull-request-header: "When merged, a new release will be created with the notes below."
+          pull-request-header: "When this PR is merged, a new tagged release will be created with the notes below."
           changelog-types: |
             [
               {"type":"feat","section":"Features"},

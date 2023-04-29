@@ -1,5 +1,5 @@
 {
-  "repository": "newrelic/newrelic-browser-agent",
+  "repository": "bjfield/newrelic-browser-agent-rp",
   "entries": [
     {
       "changes": [

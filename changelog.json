@@ -1,5 +1,39 @@
 {
   "repository": "newrelic/newrelic-browser-agent",
-  "entries": [],
-  "updateTime": "2023-04-27T22:19:22.693Z"
+  "entries": [
+    {
+      "changes": [
+        {
+          "type": "security",
+          "sha": "020f152d41d025d4a2b51f40a406dde2db5a912b",
+          "message": "Resolve security problem",
+          "issues": [
+            "7"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "0157ccd94512eb2e0ab8d987a764c7118d3159f6",
+          "message": "Add my favorite new feature",
+          "issues": [
+            "5"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "91d91328fcdfc8e73c9b58893b7dcf1efc2d4d8c",
+          "message": "Modify README.md to be less broken",
+          "issues": [
+            "2"
+          ]
+        }
+      ],
+      "version": "1.232.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "0eaa1713-1014-40b4-b477-3caf1dbb369d",
+      "createTime": "2023-04-29T06:21:49.417Z"
+    }
+  ],
+  "updateTime": "2023-04-29T06:21:49.417Z"
 }

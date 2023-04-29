@@ -90,16 +90,19 @@ export class Aggregate extends AggregateBase {
     chunksForQueryString.push(param('af', getActivatedFeaturesFlags(this.agentIdentifier).join(',')))
 
     if (globalScope.performance) {
-      try {
-        const navTimingApiData = globalScope?.performance?.getEntriesByType('navigation')?.[0]
+      if (typeof PerformanceNavigationTiming !== 'undefined') { // Navigation Timing level 2 API that replaced PerformanceTiming & PerformanceNavigation
+        const navTimingEntry = globalScope?.performance?.getEntriesByType('navigation')?.[0]
         const perf = ({
-          timing: addPT(agentRuntime.offset, navTimingApiData, {}),
-          navigation: addPN(navTimingApiData, {})
+          timing: addPT(agentRuntime.offset, navTimingEntry, {}),
+          navigation: addPN(navTimingEntry, {})
         })
         chunksForQueryString.push(param('perf', stringify(perf)))
-      } catch (err) {
-        // performance API failed for some reason
-        this.ee.emit('internal-error', [err])
+      } else if (typeof PerformanceTiming !== 'undefined') { // Safari pre-15 did not support level 2 timing
+        const perf = ({
+          timing: addPT(agentRuntime.offset, globalScope.performance.timing, {}, true),
+          navigation: addPN(globalScope.performance.navigation, {})
+        })
+        chunksForQueryString.push(param('perf', stringify(perf)))
       }
     }
 

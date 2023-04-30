@@ -98,7 +98,6 @@ module.exports = {
     'new-cap': 'off',
     'no-new': 'off',
     'no-useless-return': 'off',
-    'no-useless-constructor': 'off',
     'dot-notation': 'off',
     'spaced-comment': 'off',
     'no-unused-expressions': 'off',

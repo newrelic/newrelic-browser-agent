@@ -11,12 +11,12 @@ import { supportsPerformanceObserver } from '../../../common/window/supports-per
 import slice from 'lodash._slice'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
-import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { HandlerCache } from '../../utils/handler-cache'
+import { FeatureBase } from '../../utils/feature-base'
 
-export class Aggregate extends AggregateBase {
+export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)

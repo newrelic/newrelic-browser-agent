@@ -9,13 +9,13 @@ import { handle } from '../../../common/event-emitter/handle'
 import { getConfigurationValue, getInfo } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
-import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
+import { FeatureBase } from '../../utils/feature-base'
 
-export class Aggregate extends AggregateBase {
+export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)

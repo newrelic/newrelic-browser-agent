@@ -28,7 +28,7 @@ export class FeatureBase {
    * loader configurations may appear after the loader code is executed.
    */
   checkConfiguration () {
-    // NOTE: This check has to happen at aggregator load time, but could be moved to `AggregateBase`.
+    // NOTE: This check has to happen at aggregator load time
     if (!isConfigured(this.agentIdentifier)) {
       let jsAttributes = { ...gosCDN().info?.jsAttributes }
       try {

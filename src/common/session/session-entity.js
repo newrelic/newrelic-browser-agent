@@ -7,6 +7,7 @@ import { isBrowserScope } from '../util/global-scope'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, PREFIX } from './constants'
 import { LocalMemory } from '../storage/local-memory'
 import { InteractionTimer } from '../timer/interaction-timer'
+import { wrapEvents } from '../wrap'
 
 export class SessionEntity {
   /**
@@ -33,6 +34,8 @@ export class SessionEntity {
     this.key = key
     // value is intended to act as the primary value of the k=v pair
     this.value = value
+
+    wrapEvents(ee.get(agentIdentifier))
 
     // the first time the session entity class is instantiated, we check the storage API for an existing
     // object. If it exists, the values inside the object are used to inform the timers that run locally.
@@ -64,6 +67,8 @@ export class SessionEntity {
       this.inactiveTimer = new InteractionTimer({
         onEnd: () => this.reset(),
         onRefresh: () => this.refresh(),
+        ee: ee.get(agentIdentifier),
+        refreshEvents: ['click', 'keydown', 'scroll'],
         abortController: this.abortController
       }, inactiveMs)
     } else {
@@ -97,7 +102,8 @@ export class SessionEntity {
     try {
       const val = this.storage.get(this.lookupKey)
       if (!val) return {}
-      const obj = typeof val === 'string' ? this.decompress(JSON.parse(val)) : this.decompress(val)
+      // TODO - decompression would need to happen here if we decide to do it
+      const obj = typeof val === 'string' ? JSON.parse(val) : val
       if (this.isInvalid(obj)) return {}
       if (this.isExpired(obj.expiresAt)) return this.reset()
       // if "inactive" timer is expired at "read" time -- esp. initial read -- reset
@@ -124,7 +130,8 @@ export class SessionEntity {
       Object.keys(data).forEach(k => {
         this[k] = data[k]
       })
-      this.storage.set(this.lookupKey, stringify(this.compress(data)))
+      // TODO - compression would need happen here if we decide to do it
+      this.storage.set(this.lookupKey, stringify(data))
       return data
     } catch (e) {
       // storage is inaccessible
@@ -193,17 +200,6 @@ export class SessionEntity {
    */
   getFutureTimestamp (futureMs) {
     return Date.now() + futureMs
-  }
-
-  compress (obj) {
-    // no compression applied at this time
-    // could use bel-serializer encoding here if prioritized
-    return obj
-  }
-
-  decompress (obj) {
-    // no need to decompress if we aren't compressing
-    return obj
   }
 
   syncCustomAttribute (key, value) {

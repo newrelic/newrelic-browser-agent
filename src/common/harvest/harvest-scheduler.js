@@ -29,7 +29,7 @@ export class HarvestScheduler extends SharedContext {
     }, getConfigurationValue(this.sharedContext.agentIdentifier, 'allow_bfcache')) // TO DO: remove feature flag after rls stable
 
     // unload if session resets
-    this.sharedContext.ee.on('session-reset', () => {
+    this.sharedContext?.ee.on('session-reset', () => {
       this.unload()
     })
   }

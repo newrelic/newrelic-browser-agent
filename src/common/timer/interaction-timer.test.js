@@ -41,10 +41,33 @@ describe('constructor', () => {
   })
 
   test('refresh type timers set event listeners', () => {
+    //eslint-disable-next-line
+    let ee = { on: jest.fn().mockImplementation((evt, cb) => { cb([{ type: 'click' }]) }) }
+    let it = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn(), ee }, 100)
+    // scroll, keypress, click
+    expect(ee.on).toHaveBeenCalledTimes(1)
+    expect(it.onRefresh).toHaveBeenCalledTimes(1)
+
+    //eslint-disable-next-line
+     ee = { on: jest.fn().mockImplementation((evt, cb) => { cb([{ type: 'scroll' }]) }) }
+    it = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn(), ee }, 100)
+    // scroll, keypress, click
+    expect(ee.on).toHaveBeenCalledTimes(1)
+    expect(it.onRefresh).toHaveBeenCalledTimes(1)
+
+    //eslint-disable-next-line
+     ee = { on: jest.fn().mockImplementation((evt, cb) => { cb([{ type: 'keydown' }]) }) }
+    it = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn(), ee }, 100)
+    // scroll, keypress, click
+    expect(ee.on).toHaveBeenCalledTimes(1)
+    expect(it.onRefresh).toHaveBeenCalledTimes(1)
+
     const aelSpy = jest.spyOn(document, 'addEventListener')
-    new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn() }, 100)
-    // scroll, keypress, click, visibilityChange
-    expect(aelSpy).toHaveBeenCalledTimes(4)
+    //eslint-disable-next-line
+    ee = { on: jest.fn().mockImplementation((evt, cb) => { cb([{ type: 'keydown' }]) }) }
+    it = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn(), ee }, 100)
+    // visibility change
+    expect(aelSpy).toHaveBeenCalledTimes(1)
   })
 })
 

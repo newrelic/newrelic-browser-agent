@@ -15,7 +15,7 @@ if (!version) {
 }
 
 var opts = {
-  uri: 'https://staging-api.newrelic.com/v2/js_agent_loaders/version.json',
+  uri: 'https://api.newrelic.com/v2/js_agent_loaders/version.json',
   method: 'GET',
   gzip: true,
   qs: { loader_version: `nr-loader-spa-${version}.min.js` }

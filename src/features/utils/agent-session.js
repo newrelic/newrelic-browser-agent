@@ -13,6 +13,8 @@ export function setupAgentSession (agentIdentifier) {
   const agentRuntime = getRuntime(agentIdentifier)
   if (ranOnce++) return agentRuntime.session
 
+  const sharedEE = ee.get(agentIdentifier)
+
   // subdomains is a boolean that can be specified by customer.
   // only way to keep the session object across subdomains is using first party cookies
   // This determines which storage wrapper the session manager will use to keep state
@@ -50,14 +52,14 @@ export function setupAgentSession (agentIdentifier) {
   // the session's storage API
   registerHandler('api-setCustomAttribute', (time, key, value) => {
     agentRuntime.session.syncCustomAttribute(key, value)
-  }, 'session', ee.get(agentIdentifier))
+  }, 'session', sharedEE)
 
   // any calls to newrelic.setUserId(...) will need to be added to:
   // local info.jsAttributes {}
   // the session's storage API
   registerHandler('api-setUserId', (time, key, value) => {
     agentRuntime.session.syncCustomAttribute(key, value)
-  }, 'session', ee.get(agentIdentifier))
+  }, 'session', sharedEE)
 
   drain(agentIdentifier, 'session')
 

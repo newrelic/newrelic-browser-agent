@@ -17,6 +17,7 @@ import { hideBin } from 'yargs/helpers'
 import fs from 'fs-extra'
 import fetch from 'node-fetch'
 import { filesize } from 'filesize'
+import pkg from './package.json' assert { type: 'json' }
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const reportSettings = {
@@ -81,7 +82,7 @@ async function getReleaseSize (buildType) {
 }
 
 async function getBuildSize (buildType) {
-  const version = (await fs.readFile(path.resolve(__dirname, '../../VERSION'))).toString().trim()
+  const version = pkg.version
   let buildStatsPath = path.resolve(__dirname, `../../build/${buildType}-${version}.stats.json`)
 
   if (!(await fs.pathExists(buildStatsPath))) {

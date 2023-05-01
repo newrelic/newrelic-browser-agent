@@ -60,8 +60,6 @@ jobs:
           node-version: lts/*
       - name: install
         run: npm ci
-      - name: sync versions
-        run: npm run sync:version
       - name: build:prod
         run: npm run cdn:build:prod
       - name: upload artifacts to S3
@@ -91,17 +89,12 @@ jobs:
           node-version: lts/*
       - name: install
         run: npm ci
-      - name: sync versions
-        run: npm run sync:version
-      - name: get version
-        id: build_versions
-        run: node tools/scripts/get-build-versions.js
       - name: re-publish internal loader (prod)
         run: |
           node ./tools/scripts/upload-ab-to-s3.js \
             --env prod \
             --current https://js-agent.newrelic.com/nr-loader-spa-current.min.js \
-            --next https://js-agent.newrelic.com/nr-loader-spa-${{steps.build_versions.outputs.CDN_VERSION}}.min.js \
+            --next https://js-agent.newrelic.com/nr-loader-spa-$(cat package.json | jq -r '.version').min.js \
             --appId ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \
@@ -113,7 +106,7 @@ jobs:
           node ./tools/scripts/upload-ab-to-s3.js \
             --env eu-prod \
             --current https://js-agent.newrelic.com/nr-loader-spa-current.min.js \
-            --next https://js-agent.newrelic.com/nr-loader-spa-${{steps.build_versions.outputs.CDN_VERSION}}.min.js \
+            --next https://js-agent.newrelic.com/nr-loader-spa-$(cat package.json | jq -r '.version').min.js \
             --appId ${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \
@@ -157,21 +150,16 @@ jobs:
           node-version: lts/*
       - name: install
         run: npm ci
-      - name: sync versions
-        run: npm run sync:version
-      - name: get version
-        id: build_versions
-        run: node tools/scripts/get-build-versions.js
       - name: upload artifacts to NR
         run: |
           node tools/scripts/upload-to-nr.js \
             --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
             --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
             --eu-api-key=${{ secrets.NR_API_KEY_EU }} \
-            --v=${{steps.build_versions.outputs.CDN_VERSION}}
+            --v=$(cat package.json | jq -r '.version')
       - name: validate file
         run: |
-          node tools/scripts/check-nrdb.js -v ${{steps.build_versions.outputs.CDN_VERSION}}
+          node tools/scripts/check-nrdb.js -v $(cat package.json | jq -r '.version')
   raise-release-notes-pr:
     runs-on: ubuntu-latest
     container:
@@ -194,15 +182,10 @@ jobs:
           node-version: lts/*
       - name: install
         run: npm ci
-      - name: sync versions
-        run: npm run sync:version
-      - name: get version
-        id: build_versions
-        run: node tools/scripts/get-build-versions.js
       - name: Build and raise PR to docs-website
         run: |
           node tools/scripts/docs-website/create-docs-pr.js \
-            -t=${{steps.build_versions.outputs.CDN_VERSION}}
+            -t=$(cat package.json | jq -r '.version')
   publish-current-to-s3:
     runs-on: ubuntu-latest
     container:
@@ -223,8 +206,6 @@ jobs:
           node-version: lts/*
       - name: install
         run: npm ci
-      - name: sync versions
-        run: npm run sync:version
       - name: build
         run: npm run cdn:build:current
       - name: upload artifacts to S3
@@ -258,8 +239,6 @@ jobs:
           npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
       - name: install
         run: npm ci
-      - name: force versions to sync
-        run: npm run sync:version
       - name: build:npm
         run: npm run build:npm
       - name: publish

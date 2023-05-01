@@ -29,9 +29,6 @@ jobs:
       - name: install
         run: npm ci
 
-      - name: sync versions
-        run: npm run sync:version
-
       - name: build:npm
         run: npm run build:npm
 

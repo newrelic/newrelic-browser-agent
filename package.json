@@ -124,8 +124,7 @@
     "npm:build:esm": "npx babel --env-name npm-esm --out-dir dist/esm --out-file-extension .js ./src",
     "npm:build:cjs": "npx babel --env-name npm-cjs --out-dir dist/cjs --out-file-extension .js ./src",
     "npm:build:types": "npx tsc -b",
-    "npm:pack": "mkdir -p temp && export PKG_NAME=$(npm pack --pack-destination temp) && echo ./temp/$PKG_NAME",
-    "sync:version": "node tools/scripts/sync-version.js"
+    "npm:pack": "mkdir -p temp && export PKG_NAME=$(npm pack --pack-destination temp) && echo ./temp/$PKG_NAME"
   },
   "config": {
     "unsafe-perm": true

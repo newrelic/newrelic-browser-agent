@@ -118,7 +118,9 @@ const maxSupportedVersion = apiName => {
 function getBrowsers (sauceBrowsers, sample = 4) {
   Object.keys(browsers).forEach(browser => {
     const name = browserName(browser)
-    const versListForBrowser = sauceBrowsers.filter(platformSelector(name, sample === Infinity ? 1 : minSupportedVersion(name), sample === Infinity ? sample : maxSupportedVersion(name), { mobile: sample === Infinity }))
+    const versListForBrowser = sample === Infinity
+      ? sauceBrowsers.filter(platformSelector(name, 1, sample, { mobile: true }))
+      : sauceBrowsers.filter(platformSelector(name, minSupportedVersion(name), maxSupportedVersion(name), { mobile: false }))
     versListForBrowser.sort((a, b) => Number(a.short_version) - Number(b.short_version)) // in ascending version order
 
     // Remove duplicate version numbers.

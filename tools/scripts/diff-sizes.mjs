@@ -17,7 +17,7 @@ import { hideBin } from 'yargs/helpers'
 import fs from 'fs-extra'
 import fetch from 'node-fetch'
 import { filesize } from 'filesize'
-import pkg from './package.json'
+import pkg from '../../package.json' assert { type: 'json' }
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const reportSettings = {

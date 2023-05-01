@@ -16,7 +16,7 @@ const model = {
     allowed_origins: undefined
   },
   session: {
-    domain: new URL(globalScope.location).host, // used by first party cookies to set the top-level domain (if subdomains === true)
+    domain: undefined, // used by first party cookies to set the top-level domain (if subdomains === true)
     subdomains: false, // "true" triggers Session Manager to use First Party Cookies
     expiresMs: DEFAULT_EXPIRES_MS,
     inactiveMs: DEFAULT_INACTIVE_MS

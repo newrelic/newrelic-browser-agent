@@ -40,7 +40,7 @@ jobs:
             else if (description.length === 0) echo(highlight + '[missing]')
             else if (description.length < 70) echo(description + highlight + (new Array(70 - description.length + 1)).join('\xa0'))
             else echo(description)
-            
+
             echo('')
             const errors = []
             if (context.payload.pull_request.title.length > 70) errors.push('PR title is longer than 70 characters and would be truncated. Please shorten.')

@@ -11,7 +11,7 @@ import { wrapEvents } from '../wrap'
 
 export class SessionEntity {
   /**
-   * Create a self-managing Session Entity. This entity is scoped to the agent identifier which triggered it, allowing for mutliple simultaneous session objects to exist.
+   * Create a self-managing Session Entity. This entity is scoped to the agent identifier which triggered it, allowing for multiple simultaneous session objects to exist.
    * The key is inteded to be unique, if not, existing entities in the same agent ID will overlap and overwrite.
    * The value can be overridden in the constructor, but will default to a unique 16 character hex string
    * expiresMs and inactiveMs are used to "expire" the session, but can be overridden in the constructor. Pass 0 to disable expiration timers.

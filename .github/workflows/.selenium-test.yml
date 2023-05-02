@@ -4,7 +4,7 @@
 name: Run Selenium Test
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       browser-target:
         description: 'Which browser to target with the selenium test: chrome or firefox'
@@ -29,17 +29,17 @@ jobs:
           - 4444:4444
         options: --shm-size=4g
     steps:
-      - name: Setup Container
+      - name: Setup container
         run: apt update && apt install -y git
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm ci
-      - name: Build Agent
+      - name: Build agent
         run: npm run build:all
-      - name: Run JIL Unit Tests
+      - name: Run jil unit tests
         run: |
           node ./tools/jil/bin/cli.js \
             -f merged \

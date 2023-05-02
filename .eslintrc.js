@@ -106,7 +106,6 @@ module.exports = {
     'valid-typeof': 'off',
     'no-undef': 'off',
     'no-control-regex': 'off',
-    'no-prototype-builtins': 'off',
     'no-return-assign': 'off',
 
     'n/handle-callback-err': 'off',

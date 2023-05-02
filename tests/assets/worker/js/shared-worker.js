@@ -1,3 +1,5 @@
+/* eslint-disable no-eval */
+
 onconnect = function (event) {
   const port = event.ports[0]
 

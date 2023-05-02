@@ -21,11 +21,11 @@ module.exports.urlFor = function urlFor (relativePath, query, testServer) {
       .join('/')
   }
 
-  if (query?.hasOwnProperty('config') && typeof query.config !== 'string') {
+  if (Object.prototype.hasOwnProperty.call(query || {}, 'config') && typeof query.config !== 'string') {
     query.config = Buffer.from(JSON.stringify(query.config)).toString('base64')
   }
 
-  if (query?.hasOwnProperty('init') && typeof query.init !== 'string') {
+  if (Object.prototype.hasOwnProperty.call(query || {}, 'init') && typeof query.init !== 'string') {
     query.init = Buffer.from(
       JSON.stringify(query.init, (k, v) => {
         if (typeof v == 'object' && v instanceof RegExp) {
@@ -38,7 +38,7 @@ module.exports.urlFor = function urlFor (relativePath, query, testServer) {
   }
 
   if (
-    query?.hasOwnProperty('workerCommands') &&
+    Object.prototype.hasOwnProperty.call(query || {}, 'workerCommands') &&
     typeof query.workerCommands !== 'string'
   ) {
     query.workerCommands = Buffer.from(
@@ -47,7 +47,7 @@ module.exports.urlFor = function urlFor (relativePath, query, testServer) {
   }
 
   if (
-    query?.hasOwnProperty('scriptString') &&
+    Object.prototype.hasOwnProperty.call(query || {}, 'scriptString') &&
     typeof query.scriptString === 'string'
   ) {
     query.scriptString = Buffer.from(query.scriptString).toString('base64')

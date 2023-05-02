@@ -10,15 +10,15 @@ import { paintMetrics } from '../../../common/metrics/paint-metrics'
 import { submitData } from '../../../common/util/submit-data'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { AggregateBase } from '../../utils/aggregate-base'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
 import { globalScope, isBrowserScope } from '../../../common/util/global-scope'
 import { drain } from '../../../common/drain/drain'
+import { FeatureBase } from '../../utils/feature-base'
 
 const jsonp = 'NREUM.setToken'
 
-export class Aggregate extends AggregateBase {
+export class Aggregate extends FeatureBase {
   static featureName = CONSTANTS.FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME)

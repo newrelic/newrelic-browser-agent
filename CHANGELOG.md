@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.233.0](https://github.com/bjfield/newrelic-browser-agent-rp/compare/v1.232.0...v1.233.0) (2023-05-02)
+
+
+### Features
+
+* Add an exciting new feature ([#8](https://github.com/bjfield/newrelic-browser-agent-rp/issues/8)) ([cc80683](https://github.com/bjfield/newrelic-browser-agent-rp/commit/cc80683420b55b6c96299c71802c4e61ed5cee93))
+
+
+### Bug Fixes
+
+* Implement a nice fix ([6d246bd](https://github.com/bjfield/newrelic-browser-agent-rp/commit/6d246bda4020bc3bcb877557bf8cd1bcadd13b17))
+
 ## [1.232.0](https://github.com/bjfield/newrelic-browser-agent-rp/compare/v1.231.0...v1.232.0) (2023-04-29)
 
 

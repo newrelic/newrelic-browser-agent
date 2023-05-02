@@ -89,7 +89,6 @@ async function getBuildSize (buildType) {
   }
 
   const buildStats = await fs.readJson(buildStatsPath)
-  if (buildType === 'npm') console.log(buildStatsPath)
   return parseBuildStats(buildStats)
 }
 

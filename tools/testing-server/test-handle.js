@@ -274,7 +274,7 @@ module.exports = class TestHandle {
     return { promise, resolve: capturedResolve, reject: capturedReject }
   }
 
-  /** **** BAM Expect Shortcut Methods ******/
+  /* ***** BAM Expect Shortcut Methods ***** */
 
   expectRum (timeout) {
     return this.expect('bamServer', {

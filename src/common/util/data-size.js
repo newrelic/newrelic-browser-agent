@@ -5,6 +5,12 @@
 
 import { stringify } from './stringify'
 
+/**
+ * Returns the size of the provided data. Designed for measuring XHR responses.
+ *
+ * @param {*} data - The data to be measured.
+ * @returns {(number|undefined)} - The size of the data or undefined if size cannot be determined.
+ */
 export function dataSize (data) {
   if (typeof data === 'string' && data.length) return data.length
   if (typeof data !== 'object') return undefined

@@ -146,7 +146,7 @@ async function writeDiff (assetSizes) {
   await fs.ensureDir(config.out)
   await fs.writeJson(path.join(config.out, 'size_report.json'), assetSizes, { spaces: 2 })
   await fs.outputFile(path.join(config.out, 'size_report.md'), `# Asset Size Report
-Merging this pull request will result in the following CDN asset size changes:
+Merging this pull request will result in the following **CDN asset size changes**:
 
 | Asset Name | Previous Size | New Size | Diff |
 |------------|---------------|----------|------|

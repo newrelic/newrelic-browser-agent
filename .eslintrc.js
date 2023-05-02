@@ -105,7 +105,6 @@ module.exports = {
     'no-use-before-define': 'off',
     'valid-typeof': 'off',
     'no-undef': 'off',
-    'no-control-regex': 'off',
     'no-return-assign': 'off',
 
     'n/handle-callback-err': 'off',

@@ -82,7 +82,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Setup Container
-        run: apt update && apt install -y git
+        run: apt update && apt install -y git && apt install -y jq
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
@@ -143,7 +143,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Setup Container
-        run: apt update && apt install -y git
+        run: apt update && apt install -y git && apt install -y jq
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
@@ -173,7 +173,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
     steps:
       - name: Setup Container
-        run: apt update && apt install -y git
+        run: apt update && apt install -y git && apt install -y jq
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.DOCS_SITE_FORK_TOKEN }}

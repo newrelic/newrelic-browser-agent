@@ -1,3 +1,9 @@
+# Release Please automates releases using Conventional Commit messages. After each release it maintains an open PR
+# called `chore(main): release <semver>`, which keeps the CHANGELOG.md up to date along with a changelog.json file.
+# When the release PR is merged, this action will create a Github release. Our docs-site PR workflow will use the
+# contents of the changelog.json file and PR headers to generate release notes for the public docs website.
+# See https://github.com/google-github-actions/release-please-action
+
 on:
   push:
     branches:
@@ -8,7 +14,7 @@ permissions:
   contents: write
   pull-requests: write
 
-name: release-please
+name: Release Please
 
 jobs:
   release-please:
@@ -25,4 +31,3 @@ jobs:
               {"type":"fix","section":"Bug Fixes"},
               {"type":"security","section":"Security Fixes"}
             ]
-          extra-files: VERSION

@@ -32,8 +32,14 @@ jobs:
           node-version: lts/*
       - name: Install dependencies
         run: npm ci
-      - name: Running dev build
+      - name: Running cdn build
         run: npm run cdn:build:dev
+      - name: Running npm build
+        run: |
+          npm run build:npm
+          npm run tools:test-builds
+      - name: Generating npm build stats
+        run: node ./tools/scripts/npm-build-stats.js
       - name: Generating asset size report
         run: node ./tools/scripts/diff-sizes.mjs -o build
       - name: Creating pull request comment

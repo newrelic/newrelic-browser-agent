@@ -12,7 +12,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
     steps:
       - name: Setup Container
-        run: apt update && apt install -y git
+        run: apt update && apt install -y git && apt install -y jq
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
@@ -21,10 +21,7 @@ jobs:
           node-version: lts/*
       - name: install
         run: npm ci
-      - name: get version
-        id: build_versions
-        run: node tools/scripts/get-build-versions.js
       - name: Build and raise PR to docs-website
         run: |
           node tools/scripts/docs-website/create-docs-pr.js \
-            -t=v${{steps.build_versions.outputs.CDN_VERSION}}
+            -t=v$(cat package.json | jq -r '.version')

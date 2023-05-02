@@ -32,7 +32,7 @@ This page contains information about working on the New Relic Browser agent proj
 - [Troubleshooting Browser agent installation](https://docs.newrelic.com/docs/browser/browser-monitoring/troubleshooting/troubleshoot-your-browser-monitoring-installation/)
 - [Introduction to browser monitoring](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/introduction-browser-monitoring/)
 - [Browser monitoring best practices](https://docs.newrelic.com/docs/new-relic-solutions/best-practices-guides/full-stack-observability/browser-monitoring-best-practices-guide/)
-- [Browser agent NPM package (pre-release)](https://www.npmjs.com/package/@newrelic/browser-agent)
+- [Browser agent NPM package](https://www.npmjs.com/package/@newrelic/browser-agent)
 
 ## Building
 

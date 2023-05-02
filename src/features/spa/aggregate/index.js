@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-/*eslint no-undef: "error"*/
+/* eslint no-undef: "error" */
 import { registerHandler as register } from '../../../common/event-emitter/register-handler'
 import { parseUrl } from '../../../common/url/parse-url'
 import { shouldCollectEvent } from '../../../common/deny-list/deny-list'
@@ -212,7 +212,7 @@ export class Aggregate extends FeatureBase {
           if (evName === 'click') {
             var value = getActionText(ev.target)
             if (value) {
-              state.currentNode.attrs.custom['actionText'] = value
+              state.currentNode.attrs.custom.actionText = value
             }
           }
         }

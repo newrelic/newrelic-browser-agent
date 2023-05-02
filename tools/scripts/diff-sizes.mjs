@@ -17,6 +17,7 @@ import { hideBin } from 'yargs/helpers'
 import fs from 'fs-extra'
 import fetch from 'node-fetch'
 import { filesize } from 'filesize'
+import pkg from '../../package.json' assert { type: 'json' }
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const reportSettings = {
@@ -32,6 +33,13 @@ const reportSettings = {
   ],
   worker: [
     { name: 'nr-loader-worker.min', matcher: /nr-loader-worker(?:-\d*?)?\.min\.js/ }
+  ],
+  npm: [
+    { name: 'Browser Agent', matcher: /browser-agent\.js/ },
+    { name: 'Custom Lite Agent', matcher: /custom-agent-lite\.js/ },
+    { name: 'Custom Pro Agent', matcher: /custom-agent-pro\.js/ },
+    { name: 'Custom SPA Agent', matcher: /custom-agent-spa\.js/ },
+    { name: 'Worker Agent', matcher: /worker-wrapper\.js/ }
   ]
 }
 
@@ -61,7 +69,7 @@ function parseBuildStats (buildStats) {
 }
 
 async function getReleaseSize (buildType) {
-  let releaseStatsPath = 'https://js-agent.newrelic.com'
+  let releaseStatsPath = 'https://nr-browser-agent.s3.amazonaws.com'
   if (config.release === 'dev') {
     releaseStatsPath += `/dev/${buildType}.stats.json`
   } else {
@@ -74,7 +82,7 @@ async function getReleaseSize (buildType) {
 }
 
 async function getBuildSize (buildType) {
-  const version = (await fs.readFile(path.resolve(__dirname, '../../VERSION'))).toString().trim()
+  const version = pkg.version
   let buildStatsPath = path.resolve(__dirname, `../../build/${buildType}-${version}.stats.json`)
 
   if (!(await fs.pathExists(buildStatsPath))) {
@@ -139,7 +147,7 @@ async function writeDiff (assetSizes) {
   await fs.ensureDir(config.out)
   await fs.writeJson(path.join(config.out, 'size_report.json'), assetSizes, { spaces: 2 })
   await fs.outputFile(path.join(config.out, 'size_report.md'), `# Asset Size Report
-Merging this pull request will result in the following asset size changes:
+Merging this pull request will result in the following **CDN asset size changes**:
 
 | Asset Name | Previous Size | New Size | Diff |
 |------------|---------------|----------|------|
@@ -147,8 +155,14 @@ ${generateDiffRows(assetSizes, 'standard')}
 ${generateDiffRows(assetSizes, 'polyfills')}
 ${generateDiffRows(assetSizes, 'worker')}
 
+Merging this pull request will result in the following **NPM package consumer size changes**:
+
+| Asset Name | Previous Size | New Size | Diff |
+|------------|---------------|----------|------|
+${generateDiffRows(assetSizes, 'npm')}
+
 <details>
-<summary>Other Standard Assets</summary>
+<summary>Other Standard CDN Assets</summary>
 
 ## Released Assets
 
@@ -165,7 +179,7 @@ ${generateOtherDiffRows(assetSizes, 'standard', 'buildStats')}
 </details>
 
 <details>
-<summary>Other Polyfills Assets</summary>
+<summary>Other Polyfill CDN Assets</summary>
 
 ## Released Assets
 
@@ -188,12 +202,14 @@ Promise.all([
   Promise.all([
     getReleaseSize('standard'),
     getReleaseSize('polyfills'),
-    getReleaseSize('worker')
+    getReleaseSize('worker'),
+    getReleaseSize('npm')
   ]),
   Promise.all([
     getBuildSize('standard'),
     getBuildSize('polyfills'),
-    getBuildSize('worker')
+    getBuildSize('worker'),
+    getBuildSize('npm')
   ])
 ])
   .then(([releaseStats, buildStats]) => {
@@ -209,6 +225,10 @@ Promise.all([
       worker: {
         releaseStats: releaseStats[2],
         buildStats: buildStats[2]
+      },
+      npm: {
+        releaseStats: releaseStats[3],
+        buildStats: buildStats[3]
       }
     }
   })

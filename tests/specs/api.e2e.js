@@ -120,7 +120,7 @@ describe('newrelic api', () => {
       await browser.url(url)
       const { request } = await errorsPromise
       const errorData = getErrorsFromResponse(request)
-      const params = errorData[0] && errorData[0]['params']
+      const params = errorData[0] && errorData[0].params
 
       expect(params.exceptionClass).toEqual('Error')
       expect(params.message).toEqual('no free taco coupons')
@@ -136,7 +136,7 @@ describe('newrelic api', () => {
       await browser.url(url)
       const { request } = await errorsPromise
       const errorData = getErrorsFromResponse(request)
-      const params = errorData[0] && errorData[0]['params']
+      const params = errorData[0] && errorData[0].params
 
       expect(params.exceptionClass).toEqual('Error')
       expect(params.message).toEqual('too many free taco coupons')

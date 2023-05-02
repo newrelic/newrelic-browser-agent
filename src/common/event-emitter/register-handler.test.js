@@ -19,7 +19,7 @@ test('should default group to "feature"', async () => {
 
   registerHandler(eventType, eventHandler)
 
-  expect(registerHandler.handlers['feature']).toEqual(expect.objectContaining({
+  expect(registerHandler.handlers.feature).toEqual(expect.objectContaining({
     [eventType]: [expect.arrayContaining([
       handleEE, eventHandler
     ])]

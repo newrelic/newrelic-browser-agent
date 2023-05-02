@@ -183,7 +183,7 @@ async function run () {
    */
   async function loaderFilenames () {
     const loaderTypes = ['rum', 'full', 'spa']
-    const version = argv['v']
+    const version = argv.v
     const fuzzyVersions = getFuzzyVersions(version)
     const fileNames = loaderTypes.map(type => [
       `nr-loader-${type}-${version}.min.js`,

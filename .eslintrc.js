@@ -108,7 +108,6 @@ module.exports = {
     'no-return-assign': 'off',
 
     'n/handle-callback-err': 'off',
-    'n/no-deprecated-api': 'off',
 
     'sonarjs/cognitive-complexity': 'off',
     'sonarjs/no-duplicate-string': 'off',

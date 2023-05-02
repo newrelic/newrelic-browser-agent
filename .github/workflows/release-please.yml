@@ -17,7 +17,7 @@ jobs:
       - uses: google-github-actions/release-please-action@v3
         with:
           release-type: node
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           pull-request-header: "When this PR is merged, a new tagged release will be created with the notes below."
           changelog-types: |
             [
@@ -25,4 +25,3 @@ jobs:
               {"type":"fix","section":"Bug Fixes"},
               {"type":"security","section":"Security Fixes"}
             ]
-          extra-files: VERSION

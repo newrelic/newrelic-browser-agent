@@ -154,7 +154,7 @@ ${generateDiffRows(assetSizes, 'standard')}
 ${generateDiffRows(assetSizes, 'polyfills')}
 ${generateDiffRows(assetSizes, 'worker')}
 
-Merging this pull request will result in the following NPM package consumer size changes:
+Merging this pull request will result in the following **NPM package consumer size changes**:
 
 | Asset Name | Previous Size | New Size | Diff |
 |------------|---------------|----------|------|

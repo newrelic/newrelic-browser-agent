@@ -29,3 +29,7 @@ jobs:
           node ./tools/scripts/fastly.js \
             --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
             --purge-path experiments/$GITHUB_REF_NAME/nr-loader-spa.min.js
+  run-dev-process:
+    needs: [publish-experiment-to-s3]
+    uses: ./.github/workflows/publish-dev.yml
+    secrets: inherit

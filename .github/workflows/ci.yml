@@ -8,6 +8,7 @@
 name: Browser Agent CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - 'main'
@@ -49,7 +50,6 @@ jobs:
             --token=${{ secrets.GITHUB_TOKEN }} \
             --input=./build/size_report.md \
             --tag='<!-- browser_agent asset size report -->'
-            - name: Archive code coverage results
       - name: Archive asset size report results
         uses: actions/upload-artifact@v3
         with:
@@ -106,11 +106,11 @@ jobs:
           path: coverage/
 
   jil-smoke-chrome:
-    uses: newrelic/newrelic-browser-agent/.github/workflows/.selenium-test.yml@main
+    uses: ./.github/workflows/selenium-test.yml
     with:
       browser-target: chrome
 
   jil-smoke-firefox:
-    uses: newrelic/newrelic-browser-agent/.github/workflows/.selenium-test.yml@main
+    uses: ./.github/workflows/selenium-test.yml
     with:
       browser-target: firefox

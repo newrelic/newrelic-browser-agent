@@ -13,7 +13,7 @@ on:
 
 jobs:
   selenium-test:
-    name: Selenium Test - {{ inputs.browser-target }}
+    name: Selenium Test - ${{ inputs.browser-target }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     container:
@@ -24,7 +24,7 @@ jobs:
         shell: bash
     services:
       selenium:
-        image: selenium/standalone-{{ inputs.browser-target }}
+        image: selenium/standalone-${{ inputs.browser-target }}:110.0
         ports:
           - 4444:4444
         options: --shm-size=4g
@@ -43,8 +43,7 @@ jobs:
         run: |
           node ./tools/jil/bin/cli.js \
             -f merged \
-            -b {{ inputs.browser-target }}@latest/linux \
+            -b ${{ inputs.browser-target }}@latest/linux \
             -t 85000 \
-            --no-retry \
             --selenium-server=selenium:4444 \
             --unit-only

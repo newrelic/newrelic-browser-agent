@@ -7,7 +7,7 @@ const argv = yargs
 
   .argv
 
-const version = argv['v']
+const version = argv.v
 
 if (!version) {
   console.log('version required...')

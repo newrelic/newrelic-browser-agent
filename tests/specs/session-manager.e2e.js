@@ -171,7 +171,6 @@ describe('newrelic session ID', () => {
       expect(lsData2.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
     })
   })
-  ////////////
   describe('Interactivity behavior -- ', () => {
     it('should update inactiveTimers if page is clicked', async () => {
       const inactiveMs = 7500
@@ -285,7 +284,6 @@ describe('newrelic session ID', () => {
       expect(Math.abs(lsData2.inactiveAt - refreshedAt - 7500)).toBeLessThan(1000)
     })
   })
-  ////////////
   describe('Custom attributes', () => {
     it('should be able to set custom attributes', async () => {
       const url = await testHandle.assetURL('instrumented.html', { init })

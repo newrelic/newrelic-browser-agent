@@ -14,12 +14,12 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { handle } from '../../../common/event-emitter/handle'
 import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
-import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { FeatureBase } from '../../utils/feature-base'
 
-export class Aggregate extends AggregateBase {
+export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
@@ -29,7 +29,7 @@ export class Aggregate extends AggregateBase {
     this.curSessEndRecorded = false
     this.cls = null // this should be null unless set to a numeric value by web-vitals so that we differentiate if CLS is supported
 
-    /*! This is the section that used to be in the loader portion: !*/
+    /* ! This is the section that used to be in the loader portion: ! */
     /* ------------------------------------------------------------ */
     const pageStartedHidden = getRuntime(agentIdentifier).initHidden // our attempt at recapturing initial vis state since this code runs post-load time
     this.alreadySent = new Set() // since we don't support timings on BFCache restores, this tracks and helps cap metrics that web-vitals report more than once
@@ -88,10 +88,10 @@ export class Aggregate extends AggregateBase {
         attributes.eid = lcpEntry.id
 
         if (lcpEntry.url) {
-          attributes['elUrl'] = cleanURL(lcpEntry.url)
+          attributes.elUrl = cleanURL(lcpEntry.url)
         }
         if (lcpEntry.element?.tagName) {
-          attributes['elTag'] = lcpEntry.element.tagName
+          attributes.elTag = lcpEntry.element.tagName
         }
       }
 
@@ -181,7 +181,7 @@ export class Aggregate extends AggregateBase {
     Future: onCLS value changes should be reported directly & CLS separated into its own timing node so it's not beholden to 'pageHide' firing. It'd also be possible to report the real final CLS.
     */
     if (this.cls !== null) {
-      attrs['cls'] = this.cls
+      attrs.cls = this.cls
     }
 
     this.timings.push({

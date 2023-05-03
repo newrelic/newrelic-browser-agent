@@ -8,8 +8,8 @@
 var fs = require('fs')
 var path = require('path')
 var request = require('request')
-var util = require('util')
 var yargs = require('yargs')
+const { deepmerge } = require('deepmerge-ts')
 
 var argv = yargs
   .string('environments')
@@ -169,7 +169,7 @@ function uploadLoaderToDB (filename, loader, environment, cb) {
   }
 
   console.log('Uploading loader ' + filename + ' to ' + environment + '...')
-  var options = util._extend(envOptions[environment], baseOptions)
+  var options = deepmerge(baseOptions, envOptions[environment])
 
   request(options, function (err, res, body) {
     if (err) return cb(err)

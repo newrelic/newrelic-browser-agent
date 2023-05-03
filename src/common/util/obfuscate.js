@@ -8,10 +8,6 @@ var fileProtocolRule = {
   replacement: 'file://OBFUSCATED'
 }
 export class Obfuscator extends SharedContext {
-  constructor (parent) {
-    super(parent) // gets any allowed properties from the parent and stores them in `sharedContext`
-  }
-
   shouldObfuscate () {
     return getRules(this.sharedContext.agentIdentifier).length > 0
   }

@@ -78,11 +78,11 @@ export class SessionEntity {
     // The fact that the session is "new" or pre-existing is used in some places in the agent.  Session Replay and Trace
     // can use this info to inform whether to trust a new sampling decision vs continue a previous tracking effort.
     this.isNew = !Object.keys(initialRead).length
-    // if its a "new" session, we write to storage API with the default values.  These values ,ay change over the lifespan of the agent run.
+    // if its a "new" session, we write to storage API with the default values.  These values may change over the lifespan of the agent run.
     if (this.isNew) this.write({ value, sessionReplayActive: false, sessionTraceActive: false, inactiveAt: this.inactiveAt, expiresAt: this.expiresAt }, true)
     else {
       Object.keys(initialRead).forEach(k => {
-        this[k] = initialRead[k]
+        this[k] = initialRead[k] // value, inactiveAt, expiresAt, ...custom { .. .}
       })
     }
 
@@ -172,6 +172,7 @@ export class SessionEntity {
    * Refresh the inactivity timer data
    */
   refresh () {
+    // read here... invalidate
     if (!this.expiresTimer.isValid()) this.reset()
     this.inactiveAt = this.getFutureTimestamp(this.inactiveMs)
     this.write({ ...this.read(), inactiveAt: this.inactiveAt })

@@ -26,15 +26,16 @@ export function setupAgentSession (agentIdentifier) {
       : new LocalStorage()
   } else storageAPI = new LocalMemory()
 
-  agentRuntime.session = new SessionEntity({
-    agentIdentifier,
-    key: 'SESSION',
-    storageAPI,
-    expiresMs: getConfigurationValue(agentIdentifier, 'session.expiresMs'),
-    inactiveMs: getConfigurationValue(agentIdentifier, 'session.inactiveMs'),
-    ...(!cookiesEnabled && { expiresMs: 0, inactiveMs: 0 })
+  if (cookiesEanbled) {
+    agentRuntime.session = new SessionEntity({
+      agentIdentifier,
+      key: 'SESSION',
+      storageAPI,
+      expiresMs: getConfigurationValue(agentIdentifier, 'session.expiresMs'),
+      inactiveMs: getConfigurationValue(agentIdentifier, 'session.inactiveMs')
     // ...(!cookiesEnabled && { value: '0' }) // add this back in if we have to send '0' for cookies disabled...
-  })
+    })
+  }
 
   // The first time the agent runs on a page, it should put everything
   // that's currently stored in the storage API into the local info.jsAttributes object

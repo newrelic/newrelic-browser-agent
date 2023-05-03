@@ -108,6 +108,7 @@
     "cdn:build:current": "npm run cdn:fresh-build && PUBLISH=CURRENT npm run cdn:webpack && npm run cdn:cleanup",
     "cdn:build:nr": "npm run cdn:fresh-build && PUBLISH=PROD SOURCEMAPS=false npm run cdn:webpack && npm run cdn:cleanup",
     "cdn:build:pr": "npm run cdn:fresh-build && PUBLISH=PR npm run cdn:webpack && npm run cdn:cleanup",
+    "cdn:build:experiment": "npm run cdn:fresh-build && PUBLISH=EXPERIMENT npm run cdn:webpack && npm run cdn:cleanup",
     "cdn:cleanup": "node ./tools/scripts/post-build-cleanup",
     "cdn:clone": "node ./tools/scripts/clone",
     "cdn:fresh-build": "rm -rf ./build",

@@ -10,7 +10,6 @@ import { VERSION } from '../../../common/constants/env'
 import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope } from '../../../common/util/global-scope'
-import { metrics, type } from './session-replay-investigation'
 import { FeatureBase } from '../../utils/feature-base'
 
 export class Aggregate extends FeatureBase {
@@ -128,26 +127,6 @@ export class Aggregate extends FeatureBase {
       if (agentRuntime.ptid) {
         this.storeSupportabilityMetrics('PageSession/Feature/SessionTrace/DurationMs', Math.round(performance.now()))
       }
-
-      // Capture metrics for session replay, if they exist (non zero values)
-      Object.entries(metrics).forEach(([key, val]) => {
-        // PageSession/Feature/SessionReplay/Nodes/Spa
-        // PageSession/Feature/SessionReplay/Bytes/Spa
-        // PageSession/Feature/SessionReplay/InitialSnapshotBytes/Spa
-        // PageSession/Feature/SessionReplay/InitialSnapshotBytesCompressed/Spa
-        // PageSession/Feature/SessionReplay/BytesPerMinute/Spa
-        // PageSession/Feature/SessionReplay/NodesPerMinute/Spa
-        // PageSession/Feature/SessionReplay/MaxTimeHit/Spa
-        // ---- or ----
-        // PageSession/Feature/SessionReplay/Nodes/Standard
-        // PageSession/Feature/SessionReplay/Bytes/Standard
-        // PageSession/Feature/SessionReplay/InitialSnapshotBytes/Standard
-        // PageSession/Feature/SessionReplay/InitialSnapshotBytesCompressed/Standard
-        // PageSession/Feature/SessionReplay/BytesPerMinute/Standard
-        // PageSession/Feature/SessionReplay/NodesPerMinute/Standard
-        // PageSession/Feature/SessionReplay/MaxTimeHit/Standard
-        if (val > 0) this.storeSupportabilityMetrics(`PageSession/Feature/SessionReplay/${key}/${type}`, val)
-      })
     } catch (e) {
       // do nothing
     }

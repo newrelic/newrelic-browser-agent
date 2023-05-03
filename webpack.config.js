@@ -7,7 +7,7 @@ const pkg = require('./package.json')
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
-let { PUBLISH, SOURCEMAPS = true, PR_NAME, VERSION_OVERRIDE } = process.env
+let { PUBLISH, SOURCEMAPS = true, PR_NAME, BRANCH_NAME, VERSION_OVERRIDE } = process.env
 // this will change to package.json.version when it is aligned between all the packages
 let VERSION = VERSION_OVERRIDE || pkg.version
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
@@ -39,6 +39,12 @@ switch (PUBLISH) {
     PUBLIC_PATH = `https://js-agent.newrelic.com/pr/${PR_NAME}/`
     MAP_PATH = `\n//# sourceMappingURL=https://js-agent.newrelic.com/pr/${PR_NAME}/[url]`
     VERSION = (Number(VERSION) + 1).toString()
+    break
+  case 'EXPERIMENT':
+    PATH_VERSION = ''
+    SUBVERSION = `${BRANCH_NAME}`
+    PUBLIC_PATH = `https://js-agent.newrelic.com/experiment/${BRANCH_NAME}/`
+    MAP_PATH = `\n//# sourceMappingURL=https://js-agent.newrelic.com/experiment/${BRANCH_NAME}/[url]`
     break
   case 'EXTENSION':
     // build for extension injection
@@ -72,6 +78,7 @@ console.log('PUBLIC_PATH', PUBLIC_PATH)
 console.log('MAP_PATH', MAP_PATH)
 console.log('IS_LOCAL', IS_LOCAL)
 if (PR_NAME) console.log('PR_NAME', PR_NAME)
+if (BRANCH_NAME) console.log('BRANCH_NAME', BRANCH_NAME)
 process.env.BUILD_VERSION = VERSION
 process.env.BUILD_ENV = SUBVERSION
 
@@ -83,7 +90,7 @@ process.env.BUILD_ENV = SUBVERSION
 const instantiateSourceMapPlugin = (filename) => {
   return new webpack.SourceMapDevToolPlugin({
     append: MAP_PATH, // sourceMappingURL CDN route vs local route (for sourceMappingURL)
-    filename: filename || (['PROD', 'DEV', 'CURRENT'].includes(SUBVERSION) ? '[name].[chunkhash:8].map' : '[name].map'),
+    filename: filename || (SUBVERSION !== 'LOCAL' ? '[name].[chunkhash:8].map' : '[name].map'),
     ...(JSON.parse(SOURCEMAPS) === false && { exclude: new RegExp('.*') }) // Exclude all files if disabled.
   })
 }
@@ -129,7 +136,7 @@ const commonConfig = {
   },
   output: {
     filename: '[name].js',
-    chunkFilename: ['PROD', 'DEV', 'CURRENT'].includes(SUBVERSION) ? `[name].[chunkhash:8]${PATH_VERSION}.min.js` : `[name]${PATH_VERSION}.js`,
+    chunkFilename: SUBVERSION !== 'LOCAL' ? `[name].[chunkhash:8]${PATH_VERSION}.min.js` : `[name]${PATH_VERSION}.js`,
     path: path.resolve(__dirname, './build'),
     publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
     clean: false
@@ -212,12 +219,12 @@ const polyfillsConfig = merge(commonConfig, {
      * overwrite with either an ES5 or ES6 target. For differentiated transpilation of dynamically loaded dependencies
      * in non-production builds, we can tag output filenames for chunks of the polyfills bundle with `-es5`.
      */
-    chunkFilename: ['PROD', 'DEV', 'CURRENT'].includes(SUBVERSION) ? `[name].[chunkhash:8]-es5${PATH_VERSION}.min.js` : `[name]-es5${PATH_VERSION}.js`
+    chunkFilename: SUBVERSION !== 'LOCAL' ? `[name].[chunkhash:8]-es5${PATH_VERSION}.min.js` : `[name]-es5${PATH_VERSION}.js`
   },
   plugins: [
     ...instantiateBundleAnalyzerPlugin('polyfills'),
     // Source map outputs must also must be tagged to prevent standard/polyfill filename collisions in non-production.
-    instantiateSourceMapPlugin(['PROD', 'DEV', 'CURRENT'].includes(SUBVERSION) ? '[name].[chunkhash:8]-es5.map' : '[name]-es5.map')
+    instantiateSourceMapPlugin(SUBVERSION !== 'LOCAL' ? '[name].[chunkhash:8]-es5.map' : '[name]-es5.map')
   ],
   target: 'browserslist:ie >= 11' // Applies to webpack's own runtime output; babel-loader only impacts bundled modules.
 })

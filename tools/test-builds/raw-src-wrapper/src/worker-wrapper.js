@@ -1,3 +1,5 @@
+/* eslint-disable no-eval */
+
 onmessage = async function (e) {
   if (e.data.type === 'startAgent') {
     self.NREUM = e.data.payload

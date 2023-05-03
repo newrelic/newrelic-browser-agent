@@ -26,7 +26,7 @@ const TIMER_FNS = [SET_TIMEOUT, 'setImmediate', SET_INTERVAL, CLEAR_TIMEOUT, 'cl
  * @param {Object} sharedEE - The shared event emitter on which a new scoped event emitter will be based.
  * @returns {Object} Scoped event emitter with a debug ID of `timer`.
  */
-//eslint-disable-next-line
+// eslint-disable-next-line
 export function wrapTimer(sharedEE) {
   const ee = scopedEE(sharedEE)
 

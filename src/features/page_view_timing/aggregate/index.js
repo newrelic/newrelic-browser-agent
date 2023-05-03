@@ -14,12 +14,12 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { handle } from '../../../common/event-emitter/handle'
 import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
-import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { FeatureBase } from '../../utils/feature-base'
 
-export class Aggregate extends AggregateBase {
+export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
@@ -27,13 +27,9 @@ export class Aggregate extends AggregateBase {
     this.timings = []
     this.timingsSent = []
     this.curSessEndRecorded = false
+    this.cls = null // this should be null unless set to a numeric value by web-vitals so that we differentiate if CLS is supported
 
-    try { // we (only) need to track cls state because it's attached to other timing events rather than reported on change...
-      this.clsSupported = PerformanceObserver.supportedEntryTypes.includes('layout-shift')
-      this.cls = 0
-    } catch (e) {}
-
-    /*! This is the section that used to be in the loader portion: !*/
+    /* ! This is the section that used to be in the loader portion: ! */
     /* ------------------------------------------------------------ */
     const pageStartedHidden = getRuntime(agentIdentifier).initHidden // our attempt at recapturing initial vis state since this code runs post-load time
     this.alreadySent = new Set() // since we don't support timings on BFCache restores, this tracks and helps cap metrics that web-vitals report more than once
@@ -66,7 +62,7 @@ export class Aggregate extends AggregateBase {
 
     /* First Input Delay (+"First Interaction") - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
     onFID(({ name, value, entries }) => {
-      if (pageStartedHidden || this.alreadySent.has(name)) return
+      if (pageStartedHidden || this.alreadySent.has(name) || entries.length === 0) return
       this.alreadySent.add(name)
 
       // CWV will only report one (THE) first-input entry to us; fid isn't reported if there are no user interactions occurs before the *first* page hiding.
@@ -84,24 +80,28 @@ export class Aggregate extends AggregateBase {
       if (pageStartedHidden || this.alreadySent.has(name)) return
       this.alreadySent.add(name)
 
-      // CWV will only ever report one (THE) lcp entry to us; lcp is also only reported *once* on earlier(user interaction, page hidden).
-      const lcpEntry = entries[entries.length - 1] // this looks weird if we only expect one, but this is how cwv-attribution gets it so to be sure...
-      const attrs = {
-        size: lcpEntry.size,
-        eid: lcpEntry.id
+      const attributes = {}
+      if (entries.length > 0) {
+        // CWV will only ever report one (THE) lcp entry to us; lcp is also only reported *once* on earlier(user interaction, page hidden).
+        const lcpEntry = entries[entries.length - 1] // this looks weird if we only expect one, but this is how cwv-attribution gets it so to be sure...
+        attributes.size = lcpEntry.size
+        attributes.eid = lcpEntry.id
+
+        if (lcpEntry.url) {
+          attributes.elUrl = cleanURL(lcpEntry.url)
+        }
+        if (lcpEntry.element?.tagName) {
+          attributes.elTag = lcpEntry.element.tagName
+        }
       }
-      this.addConnectionAttributes(attrs)
-      if (lcpEntry.url) {
-        attrs['elUrl'] = cleanURL(lcpEntry.url)
-      }
-      if (lcpEntry.element && lcpEntry.element.tagName) {
-        attrs['elTag'] = lcpEntry.element.tagName
-      }
-      this.addTiming(name.toLowerCase(), value, attrs)
+
+      this.addConnectionAttributes(attributes)
+      this.addTiming(name.toLowerCase(), value, attributes)
     })
 
-    /* Cumulative Layout Shift - We don't have to limit this callback since cls is stored as a state and only sent as attribute on other timings. */
-    onCLS(({ value }) => this.cls = value)
+    /* Cumulative Layout Shift - We don't have to limit this callback since cls is stored as a state and only sent as attribute on other timings.
+      reportAllChanges ensures our tracked cls has the most recent rolling value to attach to 'unload' and 'pagehide'. */
+    onCLS(({ value }) => this.cls = value, { reportAllChanges: true })
 
     /* Interaction-to-Next-Paint */
     onINP(({ name, value, id }) => this.addTiming(name.toLowerCase(), value, { metricId: id }))
@@ -160,17 +160,28 @@ export class Aggregate extends AggregateBase {
    */
   recordPageUnload (timestamp) {
     this.addTiming('unload', timestamp, null)
-    // Because window's pageHide commonly fires before vis change and the final harvest occurs on the earlier of the two, we also have to add that now or it won't make it into the last payload out.
+    /*
+    Issue: Because window's pageHide commonly fires BEFORE vis change and "final" harvest would happen at the former in this case, we also have to add our vis-change event now or it may not be sent.
+    Affected: Safari < v14.1/.5 ; versions that don't support 'visiilitychange' event
+    Impact: For affected w/o this, NR 'pageHide' attribute may not be sent. For other browsers w/o this, NR 'pageHide' gets fragmented into its own harvest call on page unloading because of dual EoL logic.
+    Mitigation: NR 'unload' and 'pageHide' are both recorded when window pageHide fires, rather than only recording 'unload'.
+    Future: When EoL can become the singular subscribeToVisibilityChange, it's likely endCurrentSession isn't needed here as 'unload'-'pageHide' can be untangled.
+    */
     this.endCurrentSession(timestamp)
   }
 
   addTiming (name, value, attrs) {
     attrs = attrs || {}
 
-    // If CLS is supported, a cls value should exist and be reported, even at 0.
-    // *cli Mar'23 - At this time, it remains attached to all timings. See NEWRELIC-6143.
-    if (this.clsSupported) {
-      attrs['cls'] = this.cls
+    // If cls was set to another value by `onCLS`, then it's supported and is attached onto any timing but is omitted until such time.
+    /*
+    *cli Apr'23 - Convert attach-to-all -> attach-if-not-null. See NEWRELIC-6143.
+    Issue: Because NR 'pageHide' was only sent once with what is considered the "final" CLS value, in the case that 'pageHide' fires before 'load' happens, we incorrectly a final CLS of 0 for that page.
+    Mitigation: We've set initial CLS to null so that it's omitted from timings like 'pageHide' in that edge case. It should only be included if onCLS callback was executed at least once.
+    Future: onCLS value changes should be reported directly & CLS separated into its own timing node so it's not beholden to 'pageHide' firing. It'd also be possible to report the real final CLS.
+    */
+    if (this.cls !== null) {
+      attrs.cls = this.cls
     }
 
     this.timings.push({

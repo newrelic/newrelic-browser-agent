@@ -68,7 +68,7 @@ export class Agent {
       }
 
       const newrelic = gosNREUM()
-      delete newrelic.initializedAgents[this.agentIdentifier]?.['api'] // prevent further calls to agent-specific APIs (see "configure.js")
+      delete newrelic.initializedAgents[this.agentIdentifier]?.api // prevent further calls to agent-specific APIs (see "configure.js")
       delete newrelic.initializedAgents[this.agentIdentifier]?.[NR_FEATURES_REF_NAME] // GC mem used internally by features
       delete this.sharedAggregator
       // Keep the initialized agent object with its configs for troubleshooting purposes.

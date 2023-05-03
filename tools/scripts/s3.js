@@ -5,7 +5,7 @@ var s3
 module.exports = {
   connectToS3: function connectToS3 (role, dry) {
     return new Promise((resolve, reject) => {
-      if (dry) return resolve()
+      if (dry) console.log('connecting to S3 in dry mode')
 
       var roleToAssume = {
         RoleArn: role, // argv['role']
@@ -79,6 +79,19 @@ module.exports = {
       s3.putObject(params, (err, data) => {
         if (err) reject(err)
         else resolve(data)
+      })
+    })
+  },
+  getListOfObjects: function getListOfObjects (Bucket, Prefix = '') {
+    const params = {
+      Bucket, Prefix, MaxKeys: 1000
+    }
+    // TODO -- for sake of time this assumes 1000 objects is enough...
+    // MAY NEED TO REVISIT IF NEED TO HANDLE PAGINATION
+    return new Promise((resolve, reject) => {
+      s3.listObjectsV2(params, (err, data) => {
+        if (err) reject(err)
+        resolve(data.Contents)
       })
     })
   }

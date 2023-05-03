@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-/*eslint no-undef: "error"*/
+/* eslint no-undef: "error" */
 import { registerHandler as register } from '../../../common/event-emitter/register-handler'
 import { parseUrl } from '../../../common/url/parse-url'
 import { shouldCollectEvent } from '../../../common/deny-list/deny-list'
@@ -13,19 +13,19 @@ import { paintMetrics } from '../../../common/metrics/paint-metrics'
 import { Interaction } from './interaction'
 import { getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
-import { AggregateBase } from '../../utils/aggregate-base'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { Serializer } from './serializer'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import * as CONSTANTS from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { FeatureBase } from '../../utils/feature-base'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
   INTERACTION, SPA_NODE, JSONP_NODE, FETCH_START, FETCH_DONE, FETCH_BODY, JSONP_END, originalSetTimeout
 } = CONSTANTS
-export class Aggregate extends AggregateBase {
+export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
@@ -212,7 +212,7 @@ export class Aggregate extends AggregateBase {
           if (evName === 'click') {
             var value = getActionText(ev.target)
             if (value) {
-              state.currentNode.attrs.custom['actionText'] = value
+              state.currentNode.attrs.custom.actionText = value
             }
           }
         }

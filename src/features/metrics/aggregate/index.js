@@ -1,7 +1,6 @@
 import { getRuntime } from '../../../common/config/config'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { getFrameworks } from '../../../common/metrics/framework-detection'
@@ -12,8 +11,9 @@ import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope } from '../../../common/util/global-scope'
 import { metrics, type } from './session-replay-investigation'
+import { FeatureBase } from '../../utils/feature-base'
 
-export class Aggregate extends AggregateBase {
+export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)

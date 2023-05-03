@@ -276,7 +276,7 @@ describe('event-emitter emit', () => {
 
     expect(mockScopeListener).toHaveBeenCalledTimes(1)
     expect(mockListener).not.toHaveBeenCalled()
-    expect(scopeEE.backlog['feature']).toEqual(expect.arrayContaining([
+    expect(scopeEE.backlog.feature).toEqual(expect.arrayContaining([
       expect.arrayContaining([
         scopeEE,
         eventType,
@@ -284,7 +284,7 @@ describe('event-emitter emit', () => {
         {}
       ])
     ]))
-    expect(ee.backlog['feature']).toEqual(scopeEE.backlog['feature'])
+    expect(ee.backlog.feature).toEqual(scopeEE.backlog.feature)
   })
 })
 

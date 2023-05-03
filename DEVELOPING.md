@@ -1,4 +1,4 @@
-[![Community Plus header](https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png)](https://opensource.newrelic.com/oss-category/#community-plus)
+<a href="https://opensource.newrelic.com/oss-category/#community-plus"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/dark/Community_Plus.png"><source media="(prefers-color-scheme: light)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"><img alt="New Relic Open Source community plus project banner." src="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"></picture></a>
 
 <div style="display:flex;flex-wrap:wrap;justify-content:space-evenly;align-items:top;margin:0 0 10px">
     <div style="margin:0 5px;"><img src="https://img.shields.io/github/actions/workflow/status/newrelic/newrelic-browser-agent/smoke-test.yml?branch=main&event=schedule&style=plastic&label=Smoke%20Tests" /></div>
@@ -32,7 +32,7 @@ This page contains information about working on the New Relic Browser agent proj
 - [Troubleshooting Browser agent installation](https://docs.newrelic.com/docs/browser/browser-monitoring/troubleshooting/troubleshoot-your-browser-monitoring-installation/)
 - [Introduction to browser monitoring](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/introduction-browser-monitoring/)
 - [Browser monitoring best practices](https://docs.newrelic.com/docs/new-relic-solutions/best-practices-guides/full-stack-observability/browser-monitoring-best-practices-guide/)
-- [Browser agent NPM package (pre-release)](https://www.npmjs.com/package/@newrelic/browser-agent)
+- [Browser agent NPM package](https://www.npmjs.com/package/@newrelic/browser-agent)
 
 ## Building
 
@@ -181,34 +181,3 @@ http://localhost:3333/tests/assets/spa/fetch.html?loader=spa
 ### PR Testing
 
 When you open a PR, the agent's functional and unit test suite will be run on the latest version of Chrome, Firefox and Safari to quickly validate the new code. If that passes, the PR will run functional and unit tests again against the full matrix of browsers and browser versions that are required to pass before approving a PR.
-
-## Support
-
-New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. Like all official New Relic open source projects, there's a related Community topic in the New Relic Explorers Hub. You can find this project's topic/threads here:
-
-https://discuss.newrelic.com/c/full-stack-observability/browser
-
-## Contribute
-
-We encourage your contributions to improve the Browser agent! Keep in mind that when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
-
-If you have any questions, or to execute our corporate CLA (which is required if your contribution is on behalf of a company), drop us an email at opensource@newrelic.com.
-
-For more details on how best to contribute, see [CONTRIBUTING.md](CONTRIBUTING.md)
-
-**A note about vulnerabilities**
-
-As noted in our [security policy](https://github.com/newrelic/newrelic-browser-agent/security/policy), New Relic is committed to the privacy and security of our customers and their data. We believe that providing coordinated disclosure by security researchers and engaging with the security community are important means to achieve our security goals.
-
-If you believe you have found a security vulnerability in this project or any of New Relic's products or websites, we welcome and greatly appreciate you reporting it to New Relic through [HackerOne](https://hackerone.com/newrelic).
-
-If you would like to contribute to this project, review [these guidelines](./CONTRIBUTING.md).
-
-To all contributors, we thank you! Without your contribution, this project would not be what it is today. We also host [a community project page dedicated to the Browser agent](https://opensource.newrelic.com/projects/newrelic/newrelic-browser-agent).
-
-## License
-
-The Browser agent is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
-
-The Browser agent also uses source code from third-party libraries. Full details on which libraries are used and the terms under which they are licensed can be found in the [third-party notices document](THIRD_PARTY_NOTICES.md).
-

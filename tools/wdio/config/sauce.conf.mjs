@@ -28,8 +28,8 @@ function sauceCapabilities () {
     if (browserSpec.desired.platformName === 'iOS') {
       capabilities['appium:deviceName'] = browserSpec.desired['appium:deviceName']
       capabilities['appium:platformVersion'] = browserSpec.desired['appium:platformVersion']
-      capabilities['appium:automationName'] = browserSpec.desired['XCUITest']
-      capabilities['sauce:options']['appiumVersion'] = browserSpec.desired['sauce:options']['appiumVersion']
+      capabilities['appium:automationName'] = browserSpec.desired.XCUITest
+      capabilities['sauce:options'].appiumVersion = browserSpec.desired['sauce:options'].appiumVersion
     }
 
     return capabilities

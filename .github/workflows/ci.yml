@@ -1,6 +1,14 @@
+# This workflow runs sanity checks on pull requests to ensure they meet
+# a minimum standard such as building, linting, and testing without error.
+# This workflow also contains processing for decorating pull requests with
+# additional information like package size increases.
+#
+# This workflow runs on main to update external services like codecov with
+# the latest code, results, etc.
 name: Browser Agent CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - 'main'
@@ -17,25 +25,39 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Setup Container
+      - name: Setup container
         run: apt update && apt install -y git
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm ci
-      - name: Running Prod Build
+      - name: Running cdn build
         run: npm run cdn:build:dev
-      - name: Generating Asset Size Report
+      - name: Running npm build
+        run: |
+          npm run build:npm
+          npm run tools:test-builds
+      - name: Generating npm build stats
+        run: node ./tools/scripts/npm-build-stats.js
+      - name: Generating asset size report
         run: node ./tools/scripts/diff-sizes.mjs -o build
-      - name: Creating PR Comment
+      - name: Creating pull request comment
         run: |
           node ./tools/scripts/comment-pr.mjs \
             --pull-request=${{ github.event.pull_request.number }} \
             --token=${{ secrets.GITHUB_TOKEN }} \
             --input=./build/size_report.md \
             --tag='<!-- browser_agent asset size report -->'
+      - name: Archive asset size report results
+        uses: actions/upload-artifact@v3
+        with:
+          name: asset-size-report
+          path: |
+            build/size_report.*
+            build/*.stats.html
+            build/*.stats.json
 
   lint:
     runs-on: ubuntu-latest
@@ -46,15 +68,15 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Setup Container
+      - name: Setup container
         run: apt update && apt install -y git
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm ci
-      - name: Run Linting
+      - name: Run linting
         run: npm run lint
 
   unit:
@@ -66,73 +88,29 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Setup Container
+      - name: Setup container
         run: apt update && apt install -y git
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Install Dependencies
+      - name: Install project dependencies
         run: npm ci
-      - name: Run Unit Tests
+      - name: Run unit tests
         run: npm run test:coverage
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v3
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage-report
+          path: coverage/
 
   jil-smoke-chrome:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    container:
-      image: ubuntu:latest
-      options: --network-alias=bam-test-1.nr-local.net
-    defaults:
-      run:
-        shell: bash
-    services:
-      selenium:
-        image: selenium/standalone-chrome
-        ports:
-          - 4444:4444
-        options: --shm-size=4g
-    steps:
-      - name: Setup Container
-        run: apt update && apt install -y git
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: lts/*
-      - name: Install Dependencies
-        run: npm ci
-      - name: Build Agent
-        run: npm run build:all
-      - name: Run JIL Unit Tests
-        run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest/linux -t 85000 --no-retry --selenium-server=selenium:4444 --unit-only
+    uses: ./.github/workflows/selenium-test.yml
+    with:
+      browser-target: chrome
 
   jil-smoke-firefox:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    container:
-      image: ubuntu:latest
-      options: --network-alias=bam-test-1.nr-local.net
-    defaults:
-      run:
-        shell: bash
-    services:
-      selenium:
-        image: selenium/standalone-firefox
-        ports:
-          - 4444:4444
-        options: --shm-size=4g
-    steps:
-      - name: Setup Container
-        run: apt update && apt install -y git
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: lts/*
-      - name: Install Dependencies
-        run: npm ci
-      - name: Build Agent
-        run: npm run build:all
-      - name: Run JIL Unit Tests
-        run: node ./tools/jil/bin/cli.js -f merged -b firefox@latest/linux -t 85000 --no-retry --selenium-server=selenium:4444 --unit-only
+    uses: ./.github/workflows/selenium-test.yml
+    with:
+      browser-target: firefox

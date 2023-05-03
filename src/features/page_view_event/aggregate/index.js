@@ -10,15 +10,15 @@ import { paintMetrics } from '../../../common/metrics/paint-metrics'
 import { submitData } from '../../../common/util/submit-data'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { AggregateBase } from '../../utils/aggregate-base'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
 import { globalScope, isBrowserScope } from '../../../common/util/global-scope'
 import { drain } from '../../../common/drain/drain'
+import { FeatureBase } from '../../utils/feature-base'
 
 const jsonp = 'NREUM.setToken'
 
-export class Aggregate extends AggregateBase {
+export class Aggregate extends FeatureBase {
   static featureName = CONSTANTS.FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME)
@@ -90,16 +90,19 @@ export class Aggregate extends AggregateBase {
     chunksForQueryString.push(param('af', getActivatedFeaturesFlags(this.agentIdentifier).join(',')))
 
     if (globalScope.performance) {
-      try {
-        const navTimingApiData = globalScope?.performance?.getEntriesByType('navigation')?.[0]
+      if (typeof PerformanceNavigationTiming !== 'undefined') { // Navigation Timing level 2 API that replaced PerformanceTiming & PerformanceNavigation
+        const navTimingEntry = globalScope?.performance?.getEntriesByType('navigation')?.[0]
         const perf = ({
-          timing: addPT(agentRuntime.offset, navTimingApiData, {}),
-          navigation: addPN(navTimingApiData, {})
+          timing: addPT(agentRuntime.offset, navTimingEntry, {}),
+          navigation: addPN(navTimingEntry, {})
         })
         chunksForQueryString.push(param('perf', stringify(perf)))
-      } catch (err) {
-        // performance API failed for some reason
-        this.ee.emit('internal-error', [err])
+      } else if (typeof PerformanceTiming !== 'undefined') { // Safari pre-15 did not support level 2 timing
+        const perf = ({
+          timing: addPT(agentRuntime.offset, globalScope.performance.timing, {}, true),
+          navigation: addPN(globalScope.performance.navigation, {})
+        })
+        chunksForQueryString.push(param('perf', stringify(perf)))
       }
     }
 

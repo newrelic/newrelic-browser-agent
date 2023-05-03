@@ -7,10 +7,6 @@ export FORCE_COLOR=1
 npm run lint
 npm test -- --onlyChanged
 
-# Update version in package.json to match VERSION file
-npm run sync:version
-git add package.json
-
 # Include updated caniuse-lite database used by browserslist
 npx browserslist@latest --update-db
 git add package.json

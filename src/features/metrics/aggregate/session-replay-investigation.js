@@ -49,7 +49,7 @@ try {
   warn('SR Metrics ERR', err)
 }
 
-//stop recording after 5 minutes
+// stop recording after 5 minutes
 setTimeout(() => {
   metrics.MaxTimeHit++
   stopRecording()

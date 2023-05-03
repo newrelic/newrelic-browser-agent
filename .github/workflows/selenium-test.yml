@@ -1,0 +1,49 @@
+# This is a shared workflow that will run the JIL unit test suite
+# against the specified browser using a local selenium docker
+# container to host the browser.
+name: Run Selenium Test
+
+on:
+  workflow_call:
+    inputs:
+      browser-target:
+        description: 'Which browser to target with the selenium test: chrome or firefox'
+        required: true
+        type: string
+
+jobs:
+  selenium-test:
+    name: Selenium Test - ${{ inputs.browser-target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: ubuntu:latest
+      options: --network-alias=bam-test-1.nr-local.net
+    defaults:
+      run:
+        shell: bash
+    services:
+      selenium:
+        image: selenium/standalone-${{ inputs.browser-target }}:110.0
+        ports:
+          - 4444:4444
+        options: --shm-size=4g
+    steps:
+      - name: Setup container
+        run: apt update && apt install -y git
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Build agent
+        run: npm run build:all
+      - name: Run jil unit tests
+        run: |
+          node ./tools/jil/bin/cli.js \
+            -f merged \
+            -b ${{ inputs.browser-target }}@latest/linux \
+            -t 85000 \
+            --selenium-server=selenium:4444 \
+            --unit-only

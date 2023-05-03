@@ -23,14 +23,8 @@ var argv = yargs
     .describe('test', 'for testing only, uploads scripts to folder named test')
     .alias('t', 'test')
 
-    .boolean('dev')
-    .describe('dev', 'for dev early release directory only, uploads scripts to folder named dev')
-    .alias('D', 'dev')
-
-    .string('pr')
-    .alias('pr', 'pr-name')
-    .describe('pr', 'PR name (bucket name)')
-    .default('')
+    .string('dir')
+    .describe('dir', 'AWS directory name')
 
     .help('h')
     .alias('h', 'help')
@@ -108,16 +102,9 @@ function connectToS3() {
 
 function uploadToS3(fileName, content) {
     return new Promise((resolve, reject) => {
-        if (argv['test'] === true) {
-            fileName = 'test/' + fileName
-        }
 
-        if (argv['dev'] === true) {
-            fileName = 'dev/' + fileName
-        }
-
-        if (argv['pr']) {
-            fileName = 'pr/' + argv['pr'] + '/' + fileName
+        if (argv['dir']){
+            filename = dir + '/' + filename
         }
 
         var params = {

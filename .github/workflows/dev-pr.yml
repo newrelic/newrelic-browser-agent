@@ -26,7 +26,7 @@ jobs:
           node ./tools/scripts/upload-to-s3.js \
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }} \
-            --pr PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}
+            --dir pr/PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}
       - name: purge fastly PR url
         run: |
           node ./tools/scripts/fastly.js \

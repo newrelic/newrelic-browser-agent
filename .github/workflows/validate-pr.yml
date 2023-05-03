@@ -35,23 +35,27 @@ jobs:
             echo('')
             head('DESCRIPTION')
             echo('----------------------------------------------------------------------')
-            const headerMarker = context.payload.pull_request.body.indexOf('\n---')
-            const description = context.payload.pull_request.body.substring(0, headerMarker).trim()
-            if (headerMarker === -1) echo(highlight + '[missing `---` line to terminate description header]')
-            else if (description.length === 0) echo(highlight + '[missing]')
-            else if (description.length < 70) echo(description + highlight + (new Array(70 - description.length + 1)).join('\xa0'))
-            else echo(description)
+            const prBody = (context.payload.pull_request.body || '').trim()
+            const headerMarker = prBody.indexOf('\n---')
+            const description = prBody.substring(0, headerMarker).trim()
+            if (prBody === '') echo(highlight + '[missing description header]')
+            else if (headerMarker === -1) echo(highlight + '[missing `---` line to terminate description header]')
+            else if (description.length === 0) echo(highlight + '[missing description header]')
+            else if (description.length < 70 && context.payload.pull_request.title.substring(0, 6) !== 'chore:') {
+              echo(description + highlight + (new Array(70 - description.length + 1)).join('\xa0'))
+            } else echo(description)
 
             echo('')
             const errors = []
             if (context.payload.pull_request.title.length > 70) errors.push('PR title is longer than 70 characters and would be truncated. Please shorten.')
             if (!(/(?:feat|fix|security|chore)(?:\([^)]+\))?: .*/g).test(context.payload.pull_request.title)) errors.push('Title does not start with a type of `feat`, `fix`, `security`, or `chore` followed by an optional scope then a colon and a space.')
-            if (headerMarker === -1) errors.push('The PR description is missing a horizontal rule (`---`) on a line by itself to terminate the header section.')
-            if (description.length < 70) errors.push('The top of the PR description must contain a summary paragraph of 70 characters or more followed by a horizontal rule (`---`) on a line by itself.');
+            if (prBody === '') errors.push('The PR description cannot be blank.')
+            else if (headerMarker === -1) errors.push('The PR description is missing a horizontal rule (`---`) on a line by itself to terminate the header section.')
+            if (description.length < 70 && context.payload.pull_request.title.substring(0, 6) !== 'chore:') errors.push('The top of the PR description must contain a summary paragraph of 70 characters or more followed by a horizontal rule (`---`) on a line by itself.');
             if (errors.length) {
               core.setFailed('Validation Failed')
               echo('- ' + errors.join('\n- '))
             } else {
               echo(greenBold + 'Validation Succeeded')
-              echo('PR title and description are in a valid format for use in generating release note contents.')
+              echo('PR title and description are in a valid format for the change type.')
             }

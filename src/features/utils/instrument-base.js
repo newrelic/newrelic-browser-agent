@@ -53,7 +53,7 @@ export class InstrumentBase extends FeatureBase {
         const { Aggregate } = await lazyLoader(this.featureName, 'aggregate')
         new Aggregate(this.agentIdentifier, this.aggregator)
       } catch (e) {
-        warn(`Downloading ${this.featureName} failed...`)
+        warn(`Downloading ${this.featureName} failed...`, e)
         this.abortHandler?.() // undo any important alterations made to the page
 
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically

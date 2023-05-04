@@ -44,8 +44,8 @@ switch (PUBLISH) {
   case 'EXPERIMENT':
     PATH_VERSION = ''
     SUBVERSION = `${BRANCH_NAME}`
-    PUBLIC_PATH = `https://js-agent.newrelic.com/experiment/${BRANCH_NAME}/`
-    MAP_PATH = `\n//# sourceMappingURL=https://js-agent.newrelic.com/experiment/${BRANCH_NAME}/[url]`
+    PUBLIC_PATH = `https://js-agent.newrelic.com/experiments/${BRANCH_NAME}/`
+    MAP_PATH = `\n//# sourceMappingURL=https://js-agent.newrelic.com/experiments/${BRANCH_NAME}/[url]`
     VERSION = `${VERSION}-${BRANCH_NAME.toLowerCase()}`
     break
   case 'EXTENSION':

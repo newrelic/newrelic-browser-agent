@@ -6,11 +6,7 @@ name: Repolinter Action
 # Currently there is no elegant way to specify the default
 # branch in the event filtering, so branches are instead
 # filtered in the "Test Default Branch" step.
-on:
-  workflow_dispatch:
-  push:
-    branches-ignore:
-      - 'release-please**'
+on: [push, workflow_dispatch]
 
 jobs:
   repolint:

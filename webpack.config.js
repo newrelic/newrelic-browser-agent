@@ -32,6 +32,7 @@ switch (PUBLISH) {
     SUBVERSION = 'DEV'
     PUBLIC_PATH = 'https://js-agent.newrelic.com/dev/'
     MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/dev/[url]'
+    VERSION = `${VERSION}-dev`
     break
   case 'PR':
     PATH_VERSION = ''
@@ -45,6 +46,7 @@ switch (PUBLISH) {
     SUBVERSION = `${BRANCH_NAME}`
     PUBLIC_PATH = `https://js-agent.newrelic.com/experiment/${BRANCH_NAME}/`
     MAP_PATH = `\n//# sourceMappingURL=https://js-agent.newrelic.com/experiment/${BRANCH_NAME}/[url]`
+    VERSION = `${VERSION}-${BRANCH_NAME.toLowerCase()}`
     break
   case 'EXTENSION':
     // build for extension injection

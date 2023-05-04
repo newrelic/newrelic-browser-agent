@@ -408,7 +408,7 @@ async function createPR (version, branch, dryRun) {
     base: BASE_BRANCH,
     title,
     body: title,
-    draft: true
+    draft: false
   }
 
   console.log(`Creating PR with following options: ${JSON.stringify(prOptions)}\n`)

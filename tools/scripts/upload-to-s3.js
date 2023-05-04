@@ -104,7 +104,7 @@ function uploadToS3(fileName, content) {
     return new Promise((resolve, reject) => {
 
         if (argv['dir']){
-            filename = argv['dir'] + '/' + filename
+            fileName = argv['dir'] + '/' + fileName
         }
 
         var params = {

@@ -139,24 +139,6 @@ async function sparseCloneRepo (repoInfo, checkoutFiles) {
   process.chdir('..')
 }
 
-/**
- * Retrieves the body of a commit message for a given commit hash from the current git history.
- * Assumes the execution context is a valid checked-out git repo.
- *
- * @async
- * @function
- * @param {string} commitHash - The commit hash of the commit from which to retrieve the message body.
- * @returns {Promise<string>} A Promise that resolves to the message body of the specified commit,
- *     or '<missing description>' if the commit message has no body.
- */
-async function getCommitBody (commitHash) {
-  const silent = true
-  const fullMessage = await execAsPromise(`git log --format=%B -n 1 ${commitHash}`, silent)
-  const startOfBody = fullMessage.indexOf('\n\n') + 2
-  const body = fullMessage.substring(startOfBody).trim()
-  return body || '<missing description>'
-}
-
 function execAsPromise (command, silent = false) {
   return new Promise((resolve, reject) => {
     if (!silent) console.log(`Executing: '${command}'`)
@@ -188,6 +170,5 @@ export default {
   setUpstream,
   deleteUpstreamBranch,
   syncWithParent,
-  setUserInfo,
-  getCommitBody
+  setUserInfo
 }

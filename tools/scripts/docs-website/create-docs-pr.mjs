@@ -185,8 +185,8 @@ async function extractReleaseDetails (version, changelogFilename) {
   const github = new Github(githubOwner, githubRepo)
   for (const change of versionData.changes) {
     if (categories[change.type]) {
-      console.log(`- ${change.message}`)
-      const entry = { sha: change.sha, title: change.message, description: await getEntryDescription(github, change.sha) }
+      const entry = await getEntryContent(github, change.sha) // { title, description }
+      console.log(`- ${entry.title}`)
       categories[change.type].push(entry)
     }
   }
@@ -224,28 +224,19 @@ async function extractReleaseDetails (version, changelogFilename) {
 }
 
 /**
- * Retrieves the description of a commit from its associated pull request's header or the commit message body from git history.
+ * Retrieves the title and description of a squash-merged commit from its associated pull request.
  *
  * @param {Github} github - An instance of the Github class constructed with the appropriate Github owner and repo.
  * @param {string} commitHash - The SHA-1 hash of the commit to get the description for.
- * @returns {Promise<string>} A Promise that resolves to the commit description, or an empty string if no description is found.
+ * @returns {Promise<Object>} A Promise that resolves to the commit title and description, or an empty strings.
  */
-async function getEntryDescription (github, commitHash) {
-  let description = ''
-
-  // First try to get the header of the associated PR.
+async function getEntryContent (github, commitHash) {
   const relatedPR = await github.getAssociatedPR(commitHash)
-  if (relatedPR) {
-    const prBody = relatedPR.body
-    if (prBody.indexOf('\n---') !== -1) description = prBody.split('\n---')[0].trim()
-  }
+  const title = relatedPR?.title || ''
+  const prBody = relatedPR?.body || ''
+  const description = prBody.indexOf('\n---') !== -1 ? prBody.split('\n---')[0].trim() : '<missing>'
 
-  // Fall back to the body of the commit message from the git history.
-  if (description === '') {
-    description = await git.getCommitBody(commitHash)
-  }
-
-  return description
+  return { title, description }
 }
 
 /**

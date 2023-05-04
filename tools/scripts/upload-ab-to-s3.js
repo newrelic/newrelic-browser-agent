@@ -1,6 +1,5 @@
 const request = require('request')
 const { connectToS3, uploadToS3, getListOfObjects } = require('./s3')
-const fs = require('fs')
 
 var argv = require('yargs')
   .usage('$0 [options]')
@@ -103,7 +102,7 @@ function getIdFromUrl (url) {
   connectToS3(role, dry).then(async () => {
     const filePaths = [
       next, // defaults to dev build
-      current, // defaults to current build
+      ...(env !== 'dev' ? [current] : []), // defaults to current build
       ...((env === 'dev' && await getOpenPrNums()) || []).map(num => `https://js-agent.newrelic.com/pr/PR-${num}/nr-loader-spa.min.js`),
       ...((env === 'staging' && await getExperiments()) || []).map(s3ObjectName => `https://js-agent.newrelic.com/${s3ObjectName}`)
     ]
@@ -125,8 +124,6 @@ function getIdFromUrl (url) {
       const expires = new Date()
       expires.setMonth(expires.getMonth() + 1)
 
-      fs.writeFileSync('loader.js', output, 'utf-8')
-
       const uploads = await uploadToS3(filename, output, bucket, dry, 300, expires.toISOString())
       console.log(`Successfully uploaded ${filename} to S3`)
       process.exit(0)
@@ -143,30 +140,30 @@ function wrapAgent (agent, id) {
   return `
         ids['${id}'] = () => {
             ${agent}
-
-            for (key in NREUM.initializedAgents){
-              if (Object.keys(NREUM.initializedAgents[key].info.jsAttributes).length === 0) {
-                      ;NREUM.initializedAgents[key].api.setCustomAttribute('buildID', '${id}')
-                      ;NREUM.initializedAgents[key].api.setCustomAttribute('SHA', '${sha}')
-                      ;NREUM.initializedAgents[key].api.setCustomAttribute('workflow', '${workflow}');
-              }
-            }
+            ;newrelic.setCustomAttribute('buildID', '${id}')
+            ;newrelic.setCustomAttribute('SHA', '${sha}')
+            ;newrelic.setCustomAttribute('workflow', '${workflow}');
         }
     `
 }
 
 function randomExecutor (ids) {
-  let output = ''
-  output += 'ids[\'current\']();\n'
-  output += 'ids[\'dev\']();\n'
-  output += `
+  let output = `
         (function (){
-          var r = Math.random()
+          const params = new Proxy(new URLSearchParams(window.location.search), {
+            get: (searchParams, prop) => searchParams.get(prop),
+          });
+          if (params.nrbaloader && ids[params.nrbaloader]) return ids[params.nrbaloader]();
+
+          const ls = localStorage.getItem("nrbaloader")
+          if (ls && ids[ls]) return ids[ls]();
+
+          var r = Math.random();
     `
-  ids.filter(x => x !== 'dev' && x !== 'current').forEach((id, i, vals) => {
-    output += `if (r <= ${i + 1 / vals.length}) return ids['${id}']();\n`
+  ids.forEach((id, i) => {
+    output += `if (r <= ${(i + 1) / ids.length}) return ids['${id}']();\n`
   })
-  output += '})();\n'
+  output += '})()'
   return output
 }
 

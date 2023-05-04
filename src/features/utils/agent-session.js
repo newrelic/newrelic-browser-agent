@@ -15,25 +15,25 @@ export function setupAgentSession (agentIdentifier) {
 
   const sharedEE = ee.get(agentIdentifier)
 
-  // subdomains is a boolean that can be specified by customer.
+  // domain is a string that can be specified by customer.
   // only way to keep the session object across subdomains is using first party cookies
   // This determines which storage wrapper the session manager will use to keep state
   let storageAPI
   const cookiesEnabled = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true
   if (cookiesEnabled && isBrowserScope) {
-    storageAPI = getConfigurationValue(agentIdentifier, 'session.subdomains')
+    storageAPI = getConfigurationValue(agentIdentifier, 'session.domain')
       ? new FirstPartyCookies(getConfigurationValue(agentIdentifier, 'session.domain'))
       : new LocalStorage()
-  } else storageAPI = new LocalMemory()
+  }
 
-  if (cookiesEanbled) {
+  if (cookiesEnabled) {
+    // defaults to "LocalMemory" if storageAPI is undefined, such as in Worker build
     agentRuntime.session = new SessionEntity({
       agentIdentifier,
       key: 'SESSION',
       storageAPI,
       expiresMs: getConfigurationValue(agentIdentifier, 'session.expiresMs'),
       inactiveMs: getConfigurationValue(agentIdentifier, 'session.inactiveMs')
-    // ...(!cookiesEnabled && { value: '0' }) // add this back in if we have to send '0' for cookies disabled...
     })
   }
 

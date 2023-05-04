@@ -16,7 +16,11 @@ export class SessionEntity {
    * The value can be overridden in the constructor, but will default to a unique 16 character hex string
    * expiresMs and inactiveMs are used to "expire" the session, but can be overridden in the constructor. Pass 0 to disable expiration timers.
    */
-  constructor ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS, storageAPI = new LocalMemory() }) {
+  constructor (opts) {
+    this.setup(opts)
+  }
+
+  setup ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS, storageAPI = new LocalMemory() }) {
     if (!agentIdentifier || !key) throw new Error('Missing Required Fields')
     if (!isBrowserScope) this.storage = new LocalMemory()
     else this.storage = storageAPI
@@ -51,9 +55,8 @@ export class SessionEntity {
     if (expiresMs) {
       this.expiresAt = initialRead?.expiresAt || this.getFutureTimestamp(expiresMs)
       this.expiresTimer = new Timer({
-        onEnd: () => this.reset()
+        onEnd: this.reset.bind(this)
       }, expiresMs)
-      // this.expiresTimer = new Timer(() => this.reset(), this.expiresAt - Date.now())
     } else {
       this.expiresAt = Infinity
     }
@@ -65,8 +68,8 @@ export class SessionEntity {
     if (inactiveMs) {
       this.inactiveAt = initialRead?.inactiveAt || this.getFutureTimestamp(inactiveMs)
       this.inactiveTimer = new InteractionTimer({
-        onEnd: () => this.reset(),
-        onRefresh: () => this.refresh(),
+        onEnd: this.reset.bind(this),
+        onRefresh: this.refresh.bind(this),
         ee: ee.get(agentIdentifier),
         refreshEvents: ['click', 'keydown', 'scroll'],
         abortController: this.abortController
@@ -80,11 +83,7 @@ export class SessionEntity {
     this.isNew = !Object.keys(initialRead).length
     // if its a "new" session, we write to storage API with the default values.  These values may change over the lifespan of the agent run.
     if (this.isNew) this.write({ value, sessionReplayActive: false, sessionTraceActive: false, inactiveAt: this.inactiveAt, expiresAt: this.expiresAt }, true)
-    else {
-      Object.keys(initialRead).forEach(k => {
-        this[k] = initialRead[k] // value, inactiveAt, expiresAt, ...custom { .. .}
-      })
-    }
+    else this.sync(initialRead)
 
     this.initialized = true
   }
@@ -92,6 +91,10 @@ export class SessionEntity {
   // This is the actual key appended to the storage API
   get lookupKey () {
     return `${PREFIX}_${this.key}`
+  }
+
+  sync (data) {
+    Object.assign(this, data)
   }
 
   /**
@@ -127,9 +130,7 @@ export class SessionEntity {
   write (data) {
     try {
       if (!data || typeof data !== 'object') return
-      Object.keys(data).forEach(k => {
-        this[k] = data[k]
-      })
+      this.sync(data)
       // TODO - compression would need happen here if we decide to do it
       this.storage.set(this.lookupKey, stringify(data))
       return data
@@ -153,16 +154,15 @@ export class SessionEntity {
       this.expiresTimer?.clear?.()
       delete this.custom
       delete this.value
-      const newSess = new SessionEntity({
+
+      this.setup({
         agentIdentifier: this.agentIdentifier,
         key: this.key,
         storageAPI: this.storage,
         expiresMs: this.expiresMs,
         inactiveMs: this.inactiveMs
-        // value: value === '0' ? value : undefined // add this back in if we have to send '0' for disabled cookies
       })
-      Object.assign(this, newSess)
-      return newSess.read()
+      return this.read()
     } catch (e) {
       return {}
     }
@@ -172,10 +172,10 @@ export class SessionEntity {
    * Refresh the inactivity timer data
    */
   refresh () {
-    // read here... invalidate
-    if (!this.expiresTimer.isValid()) this.reset()
+    // read here & invalidate
+    const existingData = this.read()
     this.inactiveAt = this.getFutureTimestamp(this.inactiveMs)
-    this.write({ ...this.read(), inactiveAt: this.inactiveAt })
+    this.write({ ...existingData, inactiveAt: this.inactiveAt })
   }
 
   /**

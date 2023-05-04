@@ -270,7 +270,17 @@ describe('refresh()', () => {
     jest.setSystemTime(now)
     const session = new SessionEntity({ agentIdentifier, key, value })
     expect(session.value).toEqual(value)
-    session.expiresTimer = { isValid: () => { return false } }
+    session.write({ ...session.read(), expiresAt: now - 1 })
+    session.refresh()
+    expect(session.value).not.toEqual(value)
+  })
+
+  test('refresh resets the entity if inactiveTimer is invalid', () => {
+    const now = Date.now()
+    jest.setSystemTime(now)
+    const session = new SessionEntity({ agentIdentifier, key, value })
+    expect(session.value).toEqual(value)
+    session.write({ ...session.read(), inactiveAt: now - 1 })
     session.refresh()
     expect(session.value).not.toEqual(value)
   })

@@ -83,7 +83,7 @@ export function setAPI (agentIdentifier, forceDrain) {
     } else {
       setInfo(agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } })
     }
-    return apiCall(prefix, apiName, true, !!addToBrowserStorage || (value === null && 'session'))(key, value)
+    return apiCall(prefix, apiName, true, (!!addToBrowserStorage || value === null) ? 'session' : undefined)(key, value)
   }
   apiInterface.setCustomAttribute = function (name, value, persistAttribute = false) {
     if (typeof name !== 'string') {

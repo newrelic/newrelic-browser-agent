@@ -16,8 +16,7 @@ const model = {
     allowed_origins: undefined
   },
   session: {
-    domain: undefined, // used by first party cookies to set the top-level domain (if subdomains === true)
-    subdomains: false, // "true" triggers Session Manager to use First Party Cookies
+    domain: undefined, // used by first party cookies to set the top-level domain
     expiresMs: DEFAULT_EXPIRES_MS,
     inactiveMs: DEFAULT_INACTIVE_MS
   },

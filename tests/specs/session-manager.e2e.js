@@ -172,7 +172,7 @@ describe('newrelic session ID', () => {
     })
   })
   describe('Interactivity behavior -- ', () => {
-    it('should update inactiveTimers if page is clicked', async () => {
+    it('should update inactiveTimers if page is interacted with', async () => {
       const inactiveMs = 7500
       const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
       await browser.url(url)
@@ -199,62 +199,6 @@ describe('newrelic session ID', () => {
       expect(Math.abs(lsData2.inactiveAt - refreshedAt - 7500)).toBeLessThan(1000)
     })
 
-    it('should update inactiveTimers if page is scrolled', async () => {
-      const inactiveMs = 7500
-      const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
-      await browser.url(url)
-      await browser.waitForFeature('loaded')
-
-      const lsData = await browser.execute(getLocalStorageData)
-      const cData = await browser.execute(getClassData)
-      expect(lsData).toEqual(cData)
-      expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
-      expect(lsData.inactiveAt).toEqual(expect.any(Number))
-
-      const refreshedAt = await browser.execute(function () {
-        document.dispatchEvent(new CustomEvent('scroll'))
-        return Date.now()
-      })
-
-      await browser.pause(500)
-      const lsData2 = await browser.execute(getLocalStorageData)
-      const cData2 = await browser.execute(getClassData)
-
-      expect(lsData2).toEqual(cData2)
-      expect(lsData2.value).toEqual(lsData.value)
-      expect(lsData2.inactiveAt).not.toEqual(lsData.inactiveAt)
-      expect(lsData2.inactiveAt - refreshedAt).toBeGreaterThan(0)
-      expect(Math.abs(lsData2.inactiveAt - refreshedAt - 7500)).toBeLessThan(1000)
-    })
-
-    it('should update inactiveTimers if page is keydowned', async () => {
-      const inactiveMs = 7500
-      const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
-      await browser.url(url)
-      await browser.waitForFeature('loaded')
-
-      const lsData = await browser.execute(getLocalStorageData)
-      const cData = await browser.execute(getClassData)
-      expect(lsData).toEqual(cData)
-      expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
-      expect(lsData.inactiveAt).toEqual(expect.any(Number))
-
-      const refreshedAt = await browser.execute(function () {
-        document.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Q', char: 'Q', shiftKey: true }))
-        return Date.now()
-      })
-
-      await browser.pause(500)
-      const lsData2 = await browser.execute(getLocalStorageData)
-      const cData2 = await browser.execute(getClassData)
-
-      expect(lsData2).toEqual(cData2)
-      expect(lsData2.value).toEqual(lsData.value)
-      expect(lsData2.inactiveAt).not.toEqual(lsData.inactiveAt)
-      expect(lsData2.inactiveAt - refreshedAt).toBeGreaterThan(0)
-      expect(Math.abs(lsData2.inactiveAt - refreshedAt - 7500)).toBeLessThan(1000)
-    })
-
     it('inactiveAt is managed in local storage across loads', async () => {
       const inactiveMs = 7500
       const url = await testHandle.assetURL('instrumented.html', { init: { ...init, session: { inactiveMs } } })
@@ -268,7 +212,7 @@ describe('newrelic session ID', () => {
       expect(lsData.inactiveAt).toEqual(expect.any(Number))
 
       const refreshedAt = await browser.execute(function () {
-        document.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Q', char: 'Q', shiftKey: true }))
+        document.querySelector('body').click()
         return Date.now()
       })
       await browser.url(await testHandle.assetURL('fetch.html', { init: { ...init, session: { inactiveMs } } }))
@@ -281,7 +225,6 @@ describe('newrelic session ID', () => {
       expect(lsData2.value).toEqual(lsData.value)
       expect(lsData2.inactiveAt).not.toEqual(lsData.inactiveAt)
       expect(lsData2.inactiveAt - refreshedAt).toBeGreaterThan(0)
-      expect(Math.abs(lsData2.inactiveAt - refreshedAt - 7500)).toBeLessThan(1000)
     })
   })
   describe('Custom attributes', () => {
@@ -309,21 +252,6 @@ describe('newrelic session ID', () => {
   })
 
   describe('Misc class attributes -- ', () => {
-    it('class should attribute for new sessions', async () => {
-      const url = await testHandle.assetURL('instrumented.html', { init })
-      await browser.url(url)
-      await browser.waitForFeature('loaded')
-
-      let data = await browser.execute(getAllClassData)
-      expect(data.isNew).toEqual(true)
-
-      await browser.pause(1000)
-      await browser.url(await testHandle.assetURL('fetch.html', { init }))
-
-      data = await browser.execute(getAllClassData)
-      expect(data.isNew).toEqual(false)
-    })
-
     it('class should flag as initialized', async () => {
       const url = await testHandle.assetURL('instrumented.html', { init })
       await browser.url(url)

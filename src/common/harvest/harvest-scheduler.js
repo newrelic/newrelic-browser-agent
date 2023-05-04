@@ -81,7 +81,6 @@ export class HarvestScheduler extends SharedContext {
         }
       }
     } else {
-      // const runAfterSending = opts?.unload ? undefined : onHarvestFinished // don't bother running onFinish handler if this is the final harvest
       this.harvest.sendX(this.endpoint, opts, onHarvestFinished)
     }
 

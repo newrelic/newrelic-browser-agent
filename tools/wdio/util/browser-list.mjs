@@ -1,7 +1,7 @@
 import semver from 'semver'
-import browsersPolyfill from './browsers-polyfill.json' assert { type: "json" }
-import browsersSupported from './browsers-supported.json' assert { type: "json" }
-import browsersSelenium from '../../jil/util/browsers-selenium.json' assert { type: "json" }
+import browsersPolyfill from '../../browsers-lists/browsers-polyfill.json' assert { type: "json" }
+import browsersSupported from '../../browsers-lists/browsers-supported.json' assert { type: "json" }
+import browsersSelenium from '../../browsers-lists/browsers-selenium.json' assert { type: "json" }
 import jilArgs from '../args.mjs'
 
 let allowedBrowsers = browsersSupported

@@ -14,9 +14,7 @@ git add package-lock.json
 
 # Include fresh list of supported browsers from Sauce Labs based on defined browserslist
 npm run sauce:get-browsers
-git add tools/jil/util/browsers-supported.json
-git add tools/wdio/util/browsers-supported.json
-git add tools/jil/util/browsers-all.json
+git add tools/browsers-lists/*.json
 
 for FILE in $STAGED_FILES
 do

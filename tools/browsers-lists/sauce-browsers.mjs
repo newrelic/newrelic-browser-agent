@@ -1,8 +1,12 @@
-const fs = require('fs')
-const browserslist = require('browserslist')
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+import fs from 'fs-extra'
+import url from 'url'
+import path from 'path'
+import browserslist from 'browserslist'
+import fetch from 'node-fetch'
 
-(async function () {
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
+
+;(async function () {
   // Fetch an unfiltered list of browser-platform definitions from Sauce Labs.
   console.log('contacting saucelabs API ...')
   const r = await fetch('https://api.us-west-1.saucelabs.com/rest/v1/info/platforms/all', {
@@ -12,12 +16,12 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
   })
   const json = await r.json()
   console.log('Browser Types Found:', json.reduce((prev, next) => prev.add(next.api_name), new Set()))
-  console.log(`fetched ${json.length} browsers from saucelabs`)
+  console.log(`Fetched ${json.length} browsers from saucelabs.`)
 
   // Filter list down to a sample of supported browsers and write metadata to a file for testing.
-  fs.writeFileSync('./tools/jil/util/browsers-supported.json', JSON.stringify(getBrowsers(json), null, 2))
-  fs.writeFileSync('./tools/jil/util/browsers-all.json', JSON.stringify(getBrowsers(json, Infinity), null, 2))
-  console.log('saved saucelabs browsers to browsers-supported.json')
+  await fs.writeJSON(path.resolve(__dirname, 'browsers-supported.json'), getBrowsers(json, 4), { spaces: 2 })
+  await fs.writeJSON(path.resolve(__dirname, 'browsers-all.json'), getBrowsers(json, Infinity), { spaces: 2 })
+  console.log('Saved browsers to tools/browsers-lists.')
 })()
 
 /**
@@ -112,15 +116,16 @@ const maxSupportedVersion = apiName => {
 function getBrowsers (sauceBrowsers, sample = 4) {
   Object.keys(browsers).forEach(browser => {
     const name = browserName(browser)
-    const versListForBrowser = sauceBrowsers.filter(platformSelector(name, sample === Infinity && 1 || minSupportedVersion(name), sample === Infinity && sample || maxSupportedVersion(name), { mobile: sample === Infinity }))
+    const versListForBrowser = sample === Infinity
+      ? sauceBrowsers.filter(platformSelector(name, 1, sample, { mobile: true }))
+      : sauceBrowsers.filter(platformSelector(name, minSupportedVersion(name), maxSupportedVersion(name), { mobile: false }))
     versListForBrowser.sort((a, b) => Number(a.short_version) - Number(b.short_version)) // in ascending version order
 
     // Remove duplicate version numbers.
     let uniques = []; let versionsSeen = new Set()
     while (versListForBrowser.length) {
       let nextLatest = versListForBrowser.pop()
-      if (versionsSeen.has(nextLatest.short_version))
-      { continue }
+      if (versionsSeen.has(nextLatest.short_version)) { continue }
       uniques.push(nextLatest)
       versionsSeen.add(nextLatest.short_version)
     }

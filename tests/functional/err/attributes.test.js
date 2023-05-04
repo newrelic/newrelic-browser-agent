@@ -30,7 +30,7 @@ function runTests (loader, supported) {
     }
   }
   testDriver.test(`set multiple custom attributes after page load with multiple JS errors occurring after page load (${loader})`, supported, function (t, browser, router) {
-    let url = router.assetURL('js-error-with-custom-attribute.html', opts)
+    let url = router.assetURL('js-error-with-custom-attribute.html', {...opts, init})
 
     let loadPromise = browser.get(url)
     let rumPromise = router.expectRum()
@@ -43,7 +43,6 @@ function runTests (loader, supported) {
           .click()
           .click()
           .click()
-          .get(url)
         return Promise.all([errorsPromise, domPromise])
       })
       .then(([{ request }]) => {

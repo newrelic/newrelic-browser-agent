@@ -125,15 +125,21 @@ testDriver.test('browsers that do not decode the url when accessing window.locat
 })
 
 testDriver.test('cookie disabled: query string attributes', notSafariWithSeleniumBug, function (t, browser, router) {
-  t.plan(2)
   let loadPromise = browser.safeGet(router.assetURL('instrumented.html', {
     init: { privacy: { cookies_enabled: false } }
   }))
   let rumPromise = router.expectRum()
 
+  let sId
   Promise.all([rumPromise, loadPromise]).then(([{ request: { query } }]) => {
     t.equal(query.ck, '0', "The cookie flag ('ck') should equal 0.")
-    t.equal(query.s, '0', "The session id attr 's' should be 0.")
+    t.ok(query.s, "The session id attr 's' should exist and be truthy.")
+    sId = query.s
+    return Promise.all([router.expectRum(), browser.refresh()])
+  }).then(([{ request: { query } }]) => {
+    t.equal(query.ck, '0', "The cookie flag ('ck') should equal 0.")
+    t.equal(query.s, '0', 'the session id attr "s" should equal 0 when disabled')
+    t.end()
   }).catch(fail(t, FAIL_MSG))
 })
 

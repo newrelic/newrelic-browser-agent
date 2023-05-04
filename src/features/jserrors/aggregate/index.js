@@ -222,6 +222,7 @@ export class Aggregate extends FeatureBase {
 
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
+    var att = getInfo(this.agentIdentifier).jsAttributes
     if (params._interactionId != null) {
       // hold on to the error until the interaction finishes
       this.errorCache[params._interactionId] = this.errorCache[params._interactionId] || []
@@ -229,7 +230,6 @@ export class Aggregate extends FeatureBase {
     } else {
       // store custom attributes
       var customParams = {}
-      var att = getInfo(this.agentIdentifier).jsAttributes
       mapOwn(att, setCustom)
       if (customAttributes) {
         mapOwn(customAttributes, setCustom)

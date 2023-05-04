@@ -67,7 +67,7 @@ export class Aggregate extends FeatureBase {
     const scheduler = new HarvestScheduler('events', {
       onFinished: onHarvestFinished,
       retryDelay: state.harvestTimeSeconds
-    }, { agentIdentifier })
+    }, { agentIdentifier, ee: baseEE })
     scheduler.harvest.on('events', onHarvestStarted)
 
     // childTime is used when calculating exclusive time for a cb duration.

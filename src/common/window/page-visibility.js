@@ -10,8 +10,8 @@ import { documentAddEventListener } from '../event-listener/event-listener-opts'
  * @param {boolean} [toHiddenOnly=false] - only execute the 'cb' when the vis is changing to the hidden state; no arg is passed to 'cb' if used
  * @returns void
  */
-export function subscribeToVisibilityChange (cb, toHiddenOnly = false) {
-  documentAddEventListener('visibilitychange', handleVisibilityChange)
+export function subscribeToVisibilityChange (cb, toHiddenOnly = false, capture, abortSignal) {
+  documentAddEventListener('visibilitychange', handleVisibilityChange, capture, abortSignal)
   return
 
   function handleVisibilityChange () {

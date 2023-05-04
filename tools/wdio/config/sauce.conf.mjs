@@ -17,7 +17,7 @@ function sauceCapabilities () {
     const capabilities = {
       browserName: browserSpec.desired.browserName,
       platformName: browserSpec.desired.platformName,
-      browserVersion: browserSpec.desired.browserVersion, // ignored for iOS; appium:platformVersion used instead
+      browserVersion: browserSpec.desired.browserVersion, // ignored for mobile platforms; appium:platformVersion used instead
       'sauce:options': {}
     }
 
@@ -25,10 +25,10 @@ function sauceCapabilities () {
       capabilities['sauce:options'].tunnelName = getSauceConnectTunnelName()
     }
 
-    if (browserSpec.desired.platformName === 'iOS') {
+    if (['iOS', 'Android'].includes(browserSpec.desired.platformName)) {
       capabilities['appium:deviceName'] = browserSpec.desired['appium:deviceName']
       capabilities['appium:platformVersion'] = browserSpec.desired['appium:platformVersion']
-      capabilities['appium:automationName'] = browserSpec.desired.XCUITest
+      capabilities['appium:automationName'] = browserSpec.desired['appium:automationName'] || browserSpec.desired.XCUITest
       capabilities['sauce:options'].appiumVersion = browserSpec.desired['sauce:options'].appiumVersion
     }
 

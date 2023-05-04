@@ -3,9 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict'
-
-const { Octokit } = require('@octokit/rest')
+import { Octokit } from '@octokit/rest'
 
 if (!process.env.GITHUB_TOKEN) {
   console.log('GITHUB_TOKEN recommended to be set in ENV')
@@ -15,7 +13,7 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN
 })
 
-class Github {
+export default class Github {
   constructor (repoOwner = 'newrelic', repository = 'newrelic-browser-agent') {
     this.repoOwner = repoOwner
     this.repository = repository
@@ -144,6 +142,17 @@ class Github {
       draft: draft
     })
   }
-}
 
-module.exports = Github
+  async getAssociatedPR (commitHash) {
+    const response = await octokit.request('GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls', {
+      owner: this.repoOwner,
+      repo: this.repository,
+      commit_sha: commitHash,
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
+    })
+    const relatedPRs = response.data
+    return relatedPRs[0]
+  }
+}

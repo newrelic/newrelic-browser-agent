@@ -49,6 +49,10 @@ export class InstrumentBase extends FeatureBase {
        * it's only responsible for aborting its one specific feature, rather than all.
        */
       try {
+        // The session entity needs to be attached to the config internals before the aggregator chunk runs
+        const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
+        setupAgentSession(this.agentIdentifier)
+        // import and instantiate the aggregator chunk
         const { lazyLoader } = await import(/* webpackChunkName: "lazy-loader" */ './lazy-loader')
         const { Aggregate } = await lazyLoader(this.featureName, 'aggregate')
         new Aggregate(this.agentIdentifier, this.aggregator)

@@ -167,7 +167,7 @@ export class Harvest extends SharedContext {
       encodeParam('ct', runtime.customTransaction),
       '&rst=' + now(),
       '&ck=0', // ck param DEPRECATED - still expected by backend
-      '&s=' + (runtime.sessionId || '0'), // the 0 id encaps all untrackable and default traffic
+      '&s=' + (runtime.session?.value || '0'), // the 0 id encaps all untrackable and default traffic
       encodeParam('ref', ref),
       encodeParam('ptid', (runtime.ptid ? '' + runtime.ptid : ''))
     ].join(''))

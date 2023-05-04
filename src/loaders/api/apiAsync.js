@@ -3,7 +3,7 @@ import { getConfigurationValue, getInfo, getRuntime } from '../../common/config/
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { handle } from '../../common/event-emitter/handle'
 import { registerHandler } from '../../common/event-emitter/register-handler'
-import { single } from '../../common/util/single'
+import { single } from '../../common/util/invoke'
 import { submitData } from '../../common/util/submit-data'
 import { isBrowserScope } from '../../common/util/global-scope'
 import { CUSTOM_METRIC_CHANNEL } from '../../features/metrics/constants'

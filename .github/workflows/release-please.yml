@@ -23,7 +23,7 @@ jobs:
       - uses: google-github-actions/release-please-action@v3
         with:
           release-type: node
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          token: ${{ secrets.BROWSER_GITHUB_BOT_PAT }}
           pull-request-header: "When this PR is merged, a new tagged release will be created with the notes below."
           changelog-types: |
             [

@@ -186,6 +186,7 @@ async function extractReleaseDetails (version, changelogFilename) {
   for (const change of versionData.changes) {
     if (categories[change.type]) {
       const entry = await getEntryContent(github, change.sha) // { title, description }
+      entry.title = cleanTitle(entry.title)
       console.log(`- ${entry.title}`)
       categories[change.type].push(entry)
     }
@@ -221,6 +222,18 @@ async function extractReleaseDetails (version, changelogFilename) {
   }
 
   return { releaseDate, frontMatter, notesBody }
+}
+
+/**
+ * Strips the conventional commit prefix and Jira issue suffix from a title.
+ *
+ * @param {string} rawTitle - A PR title.
+ * @returns A title string ready for release notes.
+ */
+function cleanTitle (rawTitle) {
+  return rawTitle
+    .replaceAll(/^feat:\s*|^fix:\s*|^security:\s*/gi, '')
+    .replaceAll(/[ -]+(?:NEWRELIC|NR)-\d+$/gi, '')
 }
 
 /**

@@ -1,8 +1,6 @@
 name: Build and Deploy PR to NR Dev
 
 on:
-  pull_request_target:
-    types: [labeled]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -11,7 +9,6 @@ on:
 
 jobs:
   pr-dev-build:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || ( contains(github.event.pull_request.labels.*.name, 'safe to test') && ( contains(github.event.pull_request.labels.*.name, 'standalone') || contains(github.event.pull_request.labels.*.name, 'MMF') || contains(github.event.pull_request.labels.*.name, 'bug') || contains(github.event.pull_request.labels.*.name, 'enhancement') ) )
     runs-on: ubuntu-latest
     container: node:14
     env:
@@ -29,7 +26,13 @@ jobs:
           node ./tools/scripts/upload-to-s3.js \
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }} \
-            --pr PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}
+            --dir pr/PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}
+      - name: purge fastly PR url
+        run: |
+          node ./tools/scripts/fastly.js \
+            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
+            --env dev \
+            --purge-path=pr/PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}/nr-loader-spa.min.js
       - name: re-publish internal loader
         run: |
           node ./tools/scripts/upload-ab-to-s3.js \
@@ -40,12 +43,16 @@ jobs:
             --sha $GITHUB_SHA \
             --workflow $GITHUB_WORKFLOW \
             --role ${{ secrets.AWS_ROLE_ARN }}
-      - name: purge fastly cache url
+      - name: purge fastly internal dev url
         run: |
           node ./tools/scripts/fastly.js \
             --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
             --env dev \
             --purge-internal
-      - name: Notify
+      - name: PR Comment
         run: |
-          curl -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/newrelic/newrelic-browser-agent/issues/${{ github.event.pull_request.number || github.event.inputs.pr_number }}/comments -d '{"body": "A new build of PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }} has been shipped to NR Internal\nDashboard - https://staging.onenr.io/0M8jq5NPOjl\nCDN Link - https://js-agent.newrelic.com/pr/PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}/nr-loader-spa.min.js"}'
+          node ./tools/scripts/comment-pr.mjs \
+            --pull-request=${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }} \
+            --token=${{ secrets.GITHUB_TOKEN }} \
+            --raw-text="A new build of PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }} has been shipped to NR Internal\nDashboard - https://staging.onenr.io/0M8jq5NPOjl\nCDN Link - https://js-agent.newrelic.com/pr/PR-${{ github.event.pull_request.number || github.event.inputs.pr_number || 'workflow-dispatch' }}/nr-loader-spa.min.js" \
+            --tag='<!-- browser_agent pr build report -->'

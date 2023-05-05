@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Mon Apr 10 2023 17:53:39 GMT-0500 (Central Daylight Time)",
+  "lastUpdated": "Fri Apr 21 2023 14:47:47 GMT-0400 (Eastern Daylight Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -20,6 +20,19 @@
       "email": "zloirock@zloirock.ru",
       "url": "http://zloirock.ru"
     },
+    "fflate@0.7.4": {
+      "name": "fflate",
+      "version": "0.7.4",
+      "range": "^0.7.4",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/101arrowz/fflate",
+      "versionedRepoUrl": "https://github.com/101arrowz/fflate/tree/v0.7.4",
+      "licenseFile": "node_modules/fflate/LICENSE",
+      "licenseUrl": "https://github.com/101arrowz/fflate/blob/v0.7.4/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Arjun Barrett",
+      "email": "arjunbarrett@gmail.com"
+    },
     "lodash._slice@2.4.1": {
       "name": "lodash._slice",
       "version": "2.4.1",
@@ -33,6 +46,18 @@
       "publisher": "John-David Dalton",
       "email": "john.david.dalton@gmail.com",
       "url": "http://allyoucanleet.com/"
+    },
+    "rrweb@2.0.0-alpha.8": {
+      "name": "rrweb",
+      "version": "2.0.0-alpha.8",
+      "range": "^2.0.0-alpha.7",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/rrweb-io/rrweb",
+      "versionedRepoUrl": "https://github.com/rrweb-io/rrweb/tree/v2.0.0-alpha.8",
+      "licenseFile": "node_modules/rrweb/README.md",
+      "licenseUrl": "https://github.com/rrweb-io/rrweb/blob/v2.0.0-alpha.8/README.md",
+      "licenseTextSource": "spdx",
+      "publisher": "yanzhen@smartx.com"
     },
     "web-vitals@3.3.1": {
       "name": "web-vitals",
@@ -494,6 +519,17 @@
       "publisher": "jden",
       "email": "jason@denizac.org"
     },
+    "eslint-plugin-sonarjs@0.19.0": {
+      "name": "eslint-plugin-sonarjs",
+      "version": "0.19.0",
+      "range": "^0.19.0",
+      "licenses": "LGPL-3.0",
+      "repoUrl": "https://github.com/SonarSource/eslint-plugin-sonarjs",
+      "versionedRepoUrl": "https://github.com/SonarSource/eslint-plugin-sonarjs/tree/v0.19.0",
+      "licenseFile": "node_modules/eslint-plugin-sonarjs/LICENSE",
+      "licenseUrl": "https://github.com/SonarSource/eslint-plugin-sonarjs/blob/v0.19.0/LICENSE",
+      "licenseTextSource": "file"
+    },
     "eslint@8.38.0": {
       "name": "eslint",
       "version": "8.38.0",
@@ -648,6 +684,18 @@
       "publisher": "jQuery Foundation and other contributors",
       "url": "https://github.com/jquery/jquery/blob/1.11.3/AUTHORS.txt"
     },
+    "jung@2.1.0": {
+      "name": "jung",
+      "version": "2.1.0",
+      "range": "^2.1.0",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/jarofghosts/jung",
+      "versionedRepoUrl": "https://github.com/jarofghosts/jung/tree/v2.1.0",
+      "licenseFile": "node_modules/jung/LICENSE",
+      "licenseUrl": "https://github.com/jarofghosts/jung/blob/v2.1.0/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "jesse keane"
+    },
     "just-debounce@1.1.0": {
       "name": "just-debounce",
       "version": "1.1.0",
@@ -695,6 +743,18 @@
       "licenseUrl": "https://github.com/node-fetch/node-fetch/blob/v3.3.1/LICENSE.md",
       "licenseTextSource": "file",
       "publisher": "David Frank"
+    },
+    "npm-run-all@4.1.5": {
+      "name": "npm-run-all",
+      "version": "4.1.5",
+      "range": "^4.1.5",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/mysticatea/npm-run-all",
+      "versionedRepoUrl": "https://github.com/mysticatea/npm-run-all/tree/v4.1.5",
+      "licenseFile": "node_modules/npm-run-all/LICENSE",
+      "licenseUrl": "https://github.com/mysticatea/npm-run-all/blob/v4.1.5/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Toru Nagashima"
     },
     "object-inspect@1.12.3": {
       "name": "object-inspect",

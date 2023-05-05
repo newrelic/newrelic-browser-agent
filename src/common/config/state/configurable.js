@@ -1,5 +1,6 @@
 import { getFrozenAttributes } from '../../../loaders/features/featureDependencies'
 import { warn } from '../../util/console'
+import { stringify } from '../../util/stringify'
 
 export class Configurable {
   constructor (obj, model) {
@@ -24,7 +25,7 @@ function setValues (obj, model) {
           }
         })
       }
-      if (typeof state[key] === 'object' && typeof value === 'object') state[key] = setValues(value, state[key])
+      if (typeof state[key] === 'object' && typeof value === 'object') state[key] = JSON.parse(stringify(value))
       else state[key] = value
     })
     return state

@@ -11,7 +11,7 @@ export default class TestingServerWorker {
           return window.NREUM && window.NREUM.activatedFeatures && window.NREUM.activatedFeatures[feat]
         }, feature),
         {
-          timeout: 60000,
+          timeout: 30000,
           timeoutMsg: 'Agent never loaded'
         })
     })

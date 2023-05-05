@@ -4,13 +4,13 @@ const { getErrorsFromResponse } = require('../functional/err/assertion-helpers')
 describe('newrelic api', () => {
   let testHandle
   const init = {
-    ajax: { deny_list: [], harvestTimeSeconds: 2 },
-    jserrors: { harvestTimeSeconds: 2 },
-    metrics: { harvestTimeSeconds: 2 },
-    page_action: { harvestTimeSeconds: 2 },
-    page_view_timing: { harvestTimeSeconds: 2 },
-    session_trace: { harvestTimeSeconds: 2 },
-    spa: { harvestTimeSeconds: 2 }
+    ajax: { deny_list: [], harvestTimeSeconds: 5 },
+    jserrors: { harvestTimeSeconds: 5 },
+    metrics: { harvestTimeSeconds: 5 },
+    page_action: { harvestTimeSeconds: 5 },
+    page_view_timing: { harvestTimeSeconds: 5 },
+    session_trace: { harvestTimeSeconds: 5 },
+    spa: { harvestTimeSeconds: 5 }
   }
 
   beforeEach(async () => {
@@ -22,7 +22,7 @@ describe('newrelic api', () => {
   })
 
   it('should load when sessionStorage is not available', async () => {
-    const url = await testHandle.assetURL('api/session-storage-disallowed.html', {
+    const url = await testHandle.assetURL('api/local-storage-disallowed.html', {
       loader: 'spa',
       init
     })
@@ -77,7 +77,8 @@ describe('newrelic api', () => {
       await browser.url(url)
       await browser.waitForFeature('loaded')
       const metricsPromise = testHandle.expectCustomMetrics()
-      await browser.url(unloadUrl)
+      await browser.minimizeWindow()
+      await browser.maximizeWindow()
       const { request: { body, query } } = await metricsPromise
       const time = getTime(body ? JSON.parse(body)?.cm : JSON.parse(query.cm))
 

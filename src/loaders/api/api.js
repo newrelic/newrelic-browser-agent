@@ -9,11 +9,10 @@ import { ee } from '../../common/event-emitter/contextual-ee'
 import { now } from '../../common/timing/now'
 import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
-import { isBrowserScope, isWorkerScope } from '../../common/util/global-scope'
+import { isWorkerScope } from '../../common/util/global-scope'
 import { warn } from '../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { gosCDN } from '../../common/window/nreum'
-import { putInBrowserStorage, removeFromBrowserStorage } from '../../common/window/session-storage'
 
 export const CUSTOM_ATTR_GROUP = 'CUSTOM/' // the subgroup items should be stored under in storage API
 
@@ -81,12 +80,10 @@ export function setAPI (agentIdentifier, forceDrain) {
     const currentInfo = getInfo(agentIdentifier)
     if (value === null) {
       delete currentInfo.jsAttributes[key]
-      if (isBrowserScope) removeFromBrowserStorage(key, CUSTOM_ATTR_GROUP) // addToBrowserStorage flag isn't needed to unset keys from storage
     } else {
       setInfo(agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } })
-      if (isBrowserScope && addToBrowserStorage) putInBrowserStorage(key, value, CUSTOM_ATTR_GROUP)
     }
-    return apiCall(prefix, apiName, true)()
+    return apiCall(prefix, apiName, true, (!!addToBrowserStorage || value === null) ? 'session' : undefined)(key, value)
   }
   apiInterface.setCustomAttribute = function (name, value, persistAttribute = false) {
     if (typeof name !== 'string') {

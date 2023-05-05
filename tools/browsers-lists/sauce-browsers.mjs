@@ -18,6 +18,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
   console.log('Browser Types Found:', json.reduce((prev, next) => prev.add(next.api_name), new Set()))
   console.log(`Fetched ${json.length} browsers from saucelabs.`)
 
+  const sprtd = getBrowsers(json, 4)
   // Filter list down to a sample of supported browsers and write metadata to a file for testing.
   await fs.writeJSON(path.resolve(__dirname, 'browsers-supported.json'), getBrowsers(json, 4), { spaces: 2 })
   await fs.writeJSON(path.resolve(__dirname, 'browsers-all.json'), getBrowsers(json, Infinity), { spaces: 2 })

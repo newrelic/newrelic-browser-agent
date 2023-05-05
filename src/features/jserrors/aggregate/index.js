@@ -105,49 +105,78 @@ export class Aggregate extends FeatureBase {
     return this.nameHash(params) + ':' + stringHashCode(stringify(customParams))
   }
 
-  canonicalizeURL (url, cleanedOrigin) {
+  /**
+   * Converts a URL to its basic form without a query string or fragment.
+   * If the resulting URL is the same as the cleaned origin, returns '<inline>'.
+   * @param {string} url - The URL to be canonicalized.
+   * @param {string} cleanedLoaderOrigin - The cleaned origin URL of the agent loader, used for comparison.
+   * @returns {string} The canonicalized URL, or '<inline>' if the URL matches the cleaned loader origin URL.
+   */
+  canonicalizeURL (url, cleanedLoaderOrigin) {
     if (typeof url !== 'string') return ''
 
     var cleanedURL = cleanURL(url)
-    if (cleanedURL === cleanedOrigin) {
+    // If the URL matches the origin URL of the loader, we assume this stack frame refers to an inline script.
+    if (cleanedURL === cleanedLoaderOrigin) {
       return '<inline>'
     } else {
       return cleanedURL
     }
   }
 
-  buildCanonicalStackString (stackInfo, cleanedOrigin) {
-    var canonicalStack = ''
+  /**
+   * Represents an error with a stack trace.
+   * @typedef {Object} StackInfo
+   * @property {string} name - The name of the error (e.g. 'TypeError').
+   * @property {string} message - The error message.
+   * @property {string} stackString - The stack trace as a string.
+   * @property {Array<Object>} frames - An array of frames in the stack trace.
+   * @property {string} frames.url - The URL of the file containing the code for the frame.
+   * @property {string} frames.func - The name of the function associated with the frame.
+   * @property {number} frames.line - The line number of the code in the frame.
+   */
+
+  /**
+   * Builds a standardized stack trace string from the frames in the given `stackInfo` object, with each frame separated
+   * by a newline character. Each entry takes the form `<functionName>@<url>:<lineNumber>`, except when the function
+   * name or line number are missing for a given frame.
+   *
+   * @param {StackInfo} stackInfo - An object specifying a stack string and individual frames.
+   * @returns {string} A canonical stack string built from the URLs and function names in the given `stackInfo` object.
+   */
+  buildCanonicalStackString (stackInfo) {
+    var canonicalStackString = ''
 
     for (var i = 0; i < stackInfo.frames.length; i++) {
       var frame = stackInfo.frames[i]
       var func = canonicalFunctionName(frame.func)
 
-      if (canonicalStack) canonicalStack += '\n'
-      if (func) canonicalStack += func + '@'
-      if (typeof frame.url === 'string') canonicalStack += frame.url
-      if (frame.line) canonicalStack += ':' + frame.line
+      if (canonicalStackString) canonicalStackString += '\n'
+      if (func) canonicalStackString += func + '@'
+      if (typeof frame.url === 'string') canonicalStackString += frame.url
+      if (frame.line) canonicalStackString += ':' + frame.line
     }
 
-    return canonicalStack
+    return canonicalStackString
   }
 
-  // Strip query parameters and fragments from the stackString property of the
-  // given stackInfo, along with the 'url' properties of each frame in
-  // stackInfo.frames.
-  //
-  // Any URLs that are equivalent to the cleaned version of the origin will also
-  // be replaced with the string '<inline>'.
-  //
+  /**
+   * Strips query parameters and fragments from the `stackString` property of the given `stackInfo` object, along with
+   * the `url` properties of each frame in `stackInfo.frames`. Any URLs that are equivalent to the cleaned version of
+   * the loader origin will also be replaced with the string '<inline>'.
+   *
+   * @param {StackInfo} stackInfo - An object specifying a stack string and individual frames.
+   * @returns {StackInfo} A stackInfo object updated with URLs without query strings and fragments.
+   */
   canonicalizeStackURLs (stackInfo) {
-    // Currently, loader.origin might contain a fragment, but we don't want to use it
-    // for comparing with frame URLs.
-    var cleanedOrigin = cleanURL(getRuntime(this.agentIdentifier).origin)
+    // Currently, loader.origin might contain a URL fragment, but we don't want to use it for comparing with frame URLs.
+    const cleanedLoaderOrigin = cleanURL(getRuntime(this.agentIdentifier).origin)
 
-    for (var i = 0; i < stackInfo.frames.length; i++) {
-      var frame = stackInfo.frames[i]
-      var originalURL = frame.url
-      var cleanedURL = this.canonicalizeURL(originalURL, cleanedOrigin)
+    // Clean the URL of each stack frame and replace it in the stackString if it changes.
+    for (let i = 0; i < stackInfo.frames.length; i++) {
+      let frame = stackInfo.frames[i]
+      let originalURL = frame.url
+      let cleanedURL = this.canonicalizeURL(originalURL, cleanedLoaderOrigin)
       if (cleanedURL && cleanedURL !== frame.url) {
         frame.url = cleanedURL
         stackInfo.stackString = stackInfo.stackString.split(originalURL).join(cleanedURL)

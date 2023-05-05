@@ -233,7 +233,8 @@ async function extractReleaseDetails (version, changelogFilename) {
 function cleanTitle (rawTitle) {
   return rawTitle
     .replaceAll(/^feat:\s*|^fix:\s*|^security:\s*/gi, '')
-    .replaceAll(/[ -]+(?:NEWRELIC|NR)-\d+$/gi, '')
+    .replaceAll(/(?:[ \-(]*)(?:NR|NEWRELIC)-\d+(?:[, \-)]*)/gi, '')
+    .trim()
 }
 
 /**

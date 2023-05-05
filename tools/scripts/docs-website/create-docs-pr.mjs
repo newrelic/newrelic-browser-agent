@@ -14,7 +14,7 @@ import yargs from 'yargs/yargs'
 import chalk from 'chalk'
 
 const DEFAULT_CHANGELOG_FILE_NAME = 'changelog.json'
-const DEFAULT_BROWSERS_FILE_NAME = 'tools/jil/util/browsers-supported.json'
+const DEFAULT_BROWSERS_FILE_NAME = 'tools/browsers-lists/browsers-supported.json'
 
 const DEFAULT_DOCS_SITE_USER_EMAIL = 'browser-agent@newrelic.com'
 const DEFAULT_DOCS_SITE_USER_NAME = 'Browser Agent Team'

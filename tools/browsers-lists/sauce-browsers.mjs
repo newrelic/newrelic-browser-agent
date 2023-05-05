@@ -1,8 +1,13 @@
-const fs = require('fs')
-const browserslist = require('browserslist')
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+import fs from 'fs-extra'
+import url from 'url'
+import path from 'path'
+import browserslist from 'browserslist'
+import fetch from 'node-fetch'
 
-(async function () {
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
+const supportedBrowsers = ['chrome', 'edge', 'firefox', 'safari', 'android', 'ios']
+
+;(async function () {
   // Fetch an unfiltered list of browser-platform definitions from Sauce Labs.
   console.log('contacting saucelabs API ...')
   const r = await fetch('https://api.us-west-1.saucelabs.com/rest/v1/info/platforms/all', {
@@ -12,31 +17,13 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
   })
   const json = await r.json()
   console.log('Browser Types Found:', json.reduce((prev, next) => prev.add(next.api_name), new Set()))
-  console.log(`fetched ${json.length} browsers from saucelabs`)
+  console.log(`Fetched ${json.length} browsers from saucelabs.`)
 
-  const sprtd = getBrowsers(json, 4)
   // Filter list down to a sample of supported browsers and write metadata to a file for testing.
-  fs.writeFileSync('./tools/jil/util/browsers-supported.json', JSON.stringify(sprtd, null, 2))
-  fs.writeFileSync('./tools/wdio/util/browsers-supported.json', JSON.stringify(sprtd, null, 2))
-  console.log('saved all browsers to wdio + JIL browsers-supported.json')
-
-  const all = getBrowsers(json, Infinity)
-  fs.writeFileSync('./tools/jil/util/browsers-all.json', JSON.stringify(all, null, 2))
-  fs.writeFileSync('./tools/wdio/util/browsers-all.json', JSON.stringify(all, null, 2))
-  console.log('saved all browsers to wdio + JIL browsers-supported.json')
+  await fs.writeJSON(path.resolve(__dirname, 'browsers-supported.json'), getBrowsers(json), { spaces: 2 })
+  await fs.writeJSON(path.resolve(__dirname, 'browsers-all.json'), getBrowsers(json, Infinity), { spaces: 2 })
+  console.log('Saved browsers to tools/browsers-lists.')
 })()
-
-/**
- * A template object to be returned by {@link getBrowsers}.
- */
-const browsers = {
-  chrome: [],
-  edge: [],
-  safari: [],
-  firefox: [],
-  android: [], // no longer works with W3C commands.... need to change JIL or do deeper dive to get this to work
-  ios: []
-}
 
 /**
  * Translates the name of a supported browser to the format used by SauceLabs browser-platform definitions.
@@ -116,49 +103,54 @@ const maxSupportedVersion = apiName => {
  * @returns {Object} - A set of SauceLabs browser-platform definitions eligible for testing.
  */
 function getBrowsers (sauceBrowsers, sample = 4) {
-  Object.keys(browsers).forEach(browser => {
-    const name = browserName(browser)
-    const versListForBrowser = sample === Infinity
-      ? sauceBrowsers.filter(platformSelector(name, 1, sample, { mobile: true }))
-      : sauceBrowsers.filter(platformSelector(name, minSupportedVersion(name), maxSupportedVersion(name), { mobile: false }))
-    versListForBrowser.sort((a, b) => Number(a.short_version) - Number(b.short_version)) // in ascending version order
+  return supportedBrowsers.reduce((aggregator, name) => {
+    const desiredBrowserName = browserName(name)
+    const filteredBrowsersList = sauceBrowsers
+      // Filter browsers lists for the browsers we want in this iteration
+      .filter(sample === Infinity
+        ? platformSelector(desiredBrowserName)
+        : platformSelector(desiredBrowserName, minSupportedVersion(desiredBrowserName), maxSupportedVersion(desiredBrowserName))
+      )
+      // Order browsers list by version number in ascending order
+      .sort((a, b) => Number(a.short_version) - Number(b.short_version))
+      // Remove duplicate version numbers.
+      .reduce((aggregator, sauceBrowser) => {
+        if (!aggregator[sauceBrowser.short_version]) {
+          aggregator[sauceBrowser.short_version] = sauceBrowser
+        }
 
-    // Remove duplicate version numbers.
-    let uniques = []; let versionsSeen = new Set()
-    while (versListForBrowser.length) {
-      let nextLatest = versListForBrowser.pop()
-      if (versionsSeen.has(nextLatest.short_version)) { continue }
-      uniques.push(nextLatest)
-      versionsSeen.add(nextLatest.short_version)
-    }
+        return aggregator
+      }, {})
 
-    // We only test 4 versions, so condense the array as needed.
-    uniques = evenlySampleArray(uniques, sample)
+    // Sample the version numbers
+    aggregator[name] = evenlySampleArray(Object.values(filteredBrowsersList), sample)
+      // Construct the metadata needed for the connection to saucelabs
+      .map(sauceBrowser => {
+        const browserName = mobileBrowserName(sauceBrowser)
+        const platformName = mobilePlatformName(sauceBrowser)
+        return {
+          browserName,
+          platformName,
+          platform: platformName,
+          version: sauceBrowser.short_version,
+          ...(sauceBrowser.automation_backend !== 'appium' && {
+            browserVersion: sauceBrowser.short_version
+          }),
+          ...(sauceBrowser.device && { device: sauceBrowser.device }),
+          ...(sauceBrowser.automation_backend === 'appium' && { 'appium:deviceName': sauceBrowser.long_name }),
+          ...(sauceBrowser.automation_backend === 'appium' && { 'appium:platformVersion': sauceBrowser.short_version }),
+          ...(sauceBrowser.automation_backend === 'appium' && { 'appium:automationName': sauceBrowser.api_name === 'android' ? 'UiAutomator2' : 'XCUITest' }),
+          ...(sauceBrowser.automation_backend === 'appium' && {
+            'sauce:options': {
+              appiumVersion: sauceBrowser.recommended_backend_version
+            }
+          }),
+          ...(browserName.toLowerCase() === 'safari' && { acceptInsecureCerts: false })
+        }
+      })
 
-    // Compose metadata for testing each filtered supported browser.
-    uniques.forEach(sauceBrowser => {
-      if (hasKnownConnectionIssue(sauceBrowser)) return
-      const metadata = {
-        browserName: mobileBrowserName(sauceBrowser),
-        platform: mobilePlatformName(sauceBrowser),
-        ...(!['safari', 'firefox'].includes(sauceBrowser.api_name) && { platformName: mobilePlatformName(sauceBrowser) }),
-        version: sauceBrowser.short_version,
-        ...(sauceBrowser.automation_backend !== 'appium' && !['safari', 'firefox'].includes(sauceBrowser.api_name) && { browserVersion: sauceBrowser.short_version }),
-        ...(sauceBrowser.device && { device: sauceBrowser.device }),
-        ...(sauceBrowser.automation_backend === 'appium' && { 'appium:deviceName': sauceBrowser.long_name }),
-        ...(sauceBrowser.automation_backend === 'appium' && { 'appium:platformVersion': sauceBrowser.short_version }),
-        ...(sauceBrowser.automation_backend === 'appium' && { 'appium:automationName': sauceBrowser.api_name === 'android' ? 'UiAutomator2' : 'XCUITest' }),
-        ...(sauceBrowser.automation_backend === 'appium' && {
-          'sauce:options': {
-            appiumVersion: sauceBrowser.recommended_backend_version
-          }
-        })
-      }
-      if (metadata.browserName.toLowerCase() === 'safari') metadata.acceptInsecureCerts = false
-      browsers[browser].push(metadata)
-    })
-  })
-  return browsers
+    return aggregator
+  }, {})
 }
 
 /**
@@ -168,8 +160,9 @@ function getBrowsers (sauceBrowsers, sample = 4) {
  * @param {number} maxVersion - The maximum browser version to include (e.g., `16`).
  * @returns {function} A filter function.
  */
-function platformSelector (desiredBrowser, minVersion = 0, maxVersion = 9999, ignore = {}) {
+function platformSelector (desiredBrowser, minVersion = 0, maxVersion = Infinity) {
   return (sauceBrowser) => {
+    if (hasKnownConnectionIssue(sauceBrowser)) return false
     if (sauceBrowser.api_name !== desiredBrowser) return false
     if (isNaN(Number(sauceBrowser.short_version))) return false
     if (sauceBrowser.short_version < minVersion) return false
@@ -179,7 +172,6 @@ function platformSelector (desiredBrowser, minVersion = 0, maxVersion = 9999, ig
       case 'iphone':
       case 'ipad':
       case 'android':
-        if (ignore.mobile) return false
         if (sauceBrowser.automation_backend !== 'appium') return false
         break
         // NOTE: the following platform limitation per browser is FRAGILE -- will have to update this in the future!
@@ -248,9 +240,6 @@ function mobilePlatformName (sauceBrowser) {
     case 'iphone':
     case 'ipad':
       return 'iOS'
-    case 'safari':
-      // return browser.os.replace('Mac', 'macOS')
-      return sauceBrowser.os
     case 'android':
       return 'Android'
     default:

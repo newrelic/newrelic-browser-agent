@@ -1,4 +1,4 @@
-Please add a changelog description here. This will help populate the repo changelog and docs site release notes.
+Please add a one-paragraph summary here, suitable for a release notes description. This will help with documentation.
 ---
 <!--
 Thank you for submitting a pull request. This code is leveraged to monitor critical services. Before contributing, please read our [contributing guidelines](https://github.com/newrelic/newrelic-browser-agent/blob/main/CONTRIBUTING.md) and [code of conduct](https://github.com/newrelic/.github/blob/main/CODE_OF_CONDUCT.md).

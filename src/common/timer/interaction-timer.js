@@ -66,9 +66,10 @@ export class InteractionTimer extends Timer {
     this.onRefresh?.()
   }
 
-  resume () {
-    if (!this.remainingMs || !this.isValid()) return
-    this.timer = this.create(this.cb, this.remainingMs)
-    this.remainingMs = undefined
-  }
+  // NOT CURRENTLY UTILIZED BY ANYTHING
+  // resume () {
+  //   if (!this.remainingMs || !this.isValid()) return
+  //   this.timer = this.create(this.cb, this.remainingMs)
+  //   this.remainingMs = undefined
+  // }
 }

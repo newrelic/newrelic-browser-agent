@@ -95,14 +95,16 @@
       "platformName": "Mac 12",
       "platform": "Mac 12",
       "version": "15",
-      "browserVersion": "15"
+      "browserVersion": "15",
+      "acceptInsecureCerts": false
     },
     {
       "browserName": "safari",
       "platformName": "Mac 12",
       "platform": "Mac 12",
       "version": "16",
-      "browserVersion": "16"
+      "browserVersion": "16",
+      "acceptInsecureCerts": false
     }
   ],
   "android": [
@@ -110,6 +112,7 @@
       "browserName": "Chrome",
       "platformName": "Android",
       "platform": "Android",
+      "version": "9.0",
       "device": "Pixel3XLGoogleAPI",
       "appium:deviceName": "Google Pixel 3 XL GoogleAPI Emulator",
       "appium:platformVersion": "9.0",
@@ -124,49 +127,57 @@
       "browserName": "Safari",
       "platformName": "iOS",
       "platform": "iOS",
+      "version": "15.0",
       "device": "iPhone 7 Plus",
       "appium:deviceName": "iPhone 7 Plus Simulator",
       "appium:platformVersion": "15.0",
       "appium:automationName": "XCUITest",
       "sauce:options": {
         "appiumVersion": "1.22.3"
-      }
+      },
+      "acceptInsecureCerts": false
     },
     {
       "browserName": "Safari",
       "platformName": "iOS",
       "platform": "iOS",
+      "version": "15.2",
       "device": "iPhone 11 Pro",
       "appium:deviceName": "iPhone 11 Pro Simulator",
       "appium:platformVersion": "15.2",
       "appium:automationName": "XCUITest",
       "sauce:options": {
         "appiumVersion": "1.22.3"
-      }
+      },
+      "acceptInsecureCerts": false
     },
     {
       "browserName": "Safari",
       "platformName": "iOS",
       "platform": "iOS",
+      "version": "15.4",
       "device": "iPhone XS",
       "appium:deviceName": "iPhone XS Simulator",
       "appium:platformVersion": "15.4",
       "appium:automationName": "XCUITest",
       "sauce:options": {
         "appiumVersion": "1.22.3"
-      }
+      },
+      "acceptInsecureCerts": false
     },
     {
       "browserName": "Safari",
       "platformName": "iOS",
       "platform": "iOS",
+      "version": "15.5",
       "device": "iPhone 8",
       "appium:deviceName": "iPhone 8 Simulator",
       "appium:platformVersion": "15.5",
       "appium:automationName": "XCUITest",
       "sauce:options": {
         "appiumVersion": "1.22.3"
-      }
+      },
+      "acceptInsecureCerts": false
     }
   ]
 }

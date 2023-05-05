@@ -2,6 +2,538 @@
   "chrome": [
     {
       "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "26",
+      "browserVersion": "26"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "27",
+      "browserVersion": "27"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "28",
+      "browserVersion": "28"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "29",
+      "browserVersion": "29"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "30",
+      "browserVersion": "30"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "31",
+      "browserVersion": "31"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "32",
+      "browserVersion": "32"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "33",
+      "browserVersion": "33"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "34",
+      "browserVersion": "34"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "35",
+      "browserVersion": "35"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "36",
+      "browserVersion": "36"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "37",
+      "browserVersion": "37"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "38",
+      "browserVersion": "38"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "39",
+      "browserVersion": "39"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "40",
+      "browserVersion": "40"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "41",
+      "browserVersion": "41"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "42",
+      "browserVersion": "42"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "43",
+      "browserVersion": "43"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "44",
+      "browserVersion": "44"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "45",
+      "browserVersion": "45"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "46",
+      "browserVersion": "46"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "47",
+      "browserVersion": "47"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "48",
+      "browserVersion": "48"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "49",
+      "browserVersion": "49"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "50",
+      "browserVersion": "50"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "51",
+      "browserVersion": "51"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "52",
+      "browserVersion": "52"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "53",
+      "browserVersion": "53"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "54",
+      "browserVersion": "54"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "55",
+      "browserVersion": "55"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "56",
+      "browserVersion": "56"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "57",
+      "browserVersion": "57"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "58",
+      "browserVersion": "58"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "59",
+      "browserVersion": "59"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "60",
+      "browserVersion": "60"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "61",
+      "browserVersion": "61"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "62",
+      "browserVersion": "62"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "63",
+      "browserVersion": "63"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "64",
+      "browserVersion": "64"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "65",
+      "browserVersion": "65"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "66",
+      "browserVersion": "66"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "67",
+      "browserVersion": "67"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "68",
+      "browserVersion": "68"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "69",
+      "browserVersion": "69"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "70",
+      "browserVersion": "70"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "71",
+      "browserVersion": "71"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "72",
+      "browserVersion": "72"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "73",
+      "browserVersion": "73"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "74",
+      "browserVersion": "74"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "75",
+      "browserVersion": "75"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "76",
+      "browserVersion": "76"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "77",
+      "browserVersion": "77"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "78",
+      "browserVersion": "78"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "79",
+      "browserVersion": "79"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "80",
+      "browserVersion": "80"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "81",
+      "browserVersion": "81"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "83",
+      "browserVersion": "83"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "84",
+      "browserVersion": "84"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "85",
+      "browserVersion": "85"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "86",
+      "browserVersion": "86"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "87",
+      "browserVersion": "87"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "88",
+      "browserVersion": "88"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "89",
+      "browserVersion": "89"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "90",
+      "browserVersion": "90"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "91",
+      "browserVersion": "91"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "92",
+      "browserVersion": "92"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "93",
+      "browserVersion": "93"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "94",
+      "browserVersion": "94"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "95",
+      "browserVersion": "95"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "96",
+      "browserVersion": "96"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "97",
+      "browserVersion": "97"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "98",
+      "browserVersion": "98"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "99",
+      "browserVersion": "99"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "100",
+      "browserVersion": "100"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "101",
+      "browserVersion": "101"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "102",
+      "browserVersion": "102"
+    },
+    {
+      "browserName": "chrome",
       "platformName": "Windows 10",
       "platform": "Windows 10",
       "version": "103",
@@ -83,6 +615,209 @@
       "browserName": "MicrosoftEdge",
       "platformName": "Windows 10",
       "platform": "Windows 10",
+      "version": "13",
+      "browserVersion": "13"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "14",
+      "browserVersion": "14"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "15",
+      "browserVersion": "15"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "16",
+      "browserVersion": "16"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "17",
+      "browserVersion": "17"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "18",
+      "browserVersion": "18"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "79",
+      "browserVersion": "79"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "80",
+      "browserVersion": "80"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "81",
+      "browserVersion": "81"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "83",
+      "browserVersion": "83"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "84",
+      "browserVersion": "84"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "85",
+      "browserVersion": "85"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "86",
+      "browserVersion": "86"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "87",
+      "browserVersion": "87"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "88",
+      "browserVersion": "88"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "89",
+      "browserVersion": "89"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "90",
+      "browserVersion": "90"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "91",
+      "browserVersion": "91"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "92",
+      "browserVersion": "92"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "93",
+      "browserVersion": "93"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "94",
+      "browserVersion": "94"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "95",
+      "browserVersion": "95"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "96",
+      "browserVersion": "96"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "97",
+      "browserVersion": "97"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "98",
+      "browserVersion": "98"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "99",
+      "browserVersion": "99"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "100",
+      "browserVersion": "100"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "101",
+      "browserVersion": "101"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "102",
+      "browserVersion": "102"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
       "version": "103",
       "browserVersion": "103"
     },
@@ -151,6 +886,671 @@
     }
   ],
   "firefox": [
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "4",
+      "browserVersion": "4"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "5",
+      "browserVersion": "5"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "6",
+      "browserVersion": "6"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "7",
+      "browserVersion": "7"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "8",
+      "browserVersion": "8"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "9",
+      "browserVersion": "9"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "10",
+      "browserVersion": "10"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "11",
+      "browserVersion": "11"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "12",
+      "browserVersion": "12"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "13",
+      "browserVersion": "13"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "14",
+      "browserVersion": "14"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "15",
+      "browserVersion": "15"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "16",
+      "browserVersion": "16"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "17",
+      "browserVersion": "17"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "18",
+      "browserVersion": "18"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "19",
+      "browserVersion": "19"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "20",
+      "browserVersion": "20"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "21",
+      "browserVersion": "21"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "22",
+      "browserVersion": "22"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "23",
+      "browserVersion": "23"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "24",
+      "browserVersion": "24"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "25",
+      "browserVersion": "25"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "26",
+      "browserVersion": "26"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "27",
+      "browserVersion": "27"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "28",
+      "browserVersion": "28"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "29",
+      "browserVersion": "29"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "30",
+      "browserVersion": "30"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "31",
+      "browserVersion": "31"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "32",
+      "browserVersion": "32"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "33",
+      "browserVersion": "33"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "34",
+      "browserVersion": "34"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "35",
+      "browserVersion": "35"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "36",
+      "browserVersion": "36"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "37",
+      "browserVersion": "37"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "38",
+      "browserVersion": "38"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "39",
+      "browserVersion": "39"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "40",
+      "browserVersion": "40"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "41",
+      "browserVersion": "41"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "42",
+      "browserVersion": "42"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "43",
+      "browserVersion": "43"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "44",
+      "browserVersion": "44"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "45",
+      "browserVersion": "45"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "46",
+      "browserVersion": "46"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "48",
+      "browserVersion": "48"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "50",
+      "browserVersion": "50"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "51",
+      "browserVersion": "51"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "52",
+      "browserVersion": "52"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "53",
+      "browserVersion": "53"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "54",
+      "browserVersion": "54"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "55",
+      "browserVersion": "55"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "56",
+      "browserVersion": "56"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "58",
+      "browserVersion": "58"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "60",
+      "browserVersion": "60"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "61",
+      "browserVersion": "61"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "62",
+      "browserVersion": "62"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "63",
+      "browserVersion": "63"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "64",
+      "browserVersion": "64"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "65",
+      "browserVersion": "65"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "66",
+      "browserVersion": "66"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "67",
+      "browserVersion": "67"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "68",
+      "browserVersion": "68"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "69",
+      "browserVersion": "69"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "70",
+      "browserVersion": "70"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "71",
+      "browserVersion": "71"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "72",
+      "browserVersion": "72"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "73",
+      "browserVersion": "73"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "74",
+      "browserVersion": "74"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "75",
+      "browserVersion": "75"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "76",
+      "browserVersion": "76"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "77",
+      "browserVersion": "77"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "78",
+      "browserVersion": "78"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "79",
+      "browserVersion": "79"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "80",
+      "browserVersion": "80"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "81",
+      "browserVersion": "81"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "82",
+      "browserVersion": "82"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "83",
+      "browserVersion": "83"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "84",
+      "browserVersion": "84"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "85",
+      "browserVersion": "85"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "86",
+      "browserVersion": "86"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "87",
+      "browserVersion": "87"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "88",
+      "browserVersion": "88"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "89",
+      "browserVersion": "89"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "90",
+      "browserVersion": "90"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "91",
+      "browserVersion": "91"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "92",
+      "browserVersion": "92"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "93",
+      "browserVersion": "93"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "94",
+      "browserVersion": "94"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "95",
+      "browserVersion": "95"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "96",
+      "browserVersion": "96"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "97",
+      "browserVersion": "97"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "98",
+      "browserVersion": "98"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "99",
+      "browserVersion": "99"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "100",
+      "browserVersion": "100"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "101",
+      "browserVersion": "101"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "102",
+      "browserVersion": "102"
+    },
     {
       "browserName": "firefox",
       "platformName": "Windows 10",
@@ -225,17 +1625,75 @@
   "safari": [
     {
       "browserName": "safari",
+      "platformName": "Mac 10.10",
+      "platform": "Mac 10.10",
+      "version": "8",
+      "browserVersion": "8",
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "safari",
+      "platformName": "Mac 10.11",
+      "platform": "Mac 10.11",
+      "version": "9",
+      "browserVersion": "9",
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "safari",
+      "platformName": "Mac 10.12",
+      "platform": "Mac 10.12",
+      "version": "10",
+      "browserVersion": "10",
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "safari",
+      "platformName": "Mac 10.12",
+      "platform": "Mac 10.12",
+      "version": "11",
+      "browserVersion": "11",
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "safari",
+      "platformName": "Mac 10.14",
+      "platform": "Mac 10.14",
+      "version": "12",
+      "browserVersion": "12",
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "safari",
+      "platformName": "Mac 10.15",
+      "platform": "Mac 10.15",
+      "version": "13",
+      "browserVersion": "13",
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "safari",
+      "platformName": "Mac 11",
+      "platform": "Mac 11",
+      "version": "14",
+      "browserVersion": "14",
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "safari",
       "platformName": "Mac 12",
       "platform": "Mac 12",
       "version": "15",
-      "browserVersion": "15"
+      "browserVersion": "15",
+      "acceptInsecureCerts": false
     },
     {
       "browserName": "safari",
       "platformName": "Mac 12",
       "platform": "Mac 12",
       "version": "16",
-      "browserVersion": "16"
+      "browserVersion": "16",
+      "acceptInsecureCerts": false
     }
   ],
   "android": [
@@ -243,9 +1701,127 @@
       "browserName": "Chrome",
       "platformName": "Android",
       "platform": "Android",
+      "version": "5.1",
+      "device": "android",
+      "appium:deviceName": "Android Emulator",
+      "appium:platformVersion": "5.1",
+      "appium:automationName": "UiAutomator2",
+      "sauce:options": {
+        "appiumVersion": "1.22.1"
+      }
+    },
+    {
+      "browserName": "Chrome",
+      "platformName": "Android",
+      "platform": "Android",
+      "version": "6.0",
+      "device": "Android GoogleAPI Emulator",
+      "appium:deviceName": "Android GoogleAPI Emulator",
+      "appium:platformVersion": "6.0",
+      "appium:automationName": "UiAutomator2",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      }
+    },
+    {
+      "browserName": "Chrome",
+      "platformName": "Android",
+      "platform": "Android",
+      "version": "7.0",
+      "device": "GalaxyS8FHDGoogleAPI",
+      "appium:deviceName": "Samsung Galaxy S8 FHD GoogleAPI Emulator",
+      "appium:platformVersion": "7.0",
+      "appium:automationName": "UiAutomator2",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      }
+    },
+    {
+      "browserName": "Chrome",
+      "platformName": "Android",
+      "platform": "Android",
+      "version": "7.1",
+      "device": "GalaxyS8PlusHDGoogleAPI",
+      "appium:deviceName": "Samsung Galaxy S8 Plus HD GoogleAPI Emulator",
+      "appium:platformVersion": "7.1",
+      "appium:automationName": "UiAutomator2",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      }
+    },
+    {
+      "browserName": "Chrome",
+      "platformName": "Android",
+      "platform": "Android",
+      "version": "8.0",
+      "device": "GalaxyS8HDGoogleAPI",
+      "appium:deviceName": "Samsung Galaxy S8 HD GoogleAPI Emulator",
+      "appium:platformVersion": "8.0",
+      "appium:automationName": "UiAutomator2",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      }
+    },
+    {
+      "browserName": "Chrome",
+      "platformName": "Android",
+      "platform": "Android",
+      "version": "8.1",
+      "device": "GalaxyS8PlusWQHDGoogleAPI",
+      "appium:deviceName": "Samsung Galaxy S8 Plus WQHD GoogleAPI Emulator",
+      "appium:platformVersion": "8.1",
+      "appium:automationName": "UiAutomator2",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      }
+    },
+    {
+      "browserName": "Chrome",
+      "platformName": "Android",
+      "platform": "Android",
+      "version": "9.0",
       "device": "Pixel3XLGoogleAPI",
       "appium:deviceName": "Google Pixel 3 XL GoogleAPI Emulator",
       "appium:platformVersion": "9.0",
+      "appium:automationName": "UiAutomator2",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      }
+    },
+    {
+      "browserName": "Chrome",
+      "platformName": "Android",
+      "platform": "Android",
+      "version": "10.0",
+      "device": "GalaxyTabActiveProGoogleAPI",
+      "appium:deviceName": "Samsung Galaxy Tab Active Pro GoogleAPI Emulator",
+      "appium:platformVersion": "10.0",
+      "appium:automationName": "UiAutomator2",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      }
+    },
+    {
+      "browserName": "Chrome",
+      "platformName": "Android",
+      "platform": "Android",
+      "version": "11.0",
+      "device": "GalaxyTabS6GoogleAPI",
+      "appium:deviceName": "Samsung Galaxy Tab S6 GoogleAPI Emulator",
+      "appium:platformVersion": "11.0",
+      "appium:automationName": "UiAutomator2",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      }
+    },
+    {
+      "browserName": "Chrome",
+      "platformName": "Android",
+      "platform": "Android",
+      "version": "12.0",
+      "device": "Pixel6ProGoogleAPI",
+      "appium:deviceName": "Google Pixel 6 Pro GoogleAPI Emulator",
+      "appium:platformVersion": "12.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
         "appiumVersion": "1.22.3"
@@ -257,49 +1833,309 @@
       "browserName": "Safari",
       "platformName": "iOS",
       "platform": "iOS",
+      "version": "10.3",
+      "device": "iPhone 7 Plus",
+      "appium:deviceName": "iPhone 7 Plus Simulator",
+      "appium:platformVersion": "10.3",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.9.1"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "11.0",
+      "device": "iPhone 6 Plus",
+      "appium:deviceName": "iPhone 6 Plus Simulator",
+      "appium:platformVersion": "11.0",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.9.1"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "11.1",
+      "device": "iPhone 7",
+      "appium:deviceName": "iPhone 7 Simulator",
+      "appium:platformVersion": "11.1",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.9.1"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "11.2",
+      "device": "iPhone 7",
+      "appium:deviceName": "iPhone 7 Simulator",
+      "appium:platformVersion": "11.2",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.9.1"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "11.3",
+      "device": "iPhone 5s",
+      "appium:deviceName": "iPhone 5s Simulator",
+      "appium:platformVersion": "11.3",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.9.1"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "12.0",
+      "device": "iPhone 5s",
+      "appium:deviceName": "iPhone 5s Simulator",
+      "appium:platformVersion": "12.0",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.9.1"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "12.2",
+      "device": "iPhone 8",
+      "appium:deviceName": "iPhone 8 Simulator",
+      "appium:platformVersion": "12.2",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "12.4",
+      "device": "iPhone 6",
+      "appium:deviceName": "iPhone 6 Simulator",
+      "appium:platformVersion": "12.4",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "13.0",
+      "device": "iPhone 8 Plus",
+      "appium:deviceName": "iPhone 8 Plus Simulator",
+      "appium:platformVersion": "13.0",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "13.2",
+      "device": "iPhone 6s Plus",
+      "appium:deviceName": "iPhone 6s Plus Simulator",
+      "appium:platformVersion": "13.2",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "13.4",
+      "device": "iPhone 6s Plus",
+      "appium:deviceName": "iPhone 6s Plus Simulator",
+      "appium:platformVersion": "13.4",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "14.0",
+      "device": "iPhone 8 Plus",
+      "appium:deviceName": "iPhone 8 Plus Simulator",
+      "appium:platformVersion": "14.0",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "14.3",
+      "device": "iPhone 8",
+      "appium:deviceName": "iPhone 8 Simulator",
+      "appium:platformVersion": "14.3",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "14.4",
+      "device": "iPhone 11 Pro",
+      "appium:deviceName": "iPhone 11 Pro Simulator",
+      "appium:platformVersion": "14.4",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "14.5",
+      "device": "iPhone 7",
+      "appium:deviceName": "iPhone 7 Simulator",
+      "appium:platformVersion": "14.5",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "15.0",
       "device": "iPhone 7 Plus",
       "appium:deviceName": "iPhone 7 Plus Simulator",
       "appium:platformVersion": "15.0",
       "appium:automationName": "XCUITest",
       "sauce:options": {
         "appiumVersion": "1.22.3"
-      }
+      },
+      "acceptInsecureCerts": false
     },
     {
       "browserName": "Safari",
       "platformName": "iOS",
       "platform": "iOS",
+      "version": "15.2",
       "device": "iPhone 11 Pro",
       "appium:deviceName": "iPhone 11 Pro Simulator",
       "appium:platformVersion": "15.2",
       "appium:automationName": "XCUITest",
       "sauce:options": {
         "appiumVersion": "1.22.3"
-      }
+      },
+      "acceptInsecureCerts": false
     },
     {
       "browserName": "Safari",
       "platformName": "iOS",
       "platform": "iOS",
+      "version": "15.4",
       "device": "iPhone XS",
       "appium:deviceName": "iPhone XS Simulator",
       "appium:platformVersion": "15.4",
       "appium:automationName": "XCUITest",
       "sauce:options": {
         "appiumVersion": "1.22.3"
-      }
+      },
+      "acceptInsecureCerts": false
     },
     {
       "browserName": "Safari",
       "platformName": "iOS",
       "platform": "iOS",
+      "version": "15.5",
       "device": "iPhone 8",
       "appium:deviceName": "iPhone 8 Simulator",
       "appium:platformVersion": "15.5",
       "appium:automationName": "XCUITest",
       "sauce:options": {
         "appiumVersion": "1.22.3"
-      }
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "16.0",
+      "device": "iPhone Simulator",
+      "appium:deviceName": "iPhone Simulator",
+      "appium:platformVersion": "16.0",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "2.0.0"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "16.1",
+      "device": "iPhone 13",
+      "appium:deviceName": "iPhone 13 Simulator",
+      "appium:platformVersion": "16.1",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "2.0.0"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "16.2",
+      "device": "iPhone 8 Plus",
+      "appium:deviceName": "iPhone 8 Plus Simulator",
+      "appium:platformVersion": "16.2",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "2.0.0"
+      },
+      "acceptInsecureCerts": false
     }
   ]
 }

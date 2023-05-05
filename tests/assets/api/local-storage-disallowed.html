@@ -6,10 +6,10 @@
 <html>
 <head>
   <script>
-    if (window.sessionStorage) {
-      window.sessionStorage.clear();
-      window.sessionStorage.setItem = function () {
-        throw new Error('session storage not allowed')
+    if (window.localStorage) {
+      window.localStorage.clear();
+      window.localStorage.setItem = function () {
+        throw new Error('local storage not allowed')
       }
     }
   </script>

@@ -4,7 +4,7 @@
  */
 import { ffVersion } from '../browser-version/firefox-version'
 import { windowAddEventListener } from '../event-listener/event-listener-opts'
-import { single } from '../util/single'
+import { single } from '../util/invoke'
 import { globalScope, isWorkerScope, isBrowserScope } from '../util/global-scope'
 import { subscribeToVisibilityChange } from '../window/page-visibility'
 

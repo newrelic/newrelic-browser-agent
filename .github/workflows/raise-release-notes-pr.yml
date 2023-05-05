@@ -12,7 +12,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
     steps:
       - name: Setup Container
-        run: apt update && apt install -y git && apt install -y jq
+        run: apt update && apt install -y git jq
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.DOCS_SITE_FORK_TOKEN }}

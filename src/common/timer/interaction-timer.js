@@ -47,10 +47,9 @@ export class InteractionTimer extends Timer {
     }
   }
 
-  clear (abort) {
-    clearTimeout(this.timer)
-    this.timer = null
-    if (abort) this.abortController?.abort()
+  abort () {
+    this.clear()
+    this.abortController?.abort()
   }
 
   pause () {

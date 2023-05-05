@@ -1,6 +1,5 @@
 import { getFrozenAttributes } from '../../../loaders/features/featureDependencies'
 import { warn } from '../../util/console'
-import { stringify } from '../../util/stringify'
 
 export class Configurable {
   constructor (obj, model) {

@@ -182,7 +182,7 @@ export class SessionEntity {
       if (this.initialized) this.ee.emit('session-reset')
 
       this.storage.remove(this.lookupKey)
-      this.inactiveTimer?.clear?.(true)
+      this.inactiveTimer?.abort?.()
       this.expiresTimer?.clear?.()
       delete this.custom
       delete this.value

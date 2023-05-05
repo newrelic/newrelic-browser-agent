@@ -25,8 +25,7 @@ function setValues (obj, model) {
           }
         })
       }
-      if (typeof state[key] === 'object' && typeof value === 'object') state[key] = JSON.parse(stringify(value))
-      else state[key] = value
+      state[key] = value
     })
     return state
   } catch (err) {

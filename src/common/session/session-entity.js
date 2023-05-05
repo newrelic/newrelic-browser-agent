@@ -83,7 +83,7 @@ export class SessionEntity {
       this.inactiveTimer = new InteractionTimer({
         // When the inactive timer ends, collect a SM and reset the session
         onEnd: () => {
-          this.collectSM('expired')
+          this.collectSM('inactive')
           this.reset()
         },
         // When the inactive timer refreshes, it will update the storage values with an update timestamp

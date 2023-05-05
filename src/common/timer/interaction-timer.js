@@ -7,9 +7,19 @@ export class InteractionTimer extends Timer {
   constructor (opts, ms) {
     super(opts, ms)
     this.onRefresh = opts.onRefresh
+    this.onPause = opts.onPause
+
+    // used by pause/resume
+    this.remainingMs = undefined
 
     if (!opts.refreshEvents) opts.refreshEvents = ['click', 'keydown', 'scroll']
-    this.abortController = opts.abortController
+
+    // the abort controller is used to "reset" the event listeners and prevent them from duplicating when new sessions are created
+    try {
+      this.abortController = new AbortController()
+    } catch (e) {
+      // this try-catch can be removed when IE11 is completely unsupported & gone
+    }
 
     if (isBrowserScope && opts.ee) {
       if (opts.ee) {
@@ -37,11 +47,29 @@ export class InteractionTimer extends Timer {
     }
   }
 
+  clear (abort) {
+    clearTimeout(this.timer)
+    this.timer = null
+    if (abort) this.abortController?.abort()
+  }
+
+  pause () {
+    this.onPause?.()
+    clearTimeout(this.timer)
+    this.remainingMs = this.initialMs - (Date.now() - this.startTimestamp)
+  }
+
   refresh (cb, ms) {
     this.clear()
     this.timer = this.create(cb, ms)
     this.startTimestamp = Date.now()
     this.remainingMs = undefined
-    this.onRefresh()
+    this.onRefresh?.()
+  }
+
+  resume () {
+    if (!this.remainingMs || !this.isValid()) return
+    this.timer = this.create(this.cb, this.remainingMs)
+    this.remainingMs = undefined
   }
 }

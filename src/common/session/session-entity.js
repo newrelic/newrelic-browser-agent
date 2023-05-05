@@ -8,6 +8,20 @@ import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, PREFIX } from './constants'
 import { LocalMemory } from '../storage/local-memory'
 import { InteractionTimer } from '../timer/interaction-timer'
 import { wrapEvents } from '../wrap'
+import { Configurable } from '../config/state/configurable'
+import { handle } from '../event-emitter/handle'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
+import { FEATURE_NAMES } from '../../loaders/features/features'
+
+const model = {
+  value: '',
+  inactiveAt: 0,
+  expiresAt: 0,
+  updatedAt: 0,
+  sessionReplayActive: false,
+  sessionTraceActive: false,
+  custom: {}
+}
 
 export class SessionEntity {
   /**
@@ -25,13 +39,6 @@ export class SessionEntity {
     if (!isBrowserScope) this.storage = new LocalMemory()
     else this.storage = storageAPI
 
-    // the abort controller is used to "reset" the event listeners and prevent them from duplicating when new sessions are created
-    try {
-      this.abortController = new AbortController()
-    } catch (e) {
-      // this try-catch can be removed when IE11 is completely unsupported & gone
-    }
-
     this.agentIdentifier = agentIdentifier
 
     // key is intended to act as the k=v pair
@@ -39,7 +46,9 @@ export class SessionEntity {
     // value is intended to act as the primary value of the k=v pair
     this.value = value
 
-    wrapEvents(ee.get(agentIdentifier))
+    this.ee = ee.get(agentIdentifier)
+
+    wrapEvents(this.ee)
 
     // the first time the session entity class is instantiated, we check the storage API for an existing
     // object. If it exists, the values inside the object are used to inform the timers that run locally.
@@ -55,8 +64,12 @@ export class SessionEntity {
     if (expiresMs) {
       this.expiresAt = initialRead?.expiresAt || this.getFutureTimestamp(expiresMs)
       this.expiresTimer = new Timer({
-        onEnd: this.reset.bind(this)
-      }, expiresMs)
+        // When the inactive timer ends, collect a SM and reset the session
+        onEnd: () => {
+          this.collectSM('expired')
+          this.reset()
+        }
+      }, this.expiresAt - Date.now())
     } else {
       this.expiresAt = Infinity
     }
@@ -68,12 +81,18 @@ export class SessionEntity {
     if (inactiveMs) {
       this.inactiveAt = initialRead?.inactiveAt || this.getFutureTimestamp(inactiveMs)
       this.inactiveTimer = new InteractionTimer({
-        onEnd: this.reset.bind(this),
+        // When the inactive timer ends, collect a SM and reset the session
+        onEnd: () => {
+          this.collectSM('expired')
+          this.reset()
+        },
+        // When the inactive timer refreshes, it will update the storage values with an update timestamp
         onRefresh: this.refresh.bind(this),
-        ee: ee.get(agentIdentifier),
-        refreshEvents: ['click', 'keydown', 'scroll'],
-        abortController: this.abortController
-      }, inactiveMs)
+        // When the inactive timer pauses, update the storage values with an update timestamp
+        onPause: () => this.write(new Configurable(this, model)),
+        ee: this.ee,
+        refreshEvents: ['click', 'keydown', 'scroll']
+      }, this.inactiveAt - Date.now())
     } else {
       this.inactiveAt = Infinity
     }
@@ -82,7 +101,8 @@ export class SessionEntity {
     // can use this info to inform whether to trust a new sampling decision vs continue a previous tracking effort.
     this.isNew = !Object.keys(initialRead).length
     // if its a "new" session, we write to storage API with the default values.  These values may change over the lifespan of the agent run.
-    if (this.isNew) this.write({ value, sessionReplayActive: false, sessionTraceActive: false, inactiveAt: this.inactiveAt, expiresAt: this.expiresAt }, true)
+    // we can use configurable here to help us know and manage what values are being used. -- see "model" above
+    if (this.isNew) this.write(new Configurable(this, model), true)
     else this.sync(initialRead)
 
     this.initialized = true
@@ -108,9 +128,17 @@ export class SessionEntity {
       // TODO - decompression would need to happen here if we decide to do it
       const obj = typeof val === 'string' ? JSON.parse(val) : val
       if (this.isInvalid(obj)) return {}
-      if (this.isExpired(obj.expiresAt)) return this.reset()
+      // if the session expires, collect a SM count before resetting
+      if (this.isExpired(obj.expiresAt)) {
+        this.collectSM('expired')
+        return this.reset()
+      }
       // if "inactive" timer is expired at "read" time -- esp. initial read -- reset
-      if (this.isExpired(obj.inactiveAt)) return this.reset()
+      // collect a SM count before resetting
+      if (this.isExpired(obj.inactiveAt)) {
+        this.collectSM('inactive')
+        return this.reset()
+      }
 
       return obj
     } catch (e) {
@@ -130,6 +158,8 @@ export class SessionEntity {
   write (data) {
     try {
       if (!data || typeof data !== 'object') return
+      // everytime we update, we can update a timestamp for sanity
+      data.updatedAt = Date.now()
       this.sync(data)
       // TODO - compression would need happen here if we decide to do it
       this.storage.set(this.lookupKey, stringify(data))
@@ -147,10 +177,12 @@ export class SessionEntity {
     // * stop recording (stn and sr)...
     // * delete the session and start over
     try {
-      if (this.initialized) ee.get(this.agentIdentifier).emit('session-reset')
+      // when resetting, we can measure the duration of the session as a SM
+      this.collectSM('duration')
+      if (this.initialized) this.ee.emit('session-reset')
+
       this.storage.remove(this.lookupKey)
-      this.abortController?.abort()
-      this.inactiveTimer?.clear?.()
+      this.inactiveTimer?.clear?.(true)
       this.expiresTimer?.clear?.()
       delete this.custom
       delete this.value
@@ -193,6 +225,19 @@ export class SessionEntity {
   isInvalid (data) {
     const requiredKeys = ['value', 'expiresAt', 'inactiveAt']
     return !requiredKeys.every(x => Object.keys(data).includes(x))
+  }
+
+  collectSM (type) {
+    let value, tag
+    if (type === 'duration') {
+      const startingTimestamp = this.expiresAt - this.expiresMs
+      value = Date.now() - startingTimestamp
+      tag = 'Session/Duration/Ms'
+    }
+    if (type === 'expired') tag = 'Session/Expired/Seen'
+    if (type === 'inactive') tag = 'Session/Inactive/Seen'
+
+    if (tag) handle(SUPPORTABILITY_METRIC_CHANNEL, [tag, value], undefined, FEATURE_NAMES.metrics, this.ee)
   }
 
   /**

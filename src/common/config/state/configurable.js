@@ -14,6 +14,7 @@ function setValues (obj, model) {
     if (!model || typeof model !== 'object') return warn('Setting a Configurable requires a model to set its initial properties')
     Object.assign(state, model)
     Object.entries(obj).forEach(([key, value]) => {
+      if (!Object.keys(model).includes(key)) return
       const frozenAttrs = getFrozenAttributes(key)
       if (frozenAttrs.length && value && typeof value === 'object') {
         frozenAttrs.forEach(attr => {

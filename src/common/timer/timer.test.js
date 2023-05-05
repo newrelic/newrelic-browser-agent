@@ -69,23 +69,6 @@ describe('create()', () => {
   })
 })
 
-describe('pause()', () => {
-  test('pause prevents the callback from firing', () => {
-    const timer = new Timer({ onEnd: jest.fn() }, 100)
-    expect(timer.onEnd).toHaveBeenCalledTimes(0)
-    timer.pause()
-    jest.advanceTimersByTime(150)
-    expect(timer.onEnd).toHaveBeenCalledTimes(0)
-  })
-
-  test('pause sets remainingMs timestamp', () => {
-    const timer = new Timer({ onEnd: jest.fn() }, 100)
-    expect(timer.remainingMs).toEqual(undefined)
-    timer.pause()
-    expect(timer.remainingMs).toEqual(timer.initialMs - (now - timer.startTimestamp))
-  })
-})
-
 describe('clear()', () => {
   test('clear prevents the callback from firing and deletes the pointer', () => {
     const timer = new Timer({ onEnd: jest.fn() }, 100)

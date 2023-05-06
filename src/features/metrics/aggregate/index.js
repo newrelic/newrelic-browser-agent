@@ -1,4 +1,4 @@
-import { getRuntime } from '../../../common/config/config'
+import { getRuntime, getInfo } from '../../../common/config/config'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL } from '../constants'
@@ -11,6 +11,7 @@ import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope } from '../../../common/util/global-scope'
 import { FeatureBase } from '../../utils/feature-base'
+import { stringify } from '../../../common/util/stringify'
 
 export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
@@ -97,6 +98,7 @@ export class Aggregate extends FeatureBase {
     try {
       if (this.resourcesSent) return
       const agentRuntime = getRuntime(this.agentIdentifier)
+      const info = getInfo(this.agentIdentifier)
       // make sure this only gets sent once
       this.resourcesSent = true
       // differentiate between internal+external and ajax+non-ajax
@@ -123,10 +125,25 @@ export class Aggregate extends FeatureBase {
         )
       })
 
+      // Capture per-agent query bytes sent for each endpoint (see harvest) and RUM call (see page_view_event aggregator).
+      Object.keys(agentRuntime.bytesSent).forEach(endpoint => {
+        this.storeSupportabilityMetrics(
+          `PageSession/Endpoint/${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)}/QueryBytesSent`,
+          agentRuntime.queryBytesSent[endpoint]
+        )
+      })
+
       // Capture metrics for session trace if active (`ptid` is set when returned by replay ingest).
       if (agentRuntime.ptid) {
         this.storeSupportabilityMetrics('PageSession/Feature/SessionTrace/DurationMs', Math.round(performance.now()))
       }
+
+      // Capture metrics for size of custom attributes
+      const jsAttributes = stringify(info.jsAttributes)
+      this.storeSupportabilityMetrics('PageSession/Feature/CustomData/Bytes', jsAttributes === '{}' ? 0 : jsAttributes.length)
+
+      // Capture metrics on usage of img network method
+      this.storeSupportabilityMetrics('NetworkMethod/Img/Count', agentRuntime.imgMethodCount)
     } catch (e) {
       // do nothing
     }

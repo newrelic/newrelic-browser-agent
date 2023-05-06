@@ -64,6 +64,7 @@ export function setAPI (agentIdentifier) {
     cycle += 1
 
     const agentInfo = getInfo(agentIdentifier)
+    const agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
     if (!agentInfo.beacon) return
 
     var url = scheme + '://' + agentInfo.beacon + '/1/' + agentInfo.licenseKey
@@ -76,6 +77,8 @@ export function setAPI (agentIdentifier) {
     url += 'dc=' + ~~dom_time + '&'
     url += 'fe=' + ~~fe_time + '&'
     url += 'c=' + cycle
+
+    agentRuntime.imgMethodCount += 1
 
     submitData.img(url)
   }

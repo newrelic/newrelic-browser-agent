@@ -6,7 +6,9 @@ import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/env'
 
 const model = {
   buildEnv: BUILD_ENV,
-  bytesSent: {},
+  bytesSent: {}, // Used for SM to capture body bytes sent per endpoint
+  queryBytesSent: {}, // Used for SM to capture query parameter bytes sent per endpoint
+  imgMethodCount: 0, // Used for SM to capture count of time img network method is used
   customTransaction: undefined,
   disabled: false,
   distMethod: DIST_METHOD,

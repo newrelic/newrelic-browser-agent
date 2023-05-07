@@ -65,6 +65,10 @@ export default class MatcherRule {
       return false
     }
 
+    if (!this.#browserVersion || this.#browserVersion === '*') {
+      return this.#matcherType === MATCHER_TYPE.INCLUDE
+    }
+
     return (() => {
       switch (this.#specOperator) {
         case SPEC_OPERATOR.AT:

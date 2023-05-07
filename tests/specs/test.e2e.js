@@ -12,7 +12,7 @@ describe('newrelic api', () => {
   })
 
   test(Matcher.withFeature('notInternetExplorer'))('not ie', async () => {
-    const url = await testHandle.assetURL('api/session-storage-disallowed.html', {
+    const url = await testHandle.assetURL('instrumented.html', {
       loader: 'spa'
     })
 
@@ -28,7 +28,7 @@ describe('newrelic api', () => {
   })
 
   // test(Matcher.withFeature('workerStackSizeGeneratesError'))('not firefox', async () => {
-  //   const url = await testHandle.assetURL('api/session-storage-disallowed.html', {
+  //   const url = await testHandle.assetURL('api/instrumented.html', {
   //     loader: 'spa'
   //   })
 

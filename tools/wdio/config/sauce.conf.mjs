@@ -1,4 +1,7 @@
-import browserList from '../util/browser-list.mjs'
+import browsersSupported from '../../browsers-lists/browsers-supported.json' assert { type: "json" }
+import browsersAll from '../../browsers-lists/browsers-all.json' assert { type: "json" }
+import browsersPolyfill from '../../browsers-lists/browsers-polyfill.json' assert { type: "json" }
+import browsersList from '../../browsers-lists/browsers-list.mjs'
 import jilArgs from '../args.mjs'
 import {
   getSauceConnectTunnelName,
@@ -13,27 +16,23 @@ import {
  * @returns An object defining platform capabilities to be requested of SauceLabs.
  */
 function sauceCapabilities () {
-  return browserList(jilArgs.browsers).map((browserSpec) => {
-    const capabilities = {
-      browserName: browserSpec.desired.browserName,
-      platformName: browserSpec.desired.platformName,
-      browserVersion: browserSpec.desired.browserVersion, // ignored for mobile platforms; appium:platformVersion used instead
-      'sauce:options': {}
-    }
+  let browsers = browsersSupported
 
-    if (!jilArgs.sauce) {
-      capabilities['sauce:options'].tunnelName = getSauceConnectTunnelName()
-    }
+  if (jilArgs.allBrowsers) {
+    browsers = browsersAll
+  } else if (jilArgs.polyfills) {
+    browsers = browsersPolyfill
+  }
 
-    if (['iOS', 'Android'].includes(browserSpec.desired.platformName)) {
-      capabilities['appium:deviceName'] = browserSpec.desired['appium:deviceName']
-      capabilities['appium:platformVersion'] = browserSpec.desired['appium:platformVersion']
-      capabilities['appium:automationName'] = browserSpec.desired['appium:automationName'] || browserSpec.desired.XCUITest
-      capabilities['sauce:options'].appiumVersion = browserSpec.desired['sauce:options'].appiumVersion
-    }
-
-    return capabilities
-  })
+  return browsersList(browsers, jilArgs.browsers)
+    .map(sauceBrowser => ({
+      ...sauceBrowser,
+      platform: undefined,
+      version: undefined,
+      'sauce:options': !jilArgs.sauce
+        ? { tunnelName: getSauceConnectTunnelName() }
+        : {}
+    }))
 }
 
 export default function config () {

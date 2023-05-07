@@ -27,24 +27,24 @@ export const SPEC_OPERATOR = {
  */
 export function parseSpecString (spec, options = { browserNameRequired: true, operatorRequired: true, browserVersionRequired: true }) {
   // Drop the platformName if it exists
-  const [browserInfo] = spec.split('/')
-  const [, browserName, specOperator, browserVersion] = browserInfo.match(/(.*)(@|<=|>=|<|>)(.*)/)
+  const [browserInfo, platform] = spec.split('/')
+  const [specOperator] = browserInfo.match(/(@|<=|>=|<|>)/) || []
+  const [browserName, browserVersion] = browserInfo.split(specOperator)
 
-  if (options.browserNameRequired && (!browserName || browserName.length === 0)) {
+  if (options?.browserNameRequired && (!browserName || browserName.length === 0)) {
     throw new Error(`The spec ${spec} is missing the browserName. The correct syntax is: ${specSyntax}`)
   }
-  if (options.operatorRequired && (!specOperator || specOperator.length === 0)) {
+  if (options?.operatorRequired && (!specOperator || specOperator.length === 0)) {
     throw new Error(`The spec ${spec} is missing the operator or is using an invalid operator. The correct syntax is: ${specSyntax}`)
   }
-  if (options.browserVersionRequired && (!browserVersion || browserVersion.length === 0)) {
+  if (options?.browserVersionRequired && (!browserVersion || browserVersion.length === 0)) {
     throw new Error(`The spec ${spec} is missing the browserVersion. The correct syntax is: ${specSyntax}`)
-  } else if (browserVersion && !isFinite(parseInt(browserVersion, 10))) {
-    throw new Error(`The spec ${spec} contains a browserVersion value that is not an integer. The correct syntax is: ${specSyntax}`)
   }
 
   return {
     browserName,
     specOperator,
-    browserVersion: parseInt(browserVersion, 10)
+    browserVersion,
+    platform
   }
 }

@@ -12,12 +12,18 @@ export default class BrowserMatcher {
   }
 
   #test (matcher) {
-    let skip = matcher && !matcher.match(this.#browserSpec)
-    console.log('BrowserMatcher##test', this.#browserSpec)
-    console.log('BrowserMatcher##test', matcher)
-    console.log('BrowserMatcher##test', matcher.match(this.#browserSpec))
-    console.log('BrowserMatcher##test', skip)
+    let skip = matcher && !matcher.test(this.#browserSpec)
+
     return function (...args) {
+      /*
+        We only call global.it for tests that are not skipped. This registers the test
+        with the mocha engine. When all tests in a file are skipped, WDIO will not launch
+        a browser in SauceLabs.
+
+        Do not use global.it.skip. This still registers the test with mocha and will cause
+        WDIO to launch a browser in SauceLabs. If all the tests are skipped in a file, this
+        is a waste of time.
+      */
       if (!skip) {
         global.it.apply(this, args)
       }

@@ -1,5 +1,5 @@
-import { parseSpecString } from '../browsers-spec/spec-parser.mjs'
-import SpecMatcher from '../browsers-spec/spec-matcher.mjs'
+import { parseSpecString } from '../browser-matcher/spec-parser.mjs'
+import SpecMatcher from '../browser-matcher/spec-matcher.mjs'
 
 export default function browsersList (browsersList, spec = 'chrome@latest') {
   let { browserName, specOperator, browserVersion } = parseSpecString(spec, null)

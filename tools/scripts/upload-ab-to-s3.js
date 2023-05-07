@@ -92,6 +92,7 @@ const config = {
 function getIdFromUrl (url) {
   if (url.includes('PR-')) return 'PR-' + url.split('/').find(x => x.includes('PR-')).split('-')[1]
   if (url.includes('/dev/')) return 'dev'
+  if (url.includes('experiments/')) return url.split('https://js-agent.newrelic.com/experiments/')[1].split('/')[0]
   if (url.includes('-current')) return 'current'
   if (url.match(/\d+/)) return url.match(/\d+/)[0]
   return `${counter++}`

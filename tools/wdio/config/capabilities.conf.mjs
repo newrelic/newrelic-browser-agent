@@ -1,6 +1,6 @@
 import browserList from '../util/browser-list.mjs'
 import jilArgs from '../runner/args.mjs'
-import { getSauceConnectTunnelName } from '../util/saucelabs.mjs'
+import { getSauceConnectTunnelName } from '../../saucelabs/utils.mjs'
 
 function seleniumCapabilities () {
   // We only add one entry per browser so we don't have to mess with versions

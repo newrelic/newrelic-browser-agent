@@ -3,7 +3,7 @@ import jilArgs from '../args.mjs'
 import {
   getSauceConnectTunnelName,
   getSauceLabsCreds
-} from '../util/saucelabs.mjs'
+} from '../../saucelabs/utils.mjs'
 
 /**
  * Generates an array of "desired capabilities" objects for spinning up instances in SauceLabs for each of the

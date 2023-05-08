@@ -88,7 +88,7 @@ export class Harvest extends SharedContext {
 
     var agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
 
-    if (!payload.body) { // no payload body? nothing to send, just run onfinish stuff and return
+    if (!payload.body && !payload.qs) { // no payload body? nothing to send, just run onfinish stuff and return
       if (cbFinished) {
         cbFinished({ sent: false })
       }
@@ -97,7 +97,7 @@ export class Harvest extends SharedContext {
 
     if (!opts) opts = {}
 
-    var url = this.getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + this.baseQueryString()
+    let url = `${this.getScheme()}://${info.errorBeacon}${endpoint !== 'rum' ? `/${endpoint}` : ''}/1/${info.licenseKey}${this.baseQueryString()}`
     if (payload.qs) url += encodeObj(payload.qs, agentRuntime.maxBytes)
 
     if (!submitMethod) {

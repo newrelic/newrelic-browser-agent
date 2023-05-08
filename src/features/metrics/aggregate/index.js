@@ -141,9 +141,6 @@ export class Aggregate extends FeatureBase {
       // Capture metrics for size of custom attributes
       const jsAttributes = stringify(info.jsAttributes)
       this.storeSupportabilityMetrics('PageSession/Feature/CustomData/Bytes', jsAttributes === '{}' ? 0 : jsAttributes.length)
-
-      // Capture metrics on usage of img network method
-      this.storeSupportabilityMetrics('NetworkMethod/Img/Count', agentRuntime.imgMethodCount)
     } catch (e) {
       // do nothing
     }

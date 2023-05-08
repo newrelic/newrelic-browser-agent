@@ -78,8 +78,6 @@ export function setAPI (agentIdentifier) {
     url += 'fe=' + ~~fe_time + '&'
     url += 'c=' + cycle
 
-    agentRuntime.imgMethodCount += 1
-
     submitData.img(url)
   }
 

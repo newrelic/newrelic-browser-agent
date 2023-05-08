@@ -61,10 +61,30 @@ All tests should exist in the path `tests/specs` for WDIO to pick them up. Tests
 In some cases, a test may apply only to a subset of browsers. We have created a new global `test()` that can be used in place of `it`. The `test` method takes a browser matcher and returns a higher-order function. If the browser matcher matches the browser the test is currently running inside, the higher-order function will call the `it` global method to register the test case with the WDIO framework. Below is an example.
 
 ```javascript
-import Matcher from '../../tools/jil/util/browser-matcher'
+import { notInternetExplorer } from '../../tools/browser-matcher/common-matchers.mjs'
 ...
-test(Matcher.withFeature('notInternetExplorer'))
+test(notInternetExplorer)
   ('should load when sessionStorage is not available', async () => {
     ...
   })
 ```
+
+Common browser matchers that are used for more than one test file can be created/located in `tools/browser-matcher/common-matchers.mjs`. If you have a test case that needs a very specific browser matcher, you can create the matcher within the test file itself like the below example.
+
+```javascript
+import SpecMatcher from '../../tools/browser-matcher/spec-matcher.mjs'
+
+const notChromeOrSafari = new SpecMatcher()
+  .exclude('chrome)
+  .exclude('safari')
+...
+test(notInternetExplorer)
+  ('should load when sessionStorage is not available', async () => {
+    ...
+  })
+```
+
+The `SpecMatcher` class employs the builder pattern allowing you to endlessly chain calls to the `exclude` and `include` methods. Each call will add a new rule internally that will be assessed when a test is ran that depends on the matcher. You may find that an existing matcher meets some of the needs for a new test but needs additional rules applied in your use case. If you find yourself in this situation, the `SpecMatcher` class has a `clone` method that you can use to start your new matcher with a base set of rules instead of an empty set. Be sure to use `clone` instead of importing and modifying an existing matcher as that will cause the matcher to unexpectedly mutate for other tests in the same file.
+
+- **DO** create one-off matchers within the test file and move the matcher to `tools/browser-matcher/common-matchers.mjs` if it is used in more than one test file.
+- **DON'T** modify an existing matcher unless the modification should apply to all current uses of the matcher. Instead, clone the matcher to start creating a new matcher.

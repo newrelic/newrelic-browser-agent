@@ -1,5 +1,43 @@
 {
   "repository": "newrelic/newrelic-browser-agent",
-  "entries": [],
-  "updateTime": "2023-04-27T22:19:22.693Z"
+  "entries": [
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "bcfe6ffff9d0be583bbd9d5d6ef78265aaa753cb",
+          "message": "Add internal session metrics",
+          "issues": []
+        },
+        {
+          "type": "feat",
+          "sha": "88c2d83609c2b11aad81d4480fce25b007c4b4fa",
+          "message": "Add query parameter supportability metrics",
+          "issues": [
+            "518"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f95630dfbbb7234950fc37216c059218237eeb11",
+          "message": "Allow custom error grouping",
+          "issues": []
+        },
+        {
+          "type": "feat",
+          "sha": "32e1061646d89d6270f027acd5e35bc089323bda",
+          "message": "Add new stateful Session Manager - NEWRELIC-7986",
+          "issues": [
+            "464"
+          ]
+        }
+      ],
+      "version": "1.232.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "3ec85467-62d9-4cc4-aff2-029e61005d14",
+      "createTime": "2023-05-08T21:11:35.144Z"
+    }
+  ],
+  "updateTime": "2023-05-08T21:11:35.144Z"
 }

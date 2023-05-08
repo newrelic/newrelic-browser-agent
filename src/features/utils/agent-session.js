@@ -26,9 +26,6 @@ export function setupAgentSession (agentIdentifier) {
       : new LocalStorage()
   }
 
-  console.log(getConfigurationValue(agentIdentifier, 'session.expiresMs'))
-  console.log(getConfigurationValue(agentIdentifier, 'session.inactiveMs'))
-
   if (cookiesEnabled) {
     // defaults to "LocalMemory" if storageAPI is undefined, such as in Worker build
     agentRuntime.session = new SessionEntity({

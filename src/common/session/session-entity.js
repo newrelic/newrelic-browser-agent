@@ -51,8 +51,6 @@ export class SessionEntity {
     this.expiresMs = expiresMs
     this.inactiveMs = inactiveMs
 
-    console.log(expiresMs, inactiveMs)
-
     this.ee = ee.get(agentIdentifier)
 
     wrapEvents(this.ee)
@@ -186,9 +184,8 @@ export class SessionEntity {
     // * stop recording (stn and sr)...
     // * delete the session and start over
     try {
-      if (this.initialized) {
-        this.ee.emit('session-reset')
-      }
+      if (this.initialized) this.ee.emit('session-reset')
+
       this.storage.remove(this.lookupKey)
       this.inactiveTimer?.abort?.()
       this.expiresTimer?.clear?.()
@@ -202,7 +199,6 @@ export class SessionEntity {
         expiresMs: this.expiresMs,
         inactiveMs: this.inactiveMs
       })
-      console.log('new value...', this.value)
       return this.read()
     } catch (e) {
       return {}

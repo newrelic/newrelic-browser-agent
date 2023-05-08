@@ -147,117 +147,116 @@ describe('newrelic session ID', () => {
       expect(lsData2.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
     })
   })
-  // describe('Interactivity behavior -- ', () => {
-  //   it('should update inactiveTimers if page is interacted with', async () => {
-  //     const inactiveMs = 7500
-  //     const url = await testHandle.assetURL('session-entity.html', { init: { ...init, session: { inactiveMs } } })
-  //     await browser.url(url)
-  //     await browser.waitForFeature('loaded')
+  describe('Interactivity behavior -- ', () => {
+    it('should update inactiveTimers if page is interacted with', async () => {
+      const inactiveMs = 7500
+      const url = await testHandle.assetURL('session-entity.html', { init: { ...init, session: { inactiveMs } } })
+      await browser.url(url)
+      await browser.waitForFeature('loaded')
 
-  //     const lsData = await browser.execute(getLocalStorageData)
-  //     const cData = await browser.execute(getClassData)
-  //     expect(lsData).toEqual(cData)
-  //     expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
-  //     expect(lsData.inactiveAt).toEqual(expect.any(Number))
+      const lsData = await browser.execute(getLocalStorageData)
+      const cData = await browser.execute(getClassData)
+      expect(lsData).toEqual(cData)
+      expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(lsData.inactiveAt).toEqual(expect.any(Number))
 
-  //     const refreshedAt = await browser.execute(function () {
-  //       document.querySelector('body').click()
-  //       return Date.now()
-  //     })
-  //     await browser.pause(500)
-  //     const lsData2 = await browser.execute(getLocalStorageData)
-  //     const cData2 = await browser.execute(getClassData)
+      const refreshedAt = await browser.execute(function () {
+        document.querySelector('body').click()
+        return Date.now()
+      })
+      await browser.pause(500)
+      const lsData2 = await browser.execute(getLocalStorageData)
+      const cData2 = await browser.execute(getClassData)
 
-  //     expect(lsData2).toEqual(cData2)
-  //     expect(lsData2.value).toEqual(lsData.value)
-  //     expect(lsData2.inactiveAt).not.toEqual(lsData.inactiveAt)
-  //     expect(lsData2.inactiveAt - refreshedAt).toBeGreaterThan(0)
-  //     expect(Math.abs(lsData2.inactiveAt - refreshedAt - 7500)).toBeLessThan(1000)
-  //   })
+      expect(lsData2).toEqual(cData2)
+      expect(lsData2.value).toEqual(lsData.value)
+      expect(lsData2.inactiveAt).not.toEqual(lsData.inactiveAt)
+      expect(lsData2.inactiveAt - refreshedAt).toBeGreaterThan(0)
+    })
 
-  //   it('inactiveAt is managed in local storage across loads', async () => {
-  //     const inactiveMs = 7500
-  //     const url = await testHandle.assetURL('session-entity.html', { init: { ...init, session: { inactiveMs } } })
-  //     await browser.url(url)
-  //     await browser.waitForFeature('loaded')
+    it('inactiveAt is managed in local storage across loads', async () => {
+      const inactiveMs = 7500
+      const url = await testHandle.assetURL('session-entity.html', { init: { ...init, session: { inactiveMs } } })
+      await browser.url(url)
+      await browser.waitForFeature('loaded')
 
-  //     const lsData = await browser.execute(getLocalStorageData)
-  //     const cData = await browser.execute(getClassData)
-  //     expect(lsData).toEqual(cData)
-  //     expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
-  //     expect(lsData.inactiveAt).toEqual(expect.any(Number))
+      const lsData = await browser.execute(getLocalStorageData)
+      const cData = await browser.execute(getClassData)
+      expect(lsData).toEqual(cData)
+      expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(lsData.inactiveAt).toEqual(expect.any(Number))
 
-  //     const refreshedAt = await browser.execute(function () {
-  //       document.querySelector('body').click()
-  //       return Date.now()
-  //     })
-  //     await browser.url(await testHandle.assetURL('fetch.html', { init: { ...init, session: { inactiveMs } } }))
-  //     await browser.waitForFeature('loaded')
+      const refreshedAt = await browser.execute(function () {
+        document.querySelector('body').click()
+        return Date.now()
+      })
+      await browser.url(await testHandle.assetURL('fetch.html', { init: { ...init, session: { inactiveMs } } }))
+      await browser.waitForFeature('loaded')
 
-  //     const lsData2 = await browser.execute(getLocalStorageData)
-  //     const cData2 = await browser.execute(getClassData)
+      const lsData2 = await browser.execute(getLocalStorageData)
+      const cData2 = await browser.execute(getClassData)
 
-  //     expect(lsData2).toEqual(cData2)
-  //     expect(lsData2.value).toEqual(lsData.value)
-  //     expect(lsData2.inactiveAt).not.toEqual(lsData.inactiveAt)
-  //     expect(lsData2.inactiveAt - refreshedAt).toBeGreaterThan(0)
-  //   })
-  // })
-  // describe('Custom attributes', () => {
-  //   it('should be able to set custom attributes', async () => {
-  //     const url = await testHandle.assetURL('session-entity.html', { init })
-  //     await browser.url(url)
-  //     await browser.waitForFeature('loaded')
+      expect(lsData2).toEqual(cData2)
+      expect(lsData2.value).toEqual(lsData.value)
+      expect(lsData2.inactiveAt).not.toEqual(lsData.inactiveAt)
+      expect(lsData2.inactiveAt - refreshedAt).toBeGreaterThan(0)
+    })
+  })
+  describe('Custom attributes', () => {
+    it('should be able to set custom attributes', async () => {
+      const url = await testHandle.assetURL('session-entity.html', { init })
+      await browser.url(url)
+      await browser.waitForFeature('loaded')
 
-  //     let lsData = await browser.execute(getLocalStorageData)
-  //     let data = await browser.execute(getAllClassData)
-  //     expect(lsData.custom).toBeFalsy()
-  //     expect(data.custom).toBeFalsy()
-  //     expect(data.custom).toEqual(lsData.custom)
+      let lsData = await browser.execute(getLocalStorageData)
+      let data = await browser.execute(getAllClassData)
+      expect(lsData.custom).toEqual({})
+      expect(data.custom).toEqual({})
+      expect(data.custom).toEqual(lsData.custom)
 
-  //     await browser.execute(function () {
-  //       newrelic.setCustomAttribute('test', 1, true)
-  //     })
+      await browser.execute(function () {
+        newrelic.setCustomAttribute('test', 1, true)
+      })
 
-  //     lsData = await browser.execute(getLocalStorageData)
-  //     expect(lsData.custom).toEqual({ test: 1 })
+      lsData = await browser.execute(getLocalStorageData)
+      expect(lsData.custom).toEqual({ test: 1 })
 
-  //     data = await browser.execute(getAllClassData)
-  //     expect(data.custom).toEqual({ test: 1 })
-  //   })
-  // })
+      data = await browser.execute(getAllClassData)
+      expect(data.custom).toEqual({ test: 1 })
+    })
+  })
 
-  // describe('Misc class attributes -- ', () => {
-  //   it('class should flag as initialized', async () => {
-  //     const url = await testHandle.assetURL('session-entity.html', { init })
-  //     await browser.url(url)
-  //     await browser.waitForFeature('loaded')
+  describe('Misc class attributes -- ', () => {
+    it('class should flag as initialized', async () => {
+      const url = await testHandle.assetURL('session-entity.html', { init })
+      await browser.url(url)
+      await browser.waitForFeature('loaded')
 
-  //     let data = await browser.execute(getAllClassData)
-  //     expect(data.initialized).toEqual(true)
-  //   })
-  // })
+      let data = await browser.execute(getAllClassData)
+      expect(data.initialized).toEqual(true)
+    })
+  })
 
-  // describe('Reset --', () => {
-  //   it('should notify when resetting', async () => {
-  //     const url = await testHandle.assetURL('session-entity.html', { init })
-  //     await browser.url(url)
-  //     await browser.waitForFeature('loaded')
-  //     await browser.execute(function () {
-  //       window.wasReset = false
-  //       newrelic.ee.on('session-reset', function () {
-  //         window.wasReset = true
-  //       })
-  //     })
+  describe('Reset --', () => {
+    it('should notify when resetting', async () => {
+      const url = await testHandle.assetURL('session-entity.html', { init })
+      await browser.url(url)
+      await browser.waitForFeature('loaded')
+      await browser.execute(function () {
+        window.wasReset = false
+        newrelic.ee.on('session-reset', function () {
+          window.wasReset = true
+        })
+      })
 
-  //     await browser.execute(resetSession)
+      await browser.execute(resetSession)
 
-  //     const wasReset = await browser.execute(function () {
-  //       return window.wasReset
-  //     })
-  //     expect(wasReset).toEqual(true)
-  //   })
-  // })
+      const wasReset = await browser.execute(function () {
+        return window.wasReset
+      })
+      expect(wasReset).toEqual(true)
+    })
+  })
 })
 
 function getLocalStorageData () {

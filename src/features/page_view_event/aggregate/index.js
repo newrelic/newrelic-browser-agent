@@ -5,7 +5,6 @@ import { onTTFB } from 'web-vitals'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
 import { paintMetrics } from '../../../common/metrics/paint-metrics'
-import { submitData } from '../../../common/util/submit-data'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { Harvest } from '../../../common/harvest/harvest'
 import * as CONSTANTS from '../constants'
@@ -15,8 +14,6 @@ import { drain } from '../../../common/drain/drain'
 import { FeatureBase } from '../../utils/feature-base'
 import { activateFeatures } from '../../../common/util/feature-flags'
 import { warn } from '../../../common/util/console'
-
-const jsonp = 'NREUM.setToken'
 
 export class Aggregate extends FeatureBase {
   static featureName = CONSTANTS.FEATURE_NAME

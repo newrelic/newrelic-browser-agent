@@ -13,7 +13,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    needs: [test]
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}

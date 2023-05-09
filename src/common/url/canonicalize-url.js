@@ -19,7 +19,7 @@ export function canonicalizeUrl (url) {
   const cleanedUrl = cleanURL(url)
   const cleanedGlobalScopeUrl = cleanURL(initialLocation)
 
-  // If the URL matches the origin URL of the loader, we assume it originated with an inline script.
+  // If the URL matches the origin URL of the loader, we assume it originated within an inline script.
   if (cleanedUrl === cleanedGlobalScopeUrl) {
     return '<inline>'
   } else {

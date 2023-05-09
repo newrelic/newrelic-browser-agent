@@ -23,6 +23,10 @@ import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { FeatureBase } from '../../utils/feature-base'
 
+/**
+ * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
+ */
+
 export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
@@ -33,6 +37,9 @@ export class Aggregate extends FeatureBase {
     this.errorCache = {}
     this.currentBody
     this.errorOnPage = false
+
+    // Currently, loader.origin might contain a URL fragment, but we don't want to use it for comparing with frame URLs.
+    this.cleanedLoaderOrigin = cleanURL(getRuntime(this.agentIdentifier).origin)
 
     // this will need to change to match whatever ee we use in the instrument
     this.ee.on('interactionSaved', (interaction) => this.onInteractionSaved(interaction))
@@ -106,40 +113,8 @@ export class Aggregate extends FeatureBase {
   }
 
   /**
-   * Converts a URL to its basic form without a query string or fragment.
-   * If the resulting URL is the same as the cleaned origin, returns '<inline>'.
-   * @param {string} url - The URL to be canonicalized.
-   * @param {string} cleanedLoaderOrigin - The cleaned origin URL of the agent loader, used for comparison.
-   * @returns {string} The canonicalized URL, or '<inline>' if the URL matches the cleaned loader origin URL.
-   */
-  canonicalizeURL (url, cleanedLoaderOrigin) {
-    if (typeof url !== 'string') return ''
-
-    var cleanedURL = cleanURL(url)
-    // If the URL matches the origin URL of the loader, we assume this stack frame refers to an inline script.
-    if (cleanedURL === cleanedLoaderOrigin) {
-      return '<inline>'
-    } else {
-      return cleanedURL
-    }
-  }
-
-  /**
-   * Represents an error with a stack trace.
-   * @typedef {Object} StackInfo
-   * @property {string} name - The name of the error (e.g. 'TypeError').
-   * @property {string} message - The error message.
-   * @property {string} stackString - The stack trace as a string.
-   * @property {Array<Object>} frames - An array of frames in the stack trace.
-   * @property {string} frames.url - The URL of the file containing the code for the frame.
-   * @property {string} frames.func - The name of the function associated with the frame.
-   * @property {number} frames.line - The line number of the code in the frame.
-   */
-
-  /**
    * Builds a standardized stack trace string from the frames in the given `stackInfo` object, with each frame separated
-   * by a newline character. Each entry takes the form `<functionName>@<url>:<lineNumber>`, except when the function
-   * name or line number are missing for a given frame.
+   * by a newline character. Lines take the form `<functionName>@<url>:<lineNumber>`.
    *
    * @param {StackInfo} stackInfo - An object specifying a stack string and individual frames.
    * @returns {string} A canonical stack string built from the URLs and function names in the given `stackInfo` object.
@@ -160,32 +135,6 @@ export class Aggregate extends FeatureBase {
     return canonicalStackString
   }
 
-  /**
-   * Strips query parameters and fragments from the `stackString` property of the given `stackInfo` object, along with
-   * the `url` properties of each frame in `stackInfo.frames`. Any URLs that are equivalent to the cleaned version of
-   * the loader origin will also be replaced with the string '<inline>'.
-   *
-   * @param {StackInfo} stackInfo - An object specifying a stack string and individual frames.
-   * @returns {StackInfo} A stackInfo object updated with URLs without query strings and fragments.
-   */
-  canonicalizeStackURLs (stackInfo) {
-    // Currently, loader.origin might contain a URL fragment, but we don't want to use it for comparing with frame URLs.
-    const cleanedLoaderOrigin = cleanURL(getRuntime(this.agentIdentifier).origin)
-
-    // Clean the URL of each stack frame and replace it in the stackString if it changes.
-    for (let i = 0; i < stackInfo.frames.length; i++) {
-      let frame = stackInfo.frames[i]
-      let originalURL = frame.url
-      let cleanedURL = this.canonicalizeURL(originalURL, cleanedLoaderOrigin)
-      if (cleanedURL && cleanedURL !== frame.url) {
-        frame.url = cleanedURL
-        stackInfo.stackString = stackInfo.stackString.split(originalURL).join(cleanedURL)
-      }
-    }
-
-    return stackInfo
-  }
-
   storeError (err, time, internal, customAttributes) {
     // are we in an interaction
     time = time || now()
@@ -202,11 +151,11 @@ export class Aggregate extends FeatureBase {
       // Again as with previous usage, all falsey values would include the error.
     }
 
-    var stackInfo = this.canonicalizeStackURLs(computeStackTrace(err))
-    var canonicalStack = this.buildCanonicalStackString(stackInfo)
+    var stackInfo = computeStackTrace(err, this.cleanedLoaderOrigin)
+    var canonicalStackString = this.buildCanonicalStackString(stackInfo)
 
     const params = {
-      stackHash: stringHashCode(canonicalStack),
+      stackHash: stringHashCode(canonicalStackString),
       exceptionClass: stackInfo.name,
       request_uri: globalScope?.location.pathname
     }

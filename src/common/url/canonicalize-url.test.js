@@ -8,10 +8,10 @@ describe('canonicalizeUrl', () => {
   })
 
   test('identifies URLs matching the specified loader origin as <inline>', () => {
-    expect(canonicalizeUrl('http://example.com/?abc=123', 'http://example.com/')).toBe('<inline>')
+    expect(canonicalizeUrl('http://example.com/?abc=123#fragment', 'http://example.com/')).toBe('<inline>')
   })
 
   test('does not identify sub-paths of the loader origin as <inline>', () => {
-    expect(canonicalizeUrl('http://example.com/path/to/script.js', 'http://example.co/')).not.toBe('<inline>')
+    expect(canonicalizeUrl('http://example.com/path/to/script.js', 'http://example.com/')).not.toBe('<inline>')
   })
 })

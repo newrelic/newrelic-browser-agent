@@ -20,7 +20,7 @@ export let globalScope = (() => {
   throw new Error('New Relic browser agent shutting down due to error: Unable to locate global scope. This is possibly due to code redefining browser global variables like "self" and "window".')
 })()
 
-export let initialLocation = '' + globalScope.location
+export const initialLocation = '' + globalScope.location
 
 /**
  * The below methods are only used for testing and should be removed once the

@@ -84,7 +84,7 @@ export class Aggregate extends FeatureBase {
     }
 
     const body = {
-      custom: info.jsAttributes
+      ja: stringify(info.jsAttributes)
     }
 
     if (globalScope.performance) {
@@ -130,7 +130,7 @@ export class Aggregate extends FeatureBase {
         drain(this.agentIdentifier, this.featureName)
       } catch (err) {
         this.ee.abort()
-        warn('RUM call failed. Agent shutting down.', err)
+        warn('RUM call failed. Agent shutting down.')
       }
     })
   }

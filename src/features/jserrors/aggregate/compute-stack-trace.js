@@ -171,7 +171,7 @@ function parseStackProp (info, line) {
     return info
   }
 
-  // Once we've seen a wrapper, ingore all subsequent stack entries.
+  // Once we've seen a wrapper, ignore all subsequent stack entries.
   if (isNrWrapper(element.func)) info.wrapperSeen = true
   if (!info.wrapperSeen) {
     // Query strings and fragments should be removed, and URLs matching the loader's origin should be "<inline>".

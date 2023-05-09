@@ -1,4 +1,4 @@
-import MatcherRule, { MATCHER_TYPE } from './matcher-rule.mjs'
+import MatcherRule from './matcher-rule.mjs'
 
 /**
  * Constructs a set of rules that can be used to test
@@ -29,28 +29,20 @@ export default class SpecMatcher {
    * @returns The current spec matcher instance to continue the builder pattern
    */
   include (spec) {
-    this.#rules.push(new MatcherRule(MATCHER_TYPE.INCLUDE, spec))
+    this.#rules.push(new MatcherRule(spec))
     return this
   }
 
   /**
-   * Creates a rule that ensures the browser spec being tested is excluded
-   * in the provided browser spec.
-   * @param {string} spec A browser spec string including a spec operator
-   * @returns The current spec matcher instance to continue the builder pattern
-   */
-  exclude (spec) {
-    this.#rules.push(new MatcherRule(MATCHER_TYPE.EXCLUDE, spec))
-    return this
-  }
-
-  /**
-   * Test the given browser spec string meets the rules defined in the current
-   * spec matcher instance
-   * @param {string} spec A browser spec string including the `@` spec operator
+   * Test the given browser version meets the rules defined in the current
+   * spec matcher instance.
+   * @param {string} browserName The name of the browser like `chrome`
+   * @param {string} browserVersion The version of the browser like `99`
    * @returns
    */
-  test (spec) {
-    return this.#rules.reduce((aggregate, rule) => aggregate && rule.test(spec), true)
+  test (browserName, browserVersion) {
+    if (this.#rules.length === 0) return false
+
+    return this.#rules.reduce((aggregate, rule) => aggregate && rule.test(browserName, browserVersion), true)
   }
 }

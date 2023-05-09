@@ -8,10 +8,10 @@ export default class BrowserMatcher {
   async beforeSession (_, capabilities) {
     this.#browserSpec =
       `${this.#getBrowserName(capabilities)}@${capabilities.browserVersion || capabilities.version}`
-    global.test = this.#test.bind(this)
+    global.withBrowsersMatching = this.#browserMatchTest.bind(this)
   }
 
-  #test (matcher) {
+  #browserMatchTest (matcher) {
     let skip = matcher && !matcher.test(this.#browserSpec)
 
     return function (...args) {

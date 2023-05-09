@@ -52,18 +52,18 @@ All tests should exist in the path `tests/specs` for WDIO to pick them up. Tests
 - **DO** use `afterEach` to cleanup global state after each test.
 - **DON'T** use `beforeAll` or `afterAll`, which can result in poor state isolation.
 - **DO** use the `it` keyword to declare a test case that has no browser limitation.
-- **DO** use the `test()` function to declare a test case that has browser limitations.
+- **DO** use the `withBrowsersMatching()` function to declare a test case that has browser limitations.
 - **DO** avoid promise chaining and use `async/await` to test asynchronous code.
 - **DO** create custom commands in `tools/wdio/plugins/jil-commands.mjs` instead of writing utility methods for common testing functionality.
 
 ### Tests for specific browsers
 
-In some cases, a test may apply only to a subset of browsers. We have created a new global `test()` that can be used in place of `it`. The `test` method takes a browser matcher and returns a higher-order function. If the browser matcher matches the browser the test is currently running inside, the higher-order function will call the `it` global method to register the test case with the WDIO framework. Below is an example.
+In some cases, a test may apply only to a subset of browsers. We have created a new global `withBrowsersMatching()` that can be used in place of `it`. The `withBrowsersMatching` method takes a browser matcher and returns a higher-order function. If the browser matcher matches the browser the test is currently running inside, the higher-order function will call the `it` global method to register the test case with the WDIO framework. Below is an example.
 
 ```javascript
 import { notInternetExplorer } from '../../tools/browser-matcher/common-matchers.mjs'
 ...
-test(notInternetExplorer)
+withBrowsersMatching(notInternetExplorer)
   ('should load when sessionStorage is not available', async () => {
     ...
   })
@@ -78,7 +78,7 @@ const notChromeOrSafari = new SpecMatcher()
   .exclude('chrome)
   .exclude('safari')
 ...
-test(notInternetExplorer)
+withBrowsersMatching(notInternetExplorer)
   ('should load when sessionStorage is not available', async () => {
     ...
   })

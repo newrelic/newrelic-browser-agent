@@ -3,11 +3,11 @@ import { Configurable } from './configurable'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { globalScope } from '../../util/global-scope'
 import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/env'
-import { SessionEntity } from '../../session/session-entity'
 
 const model = {
   buildEnv: BUILD_ENV,
-  bytesSent: {},
+  bytesSent: {}, // Used for SM to capture body bytes sent per endpoint
+  queryBytesSent: {}, // Used for SM to capture query parameter bytes sent per endpoint
   customTransaction: undefined,
   disabled: false,
   distMethod: DIST_METHOD,

@@ -64,6 +64,7 @@ export function setAPI (agentIdentifier) {
     cycle += 1
 
     const agentInfo = getInfo(agentIdentifier)
+    const agentRuntime = getRuntime(agentIdentifier)
     if (!agentInfo.beacon) return
 
     var url = scheme + '://' + agentInfo.beacon + '/1/' + agentInfo.licenseKey

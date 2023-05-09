@@ -1,5 +1,5 @@
 const request = require('request')
-const { connectToS3, uploadToS3 } = require('./s3')
+const { connectToS3, uploadToS3, getListOfObjects } = require('./s3')
 
 var argv = require('yargs')
   .usage('$0 [options]')
@@ -92,33 +92,35 @@ const config = {
 function getIdFromUrl (url) {
   if (url.includes('PR-')) return 'PR-' + url.split('/').find(x => x.includes('PR-')).split('-')[1]
   if (url.includes('/dev/')) return 'dev'
+  if (url.includes('experiments/')) return url.split('https://js-agent.newrelic.com/experiments/')[1].split('/')[0]
   if (url.includes('-current')) return 'current'
   if (url.match(/\d+/)) return url.match(/\d+/)[0]
   return `${counter++}`
 }
 
 (async function () {
-  const filePaths = [
-    ...(env !== 'dev' ? [current] : []), // defaults to current build
-    next, // defaults to dev build
-    ...((env === 'dev' && await getOpenPrNums()) || []).map(num => `https://js-agent.newrelic.com/pr/PR-${num}/nr-loader-spa.min.js`)
-  ]
+  connectToS3(role, dry).then(async () => {
+    const filePaths = [
+      next, // defaults to dev build
+      ...(env !== 'dev' ? [current] : []), // defaults to current build
+      ...((env === 'dev' && await getOpenPrNums()) || []).map(num => `https://js-agent.newrelic.com/pr/PR-${num}/nr-loader-spa.min.js`),
+      ...((env === 'staging' && await getExperiments()) || []).map(s3ObjectName => `https://js-agent.newrelic.com/${s3ObjectName}`)
+    ]
 
-  Promise.all(filePaths.map(fp => getFile(fp))).then((contents) => {
-    contents = contents.filter(([url, res]) => res.statusCode === 200)
-    if (!contents.length) throw new Error('Contents are empty')
+    Promise.all(filePaths.map(fp => getFile(fp))).then(async (contents) => {
+      contents = contents.filter(([url, res]) => res.statusCode === 200)
+      if (!contents.length) throw new Error('Contents are empty')
 
-    console.log(`found ${contents.length} valid PR builds in CDN`)
-    let output = `window.NREUM=${JSON.stringify(config)};`
-    output += `
+      console.log(`found ${contents.length} valid PR builds in CDN`)
+      let output = `window.NREUM=${JSON.stringify(config)};`
+      output += `
       const ids = {};
     `
-    contents.forEach(([url, res, body]) => { output += wrapAgent(body, getIdFromUrl(url)) })
-    output += randomExecutor(contents.map(([url]) => getIdFromUrl(url)))
+      contents.forEach(([url, res, body]) => { output += wrapAgent(body, getIdFromUrl(url)) })
+      output += randomExecutor(contents.map(([url]) => getIdFromUrl(url)))
 
-    const filename = `internal/${env}.js`
+      const filename = `internal/${env}.js`
 
-    connectToS3(role, dry).then(async () => {
       const expires = new Date()
       expires.setMonth(expires.getMonth() + 1)
 
@@ -204,4 +206,9 @@ function getOpenPrNums () {
       resolve(prNums)
     })
   })
+}
+
+async function getExperiments () {
+  const objects = await getListOfObjects(bucket, 'experiments/')
+  return objects.filter(({ Key }) => Key.includes('nr-loader-spa.min.js')).map(({ Key }) => Key)
 }

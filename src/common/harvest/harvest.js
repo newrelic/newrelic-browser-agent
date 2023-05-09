@@ -118,6 +118,8 @@ export class Harvest extends SharedContext {
 
     // Get bytes harvested per endpoint as a supportability metric. See metrics aggregator (on unload).
     agentRuntime.bytesSent[endpoint] = (agentRuntime.bytesSent[endpoint] || 0) + body?.length || 0
+    // Get query bytes harvested per endpoint as a supportability metric. See metrics aggregator (on unload).
+    agentRuntime.queryBytesSent[endpoint] = (agentRuntime.queryBytesSent[endpoint] || 0) + fullUrl.split('?').slice(-1)[0]?.length || 0
 
     /* Since workers don't support sendBeacon right now, or Image(), they can only use XHR method.
         Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),

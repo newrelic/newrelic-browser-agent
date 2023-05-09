@@ -92,6 +92,11 @@ const jilArgs = yargs(process.argv.slice(2))
   .alias('P', 'polyfills')
   .describe('P', 'inject polyfills and polyfill loaders into test pages')
 
+  .boolean('A')
+  .default('A', false)
+  .alias('A', 'all-browsers')
+  .describe('A', 'Run tests against all browsers, even unsupported ones')
+
   .help('h')
   .alias('h', 'help').argv
 

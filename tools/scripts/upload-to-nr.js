@@ -11,7 +11,7 @@ var yargs = require('yargs')
 var argv = yargs
   .string('environments')
   .describe('environments', 'Comma-separated list of environments to upload loaders to')
-  .default('environments', 'dev,staging,production,eu')
+  .default('environments', 'staging,production,eu')
 
   .string('production-api-key')
   .describe('production-api-key', 'API key to use for talking to production RPM site to upload loaders')
@@ -134,12 +134,12 @@ async function run () {
     }
 
     var envOptions = {
-      dev: {
-        url: 'https://science-api-grape.staging-service.newrelic.com/v2/js_agent_loaders/create.json',
-        headers: {
-          'X-Api-Key': argv['staging-api-key']
-        }
-      },
+      // dev: {
+      //   url: 'https://science-api-grape.staging-service.newrelic.com/v2/js_agent_loaders/create.json',
+      //   headers: {
+      //     'X-Api-Key': argv['staging-api-key']
+      //   }
+      // },
       staging: {
         url: 'https://staging-api.newrelic.com/v2/js_agent_loaders/create.json',
         headers: {
@@ -183,7 +183,7 @@ async function run () {
    */
   async function loaderFilenames () {
     const loaderTypes = ['rum', 'full', 'spa']
-    const version = argv['v']
+    const version = argv.v
     const fuzzyVersions = getFuzzyVersions(version)
     const fileNames = loaderTypes.map(type => [
       `nr-loader-${type}-${version}.min.js`,

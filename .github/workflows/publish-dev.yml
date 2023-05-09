@@ -5,28 +5,42 @@ on:
     branches:
       - main
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   publish-to-s3:
     runs-on: ubuntu-latest
-    container: node:14
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
+      - name: Setup container
+        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: install
         run: npm ci
-      - name: sync versions
-        run: npm run sync:version
       - name: build
         run: npm run cdn:build:dev
+      - name: Running npm build
+        run: |
+          npm run build:npm
+          npm run tools:test-builds
+      - name: Generating npm build stats
+        run: node ./tools/scripts/npm-build-stats.js
       - name: upload artifacts to S3
         run: |
           node tools/scripts/upload-to-s3.js \
             --bucket ${{ secrets.AWS_BUCKET }} \
             --role ${{ secrets.AWS_ROLE_ARN }} \
-            --dev
+            --dir dev
       - name: purge fastly dev cache url
         run: |
           node ./tools/scripts/fastly.js \

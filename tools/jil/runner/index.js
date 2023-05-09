@@ -155,6 +155,10 @@ function loadBrowsersAndRunTests () {
     // test duration no longer than GC timeout
     desired.maxDuration = 3600 // 1 hour
 
+    // remove attributes that break jwt connection
+    delete desired.platformName
+    delete desired.browserVersion
+
     testDriver.addBrowser(connectionInfo, desired)
   }
 }

@@ -30,6 +30,10 @@ const config = yargs(hideBin(process.argv))
   .alias('i', 'input')
   .describe('i', 'Input file containing the comment contents.')
 
+  .string('r')
+  .alias('r', 'raw-text')
+  .describe('r', 'Raw text to be used for the comment contents. Takes precedent over "input" if passed.')
+
   .string('tag')
   .describe('tag', 'Tag to place in the comment to support updating of comment')
 
@@ -54,20 +58,22 @@ const config = yargs(hideBin(process.argv))
     }
   }
 
+  const body = config.rawText || await fs.readFile(config.input)
+
   if (comment) {
     await client.rest.issues.updateComment({
       owner: 'newrelic',
       repo: 'newrelic-browser-agent',
       issue_number: config.pullRequest,
       comment_id: comment.id,
-      body: (await fs.readFile(config.input)) + `\n${config.tag}`
+      body: body + `\n${config.tag}`
     })
   } else {
     await client.rest.issues.createComment({
       owner: 'newrelic',
       repo: 'newrelic-browser-agent',
       issue_number: config.pullRequest,
-      body: (await fs.readFile(config.input)) + `\n${config.tag}`
+      body: body + `\n${config.tag}`
     })
   }
 })()

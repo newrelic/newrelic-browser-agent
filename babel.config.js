@@ -1,11 +1,10 @@
 const process = require('process')
-const fs = require('fs')
 
 module.exports = function (api) {
   api.cache(true)
 
   if (!process.env.BUILD_VERSION) {
-    process.env.BUILD_VERSION = process.env.VERSION_OVERRIDE || fs.readFileSync('./VERSION', 'utf-8')?.trim()
+    process.env.BUILD_VERSION = process.env.VERSION_OVERRIDE || require('./package.json').version
   }
 
   const presets = [

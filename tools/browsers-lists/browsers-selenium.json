@@ -6,13 +6,6 @@
       "version": "latest"
     }
   ],
-  "edge": [
-    {
-      "browserName": "edge",
-      "platform": "linux",
-      "version": "latest"
-    }
-  ],
   "firefox": [
     {
       "browserName": "firefox",

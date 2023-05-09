@@ -98,7 +98,7 @@ export class TestHandleConnector {
     }
   }
 
-  /****** BAM Expect Shortcut Methods ******/
+  /* ***** BAM Expect Shortcut Methods ***** */
 
   expectRum (timeout) {
     return this.expect('bamServer', {

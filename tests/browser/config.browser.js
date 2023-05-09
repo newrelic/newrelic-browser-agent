@@ -10,25 +10,38 @@ import { setConfiguration, getConfigurationValue } from '../../src/common/config
 const { agentIdentifier } = setup()
 
 test('getConfiguration', function (t) {
-  t.test('returns value from NREUM.init using provided path', function (t) {
+  t.test('does not set value for property not in model', function (t) {
     setConfiguration(agentIdentifier, { a: 123 })
-    t.equal(getConfigurationValue(agentIdentifier, 'a'), 123)
+    t.equal(getConfigurationValue(agentIdentifier, 'a'), undefined)
 
     setConfiguration(agentIdentifier, { a: { b: 123 } })
-    t.equal(getConfigurationValue(agentIdentifier, 'a.b'), 123)
+    t.equal(getConfigurationValue(agentIdentifier, 'a.b'), undefined)
 
     setConfiguration(agentIdentifier, { a: { b: { c: 123 } } })
-    t.equal(getConfigurationValue(agentIdentifier, 'a.b.c'), 123)
+    t.equal(getConfigurationValue(agentIdentifier, 'a.b.c'), undefined)
+
+    t.end()
+  })
+
+  t.test('returns value from NREUM.init using provided path', function (t) {
+    setConfiguration(agentIdentifier, { ajax: 123 })
+    t.equal(getConfigurationValue(agentIdentifier, 'ajax'), 123)
+
+    setConfiguration(agentIdentifier, { ajax: { a: true } })
+    t.equal(getConfigurationValue(agentIdentifier, 'ajax.a'), true)
+
+    setConfiguration(agentIdentifier, { ajax: { a: { b: 123 } } })
+    t.equal(getConfigurationValue(agentIdentifier, 'ajax.a.b'), 123)
 
     t.end()
   })
 
   t.test('returns undefined when path does not match', function (t) {
-    setConfiguration(agentIdentifier, { a: 123 })
+    setConfiguration(agentIdentifier, { ajax: 123 })
     t.equal(getConfigurationValue(agentIdentifier, 'b', 456), undefined)
 
-    setConfiguration(agentIdentifier, { a: { b: 123 } })
-    t.equal(getConfigurationValue(agentIdentifier, 'a.c', 456), undefined)
+    setConfiguration(agentIdentifier, { ajax: { b: 123 } })
+    t.equal(getConfigurationValue(agentIdentifier, 'ajax.c', 456), undefined)
 
     t.end()
   })

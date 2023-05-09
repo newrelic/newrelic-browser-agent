@@ -21,8 +21,6 @@ jobs:
         run: npm ci
       - name: build:prod
         run: npm run cdn:build:prod
-      - name: check files don't exist already
-        run: node tools/scripts/check-version.js -e no
       - name: upload artifacts to S3
         run: |
           node tools/scripts/upload-to-s3.js \

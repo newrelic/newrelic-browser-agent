@@ -6,8 +6,6 @@ export class Timer {
     this.onEnd = opts.onEnd
     this.initialMs = ms
     this.startTimestamp = Date.now()
-    // used by pause/resume
-    this.remainingMs = undefined
 
     this.timer = this.create(this.onEnd, ms)
   }
@@ -15,17 +13,6 @@ export class Timer {
   create (cb, ms) {
     if (this.timer) this.clear()
     return setTimeout(() => cb ? cb() : this.onEnd(), ms || this.initialMs)
-  }
-
-  pause () {
-    clearTimeout(this.timer)
-    this.remainingMs = this.initialMs - (Date.now() - this.startTimestamp)
-  }
-
-  resume () {
-    if (!this.remainingMs || !this.isValid()) return
-    this.timer = this.create(this.cb, this.remainingMs)
-    this.remainingMs = undefined
   }
 
   clear () {

@@ -3,6 +3,42 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.232.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.231.0...v1.232.0) (2023-05-08)
+
+
+### Features
+
+* Add internal session metrics ([bcfe6ff](https://github.com/newrelic/newrelic-browser-agent/commit/bcfe6ffff9d0be583bbd9d5d6ef78265aaa753cb))
+* Add new stateful Session Manager - NEWRELIC-7986 ([#464](https://github.com/newrelic/newrelic-browser-agent/issues/464)) ([32e1061](https://github.com/newrelic/newrelic-browser-agent/commit/32e1061646d89d6270f027acd5e35bc089323bda))
+* Add query parameter supportability metrics ([#518](https://github.com/newrelic/newrelic-browser-agent/issues/518)) ([88c2d83](https://github.com/newrelic/newrelic-browser-agent/commit/88c2d83609c2b11aad81d4480fce25b007c4b4fa))
+* Allow custom error grouping ([f95630d](https://github.com/newrelic/newrelic-browser-agent/commit/f95630dfbbb7234950fc37216c059218237eeb11))
+
+## v1.231.0
+
+### Omit CLS scores before web-vitals report them
+Initial snapshots of CLS reported as 0s attached to timing metrics will be omitted, so as to "de-noise" the aggregate CLS dataset. This also temporarily addresses an edge case of long loading pages potentially sending a "final" CLS value of 0, inaccurately. The case of a final 0 CLS when a user only navigates away from the page has also been fixed.
+
+### Fix accepted argument type for `all` and `race` methods of `Promise`
+The wrapped Promise's static `all` and `race` methods now work with iterators per native implementation, rather than only arrays.
+
+### Upgrade Navigation Timing API in `PageView` (RUM) call
+The performance entry data sent for `PageView` now uses the Navigation Timing Level 2 API over the deprecated Level 1 API.
+
+### Fix typo in top-level API causing exception
+An an uncaught reference exception was occurring on pages with more than one initialized agent due to a typo in the name of a variable (`returnsVals`).
+
+### Add null entry checks to certain web-vitals handlers
+For LCP and FID, we will exclude the performance entry info when there are no entries given by web-vitals. This had thrown exceptions.
+
+### Remove previously added console logging measurements
+This reverses performance impacts and exceptions introduced in the prior release by serializing console API arguments.
+
+### Rectify version reported by NPM agent implementations
+Agents installed via the NPM method will report the correct semantic version in data harvests.
+
+### Fix exception when importing NPM package source code
+An error was occurring related to a missing environment variable when importing from the NPM package source directly (versus via the CJS/ESM packages).
+
 ## v1.230.0
 
 ### Add persistence for custom attributes

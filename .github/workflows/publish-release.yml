@@ -6,35 +6,6 @@ on:
     types: [published]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
-    defaults:
-      run:
-        shell: bash
-
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: Release${{ github.event.number }}-${{ github.run_number }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    steps:
-      - name: Setup Container
-        run: apt update && apt install -y git
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: lts/*
-      - name: install
-        run: npm ci
-      - name: build:all
-        run: npm run build:all
-      - name: run tests
-        run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=10
   publish-to-s3:
     runs-on: ubuntu-latest
     container:
@@ -42,7 +13,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    needs: [test]
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -60,12 +30,8 @@ jobs:
           node-version: lts/*
       - name: install
         run: npm ci
-      - name: sync versions
-        run: npm run sync:version
       - name: build:prod
         run: npm run cdn:build:prod
-      - name: check files don't exist already
-        run: node tools/scripts/check-version.js -e no
       - name: upload artifacts to S3
         run: |
           node tools/scripts/upload-to-s3.js \
@@ -86,24 +52,19 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Setup Container
-        run: apt update && apt install -y git
+        run: apt update && apt install -y git jq
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
       - name: install
         run: npm ci
-      - name: sync versions
-        run: npm run sync:version
-      - name: get version
-        id: build_versions
-        run: node tools/scripts/get-build-versions.js
       - name: re-publish internal loader (prod)
         run: |
           node ./tools/scripts/upload-ab-to-s3.js \
             --env prod \
             --current https://js-agent.newrelic.com/nr-loader-spa-current.min.js \
-            --next https://js-agent.newrelic.com/nr-loader-spa-${{steps.build_versions.outputs.CDN_VERSION}}.min.js \
+            --next https://js-agent.newrelic.com/nr-loader-spa-$(cat package.json | jq -r '.version').min.js \
             --appId ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \
@@ -115,7 +76,7 @@ jobs:
           node ./tools/scripts/upload-ab-to-s3.js \
             --env eu-prod \
             --current https://js-agent.newrelic.com/nr-loader-spa-current.min.js \
-            --next https://js-agent.newrelic.com/nr-loader-spa-${{steps.build_versions.outputs.CDN_VERSION}}.min.js \
+            --next https://js-agent.newrelic.com/nr-loader-spa-$(cat package.json | jq -r '.version').min.js \
             --appId ${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }} \
             --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
             --bucket ${{ secrets.AWS_BUCKET }} \
@@ -152,28 +113,23 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Setup Container
-        run: apt update && apt install -y git
+        run: apt update && apt install -y git jq
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
       - name: install
         run: npm ci
-      - name: sync versions
-        run: npm run sync:version
-      - name: get version
-        id: build_versions
-        run: node tools/scripts/get-build-versions.js
       - name: upload artifacts to NR
         run: |
           node tools/scripts/upload-to-nr.js \
             --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
             --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
             --eu-api-key=${{ secrets.NR_API_KEY_EU }} \
-            --v=${{steps.build_versions.outputs.CDN_VERSION}}
+            --v=$(cat package.json | jq -r '.version')
       - name: validate file
         run: |
-          node tools/scripts/check-nrdb.js -v ${{steps.build_versions.outputs.CDN_VERSION}}
+          node tools/scripts/check-nrdb.js -v $(cat package.json | jq -r '.version')
   raise-release-notes-pr:
     runs-on: ubuntu-latest
     container:
@@ -187,7 +143,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
     steps:
       - name: Setup Container
-        run: apt update && apt install -y git
+        run: apt update && apt install -y git jq
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
@@ -196,15 +152,10 @@ jobs:
           node-version: lts/*
       - name: install
         run: npm ci
-      - name: sync versions
-        run: npm run sync:version
-      - name: get version
-        id: build_versions
-        run: node tools/scripts/get-build-versions.js
       - name: Build and raise PR to docs-website
         run: |
-          node tools/scripts/docs-website/create-docs-pr.js \
-            -t=${{steps.build_versions.outputs.CDN_VERSION}}
+          node tools/scripts/docs-website/create-docs-pr.mjs \
+            -t=$(cat package.json | jq -r '.version')
   publish-current-to-s3:
     runs-on: ubuntu-latest
     container:
@@ -225,8 +176,6 @@ jobs:
           node-version: lts/*
       - name: install
         run: npm ci
-      - name: sync versions
-        run: npm run sync:version
       - name: build
         run: npm run cdn:build:current
       - name: upload artifacts to S3
@@ -260,8 +209,6 @@ jobs:
           npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
       - name: install
         run: npm ci
-      - name: force versions to sync
-        run: npm run sync:version
       - name: build:npm
         run: npm run build:npm
       - name: publish

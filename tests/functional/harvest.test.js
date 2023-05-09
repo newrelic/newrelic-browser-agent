@@ -138,7 +138,7 @@ testDriver.test('cookie disabled: query string attributes', notSafariWithSeleniu
     return Promise.all([router.expectRum(), browser.refresh()])
   }).then(([{ request: { query } }]) => {
     t.equal(query.ck, '0', "The cookie flag ('ck') should equal 0.")
-    t.ok(!!query.s && query.s !== sId, 'the session id attr "s" exists but does not match the previous id')
+    t.equal(query.s, '0', 'the session id attr "s" should equal 0 when disabled')
     t.end()
   }).catch(fail(t, FAIL_MSG))
 })

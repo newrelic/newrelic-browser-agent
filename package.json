@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "0.1.230",
+  "version": "1.232.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "Tests for the New Relic JavaScript agent",
@@ -108,6 +108,7 @@
     "cdn:build:current": "npm run cdn:fresh-build && PUBLISH=CURRENT npm run cdn:webpack && npm run cdn:cleanup",
     "cdn:build:nr": "npm run cdn:fresh-build && PUBLISH=PROD SOURCEMAPS=false npm run cdn:webpack && npm run cdn:cleanup",
     "cdn:build:pr": "npm run cdn:fresh-build && PUBLISH=PR npm run cdn:webpack && npm run cdn:cleanup",
+    "cdn:build:experiment": "npm run cdn:fresh-build && PUBLISH=EXPERIMENT npm run cdn:webpack && npm run cdn:cleanup",
     "cdn:cleanup": "node ./tools/scripts/post-build-cleanup",
     "cdn:clone": "node ./tools/scripts/clone",
     "cdn:fresh-build": "rm -rf ./build",
@@ -117,15 +118,14 @@
     "packages:bundle": "webpack -c tools/jil/webpack.modular.js",
     "test-server": "node ./tools/jil/bin/server",
     "sauce:connect": "node ./tools/wdio/bin/sauce",
-    "sauce:get-browsers": "node ./tools/scripts/sauce-browsers",
+    "sauce:get-browsers": "node ./tools/browsers-lists/sauce-browsers.mjs",
     "tools:test-builds": "npm --prefix ./tools/test-builds run build-all",
     "third-party-updates": "oss third-party manifest --includeOptDeps && oss third-party notices --includeOptDeps",
     "prepare": "husky install",
     "npm:build:esm": "npx babel --env-name npm-esm --out-dir dist/esm --out-file-extension .js ./src",
     "npm:build:cjs": "npx babel --env-name npm-cjs --out-dir dist/cjs --out-file-extension .js ./src",
     "npm:build:types": "npx tsc -b",
-    "npm:pack": "mkdir -p temp && export PKG_NAME=$(npm pack --pack-destination temp) && echo ./temp/$PKG_NAME",
-    "sync:version": "node tools/scripts/sync-version.js"
+    "npm:pack": "mkdir -p temp && export PKG_NAME=$(npm pack --pack-destination temp) && echo ./temp/$PKG_NAME"
   },
   "config": {
     "unsafe-perm": true
@@ -184,6 +184,7 @@
     "fs-extra": "^11.1.0",
     "function-bind": "^1.1.1",
     "glob": "^7.0.5",
+    "gzip-size": "^7.0.0",
     "html-webpack-plugin": "^5.5.0",
     "husky": "^8.0.0",
     "jest": "^28.1.1",

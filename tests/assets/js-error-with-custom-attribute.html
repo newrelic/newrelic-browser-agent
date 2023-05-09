@@ -13,7 +13,7 @@
       var i = 0
       function triggerError() {
         newrelic.setCustomAttribute('customParamKey', i++)
-        newrelic.noticeError(new Error("My error"))
+        newrelic.noticeError(new Error("My error-" + i))
       }
     </script>
 

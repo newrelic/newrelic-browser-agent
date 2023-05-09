@@ -18,12 +18,12 @@ import { getInfo, getConfigurationValue, getRuntime } from '../../../common/conf
 import { now } from '../../../common/timing/now'
 import { globalScope } from '../../../common/util/global-scope'
 
-import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { FeatureBase } from '../../utils/feature-base'
 
-export class Aggregate extends AggregateBase {
+export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
@@ -222,6 +222,7 @@ export class Aggregate extends AggregateBase {
 
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
+    var att = getInfo(this.agentIdentifier).jsAttributes
     if (params._interactionId != null) {
       // hold on to the error until the interaction finishes
       this.errorCache[params._interactionId] = this.errorCache[params._interactionId] || []
@@ -229,7 +230,6 @@ export class Aggregate extends AggregateBase {
     } else {
       // store custom attributes
       var customParams = {}
-      var att = getInfo(this.agentIdentifier).jsAttributes
       mapOwn(att, setCustom)
       if (customAttributes) {
         mapOwn(customAttributes, setCustom)

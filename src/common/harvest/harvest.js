@@ -64,6 +64,7 @@ export class Harvest extends SharedContext {
  * @param {object} opts
  * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
  * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
+ * @param {bool} opts.sendEmptyBody - Specify whether the call should be made even if the body is empty. Useful for rum calls.
  */
   send (endpoint, singlePayload, opts, submitMethod, cbFinished) {
     var makeBody = createAccumulator()
@@ -88,7 +89,7 @@ export class Harvest extends SharedContext {
 
     var agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
 
-    if (!payload.body && !payload.qs) { // no payload body? nothing to send, just run onfinish stuff and return
+    if (!payload.body && ((opts && !opts.sendEmptyBody) || !opts)) { // no payload body? nothing to send, just run onfinish stuff and return
       if (cbFinished) {
         cbFinished({ sent: false })
       }
@@ -129,7 +130,7 @@ export class Harvest extends SharedContext {
     if (cbFinished && method === submitData.xhr) {
       var xhr = result
       xhr.addEventListener('load', function () {
-        var result = { sent: true }
+        var result = { sent: true, status: this.status }
         if (this.status === 429) {
           result.retry = true
           result.delay = this.tooManyRequestsDelay

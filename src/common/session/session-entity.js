@@ -17,7 +17,7 @@ const model = {
   value: '',
   inactiveAt: 0,
   expiresAt: 0,
-  updatedAt: 0,
+  updatedAt: Date.now(),
   sessionReplayActive: false,
   sessionTraceActive: false,
   custom: {}
@@ -39,12 +39,17 @@ export class SessionEntity {
     if (!isBrowserScope) this.storage = new LocalMemory()
     else this.storage = storageAPI
 
+    this.sync(model)
+
     this.agentIdentifier = agentIdentifier
 
     // key is intended to act as the k=v pair
     this.key = key
     // value is intended to act as the primary value of the k=v pair
     this.value = value
+
+    this.expiresMs = expiresMs
+    this.inactiveMs = inactiveMs
 
     this.ee = ee.get(agentIdentifier)
 
@@ -60,13 +65,13 @@ export class SessionEntity {
 
     // the set-up of the timer used to expire the session "naturally" at a certain time
     // this gets ignored if the value is falsy, allowing for session entities that do not expire
-    this.expiresMs = expiresMs
     if (expiresMs) {
       this.expiresAt = initialRead?.expiresAt || this.getFutureTimestamp(expiresMs)
       this.expiresTimer = new Timer({
         // When the inactive timer ends, collect a SM and reset the session
         onEnd: () => {
-          this.collectSM('expired')
+          this.collectSM('expired', this)
+          this.collectSM('duration', this)
           this.reset()
         }
       }, this.expiresAt - Date.now())
@@ -77,19 +82,19 @@ export class SessionEntity {
     // the set-up of the timer used to expire the session due to "inactivity" at a certain time
     // this gets ignored if the value is falsy, allowing for session entities that do not expire
     // this gets "refreshed" when "activity" is observed
-    this.inactiveMs = inactiveMs
     if (inactiveMs) {
       this.inactiveAt = initialRead?.inactiveAt || this.getFutureTimestamp(inactiveMs)
       this.inactiveTimer = new InteractionTimer({
         // When the inactive timer ends, collect a SM and reset the session
         onEnd: () => {
-          this.collectSM('inactive')
+          this.collectSM('inactive', this)
+          this.collectSM('duration', this)
           this.reset()
         },
         // When the inactive timer refreshes, it will update the storage values with an update timestamp
         onRefresh: this.refresh.bind(this),
         // When the inactive timer pauses, update the storage values with an update timestamp
-        onPause: () => this.write(new Configurable(this, model)),
+        onPause: () => this.write(new Configurable(this.read(), model)),
         ee: this.ee,
         refreshEvents: ['click', 'keydown', 'scroll']
       }, this.inactiveAt - Date.now())
@@ -130,13 +135,15 @@ export class SessionEntity {
       if (this.isInvalid(obj)) return {}
       // if the session expires, collect a SM count before resetting
       if (this.isExpired(obj.expiresAt)) {
-        this.collectSM('expired')
+        this.collectSM('expired', this)
+        this.collectSM('duration', obj, true)
         return this.reset()
       }
       // if "inactive" timer is expired at "read" time -- esp. initial read -- reset
       // collect a SM count before resetting
       if (this.isExpired(obj.inactiveAt)) {
-        this.collectSM('inactive')
+        this.collectSM('inactive', this)
+        this.collectSM('duration', obj, true)
         return this.reset()
       }
 
@@ -177,8 +184,6 @@ export class SessionEntity {
     // * stop recording (stn and sr)...
     // * delete the session and start over
     try {
-      // when resetting, we can measure the duration of the session as a SM
-      this.collectSM('duration')
       if (this.initialized) this.ee.emit('session-reset')
 
       this.storage.remove(this.lookupKey)
@@ -227,11 +232,12 @@ export class SessionEntity {
     return !requiredKeys.every(x => Object.keys(data).includes(x))
   }
 
-  collectSM (type) {
+  collectSM (type, data, useUpdatedAt) {
     let value, tag
     if (type === 'duration') {
-      const startingTimestamp = this.expiresAt - this.expiresMs
-      value = Date.now() - startingTimestamp
+      const startingTimestamp = data.expiresAt - data.expiresMs
+      const endingTimestamp = useUpdatedAt ? data.updatedAt : Date.now()
+      value = endingTimestamp - startingTimestamp
       tag = 'Session/Duration/Ms'
     }
     if (type === 'expired') tag = 'Session/Expired/Seen'

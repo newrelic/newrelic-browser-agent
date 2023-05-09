@@ -123,7 +123,6 @@ export class Aggregate extends FeatureBase {
         activateFeatures(JSON.parse(responseText), this.agentIdentifier)
         drain(this.agentIdentifier, this.featureName)
       } catch (err) {
-        handle('ierr', [err, performance.now(), true], undefined, this.featureName, this.ee)
         warn('RUM call failed. Agent shutting down.', err)
       }
     })

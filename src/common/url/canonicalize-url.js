@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { globalScope } from '../util/global-scope'
+import { initialLocation } from '../util/global-scope'
 import { cleanURL } from './clean-url'
 
 /**
@@ -17,7 +17,7 @@ export function canonicalizeUrl (url) {
   if (typeof url !== 'string') return ''
 
   const cleanedUrl = cleanURL(url)
-  const cleanedGlobalScopeUrl = cleanURL('' + globalScope.location)
+  const cleanedGlobalScopeUrl = cleanURL(initialLocation)
 
   // If the URL matches the origin URL of the loader, we assume it originated with an inline script.
   if (cleanedUrl === cleanedGlobalScopeUrl) {

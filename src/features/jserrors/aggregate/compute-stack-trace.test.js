@@ -1,14 +1,16 @@
 import { faker } from '@faker-js/faker'
 import { browserErrorUtils } from '../../../../tools/testing-utils'
-import { computeStackTrace } from './compute-stack-trace'
 
 const globalScopeLocation = 'https://example.com/'
 
-beforeEach(() => {
-  jest.spyOn(window, 'location', 'get').mockReturnValue(globalScopeLocation)
-})
+const mockGlobalScopeLocation = (url) => {
+  jest.doMock('../../../common/util/global-scope', () => ({
+    initialLocation: url || globalScopeLocation
+  }))
+}
 
 afterEach(() => {
+  jest.resetModules()
   jest.clearAllMocks()
 })
 
@@ -24,7 +26,9 @@ const baseMockError = {
     '    at onload (' + globalScopeLocation + 'js/script.js?loader=spa:70:5)'
 }
 
-test('parsing should return a failure for a null error object', () => {
+test('parsing should return a failure for a null error object', async () => {
+  mockGlobalScopeLocation()
+  const { computeStackTrace } = await import('./compute-stack-trace')
   const result = computeStackTrace(null)
 
   expect(result).toEqual(expect.objectContaining({
@@ -35,11 +39,13 @@ test('parsing should return a failure for a null error object', () => {
 })
 
 describe('errors with stack property', () => {
-  test('should show <inline> for same-page stack string URLs but not sub-paths', () => {
+  test('should show <inline> for same-page stack string URLs but not sub-paths', async () => {
     const mockError = browserErrorUtils.constructError({
       ...baseMockError
     })
 
+    mockGlobalScopeLocation()
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({
@@ -51,13 +57,15 @@ describe('errors with stack property', () => {
     }))
   })
 
-  test('parsed name should be unknown when name and constructor are missing', () => {
+  test('parsed name should be unknown when name and constructor are missing', async () => {
     const mockError = browserErrorUtils.constructError({
       ...baseMockError,
       name: null,
       constructor: null
     })
 
+    mockGlobalScopeLocation()
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({
@@ -66,12 +74,14 @@ describe('errors with stack property', () => {
     }))
   })
 
-  test('parsed stack should not contain nrWrapper', () => {
+  test('parsed stack should not contain nrWrapper', async () => {
     const alteredError = baseMockError
     alteredError.stack +=
       '\n    at nrWrapper (' + globalScopeLocation + '?loader=spa:60:17)'
     const mockError = browserErrorUtils.constructError(alteredError)
 
+    mockGlobalScopeLocation()
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({
@@ -85,7 +95,7 @@ describe('errors with stack property', () => {
     }))
   })
 
-  test('stack should still parse when column numbers are missing', () => {
+  test('stack should still parse when column numbers are missing', async () => {
     const mockError = browserErrorUtils.constructError({
       ...baseMockError,
       stack:
@@ -96,6 +106,8 @@ describe('errors with stack property', () => {
       '    at onload (' + globalScopeLocation + '?loader=spa:57)'
     })
 
+    mockGlobalScopeLocation()
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({
@@ -124,13 +136,15 @@ describe('errors with stack property', () => {
     }))
   })
 
-  test('parser can handle chrome eval stack', () => {
+  test('parser can handle chrome eval stack', async () => {
     const mockError = browserErrorUtils.constructError({
       ...baseMockError,
       stack:
         '    at foobar (eval at foobar (' + globalScopeLocation + '))'
     })
 
+    mockGlobalScopeLocation()
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({
@@ -145,7 +159,7 @@ describe('errors with stack property', () => {
     }))
   })
 
-  test('parser can handle ie eval stack', () => {
+  test('parser can handle ie eval stack', async () => {
     const mockError = browserErrorUtils.constructError({
       toString: 'TypeError: Permission denied',
       name: 'TypeError',
@@ -155,6 +169,8 @@ describe('errors with stack property', () => {
         '    at Function code (Function code:23:23)'
     })
 
+    mockGlobalScopeLocation()
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({
@@ -169,13 +185,15 @@ describe('errors with stack property', () => {
     }))
   })
 
-  test('parser can handle stack with anonymous function', () => {
+  test('parser can handle stack with anonymous function', async () => {
     const mockError = browserErrorUtils.constructError({
       ...baseMockError,
       stack:
         'anonymous'
     })
 
+    mockGlobalScopeLocation()
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({
@@ -195,7 +213,7 @@ describe('errors without stack property and with line property', () => {
   /**
    * @deprecated sourceURL is no longer present in errors for any browsers we support
    */
-  test('parsed stack should contain sourceURL and line number', () => {
+  test('parsed stack should contain sourceURL and line number', async () => {
     const sourceURL = faker.internet.url()
     const mockError = browserErrorUtils.constructError({
       ...baseMockError,
@@ -204,6 +222,8 @@ describe('errors without stack property and with line property', () => {
       sourceURL
     })
 
+    mockGlobalScopeLocation()
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({
@@ -222,7 +242,7 @@ describe('errors without stack property and with line property', () => {
   /**
    * @deprecated sourceURL is no longer present in errors for any browsers we support
    */
-  test('parsed stack should contain sourceURL, line number, and column number', () => {
+  test('parsed stack should contain sourceURL, line number, and column number', async () => {
     const sourceURL = faker.internet.url()
     const mockError = browserErrorUtils.constructError({
       ...baseMockError,
@@ -232,6 +252,8 @@ describe('errors without stack property and with line property', () => {
       sourceURL
     })
 
+    mockGlobalScopeLocation()
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({
@@ -248,7 +270,7 @@ describe('errors without stack property and with line property', () => {
     }))
   })
 
-  test('parsed stack should contain "evaluated code" if sourceURL property is not present', () => {
+  test('parsed stack should contain "evaluated code" if sourceURL property is not present', async () => {
     const mockError = browserErrorUtils.constructError({
       ...baseMockError,
       line: 100,
@@ -256,6 +278,8 @@ describe('errors without stack property and with line property', () => {
       stack: undefined
     })
 
+    mockGlobalScopeLocation()
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({
@@ -273,9 +297,8 @@ describe('errors without stack property and with line property', () => {
   /**
    * @deprecated sourceURL is no longer present in errors for any browsers we support
    */
-  test('should show <inline> for same-page URLs', () => {
+  test('should show <inline> for same-page URLs', async () => {
     const pageLocation = faker.internet.url()
-    jest.spyOn(window, 'location', 'get').mockReturnValue(pageLocation)
     const sourceURL = pageLocation + '?abc=123'
     const mockError = browserErrorUtils.constructError({
       ...baseMockError,
@@ -285,6 +308,8 @@ describe('errors without stack property and with line property', () => {
       sourceURL: sourceURL
     })
 
+    mockGlobalScopeLocation(pageLocation)
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({
@@ -298,9 +323,8 @@ describe('errors without stack property and with line property', () => {
   /**
    * @deprecated sourceURL is no longer present in errors for any browsers we support
    */
-  test('should NOT show <inline> for same-domain URLs with a sub-path', () => {
+  test('should NOT show <inline> for same-domain URLs with a sub-path', async () => {
     const pageLocation = faker.internet.url()
-    jest.spyOn(window, 'location', 'get').mockReturnValue(pageLocation)
     const sourceURL = pageLocation + '/path/to/script.js'
     const mockError = browserErrorUtils.constructError({
       ...baseMockError,
@@ -310,6 +334,8 @@ describe('errors without stack property and with line property', () => {
       sourceURL
     })
 
+    mockGlobalScopeLocation(pageLocation)
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({
@@ -328,12 +354,14 @@ describe('errors without stack property and with line property', () => {
  * error, including primitives.
  */
 describe('errors that are messages only or primitives', () => {
-  test('parser should get error name from constructor', () => {
+  test('parser should get error name from constructor', async () => {
     const mockError = browserErrorUtils.constructError({
       toString: '0',
       constructor: 'function Number() { [native code] }'
     })
 
+    mockGlobalScopeLocation()
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({
@@ -344,13 +372,15 @@ describe('errors that are messages only or primitives', () => {
     }))
   })
 
-  test('parser should get error name from name property', () => {
+  test('parser should get error name from name property', async () => {
     const mockError = browserErrorUtils.constructError({
       toString: '0',
       name: faker.datatype.uuid(),
       constructor: 'function Number() { [native code] }'
     })
 
+    mockGlobalScopeLocation()
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({
@@ -361,7 +391,7 @@ describe('errors that are messages only or primitives', () => {
     }))
   })
 
-  test('parser should include the message property', () => {
+  test('parser should include the message property', async () => {
     const mockError = browserErrorUtils.constructError({
       toString: '0',
       name: faker.datatype.uuid(),
@@ -369,6 +399,8 @@ describe('errors that are messages only or primitives', () => {
       constructor: 'function Number() { [native code] }'
     })
 
+    mockGlobalScopeLocation()
+    const { computeStackTrace } = await import('./compute-stack-trace')
     const result = computeStackTrace(mockError)
 
     expect(result).toEqual(expect.objectContaining({

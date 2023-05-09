@@ -4,7 +4,6 @@
  */
 
 import { canonicalFunctionName } from './canonical-function-name'
-import { cleanURL } from '../../../common/url/clean-url'
 import { computeStackTrace } from './compute-stack-trace'
 import { stringHashCode } from './string-hash-code'
 import { truncateSize } from './format-stack-trace'
@@ -37,9 +36,6 @@ export class Aggregate extends FeatureBase {
     this.errorCache = {}
     this.currentBody
     this.errorOnPage = false
-
-    // Currently, loader.origin might contain a URL fragment, but we don't want to use it for comparing with frame URLs.
-    this.cleanedLoaderOrigin = cleanURL(getRuntime(this.agentIdentifier).origin)
 
     // this will need to change to match whatever ee we use in the instrument
     this.ee.on('interactionSaved', (interaction) => this.onInteractionSaved(interaction))
@@ -151,7 +147,7 @@ export class Aggregate extends FeatureBase {
       // Again as with previous usage, all falsey values would include the error.
     }
 
-    var stackInfo = computeStackTrace(err, this.cleanedLoaderOrigin)
+    var stackInfo = computeStackTrace(err)
     var canonicalStackString = this.buildCanonicalStackString(stackInfo)
 
     const params = {

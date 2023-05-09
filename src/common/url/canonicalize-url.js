@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { globalScope } from '../util/global-scope'
 import { cleanURL } from './clean-url'
 
 /**
@@ -12,13 +13,14 @@ import { cleanURL } from './clean-url'
  * @param {string} loaderOriginUrl - The origin URL of the agent loader, used for inline detection.
  * @returns {string} The canonicalized URL, or '<inline>' if the URL matches the loader origin URL.
  */
-export function canonicalizeUrl (url, loaderOriginUrl) {
+export function canonicalizeUrl (url) {
   if (typeof url !== 'string') return ''
 
-  var cleanedUrl = cleanURL(url)
+  const cleanedUrl = cleanURL(url)
+  const cleanedGlobalScopeUrl = cleanURL(globalScope.location)
 
   // If the URL matches the origin URL of the loader, we assume it originated with an inline script.
-  if (cleanedUrl === loaderOriginUrl) {
+  if (cleanedUrl === cleanedGlobalScopeUrl) {
     return '<inline>'
   } else {
     return cleanedUrl

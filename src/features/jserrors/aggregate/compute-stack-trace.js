@@ -80,20 +80,12 @@ var ie_eval = /^\s*at Function code \(Function code:\d+:\d+\)\s*/i
  */
 
 /**
- * Used for comparison to decide if a stack trace URL is inline.
- */
-var _loaderOriginUrl
-
-/**
  * Attempts to compute a stack trace for the given exception.
  * @param {Error} ex - The exception for which to compute the stack trace.
- * @param {string} loaderOriginUrl - The origin URL of the agent loader, for identifying inline scripts.
  * @returns {StackInfo} A stack trace object containing information about the frames on the stack.
  */
-export function computeStackTrace (ex, loaderOriginUrl) {
+export function computeStackTrace (ex) {
   var stack = null
-
-  _loaderOriginUrl = loaderOriginUrl
 
   try {
     stack = computeStackTraceFromStackProp(ex)
@@ -182,8 +174,8 @@ function parseStackProp (info, line) {
   // Once we've seen a wrapper, ingore all subsequent stack entries.
   if (isNrWrapper(element.func)) info.wrapperSeen = true
   if (!info.wrapperSeen) {
-    // Any stack elements URLs matching the loader's origin URL should be replaced with <inline>.
-    let canonicalUrl = canonicalizeUrl(element.url, _loaderOriginUrl)
+    // Query strings and fragments should be removed, and URLs matching the loader's origin should be "<inline>".
+    let canonicalUrl = canonicalizeUrl(element.url)
     if (canonicalUrl !== element.url) {
       line = line.replace(element.url, canonicalUrl)
       element.url = canonicalUrl
@@ -249,7 +241,7 @@ function computeStackTraceBySourceAndLine (ex) {
   }
 
   // Remove any query string and fragment
-  var canonicalUrl = canonicalizeUrl(ex.sourceURL, _loaderOriginUrl)
+  var canonicalUrl = canonicalizeUrl(ex.sourceURL)
 
   var stackString = className + ': ' + ex.message + '\n    at ' + canonicalUrl
   if (ex.line) {

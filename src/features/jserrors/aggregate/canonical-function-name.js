@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var canonicalFunctionNameRe = /([a-z0-9]+)$/i
+const canonicalFunctionNameRe = /([a-z0-9]+)$/i
 
 /**
  * Given a function name string, extracts only an alphanumeric segment at the end of the string (if one exists).
@@ -15,7 +15,7 @@ var canonicalFunctionNameRe = /([a-z0-9]+)$/i
 export function canonicalFunctionName (functionNameString) {
   if (!functionNameString) return
 
-  var match = functionNameString.match(canonicalFunctionNameRe)
+  const match = functionNameString.match(canonicalFunctionNameRe)
   if (match) return match[1]
 
   return

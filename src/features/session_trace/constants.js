@@ -1,4 +1,3 @@
-import { originals } from '../../common/config/config'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const FEATURE_NAME = FEATURE_NAMES.sessionTrace
@@ -11,5 +10,3 @@ export const FN_START = 'fn' + START
 export const FN_END = 'fn' + END
 export const BST_TIMER = 'bstTimer'
 export const PUSH_STATE = 'pushState'
-export const ORIG_EVENT = originals.EV
-export const ADD_EVENT_LISTENER = 'addEventListener'

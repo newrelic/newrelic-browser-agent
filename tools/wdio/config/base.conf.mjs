@@ -18,7 +18,18 @@ export default function config () {
     maxInstances: jilArgs.concurrency || 1,
     maxInstancesPerCapability: 100,
     capabilities: [],
-    logLevel: jilArgs.verbose ? 'debug' : jilArgs.silent ? 'silent' : 'error',
+    logLevel: (() => {
+      if (jilArgs.verbose) {
+        return 'debug'
+      }
+      if (jilArgs.logRequests || jilArgs.debugShim) {
+        return 'info'
+      }
+      if (jilArgs.silent) {
+        return 'silent'
+      }
+      return 'error'
+    })(),
     waitforTimeout: 10000,
     connectionRetryTimeout: 120000,
     connectionRetryCount: 3,

@@ -883,6 +883,13 @@
       "platform": "Windows 11",
       "version": "112",
       "browserVersion": "112"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "113",
+      "browserVersion": "113"
     }
   ],
   "firefox": [
@@ -1620,6 +1627,13 @@
       "platform": "Windows 10",
       "version": "112",
       "browserVersion": "112"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "113",
+      "browserVersion": "113"
     }
   ],
   "safari": [
@@ -1822,6 +1836,19 @@
       "device": "Pixel6ProGoogleAPI",
       "appium:deviceName": "Google Pixel 6 Pro GoogleAPI Emulator",
       "appium:platformVersion": "12.0",
+      "appium:automationName": "UiAutomator2",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      }
+    },
+    {
+      "browserName": "Chrome",
+      "platformName": "Android",
+      "platform": "Android",
+      "version": "13.0",
+      "device": "Pixel6ProGoogleAPI",
+      "appium:deviceName": "Google Pixel 6 Pro GoogleAPI Emulator",
+      "appium:platformVersion": "13.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
         "appiumVersion": "1.22.3"

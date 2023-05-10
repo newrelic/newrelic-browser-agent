@@ -46,7 +46,7 @@ submitData.xhrGet = function xhrGet (url) {
  * @param {boolean} sync
  * @returns {XMLHttpRequest}
  */
-submitData.xhr = function xhr (url, body, sync, method = 'POST') {
+submitData.xhr = function xhr (url, body, sync, method = 'POST', gzipped) {
   var request = new XMLHttpRequest()
 
   request.open(method, url, !sync)
@@ -58,6 +58,7 @@ submitData.xhr = function xhr (url, body, sync, method = 'POST') {
   }
 
   request.setRequestHeader('content-type', 'text/plain')
+  if (gzipped) request.setRequestHeader('Content-Encoding', 'gzip')
   request.send(body)
   return request
 }

@@ -2,11 +2,13 @@ import { record } from 'rrweb'
 import { drain } from '../../../common/drain/drain'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { AggregateBase } from '../../utils/aggregate-base'
+import { FeatureBase } from '../../utils/feature-base'
 import { FEATURE_NAME } from '../constants'
 import { stringify } from '../../../common/util/stringify'
-import { getRuntime } from '../../../common/config/config'
-// import { SESSION_REPLAY_ID, SESSION_REPLAY_START_TIME, getOrSet, get, isNew } from '../../../common/session/session-manager'
+import { getInfo, getRuntime } from '../../../common/config/config'
+import { SESSION_EVENTS } from '../../../common/session/session-entity'
+import { gzip, gzipSync, strToU8 } from 'fflate'
+import { warn } from '../../../common/util/console'
 
 const MODE = {
   OFF: 0,
@@ -17,7 +19,7 @@ const MODE = {
 const MAX_PAYLOAD_SIZE = 1000000
 const IDEAL_PAYLOAD_SIZE = 64000
 
-export class Aggregate extends AggregateBase {
+export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
@@ -49,19 +51,23 @@ export class Aggregate extends AggregateBase {
       this.abort()
     })
 
-    document.addEventListener('visibilitychange', () => {
+    this.ee.on(SESSION_EVENTS.PAUSE, () => { this.stopRecording() })
+    this.ee.on(SESSION_EVENTS.RESUME, () => {
       if (!this.initialized || this.mode === MODE.OFF) return
-      if (document.visibilityState === 'hidden') this.stopRecording()
-      else {
-        this.startRecording()
-        this.takeFullSnapshot()
-      }
+      this.startRecording()
+      this.takeFullSnapshot()
     })
 
-    this.scheduler = new HarvestScheduler('session', {
+    // https://vortex-alb.stg-single-tooth.cell.us.nr-data.net/blob
+    this.scheduler = new HarvestScheduler('blob', {
       onFinished: this.onHarvestFinished.bind(this),
       retryDelay: this.harvestTimeSeconds,
-      getPayload: this.prepareHarvest.bind(this)
+      getPayload: this.prepareHarvest.bind(this),
+      // TODO -- this stuff needs a better way to be handled
+      includeBaseParams: false,
+      customUrl: 'https://vortex-alb.stg-single-tooth.cell.us.nr-data.net/blob',
+      raw: true,
+      gzip: true
     }, this)
 
     this.waitForFlags()
@@ -145,13 +151,31 @@ export class Aggregate extends AggregateBase {
   }
 
   prepareHarvest (options) {
+    console.log('prepare harvest')
     if (this.events.length === 0) return
 
-    return this.getPayload()
+    const payload = this.getPayload()
+    return { ...payload, body: gzipSync(strToU8(stringify(payload.body))) }
   }
 
   getPayload () {
-    return { body: { data: [...this.events] } }
+    return {
+      qs: { protocol_version: '0' },
+      body: {
+        type: 'Replay',
+        appId: getInfo(this.agentIdentifier).applicationID,
+        timestamp: Date.now(),
+        blob: [...this.events],
+        attributes: {
+          session: getRuntime(this.agentIdentifier).session.value,
+          hasSnapshot: false,
+          hasError: false,
+          agentVersion: getRuntime(this.agentIdentifier).version,
+          isFirstChunk: true,
+          'nr.rrweb.version': '0.0.1'
+        }
+      }
+    }
   }
 
   onHarvestFinished (result) {
@@ -180,9 +204,11 @@ export class Aggregate extends AggregateBase {
     })
   }
 
-  store (event, isCheckout) {
+  async store (event, isCheckout) {
     if (this.blocked) return
-    if (this.exceedsSizeLimit(MAX_PAYLOAD_SIZE, event)) {
+    const payload = await this.getPayloadSize(MAX_PAYLOAD_SIZE, event)
+    console.log('payload', payload)
+    if (payload.size > MAX_PAYLOAD_SIZE) {
       return this.abort()
     }
 
@@ -194,14 +220,14 @@ export class Aggregate extends AggregateBase {
       if (!this.recording) {
         this.recording = true
         const { session } = getRuntime(this.agentIdentifier)
-        session.write({ ...session.read(), sessionReplayActive: true })
+        session.write({ ...session, sessionReplayActive: true })
       }
     }
 
     this.events.push(event)
     console.log('this.events', this.events)
 
-    if (this.exceedsSizeLimit(IDEAL_PAYLOAD_SIZE)) {
+    if (payload.size > IDEAL_PAYLOAD_SIZE) {
       // if we've made it to the ideal size of ~128kb before the interval timer, we should send early.
       this.scheduler.runHarvest()
     }
@@ -211,17 +237,31 @@ export class Aggregate extends AggregateBase {
     record.takeFullSnapshot()
   }
 
-  exceedsSizeLimit (limit, newData) {
+  async getPayloadSize (limit, newData) {
     const payload = this.getPayload()
     if (newData) {
-      payload.body.data.push(newData)
+      payload.body.blob.push(newData)
     }
-    return stringify(payload)?.length > limit
+    const compressedData = await this.compress(payload.body)
+    return { size: compressedData.length }
   }
 
   abort () {
-    console.log('ABORT SESSION REPLAY!')
     this.blocked = true
     this.stopRecording()
+    const { session } = getRuntime(this.agentIdentifier)
+    session.write({ ...session, sessionReplayActive: false })
+  }
+
+  compress (data) {
+    return new Promise((resolve, reject) => {
+      gzip(stringify(data), (err, data) => {
+        if (err) {
+          warn('Failed to compress', err)
+          return reject(err)
+        }
+        return resolve(data)
+      })
+    })
   }
 }

@@ -136,7 +136,7 @@ export class Aggregate extends FeatureBase {
     agentRuntime.queryBytesSent[protocol] = (agentRuntime.queryBytesSent[protocol] || 0) + queryString?.length || 0
 
     const isValidJsonp = submitData.jsonp(
-      this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString,
+      this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + '?' + queryString,
       jsonp
     )
     // Usually `drain` is invoked automatically after processing feature flags contained in the JSONP callback from

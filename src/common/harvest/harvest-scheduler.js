@@ -68,20 +68,50 @@ export class HarvestScheduler extends SharedContext {
     if (this.aborted) return
     var scheduler = this
 
-    if (this.opts.getPayload) { // Ajax & PVT
+    if (this.opts.getPayload) { // Ajax & PVT & SR
       var submitMethod = getSubmitMethod(this.endpoint, opts)
       if (!submitMethod) return false
 
       var retry = submitMethod.method === submitData.xhr
       var payload = this.opts.getPayload({ retry: retry })
+
       if (payload) {
         payload = Object.prototype.toString.call(payload) === '[object Array]' ? payload : [payload]
         for (var i = 0; i < payload.length; i++) {
-          this.harvest.send(this.endpoint, payload[i], opts, submitMethod, onHarvestFinished)
+          if (this.opts.raw) {
+            this.harvest._send({
+              endpoint: this.endpoint,
+              payload: payload[i],
+              opts,
+              submitMethod,
+              cbFinished: onHarvestFinished,
+              includeBaseParams: this.opts.includeBaseParams,
+              customUrl: this.opts.customUrl,
+              gzip: this.opts.gzip
+            })
+          } else {
+            this.harvest.send({
+              endpoint: this.endpoint,
+              payload: payload[i],
+              opts,
+              submitMethod,
+              cbFinished: onHarvestFinished,
+              includeBaseParams: this.opts.includeBaseParams,
+              customUrl: this.opts.customUrl,
+              gzip: this.opts.gzip
+            })
+          }
         }
       }
     } else {
-      this.harvest.sendX(this.endpoint, opts, onHarvestFinished)
+      this.harvest.sendX({
+        endpoint: this.endpoint,
+        opts,
+        cbFinished: onHarvestFinished,
+        includeBaseParams: this.opts.includeBaseParams,
+        customUrl: this.opts.customUrl,
+        gzip: this.opts.gzip
+      })
     }
 
     if (this.started) {

@@ -6,8 +6,9 @@ import { isBrowserScope } from '../util/global-scope'
 export class InteractionTimer extends Timer {
   constructor (opts, ms) {
     super(opts, ms)
-    this.onRefresh = opts.onRefresh
     this.onPause = opts.onPause
+    this.onRefresh = opts.onRefresh
+    this.onResume = opts.onResume
 
     // used by pause/resume
     this.remainingMs = undefined
@@ -42,7 +43,10 @@ export class InteractionTimer extends Timer {
       subscribeToVisibilityChange((state) => {
         if (state === 'hidden') this.pause()
         // vis change --> visible is treated like a new interaction with the page
-        else this.refresh()
+        else {
+          this.onResume?.()
+          this.refresh()
+        }
       }, false, false, this.abortController?.signal)
     }
   }
@@ -71,5 +75,6 @@ export class InteractionTimer extends Timer {
   //   if (!this.remainingMs || !this.isValid()) return
   //   this.timer = this.create(this.cb, this.remainingMs)
   //   this.remainingMs = undefined
+  //   this.onResume?.()
   // }
 }

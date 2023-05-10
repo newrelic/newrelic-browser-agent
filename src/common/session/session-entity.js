@@ -23,6 +23,12 @@ const model = {
   custom: {}
 }
 
+export const SESSION_EVENTS = {
+  PAUSE: 'session-pause',
+  RESET: 'session-reset',
+  RESUME: 'session-resume'
+}
+
 export class SessionEntity {
   /**
    * Create a self-managing Session Entity. This entity is scoped to the agent identifier which triggered it, allowing for multiple simultaneous session objects to exist.
@@ -93,8 +99,12 @@ export class SessionEntity {
         },
         // When the inactive timer refreshes, it will update the storage values with an update timestamp
         onRefresh: this.refresh.bind(this),
+        onResume: () => { this.ee.emit(SESSION_EVENTS.RESUME) },
         // When the inactive timer pauses, update the storage values with an update timestamp
-        onPause: () => this.write(new Configurable(this.read(), model)),
+        onPause: () => {
+          if (this.initialized) this.ee.emit(SESSION_EVENTS.PAUSE)
+          this.write(new Configurable(this.read(), model))
+        },
         ee: this.ee,
         refreshEvents: ['click', 'keydown', 'scroll']
       }, this.inactiveAt - Date.now())
@@ -104,7 +114,7 @@ export class SessionEntity {
 
     // The fact that the session is "new" or pre-existing is used in some places in the agent.  Session Replay and Trace
     // can use this info to inform whether to trust a new sampling decision vs continue a previous tracking effort.
-    this.isNew = !Object.keys(initialRead).length
+    if (this.isNew === undefined) this.isNew = !Object.keys(initialRead).length
     // if its a "new" session, we write to storage API with the default values.  These values may change over the lifespan of the agent run.
     // we can use configurable here to help us know and manage what values are being used. -- see "model" above
     if (this.isNew) this.write(new Configurable(this, model), true)
@@ -184,13 +194,14 @@ export class SessionEntity {
     // * stop recording (stn and sr)...
     // * delete the session and start over
     try {
-      if (this.initialized) this.ee.emit('session-reset')
+      if (this.initialized) this.ee.emit(SESSION_EVENTS.RESET)
 
       this.storage.remove(this.lookupKey)
       this.inactiveTimer?.abort?.()
       this.expiresTimer?.clear?.()
       delete this.custom
       delete this.value
+      delete this.isNew
 
       this.setup({
         agentIdentifier: this.agentIdentifier,

@@ -6,9 +6,9 @@ import crypto from 'crypto'
 import { deepmerge } from 'deepmerge-ts'
 import { Launcher } from '@wdio/cli'
 import baseConfig from './config/base.conf.mjs'
+import specsConfig from './config/specs.conf.mjs'
 import seleniumConfig from './config/selenium.conf.mjs'
 import sauceConfig from './config/sauce.conf.mjs'
-import specsConfig from './config/specs.conf.mjs'
 
 /**
  * The JIL runner utilizes the CLI arguments to dynamically generate the
@@ -17,7 +17,7 @@ import specsConfig from './config/specs.conf.mjs'
  * properly passed to the worker processes.
  */
 
-const wdioConfig = deepmerge(baseConfig(), seleniumConfig(), sauceConfig(), specsConfig())
+const wdioConfig = deepmerge(baseConfig(), specsConfig(), seleniumConfig(), sauceConfig())
 const configFilePath = path.join(
   os.tmpdir(),
   `wdio.conf_${crypto.randomBytes(16).toString('hex')}.mjs`
@@ -30,9 +30,17 @@ if (['trace', 'debug', 'info'].indexOf(wdioConfig.logLevel) > -1) {
 // Clear the JIL CLI params before starting wdio so they are not passed to worker processes
 process.argv.splice(2)
 
+const jsonReplacer = (_, value) => {
+  if (value instanceof RegExp) {
+    return value.toString()
+  }
+
+  return value
+}
+
 fs.writeFile(
   configFilePath,
-  `export const config = JSON.parse(\`${JSON.stringify(wdioConfig)}\`)`,
+  `export const config = JSON.parse(\`${JSON.stringify(wdioConfig, jsonReplacer)}\`)`,
   (error) => {
     if (error) {
       console.error(error)

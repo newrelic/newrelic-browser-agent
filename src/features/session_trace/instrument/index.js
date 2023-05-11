@@ -58,9 +58,10 @@ export class Instrument extends InstrumentBase {
       handle('bstHist', [location.pathname + location.hash, this.startPath, this.time], undefined, FEATURE_NAMES.sessionTrace, thisInstrumentEE)
     })
 
+    let observer
     try {
       // Capture initial resources and watch for future ones. Don't defer this given there's a default cap on the number of buffered entries.
-      const observer = new PerformanceObserver((list) => { // eslint-disable-line no-undef
+      observer = new PerformanceObserver((list) => { // eslint-disable-line no-undef
         const entries = list.getEntries()
         handle(BST_RESOURCE, [entries], undefined, FEATURE_NAMES.sessionTrace, thisInstrumentEE)
       })
@@ -74,6 +75,6 @@ export class Instrument extends InstrumentBase {
     // document.addEventListener('click', noOp, eventListenerOpts(false))
     // noOp (e) { /* no-op */ }
 
-    this.importAggregator()
+    this.importAggregator(observer)
   }
 }

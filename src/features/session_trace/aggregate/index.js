@@ -7,7 +7,6 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { mapOwn } from '../../../common/util/map-own'
 import { stringify } from '../../../common/util/stringify'
 import { parseUrl } from '../../../common/url/parse-url'
-import { supportsPerformanceObserver } from '../../../common/window/supports-performance-observer'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { FEATURE_NAME } from '../constants'
@@ -17,12 +16,13 @@ import { FeatureBase } from '../../utils/feature-base'
 
 export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
+  constructor (agentIdentifier, aggregator, argsArray) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
     if (!getRuntime(agentIdentifier).xhrWrappable) return
 
+    this.resourceObserver = argsArray?.[0]
     const handlerCache = new HandlerCache()
     this.ptid = ''
     this.ignoredEvents = {
@@ -223,7 +223,7 @@ export class Aggregate extends FeatureBase {
     } else if (t && typeof (t.tagName) === 'string') {
       origin = t.tagName.toLowerCase()
       if (t.id) origin += '#' + t.id
-      if (t.className) origin += '.' + Array.from(t.classList).join('.')
+      if (t.className) origin += '.' + t.classList.value.replaceAll(' ', '.') // p.s. IE11 may not be happy about DOMTokenList.value (?)
     }
 
     if (origin === 'unknown') {
@@ -252,18 +252,16 @@ export class Aggregate extends FeatureBase {
     if (!resources || resources.length === 0) return
 
     resources.forEach((currentResource) => {
-      var parsed = parseUrl(currentResource.name)
-      var res = {
+      if (currentResource.fetchStart <= this.laststart) return // don't recollect already-seen resources
+
+      const parsed = parseUrl(currentResource.name)
+      const res = {
         n: currentResource.initiatorType,
         s: currentResource.fetchStart | 0,
         e: currentResource.responseEnd | 0,
         o: parsed.protocol + '://' + parsed.hostname + ':' + parsed.port + parsed.pathname, // resource.name is actually a URL so it's the source
         t: currentResource.entryType
       }
-
-      // don't recollect old resources
-      if (res.s <= this.laststart) return
-
       this.storeSTN(res)
     })
 
@@ -317,8 +315,8 @@ export class Aggregate extends FeatureBase {
   }
 
   takeSTNs (retry) {
-    // if the observer is not being used, this checks resourcetiming buffer every harvest
-    if (!supportsPerformanceObserver()) {
+    // If PO isn't supported, this checks resourcetiming buffer every harvest.
+    if (!this.resourceObserver) {
       this.storeResources(window.performance.getEntriesByType('resource'))
     }
 

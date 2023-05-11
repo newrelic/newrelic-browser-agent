@@ -11,7 +11,7 @@ export const submitData = {}
  * @param {string} jsonp
  * @returns {Element}
  */
-submitData.jsonp = function jsonp (url, jsonp) {
+submitData.jsonp = function jsonp ({ url, jsonp }) {
   try {
     if (isWorkerScope) {
       try {
@@ -35,8 +35,8 @@ submitData.jsonp = function jsonp (url, jsonp) {
   }
 }
 
-submitData.xhrGet = function xhrGet (url) {
-  return submitData.xhr(url, undefined, false, 'GET')
+submitData.xhrGet = function xhrGet ({ url }) {
+  return submitData.xhr({ url, sync: false, method: 'GET' })
 }
 
 /**
@@ -46,7 +46,7 @@ submitData.xhrGet = function xhrGet (url) {
  * @param {boolean} sync
  * @returns {XMLHttpRequest}
  */
-submitData.xhr = function xhr (url, body, sync, method = 'POST', gzipped) {
+submitData.xhr = function xhr ({ url, body, sync, method = 'POST', gzipped, licenseKey }) {
   var request = new XMLHttpRequest()
 
   request.open(method, url, !sync)
@@ -58,6 +58,7 @@ submitData.xhr = function xhr (url, body, sync, method = 'POST', gzipped) {
   }
 
   request.setRequestHeader('content-type', 'text/plain')
+  if (gzipped) request.setRequestHeader('X-Browser-Monitoring-Key', licenseKey)
   if (gzipped) request.setRequestHeader('Content-Encoding', 'gzip')
   request.send(body)
   return request
@@ -75,7 +76,7 @@ submitData.xhr = function xhr (url, body, sync, method = 'POST', gzipped) {
  * @param {string} url
  * @returns {Element}
  */
-submitData.img = function img (url) {
+submitData.img = function img ({ url }) {
   var element = new Image()
   element.src = url
   return element
@@ -87,7 +88,7 @@ submitData.img = function img (url) {
  * @param {string} body
  * @returns {boolean}
  */
-submitData.beacon = function (url, body) {
+submitData.beacon = function ({ url, body }) {
   // Navigator has to be bound to ensure it does not error in some browsers
   // https://xgwang.me/posts/you-may-not-know-beacon/#it-may-throw-error%2C-be-sure-to-catch
   const send = window.navigator.sendBeacon.bind(window.navigator)

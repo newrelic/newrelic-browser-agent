@@ -13,6 +13,8 @@ import { handle } from '../event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
+// this is what can be stored in local storage (not enforced but probably should be)
+// these values should sync between local storage and the parent class props
 const model = {
   value: '',
   inactiveAt: 0,
@@ -37,22 +39,22 @@ export class SessionEntity {
    * expiresMs and inactiveMs are used to "expire" the session, but can be overridden in the constructor. Pass 0 to disable expiration timers.
    */
   constructor (opts) {
+    this.state = {}
     this.setup(opts)
   }
 
   setup ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS, storageAPI = new LocalMemory() }) {
     if (!agentIdentifier || !key) throw new Error('Missing Required Fields')
     if (!isBrowserScope) this.storage = new LocalMemory()
-    else this.storage = storageAPI
+    else this.storage = storageAPI // new LocalStorage()
 
     this.sync(model)
 
     this.agentIdentifier = agentIdentifier
-
     // key is intended to act as the k=v pair
     this.key = key
     // value is intended to act as the primary value of the k=v pair
-    this.value = value
+    this.state.value = value
 
     this.expiresMs = expiresMs
     this.inactiveMs = inactiveMs
@@ -72,7 +74,7 @@ export class SessionEntity {
     // the set-up of the timer used to expire the session "naturally" at a certain time
     // this gets ignored if the value is falsy, allowing for session entities that do not expire
     if (expiresMs) {
-      this.expiresAt = initialRead?.expiresAt || this.getFutureTimestamp(expiresMs)
+      this.state.expiresAt = initialRead?.expiresAt || this.getFutureTimestamp(expiresMs)
       this.expiresTimer = new Timer({
         // When the inactive timer ends, collect a SM and reset the session
         onEnd: () => {
@@ -80,16 +82,16 @@ export class SessionEntity {
           this.collectSM('duration', this)
           this.reset()
         }
-      }, this.expiresAt - Date.now())
+      }, this.state.expiresAt - Date.now())
     } else {
-      this.expiresAt = Infinity
+      this.state.expiresAt = Infinity
     }
 
     // the set-up of the timer used to expire the session due to "inactivity" at a certain time
     // this gets ignored if the value is falsy, allowing for session entities that do not expire
     // this gets "refreshed" when "activity" is observed
     if (inactiveMs) {
-      this.inactiveAt = initialRead?.inactiveAt || this.getFutureTimestamp(inactiveMs)
+      this.state.inactiveAt = initialRead?.inactiveAt || this.getFutureTimestamp(inactiveMs)
       this.inactiveTimer = new InteractionTimer({
         // When the inactive timer ends, collect a SM and reset the session
         onEnd: () => {
@@ -103,13 +105,13 @@ export class SessionEntity {
         // When the inactive timer pauses, update the storage values with an update timestamp
         onPause: () => {
           if (this.initialized) this.ee.emit(SESSION_EVENTS.PAUSE)
-          this.write(new Configurable(this.read(), model))
+          this.write(new Configurable(this.state, model))
         },
         ee: this.ee,
         refreshEvents: ['click', 'keydown', 'scroll']
-      }, this.inactiveAt - Date.now())
+      }, this.state.inactiveAt - Date.now())
     } else {
-      this.inactiveAt = Infinity
+      this.state.inactiveAt = Infinity
     }
 
     // The fact that the session is "new" or pre-existing is used in some places in the agent.  Session Replay and Trace
@@ -117,7 +119,7 @@ export class SessionEntity {
     if (this.isNew === undefined) this.isNew = !Object.keys(initialRead).length
     // if its a "new" session, we write to storage API with the default values.  These values may change over the lifespan of the agent run.
     // we can use configurable here to help us know and manage what values are being used. -- see "model" above
-    if (this.isNew) this.write(new Configurable(this, model), true)
+    if (this.isNew) this.write(new Configurable(this.state, model), true)
     else this.sync(initialRead)
 
     this.initialized = true
@@ -129,7 +131,7 @@ export class SessionEntity {
   }
 
   sync (data) {
-    Object.assign(this, data)
+    Object.assign(this.state, data)
   }
 
   /**
@@ -177,7 +179,8 @@ export class SessionEntity {
       if (!data || typeof data !== 'object') return
       // everytime we update, we can update a timestamp for sanity
       data.updatedAt = Date.now()
-      this.sync(data)
+      this.sync(data) // update the parent class "state" properties with the local storage values
+      //
       // TODO - compression would need happen here if we decide to do it
       this.storage.set(this.lookupKey, stringify(data))
       return data
@@ -195,11 +198,10 @@ export class SessionEntity {
     // * delete the session and start over
     try {
       if (this.initialized) this.ee.emit(SESSION_EVENTS.RESET)
-
+      this.state = {}
       this.storage.remove(this.lookupKey)
       this.inactiveTimer?.abort?.()
       this.expiresTimer?.clear?.()
-      delete this.custom
       delete this.value
       delete this.isNew
 
@@ -222,8 +224,7 @@ export class SessionEntity {
   refresh () {
     // read here & invalidate
     const existingData = this.read()
-    this.inactiveAt = this.getFutureTimestamp(this.inactiveMs)
-    this.write({ ...existingData, inactiveAt: this.inactiveAt })
+    this.write({ ...existingData, inactiveAt: this.getFutureTimestamp(this.inactiveMs) })
   }
 
   /**
@@ -239,7 +240,7 @@ export class SessionEntity {
    * @returns {boolean}
    */
   isInvalid (data) {
-    const requiredKeys = ['value', 'expiresAt', 'inactiveAt']
+    const requiredKeys = Object.keys(model)
     return !requiredKeys.every(x => Object.keys(data).includes(x))
   }
 

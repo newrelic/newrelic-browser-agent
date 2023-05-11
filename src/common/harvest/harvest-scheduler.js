@@ -68,51 +68,43 @@ export class HarvestScheduler extends SharedContext {
     if (this.aborted) return
     var scheduler = this
 
+    let harvests = []
+    let submitMethod, retry
+
     if (this.opts.getPayload) { // Ajax & PVT & SR
-      var submitMethod = getSubmitMethod(this.endpoint, opts)
+      submitMethod = getSubmitMethod(this.endpoint, opts)
       if (!submitMethod) return false
 
-      var retry = submitMethod.method === submitData.xhr
+      retry = submitMethod.method === submitData.xhr
       var payload = this.opts.getPayload({ retry: retry })
 
       if (payload) {
         payload = Object.prototype.toString.call(payload) === '[object Array]' ? payload : [payload]
-        for (var i = 0; i < payload.length; i++) {
-          if (this.opts.raw) {
-            this.harvest._send({
-              endpoint: this.endpoint,
-              payload: payload[i],
-              opts,
-              submitMethod,
-              cbFinished: onHarvestFinished,
-              includeBaseParams: this.opts.includeBaseParams,
-              customUrl: this.opts.customUrl,
-              gzip: this.opts.gzip
-            })
-          } else {
-            this.harvest.send({
-              endpoint: this.endpoint,
-              payload: payload[i],
-              opts,
-              submitMethod,
-              cbFinished: onHarvestFinished,
-              includeBaseParams: this.opts.includeBaseParams,
-              customUrl: this.opts.customUrl,
-              gzip: this.opts.gzip
-            })
-          }
-        }
+        harvests.push(...payload)
       }
-    } else {
-      this.harvest.sendX({
+    }
+
+    let send = args => this.harvest.sendX(args)
+    if (harvests.length) {
+      if (this.opts.raw) send = args => this.harvest._send(args)
+      else send = args => this.harvest.send(args)
+    }
+
+    // force it to run at least once
+    if (!harvests.length) harvests.push(undefined)
+
+    harvests.forEach(payload => {
+      send({
         endpoint: this.endpoint,
+        payload,
         opts,
+        submitMethod,
         cbFinished: onHarvestFinished,
         includeBaseParams: this.opts.includeBaseParams,
         customUrl: this.opts.customUrl,
         gzip: this.opts.gzip
       })
-    }
+    })
 
     if (this.started) {
       this.scheduleHarvest()

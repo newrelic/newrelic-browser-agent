@@ -8,7 +8,7 @@ import { obj as encodeObj, param as encodeParam } from '../url/encode'
 import { stringify } from '../util/stringify'
 import { submitData } from '../util/submit-data'
 import { getLocation } from '../url/location'
-import { getInfo, getConfigurationValue, getRuntime, getConfiguration } from '../config/config'
+import { getInfo, getConfigurationValue, getRuntime } from '../config/config'
 import { cleanURL } from '../url/clean-url'
 import { now } from '../timing/now'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
@@ -17,6 +17,7 @@ import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/env'
 import { isBrowserScope, isWorkerScope } from '../util/global-scope'
+import { gzipSync, strToU8 } from 'fflate'
 
 const haveSendBeacon = !!navigator.sendBeacon // only the web window obj has sendBeacon at this time, so 'false' for other envs
 
@@ -41,33 +42,15 @@ export class Harvest extends SharedContext {
    * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
    * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
    */
-  sendX ({ endpoint, opts, cbFinished, includeBaseParams, customUrl, gzip }) {
+  sendX (spec) {
+    const { endpoint, opts } = spec
     var submitMethod = getSubmitMethod(endpoint, opts)
     if (!submitMethod) return false
     var options = {
       retry: submitMethod.method === submitData.xhr
     }
-    return this.obfuscator.shouldObfuscate()
-      ? this.obfuscateAndSend({
-        endpoint,
-        payload: this.createPayload(endpoint, options),
-        opts,
-        submitMethod,
-        cbFinished,
-        includeBaseParams,
-        customUrl,
-        gzip
-      })
-      : this._send({
-        endpoint,
-        payload: this.createPayload(endpoint, options),
-        opts,
-        submitMethod,
-        cbFinished,
-        includeBaseParams,
-        customUrl,
-        gzip
-      })
+    var caller = this.obfuscator.shouldObfuscate() ? (...args) => this.obfuscateAndSend(...args) : (...args) => this._send(...args)
+    caller({ ...spec, payload: this.createPayload(endpoint, options), submitMethod })
   }
 
   /**
@@ -85,7 +68,8 @@ export class Harvest extends SharedContext {
  * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
  * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
  */
-  send ({ endpoint, payload, opts, submitMethod, cbFinished, includeBaseParams, customUrl, gzip }) {
+  send (spec) {
+    const { payload } = spec
     var makeBody = createAccumulator()
     var makeQueryString = createAccumulator()
     if (payload.body) mapOwn(payload.body, makeBody)
@@ -94,15 +78,16 @@ export class Harvest extends SharedContext {
     var newPayload = { body: makeBody(), qs: makeQueryString() }
     var caller = this.obfuscator.shouldObfuscate() ? (...args) => this.obfuscateAndSend(...args) : (...args) => this._send(...args)
 
-    return caller({ endpoint, payload: newPayload, opts, submitMethod, cbFinished, includeBaseParams, customUrl, gzip })
+    return caller({ ...spec, payload: newPayload })
   }
 
-  obfuscateAndSend ({ endpoint, payload, opts, submitMethod, cbFinished, includeBaseParams, customUrl, gzip }) {
+  obfuscateAndSend (spec) {
+    const { payload } = spec
     applyFnToProps(payload, (...args) => this.obfuscator.obfuscateString(...args), 'string', ['e'])
-    return this._send({ endpoint, payload, opts, submitMethod, cbFinished, includeBaseParams, customUrl, gzip })
+    return this._send({ ...spec, payload })
   }
 
-  _send ({ endpoint, payload, opts, submitMethod, cbFinished, includeBaseParams = true, customUrl, gzip }) {
+  _send ({ endpoint, payload, opts, submitMethod, cbFinished, customUrl, gzip, includeBaseParams = true }) {
     var info = getInfo(this.sharedContext.agentIdentifier)
     if (!info.errorBeacon) return false
 
@@ -146,7 +131,11 @@ export class Harvest extends SharedContext {
     /* Since workers don't support sendBeacon right now, or Image(), they can only use XHR method.
         Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
         we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon. */
-    var result = method(fullUrl, body, opts.unload && isWorkerScope, undefined, gzip)
+    if (useBody && gzip) {
+      body = gzipSync(strToU8(stringify(body)))
+    }
+
+    var result = method({ url: fullUrl, body, sync: opts.unload && isWorkerScope, gzip, licenseKey: info.licenseKey })
 
     if (cbFinished && method === submitData.xhr) {
       var xhr = result
@@ -169,7 +158,7 @@ export class Harvest extends SharedContext {
     // if beacon request failed, retry with an alternative method -- will not happen for workers
     if (!result && method === submitData.beacon) {
       method = submitData.img
-      result = method(url + encodeObj(payload.body, agentRuntime.maxBytes))
+      result = method({ url: url + encodeObj(payload.body, agentRuntime.maxBytes) })
     }
 
     return result

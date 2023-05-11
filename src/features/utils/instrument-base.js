@@ -64,7 +64,6 @@ export class InstrumentBase extends FeatureBase {
         const { Aggregate } = await lazyLoader(this.featureName, 'aggregate')
         new Aggregate(this.agentIdentifier, this.aggregator)
       } catch (e) {
-        console.log(e)
         warn(`Downloading ${this.featureName} failed...`, e)
         this.abortHandler?.() // undo any important alterations made to the page
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
@@ -79,12 +78,11 @@ export class InstrumentBase extends FeatureBase {
 }
 
 function shouldImportAgg (featureName, session) {
-  console.log('session...', session.isNew, session.sessionReplayActive)
   // if this isnt the FIRST load of a session AND
   // we are not actively recording SR... DO NOT run the aggregator
   // session replay samples can only be decided on the first load of a session
   // session replays can continue if in progress
-  if (featureName === FEATURE_NAMES.sessionReplay) return !!session.isNew || !!session.sessionReplayActive
+  if (featureName === FEATURE_NAMES.sessionReplay) return !!session.isNew || !!session.state.sessionReplayActive
   // todo -- add case like above for session trace
   return true
 }

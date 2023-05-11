@@ -135,10 +135,10 @@ export class Aggregate extends FeatureBase {
     // Capture query bytes sent to RUM call endpoint (currently `1`) as a supportability metric. See metrics aggregator (on unload).
     agentRuntime.queryBytesSent[protocol] = (agentRuntime.queryBytesSent[protocol] || 0) + queryString?.length || 0
 
-    const isValidJsonp = submitData.jsonp(
-      this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + '?' + queryString,
+    const isValidJsonp = submitData.jsonp({
+      url: this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + '?' + queryString,
       jsonp
-    )
+    })
     // Usually `drain` is invoked automatically after processing feature flags contained in the JSONP callback from
     // ingest (see `activateFeatures`), so when JSONP cannot execute (as with module workers), we drain manually.
     if (!isValidJsonp) drain(this.agentIdentifier, CONSTANTS.FEATURE_NAME)

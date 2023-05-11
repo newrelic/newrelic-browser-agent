@@ -7,8 +7,11 @@ import { FEATURE_NAME } from '../constants'
 import { stringify } from '../../../common/util/stringify'
 import { getInfo, getRuntime } from '../../../common/config/config'
 import { SESSION_EVENTS } from '../../../common/session/session-entity'
-import { gzip, gzipSync, strToU8 } from 'fflate'
+import { gzip } from 'fflate'
 import { warn } from '../../../common/util/console'
+
+// would be better to get this dynamically in some way
+export const RRWEB_VERSION = '2.0.0-alpha.4'
 
 const MODE = {
   OFF: 0,
@@ -32,22 +35,25 @@ export class Aggregate extends FeatureBase {
     this.mode = MODE.OFF
     this.blocked = false
 
+    this.hasFirstChunk = false
+    this.hasSnapshot = false
+
     const { session } = getRuntime(this.agentIdentifier)
     // // if this isnt the FIRST load of a session AND
     // // we are not actively recording SR... DO NOT run the aggregator
     // // session replay samples can only be decided on the first load of a session
     // // session replays can continue if in progress
-    if (!session.isNew && !session.sessionReplayActive) {
+    if (!session.isNew && !session.state.sessionReplayActive) {
       drain(this.agentIdentifier, this.featureName)
       return
     }
 
-    console.log('session ID at startup', session.value)
+    // console.log('session ID at startup', session.state.value)
 
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
 
     this.ee.on('session-reset', () => {
-      console.log('session-reset.... abort it!')
+      // console.log('session-reset.... abort it!')
       this.abort()
     })
 
@@ -70,7 +76,11 @@ export class Aggregate extends FeatureBase {
       gzip: true
     }, this)
 
-    this.waitForFlags()
+    // TODO -- get this working with agreed structure
+    // DISABLE FOR STEEL THREAD, RUN ON EVERY PAGE
+    // THIS STILL ONLY HONORS NEW SESSIONS OR ONGOING RECORDINGS THO...
+    // this.waitForFlags()
+    this.initializeRecording(true, false, true) // and disable this when flags are working
 
     drain(this.agentIdentifier, this.featureName)
   }
@@ -123,56 +133,59 @@ export class Aggregate extends FeatureBase {
   }
 
   initializeRecording (entitlements, errorSample, fullSample) {
-    console.log('initialize recording')
+    // console.log('initialize recording')
     this.initialized = true
-    if (!entitlements) return
+    if (!entitlements) return // TODO -- re-enable this when flags are working
 
     const { session } = getRuntime(this.agentIdentifier)
-    console.log('both', (!session.isNew && !session.sessionReplayActive))
-    console.log('active', session.sessionReplayActive)
-    console.log('new and sample', session.isNew && fullSample)
+    // console.log('both', (!session.isNew && !session.state.sessionReplayActive))
+    // console.log('active', session.state.sessionReplayActive)
+    // console.log('new and sample', session.isNew && fullSample)
     // if theres an existing session replay in progress, there's no need to sample, just check the entitlements response
     // if not, these sample flags need to be checked
-    if (!session.isNew && !session.sessionReplayActive) return
-    if (session.sessionReplayActive || (session.isNew && fullSample)) this.mode = MODE.FULL
+    if (!session.isNew && !session.state.sessionReplayActive) return
+    if (session.state.sessionReplayActive || (session.isNew && fullSample)) this.mode = MODE.FULL
     else if (errorSample) this.mode = MODE.ERROR
 
-    console.log('mode --', this.mode)
+    // console.log('mode --', this.mode)
 
     if (this.mode !== MODE.OFF) this.startRecording()
     if (this.mode === MODE.FULL) this.scheduler.startTimer(this.harvestTimeSeconds)
     if (this.mode === MODE.ERROR) {
       registerHandler('err', () => {
-        this.errorNoticed = true
+        this.hasError = true
+        if (this.errorNoticed) return
         this.scheduler.runHarvest({ needResponse: true })
         this.scheduler.startTimer(this.harvestTimeSeconds)
+        this.errorNoticed = true
       }, this.featureName, this.ee)
     }
   }
 
   prepareHarvest (options) {
-    console.log('prepare harvest')
+    // console.log('prepare harvest')
     if (this.events.length === 0) return
 
-    const payload = this.getPayload()
-    return { ...payload, body: gzipSync(strToU8(stringify(payload.body))) }
+    return this.getPayload()
   }
 
   getPayload () {
+    const agentRuntime = getRuntime(this.agentIdentifier)
+    const info = getInfo(this.agentIdentifier)
     return {
       qs: { protocol_version: '0' },
       body: {
         type: 'Replay',
-        appId: getInfo(this.agentIdentifier).applicationID,
+        appId: info.applicationID,
         timestamp: Date.now(),
         blob: [...this.events],
         attributes: {
-          session: getRuntime(this.agentIdentifier).session.value,
-          hasSnapshot: false,
-          hasError: false,
-          agentVersion: getRuntime(this.agentIdentifier).version,
-          isFirstChunk: true,
-          'nr.rrweb.version': '0.0.1'
+          session: agentRuntime.session.value,
+          hasSnapshot: this.hasSnapshot,
+          hasError: this.hasError,
+          agentVersion: agentRuntime.version,
+          isFirstChunk: this.isFirstChunk,
+          'nr.rrweb.version': RRWEB_VERSION
         }
       }
     }
@@ -181,12 +194,12 @@ export class Aggregate extends FeatureBase {
   onHarvestFinished (result) {
     // The mutual decision for now is to stop recording and clear buffers if ingest is experiencing 429 rate limiting
     if (result.status === 429) {
-      console.log('429... abort it!')
+      // console.log('429... abort it!')
       this.abort()
       return
     }
 
-    console.log(result)
+    // console.log(result)
     // keep things in the buffer if they fail to send AND its not a rate limit issue
     if (result.sent && !result.retry) this.clearBuffer()
 
@@ -195,9 +208,13 @@ export class Aggregate extends FeatureBase {
 
   clearBuffer () {
     this.events = []
+    this.isFirstChunk = false
+    this.hasSnapshot = false
+    this.hasError = false
   }
 
   startRecording () {
+    this.hasSnapshot = true
     this.stopRecording = record({
       emit: this.store.bind(this),
       ...(this.mode === MODE.ERROR && { checkoutEveryNms: this.harvestTimeSeconds * 1000 })
@@ -207,11 +224,10 @@ export class Aggregate extends FeatureBase {
   async store (event, isCheckout) {
     if (this.blocked) return
     const payload = await this.getPayloadSize(MAX_PAYLOAD_SIZE, event)
-    console.log('payload', payload)
+    // console.log('payload', payload)
     if (payload.size > MAX_PAYLOAD_SIZE) {
       return this.abort()
     }
-
     if (this.mode === MODE.ERROR && !this.errorNoticed && isCheckout) {
       // we are still waiting for an error to throw, so keep wiping the buffer over time
       this.clearBuffer()
@@ -220,12 +236,18 @@ export class Aggregate extends FeatureBase {
       if (!this.recording) {
         this.recording = true
         const { session } = getRuntime(this.agentIdentifier)
-        session.write({ ...session, sessionReplayActive: true })
+        session.write({ ...session.state, sessionReplayActive: true })
+
+        if (this.mode === MODE.ERROR) {
+          this.stopRecording()
+          this.mode = MODE.FULL
+          this.startRecording()
+        }
       }
     }
 
     this.events.push(event)
-    console.log('this.events', this.events)
+    // console.log('this.events', this.events)
 
     if (payload.size > IDEAL_PAYLOAD_SIZE) {
       // if we've made it to the ideal size of ~128kb before the interval timer, we should send early.
@@ -235,6 +257,7 @@ export class Aggregate extends FeatureBase {
 
   takeFullSnapshot () {
     record.takeFullSnapshot()
+    this.hasSnapshot = true
   }
 
   async getPayloadSize (limit, newData) {
@@ -250,7 +273,7 @@ export class Aggregate extends FeatureBase {
     this.blocked = true
     this.stopRecording()
     const { session } = getRuntime(this.agentIdentifier)
-    session.write({ ...session, sessionReplayActive: false })
+    session.write({ ...session.state, sessionReplayActive: false })
   }
 
   compress (data) {

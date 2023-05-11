@@ -82,6 +82,7 @@ function shouldImportAgg (featureName, session) {
   // we are not actively recording SR... DO NOT run the aggregator
   // session replay samples can only be decided on the first load of a session
   // session replays can continue if in progress
+  if (featureName === FEATURE_NAMES.sessionReplay) console.log('session...', session.isNew, session.state.sessionReplayActive)
   if (featureName === FEATURE_NAMES.sessionReplay) return !!session.isNew || !!session.state.sessionReplayActive
   // todo -- add case like above for session trace
   return true

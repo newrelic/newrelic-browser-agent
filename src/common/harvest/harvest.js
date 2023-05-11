@@ -135,7 +135,7 @@ export class Harvest extends SharedContext {
       body = gzipSync(strToU8(stringify(body)))
     }
 
-    var result = method({ url: fullUrl, body, sync: opts.unload && isWorkerScope, gzip, licenseKey: info.licenseKey })
+    var result = method({ url: fullUrl, body, sync: opts.unload && isWorkerScope, gzipped: gzip, licenseKey: info.licenseKey })
 
     if (cbFinished && method === submitData.xhr) {
       var xhr = result

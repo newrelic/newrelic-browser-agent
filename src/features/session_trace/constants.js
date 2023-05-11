@@ -1,7 +1,6 @@
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const FEATURE_NAME = FEATURE_NAMES.sessionTrace
-export const RESOURCE_TIMING_BUFFER_FULL = 'resourcetimingbufferfull'
 export const BST_RESOURCE = 'bstResource'
 export const RESOURCE = 'resource'
 export const START = '-start'

@@ -4,7 +4,6 @@
  */
 import { handle } from '../../../common/event-emitter/handle'
 import { wrapHistory, wrapEvents, wrapTimer, wrapRaf } from '../../../common/wrap'
-import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
 import { InstrumentBase } from '../../utils/instrument-base'
 import * as CONSTANTS from '../constants'
@@ -12,8 +11,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { isBrowserScope } from '../../../common/util/global-scope'
 
 const {
-  BST_RESOURCE, BST_TIMER, END, FEATURE_NAME, FN_END, FN_START,
-  PUSH_STATE, RESOURCE, RESOURCE_TIMING_BUFFER_FULL, START
+  BST_RESOURCE, RESOURCE, BST_TIMER, START, END, FEATURE_NAME, FN_END, FN_START, PUSH_STATE
 } = CONSTANTS
 
 export class Instrument extends InstrumentBase {
@@ -61,17 +59,14 @@ export class Instrument extends InstrumentBase {
     })
 
     try {
-      // Capture initial resources and watch for future ones.
+      // Capture initial resources and watch for future ones. Don't defer this given there's a default cap on the number of buffered entries.
       const observer = new PerformanceObserver((list) => { // eslint-disable-line no-undef
         const entries = list.getEntries()
         handle(BST_RESOURCE, [entries], undefined, FEATURE_NAMES.sessionTrace, thisInstrumentEE)
       })
       observer.observe({ type: RESOURCE, buffered: true })
     } catch (e) {
-      // Use the older API to collect resource timings once when buffer is full.
-      if (window.performance.clearResourceTimings) {
-        window.performance.addEventListener?.(RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, eventListenerOpts(false))
-      }
+      // Per NEWRELIC-8525, we don't have a fallback for capturing resources for older versions that don't support PO at this time.
     }
 
     // document.addEventListener('scroll', noOp, eventListenerOpts(false))
@@ -79,20 +74,6 @@ export class Instrument extends InstrumentBase {
     // document.addEventListener('click', noOp, eventListenerOpts(false))
     // noOp (e) { /* no-op */ }
 
-    this.abortHandler = this.#abort
     this.importAggregator()
-  }
-
-  /** Restoration and resource release tasks to be done if Session trace loader is being aborted. Unwind changes to globals. */
-  #abort () {
-    window.performance.removeEventListener?.(RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false)
-    // The doc interaction noOp listeners are harmless--cannot buffer data into EE.
-    this.abortHandler = undefined // weakly allow this abort op to run only once
-  }
-
-  onResourceTimingBufferFull (evt) {
-    handle(BST_RESOURCE, [window.performance.getEntriesByType(RESOURCE)], undefined, FEATURE_NAMES.sessionTrace, this.ee)
-    // Stop recording once buffer is full.
-    window.performance.removeEventListener?.(RESOURCE_TIMING_BUFFER_FULL, this.onResourceTimingBufferFull, false)
   }
 }

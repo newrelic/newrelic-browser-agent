@@ -66,12 +66,7 @@ class TestServer {
 
   constructor (config) {
     if (!config.logger) {
-      const consoleLogger = {
-        ...console,
-        fatal: console.error,
-        child: () => consoleLogger
-      }
-      config.logger = consoleLogger
+      config.logger = console
     }
 
     this.#config = config

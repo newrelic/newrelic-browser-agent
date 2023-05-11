@@ -23,6 +23,7 @@ export default function config () {
     connectionRetryTimeout: 120000,
     connectionRetryCount: 3,
     services: [
+      path.resolve(__dirname, '../plugins/browser-matcher.mjs'),
       path.resolve(__dirname, '../plugins/jil-commands.mjs'),
       path.resolve(__dirname, '../plugins/newrelic-instrumentation.mjs'),
       [path.resolve(__dirname, '../plugins/testing-server/index.mjs'), jilArgs]

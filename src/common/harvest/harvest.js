@@ -8,7 +8,7 @@ import { obj as encodeObj, param as encodeParam } from '../url/encode'
 import { stringify } from '../util/stringify'
 import { submitData } from '../util/submit-data'
 import { getLocation } from '../url/location'
-import { getInfo, getConfigurationValue, getRuntime, getConfiguration } from '../config/config'
+import { getInfo, getConfigurationValue, getRuntime } from '../config/config'
 import { cleanURL } from '../url/clean-url'
 import { now } from '../timing/now'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
@@ -187,6 +187,7 @@ export class Harvest extends SharedContext {
       if (singlePayload.body) mapOwn(singlePayload.body, makeBody)
       if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
     }
+
     return { body: makeBody(), qs: makeQueryString() }
   }
 
@@ -201,8 +202,6 @@ export class Harvest extends SharedContext {
     })
   }
 }
-
-function or (a, b) { return a || b }
 
 export function getSubmitMethod (endpoint, opts) {
   opts = opts || {}
@@ -242,7 +241,7 @@ function createAccumulator () {
   var accumulator = {}
   var hasData = false
   return function (key, val) {
-    if (val && val.length) {
+    if (val !== null && val !== undefined && val.toString()?.length) {
       accumulator[key] = val
       hasData = true
     }

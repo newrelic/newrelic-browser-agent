@@ -48,11 +48,11 @@ export function obj (payload, maxBytes) {
     var next
     var i
 
-    if (typeof dataArray === 'string') {
+    if (typeof dataArray === 'string' || (!Array.isArray(dataArray) && dataArray !== null && dataArray !== undefined && dataArray.toString().length)) {
       next = '&' + feature + '=' + qs(dataArray)
       total += next.length
       result += next
-    } else if (dataArray.length) {
+    } else if (Array.isArray(dataArray) && dataArray.length) {
       total += 9
       for (i = 0; i < dataArray.length; i++) {
         next = qs(stringify(dataArray[i]))

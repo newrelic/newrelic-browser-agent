@@ -169,13 +169,14 @@ export class Aggregate extends FeatureBase {
     if (this.events.length === 0) return
     const payload = this.getPayload()
     console.log('rrweb payload', payload)
+    this.clearBuffer()
     return payload
   }
 
   getPayload () {
     const agentRuntime = getRuntime(this.agentIdentifier)
     const info = getInfo(this.agentIdentifier)
-    const payload = {
+    return {
       qs: { protocol_version: '0' },
       body: {
         type: 'Replay',
@@ -192,8 +193,6 @@ export class Aggregate extends FeatureBase {
         }
       }
     }
-    this.clearBuffer()
-    return payload
   }
 
   onHarvestFinished (result) {

@@ -28,7 +28,7 @@ testDriver.test('capturing SPA interactions with zone.js', supported, function (
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
       t.equal(interactionTree.children.length, 0, 'expect no child nodes')
@@ -51,7 +51,7 @@ testDriver.test('capturing SPA interactions with zone.js', supported, function (
     })
     .then(({ request: { query, body } }) => {
       let receiptTime = now()
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 

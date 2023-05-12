@@ -79,7 +79,7 @@ function runPaintTimingsTests (loader) {
     Promise.all([timingsPromise, rumPromise, loadPromise])
       .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timings = body && body.length ? body : querypack.decode(query.e)
         let timing = timings.find(t => t.name === 'fp')
         t.ok(timing.value > 0, 'firstPaint is a positive value')
         t.end()
@@ -97,7 +97,7 @@ function runPaintTimingsTests (loader) {
     Promise.all([timingsPromise, rumPromise, loadPromise])
       .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timings = body && body.length ? body : querypack.decode(query.e)
         let timing = timings.find(t => t.name === 'fcp')
         t.ok(timing.value > 0, 'firstContentfulPaint is a positive value')
         t.end()
@@ -122,7 +122,7 @@ function runFirstInteractionTests (loader) {
       })
       .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timings = body && body.length ? body : querypack.decode(query.e)
 
         var timing = timings.find(item => item.name === 'fi')
         t.ok(timing.value > 0, 'firstInteraction is a positive value')
@@ -156,7 +156,7 @@ function runLargestContentfulPaintFromInteractionTests (loader) {
       })
       .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timings = body && body.length ? body : querypack.decode(query.e)
 
         const timing = timings.find(t => t.name === 'lcp')
         t.ok(timing, 'there is a largestContentfulPaint timing')
@@ -199,7 +199,7 @@ function runWindowLoadTests (loader) {
       .then(({ request: { body, query } }) => {
         let duration = Date.now() - start
 
-        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timings = body && body.length ? body : querypack.decode(query.e)
         t.ok(timings.length > 0, 'there should be at least one timing metric')
 
         var timing = timings.find(t => t.name === 'load')
@@ -230,7 +230,7 @@ function runWindowUnloadTests (loader) {
       .then(({ request: { body, query } }) => {
         let duration = Date.now() - start
 
-        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timings = body && body.length ? body : querypack.decode(query.e)
         t.ok(timings.length > 0, 'there should be at least one timing metric')
 
         var timing = timings.find(t => t.name === 'unload')
@@ -261,7 +261,7 @@ function runPageHideTests (loader) {
       })
       .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timings = body && body.length ? body : querypack.decode(query.e)
         let duration = Date.now() - start
 
         t.ok(timings.length > 0, 'there should be at least one timing metric')
@@ -304,7 +304,7 @@ function runPvtInStnTests (loader) {
       })
       .then(([{ request: resourcesResult }]) => {
         const expectedPVTItems = ['fi', 'fid', 'lcp', 'fcp', 'load', 'unload', 'pageHide']
-        const stnItems = !!resourcesResult && !!resourcesResult.body ? JSON.parse(resourcesResult.body).res : []
+        const stnItems = !!resourcesResult && !!resourcesResult.body ? resourcesResult.body.res : []
         t.ok(stnItems.length, 'STN items were generated')
         const pvtInStn = stnItems.filter(x => !!expectedPVTItems.filter(y => y === x.n && x.o === 'document').length)
         t.equal(pvtInStn.length, expectedPVTItems.length, 'Expected PVT Items are present in STN payload')
@@ -330,7 +330,7 @@ function runClsTests (loader) {
       })
       .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timings = body && body.length ? body : querypack.decode(query.e)
 
         const timing = timings.find(t => t.name === 'unload')
         var cls = timing.attributes.find(a => a.key === 'cls')
@@ -358,7 +358,7 @@ function runClsTests (loader) {
         })
       })
       .then(({ request: { body, query } }) => {
-        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timings = body && body.length ? body : querypack.decode(query.e)
 
         var pagehide = timings.find(t => t.name === 'pageHide')
         var cls = pagehide.attributes.find(a => a.key === 'cls')
@@ -390,7 +390,7 @@ function runClsTests (loader) {
       })
       .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timings = body && body.length ? body : querypack.decode(query.e)
 
         let timing = timings.find(t => t.name === 'pageHide')
         var cls = timing.attributes.find(a => a.key === 'cls')
@@ -436,7 +436,7 @@ function runCustomAttributeTests (loader) {
         })
       })
       .then(({ request: { body, query } }) => {
-        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timings = body && body.length ? body : querypack.decode(query.e)
         t.ok(timings.length > 0, 'there should be at least one timing metric')
 
         const timing = timings.find(t => t.name === 'load')
@@ -475,7 +475,7 @@ function runLcpTests (loader) {
     Promise.all([timingsPromise, rumPromise, loadPromise])
       .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timings = body && body.length ? body : querypack.decode(query.e)
 
         const timing = timings.find(t => t.name === 'lcp')
         t.ok(timing, 'found an LCP timing')
@@ -508,7 +508,7 @@ function runLcpTests (loader) {
       })
       .then(({ request: timingsResult }) => {
         const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timings = body && body.length ? body : querypack.decode(query.e)
 
         const timing = timings.find(t => t.name === 'lcp')
         t.notOk(timing, 'did NOT find a LCP timing')
@@ -533,7 +533,7 @@ function runLongTasksTest (loader) {
       })
       .then(([{ request: timingsResult }]) => {
         const { body, query } = timingsResult
-        const timings = querypack.decode(body && body.length ? body : query.e)
+        const timings = body && body.length ? body : querypack.decode(query.e)
 
         const ltEvents = timings.filter(t => t.name === 'lt')
         t.ok(ltEvents.length == 2, 'expected number of long tasks (2) observed')

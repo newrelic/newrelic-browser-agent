@@ -68,10 +68,10 @@ testDriver.test('NR-40043: Multiple errors with noticeError and unique messages 
 
   Promise.all([errPromise, rumPromise, loadPromise]).then(([errors]) => {
     t.equal(errors.reply.statusCode, 429, 'server responded with 429')
-    firstBody = JSON.parse(errors.request.body).err
+    firstBody = errors.request.body.err
     return router.expectErrors()
   }).then(errors => {
-    let secondBody = JSON.parse(errors.request.body).err
+    let secondBody = errors.request.body.err
 
     t.equal(errors.reply.statusCode, 200, 'server responded with 200')
     t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
@@ -123,10 +123,10 @@ testDriver.test('NEWRELIC-3788: Multiple identical errors from the same line but
 
   Promise.all([errPromise, rumPromise, loadPromise]).then(([errors]) => {
     t.equal(errors.reply.statusCode, 429, 'server responded with 429')
-    firstBody = JSON.parse(errors.request.body).err
+    firstBody = errors.request.body.err
     return router.expectErrors()
   }).then(errors => {
-    let secondBody = JSON.parse(errors.request.body).err
+    let secondBody = errors.request.body.err
 
     t.equal(errors.reply.statusCode, 200, 'server responded with 200')
     t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')

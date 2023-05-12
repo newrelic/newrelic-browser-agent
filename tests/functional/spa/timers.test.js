@@ -22,7 +22,7 @@ testDriver.test('incorrect timer', supported, function (t, browser, router) {
       })
     })
     .then(({ request: { query, body } }) => {
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
       t.equal(interactionTree.category, 'Route change', 'got route change harvest call')
       t.end()
     })

@@ -69,7 +69,7 @@ testDriver.test('error in root node', function (t, browser, router) {
       t.equal(errors.length, 1, 'should have 1 errors')
 
       let { body, query } = eventData
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
       var interactionId = interactionTree.id
       t.ok(interactionId != null, 'interaction id should not be null')
       t.ok(interactionTree.nodeId != null, 'interaction should have nodeId attribute')
@@ -103,7 +103,7 @@ testDriver.test('error in xhr', function (t, browser, router) {
       t.equal(errors.length, 1, 'should have 1 unique errors')
 
       let { body, query } = eventData
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
       var interactionId = interactionTree.id
       t.ok(interactionId != null, 'interaction id should not be null')
       t.ok(interactionTree.nodeId != null, 'interaction should have nodeId attribute')
@@ -138,7 +138,7 @@ testDriver.test('error in custom tracer', function (t, browser, router) {
       t.equal(errors.length, 1, 'should have 1 unique errors')
 
       let { body, query } = eventData
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
       var interactionId = interactionTree.id
       t.ok(interactionId != null, 'interaction id should not be null')
       t.ok(interactionTree.nodeId != null, 'interaction should have nodeId attribute')
@@ -177,7 +177,7 @@ testDriver.test('string error in custom tracer', function (t, browser, router) {
       else t.equal(errors.length, 1, 'should have 1 errors')
 
       let { body, query } = eventData
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
       var interactionId = interactionTree.id
       t.ok(interactionId != null, 'interaction id should not be null')
       t.ok(interactionTree.nodeId != null, 'interaction should have nodeId attribute')

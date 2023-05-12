@@ -21,7 +21,7 @@ testDriver.test('First paint for supported browsers', firstPaint.and(notSafariWi
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
 
       t.ok(interactionTree.firstPaint > 0, 'firstPaint has positive value')
     })
@@ -44,7 +44,7 @@ testDriver.test('First contentful paint for supported browsers', firstContentful
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
 
       t.ok(interactionTree.firstContentfulPaint > 0, 'firstContentfulPaint has positive value')
     })
@@ -67,7 +67,7 @@ testDriver.test('First paint for unsupported browsers', firstPaint.inverse().and
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
 
       t.ok(interactionTree.firstPaint === null, 'firstPaint should not exist')
     })
@@ -90,7 +90,7 @@ testDriver.test('First contentful paint for unsupported browsers', firstContentf
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
 
       t.ok(interactionTree.firstContentfulPaint === null, 'firstContentfulPaint should not exist')
     })
@@ -119,7 +119,7 @@ testDriver.test('route change interactions should not contain paint metrics valu
     })
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
 
       t.equal(interactionTree.category, 'Route change', 'should be route change interaction')
       t.ok(interactionTree.firstPaint === null, 'firstPaint should not exist')

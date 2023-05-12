@@ -134,6 +134,10 @@ function loadBrowsersAndRunTests () {
     } else {
       let sauceCreds = getSauceLabsCreds()
       connectionInfo = `http://${sauceCreds.username}:${sauceCreds.accessKey}@ondemand.saucelabs.com/wd/hub`
+
+      if (config.sauceExtendedDebugging && desired.browserName === 'chrome') {
+        desired.extendedDebugging = true
+      }
     }
 
     if (browser.allowsExtendedDebugging()) desired.extendedDebugging = true // turn on JS console logs & HAR files in SauceLabs

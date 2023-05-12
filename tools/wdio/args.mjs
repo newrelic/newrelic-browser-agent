@@ -97,6 +97,11 @@ const jilArgs = yargs(process.argv.slice(2))
   .alias('A', 'all-browsers')
   .describe('A', 'Run tests against all browsers, even unsupported ones')
 
+  .boolean('D')
+  .default('D', false)
+  .alias('D', 'sauce-extended-debugging')
+  .describe('D', 'Run tests with sauce labs extended debugging enabled')
+
   .help('h')
   .alias('h', 'help').argv
 

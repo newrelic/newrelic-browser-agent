@@ -22,7 +22,7 @@ testDriver.test('interactions wait for external scripts to complete', supported,
       })
     })
     .then(({ request: { query, body } }) => {
-      let i = querypack.decode(body && body.length ? body : query.e)[0]
+      let i = body && body.length ? body : querypack.decode(query.e)[0]
       t.ok(i.start, 'start is present')
       t.ok(i.end, 'end is present')
       var duration = i.end - i.start
@@ -41,7 +41,7 @@ testDriver.test('interactions wait for external scripts to complete', supported,
 testDriver.test('ajax call in loaded script extends interaction', supported, function (t, browser, router) {
   loadClickAndGetInteraction(router, browser, 'spa/external-scripts/script-with-ajax.html')
     .then(({ request: { query, body } }) => {
-      let i = querypack.decode(body && body.length ? body : query.e)[0]
+      let i = body && body.length ? body : querypack.decode(query.e)[0]
 
       t.equal(i.children.length, 1, 'should have one child for ajax')
       t.equal(i.children[0].type, 'ajax')
@@ -63,7 +63,7 @@ testDriver.test('ajax call in loaded script extends interaction', supported, fun
 testDriver.test('errored script', supported, function (t, browser, router) {
   loadClickAndGetInteraction(router, browser, 'spa/external-scripts/aborted-script.html')
     .then(({ request: { query, body } }) => {
-      let i = querypack.decode(body && body.length ? body : query.e)[0]
+      let i = body && body.length ? body : querypack.decode(query.e)[0]
 
       t.ok(i.start, 'start is present')
       t.ok(i.end, 'end is present')

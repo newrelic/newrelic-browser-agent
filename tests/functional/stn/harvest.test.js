@@ -41,8 +41,8 @@ testDriver.test('session traces are retried when collector returns 429 during fi
 
     let secondBody = result.request.body
 
-    const firstParsed = JSON.parse(firstBody)
-    const secondParsed = JSON.parse(secondBody)
+    const firstParsed = firstBody
+    const secondParsed = secondBody
 
     t.ok(secondParsed.res.length > firstParsed.res.length, 'second try has more nodes than first')
     t.ok(containsAll(secondParsed, firstParsed), 'all nodes have been resent')
@@ -137,9 +137,9 @@ testDriver.test('session traces are retried when collector returns 429 during sc
 
     let thirdBody = result.request.body
 
-    const firstParsed = JSON.parse(firstBody)
-    const secondParsed = JSON.parse(secondBody)
-    const thirdParsed = JSON.parse(thirdBody)
+    const firstParsed = firstBody
+    const secondParsed = secondBody
+    const thirdParsed = thirdBody
 
     t.ok(secondParsed.res.length > firstParsed.res.length, 'second try has more nodes than first')
     t.ok(containsAll(thirdParsed, secondParsed), 'all nodes have been resent')

@@ -29,6 +29,11 @@ function sauceCapabilities () {
       ...sauceBrowser,
       platform: undefined,
       version: undefined,
+      ...(() => {
+        if (jilArgs.sauceExtendedDebugging && sauceBrowser.browserName === 'chrome') {
+          return { extendedDebugging: true }
+        }
+      })(),
       'sauce:options': !jilArgs.sauce
         ? { tunnelName: getSauceConnectTunnelName() }
         : {}

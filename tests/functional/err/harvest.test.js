@@ -37,10 +37,10 @@ testDriver.test('jserrors are retried when collector returns 429', corsSupported
 
   Promise.all([errPromise, loadPromise, rumPromise]).then(([errResult]) => {
     t.equal(errResult.reply.statusCode, 429, 'server responded with 429')
-    firstBody = JSON.parse(errResult.request.body).err
+    firstBody = errResult.request.body.err
     return router.expectErrors()
   }).then(result => {
-    let secondBody = JSON.parse(result.request.body).err
+    let secondBody = result.request.body.err
 
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
     t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')

@@ -42,7 +42,7 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
 
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
-    const parsed = JSON.parse(body).res
+    const parsed = body.res
     const harvestBody = parsed
     const resources = harvestBody.filter(function (node) { return node.t === 'resource' })
 

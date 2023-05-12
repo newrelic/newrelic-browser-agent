@@ -170,7 +170,9 @@ export class Aggregate extends FeatureBase {
   prepareHarvest (options) {
     // console.log('prepare harvest')
     if (this.events.length === 0) return
-    return this.getPayload()
+    const payload = this.getPayload()
+    console.log('rrweb payload', payload)
+    return payload
   }
 
   getPayload () {

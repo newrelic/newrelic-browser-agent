@@ -7,22 +7,13 @@ const log = logger('jil-testing-server')
  * This is a WDIO launcher plugin that starts the testing servers.
  */
 export default class TestingServerLauncher {
-  static #defaultAgentConfig = {
-    licenseKey: 'asdf',
-    applicationID: 42,
-    accountID: 123,
-    agentID: 456,
-    trustKey: 789
-  }
-
   #testingServer
 
   constructor (opts) {
-    this.#testingServer = new TestServer(
-      opts,
-      TestingServerLauncher.#defaultAgentConfig,
-      log
-    )
+    this.#testingServer = new TestServer({
+      ...opts,
+      logger: log
+    })
   }
 
   async onPrepare (_, capabilities) {

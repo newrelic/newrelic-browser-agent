@@ -164,12 +164,12 @@ export class Aggregate extends FeatureBase {
         this.errorNoticed = true
       }, this.featureName, this.ee)
     }
+    this.isFirstChunk = true
   }
 
   prepareHarvest (options) {
     // console.log('prepare harvest')
     if (this.events.length === 0) return
-
     return this.getPayload()
   }
 
@@ -180,9 +180,9 @@ export class Aggregate extends FeatureBase {
       qs: { protocol_version: '0' },
       body: {
         type: 'Replay',
-        appId: info.applicationID,
+        appId: Number(info.applicationID),
         timestamp: Date.now(),
-        blob: [...this.events],
+        blob: stringify(this.events),
         attributes: {
           session: agentRuntime.session.value,
           hasSnapshot: this.hasSnapshot,
@@ -215,6 +215,7 @@ export class Aggregate extends FeatureBase {
     this.isFirstChunk = false
     this.hasSnapshot = false
     this.hasError = false
+    this.isFirstChunk = false
   }
 
   startRecording () {
@@ -249,7 +250,7 @@ export class Aggregate extends FeatureBase {
       }
     }
 
-    this.utfEncoder.push(event)
+    this.events.push(event)
 
     if (payload.size > IDEAL_PAYLOAD_SIZE) {
       // if we've made it to the ideal size of ~128kb before the interval timer, we should send early.
@@ -265,7 +266,7 @@ export class Aggregate extends FeatureBase {
   async getPayloadSize (newData) {
     const payload = this.getPayload()
     if (newData) {
-      payload.body.blob.push(newData)
+      payload.body.blob += newData
     }
     const compressedData = await this.estimateCompression(payload.body, true)
     return { size: compressedData }

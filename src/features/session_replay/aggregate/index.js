@@ -7,7 +7,7 @@ import { FEATURE_NAME } from '../constants'
 import { stringify } from '../../../common/util/stringify'
 import { getInfo, getRuntime } from '../../../common/config/config'
 import { SESSION_EVENTS } from '../../../common/session/session-entity'
-import { gzip } from 'fflate'
+import { EncodeUTF8, gzip } from 'fflate'
 import { warn } from '../../../common/util/console'
 
 // would be better to get this dynamically in some way
@@ -37,6 +37,10 @@ export class Aggregate extends FeatureBase {
 
     this.hasFirstChunk = false
     this.hasSnapshot = false
+
+    this.utfEncoder = new EncodeUTF8((data, final) => {
+      this.events.push(data)
+    })
 
     const { session } = getRuntime(this.agentIdentifier)
     // // if this isnt the FIRST load of a session AND
@@ -223,8 +227,7 @@ export class Aggregate extends FeatureBase {
 
   async store (event, isCheckout) {
     if (this.blocked) return
-    const payload = await this.getPayloadSize(MAX_PAYLOAD_SIZE, event)
-    // console.log('payload', payload)
+    const payload = await this.getPayloadSize(event)
     if (payload.size > MAX_PAYLOAD_SIZE) {
       return this.abort()
     }
@@ -246,8 +249,7 @@ export class Aggregate extends FeatureBase {
       }
     }
 
-    this.events.push(event)
-    // console.log('this.events', this.events)
+    this.utfEncoder.push(event)
 
     if (payload.size > IDEAL_PAYLOAD_SIZE) {
       // if we've made it to the ideal size of ~128kb before the interval timer, we should send early.
@@ -260,13 +262,13 @@ export class Aggregate extends FeatureBase {
     this.hasSnapshot = true
   }
 
-  async getPayloadSize (limit, newData) {
+  async getPayloadSize (newData) {
     const payload = this.getPayload()
     if (newData) {
       payload.body.blob.push(newData)
     }
-    const compressedData = await this.compress(payload.body)
-    return { size: compressedData.length }
+    const compressedData = await this.estimateCompression(payload.body, true)
+    return { size: compressedData }
   }
 
   abort () {
@@ -276,14 +278,16 @@ export class Aggregate extends FeatureBase {
     session.write({ ...session.state, sessionReplayActive: false })
   }
 
-  compress (data) {
+  estimateCompression (data, estimate) {
     return new Promise((resolve, reject) => {
-      gzip(stringify(data), (err, data) => {
+      const d = stringify(data)
+      if (estimate) return resolve(d.length * 0.11)
+      gzip(d, (err, data) => {
         if (err) {
           warn('Failed to compress', err)
           return reject(err)
         }
-        return resolve(data)
+        return resolve(data.length)
       })
     })
   }

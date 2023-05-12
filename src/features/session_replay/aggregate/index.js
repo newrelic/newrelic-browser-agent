@@ -39,10 +39,6 @@ export class Aggregate extends FeatureBase {
     this.hasSnapshot = false
     this.hasError = false
 
-    this.utfEncoder = new EncodeUTF8((data, final) => {
-      this.events.push(data)
-    })
-
     const { session } = getRuntime(this.agentIdentifier)
     // // if this isnt the FIRST load of a session AND
     // // we are not actively recording SR... DO NOT run the aggregator
@@ -179,7 +175,7 @@ export class Aggregate extends FeatureBase {
   getPayload () {
     const agentRuntime = getRuntime(this.agentIdentifier)
     const info = getInfo(this.agentIdentifier)
-    return {
+    const payload = {
       qs: { protocol_version: '0' },
       body: {
         type: 'Replay',
@@ -196,6 +192,8 @@ export class Aggregate extends FeatureBase {
         }
       }
     }
+    this.clearBuffer()
+    return payload
   }
 
   onHarvestFinished (result) {
@@ -208,7 +206,7 @@ export class Aggregate extends FeatureBase {
 
     // console.log(result)
     // keep things in the buffer if they fail to send AND its not a rate limit issue
-    if (result.sent && !result.retry) this.clearBuffer()
+    this.clearBuffer()
 
     if (this.blocked) this.scheduler.stopTimer(true)
   }
@@ -218,7 +216,6 @@ export class Aggregate extends FeatureBase {
     this.isFirstChunk = false
     this.hasSnapshot = false
     this.hasError = false
-    this.isFirstChunk = false
   }
 
   startRecording () {

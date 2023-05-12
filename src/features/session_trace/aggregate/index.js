@@ -70,7 +70,7 @@ export class Aggregate extends FeatureBase {
         }
 
         if (result.sent && result.retry && this.sentTrace) { // merge previous trace back into buffer to retry for next harvest
-          Object.entries(this.sentTrace).forEach((name, listOfSTNodes) => {
+          Object.entries(this.sentTrace).forEach(([name, listOfSTNodes]) => {
             if (this.nodeCount >= this.maxNodesPerHarvest) return
 
             this.nodeCount += listOfSTNodes.length

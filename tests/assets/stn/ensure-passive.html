@@ -21,6 +21,11 @@
     </script>
     {config}
     {loader}
+    <script>
+      try {
+        document.addEventListener('scroll', function(e){}, {capture:false, passive:true})
+      } catch {}
+    </script>
   </head>
   <body>
   </body>

@@ -182,7 +182,7 @@ export class Aggregate extends FeatureBase {
         type: 'Replay',
         appId: Number(info.applicationID),
         timestamp: Date.now(),
-        blob: stringify(this.events),
+        blob: JSON.stringify(this.events), // this needs to be a stringified JSON array of rrweb nodes
         attributes: {
           session: agentRuntime.session.state.value,
           hasSnapshot: this.hasSnapshot,

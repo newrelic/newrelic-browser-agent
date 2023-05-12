@@ -200,6 +200,7 @@ class TestServer {
     })
 
     this.#assetServer.decorate('testServerId', 'assetServer')
+    this.#assetServer.register(require('@fastify/compress'))
     this.#assetServer.register(require('@fastify/multipart'), {
       addToBody: true
     })
@@ -231,6 +232,7 @@ class TestServer {
     })
 
     this.#corsServer.decorate('testServerId', 'corsServer')
+    this.#corsServer.register(require('@fastify/compress'))
     this.#corsServer.register(require('@fastify/multipart'), {
       addToBody: true
     })
@@ -251,6 +253,7 @@ class TestServer {
     })
 
     this.#bamServer.decorate('testServerId', 'bamServer')
+    this.#bamServer.register(require('@fastify/compress'))
     this.#bamServer.register(require('@fastify/multipart'), {
       addToBody: true
     })

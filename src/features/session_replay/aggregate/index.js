@@ -37,6 +37,7 @@ export class Aggregate extends FeatureBase {
 
     this.hasFirstChunk = false
     this.hasSnapshot = false
+    this.hasError = false
 
     this.utfEncoder = new EncodeUTF8((data, final) => {
       this.events.push(data)
@@ -186,7 +187,7 @@ export class Aggregate extends FeatureBase {
         timestamp: Date.now(),
         blob: stringify(this.events),
         attributes: {
-          session: agentRuntime.session.value,
+          session: agentRuntime.session.state.value,
           hasSnapshot: this.hasSnapshot,
           hasError: this.hasError,
           agentVersion: agentRuntime.version,

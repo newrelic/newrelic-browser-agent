@@ -54,14 +54,42 @@ export class Aggregate extends FeatureBase {
       } else {
         this.storeTiming(window.performance.timing)
       }
-      handlerCache.decide(true) // go through with processing all of the staged ee handlers, so that data can be harvested
 
       const scheduler = new HarvestScheduler('resources', {
-        onFinished: this.onHarvestFinished.bind(this),
+        onFinished: onHarvestFinished.bind(this),
         retryDelay: this.harvestTimeSeconds
       }, this)
-      scheduler.harvest.on('resources', this.prepareHarvest.bind(this))
+      scheduler.harvest.on('resources', prepareHarvest.bind(this))
       scheduler.runHarvest({ needResponse: true }) // sends first stn harvest immediately
+      handlerCache.decide(true)
+
+      function onHarvestFinished (result) {
+        if (result.sent && result.responseText && !this.ptid) { // continue interval harvest only if ptid was returned by server on the first
+          getRuntime(this.agentIdentifier).ptid = this.ptid = result.responseText
+          scheduler.startTimer(this.harvestTimeSeconds)
+        }
+
+        if (result.sent && result.retry && this.sentTrace) { // merge previous trace back into buffer to retry for next harvest
+          Object.entries(this.sentTrace).forEach((name, listOfSTNodes) => {
+            if (this.nodeCount >= this.maxNodesPerHarvest) return
+
+            this.nodeCount += listOfSTNodes.length
+            this.trace[name] = this.trace[name] ? listOfSTNodes.concat(this.trace[name]) : listOfSTNodes
+          })
+          this.sentTrace = null
+        }
+      }
+      function prepareHarvest (options) {
+        if (now() > MAX_TRACE_DURATION) { // been collecting for over 15 min, empty trace object and bail
+          scheduler.stopTimer()
+          this.trace = {}
+          return
+        }
+        // Only harvest when there are more than 30 nodes to send after the very first.
+        if (this.ptid && this.nodeCount <= 30) return
+
+        return this.takeSTNs(options.retry)
+      }
     }, this.featureName, this.ee)
 
     registerHandler('block-stn', () => handlerCache.decide(false), this.featureName, this.ee)
@@ -78,38 +106,9 @@ export class Aggregate extends FeatureBase {
     drain(this.agentIdentifier, this.featureName)
   }
 
-  onHarvestFinished (result) {
-    if (result.sent && result.responseText && !this.ptid) { // continue interval harvest only if ptid was returned by server on the first
-      getRuntime(this.agentIdentifier).ptid = this.ptid = result.responseText
-      scheduler.startTimer(this.harvestTimeSeconds)
-    }
-
-    if (result.sent && result.retry && this.sentTrace) { // merge previous trace back into buffer to retry for next harvest
-      Object.entries(this.sentTrace).forEach((name, listOfSTNodes) => {
-        if (this.nodeCount >= this.maxNodesPerHarvest) return
-
-        this.nodeCount += listOfSTNodes.length
-        this.trace[name] = this.trace[name] ? listOfSTNodes.concat(this.trace[name]) : listOfSTNodes
-      })
-      this.sentTrace = null
-    }
-  }
-
-  prepareHarvest (options) {
-    if (now() > MAX_TRACE_DURATION) { // been collecting for over 15 min, empty trace object and bail
-      scheduler.stopTimer()
-      this.trace = {}
-      return
-    }
-    // Only harvest when there are more than 30 nodes to send after the very first.
-    if (this.ptid && this.nodeCount <= 30) return
-
-    return this.takeSTNs(options.retry)
-  }
-
   // PageViewTiming (FEATURE) events and metrics, such as 'load', 'lcp', etc. pipes into ST here.
   processPVT (name, value, attrs) {
-    this.storeTiming({ name: value })
+    this.storeTiming({ [name]: value })
     if (hasFID(name, attrs)) this.storeEvent({ type: 'fid', target: 'document' }, 'document', value, value + attrs.fid)
 
     function hasFID (name, attrs) {

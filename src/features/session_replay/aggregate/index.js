@@ -8,10 +8,8 @@ import { stringify } from '../../../common/util/stringify'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { SESSION_EVENTS } from '../../../common/session/session-entity'
 
-import * as pkg from '../../../../package.json'
-
 // would be better to get this dynamically in some way
-export const RRWEB_VERSION = pkg.dependencies.rrweb
+export const RRWEB_VERSION = '2.0.0-alpha.8'
 
 const MODE = {
   OFF: 0,

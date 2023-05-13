@@ -132,7 +132,12 @@ export class Harvest extends SharedContext {
         Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
         we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon. */
     if (useBody && gzip) {
-      body = gzipSync(strToU8(body))
+      try {
+        body = gzipSync(strToU8(body))
+      } catch (err) {
+        // failed to gzip...
+        gzip = false
+      }
     }
 
     var result = method({ url: fullUrl, body, sync: opts.unload && isWorkerScope, gzipped: gzip, licenseKey: info.licenseKey })

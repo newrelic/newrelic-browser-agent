@@ -5,10 +5,8 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FeatureBase } from '../../utils/feature-base'
 import { FEATURE_NAME } from '../constants'
 import { stringify } from '../../../common/util/stringify'
-import { getInfo, getRuntime } from '../../../common/config/config'
+import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { SESSION_EVENTS } from '../../../common/session/session-entity'
-import { EncodeUTF8, gzip } from 'fflate'
-import { warn } from '../../../common/util/console'
 
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.4'
@@ -29,15 +27,17 @@ export class Aggregate extends FeatureBase {
 
     this.events = []
     this.overflow = []
-    this.harvestTimeSeconds = 10
+    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'session_replay.harvestTimeSeconds') || 60
     this.initialized = false
     this.errorNoticed = false
     this.mode = MODE.OFF
     this.blocked = false
 
-    this.hasFirstChunk = false
+    this.isFirstChunk = false
     this.hasSnapshot = false
     this.hasError = false
+
+    this.payloadBytesEstimation = 0
 
     const { session } = getRuntime(this.agentIdentifier)
     // // if this isnt the FIRST load of a session AND
@@ -139,16 +139,11 @@ export class Aggregate extends FeatureBase {
     if (!entitlements) return // TODO -- re-enable this when flags are working
 
     const { session } = getRuntime(this.agentIdentifier)
-    // console.log('both', (!session.isNew && !session.state.sessionReplayActive))
-    // console.log('active', session.state.sessionReplayActive)
-    // console.log('new and sample', session.isNew && fullSample)
     // if theres an existing session replay in progress, there's no need to sample, just check the entitlements response
     // if not, these sample flags need to be checked
     if (!session.isNew && !session.state.sessionReplayActive) return
     if (session.state.sessionReplayActive || (session.isNew && fullSample)) this.mode = MODE.FULL
     else if (errorSample) this.mode = MODE.ERROR
-
-    // console.log('mode --', this.mode)
 
     if (this.mode !== MODE.OFF) this.startRecording()
     if (this.mode === MODE.FULL) this.scheduler.startTimer(this.harvestTimeSeconds)
@@ -161,7 +156,7 @@ export class Aggregate extends FeatureBase {
         this.errorNoticed = true
       }, this.featureName, this.ee)
     }
-    this.isFirstChunk = true
+    this.isFirstChunk = !!session.isNew
   }
 
   prepareHarvest (options) {
@@ -215,20 +210,32 @@ export class Aggregate extends FeatureBase {
     this.isFirstChunk = false
     this.hasSnapshot = false
     this.hasError = false
+    this.payloadBytesEstimation = 0
   }
 
   startRecording () {
+    const { blockClass, ignoreClass, maskTextClass, blockSelector, maskInputOptions, maskTextSelector, maskAllInputs } = getConfigurationValue(this.agentIdentifier, 'session_replay')
     this.hasSnapshot = true
+    // set up rrweb configurations for maximum privacy --
+    // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
     this.stopRecording = record({
       emit: this.store.bind(this),
+      blockClass,
+      ignoreClass,
+      maskTextClass,
+      blockSelector,
+      maskInputOptions,
+      maskTextSelector,
+      maskAllInputs,
       ...(this.mode === MODE.ERROR && { checkoutEveryNms: this.harvestTimeSeconds * 1000 })
     })
   }
 
-  async store (event, isCheckout) {
+  store (event, isCheckout) {
     if (this.blocked) return
-    const payload = await this.getPayloadSize(event)
-    if (payload.size > MAX_PAYLOAD_SIZE) {
+    const eventBytes = stringify(event).length
+    const payloadSize = this.getPayloadSize(eventBytes)
+    if (payloadSize > MAX_PAYLOAD_SIZE) {
       return this.abort()
     }
     if (this.mode === MODE.ERROR && !this.errorNoticed && isCheckout) {
@@ -250,9 +257,10 @@ export class Aggregate extends FeatureBase {
     }
 
     this.events.push(event)
+    this.payloadBytesEstimation += eventBytes
 
-    if (payload.size > IDEAL_PAYLOAD_SIZE) {
-      // if we've made it to the ideal size of ~128kb before the interval timer, we should send early.
+    if (payloadSize > IDEAL_PAYLOAD_SIZE) {
+      // if we've made it to the ideal size of ~64kb before the interval timer, we should send early.
       this.scheduler.runHarvest()
     }
   }
@@ -262,13 +270,9 @@ export class Aggregate extends FeatureBase {
     this.hasSnapshot = true
   }
 
-  async getPayloadSize (newData) {
-    const payload = this.getPayload()
-    if (newData) {
-      payload.body.blob += newData
-    }
-    const compressedData = await this.estimateCompression(payload.body, true)
-    return { size: compressedData }
+  getPayloadSize (newBytes = 0) {
+    // the 1KB gives us some padding for the other metadata
+    return (this.payloadBytesEstimation + newBytes) + 1000
   }
 
   abort () {
@@ -278,17 +282,7 @@ export class Aggregate extends FeatureBase {
     session.write({ ...session.state, sessionReplayActive: false })
   }
 
-  estimateCompression (data, estimate) {
-    return new Promise((resolve, reject) => {
-      const d = stringify(data)
-      if (estimate) return resolve(d.length * 0.11)
-      gzip(d, (err, data) => {
-        if (err) {
-          warn('Failed to compress', err)
-          return reject(err)
-        }
-        return resolve(data.length)
-      })
-    })
+  estimateCompression (data) {
+    return data.length * 0.11
   }
 }

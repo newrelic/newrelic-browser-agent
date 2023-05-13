@@ -8,7 +8,7 @@ import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, PREFIX } from './constants'
 import { LocalMemory } from '../storage/local-memory'
 import { InteractionTimer } from '../timer/interaction-timer'
 import { wrapEvents } from '../wrap'
-import { Configurable } from '../config/state/configurable'
+import { getModeledObject } from '../config/state/configurable'
 import { handle } from '../event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { FEATURE_NAMES } from '../../loaders/features/features'
@@ -105,7 +105,7 @@ export class SessionEntity {
         // When the inactive timer pauses, update the storage values with an update timestamp
         onPause: () => {
           if (this.initialized) this.ee.emit(SESSION_EVENTS.PAUSE)
-          this.write(new Configurable(this.state, model))
+          this.write(getModeledObject(this.state, model))
         },
         ee: this.ee,
         refreshEvents: ['click', 'keydown', 'scroll']
@@ -118,8 +118,8 @@ export class SessionEntity {
     // can use this info to inform whether to trust a new sampling decision vs continue a previous tracking effort.
     if (this.isNew === undefined) this.isNew = !Object.keys(initialRead).length
     // if its a "new" session, we write to storage API with the default values.  These values may change over the lifespan of the agent run.
-    // we can use configurable here to help us know and manage what values are being used. -- see "model" above
-    if (this.isNew) this.write(new Configurable(this.state, model), true)
+    // we can use a modeled object here to help us know and manage what values are being used. -- see "model" above
+    if (this.isNew) this.write(getModeledObject(this.state, model), true)
     else this.sync(initialRead)
 
     this.initialized = true

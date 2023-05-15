@@ -1,4 +1,4 @@
-import { record } from 'rrweb'
+// import { record } from 'rrweb'
 import { drain } from '../../../common/drain/drain'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
@@ -10,6 +10,8 @@ import { SESSION_EVENTS } from '../../../common/session/session-entity'
 
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.8'
+
+let recorder
 
 const MODE = {
   OFF: 0,
@@ -39,16 +41,6 @@ export class Aggregate extends FeatureBase {
 
     this.payloadBytesEstimation = 0
 
-    const { session } = getRuntime(this.agentIdentifier)
-    // // if this isnt the FIRST load of a session AND
-    // // we are not actively recording SR... DO NOT run the aggregator
-    // // session replay samples can only be decided on the first load of a session
-    // // session replays can continue if in progress
-    if (!session.isNew && !session.state.sessionReplayActive) {
-      drain(this.agentIdentifier, this.featureName)
-      return
-    }
-
     // console.log('session ID at startup', session.state.value)
 
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
@@ -77,13 +69,34 @@ export class Aggregate extends FeatureBase {
       gzip: true
     }, this)
 
+    registerHandler('err', (e) => {
+      this.hasError = true
+      if (this.errorNoticed) return
+      // if the error was noticed AFTER the recorder was imported....
+      if (this.mode === MODE.ERROR && !!recorder) {
+        this.errorNoticed = true
+        this.stopRecording()
+        this.mode = MODE.FULL
+        this.startRecording()
+        this.scheduler.startTimer(this.harvestTimeSeconds)
+      }
+    }, this.featureName, this.ee)
+
     // TODO -- get this working with agreed structure
     // DISABLE FOR STEEL THREAD, RUN ON EVERY PAGE
     // THIS STILL ONLY HONORS NEW SESSIONS OR ONGOING RECORDINGS THO...
     // this.waitForFlags()
-    this.initializeRecording(true, false, true) // and disable this when flags are working
+    this.initializeRecording(true, true, false) // and disable this when flags are working
 
-    drain(this.agentIdentifier, this.featureName)
+    const { session } = getRuntime(this.agentIdentifier)
+    // // if this isnt the FIRST load of a session AND
+    // // we are not actively recording SR... DO NOT run the aggregator
+    // // session replay samples can only be decided on the first load of a session
+    // // session replays can continue if in progress
+    if (session.isNew || !!session.state.sessionReplayActive) {
+      drain(this.agentIdentifier, this.featureName)
+      return
+    }
   }
 
   setupFlagResponseHandlers () {
@@ -133,7 +146,7 @@ export class Aggregate extends FeatureBase {
     }, this.featureName, this.ee)
   }
 
-  initializeRecording (entitlements, errorSample, fullSample) {
+  async initializeRecording (entitlements, errorSample, fullSample) {
     // console.log('initialize recording')
     this.initialized = true
     if (!entitlements) return // TODO -- re-enable this when flags are working
@@ -145,16 +158,20 @@ export class Aggregate extends FeatureBase {
     if (session.state.sessionReplayActive || (session.isNew && fullSample)) this.mode = MODE.FULL
     else if (errorSample) this.mode = MODE.ERROR
 
-    if (this.mode !== MODE.OFF) this.startRecording()
-    if (this.mode === MODE.FULL) this.scheduler.startTimer(this.harvestTimeSeconds)
-    if (this.mode === MODE.ERROR) {
-      registerHandler('err', () => {
-        this.hasError = true
-        if (this.errorNoticed) return
-        this.scheduler.runHarvest({ needResponse: true })
-        this.scheduler.startTimer(this.harvestTimeSeconds)
-        this.errorNoticed = true
-      }, this.featureName, this.ee)
+    console.log('MODE', this.mode)
+
+    if (this.mode === MODE.FULL || (this.mode === MODE.ERROR && this.errorNoticed)) {
+      this.mode = MODE.FULL
+      this.scheduler.startTimer(this.harvestTimeSeconds)
+      this.recording = true
+      // we only set sessionReplayActive to true if "full"
+      const { session } = getRuntime(this.agentIdentifier)
+      session.write({ ...session.state, sessionReplayType: true })
+    }
+    if (this.mode !== MODE.OFF) {
+      const { record } = await import(/* webpackChunkName: "recorder" */'rrweb')
+      recorder = record
+      this.startRecording()
     }
     this.isFirstChunk = !!session.isNew
   }
@@ -214,11 +231,15 @@ export class Aggregate extends FeatureBase {
   }
 
   startRecording () {
+    if (!recorder) {
+      warn('Recording library was never imported')
+      return this.abort()
+    }
     const { blockClass, ignoreClass, maskTextClass, blockSelector, maskInputOptions, maskTextSelector, maskAllInputs } = getConfigurationValue(this.agentIdentifier, 'session_replay')
     this.hasSnapshot = true
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
-    this.stopRecording = record({
+    this.stopRecording = recorder({
       emit: this.store.bind(this),
       blockClass,
       ignoreClass,
@@ -227,7 +248,7 @@ export class Aggregate extends FeatureBase {
       maskInputOptions,
       maskTextSelector,
       maskAllInputs,
-      ...(this.mode === MODE.ERROR && { checkoutEveryNms: this.harvestTimeSeconds * 1000 })
+      ...(this.mode === MODE.ERROR && { checkoutEveryNms: 30000 })
     })
   }
 
@@ -241,19 +262,6 @@ export class Aggregate extends FeatureBase {
     if (this.mode === MODE.ERROR && !this.errorNoticed && isCheckout) {
       // we are still waiting for an error to throw, so keep wiping the buffer over time
       this.clearBuffer()
-    } else {
-      // set once
-      if (!this.recording) {
-        this.recording = true
-        const { session } = getRuntime(this.agentIdentifier)
-        session.write({ ...session.state, sessionReplayActive: true })
-
-        if (this.mode === MODE.ERROR) {
-          this.stopRecording()
-          this.mode = MODE.FULL
-          this.startRecording()
-        }
-      }
     }
 
     this.events.push(event)
@@ -266,7 +274,8 @@ export class Aggregate extends FeatureBase {
   }
 
   takeFullSnapshot () {
-    record.takeFullSnapshot()
+    if (!recorder) return
+    recorder.takeFullSnapshot()
     this.hasSnapshot = true
   }
 

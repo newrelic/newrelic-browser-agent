@@ -69,7 +69,7 @@ testDriver.test('SPA - Kills feature if entitlements flag is 0', supported, func
     .then(() => spaPromise)
     .then(() => t.fail('should not have received spa data'))
     .catch((e) => {
-      if (e.toString().indexOf('Expect for bamServer timed out') > -1) {
+      if (e.toString().indexOf('for bamServer timed out') > -1) {
         t.pass('did not received spa data :)')
       } else {
         t.fail('unknown error', e)
@@ -105,7 +105,7 @@ testDriver.test('PAGE ACTIONS - Kills feature if entitlements flag is 0', suppor
     .then(() => insPromise)
     .then(() => t.fail('should not have received spa data'))
     .catch((e) => {
-      if (e.toString().indexOf('Expect for bamServer timed out') > -1) {
+      if (e.toString().indexOf('for bamServer timed out') > -1) {
         t.pass('did not received ins data :)')
       } else {
         t.fail('unknown error', e)

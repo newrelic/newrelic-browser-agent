@@ -215,7 +215,7 @@ class TestServer {
     this.#assetServer.register(require('@fastify/static'), {
       root: paths.rootDir,
       prefix: '/',
-      index: false,
+      index: ['index.html'],
       cacheControl: false,
       etag: false
     })

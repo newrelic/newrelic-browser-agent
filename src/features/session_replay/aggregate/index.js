@@ -86,7 +86,7 @@ export class Aggregate extends FeatureBase {
     // DISABLE FOR STEEL THREAD, RUN ON EVERY PAGE
     // THIS STILL ONLY HONORS NEW SESSIONS OR ONGOING RECORDINGS THO...
     // this.waitForFlags()
-    this.initializeRecording(true, true, false) // and disable this when flags are working
+    this.initializeRecording(true, Math.random() < 0.1, Math.random() < 0.1) // and disable this when flags are working
 
     const { session } = getRuntime(this.agentIdentifier)
     // // if this isnt the FIRST load of a session AND

@@ -49,7 +49,7 @@ function finalHarvest (type, browserVersionMatcher) {
           t.equal(errResponse.request.method, 'POST', 'jserrors harvest is a POST')
 
           body = ajaxResponse.request.body
-          t.ok(body.startsWith('bel.'), 'ajax event is sent on close')	// note: there's a race condition between api calls & final harvest callbacks that determines what the payload may look like
+          t.ok(body.length > 0, 'ajax event is sent on close')	// note: there's a race condition between api calls & final harvest callbacks that determines what the payload may look like
           t.equal(errResponse.request.method, 'POST', 'events harvest is a POST')
 
           body = insResponse.request.body

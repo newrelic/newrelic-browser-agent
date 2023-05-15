@@ -113,6 +113,7 @@ class TestRun extends EventEmitter {
 
       const id = self._generateID()
       const handle = router.createTestHandle(id)
+      self.driver.output.log(`# Running test [${id}]: ${testName}`)
 
       harness.pause()
       observeTapeTest(t, onTestFinished, onTestResult)
@@ -170,6 +171,7 @@ class TestRun extends EventEmitter {
       }
 
       try {
+
         fn(t, browser, handle)
       } catch (e) {
         newrelic.noticeError(e)

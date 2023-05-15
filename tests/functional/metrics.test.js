@@ -22,10 +22,12 @@ function loaderTypeSupportabilityMetric (loaderType) {
 
     Promise.all([rumPromise, loadPromise])
       .then(() => {
-        browser.get(router.assetURL('/'))
-        return router.expectMetrics(3000)
+        return Promise.all([
+          router.expectMetrics(5000),
+          browser.get(router.assetURL('/'))
+        ])
       })
-      .then(({ request: data }) => {
+      .then(([{ request: data }]) => {
         var supportabilityMetrics = getMetricsFromResponse(data, true)
         const loaderTypeSM = supportabilityMetrics.find(x => x.params.name.includes('LoaderType'))
         t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')

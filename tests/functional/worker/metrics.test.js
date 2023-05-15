@@ -37,7 +37,8 @@ function metricsApiCreatesSM (type, browserVersionMatcher) {
           newrelic.setPageViewName('test')
           newrelic.setPageViewName('test')
           newrelic.setPageViewName('test')
-          self.close()
+
+          setTimeout(self.close, 300)
         }].map(x => x.toString())
       })
       const loadPromise = browser.get(assetURL)
@@ -85,8 +86,8 @@ function metricsValidObfuscationCreatesSM (type, browserVersionMatcher) {
           ins: { harvestTimeSeconds: 2 }
         },
         workerCommands: [() => {
+          setTimeout(self.close, 300)
           setTimeout(function () {
-            setTimeout(() => self.close(), 100)
             fetch('/tests/assets/obfuscate-pii-valid.html')
             throw new Error('pii')
           }, 100)
@@ -132,7 +133,7 @@ function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
         },
         workerCommands: [() => {
           setTimeout(function () {
-            setTimeout(() => self.close(), 100)
+            setTimeout(self.close, 300)
             fetch('/tests/assets/obfuscate-pii-valid.html')
             throw new Error('pii')
           }, 100)
@@ -184,7 +185,7 @@ function metricsWorkersCreateSM (type, browserVersionMatcher) {
           } catch (e) {
             console.warn(e)
           }
-          self.close()
+          setTimeout(self.close, 300)
         }].map(x => x.toString())
       })
       const loadPromise = browser.get(assetURL)

@@ -267,12 +267,13 @@ testDriver.test('final harvest sends resources', reliableResourcesHarvest.and(st
   let url = router.assetURL('final-harvest.html')
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
+  let resourcesPromise = router.expectResources()
 
-  Promise.all([rumPromise, loadPromise])
+  Promise.all([rumPromise, loadPromise, resourcesPromise])
     .then(() => {
       t.equal(router.requestCounts.bamServer.resources, 1, 'resources harvest is sent on startup')
 
-      let resourcesPromise = router.expectResources()
+      resourcesPromise = router.expectResources()
 
       let domPromise = browser
         .setAsyncScriptTimeout(10000) // the default is too low for IE
@@ -340,13 +341,14 @@ testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stn
   let url = router.assetURL('final-harvest-timings.html', { init: { metrics: { enabled: false } } })
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
+  let resourcesPromise = router.expectResources()
 
-  Promise.all([rumPromise, loadPromise])
+  Promise.all([rumPromise, loadPromise, resourcesPromise])
     .then(() => {
       t.equal(router.requestCounts.bamServer.resources, 1, 'resources harvest is sent on startup')
       t.equal(router.requestCounts.bamServer.jserrors, undefined, 'no errors harvest yet')
 
-      let resourcesPromise = router.expectResources()
+      resourcesPromise = router.expectResources()
       let errorsPromise = router.expectErrors()
 
       let domPromise = browser

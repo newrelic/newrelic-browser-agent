@@ -23,10 +23,10 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
 
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
-      t.equal(interactionTree.children.length, 0, 'expect no child nodes')
+      t.ok(interactionTree.children[0].path.startsWith('/1/'), 'expect rum call child node')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
       let eventPromise = router.expectInteractionEvents()
@@ -38,7 +38,7 @@ testDriver.test('capturing SPA interactions', supported, function (t, browser, r
     })
     .then(({ request: { query, body } }) => {
       let receiptTime = now()
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
 
       t.ok(interactionTree.id != null, 'interaction has id')
       t.ok(interactionTree.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/),
@@ -89,10 +89,10 @@ testDriver.test('capturing SPA interactions using loader_config data', supported
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
 
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
-      t.equal(interactionTree.children.length, 0, 'expect no child nodes')
+      t.ok(interactionTree.children[0].path.startsWith('/1/'), 'expect rum call child node')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
       let eventPromise = router.expectInteractionEvents()
@@ -104,7 +104,7 @@ testDriver.test('capturing SPA interactions using loader_config data', supported
     })
     .then(({ request: { query, body } }) => {
       let receiptTime = now()
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
 
       t.ok(interactionTree.id != null, 'interaction has id')
       t.ok(interactionTree.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/),
@@ -152,10 +152,10 @@ testDriver.test('child nodes in SPA interaction does not exceed set limit', supp
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
 
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
-      t.equal(interactionTree.children.length, 0, 'expect no child nodes')
+      t.ok(interactionTree.children[0].path.startsWith('/1/'), 'expect rum call child node')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
       let eventPromise = router.expectInteractionEvents()
@@ -168,7 +168,7 @@ testDriver.test('child nodes in SPA interaction does not exceed set limit', supp
       })
     })
     .then(({ request: { query, body } }) => {
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       t.ok(interactionTree.children.length <= 128, 'interaction should have no more than 128 child nodes')
       t.end()
     })

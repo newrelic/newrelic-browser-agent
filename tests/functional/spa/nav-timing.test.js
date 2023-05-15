@@ -20,10 +20,10 @@ testDriver.test('navTiming on initialPageLoad', supported, function (t, browser,
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
 
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
-      t.equal(interactionTree.children.length, 0, 'expect no child nodes')
+      t.ok(interactionTree.children[0].path.startsWith('/1/'), 'expect rum call child node')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
 
       let eventPromise = router.expectEvents()
@@ -34,7 +34,7 @@ testDriver.test('navTiming on initialPageLoad', supported, function (t, browser,
       })
     })
     .then(({ request: { query, body } }) => {
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       t.equal(interactionTree.trigger, 'click', 'should be triggered by click')
       t.notOk(interactionTree.navTiming, 'should not have navTiming')
       t.end()

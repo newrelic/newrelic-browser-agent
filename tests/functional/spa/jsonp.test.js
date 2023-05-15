@@ -24,7 +24,7 @@ function runTest (title, htmlPage, supported) {
         return clickPageAndWaitForEvents(browser, router)
       })
       .then(({ request: { query, body } }) => {
-        let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+        let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
         t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
         t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')
         t.ok(interactionTree.callbackEnd <= interactionTree.end, 'interaction callback end should be <= interaction end')
@@ -65,7 +65,7 @@ testDriver.test('JSONP on initial page load', supported, function (t, browser, r
       let query, body
       ({ query, body } = result[1].request)
 
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
       t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')
       t.ok(interactionTree.callbackEnd <= interactionTree.end, 'interaction callback end should be <= interaction end')
@@ -109,7 +109,7 @@ testDriver.test('two JSONP events', supported, function (t, browser, router) {
       return clickPageAndWaitForEvents(browser, router)
     })
     .then(({ request: { query, body } }) => {
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
       t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')
       t.ok(interactionTree.callbackEnd <= interactionTree.end, 'interaction callback end should be <= interaction end')
@@ -149,7 +149,7 @@ testDriver.test('JSONP with non-JSON response', supported, function (t, browser,
       return clickPageAndWaitForEvents(browser, router)
     })
     .then(({ request: { query, body } }) => {
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       var xhr = interactionTree.children[0]
 
       t.equal(xhr.status, 200, 'should have a 200 status')
@@ -173,7 +173,7 @@ testDriver.test('JSONP with error', supported, function (t, browser, router) {
       return clickPageAndWaitForEvents(browser, router)
     })
     .then(({ request: { query, body } }) => {
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       var xhr = interactionTree.children[0]
       t.ok(xhr, 'xhr node should exist')
 
@@ -205,7 +205,7 @@ testDriver.test('JSONP timings', supported, function (t, browser, router) {
       return clickPageAndWaitForEvents(browser, router)
     })
     .then(({ request: { query, body } }) => {
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       var xhr = interactionTree.children[0]
       t.ok(xhr, 'xhr node should exist')
 

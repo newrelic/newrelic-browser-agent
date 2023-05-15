@@ -46,5 +46,4 @@ export function setInfo (id, obj) {
   if (!id) throw new Error('All info objects require an agent identifier!')
   _cache[id] = new Configurable(obj, model)
   gosNREUMInitializedAgents(id, _cache[id], 'info')
-  console.log('info updated', obj)
 }

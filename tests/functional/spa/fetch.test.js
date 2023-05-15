@@ -20,7 +20,7 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
 
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
       t.notOk(interactionTree.isRouteChange, 'The interaction does not include a route change.')
@@ -36,7 +36,7 @@ testDriver.test('capturing fetch in SPA interactions', supported, function (t, b
     })
     .then(({ request: { query, body } }) => {
       let receiptTime = now()
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
 
       t.ok(interactionTree.id, 'interaction has id attribute')
       t.ok(interactionTree.nodeId, 'interaction has nodeId attribute')
@@ -106,7 +106,7 @@ testDriver.test('response size', supported, function (t, browser, router) {
           })
         })
         .then(({ request: { query, body } }) => {
-          let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+          let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
           var fetchNode = interactionTree.children.find((node) => node.type === 'ajax')
           t.equal(fetchNode.responseBodySize, testCase.responseBodySize, 'should have correct responseBodySize')
           t.end()

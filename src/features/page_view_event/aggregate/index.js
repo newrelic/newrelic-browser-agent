@@ -83,8 +83,9 @@ export class Aggregate extends FeatureBase {
       at: info.atts
     }
 
+    const jsCustomAttributes = stringify(info.jsAttributes)
     const body = {
-      ja: stringify(info.jsAttributes)
+      ja: jsCustomAttributes !== '{}' ? jsCustomAttributes : undefined
     }
 
     if (globalScope.performance) {

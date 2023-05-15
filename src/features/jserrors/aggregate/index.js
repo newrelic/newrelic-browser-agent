@@ -238,7 +238,6 @@ export class Aggregate extends FeatureBase {
       var jsAttributesHash = stringHashCode(stringify(customParams))
       var aggregateHash = bucketHash + ':' + jsAttributesHash
       this.aggregator.store(type, aggregateHash, params, newMetrics, customParams)
-      console.log('stored error', customParams)
     }
 
     function setCustom (key, val) {

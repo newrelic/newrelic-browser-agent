@@ -25,7 +25,7 @@ testDriver.test('captures innerText', supported, function (t, browser, router) {
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
       t.equal(interactionTree.children.length, 0, 'expect no child nodes')
@@ -41,7 +41,7 @@ testDriver.test('captures innerText', supported, function (t, browser, router) {
       })
     })
     .then(({ request: { query, body } }) => {
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
       t.deepEqual(interactionTree.children[0], {
         type: 'stringAttribute',
@@ -66,7 +66,7 @@ testDriver.test('captures value', supported, function (t, browser, router) {
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
       t.equal(interactionTree.children.length, 0, 'expect no child nodes')
@@ -82,7 +82,7 @@ testDriver.test('captures value', supported, function (t, browser, router) {
       })
     })
     .then(({ request: { query, body } }) => {
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
       t.deepEqual(interactionTree.children[0], {
         type: 'stringAttribute',
@@ -107,7 +107,7 @@ testDriver.test('captures title', supported, function (t, browser, router) {
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
       t.equal(interactionTree.children.length, 0, 'expect no child nodes')
@@ -123,7 +123,7 @@ testDriver.test('captures title', supported, function (t, browser, router) {
       })
     })
     .then(({ request: { query, body } }) => {
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
       t.deepEqual(interactionTree.children[0], {
         type: 'stringAttribute',
@@ -148,7 +148,7 @@ testDriver.test('does not capture body text', supported, function (t, browser, r
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
 
       t.equal(interactionTree.trigger, 'initialPageLoad', 'initial page load should be tracked with an interaction')
       t.equal(interactionTree.children.length, 0, 'expect no child nodes')
@@ -170,7 +170,7 @@ testDriver.test('does not capture body text', supported, function (t, browser, r
       })
     })
     .then(({ request: { query, body } }) => {
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       t.equal(interactionTree.children.length, 0, 'expected no child nodes')
     })
     .catch(fail)

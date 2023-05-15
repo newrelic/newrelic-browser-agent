@@ -27,7 +27,7 @@ testDriver.test('XHR request on same origin has AJAX request with DT payload', s
       })
     })
     .then(({ request: { query, body } }) => {
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
       var xhr = interactionTree.children[0]
@@ -62,7 +62,7 @@ testDriver.test('XHR request on different origin has no AJAX request with DT pay
       })
     })
     .then(({ request: { query, body } }) => {
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
       var xhr = interactionTree.children[0]
@@ -96,7 +96,7 @@ testDriver.test('DT payload is NOT added when the feature is not enabled (defaul
       })
     })
     .then(({ request: { query, body } }) => {
-      let interactionTree = body && body.length ? body : querypack.decode(query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       t.equal(interactionTree.children.length, 1, 'expected one child node')
 
       var xhr = interactionTree.children[0]

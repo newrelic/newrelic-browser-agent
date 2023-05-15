@@ -220,7 +220,9 @@ export class Aggregate extends FeatureBase {
     } else if (t && typeof (t.tagName) === 'string') {
       origin = t.tagName.toLowerCase()
       if (t.id) origin += '#' + t.id
-      if (t.className) origin += '.' + t.classList.value.replaceAll(' ', '.') // p.s. IE11 may not be happy about DOMTokenList.value (?)
+      if (t.className) {
+        for (let i = 0; i < t.classList.length; i++) origin += '.' + t.classList[i]
+      }
     }
 
     if (origin === 'unknown') {
@@ -250,7 +252,7 @@ export class Aggregate extends FeatureBase {
     if (!resources || resources.length === 0) return
 
     resources.forEach((currentResource) => {
-      if (currentResource.fetchStart <= this.laststart) return // don't recollect already-seen resources
+      if ((currentResource.fetchStart | 0) <= this.laststart) return // don't recollect already-seen resources
 
       const parsed = parseUrl(currentResource.name)
       const res = {

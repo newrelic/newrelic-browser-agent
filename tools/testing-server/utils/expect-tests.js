@@ -12,12 +12,12 @@
  *
  */
 
-module.exports.testRumRequest = function (request) {
+module.exports.testRumRequest = function testRumRequest (request) {
   const url = new URL(request.url, 'resolve://')
   return url.pathname === `/1/${this.testId}`
 }
 
-module.exports.testEventsRequest = function (request) {
+module.exports.testEventsRequest = function testEventsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/events/1/${this.testId}`) {
     return false
@@ -37,7 +37,7 @@ module.exports.testEventsRequest = function (request) {
   }
 }
 
-module.exports.testTimingEventsRequest = function (request) {
+module.exports.testTimingEventsRequest = function testTimingEventsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/events/1/${this.testId}`) {
     return false
@@ -63,7 +63,7 @@ module.exports.testTimingEventsRequest = function (request) {
   }
 }
 
-module.exports.testAjaxEventsRequest = function (request) {
+module.exports.testAjaxEventsRequest = function testAjaxEventsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/events/1/${this.testId}`) {
     return false
@@ -89,7 +89,7 @@ module.exports.testAjaxEventsRequest = function (request) {
   }
 }
 
-module.exports.testInteractionEventsRequest = function (request) {
+module.exports.testInteractionEventsRequest = function testInteractionEventsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/events/1/${this.testId}`) {
     return false
@@ -115,7 +115,7 @@ module.exports.testInteractionEventsRequest = function (request) {
   }
 }
 
-module.exports.testMetricsRequest = function (request) {
+module.exports.testMetricsRequest = function testMetricsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {
     return false
@@ -148,7 +148,7 @@ module.exports.testMetricsRequest = function (request) {
   }
 }
 
-module.exports.testCustomMetricsRequest = function (request) {
+module.exports.testCustomMetricsRequest = function testCustomMetricsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {
     return false
@@ -168,7 +168,7 @@ module.exports.testCustomMetricsRequest = function (request) {
   }
 }
 
-module.exports.testSupportMetricsRequest = function (request) {
+module.exports.testSupportMetricsRequest = function testSupportMetricsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {
     return false
@@ -188,7 +188,7 @@ module.exports.testSupportMetricsRequest = function (request) {
   }
 }
 
-module.exports.testErrorsRequest = function (request) {
+module.exports.testErrorsRequest = function testErrorsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {
     return false
@@ -208,7 +208,7 @@ module.exports.testErrorsRequest = function (request) {
   }
 }
 
-module.exports.testAjaxTimeSlicesRequest = function (request) {
+module.exports.testAjaxTimeSlicesRequest = function testAjaxTimeSlicesRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {
     return false
@@ -228,7 +228,7 @@ module.exports.testAjaxTimeSlicesRequest = function (request) {
   }
 }
 
-module.exports.testInsRequest = function (request) {
+module.exports.testInsRequest = function testInsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/ins/1/${this.testId}`) {
     return false
@@ -248,7 +248,7 @@ module.exports.testInsRequest = function (request) {
   }
 }
 
-module.exports.testResourcesRequest = function (request) {
+module.exports.testResourcesRequest = function testResourcesRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/resources/1/${this.testId}`) {
     return false

@@ -30,7 +30,14 @@ function sauceCapabilities () {
       platform: undefined,
       version: undefined,
       'sauce:options': !jilArgs.sauce
-        ? { tunnelName: getSauceConnectTunnelName() }
+        ? {
+            tunnelName: getSauceConnectTunnelName(),
+            ...(() => {
+              if (jilArgs.sauceExtendedDebugging && sauceBrowser.browserName === 'chrome') {
+                return { extendedDebugging: true }
+              }
+            })()
+          }
         : {}
     }))
 }

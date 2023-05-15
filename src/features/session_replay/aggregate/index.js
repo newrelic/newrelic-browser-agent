@@ -75,6 +75,7 @@ export class Aggregate extends FeatureBase {
       // if the error was noticed AFTER the recorder was imported....
       if (this.mode === MODE.ERROR && !!recorder) {
         this.errorNoticed = true
+        this.scheduler.runHarvest({ needResponse: true })
         this.stopRecording()
         this.mode = MODE.FULL
         this.startRecording()

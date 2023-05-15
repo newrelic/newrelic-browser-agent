@@ -883,6 +883,13 @@
       "platform": "Windows 11",
       "version": "112",
       "browserVersion": "112"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "113",
+      "browserVersion": "113"
     }
   ],
   "firefox": [
@@ -1620,6 +1627,13 @@
       "platform": "Windows 10",
       "version": "112",
       "browserVersion": "112"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "113",
+      "browserVersion": "113"
     }
   ],
   "safari": [

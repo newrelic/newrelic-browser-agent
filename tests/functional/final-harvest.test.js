@@ -65,12 +65,12 @@ testDriver.test('final harvest happens on page unload -- new unload BFC work', f
       t.equal(router.requestCounts.bamServer.jserrors, 1, 'received one err harvest')
 
       if (results[0].request.body) {
-        t.ok(JSON.parse(results[0].request.body).ins, 'received ins harvest')
+        t.ok(results[0].request.body.ins, 'received ins harvest')
       } else {
         t.ok(JSON.parse(results[0].request.query.ins), 'received ins harvest')
       }
       if (results[0].request.body) {
-        t.ok(JSON.parse(results[1].request.body).err, 'received err harvest')
+        t.ok(results[1].request.body.err, 'received err harvest')
       } else {
         t.ok(JSON.parse(results[1].request.query.err), 'received err harvest')
       }
@@ -184,7 +184,7 @@ testDriver.test('final harvest sends pageHide if not already recorded', workingS
     .then(({ request: { body, query } }) => {
       t.equal(router.requestCounts.bamServer.events, 1, 'received one events harvest')
 
-      const timings = querypack.decode(body && body.length ? body : query.e)
+      const timings = body && body.length ? body : querypack.decode(query.e)
       const pageHide = timings.find(x => x.type === 'timing' && x.name === 'pageHide')
       const duration = Date.now() - start
       t.ok(timings.length > 0, 'there should be at least one timing metric')
@@ -215,7 +215,7 @@ testDriver.test('final harvest doesnt append pageHide if already previously reco
       return Promise.all([timingsPromise, clickPromise])
     })
     .then(([{ request: { body, query } }]) => {
-      const timings = querypack.decode(body && body.length ? body : query.e)
+      const timings = body && body.length ? body : querypack.decode(query.e)
       let duration = Date.now() - start
       t.ok(timings.length > 0, 'there should be at least one timing metric')
       const pageHide = timings.filter(t => t.name === 'pageHide')
@@ -319,7 +319,7 @@ testDriver.test('final harvest sends timings data', workingSendBeacon, function 
     .then(({ request: { body, query } }) => {
       t.equal(router.requestCounts.bamServer.events, 1, 'received first events harvest')
 
-      const timings = querypack.decode(body && body.length ? body : query.e)
+      const timings = body && body.length ? body : querypack.decode(query.e)
       t.ok(timings.length > 0, 'there should be at least one timing metric')
       t.equal(timings[0].type, 'timing', 'first node is a timing node')
       t.end()
@@ -397,7 +397,7 @@ testDriver.test('final harvest sends ajax events', workingSendBeacon.and(doNotSu
       })
     })
     .then(({ request: { body, query } }) => {
-      const events = querypack.decode(body && body.length ? body : query.e)
+      const events = body && body.length ? body : querypack.decode(query.e)
       t.ok(events.length > 0, 'there should be at least one ajax call')
       t.equal(events[0].type, 'ajax', 'first node is a ajax node')
       t.end()

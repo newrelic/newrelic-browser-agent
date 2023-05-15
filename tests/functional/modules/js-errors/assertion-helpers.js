@@ -46,7 +46,7 @@ function assertExpectedErrors (t, browser, actualErrors, expectedErrors, assetUR
 function getErrorsFromResponse (response, browser) {
   if (response.body) {
     try {
-      var parsedBody = JSON.parse(response.body)
+      var parsedBody = response.body
       if (parsedBody.err) {
         return parsedBody.err
       }
@@ -68,7 +68,7 @@ function getMetricsFromResponse (response, isSupportability) {
   var attr = isSupportability ? 'sm' : 'cm'
   if (response.body) {
     try {
-      var parsedBody = JSON.parse(response.body)
+      var parsedBody = response.body
       if (parsedBody[attr]) {
         return parsedBody[attr]
       }

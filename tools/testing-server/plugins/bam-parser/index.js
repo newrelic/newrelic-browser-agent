@@ -16,18 +16,20 @@ module.exports = fp(async function (fastify, testServer) {
     'text/plain',
     { parseAs: 'string' },
     (request, body, done) => {
+      if (!body || typeof body !== 'string' || body.trim().length === 0) return done(null, body)
+
       if (request.url.match(beaconRequestsRegex)) {
         if (body.startsWith('bel.')) {
           try {
-            done(null, querypack.decode(body))
+            return done(null, querypack.decode(body))
           } catch (error) {
-            done(error, body)
+            return done(error, body)
           }
         } else {
           try {
-            done(null, JSON.parse(body))
+            return done(null, JSON.parse(body))
           } catch (error) {
-            done(error, body)
+            return done(error, body)
           }
         }
       }

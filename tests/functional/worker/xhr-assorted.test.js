@@ -175,12 +175,12 @@ function harvestRetried (type, browserVersionMatcher) {
       Promise.all([ajaxPromise, loadPromise, router.expectRum()])
         .then(([result]) => {
           t.equal(result.reply.statusCode, 429, 'server responded with 429')
-          firstBody = querypack.decode(result.request.body)
+          firstBody = result.request.body
           return router.expectAjaxEvents()
         }).then(result => {
           t.equal(router.requestCounts.bamServer.events, 2, 'got two events harvest requests')
 
-          const secondBody = querypack.decode(result.request.body)
+          const secondBody = result.request.body
 
           const secondContainsFirst = firstBody.every(firstElement => {
             return secondBody.find(secondElement => {

@@ -43,7 +43,7 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
       t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
       const body = result.request.body
-      const harvestBody = JSON.parse(body).res
+      const harvestBody = body.res
       const loadNodes = harvestBody.filter(function (node) { return node.t === 'event' && node.n === 'load' || node.n === 'readystatechange' })
       t.notOk(loadNodes.length > 0, 'XMLHttpRequest nodes not captured when ajax instrumentation is disabled')
 
@@ -97,7 +97,7 @@ testDriver.test('session trace ajax deny list', supported, function (t, browser,
       t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
       const body = result.request.body
-      const harvestBody = JSON.parse(body).res
+      const harvestBody = body.res
       const loadNodes = harvestBody.filter(function (node) { return node.t === 'ajax' })
       t.ok(loadNodes.length > 0, 'XMLHttpRequest nodes captured even with ajax deny list')
 

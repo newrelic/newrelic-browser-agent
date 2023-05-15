@@ -41,11 +41,8 @@ testDriver.test('session traces are retried when collector returns 429 during fi
 
     let secondBody = result.request.body
 
-    const firstParsed = JSON.parse(firstBody)
-    const secondParsed = JSON.parse(secondBody)
-
-    t.ok(secondParsed.res.length > firstParsed.res.length, 'second try has more nodes than first')
-    t.ok(containsAll(secondParsed, firstParsed), 'all nodes have been resent')
+    t.ok(secondBody.res.length > firstBody.res.length, 'second try has more nodes than first')
+    t.ok(containsAll(secondBody, firstBody), 'all nodes have been resent')
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
     t.end()
@@ -137,18 +134,14 @@ testDriver.test('session traces are retried when collector returns 429 during sc
 
     let thirdBody = result.request.body
 
-    const firstParsed = JSON.parse(firstBody)
-    const secondParsed = JSON.parse(secondBody)
-    const thirdParsed = JSON.parse(thirdBody)
-
-    t.ok(secondParsed.res.length > firstParsed.res.length, 'second try has more nodes than first')
-    t.ok(containsAll(thirdParsed, secondParsed), 'all nodes have been resent')
+    t.ok(secondBody.res.length > firstBody.res.length, 'second try has more nodes than first')
+    t.ok(containsAll(thirdBody, secondBody), 'all nodes have been resent')
 
     // this is really checking that no nodes have been resent
-    var resentNodes = intersectPayloads(secondParsed, firstParsed)
+    var resentNodes = intersectPayloads(secondBody, firstBody)
     t.ok(resentNodes.length === 0, 'nodes from first successful harvest are not resent in second harvest')
 
-    resentNodes = intersectPayloads(thirdParsed, firstParsed)
+    resentNodes = intersectPayloads(thirdBody, firstBody)
     t.ok(resentNodes.length === 0, 'nodes from first successful harvest are not resent in third harvest')
 
     t.equal(result.reply.statusCode, 200, 'server responded with 200')

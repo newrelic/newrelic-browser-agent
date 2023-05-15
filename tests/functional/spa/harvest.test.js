@@ -49,7 +49,7 @@ testDriver.test('events are retried when collector returns 429', corsSupported, 
     let secondBody = result.request.body
 
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
-    t.equal(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
+    t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
 
     t.end()
   }).catch(fail)
@@ -87,7 +87,7 @@ testDriver.test('multiple custom interactions have correct customEnd value', cor
   let eventsPromise = router.expectEvents()
 
   Promise.all([eventsPromise, loadPromise, rumPromise]).then(([eventsResult]) => {
-    const qpData = querypack.decode(eventsResult.request.body)
+    const qpData = eventsResult.request.body
 
     t.ok(qpData.length === 3, 'three interactions should have been captured')
     qpData.forEach(interaction => {

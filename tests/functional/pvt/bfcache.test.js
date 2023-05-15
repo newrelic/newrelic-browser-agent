@@ -49,7 +49,7 @@ testDriver.test('EOL events are sent appropriately', excludeIE, function (t, bro
     return timingsListener
   }).then(({ request: pvtPayload }) => {
     // 2) Verify PageViewTimings sent sufficient expected timing events, then trigger our "unload" logic.
-    const phTimings = querypack.decode(pvtPayload?.body?.length ? pvtPayload.body : pvtPayload.query.e)
+    const phTimings = pvtPayload?.body?.length ? pvtPayload.body : querypack.decode(pvtPayload.query.e)
     t.ok(phTimings.length > 1, 'vis hidden causes PVT harvest')	// should be more timings than "pagehide" at min -- this can increase for confidence when CLS & INP are added
 
     const phNode = phTimings.find(t => t.name === 'pageHide')
@@ -62,7 +62,7 @@ testDriver.test('EOL events are sent appropriately', excludeIE, function (t, bro
     return timingsListener
   }).then(({ request: pvtPayload }) => {
     // 3) Verify PVTs aren't sent again but unload event is; (TEMPORARY) pageHide event should not be sent again
-    const ulTimings = querypack.decode(pvtPayload?.body?.length ? pvtPayload.body : pvtPayload.query.e)
+    const ulTimings = pvtPayload?.body?.length ? pvtPayload.body : querypack.decode(pvtPayload.query.e)
 
     t.ok(ulTimings.length > 0, 'unloading causes PVT harvest')	// "unload" & ongoing CWV lib metrics like INP--if supported--should be harvested here
 

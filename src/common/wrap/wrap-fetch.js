@@ -7,7 +7,6 @@
  * This module is used by: ajax, spa.
  */
 import { ee as baseEE } from '../event-emitter/contextual-ee'
-import slice from 'lodash._slice'
 import { globalScope } from '../util/global-scope'
 import { flag } from './wrap-function'
 
@@ -71,7 +70,7 @@ export function wrapFetch (sharedEE) {
     var fn = target[name]
     if (typeof fn === 'function') {
       target[name] = function () {
-        var args = slice(arguments)
+        var args = Array.from(arguments)
 
         var ctx = {}
         // we are wrapping args in an array so we can preserve the reference

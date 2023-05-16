@@ -2,11 +2,11 @@
 import { drain } from '../../../common/drain/drain'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { FeatureBase } from '../../utils/feature-base'
 import { FEATURE_NAME } from '../constants'
 import { stringify } from '../../../common/util/stringify'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { SESSION_EVENTS } from '../../../common/session/session-entity'
+import { AggregateBase } from '../../utils/aggregate-base'
 
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.8'
@@ -22,7 +22,7 @@ const MODE = {
 const MAX_PAYLOAD_SIZE = 1000000
 const IDEAL_PAYLOAD_SIZE = 64000
 
-export class Aggregate extends FeatureBase {
+export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
@@ -86,8 +86,12 @@ export class Aggregate extends FeatureBase {
     // TODO -- get this working with agreed structure
     // DISABLE FOR STEEL THREAD, RUN ON EVERY PAGE
     // THIS STILL ONLY HONORS NEW SESSIONS OR ONGOING RECORDINGS THO...
-    // this.waitForFlags()
-    this.initializeRecording(true, Math.random() < 0.5, Math.random() < 0.5) // and disable this when flags are working
+
+    this.waitForFlags(['sr'], this.featureName, this.ee).then(([{ value }]) => {
+      this.initializeRecording(value, Math.random() < 0.5, Math.random() < 0.5)
+    })
+
+    // this.initializeRecording(true, Math.random() < 0.5, Math.random() < 0.5) // and disable this when flags are working
 
     const { session } = getRuntime(this.agentIdentifier)
     // // if this isnt the FIRST load of a session AND
@@ -98,53 +102,6 @@ export class Aggregate extends FeatureBase {
       drain(this.agentIdentifier, this.featureName)
       return
     }
-  }
-
-  setupFlagResponseHandlers () {
-    const sessionReplayFlagChecks = [
-      // this must run every time
-      new Promise(resolve => {
-        this.entitlementsResponse = resolve
-      }),
-      new Promise(resolve => {
-        this.errorSample = resolve
-      }),
-      new Promise(resolve => {
-        this.fullSample = resolve
-      })
-    ]
-
-    Promise.all(sessionReplayFlagChecks).then(([entitlements, errorSample, fullSample]) => {
-      this.initializeRecording(entitlements, errorSample, fullSample)
-    })
-  }
-
-  waitForFlags () {
-    this.setupFlagResponseHandlers()
-
-    registerHandler('feat-sr', () => {
-      this.entitlementsResponse(true)
-    }, this.featureName, this.ee)
-
-    registerHandler('feat-srf', () => {
-      this.fullSample(true)
-    }, this.featureName, this.ee)
-
-    registerHandler('feat-sre', () => {
-      this.errorSample(true)
-    }, this.featureName, this.ee)
-
-    registerHandler('block-sr', () => {
-      this.entitlementsResponse(false)
-    }, this.featureName, this.ee)
-
-    registerHandler('block-srf', () => {
-      this.fullSample(false)
-    }, this.featureName, this.ee)
-
-    registerHandler('block-sre', () => {
-      this.errorSample(false)
-    }, this.featureName, this.ee)
   }
 
   async initializeRecording (entitlements, errorSample, fullSample) {
@@ -159,7 +116,7 @@ export class Aggregate extends FeatureBase {
     if (session.state.sessionReplayActive || (session.isNew && fullSample)) this.mode = MODE.FULL
     else if (errorSample) this.mode = MODE.ERROR
 
-    console.log('MODE', this.mode)
+    console.log('MODE', this.mode, '-- entitlements, error, full', entitlements, errorSample, fullSample)
 
     if (this.mode === MODE.FULL || (this.mode === MODE.ERROR && this.errorNoticed)) {
       this.mode = MODE.FULL

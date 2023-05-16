@@ -16,15 +16,15 @@
   </style>
   <script>
 localStorage.clear()
-;window.NREUM||(NREUM={});NREUM.init={session_replay: {blockClass: 'new-value'},distributed_tracing:{enabled:true},privacy:{cookies_enabled:true},ajax:{deny_list:["staging-bam-cell.nr-data.net"], ssl: true}};
+// ;window.NREUM||(NREUM={});NREUM.init={session_replay: {blockClass: 'new-value'},distributed_tracing:{enabled:true},privacy:{cookies_enabled:true},ajax:{deny_list:["staging-bam-cell.nr-data.net"], ssl: true}};
 
-;NREUM.loader_config={accountID:"550352",trustKey:"1",agentID:"35095249",licenseKey:"NRBR-feb8b6d3e7b1d294be1",applicationID:"35095249"};
-;NREUM.info={beacon:"staging-bam-cell.nr-data.net",errorBeacon:"staging-bam-cell.nr-data.net",licenseKey:"NRBR-feb8b6d3e7b1d294be1",applicationID:"35095249",sa:1};
+// ;NREUM.loader_config={accountID:"550352",trustKey:"1",agentID:"35095249",licenseKey:"NRBR-feb8b6d3e7b1d294be1",applicationID:"35095249"};
+// ;NREUM.info={beacon:"staging-bam-cell.nr-data.net",errorBeacon:"staging-bam-cell.nr-data.net",licenseKey:"NRBR-feb8b6d3e7b1d294be1",applicationID:"35095249",sa:1};
 
   </script>
+  {init}
+  {config}
   {loader}
-  
-  <script> NREUM.init.ssl = true</script>
   {script-injection}
 </head>
 <body>

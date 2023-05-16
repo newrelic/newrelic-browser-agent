@@ -10,6 +10,7 @@ import { onWindowLoad } from '../../common/window/load'
 import { isWorkerScope } from '../../common/util/global-scope'
 import { warn } from '../../common/util/console'
 import { FEATURE_NAMES } from '../../loaders/features/features'
+import { getConfigurationValue } from '../../common/config/config'
 
 /**
  * Base class for instrumenting a feature.
@@ -51,9 +52,11 @@ export class InstrumentBase extends FeatureBase {
        */
       try {
         // The session entity needs to be attached to the config internals before the aggregator chunk runs
-        const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
-        const session = setupAgentSession(this.agentIdentifier)
-
+        let session
+        if (getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true) {
+          const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
+          session = setupAgentSession(this.agentIdentifier)
+        }
         if (!shouldImportAgg(this.featureName, session)) {
           drain(this.agentIdentifier, this.featureName)
           return
@@ -87,7 +90,7 @@ function shouldImportAgg (featureName, session) {
   // we are not actively recording SR... DO NOT run the aggregator
   // session replay samples can only be decided on the first load of a session
   // session replays can continue if in progress
-  if (featureName === FEATURE_NAMES.sessionReplay) return !!session.isNew || !!session.state.sessionReplayActive
+  if (featureName === FEATURE_NAMES.sessionReplay) return !!session?.isNew || !!session?.state.sessionReplayActive
   // todo -- add case like above for session trace
   return true
 }

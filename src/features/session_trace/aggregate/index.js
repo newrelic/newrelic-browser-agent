@@ -27,7 +27,7 @@ const toAggregate = {
   mousing: [1000, 2000],
   touching: [1000, 2000]
 }
-const MAX_TRACE_DURATION = 15 * 60 * 1000 // 15 minutes
+const MAX_TRACE_DURATION = 10 * 60 * 1000 // 15 minutes
 
 export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME

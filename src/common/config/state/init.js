@@ -34,10 +34,10 @@ const model = () => {
     session_trace: { enabled: true, harvestTimeSeconds: 10 },
     session_replay: {
       // feature settings
-      harvestTimeSeconds: 60,
       enabled: true,
-      sampleRate: 0,
-      errorSampleRate: 0,
+      harvestTimeSeconds: 60,
+      sampleRate: 0.1,
+      errorSampleRate: 0.1,
       // recording config settings
       maskTextSelector: '*',
       maskAllInputs: true,

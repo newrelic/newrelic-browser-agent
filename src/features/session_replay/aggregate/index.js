@@ -83,11 +83,12 @@ export class Aggregate extends AggregateBase {
       }
     }, this.featureName, this.ee)
 
-    // TODO -- get this working with agreed structure
-    // DISABLE FOR STEEL THREAD, RUN ON EVERY PAGE
-    // THIS STILL ONLY HONORS NEW SESSIONS OR ONGOING RECORDINGS THO...
-    this.waitForFlags(['sr'], this.featureName, this.ee).then(([{ value }]) => {
-      this.initializeRecording(value, Math.random() < 0.5, Math.random() < 0.5)
+    this.waitForFlags(['sr']).then(([{ value }]) => {
+      this.initializeRecording(
+        value,
+        Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.errorSampleRate'),
+        Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.sampleRate')
+      )
     })
 
     // this.initializeRecording(true, Math.random() < 0.5, Math.random() < 0.5) // and disable this when flags are working

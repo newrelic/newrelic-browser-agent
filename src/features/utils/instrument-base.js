@@ -76,14 +76,19 @@ export class InstrumentBase extends FeatureBase {
     else onWindowLoad(() => importLater(), true)
   }
 }
-
+/**
+ * Make a determination if an aggregate class should even be imported
+ * @param {string} featureName
+ * @param {SessionEntity} session
+ * @returns
+ */
 function shouldImportAgg (featureName, session) {
   // if this isnt the FIRST load of a session AND
   // we are not actively recording SR... DO NOT run the aggregator
   // session replay samples can only be decided on the first load of a session
   // session replays can continue if in progress
   // RETURN FALSE FOR NOW UNTIL THIS FEATURE IS WORKING, revert this when continuing development!
-  if (featureName === FEATURE_NAMES.sessionReplay) return false // !!session.isNew || !!session.state.sessionReplayActive
+  if (featureName === FEATURE_NAMES.sessionReplay) return !!session.isNew || !!session.state.sessionReplayActive
   // todo -- add case like above for session trace
   return true
 }

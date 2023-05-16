@@ -13,13 +13,15 @@ export const RRWEB_VERSION = '2.0.0-alpha.8'
 
 let recorder
 
+/** The "mode" with which the session replay is recording */
 const MODE = {
   OFF: 0,
   FULL: 1,
   ERROR: 2
 }
-
+/** Vortex caps payload sizes at 1MB */
 const MAX_PAYLOAD_SIZE = 1000000
+/** Unloading caps around 64kb */
 const IDEAL_PAYLOAD_SIZE = 64000
 
 export class Aggregate extends AggregateBase {
@@ -27,37 +29,47 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
+    /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
     this.events = []
-    this.overflow = []
+    /** The interval to harvest at.  This gets overridden if the size of the payload exceeds certain thresholds */
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'session_replay.harvestTimeSeconds') || 60
+    /** Set once the recorder has fully initialized after flag checks and sampling */
     this.initialized = false
+    /** Set once an error has been detected on the page.  Is cleared after a harvest */
     this.errorNoticed = false
+    /** The "mode" to record in.  Defaults to "OFF" until flags and sampling are checked. See "MODE" constant. */
     this.mode = MODE.OFF
+    /** Set once the feature has been "aborted" to prevent other side-effects from continuing */
     this.blocked = false
 
+    /** Payload metadata -- Should indicate that the payload being sent is the first of a session */
     this.isFirstChunk = false
+    /** Payload metadata -- Should indicate that the payload being sent has a full DOM snapshot. */
     this.hasSnapshot = false
+    /** Payload metadata -- Should indicate that the payload being sent contains an error. */
     this.hasError = false
 
+    /** A value which increments with every new mutation node reported. Resets after a harvest is sent */
     this.payloadBytesEstimation = 0
 
-    // console.log('session ID at startup', session.state.value)
-
+    /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
 
+    // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
     this.ee.on('session-reset', () => {
-      // console.log('session-reset.... abort it!')
       this.abort()
     })
 
+    // The SessionEntity class can emit a message indicating the session was paused (visibility change). This feature must stop recording if that occurs.
     this.ee.on(SESSION_EVENTS.PAUSE, () => { this.stopRecording() })
+    // The SessionEntity class can emit a message indicating the session was resumed (visibility change). This feature must start running again (if already running) if that occurs.
     this.ee.on(SESSION_EVENTS.RESUME, () => {
       if (!this.initialized || this.mode === MODE.OFF) return
       this.startRecording()
       this.takeFullSnapshot()
     })
 
-    // https://vortex-alb.stg-single-tooth.cell.us.nr-data.net/blob
+    // Bespoke logic for new endpoint.  This will change as downstream dependencies become solidified.
     this.scheduler = new HarvestScheduler('blob', {
       onFinished: this.onHarvestFinished.bind(this),
       retryDelay: this.harvestTimeSeconds,
@@ -69,8 +81,11 @@ export class Aggregate extends AggregateBase {
       gzip: true
     }, this)
 
+    // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
+    // This was to ensure that all errors, including those on the page before load and those handled with "noticeError" are accounted for. Needs evalulation
     registerHandler('err', (e) => {
       this.hasError = true
+      // run once
       if (this.errorNoticed) return
       // if the error was noticed AFTER the recorder was imported....
       if (this.mode === MODE.ERROR && !!recorder) {
@@ -83,6 +98,7 @@ export class Aggregate extends AggregateBase {
       }
     }, this.featureName, this.ee)
 
+    // new handler for waiting for multiple flags.  will be useful if/when backend designs multiple flags, or for evaluating multiple feature flags simultaneously (stn vs sr)
     this.waitForFlags(['sr']).then(([{ value }]) => {
       this.initializeRecording(
         value,
@@ -91,17 +107,7 @@ export class Aggregate extends AggregateBase {
       )
     })
 
-    // this.initializeRecording(true, Math.random() < 0.5, Math.random() < 0.5) // and disable this when flags are working
-
-    const { session } = getRuntime(this.agentIdentifier)
-    // // if this isnt the FIRST load of a session AND
-    // // we are not actively recording SR... DO NOT run the aggregator
-    // // session replay samples can only be decided on the first load of a session
-    // // session replays can continue if in progress
-    if (session.isNew || !!session.state.sessionReplayActive) {
-      drain(this.agentIdentifier, this.featureName)
-      return
-    }
+    drain(this.agentIdentifier, this.featureName)
   }
 
   async initializeRecording (entitlements, errorSample, fullSample) {
@@ -112,20 +118,29 @@ export class Aggregate extends AggregateBase {
     const { session } = getRuntime(this.agentIdentifier)
     // if theres an existing session replay in progress, there's no need to sample, just check the entitlements response
     // if not, these sample flags need to be checked
+    // if this isnt the FIRST load of a session AND
+    // we are not actively recording SR... DO NOT import or run the recording library
+    // session replay samples can only be decided on the first load of a session
+    // session replays can continue if already in progress
     if (!session.isNew && !session.state.sessionReplayActive) return
     if (session.state.sessionReplayActive || (session.isNew && fullSample)) this.mode = MODE.FULL
     else if (errorSample) this.mode = MODE.ERROR
 
     console.log('MODE', this.mode, '-- entitlements, error, full', entitlements, errorSample, fullSample)
 
+    // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
+    // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
+    // If an error happened before we've gotten to this stage, we can simply just run in FULL mode.
     if (this.mode === MODE.FULL || (this.mode === MODE.ERROR && this.errorNoticed)) {
       this.mode = MODE.FULL
+      // We only report (harvest) in FULL mode
       this.scheduler.startTimer(this.harvestTimeSeconds)
       this.recording = true
       // we only set sessionReplayActive to true if "full"
       const { session } = getRuntime(this.agentIdentifier)
       session.write({ ...session.state, sessionReplayType: true })
     }
+    // We record in FULL or ERROR mode
     if (this.mode !== MODE.OFF) {
       const { record } = await import(/* webpackChunkName: "recorder" */'rrweb')
       recorder = record
@@ -135,10 +150,10 @@ export class Aggregate extends AggregateBase {
   }
 
   prepareHarvest (options) {
-    // console.log('prepare harvest')
     if (this.events.length === 0) return
     const payload = this.getPayload()
     console.log('rrweb payload', payload)
+    // TODO -- Gracefully handle the buffer for retries.
     this.clearBuffer()
     return payload
   }
@@ -168,18 +183,14 @@ export class Aggregate extends AggregateBase {
   onHarvestFinished (result) {
     // The mutual decision for now is to stop recording and clear buffers if ingest is experiencing 429 rate limiting
     if (result.status === 429) {
-      // console.log('429... abort it!')
       this.abort()
       return
     }
 
-    // console.log(result)
-    // keep things in the buffer if they fail to send AND its not a rate limit issue
-    this.clearBuffer()
-
     if (this.blocked) this.scheduler.stopTimer(true)
   }
 
+  /** Clears the buffer (this.events), and resets all payload metadata properties */
   clearBuffer () {
     this.events = []
     this.isFirstChunk = false
@@ -188,6 +199,7 @@ export class Aggregate extends AggregateBase {
     this.payloadBytesEstimation = 0
   }
 
+  /** Begin recording using configured recording lib */
   startRecording () {
     if (!recorder) {
       warn('Recording library was never imported')
@@ -210,13 +222,19 @@ export class Aggregate extends AggregateBase {
     })
   }
 
+  /** Store a payload in the buffer (this.events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
     if (this.blocked) return
     const eventBytes = stringify(event).length
+    /** The estimated size of the payload after compression */
     const payloadSize = this.getPayloadSize(eventBytes)
+    // Vortex will block payloads at a certain size, we might as well not send.
     if (payloadSize > MAX_PAYLOAD_SIZE) {
       return this.abort()
     }
+    // Checkout events are flags by the recording lib that indicate a fullsnapshot was taken every n ms. These are important
+    // to help reconstruct the replay later and must be included.  While waiting and buffering for errors to come through,
+    // each time we see a new checkout, we can drop the old data.
     if (this.mode === MODE.ERROR && !this.errorNoticed && isCheckout) {
       // we are still waiting for an error to throw, so keep wiping the buffer over time
       this.clearBuffer()
@@ -225,23 +243,28 @@ export class Aggregate extends AggregateBase {
     this.events.push(event)
     this.payloadBytesEstimation += eventBytes
 
+    // We are making an effort to try to keep payloads manageable for unloading.  If they reach the unload limit before their interval,
+    // it will send immediately.  This often happens on the first snapshot, which can be significantly larger than the other payloads.
     if (payloadSize > IDEAL_PAYLOAD_SIZE) {
       // if we've made it to the ideal size of ~64kb before the interval timer, we should send early.
       this.scheduler.runHarvest()
     }
   }
 
+  /** force the recording lib to take a full DOM snapshot.  This needs to occur in certain cases, like visibility changes */
   takeFullSnapshot () {
     if (!recorder) return
     recorder.takeFullSnapshot()
     this.hasSnapshot = true
   }
 
+  /** Estimate the payload size */
   getPayloadSize (newBytes = 0) {
     // the 1KB gives us some padding for the other metadata
-    return (this.payloadBytesEstimation + newBytes) + 1000
+    return this.estimateCompression(this.payloadBytesEstimation + newBytes) + 1000
   }
 
+  /** Abort the feature, once aborted it will not resume */
   abort () {
     this.blocked = true
     this.stopRecording()
@@ -249,7 +272,9 @@ export class Aggregate extends AggregateBase {
     session.write({ ...session.state, sessionReplayActive: false })
   }
 
+  /** Extensive research has yielded about an 88% compression factor on these payloads.
+   * This is an estimation using that factor as to not cause performance issues while evaluating */
   estimateCompression (data) {
-    return data.length * 0.11
+    return data * 0.12
   }
 }

@@ -4,7 +4,6 @@
  */
 
 import { canonicalFunctionName } from './canonical-function-name'
-import { cleanURL } from '../../../common/url/clean-url'
 import { computeStackTrace } from './compute-stack-trace'
 import { stringHashCode } from './string-hash-code'
 import { truncateSize } from './format-stack-trace'
@@ -22,6 +21,10 @@ import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { FeatureBase } from '../../utils/feature-base'
+
+/**
+ * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
+ */
 
 export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
@@ -105,56 +108,27 @@ export class Aggregate extends FeatureBase {
     return this.nameHash(params) + ':' + stringHashCode(stringify(customParams))
   }
 
-  canonicalizeURL (url, cleanedOrigin) {
-    if (typeof url !== 'string') return ''
-
-    var cleanedURL = cleanURL(url)
-    if (cleanedURL === cleanedOrigin) {
-      return '<inline>'
-    } else {
-      return cleanedURL
-    }
-  }
-
-  buildCanonicalStackString (stackInfo, cleanedOrigin) {
-    var canonicalStack = ''
+  /**
+   * Builds a standardized stack trace string from the frames in the given `stackInfo` object, with each frame separated
+   * by a newline character. Lines take the form `<functionName>@<url>:<lineNumber>`.
+   *
+   * @param {StackInfo} stackInfo - An object specifying a stack string and individual frames.
+   * @returns {string} A canonical stack string built from the URLs and function names in the given `stackInfo` object.
+   */
+  buildCanonicalStackString (stackInfo) {
+    var canonicalStackString = ''
 
     for (var i = 0; i < stackInfo.frames.length; i++) {
       var frame = stackInfo.frames[i]
       var func = canonicalFunctionName(frame.func)
 
-      if (canonicalStack) canonicalStack += '\n'
-      if (func) canonicalStack += func + '@'
-      if (typeof frame.url === 'string') canonicalStack += frame.url
-      if (frame.line) canonicalStack += ':' + frame.line
+      if (canonicalStackString) canonicalStackString += '\n'
+      if (func) canonicalStackString += func + '@'
+      if (typeof frame.url === 'string') canonicalStackString += frame.url
+      if (frame.line) canonicalStackString += ':' + frame.line
     }
 
-    return canonicalStack
-  }
-
-  // Strip query parameters and fragments from the stackString property of the
-  // given stackInfo, along with the 'url' properties of each frame in
-  // stackInfo.frames.
-  //
-  // Any URLs that are equivalent to the cleaned version of the origin will also
-  // be replaced with the string '<inline>'.
-  //
-  canonicalizeStackURLs (stackInfo) {
-    // Currently, loader.origin might contain a fragment, but we don't want to use it
-    // for comparing with frame URLs.
-    var cleanedOrigin = cleanURL(getRuntime(this.agentIdentifier).origin)
-
-    for (var i = 0; i < stackInfo.frames.length; i++) {
-      var frame = stackInfo.frames[i]
-      var originalURL = frame.url
-      var cleanedURL = this.canonicalizeURL(originalURL, cleanedOrigin)
-      if (cleanedURL && cleanedURL !== frame.url) {
-        frame.url = cleanedURL
-        stackInfo.stackString = stackInfo.stackString.split(originalURL).join(cleanedURL)
-      }
-    }
-
-    return stackInfo
+    return canonicalStackString
   }
 
   storeError (err, time, internal, customAttributes) {
@@ -173,11 +147,11 @@ export class Aggregate extends FeatureBase {
       // Again as with previous usage, all falsey values would include the error.
     }
 
-    var stackInfo = this.canonicalizeStackURLs(computeStackTrace(err))
-    var canonicalStack = this.buildCanonicalStackString(stackInfo)
+    var stackInfo = computeStackTrace(err)
+    var canonicalStackString = this.buildCanonicalStackString(stackInfo)
 
     const params = {
-      stackHash: stringHashCode(canonicalStack),
+      stackHash: stringHashCode(canonicalStackString),
       exceptionClass: stackInfo.name,
       request_uri: globalScope?.location.pathname
     }

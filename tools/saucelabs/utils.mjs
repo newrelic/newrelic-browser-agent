@@ -1,6 +1,6 @@
 import os from 'os'
 import process from 'process'
-import Saucelabs from 'saucelabs'
+import SauceLabs from 'saucelabs'
 
 /**
  * Retrieves and provides credentials for accessing sauce labs from the process
@@ -62,6 +62,6 @@ export function buildSauceConnectOptions (cliArgs) {
  * @returns {Promise<SauceConnectInstance>}
  */
 export async function startSauceConnect (cliArgs) {
-  const sauce = new Saucelabs.default(getSauceLabsCreds())
+  const sauce = new SauceLabs.default(getSauceLabsCreds())
   return await sauce.startSauceConnect(buildSauceConnectOptions(cliArgs))
 }

@@ -10,6 +10,10 @@ const jilArgs = yargs(process.argv.slice(2))
   .alias('v', 'verbose')
   .describe('v', 'if true, prints all output from each browser above summary')
 
+  .boolean('L')
+  .alias('L', 'log-requests')
+  .describe('l', 'if true, prints data about requests to the test server')
+
   .string('b')
   .alias('b', 'browsers')
   .requiresArg('b')

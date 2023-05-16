@@ -7,7 +7,15 @@ const sessionReplayData = require('../utils/session-replay-data')
  * @param {module:fastify.FastifyInstance} fastify the fastify server instance
  * @param {TestServer} testServer test server instance
  */
-module.exports = fp(async function (fastify, testServer) {
+module.exports = fp(async function (fastify) {
+  fastify.route({
+    method: ['GET', 'POST'],
+    url: '/debug',
+    handler: async function (request, reply) {
+      fastify.testServerLogger.logDebugShimMessage(request)
+      reply.code(200).send()
+    }
+  })
   fastify.route({
     method: ['GET', 'POST'],
     url: '/1/:testId',

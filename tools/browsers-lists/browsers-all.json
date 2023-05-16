@@ -1851,7 +1851,7 @@
       "appium:platformVersion": "13.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       }
     }
   ],

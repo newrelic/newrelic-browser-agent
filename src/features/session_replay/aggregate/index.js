@@ -86,7 +86,6 @@ export class Aggregate extends AggregateBase {
     // TODO -- get this working with agreed structure
     // DISABLE FOR STEEL THREAD, RUN ON EVERY PAGE
     // THIS STILL ONLY HONORS NEW SESSIONS OR ONGOING RECORDINGS THO...
-
     this.waitForFlags(['sr'], this.featureName, this.ee).then(([{ value }]) => {
       this.initializeRecording(value, Math.random() < 0.5, Math.random() < 0.5)
     })

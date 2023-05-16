@@ -29,7 +29,7 @@ function getInitContent (request, reply, testServer) {
     initJSON = initJSON.replace(regexReplacementRegex, '/$1/$2')
   }
 
-  return `window.NREUM||(NREUM={});NREUM.init=${initJSON};NREUM.init.ssl=true;`
+  return `window.NREUM||(NREUM={});NREUM.init=${initJSON};NREUM.init.ssl=false;`
 }
 
 /**

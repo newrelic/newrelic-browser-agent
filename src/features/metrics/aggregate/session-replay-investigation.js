@@ -23,6 +23,26 @@ try {
   stopRecording = record({
     maskAllInputs: true,
     maskTextSelector: '*',
+    inlineStylesheet: false,
+    slimDOMOptions: {
+      script: true,
+      comment: true,
+      headFavicon: true,
+      headWhitespace: true,
+      headMetaDescKeywords: true,
+      headMetaSocial: true,
+      headMetaRobots: true,
+      headMetaHttpEquiv: true,
+      headMetaAuthorship: true,
+      headMetaVerification: true
+    },
+    sampling: {
+      mousemove: false,
+      mouseInteraction: false,
+      scroll: 150, // do not emit twice in 150ms
+      media: 800,
+      input: 'last' // When input multiple characters, only record the final input
+    },
     emit: (event) => {
       try {
         metrics.Nodes++

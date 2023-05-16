@@ -1,4 +1,6 @@
 
+import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS } from '../../session/constants'
+import { globalScope } from '../../util/global-scope'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { Configurable } from './configurable'
 
@@ -12,6 +14,11 @@ const model = {
     cors_use_newrelic_header: undefined,
     cors_use_tracecontext_headers: undefined,
     allowed_origins: undefined
+  },
+  session: {
+    domain: undefined, // used by first party cookies to set the top-level domain
+    expiresMs: DEFAULT_EXPIRES_MS,
+    inactiveMs: DEFAULT_INACTIVE_MS
   },
   ssl: undefined,
   obfuscate: undefined,

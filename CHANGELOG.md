@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.232.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.231.0...v1.232.0) (2023-05-08)
+
+
+### Features
+
+* Add internal session metrics ([bcfe6ff](https://github.com/newrelic/newrelic-browser-agent/commit/bcfe6ffff9d0be583bbd9d5d6ef78265aaa753cb))
+* Add new stateful Session Manager - NEWRELIC-7986 ([#464](https://github.com/newrelic/newrelic-browser-agent/issues/464)) ([32e1061](https://github.com/newrelic/newrelic-browser-agent/commit/32e1061646d89d6270f027acd5e35bc089323bda))
+* Add query parameter supportability metrics ([#518](https://github.com/newrelic/newrelic-browser-agent/issues/518)) ([88c2d83](https://github.com/newrelic/newrelic-browser-agent/commit/88c2d83609c2b11aad81d4480fce25b007c4b4fa))
+* Allow custom error grouping ([f95630d](https://github.com/newrelic/newrelic-browser-agent/commit/f95630dfbbb7234950fc37216c059218237eeb11))
+
 ## v1.231.0
 
 ### Omit CLS scores before web-vitals report them

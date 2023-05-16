@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const browsersPolyfill = require('./browsers-polyfill.json')
-const browsersSupported = require('./browsers-supported.json')
-const browsersSelenium = require('./browsers-selenium.json')
-const browsersAll = require('./browsers-all.json')
+const browsersPolyfill = require('../../browsers-lists/browsers-polyfill.json')
+const browsersSupported = require('../../browsers-lists/browsers-supported.json')
+const browsersSelenium = require('../../browsers-lists/browsers-selenium.json')
+const browsersAll = require('../../browsers-lists/browsers-all.json')
 const semver = require('semver')
 const BrowserMatcher = require('./browser-matcher')
 var config = require('../runner/args')

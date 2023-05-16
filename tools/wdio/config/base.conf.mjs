@@ -18,11 +18,23 @@ export default function config () {
     maxInstances: jilArgs.concurrency || 1,
     maxInstancesPerCapability: 100,
     capabilities: [],
-    logLevel: jilArgs.verbose ? 'debug' : jilArgs.silent ? 'silent' : 'error',
+    logLevel: (() => {
+      if (jilArgs.verbose) {
+        return 'debug'
+      }
+      if (jilArgs.logRequests || jilArgs.debugShim) {
+        return 'info'
+      }
+      if (jilArgs.silent) {
+        return 'silent'
+      }
+      return 'error'
+    })(),
     waitforTimeout: 10000,
     connectionRetryTimeout: 120000,
     connectionRetryCount: 3,
     services: [
+      path.resolve(__dirname, '../plugins/browser-matcher.mjs'),
       path.resolve(__dirname, '../plugins/jil-commands.mjs'),
       path.resolve(__dirname, '../plugins/newrelic-instrumentation.mjs'),
       [path.resolve(__dirname, '../plugins/testing-server/index.mjs'), jilArgs]
@@ -37,7 +49,7 @@ export default function config () {
     ],
     mochaOpts: {
       ui: 'bdd',
-      timeout: 60000,
+      timeout: 30000,
       retries: jilArgs.retry ? 3 : 0
     },
     autoCompileOpts: {

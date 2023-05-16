@@ -6,35 +6,6 @@ on:
     types: [published]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
-    defaults:
-      run:
-        shell: bash
-
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: Release${{ github.event.number }}-${{ github.run_number }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    steps:
-      - name: Setup Container
-        run: apt update && apt install -y git
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: lts/*
-      - name: install
-        run: npm ci
-      - name: build:all
-        run: npm run build:all
-      - name: run tests
-        run: node ./tools/jil/bin/cli.js -f merged -b chrome@latest -s -t 85000 --concurrent=10
   publish-to-s3:
     runs-on: ubuntu-latest
     container:
@@ -42,7 +13,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    needs: [test]
     env:
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
@@ -82,7 +52,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Setup Container
-        run: apt update && apt install -y git && apt install -y jq
+        run: apt update && apt install -y git jq
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
@@ -143,7 +113,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Setup Container
-        run: apt update && apt install -y git && apt install -y jq
+        run: apt update && apt install -y git jq
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
@@ -173,7 +143,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
     steps:
       - name: Setup Container
-        run: apt update && apt install -y git && apt install -y jq
+        run: apt update && apt install -y git jq
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
@@ -184,7 +154,7 @@ jobs:
         run: npm ci
       - name: Build and raise PR to docs-website
         run: |
-          node tools/scripts/docs-website/create-docs-pr.js \
+          node tools/scripts/docs-website/create-docs-pr.mjs \
             -t=$(cat package.json | jq -r '.version')
   publish-current-to-s3:
     runs-on: ubuntu-latest

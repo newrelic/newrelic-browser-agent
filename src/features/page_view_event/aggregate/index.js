@@ -130,7 +130,10 @@ export class Aggregate extends FeatureBase {
     var queryString = fromArray(chunksForQueryString, agentRuntime.maxBytes)
 
     // Capture bytes sent to RUM call endpoint (currently `1`) as a supportability metric. See metrics aggregator (on unload).
-    agentRuntime.bytesSent[protocol] = (agentRuntime.bytesSent[protocol] || 0) + queryString?.length || 0
+    agentRuntime.bytesSent[protocol] = 0 // Set to zero for now until RUM is moved to POST
+
+    // Capture query bytes sent to RUM call endpoint (currently `1`) as a supportability metric. See metrics aggregator (on unload).
+    agentRuntime.queryBytesSent[protocol] = (agentRuntime.queryBytesSent[protocol] || 0) + queryString?.length || 0
 
     const isValidJsonp = submitData.jsonp(
       this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + queryString,

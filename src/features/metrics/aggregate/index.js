@@ -1,4 +1,4 @@
-import { getRuntime } from '../../../common/config/config'
+import { getRuntime, getInfo } from '../../../common/config/config'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL } from '../constants'
@@ -12,6 +12,7 @@ import { windowAddEventListener } from '../../../common/event-listener/event-lis
 import { isBrowserScope } from '../../../common/util/global-scope'
 import { metrics, type } from './session-replay-investigation'
 import { FeatureBase } from '../../utils/feature-base'
+import { stringify } from '../../../common/util/stringify'
 
 export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
@@ -98,6 +99,7 @@ export class Aggregate extends FeatureBase {
     try {
       if (this.resourcesSent) return
       const agentRuntime = getRuntime(this.agentIdentifier)
+      const info = getInfo(this.agentIdentifier)
       // make sure this only gets sent once
       this.resourcesSent = true
       // differentiate between internal+external and ajax+non-ajax
@@ -121,6 +123,14 @@ export class Aggregate extends FeatureBase {
         this.storeSupportabilityMetrics(
           `PageSession/Endpoint/${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)}/BytesSent`,
           agentRuntime.bytesSent[endpoint]
+        )
+      })
+
+      // Capture per-agent query bytes sent for each endpoint (see harvest) and RUM call (see page_view_event aggregator).
+      Object.keys(agentRuntime.bytesSent).forEach(endpoint => {
+        this.storeSupportabilityMetrics(
+          `PageSession/Endpoint/${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)}/QueryBytesSent`,
+          agentRuntime.queryBytesSent[endpoint]
         )
       })
 
@@ -148,6 +158,10 @@ export class Aggregate extends FeatureBase {
         // PageSession/Feature/SessionReplay/MaxTimeHit/Standard
         if (val > 0) this.storeSupportabilityMetrics(`PageSession/Feature/SessionReplay/${key}/${type}`, val)
       })
+
+      // Capture metrics for size of custom attributes
+      const jsAttributes = stringify(info.jsAttributes)
+      this.storeSupportabilityMetrics('PageSession/Feature/CustomData/Bytes', jsAttributes === '{}' ? 0 : jsAttributes.length)
     } catch (e) {
       // do nothing
     }

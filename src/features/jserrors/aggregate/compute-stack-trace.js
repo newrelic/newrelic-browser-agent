@@ -57,6 +57,7 @@
 // ex.message = ...
 // ex.name = ReferenceError
 import { formatStackTrace } from './format-stack-trace'
+import { canonicalizeUrl } from '../../../common/url/canonicalize-url'
 
 var debug = false
 
@@ -66,6 +67,23 @@ var gecko = /^\s*(?:(\S*|global code)(?:\(.*?\))?@)?((?:file|http|https|chrome|s
 var chrome_eval = /^\s*at .+ \(eval at \S+ \((?:(?:file|http|https):[^)]+)?\)(?:, [^:]*:\d+:\d+)?\)$/i
 var ie_eval = /^\s*at Function code \(Function code:\d+:\d+\)\s*/i
 
+/**
+ * Represents an error with a stack trace.
+ * @typedef {Object} StackInfo
+ * @property {string} name - The name of the error (e.g. 'TypeError').
+ * @property {string} message - The error message.
+ * @property {string} stackString - The stack trace as a string.
+ * @property {Array<Object>} frames - An array of frames in the stack trace.
+ * @property {string} frames.url - The URL of the file containing the code for the frame.
+ * @property {string} frames.func - The name of the function associated with the frame.
+ * @property {number} frames.line - The line number of the code in the frame.
+ */
+
+/**
+ * Attempts to compute a stack trace for the given exception.
+ * @param {Error} ex - The exception for which to compute the stack trace.
+ * @returns {StackInfo} A stack trace object containing information about the frames on the stack.
+ */
 export function computeStackTrace (ex) {
   var stack = null
 
@@ -110,9 +128,9 @@ export function computeStackTrace (ex) {
 }
 
 /**
- * Computes stack trace information from the stack property.
- * Chrome and Gecko use this property.
- * @param {Error} ex
+ * Computes stack trace information from the stack property. Chrome and Gecko use this property.
+ *
+ * @param {Error} ex - The error object to compute the stack trace for.
  * @return {?Object.<string, *>} Stack trace information.
  */
 function computeStackTraceFromStackProp (ex) {
@@ -136,22 +154,49 @@ function computeStackTraceFromStackProp (ex) {
   }
 }
 
+/**
+ * Parses a line from a JavaScript error stack trace and adds it to the given `info` object.
+ * Ignores all stack entries thrown from one of our wrapper functions.
+ *
+ * @param {object} info - The `info` object to add the parsed line to.
+ * @param {string} line - The line to parse.
+ * @returns {object} The `info` object with the parsed line added.
+ */
 function parseStackProp (info, line) {
-  var element = getElement(line)
+  let element = getStackElement(line)
 
+  // This catches lines that aren't frames (like the first line stating the error).
   if (!element) {
     info.stackLines.push(line)
     return info
   }
 
-  if (isWrapper(element.func)) info.wrapperSeen = true
-  else info.stackLines.push(line)
+  // Once we've seen a wrapper, ignore all subsequent stack entries.
+  if (isNrWrapper(element.func)) info.wrapperSeen = true
+  if (!info.wrapperSeen) {
+    // Query strings and fragments should be removed, and URLs matching the loader's origin should be "<inline>".
+    let canonicalUrl = canonicalizeUrl(element.url)
+    if (canonicalUrl !== element.url) {
+      line = line.replace(element.url, canonicalUrl)
+      element.url = canonicalUrl
+    }
 
-  if (!info.wrapperSeen) info.frames.push(element)
+    info.stackLines.push(line)
+    info.frames.push(element)
+  }
+
   return info
 }
 
-function getElement (line) {
+/**
+ * Parses a line from a JavaScript error stack trace to extract information about a stack trace element, such as the
+ * URL, function name, line number, and column number.
+ *
+ * @param {string} line - A single line from a JavaScript error stack trace.
+ * @returns {object} An object containing information about the stack trace element, including the URL, function
+ *     name, line number, and column number (if available).
+ */
+function getStackElement (line) {
   var parts = line.match(gecko)
   if (!parts) parts = line.match(chrome)
 
@@ -169,6 +214,14 @@ function getElement (line) {
   }
 }
 
+/**
+ * Computes a stack trace object from an error object, by extracting the source and line number from the error object,
+ * and using them to create a single stack frame.
+ *
+ * @param {Error} ex - The error object to compute the stack trace for.
+ * @returns {Object|null} - An object representing the computed stack trace, or null if the
+ * input error object does not contain a line number.
+ */
 function computeStackTraceBySourceAndLine (ex) {
   if (!('line' in ex)) return null
 
@@ -187,7 +240,10 @@ function computeStackTraceBySourceAndLine (ex) {
     })
   }
 
-  var stackString = className + ': ' + ex.message + '\n    at ' + ex.sourceURL
+  // Remove any query string and fragment
+  var canonicalUrl = canonicalizeUrl(ex.sourceURL)
+
+  var stackString = className + ': ' + ex.message + '\n    at ' + canonicalUrl
   if (ex.line) {
     stackString += ':' + ex.line
     if (ex.column) {
@@ -201,13 +257,19 @@ function computeStackTraceBySourceAndLine (ex) {
     message: ex.message,
     stackString: stackString,
     frames: [{
-      url: ex.sourceURL,
+      url: canonicalUrl,
       line: ex.line,
       column: ex.column
     }]
   })
 }
 
+/**
+ * For exceptions with no stack and only a message, derives a stack trace by extracting the class name and message.
+ *
+ * @param {Error} ex - The exception for which to compute the stack trace.
+ * @returns {StackTrace} A stack trace object containing the name and message of the exception.
+ */
 function computeStackTraceWithMessageOnly (ex) {
   var className = ex.name || getClassName(ex)
   if (!className) return null
@@ -221,11 +283,23 @@ function computeStackTraceWithMessageOnly (ex) {
   })
 }
 
+/**
+ * Attempts to extract the name of the constructor function (the class) of the given object.
+ *
+ * @param {Object} obj - The object for which to extract the constructor function name.
+ * @returns {string} The name of the constructor function, or 'unknown' if the name cannot be determined.
+ */
 function getClassName (obj) {
   var results = classNameRegex.exec(String(obj.constructor))
   return (results && results.length > 1) ? results[1] : 'unknown'
 }
 
-function isWrapper (functionName) {
+/**
+ * Checks whether the given function name is a New Relic wrapper function.
+ *
+ * @param {string} functionName - The name of the function to check.
+ * @returns {boolean} True if the function name includes the string 'nrWrapper', false otherwise.
+ */
+function isNrWrapper (functionName) {
   return (functionName && functionName.indexOf('nrWrapper') >= 0)
 }

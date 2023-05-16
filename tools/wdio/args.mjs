@@ -10,6 +10,10 @@ const jilArgs = yargs(process.argv.slice(2))
   .alias('v', 'verbose')
   .describe('v', 'if true, prints all output from each browser above summary')
 
+  .boolean('L')
+  .alias('L', 'log-requests')
+  .describe('l', 'if true, prints data about requests to the test server')
+
   .string('b')
   .alias('b', 'browsers')
   .requiresArg('b')
@@ -91,6 +95,11 @@ const jilArgs = yargs(process.argv.slice(2))
   .boolean('P')
   .alias('P', 'polyfills')
   .describe('P', 'inject polyfills and polyfill loaders into test pages')
+
+  .boolean('A')
+  .default('A', false)
+  .alias('A', 'all-browsers')
+  .describe('A', 'Run tests against all browsers, even unsupported ones')
 
   .help('h')
   .alias('h', 'help').argv

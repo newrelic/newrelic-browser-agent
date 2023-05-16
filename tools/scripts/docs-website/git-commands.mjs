@@ -3,9 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict'
-
-const { exec } = require('child_process')
+import { exec } from 'child_process'
 
 async function getPushRemotes () {
   const stdout = await execAsPromise('git remote -v')
@@ -141,9 +139,9 @@ async function sparseCloneRepo (repoInfo, checkoutFiles) {
   process.chdir('..')
 }
 
-function execAsPromise (command) {
+function execAsPromise (command, silent = false) {
   return new Promise((resolve, reject) => {
-    console.log(`Executing: '${command}'`)
+    if (!silent) console.log(`Executing: '${command}'`)
 
     exec(command, (err, stdout) => {
       if (err) {
@@ -155,7 +153,7 @@ function execAsPromise (command) {
   })
 }
 
-module.exports = {
+export default {
   getPushRemotes,
   getCurrentBranch,
   checkoutNewBranch,

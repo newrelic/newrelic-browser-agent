@@ -7,7 +7,6 @@
  */
 
 import { ee } from '../event-emitter/contextual-ee'
-import slice from 'lodash._slice'
 export const flag = 'nr@original'
 
 /**
@@ -77,7 +76,7 @@ export function createWrapperWithEmitter (emitter, always) {
 
       try {
         originalThis = this
-        args = slice(arguments)
+        args = Array.from(arguments)
 
         if (typeof getContext === 'function') {
           ctx = getContext(args, originalThis)

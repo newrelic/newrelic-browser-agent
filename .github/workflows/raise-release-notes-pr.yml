@@ -12,7 +12,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
     steps:
       - name: Setup Container
-        run: apt update && apt install -y git && apt install -y jq
+        run: apt update && apt install -y git jq
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
@@ -23,5 +23,5 @@ jobs:
         run: npm ci
       - name: Build and raise PR to docs-website
         run: |
-          node tools/scripts/docs-website/create-docs-pr.js \
+          node tools/scripts/docs-website/create-docs-pr.mjs \
             -t=v$(cat package.json | jq -r '.version')

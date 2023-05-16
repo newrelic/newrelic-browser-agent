@@ -17,7 +17,6 @@ import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/env'
 import { isBrowserScope, isWorkerScope } from '../util/global-scope'
-import { gzipSync, strToU8 } from 'fflate'
 
 const haveSendBeacon = !!navigator.sendBeacon // only the web window obj has sendBeacon at this time, so 'false' for other envs
 
@@ -115,13 +114,15 @@ export class Harvest extends SharedContext {
     var body
     var fullUrl = url + '?' + baseParams + params
 
-    if (useBody && endpoint === 'events') {
-      body = payload.body.e
-    } else if (useBody) {
-      body = stringify(payload.body)
-    } else {
-      fullUrl = url + encodeObj(payload.body, agentRuntime.maxBytes)
-    }
+    if (!gzip) {
+      if (useBody && endpoint === 'events') {
+        body = payload.body.e
+      } else if (useBody) {
+        body = stringify(payload.body)
+      } else {
+        fullUrl = url + encodeObj(payload.body, agentRuntime.maxBytes)
+      }
+    } else body = payload.body
 
     // Get bytes harvested per endpoint as a supportability metric. See metrics aggregator (on unload).
     agentRuntime.bytesSent[endpoint] = (agentRuntime.bytesSent[endpoint] || 0) + body?.length || 0
@@ -131,14 +132,6 @@ export class Harvest extends SharedContext {
     /* Since workers don't support sendBeacon right now, or Image(), they can only use XHR method.
         Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
         we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon. */
-    if (useBody && gzip) {
-      try {
-        body = gzipSync(strToU8(body))
-      } catch (err) {
-        // failed to gzip...
-        gzip = false
-      }
-    }
 
     var result = method({ url: fullUrl, body, sync: opts.unload && isWorkerScope, gzipped: gzip, licenseKey: info.licenseKey })
 

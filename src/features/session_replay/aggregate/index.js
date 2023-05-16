@@ -11,7 +11,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.8'
 
-let recorder
+let recorder, gzipper, u8
 
 /** The "mode" with which the session replay is recording */
 const MODE = {
@@ -145,6 +145,9 @@ export class Aggregate extends AggregateBase {
       const { record } = await import(/* webpackChunkName: "recorder" */'rrweb')
       recorder = record
       this.startRecording()
+      const { gzipSync, strToU8 } = await import(/* webpackChunkName: "compressor" */'fflate')
+      gzipper = gzipSync
+      u8 = strToU8
     }
     this.isFirstChunk = !!session.isNew
   }
@@ -152,10 +155,17 @@ export class Aggregate extends AggregateBase {
   prepareHarvest (options) {
     if (this.events.length === 0) return
     const payload = this.getPayload()
-    console.log('rrweb payload', payload)
+    try {
+      payload.body = gzipper(u8(stringify(payload.body)))
+      this.scheduler.opts.gzip = true
+    } catch (err) {
+      // failed to gzip
+      this.scheduler.opts.gzip = false
+    }
+    console.log('payload!', payload)
     // TODO -- Gracefully handle the buffer for retries.
     this.clearBuffer()
-    return payload
+    return [payload]
   }
 
   getPayload () {

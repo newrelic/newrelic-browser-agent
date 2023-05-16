@@ -70,11 +70,6 @@ export class Instrument extends InstrumentBase {
       // Per NEWRELIC-8525, we don't have a fallback for capturing resources for older versions that don't support PO at this time.
     }
 
-    // document.addEventListener('scroll', noOp, eventListenerOpts(false))
-    // document.addEventListener('keypress', noOp, eventListenerOpts(false))
-    // document.addEventListener('click', noOp, eventListenerOpts(false))
-    // noOp (e) { /* no-op */ }
-
-    this.importAggregator(observer)
+    this.importAggregator({ resourceObserver: observer })
   }
 }

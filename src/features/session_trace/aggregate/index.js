@@ -31,13 +31,13 @@ const MAX_TRACE_DURATION = 15 * 60 * 1000 // 15 minutes
 
 export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, argsArray) {
+  constructor (agentIdentifier, aggregator, argsObj) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
     if (!getRuntime(agentIdentifier).xhrWrappable) return
 
-    this.resourceObserver = argsArray?.[0]
+    this.resourceObserver = argsObj?.resourceObserver // undefined if observer couldn't be created
     this.ptid = ''
     this.trace = {}
     this.nodeCount = 0

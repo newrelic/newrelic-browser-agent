@@ -21,7 +21,8 @@ module.exports.loaderConfigKeys = [
   'agentID',
   'applicationID',
   'licenseKey',
-  'trustKey'
+  'trustKey',
+  'xpid'
 ]
 
 module.exports.loaderOnlyConfigKeys = ['accountID', 'agentID', 'trustKey']

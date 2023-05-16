@@ -57,9 +57,13 @@ submitData.xhr = function xhr ({ url, body, sync, method = 'POST', gzipped, lice
     // do nothing
   }
 
-  request.setRequestHeader('content-type', 'application/json')
-  if (gzipped) request.setRequestHeader('X-Browser-Monitoring-Key', licenseKey)
-  if (gzipped) request.setRequestHeader('Content-Encoding', 'gzip')
+  if (gzipped) {
+    request.setRequestHeader('content-type', 'application/json')
+    request.setRequestHeader('X-Browser-Monitoring-Key', licenseKey)
+    request.setRequestHeader('Content-Encoding', 'gzip')
+  } else {
+    request.setRequestHeader('content-type', 'text/plain')
+  }
   request.send(body)
   return request
 }

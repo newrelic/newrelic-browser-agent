@@ -44,7 +44,10 @@ export class InstrumentBase extends FeatureBase {
   importAggregator () {
     if (this.hasAggregator || !this.auto) return
     this.hasAggregator = true
-
+    let session, agentSessionFile
+    if (getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true) {
+      agentSessionFile = import(/* webpackChunkName: "session-manager" */ './agent-session')
+    }
     const importLater = async () => {
       /**
        * Note this try-catch differs from the one in Agent.start() in that it's placed later in a page's lifecycle and
@@ -52,9 +55,8 @@ export class InstrumentBase extends FeatureBase {
        */
       try {
         // The session entity needs to be attached to the config internals before the aggregator chunk runs
-        let session
-        if (getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true) {
-          const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
+        if (agentSessionFile && !session) {
+          const { setupAgentSession } = await agentSessionFile
           session = setupAgentSession(this.agentIdentifier)
         }
         if (!shouldImportAgg(this.featureName, session)) {

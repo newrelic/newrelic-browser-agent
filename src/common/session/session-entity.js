@@ -20,7 +20,7 @@ const model = {
   inactiveAt: 0,
   expiresAt: 0,
   updatedAt: Date.now(),
-  sessionReplayActive: false,
+  sessionReplay: 0,
   sessionTraceActive: false,
   custom: {}
 }

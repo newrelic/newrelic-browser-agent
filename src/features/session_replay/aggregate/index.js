@@ -95,6 +95,9 @@ export class Aggregate extends AggregateBase {
         this.mode = MODE.FULL
         this.startRecording()
         this.scheduler.startTimer(this.harvestTimeSeconds)
+
+        const { session } = getRuntime(this.agentIdentifier)
+        session.write({ ...session.state, sessionReplay: this.mode })
       }
     }, this.featureName, this.ee)
 
@@ -122,9 +125,9 @@ export class Aggregate extends AggregateBase {
     // we are not actively recording SR... DO NOT import or run the recording library
     // session replay samples can only be decided on the first load of a session
     // session replays can continue if already in progress
-    if (!session.isNew && !session.state.sessionReplayActive) return
-    if (session.state.sessionReplayActive || (session.isNew && fullSample)) this.mode = MODE.FULL
-    else if (errorSample) this.mode = MODE.ERROR
+    if (!session.isNew && session.state.sessionReplay === MODE.OFF) return
+    if (session.state.sessionReplay === MODE.FULL || (session.isNew && fullSample)) this.mode = MODE.FULL
+    else if (session.state.sessionReplay === MODE.ERROR || errorSample) this.mode = MODE.ERROR
 
     console.log('MODE', this.mode, '-- entitlements, error, full', entitlements, errorSample, fullSample)
 
@@ -136,9 +139,6 @@ export class Aggregate extends AggregateBase {
       // We only report (harvest) in FULL mode
       this.scheduler.startTimer(this.harvestTimeSeconds)
       this.recording = true
-      // we only set sessionReplayActive to true if "full"
-      const { session } = getRuntime(this.agentIdentifier)
-      session.write({ ...session.state, sessionReplayType: true })
     }
     // We record in FULL or ERROR mode
     if (this.mode !== MODE.OFF) {
@@ -150,6 +150,8 @@ export class Aggregate extends AggregateBase {
       u8 = strToU8
     }
     this.isFirstChunk = !!session.isNew
+
+    session.write({ ...session.state, sessionReplay: this.mode })
   }
 
   prepareHarvest (options) {

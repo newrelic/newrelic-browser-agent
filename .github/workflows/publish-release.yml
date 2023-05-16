@@ -155,7 +155,7 @@ jobs:
       - name: Build and raise PR to docs-website
         run: |
           node tools/scripts/docs-website/create-docs-pr.mjs \
-            -t=$(cat package.json | jq -r '.version')
+            -t=v$(cat package.json | jq -r '.version')
   publish-current-to-s3:
     runs-on: ubuntu-latest
     container:

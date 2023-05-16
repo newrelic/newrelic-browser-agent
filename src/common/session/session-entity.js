@@ -5,7 +5,6 @@ import { ee } from '../event-emitter/contextual-ee'
 import { Timer } from '../timer/timer'
 import { isBrowserScope } from '../util/global-scope'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, PREFIX } from './constants'
-import { LocalMemory } from '../storage/local-memory'
 import { InteractionTimer } from '../timer/interaction-timer'
 import { wrapEvents } from '../wrap'
 import { getModeledObject } from '../config/state/configurable'
@@ -42,16 +41,16 @@ export class SessionEntity {
     this.setup(opts)
   }
 
-  setup ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS, storageAPI = new LocalMemory() }) {
-    if (!agentIdentifier || !key) throw new Error('Missing Required Fields')
-    if (!isBrowserScope) this.storage = new LocalMemory()
-    else this.storage = storageAPI
-
+  setup ({ agentIdentifier, key, storage, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS }) {
+    if (!agentIdentifier || !key || !storage) {
+      throw new Error(`Missing required field(s):${!agentIdentifier ? ' agentID' : ''}${!key ? ' key' : ''}${!storage ? ' storage' : ''}`)
+    }
+    this.agentIdentifier = agentIdentifier
+    this.storage = storage
     this.state = {}
 
     this.sync(model)
 
-    this.agentIdentifier = agentIdentifier
     // key is intended to act as the k=v pair
     this.key = key
     // value is intended to act as the primary value of the k=v pair
@@ -207,7 +206,7 @@ export class SessionEntity {
       this.setup({
         agentIdentifier: this.agentIdentifier,
         key: this.key,
-        storageAPI: this.storage,
+        storage: this.storage,
         expiresMs: this.expiresMs,
         inactiveMs: this.inactiveMs
       })

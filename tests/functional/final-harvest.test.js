@@ -271,7 +271,7 @@ testDriver.test('final harvest sends resources', reliableResourcesHarvest.and(st
 
   Promise.all([resourcesPromise, rumPromise, loadPromise])
     .then(([{ request: { body } }]) => {
-      t.ok(body, 'received res harvest')
+      t.ok(body, 'received first resources harvest on startup')
 
       resourcesPromise = router.expectResources()
       let domPromise = browser
@@ -284,7 +284,7 @@ testDriver.test('final harvest sends resources', reliableResourcesHarvest.and(st
       return Promise.all([resourcesPromise, domPromise])
     })
     .then(([{ request: { body } }]) => {
-      t.ok(body, 'received res harvest')
+      t.ok(body, 'received second res harvest on interval')
       t.end()
     })
     .catch(fail)

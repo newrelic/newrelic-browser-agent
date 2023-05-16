@@ -44,8 +44,6 @@ module.exports = fp(async function (fastify) {
       if (request.testHandle) {
         request.testHandle.incrementRequestCount(fastify.testServerId, 'events')
       }
-
-      console.log('EVENTS!')
       return reply.code(200).send('')
     }
   })

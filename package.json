@@ -218,6 +218,7 @@
     "yargs": "^17.6.2"
   },
   "files": [
+    "build",
     "dist",
     "src",
     "LICENSE",

@@ -4,7 +4,7 @@
 
 The New Relic browser agent instruments your web application or site and provides observability into performance, errors, and other behaviors.
 
-- The instructions on this page pertain to installing the browser agent as an NPM package.
+- The instructions on this page pertain to installing the browser agent as an npm package.
 
 - The browser agent is also generally available as a copy-paste JavaScript snippet and via auto-injection by backend apps. See *[Install the browser agent](https://docs.newrelic.com/docs/browser/browser-monitoring/installation/install-browser-monitoring-agent/)* for info on these alternatives.
 
@@ -14,7 +14,7 @@ The New Relic browser agent instruments your web application or site and provide
 
 ## Adding the agent package to your project
 
-To make the agent available to your application, install via [NPM](https://docs.npmjs.com/cli/v8/commands/npm-install) or [Yarn](https://classic.yarnpkg.com/lang/en/docs/cli/install/).
+To make the agent available to your application, install via [npm](https://docs.npmjs.com/cli/v8/commands/npm-install) or [Yarn](https://classic.yarnpkg.com/lang/en/docs/cli/install/).
 
 ```shell
 $ npm install @newrelic/browser-agent --save
@@ -26,7 +26,7 @@ $ yarn add @newrelic/browser-agent
 
 ## Creating an app in New Relic One
 
-Before instrumenting your app using the NPM package, a Browser App should be configured in New Relic One. This may be done with or without a corresponding APM agent. Once the app has been created, the Copy/Paste JavaScript code on the app's *Application settings* page will contain the configuration values needed to define options when instantiating the agent via the NPM package.
+Before instrumenting your app using the npm package, a Browser App should be configured in New Relic One. This may be done with or without a corresponding APM agent. Once the app has been created, the Copy/Paste JavaScript code on the app's *Application settings* page will contain the configuration values needed to define options when instantiating the agent via the npm package.
 
 1. If a browser app does not already exist, create one:
    - From the *New Relic One* navigation panel, click *Add Data*.
@@ -35,7 +35,7 @@ Before instrumenting your app using the NPM package, a Browser App should be con
    - Select or name your app and click *Enable*.
 2. From the navigation panel, select *Browser* to view brower apps.
 3. Select the desired app and navigate to the *Application settings* page.
-4. From the *Copy/Paste JavaScript* box, copy the configuration values assigned to the `NREUM` object (`init`, `info`, and `loader_config`). You will use these configuration values when instantiating the agent using the NPM package.
+4. From the *Copy/Paste JavaScript* box, copy the configuration values assigned to the `NREUM` object (`init`, `info`, and `loader_config`). You will use these configuration values when instantiating the agent using the npm package.
 
 ## Instantiating the agent
 
@@ -168,6 +168,51 @@ Neither the browser agent development team nor the New Relic support teams can s
 // THIS IS BAD - do not do this
 import { Agent } from '@newrelic/browser-agent/loaders/agent'
 import { Metrics } from '@newrelic/browser-agent/src/features/metrics'
+```
+
+## Utilizing Pre-Defined Bundles
+
+The npm package contains our pre-defined bundles within the `/build/` directory. This allows you to use the npm package while still importing a pre-built bundle into your HTML files. The npm package contains all our bundle files but you really only need to host and include one of the agent loaders. The loader will still load all async bundles from the New Relic CDN.
+
+```html
+<!-- Copy the configuration block from the snippet in New Relic -->
+<script>
+  ;window.NREUM||(NREUM={});NREUM.init={ ... };
+
+  ;NREUM.loader_config={ ... };
+  ;NREUM.info={ ... };
+</script>
+
+<!-- Include the lite agent -->
+<script src="/node_modules/@newrelic/browser-agent/build/nr-loader-spa-1.232.1.min.js"></script>
+<!-- Include the pro agent -->
+<script src="/node_modules/@newrelic/browser-agent/build/nr-loader-full-1.232.1.min.js"></script>
+<!-- Include the pro+spa agent -->
+<script src="/node_modules/@newrelic/browser-agent/build/nr-loader-rum-1.232.1.min.js"></script>
+```
+
+The version number in the file name will change depending on the version of the npm package that is installed. It is recommended that you setup your build tooling to copy the correct file from the `/node_modules/@newrelic/browser-agent/build/` directory into a `static` directory where you normally host static files. You can rename the file at the same time to make the `script` element static but remember to manage cache busting for your users.
+
+Also included in the bundle are un-minified and polyfilled versions of each of the agents. The polyfilled versions of the agents are built to ES5 standards. When using the polyfilled versions of the agents, remember to either include your own polyfills in the HTML above the loader `script` or use our `polyfills` script.
+
+```html
+<!-- Copy the configuration block from the snippet in New Relic -->
+<script>
+  ;window.NREUM||(NREUM={});NREUM.init={ ... };
+
+  ;NREUM.loader_config={ ... };
+  ;NREUM.info={ ... };
+</script>
+
+<!-- Include our polyfills script -->
+<script src="/node_modules/@newrelic/browser-agent/build/nr-polyfills-1.232.1.min.js"></script>
+
+<!-- Include the ES5 lite agent -->
+<script src="/node_modules/@newrelic/browser-agent/build/nr-loader-spa-polyfills-1.232.1.min.js"></script>
+<!-- Include the ES5 pro agent -->
+<script src="/node_modules/@newrelic/browser-agent/build/nr-loader-full-polyfills-1.232.1.min.js"></script>
+<!-- Include the ES5 pro+spa agent -->
+<script src="/node_modules/@newrelic/browser-agent/build/nr-loader-rum-polyfills-1.232.1.min.js"></script>
 ```
 
 ## Support

@@ -48,8 +48,9 @@ export class Harvest extends SharedContext {
     var options = {
       retry: submitMethod.method === submitData.xhr
     }
+    const payload = this.createPayload(endpoint, options)
     var caller = this.obfuscator.shouldObfuscate() ? (...args) => this.obfuscateAndSend(...args) : (...args) => this._send(...args)
-    caller({ ...spec, payload: this.createPayload(endpoint, options), submitMethod })
+    return caller({ ...spec, payload, submitMethod })
   }
 
   /**
@@ -101,7 +102,7 @@ export class Harvest extends SharedContext {
 
     if (!opts) opts = {}
 
-    var url = customUrl || this.getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey
+    var url = customUrl || this.getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + '?'
 
     var baseParams = includeBaseParams ? this.baseQueryString() : ''
     var params = payload.qs ? encodeObj(payload.qs, agentRuntime.maxBytes) : ''
@@ -112,7 +113,7 @@ export class Harvest extends SharedContext {
     var useBody = submitMethod.useBody
 
     var body
-    var fullUrl = url + '?' + baseParams + params
+    var fullUrl = url + baseParams + params
 
     if (!gzip) {
       if (useBody && endpoint === 'events') {
@@ -120,7 +121,7 @@ export class Harvest extends SharedContext {
       } else if (useBody) {
         body = stringify(payload.body)
       } else {
-        fullUrl = url + encodeObj(payload.body, agentRuntime.maxBytes)
+        fullUrl = fullUrl + encodeObj(payload.body, agentRuntime.maxBytes)
       }
     } else body = payload.body
 

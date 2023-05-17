@@ -7,6 +7,11 @@
   <head>
     <title>RUM Unit Test</title>
     {init} {config} {loader} {script-injection}
+    <script>
+      newrelic.setUserId(456);
+    newrelic.setUserId({'foo':'bar'});
+    newrelic.noticeError('fake1')
+    </script>
   </head>
-  <body></body>
+  <body>Instrumented</body>
 </html>

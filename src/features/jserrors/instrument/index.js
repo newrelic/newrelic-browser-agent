@@ -124,8 +124,6 @@ function notice (err, doNotStamp, ee) {
   // this is to preserve existing behavior
   var time = (!doNotStamp) ? now() : null
   handle('err', [err, time], undefined, FEATURE_NAMES.jserrors, ee)
-  // emit to session replay feature if present
-  handle('err', [err, time], undefined, FEATURE_NAMES.sessionReplay, ee)
 }
 
 /**

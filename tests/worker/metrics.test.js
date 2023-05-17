@@ -1,6 +1,6 @@
-const testDriver = require('../../../tools/jil/index')
+const testDriver = require('../../tools/jil/index')
 const { workerTypes, typeToMatcher } = require('./helpers')
-const { failWithEndTimeout, asyncApiFns, extractWorkerSM, getMetricsFromResponse } = require('../uncat-internal-help.cjs')
+const { failWithEndTimeout, asyncApiFns, extractWorkerSM, getMetricsFromResponse } = require('../functional/uncat-internal-help.cjs')
 
 const fetchExt = testDriver.Matcher.withFeature('fetchExt')
 const nestedWorkerSupport = testDriver.Matcher.withFeature('nestedWorkers')
@@ -55,12 +55,8 @@ function metricsApiCreatesSM (type, browserVersionMatcher) {
             const match = asyncApiFns.find(x => x === sm.params.name)
             if (match) observedAPImetrics.push(match)
 
-            if (sm.params.name === multipleApiCalls)
-            { t.equal(sm.stats.c, 5, sm.params.name + ' count was incremented by 1 until reached 5') }
-            else if (sm.params.name.startsWith('Workers/'))
-            { continue } // these metrics have an unreliable count dependent & are tested separately anyways
-            else
-            { t.equal(sm.stats.c, 1, sm.params.name + ' count was incremented by 1') }
+            if (sm.params.name === multipleApiCalls) { t.equal(sm.stats.c, 5, sm.params.name + ' count was incremented by 1 until reached 5') } else if (sm.params.name.startsWith('Workers/')) { continue } // these metrics have an unreliable count dependent & are tested separately anyways
+            else { t.equal(sm.stats.c, 1, sm.params.name + ' count was incremented by 1') }
           }
 
           t.ok(observedAPImetrics.length === asyncApiFns.length, 'Saw all asyncApiFns')
@@ -120,43 +116,44 @@ function metricsInvalidObfuscationCreatesSM (type, browserVersionMatcher) {
     replacement: 123			// #3 - invalid replacement type (string)
   }]
 
-  for (badRuleNum in badObfusRulesArr)
-  { testDriver.test(`${type} - invalid obfuscation rule #${parseInt(badRuleNum) + 1} creates invalid supportability metric`, browserVersionMatcher,
-    function (t, browser, router) {
-      let assetURL = router.assetURL(`worker/${type}-worker.html`, {
-        init: {
-          obfuscate: [badObfusRulesArr[badRuleNum]],
-          ajax: { harvestTimeSeconds: 2 },
-          jserrors: { enabled: false },
-          ins: { harvestTimeSeconds: 2 }
-        },
-        workerCommands: [() => {
-          setTimeout(function () {
-            setTimeout(() => self.close(), 100)
-            fetch('/tests/assets/obfuscate-pii-valid.html')
-            throw new Error('pii')
-          }, 100)
-          newrelic.addPageAction('pageactionpii')
-          newrelic.setCustomAttribute('piicustomAttribute', 'customAttribute')
-        }].map(x => x.toString())
-      })
+  for (badRuleNum in badObfusRulesArr) {
+    testDriver.test(`${type} - invalid obfuscation rule #${parseInt(badRuleNum) + 1} creates invalid supportability metric`, browserVersionMatcher,
+      function (t, browser, router) {
+        let assetURL = router.assetURL(`worker/${type}-worker.html`, {
+          init: {
+            obfuscate: [badObfusRulesArr[badRuleNum]],
+            ajax: { harvestTimeSeconds: 2 },
+            jserrors: { enabled: false },
+            ins: { harvestTimeSeconds: 2 }
+          },
+          workerCommands: [() => {
+            setTimeout(function () {
+              setTimeout(() => self.close(), 100)
+              fetch('/tests/assets/obfuscate-pii-valid.html')
+              throw new Error('pii')
+            }, 100)
+            newrelic.addPageAction('pageactionpii')
+            newrelic.setCustomAttribute('piicustomAttribute', 'customAttribute')
+          }].map(x => x.toString())
+        })
 
-      const loadPromise = browser.get(assetURL)
-      const metricsPromise = router.expectMetrics(5000)
+        const loadPromise = browser.get(assetURL)
+        const metricsPromise = router.expectMetrics(5000)
 
-      Promise.all([metricsPromise, loadPromise, router.expectRum()])
-        .then(([{ request: data }]) => {
-          const supportabilityMetrics = getMetricsFromResponse(data, true)
-          t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
-          let invalidDetected = false
-          supportabilityMetrics.forEach(sm => {
-            if (sm.params.name.includes('Generic/Obfuscate/Invalid')) invalidDetected = true
-          })
-          t.ok(invalidDetected, 'an invalid regex rule detected')
-          t.end()
-        }).catch(failWithEndTimeout(t))
-    }
-  ) }
+        Promise.all([metricsPromise, loadPromise, router.expectRum()])
+          .then(([{ request: data }]) => {
+            const supportabilityMetrics = getMetricsFromResponse(data, true)
+            t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
+            let invalidDetected = false
+            supportabilityMetrics.forEach(sm => {
+              if (sm.params.name.includes('Generic/Obfuscate/Invalid')) invalidDetected = true
+            })
+            t.ok(invalidDetected, 'an invalid regex rule detected')
+            t.end()
+          }).catch(failWithEndTimeout(t))
+      }
+    )
+  }
 }
 function metricsWorkersCreateSM (type, browserVersionMatcher) {
   testDriver.test(`${type} - workers creation generates sm`, browserVersionMatcher,
@@ -199,8 +196,7 @@ function metricsWorkersCreateSM (type, browserVersionMatcher) {
 
           if (type == workerTypes[2]) {		// for shared workers, nested workers aren't avail like it is for reg workers
             t.notOk(wsm.classicWorker || wsm.moduleWorker, 'nested classic or module (dedicated) worker is not avail')
-          }
-          else if (!wsm.workerImplFail) {	// since this test is supposed to run inside a worker, there's no need to check if we're in a worker compat browser & version...
+          } else if (!wsm.workerImplFail) {	// since this test is supposed to run inside a worker, there's no need to check if we're in a worker compat browser & version...
             t.ok(wsm.classicWorker, 'nested classic worker is available')
             t.ok(wsm.moduleWorker, 'nested module worker is available')	// see note on this from original metrics.test.js test
           }

@@ -154,7 +154,6 @@ export function setAPI (agentIdentifier, forceDrain) {
     if (typeof err === 'string') err = new Error(err)
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
     handle('err', [err, now(), false, customAttributes], undefined, FEATURE_NAMES.jserrors, instanceEE)
-    handle('err', [err, now(), false, customAttributes], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
   }
 
   // theres no window.load event on non-browser scopes, lazy load immediately

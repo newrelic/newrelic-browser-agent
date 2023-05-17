@@ -81,6 +81,7 @@ submitData.xhr = function xhr ({ url, body, sync, method = 'POST', gzipped, lice
  * @returns {Element}
  */
 submitData.img = function img ({ url }) {
+  console.log('img url', url)
   var element = new Image()
   element.src = url
   return element

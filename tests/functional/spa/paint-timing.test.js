@@ -45,7 +45,6 @@ testDriver.test('First contentful paint for supported browsers', firstContentful
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
       let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
-
       t.ok(interactionTree.firstContentfulPaint > 0, 'firstContentfulPaint has positive value')
     })
     .catch(fail)

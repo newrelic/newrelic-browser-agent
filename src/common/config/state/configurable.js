@@ -9,7 +9,8 @@ export function getModeledObject (obj, model) {
       Object.getPrototypeOf(model),
       Object.getOwnPropertyDescriptors(model)
     )
-    for (let key in output) {
+    const target = Object.keys(output).length === 0 ? obj : output
+    for (let key in target) {
       if (obj[key] !== undefined) {
         try {
           if (typeof obj[key] === 'object' && typeof model[key] === 'object') output[key] = getModeledObject(obj[key], model[key])

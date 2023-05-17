@@ -83,7 +83,7 @@ export class Aggregate extends AggregateBase {
 
     // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
     // This was to ensure that all errors, including those on the page before load and those handled with "noticeError" are accounted for. Needs evalulation
-    registerHandler('err', (e) => {
+    registerHandler('errorAgg', (e) => {
       this.hasError = true
       // run once
       if (this.errorNoticed) return

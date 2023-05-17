@@ -62,7 +62,7 @@ function addEventListenerPatched (type, browserVersionMatcher) {
       Promise.all([loadPromise, xhrMetricsPromise, router.expectRum()])
         .then(([, { request }]) => {
           t.ok(!!getXhrFromResponse(request), 'got XHR data')
-      	t.end()
+          t.end()
         })
         .catch(fail(t, 'unexpected problem reading payload'))
     }
@@ -100,7 +100,7 @@ function constructorRuntimePatched (type, browserVersionMatcher) {
       Promise.all([loadPromise, xhrMetricsPromise, router.expectRum()])
         .then(([, { request }]) => {
           t.ok(!!getXhrFromResponse(request), 'got XHR data')
-      	t.end()
+          t.end()
         })
         .catch(fail(t, 'unexpected problem reading payload'))
     }
@@ -115,13 +115,13 @@ function catCors (type, browserVersionMatcher) {
           if (!NREUM.loader_config) NREUM.loader_config = {}
           NREUM.loader_config.xpid = '12#34'
         },
-				`self.testId = '${router.testId}'`,
-				() => {
-				  var url = 'http://' + NREUM.info.beacon + '/cat-cors/' + self.testId
-				  var xhr = new XMLHttpRequest()
-				  xhr.open('GET', url)
-				  xhr.send()
-				}].map(x => x.toString())
+        `self.testId = '${router.testId}'`,
+        () => {
+          var url = 'http://' + NREUM.info.beacon + '/cat-cors/' + self.testId
+          var xhr = new XMLHttpRequest()
+          xhr.open('GET', url)
+          xhr.send()
+        }].map(x => x.toString())
       })
 
       const loadPromise = browser.get(assetURL)
@@ -135,7 +135,7 @@ function catCors (type, browserVersionMatcher) {
       Promise.all([ajaxPromise, loadPromise, router.expectRum()])
         .then(([{ request }]) => {
           t.notok(request.headers['x-newrelic-id'], 'cross-origin XHR should not have CAT header')
-      	t.end()
+          t.end()
         })
         .catch(fail(t, 'unexpected error'))
     }

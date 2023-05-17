@@ -1,4 +1,4 @@
-const browserMatcher = require('../../../tools/jil/index').Matcher
+const browserMatcher = require('../../tools/jil/index').Matcher
 
 /**
  * @type {string[]}

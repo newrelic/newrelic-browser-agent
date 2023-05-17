@@ -10,6 +10,15 @@ const jilArgs = yargs(process.argv.slice(2))
   .alias('v', 'verbose')
   .describe('v', 'if true, prints all output from each browser above summary')
 
+  .boolean('L')
+  .alias('L', 'log-requests')
+  .describe('l', 'if true, prints data about requests to the test server')
+
+  .boolean('D')
+  .default('D', false)
+  .alias('D', 'sauce-extended-debugging')
+  .describe('D', 'Run tests with sauce labs extended debugging enabled')
+
   .string('b')
   .alias('b', 'browsers')
   .requiresArg('b')

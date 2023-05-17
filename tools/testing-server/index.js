@@ -3,6 +3,7 @@ const { urlFor } = require('./utils/url')
 const waitOn = require('wait-on')
 const { paths, defaultAgentConfig } = require('./constants')
 const TestHandle = require('./test-handle')
+const TestServerLogger = require('./logger')
 
 /**
  * Test server configuration options
@@ -64,12 +65,14 @@ class TestServer {
    */
   #testHandles = new Map()
 
-  constructor (config) {
-    if (!config.logger) {
-      config.logger = console
-    }
+  /**
+   * Custom logger for the test server
+   */
+  #logger
 
+  constructor (config) {
     this.#config = config
+    this.#logger = new TestServerLogger(config)
 
     this.#createAssetServer()
     this.#createCorsServer()
@@ -196,10 +199,11 @@ class TestServer {
     this.#assetServer = fastify({
       maxParamLength: Number.MAX_SAFE_INTEGER,
       bodyLimit: Number.MAX_SAFE_INTEGER,
-      logger: this.#config.logRequests ? this.#config.logger : false
+      logger: false
     })
 
     this.#assetServer.decorate('testServerId', 'assetServer')
+    this.#assetServer.decorate('testServerLogger', this.#logger)
     this.#assetServer.register(require('@fastify/multipart'), {
       addToBody: true
     })
@@ -211,7 +215,7 @@ class TestServer {
     this.#assetServer.register(require('@fastify/static'), {
       root: paths.rootDir,
       prefix: '/',
-      index: false,
+      index: ['index.html'],
       cacheControl: false,
       etag: false
     })
@@ -221,16 +225,18 @@ class TestServer {
     this.#assetServer.register(require('./routes/mock-apis'), this)
     this.#assetServer.register(require('./plugins/test-handle'), this)
     this.#assetServer.register(require('./plugins/no-cache'))
+    this.#assetServer.register(require('./plugins/request-logger'))
   }
 
   #createCorsServer () {
     this.#corsServer = fastify({
       maxParamLength: Number.MAX_SAFE_INTEGER,
       bodyLimit: Number.MAX_SAFE_INTEGER,
-      logger: this.#config.logRequests ? this.#config.logger : false
+      logger: false
     })
 
     this.#corsServer.decorate('testServerId', 'corsServer')
+    this.#corsServer.decorate('testServerLogger', this.#logger)
     this.#corsServer.register(require('@fastify/multipart'), {
       addToBody: true
     })
@@ -241,16 +247,18 @@ class TestServer {
     })
     this.#corsServer.register(require('./routes/mock-apis'), this)
     this.#corsServer.register(require('./plugins/no-cache'))
+    this.#corsServer.register(require('./plugins/request-logger'))
   }
 
   #createBamServer () {
     this.#bamServer = fastify({
       maxParamLength: Number.MAX_SAFE_INTEGER,
       bodyLimit: Number.MAX_SAFE_INTEGER,
-      logger: this.#config.logRequests ? this.#config.logger : false
+      logger: false
     })
 
     this.#bamServer.decorate('testServerId', 'bamServer')
+    this.#bamServer.decorate('testServerLogger', this.#logger)
     this.#bamServer.register(require('@fastify/multipart'), {
       addToBody: true
     })
@@ -263,18 +271,21 @@ class TestServer {
     this.#bamServer.register(require('./routes/bam-apis'), this)
     this.#bamServer.register(require('./plugins/test-handle'), this)
     this.#bamServer.register(require('./plugins/no-cache'))
+    this.#bamServer.register(require('./plugins/request-logger'))
   }
 
   #createCommandServer () {
     this.#commandServer = fastify({
       maxParamLength: Number.MAX_SAFE_INTEGER,
       bodyLimit: Number.MAX_SAFE_INTEGER,
-      logger: this.#config.logRequests ? this.#config.logger : false
+      logger: false
     })
 
     this.#commandServer.decorate('testServerId', 'commandServer')
+    this.#commandServer.decorate('testServerLogger', this.#logger)
     this.#commandServer.register(require('./routes/command-apis'), this)
     this.#commandServer.register(require('./plugins/no-cache'))
+    this.#commandServer.register(require('./plugins/request-logger'))
   }
 
   /**

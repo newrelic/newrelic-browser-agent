@@ -213,17 +213,19 @@ module.exports = class TestHandle {
   }
 
   /**
-   * Constructs an url for a test asset relative to the current testId
-   * @param {string} assetFile
+   * Constructs a URL for a test asset relative to the current testId
+   * @param {string} assetFile - A path to a file or a directory containing an index.html file.
    * @param {object} query
    * @returns {string}
    */
   assetURL (assetFile, query = {}) {
+    let relativePath = path.relative(
+      paths.rootDir,
+      path.resolve(paths.testsAssetsDir, assetFile)
+    )
+    if (assetFile.slice(-1) === '/') relativePath += '/'
     return urlFor(
-      path.relative(
-        paths.rootDir,
-        path.resolve(paths.testsAssetsDir, assetFile)
-      ),
+      relativePath,
       deepmerge(
         {
           loader: 'full',

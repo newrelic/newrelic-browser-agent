@@ -14,9 +14,7 @@ testDriver.test('does not set CAT header on cross-origin XHRs', function (t, bro
       return url.pathname === `/cat-cors/${router.testId}`
     }
   })
-  let loadPromise = browser.safeGet(router.assetURL(
-    'cat-cors.html', { testId: router.testId })
-  )
+  let loadPromise = browser.get(router.assetURL('cat-cors.html', { testId: router.testId }))
 
   Promise.all([ajaxPromise, loadPromise])
     .then(([{ request }]) => {
@@ -33,9 +31,7 @@ testDriver.test('sets CAT header on same origin XHRs if xpid is defined', functi
       return url.pathname === `/same-origin/${router.testId}`
     }
   })
-  let loadPromise = browser.safeGet(router.assetURL(
-    'cat-same-origin.html', { testId: router.testId })
-  )
+  let loadPromise = browser.get(router.assetURL('cat-same-origin.html', { testId: router.testId }))
 
   Promise.all([ajaxPromise, loadPromise])
     .then(([{ request }]) => {
@@ -52,9 +48,7 @@ testDriver.test('does not set CAT header on same origin XHRs if xpid is undefine
       return url.pathname === `/same-origin/${router.testId}`
     }
   })
-  let loadPromise = browser.safeGet(router.assetURL(
-    'cat-same-origin.html', { testId: router.testId, xpid: '' })
-  )
+  let loadPromise = browser.get(router.assetURL('cat-same-origin.html', { testId: router.testId, xpid: '' }))
 
   Promise.all([ajaxPromise, loadPromise])
     .then(([{ request }]) => {

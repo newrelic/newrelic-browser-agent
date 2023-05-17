@@ -16,6 +16,11 @@ module.exports = yargs
   .alias('v', 'verbose')
   .describe('v', 'if true, prints all output from each browser above summary')
 
+  .boolean('D')
+  .default('D', false)
+  .alias('D', 'sauce-extended-debugging')
+  .describe('D', 'Run tests with sauce labs extended debugging enabled')
+
   .string('b')
   .alias('b', 'browsers')
   .requiresArg('b')

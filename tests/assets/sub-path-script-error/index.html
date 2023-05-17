@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  <title>Sub-path script error</title>
+  {init}
+  {config}
+  {loader}
+  <script type="text/javascript" src="./js/script.js"></script>
+</head>
+<body>
+  The included script simulates a TypeError being thrown from a fetch call. For testing whether stacktrace
+  URLs for external scripts sharing a sub-path with the loader origin URL are erroneously converted to
+  <code>&lt;inline&gt;</code>, this page should be called at <code>.../sub-path-script-error/</code> without
+  the <code>index.html</code> so that the base page and the <code>./js/script.js</code> file share a root
+  path in stack traces.
+</body>
+</html>

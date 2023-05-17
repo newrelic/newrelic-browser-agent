@@ -22,6 +22,8 @@ jobs:
       - name: Setup container
         run: apt update && apt install -y git
       - uses: actions/checkout@v3
+        with:
+          ref: 'main'
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*

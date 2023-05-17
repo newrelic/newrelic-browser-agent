@@ -8,7 +8,6 @@ import { mapOwn } from '../../../common/util/map-own'
 import { stringify } from '../../../common/util/stringify'
 import { parseUrl } from '../../../common/url/parse-url'
 import { supportsPerformanceObserver } from '../../../common/window/supports-performance-observer'
-import slice from 'lodash._slice'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { FEATURE_NAME } from '../constants'
@@ -224,7 +223,7 @@ export class Aggregate extends FeatureBase {
     } else if (t && typeof (t.tagName) === 'string') {
       origin = t.tagName.toLowerCase()
       if (t.id) origin += '#' + t.id
-      if (t.className) origin += '.' + slice(t.classList).join('.')
+      if (t.className) origin += '.' + Array.from(t.classList).join('.')
     }
 
     if (origin === 'unknown') {

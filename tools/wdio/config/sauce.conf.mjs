@@ -2,6 +2,7 @@ import browsersSupported from '../../browsers-lists/browsers-supported.json' ass
 import browsersAll from '../../browsers-lists/browsers-all.json' assert { type: "json" }
 import browsersPolyfill from '../../browsers-lists/browsers-polyfill.json' assert { type: "json" }
 import browsersList from '../../browsers-lists/browsers-list.mjs'
+import browserSupportsExtendedDebugging from '../../browsers-lists/extended-debugging.mjs'
 import jilArgs from '../args.mjs'
 import {
   getSauceConnectTunnelName,
@@ -33,7 +34,7 @@ function sauceCapabilities () {
         ? {
             tunnelName: getSauceConnectTunnelName(),
             ...(() => {
-              if (jilArgs.sauceExtendedDebugging && sauceBrowser.browserName === 'chrome') {
+              if (jilArgs.sauceExtendedDebugging && browserSupportsExtendedDebugging(sauceBrowser)) {
                 return { extendedDebugging: true }
               }
             })()

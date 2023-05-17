@@ -9,8 +9,8 @@ export default function browserSupportsExtendedDebugging ({ browserName, browser
     return true
   }
 
-  if (browserName === 'firefox' && (Number(browserVersion) >= 53 || Number(version) >= 53)) {
-    return true
+  if (browserName === 'firefox') {
+    return Number(browserVersion) >= 53 || Number(version) >= 53
   }
 
   const latestChrome = browsersAll.chrome

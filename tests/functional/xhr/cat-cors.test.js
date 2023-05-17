@@ -8,6 +8,7 @@ const { fail } = require('./helpers')
 
 testDriver.test('does not set CAT header on cross-origin XHRs', function (t, browser, router) {
   t.plan(1)
+
   const ajaxPromise = router.expect('bamServer', {
     test: function (request) {
       const url = new URL(request.url, 'resolve://')
@@ -25,6 +26,7 @@ testDriver.test('does not set CAT header on cross-origin XHRs', function (t, bro
 
 testDriver.test('sets CAT header on same origin XHRs if xpid is defined', function (t, browser, router) {
   t.plan(1)
+
   const ajaxPromise = router.expect('assetServer', {
     test: function (request) {
       const url = new URL(request.url, 'resolve://')
@@ -42,6 +44,7 @@ testDriver.test('sets CAT header on same origin XHRs if xpid is defined', functi
 
 testDriver.test('does not set CAT header on same origin XHRs if xpid is undefined', function (t, browser, router) {
   t.plan(1)
+  
   const ajaxPromise = router.expect('assetServer', {
     test: function (request) {
       const url = new URL(request.url, 'resolve://')

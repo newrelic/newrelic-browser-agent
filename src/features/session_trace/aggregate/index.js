@@ -220,7 +220,9 @@ export class Aggregate extends FeatureBase {
     } else if (t && typeof (t.tagName) === 'string') {
       origin = t.tagName.toLowerCase()
       if (t.id) origin += '#' + t.id
-      if (t.className) origin += '.' + Array.from(t.classList).join('.')
+      if (t.className) {
+        for (let i = 0; i < t.classList.length; i++) origin += '.' + t.classList[i]
+      }
     }
 
     if (origin === 'unknown') {

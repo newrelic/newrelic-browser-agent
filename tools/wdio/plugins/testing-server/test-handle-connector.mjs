@@ -8,7 +8,7 @@ import {
   testTimingEventsRequest
 } from '../../../testing-server/utils/expect-tests.js'
 
-const log = logger('jil-testing-server-connector')
+const log = logger('testing-server-connector')
 
 /**
  * Connects a test executing in a child process of WDIO to the testing

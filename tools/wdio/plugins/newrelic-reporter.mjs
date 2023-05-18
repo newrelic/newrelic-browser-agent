@@ -57,6 +57,6 @@ export default class NewrelicReporter extends WDIOReporter {
       duration:
         new Date(testStat.end).getTime() - new Date(testStat.start).getTime()
     }
-    newrelic.recordCustomEvent('JilTestResult', eventData)
+    newrelic.recordCustomEvent('WDIOTestResult', eventData)
   }
 }

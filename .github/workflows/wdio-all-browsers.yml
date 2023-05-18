@@ -1,0 +1,60 @@
+name: 'WDIO: All browsers'
+
+on:
+  push:
+  schedule:
+    # Runs every day at 4AM
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+env:
+  BUILD_NUMBER: PR${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+
+jobs:
+  chrome:
+    if: contains(fromJson('["schedule"]'), github.event_name) || contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(fromJson('["push"]'), github.event_name)
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: chrome@*
+      build-number: $BUILD_NUMBER
+    secrets: inherit
+
+  firefox:
+    if: contains(fromJson('["schedule"]'), github.event_name) || contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(fromJson('["push"]'), github.event_name)
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: firefox@*
+      build-number: $BUILD_NUMBER
+    secrets: inherit
+
+  safari:
+    if: contains(fromJson('["schedule"]'), github.event_name) || contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(fromJson('["push"]'), github.event_name)
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: safari@*
+      build-number: $BUILD_NUMBER
+    secrets: inherit
+
+  edge:
+    if: contains(fromJson('["schedule"]'), github.event_name) || contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(fromJson('["push"]'), github.event_name)
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: edge@*
+      build-number: $BUILD_NUMBER
+    secrets: inherit
+
+  ios:
+    if: contains(fromJson('["schedule"]'), github.event_name) || contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(fromJson('["push"]'), github.event_name)
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: ios@*
+      build-number: $BUILD_NUMBER
+    secrets: inherit
+
+  android:
+    if: contains(fromJson('["schedule"]'), github.event_name) || contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(fromJson('["push"]'), github.event_name)
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: android@*
+      build-number: $BUILD_NUMBER
+    secrets: inherit

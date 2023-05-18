@@ -9,8 +9,8 @@ export default class TestingServerWorker {
   #commandServerPort
 
   beforeSession (_, capabilities) {
-    this.#commandServerPort = capabilities['jil:testServerCommandPort']
-    delete capabilities['jil:testServerCommandPort']
+    this.#commandServerPort = capabilities.testServerCommandPort
+    delete capabilities.testServerCommandPort
   }
 
   async before (capabilities, specs, browser) {

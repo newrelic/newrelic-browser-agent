@@ -9,9 +9,10 @@ import baseConfig from './config/base.conf.mjs'
 import specsConfig from './config/specs.conf.mjs'
 import seleniumConfig from './config/selenium.conf.mjs'
 import sauceConfig from './config/sauce.conf.mjs'
+import { serialize } from './util/config-serializer.mjs'
 
 /**
- * The JIL runner utilizes the CLI arguments to dynamically generate the
+ * The runner utilizes the CLI arguments to dynamically generate the
  * wdio configuration file. The file is written to disk and passed to the
  * wdio launcher. WDIO is launched this way to ensure the configuration is
  * properly passed to the worker processes.
@@ -27,20 +28,12 @@ if (['trace', 'debug', 'info'].indexOf(wdioConfig.logLevel) > -1) {
   console.log(`Writing wdio config file to ${configFilePath}`)
 }
 
-// Clear the JIL CLI params before starting wdio so they are not passed to worker processes
+// Clear the CLI params before starting wdio so they are not passed to worker processes
 process.argv.splice(2)
-
-const jsonReplacer = (_, value) => {
-  if (value instanceof RegExp) {
-    return value.toString()
-  }
-
-  return value
-}
 
 fs.writeFile(
   configFilePath,
-  `export const config = JSON.parse(\`${JSON.stringify(wdioConfig, jsonReplacer)}\`)`,
+  `export const config = ${serialize(wdioConfig)}`,
   (error) => {
     if (error) {
       console.error(error)

@@ -44,6 +44,7 @@ const SerAny = require('serialize-anything')
  * @property {Promise<any>} promise the underlying promise of the deferred object
  * @property {Function} resolve the resolve function of the deferred object
  * @property {Function} reject the reject function of the deferred object
+ * @property {NodeJS.Timeout} [timeout] the pending timeout for the deferred object
  * @property {Function} [test] optional test function that takes the request and
  * returns a boolean indicating if the request matches. This is useful for the
  * jserrors BAM endpoint where multiple types of data are reported.
@@ -138,6 +139,7 @@ module.exports = class TestHandle {
 
           if (test.call(this, request)) {
             request.resolvingExpect = pendingExpect
+            clearTimeout(pendingExpect.timeout)
             pendingExpects.delete(pendingExpect)
             break
           }
@@ -182,9 +184,15 @@ module.exports = class TestHandle {
     deferred.test = testServerExpect.test
 
     if (testServerExpect.timeout !== false) {
-      setTimeout(() => {
+      deferred.timeout = setTimeout(() => {
+        let testName = testServerExpect.test.name
+
+        if (typeof testServerExpect.test === 'string') {
+          testName = SerAny.deserialize(testServerExpect.test).name
+        }
+
         deferred.reject(new Error(
-          `Expect ${testServerExpect.test.name} for ${serverId} timed out after ${testServerExpect.timeout || this.#testServer.config.timeout}ms for test ${this.#testId}`
+          `Expect ${testName} for ${serverId} timed out after ${testServerExpect.timeout || this.#testServer.config.timeout}ms for test ${this.#testId}`
         ))
       }, testServerExpect.timeout || this.#testServer.config.timeout)
     }

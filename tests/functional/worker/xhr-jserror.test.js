@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require('../../../tools/jil/index')
-const { fail, getErrorsFromResponse } = require('../err/assertion-helpers')
-const { getXhrFromResponse } = require('../xhr/helpers')
+const testDriver = require('../../tools/jil/index')
+const { fail, getErrorsFromResponse } = require('../functional/err/assertion-helpers')
+const { getXhrFromResponse } = require('../functional/xhr/helpers')
 const { workerTypes, typeToMatcher } = require('./helpers')
 
 const supportsFetch = testDriver.Matcher.withFeature('fetch')

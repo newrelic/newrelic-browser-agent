@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require('../../../tools/jil/index')
+const testDriver = require('../../tools/jil/index')
 const { workerTypes, typeToMatcher, workerCustomAttrs } = require('./helpers')
 
 const init = {

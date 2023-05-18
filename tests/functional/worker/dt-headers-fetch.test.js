@@ -1,6 +1,6 @@
-const testDriver = require('../../../tools/jil/index')
+const testDriver = require('../../tools/jil/index')
 const { workerTypes, typeToMatcher } = require('./helpers')
-const { fail, testCases, validateNewrelicHeader, validateNoNewrelicHeader, validateTraceContextHeaders, validateNoTraceContextHeaders } = require('../xhr/helpers')
+const { fail, testCases, validateNewrelicHeader, validateNoNewrelicHeader, validateTraceContextHeaders, validateNoTraceContextHeaders } = require('../functional/xhr/helpers')
 
 const fetchBrowsers = testDriver.Matcher.withFeature('fetch')
 

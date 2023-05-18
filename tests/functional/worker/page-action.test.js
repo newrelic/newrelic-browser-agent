@@ -1,7 +1,7 @@
-const testDriver = require('../../../tools/jil/index')
+const testDriver = require('../../tools/jil/index')
 const { workerTypes, typeToMatcher } = require('./helpers')
-const { validatePageActionData, fail } = require('../ins/ins-internal-help.cjs')
-const { testInsRequest } = require('../../../tools/testing-server/utils/expect-tests')	// shared helpers
+const { validatePageActionData, fail } = require('../functional/ins/ins-internal-help.cjs')
+const { testInsRequest } = require('../../tools/testing-server/utils/expect-tests')	// shared helpers
 
 workerTypes.forEach(type => { // runs all test for classic & module workers & use the 'workers' browser-matcher for classic and the 'workersFull' for module
   const browsersWithOrWithoutModuleSupport = typeToMatcher(type)

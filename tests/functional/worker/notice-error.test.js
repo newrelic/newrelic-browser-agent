@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const testDriver = require('../../../tools/jil/index')
+const testDriver = require('../../tools/jil/index')
 const { workerTypes, typeToMatcher, workerCustomAttrs } = require('./helpers')
-const { fail } = require('../err/assertion-helpers') // shared from jserrors feat tests
+const { fail } = require('../functional/err/assertion-helpers') // shared from jserrors feat tests
 
 const init = {
   jserrors: {

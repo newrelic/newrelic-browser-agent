@@ -24,9 +24,7 @@ testDriver.test('error on the initial page load', function (t, browser, router) 
 
       t.equal(errors.length, 1, 'should have 1 errors')
 
-      let { body, query } = eventData
-      let bel = body && body.length ? body : query.e
-      let interactionTree = querypack.decode(bel)[0]
+      let interactionTree = (eventData.body && eventData.body.length ? eventData.body : querypack.decode(eventData.query.e))[0]
 
       // Root
       var interactionId = interactionTree.id
@@ -69,7 +67,7 @@ testDriver.test('error in root node', function (t, browser, router) {
       t.equal(errors.length, 1, 'should have 1 errors')
 
       let { body, query } = eventData
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       var interactionId = interactionTree.id
       t.ok(interactionId != null, 'interaction id should not be null')
       t.ok(interactionTree.nodeId != null, 'interaction should have nodeId attribute')
@@ -103,7 +101,7 @@ testDriver.test('error in xhr', function (t, browser, router) {
       t.equal(errors.length, 1, 'should have 1 unique errors')
 
       let { body, query } = eventData
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       var interactionId = interactionTree.id
       t.ok(interactionId != null, 'interaction id should not be null')
       t.ok(interactionTree.nodeId != null, 'interaction should have nodeId attribute')
@@ -138,7 +136,7 @@ testDriver.test('error in custom tracer', function (t, browser, router) {
       t.equal(errors.length, 1, 'should have 1 unique errors')
 
       let { body, query } = eventData
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       var interactionId = interactionTree.id
       t.ok(interactionId != null, 'interaction id should not be null')
       t.ok(interactionTree.nodeId != null, 'interaction should have nodeId attribute')
@@ -177,7 +175,7 @@ testDriver.test('string error in custom tracer', function (t, browser, router) {
       else t.equal(errors.length, 1, 'should have 1 errors')
 
       let { body, query } = eventData
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
       var interactionId = interactionTree.id
       t.ok(interactionId != null, 'interaction id should not be null')
       t.ok(interactionTree.nodeId != null, 'interaction should have nodeId attribute')
@@ -283,13 +281,11 @@ testDriver.test('same error in multiple interactions', function (t, browser, rou
         })
     })
     .then(({ request: errorData }) => {
-      let interaction1 = querypack.decode(
-        event1.body && event1.body.length ? event1.body : event1.query.e)[0]
+      let interaction1 = (event1.body && event1.body.length ? event1.body : querypack.decode(event1.query.e))[0]
       var interactionId1 = interaction1.id
       t.ok(interactionId1 != null, 'interaction 1 id should not be null')
 
-      let interaction2 = querypack.decode(
-        event2.body && event2.body.length ? event2.body : event2.query.e)[0]
+      let interaction2 = (event2.body && event2.body.length ? event2.body : querypack.decode(event2.query.e))[0]
       var interactionId2 = interaction2.id
       t.ok(interactionId2 != null, 'interaction 2 id should not be null')
 

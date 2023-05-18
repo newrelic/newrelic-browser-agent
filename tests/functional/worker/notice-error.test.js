@@ -36,7 +36,7 @@ function noticeErrorTest (type, supportRegOrESMWorker) {
     let errPromise = router.expectErrors()
 
     Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request }]) => {
-      const { err } = JSON.parse(request.body)
+      const { err } = request.body
       checkBasics(t, err)
       t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should not have correct custom attributes')
       t.end()
@@ -55,7 +55,7 @@ function noticeErrorStringTest (type, supportRegOrESMWorker) {
     let errPromise = router.expectErrors()
 
     Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request }]) => {
-      const { err } = JSON.parse(request.body)
+      const { err } = request.body
       checkBasics(t, err)
       t.deepEqual(err[0].custom, { ...workerCustomAttrs }, 'Should not have correct custom attributes')
       t.end()
@@ -76,7 +76,7 @@ function noticeErrorWithParamsTest (type, supportRegOrESMWorker) {
     let errPromise = router.expectErrors()
 
     Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request }]) => {
-      const { err } = JSON.parse(request.body)
+      const { err } = request.body
       checkBasics(t, err)
       t.deepEqual(err[0].custom, { hi: 'mom', ...workerCustomAttrs }, 'Should have correct custom attributes')
       t.end()
@@ -99,7 +99,7 @@ function multipleMatchingErrorsTest (type, supportRegOrESMWorker) {
     let errPromise = router.expectErrors()
 
     Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request }]) => {
-      const { err } = JSON.parse(request.body)
+      const { err } = request.body
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 3, 'Should have aggregated 3 errors')
       t.end()

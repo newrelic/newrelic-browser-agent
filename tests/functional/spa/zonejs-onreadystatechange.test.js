@@ -18,7 +18,7 @@ testDriver.test('onreadystatechange only called once with zone.js', supported, f
   Promise.all([eventsPromise, rumPromise, loadPromise])
     .then(([{ request: eventsResult }]) => {
       let { body, query } = eventsResult
-      let interactionTree = querypack.decode(body && body.length ? body : query.e)[0]
+      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
 
       const interactionAttr = interactionTree.children.find(x => x.key === 'counts')
 

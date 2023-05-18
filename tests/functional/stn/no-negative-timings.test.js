@@ -13,7 +13,7 @@ testDriver.test('posts session traces', supported, function (t, browser, router)
   let loadPromise = browser.get(router.assetURL('lotsatimers.html')).waitForFeature('loaded')
 
   Promise.all([resourcePromise, rumPromise, loadPromise]).then(([{ request: { body } }]) => {
-    const stnBody = JSON.parse(body).res
+    const stnBody = body.res
     t.ok(stnBody.every(x => x.s >= 0 && x.e >= 0), 'stn body contains no negative timings')
     t.end()
   }).catch(fail)

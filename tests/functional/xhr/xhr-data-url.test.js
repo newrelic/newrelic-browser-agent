@@ -31,7 +31,7 @@ testDriver.test('Ignoring data url XHR events.', function (t, browser, router) {
       return router.expectAjaxEvents()
     })
     .then(({ request }) => {
-      const qpData = querypack.decode(request.body)
+      const qpData = request.body
       const ajaxEvent = qpData.find(qpd => qpd.type === 'ajax' && qpd.domain === 'undefined:undefined')
       if (ajaxEvent) {
         // A payload here is unwanted because data URLs should not be included in XHR collection.
@@ -43,7 +43,7 @@ testDriver.test('Ignoring data url XHR events.', function (t, browser, router) {
       return router.expectAjaxEvents()
     })
     .then(({ request }) => {
-      const qpData = querypack.decode(request.body)
+      const qpData = request.body
       const harvestEvent = qpData.find(qpd => qpd.type === 'ajax' && qpd.path.startsWith('/events'))
       if (harvestEvent) {
         // A payload here is wanted.

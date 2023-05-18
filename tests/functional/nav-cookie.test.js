@@ -33,7 +33,7 @@ testDriver.test('agent set nav cookie when page is unloading', function (t, brow
       t.equal(router.requestCounts.bamServer.ins, 1, 'received one ins harvest')
 
       if (body) {
-        t.ok(JSON.parse(body).ins, 'received ins harvest')
+        t.ok(body.ins, 'received ins harvest')
       } else {
         t.ok(query.ins, 'received ins harvest')
       }

@@ -44,7 +44,7 @@ testDriver.test('capturing XHR ajax events', function (t, browser, router) {
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
     .then(async ([{ request }]) => {
-      const ajaxRequests = querypack.decode(request.body)
+      const ajaxRequests = request.body
       t.ok(ajaxRequests.length, 'XMLHttpRequest ajax event was harvested')
 
       t.end()
@@ -70,8 +70,8 @@ testDriver.test('capturing large payload of XHR ajax events', function (t, brows
 
   Promise.all([ajaxPromises, loadPromise, rumPromise])
     .then(([[{ request: request1 }, { request: request2 }]]) => {
-      const ajax1Requests = querypack.decode(request1.body)
-      const ajax2Requests = querypack.decode(request2.body)
+      const ajax1Requests = request1.body
+      const ajax2Requests = request2.body
       t.ok(ajax1Requests)
       t.ok(ajax2Requests)
       t.end()
@@ -93,7 +93,7 @@ testDriver.test('capturing Fetch ajax events', fetchBrowsers, function (t, brows
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
     .then(([{ request }]) => {
-      const ajaxRequests = querypack.decode(request.body)
+      const ajaxRequests = request.body
       t.ok(ajaxRequests.length, 'Fetch ajax event was harvested')
 
       t.end()
@@ -126,7 +126,7 @@ testDriver.test('Distributed Tracing info is added to XHR ajax events', function
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
     .then(([{ request }]) => {
-      const ajaxRequests = querypack.decode(request.body)
+      const ajaxRequests = request.body
       t.ok(ajaxRequests.length, 'XMLHttpRequest ajax event was harvested')
 
       const expectedAjaxRequest = ajaxRequests.find(ar => ar.path === '/json')
@@ -165,7 +165,7 @@ testDriver.test('Distributed Tracing info is added to Fetch ajax events', fetchB
 
   Promise.all([ajaxPromise, loadPromise, rumPromise])
     .then(([{ request }]) => {
-      const ajaxRequests = querypack.decode(request.body)
+      const ajaxRequests = request.body
       t.ok(ajaxRequests.length, 'Fetch ajax event was harvested')
 
       const expectedAjaxRequest = ajaxRequests.find(ar => ar.path === '/json')

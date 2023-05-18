@@ -46,7 +46,7 @@ function referenceErrorTest (type, matcher) {
     let errPromise = router.expectErrors()
 
     Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request: errResponse }]) => {
-      const { err } = JSON.parse(errResponse.body)
+      const { err } = errResponse.body
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
@@ -77,7 +77,7 @@ function unhandledPromiseRejectionTest (type, matcher) {
     let errPromise = router.expectErrors()
 
     timedPromiseAll([errPromise, loadPromise, router.expectRum()], 6000).then(([{ request: errResponse }]) => {
-      const { err } = JSON.parse(errResponse.body)
+      const { err } = errResponse.body
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
@@ -112,7 +112,7 @@ function rangeErrorTest (type, matcher) {
     let errPromise = router.expectErrors()
 
     Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request: errResponse }]) => {
-      const { err } = JSON.parse(errResponse.body)
+      const { err } = errResponse.body
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
@@ -146,7 +146,7 @@ function typeErrorTest (type, matcher) {
     let errPromise = router.expectErrors()
 
     Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request: errResponse }]) => {
-      const { err } = JSON.parse(errResponse.body)
+      const { err } = errResponse.body
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
@@ -179,7 +179,7 @@ function uriErrorTest (type, matcher) {
     let errPromise = router.expectErrors()
 
     Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request: errResponse }]) => {
-      const { err } = JSON.parse(errResponse.body)
+      const { err } = errResponse.body
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
@@ -217,7 +217,7 @@ function memoryLeakTest (type, matcher) {
     let errPromise = router.expectErrors()
 
     timedPromiseAll([errPromise, loadPromise, router.expectRum()], 6000).then(([{ request: errResponse }]) => {
-      const { err } = JSON.parse(errResponse.body)
+      const { err } = errResponse.body
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
@@ -251,7 +251,7 @@ function syntaxErrorTest (type, matcher) {
     let errPromise = router.expectErrors()
 
     Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request: errResponse }]) => {
-      const { err } = JSON.parse(errResponse.body)
+      const { err } = errResponse.body
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')
@@ -282,7 +282,7 @@ function thrownErrorTest (type, matcher) {
     let errPromise = router.expectErrors()
 
     Promise.all([errPromise, loadPromise, router.expectRum()]).then(([{ request: errResponse }]) => {
-      const { err } = JSON.parse(errResponse.body)
+      const { err } = errResponse.body
       t.equal(err.length, 1, 'Should have 1 error obj')
       t.equal(err[0].metrics.count, 1, 'Should have seen 1 error')
       t.ok(err[0].metrics.time.t > 0, 'Should have a valid timestamp')

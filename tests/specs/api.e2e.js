@@ -80,7 +80,7 @@ describe('newrelic api', () => {
       await browser.minimizeWindow()
       await browser.maximizeWindow()
       const { request: { body, query } } = await metricsPromise
-      const time = getTime(body ? JSON.parse(body)?.cm : JSON.parse(query.cm))
+      const time = getTime(body ? body.cm : JSON.parse(query.cm))
 
       expect(query.ct).toEqual('http://custom.transaction/foo')
       expect(typeof time).toEqual('number')
@@ -102,7 +102,7 @@ describe('newrelic api', () => {
       const metricsPromise = testHandle.expectCustomMetrics()
       await browser.url(unloadUrl)
       const { request: { body, query } } = await metricsPromise
-      const time = getTime(body ? JSON.parse(body)?.cm : JSON.parse(query.cm))
+      const time = getTime(body ? body.cm : JSON.parse(query.cm))
 
       expect(query.ct).toEqual('http://bar.baz/foo')
       expect(typeof time).toEqual('number')

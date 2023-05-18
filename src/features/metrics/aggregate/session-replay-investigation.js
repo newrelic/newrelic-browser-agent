@@ -37,11 +37,21 @@ try {
       headMetaVerification: true
     },
     sampling: {
-      mousemove: false,
-      mouseInteraction: false,
+      mousemove: 150,
+      mouseInteraction: {
+        MouseUp: false,
+        MouseDown: false,
+        Click: true,
+        ContextMenu: false,
+        DblClick: false,
+        Focus: false,
+        Blur: false,
+        TouchStart: false,
+        TouchEnd: false
+      },
       scroll: 150, // do not emit twice in 150ms
-      media: 800,
-      input: 'last' // When input multiple characters, only record the final input
+      media: 800
+      // input: 'last' // When input multiple characters, only record the final input
     },
     emit: (event) => {
       try {

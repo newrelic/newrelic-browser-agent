@@ -64,7 +64,6 @@ if (launchedFromCli) {
 }
 
 function loadDefaultFiles (cb) {
-  console.log("LOAD DEFAULT FILES!")
   let globOpts = { cwd: path.resolve(__dirname, '../../..') }
 
   let fileGlob = 'tests/@(browser|functional)/**/*.@(browser|test).js'
@@ -78,6 +77,7 @@ function loadDefaultFiles (cb) {
 }
 
 function loadFiles (testFiles, cb) {
+  const proms = []
   for (let file of testFiles) {
     file = resolve(process.cwd(), file)
     if (file.slice(-11) === '.browser.js') {
@@ -89,19 +89,22 @@ function loadFiles (testFiles, cb) {
       }
       loadBrowser(testDriver, file, undefined, spec) // queued for later (browserify)
     } else if (file.slice(-8) === '.test.js') {
-      try{
-      require(file)
-      if (cb) cb()
-      } catch(err){
+      try {
+        require(file)
+      } catch (err) {
         let globOpts = { cwd: path.resolve(__dirname, '../../..') }
-        glob(file, globOpts, (e, files = []) => {
-          if (e) throw new Error(e)
-          files.forEach(f => require(f))
-          if (cb) cb()
-        })
+        proms.push(new Promise((resolve) => {
+          glob(file, globOpts, (e, files = []) => {
+            if (e) throw new Error(e)
+            files.forEach(f => require(f))
+            resolve()
+          })
+        }))
       }
     }
   }
+
+  Promise.all(proms).then(() => {if (cb) cb()})
 }
 
 function getBuildIdentifier () {

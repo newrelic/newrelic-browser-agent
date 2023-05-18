@@ -246,7 +246,7 @@ test('uses correct submission mechanism for resources', function (t) {
   }
 
   setupFakeNr()
-  let result = harvesterInst.sendX({endpoint: 'resources', opts: null, cbFinished: harvestFinished})
+  let result = harvesterInst.sendX({endpoint: 'resources', cbFinished: harvestFinished})
 
   let baseUrl = scheme + '://foo/resources/1/bar?a=undefined&v=' + VERSION + '&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref=' + scheme + '://foo.com&q1=v1&q2=v2'
   let expectedPayload = { resources: ['one', 'two', 'three'] }
@@ -322,7 +322,7 @@ test('uses correct submission mechanism for jserrors', function (t) {
   }
 
   setupFakeNr()
-  let result = harvesterInst.sendX({endpoint: 'jserrors', opts: null, cbFinished: harvestFinished})
+  let result = harvesterInst.sendX({endpoint: 'jserrors', cbFinished: harvestFinished})
 
   let baseUrl = scheme + '://foo/jserrors/1/bar?a=undefined&v=' + VERSION + '&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref=' + scheme + '://foo.com&q1=v1&q2=v2'
   let expectedPayload = { jserrors: ['one', 'two', 'three'] }
@@ -353,7 +353,7 @@ test('adds ptid to harvest when ptid is present', function (t) {
 
   // simulate ptid present (session trace in progress) after initial session trace (/resources) call
   setupFakeNr({ ptid: '54321' })
-  let result = harvesterInst.sendX({endpoint: 'jserrors', opts: null, cbFinished: function () {}})
+  let result = harvesterInst.sendX({endpoint: 'jserrors', cbFinished: function () {}})
 
   let baseUrl = scheme + '://foo/jserrors/1/bar?a=undefined&v=' + VERSION + '&t=Unnamed%20Transaction&rst={TIMESTAMP}&ref=' + scheme + '://foo.com&ptid=54321&q1=v1&q2=v2'
   let expectedPayload = { jserrors: ['one', 'two', 'three'] }
@@ -385,7 +385,7 @@ test('does not add ptid to harvest when ptid is not present', function (t) {
 
   // simulate session trace not started on page
   setupFakeNr({ ptid: null }) // === ptid: undefined
-  let result = harvesterInst.sendX({endpoint: 'jserrors', opts: null, cbFinished: function () {}})
+  let result = harvesterInst.sendX({endpoint: 'jserrors', cbFinished: function () {}})
 
   if (xhrWrappable) {
     t.ok(result, 'result truthy when jserrors submitted via xhr')

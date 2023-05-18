@@ -35,7 +35,7 @@ function apiFinished (type, browserVersionMatcher) {
 
       Promise.all([loadPromise, insPromise, rumPromise])
         .then(([/* loadPromise junk */, { request: { body } }]) => {
-          let insData = JSON.parse(body).ins
+          let insData = body.ins
           t.equal(insData.length, 1, 'exactly 1 PageAction was submitted')
           t.equal(insData[0].actionName, 'finished', 'PageAction has actionName = finished')
           t.end()

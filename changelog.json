@@ -4,6 +4,31 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "36ceedf03e88ac0dc48eb9577bdceb8602f08359",
+          "message": "Add X-NewRelic-ID header only if defined",
+          "issues": [
+            "531"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "1aba92dbaa57fb8254fa007f65b7173a716e2e8f",
+          "message": "Identify inline stack trace URLs more precisely",
+          "issues": [
+            "522"
+          ]
+        }
+      ],
+      "version": "1.232.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "0ced5833-a1fb-4c9e-8397-2307ad284231",
+      "createTime": "2023-05-17T14:34:33.911Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "bcfe6ffff9d0be583bbd9d5d6ef78265aaa753cb",
           "message": "Add internal session metrics",
@@ -39,5 +64,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-05-08T21:11:35.144Z"
+  "updateTime": "2023-05-17T14:34:33.911Z"
 }

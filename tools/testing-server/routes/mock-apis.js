@@ -1,4 +1,4 @@
-const fs = require('fs')
+const fs = require('fs-extra')
 const path = require('path')
 const fp = require('fastify-plugin')
 const { PassThrough } = require('stream')
@@ -148,7 +148,7 @@ module.exports = fp(async function (fastify, testServer) {
     stream.end()
   })
   fastify.get('/web-worker-agent', async (request, reply) => {
-    const contents = await fs.promises.readFile(
+    const contents = await fs.readFile(
       path.join(paths.builtAssetsDir, 'nr-loader-worker.min.js')
     )
     reply

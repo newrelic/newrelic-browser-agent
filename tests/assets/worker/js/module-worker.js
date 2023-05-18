@@ -3,6 +3,7 @@
 onmessage = function (e) {
   if (e.data.type === 'startAgent') {
     self.NREUM = e.data.payload
+    // Module workers do not support importScripts, need to import directly
     import('../../../../../../../../web-worker-agent').then(() => {
       self.postMessage({ type: 'ready' })
     })

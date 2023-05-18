@@ -99,7 +99,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
 
   function onOpenXhrEnd (args, xhr) {
     var loader_config = getLoaderConfig(agentIdentifier)
-    if ('xpid' in loader_config && this.sameOrigin) {
+    if (loader_config.xpid && this.sameOrigin) {
       xhr.setRequestHeader('X-NewRelic-ID', loader_config.xpid)
     }
 

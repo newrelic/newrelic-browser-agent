@@ -40,8 +40,10 @@ export class InstrumentBase extends FeatureBase {
   /**
    * Lazy-load the latter part of the feature: its aggregator. This method is called by the first part of the feature
    * (the instrumentation) when instrumentation is complete.
+   * @param {Object} [argsObjFromInstrument] - any values or references to pass down to aggregate
+   * @returns void
    */
-  importAggregator () {
+  importAggregator (argsObjFromInstrument) {
     if (this.hasAggregator || !this.auto) return
     this.hasAggregator = true
     let session, agentSessionImport
@@ -70,7 +72,7 @@ export class InstrumentBase extends FeatureBase {
         // import and instantiate the aggregator chunk
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
-        new Aggregate(this.agentIdentifier, this.aggregator)
+        new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)
       } catch (e) {
         warn(`Downloading ${this.featureName} failed...`, e)
         this.abortHandler?.() // undo any important alterations made to the page

@@ -184,7 +184,7 @@ module.exports = class TestHandle {
     if (testServerExpect.timeout !== false) {
       setTimeout(() => {
         deferred.reject(new Error(
-          `Expect for ${serverId} timed out for test ${this.#testId}`
+          `Expect ${testServerExpect.test.name} for ${serverId} timed out after ${testServerExpect.timeout || this.#testServer.config.timeout}ms for test ${this.#testId}`
         ))
       }, testServerExpect.timeout || this.#testServer.config.timeout)
     }

@@ -37,7 +37,7 @@ function metricsApiCreatesSM (type, browserVersionMatcher) {
           newrelic.setPageViewName('test')
           newrelic.setPageViewName('test')
           newrelic.setPageViewName('test')
-          self.close()
+          setTimeout(self.close, 300)
         }].map(x => x.toString())
       })
       const loadPromise = browser.get(assetURL)
@@ -82,7 +82,7 @@ function metricsValidObfuscationCreatesSM (type, browserVersionMatcher) {
         },
         workerCommands: [() => {
           setTimeout(function () {
-            setTimeout(() => self.close(), 100)
+            setTimeout(self.close, 300)
             fetch('/tests/assets/obfuscate-pii-valid.html')
             throw new Error('pii')
           }, 100)

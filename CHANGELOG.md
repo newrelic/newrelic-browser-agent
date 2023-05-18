@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.232.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.232.0...v1.232.1) (2023-05-17)
+
+
+### Bug Fixes
+
+* Add X-NewRelic-ID header only if defined ([#531](https://github.com/newrelic/newrelic-browser-agent/issues/531)) ([36ceedf](https://github.com/newrelic/newrelic-browser-agent/commit/36ceedf03e88ac0dc48eb9577bdceb8602f08359))
+* Identify inline stack trace URLs more precisely ([#522](https://github.com/newrelic/newrelic-browser-agent/issues/522)) ([1aba92d](https://github.com/newrelic/newrelic-browser-agent/commit/1aba92dbaa57fb8254fa007f65b7173a716e2e8f))
+
 ## [1.232.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.231.0...v1.232.0) (2023-05-08)
 
 

@@ -40,7 +40,6 @@ function errorRetryTest (type, matcher) {
 
     Promise.all([errPromise, loadPromise, router.expectRum()]).then(([response]) => {
       t.equal(response.reply.statusCode, 429, 'server responded with 429')
-      firstBody = JSON.parse(response.request.body).err
       return router.expectErrors()
     }).then(({ request }) => {
       const actualErrors = getErrorsFromResponse(request, browser)

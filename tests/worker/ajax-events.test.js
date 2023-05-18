@@ -39,7 +39,7 @@ function ajaxEventsEnabled (type, browserVersionMatcher) {
 
       Promise.all([ajaxPromise, rumPromise, loadPromise])
         .then(([{ request }]) => {
-          const requests = querypack.decode(request.body)
+          const requests = request.body
 
           const xmlHttpRequest = requests.find(r => r.requestedWith === 'XMLHttpRequest' && r.path === '/json')
           t.ok(xmlHttpRequest, 'XHR is harvested')
@@ -124,7 +124,7 @@ function ajaxDTInfo (type, browserVersionMatcher) {
             try {
               fetch('/json')
             } finally {}
-          }, 2000)
+          }, 1000)
         }].map(x => x.toString())
       })
 
@@ -134,7 +134,7 @@ function ajaxDTInfo (type, browserVersionMatcher) {
 
       Promise.all([ajaxPromise, rumPromise, loadPromise])
         .then(([{ request }]) => {
-          const requests = querypack.decode(request.body)
+          const requests = request.body
             .filter(r => r.path === '/json')
 
           requests.forEach(r => {

@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.232.0",
+  "version": "1.232.1",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "Tests for the New Relic JavaScript agent",
@@ -96,7 +96,7 @@
     "build:npm": "npm run npm:build:esm && npm run npm:build:cjs && npm run npm:build:types && npm run npm:pack",
     "lint": "eslint -c .eslintrc.js --ext .js,.cjs,.mjs .",
     "lint:fix": "npm run lint -- --fix",
-    "test-all": "tools/jil/bin/cli.js -b *@*",
+    "test-jil": "tools/jil/bin/cli.js",
     "ci-build": "npm ci --cache ./.npm",
     "build-tar": "npm run ci-build && tar czf ./build/browser-agent.tar.gz --exclude=.git --exclude=.npm --exclude=build/browser-agent.tar.gz .",
     "watch": "jung -D '\\.npm|.git|node_modules|build|tools|tests' --run -- npm run build:all",

@@ -27,7 +27,7 @@ function paSubmission (type, supportRegOrESMWorker) {
       .then(([/* loadPromise junk */, { request }]) => {
         t.equal(request.method, 'POST', 'first PageAction submission is a POST')
         t.notOk(request.query.ins, 'query string does not include ins parameter')
-        validatePageActionData(t, JSON.parse(request.body).ins, request.query)
+        validatePageActionData(t, request.body.ins, request.query)
         t.end()
       }).catch(fail(t))
   })
@@ -55,14 +55,14 @@ function paRetry (type, supportRegOrESMWorker) {
     Promise.all([loadPromise, insPromise, router.expectRum()])
       .then(([, insResult]) => {
         t.equal(insResult.reply.statusCode, 429, 'server responded with 429')
-        firstBody = JSON.parse(insResult.request.body)
+        firstBody = insResult.request.body
 
         return router.expectIns()
       })
       .then((insResult) => {
         t.equal(router.requestCounts.bamServer.ins, 2, 'got two ins harvest requests')
 
-        const secondBody = JSON.parse(insResult.request.body)
+        const secondBody = insResult.request.body
 
         t.equal(insResult.reply.statusCode, 200, 'server responded with 200')
         t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
@@ -89,7 +89,7 @@ function paPrecedence (type, supportRegOrESMWorker) {
 
     Promise.all([loadPromise, insPromise, router.expectRum()])
       .then(([, { request }]) => {
-        precValidatePageActionData(JSON.parse(request.body).ins)
+        precValidatePageActionData(request.body.ins)
         t.end()
       }).catch(fail(t))
 

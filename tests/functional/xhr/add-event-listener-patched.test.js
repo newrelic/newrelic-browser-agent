@@ -27,8 +27,7 @@ testDriver.test('xhr instrumentation works with EventTarget.prototype.addEventLi
 
   Promise.all([ajaxPromise, rumPromise, loadPromise]).then(([{ request: { query, body } }]) => {
     try {
-      const parsedBody = JSON.parse(body)
-      t.ok(parsedBody.xhr, 'got XHR data')
+      t.ok(body.xhr, 'got XHR data')
     } catch (err) {
       t.ok(query.xhr, 'got XHR data')
     }

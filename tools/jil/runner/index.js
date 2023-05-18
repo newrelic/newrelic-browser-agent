@@ -47,12 +47,10 @@ if (launchedFromCli) {
       if (testFiles.length === 0) {
         loadDefaultFiles(loadBrowsersAndRunTests)
       } else {
-        console.log(1)
         loadFiles(testFiles, loadBrowsersAndRunTests)
       }
     }))
   } else if (commandLineTestFiles.length) {
-    console.log(2)
     loadFiles(commandLineTestFiles, loadBrowsersAndRunTests)
   } else {
     loadDefaultFiles(loadBrowsersAndRunTests)
@@ -64,7 +62,6 @@ if (launchedFromCli) {
 }
 
 function loadDefaultFiles (cb) {
-  console.log("LOAD DEFAULT FILES!")
   let globOpts = { cwd: path.resolve(__dirname, '../../..') }
 
   let fileGlob = 'tests/@(browser|functional)/**/*.@(browser|test).js'
@@ -145,11 +142,9 @@ function loadBrowsersAndRunTests () {
     } else {
       let sauceCreds = getSauceLabsCreds()
       connectionInfo = `http://${sauceCreds.username}:${sauceCreds.accessKey}@ondemand.saucelabs.com/wd/hub`
-
-      if (config.sauceExtendedDebugging && browser.allowsExtendedDebugging()) {
-        desired.extendedDebugging = true // turn on JS console logs & HAR files in SauceLabs
-      }
     }
+
+    if (browser.allowsExtendedDebugging()) desired.extendedDebugging = true // turn on JS console logs & HAR files in SauceLabs
 
     desired.build = buildIdentifier
     desired.name = `${buildIdentifier}-${browser.toString()}`

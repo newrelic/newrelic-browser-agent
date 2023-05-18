@@ -49,7 +49,7 @@ export class Harvest extends SharedContext {
       retry: submitMethod.method === submitData.xhr
     }
     const payload = this.createPayload(endpoint, options)
-    var caller = this.obfuscator.shouldObfuscate() ? (...args) => this.obfuscateAndSend(...args) : (...args) => this._send(...args)
+    var caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
     return caller({ ...spec, payload, submitMethod })
   }
 
@@ -76,14 +76,14 @@ export class Harvest extends SharedContext {
     if (payload.qs) mapOwn(payload.qs, makeQueryString)
 
     var newPayload = { body: makeBody(), qs: makeQueryString() }
-    var caller = this.obfuscator.shouldObfuscate() ? (...args) => this.obfuscateAndSend(...args) : (...args) => this._send(...args)
+    var caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
 
     return caller({ ...spec, payload: newPayload })
   }
 
   obfuscateAndSend (spec) {
     const { payload } = spec
-    applyFnToProps(payload, (...args) => this.obfuscator.obfuscateString(...args), 'string', ['e'])
+    applyFnToProps(payload, this.obfuscator.obfuscateString, 'string', ['e'])
     return this._send({ ...spec, payload })
   }
 

@@ -69,7 +69,7 @@ export class Harvest extends SharedContext {
  * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
  */
   send (spec) {
-    const { payload } = spec
+    const { payload = {} } = spec
     var makeBody = createAccumulator()
     var makeQueryString = createAccumulator()
     if (payload.body) mapOwn(payload.body, makeBody)
@@ -82,12 +82,12 @@ export class Harvest extends SharedContext {
   }
 
   obfuscateAndSend (spec) {
-    const { payload } = spec
-    applyFnToProps(payload, this.obfuscator.obfuscateString, 'string', ['e'])
+    const { payload = {} } = spec
+    applyFnToProps(payload, (...args) => this.obfuscator.obfuscateString(...args), 'string', ['e'])
     return this._send({ ...spec, payload })
   }
 
-  _send ({ endpoint, payload, opts, submitMethod, cbFinished, customUrl, gzip, includeBaseParams = true }) {
+  _send ({ endpoint, payload = {}, opts = {}, submitMethod, cbFinished, customUrl, gzip, includeBaseParams = true }) {
     var info = getInfo(this.sharedContext.agentIdentifier)
     if (!info.errorBeacon) return false
 
@@ -99,8 +99,6 @@ export class Harvest extends SharedContext {
       }
       return false
     }
-
-    if (!opts) opts = {}
 
     var url = customUrl || this.getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + '?'
 

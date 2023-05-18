@@ -45,9 +45,11 @@ export class InstrumentBase extends FeatureBase {
     if (this.hasAggregator || !this.auto) return
     this.hasAggregator = true
     let session, agentSessionImport
-    if (getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true) {
+    if (getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true && !isWorkerScope) {
       agentSessionImport = import(/* webpackChunkName: "session-manager" */ './agent-session')
-        .catch(err => { /* prevent unhandled promise rejection exception from being thrown, do something with the error, return empty object */ })
+        .catch(err => {
+          warn('failed to import the session manager', err)
+        })
     }
     const importLater = async () => {
       /**

@@ -21,7 +21,7 @@ submitData.jsonp = function jsonp ({ url, jsonp }) {
       } catch (e) {
         // for now theres no other way to execute the callback from ingest without jsonp, or unsafe eval / new Function calls
         // future work needs to be conducted to allow ingest to return a more traditional JSON API-like experience for the entitlement flags
-        submitData.xhrGet(url + '&jsonp=' + jsonp)
+        submitData.xhrGet({ url: url + '&jsonp=' + jsonp })
         return false
       }
     } else {

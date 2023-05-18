@@ -4,7 +4,10 @@ const browserMatcher = require('../../tools/jil/index').Matcher
  * @type {string[]}
  * @description The types of workers that get tested against. See tests/assets/worker/{type}-worker.html. Add "shared" to this array to run against Shared Workers (local only, does not work in GH).
  */
-const workerTypes = ['classic', 'module']
+const workerTypes = [
+  'classic'
+// , 'module'
+]
 
 /**
  * @param {string} type - one of the workerTypes

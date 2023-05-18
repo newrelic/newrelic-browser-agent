@@ -34,7 +34,7 @@ function ajaxEventsEnabled (type, browserVersionMatcher) {
       })
 
       const loadPromise = browser.get(assetURL)
-      const ajaxPromise = router.expectAjaxEvents(7000)
+      const ajaxPromise = router.expectAjaxEvents()
       const rumPromise = router.expectRum()
 
       Promise.all([ajaxPromise, rumPromise, loadPromise])
@@ -85,8 +85,8 @@ function ajaxEventsPayload (type, browserVersionMatcher) {
 
       const loadPromise = browser.get(assetURL)
       const ajaxPromise = Promise.all([
-        router.expectAjaxEvents(7000),
-        router.expectAjaxEvents(14000)
+        router.expectAjaxEvents(),
+        router.expectAjaxEvents()
       ])
       const rumPromise = router.expectRum()
 
@@ -112,7 +112,7 @@ function ajaxDTInfo (type, browserVersionMatcher) {
         init: {
           distributed_tracing: { enabled: true },
           ajax: {
-            harvestTimeSeconds: 2,
+            harvestTimeSeconds: 5,
             enabled: true
           }
         },
@@ -129,7 +129,7 @@ function ajaxDTInfo (type, browserVersionMatcher) {
       })
 
       const loadPromise = browser.get(assetURL)
-      const ajaxPromise = router.expectAjaxEvents(7000)
+      const ajaxPromise = router.expectAjaxEvents()
       const rumPromise = router.expectRum()
 
       Promise.all([ajaxPromise, rumPromise, loadPromise])

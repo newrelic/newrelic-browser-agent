@@ -193,7 +193,7 @@ function harvestSessionIsNullWhenEnabled (type, browserVersionMatcher) {
       Promise.all([ajaxPromise, loadPromise, router.expectRum()])
         .then(([{ request: { query } }]) => {
           t.equal(query.ck, '0', "The cookie flag ('ck') should equal 0.")
-    		t.ok(query.s, "The session id attr 's' should exist and have a truthy value.")
+    		  t.equal(query.s, '0', "The session id attr 's' should equal 0 in workers")
           t.end()
         }).catch(fail(t, FAIL_MSG))
     }

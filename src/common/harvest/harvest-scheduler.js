@@ -82,9 +82,6 @@ export class HarvestScheduler extends SharedContext {
 
       payload = Object.prototype.toString.call(payload) === '[object Array]' ? payload : [payload]
       harvests.push(...payload)
-    } else {
-      // force it to run at least once
-      harvests.push(undefined)
     }
 
     /** sendX is used for features that do not supply a preformatted payload via "getPayload" */
@@ -94,6 +91,9 @@ export class HarvestScheduler extends SharedContext {
       if (this.opts.raw) send = args => this.harvest._send(args)
       /** send is used to formated the payloads from "getPayload" and obfuscate before sending */
       else send = args => this.harvest.send(args)
+    } else {
+      // force it to run at least once in sendX mode
+      harvests.push(undefined)
     }
 
     harvests.forEach(payload => {

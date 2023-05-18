@@ -1,6 +1,6 @@
-const testDriver = require('../../../tools/jil/index')
+const testDriver = require('../../tools/jil/index')
 const { workerTypes, typeToMatcher } = require('./helpers')
-const { fail } = require('../xhr/helpers')
+const { fail } = require('../functional/xhr/helpers')
 const querypack = require('@newrelic/nr-querypack')
 
 workerTypes.forEach(type => {

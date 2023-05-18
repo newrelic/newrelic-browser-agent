@@ -1,7 +1,7 @@
-const testDriver = require('../../../tools/jil/index')
+const testDriver = require('../../tools/jil/index')
 const { workerTypes, typeToMatcher } = require('./helpers')
-const { fail, querypack, getXhrFromResponse } = require('../xhr/helpers')
-const { testEventsRequest } = require('../../../tools/testing-server/utils/expect-tests')
+const { fail, querypack, getXhrFromResponse } = require('../functional/xhr/helpers')
+const { testEventsRequest } = require('../../tools/testing-server/utils/expect-tests')
 
 workerTypes.forEach(type => {
   const browsersWithOrWithoutModuleSupport = typeToMatcher(type)

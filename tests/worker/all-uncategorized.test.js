@@ -1,6 +1,6 @@
-const testDriver = require('../../../tools/jil/index')
+const testDriver = require('../../tools/jil/index')
 const { workerTypes, typeToMatcher } = require('./helpers')
-const { fail, checkPayload, url } = require('../uncat-internal-help.cjs')
+const { fail, checkPayload, url } = require('../functional/uncat-internal-help.cjs')
 
 const fetchExt = testDriver.Matcher.withFeature('fetchExt')
 const FAIL_MSG = 'unexpected error'

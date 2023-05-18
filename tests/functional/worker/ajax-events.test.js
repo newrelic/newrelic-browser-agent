@@ -124,7 +124,7 @@ function ajaxDTInfo (type, browserVersionMatcher) {
             try {
               fetch('/json')
             } finally {}
-          }, 2000)
+          }, 1000)
         }].map(x => x.toString())
       })
 

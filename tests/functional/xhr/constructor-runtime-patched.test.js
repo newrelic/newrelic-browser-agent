@@ -26,8 +26,7 @@ testDriver.test('xhr instrumentation works with bad XHR constructor runtime-patc
 
   Promise.all([ajaxPromise, rumPromise, loadPromise]).then(([{ request: { query, body } }]) => {
     try {
-      const parsedBody = body
-      t.ok(parsedBody.xhr, 'got XHR data')
+      t.ok(body.xhr, 'got XHR data')
     } catch (err) {
       t.ok(query.xhr, 'got XHR data')
     }

@@ -24,8 +24,7 @@ testDriver.test('error on the initial page load', function (t, browser, router) 
 
       t.equal(errors.length, 1, 'should have 1 errors')
 
-      let { body, query } = eventData
-      let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
+      let interactionTree = (eventData.body && eventData.body.length ? eventData.body : querypack.decode(eventData.query.e))[0]
 
       // Root
       var interactionId = interactionTree.id

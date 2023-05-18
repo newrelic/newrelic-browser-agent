@@ -81,7 +81,6 @@ testDriver.test('ajax in deny list is not harvested with interaction', supported
           var query = eventsResult.query
           var body = eventsResult.body
           let interaction = (body && body.length ? body : querypack.decode(query.e))[0]
-          console.log(interaction)
 
           validateNode(t, testCase.expected, interaction)
 

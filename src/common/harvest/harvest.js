@@ -130,11 +130,21 @@ export class Harvest extends SharedContext {
     // Get query bytes harvested per endpoint as a supportability metric. See metrics aggregator (on unload).
     agentRuntime.queryBytesSent[endpoint] = (agentRuntime.queryBytesSent[endpoint] || 0) + fullUrl.split('?').slice(-1)[0]?.length || 0
 
+    const headers = []
+
+    if (gzip) {
+      headers.push({ key: 'content-type', value: 'application/json' })
+      headers.push({ key: 'X-Browser-Monitoring-Key', value: info.licenseKey })
+      headers.push({ key: 'Content-Encoding', value: 'gzip' })
+    } else {
+      headers.push({ key: 'content-type', value: 'text/plain' })
+    }
+
     /* Since workers don't support sendBeacon right now, or Image(), they can only use XHR method.
         Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
         we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon. */
 
-    var result = method({ url: fullUrl, body, sync: opts.unload && isWorkerScope, gzipped: gzip, licenseKey: info.licenseKey })
+    var result = method({ url: fullUrl, body, sync: opts.unload && isWorkerScope, headers })
 
     if (cbFinished && method === submitData.xhr) {
       var xhr = result

@@ -39,14 +39,15 @@ export class SessionEntity {
    * expiresMs and inactiveMs are used to "expire" the session, but can be overridden in the constructor. Pass 0 to disable expiration timers.
    */
   constructor (opts) {
-    this.state = {}
     this.setup(opts)
   }
 
   setup ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS, storageAPI = new LocalMemory() }) {
     if (!agentIdentifier || !key) throw new Error('Missing Required Fields')
     if (!isBrowserScope) this.storage = new LocalMemory()
-    else this.storage = storageAPI // new LocalStorage()
+    else this.storage = storageAPI
+
+    this.state = {}
 
     this.sync(model)
 
@@ -198,7 +199,6 @@ export class SessionEntity {
     // * delete the session and start over
     try {
       if (this.initialized) this.ee.emit(SESSION_EVENTS.RESET)
-      this.state = {}
       this.storage.remove(this.lookupKey)
       this.inactiveTimer?.abort?.()
       this.expiresTimer?.clear?.()

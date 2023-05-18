@@ -23,6 +23,8 @@ const MODE = {
 const MAX_PAYLOAD_SIZE = 1000000
 /** Unloading caps around 64kb */
 const IDEAL_PAYLOAD_SIZE = 64000
+/** Interval between forcing new full snapshots in "error" mode */
+const CHECKOUT_MS = 30000
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -35,7 +37,7 @@ export class Aggregate extends AggregateBase {
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'session_replay.harvestTimeSeconds') || 60
     /** Set once the recorder has fully initialized after flag checks and sampling */
     this.initialized = false
-    /** Set once an error has been detected on the page.  Is cleared after a harvest */
+    /** Set once an error has been detected on the page. */
     this.errorNoticed = false
     /** The "mode" to record in.  Defaults to "OFF" until flags and sampling are checked. See "MODE" constant. */
     this.mode = MODE.OFF
@@ -44,9 +46,12 @@ export class Aggregate extends AggregateBase {
 
     /** Payload metadata -- Should indicate that the payload being sent is the first of a session */
     this.isFirstChunk = false
-    /** Payload metadata -- Should indicate that the payload being sent has a full DOM snapshot. */
+    /** Payload metadata -- Should indicate that the payload being sent has a full DOM snapshot. This can happen
+     * -- When the recording library begins recording, it starts by taking a DOM snapshot
+     * -- When visibility changes from "hidden" -> "visible", it must capture a full snapshot for the replay to work correctly across tabs
+    */
     this.hasSnapshot = false
-    /** Payload metadata -- Should indicate that the payload being sent contains an error. */
+    /** Payload metadata -- Should indicate that the payload being sent contains an error.  Used for query/filter purposes in UI */
     this.hasError = false
 
     /** A value which increments with every new mutation node reported. Resets after a harvest is sent */
@@ -86,18 +91,19 @@ export class Aggregate extends AggregateBase {
     registerHandler('errorAgg', (e) => {
       this.hasError = true
       // run once
-      if (this.errorNoticed) return
       // if the error was noticed AFTER the recorder was imported....
-      if (this.mode === MODE.ERROR && !!recorder) {
-        this.errorNoticed = true
-        this.scheduler.runHarvest({ needResponse: true })
-        this.stopRecording()
-        this.mode = MODE.FULL
-        this.startRecording()
-        this.scheduler.startTimer(this.harvestTimeSeconds)
+      if (this.mode === MODE.ERROR) {
+        this.mode = MODE.full
+        if (recorder) {
+          this.scheduler.runHarvest()
+          this.stopRecording()
+          this.mode = MODE.FULL
+          this.startRecording()
+          this.scheduler.startTimer(this.harvestTimeSeconds)
 
-        const { session } = getRuntime(this.agentIdentifier)
-        session.write({ ...session.state, sessionReplay: this.mode })
+          const { session } = getRuntime(this.agentIdentifier)
+          session.state.sessionReplay = this.mode
+        }
       }
     }, this.featureName, this.ee)
 
@@ -113,10 +119,16 @@ export class Aggregate extends AggregateBase {
     drain(this.agentIdentifier, this.featureName)
   }
 
+  /**
+   * Evaluate entitlements and sampling before starting feature mechanics, importing and configuring recording library, and setting storage state
+   * @param {boolean} entitlements - the true/false state of the "sr" flag from RUM response
+   * @param {boolean} errorSample - the true/false state of the error sampling decision
+   * @param {boolean} fullSample - the true/false state of the full sampling decision
+   * @returns {void}
+   */
   async initializeRecording (entitlements, errorSample, fullSample) {
-    // console.log('initialize recording')
     this.initialized = true
-    if (!entitlements) return // TODO -- re-enable this when flags are working
+    if (!entitlements) return
 
     const { session } = getRuntime(this.agentIdentifier)
     // if theres an existing session replay in progress, there's no need to sample, just check the entitlements response
@@ -126,37 +138,37 @@ export class Aggregate extends AggregateBase {
     // session replay samples can only be decided on the first load of a session
     // session replays can continue if already in progress
     if (!session.isNew && session.state.sessionReplay === MODE.OFF) return
-    if (session.state.sessionReplay === MODE.FULL || (session.isNew && fullSample)) this.mode = MODE.FULL
-    else if (session.state.sessionReplay === MODE.ERROR || errorSample) this.mode = MODE.ERROR
 
-    console.log('MODE', this.mode, '-- entitlements, error, full', entitlements, errorSample, fullSample)
+    if (session.state.sessionReplay === MODE.FULL) this.mode = MODE.FULL
+    else if (session.isNew && fullSample) this.mode = MODE.FULL
+    else if (session.state.sessionReplay === MODE.ERROR) this.mode = MODE.ERROR
+    else if (errorSample) this.mode = MODE.ERROR
+    else return
 
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
     // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
     // If an error happened before we've gotten to this stage, we can simply just run in FULL mode.
-    if (this.mode === MODE.FULL || (this.mode === MODE.ERROR && this.errorNoticed)) {
+    if (this.mode === MODE.FULL) {
       this.mode = MODE.FULL
       // We only report (harvest) in FULL mode
       this.scheduler.startTimer(this.harvestTimeSeconds)
-      this.recording = true
     }
     // We record in FULL or ERROR mode
-    if (this.mode !== MODE.OFF) {
-      const { record } = await import(/* webpackChunkName: "recorder" */'rrweb')
-      recorder = record
-      this.startRecording()
-      const { gzipSync, strToU8 } = await import(/* webpackChunkName: "compressor" */'fflate')
-      gzipper = gzipSync
-      u8 = strToU8
-    }
+
+    recorder = (await import(/* webpackChunkName: "recorder" */'rrweb')).record
+    this.startRecording()
+    const { gzipSync, strToU8 } = await import(/* webpackChunkName: "compressor" */'fflate')
+    gzipper = gzipSync
+    u8 = strToU8
+
     this.isFirstChunk = !!session.isNew
 
-    session.write({ ...session.state, sessionReplay: this.mode })
+    session.state.sessionReplay = this.mode
   }
 
   prepareHarvest (options) {
     if (this.events.length === 0) return
-    const payload = this.getPayload()
+    const payload = this.getHarvestContents()
     try {
       payload.body = gzipper(u8(stringify(payload.body)))
       this.scheduler.opts.gzip = true
@@ -164,13 +176,12 @@ export class Aggregate extends AggregateBase {
       // failed to gzip
       this.scheduler.opts.gzip = false
     }
-    console.log('payload!', payload)
     // TODO -- Gracefully handle the buffer for retries.
     this.clearBuffer()
     return [payload]
   }
 
-  getPayload () {
+  getHarvestContents () {
     const agentRuntime = getRuntime(this.agentIdentifier)
     const info = getInfo(this.agentIdentifier)
     return {
@@ -196,7 +207,6 @@ export class Aggregate extends AggregateBase {
     // The mutual decision for now is to stop recording and clear buffers if ingest is experiencing 429 rate limiting
     if (result.status === 429) {
       this.abort()
-      return
     }
 
     if (this.blocked) this.scheduler.stopTimer(true)
@@ -230,7 +240,7 @@ export class Aggregate extends AggregateBase {
       maskInputOptions,
       maskTextSelector,
       maskAllInputs,
-      ...(this.mode === MODE.ERROR && { checkoutEveryNms: 30000 })
+      ...(this.mode === MODE.ERROR && { checkoutEveryNms: CHECKOUT_MS })
     })
   }
 
@@ -247,7 +257,7 @@ export class Aggregate extends AggregateBase {
     // Checkout events are flags by the recording lib that indicate a fullsnapshot was taken every n ms. These are important
     // to help reconstruct the replay later and must be included.  While waiting and buffering for errors to come through,
     // each time we see a new checkout, we can drop the old data.
-    if (this.mode === MODE.ERROR && !this.errorNoticed && isCheckout) {
+    if (this.mode === MODE.ERROR && isCheckout) {
       // we are still waiting for an error to throw, so keep wiping the buffer over time
       this.clearBuffer()
     }
@@ -281,11 +291,13 @@ export class Aggregate extends AggregateBase {
     this.blocked = true
     this.stopRecording()
     const { session } = getRuntime(this.agentIdentifier)
-    session.write({ ...session.state, sessionReplayActive: false })
+    session.state.sessionReplay = this.mode
   }
 
   /** Extensive research has yielded about an 88% compression factor on these payloads.
-   * This is an estimation using that factor as to not cause performance issues while evaluating */
+   * This is an estimation using that factor as to not cause performance issues while evaluating
+   * https://staging.onenr.io/037jbJWxbjy
+   * */
   estimateCompression (data) {
     return data * 0.12
   }

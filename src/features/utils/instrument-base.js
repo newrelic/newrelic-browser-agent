@@ -44,9 +44,10 @@ export class InstrumentBase extends FeatureBase {
   importAggregator () {
     if (this.hasAggregator || !this.auto) return
     this.hasAggregator = true
-    let session, agentSessionFile
+    let session, agentSessionImport
     if (getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true) {
-      agentSessionFile = import(/* webpackChunkName: "session-manager" */ './agent-session')
+      agentSessionImport = import(/* webpackChunkName: "session-manager" */ './agent-session')
+        .catch(err => { /* prevent unhandled promise rejection exception from being thrown, do something with the error, return empty object */ })
     }
     const importLater = async () => {
       /**
@@ -55,8 +56,8 @@ export class InstrumentBase extends FeatureBase {
        */
       try {
         // The session entity needs to be attached to the config internals before the aggregator chunk runs
-        if (agentSessionFile && !session) {
-          const { setupAgentSession } = await agentSessionFile
+        if (agentSessionImport && !session) {
+          const { setupAgentSession } = await agentSessionImport
           session = setupAgentSession(this.agentIdentifier)
         }
         if (!shouldImportAgg(this.featureName, session)) {
@@ -65,8 +66,8 @@ export class InstrumentBase extends FeatureBase {
         }
 
         // import and instantiate the aggregator chunk
-        const { lazyLoader } = await import(/* webpackChunkName: "lazy-loader" */ './lazy-loader')
-        const { Aggregate } = await lazyLoader(this.featureName, 'aggregate')
+        const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
+        const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
         new Aggregate(this.agentIdentifier, this.aggregator)
       } catch (e) {
         warn(`Downloading ${this.featureName} failed...`, e)

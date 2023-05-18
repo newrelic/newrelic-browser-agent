@@ -69,29 +69,32 @@ export class HarvestScheduler extends SharedContext {
     var scheduler = this
 
     let harvests = []
-    let submitMethod, retry
+    let submitMethod
 
     if (this.opts.getPayload) { // Ajax & PVT & SR
       submitMethod = getSubmitMethod(this.endpoint, opts)
       if (!submitMethod) return false
 
-      retry = submitMethod.method === submitData.xhr
+      const retry = submitMethod.method === submitData.xhr
       var payload = this.opts.getPayload({ retry: retry })
 
       if (!payload) return
 
       payload = Object.prototype.toString.call(payload) === '[object Array]' ? payload : [payload]
       harvests.push(...payload)
+    } else {
+      // force it to run at least once
+      harvests.push(undefined)
     }
 
+    /** sendX is used for features that do not supply a preformatted payload via "getPayload" */
     let send = args => this.harvest.sendX(args)
     if (harvests.length) {
+      /** _send is the underlying method for sending in the harvest, if sending raw we can bypass the other helpers completely which format the payloads */
       if (this.opts.raw) send = args => this.harvest._send(args)
+      /** send is used to formated the payloads from "getPayload" and obfuscate before sending */
       else send = args => this.harvest.send(args)
     }
-
-    // force it to run at least once
-    if (!harvests.length) harvests.push(undefined)
 
     harvests.forEach(payload => {
       send({

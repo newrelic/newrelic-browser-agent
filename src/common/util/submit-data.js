@@ -7,8 +7,10 @@ export const submitData = {}
 
 /**
  * Send via JSONP. Do NOT call this function outside of a guaranteed web window environment.
- * @param {string} url
- * @param {string} jsonp
+ * @param {Object} args - The args
+ * @param {string} args.url - The URL to send to
+ * @param {string} args.jsonp - The string name of the jsonp cb method
+ * @returns {XMLHttpRequest}
  * @returns {Element}
  */
 submitData.jsonp = function jsonp ({ url, jsonp }) {
@@ -41,12 +43,15 @@ submitData.xhrGet = function xhrGet ({ url }) {
 
 /**
  * Send via XHR
- * @param {string} url
- * @param {string} body
- * @param {boolean} sync
+ * @param {Object} args - The args
+ * @param {string} args.url - The URL to send to
+ * @param {string=} args.body - The Stringified body
+ * @param {boolean=} args.sync - Run XHR as Synchronous
+ * @param {string=} [args.method=POST] - The XHR method to use
+ * @param {{key: string, value: string}[]} [args.headers] - The headers to attach
  * @returns {XMLHttpRequest}
  */
-submitData.xhr = function xhr ({ url, body, sync, method = 'POST', gzipped, licenseKey }) {
+submitData.xhr = function xhr ({ url, body, sync, method = 'POST', headers = [{ key: 'content-type', value: 'text/plain' }] }) {
   var request = new XMLHttpRequest()
 
   request.open(method, url, !sync)
@@ -57,13 +62,10 @@ submitData.xhr = function xhr ({ url, body, sync, method = 'POST', gzipped, lice
     // do nothing
   }
 
-  if (gzipped) {
-    request.setRequestHeader('content-type', 'application/json')
-    request.setRequestHeader('X-Browser-Monitoring-Key', licenseKey)
-    request.setRequestHeader('Content-Encoding', 'gzip')
-  } else {
-    request.setRequestHeader('content-type', 'text/plain')
-  }
+  headers.forEach(header => {
+    request.setRequestHeader(header.key, header.value)
+  })
+
   request.send(body)
   return request
 }
@@ -77,8 +79,9 @@ submitData.xhr = function xhr ({ url, body, sync, method = 'POST', gzipped, lice
 
 /**
  * Send by appending an <img> element to the page. Do NOT call this function outside of a guaranteed web window environment.
- * @param {string} url
- * @returns {Element}
+ * @param {Object} args - The args
+ * @param {string} args.url - The URL to send to
+ * @returns {HTMLImageElement}
  */
 submitData.img = function img ({ url }) {
   console.log('img url', url)
@@ -89,8 +92,9 @@ submitData.img = function img ({ url }) {
 
 /**
  * Send via sendBeacon. Do NOT call this function outside of a guaranteed web window environment.
- * @param {string} url
- * @param {string} body
+ * @param {Object} args - The args
+ * @param {string} args.url - The URL to send to
+ * @param {string=} args.body - The Stringified body
  * @returns {boolean}
  */
 submitData.beacon = function ({ url, body }) {

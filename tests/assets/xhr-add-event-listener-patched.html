@@ -16,7 +16,7 @@
       return function () {
         var args = Array.prototype.slice.call(arguments)
         wrapperInvoked = true
-        callback.apply(window, args)
+        callback.apply(this, args)
       }
     }
 

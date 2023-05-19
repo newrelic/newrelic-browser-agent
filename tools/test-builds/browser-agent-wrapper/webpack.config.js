@@ -120,7 +120,7 @@ const config = [
     entry: {
       'worker-wrapper': {
         import: './src/worker-wrapper.js',
-        chunkLoading: 'import-scripts'
+        chunkLoading: false
       }
     },
     output: {

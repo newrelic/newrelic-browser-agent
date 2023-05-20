@@ -13,7 +13,11 @@ export default class TestingServerWorker {
     delete capabilities.testServerCommandPort
   }
 
-  async before (capabilities, specs, browser) {
+  /**
+   * Gets executed before test execution begins. At this point you can access to all global
+   * variables like `browser`. It is the perfect place to define custom commands.
+   */
+  async before () {
     browser.addCommand('getTestHandle', async () => {
       const testHandle = new TestHandleConnector(this.#commandServerPort)
       await testHandle.ready()

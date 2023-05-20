@@ -18,6 +18,7 @@ const log = logger('testing-server-connector')
 export class TestHandleConnector {
   #commandServerBase
   #testId
+  #pendingExpects = new Set()
 
   constructor (commandServerPort) {
     this.#commandServerBase = `http://127.0.0.1:${commandServerPort}`
@@ -32,6 +33,8 @@ export class TestHandleConnector {
   }
 
   async destroy () {
+    this.#pendingExpects.forEach(pendingExpect => pendingExpect.abortController.abort())
+
     if (this.#testId) {
       await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}`, {
         method: 'DELETE'
@@ -51,7 +54,8 @@ export class TestHandleConnector {
   async expect (serverId, testServerExpect) {
     await this.ready()
 
-    const result = await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/expect`, {
+    const abortController = new AbortController()
+    const expectRequest = fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/expect`, {
       method: 'POST',
       body: JSON.stringify({
         serverId,
@@ -60,14 +64,28 @@ export class TestHandleConnector {
           test: SerAny.serialize(testServerExpect.test)
         }
       }),
-      headers: { 'content-type': 'application/json' }
+      headers: { 'content-type': 'application/json' },
+      signal: abortController.signal
     })
 
-    if (result.status !== 200) {
-      log.error(`Expect failed with status code ${result.status}`, await result.json(), result.error)
-      throw new Error('Expect failed with an unknown result')
-    } else {
-      return await result.json()
+    const pendingExpect = { abortController, expectRequest }
+    this.#pendingExpects.add(pendingExpect)
+
+    try {
+      const result = await expectRequest
+
+      if (result.status !== 200) {
+        log.error(`Expect failed with status code ${result.status}`, await result.json(), result.error)
+        throw new Error('Expect failed with an unknown result')
+      } else {
+        return await result.json()
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        throw err
+      }
+    } finally {
+      this.#pendingExpects.delete(pendingExpect)
     }
   }
 

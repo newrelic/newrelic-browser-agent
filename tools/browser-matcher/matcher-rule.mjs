@@ -5,7 +5,6 @@ import { parseSpecString, SPEC_OPERATOR } from './spec-parser.mjs'
  * allowing comparison between two browser specs strings.
  */
 export default class MatcherRule {
-  #matcherType
   #specString
   #browserName
   #specOperator
@@ -49,6 +48,8 @@ export default class MatcherRule {
    * to construct this matcher rule.
    * @param {string} browserName The name of the browser like `chrome`
    * @param {string} browserVersion The version of the browser like `99`
+   * @returns {boolean} true if the provided browserName and browserVersion matches
+   * the current rule definition.
    */
   test (browserName, browserVersion) {
     if (!this.#browserName || this.#browserName === '*') {

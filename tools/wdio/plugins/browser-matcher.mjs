@@ -3,16 +3,17 @@
  * filtering of tests by a browser match.
  */
 export default class BrowserMatcher {
-  #browserSpec
+  #browserName
+  #browserVersion
 
   async beforeSession (_, capabilities) {
-    this.#browserSpec =
-      `${this.#getBrowserName(capabilities)}@${capabilities.browserVersion || capabilities.version}`
+    this.#browserName = this.#getBrowserName(capabilities)
+    this.#browserVersion = this.#getBrowserVersion(capabilities)
     global.withBrowsersMatching = this.#browserMatchTest.bind(this)
   }
 
   #browserMatchTest (matcher) {
-    let skip = matcher && !matcher.test(this.#browserSpec)
+    let skip = (matcher && !matcher.test(this.#browserName, this.#browserVersion)) || false
 
     return function (...args) {
       /*
@@ -30,14 +31,24 @@ export default class BrowserMatcher {
     }
   }
 
-  #getBrowserName ({ browserName }) {
-    if (browserName === 'internet explorer') {
+  #getBrowserName ({ browserName, platformName }) {
+    if (platformName?.toLowerCase() === 'ios') {
+      return 'ios'
+    }
+    if (platformName?.toLowerCase() === 'android') {
+      return 'android'
+    }
+    if (browserName.toLowerCase() === 'internet explorer') {
       return 'ie'
     }
-    if (browserName === 'MicrosoftEdge') {
+    if (browserName.toLowerCase() === 'microsoftedge') {
       return 'edge'
     }
 
-    return browserName
+    return browserName.toLowerCase()
+  }
+
+  #getBrowserVersion ({ browserVersion, version }) {
+    return browserVersion || version
   }
 }

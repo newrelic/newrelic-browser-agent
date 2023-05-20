@@ -7,14 +7,14 @@ const TestServer = require('../../testing-server');
   if (!args.timeout) args.timeout = 32000
   if (!args.port) args.port = 3333
 
-  const server = new TestServer(args, {}, console)
+  const server = new TestServer(args)
   await server.start(args.port)
 
   const hostname = args.host
   // server.router.handle(server.config.defaultAgentConfig.licenseKey, true);
 
-  console.log('asset server: http://' + hostname + ':' + server.assetServer.port)
-  console.log('cors server: http://' + hostname + ':' + server.corsServer.port)
-  console.log('bam server: http://' + hostname + ':' + server.bamServer.port)
-  console.log('command server: http://' + hostname + ':' + server.commandServer.port)
+  console.log(`asset server: http://${hostname}:${server.assetServer.port}`)
+  console.log(`cors server: http://${hostname}:${server.corsServer.port}`)
+  console.log(`bam server: http://${hostname}:${server.bamServer.port}`)
+  console.log(`command server: http://${hostname}:${server.commandServer.port}`)
 })()

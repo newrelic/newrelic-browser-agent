@@ -31,6 +31,7 @@ function sauceCapabilities () {
       platform: undefined,
       version: undefined,
       device: undefined,
+      acceptInsecureCerts: undefined,
       'sauce:options': !args.sauce
         ? {
             tunnelName: getSauceConnectTunnelName(),

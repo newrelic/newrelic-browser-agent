@@ -38,11 +38,12 @@ export default class SpecMatcher {
    * spec matcher instance.
    * @param {string} browserName The name of the browser like `chrome`
    * @param {string} browserVersion The version of the browser like `99`
-   * @returns
+   * @returns {boolean} true if any of the rules included in the matcher matches
+   * the provided browserName and browserVersion
    */
   test (browserName, browserVersion) {
     if (this.#rules.length === 0) return false
 
-    return this.#rules.reduce((aggregate, rule) => aggregate && rule.test(browserName, browserVersion), true)
+    return this.#rules.some(rule => rule.test(browserName, browserVersion))
   }
 }

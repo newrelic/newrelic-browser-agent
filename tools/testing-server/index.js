@@ -35,6 +35,15 @@ class TestServer {
   #config
 
   /**
+   * Default fastify server config
+   */
+  #defaultServerConfig = {
+    maxParamLength: Number.MAX_SAFE_INTEGER,
+    bodyLimit: Number.MAX_SAFE_INTEGER,
+    logger: false
+  }
+
+  /**
    * Fastify asset server instance.
    * @type module:fastify.FastifyInstance
    */
@@ -196,11 +205,7 @@ class TestServer {
   }
 
   #createAssetServer () {
-    this.#assetServer = fastify({
-      maxParamLength: Number.MAX_SAFE_INTEGER,
-      bodyLimit: Number.MAX_SAFE_INTEGER,
-      logger: false
-    })
+    this.#assetServer = fastify(this.#defaultServerConfig)
 
     this.#assetServer.decorate('testServerId', 'assetServer')
     this.#assetServer.decorate('testServerLogger', this.#logger)
@@ -229,11 +234,7 @@ class TestServer {
   }
 
   #createCorsServer () {
-    this.#corsServer = fastify({
-      maxParamLength: Number.MAX_SAFE_INTEGER,
-      bodyLimit: Number.MAX_SAFE_INTEGER,
-      logger: false
-    })
+    this.#corsServer = fastify(this.#defaultServerConfig)
 
     this.#corsServer.decorate('testServerId', 'corsServer')
     this.#corsServer.decorate('testServerLogger', this.#logger)
@@ -251,11 +252,7 @@ class TestServer {
   }
 
   #createBamServer () {
-    this.#bamServer = fastify({
-      maxParamLength: Number.MAX_SAFE_INTEGER,
-      bodyLimit: Number.MAX_SAFE_INTEGER,
-      logger: false
-    })
+    this.#bamServer = fastify(this.#defaultServerConfig)
 
     this.#bamServer.decorate('testServerId', 'bamServer')
     this.#bamServer.decorate('testServerLogger', this.#logger)
@@ -275,11 +272,7 @@ class TestServer {
   }
 
   #createCommandServer () {
-    this.#commandServer = fastify({
-      maxParamLength: Number.MAX_SAFE_INTEGER,
-      bodyLimit: Number.MAX_SAFE_INTEGER,
-      logger: false
-    })
+    this.#commandServer = fastify(this.#defaultServerConfig)
 
     this.#commandServer.decorate('testServerId', 'commandServer')
     this.#commandServer.decorate('testServerLogger', this.#logger)

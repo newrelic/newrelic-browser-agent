@@ -7,6 +7,7 @@ export default class BrowserMatcher {
   #browserVersion
 
   async beforeSession (_, capabilities) {
+    console.log(capabilities)
     this.#browserName = this.#getBrowserName(capabilities)
     this.#browserVersion = this.#getBrowserVersion(capabilities)
     global.withBrowsersMatching = this.#browserMatchTest.bind(this)
@@ -48,7 +49,11 @@ export default class BrowserMatcher {
     return browserName.toLowerCase()
   }
 
-  #getBrowserVersion ({ browserVersion, version }) {
-    return browserVersion || version
+  #getBrowserVersion (capabilities) {
+    if (capabilities.platformName?.toLowerCase() === 'ios') {
+      return capabilities['appium:platformVersion']
+    }
+
+    return capabilities.browserVersion || capabilities.version
   }
 }

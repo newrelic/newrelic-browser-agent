@@ -14,7 +14,7 @@
     <button id="trigger">PAGE 1</button>
 
     <script type="text/javascript">
-      setInterval(() => {
+      setInterval(function() {
         document.querySelector("#trigger").style.position = 'absolute'; 
         document.querySelector("#trigger").style.left = Math.random()*100 + 'px';
       }, 1000)

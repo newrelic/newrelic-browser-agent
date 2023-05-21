@@ -37,7 +37,7 @@ function resetSpies (options) {
 
   sinon.stub(harv.Harvest.prototype, 'send', fakeSend)
   sinon.stub(harv.Harvest.prototype, 'sendX', fakeSendX)
-  sinon.stub(harv, 'getSubmitMethod', fakeGetSubmitMethod)
+  sinon.stub(harv, 'getSubmitMethod').callsFake(fakeGetSubmitMethod)
 
   function fakeSend ({endpoint, payload, opts, submitMethod, cbFinished}) {
     setTimeout(function () {

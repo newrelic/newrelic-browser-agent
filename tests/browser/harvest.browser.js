@@ -563,19 +563,19 @@ test('uses correct submission mechanisms on unload', function (t) {
 test('when sendBeacon returns false', function (t) {
   t.test('uses img for jserrors', function (t) {
     let baseUrl = scheme + '://foo/jserrors/1/bar?'
-    let expectedPayload = { jserrors: ['one', 'two', 'three'] }
+    const payload = dummyPayload('jserrors')
+    const expectedUrl =  baseUrl + encode.obj(payload().qs) + encode.obj(payload().body)
 
     resetSpies()
     submitData.beacon = sinon.stub().returns(false)
 
-    harvesterInst.on('jserrors', once(dummyPayload('jserrors')))
+    harvesterInst.on('jserrors', once(payload))
 
     setupFakeNr()
-    harvesterInst.sendX({endpoint: 'jserrors', opts: { unload: true }})
+    harvesterInst.sendX({endpoint: 'jserrors', includeBaseParams: false, opts: { unload: true }})
 
     t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (jserrors)')
     let call = submitData.img.getCall(0)
-    let expectedUrl = baseUrl + encode.obj(expectedPayload)
     validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
     t.notOk(call.args[0].body, 'no body arg given to img')
 
@@ -584,19 +584,19 @@ test('when sendBeacon returns false', function (t) {
 
   t.test('uses img for ins', function (t) {
     let baseUrl = scheme + '://foo/ins/1/bar?'
-    let expectedPayload = { ins: ['one', 'two', 'three'] }
+    const payload = dummyPayload('ins')
+    const expectedUrl =  baseUrl + encode.obj(payload().qs) + encode.obj(payload().body)
 
     resetSpies()
     submitData.beacon = sinon.stub().returns(false)
 
-    harvesterInst.on('ins', once(dummyPayload('ins')))
+    harvesterInst.on('ins', once(payload))
 
     setupFakeNr()
-    harvesterInst.sendX({endpoint: 'ins', opts: { unload: true }})
+    harvesterInst.sendX({endpoint: 'ins', includeBaseParams: false, opts: { unload: true }})
 
     t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (ins)')
     let call = submitData.img.getCall(0)
-    let expectedUrl = baseUrl + encode.obj(expectedPayload)
     validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
     t.notOk(call.args[0].body, 'no body arg given to img')
 
@@ -605,19 +605,19 @@ test('when sendBeacon returns false', function (t) {
 
   t.test('uses img for resources', function (t) {
     let baseUrl = scheme + '://foo/resources/1/bar?'
-    let expectedPayload = { resources: ['one', 'two', 'three'] }
+    const payload = dummyPayload('resources')
+    const expectedUrl =  baseUrl + encode.obj(payload().qs) + encode.obj(payload().body)
 
     resetSpies()
     submitData.beacon = sinon.stub().returns(false)
 
-    harvesterInst.on('resources', once(dummyPayload('resources')))
+    harvesterInst.on('resources', once(payload))
 
     setupFakeNr()
-    harvesterInst.sendX({endpoint: 'resources', opts: { unload: true }})
+    harvesterInst.sendX({endpoint: 'resources', includeBaseParams: false, opts: { unload: true }})
 
     t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (resources)')
     let call = submitData.img.getCall(0)
-    let expectedUrl = baseUrl + encode.obj(expectedPayload)
     validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
     t.notOk(call.args[0].body, 'no body arg given to img')
 
@@ -626,19 +626,19 @@ test('when sendBeacon returns false', function (t) {
 
   t.test('uses img for events', function (t) {
     let baseUrl = scheme + '://foo/events/1/bar?'
-    let expectedPayload = { events: ['one', 'two', 'three'] }
+    const payload = dummyPayload('events')
+    const expectedUrl =  baseUrl + encode.obj(payload().qs) + encode.obj(payload().body)
 
     resetSpies()
     submitData.beacon = sinon.stub().returns(false)
 
-    harvesterInst.on('events', once(dummyPayload('events')))
+    harvesterInst.on('events', once(payload))
 
     setupFakeNr()
-    harvesterInst.sendX({endpoint:'events', opts:{ unload: true }})
+    harvesterInst.sendX({endpoint:'events', includeBaseParams: false, opts:{ unload: true }})
 
     t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (events)')
     let call = submitData.img.getCall(0)
-    let expectedUrl = baseUrl + encode.obj(expectedPayload)
     validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
     t.notOk(call.args[0].body, 'no body arg given to img')
 

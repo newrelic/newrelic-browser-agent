@@ -8,6 +8,7 @@ module.exports = {
     'tests/assets/frameworks/**/*',
     'tests/assets/js/internal/**/*',
     'tests/assets/js/vendor/**/*',
+    'tests/assets/scripts/**/*',
     'tests/assets/test-builds/**/*',
     'tests/assets/modular/js-errors/js/vendor/**/*',
 

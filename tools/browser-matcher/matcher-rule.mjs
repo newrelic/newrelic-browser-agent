@@ -66,7 +66,7 @@ export default class MatcherRule {
 
     switch (this.#specOperator) {
       case SPEC_OPERATOR.AT:
-        return Number(browserVersion) == Number(this.#browserVersion)
+        return Number(browserVersion) === Number(this.#browserVersion)
       case SPEC_OPERATOR.GT:
         return Number(browserVersion) > Number(this.#browserVersion)
       case SPEC_OPERATOR.LT:

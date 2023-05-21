@@ -13,7 +13,7 @@ export default function config () {
     }
   } else {
     return {
-      specs: args._.map(testPath => path.resolve(
+      specs: args._.map(testPath => path.join(
         path.resolve(__dirname, '../../../'), testPath
       ))
     }

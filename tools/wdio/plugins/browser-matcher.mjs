@@ -1,3 +1,5 @@
+import { getBrowserName, getBrowserVersion } from '../../browsers-lists/utils.mjs'
+
 /**
  * This is a WDIO worker plugin that provides a global method allowing for the
  * filtering of tests by a browser match.
@@ -7,9 +9,8 @@ export default class BrowserMatcher {
   #browserVersion
 
   async beforeSession (_, capabilities) {
-    console.log(capabilities)
-    this.#browserName = this.#getBrowserName(capabilities)
-    this.#browserVersion = this.#getBrowserVersion(capabilities)
+    this.#browserName = getBrowserName(capabilities)
+    this.#browserVersion = getBrowserVersion(capabilities)
     global.withBrowsersMatching = this.#browserMatchTest.bind(this)
   }
 
@@ -30,30 +31,5 @@ export default class BrowserMatcher {
         global.it.apply(this, args)
       }
     }
-  }
-
-  #getBrowserName ({ browserName, platformName }) {
-    if (platformName?.toLowerCase() === 'ios') {
-      return 'ios'
-    }
-    if (platformName?.toLowerCase() === 'android') {
-      return 'android'
-    }
-    if (browserName.toLowerCase() === 'internet explorer') {
-      return 'ie'
-    }
-    if (browserName.toLowerCase() === 'microsoftedge') {
-      return 'edge'
-    }
-
-    return browserName.toLowerCase()
-  }
-
-  #getBrowserVersion (capabilities) {
-    if (capabilities.platformName?.toLowerCase() === 'ios') {
-      return capabilities['appium:platformVersion']
-    }
-
-    return capabilities.browserVersion || capabilities.version
   }
 }

@@ -165,7 +165,7 @@ export class Harvest extends SharedContext {
     // if beacon request failed, retry with an alternative method -- will not happen for workers
     if (!result && method === submitData.beacon) {
       method = submitData.img
-      result = method({ url: url + encodeObj(payload.body, agentRuntime.maxBytes) })
+      result = method({ url: fullUrl + encodeObj(payload.body, agentRuntime.maxBytes) })
     }
 
     return result

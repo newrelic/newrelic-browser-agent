@@ -202,7 +202,6 @@ export class SessionEntity {
       this.storage.remove(this.lookupKey)
       this.inactiveTimer?.abort?.()
       this.expiresTimer?.clear?.()
-      delete this.value
       delete this.isNew
 
       this.setup({

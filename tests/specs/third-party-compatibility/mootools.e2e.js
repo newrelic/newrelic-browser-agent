@@ -22,6 +22,7 @@ describe('mootools compatibility', () => {
           $('body').click() // Setup expects before interacting with page
         ])
 
+        console.log(JSON.stringify(eventsResults.request.body))
         const jsonpRequest = eventsResults.request.body
           .find(interaction =>
             Array.isArray(interaction.children) && interaction.children.findIndex(childNode =>

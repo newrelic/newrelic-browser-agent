@@ -39,14 +39,15 @@ export default function config () {
       path.resolve(__dirname, '../plugins/newrelic-instrumentation.mjs'),
       [path.resolve(__dirname, '../plugins/testing-server/index.mjs'), args]
     ],
-    framework: 'mocha',
-    specFileRetriesDeferred: true,
     reporters: [
       'spec',
       [path.resolve(__dirname, '../plugins/newrelic-reporter.mjs'), {
         buildIdentifier
       }]
     ],
+    specFileRetries: args.retry ? 3 : 0, // The entire spec file might fail for a sauce labs issue (safari 15)
+    specFileRetriesDeferred: true,
+    framework: 'mocha',
     mochaOpts: {
       ui: 'bdd',
       timeout: 30000,

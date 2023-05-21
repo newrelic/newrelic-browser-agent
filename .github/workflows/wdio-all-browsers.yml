@@ -2,6 +2,14 @@ name: 'WDIO: All browsers'
 
 on:
   workflow_dispatch:
+  workflow_call:
+    secrets:
+      JIL_SAUCE_LABS_USERNAME:
+        required: true
+      JIL_SAUCE_LABS_ACCESS_KEY:
+        required: true
+      JIL_NODE_NEW_RELIC_LICENSE_KEY:
+        required: true
 
 env:
   BUILD_NUMBER: PR${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}

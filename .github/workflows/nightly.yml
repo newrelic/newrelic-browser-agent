@@ -1,7 +1,6 @@
 name: 'Nightly Jobs'
 
 on:
-  push:
   schedule:
     # Runs every day at 4AM
     - cron: '0 4 * * *'

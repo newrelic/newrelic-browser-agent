@@ -17,12 +17,13 @@ describe('mootools compatibility', () => {
       testHandle,
       testAsset: 'third-party-compatibility/mootools/1.6.0-nocompat.html',
       afterLoadCallback: async () => {
+        await testHandle.expectEvents() // Wait for the next harvest to continue the test
+
         const [eventsResults] = await Promise.all([
           testHandle.expectEvents(),
           $('body').click() // Setup expects before interacting with page
         ])
 
-        console.log(JSON.stringify(eventsResults.request.body))
         const jsonpRequest = eventsResults.request.body
           .find(interaction =>
             Array.isArray(interaction.children) && interaction.children.findIndex(childNode =>

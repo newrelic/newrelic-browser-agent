@@ -221,7 +221,7 @@ class TestServer {
       etag: false
     })
     this.#assetServer.register(require('./plugins/agent-injector'), this)
-    this.#assetServer.register(require('./plugins/browserify'), this)
+    this.#assetServer.register(require('./plugins/browser-scripts'), this)
     this.#assetServer.register(require('./routes/tests-index'), this)
     this.#assetServer.register(require('./routes/mock-apis'), this)
     this.#assetServer.register(require('./plugins/test-handle'), this)

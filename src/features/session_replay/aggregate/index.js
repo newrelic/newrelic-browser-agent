@@ -93,9 +93,8 @@ export class Aggregate extends AggregateBase {
       // run once
       if (this.mode === MODE.ERROR) {
         this.mode = MODE.FULL
-        // if the error was noticed AFTER the recorder was imported....
+        // if the error was noticed AFTER the recorder was already imported....
         if (recorder && this.initialized) {
-          this.scheduler.runHarvest()
           this.stopRecording()
           this.startRecording()
           this.scheduler.startTimer(this.harvestTimeSeconds)

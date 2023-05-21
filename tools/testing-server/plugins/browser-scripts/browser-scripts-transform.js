@@ -4,13 +4,12 @@ const preprocessify = require('preprocessify')
 const fse = require('fs-extra')
 const path = require('path')
 
-async function browserifyScript (scriptPath, enablePolyfills) {
-  try {
+function processScript (scriptPath, enablePolyfills) {
+  return new Promise((resolve, reject) => {
     const reRoutedPath = 'tests/assets/scripts/tests' + scriptPath.split('/tests').pop()
-    return fse.readFile(path.join(process.cwd(), reRoutedPath))
-  } catch (e) {
-    console.log('couldnt find prebuilt file... browserify it')
-    return new Promise((resolve, reject) => {
+    fse.readFile(path.join(process.cwd(), reRoutedPath)).then(f => {
+      resolve(f)
+    }).catch(() => {
       browserify(scriptPath)
         .transform('babelify', {
           envName: 'test',
@@ -52,7 +51,7 @@ async function browserifyScript (scriptPath, enablePolyfills) {
           resolve(content)
         })
     })
-  }
+  })
 }
 
 /**
@@ -61,7 +60,7 @@ async function browserifyScript (scriptPath, enablePolyfills) {
 module.exports = function (scriptPath, testServer) {
   return new Transform({
     async transform (chunk, encoding, done) {
-      const transformedScript = await browserifyScript(
+      const transformedScript = await processScript(
         scriptPath,
         testServer.config.polyfills
       )
@@ -70,4 +69,4 @@ module.exports = function (scriptPath, testServer) {
   })
 }
 
-module.exports.browserifyScript = browserifyScript
+module.exports.processScript = processScript

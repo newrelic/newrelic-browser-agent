@@ -1,10 +1,10 @@
 const fp = require('fastify-plugin')
-const applyBrowserifyTransform = require('./browserify-transform')
+const applyBrowserScriptsTransform = require('./browser-scripts-transform')
 const { paths } = require('../../constants')
 
 /**
  * Fastify plugin to apply transformations for test JS files that need to be
- * transpiled through browserify.
+ * re-mapped to a pre-built directory, or if not found, transpiled on the fly through browserify.
  * @param {module:fastify.FastifyInstance} fastify the fastify server instance
  * @param {TestServer} testServer test server instance
  */
@@ -20,6 +20,6 @@ module.exports = fp(async function (fastify, testServer) {
     }
 
     reply.removeHeader('content-length')
-    return payload.pipe(applyBrowserifyTransform(payload.filename, testServer))
+    return payload.pipe(applyBrowserScriptsTransform(payload.filename, testServer))
   })
 })

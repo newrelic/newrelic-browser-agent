@@ -49,6 +49,10 @@ export default class CustomCommands {
       })
     })
 
+    /**
+     * Retrieves agent session data from localStorage and all instantiated
+     * agents on the page.
+     */
     browser.addCommand('getAgentSessionInfo', async function () {
       const agentSessions = await browser.execute(function () {
         return Object.entries(newrelic.initializedAgents)

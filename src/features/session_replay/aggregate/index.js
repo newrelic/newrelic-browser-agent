@@ -91,13 +91,12 @@ export class Aggregate extends AggregateBase {
     registerHandler('errorAgg', (e) => {
       this.hasError = true
       // run once
-      // if the error was noticed AFTER the recorder was imported....
       if (this.mode === MODE.ERROR) {
-        this.mode = MODE.full
-        if (recorder) {
+        this.mode = MODE.FULL
+        // if the error was noticed AFTER the recorder was imported....
+        if (recorder && this.initialized) {
           this.scheduler.runHarvest()
           this.stopRecording()
-          this.mode = MODE.FULL
           this.startRecording()
           this.scheduler.startTimer(this.harvestTimeSeconds)
 
@@ -137,19 +136,20 @@ export class Aggregate extends AggregateBase {
     // we are not actively recording SR... DO NOT import or run the recording library
     // session replay samples can only be decided on the first load of a session
     // session replays can continue if already in progress
-    if (!session.isNew && session.state.sessionReplay === MODE.OFF) return
-
-    if (session.state.sessionReplay === MODE.FULL) this.mode = MODE.FULL
-    else if (session.isNew && fullSample) this.mode = MODE.FULL
-    else if (session.state.sessionReplay === MODE.ERROR) this.mode = MODE.ERROR
-    else if (errorSample) this.mode = MODE.ERROR
-    else return
+    if (!session.isNew) { // inherit the mode of the existing session
+      this.mode = session.state.sessionReplay
+    } else {
+      // The session is new... determine the mode the new session should start in
+      if (fullSample) this.mode = MODE.FULL // full mode has precedence over error mode
+      else if (errorSample) this.mode = MODE.ERROR
+      // If neither are selected, then don't record (early return)
+      return
+    }
 
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
     // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
-    // If an error happened before we've gotten to this stage, we can simply just run in FULL mode.
+    // If an error happened in ERROR mode before we've gotten to this stage, it will have already set the mode to FULL
     if (this.mode === MODE.FULL) {
-      this.mode = MODE.FULL
       // We only report (harvest) in FULL mode
       this.scheduler.startTimer(this.harvestTimeSeconds)
     }

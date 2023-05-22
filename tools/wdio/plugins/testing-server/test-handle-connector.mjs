@@ -11,6 +11,10 @@ import {
 const log = logger('testing-server-connector')
 
 /**
+ * @typedef {import('../../../testing-server/test-handle.js').TestServerExpect} TestServerExpect
+ */
+
+/**
  * Connects a test executing in a child process of WDIO to the testing
  * server running in the root WDIO process for the purposes of creating
  * expects and scheduling replies.
@@ -61,7 +65,8 @@ export class TestHandleConnector {
         serverId,
         expectOpts: {
           timeout: testServerExpect.timeout,
-          test: SerAny.serialize(testServerExpect.test)
+          test: SerAny.serialize(testServerExpect.test),
+          expectTimeout: testServerExpect.expectTimeout
         }
       }),
       headers: { 'content-type': 'application/json' },
@@ -76,7 +81,14 @@ export class TestHandleConnector {
 
       if (result.status !== 200) {
         log.error(`Expect failed with status code ${result.status}`, await result.json(), result.error)
-        throw new Error('Expect failed with an unknown result')
+
+        if (testServerExpect.expectTimeout) {
+          throw new Error('Unexpected network call seen')
+        } else {
+          throw new Error('Expect failed with an unknown result')
+        }
+      } else if (testServerExpect.expectTimeout) {
+        return
       } else {
         return await result.json()
       }
@@ -118,87 +130,99 @@ export class TestHandleConnector {
 
   /* ***** BAM Expect Shortcut Methods ***** */
 
-  expectRum (timeout) {
+  expectRum (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testRumRequest
+      test: testRumRequest,
+      expectTimeout
     })
   }
 
-  expectEvents (timeout) {
+  expectEvents (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testEventsRequest
+      test: testEventsRequest,
+      expectTimeout
     })
   }
 
-  expectTimings (timeout) {
+  expectTimings (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testTimingEventsRequest
+      test: testTimingEventsRequest,
+      expectTimeout
     })
   }
 
-  expectAjaxEvents (timeout) {
+  expectAjaxEvents (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testAjaxEventsRequest
+      test: testAjaxEventsRequest,
+      expectTimeout
     })
   }
 
-  expectInteractionEvents (timeout) {
+  expectInteractionEvents (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testInteractionEventsRequest
+      test: testInteractionEventsRequest,
+      expectTimeout
     })
   }
 
-  expectMetrics (timeout) {
+  expectMetrics (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testMetricsRequest
+      test: testMetricsRequest,
+      expectTimeout
     })
   }
 
-  expectSupportMetrics (timeout) {
+  expectSupportMetrics (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testSupportMetricsRequest
+      test: testSupportMetricsRequest,
+      expectTimeout
     })
   }
 
-  expectCustomMetrics (timeout) {
+  expectCustomMetrics (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testCustomMetricsRequest
+      test: testCustomMetricsRequest,
+      expectTimeout
     })
   }
 
-  expectErrors (timeout) {
+  expectErrors (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testErrorsRequest
+      test: testErrorsRequest,
+      expectTimeout
     })
   }
 
-  expectAjaxTimeSlices (timeout) {
+  expectAjaxTimeSlices (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testAjaxTimeSlicesRequest
+      test: testAjaxTimeSlicesRequest,
+      expectTimeout
     })
   }
 
-  expectIns (timeout) {
+  expectIns (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testInsRequest
+      test: testInsRequest,
+      expectTimeout
     })
   }
 
-  expectResources (timeout) {
+  expectResources (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testResourcesRequest
+      test: testResourcesRequest,
+      expectTimeout
     })
   }
 }

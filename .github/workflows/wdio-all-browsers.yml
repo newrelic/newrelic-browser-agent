@@ -16,7 +16,6 @@ env:
 
 jobs:
   chrome:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name)
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       browser-target: chrome@*
@@ -24,7 +23,6 @@ jobs:
     secrets: inherit
 
   firefox:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name)
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       browser-target: firefox@*
@@ -32,7 +30,6 @@ jobs:
     secrets: inherit
 
   safari:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name)
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       browser-target: safari@*
@@ -40,7 +37,6 @@ jobs:
     secrets: inherit
 
   edge:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name)
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       browser-target: edge@*
@@ -48,7 +44,6 @@ jobs:
     secrets: inherit
 
   ios:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name)
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       browser-target: ios@*
@@ -56,7 +51,6 @@ jobs:
     secrets: inherit
 
   android:
-    if: contains(fromJson('["workflow_dispatch"]'), github.event_name)
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       browser-target: android@*

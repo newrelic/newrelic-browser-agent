@@ -50,7 +50,7 @@ export default function config () {
     framework: 'mocha',
     mochaOpts: {
       ui: 'bdd',
-      timeout: 30000,
+      timeout: 60000,
       retries: args.retry ? 3 : 0
     },
     autoCompileOpts: {

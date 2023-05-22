@@ -5,7 +5,7 @@ describe('newrelic session ID', () => {
     expiresAt: expect.any(Number),
     inactiveAt: expect.any(Number),
     updatedAt: expect.any(Number),
-    sessionReplayActive: expect.any(Boolean),
+    sessionReplay: expect.any(Number),
     sessionTraceActive: expect.any(Boolean),
     custom: expect.any(Object)
   })
@@ -211,8 +211,8 @@ describe('newrelic session ID', () => {
       let lsData = await browser.execute(getLocalStorageData)
       let data = await browser.execute(getAllClassData)
       expect(lsData.custom).toEqual({})
-      expect(data.custom).toEqual({})
-      expect(data.custom).toEqual(lsData.custom)
+      expect(data.state.custom).toEqual({})
+      expect(data.state.custom).toEqual(lsData.custom)
 
       await browser.execute(function () {
         newrelic.setCustomAttribute('test', 1, true)
@@ -222,7 +222,7 @@ describe('newrelic session ID', () => {
       expect(lsData.custom).toEqual({ test: 1 })
 
       data = await browser.execute(getAllClassData)
-      expect(data.custom).toEqual({ test: 1 })
+      expect(data.state.custom).toEqual({ test: 1 })
     })
   })
 
@@ -271,13 +271,13 @@ function getClassData () {
     }
   } catch (err) {}
   return {
-    value: output.value,
-    inactiveAt: output.inactiveAt,
-    expiresAt: output.expiresAt,
-    updatedAt: output.updatedAt,
-    sessionReplayActive: output.sessionReplayActive,
-    sessionTraceActive: output.sessionTraceActive,
-    ...(output.custom && { custom: output.custom })
+    value: output.state.value,
+    inactiveAt: output.state.inactiveAt,
+    expiresAt: output.state.expiresAt,
+    updatedAt: output.state.updatedAt,
+    sessionReplay: output.state.sessionReplay,
+    sessionTraceActive: output.state.sessionTraceActive,
+    ...(output.state.custom && { custom: output.state.custom })
   }
 }
 
@@ -286,7 +286,7 @@ function getAllClassData () {
   try {
     for (key in newrelic.initializedAgents) {
       for (k in newrelic.initializedAgents[key].runtime.session) {
-        if (typeof newrelic.initializedAgents[key].runtime.session[k] !== 'object' || k === 'custom') output[k] = newrelic.initializedAgents[key].runtime.session[k]
+        if (typeof newrelic.initializedAgents[key].runtime.session[k] !== 'object' || k === 'state') output[k] = newrelic.initializedAgents[key].runtime.session[k]
       }
     }
   } catch (err) {}

@@ -34,6 +34,7 @@ export default function config () {
     connectionRetryTimeout: 120000,
     connectionRetryCount: 3,
     services: [
+      path.resolve(__dirname, '../plugins/mocha-globals/index.mjs'),
       path.resolve(__dirname, '../plugins/browser-matcher.mjs'),
       path.resolve(__dirname, '../plugins/custom-commands.mjs'),
       path.resolve(__dirname, '../plugins/newrelic-instrumentation.mjs'),

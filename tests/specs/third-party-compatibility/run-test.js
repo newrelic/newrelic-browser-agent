@@ -1,17 +1,16 @@
 export default async function runTest ({
   browser,
-  testHandle,
   testAsset,
   afterLoadCallback = () => { /* noop */ },
   afterUnloadCallback = () => { /* noop */ }
 }) {
-  const url = await testHandle.assetURL(testAsset)
+  const url = await browser.testHandle.assetURL(testAsset)
 
   const [rumResults, resourcesResults, eventsResults, ajaxResults] = await Promise.all([
-    testHandle.expectRum(),
-    testHandle.expectResources(),
-    testHandle.expectEvents(),
-    testHandle.expectAjaxTimeSlices(),
+    browser.testHandle.expectRum(),
+    browser.testHandle.expectResources(),
+    browser.testHandle.expectEvents(),
+    browser.testHandle.expectAjaxTimeSlices(),
     browser.url(url) // Setup expects before loading the page
   ])
 
@@ -31,12 +30,13 @@ export default async function runTest ({
   expect(ajaxResults.request.body.xhr.length).toBeGreaterThan(0)
 
   await afterLoadCallback({ rumResults, resourcesResults, eventsResults, ajaxResults })
+  console.log('afterLoadCallback done')
 
   const [unloadEventsResults, unloadMetricsResults] = await Promise.all([
-    testHandle.expectEvents(),
-    testHandle.expectMetrics(),
+    browser.testHandle.expectEvents(),
+    browser.testHandle.expectMetrics(),
     await browser.url(
-      await testHandle.assetURL('/')
+      await browser.testHandle.assetURL('/')
     ) // Setup expects before navigating
   ])
 
@@ -48,4 +48,5 @@ export default async function runTest ({
   expect(unloadMetricsResults.request.body.sm.length).toBeGreaterThan(0)
 
   await afterUnloadCallback({ unloadEventsResults, unloadMetricsResults })
+  console.log('afterUnloadCallback done')
 }

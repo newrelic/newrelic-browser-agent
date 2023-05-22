@@ -1,26 +1,15 @@
 import runTest from './run-test'
 
 describe('mootools compatibility', () => {
-  let testHandle
-
-  beforeEach(async () => {
-    testHandle = await browser.getTestHandle()
-  })
-
-  afterEach(async () => {
-    await testHandle.destroy()
-  })
-
   it('1.6.0-nocompat', async () => {
     await runTest({
       browser,
-      testHandle,
       testAsset: 'third-party-compatibility/mootools/1.6.0-nocompat.html',
       afterLoadCallback: async () => {
-        await testHandle.expectEvents() // Wait for the next harvest to continue the test
+        await browser.testHandle.expectEvents() // Wait for the next harvest to continue the test
 
         const [eventsResults] = await Promise.all([
-          testHandle.expectEvents(),
+          browser.testHandle.expectEvents(),
           $('body').click() // Setup expects before interacting with page
         ])
 

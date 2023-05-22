@@ -8,6 +8,7 @@ import {
   getSauceConnectTunnelName,
   getSauceLabsCreds
 } from '../../saucelabs/utils.mjs'
+import { getBrowserName } from '../../browsers-lists/utils.mjs'
 
 /**
  * Generates an array of "desired capabilities" objects for spinning up instances in SauceLabs for each of the
@@ -30,8 +31,7 @@ function sauceCapabilities () {
       ...sauceBrowser,
       platform: undefined,
       version: undefined,
-      device: undefined,
-      acceptInsecureCerts: undefined,
+      ...getMobileCapabilities(sauceBrowser),
       'sauce:options': !args.sauce
         ? {
             tunnelName: getSauceConnectTunnelName(),
@@ -43,6 +43,21 @@ function sauceCapabilities () {
           }
         : {}
     }))
+}
+
+function getMobileCapabilities (sauceBrowser) {
+  if (getBrowserName(sauceBrowser) === 'ios') {
+    return {
+      device: undefined,
+      acceptInsecureCerts: undefined,
+      'appium:autoAcceptAlerts': true,
+      'appium:safariAllowPopups': true,
+      'appium:safariIgnoreFraudWarning': true,
+      'appium:safariOpenLinksInBackground': true
+    }
+  }
+
+  return {}
 }
 
 export default function config () {

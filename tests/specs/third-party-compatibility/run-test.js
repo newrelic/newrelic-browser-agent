@@ -1,5 +1,3 @@
-import { config } from '../../util/defaults'
-
 export default async function runTest ({
   browser,
   testHandle,
@@ -7,7 +5,7 @@ export default async function runTest ({
   afterLoadCallback = () => { /* noop */ },
   afterUnloadCallback = () => { /* noop */ }
 }) {
-  const url = await testHandle.assetURL(testAsset, config)
+  const url = await testHandle.assetURL(testAsset)
 
   const [rumResults, resourcesResults, eventsResults, ajaxResults] = await Promise.all([
     testHandle.expectRum(),

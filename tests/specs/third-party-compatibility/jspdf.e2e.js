@@ -24,7 +24,7 @@ describe('jspdf compatibility', () => {
         expect(errorsResults).not.toBeDefined()
 
         const pdfGenerated = await browser.execute(function () {
-          return !!generatedPdf
+          return !!pdfGenerated
         })
         expect(pdfGenerated).toEqual(true)
       }

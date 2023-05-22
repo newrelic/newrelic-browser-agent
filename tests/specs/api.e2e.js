@@ -1,5 +1,3 @@
-import { config } from '../util/defaults'
-
 describe('newrelic api', () => {
   let testHandle
 
@@ -14,7 +12,7 @@ describe('newrelic api', () => {
   it('should load when sessionStorage is not available', async () => {
     await Promise.all([
       testHandle.expectRum(),
-      browser.url(await testHandle.assetURL('api/local-storage-disallowed.html', config)) // Setup expects before loading the page
+      browser.url(await testHandle.assetURL('api/local-storage-disallowed.html')) // Setup expects before loading the page
     ])
 
     const result = await browser.execute(function () {
@@ -31,7 +29,7 @@ describe('newrelic api', () => {
         testHandle.expectResources(),
         testHandle.expectEvents(),
         testHandle.expectAjaxTimeSlices(),
-        browser.url(await testHandle.assetURL('api.html', config)) // Setup expects before loading the page
+        browser.url(await testHandle.assetURL('api.html')) // Setup expects before loading the page
       ])
 
       expect(rumResults.request.query.ct).toEqual('http://custom.transaction/foo')
@@ -43,7 +41,7 @@ describe('newrelic api', () => {
     it('customTransactionName 1 arg unload', async () => {
       await Promise.all([
         testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('api.html', config))
+        browser.url(await testHandle.assetURL('api.html'))
       ])
 
       const [unloadCustomMetricsResults] = await Promise.all([
@@ -63,7 +61,7 @@ describe('newrelic api', () => {
     it('customTransactionName 2 arg unload', async () => {
       await Promise.all([
         testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('api2.html', config))
+        browser.url(await testHandle.assetURL('api2.html'))
       ])
 
       const [unloadCustomMetricsResults] = await Promise.all([
@@ -85,7 +83,7 @@ describe('newrelic api', () => {
     it('takes an error object', async () => {
       const [errorsResults] = await Promise.all([
         testHandle.expectErrors(),
-        browser.url(await testHandle.assetURL('api.html', config)) // Setup expects before loading the page
+        browser.url(await testHandle.assetURL('api.html')) // Setup expects before loading the page
       ])
 
       expect(Array.isArray(errorsResults.request.body.err)).toEqual(true)
@@ -101,7 +99,7 @@ describe('newrelic api', () => {
     it('takes a string', async () => {
       const [errorsResults] = await Promise.all([
         testHandle.expectErrors(),
-        browser.url(await testHandle.assetURL('api/noticeError.html', config)) // Setup expects before loading the page
+        browser.url(await testHandle.assetURL('api/noticeError.html')) // Setup expects before loading the page
       ])
 
       expect(Array.isArray(errorsResults.request.body.err)).toEqual(true)

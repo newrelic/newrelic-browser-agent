@@ -87,7 +87,7 @@
     "node": ">=12.17.0 < 13.0.0 || >=13.7.0"
   },
   "scripts": {
-    "wdio": "node tools/wdio/bin/cli.js",
+    "wdio": "node --max-old-space-size=8192 tools/wdio/bin/cli.js",
     "start": "npm-run-all --parallel cdn:watch test-server",
     "test": "jest",
     "test:watch": "jest --watch",

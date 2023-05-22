@@ -1,12 +1,15 @@
 import logger from '@wdio/logger'
 import fetch from 'node-fetch'
 import * as SerAny from 'serialize-anything'
+import { deepmerge } from 'deepmerge-ts'
 import {
   testAjaxEventsRequest, testAjaxTimeSlicesRequest, testCustomMetricsRequest, testErrorsRequest,
   testEventsRequest, testInsRequest, testInteractionEventsRequest, testMetricsRequest, testResourcesRequest,
   testRumRequest, testSupportMetricsRequest,
   testTimingEventsRequest
 } from '../../../testing-server/utils/expect-tests.js'
+import defaultAssetQuery from './default-asset-query.mjs'
+import { getBrowserName, getBrowserVersion } from '../../../browsers-lists/utils.mjs'
 
 const log = logger('testing-server-connector')
 
@@ -80,7 +83,7 @@ export class TestHandleConnector {
       const result = await expectRequest
 
       if (result.status !== 200) {
-        log.error(`Expect failed with status code ${result.status}`, await result.json(), result.error)
+        log.error(`Expect failed with status code ${result.status}`, await result.json(), getBrowserName(browser.capabilities), getBrowserVersion(browser.capabilities))
 
         if (testServerExpect.expectTimeout) {
           throw new Error('Unexpected network call seen')
@@ -104,8 +107,8 @@ export class TestHandleConnector {
   /**
    * Calls back to the testing server to create a URL for a specific test asset file
    * within the context of a test handle.
-   * @param {string} assetFile
-   * @param {object} query
+   * @param {string} assetFile the path of the asset to load relative to the repository root
+   * @param {object} query key/value pairs of query parameters to apply to the asset url
    * @returns {Promise<string>}
    */
   async assetURL (assetFile, query = {}) {
@@ -115,7 +118,7 @@ export class TestHandleConnector {
       method: 'POST',
       body: JSON.stringify({
         assetFile,
-        query
+        query: deepmerge(defaultAssetQuery, query)
       }),
       headers: { 'content-type': 'application/json' }
     })

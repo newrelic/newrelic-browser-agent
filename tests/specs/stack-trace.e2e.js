@@ -1,4 +1,3 @@
-import { config } from '../util/defaults'
 import SpecMatcher from '../../tools/browser-matcher/spec-matcher.mjs'
 
 /**
@@ -27,7 +26,7 @@ describe('stack trace', () => {
     const [, errorsResults] = await Promise.all([
       testHandle.expectRum(),
       testHandle.expectErrors(),
-      browser.url(await testHandle.assetURL('sub-path-script-error/', config)) // Setup expects before loading the page
+      browser.url(await testHandle.assetURL('sub-path-script-error/')) // Setup expects before loading the page
     ])
 
     // TypeError: Failed to fetch
@@ -49,7 +48,7 @@ describe('stack trace', () => {
   withBrowsersMatching(supportedBrowsers)('still identifies <inline> for same-page scripts after SPA route changes', async () => {
     await Promise.all([
       testHandle.expectRum(),
-      browser.url(await testHandle.assetURL('sub-path-script-error/index.html', config)) // Setup expects before loading the page
+      browser.url(await testHandle.assetURL('sub-path-script-error/index.html')) // Setup expects before loading the page
     ])
 
     const [errorsResults] = await Promise.all([

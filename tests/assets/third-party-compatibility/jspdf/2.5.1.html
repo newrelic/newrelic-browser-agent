@@ -16,17 +16,19 @@
     <div id="content">
       This is a generic page that is instrumented by the JS agent and includes jspdf to ensure compatibility.
     </div>
-    <script>
-      var generatedPdf = null
+    <script type="text/javascript">
+      var pdfGenerated = false
+
       document.addEventListener('click', function () {
-        const doc = new jspdf.jsPDF();
+        var doc = new jspdf.jsPDF();
 
         // Source HTMLElement or a string containing HTML.
         var elementHTML = document.querySelector("#content");
 
         doc.html(elementHTML, {
             callback: function(doc) {
-              generatedPdf = doc
+              pdfGenerated = true
+              window.location.hash = Math.random()
             },
             x: 15,
             y: 15,

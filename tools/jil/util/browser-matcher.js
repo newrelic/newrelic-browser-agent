@@ -295,15 +295,6 @@ features.originOnlyReferer = new BrowserMatcher()
   .include('android')
   .include('edge')
 
-features.passiveSupported = features.addEventListener
-  .exclude('*')
-  .include('edge', '>15')
-  .include('firefox', '>48')
-  .include('chrome', '>50')
-  .include('safari', '>9.3')
-  .include('android')
-  .include('ios', '>=10')
-
 features.frameworks = new BrowserMatcher()
   .exclude('*')
   .include('chrome', 'latest')

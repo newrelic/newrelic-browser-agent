@@ -5,8 +5,6 @@
 export class HandlerCache {
   /** @private @type {boolean | undefined} */
   #decision = undefined
-  /** @private @type {boolean} */
-  #shouldsettle = true
   /** @private @type {Function[]} */
   #cache = []
   /** @private @type {Timeout} */
@@ -29,7 +27,7 @@ export class HandlerCache {
      * @private
      */
   #close () {
-    this.#shouldsettle = false
+    this.#decision = false // settle() & decide() cannot be used after close
     this.#cache = []
   }
 
@@ -39,7 +37,7 @@ export class HandlerCache {
      * @returns {void}
      */
   settle (handler) {
-    if (this.#decision === false || this.#shouldsettle === false) return
+    if (this.#decision === false) return
     else if (this.#decision === undefined) this.#cache.push(handler)
     else handler()
   }
@@ -53,6 +51,7 @@ export class HandlerCache {
      * @param {boolean} decision
      */
   decide (decision) {
+    if (this.#decision !== undefined) return // a decision can only be made once
     this.#decision = decision
     if (decision === false) this.#close()
     if (decision === true) this.#drain()

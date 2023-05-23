@@ -1,0 +1,19 @@
+name: 'Nightly Jobs'
+
+on:
+  schedule:
+    # Runs every day at 4AM
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+env:
+  BUILD_NUMBER: Nightly-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+
+jobs:
+  wdio-smoke:
+    name: 'WDIO: Smoke Test'
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: chrome@latest
+      build-number: $BUILD_NUMBER
+    secrets: inherit

@@ -36,6 +36,8 @@ const SerAny = require('serialize-anything')
  * timeout should not be applied
  * @property {Function|string} test function that takes the fastify request object and returns true if the expect should
  * be resolved
+ * @property {boolean} expectTimeout boolean indicating if the expect is expected to timeout; useful when you want to expect
+ * that a certain network call does not happen
  */
 
 /**
@@ -44,9 +46,12 @@ const SerAny = require('serialize-anything')
  * @property {Promise<any>} promise the underlying promise of the deferred object
  * @property {Function} resolve the resolve function of the deferred object
  * @property {Function} reject the reject function of the deferred object
+ * @property {NodeJS.Timeout} [timeout] the pending timeout for the deferred object
  * @property {Function} [test] optional test function that takes the request and
  * returns a boolean indicating if the request matches. This is useful for the
  * jserrors BAM endpoint where multiple types of data are reported.
+ * @property {boolean} expectTimeout boolean indicating if the expect is expected to timeout; useful when you want to expect
+ * that a certain network call does not happen
  */
 
 module.exports = class TestHandle {
@@ -138,6 +143,7 @@ module.exports = class TestHandle {
 
           if (test.call(this, request)) {
             request.resolvingExpect = pendingExpect
+            clearTimeout(pendingExpect.timeout)
             pendingExpects.delete(pendingExpect)
             break
           }
@@ -180,12 +186,23 @@ module.exports = class TestHandle {
 
     const deferred = this.#createDeferred()
     deferred.test = testServerExpect.test
+    deferred.expectTimeout = testServerExpect.expectTimeout
 
     if (testServerExpect.timeout !== false) {
-      setTimeout(() => {
-        deferred.reject(new Error(
-          `Expect ${testServerExpect.test.name} for ${serverId} timed out after ${testServerExpect.timeout || this.#testServer.config.timeout}ms for test ${this.#testId}`
-        ))
+      deferred.timeout = setTimeout(() => {
+        let testName = testServerExpect.test.name
+
+        if (typeof testServerExpect.test === 'string') {
+          testName = SerAny.deserialize(testServerExpect.test).name
+        }
+
+        if (deferred.expectTimeout) {
+          deferred.resolve()
+        } else {
+          deferred.reject(new Error(
+            `Expect ${testName} for ${serverId} timed out after ${testServerExpect.timeout || this.#testServer.config.timeout}ms for test ${this.#testId}`
+          ))
+        }
       }, testServerExpect.timeout || this.#testServer.config.timeout)
     }
 
@@ -276,89 +293,101 @@ module.exports = class TestHandle {
     return { promise, resolve: capturedResolve, reject: capturedReject }
   }
 
-  /* ***** BAM Expect Shortcut Methods ***** */
+  /* ***** BAM Expect Shortcut Methods (remove after removing jil) ***** */
 
-  expectRum (timeout) {
+  expectRum (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testRumRequest
+      test: testRumRequest,
+      expectTimeout
     })
   }
 
-  expectEvents (timeout) {
+  expectEvents (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testEventsRequest
+      test: testEventsRequest,
+      expectTimeout
     })
   }
 
-  expectTimings (timeout) {
+  expectTimings (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testTimingEventsRequest
+      test: testTimingEventsRequest,
+      expectTimeout
     })
   }
 
-  expectAjaxEvents (timeout) {
+  expectAjaxEvents (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testAjaxEventsRequest
+      test: testAjaxEventsRequest,
+      expectTimeout
     })
   }
 
-  expectInteractionEvents (timeout) {
+  expectInteractionEvents (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testInteractionEventsRequest
+      test: testInteractionEventsRequest,
+      expectTimeout
     })
   }
 
-  expectMetrics (timeout) {
+  expectMetrics (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testMetricsRequest
+      test: testMetricsRequest,
+      expectTimeout
     })
   }
 
-  expectSupportMetrics (timeout) {
+  expectSupportMetrics (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testSupportMetricsRequest
+      test: testSupportMetricsRequest,
+      expectTimeout
     })
   }
 
-  expectCustomMetrics (timeout) {
+  expectCustomMetrics (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testCustomMetricsRequest
+      test: testCustomMetricsRequest,
+      expectTimeout
     })
   }
 
-  expectErrors (timeout) {
+  expectErrors (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testErrorsRequest
+      test: testErrorsRequest,
+      expectTimeout
     })
   }
 
-  expectAjaxTimeSlices (timeout) {
+  expectAjaxTimeSlices (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testAjaxTimeSlicesRequest
+      test: testAjaxTimeSlicesRequest,
+      expectTimeout
     })
   }
 
-  expectIns (timeout) {
+  expectIns (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testInsRequest
+      test: testInsRequest,
+      expectTimeout
     })
   }
 
-  expectResources (timeout) {
+  expectResources (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testResourcesRequest
+      test: testResourcesRequest,
+      expectTimeout
     })
   }
 }

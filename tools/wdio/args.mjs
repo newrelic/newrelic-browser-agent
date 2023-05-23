@@ -2,7 +2,7 @@ import process from 'process'
 import yargs from 'yargs/yargs'
 import loaders from './util/loaders.js'
 
-const jilArgs = yargs(process.argv.slice(2))
+const args = yargs(process.argv.slice(2))
   .usage('$0 file1[, filen] [options]')
   .example('$0 tests/**/*.js -vb "chrome@39, firefox, ie@>8"')
 
@@ -109,4 +109,4 @@ const jilArgs = yargs(process.argv.slice(2))
   .help('h')
   .alias('h', 'help').argv
 
-export default jilArgs
+export default args

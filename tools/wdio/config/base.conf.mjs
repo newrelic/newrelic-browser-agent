@@ -1,4 +1,4 @@
-import jilArgs from '../args.mjs'
+import args from '../args.mjs'
 import url from 'url'
 import path from 'path'
 
@@ -15,17 +15,17 @@ const buildIdentifier = ((() => {
 export default function config () {
   return {
     runner: 'local',
-    maxInstances: jilArgs.concurrency || 1,
+    maxInstances: args.concurrency || 1,
     maxInstancesPerCapability: 100,
     capabilities: [],
     logLevel: (() => {
-      if (jilArgs.verbose) {
+      if (args.verbose) {
         return 'debug'
       }
-      if (jilArgs.logRequests || jilArgs.debugShim) {
+      if (args.logRequests || args.debugShim) {
         return 'info'
       }
-      if (jilArgs.silent) {
+      if (args.silent) {
         return 'silent'
       }
       return 'error'
@@ -34,23 +34,25 @@ export default function config () {
     connectionRetryTimeout: 120000,
     connectionRetryCount: 3,
     services: [
+      path.resolve(__dirname, '../plugins/mocha-globals/index.mjs'),
       path.resolve(__dirname, '../plugins/browser-matcher.mjs'),
-      path.resolve(__dirname, '../plugins/jil-commands.mjs'),
+      path.resolve(__dirname, '../plugins/custom-commands.mjs'),
       path.resolve(__dirname, '../plugins/newrelic-instrumentation.mjs'),
-      [path.resolve(__dirname, '../plugins/testing-server/index.mjs'), jilArgs]
+      [path.resolve(__dirname, '../plugins/testing-server/index.mjs'), args]
     ],
-    framework: 'mocha',
-    specFileRetriesDeferred: true,
     reporters: [
       'spec',
       [path.resolve(__dirname, '../plugins/newrelic-reporter.mjs'), {
         buildIdentifier
       }]
     ],
+    specFileRetries: args.retry ? 3 : 0,
+    specFileRetriesDeferred: true,
+    framework: 'mocha',
     mochaOpts: {
       ui: 'bdd',
-      timeout: 30000,
-      retries: jilArgs.retry ? 3 : 0
+      timeout: 60000,
+      retries: args.retry ? 3 : 0
     },
     autoCompileOpts: {
       babelOpts: {

@@ -1,14 +1,21 @@
 import logger from '@wdio/logger'
 import fetch from 'node-fetch'
 import * as SerAny from 'serialize-anything'
+import { deepmerge } from 'deepmerge-ts'
 import {
   testAjaxEventsRequest, testAjaxTimeSlicesRequest, testCustomMetricsRequest, testErrorsRequest,
   testEventsRequest, testInsRequest, testInteractionEventsRequest, testMetricsRequest, testResourcesRequest,
   testRumRequest, testSupportMetricsRequest,
   testTimingEventsRequest
 } from '../../../testing-server/utils/expect-tests.js'
+import defaultAssetQuery from './default-asset-query.mjs'
+import { getBrowserName, getBrowserVersion } from '../../../browsers-lists/utils.mjs'
 
-const log = logger('jil-testing-server-connector')
+const log = logger('testing-server-connector')
+
+/**
+ * @typedef {import('../../../testing-server/test-handle.js').TestServerExpect} TestServerExpect
+ */
 
 /**
  * Connects a test executing in a child process of WDIO to the testing
@@ -18,6 +25,7 @@ const log = logger('jil-testing-server-connector')
 export class TestHandleConnector {
   #commandServerBase
   #testId
+  #pendingExpects = new Set()
 
   constructor (commandServerPort) {
     this.#commandServerBase = `http://127.0.0.1:${commandServerPort}`
@@ -32,6 +40,8 @@ export class TestHandleConnector {
   }
 
   async destroy () {
+    this.#pendingExpects.forEach(pendingExpect => pendingExpect.abortController.abort())
+
     if (this.#testId) {
       await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}`, {
         method: 'DELETE'
@@ -51,31 +61,54 @@ export class TestHandleConnector {
   async expect (serverId, testServerExpect) {
     await this.ready()
 
-    const result = await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/expect`, {
+    const abortController = new AbortController()
+    const expectRequest = fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/expect`, {
       method: 'POST',
       body: JSON.stringify({
         serverId,
         expectOpts: {
           timeout: testServerExpect.timeout,
-          test: SerAny.serialize(testServerExpect.test)
+          test: SerAny.serialize(testServerExpect.test),
+          expectTimeout: testServerExpect.expectTimeout
         }
       }),
-      headers: { 'content-type': 'application/json' }
+      headers: { 'content-type': 'application/json' },
+      signal: abortController.signal
     })
 
-    if (result.status !== 200) {
-      log.error(`Expect failed with status code ${result.status}`, await result.json(), result.error)
-      throw new Error('Expect failed with an unknown result')
-    } else {
-      return await result.json()
+    const pendingExpect = { abortController, expectRequest }
+    this.#pendingExpects.add(pendingExpect)
+
+    try {
+      const result = await expectRequest
+
+      if (result.status !== 200) {
+        log.error(`Expect failed with status code ${result.status}`, await result.json(), getBrowserName(browser.capabilities), getBrowserVersion(browser.capabilities))
+
+        if (testServerExpect.expectTimeout) {
+          throw new Error('Unexpected network call seen')
+        } else {
+          throw new Error('Expect failed with an unknown result')
+        }
+      } else if (testServerExpect.expectTimeout) {
+        return
+      } else {
+        return await result.json()
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        throw err
+      }
+    } finally {
+      this.#pendingExpects.delete(pendingExpect)
     }
   }
 
   /**
    * Calls back to the testing server to create a URL for a specific test asset file
    * within the context of a test handle.
-   * @param {string} assetFile
-   * @param {object} query
+   * @param {string} assetFile the path of the asset to load relative to the repository root
+   * @param {object} query key/value pairs of query parameters to apply to the asset url
    * @returns {Promise<string>}
    */
   async assetURL (assetFile, query = {}) {
@@ -85,7 +118,7 @@ export class TestHandleConnector {
       method: 'POST',
       body: JSON.stringify({
         assetFile,
-        query
+        query: deepmerge(defaultAssetQuery, query)
       }),
       headers: { 'content-type': 'application/json' }
     })
@@ -100,87 +133,99 @@ export class TestHandleConnector {
 
   /* ***** BAM Expect Shortcut Methods ***** */
 
-  expectRum (timeout) {
+  expectRum (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testRumRequest
+      test: testRumRequest,
+      expectTimeout
     })
   }
 
-  expectEvents (timeout) {
+  expectEvents (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testEventsRequest
+      test: testEventsRequest,
+      expectTimeout
     })
   }
 
-  expectTimings (timeout) {
+  expectTimings (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testTimingEventsRequest
+      test: testTimingEventsRequest,
+      expectTimeout
     })
   }
 
-  expectAjaxEvents (timeout) {
+  expectAjaxEvents (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testAjaxEventsRequest
+      test: testAjaxEventsRequest,
+      expectTimeout
     })
   }
 
-  expectInteractionEvents (timeout) {
+  expectInteractionEvents (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testInteractionEventsRequest
+      test: testInteractionEventsRequest,
+      expectTimeout
     })
   }
 
-  expectMetrics (timeout) {
+  expectMetrics (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testMetricsRequest
+      test: testMetricsRequest,
+      expectTimeout
     })
   }
 
-  expectSupportMetrics (timeout) {
+  expectSupportMetrics (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testSupportMetricsRequest
+      test: testSupportMetricsRequest,
+      expectTimeout
     })
   }
 
-  expectCustomMetrics (timeout) {
+  expectCustomMetrics (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testCustomMetricsRequest
+      test: testCustomMetricsRequest,
+      expectTimeout
     })
   }
 
-  expectErrors (timeout) {
+  expectErrors (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testErrorsRequest
+      test: testErrorsRequest,
+      expectTimeout
     })
   }
 
-  expectAjaxTimeSlices (timeout) {
+  expectAjaxTimeSlices (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testAjaxTimeSlicesRequest
+      test: testAjaxTimeSlicesRequest,
+      expectTimeout
     })
   }
 
-  expectIns (timeout) {
+  expectIns (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testInsRequest
+      test: testInsRequest,
+      expectTimeout
     })
   }
 
-  expectResources (timeout) {
+  expectResources (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
-      test: testResourcesRequest
+      test: testResourcesRequest,
+      expectTimeout
     })
   }
 }

@@ -1,36 +1,10 @@
-const { getTime } = require('../functional/uncat-internal-help.cjs')
-const { getErrorsFromResponse } = require('../functional/err/assertion-helpers')
-
 describe('newrelic api', () => {
-  let testHandle
-  const init = {
-    ajax: { deny_list: [], harvestTimeSeconds: 5 },
-    jserrors: { harvestTimeSeconds: 5 },
-    metrics: { harvestTimeSeconds: 5 },
-    page_action: { harvestTimeSeconds: 5 },
-    page_view_timing: { harvestTimeSeconds: 5 },
-    session_trace: { harvestTimeSeconds: 5 },
-    spa: { harvestTimeSeconds: 5 }
-  }
-
-  beforeEach(async () => {
-    testHandle = await browser.getTestHandle()
-  })
-
-  afterEach(async () => {
-    await testHandle.destroy()
-  })
-
   it('should load when sessionStorage is not available', async () => {
-    const url = await testHandle.assetURL('api/local-storage-disallowed.html', {
-      loader: 'spa',
-      init
-    })
-
     await Promise.all([
-      testHandle.expectRum(),
-      browser.url(url)
+      browser.testHandle.expectRum(),
+      browser.url(await browser.testHandle.assetURL('api/local-storage-disallowed.html')) // Setup expects before loading the page
     ])
+
     const result = await browser.execute(function () {
       return typeof window.newrelic.addToTrace === 'function'
     })
@@ -40,71 +14,56 @@ describe('newrelic api', () => {
 
   describe('setPageViewName api', () => {
     it('customTransactionName 1 arg', async () => {
-      const url = await testHandle.assetURL('api.html', {
-        loader: 'spa',
-        init
-      })
-
-      const rumPromise = testHandle.expectRum()
-      const eventsPromise = testHandle.expectEvents()
-      const timeSlicePromise = testHandle.expectAjaxTimeSlices()
-      const resourcesPromise = testHandle.expectResources()
-
-      await Promise.all([
-        browser.url(url),
-        rumPromise,
-        eventsPromise,
-        timeSlicePromise,
-        resourcesPromise
+      const [rumResults, resourcesResults, eventsResults, ajaxResults] = await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.testHandle.expectResources(),
+        browser.testHandle.expectEvents(),
+        browser.testHandle.expectAjaxTimeSlices(),
+        browser.url(await browser.testHandle.assetURL('api.html')) // Setup expects before loading the page
       ])
 
-      expect((await rumPromise).request.query.ct).toEqual('http://custom.transaction/foo')
-      expect((await eventsPromise).request.query.ct).toEqual('http://custom.transaction/foo')
-      expect((await timeSlicePromise).request.query.ct).toEqual('http://custom.transaction/foo')
-      expect((await resourcesPromise).request.query.ct).toEqual('http://custom.transaction/foo')
+      expect(rumResults.request.query.ct).toEqual('http://custom.transaction/foo')
+      expect(resourcesResults.request.query.ct).toEqual('http://custom.transaction/foo')
+      expect(eventsResults.request.query.ct).toEqual('http://custom.transaction/foo')
+      expect(ajaxResults.request.query.ct).toEqual('http://custom.transaction/foo')
     })
 
     it('customTransactionName 1 arg unload', async () => {
-      const url = await testHandle.assetURL('api.html', {
-        loader: 'spa',
-        init
-      })
-      const unloadUrl = await testHandle.assetURL('/', {
-        loader: 'spa',
-        init
-      })
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('api.html'))
+      ])
 
-      await browser.url(url)
-      await browser.waitForFeature('loaded')
-      const metricsPromise = testHandle.expectCustomMetrics()
-      await browser.minimizeWindow()
-      await browser.maximizeWindow()
-      const { request: { body, query } } = await metricsPromise
-      const time = getTime(body ? body.cm : JSON.parse(query.cm))
+      const [unloadCustomMetricsResults] = await Promise.all([
+        browser.testHandle.expectCustomMetrics(),
+        await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
+      ])
 
-      expect(query.ct).toEqual('http://custom.transaction/foo')
+      expect(unloadCustomMetricsResults.request.query.ct).toEqual('http://custom.transaction/foo')
+      expect(Array.isArray(unloadCustomMetricsResults.request.body.cm)).toEqual(true)
+      expect(unloadCustomMetricsResults.request.body.cm.length).toBeGreaterThan(0)
+
+      const time = unloadCustomMetricsResults.request.body.cm[0].metrics?.time?.t
       expect(typeof time).toEqual('number')
       expect(time).toBeGreaterThan(0)
     })
 
     it('customTransactionName 2 arg unload', async () => {
-      const url = await testHandle.assetURL('api2.html', {
-        loader: 'spa',
-        init
-      })
-      const unloadUrl = await testHandle.assetURL('/', {
-        loader: 'spa',
-        init
-      })
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('api2.html'))
+      ])
 
-      await browser.url(url)
-      await browser.waitForFeature('loaded')
-      const metricsPromise = testHandle.expectCustomMetrics()
-      await browser.url(unloadUrl)
-      const { request: { body, query } } = await metricsPromise
-      const time = getTime(body ? body.cm : JSON.parse(query.cm))
+      const [unloadCustomMetricsResults] = await Promise.all([
+        browser.testHandle.expectCustomMetrics(),
+        await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
+      ])
 
-      expect(query.ct).toEqual('http://bar.baz/foo')
+      expect(unloadCustomMetricsResults.request.query.ct).toEqual('http://bar.baz/foo')
+      expect(Array.isArray(unloadCustomMetricsResults.request.body.cm)).toEqual(true)
+      expect(unloadCustomMetricsResults.request.body.cm.length).toBeGreaterThan(0)
+
+      const time = unloadCustomMetricsResults.request.body.cm[0].metrics?.time?.t
       expect(typeof time).toEqual('number')
       expect(time).toBeGreaterThan(0)
     })
@@ -112,33 +71,33 @@ describe('newrelic api', () => {
 
   describe('noticeError api', () => {
     it('takes an error object', async () => {
-      const url = await testHandle.assetURL('api.html', {
-        loader: 'spa',
-        init
-      })
+      const [errorsResults] = await Promise.all([
+        browser.testHandle.expectErrors(),
+        browser.url(await browser.testHandle.assetURL('api.html')) // Setup expects before loading the page
+      ])
 
-      const errorsPromise = testHandle.expectErrors()
-      await browser.url(url)
-      const { request } = await errorsPromise
-      const errorData = getErrorsFromResponse(request)
-      const params = errorData[0] && errorData[0].params
+      expect(Array.isArray(errorsResults.request.body.err)).toEqual(true)
+      expect(errorsResults.request.body.err.length).toBeGreaterThan(0)
 
+      const params = errorsResults.request.body.err[0].params
+
+      expect(params).toBeDefined()
       expect(params.exceptionClass).toEqual('Error')
       expect(params.message).toEqual('no free taco coupons')
     })
 
     it('takes a string', async () => {
-      const url = await testHandle.assetURL('api/noticeError.html', {
-        loader: 'spa',
-        init
-      })
+      const [errorsResults] = await Promise.all([
+        browser.testHandle.expectErrors(),
+        browser.url(await browser.testHandle.assetURL('api/noticeError.html')) // Setup expects before loading the page
+      ])
 
-      const errorsPromise = testHandle.expectErrors()
-      await browser.url(url)
-      const { request } = await errorsPromise
-      const errorData = getErrorsFromResponse(request)
-      const params = errorData[0] && errorData[0].params
+      expect(Array.isArray(errorsResults.request.body.err)).toEqual(true)
+      expect(errorsResults.request.body.err.length).toBeGreaterThan(0)
 
+      const params = errorsResults.request.body.err[0].params
+
+      expect(params).toBeDefined()
       expect(params.exceptionClass).toEqual('Error')
       expect(params.message).toEqual('too many free taco coupons')
     })

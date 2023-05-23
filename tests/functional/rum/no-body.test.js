@@ -15,7 +15,7 @@ testDriver.test('RUM no body', withTls, function (t, browser, router) {
   Promise.all([rumPromise, loadPromise])
     .then(([{ request: { body, query } }]) => {
       t.equal(query.ac, 'test_account', 'Reported without body element')
-      t.equal(body.ja, '{"no":"body"}', 'Confirmed no body element')
+      t.deepEqual(body.ja, { no: 'body' }, 'Confirmed no body element')
     })
     .catch(fail)
 

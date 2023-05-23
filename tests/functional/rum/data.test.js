@@ -38,7 +38,7 @@ testDriver.test('rum data', withTls, function (t, browser, router) {
     t.equal(query.xx, 'test_extra', 'extra params')
     t.equal(query.ua, 'test_userAttributes', 'userAttributes params')
     t.equal(query.at, 'test_atts', 'atts params')
-    t.equal(body.ja, '{"foo":"bar"}', 'custom javascript attributes params')
+    t.deepEqual(body.ja, { foo: 'bar' }, 'custom javascript attributes params')
 
     if (browser.match('firefox@<=10')) {
       t.skip('old version of firefox dont report Dom content loaded correctly')
@@ -94,7 +94,7 @@ testDriver.test('rum data using loader_config data', withTls, function (t, brows
     t.equal(query.xx, 'test_extra', 'extra params')
     t.equal(query.ua, 'test_userAttributes', 'userAttributes params')
     t.equal(query.at, 'test_atts', 'atts params')
-    t.equal(body.ja, '{"foo":"bar"}', 'custom javascript attributes params')
+    t.deepEqual(body.ja, { foo: 'bar' }, 'custom javascript attributes params')
 
     if (browser.match('firefox@<=10')) {
       t.skip('old version of firefox dont report Dom content loaded correctly')

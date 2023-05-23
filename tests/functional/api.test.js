@@ -415,7 +415,7 @@ testDriver.test('setUserId adds correct (persisted) attribute to payloads', with
     .then(() => Promise.all([router.expectRum(), browser.refresh()])) // we expect setUserId's attribute to be stored by the browser tab session, and retrieved on the next page load & agent init
     .then(([{ request: { body } }]) => {
       // If that jsattribute was persisted and retrieved properly, it should be attached to the new RUM call.
-      t.equal(body.ja, `{"${ERRORS_INBOX_UID}":"user123"}`, 'setUserId affects subsequent page loads in the same storage session')
+      t.deepEqual(body.ja, { [ERRORS_INBOX_UID]: 'user123' }, 'setUserId affects subsequent page loads in the same storage session')
 
       browser.safeEval('newrelic.setUserId(null)') // unset to not affect other tests running on same Sauce instance
       t.end()

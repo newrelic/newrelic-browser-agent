@@ -8,13 +8,20 @@
   <title>RUM Unit Test</title>
   {init}
   {config}
-  <script>
+  <script type="text/javascript">
     NREUM.init.session = {expiresMs: 10000, inactiveMs: 10000}
   </script>
   {loader}
   {script-injection}
 </head>
 <body>
-  this is a generic page that is instrumented by the JS agent
+  <div id="content">
+    This is a generic page that is instrumented by the JS agent and includes short timer defaults for session manager
+  </div>
+  <script type="text/javascript">
+    document.addEventListener('click', function () {
+      window.location.hash = Math.random()
+    })
+  </script>
 </body>
 </html>

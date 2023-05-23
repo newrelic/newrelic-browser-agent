@@ -3,11 +3,12 @@ import browsersAll from '../../browsers-lists/browsers-all.json' assert { type: 
 import browsersPolyfill from '../../browsers-lists/browsers-polyfill.json' assert { type: "json" }
 import browsersList from '../../browsers-lists/browsers-list.mjs'
 import browserSupportsExtendedDebugging from '../../browsers-lists/extended-debugging.mjs'
-import jilArgs from '../args.mjs'
+import args from '../args.mjs'
 import {
   getSauceConnectTunnelName,
   getSauceLabsCreds
 } from '../../saucelabs/utils.mjs'
+import { getBrowserName } from '../../browsers-lists/utils.mjs'
 
 /**
  * Generates an array of "desired capabilities" objects for spinning up instances in SauceLabs for each of the
@@ -19,22 +20,23 @@ import {
 function sauceCapabilities () {
   let browsers = browsersSupported
 
-  if (jilArgs.allBrowsers) {
+  if (args.allBrowsers) {
     browsers = browsersAll
-  } else if (jilArgs.polyfills) {
+  } else if (args.polyfills) {
     browsers = browsersPolyfill
   }
 
-  return browsersList(browsers, jilArgs.browsers)
+  return browsersList(browsers, args.browsers)
     .map(sauceBrowser => ({
       ...sauceBrowser,
       platform: undefined,
       version: undefined,
-      'sauce:options': !jilArgs.sauce
+      ...getMobileCapabilities(sauceBrowser),
+      'sauce:options': !args.sauce
         ? {
             tunnelName: getSauceConnectTunnelName(),
             ...(() => {
-              if (jilArgs.sauceExtendedDebugging && browserSupportsExtendedDebugging(sauceBrowser)) {
+              if (args.sauceExtendedDebugging && browserSupportsExtendedDebugging(sauceBrowser)) {
                 return { extendedDebugging: true }
               }
             })()
@@ -43,8 +45,30 @@ function sauceCapabilities () {
     }))
 }
 
+function getMobileCapabilities (sauceBrowser) {
+  if (getBrowserName(sauceBrowser) === 'ios') {
+    return {
+      device: undefined,
+      acceptInsecureCerts: undefined,
+      'appium:autoAcceptAlerts': true,
+      'appium:safariAllowPopups': true,
+      'appium:safariIgnoreFraudWarning': true,
+      'appium:safariOpenLinksInBackground': true
+    }
+  }
+
+  if (getBrowserName(sauceBrowser) === 'android') {
+    return {
+      device: undefined,
+      acceptInsecureCerts: undefined
+    }
+  }
+
+  return {}
+}
+
 export default function config () {
-  if (jilArgs.selenium) {
+  if (args.selenium) {
     return {}
   } else {
     return {
@@ -53,15 +77,19 @@ export default function config () {
       services: [
         [
           'sauce',
-          jilArgs.sauce
-            ? {
-                sauceConnect: true,
-                sauceConnectOpts: {
-                  noSslBumpDomains: 'all',
-                  tunnelDomains: jilArgs.host || 'bam-test-1.nr-local.net'
+          {
+            setJobName: (config, capabilities, suiteTitle) => `Browser Agent: ${suiteTitle}`,
+            ...(args.sauce
+              ? {
+                  sauceConnect: true,
+                  sauceConnectOpts: {
+                    noSslBumpDomains: 'all',
+                    tunnelDomains: args.host || 'bam-test-1.nr-local.net'
+                  }
                 }
-              }
-            : {}
+              : {}
+            )
+          }
         ]
       ]
     }

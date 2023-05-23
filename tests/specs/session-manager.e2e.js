@@ -1,6 +1,7 @@
+import { supportsMultipleTabs } from '../../tools/browser-matcher/common-matchers.mjs'
+
 describe('newrelic session ID', () => {
-  let testHandle
-  let anySession = () => ({
+  const anySession = () => ({
     value: expect.any(String),
     expiresAt: expect.any(Number),
     inactiveAt: expect.any(Number),
@@ -9,247 +10,267 @@ describe('newrelic session ID', () => {
     sessionTraceActive: expect.any(Boolean),
     custom: expect.any(Object)
   })
-  const harvestTimeSeconds = 5
-  const init = {
-    ajax: { deny_list: [], harvestTimeSeconds },
-    jserrors: { harvestTimeSeconds },
-    metrics: { harvestTimeSeconds },
-    page_action: { harvestTimeSeconds },
-    page_view_timing: { harvestTimeSeconds },
-    session_trace: { harvestTimeSeconds },
-    spa: { harvestTimeSeconds },
-    session: { expiresMs: 10000, inactiveMs: 10000 }
-  }
 
-  beforeEach(async () => {
-    testHandle = await browser.getTestHandle()
-  })
-
-  afterEach(async () => {
-    await browser.execute(function () { window.localStorage.clear() })
-    await testHandle.destroy()
-  })
-
-  describe('data is stored in storage API --', () => {
+  describe('data is stored in storage API', () => {
     it('should store session data in local storage by default', async () => {
-      const url = await testHandle.assetURL('session-entity.html', { init })
-      await browser.url(url)
-      await browser.waitForFeature('loaded')
-      const storedData = await browser.execute(getLocalStorageData)
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
+      ])
 
-      expect(storedData).toEqual(anySession())
+      const { localStorage } = await browser.getAgentSessionInfo()
+
+      expect(localStorage).toEqual(anySession())
     })
   })
 
-  describe('persist across different navigations -- ', () => {
+  describe('persist across different navigation', () => {
     it('should keep a session id across page loads - Refresh', async () => {
-      await browser.url(await testHandle.assetURL('session-entity.html', { init }))
-      await browser.waitForFeature('loaded')
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
+      ])
 
-      const ls1 = await browser.execute(getLocalStorageData)
+      const { localStorage: ls1 } = await browser.getAgentSessionInfo()
       expect(ls1).toEqual(anySession())
 
-      await browser.refresh()
-      await browser.waitForFeature('loaded')
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.refresh() // Setup expects before loading the page
+      ])
 
-      const ls2 = await browser.execute(getLocalStorageData)
+      const { localStorage: ls2 } = await browser.getAgentSessionInfo()
       expect(ls2).toEqual(anySession())
       expect(ls2.value).toEqual(ls1.value)
       expect(ls2.expiresAt).toEqual(ls1.expiresAt)
-      await browser.execute(function () { window.localStorage.clear() })
     })
 
     it('should keep a session id across page loads - Same tab navigation', async () => {
-      await browser.url(await testHandle.assetURL('session-entity.html', { init }))
-      await browser.waitForFeature('loaded')
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
+      ])
 
-      const ls1 = await browser.execute(getLocalStorageData)
+      const { localStorage: ls1 } = await browser.getAgentSessionInfo()
       expect(ls1).toEqual(anySession())
 
-      await browser.url(await testHandle.assetURL('fetch.html', { init }))
-      await browser.waitForFeature('loaded')
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('fetch.html')) // Setup expects before loading the page
+      ])
 
-      const ls2 = await browser.execute(getLocalStorageData)
+      const { localStorage: ls2 } = await browser.getAgentSessionInfo()
       expect(ls2).toEqual(anySession())
       expect(ls2.value).toEqual(ls1.value)
       expect(ls2.expiresAt).toEqual(ls1.expiresAt)
-      await browser.execute(function () { window.localStorage.clear() })
     })
 
-    it('should keep a session id across page loads - Multi tab navigation', async () => {
-      await browser.url(await testHandle.assetURL('session-entity.html', { init }))
-      await browser.waitForFeature('loaded')
+    withBrowsersMatching(supportsMultipleTabs)('should keep a session id across page loads - Multi tab navigation', async () => {
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
+      ])
 
-      const ls1 = await browser.execute(getLocalStorageData)
+      const { localStorage: ls1 } = await browser.getAgentSessionInfo()
       expect(ls1).toEqual(anySession())
 
-      await browser.execute(function () { window.open('/') })
-      await browser.waitForFeature('loaded')
+      const newTab = await browser.createWindow('tab')
+      await browser.switchToWindow(newTab.handle)
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('instrumented.html')) // Setup expects before loading the page
+      ]).finally(async () => {
+        await browser.closeWindow()
+        await browser.switchToWindow((await browser.getWindowHandles())[0])
+      })
 
-      await browser.switchWindow('http://bam-test-1.nr-local.net')
-      const ls2 = await browser.execute(getLocalStorageData)
+      const { localStorage: ls2 } = await browser.getAgentSessionInfo()
       expect(ls2).toEqual(anySession())
       expect(ls2.value).toEqual(ls1.value)
       expect(ls2.expiresAt).toEqual(ls1.expiresAt)
-      await browser.execute(function () { window.localStorage.clear() })
     })
   })
 
-  describe('session expirations -- ', () => {
-    it('should set a new session after expiring', async () => {
-      const expiresMs = 5000
-      const url = await testHandle.assetURL('fetch.html', { init: { ...init, session: { expiresMs } } })
-      await browser.url(url)
-      await browser.waitForFeature('loaded')
-      await browser.execute(function () { window.localStorage.clear() })
-      await browser.execute(resetSession)
+  describe('session expirations', () => {
+    it('should start a new session after expiring', async () => {
+      const sessionExpiresMs = 5000
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('instrumented.html', {
+          init: {
+            session: {
+              expiresMs: sessionExpiresMs
+            }
+          }
+        })) // Setup expects before loading the page
+      ])
 
-      const lsData = await browser.execute(getLocalStorageData)
-      const cData = await browser.execute(getClassData)
+      await browser.resetAgentSession()
+      const agentSessionInfo = await browser.getAgentSessionInfo()
 
-      expect(lsData).toEqual(cData)
-      expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
-      expect(lsData.inactiveAt).toEqual(expect.any(Number))
+      expect(agentSessionInfo.localStorage).toEqual(Object.values(agentSessionInfo.agentSessions)[0])
+      expect(agentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(agentSessionInfo.localStorage.inactiveAt).toEqual(expect.any(Number))
 
-      // wait longer than the expiresMs
-      await browser.pause(expiresMs + 1000)
+      // wait longer than the session expiration time
+      await browser.pause(sessionExpiresMs + 1000)
+      const resetAgentSessionInfo = await browser.getAgentSessionInfo()
 
-      const lsData2 = await browser.execute(getLocalStorageData)
-      const cData2 = await browser.execute(getClassData)
-
-      expect(lsData2).toEqual(cData2)
-      expect(lsData2.value).not.toEqual(lsData.value)
-      expect(lsData2.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(resetAgentSessionInfo.localStorage).toEqual(Object.values(resetAgentSessionInfo.agentSessions)[0])
+      expect(resetAgentSessionInfo.localStorage.value).not.toEqual(agentSessionInfo.localStorage.value)
+      expect(resetAgentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
     })
 
-    it('should set a new session after inactivity', async () => {
-      const inactiveMs = 10000
-      const url = await testHandle.assetURL('session-entity.html', { init: { ...init, session: { inactiveMs } } })
-      await browser.url(url)
-      await browser.waitForFeature('loaded')
-      await browser.execute(function () { window.localStorage.clear() })
-      await browser.execute(resetSession)
+    it('should start a new session after inactivity', async () => {
+      const sessionInactivityMs = 5000
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('instrumented.html', {
+          init: {
+            session: {
+              inactiveMs: sessionInactivityMs
+            }
+          }
+        })) // Setup expects before loading the page
+      ])
 
-      const lsData = await browser.execute(getLocalStorageData)
-      const cData = await browser.execute(getClassData)
-      expect(lsData).toEqual(cData)
-      expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
-      expect(lsData.inactiveAt).toEqual(expect.any(Number))
+      await browser.resetAgentSession()
+      const agentSessionInfo = await browser.getAgentSessionInfo()
 
-      // wait longer than the inactiveMs
-      await browser.pause(inactiveMs + 1000)
+      expect(agentSessionInfo.localStorage).toEqual(Object.values(agentSessionInfo.agentSessions)[0])
+      expect(agentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(agentSessionInfo.localStorage.inactiveAt).toEqual(expect.any(Number))
 
-      const lsData2 = await browser.execute(getLocalStorageData)
-      const cData2 = await browser.execute(getClassData)
+      // wait longer than the session inactivity time
+      await browser.pause(sessionInactivityMs + 1000)
+      const resetAgentSessionInfo = await browser.getAgentSessionInfo()
 
-      expect(lsData2).toEqual(cData2)
-      expect(lsData2.value).not.toEqual(lsData.value)
-      expect(lsData2.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(resetAgentSessionInfo.localStorage).toEqual(Object.values(resetAgentSessionInfo.agentSessions)[0])
+      expect(resetAgentSessionInfo.localStorage.value).not.toEqual(agentSessionInfo.localStorage.value)
+      expect(resetAgentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
     })
   })
-  describe('Interactivity behavior -- ', () => {
+
+  describe('Interactivity behavior', () => {
+    const sessionInactivityMs = 5000
+
     it('should update inactiveTimers if page is interacted with', async () => {
-      const inactiveMs = 7500
-      const url = await testHandle.assetURL('session-entity.html', { init: { ...init, session: { inactiveMs } } })
-      await browser.url(url)
-      await browser.waitForFeature('loaded')
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html', {
+          init: {
+            session: {
+              inactiveMs: sessionInactivityMs
+            }
+          }
+        })) // Setup expects before loading the page
+      ])
 
-      const lsData = await browser.execute(getLocalStorageData)
-      const cData = await browser.execute(getClassData)
-      expect(lsData).toEqual(cData)
-      expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
-      expect(lsData.inactiveAt).toEqual(expect.any(Number))
+      const agentSessionInfo = await browser.getAgentSessionInfo()
+
+      expect(agentSessionInfo.localStorage).toEqual(Object.values(agentSessionInfo.agentSessions)[0])
+      expect(agentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(agentSessionInfo.localStorage.inactiveAt).toEqual(expect.any(Number))
 
       const refreshedAt = await browser.execute(function () {
         document.querySelector('body').click()
         return Date.now()
       })
       await browser.pause(500)
-      const lsData2 = await browser.execute(getLocalStorageData)
-      const cData2 = await browser.execute(getClassData)
+      const refreshedAgentSessionInfo = await browser.getAgentSessionInfo()
 
-      expect(lsData2).toEqual(cData2)
-      expect(lsData2.value).toEqual(lsData.value)
-      expect(lsData2.inactiveAt).not.toEqual(lsData.inactiveAt)
-      expect(lsData2.inactiveAt - refreshedAt).toBeGreaterThan(0)
+      expect(refreshedAgentSessionInfo.localStorage).toEqual(Object.values(refreshedAgentSessionInfo.agentSessions)[0])
+      expect(refreshedAgentSessionInfo.localStorage.value).toEqual(agentSessionInfo.localStorage.value)
+      expect(refreshedAgentSessionInfo.localStorage.inactiveAt).not.toEqual(agentSessionInfo.localStorage.inactiveAt)
+      expect(refreshedAgentSessionInfo.localStorage.inactiveAt - refreshedAt).toBeGreaterThan(0)
     })
 
-    it('inactiveAt is managed in local storage across loads', async () => {
-      const inactiveMs = 7500
-      const url = await testHandle.assetURL('session-entity.html', { init: { ...init, session: { inactiveMs } } })
-      await browser.url(url)
-      await browser.waitForFeature('loaded')
+    it('should update inactiveAt in local storage across page loads', async () => {
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html', {
+          init: {
+            session: {
+              inactiveMs: sessionInactivityMs
+            }
+          }
+        })) // Setup expects before loading the page
+      ])
 
-      const lsData = await browser.execute(getLocalStorageData)
-      const cData = await browser.execute(getClassData)
-      expect(lsData).toEqual(cData)
-      expect(lsData.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
-      expect(lsData.inactiveAt).toEqual(expect.any(Number))
+      const agentSessionInfo = await browser.getAgentSessionInfo()
+
+      expect(agentSessionInfo.localStorage).toEqual(Object.values(agentSessionInfo.agentSessions)[0])
+      expect(agentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(agentSessionInfo.localStorage.inactiveAt).toEqual(expect.any(Number))
 
       const refreshedAt = await browser.execute(function () {
         document.querySelector('body').click()
         return Date.now()
       })
-      await browser.url(await testHandle.assetURL('fetch.html', { init: { ...init, session: { inactiveMs } } }))
-      await browser.waitForFeature('loaded')
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('fetch.html')) // Setup expects before loading the page
+      ])
+      const refreshedAgentSessionInfo = await browser.getAgentSessionInfo()
 
-      const lsData2 = await browser.execute(getLocalStorageData)
-      const cData2 = await browser.execute(getClassData)
-
-      expect(lsData2).toEqual(cData2)
-      expect(lsData2.value).toEqual(lsData.value)
-      expect(lsData2.inactiveAt).not.toEqual(lsData.inactiveAt)
-      expect(lsData2.inactiveAt - refreshedAt).toBeGreaterThan(0)
+      expect(refreshedAgentSessionInfo.localStorage).toEqual(Object.values(refreshedAgentSessionInfo.agentSessions)[0])
+      expect(refreshedAgentSessionInfo.localStorage.value).toEqual(agentSessionInfo.localStorage.value)
+      expect(refreshedAgentSessionInfo.localStorage.inactiveAt).not.toEqual(agentSessionInfo.localStorage.inactiveAt)
+      expect(refreshedAgentSessionInfo.localStorage.inactiveAt - refreshedAt).toBeGreaterThan(0)
     })
   })
+
   describe('Custom attributes', () => {
     it('should be able to set custom attributes', async () => {
-      const url = await testHandle.assetURL('session-entity.html', { init })
-      await browser.url(url)
-      await browser.waitForFeature('loaded')
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
+      ])
 
-      let lsData = await browser.execute(getLocalStorageData)
-      let data = await browser.execute(getAllClassData)
-      expect(lsData.custom).toEqual({})
-      expect(data.custom).toEqual({})
-      expect(data.custom).toEqual(lsData.custom)
+      const agentSessionInfo = await browser.getAgentSessionInfo()
+
+      expect(agentSessionInfo.localStorage.custom).toEqual({})
+      expect(Object.values(agentSessionInfo.agentSessions)[0].custom).toEqual({})
 
       await browser.execute(function () {
         newrelic.setCustomAttribute('test', 1, true)
       })
+      const updatedAgentSessionInfo = await browser.getAgentSessionInfo()
 
-      lsData = await browser.execute(getLocalStorageData)
-      expect(lsData.custom).toEqual({ test: 1 })
-
-      data = await browser.execute(getAllClassData)
-      expect(data.custom).toEqual({ test: 1 })
+      expect(updatedAgentSessionInfo.localStorage.custom).toEqual({ test: 1 })
+      expect(Object.values(updatedAgentSessionInfo.agentSessions)[0].custom).toEqual({ test: 1 })
     })
   })
 
-  describe('Misc class attributes -- ', () => {
-    it('class should flag as initialized', async () => {
-      const url = await testHandle.assetURL('session-entity.html', { init })
-      await browser.url(url)
-      await browser.waitForFeature('loaded')
+  describe('misc session entity class attributes', () => {
+    it('should flag as initialized', async () => {
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
+      ])
 
-      let data = await browser.execute(getAllClassData)
-      expect(data.initialized).toEqual(true)
+      const initialized = await browser.execute(function () {
+        return Object.values(newrelic.initializedAgents)[0].runtime.session.initialized
+      })
+
+      expect(initialized).toEqual(true)
     })
   })
 
-  describe('Reset --', () => {
+  describe('session entity events', () => {
     it('should notify when resetting', async () => {
-      const url = await testHandle.assetURL('session-entity.html', { init })
-      await browser.url(url)
-      await browser.waitForFeature('loaded')
+      await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
+      ])
+
       await browser.execute(function () {
         window.wasReset = false
         newrelic.ee.on('session-reset', function () {
           window.wasReset = true
         })
       })
-
-      await browser.execute(resetSession)
+      await browser.resetAgentSession()
 
       const wasReset = await browser.execute(function () {
         return window.wasReset
@@ -258,57 +279,3 @@ describe('newrelic session ID', () => {
     })
   })
 })
-
-function getLocalStorageData () {
-  return JSON.parse(window.localStorage.getItem('NRBA_SESSION') || '{}')
-}
-
-function getClassData () {
-  var output = {}
-  try {
-    for (key in newrelic.initializedAgents) {
-      output = newrelic.initializedAgents[key].runtime.session
-    }
-  } catch (err) {}
-  return {
-    value: output.value,
-    inactiveAt: output.inactiveAt,
-    expiresAt: output.expiresAt,
-    updatedAt: output.updatedAt,
-    sessionReplayActive: output.sessionReplayActive,
-    sessionTraceActive: output.sessionTraceActive,
-    ...(output.custom && { custom: output.custom })
-  }
-}
-
-function getAllClassData () {
-  var output = {}
-  try {
-    for (key in newrelic.initializedAgents) {
-      for (k in newrelic.initializedAgents[key].runtime.session) {
-        if (typeof newrelic.initializedAgents[key].runtime.session[k] !== 'object' || k === 'custom') output[k] = newrelic.initializedAgents[key].runtime.session[k]
-      }
-    }
-  } catch (err) {}
-  return output
-}
-
-function resetSession () {
-  try {
-    for (key in newrelic.initializedAgents) {
-      newrelic.initializedAgents[key].runtime.session.reset()
-    }
-  } catch (err) {
-  // do nothing
-  }
-}
-
-function waitForLoad (browser) {
-  return browser.waitUntil(
-    () => browser.execute(() => document.readyState === 'complete'),
-    {
-      timeout: 10000, // 10 seconds
-      timeoutMsg: 'Window didnt load in time'
-    }
-  )
-}

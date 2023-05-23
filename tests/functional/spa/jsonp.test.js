@@ -12,7 +12,6 @@ let supportedWithoutFirefox = supported.exclude('firefox@5')
 
 runTest('basic', 'spa/jsonp/basic.html', supported)
 runTest('jQuery', 'spa/jsonp/jquery.html', supportedWithoutFirefox)
-runTest('MooTools', 'spa/jsonp/mootools.html', supported)
 runTest('Angular v1.x', 'spa/jsonp/angular1.html', supportedWithoutFirefox)
 
 function runTest (title, htmlPage, supported) {

@@ -30,7 +30,11 @@ module.exports = fp(async function (fastify, testServer) {
     }
 
     if (request.resolvingExpect) {
-      request.resolvingExpect.resolve({
+      const fn = request.resolvingExpect.expectTimeout
+        ? request.resolvingExpect.reject
+        : request.resolvingExpect.resolve
+
+      fn({
         request: {
           body: request.body,
           query: request.query,

@@ -1,0 +1,58 @@
+name: 'WDIO: All browsers'
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    secrets:
+      JIL_SAUCE_LABS_USERNAME:
+        required: true
+      JIL_SAUCE_LABS_ACCESS_KEY:
+        required: true
+      JIL_NODE_NEW_RELIC_LICENSE_KEY:
+        required: true
+
+env:
+  BUILD_NUMBER: PR${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+
+jobs:
+  chrome:
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: chrome@*
+      build-number: $BUILD_NUMBER
+    secrets: inherit
+
+  firefox:
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: firefox@*
+      build-number: $BUILD_NUMBER
+    secrets: inherit
+
+  safari:
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: safari@*
+      build-number: $BUILD_NUMBER
+    secrets: inherit
+
+  edge:
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: edge@*
+      build-number: $BUILD_NUMBER
+    secrets: inherit
+
+  ios:
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: ios@*
+      build-number: $BUILD_NUMBER
+    secrets: inherit
+
+  android:
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: android@*
+      build-number: $BUILD_NUMBER
+    secrets: inherit

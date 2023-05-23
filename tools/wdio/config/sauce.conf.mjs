@@ -57,6 +57,13 @@ function getMobileCapabilities (sauceBrowser) {
     }
   }
 
+  if (getBrowserName(sauceBrowser) === 'android') {
+    return {
+      device: undefined,
+      acceptInsecureCerts: undefined
+    }
+  }
+
   return {}
 }
 

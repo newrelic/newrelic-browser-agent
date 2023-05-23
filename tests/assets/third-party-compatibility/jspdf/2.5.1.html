@@ -20,21 +20,12 @@
       var pdfGenerated = false
 
       document.addEventListener('click', function () {
-        var doc = new jspdf.jsPDF();
-
-        // Source HTMLElement or a string containing HTML.
-        var elementHTML = document.querySelector("#content");
-
-        doc.html(elementHTML, {
-            callback: function(doc) {
-              pdfGenerated = true
-              window.location.hash = Math.random()
-            },
-            x: 15,
-            y: 15,
-            width: 170, //target width in the PDF document
-            windowWidth: 650 //window width in CSS pixels
-        });
+        (new jspdf.jsPDF()).html(document.getElementById('content'), {
+          callback: function () {
+            pdfGenerated = true
+            window.location.hash = Math.random()
+          }
+        })
       })
     </script>
   </body>

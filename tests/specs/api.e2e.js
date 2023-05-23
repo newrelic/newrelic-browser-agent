@@ -1,18 +1,8 @@
 describe('newrelic api', () => {
-  let testHandle
-
-  beforeEach(async () => {
-    testHandle = await browser.getTestHandle()
-  })
-
-  afterEach(async () => {
-    await testHandle.destroy()
-  })
-
   it('should load when sessionStorage is not available', async () => {
     await Promise.all([
-      testHandle.expectRum(),
-      browser.url(await testHandle.assetURL('api/local-storage-disallowed.html')) // Setup expects before loading the page
+      browser.testHandle.expectRum(),
+      browser.url(await browser.testHandle.assetURL('api/local-storage-disallowed.html')) // Setup expects before loading the page
     ])
 
     const result = await browser.execute(function () {
@@ -25,11 +15,11 @@ describe('newrelic api', () => {
   describe('setPageViewName api', () => {
     it('customTransactionName 1 arg', async () => {
       const [rumResults, resourcesResults, eventsResults, ajaxResults] = await Promise.all([
-        testHandle.expectRum(),
-        testHandle.expectResources(),
-        testHandle.expectEvents(),
-        testHandle.expectAjaxTimeSlices(),
-        browser.url(await testHandle.assetURL('api.html')) // Setup expects before loading the page
+        browser.testHandle.expectRum(),
+        browser.testHandle.expectResources(),
+        browser.testHandle.expectEvents(),
+        browser.testHandle.expectAjaxTimeSlices(),
+        browser.url(await browser.testHandle.assetURL('api.html')) // Setup expects before loading the page
       ])
 
       expect(rumResults.request.query.ct).toEqual('http://custom.transaction/foo')
@@ -40,13 +30,13 @@ describe('newrelic api', () => {
 
     it('customTransactionName 1 arg unload', async () => {
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('api.html'))
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('api.html'))
       ])
 
       const [unloadCustomMetricsResults] = await Promise.all([
-        testHandle.expectCustomMetrics(),
-        await browser.url(await testHandle.assetURL('/')) // Setup expects before navigating
+        browser.testHandle.expectCustomMetrics(),
+        await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
       ])
 
       expect(unloadCustomMetricsResults.request.query.ct).toEqual('http://custom.transaction/foo')
@@ -60,13 +50,13 @@ describe('newrelic api', () => {
 
     it('customTransactionName 2 arg unload', async () => {
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('api2.html'))
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('api2.html'))
       ])
 
       const [unloadCustomMetricsResults] = await Promise.all([
-        testHandle.expectCustomMetrics(),
-        await browser.url(await testHandle.assetURL('/')) // Setup expects before navigating
+        browser.testHandle.expectCustomMetrics(),
+        await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
       ])
 
       expect(unloadCustomMetricsResults.request.query.ct).toEqual('http://bar.baz/foo')
@@ -82,8 +72,8 @@ describe('newrelic api', () => {
   describe('noticeError api', () => {
     it('takes an error object', async () => {
       const [errorsResults] = await Promise.all([
-        testHandle.expectErrors(),
-        browser.url(await testHandle.assetURL('api.html')) // Setup expects before loading the page
+        browser.testHandle.expectErrors(),
+        browser.url(await browser.testHandle.assetURL('api.html')) // Setup expects before loading the page
       ])
 
       expect(Array.isArray(errorsResults.request.body.err)).toEqual(true)
@@ -98,8 +88,8 @@ describe('newrelic api', () => {
 
     it('takes a string', async () => {
       const [errorsResults] = await Promise.all([
-        testHandle.expectErrors(),
-        browser.url(await testHandle.assetURL('api/noticeError.html')) // Setup expects before loading the page
+        browser.testHandle.expectErrors(),
+        browser.url(await browser.testHandle.assetURL('api/noticeError.html')) // Setup expects before loading the page
       ])
 
       expect(Array.isArray(errorsResults.request.body.err)).toEqual(true)

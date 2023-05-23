@@ -30,7 +30,6 @@ export default async function runTest ({
   expect(ajaxResults.request.body.xhr.length).toBeGreaterThan(0)
 
   await afterLoadCallback({ rumResults, resourcesResults, eventsResults, ajaxResults })
-  console.log('afterLoadCallback done')
 
   const [unloadEventsResults, unloadMetricsResults] = await Promise.all([
     browser.testHandle.expectEvents(),
@@ -48,5 +47,4 @@ export default async function runTest ({
   expect(unloadMetricsResults.request.body.sm.length).toBeGreaterThan(0)
 
   await afterUnloadCallback({ unloadEventsResults, unloadMetricsResults })
-  console.log('afterUnloadCallback done')
 }

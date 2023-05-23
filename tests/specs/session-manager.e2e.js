@@ -1,7 +1,6 @@
 import { supportsMultipleTabs } from '../../tools/browser-matcher/common-matchers.mjs'
 
 describe('newrelic session ID', () => {
-  let testHandle
   const anySession = () => ({
     value: expect.any(String),
     expiresAt: expect.any(Number),
@@ -12,20 +11,11 @@ describe('newrelic session ID', () => {
     custom: expect.any(Object)
   })
 
-  beforeEach(async () => {
-    testHandle = await browser.getTestHandle()
-  })
-
-  afterEach(async () => {
-    await browser.destroyAgentSession(testHandle)
-    await testHandle.destroy()
-  })
-
   describe('data is stored in storage API', () => {
     it('should store session data in local storage by default', async () => {
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
       ])
 
       const { localStorage } = await browser.getAgentSessionInfo()
@@ -37,15 +27,15 @@ describe('newrelic session ID', () => {
   describe('persist across different navigation', () => {
     it('should keep a session id across page loads - Refresh', async () => {
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
       ])
 
       const { localStorage: ls1 } = await browser.getAgentSessionInfo()
       expect(ls1).toEqual(anySession())
 
       await Promise.all([
-        testHandle.expectRum(),
+        browser.testHandle.expectRum(),
         browser.refresh() // Setup expects before loading the page
       ])
 
@@ -57,16 +47,16 @@ describe('newrelic session ID', () => {
 
     it('should keep a session id across page loads - Same tab navigation', async () => {
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
       ])
 
       const { localStorage: ls1 } = await browser.getAgentSessionInfo()
       expect(ls1).toEqual(anySession())
 
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('fetch.html')) // Setup expects before loading the page
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('fetch.html')) // Setup expects before loading the page
       ])
 
       const { localStorage: ls2 } = await browser.getAgentSessionInfo()
@@ -77,8 +67,8 @@ describe('newrelic session ID', () => {
 
     withBrowsersMatching(supportsMultipleTabs)('should keep a session id across page loads - Multi tab navigation', async () => {
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
       ])
 
       const { localStorage: ls1 } = await browser.getAgentSessionInfo()
@@ -87,8 +77,8 @@ describe('newrelic session ID', () => {
       const newTab = await browser.createWindow('tab')
       await browser.switchToWindow(newTab.handle)
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('instrumented.html')) // Setup expects before loading the page
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('instrumented.html')) // Setup expects before loading the page
       ]).finally(async () => {
         await browser.closeWindow()
         await browser.switchToWindow((await browser.getWindowHandles())[0])
@@ -105,8 +95,8 @@ describe('newrelic session ID', () => {
     it('should start a new session after expiring', async () => {
       const sessionExpiresMs = 5000
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('instrumented.html', {
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('instrumented.html', {
           init: {
             session: {
               expiresMs: sessionExpiresMs
@@ -134,8 +124,8 @@ describe('newrelic session ID', () => {
     it('should start a new session after inactivity', async () => {
       const sessionInactivityMs = 5000
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('instrumented.html', {
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('instrumented.html', {
           init: {
             session: {
               inactiveMs: sessionInactivityMs
@@ -166,8 +156,8 @@ describe('newrelic session ID', () => {
 
     it('should update inactiveTimers if page is interacted with', async () => {
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('session-entity.html', {
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html', {
           init: {
             session: {
               inactiveMs: sessionInactivityMs
@@ -197,8 +187,8 @@ describe('newrelic session ID', () => {
 
     it('should update inactiveAt in local storage across page loads', async () => {
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('session-entity.html', {
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html', {
           init: {
             session: {
               inactiveMs: sessionInactivityMs
@@ -218,8 +208,8 @@ describe('newrelic session ID', () => {
         return Date.now()
       })
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('fetch.html')) // Setup expects before loading the page
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('fetch.html')) // Setup expects before loading the page
       ])
       const refreshedAgentSessionInfo = await browser.getAgentSessionInfo()
 
@@ -233,8 +223,8 @@ describe('newrelic session ID', () => {
   describe('Custom attributes', () => {
     it('should be able to set custom attributes', async () => {
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
       ])
 
       const agentSessionInfo = await browser.getAgentSessionInfo()
@@ -255,8 +245,8 @@ describe('newrelic session ID', () => {
   describe('misc session entity class attributes', () => {
     it('should flag as initialized', async () => {
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
       ])
 
       const initialized = await browser.execute(function () {
@@ -270,8 +260,8 @@ describe('newrelic session ID', () => {
   describe('session entity events', () => {
     it('should notify when resetting', async () => {
       await Promise.all([
-        testHandle.expectRum(),
-        browser.url(await testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
+        browser.testHandle.expectRum(),
+        browser.url(await browser.testHandle.assetURL('session-entity.html')) // Setup expects before loading the page
       ])
 
       await browser.execute(function () {

@@ -127,6 +127,20 @@
       "browserName": "Safari",
       "platformName": "iOS",
       "platform": "iOS",
+      "version": "15.0",
+      "device": "iPhone 7 Plus",
+      "appium:deviceName": "iPhone 7 Plus Simulator",
+      "appium:platformVersion": "15.0",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "1.22.3"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
       "version": "15.2",
       "device": "iPhone 11 Pro",
       "appium:deviceName": "iPhone 11 Pro Simulator",

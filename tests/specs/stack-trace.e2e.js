@@ -12,21 +12,11 @@ const supportedBrowsers = new SpecMatcher()
   .include('android')
 
 describe('stack trace', () => {
-  let testHandle
-
-  beforeEach(async () => {
-    testHandle = await browser.getTestHandle()
-  })
-
-  afterEach(async () => {
-    await testHandle.destroy()
-  })
-
   withBrowsersMatching(supportedBrowsers)('identifies <inline> for same-page scripts (but only same-page scripts)', async () => {
     const [, errorsResults] = await Promise.all([
-      testHandle.expectRum(),
-      testHandle.expectErrors(),
-      browser.url(await testHandle.assetURL('sub-path-script-error/')) // Setup expects before loading the page
+      browser.testHandle.expectRum(),
+      browser.testHandle.expectErrors(),
+      browser.url(await browser.testHandle.assetURL('sub-path-script-error/')) // Setup expects before loading the page
     ])
 
     // TypeError: Failed to fetch
@@ -47,12 +37,12 @@ describe('stack trace', () => {
 
   withBrowsersMatching(supportedBrowsers)('still identifies <inline> for same-page scripts after SPA route changes', async () => {
     await Promise.all([
-      testHandle.expectRum(),
-      browser.url(await testHandle.assetURL('sub-path-script-error/index.html')) // Setup expects before loading the page
+      browser.testHandle.expectRum(),
+      browser.url(await browser.testHandle.assetURL('sub-path-script-error/index.html')) // Setup expects before loading the page
     ])
 
     const [errorsResults] = await Promise.all([
-      testHandle.expectErrors(),
+      browser.testHandle.expectErrors(),
       browser.execute(function () {
         window.history.replaceState(null, 'New Page Title', './new-route/')
         fetch('http://test/json/foo')

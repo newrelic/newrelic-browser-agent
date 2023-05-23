@@ -1,15 +1,17 @@
-import os from 'os'
 import process from 'process'
-import fs from 'fs'
+import fs from 'fs-extra'
 import path from 'path'
+import url from 'url'
 import crypto from 'crypto'
 import { deepmerge } from 'deepmerge-ts'
 import { Launcher } from '@wdio/cli'
+import { serialize } from 'serialize-anything'
 import baseConfig from './config/base.conf.mjs'
 import specsConfig from './config/specs.conf.mjs'
 import seleniumConfig from './config/selenium.conf.mjs'
 import sauceConfig from './config/sauce.conf.mjs'
-import { serialize } from './util/config-serializer.mjs'
+
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 /**
  * The runner utilizes the CLI arguments to dynamically generate the
@@ -20,7 +22,7 @@ import { serialize } from './util/config-serializer.mjs'
 
 const wdioConfig = deepmerge(baseConfig(), specsConfig(), seleniumConfig(), sauceConfig())
 const configFilePath = path.join(
-  os.tmpdir(),
+  path.resolve(__dirname, '../../node_modules/.cache/wdio'),
   `wdio.conf_${crypto.randomBytes(16).toString('hex')}.mjs`
 )
 
@@ -28,12 +30,13 @@ if (['trace', 'debug', 'info'].indexOf(wdioConfig.logLevel) > -1) {
   console.log(`Writing wdio config file to ${configFilePath}`)
 }
 
+fs.ensureDirSync(path.dirname(configFilePath))
+
 // Clear the CLI params before starting wdio so they are not passed to worker processes
 process.argv.splice(2)
-
 fs.writeFile(
   configFilePath,
-  `export const config = ${serialize(wdioConfig)}`,
+  `import { deserialize } from 'serialize-anything'\nexport const config = deserialize('${serialize(wdioConfig)}')`,
   (error) => {
     if (error) {
       console.error(error)

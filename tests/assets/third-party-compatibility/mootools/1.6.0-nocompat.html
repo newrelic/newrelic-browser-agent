@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Mootools 1.6.0-nocompat</title>
+    {init}
+    {config}
+    {loader}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mootools/1.6.0/mootools-core.js" integrity="sha512-nxKp6INemMtUWHV+BToAOXm2ZV4+LCc/sw+4j2fyVJG088hHf7Rt/h8qCYT7bTsEtqkDCXo6sbtFlkro3Zo3HA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mootools-more/1.6.0/mootools-more.js" integrity="sha512-76y+QT6I9ZvXkATH8rhr5xc+1ODnMdWJ1+EwITq0VxUzLMCKlWmHVISENgt4tHwr522eEAYH2bIhDky1X+JQPA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  </head>
+  <body>
+    <div id="content">
+      This is a generic page that is instrumented by the JS agent and includes mootools to ensure compatibility.
+    </div>
+    <script>
+      document.addEventListener('click', function () {
+        window.location.hash = Math.random()
+        var myJSONP = new Request.JSONP({
+          url: '/jsonp',
+          onComplete: function (data) {
+            setTimeout(newrelic.interaction().createTracer('tacoTimer', function () {
+              window.location.hash = Math.random()
+            }), 500)
+          }
+        }).send();
+      }, false)
+    </script>
+    <p>Click me!</p>
+  </body>
+</html>

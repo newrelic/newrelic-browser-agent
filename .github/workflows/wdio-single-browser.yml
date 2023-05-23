@@ -1,0 +1,74 @@
+name: 'WDIO: Single browser'
+
+on:
+  workflow_dispatch:
+    inputs:
+      browser-target:
+        description: 'Which browser(s) and version(s) to target with the wdio test: chrome@latest OR chrome@* are examples'
+        required: true
+        type: string
+      build-number:
+        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
+        required: true
+        type: string
+      additional-flags:
+        description: 'Additional flags to pass to the wdio cli'
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      browser-target:
+        description: 'Which browser(s) and version(s) to target with the wdio test: chrome@latest OR chrome@* are examples'
+        required: true
+        type: string
+      build-number:
+        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
+        required: true
+        type: string
+      additional-flags:
+        description: 'Additional flags to pass to the wdio cli'
+        required: false
+        type: string
+    secrets:
+      JIL_SAUCE_LABS_USERNAME:
+        required: true
+      JIL_SAUCE_LABS_ACCESS_KEY:
+        required: true
+      JIL_NODE_NEW_RELIC_LICENSE_KEY:
+        required: true
+jobs:
+  wdio:
+    name: WDIO Test - ${{ inputs.browser-target }}
+    timeout-minutes: 60
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      BUILD_NUMBER: ${{ inputs.build-number }}
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+    steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Build agent
+        run: npm run build:all
+      - name: Run WDIO Tests
+        run: |
+          node ./tools/wdio/bin/cli.js \
+            -s \
+            -b ${{ inputs.browser-target }} \
+            --concurrent 10 \
+            ${{ runner.debug && '-v -L -D -d' }} \
+            ${{ inputs.additional-flags }}

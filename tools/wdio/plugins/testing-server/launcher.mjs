@@ -1,7 +1,7 @@
 import logger from '@wdio/logger'
 import TestServer from '../../../testing-server/index.js'
 
-const log = logger('jil-testing-server')
+const log = logger('testing-server')
 
 /**
  * This is a WDIO launcher plugin that starts the testing servers.
@@ -25,7 +25,7 @@ export default class TestingServerLauncher {
     log.info(`Command server started on http://${this.#testingServer.commandServer.host}:${this.#testingServer.commandServer.port}`)
 
     capabilities.forEach((capability) => {
-      capability['jil:testServerCommandPort'] = this.#testingServer.commandServer.port
+      capability.testServerCommandPort = this.#testingServer.commandServer.port
     })
   }
 

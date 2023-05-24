@@ -1,3 +1,13 @@
+/*
+ * Copyright 2023 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/**
+ * @file Records, aggregates, and harvests session replay data.
+ *
+ * NOTE: This code is under development and dormant. It will not download to instrumented pages or record data.
+ */
+
 // import { record } from 'rrweb'
 import { drain } from '../../../common/drain/drain'
 import { registerHandler } from '../../../common/event-emitter/register-handler'

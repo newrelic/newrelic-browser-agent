@@ -195,7 +195,11 @@ export class Aggregate extends AggregateBase {
     const agentRuntime = getRuntime(this.agentIdentifier)
     const info = getInfo(this.agentIdentifier)
     return {
-      qs: { protocol_version: '0' },
+      qs: {
+        protocol_version: '0',
+        content_encoding: 'gzip',
+        browser_monitoring_key: info.licenseKey
+      },
       body: {
         type: 'SessionReplay',
         appId: Number(info.applicationID),

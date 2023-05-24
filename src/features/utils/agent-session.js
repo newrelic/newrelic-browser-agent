@@ -6,7 +6,6 @@ import { isBrowserScope } from '../../common/util/global-scope'
 import { SessionEntity } from '../../common/session/session-entity'
 import { LocalStorage } from '../../common/storage/local-storage.js'
 import { FirstPartyCookies } from '../../common/storage/first-party-cookies'
-import { LocalMemory } from '../../common/storage/local-memory'
 
 let ranOnce = 0
 export function setupAgentSession (agentIdentifier) {
@@ -41,7 +40,7 @@ export function setupAgentSession (agentIdentifier) {
   // that's currently stored in the storage API into the local info.jsAttributes object
   if (isBrowserScope) {
     // retrieve & re-add all of the persisted setCustomAttribute|setUserId k-v from previous page load(s)
-    const customSessionData = agentRuntime.session?.read?.()?.custom
+    const customSessionData = agentRuntime.session.state.custom
     const agentInfo = getInfo(agentIdentifier)
     if (customSessionData) {
       setInfo(agentIdentifier, { ...agentInfo, jsAttributes: { ...agentInfo.jsAttributes, ...customSessionData } })

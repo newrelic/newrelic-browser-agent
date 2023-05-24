@@ -58,13 +58,13 @@ export default class CustomCommands {
         return Object.entries(newrelic.initializedAgents)
           .reduce(function (aggregate, agentEntry) {
             aggregate[agentEntry[0]] = {
-              value: agentEntry[1].runtime.session.value,
-              inactiveAt: agentEntry[1].runtime.session.inactiveAt,
-              expiresAt: agentEntry[1].runtime.session.expiresAt,
-              updatedAt: agentEntry[1].runtime.session.updatedAt,
-              sessionReplayActive: agentEntry[1].runtime.session.sessionReplayActive,
-              sessionTraceActive: agentEntry[1].runtime.session.sessionTraceActive,
-              custom: agentEntry[1].runtime.session.custom
+              value: agentEntry[1].runtime.session.state.value,
+              inactiveAt: agentEntry[1].runtime.session.state.inactiveAt,
+              expiresAt: agentEntry[1].runtime.session.state.expiresAt,
+              updatedAt: agentEntry[1].runtime.session.state.updatedAt,
+              sessionReplay: agentEntry[1].runtime.session.state.sessionReplay,
+              sessionTraceActive: agentEntry[1].runtime.session.state.sessionTraceActive,
+              custom: agentEntry[1].runtime.session.state.custom
             }
             return aggregate
           }, {})

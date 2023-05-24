@@ -12,7 +12,8 @@ const bucketMap = {
   stn: [FEATURE_NAMES.sessionTrace],
   err: [FEATURE_NAMES.jserrors, FEATURE_NAMES.metrics],
   ins: [FEATURE_NAMES.pageAction],
-  spa: [FEATURE_NAMES.spa]
+  spa: [FEATURE_NAMES.spa],
+  sr: [FEATURE_NAMES.sessionReplay]
 }
 
 export function activateFeatures (flags, agentIdentifier) {
@@ -28,7 +29,6 @@ export function activateFeatures (flags, agentIdentifier) {
     if (activatedFeatures[flag]) {
       return
     }
-
     handle('feat-' + flag, [], undefined, bucketMap[flag], sharedEE)
     activatedFeatures[flag] = true
   })

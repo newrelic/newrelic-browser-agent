@@ -179,9 +179,10 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
     customStringAttribute: 'customStringAttribute',
     customNumAttribute: 2,
     customBooleanAttribute: true,
+    nullCustomAttribute: null,
     undefinedCustomAttribute: undefined
   }
-  const expectedCustomAttrCount = Object.keys(expectedCustomAttributes).length
+  const expectedCustomAttrCount = Object.keys(expectedCustomAttributes).length - 1 // null is processed, undefined is not
 
   setInfo(agentIdentifier, {
     jsAttributes: expectedCustomAttributes
@@ -210,8 +211,7 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
             t.ok(expectedCustomAttributes[attribute.key] === false, 'false custom attribute encoded')
             break
           case 'nullAttribute':
-          // undefined is treated as null in querypack
-            t.ok(expectedCustomAttributes[attribute.key] === undefined, 'undefined custom attributes encoded')
+            t.ok(expectedCustomAttributes[attribute.key] === null, 'undefined custom attributes encoded')
             break
           default:
             t.fail('unexpected custom attribute type')

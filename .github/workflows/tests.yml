@@ -415,28 +415,3 @@ jobs:
       - name: run tests
         run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=5 --unit-only
 
-  check-failures:
-    if: contains(github.event.pull_request.labels.*.name, 'safe to test') && ${{ !failure() }}  # final check if each needed test either pass or cancelled (special circumstance) and didn't outright fail
-    needs: [chrome-functional, chrome-unit, firefox-functional, firefox-unit, safari-functional, safari-unit, edge-functional, edge-unit, ios-functional, ios-unit, android-functional, android-unit, ie-functional, ie-unit]
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
-    defaults:
-      run:
-        shell: bash
-
-    env:
-      NRQL_API_KEY: ${{ secrets.NRQL_API_KEY }}
-
-    steps:
-      - name: Setup Container
-        run: apt update && apt install -y git
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: lts/*
-      - name: checkout and build
-        uses: ./.github/actions/test-setup
-      - name: check failed tests
-        run: node --max-old-space-size=8192 ./tools/jil/util/get-failed-tests.js

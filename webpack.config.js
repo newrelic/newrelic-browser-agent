@@ -236,11 +236,11 @@ const workerConfig = merge(commonConfig, {
   entry: {
     [`nr-loader-worker${PATH_VERSION}`]: {
       import: path.resolve(__dirname, './src/cdn/worker.js'),
-      chunkLoading: false
+      chunkLoading: 'import-scripts'
     },
     [`nr-loader-worker${PATH_VERSION}.min`]: {
       import: path.resolve(__dirname, './src/cdn/worker.js'),
-      chunkLoading: false
+      chunkLoading: 'import-scripts'
     }
   },
   module: standardConfig.module,
@@ -249,7 +249,8 @@ const workerConfig = merge(commonConfig, {
     library: {
       name: 'NRBA',
       type: 'self'
-    }
+    },
+    chunkFilename: SUBVERSION !== 'LOCAL' ? `[name].[chunkhash:8]-worker${PATH_VERSION}.min.js` : `[name]-worker${PATH_VERSION}.js`
   },
   plugins: [
     ...instantiateBundleAnalyzerPlugin('worker'),

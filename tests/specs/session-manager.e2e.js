@@ -6,7 +6,7 @@ describe('newrelic session ID', () => {
     expiresAt: expect.any(Number),
     inactiveAt: expect.any(Number),
     updatedAt: expect.any(Number),
-    sessionReplayActive: expect.any(Boolean),
+    sessionReplay: expect.any(Number),
     sessionTraceActive: expect.any(Boolean),
     custom: expect.any(Object)
   })

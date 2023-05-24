@@ -208,6 +208,7 @@ class TestServer {
     this.#assetServer = fastify(this.#defaultServerConfig)
 
     this.#assetServer.decorate('testServerId', 'assetServer')
+    // this.#assetServer.register(require('@fastify/compress'))
     this.#assetServer.decorate('testServerLogger', this.#logger)
     this.#assetServer.register(require('@fastify/multipart'), {
       addToBody: true
@@ -225,7 +226,7 @@ class TestServer {
       etag: false
     })
     this.#assetServer.register(require('./plugins/agent-injector'), this)
-    this.#assetServer.register(require('./plugins/browserify'), this)
+    this.#assetServer.register(require('./plugins/browser-scripts'), this)
     this.#assetServer.register(require('./routes/tests-index'), this)
     this.#assetServer.register(require('./routes/mock-apis'), this)
     this.#assetServer.register(require('./plugins/test-handle'), this)
@@ -237,6 +238,7 @@ class TestServer {
     this.#corsServer = fastify(this.#defaultServerConfig)
 
     this.#corsServer.decorate('testServerId', 'corsServer')
+    // this.#corsServer.register(require('@fastify/compress'))
     this.#corsServer.decorate('testServerLogger', this.#logger)
     this.#corsServer.register(require('@fastify/multipart'), {
       addToBody: true
@@ -255,6 +257,7 @@ class TestServer {
     this.#bamServer = fastify(this.#defaultServerConfig)
 
     this.#bamServer.decorate('testServerId', 'bamServer')
+    // this.#bamServer.register(require('@fastify/compress'))
     this.#bamServer.decorate('testServerLogger', this.#logger)
     this.#bamServer.register(require('@fastify/multipart'), {
       addToBody: true

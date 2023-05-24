@@ -1,3 +1,5 @@
+import '../../../jest-matchers/index.mjs'
+
 /**
  * This file is executed by mocha in each WDIO execution thread.
  */

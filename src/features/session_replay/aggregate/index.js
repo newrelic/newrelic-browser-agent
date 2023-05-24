@@ -90,11 +90,7 @@ export class Aggregate extends AggregateBase {
       onFinished: this.onHarvestFinished.bind(this),
       retryDelay: this.harvestTimeSeconds,
       getPayload: this.prepareHarvest.bind(this),
-      // TODO -- this stuff needs a better way to be handled
-      includeBaseParams: false,
-      customUrl: 'https://vortex-alb.stg-single-tooth.cell.us.nr-data.net/blob',
-      raw: true,
-      gzip: true
+      raw: true
     }, this)
 
     // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
@@ -146,15 +142,18 @@ export class Aggregate extends AggregateBase {
     // we are not actively recording SR... DO NOT import or run the recording library
     // session replay samples can only be decided on the first load of a session
     // session replays can continue if already in progress
+    console.log(session, entitlements, errorSample, fullSample)
     if (!session.isNew) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplay
     } else {
+      console.log('new session!')
       // The session is new... determine the mode the new session should start in
       if (fullSample) this.mode = MODE.FULL // full mode has precedence over error mode
       else if (errorSample) this.mode = MODE.ERROR
       // If neither are selected, then don't record (early return)
-      return
+      else return
     }
+    console.log('mode', this.mode)
 
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
     // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
@@ -162,6 +161,11 @@ export class Aggregate extends AggregateBase {
     if (this.mode === MODE.FULL) {
       // We only report (harvest) in FULL mode
       this.scheduler.startTimer(this.harvestTimeSeconds)
+    }
+
+    // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
+    if (this.mode === MODE.ERROR && this.errorNoticed) {
+      this.mode = MODE.FULL
     }
     // We record in FULL or ERROR mode
 

@@ -12,6 +12,10 @@ module.exports.testIdFromRequest = function testIdFromRequest (request) {
     return urlTestId[1]
   }
 
+  if (request.query.browser_monitoring_key) {
+    return request.query.browser_monitoring_key
+  }
+
   if (request.query.testId) {
     return request.query.testId
   }

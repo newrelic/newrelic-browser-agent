@@ -44,7 +44,8 @@ export class FeatureBase {
         info: {
           ...gosCDN().info,
           jsAttributes
-        }
+        },
+        runtime: getRuntime(this.agentIdentifier)
       })
     }
   }

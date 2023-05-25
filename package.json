@@ -193,6 +193,7 @@
     "husky": "^8.0.0",
     "jest": "^28.1.1",
     "jest-environment-jsdom": "28.1.1",
+    "jest-extended": "^3.2.4",
     "jquery": "1.11.3",
     "jung": "^2.1.0",
     "just-debounce": "^1.0.0",

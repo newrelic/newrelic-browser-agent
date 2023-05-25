@@ -8,18 +8,24 @@ export default class CustomCommands {
    */
   async before () {
     /**
-     * Used to wait for specific features of the browser agent to be loaded.
-     * @deprecated It is best to create and use a `testHandle` and call `expectRum()`
+     * Used to wait for the agent to load on the page. A loaded agent
+     * has made, received, and processed a RUM call.
      */
-    browser.addCommand('waitForFeature', async function (feature) {
+    browser.addCommand('waitForAgentLoad', async function () {
       await browser.waitUntil(
-        () => browser.execute(function (feat) {
-          return window.NREUM && window.NREUM.activatedFeatures && window.NREUM.activatedFeatures[feat]
-        }, feature),
+        () => browser.execute(function () {
+          return window.NREUM && window.NREUM.activatedFeatures && window.NREUM.activatedFeatures.loaded
+        }),
         {
           timeout: 30000,
           timeoutMsg: 'Agent never loaded'
         })
+
+      /*
+      Wait 500ms to get the agent time to perform all it's initialization processing.
+      500ms is probably too long but it's better to be safe than sorry.
+      */
+      await browser.pause(500)
     })
 
     /**

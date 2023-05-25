@@ -1,9 +1,7 @@
 describe('newrelic api', () => {
   it('should load when sessionStorage is not available', async () => {
-    await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.url(await browser.testHandle.assetURL('api/local-storage-disallowed.html')) // Setup expects before loading the page
-    ])
+    await browser.url(await browser.testHandle.assetURL('api/local-storage-disallowed.html')) // Setup expects before loading the page
+      .then(() => browser.waitForAgentLoad())
 
     const result = await browser.execute(function () {
       return typeof window.newrelic.addToTrace === 'function'
@@ -20,6 +18,7 @@ describe('newrelic api', () => {
         browser.testHandle.expectEvents(),
         browser.testHandle.expectAjaxTimeSlices(),
         browser.url(await browser.testHandle.assetURL('api.html')) // Setup expects before loading the page
+          .then(() => browser.waitForAgentLoad())
       ])
 
       expect(rumResults.request.query.ct).toEqual('http://custom.transaction/foo')
@@ -29,10 +28,8 @@ describe('newrelic api', () => {
     })
 
     it('customTransactionName 1 arg unload', async () => {
-      await Promise.all([
-        browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('api.html'))
-      ])
+      await browser.url(await browser.testHandle.assetURL('api.html'))
+        .then(() => browser.waitForAgentLoad())
 
       const [unloadCustomMetricsResults] = await Promise.all([
         browser.testHandle.expectCustomMetrics(),
@@ -49,10 +46,8 @@ describe('newrelic api', () => {
     })
 
     it('customTransactionName 2 arg unload', async () => {
-      await Promise.all([
-        browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('api2.html'))
-      ])
+      await browser.url(await browser.testHandle.assetURL('api2.html'))
+        .then(() => browser.waitForAgentLoad())
 
       const [unloadCustomMetricsResults] = await Promise.all([
         browser.testHandle.expectCustomMetrics(),
@@ -74,6 +69,7 @@ describe('newrelic api', () => {
       const [errorsResults] = await Promise.all([
         browser.testHandle.expectErrors(),
         browser.url(await browser.testHandle.assetURL('api.html')) // Setup expects before loading the page
+          .then(() => browser.waitForAgentLoad())
       ])
 
       expect(Array.isArray(errorsResults.request.body.err)).toEqual(true)
@@ -90,6 +86,7 @@ describe('newrelic api', () => {
       const [errorsResults] = await Promise.all([
         browser.testHandle.expectErrors(),
         browser.url(await browser.testHandle.assetURL('api/noticeError.html')) // Setup expects before loading the page
+          .then(() => browser.waitForAgentLoad())
       ])
 
       expect(Array.isArray(errorsResults.request.body.err)).toEqual(true)

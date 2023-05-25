@@ -192,6 +192,7 @@ export class Aggregate extends AggregateBase {
     }
     // TODO -- Gracefully handle the buffer for retries.
     this.clearBuffer()
+    console.log('payload', payload)
     return [payload]
   }
 

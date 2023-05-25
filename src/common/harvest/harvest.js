@@ -102,11 +102,11 @@ export class Harvest extends SharedContext {
 
     let url = ''
     if (customUrl) url = customUrl
-    else if (raw) url = this.getScheme() + '://' + info.errorBeacon + '/' + endpoint
-    else url = this.getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + '?'
+    else if (raw) url = `${this.getScheme()}://${info.errorBeacon}/${endpoint}`
+    else url = `${this.getScheme()}://${info.errorBeacon}/${endpoint}/1/${info.licenseKey}`
 
     var baseParams = !raw ? this.baseQueryString() : ''
-    var params = payload.qs ? encodeObj(payload.qs, agentRuntime.maxBytes) : ''
+    var payloadParams = payload.qs ? encodeObj(payload.qs, agentRuntime.maxBytes) : ''
     if (!submitMethod) {
       submitMethod = getSubmitMethod(endpoint, opts)
     }
@@ -114,7 +114,7 @@ export class Harvest extends SharedContext {
     var useBody = submitMethod.useBody
 
     var body
-    var fullUrl = url + baseParams + params
+    var fullUrl = `${url}?${baseParams}${payloadParams}`
 
     const gzip = payload?.qs?.content_encoding === 'gzip'
 
@@ -135,7 +135,7 @@ export class Harvest extends SharedContext {
 
     const headers = []
 
-    if (gzip) headers.push({ key: 'Content-Encoding', value: 'gzip' })
+    // if (gzip) headers.push({ key: 'Content-Encoding', value: 'gzip' })
     headers.push({ key: 'content-type', value: 'text/plain' })
 
     /* Since workers don't support sendBeacon right now, or Image(), they can only use XHR method.

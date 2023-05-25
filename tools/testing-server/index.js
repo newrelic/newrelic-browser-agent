@@ -257,7 +257,7 @@ class TestServer {
     this.#bamServer = fastify(this.#defaultServerConfig)
 
     this.#bamServer.decorate('testServerId', 'bamServer')
-    // this.#bamServer.register(require('@fastify/compress'))
+    this.#bamServer.register(require('@fastify/compress'), { global: false })
     this.#bamServer.decorate('testServerLogger', this.#logger)
     this.#bamServer.register(require('@fastify/multipart'), {
       addToBody: true

@@ -41,13 +41,16 @@ export class Harvest extends SharedContext {
    * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
    * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
    */
-  sendX (endpoint, opts, cbFinished) {
+  sendX (spec) {
+    const { endpoint, opts } = spec
     var submitMethod = getSubmitMethod(endpoint, opts)
     if (!submitMethod) return false
     var options = {
       retry: submitMethod.method === submitData.xhr
     }
-    return this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend(endpoint, this.createPayload(endpoint, options), opts, submitMethod, cbFinished) : this._send(endpoint, this.createPayload(endpoint, options), opts, submitMethod, cbFinished)
+    const payload = this.createPayload(endpoint, options)
+    var caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
+    return caller({ ...spec, payload, submitMethod })
   }
 
   /**
@@ -66,24 +69,26 @@ export class Harvest extends SharedContext {
  * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
  * @param {bool} opts.sendEmptyBody - Specify whether the call should be made even if the body is empty. Useful for rum calls.
  */
-  send (endpoint, singlePayload, opts, submitMethod, cbFinished) {
+  send (spec) {
+    const { payload = {} } = spec
     var makeBody = createAccumulator()
     var makeQueryString = createAccumulator()
-    if (singlePayload.body) mapOwn(singlePayload.body, makeBody)
-    if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
+    if (payload.body) mapOwn(payload.body, makeBody)
+    if (payload.qs) mapOwn(payload.qs, makeQueryString)
 
-    var payload = { body: makeBody(), qs: makeQueryString() }
-    var caller = this.obfuscator.shouldObfuscate() ? (...args) => this.obfuscateAndSend(...args) : (...args) => this._send(...args)
+    var newPayload = { body: makeBody(), qs: makeQueryString() }
+    var caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
 
-    return caller(endpoint, payload, opts, submitMethod, cbFinished)
+    return caller({ ...spec, payload: newPayload })
   }
 
-  obfuscateAndSend (endpoint, payload, opts, submitMethod, cbFinished) {
+  obfuscateAndSend (spec) {
+    const { payload = {} } = spec
     applyFnToProps(payload, (...args) => this.obfuscator.obfuscateString(...args), 'string', ['e'])
-    return this._send(endpoint, payload, opts, submitMethod, cbFinished)
+    return this._send({ ...spec, payload })
   }
 
-  _send (endpoint, payload, opts, submitMethod, cbFinished) {
+  _send ({ endpoint, payload = {}, opts = {}, submitMethod, cbFinished, customUrl, gzip, includeBaseParams = true }) {
     var info = getInfo(this.sharedContext.agentIdentifier)
     if (!info.errorBeacon) return false
 
@@ -97,10 +102,10 @@ export class Harvest extends SharedContext {
     }
 
     if (!opts) opts = {}
+    let url = customUrl || `${this.getScheme()}://${info.errorBeacon}${endpoint !== 'rum' ? `/${endpoint}` : ''}/1/${info.licenseKey}?`
 
-    let url = `${this.getScheme()}://${info.errorBeacon}${endpoint !== 'rum' ? `/${endpoint}` : ''}/1/${info.licenseKey}${this.baseQueryString()}`
-    if (payload.qs) url += encodeObj(payload.qs, agentRuntime.maxBytes)
-
+    var baseParams = includeBaseParams ? this.baseQueryString() : ''
+    var params = payload.qs ? encodeObj(payload.qs, agentRuntime.maxBytes) : ''
     if (!submitMethod) {
       submitMethod = getSubmitMethod(endpoint, opts)
     }
@@ -108,24 +113,38 @@ export class Harvest extends SharedContext {
     var useBody = submitMethod.useBody
 
     var body
-    var fullUrl = url
-    if (useBody && endpoint === 'events') {
-      body = payload.body.e
-    } else if (useBody) {
-      body = stringify(payload.body)
-    } else {
-      fullUrl = url + encodeObj(payload.body, agentRuntime.maxBytes)
-    }
+    var fullUrl = url + baseParams + params
+
+    if (!gzip) {
+      if (useBody && endpoint === 'events') {
+        body = payload.body.e
+      } else if (useBody) {
+        body = stringify(payload.body)
+      } else {
+        fullUrl = fullUrl + encodeObj(payload.body, agentRuntime.maxBytes)
+      }
+    } else body = payload.body
 
     // Get bytes harvested per endpoint as a supportability metric. See metrics aggregator (on unload).
     agentRuntime.bytesSent[endpoint] = (agentRuntime.bytesSent[endpoint] || 0) + body?.length || 0
     // Get query bytes harvested per endpoint as a supportability metric. See metrics aggregator (on unload).
     agentRuntime.queryBytesSent[endpoint] = (agentRuntime.queryBytesSent[endpoint] || 0) + fullUrl.split('?').slice(-1)[0]?.length || 0
 
+    const headers = []
+
+    if (gzip) {
+      headers.push({ key: 'content-type', value: 'application/json' })
+      headers.push({ key: 'X-Browser-Monitoring-Key', value: info.licenseKey })
+      headers.push({ key: 'Content-Encoding', value: 'gzip' })
+    } else {
+      headers.push({ key: 'content-type', value: 'text/plain' })
+    }
+
     /* Since workers don't support sendBeacon right now, or Image(), they can only use XHR method.
         Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
         we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon. */
-    var result = method(fullUrl, body, opts.unload && isWorkerScope)
+
+    var result = method({ url: fullUrl, body, sync: opts.unload && isWorkerScope, headers })
 
     if (cbFinished && method === submitData.xhr) {
       var xhr = result
@@ -148,7 +167,7 @@ export class Harvest extends SharedContext {
     // if beacon request failed, retry with an alternative method -- will not happen for workers
     if (!result && method === submitData.beacon) {
       method = submitData.img
-      result = method(url + encodeObj(payload.body, agentRuntime.maxBytes))
+      result = method({ url: fullUrl + encodeObj(payload.body, agentRuntime.maxBytes) })
     }
 
     return result
@@ -163,14 +182,14 @@ export class Harvest extends SharedContext {
     var ref = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateString(location) : location
 
     return ([
-      '?a=' + info.applicationID,
+      'a=' + info.applicationID,
       encodeParam('sa', (info.sa ? '' + info.sa : '')),
       encodeParam('v', VERSION),
       transactionNameParam(info),
       encodeParam('ct', runtime.customTransaction),
       '&rst=' + now(),
       '&ck=0', // ck param DEPRECATED - still expected by backend
-      '&s=' + (runtime.session?.value || '0'), // the 0 id encaps all untrackable and default traffic
+      '&s=' + (runtime.session?.state.value || '0'), // the 0 id encaps all untrackable and default traffic
       encodeParam('ref', ref),
       encodeParam('ptid', (runtime.ptid ? '' + runtime.ptid : ''))
     ].join(''))

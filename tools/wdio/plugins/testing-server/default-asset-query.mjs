@@ -1,13 +1,25 @@
+/**
+ * When using deepmerge-ts, this object acts as the default and schema
+ * for what we pass back to the testing server. If a configuration option
+ * is not defined in this object, it cannot be overridden in a test.
+ */
 const query = {
   loader: 'spa',
   init: {
-    ajax: { deny_list: [], harvestTimeSeconds: 5 },
-    jserrors: { harvestTimeSeconds: 5 },
-    metrics: { harvestTimeSeconds: 5 },
-    page_action: { harvestTimeSeconds: 5 },
-    page_view_timing: { harvestTimeSeconds: 5 },
-    session_trace: { harvestTimeSeconds: 5 },
-    spa: { harvestTimeSeconds: 5 }
+    allow_bfcache: true,
+    privacy: { cookies_enabled: false },
+    ajax: { deny_list: [], enabled: true, harvestTimeSeconds: 5 },
+    distributed_tracing: {},
+    session: { domain: undefined, expiresMs: 14400000, inactiveMs: 1800000 },
+    ssl: false,
+    obfuscate: undefined,
+    jserrors: { enabled: true, harvestTimeSeconds: 5 },
+    metrics: { enabled: true },
+    page_action: { enabled: true, harvestTimeSeconds: 5 },
+    page_view_event: { enabled: true },
+    page_view_timing: { enabled: true, harvestTimeSeconds: 5, long_task: false },
+    session_trace: { enabled: true, harvestTimeSeconds: 5 },
+    spa: { enabled: true, harvestTimeSeconds: 5 }
   }
 }
 

@@ -189,10 +189,12 @@ export class Aggregate extends FeatureBase {
     var type = internal ? 'ierr' : 'err'
     var newMetrics = { time: time }
 
-    // stn and spa aggregators listen to this event - stn sends the error in its payload,
+    // sr, stn and spa aggregators listen to this event - stn sends the error in its payload,
     // and spa annotates the error with interaction info
-    handle('errorAgg', [type, bucketHash, params, newMetrics], undefined, FEATURE_NAMES.sessionTrace, this.ee)
-    handle('errorAgg', [type, bucketHash, params, newMetrics], undefined, FEATURE_NAMES.spa, this.ee)
+    const msg = [type, bucketHash, params, newMetrics]
+    handle('errorAgg', msg, undefined, FEATURE_NAMES.sessionTrace, this.ee)
+    handle('errorAgg', msg, undefined, FEATURE_NAMES.spa, this.ee)
+    handle('errorAgg', msg, undefined, FEATURE_NAMES.sessionReplay, this.ee)
 
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return

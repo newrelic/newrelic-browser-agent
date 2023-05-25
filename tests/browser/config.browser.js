@@ -27,11 +27,8 @@ test('getConfiguration', function (t) {
     setConfiguration(agentIdentifier, { ajax: 123 })
     t.equal(getConfigurationValue(agentIdentifier, 'ajax'), 123)
 
-    setConfiguration(agentIdentifier, { ajax: { a: true } })
-    t.equal(getConfigurationValue(agentIdentifier, 'ajax.a'), true)
-
-    setConfiguration(agentIdentifier, { ajax: { a: { b: 123 } } })
-    t.equal(getConfigurationValue(agentIdentifier, 'ajax.a.b'), 123)
+    setConfiguration(agentIdentifier, { ajax: { enabled: true } })
+    t.equal(getConfigurationValue(agentIdentifier, 'ajax.enabled'), true)
 
     t.end()
   })

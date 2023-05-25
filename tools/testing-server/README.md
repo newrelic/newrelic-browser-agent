@@ -140,9 +140,9 @@ This stream transform looks for `{polyfills}` in the HTML response and replaces 
 
 The BAM parser plugin hooks into the fastify content parsing to support pre-parsing of querypack body payloads. The body of each request that has a content type of `text/plain` is checked to see if it starts with `bel.`. When it does, the body is transformed using [@newrelic/nr-querypack](https://github.com/newrelic/nr-querypack). This allows routes and plugins that later operate on the request body to do so without the need to first parse it.
 
-### Browserify
+### Browser-Scripts
 
-The browserify plugin utilizes the `onSend` hook of fastify to modify outgoing test JavaScript assets. When the request URL is for an asset found in `/tests/browser/`, the file will be passed through browserify and babelify along with the JIL CLI `-P` polyfills flag. The output provided should be the transpilled JavaScript code.
+The browser-scripts plugin utilizes the `onSend` hook of fastify to modify outgoing test JavaScript assets. When the request URL is for an asset found in `/tests/browser/`, the file will first check the test assets for pre-built browser-test js files. If not found, the test source code will be passed through browserify and babelify along with the JIL CLI `-P` polyfills flag. The output provided should be transpilled JavaScript code including the browser test assets.
 
 ### No Cache
 

@@ -34,5 +34,8 @@ module.exports.rumFlags = {
   ins: 1,
   cap: 1,
   spa: 1,
-  loaded: 1
+  loaded: 1,
+  sr: 1,
+  srf: 1,
+  sre: 1
 }

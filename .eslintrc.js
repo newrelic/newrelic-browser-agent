@@ -8,6 +8,7 @@ module.exports = {
     'tests/assets/frameworks/**/*',
     'tests/assets/js/internal/**/*',
     'tests/assets/js/vendor/**/*',
+    'tests/assets/scripts/**/*',
     'tests/assets/test-builds/**/*',
     'tests/assets/modular/js-errors/js/vendor/**/*',
 
@@ -18,7 +19,8 @@ module.exports = {
     // Ignore JIL code since it is being replaced with WDIO
     'tools/jil/**/*',
     'tests/browser/**/*',
-    'tests/functional/**/*'
+    'tests/functional/**/*',
+    'tests/worker/**/*'
   ],
   parser: '@babel/eslint-parser',
   parserOptions: {

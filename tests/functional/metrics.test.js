@@ -6,6 +6,19 @@
 const testDriver = require('../../tools/jil/index')
 const { asyncApiFns, failWithEndTimeout, extractWorkerSM, getMetricsFromResponse } = require('./uncat-internal-help.cjs')
 
+const config = {
+  loader: 'spa',
+  init: {
+    ajax: { deny_list: [], harvestTimeSeconds: 5 },
+    jserrors: { harvestTimeSeconds: 5 },
+    metrics: { harvestTimeSeconds: 5 },
+    page_action: { harvestTimeSeconds: 5 },
+    page_view_timing: { harvestTimeSeconds: 5 },
+    session_trace: { harvestTimeSeconds: 5 },
+    spa: { harvestTimeSeconds: 5 },
+    privacy: { cookies_enabled: false }
+  }
+}
 const withUnload = testDriver.Matcher.withFeature('reliableUnloadEvent')
 const fetchBrowsers = testDriver.Matcher.withFeature('fetchExt')
 
@@ -18,7 +31,10 @@ loaderTypes.forEach(lt => loaderTypeSupportabilityMetric(lt))
 function loaderTypeSupportabilityMetric (loaderType) {
   testDriver.test(`generic agent info is captured - ${loaderType}`, fetchBrowsers, function (t, browser, router) {
     let rumPromise = router.expectRum()
-    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', { loader: loaderType }))
+    const loadPromise = browser.safeGet(router.assetURL('instrumented.html', {
+      ...config,
+      loader: loaderType
+    }))
 
     Promise.all([rumPromise, loadPromise])
       .then(() => {
@@ -27,8 +43,12 @@ function loaderTypeSupportabilityMetric (loaderType) {
       })
       .then(({ request: data }) => {
         var supportabilityMetrics = getMetricsFromResponse(data, true)
-        const loaderTypeSM = supportabilityMetrics.find(x => x.params.name.includes('LoaderType'))
+        const versionSM = supportabilityMetrics.find(x => x.params.name.includes('Generic/Version/'))
+        const distMethodSM = supportabilityMetrics.find(x => x.params.name.includes('Generic/DistMethod/'))
+        const loaderTypeSM = supportabilityMetrics.find(x => x.params.name.includes('Generic/LoaderType/'))
         t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
+        t.ok(!!versionSM, `Version was captured for ${loaderType}`)
+        t.ok(!!distMethodSM, `DistMethod was captured for ${loaderType}`)
         t.ok(!!loaderTypeSM, `LoaderType was captured for ${loaderType}`)
         t.ok(loaderTypeSM.params.name.includes(loaderTypesMapped[loaderType]), `LoaderType SM matches ${loaderType}`)
         t.end()
@@ -37,11 +57,57 @@ function loaderTypeSupportabilityMetric (loaderType) {
   })
 }
 
+testDriver.test('agent tracks endpoint bytes sent', withUnload, function (t, browser, router) {
+  let metricsPromise = router.expectSupportMetrics()
+  const loadPromise = browser.safeGet(router.assetURL('instrumented.html', config))
+
+  Promise.all([loadPromise])
+    .then(() => Promise.all([
+      router.expectIns(),
+      router.expectErrors(),
+      browser.safeEval(`
+        newrelic.noticeError(new Error('hippo hangry'));
+        newrelic.addPageAction('DummyEvent', { free: 'tacos' })
+      `)
+    ]))
+    .then(() => Promise.all([
+      metricsPromise,
+      browser.get(router.assetURL('/')) // to conserve network traffic while trying to capture everything, resources SM harvest happens when page unloads
+    ]))
+    .then(([{ request: data }]) => {
+      var supportabilityMetrics = getMetricsFromResponse(data, true)
+      const rumBytesSent = supportabilityMetrics.find(x => x.params.name.includes('PageSession/Endpoint/1/BytesSent'))
+      const eventsBytesSent = supportabilityMetrics.find(x => x.params.name.includes('PageSession/Endpoint/Events/BytesSent'))
+      const resourcesBytesSent = supportabilityMetrics.find(x => x.params.name.includes('PageSession/Endpoint/Resources/BytesSent'))
+      const jserrorsBytesSent = supportabilityMetrics.find(x => x.params.name.includes('PageSession/Endpoint/Jserrors/BytesSent'))
+      const insBytesSent = supportabilityMetrics.find(x => x.params.name.includes('PageSession/Endpoint/Ins/BytesSen'))
+
+      const rumQueryBytesSent = supportabilityMetrics.find(x => x.params.name.includes('PageSession/Endpoint/1/QueryBytesSent'))
+      const eventsQueryBytesSent = supportabilityMetrics.find(x => x.params.name.includes('PageSession/Endpoint/Events/QueryBytesSent'))
+      const resourcesQueryBytesSent = supportabilityMetrics.find(x => x.params.name.includes('PageSession/Endpoint/Resources/QueryBytesSent'))
+      const jserrorsQueryBytesSent = supportabilityMetrics.find(x => x.params.name.includes('PageSession/Endpoint/Jserrors/QueryBytesSent'))
+      const insQueryBytesSent = supportabilityMetrics.find(x => x.params.name.includes('PageSession/Endpoint/Ins/QueryBytesSent'))
+
+      t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
+      t.ok(!!rumBytesSent, 'Rum bytes sent was captured')
+      t.ok(!!eventsBytesSent, 'Events bytes sent was captured')
+      t.ok(!!resourcesBytesSent, 'Resources bytes sent was captured')
+      t.ok(!!jserrorsBytesSent, 'JSErrors bytes sent was captured')
+      t.ok(!!insBytesSent, 'Ins bytes sent was captured')
+
+      t.ok(!!rumQueryBytesSent, 'Rum query bytes sent was captured')
+      t.ok(!!eventsQueryBytesSent, 'Events query bytes sent was captured')
+      t.ok(!!resourcesQueryBytesSent, 'Resources query bytes sent was captured')
+      t.ok(!!jserrorsQueryBytesSent, 'JSErrors query bytes sent was captured')
+      t.ok(!!insQueryBytesSent, 'Ins query bytes sent was captured')
+      t.end()
+    })
+    .catch(failWithEndTimeout(t))
+})
+
 testDriver.test('agent tracks resources seen', withUnload, function (t, browser, router) {
   let metricsPromise = router.expectSupportMetrics()
-  const loadPromise = browser.safeGet(router.assetURL('resources.html', {
-    init: { page_view_event: { enabled: false } }
-  }))
+  const loadPromise = browser.safeGet(router.assetURL('resources.html', config))
 
   Promise.all([loadPromise])
     .then(() => Promise.all([
@@ -73,7 +139,7 @@ testDriver.test('agent tracks resources seen', withUnload, function (t, browser,
 
 testDriver.test('Calling a newrelic[api] fn creates a supportability metric', withUnload, function (t, browser, router) {
   let rumPromise = router.expectRum()
-  let loadPromise = browser.get(router.assetURL('api/customMetrics.html'))
+  let loadPromise = browser.get(router.assetURL('api/customMetrics.html'), config)
 
   const observedAPImetrics = []
 
@@ -107,7 +173,7 @@ testDriver.test('Calling a newrelic[api] fn creates a supportability metric', wi
 
 testDriver.test('a valid obfuscationRule creates detected supportability metric', fetchBrowsers, function (t, browser, router) {
   let rumPromise = router.expectRum()
-  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-valid.html', { loader: 'spa' }))
+  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-valid.html', config))
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
@@ -127,7 +193,7 @@ testDriver.test('a valid obfuscationRule creates detected supportability metric'
 
 testDriver.test('an invalid obfuscation regex type creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
   let rumPromise = router.expectRum()
-  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-regex-type.html', { loader: 'spa' }))
+  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-regex-type.html', config))
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
@@ -150,7 +216,7 @@ testDriver.test('an invalid obfuscation regex type creates invalid supportabilit
 
 testDriver.test('an invalid obfuscation regex undefined creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
   let rumPromise = router.expectRum()
-  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-regex-undefined.html', { loader: 'spa' }))
+  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-regex-undefined.html', config))
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
@@ -173,7 +239,7 @@ testDriver.test('an invalid obfuscation regex undefined creates invalid supporta
 
 testDriver.test('an invalid obfuscation replacement type creates invalid supportability metric', fetchBrowsers, function (t, browser, router) {
   let rumPromise = router.expectRum()
-  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-replacement-type.html', { loader: 'spa' }))
+  const loadPromise = browser.safeGet(router.assetURL('obfuscate-pii-invalid-replacement-type.html', config))
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
@@ -194,52 +260,46 @@ testDriver.test('an invalid obfuscation replacement type creates invalid support
     .catch(failWithEndTimeout(t))
 })
 
-/**
- * When workers constructors are called, they should generate supportability metric for each instance. Environments in which (certain) workers are
- * not supported should also report a sm once per life of page.
- */
-testDriver.test('workers creation generates sm', function (t, browser, router) {
+testDriver.test('should send SMs for polyfilled native functions', withUnload, function (t, browser, router) {
   let rumPromise = router.expectRum()
-  const loadPromise = browser.safeGet(router.assetURL('instrumented-worker.html', { loader: 'spa' }))
+  const loadPromise = browser.safeGet(router.assetURL('polyfill-metrics.html', config))
 
   Promise.all([rumPromise, loadPromise])
     .then(() => {
       browser.get(router.assetURL('/'))
-      return router.expectMetrics(3000)
+      return router.expectSupportMetrics(3000)
     })
     .then(({ request: data }) => {
       var supportabilityMetrics = getMetricsFromResponse(data, true)
-      t.ok(supportabilityMetrics && !!supportabilityMetrics.length, `${supportabilityMetrics.length} SupportabilityMetrics object(s) were generated`)
+      t.ok(supportabilityMetrics && !!supportabilityMetrics.length, 'SupportabilityMetrics object(s) were generated')
 
-      const wsm = extractWorkerSM(supportabilityMetrics)
+      const functionBind = supportabilityMetrics.find(x => x.params.name.includes('Polyfill/Function.bind/Detected'))
+      const functionCall = supportabilityMetrics.find(x => x.params.name.includes('Polyfill/Function.call/Detected'))
+      const arrayIncludes = supportabilityMetrics.find(x => x.params.name.includes('Polyfill/Array.includes/Detected'))
+      const arrayFrom = supportabilityMetrics.find(x => x.params.name.includes('Polyfill/Array.from/Detected'))
+      const arrayFlat = supportabilityMetrics.find(x => x.params.name.includes('Polyfill/Array.flat/Detected'))
+      const arrayFlatMap = supportabilityMetrics.find(x => x.params.name.includes('Polyfill/Array.flatMap/Detected'))
+      const objectAssign = supportabilityMetrics.find(x => x.params.name.includes('Polyfill/Object.assign/Detected'))
+      const objectEntries = supportabilityMetrics.find(x => x.params.name.includes('Polyfill/Object.entries/Detected'))
+      const objectValues = supportabilityMetrics.find(x => x.params.name.includes('Polyfill/Object.values/Detected'))
+      const map = supportabilityMetrics.find(x => x.params.name.includes('Polyfill/Map/Detected'))
+      const set = supportabilityMetrics.find(x => x.params.name.includes('Polyfill/Set/Detected'))
+      const weakMap = supportabilityMetrics.find(x => x.params.name.includes('Polyfill/WeakMap/Detected'))
+      const weakSet = supportabilityMetrics.find(x => x.params.name.includes('Polyfill/WeakSet/Detected'))
 
-      // Just assume that all the browsers & versions we test will support workers because it's been long supported; don't bother test 'Workers/All/Unavailable'.
-      let workerShouldExistOnThisBrowser = testDriver.Matcher.withFeature('workers').match(browser.browserSpec)
-      if (workerShouldExistOnThisBrowser && !wsm.workerImplFail) { // worker may be avail in Chrome v4, but our SM implementation may not be supported until v60, etc.
-        t.ok(wsm.classicWorker, 'classic worker is expected and used')
-
-        /* Also note that though Firefox & older Safari don't actually support module workers, their call to the constructor still succeeds hence
-          generating a false positive sm. For simplicity, we'll just accept it as-is, so there's no add'l check here for 'workersFull' match.
-          ... Actually, if you compare Safari v14 vs. Edge v79, in both of which module workers are n/a, only the latter errors out while the former silently ignores. */
-        t.ok(wsm.moduleWorker, 'module worker is expected and used')
-      }
-
-      // Shared & Service workers below are more niche.
-      workerShouldExistOnThisBrowser = testDriver.Matcher.withFeature('sharedWorkers').match(browser.browserSpec)
-      if (workerShouldExistOnThisBrowser && !wsm.sharedImplFail) {
-        t.ok(wsm.classicShared, 'classic sharedworker is expected and used')
-        t.ok(wsm.moduleShared, 'module sharedworker is expected and used')
-      } else {
-        t.ok(wsm.sharedUnavail || wsm.sharedImplFail, 'sharedworker API or SM should be unavailable on this browser version')
-      }
-
-      // Service Workers won't be available in tests until JIL local asset server runs on HTTPS or changes to localhost/127.#.#.# url
-      workerShouldExistOnThisBrowser = testDriver.Matcher.withFeature('serviceWorkers').match(browser.browserSpec)
-      if (workerShouldExistOnThisBrowser) {
-        t.notOk(wsm.classicService || wsm.moduleService, 'classic or module serviceworker is NOT expected or used')
-        t.ok(wsm.serviceUnavail || wsm.serviceImplFail, 'serviceworker API should be unavailable on all')
-      }
-
+      t.ok(!!functionBind, 'Function.bind was captured')
+      t.ok(!!functionCall, 'Function.call was captured')
+      t.ok(!!arrayIncludes, 'Array.includes was captured')
+      t.ok(!!arrayFrom, 'Array.from was captured')
+      t.ok(!!arrayFlat, 'Array.flat was captured')
+      t.ok(!!arrayFlatMap, 'Array.flatMap was captured')
+      t.ok(!!objectAssign, 'Object.assign was captured')
+      t.ok(!!objectEntries, 'Object.entries was captured')
+      t.ok(!!objectValues, 'Object.values was captured')
+      t.ok(!!map, 'Map was captured')
+      t.ok(!!set, 'Set was captured')
+      t.ok(!!weakMap, 'WeakMap was captured')
+      t.ok(!!weakSet, 'WeakSet was captured')
       t.end()
     })
     .catch(failWithEndTimeout(t))

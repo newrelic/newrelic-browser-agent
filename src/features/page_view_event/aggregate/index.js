@@ -119,19 +119,24 @@ export class Aggregate extends FeatureBase {
       })
     } catch (e) {}
 
-    harvester.send('rum', { qs: queryParameters, body }, { needResponse: true, sendEmptyBody: true }, undefined, ({ status, responseText }) => {
-      if (status >= 400) {
-        // Adding retry logic for the rum call will be a separate change
-        this.ee.abort()
-        return
-      }
+    harvester.send({
+      endpoint: 'rum',
+      payload: { qs: queryParameters, body },
+      opts: { needResponse: true, sendEmptyBody: true },
+      cbFinished: ({ status, responseText }) => {
+        if (status >= 400) {
+          // Adding retry logic for the rum call will be a separate change
+          this.ee.abort()
+          return
+        }
 
-      try {
-        activateFeatures(JSON.parse(responseText), this.agentIdentifier)
-        drain(this.agentIdentifier, this.featureName)
-      } catch (err) {
-        this.ee.abort()
-        warn('RUM call failed. Agent shutting down.')
+        try {
+          activateFeatures(JSON.parse(responseText), this.agentIdentifier)
+          drain(this.agentIdentifier, this.featureName)
+        } catch (err) {
+          this.ee.abort()
+          warn('RUM call failed. Agent shutting down.')
+        }
       }
     })
   }

@@ -78,7 +78,7 @@ export function setAPI (agentIdentifier) {
     url += 'fe=' + ~~fe_time + '&'
     url += 'c=' + cycle
 
-    submitData.img(url)
+    submitData.img({ url })
   }
 
   function setErrorHandler (t, handler) {

@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker'
 import { submitData } from '../util/submit-data'
 import { Harvest } from './harvest'
 
@@ -42,7 +41,7 @@ describe('sendX', () => {
       qs: {}
     }))
 
-    harvester.sendX('jserrors', { sendEmptyBody }, sendCallback)
+    harvester.sendX({ endpoint: 'jserrors', cbFinished: sendCallback })
 
     expect(sendCallback).toHaveBeenCalledWith({ sent: false })
     expect(submitData.xhr).not.toHaveBeenCalled()
@@ -57,13 +56,12 @@ describe('sendX', () => {
       qs: {}
     }))
 
-    harvester.sendX('jserrors', { sendEmptyBody: true }, jest.fn())
+    harvester.sendX({ endpoint: 'jserrors', opts: { sendEmptyBody: true }, cbFinished: jest.fn() })
 
-    expect(submitData.xhr).toHaveBeenCalledWith(
-      expect.stringContaining('https://example.com/jserrors/1/abcd?'),
-      undefined,
-      undefined
-    )
+    expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
+      url: expect.stringContaining('https://example.com/jserrors/1/abcd?'),
+      body: undefined
+    }))
     expect(submitData.img).not.toHaveBeenCalled()
     expect(submitData.beacon).not.toHaveBeenCalled()
   })
@@ -75,18 +73,16 @@ describe('sendX', () => {
       qs: { foo: 'bar', empty: emptyValue }
     }))
 
-    harvester.sendX('jserrors', {}, jest.fn())
+    harvester.sendX({ endpoint: 'jserrors', cbFinished: jest.fn() })
 
-    expect(submitData.xhr).toHaveBeenCalledWith(
-      expect.stringContaining('&foo=bar'),
-      JSON.stringify({ bar: 'foo' }),
-      undefined
-    )
-    expect(submitData.xhr).toHaveBeenCalledWith(
-      expect.not.stringContaining('&empty'),
-      expect.not.stringContaining('empty'),
-      undefined
-    )
+    expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
+      url: expect.stringContaining('&foo=bar'),
+      body: JSON.stringify({ bar: 'foo' })
+    }))
+    expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
+      url: expect.not.stringContaining('&empty'),
+      body: expect.not.stringContaining('empty')
+    }))
     expect(submitData.img).not.toHaveBeenCalled()
     expect(submitData.beacon).not.toHaveBeenCalled()
   })
@@ -98,13 +94,12 @@ describe('sendX', () => {
       qs: { foo: 'bar', nonString: nonStringValue }
     }))
 
-    harvester.sendX('jserrors', {}, jest.fn())
+    harvester.sendX({ endpoint: 'jserrors', cbFinished: jest.fn() })
 
-    expect(submitData.xhr).toHaveBeenCalledWith(
-      expect.stringContaining(`&nonString=${nonStringValue}`),
-      JSON.stringify({ bar: 'foo', nonString: nonStringValue }),
-      undefined
-    )
+    expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
+      url: expect.stringContaining(`&nonString=${nonStringValue}`),
+      body: JSON.stringify({ bar: 'foo', nonString: nonStringValue })
+    }))
     expect(submitData.img).not.toHaveBeenCalled()
     expect(submitData.beacon).not.toHaveBeenCalled()
   })
@@ -115,7 +110,7 @@ describe('send', () => {
     const sendCallback = jest.fn()
     const harvester = new Harvest()
 
-    harvester.send('rum', { qs: {}, body: {} }, { sendEmptyBody }, null, sendCallback)
+    harvester.send({ endpoint: 'rum', payload: { qs: {}, body: {} }, opts: { sendEmptyBody }, cbFinished: sendCallback })
 
     expect(sendCallback).toHaveBeenCalledWith({ sent: false })
     expect(submitData.xhr).not.toHaveBeenCalled()
@@ -126,13 +121,12 @@ describe('send', () => {
   test('should send request when body is empty and sendEmptyBody is true', () => {
     const harvester = new Harvest()
 
-    harvester.send('rum', { qs: {}, body: {} }, { sendEmptyBody: true })
+    harvester.send({ endpoint: 'rum', payload: { qs: {}, body: {} }, opts: { sendEmptyBody: true } })
 
-    expect(submitData.xhr).toHaveBeenCalledWith(
-      expect.stringContaining('https://example.com/1/abcd?'),
-      undefined,
-      undefined
-    )
+    expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
+      url: expect.stringContaining('https://example.com/1/abcd?'),
+      body: undefined
+    }))
     expect(submitData.img).not.toHaveBeenCalled()
     expect(submitData.beacon).not.toHaveBeenCalled()
   })
@@ -140,21 +134,19 @@ describe('send', () => {
   test.each([null, undefined, []])('should remove %s values from the body and query string when sending', (emptyValue) => {
     const harvester = new Harvest()
 
-    harvester.send(
-      'rum',
-      { qs: { foo: 'bar', empty: emptyValue }, body: { bar: 'foo', empty: emptyValue } }
-    )
+    harvester.send({
+      endpoint: 'rum',
+      payload: { qs: { foo: 'bar', empty: emptyValue }, body: { bar: 'foo', empty: emptyValue } }
+    })
 
-    expect(submitData.xhr).toHaveBeenCalledWith(
-      expect.stringContaining('&foo=bar'),
-      JSON.stringify({ bar: 'foo' }),
-      undefined
-    )
-    expect(submitData.xhr).toHaveBeenCalledWith(
-      expect.not.stringContaining('&empty'),
-      expect.not.stringContaining('empty'),
-      undefined
-    )
+    expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
+      url: expect.stringContaining('&foo=bar'),
+      body: JSON.stringify({ bar: 'foo' })
+    }))
+    expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
+      url: expect.not.stringContaining('&empty'),
+      body: expect.not.stringContaining('empty')
+    }))
     expect(submitData.img).not.toHaveBeenCalled()
     expect(submitData.beacon).not.toHaveBeenCalled()
   })
@@ -162,16 +154,15 @@ describe('send', () => {
   test.each([1, false, true])('should not remove value %s (when it doesn\'t have a length) from the body and query string when sending', (nonStringValue) => {
     const harvester = new Harvest()
 
-    harvester.send(
-      'rum',
-      { qs: { foo: 'bar', nonString: nonStringValue }, body: { bar: 'foo', nonString: nonStringValue } }
-    )
+    harvester.send({
+      endpoint: 'rum',
+      payload: { qs: { foo: 'bar', nonString: nonStringValue }, body: { bar: 'foo', nonString: nonStringValue } }
+    })
 
-    expect(submitData.xhr).toHaveBeenCalledWith(
-      expect.stringContaining(`&nonString=${nonStringValue}`),
-      JSON.stringify({ bar: 'foo', nonString: nonStringValue }),
-      undefined
-    )
+    expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
+      url: expect.stringContaining(`&nonString=${nonStringValue}`),
+      body: JSON.stringify({ bar: 'foo', nonString: nonStringValue })
+    }))
     expect(submitData.img).not.toHaveBeenCalled()
     expect(submitData.beacon).not.toHaveBeenCalled()
   })

@@ -3,7 +3,8 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL } from '../constants'
 import { drain } from '../../../common/drain/drain'
-import { getFrameworks } from '../../../common/metrics/framework-detection'
+import { getFrameworks } from './framework-detection'
+import { getPolyfills } from './polyfill-detection'
 import { isFileProtocol } from '../../../common/url/protocol'
 import { getRules, validateRules } from '../../../common/util/obfuscate'
 import { VERSION } from '../../../common/constants/env'
@@ -12,6 +13,7 @@ import { windowAddEventListener } from '../../../common/event-listener/event-lis
 import { isBrowserScope } from '../../../common/util/global-scope'
 import { FeatureBase } from '../../utils/feature-base'
 import { stringify } from '../../../common/util/stringify'
+import { endpointMap } from './endpoint-map'
 
 export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
@@ -71,6 +73,10 @@ export class Aggregate extends FeatureBase {
       })
     }
 
+    getPolyfills().forEach(polyfill => {
+      this.storeSupportabilityMetrics('Polyfill/' + polyfill + '/Detected')
+    })
+
     // file protocol detection
     if (isFileProtocol()) {
       this.storeSupportabilityMetrics('Generic/FileProtocol/Detected')
@@ -120,7 +126,7 @@ export class Aggregate extends FeatureBase {
       // Capture per-agent bytes sent for each endpoint (see harvest) and RUM call (see page_view_event aggregator).
       Object.keys(agentRuntime.bytesSent).forEach(endpoint => {
         this.storeSupportabilityMetrics(
-          `PageSession/Endpoint/${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)}/BytesSent`,
+          `PageSession/Endpoint/${endpointMap[endpoint]}/BytesSent`,
           agentRuntime.bytesSent[endpoint]
         )
       })
@@ -128,7 +134,7 @@ export class Aggregate extends FeatureBase {
       // Capture per-agent query bytes sent for each endpoint (see harvest) and RUM call (see page_view_event aggregator).
       Object.keys(agentRuntime.bytesSent).forEach(endpoint => {
         this.storeSupportabilityMetrics(
-          `PageSession/Endpoint/${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)}/QueryBytesSent`,
+          `PageSession/Endpoint/${endpointMap[endpoint]}/QueryBytesSent`,
           agentRuntime.queryBytesSent[endpoint]
         )
       })

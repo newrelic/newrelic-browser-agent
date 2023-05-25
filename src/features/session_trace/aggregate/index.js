@@ -27,7 +27,8 @@ const toAggregate = {
   mousing: [1000, 2000],
   touching: [1000, 2000]
 }
-const MAX_TRACE_DURATION = 10 * 60 * 1000 // 15 minutes
+const MAX_TRACE_DURATION = 10 * 60 * 1000 // 10 minutes
+const REQ_THRESHOLD_TO_SEND = 30
 
 export class Aggregate extends FeatureBase {
   static featureName = FEATURE_NAME
@@ -80,13 +81,22 @@ export class Aggregate extends FeatureBase {
         }
       }
       function prepareHarvest (options) {
-        if (now() > MAX_TRACE_DURATION) { // been collecting for over 15 min, empty trace object and bail
-          scheduler.stopTimer()
-          this.trace = {}
-          return
+        let isStandalone = true
+
+        /* Standalone refers to the legacy version of ST before the idea of 'session' or the Replay feature existed.
+          It has a different behavior on returning a payload for harvest than when used in tandem with either of those concepts. */
+        if (isStandalone) {
+          if (now() > MAX_TRACE_DURATION) { // been collecting for over the longest duration we should run for, empty trace object so ST has nothing to send
+            scheduler.stopTimer()
+            this.trace = {}
+            return
+          }
+          // Only harvest when more than some threshold of nodes are pending, after the very first harvest.
+          if (this.ptid && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
+        } else {
+          // With sessions on harvest intervals, visible pages will send payload regardless of pending nodes but backgrounded pages will still abide by threshold.
+          if (this.ptid && document.visibilityState === 'hidden' && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
         }
-        // Only harvest when there are more than 30 nodes to send after the very first.
-        if (this.ptid && this.nodeCount <= 30) return
 
         return this.takeSTNs(options.retry)
       }

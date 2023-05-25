@@ -125,7 +125,7 @@ export class HarvestScheduler extends SharedContext {
      * @param {Object} result
      */
     function cbRanAfterSend (result) {
-      if (opts.forceNoRetry) result.retry = false // discard unsent data rather than re-queuing for next harvest attempt
+      if (opts?.forceNoRetry) result.retry = false // discard unsent data rather than re-queuing for next harvest attempt
       scheduler.onHarvestFinished(opts, result)
     }
   }

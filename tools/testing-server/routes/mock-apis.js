@@ -110,7 +110,9 @@ module.exports = fp(async function (fastify, testServer) {
   fastify.get('/js', (request, reply) => {
     reply.type('text/javascript').send('console.log(\'hi\')')
   })
-  fastify.get('/text', (request, reply) => {
+  fastify.get('/text', {
+    compress: false
+  }, (request, reply) => {
     const length = parseInt(request.query.length || 10, 10)
     reply.send('x'.repeat(length))
   })

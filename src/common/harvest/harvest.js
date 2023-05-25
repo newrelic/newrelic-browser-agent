@@ -87,7 +87,7 @@ export class Harvest extends SharedContext {
     return this._send({ ...spec, payload })
   }
 
-  _send ({ endpoint, payload = {}, opts = {}, submitMethod, cbFinished, customUrl, raw }) {
+  _send ({ endpoint, payload = {}, opts = {}, submitMethod, cbFinished, customUrl, raw, includeBaseParams = true }) {
     var info = getInfo(this.sharedContext.agentIdentifier)
     if (!info.errorBeacon) return false
 
@@ -105,7 +105,7 @@ export class Harvest extends SharedContext {
     else if (raw) url = `${this.getScheme()}://${info.errorBeacon}/${endpoint}`
     else url = `${this.getScheme()}://${info.errorBeacon}/${endpoint}/1/${info.licenseKey}`
 
-    var baseParams = !raw ? this.baseQueryString() : ''
+    var baseParams = !raw && includeBaseParams ? this.baseQueryString() : ''
     var payloadParams = payload.qs ? encodeObj(payload.qs, agentRuntime.maxBytes) : ''
     if (!submitMethod) {
       submitMethod = getSubmitMethod(endpoint, opts)

@@ -54,7 +54,7 @@ testDriver.test('customTransactionName 1 arg unload', withUnload, function (t, b
       return router.expectMetrics(3000)
     })
     .then(({ request: { body, query } }) => {
-      const time = getTime(body ? body.cm : query.cm)
+      const time = getTime(body ? body.cm : JSON.parse(query.cm))
       t.equal(
         query.ct,
         'http://custom.transaction/foo',
@@ -88,7 +88,7 @@ testDriver.test('customTransactionName 2 arg', withUnload, function (t, browser,
       return router.expectMetrics(3000)
     })
     .then(({ request: { body, query } }) => {
-      const time = getTime(body ? body.cm : query.cm)
+      const time = getTime(body ? body.cm : JSON.parse(query.cm))
       t.equal(
         query.ct,
         'http://bar.baz/foo',

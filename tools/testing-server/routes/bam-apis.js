@@ -1,5 +1,6 @@
 const fp = require('fastify-plugin')
 const { rumFlags } = require('../constants')
+const sessionReplayData = require('../utils/session-replay-data')
 
 /**
  * Fastify plugin to apply routes to the bam server.
@@ -43,7 +44,18 @@ module.exports = fp(async function (fastify) {
       if (request.testHandle) {
         request.testHandle.incrementRequestCount(fastify.testServerId, 'events')
       }
+      return reply.code(200).send('')
+    }
+  })
+  fastify.route({
+    method: ['GET', 'POST'],
+    url: '/blob',
+    handler: async function (request, reply) {
+      if (request.testHandle) {
+        request.testHandle.incrementRequestCount(fastify.testServerId, 'blob')
+      }
 
+      console.log(request.body)
       return reply.code(200).send('')
     }
   })
@@ -79,6 +91,22 @@ module.exports = fp(async function (fastify) {
 
       // This endpoint must reply with some text in the body or further resource harvests will be disabled
       return reply.code(200).send('123-456')
+    }
+  })
+
+  fastify.route({
+    method: ['GET', 'POST'],
+    url: '/session/1/:testId',
+    handler: async function (request, reply) {
+      if (request.testHandle) {
+        request.testHandle.incrementRequestCount(fastify.testServerId, 'session')
+      }
+
+      console.log(request.query.s)
+      sessionReplayData[request.query.s] ??= []
+      sessionReplayData[request.query.s].push(...JSON.parse(request.body).data)
+
+      return reply.code(200).send('')
     }
   })
 })

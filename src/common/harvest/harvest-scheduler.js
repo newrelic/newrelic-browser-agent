@@ -68,21 +68,46 @@ export class HarvestScheduler extends SharedContext {
     if (this.aborted) return
     var scheduler = this
 
-    if (this.opts.getPayload) { // Ajax & PVT
-      var submitMethod = getSubmitMethod(this.endpoint, opts)
+    let harvests = []
+    let submitMethod
+
+    if (this.opts.getPayload) { // Ajax & PVT & SR
+      submitMethod = getSubmitMethod(this.endpoint, opts)
       if (!submitMethod) return false
 
-      var retry = submitMethod.method === submitData.xhr
+      const retry = submitMethod.method === submitData.xhr
       var payload = this.opts.getPayload({ retry: retry })
-      if (payload) {
-        payload = Object.prototype.toString.call(payload) === '[object Array]' ? payload : [payload]
-        for (var i = 0; i < payload.length; i++) {
-          this.harvest.send(this.endpoint, payload[i], opts, submitMethod, onHarvestFinished)
-        }
-      }
-    } else {
-      this.harvest.sendX(this.endpoint, opts, onHarvestFinished)
+
+      if (!payload) return
+
+      payload = Object.prototype.toString.call(payload) === '[object Array]' ? payload : [payload]
+      harvests.push(...payload)
     }
+
+    /** sendX is used for features that do not supply a preformatted payload via "getPayload" */
+    let send = args => this.harvest.sendX(args)
+    if (harvests.length) {
+      /** _send is the underlying method for sending in the harvest, if sending raw we can bypass the other helpers completely which format the payloads */
+      if (this.opts.raw) send = args => this.harvest._send(args)
+      /** send is used to formated the payloads from "getPayload" and obfuscate before sending */
+      else send = args => this.harvest.send(args)
+    } else {
+      // force it to run at least once in sendX mode
+      harvests.push(undefined)
+    }
+
+    harvests.forEach(payload => {
+      send({
+        endpoint: this.endpoint,
+        payload,
+        opts,
+        submitMethod,
+        cbFinished: onHarvestFinished,
+        includeBaseParams: this.opts.includeBaseParams,
+        customUrl: this.opts.customUrl,
+        gzip: this.opts.gzip
+      })
+    })
 
     if (this.started) {
       this.scheduleHarvest()

@@ -54,8 +54,8 @@ export class MicroAgent {
       autoFeatures.forEach(f => {
         if (enabledFeatures[f]) {
           // TODO - THIS does not work, the instrument switch in lazy loader increases the size of the worker build.  Needs to be revisited
-          import(/* webpackChunkName: "lazy-loader" */ '../features/utils/lazy-loader').then(({ lazyLoader }) => {
-            return lazyLoader(f, 'instrument')
+          import(/* webpackChunkName: "lazy-feature-loader" */ '../features/utils/lazy-feature-loader').then(({ lazyFeatureLoader }) => {
+            return lazyFeatureLoader(f, 'instrument')
           }).then(({ Instrument }) => {
             this.features[f] = new Instrument(this.agentIdentifier, this.sharedAggregator)
           }).catch(err =>
@@ -66,8 +66,8 @@ export class MicroAgent {
         if (enabledFeatures[f]) {
           // TODO - THIS does not work, the instrument switch in lazy loader increases the size of the worker build.  Needs to be revisited
           // Parts of the lazy-loader were removed because webpack was transpiling them into the worker build, errantly inflating the build size.
-          import(/* webpackChunkName: "lazy-loader" */ '../features/utils/lazy-loader').then(({ lazyLoader }) => {
-            return lazyLoader(f, 'aggregate')
+          import(/* webpackChunkName: "lazy-feature-loader" */ '../features/utils/lazy-feature-loader').then(({ lazyFeatureLoader }) => {
+            return lazyFeatureLoader(f, 'aggregate')
           }).then(({ Aggregate }) => {
             this.features[f] = new Aggregate(this.agentIdentifier, this.sharedAggregator)
           }).catch(err =>

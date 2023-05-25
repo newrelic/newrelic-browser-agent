@@ -26,3 +26,4 @@ packages/browser-agent-core/cjs
 ./docs-website
 /temp
 tests/assets/test-builds/**/*
+tests/assets/scripts/**/*

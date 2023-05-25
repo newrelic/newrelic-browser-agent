@@ -41,27 +41,30 @@ describe('constructor', () => {
     expect(session).toMatchObject({
       agentIdentifier: expect.any(String),
       key: expect.any(String),
-      value: expect.any(String),
       expiresMs: expect.any(Number),
-      expiresAt: expect.any(Number),
       expiresTimer: expect.any(Object),
       inactiveMs: expect.any(Number),
-      inactiveAt: expect.any(Number),
       inactiveTimer: expect.any(Object),
       isNew: expect.any(Boolean),
-      sessionReplayActive: expect.any(Boolean),
-      sessionTraceActive: expect.any(Boolean),
-      storage: expect.any(Object)
+      storage: expect.any(Object),
+      state: expect.objectContaining({
+        value: expect.any(String),
+        expiresAt: expect.any(Number),
+        inactiveAt: expect.any(Number),
+        sessionReplay: expect.any(Number),
+        sessionTraceActive: expect.any(Boolean)
+      })
     })
   })
 
   test('can use sane defaults', () => {
     const session = new SessionEntity({ agentIdentifier, key })
-    expect(session).toEqual(expect.objectContaining({
+    expect(session.state).toEqual(expect.objectContaining({
       value: expect.any(String),
       expiresAt: expect.any(Number),
       inactiveAt: expect.any(Number),
-      sessionReplayActive: expect.any(Boolean),
+      updatedAt: expect.any(Number),
+      sessionReplay: expect.any(Number),
       sessionTraceActive: expect.any(Boolean)
     }))
   })
@@ -76,47 +79,47 @@ describe('constructor', () => {
     const now = Date.now()
     jest.setSystemTime(now)
     const session = new SessionEntity({ agentIdentifier, key, expiresMs: 100 })
-    expect(session.expiresAt).toEqual(now + 100)
+    expect(session.state.expiresAt).toEqual(now + 100)
   })
 
   test('expiresAt is the correct future timestamp - existing session', () => {
     const now = Date.now()
     jest.setSystemTime(now)
-    const existingData = new LocalMemory({ [`${PREFIX}_${key}`]: { value, expiresAt: now + 5000, inactiveAt: Infinity } })
+    const existingData = new LocalMemory({ [`${PREFIX}_${key}`]: { value, expiresAt: now + 5000, inactiveAt: Infinity, updatedAt: now, sessionReplay: 0, sessionTraceActive: false, custom: {} } })
     const session = new SessionEntity({ agentIdentifier, key, expiresMs: 100, storageAPI: existingData })
-    expect(session.expiresAt).toEqual(now + 5000)
+    expect(session.state.expiresAt).toEqual(now + 5000)
   })
 
   test('expiresAt never expires if 0', () => {
     const session = new SessionEntity({ agentIdentifier, key, expiresMs: 0 })
-    expect(session.expiresAt).toEqual(Infinity)
+    expect(session.state.expiresAt).toEqual(Infinity)
   })
 
   test('inactiveAt is the correct future timestamp - new session', () => {
     const now = Date.now()
     jest.setSystemTime(now)
     const session = new SessionEntity({ agentIdentifier, key, inactiveMs: 100 })
-    expect(session.inactiveAt).toEqual(now + 100)
+    expect(session.state.inactiveAt).toEqual(now + 100)
   })
 
   test('inactiveAt is the correct future timestamp - existing session', () => {
     const now = Date.now()
     jest.setSystemTime(now)
-    const existingData = new LocalMemory({ [`${PREFIX}_${key}`]: { value, inactiveAt: now + 5000, expiresAt: Infinity } })
+    const existingData = new LocalMemory({ [`${PREFIX}_${key}`]: { value, inactiveAt: now + 5000, expiresAt: Infinity, updatedAt: now, sessionReplay: 0, sessionTraceActive: false, custom: {} } })
     const session = new SessionEntity({ agentIdentifier, key, inactiveMs: 100, storageAPI: existingData })
-    expect(session.inactiveAt).toEqual(now + 5000)
+    expect(session.state.inactiveAt).toEqual(now + 5000)
   })
 
   test('inactiveAt never expires if 0', () => {
     const session = new SessionEntity({ agentIdentifier, key, inactiveMs: 0 })
-    expect(session.inactiveAt).toEqual(Infinity)
+    expect(session.state.inactiveAt).toEqual(Infinity)
   })
 
   test('should handle isNew', () => {
     const newSession = new SessionEntity({ agentIdentifier, key, expiresMs: 10 })
     expect(newSession.isNew).toBeTruthy()
 
-    const storageAPI = new LocalMemory({ [`${PREFIX}_${key}`]: { value, expiresAt: Infinity, inactiveAt: Infinity } })
+    const storageAPI = new LocalMemory({ [`${PREFIX}_${key}`]: { value, expiresAt: Infinity, inactiveAt: Infinity, updatedAt: Date.now(), sessionReplay: 0, sessionTraceActive: false, custom: {} } })
     const existingSession = new SessionEntity({ agentIdentifier, key, expiresMs: 10, storageAPI })
     expect(existingSession.isNew).toBeFalsy()
   })
@@ -125,11 +128,12 @@ describe('constructor', () => {
     // missing required fields
     const storageAPI = new LocalMemory({ [`${PREFIX}_${key}`]: { invalid_fields: true } })
     const session = new SessionEntity({ agentIdentifier, key, storageAPI })
-    expect(session).toEqual(expect.objectContaining({
+    expect(session.state).toEqual(expect.objectContaining({
       value: expect.any(String),
       expiresAt: expect.any(Number),
       inactiveAt: expect.any(Number),
-      sessionReplayActive: expect.any(Boolean),
+      updatedAt: expect.any(Number),
+      sessionReplay: expect.any(Number),
       sessionTraceActive: expect.any(Boolean)
     }))
   })
@@ -139,11 +143,12 @@ describe('constructor', () => {
     jest.setSystemTime(now)
     const storageAPI = new LocalMemory({ [`${PREFIX}_${key}`]: { value, expiresAt: now - 100, inactiveAt: Infinity } })
     const session = new SessionEntity({ agentIdentifier, key, storageAPI })
-    expect(session).toEqual(expect.objectContaining({
+    expect(session.state).toEqual(expect.objectContaining({
       value: expect.any(String),
       expiresAt: expect.any(Number),
       inactiveAt: expect.any(Number),
-      sessionReplayActive: expect.any(Boolean),
+      updatedAt: expect.any(Number),
+      sessionReplay: expect.any(Number),
       sessionTraceActive: expect.any(Boolean)
     }))
   })
@@ -153,11 +158,12 @@ describe('constructor', () => {
     jest.setSystemTime(now)
     const storageAPI = new LocalMemory({ [`${PREFIX}_${key}`]: { value, inactiveAt: now - 100, expiresAt: Infinity } })
     const session = new SessionEntity({ agentIdentifier, key, storageAPI })
-    expect(session).toEqual(expect.objectContaining({
+    expect(session.state).toEqual(expect.objectContaining({
       value: expect.any(String),
       expiresAt: expect.any(Number),
       inactiveAt: expect.any(Number),
-      sessionReplayActive: expect.any(Boolean),
+      updatedAt: expect.any(Number),
+      sessionReplay: expect.any(Number),
       sessionTraceActive: expect.any(Boolean)
     }))
   })
@@ -169,10 +175,10 @@ describe('reset()', () => {
     jest.setSystemTime(now)
     const session = new SessionEntity({ agentIdentifier, key, expiresMs: 10 })
     const sessionVal = session.value
-    expect(session.value).toBeTruthy()
+    expect(session.state.value).toBeTruthy()
     session.reset()
-    expect(session.value).toBeTruthy()
-    expect(session.value).not.toEqual(sessionVal)
+    expect(session.state.value).toBeTruthy()
+    expect(session.state.value).not.toEqual(sessionVal)
   })
 
   test('custom data should be wiped on reset', () => {
@@ -180,12 +186,12 @@ describe('reset()', () => {
     jest.setSystemTime(now)
     const session = new SessionEntity({ agentIdentifier, key, expiresMs: 10 })
     session.syncCustomAttribute('test', 123)
-    expect(session.custom.test).toEqual(123)
+    expect(session.state.custom.test).toEqual(123)
     expect(session.read().custom.test).toEqual(123)
 
     // simulate a timer expiring
     session.reset()
-    expect(session.custom?.test).toEqual(undefined)
+    expect(session.state.custom?.test).toEqual(undefined)
     expect(session.read()?.custom?.test).toEqual(undefined)
   })
 })
@@ -199,13 +205,13 @@ describe('read()', () => {
       value: expect.any(String),
       expiresAt: expect.any(Number),
       inactiveAt: expect.any(Number),
-      sessionReplayActive: expect.any(Boolean),
+      sessionReplay: expect.any(Number),
       sessionTraceActive: expect.any(Boolean)
     }))
   })
 
   test('"pre-existing" sessions get data from read()', () => {
-    const storageAPI = new LocalMemory({ [`${PREFIX}_${key}`]: { value, expiresAt: Infinity, inactiveAt: Infinity } })
+    const storageAPI = new LocalMemory({ [`${PREFIX}_${key}`]: { value, expiresAt: Infinity, inactiveAt: Infinity, updatedAt: Date.now(), sessionReplay: 0, sessionTraceActive: false, custom: {} } })
     const session = new SessionEntity({ agentIdentifier, key, storageAPI })
     expect(session.isNew).toBeFalsy()
     expect(session.read()).toEqual(expect.objectContaining({
@@ -219,20 +225,20 @@ describe('read()', () => {
 describe('write()', () => {
   test('write() sets data to top-level wrapper', () => {
     const session = new SessionEntity({ agentIdentifier, key })
-    expect(session.value).not.toEqual(value)
-    expect(session.expiresAt).not.toEqual(Infinity)
-    expect(session.inactiveAt).not.toEqual(Infinity)
-    session.write({ value, expiresAt: Infinity, inactiveAt: Infinity })
-    expect(session.value).toEqual(value)
-    expect(session.expiresAt).toEqual(Infinity)
-    expect(session.inactiveAt).toEqual(Infinity)
+    expect(session.state.value).not.toEqual(value)
+    expect(session.state.expiresAt).not.toEqual(Infinity)
+    expect(session.state.inactiveAt).not.toEqual(Infinity)
+    session.write({ ...session.state, value, expiresAt: Infinity, inactiveAt: Infinity })
+    expect(session.state.value).toEqual(value)
+    expect(session.state.expiresAt).toEqual(Infinity)
+    expect(session.state.inactiveAt).toEqual(Infinity)
   })
 
   test('write() sets data that read() can access', () => {
     const now = Date.now()
     jest.setSystemTime(now)
     const session = new SessionEntity({ agentIdentifier, key })
-    session.write({ value, expiresAt: now + 100, inactiveAt: now + 100 })
+    session.write({ ...session.state, value, expiresAt: now + 100, inactiveAt: now + 100 })
     const read = session.read()
     expect(read.value).toEqual(value)
     expect(read.expiresAt).toEqual(now + 100)
@@ -259,30 +265,30 @@ describe('refresh()', () => {
     const now = Date.now()
     jest.setSystemTime(now)
     const session = new SessionEntity({ agentIdentifier, key, inactiveMs: 100 })
-    expect(session.inactiveAt).toEqual(now + 100)
+    expect(session.state.inactiveAt).toEqual(now + 100)
     jest.setSystemTime(now + 1000)
     session.refresh()
-    expect(session.inactiveAt).toEqual(now + 100 + 1000)
+    expect(session.state.inactiveAt).toEqual(now + 100 + 1000)
   })
 
   test('refresh resets the entity if expiresTimer is invalid', () => {
     const now = Date.now()
     jest.setSystemTime(now)
     const session = new SessionEntity({ agentIdentifier, key, value })
-    expect(session.value).toEqual(value)
-    session.write({ ...session.read(), expiresAt: now - 1 })
+    expect(session.state.value).toEqual(value)
+    session.write({ ...session.state, expiresAt: now - 1 })
     session.refresh()
-    expect(session.value).not.toEqual(value)
+    expect(session.state.value).not.toEqual(value)
   })
 
   test('refresh resets the entity if inactiveTimer is invalid', () => {
     const now = Date.now()
     jest.setSystemTime(now)
     const session = new SessionEntity({ agentIdentifier, key, value })
-    expect(session.value).toEqual(value)
-    session.write({ ...session.read(), inactiveAt: now - 1 })
+    expect(session.state.value).toEqual(value)
+    session.write({ ...session.state, inactiveAt: now - 1 })
     session.refresh()
-    expect(session.value).not.toEqual(value)
+    expect(session.state.value).not.toEqual(value)
   })
 })
 
@@ -292,20 +298,20 @@ describe('syncCustomAttribute()', () => {
 
     // if custom has never been set, and a "delete" action is triggered, do nothing
     session.syncCustomAttribute('test', null)
-    expect(session?.custom?.test).toEqual(undefined)
+    expect(session?.state?.custom?.test).toEqual(undefined)
 
     session.syncCustomAttribute('test', 1)
-    expect(session?.custom?.test).toEqual(1)
+    expect(session?.state?.custom?.test).toEqual(1)
 
     session.syncCustomAttribute('test', 'string')
-    expect(session?.custom?.test).toEqual('string')
+    expect(session?.state?.custom?.test).toEqual('string')
 
     session.syncCustomAttribute('test', false)
-    expect(session?.custom?.test).toEqual(false)
+    expect(session?.state?.custom?.test).toEqual(false)
 
     // null specifically deletes the object completely
     session.syncCustomAttribute('test', null)
-    expect(session?.custom?.test).toEqual(undefined)
+    expect(session?.state?.custom?.test).toEqual(undefined)
   })
 
   test('Only runs in browser scope', () => {

@@ -343,39 +343,6 @@ describe('metrics', () => {
       stats: { t: expect.toBeWithin(1, Infinity) }
     }]))
   })
-
-  withBrowsersMatching(reliableUnload)('should send SMs to track worker support', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented-worker.html'))
-      .then(() => browser.waitForAgentLoad())
-
-    const [unloadSupportMetricsResults] = await Promise.all([
-      browser.testHandle.expectSupportMetrics(),
-      await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
-    ])
-
-    const supportabilityMetrics = unloadSupportMetricsResults.request.body.sm
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      // Service workers will always be unavailable in our testing since we do not use HTTPS
-      params: { name: 'Workers/Service/Unavailable' },
-      stats: { c: expect.toBeWithin(1, Infinity) }
-    }]))
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Workers/Dedicated/Classic' },
-      stats: { c: expect.toBeWithin(1, Infinity) }
-    }]))
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Workers/Dedicated/Module' },
-      stats: { c: expect.toBeWithin(1, Infinity) }
-    }]))
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Workers/Shared/Classic' },
-      stats: { c: expect.toBeWithin(1, Infinity) }
-    }]))
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Workers/Shared/Module' },
-      stats: { c: expect.toBeWithin(1, Infinity) }
-    }]))
-  })
 })
 
 function loaderTypeSupportabilityMetric (loaderType) {

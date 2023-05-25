@@ -7,11 +7,13 @@ export const submitData = {}
 
 /**
  * Send via JSONP. Do NOT call this function outside of a guaranteed web window environment.
- * @param {string} url
- * @param {string} jsonp
+ * @param {Object} args - The args
+ * @param {string} args.url - The URL to send to
+ * @param {string} args.jsonp - The string name of the jsonp cb method
+ * @returns {XMLHttpRequest}
  * @returns {Element}
  */
-submitData.jsonp = function jsonp (url, jsonp) {
+submitData.jsonp = function jsonp ({ url, jsonp }) {
   try {
     if (isWorkerScope) {
       try {
@@ -19,7 +21,7 @@ submitData.jsonp = function jsonp (url, jsonp) {
       } catch (e) {
         // for now theres no other way to execute the callback from ingest without jsonp, or unsafe eval / new Function calls
         // future work needs to be conducted to allow ingest to return a more traditional JSON API-like experience for the entitlement flags
-        submitData.xhrGet(url + '&jsonp=' + jsonp)
+        submitData.xhrGet({ url: url + '&jsonp=' + jsonp })
         return false
       }
     } else {
@@ -35,18 +37,21 @@ submitData.jsonp = function jsonp (url, jsonp) {
   }
 }
 
-submitData.xhrGet = function xhrGet (url) {
-  return submitData.xhr(url, undefined, false, 'GET')
+submitData.xhrGet = function xhrGet ({ url }) {
+  return submitData.xhr({ url, sync: false, method: 'GET' })
 }
 
 /**
  * Send via XHR
- * @param {string} url
- * @param {string} body
- * @param {boolean} sync
+ * @param {Object} args - The args
+ * @param {string} args.url - The URL to send to
+ * @param {string=} args.body - The Stringified body
+ * @param {boolean=} args.sync - Run XHR as Synchronous
+ * @param {string=} [args.method=POST] - The XHR method to use
+ * @param {{key: string, value: string}[]} [args.headers] - The headers to attach
  * @returns {XMLHttpRequest}
  */
-submitData.xhr = function xhr (url, body, sync, method = 'POST') {
+submitData.xhr = function xhr ({ url, body, sync, method = 'POST', headers = [{ key: 'content-type', value: 'text/plain' }] }) {
   var request = new XMLHttpRequest()
 
   request.open(method, url, !sync)
@@ -57,7 +62,10 @@ submitData.xhr = function xhr (url, body, sync, method = 'POST') {
     // do nothing
   }
 
-  request.setRequestHeader('content-type', 'text/plain')
+  headers.forEach(header => {
+    request.setRequestHeader(header.key, header.value)
+  })
+
   request.send(body)
   return request
 }
@@ -71,10 +79,12 @@ submitData.xhr = function xhr (url, body, sync, method = 'POST') {
 
 /**
  * Send by appending an <img> element to the page. Do NOT call this function outside of a guaranteed web window environment.
- * @param {string} url
- * @returns {Element}
+ * @param {Object} args - The args
+ * @param {string} args.url - The URL to send to
+ * @returns {HTMLImageElement}
  */
-submitData.img = function img (url) {
+submitData.img = function img ({ url }) {
+  console.log('img url', url)
   var element = new Image()
   element.src = url
   return element
@@ -82,11 +92,12 @@ submitData.img = function img (url) {
 
 /**
  * Send via sendBeacon. Do NOT call this function outside of a guaranteed web window environment.
- * @param {string} url
- * @param {string} body
+ * @param {Object} args - The args
+ * @param {string} args.url - The URL to send to
+ * @param {string=} args.body - The Stringified body
  * @returns {boolean}
  */
-submitData.beacon = function (url, body) {
+submitData.beacon = function ({ url, body }) {
   // Navigator has to be bound to ensure it does not error in some browsers
   // https://xgwang.me/posts/you-may-not-know-beacon/#it-may-throw-error%2C-be-sure-to-catch
   const send = window.navigator.sendBeacon.bind(window.navigator)

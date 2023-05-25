@@ -1,6 +1,6 @@
 import { setAPI, setTopLevelCallers } from '../api/api'
 import { addToNREUM, gosCDN, gosNREUMInitializedAgents } from '../../common/window/nreum'
-import { setConfiguration, setInfo, setLoaderConfig, setRuntime } from '../../common/config/config'
+import { setConfiguration, setInfo, setLoaderConfig, setRuntime, getRuntime } from '../../common/config/config'
 import { activateFeatures, activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/util/global-scope'
 
@@ -13,15 +13,16 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
     loader_config = nr.loader_config
   }
 
+  setConfiguration(agentIdentifier, init || {})
+  setLoaderConfig(agentIdentifier, loader_config || {})
+  setRuntime(agentIdentifier, runtime)
+
   info.jsAttributes ??= {}
   if (isWorkerScope) { // add a default attr to all worker payloads
     info.jsAttributes.isWorker = true
   }
 
   setInfo(agentIdentifier, info)
-  setConfiguration(agentIdentifier, init || {})
-  setLoaderConfig(agentIdentifier, loader_config || {})
-  setRuntime(agentIdentifier, runtime)
 
   setTopLevelCallers()
   const api = setAPI(agentIdentifier, forceDrain)

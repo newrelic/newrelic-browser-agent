@@ -260,7 +260,7 @@ testDriver.test('an invalid obfuscation replacement type creates invalid support
     .catch(failWithEndTimeout(t))
 })
 
-testDriver.test('should send SMs for polyfilled native functions', withUnload, function (t, browser, router) {
+testDriver.test('should send SMs for polyfilled native functions', withUnload.and(testDriver.Matcher.withFeature('notInternetExplorer')), function (t, browser, router) {
   let rumPromise = router.expectRum()
   const loadPromise = browser.safeGet(router.assetURL('polyfill-metrics.html', config))
 

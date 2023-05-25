@@ -47,12 +47,10 @@ if (launchedFromCli) {
       if (testFiles.length === 0) {
         loadDefaultFiles(loadBrowsersAndRunTests)
       } else {
-        console.log(1)
         loadFiles(testFiles, loadBrowsersAndRunTests)
       }
     }))
   } else if (commandLineTestFiles.length) {
-    console.log(2)
     loadFiles(commandLineTestFiles, loadBrowsersAndRunTests)
   } else {
     loadDefaultFiles(loadBrowsersAndRunTests)

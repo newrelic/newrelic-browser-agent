@@ -53,7 +53,6 @@ export class Agent {
     // Attempt to initialize all the requested features (sequentially in prio order & synchronously), with any failure aborting the whole process.
     try {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
-      const featuresToStart = [...this.desiredFeatures]
       this.desiredFeatures.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
       this.desiredFeatures.forEach(f => {
         // pageViewEvent must be enabled because RUM calls are not optional. See comment in constructor and PR 428.

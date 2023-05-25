@@ -10,8 +10,6 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await browser.destroyAgentSession(browser.testHandle)
-
   if (browser.testHandle) {
     browser.testHandle.destroy()
   }

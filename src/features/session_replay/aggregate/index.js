@@ -142,18 +142,15 @@ export class Aggregate extends AggregateBase {
     // we are not actively recording SR... DO NOT import or run the recording library
     // session replay samples can only be decided on the first load of a session
     // session replays can continue if already in progress
-    console.log(session, entitlements, errorSample, fullSample)
     if (!session.isNew) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplay
     } else {
-      console.log('new session!')
       // The session is new... determine the mode the new session should start in
       if (fullSample) this.mode = MODE.FULL // full mode has precedence over error mode
       else if (errorSample) this.mode = MODE.ERROR
       // If neither are selected, then don't record (early return)
       else return
     }
-    console.log('mode', this.mode)
 
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
     // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
@@ -192,7 +189,6 @@ export class Aggregate extends AggregateBase {
     }
     // TODO -- Gracefully handle the buffer for retries.
     this.clearBuffer()
-    console.log('payload', payload)
     return [payload]
   }
 

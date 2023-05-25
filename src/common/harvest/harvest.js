@@ -135,7 +135,6 @@ export class Harvest extends SharedContext {
 
     const headers = []
 
-    // if (gzip) headers.push({ key: 'Content-Encoding', value: 'gzip' })
     headers.push({ key: 'content-type', value: 'text/plain' })
 
     /* Since workers don't support sendBeacon right now, or Image(), they can only use XHR method.

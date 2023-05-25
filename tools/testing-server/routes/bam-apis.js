@@ -1,7 +1,6 @@
 const fp = require('fastify-plugin')
 const { rumFlags } = require('../constants')
 const sessionReplayData = require('../utils/session-replay-data')
-const zlib = require('zlib')
 
 /**
  * Fastify plugin to apply routes to the bam server.
@@ -52,7 +51,6 @@ module.exports = fp(async function (fastify) {
     method: ['POST'],
     url: '/blob',
     handler: async function (request, reply) {
-      console.log(request.body)
       if (request.testHandle) {
         request.testHandle.incrementRequestCount(fastify.testServerId, 'blob')
       }

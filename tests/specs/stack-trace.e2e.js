@@ -13,10 +13,10 @@ const supportedBrowsers = new SpecMatcher()
 
 describe('stack trace', () => {
   withBrowsersMatching(supportedBrowsers)('identifies <inline> for same-page scripts (but only same-page scripts)', async () => {
-    const [, errorsResults] = await Promise.all([
-      browser.testHandle.expectRum(),
+    const [errorsResults] = await Promise.all([
       browser.testHandle.expectErrors(),
       browser.url(await browser.testHandle.assetURL('sub-path-script-error/')) // Setup expects before loading the page
+        .then(() => browser.waitForAgentLoad())
     ])
 
     // TypeError: Failed to fetch
@@ -36,10 +36,8 @@ describe('stack trace', () => {
   })
 
   withBrowsersMatching(supportedBrowsers)('still identifies <inline> for same-page scripts after SPA route changes', async () => {
-    await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.url(await browser.testHandle.assetURL('sub-path-script-error/index.html')) // Setup expects before loading the page
-    ])
+    await browser.url(await browser.testHandle.assetURL('sub-path-script-error/index.html'))
+      .then(() => browser.waitForAgentLoad())
 
     const [errorsResults] = await Promise.all([
       browser.testHandle.expectErrors(),

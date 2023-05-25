@@ -62,7 +62,8 @@ module.exports = function (api) {
         [
           './tools/scripts/babel-plugin-transform-import',
           {
-            '(constants/)env$': '$1env.cdn'
+            '(constants/)env$': '$1env.cdn',
+            'polyfill-detection$': 'polyfill-detection.es5'
           }
         ]
       ]

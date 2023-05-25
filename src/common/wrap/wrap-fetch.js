@@ -70,7 +70,7 @@ export function wrapFetch (sharedEE) {
     var fn = target[name]
     if (typeof fn === 'function') {
       target[name] = function () {
-        var args = Array.from(arguments)
+        var args = Array.prototype.slice.call(arguments)
 
         var ctx = {}
         // we are wrapping args in an array so we can preserve the reference

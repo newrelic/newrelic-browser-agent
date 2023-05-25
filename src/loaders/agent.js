@@ -23,12 +23,16 @@ export class Agent {
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
 
-    this.desiredFeatures = new Set(options.features || []) // expected to be a list of static Instrument/InstrumentBase classes, see "spa.js" for example
+    // expected to be a list of static Instrument/InstrumentBase classes, see "spa.js" for example
+    this.desiredFeatures = (options.features || [])
+      .filter((feature, index, parsedArray) => parsedArray.indexOf(feature) === index)
 
     // For Now... ALL agents must make the rum call whether the page_view_event feature was enabled or not.
     // NR1 creates an index on the rum call, and if not seen for a few days, will remove the browser app!
     // Future work is being planned to evaluate removing this behavior from the backend, but for now we must ensure this call is made
-    this.desiredFeatures.add(PageViewEvent)
+    if (this.desiredFeatures.indexOf(PageViewEvent) === -1) {
+      this.desiredFeatures.unshift(PageViewEvent)
+    }
 
     Object.assign(this, configure(this.agentIdentifier, options, options.loaderType || 'agent'))
 
@@ -49,9 +53,9 @@ export class Agent {
     // Attempt to initialize all the requested features (sequentially in prio order & synchronously), with any failure aborting the whole process.
     try {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
-      const featuresToStart = Array.from(this.desiredFeatures)
-      featuresToStart.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
-      featuresToStart.forEach(f => {
+      const featuresToStart = [...this.desiredFeatures]
+      this.desiredFeatures.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
+      this.desiredFeatures.forEach(f => {
         // pageViewEvent must be enabled because RUM calls are not optional. See comment in constructor and PR 428.
         if (enabledFeatures[f.featureName] || f.featureName === FEATURE_NAMES.pageViewEvent) {
           const dependencies = getFeatureDependencyNames(f.featureName)

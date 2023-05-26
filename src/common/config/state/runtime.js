@@ -1,3 +1,4 @@
+import * as userAgent from '../../util/user-agent'
 import { getModeledObject } from './configurable'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { globalScope } from '../../util/global-scope'
@@ -22,6 +23,7 @@ const model = {
   releaseIds: {},
   session: undefined,
   xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
+  userAgent,
   version: VERSION
 }
 

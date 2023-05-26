@@ -5,6 +5,55 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "7a7daceeaed603396805d81c9afd4cac4364cb40",
+          "message": "Address \"configurable\" warnings arising from user-agent module",
+          "issues": [
+            "546"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f1e63367f653a957b0a401fbd21d24a1ca898bbd",
+          "message": "Refactor usage of Array.from to address MooTools conflict",
+          "issues": [
+            "544"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "903a7e1e93a09f4e94ae76e95659a203ecb2896b",
+          "message": "Capture metrics for usage of MooTools and certain polyfills",
+          "issues": [
+            "539"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "1ee675d232fb9a233c36ad0a2b998739fbaa1b8b",
+          "message": "Update agent internals in early preparation for new features",
+          "issues": [
+            "532"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "229b8ed0f4bc558cae62dd34ab6d32c302084d0b",
+          "message": "Ensure runtime is preserved for late-configuration cases",
+          "issues": [
+            "538"
+          ]
+        }
+      ],
+      "version": "1.233.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "898d2582-107b-499b-90a8-c7cd18241f1e",
+      "createTime": "2023-05-26T16:50:32.930Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "36ceedf03e88ac0dc48eb9577bdceb8602f08359",
           "message": "Add X-NewRelic-ID header only if defined",
           "issues": [
@@ -64,5 +113,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-05-17T14:34:33.911Z"
+  "updateTime": "2023-05-26T16:50:32.930Z"
 }

@@ -5,6 +5,7 @@ module.exports = {
     'src/**/*.js',
     '!src/**/*.test.js'
   ],
+  modulePathIgnorePatterns: ['<rootDir>/temp'],
   testEnvironment: 'jsdom',
   testMatch: ['<rootDir>/src/**/?(*.)+(spec|test).[tj]s?(x)'],
   transform: {

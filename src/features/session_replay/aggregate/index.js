@@ -149,7 +149,7 @@ export class Aggregate extends AggregateBase {
       if (fullSample) this.mode = MODE.FULL // full mode has precedence over error mode
       else if (errorSample) this.mode = MODE.ERROR
       // If neither are selected, then don't record (early return)
-      else return
+      return
     }
 
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).

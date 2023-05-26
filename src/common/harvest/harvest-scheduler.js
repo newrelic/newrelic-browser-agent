@@ -8,6 +8,7 @@ import { SharedContext } from '../context/shared-context'
 import { Harvest, getSubmitMethod } from './harvest'
 import { subscribeToEOL } from '../unload/eol'
 import { getConfigurationValue } from '../config/config'
+import { SESSION_EVENTS } from '../session/session-entity'
 
 /**
  * Periodically invokes harvest calls and handles retries
@@ -29,7 +30,7 @@ export class HarvestScheduler extends SharedContext {
     /* Flush all buffered data if session resets and give up retries. This should be synchronous to ensure that the correct `session` value is sent.
       Since session-reset generates a new session ID and the ID is grabbed at send-time, any delays or retries would cause the payload to be sent under
       the wrong session ID. */
-    this.sharedContext?.ee.on('session-reset', () => this.runHarvest({ forceNoRetry: true }))
+    this.sharedContext?.ee.on(SESSION_EVENTS.RESET, () => this.runHarvest({ forceNoRetry: true }))
   }
 
   /**

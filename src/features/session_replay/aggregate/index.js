@@ -16,7 +16,7 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME } from '../constants'
 import { stringify } from '../../../common/util/stringify'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
-import { SESSION_EVENTS } from '../../../common/session/session-entity'
+import { SESSION_EVENTS, MODE } from '../../../common/session/session-entity'
 import { AggregateBase } from '../../utils/aggregate-base'
 
 // would be better to get this dynamically in some way
@@ -24,12 +24,6 @@ export const RRWEB_VERSION = '2.0.0-alpha.8'
 
 let recorder, gzipper, u8
 
-/** The "mode" with which the session replay is recording */
-const MODE = {
-  OFF: 0,
-  FULL: 1,
-  ERROR: 2
-}
 /** Vortex caps payload sizes at 1MB */
 const MAX_PAYLOAD_SIZE = 1000000
 /** Unloading caps around 64kb */
@@ -72,7 +66,7 @@ export class Aggregate extends AggregateBase {
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
-    this.ee.on('session-reset', () => {
+    this.ee.on(SESSION_EVENTS.RESET, () => {
       this.abort()
     })
 
@@ -117,13 +111,11 @@ export class Aggregate extends AggregateBase {
     }, this.featureName, this.ee)
 
     // new handler for waiting for multiple flags.  will be useful if/when backend designs multiple flags, or for evaluating multiple feature flags simultaneously (stn vs sr)
-    this.waitForFlags(['sr']).then(([{ value }]) => {
-      this.initializeRecording(
-        value,
-        Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.errorSampleRate'),
-        Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.sampleRate')
-      )
-    })
+    this.waitForFlags(['sr']).then(([{ value }]) => this.initializeRecording(
+      value,
+      Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.errorSampleRate'),
+      Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.sampleRate')
+    )).then(() => this.aggregator.onReplayReady(this.mode))
 
     drain(this.agentIdentifier, this.featureName)
   }

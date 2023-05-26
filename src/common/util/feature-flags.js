@@ -2,7 +2,6 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { mapOwn } from './map-own'
 import { ee } from '../event-emitter/contextual-ee'
 import { handle } from '../event-emitter/handle'
 import { drain } from '../drain/drain'
@@ -17,20 +16,26 @@ const bucketMap = {
 }
 
 export function activateFeatures (flags, agentIdentifier) {
-  var sharedEE = ee.get(agentIdentifier)
+  const sharedEE = ee.get(agentIdentifier)
   if (!(flags && typeof flags === 'object')) return
-  mapOwn(flags, function (flag, val) {
-    if (!val) {
-      return (bucketMap[flag] || []).forEach(feat => {
-        handle('block-' + flag, [], undefined, feat, sharedEE)
-      })
-    }
 
-    if (activatedFeatures[flag]) {
-      return
+  Object.entries(flags).forEach((flag, num) => {
+    bucketMap[flag]?.forEach(feat => {
+      if (!num) handle('block-' + flag, [], undefined, feat, sharedEE)
+      else handle('feat-' + flag, [], undefined, feat, sharedEE)
+
+      handle('rumresp-' + flag, [Boolean(num)], undefined, feat, sharedEE) // this is a duplicate of feat-/block- but makes awaiting for either easier
+    })
+    activatedFeatures[flag] = Boolean(num)
+  })
+
+  // Let the features waiting on their respective flags know that RUM response was received and that any missing flags are interpreted as bad entitlement / "off".
+  // Hence, those features will not be hanging forever if their flags aren't included in the response.
+  Object.keys(bucketMap).forEach(flag => {
+    if (activatedFeatures[flag] === undefined) {
+      bucketMap[flag]?.forEach(feat => handle('rumresp-' + flag, [false], undefined, feat, sharedEE))
+      activatedFeatures[flag] = false
     }
-    handle('feat-' + flag, [], undefined, bucketMap[flag], sharedEE)
-    activatedFeatures[flag] = true
   })
   drain(agentIdentifier, FEATURE_NAMES.pageViewEvent)
 }

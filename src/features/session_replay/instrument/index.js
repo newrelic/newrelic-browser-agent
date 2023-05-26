@@ -11,12 +11,16 @@
  */
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
+import { MODE } from '../../../common/session/session-entity'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
 
+    this.abortHandler = function () {
+      aggregator.onReplayReady(MODE.OFF) // let other code know to stop waiting on SR initialization (promise) if something went wrong
+    }
     this.importAggregator()
   }
 }

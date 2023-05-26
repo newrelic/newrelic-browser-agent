@@ -12,6 +12,11 @@ import { handle } from '../event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
+export const MODE = {
+  OFF: 0,
+  FULL: 1,
+  ERROR: 2
+}
 // this is what can be stored in local storage (not enforced but probably should be)
 // these values should sync between local storage and the parent class props
 const model = {
@@ -20,10 +25,9 @@ const model = {
   expiresAt: 0,
   updatedAt: Date.now(),
   sessionReplay: 0,
-  sessionTraceActive: false,
+  sessionTraceMode: MODE.OFF,
   custom: {}
 }
-
 export const SESSION_EVENTS = {
   PAUSE: 'session-pause',
   RESET: 'session-reset',

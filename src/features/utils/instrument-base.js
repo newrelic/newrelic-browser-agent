@@ -50,11 +50,15 @@ export class InstrumentBase extends FeatureBase {
       try {
         if (enableSessionTracking) { // would require some setup before certain features start
           const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
-          const session = setupAgentSession(this.agentIdentifier)
+          const sessionManager = setupAgentSession(this.agentIdentifier)
 
-          if (!shouldImportAgg(this.featureName, session)) {
-            drain(this.agentIdentifier, this.featureName)
-            return
+          argsObjFromInstrument.sessionTrackingOn = true // let relevant features know the manager was initialized successfully and should be found on runtime obj
+
+          if (this.featureName === FEATURE_NAMES.sessionReplay) {
+            if (!shouldImportSR(sessionManager)) {
+              drain(this.agentIdentifier, this.featureName)
+              return
+            }
           }
         }
       } catch (e) {
@@ -88,12 +92,10 @@ export class InstrumentBase extends FeatureBase {
  * @param {SessionEntity} session
  * @returns
  */
-function shouldImportAgg (featureName, session) {
+function shouldImportSR (session) {
   // if this isnt the FIRST load of a session AND
   // we are not actively recording SR... DO NOT run the aggregator
   // session replay samples can only be decided on the first load of a session
   // session replays can continue if in progress
-  if (featureName === FEATURE_NAMES.sessionReplay) return !!session?.isNew || !!session?.state.sessionReplayActive
-  // todo -- add case like above for session trace
-  return true
+  return !!session?.isNew || !!session?.state.sessionReplayActive
 }

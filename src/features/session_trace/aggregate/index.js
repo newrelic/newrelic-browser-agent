@@ -67,6 +67,9 @@ export class Aggregate extends FeatureBase {
         switch (sessionEntity.state.sessionTraceMode) {
           case MODE.ERROR:
             registerHandler('errorAgg', () => sessionEntity.state.sessionTraceMode = MODE.FULL, this.featureName, this.ee) // switch to full capture when any error is encountered
+            subscribeToVisibilityChange(visState => { // on user return, check if mode transitioned error -> full since pause (e.g., on another page), and if so, also switch here
+              if (visState == 'visible' && this.mode === MODE.ERROR && sessionEntity.state.sessionTraceMode === MODE.FULL) this.mode = MODE.FULL
+            })
             // fallthrough
           case MODE.FULL:
             this.startTracing(handlerCache, sessionEntity.state.sessionTraceMode)
@@ -97,10 +100,6 @@ export class Aggregate extends FeatureBase {
       }
     }
 
-    // On user return, check if mode transitioned error -> full since pause (e.g., on another page), and if so, also switch here.
-    subscribeToVisibilityChange(visState => {
-      if (visState == 'visible' && this.mode === MODE.ERROR && sessionEntity.state.sessionTraceMode === MODE.FULL) this.mode = MODE.FULL
-    })
     /* --- EoS --- */
 
     // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...

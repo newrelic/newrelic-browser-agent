@@ -28,7 +28,13 @@ process.on('unhandledRejection', (reason, p) => {
   })
   console.log('Unhandled Rejection:')
   console.log(reason)
-})
+});
+['SIGINT', 'SIGTERM', 'SIGQUIT'].forEach(signal =>
+  process.on(signal, () => {
+    stopExternalServices();
+    process.exit(1)
+  })
+);
 
 let tunnelIdentifier = process.env.USER + '@' + os.hostname()
 

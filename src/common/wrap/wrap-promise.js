@@ -71,7 +71,7 @@ export function wrapPromise (sharedEE) {
       WrappedPromise[method] = function (subPromises) { // use our own wrapped version of "Promise.all" and ".race" static fns
         let finalized = false
 
-        Array.from(subPromises || []).forEach(sub => {
+        ;[...subPromises || []].forEach(sub => {
           this.resolve(sub).then(setNrId(method === 'all'), setNrId(false))
         })
 

@@ -76,7 +76,7 @@ export function createWrapperWithEmitter (emitter, always) {
 
       try {
         originalThis = this
-        args = Array.from(arguments)
+        args = [...arguments]
 
         if (typeof getContext === 'function') {
           ctx = getContext(args, originalThis)

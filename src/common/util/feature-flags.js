@@ -15,17 +15,23 @@ const bucketMap = {
   sr: [FEATURE_NAMES.sessionReplay]
 }
 
+/** Note that this function only processes each unique flag ONCE, with the first occurrence of each flag and numeric value determining its switch on/off setting. */
 export function activateFeatures (flags, agentIdentifier) {
   const sharedEE = ee.get(agentIdentifier)
   if (!(flags && typeof flags === 'object')) return
 
-  Object.entries(flags).forEach((flag, num) => {
-    bucketMap[flag]?.forEach(feat => {
-      if (!num) handle('block-' + flag, [], undefined, feat, sharedEE)
-      else handle('feat-' + flag, [], undefined, feat, sharedEE)
+  Object.entries(flags).forEach(([flag, num]) => {
+    if (activatedFeatures[flag] !== undefined) return
 
-      handle('rumresp-' + flag, [Boolean(num)], undefined, feat, sharedEE) // this is a duplicate of feat-/block- but makes awaiting for either easier
-    })
+    if (bucketMap[flag]) {
+      bucketMap[flag].forEach(feat => {
+        if (!num) handle('block-' + flag, [], undefined, feat, sharedEE)
+        else handle('feat-' + flag, [], undefined, feat, sharedEE)
+
+        handle('rumresp-' + flag, [Boolean(num)], undefined, feat, sharedEE) // this is a duplicate of feat-/block- but makes awaiting for 1 event easier than 2
+      })
+    } else if (num) handle('feat-' + flag, [], undefined, undefined, sharedEE) // not sure what other flags are overlooked, but there's a test for ones not in the map
+
     activatedFeatures[flag] = Boolean(num)
   })
 

@@ -28,7 +28,7 @@ jobs:
 
             head('TITLE')
             echo('----------------------------------------------------------------------')
-            const title = context.payload.pull_request.title
+            const title = context.payload.pull_request.title.replaceAll(/(?:[ \-(]*)(?:NR|NEWRELIC)-\d+(?:[, \-)]*)/gi, '')
             if (title.length > 70) echo(title.substring(0, 70) + highlight + title.substring(70))
             else echo(title)
 

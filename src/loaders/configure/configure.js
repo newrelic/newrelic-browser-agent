@@ -1,6 +1,6 @@
 import { setAPI, setTopLevelCallers } from '../api/api'
 import { addToNREUM, gosCDN, gosNREUMInitializedAgents } from '../../common/window/nreum'
-import { setConfiguration, setInfo, setLoaderConfig, setRuntime, getRuntime } from '../../common/config/config'
+import { setConfiguration, setInfo, setLoaderConfig, setRuntime } from '../../common/config/config'
 import { activateFeatures, activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/util/global-scope'
 

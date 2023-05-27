@@ -50,7 +50,7 @@ export class Aggregate extends FeatureBase {
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
     this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
     this.laststart = 0
-    this.mode = MODE.OFF
+    this.isStandalone = false
     const handlerCache = new HandlerCache()
     const sessionEntity = this.agentRuntime.session
 
@@ -63,16 +63,11 @@ export class Aggregate extends FeatureBase {
         else handlerCache.decide(false)
       }, this.featureName, this.ee)
     } else {
-      const doStuffByMode = (sessionEntity) => { // take care that the state obj reference is always subject to change but session mgr keeps one instance
-        switch (sessionEntity.state.sessionTraceMode) {
+      const doStuffByMode = (traceMode) => {
+        switch (traceMode) {
           case MODE.ERROR:
-            registerHandler('errorAgg', () => sessionEntity.state.sessionTraceMode = MODE.FULL, this.featureName, this.ee) // switch to full capture when any error is encountered
-            subscribeToVisibilityChange(visState => { // on user return, check if mode transitioned error -> full since pause (e.g., on another page), and if so, also switch here
-              if (visState == 'visible' && this.mode === MODE.ERROR && sessionEntity.state.sessionTraceMode === MODE.FULL) this.mode = MODE.FULL
-            })
-            // fallthrough
           case MODE.FULL:
-            this.startTracing(handlerCache, sessionEntity.state.sessionTraceMode)
+            this.startTracing(handlerCache)
             break
           case MODE.OFF:
           default: // this feature becomes "off" (does nothing & nothing is sent)
@@ -80,26 +75,32 @@ export class Aggregate extends FeatureBase {
             break
         }
       }
+      // Switch to full capture mode if any exception happens during agent life.
+      registerHandler('errorAgg', () => sessionEntity.state.sessionTraceMode = MODE.FULL, this.featureName, this.ee)
 
-      if (sessionEntity.isNew === false) { // inherit the same mode as existing session's Trace
-        doStuffByMode(sessionEntity)
-      } else { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
+      if (sessionEntity.isNew === true) { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
         registerHandler('rumresp-stn', async (on) => {
+          let startingMode
           if (on === true) {
-            this.startTracing(handlerCache)
+            this.startTracing(handlerCache) // always full capture whenever stn = 1
 
-            /* Future to-do: this should just change the Trace mode to "FULL" and write that to storage.
+            /* Future to-do: this should just change the Trace mode to "FULL" and write that to storage, since Trace ideally retains its own mode inheritance.
               For alpha phase, the starting Trace mode will depend on SR feature's mode. !!This means all following Traces of this session will inherit this mode!! */
-            sessionEntity.state.sessionTraceMode = await getSessionReplayMode(agentIdentifier, aggregator)
-            // The entity, or manager, will handle uploading local state to storage.
+            startingMode = await getSessionReplayMode(agentIdentifier, aggregator)
           } else { // Trace can still be turned on if SR is on
-            sessionEntity.state.sessionTraceMode = await getSessionReplayMode(agentIdentifier, aggregator)
-            doStuffByMode(sessionEntity)
+            startingMode = await getSessionReplayMode(agentIdentifier, aggregator)
+            doStuffByMode(startingMode)
           }
-        }, this.featureName, this.ee)
-      }
-    }
 
+          if (startingMode === MODE.OFF) this.isStandalone = true // without SR, Traces are still subject to old harvest limits
+          /* The NEW session state's mode cannot =FULL programmatically unless the 'errorAgg' handler won the race (exception was thrown), in which case we
+            should STILL capture in full when Replay is also on. */
+          else if (sessionEntity.state.sessionTraceMode === MODE.FULL) startingMode = MODE.FULL
+
+          sessionEntity.state.sessionTraceMode = startingMode
+        }, this.featureName, this.ee)
+      } else doStuffByMode(sessionEntity.state.sessionTraceMode) // inherit the same mode as existing session's Trace
+    }
     /* --- EoS --- */
 
     // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...
@@ -114,8 +115,8 @@ export class Aggregate extends FeatureBase {
     drain(this.agentIdentifier, this.featureName)
   }
 
-  startTracing (startupBuffer, switchToMode = MODE.FULL) {
-    this.mode = MODE.FULL // TO DO: create error mode for this feature
+  startTracing (startupBuffer) {
+    // TO DO: create error mode for this feature
     if (typeof PerformanceNavigationTiming !== 'undefined') {
       this.storeTiming(window.performance.getEntriesByType('navigation')[0])
     } else {
@@ -157,10 +158,11 @@ export class Aggregate extends FeatureBase {
         }
         // Only harvest when more than some threshold of nodes are pending, after the very first harvest.
         if (this.ptid && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
-      } else {
-        // With sessions on harvest intervals, visible pages will send payload regardless of pending nodes but backgrounded pages will still abide by threshold.
-        if (this.ptid && document.visibilityState === 'hidden' && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
       }
+      // else { -- *cli May '26 - Update: Not rate limiting backgrounded pages either for now.
+      //   // With sessions on harvest intervals, visible pages will send payload regardless of pending nodes but backgrounded pages will still abide by threshold.
+      //   if (this.ptid && document.visibilityState === 'hidden' && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
+      // }
 
       return this.takeSTNs(options.retry)
     }

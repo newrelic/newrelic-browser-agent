@@ -42,7 +42,7 @@ export class InstrumentBase extends FeatureBase {
    * @param {Object} [argsObjFromInstrument] - any values or references to pass down to aggregate
    * @returns void
    */
-  importAggregator (argsObjFromInstrument) {
+  importAggregator (argsObjFromInstrument = {}) {
     if (this.featAggregate || !this.auto) return
     const enableSessionTracking = isBrowserScope && getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true
 

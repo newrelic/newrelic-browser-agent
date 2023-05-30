@@ -72,7 +72,7 @@ export class InstrumentBase extends FeatureBase {
         // import and instantiate the aggregator chunk
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
-        new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)
+        this.featAggregate = new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)
       } catch (e) {
         warn(`Downloading ${this.featureName} failed...`, e)
         this.abortHandler?.() // undo any important alterations made to the page

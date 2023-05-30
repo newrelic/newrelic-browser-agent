@@ -49,8 +49,21 @@ export default function () {
     })
 
     describe('When session ends', () => {
-      it('should end recording', async () => {
+      it('should end recording and unload', async () => {
+        await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+          ...config,
+          init: {
+            ...config.init,
+            // harvest intv longer than the session expiry time
+            session_replay: { enabled: true, harvestTimeSeconds: 10, errorSampleRate: 0, sampleRate: 1 },
+            session: { expiresMs: 5000 }
+          }
+        }))
+          .then(() => browser.testHandle.expectRum())
 
+        const { agentSessions } = await browser.getAgentSessionInfo()
+        const sessionClass = Object.values(agentSessions)[0]
+        expect(sessionClass.sessionReplay).toEqual(MODE.FULL)
       })
     })
   })

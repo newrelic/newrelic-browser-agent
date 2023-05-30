@@ -1,0 +1,37 @@
+name: 'Pull Request Checks'
+
+on:
+  push:
+    branch:
+    - workflow-changes
+
+jobs:
+  find-pull-request:
+    name: Find Pull Request Target
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      pull-request-target: ${{ steps.pull-request-target.outputs.results }}
+    steps:
+      - name: Setup Container
+        run: apt update && apt install -y git
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: get target
+        id: pull-request-target
+        uses: ./.github/actions/find-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  jest:
+    needs: find-pull-request
+    uses: ./.github/workflows/jest.yml
+    with:
+      ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).number }}/merge'
+    secrets: inherit

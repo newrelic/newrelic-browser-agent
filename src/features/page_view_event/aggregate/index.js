@@ -11,11 +11,11 @@ import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
 import { globalScope, isBrowserScope } from '../../../common/util/global-scope'
 import { drain } from '../../../common/drain/drain'
-import { FeatureBase } from '../../utils/feature-base'
 import { activateFeatures } from '../../../common/util/feature-flags'
 import { warn } from '../../../common/util/console'
+import { AggregateBase } from '../../utils/aggregate-base'
 
-export class Aggregate extends FeatureBase {
+export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME)

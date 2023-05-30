@@ -11,11 +11,11 @@ import { VERSION } from '../../../common/constants/env'
 import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope } from '../../../common/util/global-scope'
-import { FeatureBase } from '../../utils/feature-base'
+import { AggregateBase } from '../../utils/aggregate-base'
 import { stringify } from '../../../common/util/stringify'
 import { endpointMap } from './endpoint-map'
 
-export class Aggregate extends FeatureBase {
+export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)

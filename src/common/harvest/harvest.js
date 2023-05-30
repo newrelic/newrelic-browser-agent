@@ -18,6 +18,23 @@ import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/env'
 import { isBrowserScope, isWorkerScope } from '../util/global-scope'
 
+/**
+ * @typedef {object} NetworkSendSpec
+ * @param {string} endpoint The endpoint to use (jserrors, events, resources etc.)
+ * @param {object} payload Object representing payload.
+ * @param {object} payload.qs Map of values that should be sent as part of the request query string.
+ * @param {string} payload.body String that should be sent as the body of the request.
+ * @param {string} payload.body.e Special case of body used for browser interactions.
+ * @param {object} opts Additional options for sending data
+ * @param {boolean} opts.needResponse Specify whether the caller expects a response data.
+ * @param {boolean} opts.unload Specify whether the call is a final harvest during page unload.
+ * @param {boolean} opts.sendEmptyBody Specify whether the call should be made even if the body is empty. Useful for rum calls.
+ * @param {function} submitMethod The submit method to use {@link ../util/submit-data}
+ * @param {string} customUrl Override the beacon url the data is sent to; must include protocol if defined
+ * @param {boolean} gzip Enabled gzip compression on the body of the request before it is sent
+ * @param {boolean} includeBaseParams Enables the use of base query parameters in the beacon url {@see Harvest.baseQueryString}
+ */
+
 const haveSendBeacon = !!navigator.sendBeacon // only the web window obj has sendBeacon at this time, so 'false' for other envs
 
 export class Harvest extends SharedContext {
@@ -34,12 +51,7 @@ export class Harvest extends SharedContext {
   /**
    * Initiate a harvest from multiple sources. An event that corresponds to the endpoint
    * name is emitted, which gives any listeners the opportunity to provide payload data.
-   *
-   * @param {string} endpoint - The endpoint of the harvest (jserrors, events, resources etc.)
-   *
-   * @param {object} opts
-   * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
-   * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
+   * @param {NetworkSendSpec} spec Specification for sending data
    */
   sendX (spec) {
     const { endpoint, opts } = spec
@@ -54,21 +66,9 @@ export class Harvest extends SharedContext {
   }
 
   /**
- * Initiate a harvest call.
- *
- * @param {string} endpoint - The endpoint of the harvest (jserrors, events, resources etc.)
- * @param {object} nr - The loader singleton.
- *
- * @param {object} singlePayload - Object representing payload.
- * @param {object} singlePayload.qs - Map of values that should be sent as part of the request query string.
- * @param {string} singlePayload.body - String that should be sent as the body of the request.
- * @param {string} singlePayload.body.e - Special case of body used for browser interactions.
- *
- * @param {object} opts
- * @param {bool} opts.needResponse - Specify whether the caller expects a response data.
- * @param {bool} opts.unload - Specify whether the call is a final harvest during page unload.
- * @param {bool} opts.sendEmptyBody - Specify whether the call should be made even if the body is empty. Useful for rum calls.
- */
+   * Initiate a harvest call.
+   * @param {NetworkSendSpec} spec Specification for sending data
+   */
   send (spec) {
     const { payload = {} } = spec
     var makeBody = createAccumulator()
@@ -82,6 +82,10 @@ export class Harvest extends SharedContext {
     return caller({ ...spec, payload: newPayload })
   }
 
+  /**
+   * Apply obfuscation rules to the payload and then initial the harvest network call.
+   * @param {NetworkSendSpec} spec Specification for sending data
+   */
   obfuscateAndSend (spec) {
     const { payload = {} } = spec
     applyFnToProps(payload, (...args) => this.obfuscator.obfuscateString(...args), 'string', ['e'])

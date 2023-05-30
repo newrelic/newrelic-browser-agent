@@ -11,7 +11,7 @@ import { now } from '../../../common/timing/now'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { HandlerCache } from '../../utils/handler-cache'
-import { FeatureBase } from '../../utils/feature-base'
+import { AggregateBase } from '../../utils/aggregate-base'
 
 const ignoredEvents = {
   // we find that certain events make the data too noisy to be useful
@@ -29,7 +29,7 @@ const toAggregate = {
 }
 const MAX_TRACE_DURATION = 15 * 60 * 1000 // 15 minutes
 
-export class Aggregate extends FeatureBase {
+export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator, argsObj) {
     super(agentIdentifier, aggregator, FEATURE_NAME)

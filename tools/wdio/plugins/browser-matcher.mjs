@@ -15,7 +15,18 @@ export default class BrowserMatcher {
   }
 
   #browserMatchTest (matcher) {
-    let skip = (matcher && !matcher.test(this.#browserName, this.#browserVersion)) || false
+    let skip = false
+
+    if (Array.isArray(matcher) && matcher.length > 0) {
+      for (const indexedMatcher of matcher) {
+        if (!indexedMatcher.test(this.#browserName, this.#browserVersion)) {
+          skip = true
+          break
+        }
+      }
+    } else if (matcher && typeof matcher.test === 'function') {
+      skip = !matcher.test(this.#browserName, this.#browserVersion)
+    }
 
     return function (...args) {
       /*

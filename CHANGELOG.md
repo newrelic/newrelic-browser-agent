@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.233.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.232.1...v1.233.0) (2023-05-26)
+
+
+### Features
+
+* Capture metrics for usage of MooTools and certain polyfills ([#539](https://github.com/newrelic/newrelic-browser-agent/issues/539)) ([903a7e1](https://github.com/newrelic/newrelic-browser-agent/commit/903a7e1e93a09f4e94ae76e95659a203ecb2896b))
+* Update agent internals in early preparation for new features ([#532](https://github.com/newrelic/newrelic-browser-agent/issues/532)) ([1ee675d](https://github.com/newrelic/newrelic-browser-agent/commit/1ee675d232fb9a233c36ad0a2b998739fbaa1b8b))
+
+
+### Bug Fixes
+
+* Address "configurable" warnings arising from user-agent module ([#546](https://github.com/newrelic/newrelic-browser-agent/issues/546)) ([7a7dace](https://github.com/newrelic/newrelic-browser-agent/commit/7a7daceeaed603396805d81c9afd4cac4364cb40))
+* Ensure runtime is preserved for late-configuration cases ([#538](https://github.com/newrelic/newrelic-browser-agent/issues/538)) ([229b8ed](https://github.com/newrelic/newrelic-browser-agent/commit/229b8ed0f4bc558cae62dd34ab6d32c302084d0b))
+* Refactor usage of Array.from to address MooTools conflict ([#544](https://github.com/newrelic/newrelic-browser-agent/issues/544)) ([f1e6336](https://github.com/newrelic/newrelic-browser-agent/commit/f1e63367f653a957b0a401fbd21d24a1ca898bbd))
+
 ## [1.232.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.232.0...v1.232.1) (2023-05-17)
 
 

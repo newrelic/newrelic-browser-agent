@@ -12,6 +12,7 @@ export default async function runTest ({
     browser.testHandle.expectEvents(),
     browser.testHandle.expectAjaxTimeSlices(),
     browser.url(url) // Setup expects before loading the page
+      .then(() => browser.waitForAgentLoad())
   ])
 
   expect(rumResults.request.query.a).toEqual(expect.any(String))

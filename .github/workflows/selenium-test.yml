@@ -38,7 +38,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build agent
-        run: npm run build:all
+        run: npm run build:browser-tests
       - name: Run jil unit tests
         run: |
           node ./tools/jil/bin/cli.js \

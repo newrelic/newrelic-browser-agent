@@ -13,6 +13,17 @@ import { getConfigurationValue } from '../config/config'
  * Periodically invokes harvest calls and handles retries
  */
 export class HarvestScheduler extends SharedContext {
+  /**
+     * Create a HarvestScheduler
+     * @param {string} endpoint - The base BAM endpoint name -- ex. 'events'
+     * @param {object} opts - The options used to configure the HarvestScheduler
+     * @param {Function} opts.onFinished - The callback to be fired when a harvest has finished
+     * @param {Function} opts.getPayload - A callback which can be triggered to return a payload for harvesting
+     * @param {number} opts.retryDelay - The number of seconds to wait before retrying after a network failure
+     * @param {boolean} opts.raw - Use a prefabricated payload shape as the harvest payload without the need for formatting
+     * @param {string} opts.customUrl - A custom url that falls outside of the shape of the standard BAM harvester url pattern.  Will use directly instead of concatenating various pieces
+     * @param {*} parent - The parent object, whose state can be passed into SharedContext
+     */
   constructor (endpoint, opts, parent) {
     super(parent) // gets any allowed properties from the parent and stores them in `sharedContext`
     this.endpoint = endpoint
@@ -103,9 +114,8 @@ export class HarvestScheduler extends SharedContext {
         opts,
         submitMethod,
         cbFinished: onHarvestFinished,
-        includeBaseParams: this.opts.includeBaseParams,
         customUrl: this.opts.customUrl,
-        gzip: this.opts.gzip
+        raw: this.opts.raw
       })
     })
 

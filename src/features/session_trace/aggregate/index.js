@@ -11,9 +11,8 @@ import { now } from '../../../common/timing/now'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { HandlerCache } from '../../utils/handler-cache'
-import { MODE } from '../../../common/session/session-entity'
+import { MODE, SESSION_EVENTS } from '../../../common/session/session-entity'
 import { getSessionReplayMode } from '../../session_replay/replay-mode'
-import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { AggregateBase } from '../../utils/aggregate-base'
 
 const ignoredEvents = {
@@ -51,7 +50,7 @@ export class Aggregate extends AggregateBase {
     this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
     this.laststart = 0
     this.isStandalone = false
-    const handlerCache = new HandlerCache()
+    const operationalGate = new HandlerCache() // acts as a controller-intermediary that can enable or disable this feature's collection dynamically
     const sessionEntity = this.agentRuntime.session
 
     /* --- The following section deals with user sessions concept & contains non-trivial control flow. --- */
@@ -59,30 +58,32 @@ export class Aggregate extends AggregateBase {
       // Since session manager isn't around, do the old Trace behavior of waiting for RUM response to decide feature activation.
       this.isStandalone = true
       registerHandler('rumresp-stn', (on) => {
-        if (on === true) this.startTracing(handlerCache)
-        else handlerCache.decide(false)
+        if (on === true) this.startTracing(operationalGate)
+        else operationalGate.decide(false)
       }, this.featureName, this.ee)
     } else {
       const doStuffByMode = (traceMode) => {
         switch (traceMode) {
           case MODE.ERROR:
           case MODE.FULL:
-            this.startTracing(handlerCache)
+            this.startTracing(operationalGate)
             break
           case MODE.OFF:
           default: // this feature becomes "off" (does nothing & nothing is sent)
-            handlerCache.decide(false)
+            operationalGate.decide(false)
             break
         }
       }
       // Switch to full capture mode if any exception happens during agent life.
       registerHandler('errorAgg', () => sessionEntity.state.sessionTraceMode = MODE.FULL, this.featureName, this.ee)
+      // *cli May'23 - For now, this is to match Replay's behavior of shutting down (perm) on first and any session reset.
+      this.ee.on(SESSION_EVENTS.RESET, () => operationalGate.permanentlyDecide(false))
 
       if (sessionEntity.isNew === true) { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
         registerHandler('rumresp-stn', async (on) => {
           let startingMode
           if (on === true) {
-            this.startTracing(handlerCache) // always full capture whenever stn = 1
+            this.startTracing(operationalGate) // always full capture whenever stn = 1
 
             /* Future to-do: this should just change the Trace mode to "FULL" and write that to storage, since Trace ideally retains its own mode inheritance.
               For alpha phase, the starting Trace mode will depend on SR feature's mode. !!This means all following Traces of this session will inherit this mode!! */
@@ -104,14 +105,14 @@ export class Aggregate extends AggregateBase {
     /* --- EoS --- */
 
     // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...
-    registerHandler('bst', (...args) => handlerCache.settle(() => this.storeEvent(...args)), this.featureName, this.ee)
-    registerHandler('bstTimer', (...args) => handlerCache.settle(() => this.storeTimer(...args)), this.featureName, this.ee)
-    registerHandler('bstResource', (...args) => handlerCache.settle(() => this.storeResources(...args)), this.featureName, this.ee)
-    registerHandler('bstHist', (...args) => handlerCache.settle(() => this.storeHist(...args)), this.featureName, this.ee)
-    registerHandler('bstXhrAgg', (...args) => handlerCache.settle(() => this.storeXhrAgg(...args)), this.featureName, this.ee)
-    registerHandler('bstApi', (...args) => handlerCache.settle(() => this.storeSTN(...args)), this.featureName, this.ee)
-    registerHandler('errorAgg', (...args) => handlerCache.settle(() => this.storeErrorAgg(...args)), this.featureName, this.ee)
-    registerHandler('pvtAdded', (...args) => handlerCache.settle(() => this.processPVT(...args)), this.featureName, this.ee)
+    registerHandler('bst', (...args) => operationalGate.settle(() => this.storeEvent(...args)), this.featureName, this.ee)
+    registerHandler('bstTimer', (...args) => operationalGate.settle(() => this.storeTimer(...args)), this.featureName, this.ee)
+    registerHandler('bstResource', (...args) => operationalGate.settle(() => this.storeResources(...args)), this.featureName, this.ee)
+    registerHandler('bstHist', (...args) => operationalGate.settle(() => this.storeHist(...args)), this.featureName, this.ee)
+    registerHandler('bstXhrAgg', (...args) => operationalGate.settle(() => this.storeXhrAgg(...args)), this.featureName, this.ee)
+    registerHandler('bstApi', (...args) => operationalGate.settle(() => this.storeSTN(...args)), this.featureName, this.ee)
+    registerHandler('errorAgg', (...args) => operationalGate.settle(() => this.storeErrorAgg(...args)), this.featureName, this.ee)
+    registerHandler('pvtAdded', (...args) => operationalGate.settle(() => this.processPVT(...args)), this.featureName, this.ee)
     drain(this.agentIdentifier, this.featureName)
   }
 

@@ -14,7 +14,10 @@ const { paths } = require('../constants')
 module.exports = fp(async function (fastify, testServer) {
   let response
 
-  fastify.get('/', async (request, reply) => {
+  fastify.get('/', {
+    // do not compress the main home page of the testing server, this has weird consequences
+    compress: false
+  }, async (request, reply) => {
     if (!response) {
       response = '<html><head></head><body><ul>\n'
 

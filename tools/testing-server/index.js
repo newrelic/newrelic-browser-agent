@@ -208,7 +208,7 @@ class TestServer {
     this.#assetServer = fastify(this.#defaultServerConfig)
 
     this.#assetServer.decorate('testServerId', 'assetServer')
-    // this.#assetServer.register(require('@fastify/compress'))
+    this.#assetServer.register(require('@fastify/compress')) // handle gzip payloads, reply with gzip'd content
     this.#assetServer.decorate('testServerLogger', this.#logger)
     this.#assetServer.register(require('@fastify/multipart'), {
       addToBody: true
@@ -238,7 +238,6 @@ class TestServer {
     this.#corsServer = fastify(this.#defaultServerConfig)
 
     this.#corsServer.decorate('testServerId', 'corsServer')
-    // this.#corsServer.register(require('@fastify/compress'))
     this.#corsServer.decorate('testServerLogger', this.#logger)
     this.#corsServer.register(require('@fastify/multipart'), {
       addToBody: true
@@ -257,7 +256,8 @@ class TestServer {
     this.#bamServer = fastify(this.#defaultServerConfig)
 
     this.#bamServer.decorate('testServerId', 'bamServer')
-    // this.#bamServer.register(require('@fastify/compress'))
+    this.#bamServer.register(require('./plugins/compression-interceptor')) // pre-process the request to help it conform with compression standards
+    this.#bamServer.register(require('@fastify/compress')) // handle gzip payloads, reply with gzip'd content
     this.#bamServer.decorate('testServerLogger', this.#logger)
     this.#bamServer.register(require('@fastify/multipart'), {
       addToBody: true

@@ -15,15 +15,13 @@
 export function applyFnToProps (obj, fn, type = 'string', ignoreKeys = []) {
   if (!obj || typeof obj !== 'object') return obj
 
-  for (var property in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, property)) {
-      if (typeof obj[property] === 'object') {
-        applyFnToProps(obj[property], fn, type, ignoreKeys)
-      } else {
-        if (typeof obj[property] === type && !ignoreKeys.includes(property)) obj[property] = fn(obj[property])
-      }
+  Object.keys(obj).forEach(property => {
+    if (typeof obj[property] === 'object') {
+      applyFnToProps(obj[property], fn, type, ignoreKeys)
+    } else {
+      if (typeof obj[property] === type && !ignoreKeys.includes(property)) obj[property] = fn(obj[property])
     }
-  }
+  })
 
   return obj
 }

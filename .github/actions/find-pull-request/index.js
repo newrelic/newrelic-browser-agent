@@ -21,8 +21,10 @@ if (!Array.isArray(pullRequests) || pullRequests.length === 0) {
   }
 } else {
   core.setOutput('results', JSON.stringify({
-    head: pullRequests[0].head.ref,
-    base: pullRequests[0].base.ref,
-    number: pullRequests[0].number
+    head_ref: pullRequests[0].head.ref,
+    head_sha: pullRequests[0].head.sha,
+    base_ref: pullRequests[0].base.ref,
+    base_sha: pullRequests[0].base.sha,
+    pr_number: pullRequests[0].number
   }))
 }

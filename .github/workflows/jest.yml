@@ -4,15 +4,12 @@
 name: 'Jest: Unit Tests'
 
 on:
-  push:
-    branch:
-    - workflow-changes
   workflow_dispatch:
   workflow_call:
     inputs:
       ref:
         description: 'Github branch ref to checkout and run tests on.'
-        required: true
+        required: false
         type: string
 
 jobs:
@@ -46,10 +43,10 @@ jobs:
       - name: Upload pr code coverage
         if: ${{ steps.pull-request-target.outputs.results }}
         uses: codecov/codecov-action@v3
+        env:
+          GITHUB_HEAD_REF: ${{ inputs.ref }}
         with:
-          override_branch: ${{ github.ref_name }}
-          override_commit: ${{ github.sha }}
-          override_pr: ${{ fromJSON(steps.pull-request-target.outputs.results).number }}
+          override_pr: ${{ fromJSON(steps.pull-request-target.outputs.results).pr_number }}
           verbose: true
       - name: Upload branch code coverage
         if: ${{ !steps.pull-request-target.outputs.results }}

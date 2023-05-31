@@ -35,5 +35,5 @@ jobs:
     needs: find-pull-request
     uses: ./.github/workflows/jest.yml
     with:
-      ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).number }}/merge'
+      ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
     secrets: inherit

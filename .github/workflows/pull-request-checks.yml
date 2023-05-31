@@ -1,11 +1,14 @@
 name: 'Pull Request Checks'
 
 on:
+  push:
+    branch:
+    - workflow-changes
   workflow_dispatch:
 
 jobs:
   find-pull-request:
-    name: Find Pull Request Target
+    name: Find pull request target
     runs-on: ubuntu-latest
     container:
       image: ubuntu:latest
@@ -15,19 +18,20 @@ jobs:
     outputs:
       pull-request-target: ${{ steps.pull-request-target.outputs.results }}
     steps:
-      - name: Setup Container
+      - name: Setup container
         run: apt update && apt install -y git
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: get target
+      - name: Find pull request target
         id: pull-request-target
         uses: ./.github/actions/find-pull-request
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   jest:
+    name: Jest unit tests
     needs: find-pull-request
     uses: ./.github/workflows/jest.yml
     with:

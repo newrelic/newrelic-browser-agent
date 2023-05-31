@@ -13,7 +13,31 @@ on:
         type: string
 
 jobs:
+  find-pull-request:
+    name: Find pull request target
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      pull-request-target: ${{ steps.pull-request-target.outputs.results }}
+    steps:
+      - name: Setup container
+        run: apt update && apt install -y git
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Find pull request target
+        id: pull-request-target
+        uses: ./.github/actions/find-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
   unit:
+    name: Run Jest
     runs-on: ubuntu-latest
     timeout-minutes: 30
     container:
@@ -35,6 +59,8 @@ jobs:
       - name: Run unit tests
         run: npm run test:coverage
       - uses: codecov/codecov-action@v3
+        with:
+          override_pr: ${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).number || null }}
       - name: Archive code coverage results
         uses: actions/upload-artifact@v3
         with:

@@ -6,9 +6,10 @@
 name: 'Find Branch Pull Request'
 
 inputs:
-  test:
+  pr_required:
+    description: "Boolean indicating if a pull request must exist. If true, the action will fail when a pull request is not found."
     required: false
-    default: 'foobar'
+    default: false
   token:
     description: "The github token to use for interacting with the repository."
     required: true
@@ -29,4 +30,5 @@ runs:
       run: node $GITHUB_ACTION_PATH/index.js
       shell: bash
       env:
+        PR_REQUIRED: ${{ inputs.pr_required }}
         GITHUB_TOKEN: ${{ inputs.token }}

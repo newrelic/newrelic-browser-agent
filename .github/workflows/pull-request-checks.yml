@@ -1,9 +1,7 @@
 name: 'Pull Request Checks'
 
 on:
-  push:
-    branch:
-    - workflow-changes
+  workflow_dispatch:
 
 jobs:
   find-pull-request:

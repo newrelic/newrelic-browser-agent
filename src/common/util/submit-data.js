@@ -33,22 +33,29 @@ submitData.jsonp = function jsonp ({ url, jsonp }) {
       return element
     }
   } catch (err) {
-  // do nothing
+    // do nothing
   }
 }
 
+/**
+ * Performs an asynchronous GET request using XMLHttpRequest.
+ *
+ * @param {Object} args - An object containing a `url` property.
+ * @param {string} args.url - The URL to send the GET request to.
+ * @returns {XMLHttpRequest} - An XMLHttpRequest object.
+ */
 submitData.xhrGet = function xhrGet ({ url }) {
   return submitData.xhr({ url, sync: false, method: 'GET' })
 }
 
 /**
  * Send via XHR
- * @param {Object} args - The args
- * @param {string} args.url - The URL to send to
- * @param {string=} args.body - The Stringified body
- * @param {boolean=} args.sync - Run XHR as Synchronous
- * @param {string=} [args.method=POST] - The XHR method to use
- * @param {{key: string, value: string}[]} [args.headers] - The headers to attach
+ * @param {Object} args - The args.
+ * @param {string} args.url - The URL to send to.
+ * @param {string=} args.body - The Stringified body.
+ * @param {boolean=} args.sync - Run XHR synchronously.
+ * @param {string=} [args.method=POST] - The XHR method to use.
+ * @param {{key: string, value: string}[]} [args.headers] - The headers to attach.
  * @returns {XMLHttpRequest}
  */
 submitData.xhr = function xhr ({ url, body, sync, method = 'POST', headers = [{ key: 'content-type', value: 'text/plain' }] }) {
@@ -69,13 +76,6 @@ submitData.xhr = function xhr ({ url, body, sync, method = 'POST', headers = [{ 
   request.send(body)
   return request
 }
-
-/**
- * Unused at the moment -- DEPRECATED
- */
-// submitData.xhrSync = function xhrSync (url, body) {
-//   return submitData.xhr(url, body, true)
-// }
 
 /**
  * Send by appending an <img> element to the page. Do NOT call this function outside of a guaranteed web window environment.

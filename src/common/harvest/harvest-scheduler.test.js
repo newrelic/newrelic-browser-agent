@@ -2,7 +2,7 @@ import { setConfiguration } from '../config/state/init'
 import { HarvestScheduler } from './harvest-scheduler'
 
 describe('runHarvest', () => {
-  it('should re-schedule Ajax harvest even if there is no accumulated data', () => {
+  it('should re-schedule harvest even if there is no accumulated data', () => {
     setConfiguration('asdf', {})
     const scheduler = new HarvestScheduler('events', { getPayload: jest.fn() }, { agentIdentifier: 'asdf', ee: { on: jest.fn() } })
     scheduler.started = true
@@ -12,7 +12,7 @@ describe('runHarvest', () => {
     expect(scheduler.scheduleHarvest).toHaveBeenCalledTimes(1)
   })
 
-  it('should re-schedule Ajax harvest if there is accumulated data', () => {
+  it('should also re-schedule harvest if there is accumulated data', () => {
     setConfiguration('asdf', {})
     const scheduler = new HarvestScheduler('events', { getPayload: jest.fn().mockImplementation(() => 'payload') }, { agentIdentifier: 'asdf', ee: { on: jest.fn() } })
     scheduler.started = true

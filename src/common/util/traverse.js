@@ -3,34 +3,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// traverses an object and applies a fn to property values of a certain type
-export function applyFnToProps (obj, fn, type, ignoreKeys) {
+/**
+ * Applies a function to properties of a specified type in an object, recursively.
+ *
+ * @param {Object} obj - The object to apply the function to.
+ * @param {Function} fn - The function to apply to matching properties.
+ * @param {string} [type='string'] - The type of properties to apply the function to.
+ * @param {Array<string>} [ignoreKeys=[]] - The keys of properties to ignore and not modify.
+ * @returns {Object} - The object with function recursively applied.
+ */
+export function applyFnToProps (obj, fn, type = 'string', ignoreKeys = []) {
   if (!obj || typeof obj !== 'object') return obj
-  type = type || 'string'
-  ignoreKeys = ignoreKeys || []
-  return traverse(obj)
-  function traverse (obj) {
-    for (var property in obj) {
-      // eslint-disable-next-line
-      if (obj.hasOwnProperty(property)) {
-        if (typeof obj[property] === 'object') {
-          traverse(obj[property])
-        } else {
-          if (typeof obj[property] === type && !shouldIgnore(property)) obj[property] = fn(obj[property])
-        }
+
+  for (var property in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, property)) {
+      if (typeof obj[property] === 'object') {
+        applyFnToProps(obj[property], fn, type, ignoreKeys)
+      } else {
+        if (typeof obj[property] === type && !ignoreKeys.includes(property)) obj[property] = fn(obj[property])
       }
     }
-    return obj
   }
 
-  function shouldIgnore (key) {
-    var ignore = false
-    for (var i = 0; i < ignoreKeys.length; i++) {
-      if (ignoreKeys[i] === key) {
-        ignore = true
-        break
-      }
-    }
-    return ignore
-  }
+  return obj
 }

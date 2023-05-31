@@ -89,7 +89,12 @@ export class HarvestScheduler extends SharedContext {
       const retry = submitMethod.method === submitData.xhr
       var payload = this.opts.getPayload({ retry: retry })
 
-      if (!payload) return
+      if (!payload) {
+        if (this.started) {
+          this.scheduleHarvest()
+        }
+        return
+      }
 
       payload = Object.prototype.toString.call(payload) === '[object Array]' ? payload : [payload]
       harvests.push(...payload)

@@ -13,8 +13,9 @@ on:
         type: string
 
 jobs:
-  find-pull-request:
-    name: Find pull request target
+  on_workflow_dispatch:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    name: 'Workflow Dispatch'
     runs-on: ubuntu-latest
     container:
       image: ubuntu:latest

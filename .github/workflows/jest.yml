@@ -4,6 +4,9 @@
 name: 'Jest: Unit Tests'
 
 on:
+  push:
+    branch:
+    - workflow-changes
   workflow_dispatch:
   workflow_call:
     inputs:

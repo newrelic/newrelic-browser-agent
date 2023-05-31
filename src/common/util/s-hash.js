@@ -3,6 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * Calculates a hash value for a given string.
+ *
+ * @param {string} s - The string to calculate the hash value for.
+ * @returns {number} - The calculated hash value.
+ * @throws {Error} - If the input is null or undefined.
+ */
 export function sHash (s) {
   var i
   var h = 0

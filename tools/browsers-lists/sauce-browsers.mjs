@@ -69,8 +69,6 @@ const minSupportedVersion = apiName => {
     case 'safari':
       return Math.floor(browserslistMinVersion('last 10 Safari versions'))
     case 'android':
-      // browserslist only ever provides the most recent ChromeAndroid version.
-      // Sauce Labs provides only a single Chrome Android version (100) on all emulators.
       // Android version <= 9 on Sauce Labs uses the JSON Wire Protocol by default.
       // https://changelog.saucelabs.com/en/update-to-google-chrome-version-100-on-android-emulators
       return 9
@@ -117,6 +115,8 @@ function getBrowsers (sauceBrowsers, sample = 4) {
       .reduce((aggregator, sauceBrowser) => {
         if (!aggregator[sauceBrowser.short_version]) {
           aggregator[sauceBrowser.short_version] = sauceBrowser
+        } else {
+          aggregator[sauceBrowser.short_version] = comparePreferredPlatform(aggregator[sauceBrowser.short_version], sauceBrowser)
         }
 
         return aggregator
@@ -261,4 +261,61 @@ function hasKnownConnectionIssue (sauceBrowser) {
     default:
       return false
   }
+}
+
+/**
+ * Compares two SauceLabs browser definitions and returns the one
+ * with the more preferred platform.
+ */
+function comparePreferredPlatform (sbA, sbB) {
+  // Android
+
+  // Prefer newest version with default GoogleAPI Emulator
+  if (sbA.api_name?.toLowerCase() === 'android' && sbB.api_name?.toLowerCase() === 'android') {
+    return (Number(sbA.version || 0) > Number(sbB.version || 0) || Number(sbA.version || 0) === Number(sbB.version || 0)) &&
+      (sbA.device?.toLowerCase() === 'android googleapi emulator' || sbA.long_version?.toLowerCase() === 'android googleapi emulator')
+      ? sbA
+      : sbB
+  }
+
+  // Chrome, Firefox, Edge
+
+  // Windows 11
+  if (sbA.os?.toLowerCase() === 'windows 11') {
+    return sbA
+  } else if (sbB.os?.toLowerCase() === 'windows 11') {
+    return sbB
+  }
+
+  // Windows 10
+  if (sbA.os?.toLowerCase() === 'windows 10') {
+    return sbA
+  } else if (sbB.os?.toLowerCase() === 'windows 10') {
+    return sbB
+  }
+
+  // Safari Mac & iOS
+
+  // Mac OS X 13
+  if (sbA.os?.toLowerCase() === 'mac 13') {
+    return sbA
+  } else if (sbB.os?.toLowerCase() === 'mac 13') {
+    return sbB
+  }
+
+  // Mac OS X 12
+  if (sbA.os?.toLowerCase() === 'mac 12') {
+    return sbA
+  } else if (sbB.os?.toLowerCase() === 'mac 12') {
+    return sbB
+  }
+
+  // Mac OS X 11
+  if (sbA.os?.toLowerCase() === 'mac 11') {
+    return sbA
+  } else if (sbB.os?.toLowerCase() === 'mac 11') {
+    return sbB
+  }
+
+  return sbB
 }

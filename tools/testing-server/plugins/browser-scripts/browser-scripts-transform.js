@@ -42,11 +42,11 @@ function browserifyScript (scriptPath, enablePolyfills) {
           ]
         ],
         plugins: [
-          '@babel/plugin-proposal-optional-chaining',
-          '@babel/plugin-proposal-nullish-coalescing-operator',
-          '@babel/plugin-proposal-logical-assignment-operators',
-          '@babel/plugin-proposal-class-properties', // Addresses a problem handling static class properties.
-          '@babel/plugin-proposal-private-methods' // Enables class private methods.
+          ['@babel/plugin-proposal-optional-chaining', { loose: true }],
+          ['@babel/plugin-proposal-nullish-coalescing-operator', { loose: true }],
+          ['@babel/plugin-proposal-logical-assignment-operators', { loose: true }],
+          ['@babel/plugin-proposal-class-properties', { loose: true }], // Addresses a problem handling static class properties.
+          ['@babel/plugin-proposal-private-methods', { loose: true }] // Enables class private methods.
         ]
       })
       .transform(preprocessify())

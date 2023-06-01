@@ -24,7 +24,7 @@ async function install (folder) {
   print(`installing ./${path.relative(__dirname, folder)}`)
 
   await new Promise((resolve, reject) => {
-    const proc = child_process.spawn(npmCommand, ['install', tarball], { cwd: folder, env: process.env, stdio: 'inherit' })
+    const proc = child_process.spawn(npmCommand, ['install', tarball, '--no-progress'], { cwd: folder, env: process.env, stdio: 'inherit' })
     proc.on('close', code => {
       if (code !== 0) {
         reject(new Error('install failed'))

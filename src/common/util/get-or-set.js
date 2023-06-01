@@ -5,7 +5,14 @@
 
 var has = Object.prototype.hasOwnProperty
 
-// Always returns the current value of obj[prop], even if it has to set it first
+/**
+ * Always returns the current value of obj[prop], even if it has to set it first. Sets properties as non-enumerable if possible.
+ *
+ * @param {Object} obj - The object to get or set the property on.
+ * @param {string} prop - The name of the property.
+ * @param {Function} getVal - A function that returns the value to be set if the property does not exist.
+ * @returns {*} The value of the property in the object.
+ */
 export function getOrSet (obj, prop, getVal) {
   // If the value exists return it.
   if (has.call(obj, prop)) return obj[prop]

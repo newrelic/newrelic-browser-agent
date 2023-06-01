@@ -608,6 +608,13 @@
       "platform": "Windows 11",
       "version": "113",
       "browserVersion": "113"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "114",
+      "browserVersion": "114"
     }
   ],
   "edge": [

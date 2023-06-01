@@ -229,10 +229,7 @@ export function getSubmitMethod (endpoint, opts) {
   var method
   var useBody
 
-  if (opts.needResponse) { // currently: only STN needs a response
-    useBody = true
-    method = submitData.xhr
-  } else if (opts.unload && isBrowserScope) { // all the features' final harvest; neither methods work outside window context
+  if (opts.unload && isBrowserScope) { // all the features' final harvest; neither methods work outside window context
     useBody = haveSendBeacon
     method = haveSendBeacon ? submitData.beacon : submitData.img // really only IE doesn't have Beacon API for web browsers
   } else {

@@ -184,11 +184,11 @@ The npm package contains our pre-defined bundles within the `/dist/cdn/` directo
 </script>
 
 <!-- Include the lite agent -->
-<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-spa-1.232.1.min.js"></script>
+<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-spa-1.x.x.min.js"></script>
 <!-- Include the pro agent -->
-<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-full-1.232.1.min.js"></script>
+<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-full-1.x.x.min.js"></script>
 <!-- Include the pro+spa agent -->
-<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-rum-1.232.1.min.js"></script>
+<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-rum-1.x.x.min.js"></script>
 ```
 
 The version number in the file name will change depending on the version of the npm package that is installed. It is recommended that you setup your build tooling to copy the correct file from the `/node_modules/@newrelic/browser-agent/dist/cdn/` directory into a `static` directory where you normally host static files. You can rename the file at the same time to make the `script` element static but remember to manage cache busting for your users.
@@ -205,14 +205,14 @@ Also included in the bundle are un-minified and polyfilled versions of each of t
 </script>
 
 <!-- Include our polyfills script -->
-<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-polyfills-1.232.1.min.js"></script>
+<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-polyfills-1.x.x.min.js"></script>
 
 <!-- Include the ES5 lite agent -->
-<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-spa-polyfills-1.232.1.min.js"></script>
+<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-spa-polyfills-1.x.x.min.js"></script>
 <!-- Include the ES5 pro agent -->
-<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-full-polyfills-1.232.1.min.js"></script>
+<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-full-polyfills-1.x.x.min.js"></script>
 <!-- Include the ES5 pro+spa agent -->
-<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-rum-polyfills-1.232.1.min.js"></script>
+<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-rum-polyfills-1.x.x.min.js"></script>
 ```
 
 ## Support

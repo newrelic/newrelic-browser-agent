@@ -170,7 +170,7 @@ import { Agent } from '@newrelic/browser-agent/loaders/agent'
 import { Metrics } from '@newrelic/browser-agent/src/features/metrics'
 ```
 
-## Utilizing Pre-Defined Bundles
+## Utilizing pre-defined bundles
 
 The npm package contains our pre-defined bundles within the `/dist/cdn/` directory. This allows you to use the npm package while still importing a pre-built bundle into your HTML files. The npm package contains all our bundle files but you really only need to host and include one of the agent loaders. The loader will still load all async bundles from the New Relic CDN.
 

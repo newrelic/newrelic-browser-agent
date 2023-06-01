@@ -45,7 +45,7 @@ testDriver.test('timings are retried when collector returns 429', corsSupported,
     let secondBody = result.request.body
 
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
-    t.equal(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
+    t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
 
     t.end()
   }).catch(fail)

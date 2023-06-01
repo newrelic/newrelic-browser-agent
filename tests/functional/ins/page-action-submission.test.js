@@ -32,7 +32,7 @@ testDriver.test('PageAction submission', function (t, browser, router) {
     .then(({ request }) => {
       let insData
       if (request.body) {
-        insData = JSON.parse(request.body).ins
+        insData = request.body.ins
       } else {
         insData = JSON.parse(request.query.ins)
       }
@@ -73,7 +73,7 @@ testDriver.test('PageActions are retried when collector returns 429', function (
       t.equal(reply.statusCode, 429, 'server responded with 429')
 
       if (request.body) {
-        firstBody = JSON.parse(request.body).ins
+        firstBody = request.body.ins
       } else {
         firstBody = JSON.parse(request.query.ins)
       }
@@ -86,7 +86,7 @@ testDriver.test('PageActions are retried when collector returns 429', function (
       let secondBody
 
       if (request.body) {
-        secondBody = JSON.parse(request.body).ins
+        secondBody = request.body.ins
       } else {
         secondBody = JSON.parse(request.query.ins)
       }
@@ -133,7 +133,7 @@ testDriver.test('PageAction submission on final harvest', function (t, browser, 
       let insData
 
       if (request.body) {
-        insData = JSON.parse(request.body).ins
+        insData = request.body.ins
       } else {
         insData = JSON.parse(request.query.ins)
       }
@@ -172,7 +172,7 @@ testDriver.test('precedence', function (t, browser, router) {
     .then(([{ request }]) => {
       let insData
       if (request.body) {
-        insData = JSON.parse(request.body).ins
+        insData = request.body.ins
       } else {
         insData = JSON.parse(request.query.ins)
       }

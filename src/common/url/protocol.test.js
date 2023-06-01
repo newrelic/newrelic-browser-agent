@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker'
 import { isFileProtocol } from './protocol'
 
 test('should return true when location url contains file protocol', () => {

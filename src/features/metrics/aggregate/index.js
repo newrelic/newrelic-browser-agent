@@ -3,17 +3,18 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL } from '../constants'
 import { drain } from '../../../common/drain/drain'
-import { getFrameworks } from '../../../common/metrics/framework-detection'
+import { getFrameworks } from './framework-detection'
+import { getPolyfills } from './polyfill-detection'
 import { isFileProtocol } from '../../../common/url/protocol'
 import { getRules, validateRules } from '../../../common/util/obfuscate'
 import { VERSION } from '../../../common/constants/env'
 import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope } from '../../../common/util/global-scope'
-import { FeatureBase } from '../../utils/feature-base'
+import { AggregateBase } from '../../utils/aggregate-base'
 import { stringify } from '../../../common/util/stringify'
 
-export class Aggregate extends FeatureBase {
+export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
@@ -70,6 +71,10 @@ export class Aggregate extends FeatureBase {
         })
       })
     }
+
+    getPolyfills().forEach(polyfill => {
+      this.storeSupportabilityMetrics('Polyfill/' + polyfill + '/Detected')
+    })
 
     // file protocol detection
     if (isFileProtocol()) {

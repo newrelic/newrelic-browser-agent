@@ -44,6 +44,9 @@ module.exports = function (api) {
       ]
     },
     'webpack-ie11': {
+      assumptions: {
+        iterableIsArray: false
+      },
       presets: [
         [
           '@babel/preset-env', {
@@ -62,7 +65,8 @@ module.exports = function (api) {
         [
           './tools/scripts/babel-plugin-transform-import',
           {
-            '(constants/)env$': '$1env.cdn'
+            '(constants/)env$': '$1env.cdn',
+            'polyfill-detection$': 'polyfill-detection.es5'
           }
         ]
       ]

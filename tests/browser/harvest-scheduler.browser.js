@@ -37,16 +37,16 @@ function resetSpies (options) {
 
   sinon.stub(harv.Harvest.prototype, 'send', fakeSend)
   sinon.stub(harv.Harvest.prototype, 'sendX', fakeSendX)
-  sinon.stub(harv, 'getSubmitMethod', fakeGetSubmitMethod)
+  sinon.stub(harv, 'getSubmitMethod').callsFake(fakeGetSubmitMethod)
 
-  function fakeSend (endpoint, payload, opts, submitMethod, cbFinished) {
+  function fakeSend ({endpoint, payload, opts, submitMethod, cbFinished}) {
     setTimeout(function () {
       var response = options.response || { sent: true }
       cbFinished(response)
     }, 0)
   }
 
-  function fakeSendX (endpoint, opts, cbFinished) {
+  function fakeSendX ({endpoint, opts, cbFinished}) {
     setTimeout(function () {
       var response = options.response || { sent: true }
       cbFinished(response)
@@ -161,7 +161,7 @@ test('provides retry to getPayload when submit method is xhr', function (t) {
     scheduler.stopTimer()
     setTimeout(function () {
       var call = harv.Harvest.prototype.send.getCall(0)
-      t.equal(call.args[3].method, submitData.xhr, 'method was xhr')
+      t.equal(call.args[0].submitMethod.method, submitData.xhr, 'method was xhr')
       t.ok(opts.retry, 'retry was set to true')
       t.end()
     }, 0)

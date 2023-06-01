@@ -18,7 +18,7 @@ testDriver.test('reporting errors from setImmediate callbacks', supported, funct
   Promise.all([errorsPromise, rumPromise, loadPromise]).then(([{ request: { body, query } }]) => {
     assertErrorAttributes(t, query)
 
-    let actualErrors = JSON.parse(body).err
+    let actualErrors = body.err
     let expectedErrors = [{
       message: 'immediate callback',
       stack: [{

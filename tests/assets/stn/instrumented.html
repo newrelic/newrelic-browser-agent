@@ -10,10 +10,14 @@
     {config}
     {loader}
   </head>
-  <body>
-    <button id="trigger">trigger</button>
+  <body style="height:100vh;width:100vw">
+    <button id="trigger">PAGE 1</button>
 
     <script type="text/javascript">
+      setInterval(function() {
+        document.querySelector("#trigger").style.position = 'absolute'; 
+        document.querySelector("#trigger").style.left = Math.random()*100 + 'px';
+      }, 1000)
       document.addEventListener('click', trigger)
 
       function trigger() {

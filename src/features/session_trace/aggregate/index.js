@@ -4,124 +4,95 @@
  */
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { mapOwn } from '../../../common/util/map-own'
 import { stringify } from '../../../common/util/stringify'
 import { parseUrl } from '../../../common/url/parse-url'
-import { supportsPerformanceObserver } from '../../../common/window/supports-performance-observer'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { HandlerCache } from '../../utils/handler-cache'
-import { FeatureBase } from '../../utils/feature-base'
+import { AggregateBase } from '../../utils/aggregate-base'
 
-export class Aggregate extends FeatureBase {
+const ignoredEvents = {
+  // we find that certain events make the data too noisy to be useful
+  global: { mouseup: true, mousedown: true },
+  // certain events are present both in the window and in PVT metrics.  PVT metrics are prefered so the window events should be ignored
+  window: { load: true, pagehide: true },
+  // when ajax instrumentation is disabled, all XMLHttpRequest events will return with origin = xhrOriginMissing and should be ignored
+  xhrOriginMissing: { ignoreAll: true }
+}
+const toAggregate = {
+  typing: [1000, 2000],
+  scrolling: [100, 1000],
+  mousing: [1000, 2000],
+  touching: [1000, 2000]
+}
+const MAX_TRACE_DURATION = 15 * 60 * 1000 // 15 minutes
+
+export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
+  constructor (agentIdentifier, aggregator, argsObj) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
     if (!getRuntime(agentIdentifier).xhrWrappable) return
 
-    const handlerCache = new HandlerCache()
+    this.resourceObserver = argsObj?.resourceObserver // undefined if observer couldn't be created
     this.ptid = ''
-    this.ignoredEvents = {
-      // we find that certain events make the data too noisy to be useful
-      global: { mouseup: true, mousedown: true },
-      // certain events are present both in the window and in PVT metrics.  PVT metrics are prefered so the window events should be ignored
-      window: { load: true, pagehide: true },
-      // when ajax instrumentation is disabled, all XMLHttpRequest events will return with origin = xhrOriginMissing and should be ignored
-      xhrOriginMissing: { ignoreAll: true }
-    }
-    this.toAggregate = {
-      typing: [1000, 2000],
-      scrolling: [100, 1000],
-      mousing: [1000, 2000],
-      touching: [1000, 2000]
-    }
-    this.rename = {
-      typing: {
-        keydown: true,
-        keyup: true,
-        keypress: true
-      },
-      mousing: {
-        mousemove: true,
-        mouseenter: true,
-        mouseleave: true,
-        mouseover: true,
-        mouseout: true
-      },
-      scrolling: {
-        scroll: true
-      },
-      touching: {
-        touchstart: true,
-        touchmove: true,
-        touchend: true,
-        touchcancel: true,
-        touchenter: true,
-        touchleave: true
-      }
-    }
-
     this.trace = {}
     this.nodeCount = 0
     this.sentTrace = null
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
     this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
-
     this.laststart = 0
+
+    const handlerCache = new HandlerCache()
 
     registerHandler('feat-stn', () => {
       if (typeof PerformanceNavigationTiming !== 'undefined') {
-        this.storeTiming(window.performance?.getEntriesByType('navigation')?.[0] || {})
+        this.storeTiming(window.performance.getEntriesByType('navigation')[0])
       } else {
-        this.storeTiming(window.performance?.timing)
+        this.storeTiming(window.performance.timing)
       }
 
-      var scheduler = new HarvestScheduler('resources', {
+      const scheduler = new HarvestScheduler('resources', {
         onFinished: onHarvestFinished.bind(this),
         retryDelay: this.harvestTimeSeconds
       }, this)
       scheduler.harvest.on('resources', prepareHarvest.bind(this))
       scheduler.runHarvest({ needResponse: true }) // sends first stn harvest immediately
+      handlerCache.decide(true)
 
       function onHarvestFinished (result) {
-        // start timer only if ptid was returned by server
-        if (result.sent && result.responseText && !this.ptid) {
-          this.ptid = result.responseText
-          getRuntime(this.agentIdentifier).ptid = this.ptid
+        if (result.sent && result.responseText && !this.ptid) { // continue interval harvest only if ptid was returned by server on the first
+          getRuntime(this.agentIdentifier).ptid = this.ptid = result.responseText
           scheduler.startTimer(this.harvestTimeSeconds)
         }
 
-        if (result.sent && result.retry && this.sentTrace) {
-          mapOwn(this.sentTrace, (name, nodes) => {
-            this.mergeSTNs(name, nodes)
+        if (result.sent && result.retry && this.sentTrace) { // merge previous trace back into buffer to retry for next harvest
+          Object.entries(this.sentTrace).forEach(([name, listOfSTNodes]) => {
+            if (this.nodeCount >= this.maxNodesPerHarvest) return
+
+            this.nodeCount += listOfSTNodes.length
+            this.trace[name] = this.trace[name] ? listOfSTNodes.concat(this.trace[name]) : listOfSTNodes
           })
           this.sentTrace = null
         }
       }
-
       function prepareHarvest (options) {
-        if ((now()) > (15 * 60 * 1000)) {
-          // been collecting for over 15 min, empty trace object and bail
+        if (now() > MAX_TRACE_DURATION) { // been collecting for over 15 min, empty trace object and bail
           scheduler.stopTimer()
           this.trace = {}
           return
         }
-
-        // only send when there are more than 30 nodes to send
+        // Only harvest when there are more than 30 nodes to send after the very first.
         if (this.ptid && this.nodeCount <= 30) return
 
         return this.takeSTNs(options.retry)
       }
-      handlerCache.decide(true)
     }, this.featureName, this.ee)
 
-    registerHandler('block-stn', () => {
-      handlerCache.decide(false)
-    }, this.featureName, this.ee)
+    registerHandler('block-stn', () => handlerCache.decide(false), this.featureName, this.ee)
 
     // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...
     registerHandler('bst', (...args) => handlerCache.settle(() => this.storeEvent(...args)), this.featureName, this.ee)
@@ -135,17 +106,23 @@ export class Aggregate extends FeatureBase {
     drain(this.agentIdentifier, this.featureName)
   }
 
+  // PageViewTiming (FEATURE) events and metrics, such as 'load', 'lcp', etc. pipes into ST here.
   processPVT (name, value, attrs) {
-    var t = {}
-    t[name] = value
-    this.storeTiming(t)
-    if (this.hasFID(name, attrs)) this.storeEvent({ type: 'fid', target: 'document' }, 'document', value, value + attrs.fid)
+    this.storeTiming({ [name]: value })
+    if (hasFID(name, attrs)) this.storeEvent({ type: 'fid', target: 'document' }, 'document', value, value + attrs.fid)
+
+    function hasFID (name, attrs) {
+      return name === 'fi' && !!attrs && typeof attrs.fid === 'number'
+    }
   }
 
-  storeTiming (_t) {
+  // This processes the aforementioned PVT and the first navigation entry of the page.
+  storeTiming (timingEntry) {
+    if (!timingEntry) return
+
     // loop iterates through prototype also (for FF)
-    for (let key in _t) {
-      const val = _t[key]
+    for (let key in timingEntry) {
+      let val = timingEntry[key]
 
       // ignore size and status type nodes that do not map to timestamp metrics
       const lck = key.toLowerCase()
@@ -153,39 +130,36 @@ export class Aggregate extends FeatureBase {
 
       // ignore inherited methods, meaningless 0 values, and bogus timestamps
       // that are in the future (Microsoft Edge seems to sometimes produce these)
-      if (!(typeof (val) === 'number' && val >= 0)) continue
+      if (!(typeof val === 'number' && val >= 0)) continue
 
-      const timeOffset = Math.round(_t[key])
-
+      val = Math.round(val)
       this.storeSTN({
         n: key,
-        s: timeOffset,
-        e: timeOffset,
+        s: val,
+        e: val,
         o: 'document',
         t: 'timing'
       })
     }
   }
 
+  // Tracks duration of native APIs wrapped by wrap-timer & wrap-raf.
   storeTimer (target, start, end, type) {
-    var category = 'timer'
-    if (type === 'requestAnimationFrame') category = type
-
-    var evt = {
+    const evt = {
       n: type,
       s: start,
       e: end,
       o: 'window',
-      t: category
+      t: (type === 'requestAnimationFrame') ? type : 'timer'
     }
-
     this.storeSTN(evt)
   }
 
+  // Tracks the events and their listener's duration on objects wrapped by wrap-events.
   storeEvent (currentEvent, target, start, end) {
-    if (this.shouldIgnoreEvent(currentEvent, target)) return false
+    if (this.shouldIgnoreEvent(currentEvent, target)) return
 
-    var evt = {
+    const evt = {
       n: this.evtName(currentEvent.type),
       s: start,
       e: end,
@@ -199,31 +173,56 @@ export class Aggregate extends FeatureBase {
     } catch (e) {
       evt.o = this.evtOrigin(null, target)
     }
-
     this.storeSTN(evt)
   }
 
+  shouldIgnoreEvent (event, target) {
+    const origin = this.evtOrigin(event.target, target)
+    if (event.type in ignoredEvents.global) return true
+    if (!!ignoredEvents[origin] && ignoredEvents[origin].ignoreAll) return true
+    if (!!ignoredEvents[origin] && event.type in ignoredEvents[origin]) return true
+    return false
+  }
+
   evtName (type) {
-    var name = type
-
-    mapOwn(this.rename, function (key, val) {
-      if (type in val) name = key
-    })
-
-    return name
+    switch (type) {
+      case 'keydown':
+      case 'keyup':
+      case 'keypress':
+        return 'typing'
+      case 'mousemove':
+      case 'mouseenter':
+      case 'mouseleave':
+      case 'mouseover':
+      case 'mouseout':
+        return 'mousing'
+      case 'scroll':
+        return 'scrolling'
+      case 'touchstart':
+      case 'touchmove':
+      case 'touchend':
+      case 'touchcancel':
+      case 'touchenter':
+      case 'touchleave':
+        return 'touching'
+      default:
+        return type
+    }
   }
 
   evtOrigin (t, target) {
-    var origin = 'unknown'
+    let origin = 'unknown'
 
     if (t && t instanceof XMLHttpRequest) {
-      var params = this.ee.context(t).params
+      const params = this.ee.context(t).params
       if (!params || !params.status || !params.method || !params.host || !params.pathname) return 'xhrOriginMissing'
       origin = params.status + ' ' + params.method + ': ' + params.host + params.pathname
     } else if (t && typeof (t.tagName) === 'string') {
       origin = t.tagName.toLowerCase()
       if (t.id) origin += '#' + t.id
-      if (t.className) origin += '.' + Array.from(t.classList).join('.')
+      if (t.className) {
+        for (let i = 0; i < t.classList.length; i++) origin += '.' + t.classList[i]
+      }
     }
 
     if (origin === 'unknown') {
@@ -236,43 +235,43 @@ export class Aggregate extends FeatureBase {
     return origin
   }
 
+  // Tracks when the window history API specified by wrap-history is used.
   storeHist (path, old, time) {
-    var node = {
+    const node = {
       n: 'history.pushState',
       s: time,
       e: time,
       o: path,
       t: old
     }
-
     this.storeSTN(node)
   }
 
+  // Processes all the PerformanceResourceTiming entries captured (by observer).
   storeResources (resources) {
     if (!resources || resources.length === 0) return
 
     resources.forEach((currentResource) => {
-      var parsed = parseUrl(currentResource.name)
-      var res = {
+      if ((currentResource.fetchStart | 0) <= this.laststart) return // don't recollect already-seen resources
+
+      const parsed = parseUrl(currentResource.name)
+      const res = {
         n: currentResource.initiatorType,
         s: currentResource.fetchStart | 0,
         e: currentResource.responseEnd | 0,
         o: parsed.protocol + '://' + parsed.hostname + ':' + parsed.port + parsed.pathname, // resource.name is actually a URL so it's the source
         t: currentResource.entryType
       }
-
-      // don't recollect old resources
-      if (res.s <= this.laststart) return
-
       this.storeSTN(res)
     })
 
     this.laststart = resources[resources.length - 1].fetchStart | 0
   }
 
+  // JavascriptError (FEATURE) events pipes into ST here.
   storeErrorAgg (type, name, params, metrics) {
-    if (type !== 'err') return
-    var node = {
+    if (type !== 'err') return // internal errors are purposefully ignored
+    const node = {
       n: 'error',
       s: metrics.time,
       e: metrics.time,
@@ -282,9 +281,10 @@ export class Aggregate extends FeatureBase {
     this.storeSTN(node)
   }
 
+  // Ajax (FEATURE) events--XML & fetches--pipes into ST here.
   storeXhrAgg (type, name, params, metrics) {
     if (type !== 'xhr') return
-    var node = {
+    const node = {
       n: 'Ajax',
       s: metrics.time,
       e: metrics.time + metrics.duration,
@@ -294,42 +294,29 @@ export class Aggregate extends FeatureBase {
     this.storeSTN(node)
   }
 
+  // Central function called by all the other store__ & addToTrace API to append a trace node.
   storeSTN (stn) {
-    // limit the number of data that is stored
-    if (this.nodeCount >= this.maxNodesPerHarvest) return
+    if (this.nodeCount >= this.maxNodesPerHarvest) return // limit the amount of data that is stored at once
 
-    var traceArr = this.trace[stn.n]
-    if (!traceArr) traceArr = this.trace[stn.n] = []
+    if (this.trace[stn.n]) this.trace[stn.n].push(stn)
+    else this.trace[stn.n] = [stn]
 
-    traceArr.push(stn)
     this.nodeCount++
   }
 
-  mergeSTNs (key, nodes) {
-    // limit the number of data that is stored
-    if (this.nodeCount >= this.maxNodesPerHarvest) return
-
-    var traceArr = this.trace[key]
-    if (!traceArr) traceArr = this.trace[key] = []
-
-    this.trace[key] = nodes.concat(traceArr)
-    this.nodeCount += nodes.length
-  }
-
+  // Used by session trace's harvester to create the payload body.
   takeSTNs (retry) {
-    // if the observer is not being used, this checks resourcetiming buffer every harvest
-    if (!supportsPerformanceObserver()) {
+    if (!this.resourceObserver) { // if PO isn't supported, this checks resourcetiming buffer every harvest.
       this.storeResources(window.performance.getEntriesByType('resource'))
     }
 
-    var stns = mapOwn(this.trace, (name, nodes) => {
-      if (!(name in this.toAggregate)) return nodes
-
-      return mapOwn(
-        nodes.sort(this.byStart).reduce(this.smearEvtsByOrigin(name), {}), this.val
-      ).reduce(this.flatten, [])
-    }).reduce(this.flatten, [])
-
+    const stns = Object.entries(this.trace).flatMap(([name, listOfSTNodes]) => { // basically take the "this.trace" map-obj and concat all the list-type values
+      if (!(name in toAggregate)) return listOfSTNodes
+      // Special processing for event nodes dealing with user inputs:
+      const reindexByOriginFn = this.smearEvtsByOrigin(name)
+      const partitionListByOriginMap = listOfSTNodes.sort((a, b) => a.s - b.s).reduce(reindexByOriginFn, {})
+      return Object.values(partitionListByOriginMap).flat() // join the partitions back into 1-D, now ordered by origin then start time
+    }, this)
     if (stns.length === 0) return {}
 
     if (retry) {
@@ -338,75 +325,49 @@ export class Aggregate extends FeatureBase {
     this.trace = {}
     this.nodeCount = 0
 
-    var stnInfo = {
-      qs: { st: '' + getRuntime(this.agentIdentifier).offset },
+    const stnInfo = {
+      qs: { st: String(getRuntime(this.agentIdentifier).offset) },
       body: { res: stns }
     }
-
-    if (!this.ptid) {
+    if (!this.ptid) { // send custom and user attributes on the very first ST harvest only
       const { userAttributes, atts, jsAttributes } = getInfo(this.agentIdentifier)
       stnInfo.qs.ua = userAttributes
       stnInfo.qs.at = atts
-      var ja = stringify(jsAttributes)
+      const ja = stringify(jsAttributes)
       stnInfo.qs.ja = ja === '{}' ? null : ja
     }
     return stnInfo
   }
 
-  byStart (a, b) {
-    return a.s - b.s
-  }
-
   smearEvtsByOrigin (name) {
-    var maxGap = this.toAggregate[name][0]
-    var maxLen = this.toAggregate[name][1]
-    var lastO = {}
+    const maxGap = toAggregate[name][0]
+    const maxLen = toAggregate[name][1]
+    const lastO = {}
 
-    return (byOrigin, evt) => {
-      var lastArr = byOrigin[evt.o]
+    return (byOrigin, evtNode) => {
+      let lastArr = byOrigin[evtNode.o]
+      if (!lastArr) lastArr = byOrigin[evtNode.o] = []
 
-      lastArr || (lastArr = byOrigin[evt.o] = [])
+      const last = lastO[evtNode.o]
 
-      var last = lastO[evt.o]
-
-      if (name === 'scrolling' && !this.trivial(evt)) {
-        lastO[evt.o] = null
-        evt.n = 'scroll'
-        lastArr.push(evt)
-      } else if (last && (evt.s - last.s) < maxLen && last.e > (evt.s - maxGap)) {
-        last.e = evt.e
+      if (name === 'scrolling' && !trivial(evtNode)) {
+        lastO[evtNode.o] = null
+        evtNode.n = 'scroll'
+        lastArr.push(evtNode)
+      } else if (last && (evtNode.s - last.s) < maxLen && last.e > (evtNode.s - maxGap)) {
+        last.e = evtNode.e
       } else {
-        lastO[evt.o] = evt
-        lastArr.push(evt)
+        lastO[evtNode.o] = evtNode
+        lastArr.push(evtNode)
       }
 
       return byOrigin
     }
-  }
 
-  val (key, value) {
-    return value
-  }
-
-  flatten (a, b) {
-    return a.concat(b)
-  }
-
-  hasFID (name, attrs) {
-    return name === 'fi' && !!attrs && typeof attrs.fid === 'number'
-  }
-
-  trivial (node) {
-    var limit = 4
-    if (node && typeof node.e === 'number' && typeof node.s === 'number' && (node.e - node.s) < limit) return true
-    else return false
-  }
-
-  shouldIgnoreEvent (event, target) {
-    var origin = this.evtOrigin(event.target, target)
-    if (event.type in this.ignoredEvents.global) return true
-    if (!!this.ignoredEvents[origin] && this.ignoredEvents[origin].ignoreAll) return true
-    if (!!this.ignoredEvents[origin] && event.type in this.ignoredEvents[origin]) return true
-    return false
+    function trivial (node) {
+      const limit = 4
+      if (node && typeof node.e === 'number' && typeof node.s === 'number' && (node.e - node.s) < limit) return true
+      else return false
+    }
   }
 }

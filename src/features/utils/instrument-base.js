@@ -4,11 +4,13 @@
  * exposes the `blocked` property.
  */
 
-import { registerDrain } from '../../common/drain/drain'
+import { drain, registerDrain } from '../../common/drain/drain'
 import { FeatureBase } from './feature-base'
 import { onWindowLoad } from '../../common/window/load'
 import { isWorkerScope } from '../../common/util/global-scope'
 import { warn } from '../../common/util/console'
+import { FEATURE_NAMES } from '../../loaders/features/features'
+import { getConfigurationValue } from '../../common/config/config'
 
 /**
  * Base class for instrumenting a feature.
@@ -38,11 +40,19 @@ export class InstrumentBase extends FeatureBase {
   /**
    * Lazy-load the latter part of the feature: its aggregator. This method is called by the first part of the feature
    * (the instrumentation) when instrumentation is complete.
+   * @param {Object} [argsObjFromInstrument] - any values or references to pass down to aggregate
+   * @returns void
    */
-  importAggregator () {
+  importAggregator (argsObjFromInstrument) {
     if (this.hasAggregator || !this.auto) return
     this.hasAggregator = true
-
+    let session, agentSessionImport
+    if (getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true && !isWorkerScope) {
+      agentSessionImport = import(/* webpackChunkName: "session-manager" */ './agent-session')
+        .catch(err => {
+          warn('failed to import the session manager', err)
+        })
+    }
     const importLater = async () => {
       /**
        * Note this try-catch differs from the one in Agent.start() in that it's placed later in a page's lifecycle and
@@ -50,12 +60,19 @@ export class InstrumentBase extends FeatureBase {
        */
       try {
         // The session entity needs to be attached to the config internals before the aggregator chunk runs
-        const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
-        setupAgentSession(this.agentIdentifier)
+        if (agentSessionImport && !session) {
+          const { setupAgentSession } = await agentSessionImport
+          session = setupAgentSession(this.agentIdentifier)
+        }
+        if (!shouldImportAgg(this.featureName, session)) {
+          drain(this.agentIdentifier, this.featureName)
+          return
+        }
+
         // import and instantiate the aggregator chunk
-        const { lazyLoader } = await import(/* webpackChunkName: "lazy-loader" */ './lazy-loader')
-        const { Aggregate } = await lazyLoader(this.featureName, 'aggregate')
-        new Aggregate(this.agentIdentifier, this.aggregator)
+        const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
+        const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
+        new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)
       } catch (e) {
         warn(`Downloading ${this.featureName} failed...`, e)
         this.abortHandler?.() // undo any important alterations made to the page
@@ -68,4 +85,19 @@ export class InstrumentBase extends FeatureBase {
     if (isWorkerScope) importLater()
     else onWindowLoad(() => importLater(), true)
   }
+}
+/**
+ * Make a determination if an aggregate class should even be imported
+ * @param {string} featureName
+ * @param {SessionEntity} session
+ * @returns
+ */
+function shouldImportAgg (featureName, session) {
+  // if this isnt the FIRST load of a session AND
+  // we are not actively recording SR... DO NOT run the aggregator
+  // session replay samples can only be decided on the first load of a session
+  // session replays can continue if in progress
+  if (featureName === FEATURE_NAMES.sessionReplay) return !!session?.isNew || !!session?.state.sessionReplayActive
+  // todo -- add case like above for session trace
+  return true
 }

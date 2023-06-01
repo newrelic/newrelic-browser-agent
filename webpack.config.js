@@ -153,7 +153,9 @@ const standardConfig = merge(commonConfig, {
     [`nr-loader-full${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/pro.js'),
     [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/pro.js'),
     [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/spa.js'),
-    [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/spa.js')
+    [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/spa.js'),
+    ...(SUBVERSION === 'LOCAL' && { [`nr-loader-experimental${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/experimental.js') }),
+    ...(SUBVERSION === 'LOCAL' && { [`nr-loader-experimental${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/experimental.js') })
   },
   output: {
     globalObject: 'window',
@@ -193,6 +195,8 @@ const polyfillsConfig = merge(commonConfig, {
     [`nr-loader-spa-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/polyfills/spa.js'),
     [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/polyfills/spa.js'),
     [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/polyfills/spa.js'),
+    ...(SUBVERSION === 'LOCAL' && { [`nr-loader-experimental-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/experimental.js') }),
+    ...(SUBVERSION === 'LOCAL' && { [`nr-loader-experimental-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/experimental.js') }),
     [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/polyfills.js')
   },
   module: {
@@ -236,11 +240,11 @@ const workerConfig = merge(commonConfig, {
   entry: {
     [`nr-loader-worker${PATH_VERSION}`]: {
       import: path.resolve(__dirname, './src/cdn/worker.js'),
-      chunkLoading: false
+      chunkLoading: 'import-scripts'
     },
     [`nr-loader-worker${PATH_VERSION}.min`]: {
       import: path.resolve(__dirname, './src/cdn/worker.js'),
-      chunkLoading: false
+      chunkLoading: 'import-scripts'
     }
   },
   module: standardConfig.module,
@@ -249,7 +253,8 @@ const workerConfig = merge(commonConfig, {
     library: {
       name: 'NRBA',
       type: 'self'
-    }
+    },
+    chunkFilename: SUBVERSION !== 'LOCAL' ? `[name].[chunkhash:8]-worker${PATH_VERSION}.min.js` : `[name]-worker${PATH_VERSION}.js`
   },
   plugins: [
     ...instantiateBundleAnalyzerPlugin('worker'),

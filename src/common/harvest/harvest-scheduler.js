@@ -13,6 +13,17 @@ import { getConfigurationValue } from '../config/config'
  * Periodically invokes harvest calls and handles retries
  */
 export class HarvestScheduler extends SharedContext {
+  /**
+     * Create a HarvestScheduler
+     * @param {string} endpoint - The base BAM endpoint name -- ex. 'events'
+     * @param {object} opts - The options used to configure the HarvestScheduler
+     * @param {Function} opts.onFinished - The callback to be fired when a harvest has finished
+     * @param {Function} opts.getPayload - A callback which can be triggered to return a payload for harvesting
+     * @param {number} opts.retryDelay - The number of seconds to wait before retrying after a network failure
+     * @param {boolean} opts.raw - Use a prefabricated payload shape as the harvest payload without the need for formatting
+     * @param {string} opts.customUrl - A custom url that falls outside of the shape of the standard BAM harvester url pattern.  Will use directly instead of concatenating various pieces
+     * @param {*} parent - The parent object, whose state can be passed into SharedContext
+     */
   constructor (endpoint, opts, parent) {
     super(parent) // gets any allowed properties from the parent and stores them in `sharedContext`
     this.endpoint = endpoint
@@ -68,21 +79,50 @@ export class HarvestScheduler extends SharedContext {
     if (this.aborted) return
     var scheduler = this
 
-    if (this.opts.getPayload) { // Ajax & PVT
-      var submitMethod = getSubmitMethod(this.endpoint, opts)
+    let harvests = []
+    let submitMethod
+
+    if (this.opts.getPayload) { // Ajax & PVT & SR
+      submitMethod = getSubmitMethod(this.endpoint, opts)
       if (!submitMethod) return false
 
-      var retry = submitMethod.method === submitData.xhr
+      const retry = submitMethod.method === submitData.xhr
       var payload = this.opts.getPayload({ retry: retry })
-      if (payload) {
-        payload = Object.prototype.toString.call(payload) === '[object Array]' ? payload : [payload]
-        for (var i = 0; i < payload.length; i++) {
-          this.harvest.send(this.endpoint, payload[i], opts, submitMethod, onHarvestFinished)
+
+      if (!payload) {
+        if (this.started) {
+          this.scheduleHarvest()
         }
+        return
       }
-    } else {
-      this.harvest.sendX(this.endpoint, opts, onHarvestFinished)
+
+      payload = Object.prototype.toString.call(payload) === '[object Array]' ? payload : [payload]
+      harvests.push(...payload)
     }
+
+    /** sendX is used for features that do not supply a preformatted payload via "getPayload" */
+    let send = args => this.harvest.sendX(args)
+    if (harvests.length) {
+      /** _send is the underlying method for sending in the harvest, if sending raw we can bypass the other helpers completely which format the payloads */
+      if (this.opts.raw) send = args => this.harvest._send(args)
+      /** send is used to formated the payloads from "getPayload" and obfuscate before sending */
+      else send = args => this.harvest.send(args)
+    } else {
+      // force it to run at least once in sendX mode
+      harvests.push(undefined)
+    }
+
+    harvests.forEach(payload => {
+      send({
+        endpoint: this.endpoint,
+        payload,
+        opts,
+        submitMethod,
+        cbFinished: onHarvestFinished,
+        customUrl: this.opts.customUrl,
+        raw: this.opts.raw
+      })
+    })
 
     if (this.started) {
       this.scheduleHarvest()

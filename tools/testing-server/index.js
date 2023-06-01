@@ -35,6 +35,15 @@ class TestServer {
   #config
 
   /**
+   * Default fastify server config
+   */
+  #defaultServerConfig = {
+    maxParamLength: Number.MAX_SAFE_INTEGER,
+    bodyLimit: Number.MAX_SAFE_INTEGER,
+    logger: false
+  }
+
+  /**
    * Fastify asset server instance.
    * @type module:fastify.FastifyInstance
    */
@@ -196,13 +205,10 @@ class TestServer {
   }
 
   #createAssetServer () {
-    this.#assetServer = fastify({
-      maxParamLength: Number.MAX_SAFE_INTEGER,
-      bodyLimit: Number.MAX_SAFE_INTEGER,
-      logger: false
-    })
+    this.#assetServer = fastify(this.#defaultServerConfig)
 
     this.#assetServer.decorate('testServerId', 'assetServer')
+    this.#assetServer.register(require('@fastify/compress')) // handle gzip payloads, reply with gzip'd content
     this.#assetServer.decorate('testServerLogger', this.#logger)
     this.#assetServer.register(require('@fastify/multipart'), {
       addToBody: true
@@ -220,7 +226,7 @@ class TestServer {
       etag: false
     })
     this.#assetServer.register(require('./plugins/agent-injector'), this)
-    this.#assetServer.register(require('./plugins/browserify'), this)
+    this.#assetServer.register(require('./plugins/browser-scripts'), this)
     this.#assetServer.register(require('./routes/tests-index'), this)
     this.#assetServer.register(require('./routes/mock-apis'), this)
     this.#assetServer.register(require('./plugins/test-handle'), this)
@@ -229,11 +235,7 @@ class TestServer {
   }
 
   #createCorsServer () {
-    this.#corsServer = fastify({
-      maxParamLength: Number.MAX_SAFE_INTEGER,
-      bodyLimit: Number.MAX_SAFE_INTEGER,
-      logger: false
-    })
+    this.#corsServer = fastify(this.#defaultServerConfig)
 
     this.#corsServer.decorate('testServerId', 'corsServer')
     this.#corsServer.decorate('testServerLogger', this.#logger)
@@ -251,13 +253,11 @@ class TestServer {
   }
 
   #createBamServer () {
-    this.#bamServer = fastify({
-      maxParamLength: Number.MAX_SAFE_INTEGER,
-      bodyLimit: Number.MAX_SAFE_INTEGER,
-      logger: false
-    })
+    this.#bamServer = fastify(this.#defaultServerConfig)
 
     this.#bamServer.decorate('testServerId', 'bamServer')
+    this.#bamServer.register(require('./plugins/compression-interceptor')) // pre-process the request to help it conform with compression standards
+    this.#bamServer.register(require('@fastify/compress')) // handle gzip payloads, reply with gzip'd content
     this.#bamServer.decorate('testServerLogger', this.#logger)
     this.#bamServer.register(require('@fastify/multipart'), {
       addToBody: true
@@ -275,11 +275,7 @@ class TestServer {
   }
 
   #createCommandServer () {
-    this.#commandServer = fastify({
-      maxParamLength: Number.MAX_SAFE_INTEGER,
-      bodyLimit: Number.MAX_SAFE_INTEGER,
-      logger: false
-    })
+    this.#commandServer = fastify(this.#defaultServerConfig)
 
     this.#commandServer.decorate('testServerId', 'commandServer')
     this.#commandServer.decorate('testServerLogger', this.#logger)

@@ -5,6 +5,7 @@ const { PassThrough } = require('stream')
 const zlib = require('zlib')
 const assert = require('assert')
 const { paths } = require('../constants')
+const sessionReplayData = require('../utils/session-replay-data')
 
 /**
  * Fastify plugin to apply routes to the asset server that are used in various
@@ -13,7 +14,9 @@ const { paths } = require('../constants')
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify, testServer) {
-  fastify.get('/slowscript', (request, reply) => {
+  fastify.get('/slowscript', {
+    compress: false
+  }, (request, reply) => {
     const abort = parseInt(request.query.abort || 0, 10)
     const delay = parseInt(request.query.delay || 200, 10)
 
@@ -25,7 +28,9 @@ module.exports = fp(async function (fastify, testServer) {
       reply.send('window.slowScriptLoaded=1')
     }, delay)
   })
-  fastify.get('/lazyscript', (request, reply) => {
+  fastify.get('/lazyscript', {
+    compress: false
+  }, (request, reply) => {
     const delay = parseInt(request.query.delay || 0, 10)
     const content = request.query.content || ''
 
@@ -33,7 +38,9 @@ module.exports = fp(async function (fastify, testServer) {
       reply.send(content)
     }, delay)
   })
-  fastify.get('/slowimage', (request, reply) => {
+  fastify.get('/slowimage', {
+    compress: false
+  }, (request, reply) => {
     const delay = parseInt(request.query.delay || 0, 10)
 
     setTimeout(() => {
@@ -46,7 +53,9 @@ module.exports = fp(async function (fastify, testServer) {
         )
     }, delay)
   })
-  fastify.get('/image', (request, reply) => {
+  fastify.get('/image', {
+    compress: false
+  }, (request, reply) => {
     reply
       .type('image/png')
       .send(
@@ -55,20 +64,35 @@ module.exports = fp(async function (fastify, testServer) {
         )
       )
   })
-  fastify.get('/abort', (request, reply) => {
+  fastify.get('/abort', {
+    compress: false
+  }, (request, reply) => {
     setTimeout(() => {
       reply.send('foo')
     }, 300)
   })
-  fastify.put('/timeout', (request, reply) => {
+  fastify.put('/timeout', {
+    compress: false
+  }, (request, reply) => {
     setTimeout(() => {
       reply.send('foo')
     }, 300)
   })
-  fastify.post('/echo', (request, reply) => {
+  fastify.post('/echo', {
+    compress: false
+  }, (request, reply) => {
     reply.send(request.body)
   })
-  fastify.get('/jsonp', (request, reply) => {
+
+  fastify.get('/session-replay', {
+    compress: false
+  }, (request, reply) => {
+    return sessionReplayData[request.query.s]
+  })
+
+  fastify.get('/jsonp', {
+    compress: false
+  }, (request, reply) => {
     const delay = parseInt(request.query.timeout || 0, 10)
     const cbName = request.query.callback || request.query.cb || 'callback'
 
@@ -80,35 +104,51 @@ module.exports = fp(async function (fastify, testServer) {
       }
     }, delay)
   })
-  fastify.get('/xhr_with_cat/*', (request, reply) => {
+  fastify.get('/xhr_with_cat/*', {
+    compress: false
+  }, (request, reply) => {
     reply
       .header('X-NewRelic-App-Data', 'foo')
       .send('xhr with CAT ' + new Array(100).join('data'))
   })
-  fastify.get('/xhr_no_cat', (request, reply) => {
+  fastify.get('/xhr_no_cat', {
+    compress: false
+  }, (request, reply) => {
     reply.send('xhr no CAT')
   })
-  fastify.get('/echo-headers', (request, reply) => {
+  fastify.get('/echo-headers', {
+    compress: false
+  }, (request, reply) => {
     reply.send(request.headers)
   })
-  fastify.post('/postwithhi/*', (request, reply) => {
+  fastify.post('/postwithhi/*', {
+    compress: false
+  }, (request, reply) => {
     if (request.body === 'hi!') {
       reply.send('hi!')
     } else {
       reply.send('bad agent! - got body = "' + request.body + '"')
     }
   })
-  fastify.get('/json', (request, reply) => {
+  fastify.get('/json', {
+    compress: false
+  }, (request, reply) => {
     reply.send({ text: 'hi!' })
   })
-  fastify.get('/js', (request, reply) => {
+  fastify.get('/js', {
+    compress: false
+  }, (request, reply) => {
     reply.type('text/javascript').send('console.log(\'hi\')')
   })
-  fastify.get('/text', (request, reply) => {
+  fastify.get('/text', {
+    compress: false
+  }, (request, reply) => {
     const length = parseInt(request.query.length || 10, 10)
     reply.send('x'.repeat(length))
   })
-  fastify.post('/formdata', async (request, reply) => {
+  fastify.post('/formdata', {
+    compress: false
+  }, async (request, reply) => {
     try {
       assert.deepEqual(request.body, { name: 'bob', x: '5' })
       reply.send('good')
@@ -116,7 +156,9 @@ module.exports = fp(async function (fastify, testServer) {
       reply.send('bad')
     }
   })
-  fastify.get('/slowresponse', (request, reply) => {
+  fastify.get('/slowresponse', {
+    compress: false
+  }, (request, reply) => {
     const stream = new PassThrough()
     reply.send(stream)
 
@@ -126,7 +168,9 @@ module.exports = fp(async function (fastify, testServer) {
       stream.end()
     }, 250)
   })
-  fastify.get('/gzipped', (request, reply) => {
+  fastify.get('/gzipped', {
+    compress: false
+  }, (request, reply) => {
     const stream = new PassThrough()
     reply.header('Content-Encoding', 'gzip').send(stream)
 
@@ -134,14 +178,18 @@ module.exports = fp(async function (fastify, testServer) {
     gzip.pipe(stream)
     gzip.end('x'.repeat(10000))
   })
-  fastify.get('/chunked', (request, reply) => {
+  fastify.get('/chunked', {
+    compress: false
+  }, (request, reply) => {
     const stream = new PassThrough()
     reply.header('Transfer-Encoding', 'chunked').send(stream)
 
     stream.write('x'.repeat(10000))
     stream.end()
   })
-  fastify.get('/web-worker-agent', async (request, reply) => {
+  fastify.get('/web-worker-agent', {
+    compress: false
+  }, async (request, reply) => {
     const contents = await fs.readFile(
       path.join(paths.builtAssetsDir, 'nr-loader-worker.min.js')
     )
@@ -149,7 +197,9 @@ module.exports = fp(async function (fastify, testServer) {
       .header('Content-Type', 'application/javascript; charset=UTF-8')
       .send(contents)
   })
-  fastify.get('/empty404', async (request, reply) => {
+  fastify.get('/empty404', {
+    compress: false
+  }, async (request, reply) => {
     reply.code(404).send('')
   })
 })

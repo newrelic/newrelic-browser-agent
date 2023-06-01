@@ -6,8 +6,9 @@ import { isBrowserScope } from '../util/global-scope'
 export class InteractionTimer extends Timer {
   constructor (opts, ms) {
     super(opts, ms)
-    this.onRefresh = opts.onRefresh
-    this.onPause = opts.onPause
+    this.onPause = typeof opts.onPause === 'function' ? opts.onPause : () => { /* noop */ }
+    this.onRefresh = typeof opts.onRefresh === 'function' ? opts.onRefresh : () => { /* noop */ }
+    this.onResume = typeof opts.onResume === 'function' ? opts.onResume : () => { /* noop */ }
 
     // used by pause/resume
     this.remainingMs = undefined
@@ -42,7 +43,10 @@ export class InteractionTimer extends Timer {
       subscribeToVisibilityChange((state) => {
         if (state === 'hidden') this.pause()
         // vis change --> visible is treated like a new interaction with the page
-        else this.refresh()
+        else {
+          this.onResume()
+          this.refresh()
+        }
       }, false, false, this.abortController?.signal)
     }
   }
@@ -53,7 +57,7 @@ export class InteractionTimer extends Timer {
   }
 
   pause () {
-    this.onPause?.()
+    this.onPause()
     clearTimeout(this.timer)
     this.remainingMs = this.initialMs - (Date.now() - this.startTimestamp)
   }
@@ -63,13 +67,6 @@ export class InteractionTimer extends Timer {
     this.timer = this.create(cb, ms)
     this.startTimestamp = Date.now()
     this.remainingMs = undefined
-    this.onRefresh?.()
+    this.onRefresh()
   }
-
-  // NOT CURRENTLY UTILIZED BY ANYTHING
-  // resume () {
-  //   if (!this.remainingMs || !this.isValid()) return
-  //   this.timer = this.create(this.cb, this.remainingMs)
-  //   this.remainingMs = undefined
-  // }
 }

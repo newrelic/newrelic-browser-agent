@@ -13,15 +13,16 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
     loader_config = nr.loader_config
   }
 
+  setConfiguration(agentIdentifier, init || {})
+  setLoaderConfig(agentIdentifier, loader_config || {})
+  setRuntime(agentIdentifier, runtime)
+
   info.jsAttributes ??= {}
   if (isWorkerScope) { // add a default attr to all worker payloads
     info.jsAttributes.isWorker = true
   }
 
   setInfo(agentIdentifier, info)
-  setConfiguration(agentIdentifier, init || {})
-  setLoaderConfig(agentIdentifier, loader_config || {})
-  setRuntime(agentIdentifier, runtime)
 
   setTopLevelCallers()
   const api = setAPI(agentIdentifier, forceDrain)

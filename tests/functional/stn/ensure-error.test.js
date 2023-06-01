@@ -19,15 +19,13 @@ testDriver.test('errors get to session traces', supported, function (
   Promise.all([resourcePromise, rumPromise, loadPromise])
     .then(() => {
       return router.expectResources().then(({ request: { body } }) => {
-        let parsed = JSON.parse(body)
-
-        let err = parsed.res.find((node) => {
+        let err = body.res.find((node) => {
           return node.n === 'error'
         })
         t.ok(err, 'Has an error')
         t.equal(err.o, 'hello session traces i am error')
 
-        let ajax = parsed.res.find((node) => {
+        let ajax = body.res.find((node) => {
           return node.n === 'Ajax'
         })
         t.ok(ajax, 'Has an Ajax')

@@ -1,18 +1,32 @@
+import { getBrowserName, getBrowserVersion } from '../../browsers-lists/utils.mjs'
+
 /**
  * This is a WDIO worker plugin that provides a global method allowing for the
  * filtering of tests by a browser match.
  */
 export default class BrowserMatcher {
-  #browserSpec
+  #browserName
+  #browserVersion
 
   async beforeSession (_, capabilities) {
-    this.#browserSpec =
-      `${this.#getBrowserName(capabilities)}@${capabilities.browserVersion || capabilities.version}`
+    this.#browserName = getBrowserName(capabilities)
+    this.#browserVersion = getBrowserVersion(capabilities)
     global.withBrowsersMatching = this.#browserMatchTest.bind(this)
   }
 
   #browserMatchTest (matcher) {
-    let skip = matcher && !matcher.test(this.#browserSpec)
+    let skip = false
+
+    if (Array.isArray(matcher) && matcher.length > 0) {
+      for (const indexedMatcher of matcher) {
+        if (!indexedMatcher.test(this.#browserName, this.#browserVersion)) {
+          skip = true
+          break
+        }
+      }
+    } else if (matcher && typeof matcher.test === 'function') {
+      skip = !matcher.test(this.#browserName, this.#browserVersion)
+    }
 
     return function (...args) {
       /*
@@ -28,16 +42,5 @@ export default class BrowserMatcher {
         global.it.apply(this, args)
       }
     }
-  }
-
-  #getBrowserName ({ browserName }) {
-    if (browserName === 'internet explorer') {
-      return 'ie'
-    }
-    if (browserName === 'MicrosoftEdge') {
-      return 'edge'
-    }
-
-    return browserName
   }
 }

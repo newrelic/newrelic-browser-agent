@@ -3,11 +3,14 @@ module.exports = {
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'src/**/*.js',
-    '!src/**/*.test.js'
+    '!src/**/*.test.js',
+    '!src/cdn/**/*.js'
   ],
+  modulePathIgnorePatterns: ['<rootDir>/temp'],
   testEnvironment: 'jsdom',
   testMatch: ['<rootDir>/src/**/?(*.)+(spec|test).[tj]s?(x)'],
   transform: {
-    '\\.[jt]sx?$': 'babel-jest'
-  }
+    '\\.m?[jt]sx?$': 'babel-jest'
+  },
+  setupFilesAfterEnv: ['<rootDir>/tools/jest-matchers/index.mjs']
 }

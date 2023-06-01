@@ -39,17 +39,18 @@ export function getSauceConnectTunnelName () {
  */
 export function buildSauceConnectOptions (cliArgs) {
   const opts = {
+    scVersion: '4.9.0',
     tunnelName: getSauceConnectTunnelName(),
     noSslBumpDomains: 'all',
     logger: console.log,
     tunnelDomains: cliArgs.host || 'bam-test-1.nr-local.net'
   }
 
-  if (cliArgs.verbose) {
-    opts.verbose = true
-  }
   if (cliArgs.quiet) {
     opts.logger = undefined
+  } else if (cliArgs.verbose) {
+    opts.verbose = true
+    opts.verboseDebugging = true
   }
 
   return opts

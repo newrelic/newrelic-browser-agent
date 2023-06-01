@@ -9,22 +9,22 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "107",
       "browserVersion": "107"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "111",
       "browserVersion": "111"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "114",
       "browserVersion": "114"
     }
@@ -32,8 +32,8 @@
   "edge": [
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "104",
       "browserVersion": "104"
     },
@@ -46,15 +46,15 @@
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "110",
       "browserVersion": "110"
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "113",
       "browserVersion": "113"
     }
@@ -100,8 +100,8 @@
     },
     {
       "browserName": "safari",
-      "platformName": "Mac 12",
-      "platform": "Mac 12",
+      "platformName": "Mac 13",
+      "platform": "Mac 13",
       "version": "16",
       "browserVersion": "16",
       "acceptInsecureCerts": false
@@ -113,8 +113,8 @@
       "platformName": "Android",
       "platform": "Android",
       "version": "9.0",
-      "device": "Pixel3XLGoogleAPI",
-      "appium:deviceName": "Google Pixel 3 XL GoogleAPI Emulator",
+      "device": "Android GoogleAPI Emulator",
+      "appium:deviceName": "Android GoogleAPI Emulator",
       "appium:platformVersion": "9.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {

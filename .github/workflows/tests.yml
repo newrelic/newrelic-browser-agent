@@ -384,7 +384,7 @@ jobs:
       - name: checkout and build
         uses: ./.github/actions/test-setup
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=5 --functional-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -P -b ie@* -s -t 85000 --concurrent=5 --functional-only
 
   ie-unit:
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name) || contains(github.event.pull_request.labels.*.name, 'safe to test')
@@ -413,5 +413,5 @@ jobs:
       - name: checkout and build
         uses: ./.github/actions/test-setup
       - name: run tests
-        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -P -b ie@* -s -t 85000 --concurrent=5 --unit-only
+        run: node --max-old-space-size=8192 ./tools/jil/bin/cli.js -f merged -P -b ie@* -s -t 85000 --concurrent=5 --unit-only
 

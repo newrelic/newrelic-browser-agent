@@ -172,7 +172,7 @@ import { Metrics } from '@newrelic/browser-agent/src/features/metrics'
 
 ## Utilizing Pre-Defined Bundles
 
-The npm package contains our pre-defined bundles within the `/build/` directory. This allows you to use the npm package while still importing a pre-built bundle into your HTML files. The npm package contains all our bundle files but you really only need to host and include one of the agent loaders. The loader will still load all async bundles from the New Relic CDN.
+The npm package contains our pre-defined bundles within the `/dist/cdn/` directory. This allows you to use the npm package while still importing a pre-built bundle into your HTML files. The npm package contains all our bundle files but you really only need to host and include one of the agent loaders. The loader will still load all async bundles from the New Relic CDN.
 
 ```html
 <!-- Copy the configuration block from the snippet in New Relic -->
@@ -184,14 +184,14 @@ The npm package contains our pre-defined bundles within the `/build/` directory.
 </script>
 
 <!-- Include the lite agent -->
-<script src="/node_modules/@newrelic/browser-agent/build/nr-loader-spa-1.232.1.min.js"></script>
+<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-spa-1.232.1.min.js"></script>
 <!-- Include the pro agent -->
-<script src="/node_modules/@newrelic/browser-agent/build/nr-loader-full-1.232.1.min.js"></script>
+<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-full-1.232.1.min.js"></script>
 <!-- Include the pro+spa agent -->
-<script src="/node_modules/@newrelic/browser-agent/build/nr-loader-rum-1.232.1.min.js"></script>
+<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-rum-1.232.1.min.js"></script>
 ```
 
-The version number in the file name will change depending on the version of the npm package that is installed. It is recommended that you setup your build tooling to copy the correct file from the `/node_modules/@newrelic/browser-agent/build/` directory into a `static` directory where you normally host static files. You can rename the file at the same time to make the `script` element static but remember to manage cache busting for your users.
+The version number in the file name will change depending on the version of the npm package that is installed. It is recommended that you setup your build tooling to copy the correct file from the `/node_modules/@newrelic/browser-agent/dist/cdn/` directory into a `static` directory where you normally host static files. You can rename the file at the same time to make the `script` element static but remember to manage cache busting for your users.
 
 Also included in the bundle are un-minified and polyfilled versions of each of the agents. The polyfilled versions of the agents are built to ES5 standards. When using the polyfilled versions of the agents, remember to either include your own polyfills in the HTML above the loader `script` or use our `polyfills` script.
 
@@ -205,14 +205,14 @@ Also included in the bundle are un-minified and polyfilled versions of each of t
 </script>
 
 <!-- Include our polyfills script -->
-<script src="/node_modules/@newrelic/browser-agent/build/nr-polyfills-1.232.1.min.js"></script>
+<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-polyfills-1.232.1.min.js"></script>
 
 <!-- Include the ES5 lite agent -->
-<script src="/node_modules/@newrelic/browser-agent/build/nr-loader-spa-polyfills-1.232.1.min.js"></script>
+<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-spa-polyfills-1.232.1.min.js"></script>
 <!-- Include the ES5 pro agent -->
-<script src="/node_modules/@newrelic/browser-agent/build/nr-loader-full-polyfills-1.232.1.min.js"></script>
+<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-full-polyfills-1.232.1.min.js"></script>
 <!-- Include the ES5 pro+spa agent -->
-<script src="/node_modules/@newrelic/browser-agent/build/nr-loader-rum-polyfills-1.232.1.min.js"></script>
+<script src="/node_modules/@newrelic/browser-agent/dist/cdn/nr-loader-rum-polyfills-1.232.1.min.js"></script>
 ```
 
 ## Support

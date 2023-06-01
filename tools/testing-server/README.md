@@ -114,7 +114,7 @@ The agent inject plugin utilizes the `onSend` hook of fastify to modify outgoing
 
 #### [Loader Transform](./plugins/agent-injector/loader-transform.js) 
 
-This stream transform looks for `{loader}` in the HTML response, determines which loader to inject, and injects a script tag containing the compiled loader. The loader is pulled from the `/build/` directory and requires that the project be built before the server is started. The determination of the loader used defaults to what is provided to the JIL CLI `-l | --loader` flag (default of `full`). A query parameter can be used (`?loader=spa`) when requesting an HTML asset to override the loader. The polyfill loader can be used in two ways: through the JIL CLI `-P true` flag or by setting the query parameter to a polyfill loader `?loader=spa-polyfill`.
+This stream transform looks for `{loader}` in the HTML response, determines which loader to inject, and injects a script tag containing the compiled loader. The loader is pulled from the `/dist/cdn/` directory and requires that the project be built before the server is started. The determination of the loader used defaults to what is provided to the JIL CLI `-l | --loader` flag (default of `full`). A query parameter can be used (`?loader=spa`) when requesting an HTML asset to override the loader. The polyfill loader can be used in two ways: through the JIL CLI `-P true` flag or by setting the query parameter to a polyfill loader `?loader=spa-polyfill`.
 
 #### [Config Transform](./plugins/agent-injector/config-transform.js)
 

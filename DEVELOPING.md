@@ -43,7 +43,7 @@ npm ci
 npm run cdn:build:local
 ```
 
-Build artifacts are placed in the `/build` directory.
+Build artifacts are placed in the `/dist/cdn` directory.
 
 To automatically rebuild the agent on each change:
 
@@ -55,7 +55,7 @@ npm run cdn:watch
 
 The Browser agent is loaded onto a web page in two parts. To install a version of the agent build locally:
 
-- Host the assets generated in the `/build` directory via a local HTTP server (see instructions above to build the agent).
+- Host the assets generated in the `/dist/cdn` directory via a local HTTP server (see instructions above to build the agent).
 - Insert the script below into the top of the `<head>` tag of your webpage.
 
 ```html

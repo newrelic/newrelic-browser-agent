@@ -1,4 +1,4 @@
-import browsersSelenium from '../../browsers-lists/browsers-selenium.json' assert { type: "json" }
+import browsersSelenium from '../../browsers-lists/browsers-selenium.json' assert { type: 'json' }
 import browsersList from '../../browsers-lists/browsers-list.mjs'
 import args from '../args.mjs'
 

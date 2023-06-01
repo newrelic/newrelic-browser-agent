@@ -1,4 +1,3 @@
-
 import { handle } from '../../../common/event-emitter/handle'
 import { isiOS } from '../../../common/browser-version/ios-version'
 import { InstrumentBase } from '../../utils/instrument-base'

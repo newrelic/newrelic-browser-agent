@@ -1,4 +1,3 @@
-
 const request = require('request')
 var argv = require('yargs')
   .string('fastly-key')

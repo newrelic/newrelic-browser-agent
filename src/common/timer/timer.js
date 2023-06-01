@@ -1,4 +1,3 @@
-
 export class Timer {
   constructor (opts, ms) {
     if (!opts.onEnd) throw new Error('onEnd handler is required')

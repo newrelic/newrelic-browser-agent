@@ -22,7 +22,7 @@ beforeEach(() => {
 
 describe('submitData.jsonp', () => {
   // This test requires a script tag to exist in the html set by this file's jest-environment-options header block.
-  it('should return an HTMLScriptElement when called from a web window environment', () => {
+  test('should return an HTMLScriptElement when called from a web window environment', () => {
     mockWorkerScope.mockReturnValue(false)
 
     const jsonp = 'callback'
@@ -34,7 +34,7 @@ describe('submitData.jsonp', () => {
     expect(result.src).toBe(url + '&jsonp=' + jsonp)
   })
 
-  it('should try to use importScripts when called from a worker scope', () => {
+  test('should try to use importScripts when called from a worker scope', () => {
     mockWorkerScope.mockReturnValueOnce(true)
 
     const jsonp = 'callback'
@@ -48,7 +48,7 @@ describe('submitData.jsonp', () => {
     delete global.importScripts
   })
 
-  it('should fall back to an xhrGet call and return false when called from a worker scope', () => {
+  test('should fall back to an xhrGet call and return false when called from a worker scope', () => {
     mockWorkerScope.mockReturnValueOnce(true)
 
     const jsonp = 'callback'
@@ -61,7 +61,7 @@ describe('submitData.jsonp', () => {
     expect(submitData.xhrGet).toHaveBeenCalledTimes(1)
   })
 
-  it('should not throw an error if any error occurs during execution', () => {
+  test('should not throw an error if any error occurs during execution', () => {
     jest.spyOn(document, 'createElement').mockImplementation(() => { throw new Error('message') })
 
     const jsonp = 'callback'
@@ -73,18 +73,18 @@ describe('submitData.jsonp', () => {
 })
 
 describe('submitData.xhrGet', () => {
-  it('should return an XMLHttpRequest object', () => {
+  test('should return an XMLHttpRequest object', () => {
     const result = submitData.xhrGet({ url })
     expect(result).toBeInstanceOf(XMLHttpRequest)
   })
 
-  it('should not throw an error if URL is not provided', () => {
+  test('should not throw an error if URL is not provided', () => {
     expect(() => {
       submitData.xhrGet({})
     }).not.toThrow()
   })
 
-  it('should not throw an error if an invalid URL is provided', () => {
+  test('should not throw an error if an invalid URL is provided', () => {
     expect(() => {
       submitData.xhrGet({ url: 'invalid url' })
     }).not.toThrow()
@@ -92,24 +92,24 @@ describe('submitData.xhrGet', () => {
 })
 
 describe('submitData.xhr', () => {
-  it('should return an XMLHttpRequest object', () => {
+  test('should return an XMLHttpRequest object', () => {
     const result = submitData.xhrGet({ url })
     expect(result).toBeInstanceOf(XMLHttpRequest)
   })
 
-  it('should not throw an error if URL is not provided', () => {
+  test('should not throw an error if URL is not provided', () => {
     expect(() => {
       submitData.xhr({})
     }).not.toThrow()
   })
 
-  it('should not throw an error if an invalid URL is provided', () => {
+  test('should not throw an error if an invalid URL is provided', () => {
     expect(() => {
       submitData.xhr({ url: 'invalid url' })
     }).not.toThrow()
   })
 
-  it('should send a POST request by default', () => {
+  test('should send a POST request by default', () => {
     jest.spyOn(XMLHttpRequest.prototype, 'open')
 
     submitData.xhr({ url })
@@ -117,7 +117,7 @@ describe('submitData.xhr', () => {
     expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('POST', url, true)
   })
 
-  it('should send a GET request if specified', () => {
+  test('should send a GET request if specified', () => {
     jest.spyOn(XMLHttpRequest.prototype, 'open')
 
     submitData.xhr({ url, method: 'GET' })
@@ -126,7 +126,7 @@ describe('submitData.xhr', () => {
   })
 
   // This test requires a same-origin url to be set by this file's jest-environment-options header block.
-  it('should send a request synchronously if specified', () => {
+  test('should send a request synchronously if specified', () => {
     jest.spyOn(XMLHttpRequest.prototype, 'open')
 
     submitData.xhr({ url, sync: true })
@@ -134,7 +134,7 @@ describe('submitData.xhr', () => {
     expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('POST', url, false)
   })
 
-  it('should set custom headers if provided', () => {
+  test('should set custom headers if provided', () => {
     const headers = [{ key: 'Content-Type', value: 'application/json' }]
 
     jest.spyOn(XMLHttpRequest.prototype, 'setRequestHeader')
@@ -146,7 +146,7 @@ describe('submitData.xhr', () => {
     })
   })
 
-  it('should send a request with the specified body', () => {
+  test('should send a request with the specified body', () => {
     const body = JSON.stringify({ key: 'value' })
 
     jest.spyOn(XMLHttpRequest.prototype, 'send')
@@ -158,7 +158,7 @@ describe('submitData.xhr', () => {
 })
 
 describe('submitData.img', () => {
-  it('should return an HTMLImageElement', () => {
+  test('should return an HTMLImageElement', () => {
     const imageUrl = 'https://example.com/image.png'
 
     const result = submitData.img({ url: imageUrl })
@@ -166,13 +166,13 @@ describe('submitData.img', () => {
     expect(result).toBeInstanceOf(HTMLImageElement)
   })
 
-  it('should not throw an error if URL is not provided', () => {
+  test('should not throw an error if URL is not provided', () => {
     expect(() => {
       submitData.img({})
     }).not.toThrow()
   })
 
-  it('should set the src attribute of the image element to the provided URL', () => {
+  test('should set the src attribute of the image element to the provided URL', () => {
     const imageUrl = 'https://example.com/image.png'
 
     const result = submitData.img({ url: imageUrl })
@@ -182,7 +182,7 @@ describe('submitData.img', () => {
 })
 
 describe('submitData.beacon', () => {
-  it('should return true when beacon request succeeds', () => {
+  test('should return true when beacon request succeeds', () => {
     const body = JSON.stringify({ key: 'value' })
 
     window.navigator.sendBeacon = {
@@ -194,7 +194,7 @@ describe('submitData.beacon', () => {
     expect(result).toBe(true)
   })
 
-  it('should return false when beacon request fails', () => {
+  test('should return false when beacon request fails', () => {
     const body = JSON.stringify({ key: 'value' })
 
     window.navigator.sendBeacon = {
@@ -206,7 +206,7 @@ describe('submitData.beacon', () => {
     expect(result).toBe(false)
   })
 
-  it('should error if sendBeacon is not supported', () => {
+  test('should error if sendBeacon is not supported', () => {
     const body = JSON.stringify({ key: 'value' })
 
     window.navigator.sendBeacon = undefined

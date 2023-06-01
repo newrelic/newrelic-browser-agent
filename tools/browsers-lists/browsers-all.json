@@ -611,8 +611,8 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "114",
       "browserVersion": "114"
     }

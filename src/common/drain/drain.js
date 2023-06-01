@@ -55,7 +55,7 @@ export function drain (agentIdentifier = '', featureName = 'feature') {
 
   // Only when the event-groups for all features are ready to drain (staged) do we execute the drain. This has the effect
   // that the last feature to call drain triggers drain for all features.
-  const items = Array.from(registry[agentIdentifier])
+  const items = [...registry[agentIdentifier]]
   if (items.every(([key, values]) => values.staged)) {
     items.sort((a, b) => a[1].priority - b[1].priority)
     items.forEach(([group]) => {

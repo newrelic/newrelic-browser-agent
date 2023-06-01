@@ -1,60 +1,75 @@
+const process = require('process')
 const path = require('path')
-const fs = require('fs')
+const fs = require('fs-extra')
 const child_process = require('child_process')
 const pkg = require('../../package.json')
 
+const npmCommand = /^win/.test(process.platform) ? 'npm.cmd' : 'npm'
 const tarball = path.resolve(__dirname, '../../temp', `${pkg.name.replace(/@/g, '').replace(/\//g, '-')}-${pkg.version}.tgz`)
-
-const root = process.cwd()
-
-// Since this script is intended to be run as a "postinstall" command,
-// it will do `npm install` automatically inside the root folder before any of the subfolders.
-print('Bundling "Test Builds"')
-
-recurse(root)
 
 function print (msg) {
   console.log(`\n================================\n${msg}\n================================\n`)
 }
 
-// Recurses into a folder
-function recurse (folder) {
-  const has_package_json = fs.existsSync(path.join(folder, 'package.json'))
-  // If there is `package.json` in this folder then perform `npm install`.
-  if (has_package_json && folder !== root) {
-    install(folder)
-    build(folder)
-  } else {
-    // Recurse into subfolders
-    for (let subfolder of subfolders(folder)) {
-      recurse(subfolder)
-    }
-  }
+// Delete node_modules and package lock file
+async function clean (folder) {
+  print(`cleaning ./${path.relative(__dirname, folder)}`)
+
+  await fs.remove(path.join(folder, 'node_modules'))
+  await fs.remove(path.join(folder, 'package-lock.json'))
 }
 
 // Performs `npm install`
-function install (folder) {
-  const cmd = /^win/.test(process.platform) ? 'npm.cmd' : 'npm'
-  print(`installing ./${path.relative(root, folder)}`)
-  // Clear the cached version of the npm package
-  child_process.execSync('rm -rf node_modules', { cwd: folder, env: process.env, stdio: 'inherit' })
-  child_process.execSync('rm -rf package-lock.json', { cwd: folder, env: process.env, stdio: 'inherit' })
-  // Re-install node modules
-  child_process.execSync(`npm install ${tarball}`, { cwd: folder, env: process.env, stdio: 'inherit' })
+async function install (folder) {
+  print(`installing ./${path.relative(__dirname, folder)}`)
+
+  await new Promise((resolve, reject) => {
+    const proc = child_process.spawn(npmCommand, ['install', tarball], { cwd: folder, env: process.env, stdio: 'inherit' })
+    proc.on('close', code => {
+      if (code !== 0) {
+        reject(new Error('install failed'))
+      } else {
+        resolve()
+      }
+    })
+  })
 }
 
 // Performs `npm build`
-function build (folder) {
-  const cmd = /^win/.test(process.platform) ? 'npm.cmd' : 'npm'
-  print(`Building ./${path.relative(root, folder)}`)
+async function build (folder) {
+  print(`Building ./${path.relative(__dirname, folder)}`)
 
-  child_process.execSync('npm run build', { cwd: folder, env: process.env, stdio: 'inherit' })
+  await new Promise((resolve, reject) => {
+    const proc = child_process.spawn(npmCommand, ['run', 'build'], { cwd: folder, env: process.env, stdio: 'inherit' })
+    proc.on('close', code => {
+      if (code !== 0) {
+        reject(new Error('install failed'))
+      } else {
+        resolve()
+      }
+    })
+  })
 }
 
-// Lists subfolders in a folder
-function subfolders (folder) {
-  return fs.readdirSync(folder)
-    .filter(subfolder => fs.statSync(path.join(folder, subfolder)).isDirectory())
-    .filter(subfolder => subfolder !== 'node_modules' && subfolder[0] !== '.')
-    .map(subfolder => path.join(folder, subfolder))
-}
+print('Bundling "Test Builds"')
+const packages = fs.readdirSync(__dirname, { withFileTypes: true })
+  .filter(dir => dir.isDirectory())
+  .filter(dir => {
+    try {
+      fs.accessSync(path.join(__dirname, dir.name, 'package.json'), fs.constants.R_OK | fs.constants.W_OK)
+      return true
+    } catch (err) {
+      return false
+    }
+  })
+  .map(dir => {
+    const testPackagePath = path.join(__dirname, dir.name)
+    return clean(testPackagePath)
+      .then(() => install(testPackagePath))
+      .then(() => build(testPackagePath))
+  })
+
+Promise.all(packages)
+  .catch(err => {
+    print('Build failed', err)
+  })

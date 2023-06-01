@@ -3,8 +3,10 @@ module.exports = {
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'src/**/*.js',
-    '!src/**/*.test.js'
+    '!src/**/*.test.js',
+    '!src/cdn/**/*.js'
   ],
+  modulePathIgnorePatterns: ['<rootDir>/temp'],
   testEnvironment: 'jsdom',
   testMatch: ['<rootDir>/src/**/?(*.)+(spec|test).[tj]s?(x)'],
   transform: {

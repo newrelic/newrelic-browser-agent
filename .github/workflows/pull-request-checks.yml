@@ -26,6 +26,7 @@ jobs:
         uses: ./.github/actions/find-pull-request
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          pr_required: true
 
   jest:
     name: Jest unit tests

@@ -16,29 +16,29 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "28",
       "browserVersion": "28"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "29",
       "browserVersion": "29"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "30",
       "browserVersion": "30"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "31",
       "browserVersion": "31"
     },
@@ -51,15 +51,15 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "33",
       "browserVersion": "33"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "34",
       "browserVersion": "34"
     },
@@ -72,15 +72,15 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "36",
       "browserVersion": "36"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "37",
       "browserVersion": "37"
     },
@@ -100,8 +100,8 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "40",
       "browserVersion": "40"
     },
@@ -114,8 +114,8 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "42",
       "browserVersion": "42"
     },
@@ -142,15 +142,15 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "46",
       "browserVersion": "46"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "47",
       "browserVersion": "47"
     },
@@ -191,22 +191,22 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "53",
       "browserVersion": "53"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "54",
       "browserVersion": "54"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "55",
       "browserVersion": "55"
     },
@@ -254,15 +254,15 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "62",
       "browserVersion": "62"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "63",
       "browserVersion": "63"
     },
@@ -289,8 +289,8 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "67",
       "browserVersion": "67"
     },
@@ -310,8 +310,8 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "70",
       "browserVersion": "70"
     },
@@ -324,15 +324,15 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "72",
       "browserVersion": "72"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "73",
       "browserVersion": "73"
     },
@@ -352,8 +352,8 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "76",
       "browserVersion": "76"
     },
@@ -366,15 +366,15 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "78",
       "browserVersion": "78"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "79",
       "browserVersion": "79"
     },
@@ -387,43 +387,43 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "81",
       "browserVersion": "81"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "83",
       "browserVersion": "83"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "84",
       "browserVersion": "84"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "85",
       "browserVersion": "85"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "86",
       "browserVersion": "86"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "87",
       "browserVersion": "87"
     },
@@ -443,8 +443,8 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "90",
       "browserVersion": "90"
     },
@@ -457,8 +457,8 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "92",
       "browserVersion": "92"
     },
@@ -471,15 +471,15 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "94",
       "browserVersion": "94"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "95",
       "browserVersion": "95"
     },
@@ -492,8 +492,8 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "97",
       "browserVersion": "97"
     },
@@ -513,8 +513,8 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "100",
       "browserVersion": "100"
     },
@@ -527,15 +527,15 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "102",
       "browserVersion": "102"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "103",
       "browserVersion": "103"
     },
@@ -548,22 +548,22 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "105",
       "browserVersion": "105"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "106",
       "browserVersion": "106"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "107",
       "browserVersion": "107"
     },
@@ -576,22 +576,22 @@
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "109",
       "browserVersion": "109"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "110",
       "browserVersion": "110"
     },
     {
       "browserName": "chrome",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "111",
       "browserVersion": "111"
     },
@@ -669,8 +669,8 @@
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "81",
       "browserVersion": "81"
     },
@@ -683,8 +683,8 @@
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "84",
       "browserVersion": "84"
     },
@@ -711,8 +711,8 @@
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "88",
       "browserVersion": "88"
     },
@@ -732,22 +732,22 @@
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "91",
       "browserVersion": "91"
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "92",
       "browserVersion": "92"
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "93",
       "browserVersion": "93"
     },
@@ -767,29 +767,29 @@
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "96",
       "browserVersion": "96"
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "97",
       "browserVersion": "97"
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "98",
       "browserVersion": "98"
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "99",
       "browserVersion": "99"
     },
@@ -809,22 +809,22 @@
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "102",
       "browserVersion": "102"
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "103",
       "browserVersion": "103"
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "104",
       "browserVersion": "104"
     },
@@ -851,8 +851,8 @@
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "108",
       "browserVersion": "108"
     },
@@ -865,15 +865,15 @@
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "110",
       "browserVersion": "110"
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "111",
       "browserVersion": "111"
     },
@@ -886,8 +886,8 @@
     },
     {
       "browserName": "MicrosoftEdge",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
       "version": "113",
       "browserVersion": "113"
     }
@@ -1655,16 +1655,16 @@
     },
     {
       "browserName": "safari",
-      "platformName": "Mac 10.12",
-      "platform": "Mac 10.12",
+      "platformName": "Mac 10.11",
+      "platform": "Mac 10.11",
       "version": "10",
       "browserVersion": "10",
       "acceptInsecureCerts": false
     },
     {
       "browserName": "safari",
-      "platformName": "Mac 10.12",
-      "platform": "Mac 10.12",
+      "platformName": "Mac 10.13",
+      "platform": "Mac 10.13",
       "version": "11",
       "browserVersion": "11",
       "acceptInsecureCerts": false
@@ -1679,8 +1679,8 @@
     },
     {
       "browserName": "safari",
-      "platformName": "Mac 10.15",
-      "platform": "Mac 10.15",
+      "platformName": "Mac 10.13",
+      "platform": "Mac 10.13",
       "version": "13",
       "browserVersion": "13",
       "acceptInsecureCerts": false
@@ -1703,8 +1703,8 @@
     },
     {
       "browserName": "safari",
-      "platformName": "Mac 12",
-      "platform": "Mac 12",
+      "platformName": "Mac 13",
+      "platform": "Mac 13",
       "version": "16",
       "browserVersion": "16",
       "acceptInsecureCerts": false
@@ -1716,8 +1716,8 @@
       "platformName": "Android",
       "platform": "Android",
       "version": "5.1",
-      "device": "android",
-      "appium:deviceName": "Android Emulator",
+      "device": "Android GoogleAPI Emulator",
+      "appium:deviceName": "Android GoogleAPI Emulator",
       "appium:platformVersion": "5.1",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
@@ -1742,8 +1742,8 @@
       "platformName": "Android",
       "platform": "Android",
       "version": "7.0",
-      "device": "GalaxyS8FHDGoogleAPI",
-      "appium:deviceName": "Samsung Galaxy S8 FHD GoogleAPI Emulator",
+      "device": "Android GoogleAPI Emulator",
+      "appium:deviceName": "Android GoogleAPI Emulator",
       "appium:platformVersion": "7.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
@@ -1755,8 +1755,8 @@
       "platformName": "Android",
       "platform": "Android",
       "version": "7.1",
-      "device": "GalaxyS8PlusHDGoogleAPI",
-      "appium:deviceName": "Samsung Galaxy S8 Plus HD GoogleAPI Emulator",
+      "device": "Android GoogleAPI Emulator",
+      "appium:deviceName": "Android GoogleAPI Emulator",
       "appium:platformVersion": "7.1",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
@@ -1768,8 +1768,8 @@
       "platformName": "Android",
       "platform": "Android",
       "version": "8.0",
-      "device": "GalaxyS8HDGoogleAPI",
-      "appium:deviceName": "Samsung Galaxy S8 HD GoogleAPI Emulator",
+      "device": "Android GoogleAPI Emulator",
+      "appium:deviceName": "Android GoogleAPI Emulator",
       "appium:platformVersion": "8.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
@@ -1781,8 +1781,8 @@
       "platformName": "Android",
       "platform": "Android",
       "version": "8.1",
-      "device": "GalaxyS8PlusWQHDGoogleAPI",
-      "appium:deviceName": "Samsung Galaxy S8 Plus WQHD GoogleAPI Emulator",
+      "device": "Android GoogleAPI Emulator",
+      "appium:deviceName": "Android GoogleAPI Emulator",
       "appium:platformVersion": "8.1",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
@@ -1794,8 +1794,8 @@
       "platformName": "Android",
       "platform": "Android",
       "version": "9.0",
-      "device": "Pixel3XLGoogleAPI",
-      "appium:deviceName": "Google Pixel 3 XL GoogleAPI Emulator",
+      "device": "Android GoogleAPI Emulator",
+      "appium:deviceName": "Android GoogleAPI Emulator",
       "appium:platformVersion": "9.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
@@ -1807,8 +1807,8 @@
       "platformName": "Android",
       "platform": "Android",
       "version": "10.0",
-      "device": "GalaxyTabActiveProGoogleAPI",
-      "appium:deviceName": "Samsung Galaxy Tab Active Pro GoogleAPI Emulator",
+      "device": "Android GoogleAPI Emulator",
+      "appium:deviceName": "Android GoogleAPI Emulator",
       "appium:platformVersion": "10.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
@@ -1820,8 +1820,8 @@
       "platformName": "Android",
       "platform": "Android",
       "version": "11.0",
-      "device": "GalaxyTabS6GoogleAPI",
-      "appium:deviceName": "Samsung Galaxy Tab S6 GoogleAPI Emulator",
+      "device": "Android GoogleAPI Emulator",
+      "appium:deviceName": "Android GoogleAPI Emulator",
       "appium:platformVersion": "11.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
@@ -1833,8 +1833,8 @@
       "platformName": "Android",
       "platform": "Android",
       "version": "12.0",
-      "device": "Pixel6ProGoogleAPI",
-      "appium:deviceName": "Google Pixel 6 Pro GoogleAPI Emulator",
+      "device": "Android GoogleAPI Emulator",
+      "appium:deviceName": "Android GoogleAPI Emulator",
       "appium:platformVersion": "12.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
@@ -1846,8 +1846,8 @@
       "platformName": "Android",
       "platform": "Android",
       "version": "13.0",
-      "device": "Pixel6ProGoogleAPI",
-      "appium:deviceName": "Google Pixel 6 Pro GoogleAPI Emulator",
+      "device": "Android GoogleAPI Emulator",
+      "appium:deviceName": "Android GoogleAPI Emulator",
       "appium:platformVersion": "13.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
@@ -1861,8 +1861,8 @@
       "platformName": "iOS",
       "platform": "iOS",
       "version": "10.3",
-      "device": "iPhone 7 Plus",
-      "appium:deviceName": "iPhone 7 Plus Simulator",
+      "device": "iPhone 6s",
+      "appium:deviceName": "iPhone 6s Simulator",
       "appium:platformVersion": "10.3",
       "appium:automationName": "XCUITest",
       "sauce:options": {
@@ -1875,8 +1875,8 @@
       "platformName": "iOS",
       "platform": "iOS",
       "version": "11.0",
-      "device": "iPhone 6 Plus",
-      "appium:deviceName": "iPhone 6 Plus Simulator",
+      "device": "iPhone Simulator",
+      "appium:deviceName": "iPhone Simulator",
       "appium:platformVersion": "11.0",
       "appium:automationName": "XCUITest",
       "sauce:options": {
@@ -1889,8 +1889,8 @@
       "platformName": "iOS",
       "platform": "iOS",
       "version": "11.1",
-      "device": "iPhone 7",
-      "appium:deviceName": "iPhone 7 Simulator",
+      "device": "iPhone 6s",
+      "appium:deviceName": "iPhone 6s Simulator",
       "appium:platformVersion": "11.1",
       "appium:automationName": "XCUITest",
       "sauce:options": {
@@ -1903,8 +1903,8 @@
       "platformName": "iOS",
       "platform": "iOS",
       "version": "11.2",
-      "device": "iPhone 7",
-      "appium:deviceName": "iPhone 7 Simulator",
+      "device": "iPhone 8 Plus",
+      "appium:deviceName": "iPhone 8 Plus Simulator",
       "appium:platformVersion": "11.2",
       "appium:automationName": "XCUITest",
       "sauce:options": {
@@ -1917,8 +1917,8 @@
       "platformName": "iOS",
       "platform": "iOS",
       "version": "11.3",
-      "device": "iPhone 5s",
-      "appium:deviceName": "iPhone 5s Simulator",
+      "device": "iPhone Simulator",
+      "appium:deviceName": "iPhone Simulator",
       "appium:platformVersion": "11.3",
       "appium:automationName": "XCUITest",
       "sauce:options": {
@@ -1931,8 +1931,8 @@
       "platformName": "iOS",
       "platform": "iOS",
       "version": "12.0",
-      "device": "iPhone 5s",
-      "appium:deviceName": "iPhone 5s Simulator",
+      "device": "iPhone 6",
+      "appium:deviceName": "iPhone 6 Simulator",
       "appium:platformVersion": "12.0",
       "appium:automationName": "XCUITest",
       "sauce:options": {
@@ -1945,8 +1945,8 @@
       "platformName": "iOS",
       "platform": "iOS",
       "version": "12.2",
-      "device": "iPhone 8",
-      "appium:deviceName": "iPhone 8 Simulator",
+      "device": "iPhone 8 Plus",
+      "appium:deviceName": "iPhone 8 Plus Simulator",
       "appium:platformVersion": "12.2",
       "appium:automationName": "XCUITest",
       "sauce:options": {
@@ -1959,8 +1959,8 @@
       "platformName": "iOS",
       "platform": "iOS",
       "version": "12.4",
-      "device": "iPhone 6",
-      "appium:deviceName": "iPhone 6 Simulator",
+      "device": "iPhone XS Max",
+      "appium:deviceName": "iPhone XS Max Simulator",
       "appium:platformVersion": "12.4",
       "appium:automationName": "XCUITest",
       "sauce:options": {
@@ -1973,8 +1973,8 @@
       "platformName": "iOS",
       "platform": "iOS",
       "version": "13.0",
-      "device": "iPhone 8 Plus",
-      "appium:deviceName": "iPhone 8 Plus Simulator",
+      "device": "iPhone 8",
+      "appium:deviceName": "iPhone 8 Simulator",
       "appium:platformVersion": "13.0",
       "appium:automationName": "XCUITest",
       "sauce:options": {
@@ -1987,8 +1987,8 @@
       "platformName": "iOS",
       "platform": "iOS",
       "version": "13.2",
-      "device": "iPhone 6s Plus",
-      "appium:deviceName": "iPhone 6s Plus Simulator",
+      "device": "iPhone 11",
+      "appium:deviceName": "iPhone 11 Simulator",
       "appium:platformVersion": "13.2",
       "appium:automationName": "XCUITest",
       "sauce:options": {
@@ -2001,8 +2001,8 @@
       "platformName": "iOS",
       "platform": "iOS",
       "version": "13.4",
-      "device": "iPhone 6s Plus",
-      "appium:deviceName": "iPhone 6s Plus Simulator",
+      "device": "iPhone XS Max",
+      "appium:deviceName": "iPhone XS Max Simulator",
       "appium:platformVersion": "13.4",
       "appium:automationName": "XCUITest",
       "sauce:options": {

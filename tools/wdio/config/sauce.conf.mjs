@@ -88,6 +88,7 @@ export default function config () {
               ? {
                   sauceConnect: true,
                   sauceConnectOpts: {
+                    scVersion: '4.9.0',
                     noSslBumpDomains: 'all',
                     tunnelDomains: args.host || 'bam-test-1.nr-local.net'
                   }

@@ -21,6 +21,7 @@ module.exports = function (request, reply, testServer) {
         try {
           polyfills = await fse.readFile(path.resolve(paths.rootDir, 'build/nr-polyfills.min.js'))
         } catch (err) {
+          console.log(err)
           polyfills = await processScript(
             path.resolve(paths.rootDir, 'src/cdn/polyfills.js')
           )

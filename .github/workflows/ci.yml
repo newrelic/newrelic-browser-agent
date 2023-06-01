@@ -48,7 +48,7 @@ jobs:
           node ./tools/scripts/comment-pr.mjs \
             --pull-request=${{ github.event.pull_request.number }} \
             --token=${{ secrets.GITHUB_TOKEN }} \
-            --input=./build/size_report.md \
+            --input=./dist/cdn/size_report.md \
             --tag='<!-- browser_agent asset size report -->'
       - name: Archive asset size report results
         uses: actions/upload-artifact@v3

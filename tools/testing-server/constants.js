@@ -10,7 +10,7 @@ module.exports.defaultAgentConfig = {
 
 module.exports.paths = {
   rootDir: path.resolve(__dirname, '../../'),
-  builtAssetsDir: path.resolve(__dirname, '../../build/'),
+  builtAssetsDir: path.resolve(__dirname, '../../dist/cdn/'),
   testsRootDir: path.resolve(__dirname, '../../tests/'),
   testsAssetsDir: path.resolve(__dirname, '../../tests/assets/'),
   testsBrowserDir: path.resolve(__dirname, '../../tests/browser/')

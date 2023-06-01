@@ -38,7 +38,7 @@ var config = require('yargs')
   .wrap(Math.min(110, yargs.terminalWidth()))
   .argv
 
-const buildDir = path.resolve(__dirname, '../../build/')
+const buildDir = path.resolve(__dirname, '../../dist/cdn/')
 const builtFileNames = fs.readdirSync(buildDir).filter(x => !config.m ? !x.endsWith('.map') : x)
 const version = getVersionFromFilenames(builtFileNames)
 var errors = []

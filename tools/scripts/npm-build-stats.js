@@ -15,5 +15,5 @@ const fs = require('fs-extra')
       gzipSize: gzipSizeFromFileSync(path.join(npmWrapperBuildDir, item.name))
     }))
 
-  fs.writeJson(path.resolve(__dirname, '../../build/npm.stats.json'), npmWrapperFiles)
+  fs.writeJson(path.resolve(__dirname, '../../dist/cdn/npm.stats.json'), npmWrapperFiles)
 })()

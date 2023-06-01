@@ -120,7 +120,7 @@ function loadFiles (cb) {
   asyncForEach(allFiles, readFile, cb)
 
   function readFile (file, next) {
-    fs.readFile(path.resolve(__dirname, '../../build/', file), function (err, data) {
+    fs.readFile(path.resolve(__dirname, '../../dist/cdn/', file), function (err, data) {
       if (err) return next(err)
       fileData[file] = data
       next()
@@ -183,7 +183,7 @@ function uploadLoaderToDB (filename, loader, environment, cb) {
 }
 
 function loaderFilenames () {
-  const buildDir = path.resolve(__dirname, '../../build/')
+  const buildDir = path.resolve(__dirname, '../../dist/cdn/')
   return fs.readdirSync(buildDir).filter(x => x.startsWith('nr-loader') && x.endsWith('.js'))
 }
 

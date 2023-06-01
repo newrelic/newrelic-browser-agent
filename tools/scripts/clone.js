@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 
-const buildDir = path.resolve(__dirname, '../../build/')
+const buildDir = path.resolve(__dirname, '../../dist/cdn/')
 const builtFileNames = fs.readdirSync(buildDir)
 
 async function run () {

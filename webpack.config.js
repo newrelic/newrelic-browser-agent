@@ -139,7 +139,7 @@ const commonConfig = {
   output: {
     filename: '[name].js',
     chunkFilename: SUBVERSION !== 'LOCAL' ? `[name].[chunkhash:8]${PATH_VERSION}.min.js` : `[name]${PATH_VERSION}.js`,
-    path: path.resolve(__dirname, './build'),
+    path: path.resolve(__dirname, './dist/cdn'),
     publicPath: PUBLIC_PATH, // CDN route vs local route (for linking chunked assets)
     clean: false
   }

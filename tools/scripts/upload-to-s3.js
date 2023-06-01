@@ -41,7 +41,7 @@ if (!argv['role']) {
     return process.exit(1)
 }
 
-const buildDir = path.resolve(__dirname, '../../build/')
+const buildDir = path.resolve(__dirname, '../../dist/cdn/')
 const builtFileNames = fs.readdirSync(buildDir)
 
 console.log(`found ${builtFileNames.length} files to upload to S3`)

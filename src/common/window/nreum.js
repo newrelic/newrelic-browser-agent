@@ -1,4 +1,3 @@
-
 import { now } from '../timing/now'
 import { globalScope } from '../util/global-scope'
 

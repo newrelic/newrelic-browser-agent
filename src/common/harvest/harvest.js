@@ -98,7 +98,7 @@ export class Harvest extends SharedContext {
 
     var agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
 
-    if (!payload.body && ((opts && !opts.sendEmptyBody) || !opts)) { // no payload body? nothing to send, just run onfinish stuff and return
+    if (!payload.body && !opts?.sendEmptyBody) { // no payload body? nothing to send, just run onfinish stuff and return
       if (cbFinished) {
         cbFinished({ sent: false })
       }

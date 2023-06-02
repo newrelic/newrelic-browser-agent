@@ -90,7 +90,7 @@ export default class IstanbulCoverage {
 
   /**
    * Runs in the scope of a WDIO worker process after all tests in that worker have completed
-   * and before the worker is shutdown. Used to aggregate all the coverage results for the current
+   * and before the worker is shutdown. Used to aggregate all the coverage results for the current spec file.
    */
   async after () {
     if (!this.#enabled) return

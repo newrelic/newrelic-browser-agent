@@ -14,10 +14,12 @@ import { gosNREUM } from '../../common/window/nreum'
  */
 export async function getSessionReplayMode (agentId, sharedAggregator) {
   try {
+    const newrelic = gosNREUM()
     // Should be enabled by configuration and using an agent build that includes it (via checking that the instrument class was initialized).
-    if (getConfigurationValue(agentId, 'session_replay.enabled') && typeof gosNREUM().initializedAgents[agentId].features.session_replay === 'object') {
+    if (getConfigurationValue(agentId, 'session_replay.enabled') && typeof newrelic.initializedAgents[agentId].features.session_replay === 'object') {
       const srEntitlement = await new Promise(resolve => registerHandler('rumresp-sr', on => resolve(on), FEATURE_NAMES.sessionReplay, ee.get(agentId)))
       if (srEntitlement === true) {
+        await newrelic.initializedAgents[agentId].features.session_replay.onAggregateImported // if Replay could not initialize, this throws a (uncaught) rejection
         return await sharedAggregator.sessionReplayInitialized // wait for replay to determine which mode it's after running its sampling logic
       }
     }

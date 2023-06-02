@@ -32,6 +32,16 @@ export class InstrumentBase extends FeatureBase {
 
     /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
     this.abortHandler
+    /**
+     * @type {Class} Holds the reference to the feature's aggregate module counterpart, if and after it has been initialized. This may not be assigned until after page loads!
+     * The only purpose of this for now is to expose it to the NREUM interface, as the feature's instrument instance is already exposed.
+    */
+    this.featAggregate
+    /**
+     * @type {Promise} Assigned immediately after @see importAggregator runs. Serves as a signal for when the inner async fn finishes execution. Useful for features to await
+     * one another if there are inter-features dependencies.
+    */
+    this.onAggregateImported
 
     if (auto) registerDrain(agentIdentifier, featureName)
   }
@@ -45,6 +55,10 @@ export class InstrumentBase extends FeatureBase {
   importAggregator (argsObjFromInstrument = {}) {
     if (this.featAggregate || !this.auto) return
     const enableSessionTracking = isBrowserScope && getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true
+    let loadedSuccessfully, loadFailed
+    this.onAggregateImported = new Promise((resolve, reject) => {
+      loadedSuccessfully = resolve; loadFailed = reject
+    })
 
     const importLater = async () => {
       try {
@@ -73,10 +87,12 @@ export class InstrumentBase extends FeatureBase {
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
         this.featAggregate = new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)
+        loadedSuccessfully()
       } catch (e) {
         warn(`Downloading and initializing ${this.featureName} failed...`, e)
         this.abortHandler?.() // undo any important alterations made to the page
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
+        loadFailed()
       }
     }
 

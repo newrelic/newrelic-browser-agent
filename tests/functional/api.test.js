@@ -358,18 +358,18 @@ testDriver.test('setCustomAttribute can persist onto subsequent page loads', not
   // eslint-disable-next-line
   let loadPromise = browser.get(router.assetURL('instrumented.html', { scriptString: `newrelic.setCustomAttribute('testing', 123, true);` }))
   Promise.all([router.expectRum(), loadPromise])
-    .then(([{ request: { query } }]) => {
-      t.equal(query.ja, '{"testing":123}', 'initial page load has custom attribute')
+    .then(([{ request: { body } }]) => {
+      t.deepEqual(body.ja, {"testing":123}, 'initial page load has custom attribute')
     })
     .then(() => Promise.all([router.expectRum(), browser.refresh()])) // testing:123 is still expected on next page load within same tab
-    .then(([{ request: { query } }]) => {
-      t.equal(query.ja, '{"testing":123}', '2nd page load still has custom attribute from storage')
+    .then(([{ request: { body } }]) => {
+      t.deepEqual(body.ja, {"testing":123}, '2nd page load still has custom attribute from storage')
       browser.safeEval(`(function clearAttribute(){newrelic.setCustomAttribute(\'testing\',null);})()`)
       loadPromise = browser.get(router.assetURL('instrumented.html'))
     })
     .then(() => Promise.all([router.expectRum(), loadPromise])) // testing should've been erased from storage
-    .then(([{ request: { query } }]) => {
-      t.equal(query.ja, undefined, '3rd page load does not retain custom attribute after unsetting (set to null)')
+    .then(([{ request: { body } }]) => {
+      t.equal(body.ja, undefined, '3rd page load does not retain custom attribute after unsetting (set to null)')
       t.end()
     })
     .catch(fail(t))
@@ -413,9 +413,9 @@ testDriver.test('setUserId adds correct (persisted) attribute to payloads', with
       t.equal(errCustom[ERRORS_INBOX_UID], 'user123', 'Correct enduser.id custom attr on error')
     })
     .then(() => Promise.all([router.expectRum(), browser.refresh()])) // we expect setUserId's attribute to be stored by the browser tab session, and retrieved on the next page load & agent init
-    .then(([{ request: { query } }]) => {
+    .then(([{ request: { body } }]) => {
       // If that jsattribute was persisted and retrieved properly, it should be attached to the new RUM call.
-      t.equal(query.ja, `{"${ERRORS_INBOX_UID}":"user123"}`, 'setUserId affects subsequent page loads in the same storage session')
+      t.deepEqual(body.ja, { [ERRORS_INBOX_UID]: 'user123' }, 'setUserId affects subsequent page loads in the same storage session')
 
       browser.safeEval('newrelic.setUserId(null)') // unset to not affect other tests running on same Sauce instance
       t.end()

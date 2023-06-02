@@ -52,13 +52,13 @@ submitData.xhrGet = function xhrGet ({ url }) {
  * Send via XHR
  * @param {Object} args - The args.
  * @param {string} args.url - The URL to send to.
- * @param {string=} args.body - The Stringified body.
+ * @param {string=} args.body - The Stringified body. Default null to prevent IE11 from breaking.
  * @param {boolean=} args.sync - Run XHR synchronously.
  * @param {string=} [args.method=POST] - The XHR method to use.
  * @param {{key: string, value: string}[]} [args.headers] - The headers to attach.
  * @returns {XMLHttpRequest}
  */
-submitData.xhr = function xhr ({ url, body, sync, method = 'POST', headers = [{ key: 'content-type', value: 'text/plain' }] }) {
+submitData.xhr = function xhr ({ url, body = null, sync, method = 'POST', headers = [{ key: 'content-type', value: 'text/plain' }] }) {
   var request = new XMLHttpRequest()
 
   request.open(method, url, !sync)

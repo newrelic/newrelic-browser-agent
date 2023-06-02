@@ -34,7 +34,7 @@ testDriver.test('error on the initial page load', function (t, browser, router) 
 
       // Tracer
       var interactionChildren = interactionTree.children
-      t.equal(interactionChildren.length, 1, 'should have one child')
+      t.equal(interactionChildren.length, 2, 'should have one child')
       var tracer = interactionChildren[0]
       t.equal(tracer.type, 'customTracer', 'child is a custom tracer')
       t.ok(tracer.nodeId != null, 'tracer should have a node id')

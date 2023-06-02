@@ -31,6 +31,11 @@ function sauceCapabilities () {
       ...sauceBrowser,
       platform: undefined,
       version: undefined,
+      ...(() => {
+        if (args.sauceExtendedDebugging && getBrowserName(sauceBrowser) === 'chrome') {
+          return { extendedDebugging: true }
+        }
+      })(),
       ...getMobileCapabilities(sauceBrowser),
       'sauce:options': !args.sauce
         ? {

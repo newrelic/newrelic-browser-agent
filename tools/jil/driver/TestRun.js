@@ -171,6 +171,7 @@ class TestRun extends EventEmitter {
       }
 
       try {
+
         fn(t, browser, handle)
       } catch (e) {
         newrelic.noticeError(e)

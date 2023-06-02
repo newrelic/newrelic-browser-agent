@@ -13,6 +13,7 @@ import { windowAddEventListener } from '../../../common/event-listener/event-lis
 import { isBrowserScope } from '../../../common/util/global-scope'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { stringify } from '../../../common/util/stringify'
+import { endpointMap } from './endpoint-map'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -125,7 +126,7 @@ export class Aggregate extends AggregateBase {
       // Capture per-agent bytes sent for each endpoint (see harvest) and RUM call (see page_view_event aggregator).
       Object.keys(agentRuntime.bytesSent).forEach(endpoint => {
         this.storeSupportabilityMetrics(
-          `PageSession/Endpoint/${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)}/BytesSent`,
+          `PageSession/Endpoint/${endpointMap[endpoint]}/BytesSent`,
           agentRuntime.bytesSent[endpoint]
         )
       })
@@ -133,7 +134,7 @@ export class Aggregate extends AggregateBase {
       // Capture per-agent query bytes sent for each endpoint (see harvest) and RUM call (see page_view_event aggregator).
       Object.keys(agentRuntime.bytesSent).forEach(endpoint => {
         this.storeSupportabilityMetrics(
-          `PageSession/Endpoint/${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)}/QueryBytesSent`,
+          `PageSession/Endpoint/${endpointMap[endpoint]}/QueryBytesSent`,
           agentRuntime.queryBytesSent[endpoint]
         )
       })

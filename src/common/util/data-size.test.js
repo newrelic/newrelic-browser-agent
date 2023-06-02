@@ -1,24 +1,32 @@
+import { faker } from '@faker-js/faker'
+import * as stringifyModule from './stringify'
 import { dataSize } from './data-size'
+
+jest.mock('./stringify', () => ({
+  __esModule: true,
+  stringify: jest.fn()
+}))
 
 describe('dataSize', () => {
   test('returns length of string', () => {
-    const str = 'Hello, world!'
+    const str = faker.lorem.sentence()
     expect(dataSize(str)).toBe(str.length)
   })
 
   test('returns undefined for non-object, number, or empty string', () => {
     expect(dataSize(Infinity)).toBeUndefined()
-    expect(dataSize(12345)).toBeUndefined() // might not actually be by design, but this is how it works today
+    expect(dataSize(NaN)).toBeUndefined()
+    expect(dataSize(12345)).toBeUndefined()
     expect(dataSize('')).toBeUndefined()
   })
 
   test('returns byte length of ArrayBuffer object', () => {
-    const buffer = new ArrayBuffer(8)
-    expect(dataSize(buffer)).toBe(8)
+    const buffer = new ArrayBuffer(faker.datatype.number({ min: 10, max: 100 }))
+    expect(dataSize(buffer)).toBe(buffer.byteLength)
   })
 
   test('returns size of Blob object', () => {
-    const blob = new Blob(['Hello, world!'], { type: 'text/plain' })
+    const blob = new Blob([faker.lorem.sentence()], { type: 'text/plain' })
     expect(dataSize(blob)).toBe(blob.size)
   })
 
@@ -27,24 +35,26 @@ describe('dataSize', () => {
     expect(dataSize(formData)).toBeUndefined()
   })
 
-  test('returns length of JSON string representation of object', () => {
-    const obj = {
-      str: 'Hello, world!',
-      num: 12345,
-      nestedObj: {
-        arr: [1, 2, 3]
-      }
+  test('uses stringify to get the length of an object', () => {
+    const input = {
+      [faker.datatype.uuid()]: faker.lorem.sentence()
     }
-    const expectedSize = JSON.stringify(obj).length
-    expect(dataSize(obj)).toBe(expectedSize)
+    const expectedSize = faker.datatype.number({ min: 1000, max: 10000 })
+
+    jest.spyOn(stringifyModule, 'stringify').mockReturnValue({ length: expectedSize })
+
+    expect(dataSize(input)).toBe(expectedSize)
   })
 
-  test('returns undefined for object with toJSON method that throws an error', () => {
-    const obj = {
-      toJSON: () => {
-        throw new Error('Error in toJSON')
-      }
+  test('should not throw an exception if stringify throws an exception', () => {
+    const input = {
+      [faker.datatype.uuid()]: faker.lorem.sentence()
     }
-    expect(dataSize(obj)).toBeUndefined()
+    const expectedSize = faker.datatype.number({ min: 1000, max: 10000 })
+
+    jest.spyOn(stringifyModule, 'stringify').mockImplementation(() => { throw new Error(faker.lorem.sentence()) })
+
+    expect(() => dataSize(input)).not.toThrow()
+    expect(dataSize(input)).toBeUndefined()
   })
 })

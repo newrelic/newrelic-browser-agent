@@ -2,10 +2,7 @@ import { faker } from '@faker-js/faker'
 import * as stringifyModule from './stringify'
 import { dataSize } from './data-size'
 
-jest.mock('./stringify', () => ({
-  __esModule: true,
-  stringify: jest.fn()
-}))
+jest.mock('./stringify')
 
 describe('dataSize', () => {
   test('returns length of string', () => {

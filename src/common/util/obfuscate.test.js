@@ -1,29 +1,13 @@
 import { faker } from '@faker-js/faker'
 import * as configModule from '../config/config'
-import * as sharedContextModule from '../context/shared-context'
 import * as urlProtocolModule from '../url/protocol'
 import * as consolModule from './console'
 import * as obfuscateModule from './obfuscate'
 
-jest.mock('../config/config', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn()
-}))
-
-jest.mock('../context/shared-context', () => ({
-  __esModule: true,
-  SharedContext: jest.fn()
-}))
-
-jest.mock('../url/protocol', () => ({
-  __esModule: true,
-  isFileProtocol: jest.fn()
-}))
-
-jest.mock('./console', () => ({
-  __esModule: true,
-  warn: jest.fn()
-}))
+jest.mock('../config/config')
+jest.mock('../context/shared-context')
+jest.mock('../url/protocol')
+jest.mock('./console')
 
 let agentIdentifier
 const rules = [{

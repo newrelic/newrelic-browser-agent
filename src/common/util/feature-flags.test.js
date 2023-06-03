@@ -4,6 +4,8 @@ import * as handleModule from '../event-emitter/handle'
 import * as drainModule from '../drain/drain'
 import { activateFeatures, activatedFeatures } from './feature-flags'
 
+jest.mock('../event-emitter/handle')
+jest.mock('../drain/drain')
 jest.mock('../event-emitter/contextual-ee', () => ({
   __esModule: true,
   ee: {
@@ -11,16 +13,6 @@ jest.mock('../event-emitter/contextual-ee', () => ({
       foo: `bar_${Math.random()}`
     }))
   }
-}))
-
-jest.mock('../event-emitter/handle', () => ({
-  __esModule: true,
-  handle: jest.fn()
-}))
-
-jest.mock('../drain/drain', () => ({
-  __esModule: true,
-  drain: jest.fn()
 }))
 
 let agentIdentifier

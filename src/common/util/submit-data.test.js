@@ -7,12 +7,7 @@ import { faker } from '@faker-js/faker'
 import { submitData } from './submit-data'
 import * as globalScope from './global-scope'
 
-jest.mock('./global-scope', () => ({
-  __esModule: true,
-  get isWorkerScope () {
-    return false
-  }
-}))
+jest.mock('./global-scope')
 
 const url = 'https://example.com/api'
 
@@ -21,6 +16,10 @@ afterEach(() => {
 })
 
 describe('submitData.jsonp', () => {
+  beforeEach(() => {
+    jest.replaceProperty(globalScope, 'isWorkerScope', false)
+  })
+
   afterEach(() => {
     delete global.importScripts
   })
@@ -36,7 +35,7 @@ describe('submitData.jsonp', () => {
   })
 
   test('should try to use importScripts when called from a worker scope', () => {
-    jest.spyOn(globalScope, 'isWorkerScope', 'get').mockReturnValue(true)
+    jest.replaceProperty(globalScope, 'isWorkerScope', true)
     global.importScripts = jest.fn()
 
     const jsonp = faker.datatype.uuid()
@@ -46,7 +45,7 @@ describe('submitData.jsonp', () => {
   })
 
   test('should fall back to an xhrGet call and return false importScripts throws an error', () => {
-    jest.spyOn(globalScope, 'isWorkerScope', 'get').mockReturnValue(true)
+    jest.replaceProperty(globalScope, 'isWorkerScope', true)
     jest.spyOn(submitData, 'xhrGet').mockImplementation(jest.fn())
     global.importScripts = jest.fn().mockImplementation(() => { throw new Error(faker.lorem.sentence()) })
 
@@ -59,7 +58,7 @@ describe('submitData.jsonp', () => {
   })
 
   test('should not throw an error when xhrGet throws an error', () => {
-    jest.spyOn(globalScope, 'isWorkerScope', 'get').mockReturnValue(true)
+    jest.replaceProperty(globalScope, 'isWorkerScope', true)
     jest.spyOn(submitData, 'xhrGet').mockImplementation(() => { throw new Error(faker.lorem.sentence()) })
     global.importScripts = jest.fn().mockImplementation(() => { throw new Error(faker.lorem.sentence()) })
 

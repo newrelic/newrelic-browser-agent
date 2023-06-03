@@ -12,5 +12,8 @@ module.exports = {
   transform: {
     '\\.m?[jt]sx?$': 'babel-jest'
   },
-  setupFilesAfterEnv: ['<rootDir>/tools/jest-matchers/index.mjs']
+  setupFilesAfterEnv: ['<rootDir>/tools/jest-matchers/index.mjs'],
+  unmockedModulePathPatterns: [
+    '@faker-js/faker'
+  ]
 }

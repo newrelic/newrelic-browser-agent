@@ -4,7 +4,11 @@ module.exports = {
   collectCoverageFrom: [
     'src/**/*.js',
     '!src/**/*.test.js',
-    '!src/cdn/**/*.js'
+    '!src/index.js',
+    '!src/cdn/**/*.js',
+    '!src/features/*/index.js',
+    '!src/features/*/constants.js',
+    '!src/loaders/features/features.js'
   ],
   modulePathIgnorePatterns: ['<rootDir>/temp'],
   testEnvironment: 'jsdom',

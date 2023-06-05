@@ -89,7 +89,6 @@ export class Aggregate extends AggregateBase {
       this.ee.on(SESSION_EVENTS.RESUME, () => {
         if (!this.initialized || this.mode === MODE.OFF) return
         this.startRecording()
-        this.takeFullSnapshot()
       })
 
       // Bespoke logic for new endpoint.  This will change as downstream dependencies become solidified.

@@ -9,6 +9,6 @@
     "outDir": "dist/types",
     "skipLibCheck": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "tests/specs/session-replay/helpers.js"],
   "exclude": ["**/*.test.js"]
 }

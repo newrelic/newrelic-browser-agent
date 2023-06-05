@@ -153,7 +153,9 @@ const standardConfig = merge(commonConfig, {
     [`nr-loader-full${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/pro.js'),
     [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/pro.js'),
     [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/spa.js'),
-    [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/spa.js')
+    [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/spa.js'),
+    ...(SUBVERSION === 'LOCAL' && { [`nr-loader-experimental${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/experimental.js') }),
+    ...(SUBVERSION === 'LOCAL' && { [`nr-loader-experimental${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/experimental.js') })
   },
   output: {
     globalObject: 'window',
@@ -193,6 +195,8 @@ const polyfillsConfig = merge(commonConfig, {
     [`nr-loader-spa-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/polyfills/spa.js'),
     [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/polyfills/spa.js'),
     [`nr-loader-spa-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/polyfills/spa.js'),
+    ...(SUBVERSION === 'LOCAL' && { [`nr-loader-experimental-polyfills${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/experimental.js') }),
+    ...(SUBVERSION === 'LOCAL' && { [`nr-loader-experimental-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/experimental.js') }),
     [`nr-polyfills${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/polyfills.js')
   },
   module: {

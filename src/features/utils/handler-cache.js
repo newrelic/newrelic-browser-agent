@@ -1,4 +1,3 @@
-
 /**
  * A class to defer callback execution until a decision can be reached
  */

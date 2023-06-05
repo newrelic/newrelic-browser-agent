@@ -84,11 +84,7 @@ export class Aggregate extends AggregateBase {
       onFinished: this.onHarvestFinished.bind(this),
       retryDelay: this.harvestTimeSeconds,
       getPayload: this.prepareHarvest.bind(this),
-      // TODO -- this stuff needs a better way to be handled
-      includeBaseParams: false,
-      customUrl: 'https://vortex-alb.stg-single-tooth.cell.us.nr-data.net/blob',
-      raw: true,
-      gzip: true
+      raw: true
     }, this)
 
     // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
@@ -145,7 +141,7 @@ export class Aggregate extends AggregateBase {
       if (fullSample) this.mode = MODE.FULL // full mode has precedence over error mode
       else if (errorSample) this.mode = MODE.ERROR
       // If neither are selected, then don't record (early return)
-      return
+      else return
     }
 
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
@@ -154,6 +150,11 @@ export class Aggregate extends AggregateBase {
     if (this.mode === MODE.FULL) {
       // We only report (harvest) in FULL mode
       this.scheduler.startTimer(this.harvestTimeSeconds)
+    }
+
+    // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
+    if (this.mode === MODE.ERROR && this.errorNoticed) {
+      this.mode = MODE.FULL
     }
     // We record in FULL or ERROR mode
 
@@ -187,7 +188,11 @@ export class Aggregate extends AggregateBase {
     const agentRuntime = getRuntime(this.agentIdentifier)
     const info = getInfo(this.agentIdentifier)
     return {
-      qs: { protocol_version: '0' },
+      qs: {
+        protocol_version: '0',
+        content_encoding: 'gzip',
+        browser_monitoring_key: info.licenseKey
+      },
       body: {
         type: 'SessionReplay',
         appId: Number(info.applicationID),

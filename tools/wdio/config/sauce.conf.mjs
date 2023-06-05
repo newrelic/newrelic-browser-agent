@@ -1,6 +1,6 @@
-import browsersSupported from '../../browsers-lists/browsers-supported.json' assert { type: "json" }
-import browsersAll from '../../browsers-lists/browsers-all.json' assert { type: "json" }
-import browsersPolyfill from '../../browsers-lists/browsers-polyfill.json' assert { type: "json" }
+import browsersSupported from '../../browsers-lists/browsers-supported.json' assert { type: 'json' }
+import browsersAll from '../../browsers-lists/browsers-all.json' assert { type: 'json' }
+import browsersPolyfill from '../../browsers-lists/browsers-polyfill.json' assert { type: 'json' }
 import browsersList from '../../browsers-lists/browsers-list.mjs'
 import browserSupportsExtendedDebugging from '../../browsers-lists/extended-debugging.mjs'
 import args from '../args.mjs'
@@ -31,6 +31,11 @@ function sauceCapabilities () {
       ...sauceBrowser,
       platform: undefined,
       version: undefined,
+      ...(() => {
+        if (args.sauceExtendedDebugging && getBrowserName(sauceBrowser) === 'chrome') {
+          return { extendedDebugging: true }
+        }
+      })(),
       ...getMobileCapabilities(sauceBrowser),
       'sauce:options': !args.sauce
         ? {
@@ -83,6 +88,7 @@ export default function config () {
               ? {
                   sauceConnect: true,
                   sauceConnectOpts: {
+                    scVersion: '4.9.0',
                     noSslBumpDomains: 'all',
                     tunnelDomains: args.host || 'bam-test-1.nr-local.net'
                   }

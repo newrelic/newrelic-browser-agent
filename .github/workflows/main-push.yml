@@ -1,0 +1,16 @@
+# This workflow runs on push to the main branch. This is to execute checks
+# like jest, upload test coverage to keep codecov updates, and build and deploy
+# the main branch changes to our internal dev and stage environment.
+
+name: 'Main Branch Push'
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  jest:
+    uses: ./.github/workflows/jest.yml
+    secrets: inherit

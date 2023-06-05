@@ -1,4 +1,3 @@
-
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS } from '../../session/constants'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { getModeledObject } from './configurable'
@@ -34,7 +33,7 @@ const model = () => {
     session_trace: { enabled: true, harvestTimeSeconds: 10 },
     session_replay: {
       // feature settings
-      enabled: true,
+      enabled: false,
       harvestTimeSeconds: 60,
       sampleRate: 0.1,
       errorSampleRate: 0.1,

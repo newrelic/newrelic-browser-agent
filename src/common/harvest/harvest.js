@@ -92,23 +92,26 @@ export class Harvest extends SharedContext {
     return this._send({ ...spec, payload })
   }
 
-  _send ({ endpoint, payload = {}, opts = {}, submitMethod, cbFinished, customUrl, gzip, includeBaseParams = true }) {
+  _send ({ endpoint, payload = {}, opts = {}, submitMethod, cbFinished, customUrl, raw, includeBaseParams = true }) {
     var info = getInfo(this.sharedContext.agentIdentifier)
     if (!info.errorBeacon) return false
 
     var agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
 
-    if (!payload.body) { // no payload body? nothing to send, just run onfinish stuff and return
+    if (!payload.body && !opts?.sendEmptyBody) { // no payload body? nothing to send, just run onfinish stuff and return
       if (cbFinished) {
         cbFinished({ sent: false })
       }
       return false
     }
 
-    var url = customUrl || this.getScheme() + '://' + info.errorBeacon + '/' + endpoint + '/1/' + info.licenseKey + '?'
+    let url = ''
+    if (customUrl) url = customUrl
+    else if (raw) url = `${this.getScheme()}://${info.errorBeacon}/${endpoint}`
+    else url = `${this.getScheme()}://${info.errorBeacon}${endpoint !== 'rum' ? `/${endpoint}` : ''}/1/${info.licenseKey}`
 
-    var baseParams = includeBaseParams ? this.baseQueryString() : ''
-    var params = payload.qs ? encodeObj(payload.qs, agentRuntime.maxBytes) : ''
+    var baseParams = !raw && includeBaseParams ? this.baseQueryString() : ''
+    var payloadParams = payload.qs ? encodeObj(payload.qs, agentRuntime.maxBytes) : ''
     if (!submitMethod) {
       submitMethod = getSubmitMethod(endpoint, opts)
     }
@@ -116,7 +119,9 @@ export class Harvest extends SharedContext {
     var useBody = submitMethod.useBody
 
     var body
-    var fullUrl = url + baseParams + params
+    var fullUrl = `${url}?${baseParams}${payloadParams}`
+
+    const gzip = payload?.qs?.content_encoding === 'gzip'
 
     if (!gzip) {
       if (useBody && endpoint === 'events') {
@@ -135,13 +140,7 @@ export class Harvest extends SharedContext {
 
     const headers = []
 
-    if (gzip) {
-      headers.push({ key: 'content-type', value: 'application/json' })
-      headers.push({ key: 'X-Browser-Monitoring-Key', value: info.licenseKey })
-      headers.push({ key: 'Content-Encoding', value: 'gzip' })
-    } else {
-      headers.push({ key: 'content-type', value: 'text/plain' })
-    }
+    headers.push({ key: 'content-type', value: 'text/plain' })
 
     /* Since workers don't support sendBeacon right now, or Image(), they can only use XHR method.
         Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
@@ -209,6 +208,7 @@ export class Harvest extends SharedContext {
       if (singlePayload.body) mapOwn(singlePayload.body, makeBody)
       if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
     }
+
     return { body: makeBody(), qs: makeQueryString() }
   }
 
@@ -224,17 +224,12 @@ export class Harvest extends SharedContext {
   }
 }
 
-function or (a, b) { return a || b }
-
 export function getSubmitMethod (endpoint, opts) {
   opts = opts || {}
   var method
   var useBody
 
-  if (opts.needResponse) { // currently: only STN needs a response
-    useBody = true
-    method = submitData.xhr
-  } else if (opts.unload && isBrowserScope) { // all the features' final harvest; neither methods work outside window context
+  if (opts.unload && isBrowserScope) { // all the features' final harvest; neither methods work outside window context
     useBody = haveSendBeacon
     method = haveSendBeacon ? submitData.beacon : submitData.img // really only IE doesn't have Beacon API for web browsers
   } else {
@@ -264,7 +259,7 @@ function createAccumulator () {
   var accumulator = {}
   var hasData = false
   return function (key, val) {
-    if (val !== null && val !== undefined && val.length) {
+    if (val !== null && val !== undefined && val.toString()?.length) {
       accumulator[key] = val
       hasData = true
     }

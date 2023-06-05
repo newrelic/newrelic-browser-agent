@@ -1,4 +1,4 @@
-import browsersAll from './browsers-all.json' assert { type: "json" }
+import browsersAll from './browsers-all.json' assert { type: 'json' }
 
 export default function browserSupportsExtendedDebugging ({ browserName, browserVersion, version }) {
   if (!['chrome', 'firefox'].includes(browserName)) {

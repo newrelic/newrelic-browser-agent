@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.233.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.233.0...v1.233.1) (2023-05-31)
+
+
+### Bug Fixes
+
+* Address bug affecting XHR harvest re-schedule ([#561](https://github.com/newrelic/newrelic-browser-agent/issues/561)) ([cd2dc90](https://github.com/newrelic/newrelic-browser-agent/commit/cd2dc90f04bbce81cddaa408413c47596bfb2b2b))
+
 ## [1.233.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.232.1...v1.233.0) (2023-05-26)
 
 

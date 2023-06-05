@@ -1,8 +1,10 @@
 import process from 'process'
 import yargs from 'yargs/yargs'
+import { hideBin } from 'yargs/helpers'
 import loaders from './util/loaders.js'
 
-const args = yargs(process.argv.slice(2))
+process.argvOriginal = [...process.argv].slice(2)
+const args = yargs(hideBin(process.argv))
   .usage('$0 file1[, filen] [options]')
   .example('$0 tests/**/*.js -vb "chrome@39, firefox, ie@>8"')
 
@@ -105,6 +107,11 @@ const args = yargs(process.argv.slice(2))
   .default('A', false)
   .alias('A', 'all-browsers')
   .describe('A', 'Run tests against all browsers, even unsupported ones')
+
+  .boolean('D')
+  .default('D', false)
+  .alias('D', 'sauce-extended-debugging')
+  .describe('D', 'Run tests with sauce labs extended debugging enabled')
 
   .help('h')
   .alias('h', 'help').argv

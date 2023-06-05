@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "cd2dc90f04bbce81cddaa408413c47596bfb2b2b",
+          "message": "Address bug affecting XHR harvest re-schedule",
+          "issues": [
+            "561"
+          ]
+        }
+      ],
+      "version": "1.233.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "7dfd73da-7007-4640-b9b8-d6696f8a6a4c",
+      "createTime": "2023-05-31T20:07:26.135Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "7a7daceeaed603396805d81c9afd4cac4364cb40",
           "message": "Address \"configurable\" warnings arising from user-agent module",
           "issues": [
@@ -113,5 +130,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-05-26T16:50:32.930Z"
+  "updateTime": "2023-05-31T20:07:26.135Z"
 }

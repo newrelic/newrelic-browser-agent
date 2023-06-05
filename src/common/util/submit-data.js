@@ -84,7 +84,6 @@ submitData.xhr = function xhr ({ url, body, sync, method = 'POST', headers = [{ 
  * @returns {HTMLImageElement}
  */
 submitData.img = function img ({ url }) {
-  console.log('img url', url)
   var element = new Image()
   element.src = url
   return element

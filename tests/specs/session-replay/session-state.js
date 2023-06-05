@@ -56,14 +56,27 @@ export default function () {
             ...config.init,
             // harvest intv longer than the session expiry time
             session_replay: { enabled: true, harvestTimeSeconds: 10, errorSampleRate: 0, sampleRate: 1 },
-            session: { expiresMs: 5000 }
+            session: { expiresMs: 7500 }
           }
         }))
-          .then(() => browser.testHandle.expectRum())
+          .then(() => Promise.all([
+            browser.waitForAgentLoad()
+          ]))
 
-        const { agentSessions } = await browser.getAgentSessionInfo()
-        const sessionClass = Object.values(agentSessions)[0]
-        expect(sessionClass.sessionReplay).toEqual(MODE.FULL)
+        // session has started, replay should have set mode to "FULL"
+        const { agentSessions: oldSession } = await browser.getAgentSessionInfo()
+        const oldSessionClass = Object.values(oldSession)[0]
+        expect(oldSessionClass.sessionReplay).toEqual(MODE.FULL)
+
+        await Promise.all([
+          browser.testHandle.expectBlob(),
+          browser.execute(function () { document.querySelector('body').click() })
+        ])
+
+        // session has ended, replay should have set mode to "OFF"
+        const { agentSessions: newSession } = await browser.getAgentSessionInfo()
+        const newSessionClass = Object.values(newSession)[0]
+        expect(newSessionClass.sessionReplay).toEqual(MODE.OFF)
       })
     })
   })

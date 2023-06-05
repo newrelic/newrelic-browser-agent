@@ -15,7 +15,8 @@ const {
   testInsRequest,
   testAjaxTimeSlicesRequest,
   testResourcesRequest,
-  testInteractionEventsRequest
+  testInteractionEventsRequest,
+  testBlobRequest
 } = require('./utils/expect-tests')
 const SerAny = require('serialize-anything')
 
@@ -387,6 +388,14 @@ module.exports = class TestHandle {
     return this.expect('bamServer', {
       timeout,
       test: testResourcesRequest,
+      expectTimeout
+    })
+  }
+
+  expectBlob (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testBlobRequest,
       expectTimeout
     })
   }

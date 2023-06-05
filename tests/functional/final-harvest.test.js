@@ -264,7 +264,9 @@ testDriver.test('final harvest sends js errors', workingSendBeacon, function (t,
 })
 
 testDriver.test('final harvest sends resources', reliableResourcesHarvest.and(stnSupported), function (t, browser, router) {
-  let url = router.assetURL('final-harvest.html')
+  let url = router.assetURL('final-harvest.html', {
+    init: { privacy: { cookies_enabled: false } }
+  })
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
   let resourcesPromise = router.expectResources()
@@ -336,7 +338,12 @@ testDriver.test('final harvest sends timings data', workingSendBeacon, function 
 // // It does not check all of them, just errors and resources.  This is sufficient for the
 // // test.  Sending more than that makes the test very fragile on some platforms.
 testDriver.test('final harvest sends multiple', reliableResourcesHarvest.and(stnSupported), function (t, browser, router) {
-  let url = router.assetURL('final-harvest-timings.html', { init: { metrics: { enabled: false } } })
+  let url = router.assetURL('final-harvest-timings.html', { 
+    init: {
+      metrics: { enabled: false },
+      privacy: { cookies_enabled: false }
+    }
+  })
   let loadPromise = browser.safeGet(url).catch(fail)
   let rumPromise = router.expectRum()
   let resourcesPromise = router.expectResources()

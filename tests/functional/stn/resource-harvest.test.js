@@ -16,7 +16,8 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
       },
       page_view_timing: {
         enabled: false
-      }
+      },
+      privacy: { cookies_enabled: false }
     }
   })
 

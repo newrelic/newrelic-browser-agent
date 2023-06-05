@@ -13,11 +13,12 @@ testDriver.test('session traces are retried when collector returns 429 during fi
     loader: 'spa',
     init: {
       session_trace: {
-        harvestTimeSeconds: 10
+        harvestTimeSeconds: 5
       },
       harvest: {
-        tooManyRequestsDelay: 10
-      }
+        tooManyRequestsDelay: 5
+      },
+      privacy: { cookies_enabled: false }
     }
   })
 
@@ -59,11 +60,12 @@ testDriver.test('retried first harvest captures ptid', supported, function (t, b
     loader: 'spa',
     init: {
       session_trace: {
-        harvestTimeSeconds: 10
+        harvestTimeSeconds: 5
       },
       harvest: {
-        tooManyRequestsDelay: 10
-      }
+        tooManyRequestsDelay: 5
+      },
+      privacy: { cookies_enabled: false }
     }
   })
 
@@ -102,11 +104,12 @@ testDriver.test('session traces are retried when collector returns 429 during sc
     loader: 'spa',
     init: {
       session_trace: {
-        harvestTimeSeconds: 10
+        harvestTimeSeconds: 5
       },
       harvest: {
-        tooManyRequestsDelay: 10
-      }
+        tooManyRequestsDelay: 5
+      },
+      privacy: { cookies_enabled: false }
     }
   })
 

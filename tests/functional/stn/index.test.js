@@ -12,7 +12,11 @@ testDriver.test('posts session traces', supported, function (t, browser, router)
 
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
-  let loadPromise = browser.get(router.assetURL('lotsatimers.html')).waitForFeature('loaded')
+  let loadPromise = browser.get(router.assetURL('lotsatimers.html', {
+    init: {
+      privacy: { cookies_enabled: false }
+    }
+  })).waitForFeature('loaded')
 
   Promise.all([resourcePromise, rumPromise, loadPromise]).then(([{ request: { query } }]) => {
     t.ok(+query.st > 1408126770885, `Got start time ${query.st}`)

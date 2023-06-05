@@ -16,7 +16,7 @@ const MODE = {
   ERROR: 2
 }
 
-export default function () {
+export default (function () {
   describe('session manager state behavior', () => {
     afterEach(async () => {
       await browser.destroyAgentSession(browser.testHandle)
@@ -93,7 +93,6 @@ export default function () {
         const currentPayload = await browser.execute(function () {
           return Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.events
         })
-        console.log('currentPayload', currentPayload.length)
 
         expect(currentPayload.length).toBeGreaterThan(0)
         // type 2 payloads are snapshots
@@ -143,4 +142,4 @@ export default function () {
       })
     })
   })
-}
+})()

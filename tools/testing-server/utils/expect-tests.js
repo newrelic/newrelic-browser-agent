@@ -274,9 +274,11 @@ module.exports.testBlobRequest = function testBlobRequest (request) {
   if (request?.query?.browser_monitoring_key !== this.testId) return false
 
   try {
-    const blobContents = JSON.parse(request?.body?.blob)
-    if (blobContents && blobContents.length) return true
+    const body = JSON.parse(request?.body)
+    const blobContents = JSON.parse(body?.blob)
+    if (blobContents && Array.isArray(blobContents) && blobContents.length) return true
   } catch (err) {
+    console.log('err...', err)
     return false
   }
 }

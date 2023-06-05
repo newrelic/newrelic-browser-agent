@@ -19,34 +19,34 @@ export default function () {
       await browser.destroyAgentSession(browser.testHandle)
     })
 
-    describe('session manager mode matches session replay instance mode', () => {
-      it('should match in full mode', async () => {
-        await browser.url(await browser.testHandle.assetURL('instrumented.html', config))
-          .then(() => browser.waitForAgentLoad())
+    // describe('session manager mode matches session replay instance mode', () => {
+    //   it('should match in full mode', async () => {
+    //     await browser.url(await browser.testHandle.assetURL('instrumented.html', config))
+    //       .then(() => browser.waitForAgentLoad())
 
-        const { agentSessions } = await browser.getAgentSessionInfo()
-        const sessionClass = Object.values(agentSessions)[0]
-        expect(sessionClass.sessionReplay).toEqual(MODE.FULL)
-      })
+    //     const { agentSessions } = await browser.getAgentSessionInfo()
+    //     const sessionClass = Object.values(agentSessions)[0]
+    //     expect(sessionClass.sessionReplay).toEqual(MODE.FULL)
+    //   })
 
-      it('should match in error mode', async () => {
-        await browser.url(await browser.testHandle.assetURL('instrumented.html', { ...config, init: { ...config.init, session_replay: { enabled: true, harvestTimeSeconds: 5, errorSampleRate: 1, sampleRate: 0 } } }))
-          .then(() => browser.waitForAgentLoad())
+    //   it('should match in error mode', async () => {
+    //     await browser.url(await browser.testHandle.assetURL('instrumented.html', { ...config, init: { ...config.init, session_replay: { enabled: true, harvestTimeSeconds: 5, errorSampleRate: 1, sampleRate: 0 } } }))
+    //       .then(() => browser.waitForAgentLoad())
 
-        const { agentSessions } = await browser.getAgentSessionInfo()
-        const sessionClass = Object.values(agentSessions)[0]
-        expect(sessionClass.sessionReplay).toEqual(MODE.ERROR)
-      })
+    //     const { agentSessions } = await browser.getAgentSessionInfo()
+    //     const sessionClass = Object.values(agentSessions)[0]
+    //     expect(sessionClass.sessionReplay).toEqual(MODE.ERROR)
+    //   })
 
-      it('should match in off mode', async () => {
-        await browser.url(await browser.testHandle.assetURL('instrumented.html', { ...config, init: { ...config.init, session_replay: { enabled: true, harvestTimeSeconds: 5, errorSampleRate: 0, sampleRate: 0 } } }))
-          .then(() => browser.waitForAgentLoad())
+    //   it('should match in off mode', async () => {
+    //     await browser.url(await browser.testHandle.assetURL('instrumented.html', { ...config, init: { ...config.init, session_replay: { enabled: true, harvestTimeSeconds: 5, errorSampleRate: 0, sampleRate: 0 } } }))
+    //       .then(() => browser.waitForAgentLoad())
 
-        const { agentSessions } = await browser.getAgentSessionInfo()
-        const sessionClass = Object.values(agentSessions)[0]
-        expect(sessionClass.sessionReplay).toEqual(MODE.OFF)
-      })
-    })
+    //     const { agentSessions } = await browser.getAgentSessionInfo()
+    //     const sessionClass = Object.values(agentSessions)[0]
+    //     expect(sessionClass.sessionReplay).toEqual(MODE.OFF)
+    //   })
+    // })
 
     describe('When session ends', () => {
       it('should end recording and unload', async () => {

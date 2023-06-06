@@ -1,13 +1,4 @@
-
-function config (props = {}) {
-  return {
-    loader: 'experimental',
-    init: {
-      privacy: { cookies_enabled: true },
-      session_replay: { enabled: true, harvestTimeSeconds: 5, sampleRate: 1, errorSampleRate: 0, ...props }
-    }
-  }
-}
+import { config } from './helpers'
 
 export default (function () {
   describe('Rrweb Configuration', () => {

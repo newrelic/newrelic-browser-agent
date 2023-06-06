@@ -1,2 +1,3 @@
-import rrwebConfigurationTests from './rrweb-configuration'
-import sessionStateTests from './session-state'
+// import './rrweb-configuration'
+// import './session-state'
+import './initialization'

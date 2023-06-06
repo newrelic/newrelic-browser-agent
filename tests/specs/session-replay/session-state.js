@@ -1,13 +1,5 @@
 import { supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { RRWEB_EVENT_TYPES } from './helpers'
-
-const config = {
-  loader: 'experimental',
-  init: {
-    privacy: { cookies_enabled: true },
-    session_replay: { enabled: true, harvestTimeSeconds: 5, sampleRate: 1, errorSampleRate: 0 }
-  }
-}
+import { RRWEB_EVENT_TYPES, config, getSR } from './helpers'
 
 /** The "mode" with which the session replay is recording */
 const MODE = {
@@ -24,7 +16,7 @@ export default (function () {
 
     describe('session manager mode matches session replay instance mode', () => {
       it('should match in full mode', async () => {
-        await browser.url(await browser.testHandle.assetURL('instrumented.html', config))
+        await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
           .then(() => browser.waitForAgentLoad())
 
         const { agentSessions } = await browser.getAgentSessionInfo()
@@ -33,7 +25,7 @@ export default (function () {
       })
 
       it('should match in error mode', async () => {
-        await browser.url(await browser.testHandle.assetURL('instrumented.html', { ...config, init: { ...config.init, session_replay: { enabled: true, harvestTimeSeconds: 5, errorSampleRate: 1, sampleRate: 0 } } }))
+        await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ sampleRate: 0, errorSampleRate: 1 })))
           .then(() => browser.waitForAgentLoad())
 
         const { agentSessions } = await browser.getAgentSessionInfo()
@@ -42,7 +34,7 @@ export default (function () {
       })
 
       it('should match in off mode', async () => {
-        await browser.url(await browser.testHandle.assetURL('instrumented.html', { ...config, init: { ...config.init, session_replay: { enabled: true, harvestTimeSeconds: 5, errorSampleRate: 0, sampleRate: 0 } } }))
+        await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ sampleRate: 0, errorSampleRate: 0 })))
           .then(() => browser.waitForAgentLoad())
 
         const { agentSessions } = await browser.getAgentSessionInfo()
@@ -54,11 +46,10 @@ export default (function () {
     describe('When session ends', () => {
       it('should end recording and unload', async () => {
         await browser.url(await browser.testHandle.assetURL('instrumented.html', {
-          ...config,
+          ...config(),
           init: {
-            ...config.init,
             // harvest intv longer than the session expiry time
-            session_replay: { enabled: true, harvestTimeSeconds: 10, errorSampleRate: 0, sampleRate: 1 },
+            ...config({ harvestTimeSeconds: 10 }).init,
             session: { expiresMs: 7500 }
           }
         }))
@@ -85,14 +76,12 @@ export default (function () {
 
     describe('When session resumes', () => {
       withBrowsersMatching(supportsMultipleTabs)('should take a full snapshot and continue recording', async () => {
-        await browser.url(await browser.testHandle.assetURL('instrumented.html', config))
+        await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
           .then(() => browser.waitForAgentLoad())
 
         await browser.pause(3000)
 
-        const currentPayload = await browser.execute(function () {
-          return Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.events
-        })
+        const { events: currentPayload } = await getSR()
 
         expect(currentPayload.length).toBeGreaterThan(0)
         // type 2 payloads are snapshots
@@ -100,16 +89,14 @@ export default (function () {
 
         const newTab = await browser.createWindow('tab')
         await browser.switchToWindow(newTab.handle)
-        await browser.url(await browser.testHandle.assetURL('instrumented.html', config))
+        await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
           .then(() => browser.waitForAgentLoad())
           .finally(async () => {
             await browser.closeWindow()
             await browser.switchToWindow((await browser.getWindowHandles())[0])
           })
 
-        const resumedPayload = await browser.execute(function () {
-          return Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.events
-        })
+        const { events: resumedPayload } = await getSR()
 
         // payload was harvested, new vis change should trigger a new recording which includes a new full snapshot
         expect(resumedPayload.length).toBeGreaterThan(0)
@@ -120,12 +107,12 @@ export default (function () {
 
     describe('When session pauses', () => {
       withBrowsersMatching(supportsMultipleTabs)('should pause recording', async () => {
-        await browser.url(await browser.testHandle.assetURL('instrumented.html', config))
+        await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
           .then(() => browser.waitForAgentLoad())
 
         const newTab = await browser.createWindow('tab')
         await Promise.all([
-          browser.testHandle.expectBlob(), browser.switchToWindow(newTab.handle), browser.url(await browser.testHandle.assetURL('instrumented.html', { ...config, loader: 'full' }))])
+          browser.testHandle.expectBlob(), browser.switchToWindow(newTab.handle), browser.url(await browser.testHandle.assetURL('instrumented.html', { ...config(), loader: 'full' }))])
         await browser.waitForAgentLoad()
 
         try {

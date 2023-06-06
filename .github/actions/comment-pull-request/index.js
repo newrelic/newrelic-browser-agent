@@ -4,7 +4,7 @@ import { args } from './args.js'
 const octokit = github.getOctokit(args.githubToken)
 
 let comment
-if (args.commentTag) {
+if (args.commentTag && args.commentTag.toString().trim() !== '') {
   for await (const { data: comments} of octokit.paginate.iterator(
     octokit.rest.issues.listComments,
     {

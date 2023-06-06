@@ -45,7 +45,7 @@ jobs:
     secrets: inherit
 
   comment-pull-request:
-    name: Find pull request target
+    name: Comment pull request
     needs: [find-pull-request, jest, eslint]
     runs-on: ubuntu-latest
     container:

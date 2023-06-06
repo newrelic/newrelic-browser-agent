@@ -27,7 +27,12 @@ runs:
       shell: bash
     - name: Run action script
       id: action-script
-      run: node $GITHUB_ACTION_PATH/index.js
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          --github-token ${{ inputs.token }} \
+          --pr-number ${{ inputs.number }} \
+          --comment ${{ inputs.comment }} \
+          --comment-tag ${{ inputs.comment_tag }}
       shell: bash
       env:
         PR_NUMBER: ${{ inputs.pr_number }}

@@ -66,7 +66,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           pr_number: ${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}
           comment: |
-            [![Pull Request Checks](https://github.com/newrelic/newrelic-browser-agent/actions/workflows/pull-request-checks.yml/badge.svg?branch=${{ env.GITHUB_REF_NAME }})](https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ env.GITHUB_RUN_ID }})
+            [![Pull Request Checks](https://github.com/newrelic/newrelic-browser-agent/actions/workflows/pull-request-checks.yml/badge.svg?branch=${{ github.ref_name }})](https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_number }})
 
             Last ran on `Jun 2, 2023, 9:58 PM CDT`
             Checking merge of (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}) into [${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_ref }}](https://github.com/newrelic/newrelic-browser-agent/compare/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}..${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }}) (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }})

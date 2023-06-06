@@ -1,9 +1,10 @@
+import process from 'process'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { args } from './args.js'
 
-const octokit = github.getOctokit(args.githubToken)
-const branchName = args.githubRef.replace('refs/heads/', '')
+const prRequired = process.env['PR_REQUIRED']?.toLowerCase() === 'true'
+const octokit = github.getOctokit(process.env['GITHUB_TOKEN'])
+const branchName = process.env['GITHUB_REF'].replace('refs/heads/', '')
 
 const { data: pullRequests } = await octokit.rest.pulls.list({
   owner: github.context.repo.owner,
@@ -13,7 +14,7 @@ const { data: pullRequests } = await octokit.rest.pulls.list({
 })
 
 if (!Array.isArray(pullRequests) || pullRequests.length === 0) {
-  if (args.prRequired) {
+  if (prRequired) {
     throw new Error(`No pull request found for branch ${branchName} in the ${github.context.repo.owner}/${github.context.repo.repo} repository.`)
   } else {
     core.setOutput('results', null)

@@ -30,7 +30,7 @@ runs:
       run: |
         node $GITHUB_ACTION_PATH/index.js \
           --github-token ${{ inputs.token }} \
-          --pr-number ${{ inputs.number }} \
+          --pr-number ${{ inputs.pr_number }} \
           --comment '''
             ${{ inputs.comment }}
           ''' \
@@ -38,6 +38,3 @@ runs:
             ${{ inputs.comment_tag }}
           '''
       shell: bash
-      env:
-        PR_NUMBER: ${{ inputs.pr_number }}
-        GITHUB_TOKEN: ${{ inputs.token }}

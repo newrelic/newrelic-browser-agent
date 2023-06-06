@@ -35,3 +35,11 @@ jobs:
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
     secrets: inherit
+
+  eslint:
+    name: ESLint
+    needs: find-pull-request
+    uses: ./.github/workflows/eslint.yml
+    with:
+      ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
+    secrets: inherit

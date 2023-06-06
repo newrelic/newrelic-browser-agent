@@ -64,7 +64,7 @@ export class InstrumentBase extends FeatureBase {
           const { setupAgentSession } = await agentSessionImport
           session = setupAgentSession(this.agentIdentifier)
         }
-        if (!shouldImportAgg(this.featureName, session)) {
+        if (!this.shouldImportAgg(this.featureName, session)) {
           drain(this.agentIdentifier, this.featureName)
           return
         }
@@ -85,19 +85,23 @@ export class InstrumentBase extends FeatureBase {
     if (isWorkerScope) importLater()
     else onWindowLoad(() => importLater(), true)
   }
-}
-/**
+
+  /**
  * Make a determination if an aggregate class should even be imported
  * @param {string} featureName
  * @param {SessionEntity} session
  * @returns
  */
-function shouldImportAgg (featureName, session) {
+  shouldImportAgg (featureName, session) {
   // if this isnt the FIRST load of a session AND
   // we are not actively recording SR... DO NOT run the aggregator
   // session replay samples can only be decided on the first load of a session
   // session replays can continue if in progress
-  if (featureName === FEATURE_NAMES.sessionReplay) return !!session?.isNew || !!session?.state.sessionReplayActive
-  // todo -- add case like above for session trace
-  return true
+    if (featureName === FEATURE_NAMES.sessionReplay) {
+      if (getConfigurationValue(this.agentIdentifier, 'session_trace.enabled') === false) return false
+      return !!session?.isNew || !!session?.state.sessionReplayActive
+    }
+    // todo -- add case like above for session trace
+    return true
+  }
 }

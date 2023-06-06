@@ -21,6 +21,7 @@ module.exports = fp(async function (fastify, testServer) {
   })
   fastify.addHook('onSend', (request, reply, payload, done) => {
     if (request.scheduledReply) {
+      console.log('onSend --', request.scheduledReply)
       if (request.scheduledReply.statusCode) {
         reply.code(request.scheduledReply.statusCode)
       }

@@ -19,11 +19,21 @@ export function config (props = {}) {
 
 export async function getSR () {
   return browser.execute(function () {
-    var sr = Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate
-    return {
-      events: sr.events,
-      initialized: sr.initialized,
-      recording: sr.recording
+    try {
+      var sr = Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate
+      return {
+        events: sr.events,
+        initialized: sr.initialized,
+        recording: sr.recording,
+        exists: true
+      }
+    } catch (err) {
+      return {
+        events: [],
+        initialized: false,
+        recording: false,
+        exists: false
+      }
     }
   })
 }

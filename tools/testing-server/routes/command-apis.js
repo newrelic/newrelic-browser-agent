@@ -43,4 +43,15 @@ module.exports = fp(async function (fastify, testServer) {
       reply.code(400).send(e)
     }
   })
+
+  fastify.post('/test-handle/:testId/scheduleReply', async function (request, reply) {
+    const testHandle = testServer.getTestHandle(request.params.testId)
+    console.log('body --', typeof request.body)
+    try {
+      testHandle.scheduleReply(request.body.serverId, request.body.scheduledReply)
+      reply.code(200).send()
+    } catch (e) {
+      reply.code(400).send(e)
+    }
+  })
 })

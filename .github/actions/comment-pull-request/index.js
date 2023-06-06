@@ -29,7 +29,7 @@ if (args.commentTag && args.commentTag.toString().trim() !== '') {
       issue_number: args.prNumber
     }
   )) {
-    comment = comments.find(c => c?.body?.includes(args.commentTag))
+    comment = comments.find(c => c?.body?.includes(args.commentTag.trim()))
     if (comment) {
       break
     }
@@ -49,7 +49,6 @@ if (comment) {
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     issue_number: args.prNumber,
-    comment_id: comment.id,
     body: commentBody.join('\n')
   })
 }

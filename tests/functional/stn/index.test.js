@@ -8,8 +8,6 @@ const testDriver = require('../../../tools/jil/index')
 let supported = testDriver.Matcher.withFeature('stn')
 
 testDriver.test('posts session traces', supported, function (t, browser, router) {
-  t.plan(5)
-
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
   let loadPromise = browser.get(router.assetURL('lotsatimers.html')).waitForFeature('loaded')

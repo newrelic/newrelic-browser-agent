@@ -1,0 +1,62 @@
+# This workflow runs jest unit tests with coverage and uploads the coverage
+# report to codecov. The coverage report is also archived in the workflow.
+
+name: 'Jest: Unit Tests'
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Github branch ref to checkout and run tests on.'
+        required: false
+        type: string
+
+jobs:
+  unit:
+    name: Run Jest
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Setup container
+        run: apt update && apt install -y git
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Install project dependencies
+        run: npm ci
+      - name: Run unit tests
+        run: npm run test -- --coverage
+      - name: Find pull request
+        id: pull-request-target
+        uses: ./.github/actions/find-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload pr code coverage
+        if: ${{ steps.pull-request-target.outputs.results }}
+        uses: codecov/codecov-action@v3
+        env:
+          GITHUB_HEAD_REF: ${{ inputs.ref }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          override_pr: ${{ fromJSON(steps.pull-request-target.outputs.results).pr_number }}
+          verbose: true
+      - name: Upload branch code coverage
+        if: ${{ !steps.pull-request-target.outputs.results }}
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage-report
+          path: coverage/

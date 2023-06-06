@@ -11,7 +11,7 @@ testDriver.test('METRICS, ERRORS - Kills feature if entitlements flag is 0', sup
 
   router.scheduleReply('bamServer', {
     test: testRumRequest,
-    body: `NREUM.setToken(${JSON.stringify({
+    body: `${JSON.stringify({
       stn: 1,
       err: 0,
       ins: 1,
@@ -19,7 +19,7 @@ testDriver.test('METRICS, ERRORS - Kills feature if entitlements flag is 0', sup
       spa: 1,
       loaded: 1
     })
-    })`
+    }`
   })
 
   const assetURL = router.assetURL('obfuscate-pii.html', { loader: 'full', init })
@@ -49,7 +49,7 @@ testDriver.test('SPA - Kills feature if entitlements flag is 0', supported, func
 
   router.scheduleReply('bamServer', {
     test: testRumRequest,
-    body: `NREUM.setToken(${JSON.stringify({
+    body: `${JSON.stringify({
       stn: 1,
       err: 1,
       ins: 1,
@@ -57,7 +57,7 @@ testDriver.test('SPA - Kills feature if entitlements flag is 0', supported, func
       spa: 0,
       loaded: 1
     })
-    })`
+    }`
   })
 
   const assetURL = router.assetURL('obfuscate-pii.html', { loader: 'spa', init })
@@ -85,7 +85,7 @@ testDriver.test('PAGE ACTIONS - Kills feature if entitlements flag is 0', suppor
 
   router.scheduleReply('bamServer', {
     test: testRumRequest,
-    body: `NREUM.setToken(${JSON.stringify({
+    body: `${JSON.stringify({
       stn: 1,
       err: 1,
       ins: 0,
@@ -93,7 +93,7 @@ testDriver.test('PAGE ACTIONS - Kills feature if entitlements flag is 0', suppor
       spa: 1,
       loaded: 1
     })
-    })`
+    }`
   })
 
   const assetURL = router.assetURL('obfuscate-pii.html', { loader: 'full', init })

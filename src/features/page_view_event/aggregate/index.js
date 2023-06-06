@@ -2,21 +2,18 @@ import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { isiOS } from '../../../common/browser-version/ios-version'
 import { onTTFB } from 'web-vitals'
-import { mapOwn } from '../../../common/util/map-own'
-import { param, fromArray } from '../../../common/url/encode'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
 import { paintMetrics } from '../../../common/metrics/paint-metrics'
-import { submitData } from '../../../common/util/submit-data'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
+import { Harvest } from '../../../common/harvest/harvest'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
 import { globalScope, isBrowserScope } from '../../../common/util/global-scope'
 import { drain } from '../../../common/drain/drain'
+import { activateFeatures } from '../../../common/util/feature-flags'
+import { warn } from '../../../common/util/console'
 import { AggregateBase } from '../../utils/aggregate-base'
-
-const jsonp = 'NREUM.setToken'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -55,10 +52,12 @@ export class Aggregate extends AggregateBase {
 
   sendRum () {
     const info = getInfo(this.agentIdentifier)
+    const agentRuntime = getRuntime(this.agentIdentifier)
+    const harvester = new Harvest(this)
+
     if (!info.beacon) return
     if (info.queueTime) this.aggregator.store('measures', 'qt', { value: info.queueTime })
     if (info.applicationTime) this.aggregator.store('measures', 'ap', { value: info.applicationTime })
-    const agentRuntime = getRuntime(this.agentIdentifier)
 
     // These 3 values should've been recorded after load and before this func runs. They are part of the minimum required for PageView events to be created.
     // Following PR #428, which demands that all agents send RUM call, these need to be sent even outside of the main window context where PerformanceTiming
@@ -67,27 +66,27 @@ export class Aggregate extends AggregateBase {
     this.aggregator.store('measures', 'fe', { value: isBrowserScope ? agentRuntime[CONSTANTS.FBTWL] : 0 })
     this.aggregator.store('measures', 'dc', { value: isBrowserScope ? agentRuntime[CONSTANTS.FBTDC] : 0 })
 
-    var measuresMetrics = this.aggregator.get('measures')
+    const queryParameters = {
+      tt: info.ttGuid,
+      us: info.user,
+      ac: info.account,
+      pr: info.product,
+      af: getActivatedFeaturesFlags(this.agentIdentifier).join(','),
+      ...(
+        Object.entries(this.aggregator.get('measures') || {}).reduce((aggregator, [metricName, measure]) => {
+          aggregator[metricName] = measure.params?.value
+          return aggregator
+        }, {})
+      ),
+      xx: info.extra,
+      ua: info.userAttributes,
+      at: info.atts
+    }
 
-    var measuresQueryString = mapOwn(measuresMetrics, function (metricName, measure) {
-      return '&' + metricName + '=' + measure.params.value
-    }).join('')
-
-    // currently we only have one version of our protocol
-    // in the future we may add more
-    var protocol = '1'
-
-    var scheduler = new HarvestScheduler('page_view_event', {}, this)
-
-    var chunksForQueryString = [scheduler.harvest.baseQueryString()]
-
-    chunksForQueryString.push(measuresQueryString)
-
-    chunksForQueryString.push(param('tt', info.ttGuid))
-    chunksForQueryString.push(param('us', info.user))
-    chunksForQueryString.push(param('ac', info.account))
-    chunksForQueryString.push(param('pr', info.product))
-    chunksForQueryString.push(param('af', getActivatedFeaturesFlags(this.agentIdentifier).join(',')))
+    let body
+    if (typeof info.jsAttributes === 'object' && Object.keys(info.jsAttributes).length > 0) {
+      body = { ja: info.jsAttributes }
+    }
 
     if (globalScope.performance) {
       if (typeof PerformanceNavigationTiming !== 'undefined') { // Navigation Timing level 2 API that replaced PerformanceTiming & PerformanceNavigation
@@ -96,13 +95,13 @@ export class Aggregate extends AggregateBase {
           timing: addPT(agentRuntime.offset, navTimingEntry, {}),
           navigation: addPN(navTimingEntry, {})
         })
-        chunksForQueryString.push(param('perf', stringify(perf)))
+        queryParameters.perf = stringify(perf)
       } else if (typeof PerformanceTiming !== 'undefined') { // Safari pre-15 did not support level 2 timing
         const perf = ({
           timing: addPT(agentRuntime.offset, globalScope.performance.timing, {}, true),
           navigation: addPN(globalScope.performance.navigation, {})
         })
-        chunksForQueryString.push(param('perf', stringify(perf)))
+        queryParameters.perf = stringify(perf)
       }
     }
 
@@ -112,35 +111,33 @@ export class Aggregate extends AggregateBase {
         if (!entry.startTime || entry.startTime <= 0) return
 
         if (entry.name === 'first-paint') {
-          chunksForQueryString.push(param('fp', String(Math.floor(entry.startTime))))
+          queryParameters.fp = String(Math.floor(entry.startTime))
         } else if (entry.name === 'first-contentful-paint') {
-          chunksForQueryString.push(param('fcp', String(Math.floor(entry.startTime))))
+          queryParameters.fcp = String(Math.floor(entry.startTime))
         }
         paintMetrics[entry.name] = Math.floor(entry.startTime) // this is consumed by Spa module
       })
     } catch (e) {}
 
-    chunksForQueryString.push(param('xx', info.extra))
-    chunksForQueryString.push(param('ua', info.userAttributes))
-    chunksForQueryString.push(param('at', info.atts))
+    harvester.send({
+      endpoint: 'rum',
+      payload: { qs: queryParameters, body },
+      opts: { needResponse: true, sendEmptyBody: true },
+      cbFinished: ({ status, responseText }) => {
+        if (status >= 400) {
+          // Adding retry logic for the rum call will be a separate change
+          this.ee.abort()
+          return
+        }
 
-    var customJsAttributes = stringify(info.jsAttributes)
-    chunksForQueryString.push(param('ja', customJsAttributes === '{}' ? null : customJsAttributes))
-
-    var queryString = fromArray(chunksForQueryString, agentRuntime.maxBytes)
-
-    // Capture bytes sent to RUM call endpoint (currently `1`) as a supportability metric. See metrics aggregator (on unload).
-    agentRuntime.bytesSent[protocol] = 0 // Set to zero for now until RUM is moved to POST
-
-    // Capture query bytes sent to RUM call endpoint (currently `1`) as a supportability metric. See metrics aggregator (on unload).
-    agentRuntime.queryBytesSent[protocol] = (agentRuntime.queryBytesSent[protocol] || 0) + queryString?.length || 0
-
-    const isValidJsonp = submitData.jsonp({
-      url: this.getScheme() + '://' + info.beacon + '/' + protocol + '/' + info.licenseKey + '?' + queryString,
-      jsonp
+        try {
+          activateFeatures(JSON.parse(responseText), this.agentIdentifier)
+          drain(this.agentIdentifier, this.featureName)
+        } catch (err) {
+          this.ee.abort()
+          warn('RUM call failed. Agent shutting down.')
+        }
+      }
     })
-    // Usually `drain` is invoked automatically after processing feature flags contained in the JSONP callback from
-    // ingest (see `activateFeatures`), so when JSONP cannot execute (as with module workers), we drain manually.
-    if (!isValidJsonp) drain(this.agentIdentifier, CONSTANTS.FEATURE_NAME)
   }
 }

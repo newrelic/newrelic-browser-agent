@@ -1,4 +1,3 @@
-
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS } from '../../session/constants'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { getModeledObject } from './configurable'

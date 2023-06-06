@@ -98,7 +98,7 @@ export class Harvest extends SharedContext {
 
     var agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
 
-    if (!payload.body) { // no payload body? nothing to send, just run onfinish stuff and return
+    if (!payload.body && !opts?.sendEmptyBody) { // no payload body? nothing to send, just run onfinish stuff and return
       if (cbFinished) {
         cbFinished({ sent: false })
       }
@@ -108,7 +108,7 @@ export class Harvest extends SharedContext {
     let url = ''
     if (customUrl) url = customUrl
     else if (raw) url = `${this.getScheme()}://${info.errorBeacon}/${endpoint}`
-    else url = `${this.getScheme()}://${info.errorBeacon}/${endpoint}/1/${info.licenseKey}`
+    else url = `${this.getScheme()}://${info.errorBeacon}${endpoint !== 'rum' ? `/${endpoint}` : ''}/1/${info.licenseKey}`
 
     var baseParams = !raw && includeBaseParams ? this.baseQueryString() : ''
     var payloadParams = payload.qs ? encodeObj(payload.qs, agentRuntime.maxBytes) : ''
@@ -207,6 +207,7 @@ export class Harvest extends SharedContext {
       if (singlePayload.body) mapOwn(singlePayload.body, makeBody)
       if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
     }
+
     return { body: makeBody(), qs: makeQueryString() }
   }
 
@@ -222,17 +223,12 @@ export class Harvest extends SharedContext {
   }
 }
 
-function or (a, b) { return a || b }
-
 export function getSubmitMethod (endpoint, opts) {
   opts = opts || {}
   var method
   var useBody
 
-  if (opts.needResponse) { // currently: only STN needs a response
-    useBody = true
-    method = submitData.xhr
-  } else if (opts.unload && isBrowserScope) { // all the features' final harvest; neither methods work outside window context
+  if (opts.unload && isBrowserScope) { // all the features' final harvest; neither methods work outside window context
     useBody = haveSendBeacon
     method = haveSendBeacon ? submitData.beacon : submitData.img // really only IE doesn't have Beacon API for web browsers
   } else {
@@ -262,7 +258,7 @@ function createAccumulator () {
   var accumulator = {}
   var hasData = false
   return function (key, val) {
-    if (val !== null && val !== undefined && val.length) {
+    if (val !== null && val !== undefined && val.toString()?.length) {
       accumulator[key] = val
       hasData = true
     }

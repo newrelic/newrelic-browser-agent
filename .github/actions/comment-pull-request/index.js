@@ -1,30 +1,39 @@
-import process from 'process'
-import * as core from '@actions/core'
 import * as github from '@actions/github'
+import { args } from './args.js'
 
-const prRequired = process.env['PR_REQUIRED']?.toLowerCase() === 'true'
-const octokit = github.getOctokit(process.env['GITHUB_TOKEN'])
-const branchName = process.env['GITHUB_REF'].replace('refs/heads/', '')
+const octokit = github.getOctokit(args.githubToken)
 
-const { data: pullRequests } = await octokit.rest.pulls.list({
-  owner: github.context.repo.owner,
-  repo: github.context.repo.repo,
-  state: 'open',
-  head: `${github.context.repo.owner}/${github.context.repo.repo}:${branchName}`
-})
-
-if (!Array.isArray(pullRequests) || pullRequests.length === 0) {
-  if (prRequired) {
-    throw new Error(`No pull request found for branch ${branchName} in the ${github.context.repo.owner}/${github.context.repo.repo} repository.`)
-  } else {
-    core.setOutput('results', null)
+let comment
+if (args.commentTag) {
+  for await (const { data: comments} of octokit.paginate.iterator(
+    octokit.rest.issues.listComments,
+    {
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      issue_number: args.prNumber
+    }
+  )) {
+    comment = comments.find(c => c?.body?.includes(args.commentTag))
+    if (comment) {
+      break
+    }
   }
+}
+
+if (comment) {
+  await octokit.rest.issues.updateComment({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    issue_number: args.prNumber,
+    comment_id: comment.id,
+    body: args.comment.toString().trim() + '\n' + args.commentTag.toString().trim()
+  })
 } else {
-  core.setOutput('results', JSON.stringify({
-    head_ref: pullRequests[0].head.ref,
-    head_sha: pullRequests[0].head.sha,
-    base_ref: pullRequests[0].base.ref,
-    base_sha: pullRequests[0].base.sha,
-    pr_number: pullRequests[0].number
-  }))
+  await octokit.rest.issues.createComment({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    issue_number: args.prNumber,
+    comment_id: comment.id,
+    body: args.comment.toString().trim() + '\n' + args.commentTag.toString().trim()
+  })
 }

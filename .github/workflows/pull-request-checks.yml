@@ -43,3 +43,31 @@ jobs:
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
     secrets: inherit
+
+  comment-pull-request:
+    name: Find pull request target
+    needs: [find-pull-request, jest, eslint]
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Setup container
+        run: apt update && apt install -y git
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Comment pull request
+        uses: ./.github/actions/comment-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}
+          comment: |
+            [![Pull Request Checks](https://github.com/newrelic/newrelic-browser-agent/actions/workflows/pull-request-checks.yml/badge.svg?branch=${{ env.GITHUB_REF_NAME }})](https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ env.GITHUB_RUN_ID }})
+
+            Last ran on `Jun 2, 2023, 9:58 PM CDT`
+            Checking merge of (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}) into [${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_ref }}](https://github.com/newrelic/newrelic-browser-agent/compare/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}..${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }}) (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }})
+          comment_tag: <!-- browser_agent pull request checks -->

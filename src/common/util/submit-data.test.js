@@ -44,7 +44,7 @@ describe('submitData.jsonp', () => {
     expect(global.importScripts).toHaveBeenCalledWith(url + '&jsonp=' + jsonp)
   })
 
-  test('should fall back to an xhrGet call and return false importScripts throws an error', () => {
+  test('should fall back to an xhrGet call and return false when importScripts throws an error', () => {
     jest.replaceProperty(globalScope, 'isWorkerScope', true)
     jest.spyOn(submitData, 'xhrGet').mockImplementation(jest.fn())
     global.importScripts = jest.fn().mockImplementation(() => { throw new Error(faker.lorem.sentence()) })

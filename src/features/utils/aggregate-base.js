@@ -17,7 +17,7 @@ export class AggregateBase extends FeatureBase {
       }, this.featureName, this.ee)
       registerHandler(`block-${fName}`, () => {
         resolve({ name: fName, value: false })
-      }, this.feature, this.ee)
+      }, this.featureName, this.ee)
     })
     ))
   }

@@ -24,22 +24,22 @@ export default (function () {
                 })
                 }`
         })
-        browser.testHandle.expectRum().then(r => console.log('rum resp', r))
-        await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
-          .then(() => browser.waitForAgentLoad())
 
-        await browser.pause(2000)
-        const { initialized, recording } = await getSR()
-        expect(initialized).toEqual(true)
-        expect(recording).toEqual(false)
+        const [rumResp] = await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+          .then(() => Promise.all([browser.testHandle.expectRum(), browser.waitForAgentLoad()]))
+
+        expect(JSON.parse(rumResp.reply.body)).toEqual(expect.objectContaining({
+          sr: 0
+        }))
+        const sr = await getSR()
+        expect(sr.initialized).toEqual(true)
+        expect(sr.recording).toEqual(false)
       })
 
       it('should run if flag is 1', async () => {
-        console.log('config', config())
         await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
           .then(() => browser.waitForAgentLoad())
 
-        await browser.pause(2000)
         const { initialized, recording } = await getSR()
         expect(initialized).toEqual(true)
         expect(recording).toEqual(true)
@@ -51,7 +51,6 @@ export default (function () {
 
         const { exists } = await getSR()
         expect(exists).toEqual(false)
-        expect(exists).toEqual(false)
       })
 
       it('should not run if session_trace is disabled', async () => {
@@ -59,7 +58,6 @@ export default (function () {
           .then(() => browser.waitForAgentLoad())
 
         const { exists } = await getSR()
-        expect(exists).toEqual(false)
         expect(exists).toEqual(false)
       })
     })

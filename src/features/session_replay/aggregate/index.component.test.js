@@ -75,7 +75,7 @@ describe('Session Replay', () => {
       // emit a false flag
       sr.ee.emit('block-sr')
       await wait(1)
-      expect(sr.initialized).toEqual(false)
+      expect(sr.initialized).toEqual(true)
       expect(sr.recording).toEqual(false)
     })
 

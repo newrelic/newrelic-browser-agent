@@ -61,6 +61,7 @@ export class InstrumentBase extends FeatureBase {
     })
 
     const importLater = async () => {
+      let importReplay = false
       try {
         if (enableSessionTracking) { // would require some setup before certain features start
           const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
@@ -68,12 +69,7 @@ export class InstrumentBase extends FeatureBase {
 
           argsObjFromInstrument.sessionTrackingOn = true // let relevant features know the manager was initialized successfully and should be found on runtime obj
 
-          if (this.featureName === FEATURE_NAMES.sessionReplay) {
-            if (!shouldImportSR(sessionManager)) {
-              drain(this.agentIdentifier, this.featureName)
-              return
-            }
-          }
+          if (shouldImportSR(sessionManager)) importReplay = true
         }
       } catch (e) {
         warn('A problem occurred when starting up session manager. This page will not start or extend any session.', e)
@@ -84,6 +80,11 @@ export class InstrumentBase extends FeatureBase {
        * it's only responsible for aborting its one specific feature, rather than all.
        */
       try {
+        if (this.featureName === FEATURE_NAMES.sessionReplay && !importReplay) { // replay is off if tracking is off
+          drain(this.agentIdentifier, this.featureName)
+          return
+        }
+
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
         this.featAggregate = new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)

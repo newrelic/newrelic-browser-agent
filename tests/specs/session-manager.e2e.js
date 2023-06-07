@@ -13,12 +13,12 @@ describe('newrelic session ID', () => {
     inactiveAt: expect.any(Number),
     updatedAt: expect.any(Number),
     sessionReplay: expect.any(Number),
-    sessionTraceActive: expect.any(Boolean),
+    sessionTraceMode: expect.any(Number),
     custom: expect.any(Object)
   })
 
-  afterEach(() => {
-    browser.destroyAgentSession()
+  afterEach(async () => {
+    await browser.destroyAgentSession(browser.testHandle)
   })
 
   describe('data is stored in storage API', () => {

@@ -106,7 +106,6 @@ module.exports = {
     'valid-typeof': 'off',
     'no-undef': 'off',
     'no-return-assign': 'off',
-    'no-fallthrough': ['error', { commentPattern: 'fallthrough' }],
 
     'n/handle-callback-err': 'off',
 

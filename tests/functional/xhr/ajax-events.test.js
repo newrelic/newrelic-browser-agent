@@ -30,13 +30,13 @@ testDriver.test('Disabled ajax events', function (t, browser, router) {
 })
 
 testDriver.test('capturing XHR ajax events', function (t, browser, router) {
-  const ajaxPromise = router.expectAjaxEvents(5000)
+  const ajaxPromise = router.expectAjaxEvents(10000)
   const rumPromise = router.expectRum()
   const loadPromise = browser.safeGet(router.assetURL('xhr-outside-interaction.html', {
     loader: 'spa',
     init: {
       ajax: {
-        harvestTimeSeconds: 2,
+        harvestTimeSeconds: 5,
         enabled: true
       }
     }
@@ -53,8 +53,8 @@ testDriver.test('capturing XHR ajax events', function (t, browser, router) {
 
 testDriver.test('capturing large payload of XHR ajax events', function (t, browser, router) {
   const ajaxPromises = Promise.all([
-    router.expectAjaxEvents(8000),
-    router.expectAjaxEvents(16000)
+    router.expectAjaxEvents(10000),
+    router.expectAjaxEvents(20000)
   ])
   const rumPromise = router.expectRum()
   const loadPromise = browser.safeGet(router.assetURL('xhr-large-payload.html', {

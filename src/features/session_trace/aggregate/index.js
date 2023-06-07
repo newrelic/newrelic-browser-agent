@@ -4,7 +4,6 @@
  */
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { stringify } from '../../../common/util/stringify'
 import { parseUrl } from '../../../common/url/parse-url'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
@@ -388,18 +387,10 @@ export class Aggregate extends AggregateBase {
     this.trace = {}
     this.nodeCount = 0
 
-    const stnInfo = {
-      qs: { st: String(this.agentRuntime.offset) },
+    return {
+      qs: { st: String(getRuntime(this.agentIdentifier).offset) },
       body: { res: stns }
     }
-    if (!this.ptid) { // send custom and user attributes on the very first ST harvest only
-      const { userAttributes, atts, jsAttributes } = getInfo(this.agentIdentifier)
-      stnInfo.qs.ua = userAttributes
-      stnInfo.qs.at = atts
-      const ja = stringify(jsAttributes)
-      stnInfo.qs.ja = ja === '{}' ? null : ja
-    }
-    return stnInfo
   }
 
   smearEvtsByOrigin (name) {

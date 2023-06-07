@@ -171,6 +171,7 @@ export class Aggregate extends AggregateBase {
     if (!this.stackReported[bucketHash]) {
       this.stackReported[bucketHash] = true
       params.stack_trace = truncateSize(stackInfo.stackString)
+      params.firstSeenAt = agentRuntime.offset + time
     } else {
       params.browser_stack_hash = stringHashCode(stackInfo.stackString)
     }
@@ -185,6 +186,8 @@ export class Aggregate extends AggregateBase {
       params.pageview = 1
       this.pageviewReported[bucketHash] = true
     }
+
+    if (agentRuntime?.session?.state?.sessionReplay) params.hasReplay = true
 
     var type = internal ? 'ierr' : 'err'
     var newMetrics = { time: time }

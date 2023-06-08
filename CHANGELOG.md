@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.234.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.233.1...v1.234.0) (2023-06-02)
+
+
+### Features
+
+* Migrate RUM network call from GET to POST ([#521](https://github.com/newrelic/newrelic-browser-agent/issues/521)) ([937812a](https://github.com/newrelic/newrelic-browser-agent/commit/937812abdc561223028176df6c8bf2b7100b09b2))
+
 ## [1.233.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.233.0...v1.233.1) (2023-05-31)
 
 

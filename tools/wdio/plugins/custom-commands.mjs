@@ -34,8 +34,8 @@ export default class CustomCommands {
      * in the browser. This completely destroys the current agent session ensuring that
      * a new session is not created that could affect another test.
      */
-    browser.addCommand('destroyAgentSession', async function (testHandle) {
-      await browser.url(await testHandle.assetURL('/'))
+    browser.addCommand('destroyAgentSession', async function () {
+      await browser.url(await browser.testHandle.assetURL('/'))
       await browser.execute(function () { window.localStorage.clear() })
     })
 

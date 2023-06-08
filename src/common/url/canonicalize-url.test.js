@@ -1,34 +1,45 @@
+import { faker } from '@faker-js/faker'
+import * as globalScopeModule from '../util/global-scope'
+import * as cleanUrlModule from './clean-url'
+import { canonicalizeUrl } from './canonicalize-url'
+
+jest.mock('../util/global-scope')
+jest.mock('./clean-url')
+
+beforeEach(() => {
+  jest.spyOn(cleanUrlModule, 'cleanURL').mockImplementation(input => input)
+  jest.replaceProperty(globalScopeModule, 'initialLocation', faker.internet.url())
+})
+
 afterEach(() => {
-  jest.resetModules()
+  jest.resetAllMocks()
 })
 
 test.each([null, undefined, 34])('returns empty string when url argument is %s', async (url) => {
-  const { canonicalizeUrl } = await import('./canonicalize-url')
   expect(canonicalizeUrl(url)).toEqual('')
 })
 
-test('strips URLs of query strings and fragments', async () => {
-  jest.doMock('../util/global-scope', () => ({
-    initialLocation: 'http://different-domain.com/'
-  }))
-  const { canonicalizeUrl } = await import('./canonicalize-url')
-  expect(canonicalizeUrl('http://example.com/path?query=string#fragment')).toBe('http://example.com/path')
-  expect(canonicalizeUrl('https://www.example.com/path/to/file.html?param=value')).toBe('https://www.example.com/path/to/file.html')
-  expect(canonicalizeUrl('https://www.example.com/?param=value#fragment')).toBe('https://www.example.com/')
+test('uses cleanURL to clean the input and initial location URLs', () => {
+  const url = faker.internet.url()
+  canonicalizeUrl(url)
+
+  expect(cleanUrlModule.cleanURL).toHaveBeenCalledWith(globalScopeModule.initialLocation)
+  expect(cleanUrlModule.cleanURL).toHaveBeenCalledWith(url)
+  expect(cleanUrlModule.cleanURL).toHaveBeenCalledTimes(2)
 })
 
-test('returns <inline> when matching the page URL of the loader', async () => {
-  jest.doMock('../util/global-scope', () => ({
-    initialLocation: 'http://example.com/'
-  }))
-  const { canonicalizeUrl } = await import('./canonicalize-url')
-  expect(canonicalizeUrl('http://example.com/')).toEqual('<inline>')
+test('returns <inline> when input and initial page urls are the same', async () => {
+  expect(canonicalizeUrl(globalScopeModule.initialLocation)).toEqual('<inline>')
+})
+
+test('returns input url when it does not match initial page url', async () => {
+  const url = faker.internet.url()
+
+  expect(canonicalizeUrl(url)).toEqual(url)
 })
 
 test('does not identify sub-paths of the loader origin as <inline>', async () => {
-  jest.doMock('../util/global-scope', () => ({
-    initialLocation: 'http://example.com/'
-  }))
-  const { canonicalizeUrl } = await import('./canonicalize-url')
-  expect(canonicalizeUrl('http://example.com/path/to/script.js')).not.toEqual('<inline>')
+  const url = globalScopeModule.initialLocation + '/path/to/script.js'
+
+  expect(canonicalizeUrl(url)).not.toEqual('<inline>')
 })

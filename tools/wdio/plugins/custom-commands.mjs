@@ -75,10 +75,21 @@ export default class CustomCommands {
             return aggregate
           }, {})
       })
+      const agentSessionInstances = await browser.execute(function () {
+        return Object.entries(newrelic.initializedAgents)
+          .reduce(function (aggregate, agentEntry) {
+            aggregate[agentEntry[0]] = {
+              key: agentEntry[1].runtime.session.key,
+              isNew: agentEntry[1].runtime.session.isNew,
+              initialized: agentEntry[1].runtime.session.initialized
+            }
+            return aggregate
+          }, {})
+      })
       const localStorage = await browser.execute(function () {
         return JSON.parse(window.localStorage.getItem('NRBA_SESSION') || '{}')
       })
-      return { agentSessions, localStorage }
+      return { agentSessions, agentSessionInstances, localStorage }
     })
   }
 }

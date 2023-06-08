@@ -1,5 +1,5 @@
 import { supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { RRWEB_EVENT_TYPES, config, getSR } from './helpers'
+import { RRWEB_EVENT_TYPES, config, getSR } from './helpers.js'
 
 /** The "mode" with which the session replay is recording */
 const MODE = {
@@ -91,10 +91,6 @@ export default (function () {
         await browser.switchToWindow(newTab.handle)
         await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
           .then(() => browser.waitForAgentLoad())
-          .finally(async () => {
-            await browser.closeWindow()
-            await browser.switchToWindow((await browser.getWindowHandles())[0])
-          })
 
         const { events: resumedPayload } = await getSR()
 
@@ -102,6 +98,9 @@ export default (function () {
         expect(resumedPayload.length).toBeGreaterThan(0)
         // type 2 payloads are snapshots
         expect(resumedPayload.filter(x => x.type === RRWEB_EVENT_TYPES.FullSnapshot).length).toEqual(1)
+
+        await browser.closeWindow()
+        await browser.switchToWindow((await browser.getWindowHandles())[0])
       })
     })
 

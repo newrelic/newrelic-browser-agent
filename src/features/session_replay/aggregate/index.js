@@ -43,7 +43,6 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
-
     /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
     this.events = []
     /** The interval to harvest at.  This gets overridden if the size of the payload exceeds certain thresholds */
@@ -72,7 +71,10 @@ export class Aggregate extends AggregateBase {
     /** A value which increments with every new mutation node reported. Resets after a harvest is sent */
     this.payloadBytesEstimation = 0
 
-    const shouldSetup = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true && getConfigurationValue(agentIdentifier, 'session_trace.enabled') === true
+    const shouldSetup = (
+      getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true &&
+      getConfigurationValue(agentIdentifier, 'session_trace.enabled') === true
+    )
 
     if (shouldSetup) {
       /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */

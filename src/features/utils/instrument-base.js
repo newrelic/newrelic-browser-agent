@@ -99,7 +99,7 @@ export class InstrumentBase extends FeatureBase {
   // session replays can continue if in progress
     if (featureName === FEATURE_NAMES.sessionReplay) {
       if (getConfigurationValue(this.agentIdentifier, 'session_trace.enabled') === false) return false
-      return !!session?.isNew || !!session?.state.sessionReplayActive
+      return !!session?.isNew || !!session?.state.sessionReplay
     }
     // todo -- add case like above for session trace
     return true

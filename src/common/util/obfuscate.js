@@ -5,7 +5,7 @@ import { warn } from './console'
 
 var fileProtocolRule = {
   regex: /^file:\/\/(.*)/,
-  replacement: 'file://OBFUSCATED'
+  replacement: atob('ZmlsZTovL09CRlVTQ0FURUQ=')
 }
 export class Obfuscator extends SharedContext {
   shouldObfuscate () {
@@ -51,7 +51,7 @@ export function validateRules (rules) {
     if (!('regex' in rules[i])) {
       warn('An obfuscation replacement rule was detected missing a "regex" value.')
       invalidRegexDetected = true
-    } else if (typeof rules[i].regex !== 'string' && !(rules[i].regex.constructor === RegExp)) {
+    } else if (typeof rules[i].regex !== 'string' && !(rules[i].regex instanceof RegExp)) {
       warn('An obfuscation replacement rule contains a "regex" value with an invalid type (must be a string or RegExp)')
       invalidRegexDetected = true
     }

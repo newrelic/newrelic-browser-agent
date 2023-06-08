@@ -17,7 +17,6 @@ jobs:
 
   wdio-coverage:
     name: WDIO coverage
-    needs: find-pull-request
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       browser-target: chrome@latest

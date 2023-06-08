@@ -25,6 +25,7 @@ export async function getSR () {
         events: sr.events,
         initialized: sr.initialized,
         recording: sr.recording,
+        mode: sr.mode,
         exists: true
       }
     } catch (err) {
@@ -32,7 +33,8 @@ export async function getSR () {
         events: [],
         initialized: false,
         recording: false,
-        exists: false
+        exists: false,
+        mode: 0
       }
     }
   })

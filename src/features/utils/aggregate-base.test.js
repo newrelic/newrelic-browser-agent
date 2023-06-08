@@ -111,7 +111,7 @@ test('should resolve waitForFlags when feature is enabled', async () => {
   featEnabledHandler()
 
   expect(registerHandler).toHaveBeenNthCalledWith(1, `feat-${flagNames[0]}`, expect.any(Function), featureName, aggregateBase.ee)
-  expect(registerHandler).toHaveBeenNthCalledWith(2, `block-${flagNames[0]}`, expect.any(Function), aggregateBase.feature, aggregateBase.ee)
+  expect(registerHandler).toHaveBeenNthCalledWith(2, `block-${flagNames[0]}`, expect.any(Function), featureName, aggregateBase.ee)
   expect(registerHandler).toHaveBeenCalledTimes(2)
   await expect(flagWait).resolves.toEqual([{
     name: flagNames[0],
@@ -135,7 +135,7 @@ test('should resolve waitForFlags when feature is blocked', async () => {
   featEnabledHandler()
 
   expect(registerHandler).toHaveBeenNthCalledWith(1, `feat-${flagNames[0]}`, expect.any(Function), featureName, aggregateBase.ee)
-  expect(registerHandler).toHaveBeenNthCalledWith(2, `block-${flagNames[0]}`, expect.any(Function), aggregateBase.feature, aggregateBase.ee)
+  expect(registerHandler).toHaveBeenNthCalledWith(2, `block-${flagNames[0]}`, expect.any(Function), featureName, aggregateBase.ee)
   expect(registerHandler).toHaveBeenCalledTimes(2)
   await expect(flagWait).resolves.toEqual([{
     name: flagNames[0],

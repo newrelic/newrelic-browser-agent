@@ -113,6 +113,10 @@ const args = yargs(hideBin(process.argv))
   .alias('D', 'sauce-extended-debugging')
   .describe('D', 'Run tests with sauce labs extended debugging enabled')
 
+  .boolean('coverage')
+  .default('coverage', false)
+  .describe('coverage', 'Collect coverage from test runs')
+
   .help('h')
   .alias('h', 'help').argv
 

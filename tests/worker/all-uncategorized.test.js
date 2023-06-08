@@ -1,6 +1,6 @@
 const testDriver = require('../../tools/jil/index')
 const { workerTypes, typeToMatcher } = require('./helpers')
-const { fail, checkPayload, url } = require('../functional/uncat-internal-help.cjs')
+const { fail, url } = require('../functional/uncat-internal-help.cjs')
 
 const fetchExt = testDriver.Matcher.withFeature('fetchExt')
 const FAIL_MSG = 'unexpected error'
@@ -259,6 +259,18 @@ function obfuscateAll (type, browserVersionMatcher) {
         }).catch(fail(t))
     }
   )
+}
+
+/** Accepts an object payload, fails test if stringified payload contains data that should be obfuscated. */
+function checkPayload (t, payload, name) {
+  t.ok(payload, `${name} payload exists`)
+
+  var strPayload = JSON.stringify(payload)
+  //var failed = strPayload.includes('bam-test') || strPayload.includes('fakeid') || strPayload.includes('pii')
+
+  t.ok(!strPayload.includes('pii'), `${name} -- pii was obfuscated`)
+  t.ok(!strPayload.includes('bam-test'), `${name} -- bam-test was obfuscated`)
+  t.ok(!strPayload.includes('fakeid'), `${name} -- fakeid was obfuscated`)
 }
 
 // --- Timings tests --- ... PVT not applicable to workers

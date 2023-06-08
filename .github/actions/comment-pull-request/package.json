@@ -1,5 +1,5 @@
 {
-  "name": "@newrelic/browser-agent.actions.find-pull-request",
+  "name": "@newrelic/browser-agent.actions.comment-pull-request",
   "description": "",
   "private": true,
   "type": "module",

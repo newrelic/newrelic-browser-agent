@@ -28,6 +28,37 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           pr_required: true
 
+  comment-pull-request:
+    name: Comment pull request
+    needs: [find-pull-request]
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Setup container
+        run: apt update && DEBIAN_FRONTEND=noninteractive apt install -y git tzdata
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Get workflow time
+        id: workflow-time
+        run: echo "results=$(TZ=America/Chicago date +'%B %d, %Y %H:%M:%S %Z')" >> $GITHUB_OUTPUT
+      - name: Comment pull request
+        uses: ./.github/actions/comment-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}
+          comment: |
+            [![Pull Request Checks](https://github.com/newrelic/newrelic-browser-agent/actions/workflows/pull-request-checks.yml/badge.svg?branch=${{ github.ref_name }})](https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }})
+
+            Last ran on `${{ steps.workflow-time.outputs.results }}`
+            Checking merge of (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}) into [${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_ref }}](https://github.com/newrelic/newrelic-browser-agent/compare/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}..${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }}) (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }})
+          comment_tag: <!-- browser_agent pull request checks -->
+
   jest:
     name: Jest unit tests
     needs: find-pull-request
@@ -35,6 +66,13 @@ jobs:
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
     secrets: inherit
+
+  eslint:
+    name: ESLint
+    needs: find-pull-request
+    uses: ./.github/workflows/eslint.yml
+    with:
+      ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
 
   wdio-coverage:
     name: WDIO coverage

@@ -8,7 +8,7 @@ import { setup } from './utils/setup'
 import { setRuntime, setInfo } from '../../src/common/config/config'
 import * as sinon from 'sinon'
 import * as harv from '../../src/common/harvest/harvest'
-import { submitData } from '../../src/common/util/submit-data'
+import * as submitData from '../../src/common/util/submit-data'
 import { HarvestScheduler } from '../../src/common/harvest/harvest-scheduler'
 
 const { agentIdentifier, aggregator } = setup()

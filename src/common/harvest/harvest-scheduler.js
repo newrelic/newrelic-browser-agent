@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { submitData } from '../util/submit-data'
+import * as submitData from '../util/submit-data'
 import { SharedContext } from '../context/shared-context'
 import { Harvest, getSubmitMethod } from './harvest'
 import { subscribeToEOL } from '../unload/eol'
@@ -77,16 +77,21 @@ export class HarvestScheduler extends SharedContext {
 
   runHarvest (opts) {
     if (this.aborted) return
-    var scheduler = this
+
+    const onHarvestFinished = (result) => {
+      if (result.blocked) this.onHarvestBlocked(opts, result)
+      else this.onHarvestFinished(opts, result)
+    }
 
     let harvests = []
     let submitMethod
 
-    if (this.opts.getPayload) { // Ajax & PVT & SR
+    if (this.opts.getPayload) {
+      // Ajax & PVT & SR features provide a callback function to get data for harvesting
       submitMethod = getSubmitMethod(this.endpoint, opts)
       if (!submitMethod) return false
 
-      const retry = submitMethod.method === submitData.xhr
+      const retry = !opts?.unload && submitMethod.method === submitData.xhr
       var payload = this.opts.getPayload({ retry: retry })
 
       if (!payload) {
@@ -126,12 +131,6 @@ export class HarvestScheduler extends SharedContext {
 
     if (this.started) {
       this.scheduleHarvest()
-    }
-    return
-
-    function onHarvestFinished (result) {
-      if (result.blocked) scheduler.onHarvestBlocked(opts, result)
-      else scheduler.onHarvestFinished(opts, result)
     }
   }
 

@@ -6,7 +6,7 @@
 import { mapOwn } from '../util/map-own'
 import { obj as encodeObj, param as encodeParam } from '../url/encode'
 import { stringify } from '../util/stringify'
-import { submitData } from '../util/submit-data'
+import * as submitData from '../util/submit-data'
 import { getLocation } from '../url/location'
 import { getInfo, getConfigurationValue, getRuntime } from '../config/config'
 import { cleanURL } from '../url/clean-url'
@@ -58,7 +58,7 @@ export class Harvest extends SharedContext {
     var submitMethod = getSubmitMethod(endpoint, opts)
     if (!submitMethod) return false
     var options = {
-      retry: submitMethod.method === submitData.xhr
+      retry: !opts?.unload && submitMethod.method === submitData.xhr
     }
     const payload = this.createPayload(endpoint, options)
     var caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
@@ -126,10 +126,8 @@ export class Harvest extends SharedContext {
     if (!gzip) {
       if (useBody && endpoint === 'events') {
         body = payload.body.e
-      } else if (useBody) {
-        body = stringify(payload.body)
       } else {
-        fullUrl = fullUrl + encodeObj(payload.body, agentRuntime.maxBytes)
+        body = stringify(payload.body)
       }
     } else body = payload.body
 
@@ -148,7 +146,7 @@ export class Harvest extends SharedContext {
 
     var result = method({ url: fullUrl, body, sync: opts.unload && isWorkerScope, headers })
 
-    if (cbFinished && method === submitData.xhr) {
+    if (!opts.unload && cbFinished && method === submitData.xhr) {
       var xhr = result
       xhr.addEventListener('load', function () {
         var result = { sent: true, status: this.status }
@@ -168,7 +166,8 @@ export class Harvest extends SharedContext {
 
     // if beacon request failed, retry with an alternative method -- will not happen for workers
     if (!result && method === submitData.beacon) {
-      method = submitData.img
+      // browsers that support sendBeacon also support fetch with keepalive - IE will not retry unload calls
+      method = submitData.fetchKeepAlive
       result = method({ url: fullUrl + encodeObj(payload.body, agentRuntime.maxBytes) })
     }
 
@@ -225,23 +224,14 @@ export class Harvest extends SharedContext {
 }
 
 export function getSubmitMethod (endpoint, opts) {
-  opts = opts || {}
-  var method
-  var useBody
-
-  if (opts.unload && isBrowserScope) { // all the features' final harvest; neither methods work outside window context
-    useBody = haveSendBeacon
-    method = haveSendBeacon ? submitData.beacon : submitData.img // really only IE doesn't have Beacon API for web browsers
-  } else {
-    // `submitData.beacon` was removed, there is an upper limit to the
-    // number of data allowed before it starts failing, so we save it only for page unloading
-    useBody = true
-    method = submitData.xhr
-  }
-
   return {
-    method: method,
-    useBody: useBody
+    useBody: true,
+    method: opts?.unload && isBrowserScope && haveSendBeacon
+      // Use sendBeacon for final harvest
+      ? submitData.beacon
+      // Only IE does not support sendBeacon for final harvest
+      // If not final harvest, or not browserScope, always use xhr post
+      : submitData.xhr
   }
 }
 

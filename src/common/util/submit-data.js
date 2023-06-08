@@ -1,52 +1,8 @@
-/*
- * Copyright 2020 New Relic Corporation. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
- */
-import { isWorkerScope } from './global-scope'
-export const submitData = {}
-
 /**
- * Send via JSONP. Do NOT call this function outside of a guaranteed web window environment.
- * @param {Object} args - The args
- * @param {string} args.url - The URL to send to
- * @param {string} args.jsonp - The string name of the jsonp cb method
- * @returns {XMLHttpRequest}
- * @returns {Element}
+ * @file Contains common methods used to transmit harvested data.
+ * @copyright 2023 New Relic Corporation. All rights reserved.
+ * @license Apache-2.0
  */
-submitData.jsonp = function jsonp ({ url, jsonp }) {
-  try {
-    if (isWorkerScope) {
-      try {
-        return importScripts(url + '&jsonp=' + jsonp)
-      } catch (e) {
-        // for now theres no other way to execute the callback from ingest without jsonp, or unsafe eval / new Function calls
-        // future work needs to be conducted to allow ingest to return a more traditional JSON API-like experience for the entitlement flags
-        submitData.xhrGet({ url: url + '&jsonp=' + jsonp })
-        return false
-      }
-    } else {
-      var element = document.createElement('script')
-      element.type = 'text/javascript'
-      element.src = url + '&jsonp=' + jsonp
-      var firstScript = document.getElementsByTagName('script')[0]
-      firstScript.parentNode.insertBefore(element, firstScript)
-      return element
-    }
-  } catch (err) {
-    // do nothing
-  }
-}
-
-/**
- * Performs an asynchronous GET request using XMLHttpRequest.
- *
- * @param {Object} args - An object containing a `url` property.
- * @param {string} args.url - The URL to send the GET request to.
- * @returns {XMLHttpRequest} - An XMLHttpRequest object.
- */
-submitData.xhrGet = function xhrGet ({ url }) {
-  return submitData.xhr({ url, sync: false, method: 'GET' })
-}
 
 /**
  * Send via XHR
@@ -58,8 +14,8 @@ submitData.xhrGet = function xhrGet ({ url }) {
  * @param {{key: string, value: string}[]} [args.headers] - The headers to attach.
  * @returns {XMLHttpRequest}
  */
-submitData.xhr = function xhr ({ url, body = null, sync, method = 'POST', headers = [{ key: 'content-type', value: 'text/plain' }] }) {
-  var request = new XMLHttpRequest()
+export function xhr ({ url, body = null, sync, method = 'POST', headers = [{ key: 'content-type', value: 'text/plain' }] }) {
+  const request = new XMLHttpRequest()
 
   request.open(method, url, !sync)
   try {
@@ -78,15 +34,24 @@ submitData.xhr = function xhr ({ url, body = null, sync, method = 'POST', header
 }
 
 /**
- * Send by appending an <img> element to the page. Do NOT call this function outside of a guaranteed web window environment.
- * @param {Object} args - The args
- * @param {string} args.url - The URL to send to
- * @returns {HTMLImageElement}
+ * Send via fetch with keepalive true
+ * @param {Object} args - The args.
+ * @param {string} args.url - The URL to send to.
+ * @param {string=} args.body - The Stringified body.
+ * @param {string=} [args.method=POST] - The XHR method to use.
+ * @param {{key: string, value: string}[]} [args.headers] - The headers to attach.
+ * @returns {XMLHttpRequest}
  */
-submitData.img = function img ({ url }) {
-  var element = new Image()
-  element.src = url
-  return element
+export function fetchKeepAlive ({ url, body = null, method = 'POST', headers = [{ key: 'content-type', value: 'text/plain' }] }) {
+  return fetch(url, {
+    method,
+    headers: headers.reduce((aggregator, header) => {
+      aggregator.push([header.key, header.value])
+      return aggregator
+    }, []),
+    body,
+    keepalive: true
+  })
 }
 
 /**
@@ -96,7 +61,7 @@ submitData.img = function img ({ url }) {
  * @param {string=} args.body - The Stringified body
  * @returns {boolean}
  */
-submitData.beacon = function ({ url, body }) {
+export function beacon ({ url, body }) {
   try {
     // Navigator has to be bound to ensure it does not error in some browsers
     // https://xgwang.me/posts/you-may-not-know-beacon/#it-may-throw-error%2C-be-sure-to-catch

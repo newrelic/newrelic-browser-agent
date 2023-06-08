@@ -1,4 +1,4 @@
-import { submitData } from '../util/submit-data'
+import * as submitData from '../util/submit-data'
 import { Harvest } from './harvest'
 
 jest.mock('../context/shared-context', () => ({
@@ -23,13 +23,11 @@ jest.mock('../config/config', () => ({
 }))
 jest.mock('../util/submit-data', () => ({
   __esModule: true,
-  submitData: {
-    xhr: jest.fn(() => ({
-      addEventListener: jest.fn()
-    })),
-    beacon: jest.fn(),
-    img: jest.fn()
-  }
+  xhr: jest.fn(() => ({
+    addEventListener: jest.fn()
+  })),
+  beacon: jest.fn(),
+  fetchKeepAlive: jest.fn()
 }))
 
 describe('sendX', () => {
@@ -45,7 +43,7 @@ describe('sendX', () => {
 
     expect(sendCallback).toHaveBeenCalledWith({ sent: false })
     expect(submitData.xhr).not.toHaveBeenCalled()
-    expect(submitData.img).not.toHaveBeenCalled()
+    expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
     expect(submitData.beacon).not.toHaveBeenCalled()
   })
 
@@ -62,7 +60,7 @@ describe('sendX', () => {
       url: expect.stringContaining('https://example.com/jserrors/1/abcd?'),
       body: undefined
     }))
-    expect(submitData.img).not.toHaveBeenCalled()
+    expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
     expect(submitData.beacon).not.toHaveBeenCalled()
   })
 
@@ -83,7 +81,7 @@ describe('sendX', () => {
       url: expect.not.stringContaining('&empty'),
       body: expect.not.stringContaining('empty')
     }))
-    expect(submitData.img).not.toHaveBeenCalled()
+    expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
     expect(submitData.beacon).not.toHaveBeenCalled()
   })
 
@@ -100,7 +98,7 @@ describe('sendX', () => {
       url: expect.stringContaining(`&nonString=${nonStringValue}`),
       body: JSON.stringify({ bar: 'foo', nonString: nonStringValue })
     }))
-    expect(submitData.img).not.toHaveBeenCalled()
+    expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
     expect(submitData.beacon).not.toHaveBeenCalled()
   })
 })
@@ -114,7 +112,7 @@ describe('send', () => {
 
     expect(sendCallback).toHaveBeenCalledWith({ sent: false })
     expect(submitData.xhr).not.toHaveBeenCalled()
-    expect(submitData.img).not.toHaveBeenCalled()
+    expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
     expect(submitData.beacon).not.toHaveBeenCalled()
   })
 
@@ -127,7 +125,7 @@ describe('send', () => {
       url: expect.stringContaining('https://example.com/1/abcd?'),
       body: undefined
     }))
-    expect(submitData.img).not.toHaveBeenCalled()
+    expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
     expect(submitData.beacon).not.toHaveBeenCalled()
   })
 
@@ -147,7 +145,7 @@ describe('send', () => {
       url: expect.not.stringContaining('&empty'),
       body: expect.not.stringContaining('empty')
     }))
-    expect(submitData.img).not.toHaveBeenCalled()
+    expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
     expect(submitData.beacon).not.toHaveBeenCalled()
   })
 
@@ -163,7 +161,7 @@ describe('send', () => {
       url: expect.stringContaining(`&nonString=${nonStringValue}`),
       body: JSON.stringify({ bar: 'foo', nonString: nonStringValue })
     }))
-    expect(submitData.img).not.toHaveBeenCalled()
+    expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
     expect(submitData.beacon).not.toHaveBeenCalled()
   })
 })

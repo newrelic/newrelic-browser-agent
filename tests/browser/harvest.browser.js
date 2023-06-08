@@ -6,7 +6,7 @@
 import test from '../../tools/jil/browser-test'
 import { setup } from './utils/setup'
 import { getRuntime, setRuntime, setInfo } from '../../src/common/config/config'
-import { submitData } from '../../src/common/util/submit-data'
+import * as submitData from '../../src/common/util/submit-data'
 import * as harvest from '../../src/common/harvest/harvest'
 import * as sinon from 'sinon'
 import * as encode from '../../src/common/url/encode'
@@ -59,7 +59,6 @@ function createMockedXhr (responseCode) {
 function resetSpies (origin, options) {
   harvesterInst.resetListeners()
   options = options || {}
-  submitData.img = sinon.stub().returns(true)
   submitData.beacon = sinon.stub().returns(true)
 
   if (submitData.xhr.isSinonProxy) {
@@ -115,13 +114,6 @@ function validateUrl (t, args, expectedUrlTemplate, message) {
   t.equal(actualUrl, expectedUrl, message)
 }
 
-test('returns false if nothing is sent', function (t) {
-  resetSpies()
-  setupFakeNr()
-  let result = harvesterInst.sendX({endpoint: 'ins'})
-  t.notOk(result, 'sendX returns a falsy value when nothing was sent')
-  t.end()
-})
 
 test('encodes only the origin of the referrer url, not the fragment ', function (t) {
   resetSpies()
@@ -201,10 +193,9 @@ test('uses correct submission mechanism for ins', function (t) {
     t.ok(result, 'result truthy when ins submitted via XHR')
     let call = submitData.xhr.getCall(0)
     validateUrl(t, call.args[0], baseUrl, 'correct URL given to sendBeacon')
-    t.equal(call.args[0].body, stringify(expectedPayload), 'correct body given to XHR') /// <== 
+    t.equal(call.args[0].body, stringify(expectedPayload), 'correct body given to XHR') /// <==
   } else {
     t.notOk(result, 'result falsy when attempting to submit ins in unsupported browser')
-    t.equal(submitData.img.callCount, 0, 'should not try to submit ins via img tag')
   }
 })
 
@@ -217,7 +208,6 @@ test('does not send ins call when there is no body', function (t) {
 
   t.notOk(result, 'result should be falsy')
   t.equal(submitData.xhr.callCount, 0, 'no xhr call should have been made')
-  t.equal(submitData.img.callCount, 0, 'no call via img tag should have been made')
   t.equal(submitData.beacon.callCount, 0, 'no beacon call should have been made')
   t.end()
 
@@ -258,7 +248,6 @@ test('uses correct submission mechanism for resources', function (t) {
     t.equal(call.args[0].body, stringify(expectedPayload), 'correct body given to XHR')
   } else {
     t.notOk(result, 'result falsy when attempting to submit resources in unsupported browser')
-    t.equal(submitData.img.callCount, 0, 'should not try to submit via img')
   }
 })
 
@@ -271,7 +260,6 @@ test('does not send resources when there is no body', function (t) {
 
   t.notOk(result, 'result should be falsy')
   t.equal(submitData.xhr.callCount, 0, 'no xhr call should have been made')
-  t.equal(submitData.img.callCount, 0, 'no call via img tag should have been made')
   t.equal(submitData.beacon.callCount, 0, 'no beacon call should have been made')
   t.end()
 
@@ -298,7 +286,6 @@ test('uses an XHR and returns it for first resources POST', function (t) {
     validateUrl(t, call.args[0], baseUrl, 'correct URL given to XHR')
     t.equal(call.args[0].body, stringify(expectedPayload), 'correct body given to XHR')
 
-    t.equal(submitData.img.callCount, 0, 'did not use img to submit first resources POST')
     t.equal(submitData.beacon.callCount, 0, 'did not use beacon to submit first resources POST')
   } else {
     t.notOk(result, 'result false when resources submitted via XHR with needResponse')
@@ -334,7 +321,6 @@ test('uses correct submission mechanism for jserrors', function (t) {
     t.equal(call.args[0].body, JSON.stringify(expectedPayload), 'body arg given to xhr is correct')
   } else {
     t.ok(result, 'result truthy when jserrors submitted via img')
-    let call = submitData.img.getCall(0)
     let expectedUrl = baseUrl + encode.obj(expectedPayload)
     validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
     t.notOk(call.args[0].body, 'no body arg given to img')
@@ -364,7 +350,6 @@ test('adds ptid to harvest when ptid is present', function (t) {
     validateUrl(t, call.args[0], baseUrl, 'correct URL given to xhr')
   } else {
     t.ok(result, 'result truthy when jserrors submitted via img')
-    let call = submitData.img.getCall(0)
     let expectedUrl = baseUrl + encode.obj(expectedPayload)
     validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
   }
@@ -393,7 +378,6 @@ test('does not add ptid to harvest when ptid is not present', function (t) {
     t.ok(call.args[0].url.indexOf('ptid') === -1, 'ptid not included in querystring')
   } else {
     t.ok(result, 'result truthy when jserrors submitted via img')
-    let call = submitData.img.getCall(0)
     t.ok(call.args[0].url.indexOf('ptid') === -1, 'ptid not included in querystring')
   }
 })
@@ -407,7 +391,6 @@ test('does not send jserrors when there is nothing to send', function (t) {
 
   t.notOk(result, 'result should be falsy')
   t.equal(submitData.xhr.callCount, 0, 'no xhr call should have been made')
-  t.equal(submitData.img.callCount, 0, 'no call via img tag should have been made')
   t.equal(submitData.beacon.callCount, 0, 'no beacon call should have been made')
   t.end()
 
@@ -452,7 +435,6 @@ test('uses correct submission mechanism for events', function (t) {
     t.equal(call.args[0].body, 'bel.1;1;', 'body arg given to xhr is correct')
   } else {
     t.ok(result, 'result truthy when events submitted via img')
-    let call = submitData.img.getCall(0)
     let expectedUrl = baseUrl + encode.obj(expectedPayload)
     validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
     t.notOk(call.args[0].body, 'no body arg given to img')
@@ -468,7 +450,6 @@ test('does not send eents when there is nothing to send', function (t) {
 
   t.notOk(result, 'result should be falsy')
   t.equal(submitData.xhr.callCount, 0, 'no xhr call should have been made')
-  t.equal(submitData.img.callCount, 0, 'no call via img tag should have been made')
   t.equal(submitData.beacon.callCount, 0, 'no beacon call should have been made')
   t.end()
 
@@ -504,9 +485,6 @@ test('uses correct submission mechanisms on unload', function (t) {
   if (hasSendBeacon) {
     calls = submitData.beacon.getCalls()
     t.equal(submitData.beacon.callCount, 4, 'sent all final submissions via sendBeacon')
-  } else {
-    calls = submitData.img.getCalls()
-    t.equal(submitData.img.callCount, 4, 'sent all final submissions via img')
   }
 
   let insCall = findCallForEndpoint(calls, 'ins')
@@ -574,11 +552,6 @@ test('when sendBeacon returns false', function (t) {
     setupFakeNr()
     harvesterInst.sendX({endpoint: 'jserrors', includeBaseParams: false, opts: { unload: true }})
 
-    t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (jserrors)')
-    let call = submitData.img.getCall(0)
-    validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
-    t.notOk(call.args[0].body, 'no body arg given to img')
-
     t.end()
   })
 
@@ -594,11 +567,6 @@ test('when sendBeacon returns false', function (t) {
 
     setupFakeNr()
     harvesterInst.sendX({endpoint: 'ins', includeBaseParams: false, opts: { unload: true }})
-
-    t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (ins)')
-    let call = submitData.img.getCall(0)
-    validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
-    t.notOk(call.args[0].body, 'no body arg given to img')
 
     t.end()
   })
@@ -616,11 +584,6 @@ test('when sendBeacon returns false', function (t) {
     setupFakeNr()
     harvesterInst.sendX({endpoint: 'resources', includeBaseParams: false, opts: { unload: true }})
 
-    t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (resources)')
-    let call = submitData.img.getCall(0)
-    validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
-    t.notOk(call.args[0].body, 'no body arg given to img')
-
     t.end()
   })
 
@@ -636,11 +599,6 @@ test('when sendBeacon returns false', function (t) {
 
     setupFakeNr()
     harvesterInst.sendX({endpoint:'events', includeBaseParams: false, opts:{ unload: true }})
-
-    t.equal(submitData.img.callCount, 1, 'sent one final submissions via IMG (events)')
-    let call = submitData.img.getCall(0)
-    validateUrl(t, call.args[0], expectedUrl, 'correct URL given to img')
-    t.notOk(call.args[0].body, 'no body arg given to img')
 
     t.end()
   })

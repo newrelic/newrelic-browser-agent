@@ -18,6 +18,7 @@ import { stringify } from '../../../common/util/stringify'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { SESSION_EVENTS, MODE } from '../../../common/session/session-entity'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { sharedChannel } from '../../../common/constants/shared-channel'
 
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.8'
@@ -111,7 +112,7 @@ export class Aggregate extends AggregateBase {
       value,
       Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.errorSampleRate'),
       Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.sampleRate')
-    )).then(() => this.aggregator.onReplayReady(this.mode))
+    )).then(() => sharedChannel.onReplayReady(this.mode)) // notify watchers that replay started with the mode
 
     drain(this.agentIdentifier, this.featureName)
   }

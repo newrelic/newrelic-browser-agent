@@ -10,10 +10,6 @@ export class Aggregator extends SharedContext {
   constructor (parent) {
     super(parent)
     this.aggregatedData = {}
-
-    /* Unfortunately, there's no other good medium through which SR can signal it's ready to other features that depends on it.
-      Here, the central aggregator shared across all feature instrument & aggregate components is used for that signal. */
-    this.sessionReplayInitialized = new Promise(resolve => this.onReplayReady = resolve)
   }
 
   // Items with the same type and name get aggregated together

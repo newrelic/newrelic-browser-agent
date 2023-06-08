@@ -86,9 +86,9 @@ export class Aggregate extends AggregateBase {
 
             /* Future to-do: this should just change the Trace mode to "FULL" and write that to storage, since Trace ideally retains its own mode inheritance.
               For alpha phase, the starting Trace mode will depend on SR feature's mode. !!This means all following Traces of this session will inherit this mode!! */
-            startingMode = await getSessionReplayMode(agentIdentifier, aggregator)
+            startingMode = await getSessionReplayMode(agentIdentifier)
           } else { // Trace can still be turned on if SR is on
-            startingMode = await getSessionReplayMode(agentIdentifier, aggregator)
+            startingMode = await getSessionReplayMode(agentIdentifier)
             doStuffByMode(startingMode)
           }
 

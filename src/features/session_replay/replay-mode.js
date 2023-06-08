@@ -4,6 +4,7 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
 import { MODE } from '../../common/session/session-entity'
 import { registerHandler } from '../../common/event-emitter/register-handler'
 import { gosNREUM } from '../../common/window/nreum'
+import { sharedChannel } from '../../common/constants/shared-channel'
 
 /**
  * Figure out if the Replay feature is running (what mode it's in).
@@ -12,7 +13,7 @@ import { gosNREUM } from '../../common/window/nreum'
  * @param {String} agentId
  * @returns Promise that resolves to one of the values in MODE enum
  */
-export async function getSessionReplayMode (agentId, sharedAggregator) {
+export async function getSessionReplayMode (agentId) {
   try {
     const newrelic = gosNREUM()
     // Should be enabled by configuration and using an agent build that includes it (via checking that the instrument class was initialized).
@@ -20,7 +21,7 @@ export async function getSessionReplayMode (agentId, sharedAggregator) {
       const srEntitlement = await new Promise(resolve => registerHandler('rumresp-sr', on => resolve(on), FEATURE_NAMES.sessionReplay, ee.get(agentId)))
       if (srEntitlement === true) {
         await newrelic.initializedAgents[agentId].features.session_replay.onAggregateImported // if Replay could not initialize, this throws a (uncaught) rejection
-        return await sharedAggregator.sessionReplayInitialized // wait for replay to determine which mode it's after running its sampling logic
+        return await sharedChannel.sessionReplayInitialized // wait for replay to determine which mode it's after running its sampling logic
       }
     }
   } catch (e) { /* exception ==> off */ }

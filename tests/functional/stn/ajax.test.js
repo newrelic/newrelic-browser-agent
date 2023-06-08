@@ -19,8 +19,7 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
       },
       page_view_timing: {
         enabled: false
-      },
-      privacy: { cookies_enabled: false }
+      }
     }
   })
 
@@ -71,8 +70,7 @@ testDriver.test('session trace ajax deny list', supported, function (t, browser,
       },
       page_view_timing: {
         enabled: false
-      },
-      privacy: { cookies_enabled: false }
+      }
     }
   })
 

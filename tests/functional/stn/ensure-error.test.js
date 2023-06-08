@@ -18,8 +18,7 @@ testDriver.test('errors get to session traces', supported, function (
     init: {
       session_trace: {
         harvestTimeSeconds: 5
-      },
-      privacy: { cookies_enabled: false }
+      }
     },
     scriptString: `
     // even though the error happens before the call to /resources,

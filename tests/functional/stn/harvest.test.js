@@ -17,8 +17,7 @@ testDriver.test('session traces are retried when collector returns 429 during fi
       },
       harvest: {
         tooManyRequestsDelay: 5
-      },
-      privacy: { cookies_enabled: false }
+      }
     }
   })
 
@@ -64,8 +63,7 @@ testDriver.test('retried first harvest captures ptid', supported, function (t, b
       },
       harvest: {
         tooManyRequestsDelay: 5
-      },
-      privacy: { cookies_enabled: false }
+      }
     }
   })
 
@@ -108,8 +106,7 @@ testDriver.test('session traces are retried when collector returns 429 during sc
       },
       harvest: {
         tooManyRequestsDelay: 5
-      },
-      privacy: { cookies_enabled: false }
+      }
     }
   })
 

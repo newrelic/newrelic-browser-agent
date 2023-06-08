@@ -12,7 +12,7 @@ const bucketMap = {
   err: [FEATURE_NAMES.jserrors, FEATURE_NAMES.metrics],
   ins: [FEATURE_NAMES.pageAction],
   spa: [FEATURE_NAMES.spa],
-  sr: [FEATURE_NAMES.sessionReplay]
+  sr: [FEATURE_NAMES.sessionReplay, FEATURE_NAMES.sessionTrace]
 }
 
 /** Note that this function only processes each unique flag ONCE, with the first occurrence of each flag and numeric value determining its switch on/off setting. */
@@ -30,7 +30,8 @@ export function activateFeatures (flags, agentIdentifier) {
 
         handle('rumresp-' + flag, [Boolean(num)], undefined, feat, sharedEE) // this is a duplicate of feat-/block- but makes awaiting for 1 event easier than 2
       })
-    } else if (num) handle('feat-' + flag, [], undefined, undefined, sharedEE) // not sure what other flags are overlooked, but there's a test for ones not in the map
+    } else if (num) handle('feat-' + flag, [], undefined, undefined, sharedEE) // not sure what other flags are overlooked, but there's a test for ones not in the map --
+    // ^^^ THIS DOESN'T ACTUALLY DO ANYTHHING AS UNDEFINED/FEATURE GROUP ISN'T DRAINED
 
     activatedFeatures[flag] = Boolean(num)
   })

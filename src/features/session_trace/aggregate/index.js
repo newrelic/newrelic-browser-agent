@@ -53,53 +53,60 @@ export class Aggregate extends AggregateBase {
     const sessionEntity = this.agentRuntime.session
 
     /* --- The following section deals with user sessions concept & contains non-trivial control flow. --- */
-    if (!argsObj?.sessionTrackingOn || !sessionEntity) {
+    const controlTraceOp = (traceMode) => {
+      switch (traceMode) {
+        case MODE.ERROR:
+        case MODE.FULL:
+        case true:
+          this.startTracing(operationalGate)
+          break
+        case MODE.OFF:
+        case false:
+        default: // this feature becomes "off" (does nothing & nothing is sent)
+          operationalGate.decide(false)
+          break
+      }
+    }
+    if (!sessionEntity) {
       // Since session manager isn't around, do the old Trace behavior of waiting for RUM response to decide feature activation.
       this.isStandalone = true
-      registerHandler('rumresp-stn', (on) => {
-        if (on === true) this.startTracing(operationalGate)
-        else operationalGate.decide(false)
-      }, this.featureName, this.ee)
+      registerHandler('rumresp-stn', (on) => controlTraceOp(on), this.featureName, this.ee)
     } else {
-      const doStuffByMode = (traceMode) => {
-        switch (traceMode) {
-          case MODE.ERROR:
-          case MODE.FULL:
-            this.startTracing(operationalGate)
-            break
-          case MODE.OFF:
-          default: // this feature becomes "off" (does nothing & nothing is sent)
-            operationalGate.decide(false)
-            break
-        }
-      }
       // Switch to full capture mode if any exception happens during agent life.
       registerHandler('errorAgg', () => sessionEntity.state.sessionTraceMode = MODE.FULL, this.featureName, this.ee)
       // *cli May'23 - For now, this is to match Replay's behavior of shutting down (perm) on first and any session reset.
       this.ee.on(SESSION_EVENTS.RESET, () => operationalGate.permanentlyDecide(false))
 
-      if (sessionEntity.isNew === true) { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
-        registerHandler('rumresp-stn', async (on) => {
-          let startingMode
-          if (on === true) {
-            this.startTracing(operationalGate) // always full capture whenever stn = 1
+      // CAUTION: everything inside this promise runs post-load; event subscribers must be pre-load aka synchronous with constructor
+      this.waitForFlags(['stn', 'sr']).then(async ([traceOn, replayOn]) => {
+        if (!replayOn) {
+          // When sr = 0 from BCS, also do the old Trace behavior:
+          this.isStandalone = true
+          controlTraceOp(traceOn)
+        } else {
+          if (!sessionEntity.isNew) controlTraceOp(sessionEntity.state.sessionTraceMode) // inherit the same mode as existing session's Trace
+          else { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
+            let startingMode
+            if (traceOn === true) { // CASE: both trace (entitlement+sampling) & replay (entitlement) flags are true from RUM
+              this.startTracing(operationalGate) // always full capture regardless of replay sampling decision
 
-            /* Future to-do: this should just change the Trace mode to "FULL" and write that to storage, since Trace ideally retains its own mode inheritance.
-              For alpha phase, the starting Trace mode will depend on SR feature's mode. !!This means all following Traces of this session will inherit this mode!! */
-            startingMode = await getSessionReplayMode(agentIdentifier)
-          } else { // Trace can still be turned on if SR is on
-            startingMode = await getSessionReplayMode(agentIdentifier)
-            doStuffByMode(startingMode)
+              /* Future to-do: this should just change the Trace mode to "FULL" and write that to storage, since Trace ideally retains its own mode inheritance.
+                For alpha phase, the starting Trace mode will depend on SR feature's mode. !!This means all following Traces of this session will inherit this mode!! */
+              startingMode = await getSessionReplayMode(agentIdentifier)
+            } else { // CASE: trace flag is off, BUT it must still run if replay is on (possibly)
+              startingMode = await getSessionReplayMode(agentIdentifier)
+              controlTraceOp(startingMode)
+            }
+
+            if (startingMode === MODE.OFF) this.isStandalone = true // without SR, Traces are still subject to old harvest limits
+            /* The NEW session state's mode cannot be FULL already unless the 'errorAgg' handler won the race (exception was thrown), in which case we
+              should STILL capture in full when Replay is also on. */
+            else if (sessionEntity.state.sessionTraceMode === MODE.FULL) startingMode = MODE.FULL
+
+            sessionEntity.state.sessionTraceMode = startingMode
           }
-
-          if (startingMode === MODE.OFF) this.isStandalone = true // without SR, Traces are still subject to old harvest limits
-          /* The NEW session state's mode cannot =FULL programmatically unless the 'errorAgg' handler won the race (exception was thrown), in which case we
-            should STILL capture in full when Replay is also on. */
-          else if (sessionEntity.state.sessionTraceMode === MODE.FULL) startingMode = MODE.FULL
-
-          sessionEntity.state.sessionTraceMode = startingMode
-        }, this.featureName, this.ee)
-      } else doStuffByMode(sessionEntity.state.sessionTraceMode) // inherit the same mode as existing session's Trace
+        }
+      })
     }
     /* --- EoS --- */
 

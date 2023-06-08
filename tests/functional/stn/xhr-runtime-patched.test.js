@@ -11,9 +11,6 @@ testDriver.test('posts session traces when xhr is runtime patched', supported, f
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
   let loadPromise = browser.get(router.assetURL('instrumented.html', {
-    init: {
-      privacy: { cookies_enabled: false }
-    },
     scriptString: `
     const orig = window.XMLHttpRequest.prototype.open
     window.XMLHttpRequest.prototype.open = function(method, url, async, user, pass) {

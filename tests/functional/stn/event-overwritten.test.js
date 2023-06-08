@@ -10,11 +10,7 @@ let supported = testDriver.Matcher.withFeature('stn')
 testDriver.test('captures callbacks even when window.Event overwritten', supported, function (t, browser, router) {
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
-  let loadPromise = browser.get(router.assetURL('click.html', {
-    init: {
-      privacy: { cookies_enabled: false }
-    }
-  })).waitForFeature('loaded')
+  let loadPromise = browser.get(router.assetURL('click.html')).waitForFeature('loaded')
 
   Promise.all([rumPromise, resourcePromise, loadPromise]).then(() => {
     return router.expectResources().then(({ request: { body } }) => {

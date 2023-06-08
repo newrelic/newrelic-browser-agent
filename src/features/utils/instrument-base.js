@@ -67,8 +67,6 @@ export class InstrumentBase extends FeatureBase {
           const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
           const sessionManager = setupAgentSession(this.agentIdentifier)
 
-          argsObjFromInstrument.sessionTrackingOn = true // let relevant features know the manager was initialized successfully and should be found on runtime obj
-
           if (shouldImportSR(sessionManager)) importReplay = true
         }
       } catch (e) {

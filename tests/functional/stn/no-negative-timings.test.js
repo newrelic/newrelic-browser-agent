@@ -10,11 +10,7 @@ let supported = testDriver.Matcher.withFeature('stn')
 testDriver.test('posts session traces', supported, function (t, browser, router) {
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
-  let loadPromise = browser.get(router.assetURL('lotsatimers.html', {
-    init: {
-      privacy: { cookies_enabled: false }
-    }
-  })).waitForFeature('loaded')
+  let loadPromise = browser.get(router.assetURL('lotsatimers.html')).waitForFeature('loaded')
 
   Promise.all([resourcePromise, rumPromise, loadPromise]).then(([{ request: { body } }]) => {
     const stnBody = body.res

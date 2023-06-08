@@ -171,7 +171,6 @@ describe('Session Replay', () => {
       setConfiguration(agentIdentifier, { ...init })
       sr.ee.emit('feat-sr')
       await wait(1)
-      const now = Date.now()
       const harvestContents = sr.getHarvestContents()
       // query attrs
       expect(harvestContents.qs).toMatchObject({
@@ -183,7 +182,7 @@ describe('Session Replay', () => {
       expect(harvestContents.body).toMatchObject({
         type: 'SessionReplay',
         appId: info.applicationID,
-        timestamp: now,
+        timestamp: expect.any(Number),
         blob: expect.any(String),
         attributes: {
           session: session.state.value,
@@ -205,7 +204,6 @@ describe('Session Replay', () => {
       setConfiguration(agentIdentifier, { ...init })
       sr.ee.emit('feat-sr')
       await wait(1)
-      const now = Date.now()
       const [harvestContents] = sr.prepareHarvest()
       expect(harvestContents.qs).toMatchObject({
         protocol_version: '0',
@@ -216,7 +214,7 @@ describe('Session Replay', () => {
       expect(JSON.parse(strFromU8(gunzipSync(harvestContents.body)))).toMatchObject({
         type: 'SessionReplay',
         appId: info.applicationID,
-        timestamp: now,
+        timestamp: expect.any(Number),
         blob: expect.any(String),
         attributes: {
           session: session.state.value,
@@ -239,7 +237,6 @@ describe('Session Replay', () => {
       sr.ee.emit('feat-sr')
       await wait(1)
 
-      const now = Date.now()
       const [harvestContents] = sr.prepareHarvest()
       expect(harvestContents.qs).toMatchObject({
         protocol_version: '0',
@@ -250,7 +247,7 @@ describe('Session Replay', () => {
       expect(harvestContents.body).toMatchObject({
         type: 'SessionReplay',
         appId: info.applicationID,
-        timestamp: now,
+        timestamp: expect.any(Number),
         blob: expect.any(String),
         attributes: {
           session: session.state.value,

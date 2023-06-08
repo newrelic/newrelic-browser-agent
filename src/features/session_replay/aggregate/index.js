@@ -190,7 +190,7 @@ export class Aggregate extends AggregateBase {
     session.state.sessionReplay = this.mode
   }
 
-  prepareHarvest (options) {
+  prepareHarvest () {
     if (this.events.length === 0) return
     const payload = this.getHarvestContents()
     try {

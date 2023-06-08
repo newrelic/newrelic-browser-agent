@@ -166,7 +166,6 @@ module.exports = class TestHandle {
       this.#scheduledReplies.set(serverId, new Set())
     }
 
-    console.log('test ---', serverId, scheduledReply)
     this.#scheduledReplies.get(serverId).add(scheduledReply)
   }
 

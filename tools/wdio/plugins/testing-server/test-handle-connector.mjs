@@ -56,7 +56,6 @@ export class TestHandleConnector {
    * @param {ScheduledReply} scheduledReply The reply options to apply to the server request
    */
   async scheduleReply (serverId, scheduledReply) {
-    console.log('schedule a reply in connector')
     await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/scheduleReply`, {
       method: 'POST',
       body: JSON.stringify({

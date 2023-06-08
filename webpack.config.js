@@ -169,15 +169,24 @@ const standardConfig = merge(commonConfig, {
       {
         test: /\.js$/,
         exclude: /(node_modules)/,
-        use: [
-          (SUBVERSION === 'LOCAL' ? { loader: './tools/webpack/loaders/istanbul/index.mjs' } : undefined),
-          {
-            loader: 'babel-loader',
-            options: {
-              envName: 'webpack'
-            }
-          }
-        ]
+        use: SUBVERSION === 'LOCAL'
+          ? [
+              { loader: './tools/webpack/loaders/istanbul/index.mjs' },
+              {
+                loader: 'babel-loader',
+                options: {
+                  envName: 'webpack'
+                }
+              }
+            ]
+          : [
+              {
+                loader: 'babel-loader',
+                options: {
+                  envName: 'webpack'
+                }
+              }
+            ]
       }
     ]
   },

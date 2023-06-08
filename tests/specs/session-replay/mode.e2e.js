@@ -62,7 +62,7 @@ export default (function () {
       }))
     })
 
-    it('ERROR => FULL', async () => {
+    it('ERROR (seen after init) => FULL', async () => {
       await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ sampleRate: 0, errorSampleRate: 1 })))
         .then(() => browser.waitForAgentLoad())
 
@@ -76,6 +76,20 @@ export default (function () {
       await browser.execute(function () {
         newrelic.noticeError(new Error('test'))
       })
+
+      expect(await getSR()).toEqual(expect.objectContaining({
+        recording: true,
+        initialized: true,
+        events: expect.any(Array),
+        mode: 1
+      }))
+    })
+
+    it('ERROR (seen before init) => FULL', async () => {
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ sampleRate: 0, errorSampleRate: 1 })))
+        .then(() => Promise.all([browser.execute(function () {
+          newrelic.noticeError(new Error('test'))
+        }), browser.waitForAgentLoad()]))
 
       expect(await getSR()).toEqual(expect.objectContaining({
         recording: true,

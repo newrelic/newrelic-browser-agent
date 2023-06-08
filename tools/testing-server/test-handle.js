@@ -107,12 +107,10 @@ module.exports = class TestHandle {
    * @param {module:fastify.FastifyRequest} request the incoming request
    */
   processRequest (serverId, fastify, request) {
-    console.log('process', this.#scheduledReplies, serverId)
     if (this.#scheduledReplies.has(serverId)) {
       const scheduledReplies = this.#scheduledReplies.get(serverId)
 
       for (const scheduledReply of scheduledReplies) {
-        console.log('processing scheduled reply,', scheduledReply)
         try {
           let test = scheduledReply.test
 
@@ -127,7 +125,6 @@ module.exports = class TestHandle {
             break
           }
         } catch (e) {
-          console.log('error thrown', e)
           scheduledReplies.delete(scheduledReply)
         }
       }

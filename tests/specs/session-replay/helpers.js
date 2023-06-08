@@ -26,7 +26,8 @@ export async function getSR () {
         initialized: sr.initialized,
         recording: sr.recording,
         mode: sr.mode,
-        exists: true
+        exists: true,
+        blocked: sr.blocked
       }
     } catch (err) {
       return {
@@ -34,7 +35,8 @@ export async function getSR () {
         initialized: false,
         recording: false,
         exists: false,
-        mode: 0
+        mode: 0,
+        blocked: undefined
       }
     }
   })

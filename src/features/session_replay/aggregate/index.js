@@ -327,6 +327,7 @@ export class Aggregate extends AggregateBase {
     this.blocked = true
     this.mode = MODE.OFF
     this.stopRecording()
+    this.clearBuffer()
     const { session } = getRuntime(this.agentIdentifier)
     session.state.sessionReplay = this.mode
   }

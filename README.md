@@ -6,7 +6,7 @@ The New Relic browser agent instruments your web application or site and provide
 
 - The instructions on this page pertain to installing the browser agent as an NPM package.
 
-- The browser agent is also generally available as a copy-paste JavaScript snippet and via auto-injection by backend apps. See *[Install the browser agent](https://docs.newrelic.com/docs/browser/browser-monitoring/installation/install-browser-monitoring-agent/)* for info on these alternatives.
+- The browser agent is also generally available as a copy-paste JavaScript snippet and via auto-injection by backend apps. See *[Install the browser agent](https://docs.newrelic.com/docs/browser/browser-monitoring/installation/install-browser-monitoring-agent/)* for info on these alternatives. Releases are deployed to customers gradually, so the version available via these other methods often lags the current release of this package.
 
 - For questions and feedback on this package, please visit the [Explorer's Hub](https://forum.newrelic.com/s/), New Relic's community support forum.
 

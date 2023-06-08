@@ -97,10 +97,10 @@ submitData.img = function img ({ url }) {
  * @returns {boolean}
  */
 submitData.beacon = function ({ url, body }) {
-  // Navigator has to be bound to ensure it does not error in some browsers
-  // https://xgwang.me/posts/you-may-not-know-beacon/#it-may-throw-error%2C-be-sure-to-catch
-  const send = window.navigator.sendBeacon.bind(window.navigator)
   try {
+    // Navigator has to be bound to ensure it does not error in some browsers
+    // https://xgwang.me/posts/you-may-not-know-beacon/#it-may-throw-error%2C-be-sure-to-catch
+    const send = window.navigator.sendBeacon.bind(window.navigator)
     return send(url, body)
   } catch (err) {
     // if sendBeacon still trys to throw an illegal invocation error,

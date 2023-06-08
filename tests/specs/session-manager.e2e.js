@@ -17,8 +17,8 @@ describe('newrelic session ID', () => {
     custom: expect.any(Object)
   })
 
-  afterEach(() => {
-    browser.destroyAgentSession()
+  afterEach(async () => {
+    await browser.destroyAgentSession()
   })
 
   describe('data is stored in storage API', () => {

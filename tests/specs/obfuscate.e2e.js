@@ -81,7 +81,7 @@ describe('obfuscate rules', () => {
   })
 })
 
-function checkPayload (payload, name) {
+function checkPayload (payload) {
   expect(payload).toBeDefined() // payload exists
 
   var strPayload = JSON.stringify(payload)

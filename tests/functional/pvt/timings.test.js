@@ -288,10 +288,7 @@ function runPvtInStnTests (loader) {
   testDriver.test(`Checking for PVT in STN payload for ${loader} agent`, supportsCLS, function (t, browser, router) {
     const rumPromise = router.expectRum()
     const loadPromise = browser
-      .safeGet(router.assetURL('cls-lcp.html', {
-        loader: loader,
-        init: { privacy: { cookies_enabled: false } }
-      }))
+      .safeGet(router.assetURL('cls-lcp.html', { loader: loader }))
       .waitForFeature('loaded')
       .waitForConditionInBrowser('window.contentAdded === true')
 

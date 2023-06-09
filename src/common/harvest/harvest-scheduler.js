@@ -5,7 +5,7 @@
 
 import * as submitData from '../util/submit-data'
 import { SharedContext } from '../context/shared-context'
-import { Harvest, getSubmitMethod } from './harvest'
+import { Harvest } from './harvest'
 import { subscribeToEOL } from '../unload/eol'
 import { getConfigurationValue } from '../config/config'
 
@@ -88,7 +88,7 @@ export class HarvestScheduler extends SharedContext {
 
     if (this.opts.getPayload) {
       // Ajax & PVT & SR features provide a callback function to get data for harvesting
-      submitMethod = getSubmitMethod(this.endpoint, opts)
+      submitMethod = submitData.getSubmitMethod(opts)
       if (!submitMethod) return false
 
       const retry = !opts?.unload && submitMethod.method === submitData.xhr

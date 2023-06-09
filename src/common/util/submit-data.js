@@ -4,6 +4,27 @@
  * @license Apache-2.0
  */
 
+import { isBrowserScope, supportsSendBeacon } from '../constants/runtime'
+
+/**
+ * @typedef {xhr|fetchKeepAlive|beacon} NetworkMethods
+ */
+
+/**
+ * Determines the submit method to use based on options.
+ * @param {object} opts Options used to determine submit method.
+ * @param {boolean} opts.isFinalHarvest Indicates if the data submission is due to
+ * a final harvest within the agent.
+ */
+export function getSubmitMethod ({ isFinalHarvest = false } = {}) {
+  return isFinalHarvest && isBrowserScope && supportsSendBeacon
+    // Use sendBeacon for final harvest
+    ? beacon
+    // Only IE does not support sendBeacon for final harvest
+    // If not final harvest, or not browserScope, always use xhr post
+    : xhr
+}
+
 /**
  * Send via XHR
  * @param {Object} args - The args.

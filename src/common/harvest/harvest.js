@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { mapOwn } from '../util/map-own'
 import { obj as encodeObj, param as encodeParam } from '../url/encode'
 import { stringify } from '../util/stringify'
 import * as submitData from '../util/submit-data'
@@ -16,26 +15,15 @@ import { Obfuscator } from '../util/obfuscate'
 import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/env'
-import { isBrowserScope, isWorkerScope } from '../constants/runtime'
+import { isWorkerScope } from '../constants/runtime'
 
 /**
- * @typedef {object} NetworkSendSpec
- * @param {string} endpoint The endpoint to use (jserrors, events, resources etc.)
- * @param {object} payload Object representing payload.
- * @param {object} payload.qs Map of values that should be sent as part of the request query string.
- * @param {string} payload.body String that should be sent as the body of the request.
- * @param {string} payload.body.e Special case of body used for browser interactions.
- * @param {object} opts Additional options for sending data
- * @param {boolean} opts.needResponse Specify whether the caller expects a response data.
- * @param {boolean} opts.unload Specify whether the call is a final harvest during page unload.
- * @param {boolean} opts.sendEmptyBody Specify whether the call should be made even if the body is empty. Useful for rum calls.
- * @param {function} submitMethod The submit method to use {@link ../util/submit-data}
- * @param {string} customUrl Override the beacon url the data is sent to; must include protocol if defined
- * @param {boolean} gzip Enabled gzip compression on the body of the request before it is sent
- * @param {boolean} includeBaseParams Enables the use of base query parameters in the beacon url {@see Harvest.baseQueryString}
+ * @typedef {import('./types.js').NetworkSendSpec} NetworkSendSpec
+ * @typedef {import('./types.js').HarvestEndpointIdentifier} HarvestEndpointIdentifier
+ * @typedef {import('./types.js').HarvestPayload} HarvestPayload
+ * @typedef {import('./types.js').FeatureHarvestCallback} FeatureHarvestCallback
+ * @typedef {import('./types.js').FeatureHarvestCallbackOptions} FeatureHarvestCallbackOptions
  */
-
-const haveSendBeacon = !!navigator.sendBeacon // only the web window obj has sendBeacon at this time, so 'false' for other envs
 
 export class Harvest extends SharedContext {
   constructor (parent) {
@@ -53,14 +41,12 @@ export class Harvest extends SharedContext {
    * name is emitted, which gives any listeners the opportunity to provide payload data.
    * @param {NetworkSendSpec} spec Specification for sending data
    */
-  sendX (spec) {
-    const { endpoint, opts } = spec
-    var submitMethod = getSubmitMethod(endpoint, opts)
-    if (!submitMethod) return false
+  sendX (spec = {}) {
+    const submitMethod = submitData.getSubmitMethod({ isFinalHarvest: spec.opts?.unload })
     var options = {
-      retry: !opts?.unload && submitMethod.method === submitData.xhr
+      retry: !spec.opts?.unload && submitMethod === submitData.xhr
     }
-    const payload = this.createPayload(endpoint, options)
+    const payload = this.createPayload(spec.endpoint, options)
     var caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
     return caller({ ...spec, payload, submitMethod })
   }
@@ -69,34 +55,34 @@ export class Harvest extends SharedContext {
    * Initiate a harvest call.
    * @param {NetworkSendSpec} spec Specification for sending data
    */
-  send (spec) {
-    const { payload = {} } = spec
-    var makeBody = createAccumulator()
-    var makeQueryString = createAccumulator()
-    if (payload.body) mapOwn(payload.body, makeBody)
-    if (payload.qs) mapOwn(payload.qs, makeQueryString)
-
-    var newPayload = { body: makeBody(), qs: makeQueryString() }
+  send (spec = {}) {
     var caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
 
-    return caller({ ...spec, payload: newPayload })
+    return caller({ ...spec, payload: this.cleanPayload(spec.payload) })
   }
 
   /**
    * Apply obfuscation rules to the payload and then initial the harvest network call.
    * @param {NetworkSendSpec} spec Specification for sending data
    */
-  obfuscateAndSend (spec) {
+  obfuscateAndSend (spec = {}) {
     const { payload = {} } = spec
     applyFnToProps(payload, (...args) => this.obfuscator.obfuscateString(...args), 'string', ['e'])
     return this._send({ ...spec, payload })
   }
 
+  /**
+   * Initiate a harvest call. Typically used by `sendX` and `send` methods or called directly
+   * for raw network calls.
+   * @param {NetworkSendSpec} param0 Specification for sending data
+   * @returns {boolean} True if the network call succeeded. For final harvest calls, the return
+   * value should not be relied upon because network calls will be made asynchronously.
+   */
   _send ({ endpoint, payload = {}, opts = {}, submitMethod, cbFinished, customUrl, raw, includeBaseParams = true }) {
-    var info = getInfo(this.sharedContext.agentIdentifier)
+    const info = getInfo(this.sharedContext.agentIdentifier)
     if (!info.errorBeacon) return false
 
-    var agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
+    const agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
 
     if (!payload.body && !opts?.sendEmptyBody) { // no payload body? nothing to send, just run onfinish stuff and return
       if (cbFinished) {
@@ -110,26 +96,29 @@ export class Harvest extends SharedContext {
     else if (raw) url = `${this.getScheme()}://${info.errorBeacon}/${endpoint}`
     else url = `${this.getScheme()}://${info.errorBeacon}${endpoint !== 'rum' ? `/${endpoint}` : ''}/1/${info.licenseKey}`
 
-    var baseParams = !raw && includeBaseParams ? this.baseQueryString() : ''
-    var payloadParams = payload.qs ? encodeObj(payload.qs, agentRuntime.maxBytes) : ''
+    const baseParams = !raw && includeBaseParams ? this.baseQueryString() : ''
+    const payloadParams = payload.qs ? encodeObj(payload.qs, agentRuntime.maxBytes) : ''
     if (!submitMethod) {
-      submitMethod = getSubmitMethod(endpoint, opts)
+      submitMethod = submitData.getSubmitMethod(opts)
     }
-    var method = submitMethod.method
-    var useBody = submitMethod.useBody
 
-    var body
-    var fullUrl = `${url}?${baseParams}${payloadParams}`
+    let body
+    const fullUrl = `${url}?${baseParams}${payloadParams}`
 
     const gzip = payload?.qs?.content_encoding === 'gzip'
 
     if (!gzip) {
-      if (useBody && endpoint === 'events') {
+      if (endpoint === 'events') {
         body = payload.body.e
       } else {
         body = stringify(payload.body)
       }
     } else body = payload.body
+
+    if (!body || body.length === 0 || body === '{}' || body === '[]') {
+      // If body is null, undefined, or an empty object or array, send an empty string instead
+      body = ''
+    }
 
     // Get bytes harvested per endpoint as a supportability metric. See metrics aggregator (on unload).
     agentRuntime.bytesSent[endpoint] = (agentRuntime.bytesSent[endpoint] || 0) + body?.length || 0
@@ -144,9 +133,9 @@ export class Harvest extends SharedContext {
         Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
         we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon. */
 
-    var result = method({ url: fullUrl, body, sync: opts.unload && isWorkerScope, headers })
+    var result = submitMethod({ url: fullUrl, body, sync: opts.unload && isWorkerScope, headers })
 
-    if (!opts.unload && cbFinished && method === submitData.xhr) {
+    if (!opts.unload && cbFinished && submitMethod === submitData.xhr) {
       var xhr = result
       xhr.addEventListener('load', function () {
         var result = { sent: true, status: this.status }
@@ -165,10 +154,10 @@ export class Harvest extends SharedContext {
     }
 
     // if beacon request failed, retry with an alternative method -- will not happen for workers
-    if (!result && method === submitData.beacon) {
+    if (!result && submitMethod === submitData.beacon) {
       // browsers that support sendBeacon also support fetch with keepalive - IE will not retry unload calls
-      method = submitData.fetchKeepAlive
-      result = method({ url: fullUrl + encodeObj(payload.body, agentRuntime.maxBytes) })
+      submitMethod = submitData.fetchKeepAlive
+      result = submitMethod({ url: fullUrl + encodeObj(payload.body, agentRuntime.maxBytes) })
     }
 
     return result
@@ -196,42 +185,74 @@ export class Harvest extends SharedContext {
     ].join(''))
   }
 
-  createPayload (type, options) {
-    var makeBody = createAccumulator()
-    var makeQueryString = createAccumulator()
-    var listeners = ((this._events[type] && this._events[type]) || [])
+  /**
+   * Calls and accumulates data from registered harvesting functions based on
+   * the endpoint being harvested.
+   * @param {HarvestEndpointIdentifier} endpoint BAM endpoint identifier.
+   * @param {FeatureHarvestCallbackOptions} options Options to be passed to the
+   * feature harvest listener callback.
+   * @returns {HarvestPayload} Payload object to transmit to the bam endpoint.
+   */
+  createPayload (endpoint, options) {
+    const listeners = this._events[endpoint]
+    const payload = {}
 
-    for (var i = 0; i < listeners.length; i++) {
-      var singlePayload = listeners[i](options)
-      if (!singlePayload) continue
-      if (singlePayload.body) mapOwn(singlePayload.body, makeBody)
-      if (singlePayload.qs) mapOwn(singlePayload.qs, makeQueryString)
+    if (Array.isArray(listeners) && listeners.length > 0) {
+      for (let i = 0; i < listeners.length; i++) {
+        const singlePayload = listeners[i](options)
+
+        if (singlePayload) {
+          payload.body = {
+            ...payload.body,
+            ...(singlePayload.body || {})
+          }
+          payload.qs = {
+            ...payload.qs,
+            ...(singlePayload.qs || {})
+          }
+        }
+      }
     }
 
-    return { body: makeBody(), qs: makeQueryString() }
+    return this.cleanPayload(payload)
   }
 
-  on (type, listener) {
-    var listeners = (this._events[type] || (this._events[type] = []))
-    listeners.push(listener)
-  }
+  /**
+   * Cleans and returns a payload object containing a body and qs
+   * object with key/value pairs. KV pairs where the value is null,
+   * undefined, or an empty string are removed to save on transmission
+   * size.
+   * @param {HarvestPayload} payload Payload to be sent to the endpoint.
+   * @returns {HarvestPayload} Cleaned payload payload to be sent to the endpoint.
+   */
+  cleanPayload (payload = {}) {
+    const clean = (input = {}) => Object.entries(input)
+      .reduce((accumulator, [key, value]) => {
+        if (value !== null && value !== undefined && value.toString()?.length) {
+          accumulator[key] = value
+        }
 
-  resetListeners () {
-    mapOwn(this._events, (key) => {
-      this._events[key] = []
+        return accumulator
+      }, {})
+
+    return clean({
+      body: payload.body,
+      qs: payload.qs
     })
   }
-}
 
-export function getSubmitMethod (endpoint, opts) {
-  return {
-    useBody: true,
-    method: opts?.unload && isBrowserScope && haveSendBeacon
-      // Use sendBeacon for final harvest
-      ? submitData.beacon
-      // Only IE does not support sendBeacon for final harvest
-      // If not final harvest, or not browserScope, always use xhr post
-      : submitData.xhr
+  /**
+   * Registers a function to be called when harvesting is triggered for a specific
+   * endpoint.
+   * @param {HarvestEndpointIdentifier} endpoint
+   * @param {FeatureHarvestCallback} listener
+   */
+  on (endpoint, listener) {
+    if (!Array.isArray(this._events[endpoint])) {
+      this._events[endpoint] = []
+    }
+
+    this._events[endpoint].push(listener)
   }
 }
 
@@ -241,18 +262,4 @@ export function getSubmitMethod (endpoint, opts) {
 function transactionNameParam (info) {
   if (info.transactionName) return encodeParam('to', info.transactionName)
   return encodeParam('t', info.tNamePlain || 'Unnamed Transaction')
-}
-
-// returns a function that can be called to accumulate values to a single object
-// when the function is called without parameters, then the accumulator is returned
-function createAccumulator () {
-  var accumulator = {}
-  var hasData = false
-  return function (key, val) {
-    if (val !== null && val !== undefined && val.toString()?.length) {
-      accumulator[key] = val
-      hasData = true
-    }
-    if (hasData) return accumulator
-  }
 }

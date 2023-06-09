@@ -59,3 +59,5 @@ export const ffVersion = (() => {
 
   return 0
 })()
+
+export const supportsSendBeacon = !!navigator.sendBeacon

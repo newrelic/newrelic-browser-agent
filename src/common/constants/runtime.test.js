@@ -8,11 +8,8 @@
 
 import { faker } from '@faker-js/faker'
 
-afterEach(() => {
-  jest.resetModules()
-})
-
 beforeEach(() => {
+  // We assume every runtime has a global navigator variable
   global.navigator = {
     userAgent: faker.lorem.sentence()
   }
@@ -20,6 +17,7 @@ beforeEach(() => {
 
 afterEach(() => {
   delete global.navigator
+  jest.resetModules()
 })
 
 test('should indicate agent is running in a browser scope', async () => {
@@ -150,4 +148,21 @@ test.each([
   const runtime = await import('./runtime')
 
   expect(runtime.ffVersion).toEqual(expected)
+})
+
+test('should set supportsSendBeacon to false', async () => {
+  // Ensure we don't have a sendBeacon function
+  delete global.navigator.sendBeacon
+
+  const runtime = await import('./runtime')
+
+  expect(runtime.supportsSendBeacon).toEqual(false)
+})
+
+test('should set supportsSendBeacon to true', async () => {
+  global.navigator.sendBeacon = jest.fn()
+
+  const runtime = await import('./runtime')
+
+  expect(runtime.supportsSendBeacon).toEqual(true)
 })

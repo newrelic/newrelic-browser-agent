@@ -8,11 +8,15 @@ const testDriver = require('../../../tools/jil/index')
 let supported = testDriver.Matcher.withFeature('stn')
 
 testDriver.test('posts session traces when xhr is runtime patched', supported, function (t, browser, router) {
-  t.plan(2)
-
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
-  let loadPromise = browser.get(router.assetURL('xhr-runtime-patched.html')).waitForFeature('loaded')
+  let loadPromise = browser.get(router.assetURL('instrumented.html', {
+    scriptString: `
+    const orig = window.XMLHttpRequest.prototype.open
+    window.XMLHttpRequest.prototype.open = function(method, url, async, user, pass) {
+      orig.call(this, method, url, async, user, pass)
+    }`
+  })).waitForFeature('loaded')
 
   Promise.all([resourcePromise, rumPromise, loadPromise]).then(([{ request: { query } }]) => {
     t.ok(+query.st > 1408126770885, `Got start time ${query.st}`)

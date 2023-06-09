@@ -8,6 +8,7 @@ export class HandlerCache {
   #cache = []
   /** @private @type {Timeout} */
   #settleTimer = setTimeout(() => this.#close(), 5000)
+  #noMoreChanges = false
 
   /**
    * tell the handlerCache that its ok to immediately execute the callbacks that are triggered by the ee from this moment on
@@ -16,8 +17,7 @@ export class HandlerCache {
    */
   #drain () {
     this.#cache.forEach(h => h())
-    this.#cache = []
-    clearTimeout(this.#settleTimer)
+    this.#close()
   }
 
   /**
@@ -26,8 +26,8 @@ export class HandlerCache {
    * @private
    */
   #close () {
-    this.#decision = false // settle() & decide() cannot be used after close
     this.#cache = []
+    clearTimeout(this.#settleTimer)
   }
 
   /**
@@ -50,9 +50,15 @@ export class HandlerCache {
    * @param {boolean} decision
    */
   decide (decision) {
-    if (this.#decision !== undefined) return // a decision can only be made once
+    if (this.#noMoreChanges) return
     this.#decision = decision
     if (decision === false) this.#close()
     if (decision === true) this.#drain()
+  }
+
+  permanentlyDecide (decision) {
+    if (this.#noMoreChanges) return
+    this.decide(decision)
+    this.#noMoreChanges = true
   }
 }

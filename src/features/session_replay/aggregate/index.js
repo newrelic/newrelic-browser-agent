@@ -288,6 +288,7 @@ export class Aggregate extends AggregateBase {
     const payloadSize = this.getPayloadSize(eventBytes)
     // Vortex will block payloads at a certain size, we might as well not send.
     if (payloadSize > MAX_PAYLOAD_SIZE) {
+      this.clearBuffer()
       return this.abort()
     }
     // Checkout events are flags by the recording lib that indicate a fullsnapshot was taken every n ms. These are important

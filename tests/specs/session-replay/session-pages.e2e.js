@@ -1,3 +1,4 @@
+import { supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { config, getSR } from './helpers'
 
 export default (function () {
@@ -114,7 +115,7 @@ export default (function () {
       })
     })
 
-    it('should record across new-tab page navigation', async () => {
+    withBrowsersMatching(supportsMultipleTabs)('should record across new-tab page navigation', async () => {
       await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
         .then(() => browser.waitForAgentLoad())
       const { localStorage } = await browser.getAgentSessionInfo()

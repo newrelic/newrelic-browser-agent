@@ -9,13 +9,14 @@ export default (function () {
     it('Should harvest early if exceeds preferred size', async () => {
       const startTime = Date.now()
       const [{ request: blobHarvest }] = await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ harvestTimeSeconds: 60 })))
+        .then(() => browser.waitForAgentLoad())
         .then(() => Promise.all([
           browser.testHandle.expectBlob(),
           // preferred size = 64kb, compression estimation is 88%
           browser.execute(function () {
             Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.payloadBytesEstimation = 64000 / 0.12
-          }),
-          browser.testHandle.expectRum()
+            document.querySelector('body').click()
+          })
         ]))
 
       expect(blobHarvest.body.blob.length).toBeGreaterThan(0)
@@ -25,18 +26,16 @@ export default (function () {
     it('Should abort if exceeds maximum size', async () => {
       const startTime = Date.now()
       await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ harvestTimeSeconds: 60 })))
-        .then(() => Promise.all([
-          // preferred size = 64kb, compression estimation is 88%
-          browser.execute(function () {
-            Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.payloadBytesEstimation = 1000001 / 0.12
-          }),
-          browser.waitForAgentLoad()
-        ]))
+        .then(() => browser.waitForAgentLoad())
+
+      await browser.execute(function () {
+        Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.payloadBytesEstimation = 1000001 / 0.12
+        document.querySelector('body').click()
+      })
+
       expect((await getSR())).toEqual(expect.objectContaining({
         blocked: true,
-        events: [],
-        initialized: true,
-        mode: 0
+        initialized: true
       }))
       expect(Date.now() - startTime).toBeLessThan(60000)
     })

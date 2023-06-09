@@ -45,17 +45,9 @@ describe('obfuscate rules', () => {
     }
 
     await browser.url(await browser.testHandle.assetURL('obfuscate-pii.html', config))
-      .then(() => browser.waitForAgentLoad())
+    await browser.waitForAgentLoad()
 
-    await Promise.all([
-      ajaxPromise,
-      errorsPromise,
-      insPromise,
-      resourcePromise,
-      spaPromise,
-      timingsPromise,
-      rumPromise
-    ]).then(([
+    const [
       { request: ajaxResponse },
       { request: errorsResponse },
       { request: insResponse },
@@ -63,21 +55,29 @@ describe('obfuscate rules', () => {
       { request: spaResponse },
       { request: timingsResponse },
       { request: rumResponse }
-    ]) => {
-      checkPayload(ajaxResponse.body)
-      checkPayload(errorsResponse.body)
-      checkPayload(insResponse.body)
-      checkPayload(resourceResponse.body)
-      checkPayload(spaResponse.body)
-      checkPayload(timingsResponse.body)
-      checkPayload(rumResponse.query) // see harvest.sendRum
-      // See harvest.baseQueryString
-      checkPayload(errorsResponse.query)
-      checkPayload(insResponse.query)
-      checkPayload(resourceResponse.query)
-      checkPayload(spaResponse.query)
-      checkPayload(timingsResponse.query)
-    })
+    ] = await Promise.all([
+      ajaxPromise,
+      errorsPromise,
+      insPromise,
+      resourcePromise,
+      spaPromise,
+      timingsPromise,
+      rumPromise
+    ])
+
+    checkPayload(ajaxResponse.body)
+    checkPayload(errorsResponse.body)
+    checkPayload(insResponse.body)
+    checkPayload(resourceResponse.body)
+    checkPayload(spaResponse.body)
+    checkPayload(timingsResponse.body)
+    checkPayload(rumResponse.query) // see harvest.sendRum
+    // See harvest.baseQueryString
+    checkPayload(errorsResponse.query)
+    checkPayload(insResponse.query)
+    checkPayload(resourceResponse.query)
+    checkPayload(spaResponse.query)
+    checkPayload(timingsResponse.query)
   })
 })
 

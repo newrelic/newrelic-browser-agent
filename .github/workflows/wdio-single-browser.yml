@@ -48,7 +48,7 @@ jobs:
   wdio:
     name: WDIO Test - ${{ inputs.browser-target }}
     timeout-minutes: 60
-    continue-on-error: true
+    continue-on-error: false
     runs-on: ubuntu-latest
     container:
       image: ubuntu:latest

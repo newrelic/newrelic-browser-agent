@@ -117,7 +117,11 @@ jobs:
         run: node ./tools/scripts/diff-sizes.mjs -o build
       - name: Reading asset size report
         id: asset-size-report
-        run: echo "results=$(cat ./build/size_report.md)" >> $GITHUB_OUTPUT
+        run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "results<<$EOF" >> "$GITHUB_ENV"
+          echo $(cat ./build/size_report.md) >> "$GITHUB_ENV"
+          echo "$EOF" >> "$GITHUB_ENV"
       - name: Comment pull request
         uses: ./.github/actions/comment-pull-request
         with:

@@ -84,3 +84,52 @@ jobs:
       build-number: PR${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number}}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
       coverage: true
     secrets: inherit
+
+  size-check:
+    runs-on: ubuntu-latest
+    needs: find-pull-request
+    timeout-minutes: 30
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Setup container
+        run: apt update && apt install -y git
+      - uses: actions/checkout@v3
+        with:
+          ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Running cdn build
+        run: npm run cdn:build:dev
+      - name: Running npm build
+        run: |
+          npm run build:npm
+          npm run tools:test-builds
+      - name: Generating npm build stats
+        run: node ./tools/scripts/npm-build-stats.js
+      - name: Generating asset size report
+        run: node ./tools/scripts/diff-sizes.mjs -o build
+      - name: Reading asset size report
+        id: asset-size-report
+        run: echo "results=$(cat ./build/size_report.md)" >> $GITHUB_OUTPUT
+      - name: Comment pull request
+        uses: ./.github/actions/comment-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}
+          comment: ${{ steps.asset-size-report.outputs.results }}
+          comment_tag: <!-- browser_agent asset size report -->
+      - name: Archive asset size report results
+        uses: actions/upload-artifact@v3
+        with:
+          name: asset-size-report
+          path: |
+            build/size_report.*
+            build/*.stats.html
+            build/*.stats.json

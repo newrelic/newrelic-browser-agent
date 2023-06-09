@@ -20,12 +20,11 @@ describe('framework detection', () => {
       browser.testHandle.expectSupportMetrics(3000),
       browser.url(await browser.testHandle.assetURL('/'))
     ])
-      const supportabilityMetrics = getMetricsFromResponse(response, true)
-      expect(supportabilityMetrics).toBeDefined()
-      expect(supportabilityMetrics.length).toBeGreaterThan(0) // SupportabilityMetrics objects were generated
-      const sm = supportabilityMetrics.find(x => x.params.name.includes('Framework'))
-      expect(sm.params.name).toEqual('Framework/React/Detected') // Supportability metric is React and is formatted correctly
-    })
+    const supportabilityMetrics = unloadSupportMetricsResults.request.body.sm || []
+    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
+      params: { name: 'Framework/React/Detected' },
+      stats: { t: expect.toBeFinite() }
+    }]))
   })
 
   withBrowsersMatching(supportsFetchExtended)('detects a page built with ANGULAR and sends a supportability metric', async () => {

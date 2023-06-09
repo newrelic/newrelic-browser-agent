@@ -24,7 +24,7 @@ const model = {
   inactiveAt: 0,
   expiresAt: 0,
   updatedAt: Date.now(),
-  sessionReplay: 0,
+  sessionReplay: MODE.OFF,
   sessionTraceMode: MODE.OFF,
   custom: {}
 }

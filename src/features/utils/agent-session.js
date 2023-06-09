@@ -1,4 +1,4 @@
-import { getConfiguration, getInfo, getRuntime, setInfo } from '../../common/config/config'
+import { getConfiguration, getInfo, getRuntime } from '../../common/config/config'
 import { drain } from '../../common/drain/drain'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { registerHandler } from '../../common/event-emitter/register-handler'

@@ -1,4 +1,4 @@
-import { globalScope } from '../util/global-scope'
+import { globalScope } from '../constants/runtime'
 
 /*
  * See https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#safely_detecting_option_support

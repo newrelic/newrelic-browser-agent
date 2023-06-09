@@ -43,3 +43,19 @@ export const globalScope = isBrowserScope
       globalThis instanceof WorkerGlobalScope &&
       globalThis
   ))
+
+export const initialLocation = '' + globalScope?.location
+
+export const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+
+// Shared Web Workers introduced in iOS 16.0+ and n/a in 15.6-
+export const iOS_below16 = (isiOS && typeof SharedWorker === 'undefined')
+
+export const ffVersion = (() => {
+  const match = navigator.userAgent.match(/Firefox[/\s](\d+\.\d+)/)
+  if (Array.isArray(match) && match.length >= 2) {
+    return +match[1]
+  }
+
+  return 0
+})()

@@ -6,7 +6,7 @@
 import { onFCP, onFID, onLCP, onCLS, onINP } from 'web-vitals'
 import { onFirstPaint } from '../first-paint'
 import { onLongTask } from '../long-tasks'
-import { iOS_below16 } from '../../../common/browser-version/ios-version'
+import { iOS_below16 } from '../../../common/constants/runtime'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { mapOwn } from '../../../common/util/map-own'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'

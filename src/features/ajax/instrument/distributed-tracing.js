@@ -5,7 +5,7 @@
 import { getConfiguration, getConfigurationValue, getLoaderConfig } from '../../../common/config/config'
 import { generateSpanId, generateTraceId } from '../../../common/ids/unique-id'
 import { parseUrl } from '../../../common/url/parse-url'
-import { globalScope } from '../../../common/util/global-scope'
+import { globalScope } from '../../../common/constants/runtime'
 import { stringify } from '../../../common/util/stringify'
 
 export class DT {

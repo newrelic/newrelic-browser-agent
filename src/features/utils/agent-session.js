@@ -2,7 +2,7 @@ import { getConfigurationValue, getInfo, getRuntime, setInfo } from '../../commo
 import { drain } from '../../common/drain/drain'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { registerHandler } from '../../common/event-emitter/register-handler'
-import { isBrowserScope } from '../../common/util/global-scope'
+import { isBrowserScope } from '../../common/constants/runtime'
 import { SessionEntity } from '../../common/session/session-entity'
 import { LocalStorage } from '../../common/storage/local-storage.js'
 import { FirstPartyCookies } from '../../common/storage/first-party-cookies'

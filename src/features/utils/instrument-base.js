@@ -7,7 +7,7 @@
 import { drain, registerDrain } from '../../common/drain/drain'
 import { FeatureBase } from './feature-base'
 import { onWindowLoad } from '../../common/window/load'
-import { isWorkerScope } from '../../common/util/global-scope'
+import { isWorkerScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { getConfigurationValue } from '../../common/config/config'

@@ -13,7 +13,7 @@ jest.mock('../timer/interaction-timer')
 jest.useFakeTimers()
 
 const mockBrowserScope = jest.fn().mockImplementation(() => true)
-jest.mock('../util/global-scope', () => ({
+jest.mock('../constants/runtime', () => ({
   __esModule: true,
   get isBrowserScope () {
     return mockBrowserScope()

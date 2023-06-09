@@ -1,4 +1,4 @@
-import { isBrowserScope } from '../../../common/util/global-scope'
+import { isBrowserScope } from '../../../common/constants/runtime'
 
 const FRAMEWORKS = {
   REACT: 'React',

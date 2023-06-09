@@ -9,7 +9,7 @@ import { windowAddEventListener } from '../../../common/event-listener/event-lis
 import { now } from '../../../common/timing/now'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
-import { isBrowserScope } from '../../../common/util/global-scope'
+import { isBrowserScope } from '../../../common/constants/runtime'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME

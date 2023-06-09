@@ -63,7 +63,7 @@ const urlTests = [
 ]
 
 test.each(urlTests)('verify url parsing inside browser scope', async ({ input, expected }) => {
-  jest.doMock('../util/global-scope', () => ({
+  jest.doMock('../constants/runtime', () => ({
     __esModule: true,
     isBrowserScope: true,
     globalScope: global
@@ -74,7 +74,7 @@ test.each(urlTests)('verify url parsing inside browser scope', async ({ input, e
 })
 
 test.each(urlTests)('verify url parsing outside browser scope', async ({ input, expected }) => {
-  jest.doMock('../util/global-scope', () => ({
+  jest.doMock('../constants/runtime', () => ({
     __esModule: true,
     isBrowserScope: false,
     globalScope: global
@@ -85,7 +85,7 @@ test.each(urlTests)('verify url parsing outside browser scope', async ({ input, 
 })
 
 test('should cache parsed urls', async () => {
-  jest.doMock('../util/global-scope', () => ({
+  jest.doMock('../constants/runtime', () => ({
     __esModule: true,
     isBrowserScope: true,
     globalScope: global

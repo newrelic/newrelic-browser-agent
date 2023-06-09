@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { globalScope } from '../util/global-scope'
+import { globalScope } from '../constants/runtime'
 import { originals } from '../config/config'
 
 jest.mock('./wrap-function', () => ({
@@ -24,7 +24,7 @@ jest.mock('../config/config', () => ({
   __esModule: true,
   originals: {}
 }))
-jest.mock('../util/global-scope', () => ({
+jest.mock('../constants/runtime', () => ({
   __esModule: true,
   globalScope: {
     NREUM: {}

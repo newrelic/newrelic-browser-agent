@@ -11,7 +11,7 @@ import { cleanURL } from '../../../common/url/clean-url'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
-import { isBrowserScope } from '../../../common/util/global-scope'
+import { isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 
 export class Aggregate extends AggregateBase {

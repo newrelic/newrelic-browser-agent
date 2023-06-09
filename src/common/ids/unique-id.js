@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { globalScope } from '../util/global-scope'
+import { globalScope } from '../constants/runtime'
 
 const uuidv4Template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
 

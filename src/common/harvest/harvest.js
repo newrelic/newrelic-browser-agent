@@ -16,7 +16,7 @@ import { Obfuscator } from '../util/obfuscate'
 import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/env'
-import { isBrowserScope, isWorkerScope } from '../util/global-scope'
+import { isBrowserScope, isWorkerScope } from '../constants/runtime'
 
 /**
  * @typedef {object} NetworkSendSpec

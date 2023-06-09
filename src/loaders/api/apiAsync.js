@@ -5,7 +5,7 @@ import { handle } from '../../common/event-emitter/handle'
 import { registerHandler } from '../../common/event-emitter/register-handler'
 import { single } from '../../common/util/invoke'
 import * as submitData from '../../common/util/submit-data'
-import { isBrowserScope } from '../../common/util/global-scope'
+import { isBrowserScope } from '../../common/constants/runtime'
 import { CUSTOM_METRIC_CHANNEL } from '../../features/metrics/constants'
 
 export function setAPI (agentIdentifier) {

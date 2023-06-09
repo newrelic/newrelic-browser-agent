@@ -1,10 +1,13 @@
 const process = require('process')
 
-module.exports = function (api) {
+module.exports = function (api, ...args) {
   api.cache(true)
 
   if (!process.env.BUILD_VERSION) {
     process.env.BUILD_VERSION = process.env.VERSION_OVERRIDE || require('./package.json').version
+  }
+  if (!process.env.BUILD_ENV) {
+    process.env.BUILD_ENV = 'CDN'
   }
 
   const presets = [

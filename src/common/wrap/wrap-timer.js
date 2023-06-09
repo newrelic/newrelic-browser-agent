@@ -9,7 +9,7 @@
 
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
-import { globalScope } from '../util/global-scope'
+import { globalScope } from '../constants/runtime'
 
 const wrapped = {}
 const SET_TIMEOUT = 'setTimeout'

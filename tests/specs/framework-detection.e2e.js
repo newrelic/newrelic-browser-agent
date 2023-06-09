@@ -11,10 +11,11 @@ const config = {
 
 describe('framework detection', () => {
   withBrowsersMatching(supportsFetchExtended)('detects a page built with REACT and sends a supportability metric', async () => {
-    const rumPromise = browser.testHandle.expectRum()
-    await browser.url(await browser.testHandle.assetURL('frameworks/react/simple-app/index.html', config)).then(() => browser.waitForAgentLoad())
-
-    await rumPromise.then(async () => {
+    await Promise.all([
+      browser.testHandle.expectRum(),
+      browser.url(await browser.testHandle.assetURL('frameworks/react/simple-app/index.html', config))
+        .then(() => browser.waitForAgentLoad())
+    ])
       browser.url(await browser.testHandle.assetURL('/'))
       return browser.testHandle.expectMetrics(3000)
     }).then((response) => {

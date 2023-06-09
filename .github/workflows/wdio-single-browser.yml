@@ -73,7 +73,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build agent
-        run: npm run build:all
+        run: npm run cdn:build:local
       - name: Run WDIO Tests
         run: |
           node ./tools/wdio/bin/cli.js \

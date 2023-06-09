@@ -81,8 +81,8 @@ jobs:
             -b ${{ inputs.browser-target }} \
             --concurrent 10 \
             ${{ runner.debug && '-v -L -D -d' }} \
-            ${{ inputs.coverage && '--coverage' }} \
-            ${{ inputs.additional-flags && inputs.additional-flags }}
+            ${{ inputs.coverage && '--coverage' || '' }} \
+            ${{ inputs.additional-flags }}
       - name: Find pull request
         id: pull-request-target
         uses: ./.github/actions/find-pull-request

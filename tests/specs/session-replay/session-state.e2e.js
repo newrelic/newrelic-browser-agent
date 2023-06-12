@@ -161,17 +161,11 @@ export default (function () {
           browser.waitForAgentLoad()
         ])
 
-        try {
-        // wait longer than harvest interval
-          await browser.testHandle.expectBlob(6000, true)
-          // expect bam endpoint to have only been called once (instead of twice)
-          fail('Should not have seen another blob request')
-        } catch (err) {
-          // if expectblob failed, this test passed.
-        } finally {
-          await browser.closeWindow()
-          await browser.switchToWindow((await browser.getWindowHandles())[0])
-        }
+        // Waiting for the second blob should time out, indicating no second call to the BAM endpoint.
+        // The wait must be longer than harvest interval.
+        await browser.testHandle.expectBlob(6000, true)
+        await browser.closeWindow()
+        await browser.switchToWindow((await browser.getWindowHandles())[0])
       })
     })
   })

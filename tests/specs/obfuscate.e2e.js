@@ -1,5 +1,28 @@
 import { supportsFetchExtended } from '../../tools/browser-matcher/common-matchers.mjs'
 
+const config = {
+  init: {
+    obfuscate: [{
+      regex: /bam-test/g,
+      replacement: 'OBFUSCATED'
+    }, {
+      regex: /fakeid/g
+    }, {
+      regex: /pii/g,
+      replacement: 'OBFUSCATED'
+    }, {
+      regex: /comma/g,
+      replacement: 'invalid,string'
+    }, {
+      regex: /semicolon/g,
+      replacement: 'invalid;string'
+    }, {
+      regex: /backslash/g,
+      replacement: 'invalid\\string'
+    }]
+  }
+}
+
 describe('obfuscate rules', () => {
   withBrowsersMatching(supportsFetchExtended)('should apply to all payloads', async () => {
     const spaPromise = browser.testHandle.expectEvents()
@@ -9,40 +32,6 @@ describe('obfuscate rules', () => {
     const insPromise = browser.testHandle.expectIns()
     const resourcePromise = browser.testHandle.expectResources()
     const rumPromise = browser.testHandle.expectRum()
-
-    const config = {
-      loader: 'spa',
-      init: {
-        obfuscate: [{
-          regex: /bam-test/g,
-          replacement: 'OBFUSCATED'
-        }, {
-          regex: /fakeid/g
-        }, {
-          regex: /pii/g,
-          replacement: 'OBFUSCATED'
-        }, {
-          regex: /comma/g,
-          replacement: 'invalid,string'
-        }, {
-          regex: /semicolon/g,
-          replacement: 'invalid;string'
-        }, {
-          regex: /backslash/g,
-          replacement: 'invalid\\string'
-        }],
-        ajax: {
-          harvestTimeSeconds: 2,
-          enabled: true
-        },
-        jserrors: {
-          harvestTimeSeconds: 2
-        },
-        ins: {
-          harvestTimeSeconds: 2
-        }
-      }
-    }
 
     await browser.url(await browser.testHandle.assetURL('obfuscate-pii.html', config))
     await browser.waitForAgentLoad()

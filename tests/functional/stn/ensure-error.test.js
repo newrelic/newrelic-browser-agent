@@ -14,7 +14,18 @@ testDriver.test('errors get to session traces', supported, function (
 ) {
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
-  let loadPromise = browser.get(router.assetURL('sessiontraceerror.html')).waitForFeature('loaded')
+  let loadPromise = browser.get(router.assetURL('instrumented.html', {
+    init: {
+      session_trace: {
+        harvestTimeSeconds: 5
+      }
+    },
+    scriptString: `
+    // even though the error happens before the call to /resources,
+    // it is not collected until the second cycle
+    throw new Error("hello session traces i am error")
+    `
+  })).waitForFeature('loaded')
 
   Promise.all([resourcePromise, rumPromise, loadPromise])
     .then(() => {
@@ -23,13 +34,12 @@ testDriver.test('errors get to session traces', supported, function (
           return node.n === 'error'
         })
         t.ok(err, 'Has an error')
-        t.equal(err.o, 'hello session traces i am error')
+        t.equal(err.o, 'hello session traces i am error', 'Is expected error')
 
         let ajax = body.res.find((node) => {
           return node.n === 'Ajax'
         })
         t.ok(ajax, 'Has an Ajax')
-
         t.end()
       })
     })

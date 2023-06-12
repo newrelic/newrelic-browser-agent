@@ -4,6 +4,7 @@
 /tmp
 /.npm
 **/coverage
+**/coverage-e2e
 log
 node_modules
 **/node_modules

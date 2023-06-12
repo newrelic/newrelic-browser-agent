@@ -27,8 +27,8 @@ runs:
       shell: bash
     - name: Run action script
       id: action-script
-      run: node $GITHUB_ACTION_PATH/index.js
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          --github-token ${{ inputs.token }} \
+          --pr-required ${{ inputs.pr_required }}
       shell: bash
-      env:
-        PR_REQUIRED: ${{ inputs.pr_required }}
-        GITHUB_TOKEN: ${{ inputs.token }}

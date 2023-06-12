@@ -48,15 +48,17 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           override_pr: ${{ fromJSON(steps.pull-request-target.outputs.results).pr_number }}
+          flags: unit-tests
           verbose: true
       - name: Upload branch code coverage
         if: ${{ !steps.pull-request-target.outputs.results }}
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unit-tests
           verbose: true
       - name: Archive code coverage results
         uses: actions/upload-artifact@v3
         with:
-          name: code-coverage-report
+          name: unit-code-coverage-report
           path: coverage/

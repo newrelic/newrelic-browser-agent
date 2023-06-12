@@ -15,11 +15,11 @@ describe('framework detection', () => {
       browser.url(await browser.testHandle.assetURL('frameworks/react/simple-app/index.html', config))
         .then(() => browser.waitForAgentLoad())
     ])
-    const unloadSupportabilityMetrics = await Promise.all([
-      browser.testHandle.expectMetrics(3000)
+    const [metricsResponse] = await Promise.all([
+      browser.testHandle.expectMetrics(3000),
       browser.url(await browser.testHandle.assetURL('/'))
     ])
-    const supportabilityMetrics = response.request.body.sm || []
+    const supportabilityMetrics = metricsResponse.request.body.sm || []
     expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
       params: { name: 'Framework/React/Detected' },
       stats: { c: expect.toBeFinite() }
@@ -32,9 +32,11 @@ describe('framework detection', () => {
       browser.url(await browser.testHandle.assetURL('frameworks/angular/simple-app/index.html', config))
         .then(() => browser.waitForAgentLoad())
     ])
-    browser.url(await browser.testHandle.assetURL('/'))
-    const response = await browser.testHandle.expectMetrics(3000)
-    const supportabilityMetrics = response.request.body.sm || []
+    const [metricsResponse] = await Promise.all([
+      browser.testHandle.expectMetrics(3000),
+      browser.url(await browser.testHandle.assetURL('/'))
+    ])
+    const supportabilityMetrics = metricsResponse.request.body.sm || []
     expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
       params: { name: 'Framework/Angular/Detected' },
       stats: { c: expect.toBeFinite() }
@@ -47,9 +49,11 @@ describe('framework detection', () => {
       browser.url(await browser.testHandle.assetURL('frameworks/control.html', config))
         .then(() => browser.waitForAgentLoad())
     ])
-    browser.url(await browser.testHandle.assetURL('/'))
-    const response = await browser.testHandle.expectMetrics(3000)
-    const supportabilityMetrics = response.request.body.sm
+    const [metricsResponse] = await Promise.all([
+      browser.testHandle.expectMetrics(3000),
+      browser.url(await browser.testHandle.assetURL('/'))
+    ])
+    const supportabilityMetrics = metricsResponse.request.body.sm
     // In theory, we can't assume there will always be other supportability metrics in the future.
     if (supportabilityMetrics) {
       expect(supportabilityMetrics.find(x => x.params.name.includes('Framework'))).toBeUndefined()

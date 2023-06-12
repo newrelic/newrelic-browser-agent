@@ -5,7 +5,7 @@
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { parseUrl } from '../../../common/url/parse-url'
-import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
+import { getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
@@ -13,6 +13,7 @@ import { HandlerCache } from '../../utils/handler-cache'
 import { MODE, SESSION_EVENTS } from '../../../common/session/session-entity'
 import { getSessionReplayMode } from '../../session_replay/replay-mode'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { sharedChannel } from '../../../common/constants/shared-channel'
 
 const ignoredEvents = {
   // we find that certain events make the data too noisy to be useful
@@ -72,10 +73,10 @@ export class Aggregate extends AggregateBase {
       this.isStandalone = true
       registerHandler('rumresp-stn', (on) => controlTraceOp(on), this.featureName, this.ee)
     } else {
-      // Switch to full capture mode if any exception happens during agent life.
-      registerHandler('errorAgg', () => sessionEntity.state.sessionTraceMode = MODE.FULL, this.featureName, this.ee)
-      // *cli May'23 - For now, this is to match Replay's behavior of shutting down (perm) on first and any session reset.
-      this.ee.on(SESSION_EVENTS.RESET, () => operationalGate.permanentlyDecide(false))
+      // Switch to full capture mode if any exception happens during agent life, but only if current mode is ERROR so that we don't reignite trace if MODE was turned OFF.
+      registerHandler('errorAgg', () => {
+        if (sessionEntity.state.sessionTraceMode === MODE.ERROR) sessionEntity.state.sessionTraceMode = MODE.FULL
+      }, this.featureName, this.ee)
 
       // CAUTION: everything inside this promise runs post-load; event subscribers must be pre-load aka synchronous with constructor
       this.waitForFlags(['stn', 'sr']).then(async ([traceOn, replayOn]) => {
@@ -105,6 +106,17 @@ export class Aggregate extends AggregateBase {
 
             sessionEntity.state.sessionTraceMode = startingMode
           }
+        }
+        if (!this.isStandalone) {
+          // Whenever replay aborts, Trace can also shut down: stop processing nodes but allow existing buffer to harvest.
+          sharedChannel.sessionReplayAborted.signal.addEventListener('abort', () => {
+            operationalGate.permanentlyDecide(false)
+            sessionEntity.state.sessionTraceMode = MODE.OFF
+          })
+          // Assuming on page visible that the trace mode is updated from shared session, if trace is turned off from the other page, it should be likewise here.
+          this.ee.on(SESSION_EVENTS.RESUME, () => {
+            if (sessionEntity.state.sessionTraceMode === MODE.OFF) operationalGate.permanentlyDecide(false)
+          })
         }
       })
     }

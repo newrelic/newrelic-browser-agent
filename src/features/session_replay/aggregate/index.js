@@ -298,6 +298,7 @@ export class Aggregate extends AggregateBase {
   abort () {
     this.blocked = true
     this.stopRecording()
+    sharedChannel.sessionReplayAborted.abort()
     const { session } = getRuntime(this.agentIdentifier)
     session.state.sessionReplay = this.mode
   }

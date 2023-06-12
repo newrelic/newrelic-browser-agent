@@ -6,8 +6,10 @@
 
 let onReplayReady
 const sessionReplayInitialized = new Promise(resolve => onReplayReady = resolve)
+const sessionReplayAborted = new AbortController()
 
 export const sharedChannel = Object.freeze({
   onReplayReady,
-  sessionReplayInitialized
+  sessionReplayInitialized,
+  sessionReplayAborted
 })

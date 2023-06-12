@@ -7,7 +7,7 @@
 import { drain, registerDrain } from '../../common/drain/drain'
 import { FeatureBase } from './feature-base'
 import { onWindowLoad } from '../../common/window/load'
-import { isWorkerScope } from '../../common/util/global-scope'
+import { isBrowserScope } from '../../common/util/global-scope'
 import { warn } from '../../common/util/console'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { getConfigurationValue } from '../../common/config/config'
@@ -28,11 +28,20 @@ export class InstrumentBase extends FeatureBase {
    */
   constructor (agentIdentifier, aggregator, featureName, auto = true) {
     super(agentIdentifier, aggregator, featureName)
-    this.hasAggregator = false
     this.auto = auto
 
     /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
     this.abortHandler
+    /**
+     * @type {Class} Holds the reference to the feature's aggregate module counterpart, if and after it has been initialized. This may not be assigned until after page loads!
+     * The only purpose of this for now is to expose it to the NREUM interface, as the feature's instrument instance is already exposed.
+    */
+    this.featAggregate
+    /**
+     * @type {Promise} Assigned immediately after @see importAggregator runs. Serves as a signal for when the inner async fn finishes execution. Useful for features to await
+     * one another if there are inter-features dependencies.
+    */
+    this.onAggregateImported
 
     if (auto) registerDrain(agentIdentifier, featureName)
   }
@@ -43,46 +52,49 @@ export class InstrumentBase extends FeatureBase {
    * @param {Object} [argsObjFromInstrument] - any values or references to pass down to aggregate
    * @returns void
    */
-  importAggregator (argsObjFromInstrument) {
-    if (this.hasAggregator || !this.auto) return
-    this.hasAggregator = true
-    let session, agentSessionImport
-    if (getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true && !isWorkerScope) {
-      agentSessionImport = import(/* webpackChunkName: "session-manager" */ './agent-session')
-        .catch(err => {
-          warn('failed to import the session manager', err)
-        })
-    }
+  importAggregator (argsObjFromInstrument = {}) {
+    if (this.featAggregate || !this.auto) return
+    const enableSessionTracking = isBrowserScope && getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true
+    let loadedSuccessfully, loadFailed
+    this.onAggregateImported = new Promise((resolve, reject) => {
+      loadedSuccessfully = resolve; loadFailed = reject
+    })
+
     const importLater = async () => {
+      let session
+      try {
+        if (enableSessionTracking) { // would require some setup before certain features start
+          const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
+          session = setupAgentSession(this.agentIdentifier)
+        }
+      } catch (e) {
+        warn('A problem occurred when starting up session manager. This page will not start or extend any session.', e)
+      }
+
       /**
        * Note this try-catch differs from the one in Agent.start() in that it's placed later in a page's lifecycle and
        * it's only responsible for aborting its one specific feature, rather than all.
        */
       try {
-        // The session entity needs to be attached to the config internals before the aggregator chunk runs
-        if (agentSessionImport && !session) {
-          const { setupAgentSession } = await agentSessionImport
-          session = setupAgentSession(this.agentIdentifier)
-        }
         if (!this.shouldImportAgg(this.featureName, session)) {
           drain(this.agentIdentifier, this.featureName)
           return
         }
-
-        // import and instantiate the aggregator chunk
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
         this.featAggregate = new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)
+        loadedSuccessfully()
       } catch (e) {
-        warn(`Downloading ${this.featureName} failed...`, e)
+        warn(`Downloading and initializing ${this.featureName} failed...`, e)
         this.abortHandler?.() // undo any important alterations made to the page
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
+        loadFailed()
       }
     }
 
     // For regular web pages, we want to wait and lazy-load the aggregator only after all page resources are loaded.
     // Non-browser scopes (i.e. workers) have no `window.load` event, so the aggregator can be lazy-loaded immediately.
-    if (isWorkerScope) importLater()
+    if (!isBrowserScope) importLater()
     else onWindowLoad(() => importLater(), true)
   }
 

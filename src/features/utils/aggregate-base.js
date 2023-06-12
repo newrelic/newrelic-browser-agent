@@ -14,12 +14,7 @@ export class AggregateBase extends FeatureBase {
     return Promise.all(
       flagNames.map(fName =>
         new Promise((resolve) => {
-          registerHandler(`feat-${fName}`, () => {
-            resolve({ name: fName, value: true })
-          }, this.featureName, this.ee)
-          registerHandler(`block-${fName}`, () => {
-            resolve({ name: fName, value: false })
-          }, this.featureName, this.ee)
+          registerHandler(`rumresp-${fName}`, isOn => resolve(isOn), this.featureName, this.ee)
         })
       )
     )

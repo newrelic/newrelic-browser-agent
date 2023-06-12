@@ -5,7 +5,6 @@ import { ee } from '../event-emitter/contextual-ee'
 import { Timer } from '../timer/timer'
 import { isBrowserScope } from '../util/global-scope'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, PREFIX } from './constants'
-import { LocalMemory } from '../storage/local-memory'
 import { InteractionTimer } from '../timer/interaction-timer'
 import { wrapEvents } from '../wrap'
 import { getModeledObject } from '../config/state/configurable'
@@ -13,6 +12,11 @@ import { handle } from '../event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
+export const MODE = {
+  OFF: 0,
+  FULL: 1,
+  ERROR: 2
+}
 // this is what can be stored in local storage (not enforced but probably should be)
 // these values should sync between local storage and the parent class props
 const model = {
@@ -20,11 +24,10 @@ const model = {
   inactiveAt: 0,
   expiresAt: 0,
   updatedAt: Date.now(),
-  sessionReplay: 0,
-  sessionTraceActive: false,
+  sessionReplay: MODE.OFF,
+  sessionTraceMode: MODE.OFF,
   custom: {}
 }
-
 export const SESSION_EVENTS = {
   PAUSE: 'session-pause',
   RESET: 'session-reset',
@@ -42,16 +45,16 @@ export class SessionEntity {
     this.setup(opts)
   }
 
-  setup ({ agentIdentifier, key, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS, storageAPI = new LocalMemory() }) {
-    if (!agentIdentifier || !key) throw new Error('Missing Required Fields')
-    if (!isBrowserScope) this.storage = new LocalMemory()
-    else this.storage = storageAPI
-
+  setup ({ agentIdentifier, key, storage, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS }) {
+    if (!agentIdentifier || !key || !storage) {
+      throw new Error(`Missing required field(s):${!agentIdentifier ? ' agentID' : ''}${!key ? ' key' : ''}${!storage ? ' storage' : ''}`)
+    }
+    this.agentIdentifier = agentIdentifier
+    this.storage = storage
     this.state = {}
 
     this.sync(model)
 
-    this.agentIdentifier = agentIdentifier
     // key is intended to act as the k=v pair
     this.key = key
     // value is intended to act as the primary value of the k=v pair
@@ -207,7 +210,7 @@ export class SessionEntity {
       this.setup({
         agentIdentifier: this.agentIdentifier,
         key: this.key,
-        storageAPI: this.storage,
+        storage: this.storage,
         expiresMs: this.expiresMs,
         inactiveMs: this.inactiveMs
       })

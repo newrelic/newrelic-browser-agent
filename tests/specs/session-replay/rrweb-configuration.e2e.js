@@ -1,8 +1,25 @@
+import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { config } from './helpers'
 
 export default (function () {
   describe('Rrweb Configuration', () => {
+    beforeEach(async () => {
+      await browser.testHandle.scheduleReply('bamServer', {
+        test: testRumRequest,
+        body: JSON.stringify({
+          stn: 1,
+          err: 1,
+          ins: 1,
+          cap: 1,
+          spa: 1,
+          loaded: 1,
+          sr: 1
+        })
+      })
+    })
+
     afterEach(async () => {
+      await browser.testHandle.clearScheduledReplies('bamServer')
       await browser.destroyAgentSession(browser.testHandle)
     })
 

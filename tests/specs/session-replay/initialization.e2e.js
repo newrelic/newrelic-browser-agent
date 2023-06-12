@@ -3,7 +3,23 @@ import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests
 
 export default (function () {
   describe('Session Replay Initialization', () => {
+    beforeEach(async () => {
+      await browser.testHandle.scheduleReply('bamServer', {
+        test: testRumRequest,
+        body: JSON.stringify({
+          stn: 1,
+          err: 1,
+          ins: 1,
+          cap: 1,
+          spa: 1,
+          loaded: 1,
+          sr: 1
+        })
+      })
+    })
+
     afterEach(async () => {
+      await browser.testHandle.clearScheduledReplies('bamServer')
       await browser.destroyAgentSession(browser.testHandle)
     })
 
@@ -11,18 +27,18 @@ export default (function () {
       // this test needs to be able to override the SR flag to 0
       // work needed to enable this in WDIO
       it('should not run if flag is 0', async () => {
+        await browser.testHandle.clearScheduledReplies('bamServer')
         await browser.testHandle.scheduleReply('bamServer', {
           test: testRumRequest,
-          body: `${JSON.stringify({
-                  stn: 1,
-                  err: 1,
-                  ins: 1,
-                  cap: 1,
-                  spa: 1,
-                  loaded: 1,
-                  sr: 0
-                })
-                }`
+          body: JSON.stringify({
+            stn: 1,
+            err: 1,
+            ins: 1,
+            cap: 1,
+            spa: 1,
+            loaded: 1,
+            sr: 0
+          })
         })
 
         const [rumResp] = await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))

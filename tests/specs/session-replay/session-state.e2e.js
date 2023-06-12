@@ -1,4 +1,5 @@
 import { supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
 import { RRWEB_EVENT_TYPES, config, getSR } from './helpers.js'
 
 /** The "mode" with which the session replay is recording */
@@ -10,7 +11,23 @@ const MODE = {
 
 export default (function () {
   describe('session manager state behavior', () => {
+    beforeEach(async () => {
+      await browser.testHandle.scheduleReply('bamServer', {
+        test: testRumRequest,
+        body: JSON.stringify({
+          stn: 1,
+          err: 1,
+          ins: 1,
+          cap: 1,
+          spa: 1,
+          loaded: 1,
+          sr: 1
+        })
+      })
+    })
+
     afterEach(async () => {
+      await browser.testHandle.clearScheduledReplies('bamServer')
       await browser.destroyAgentSession(browser.testHandle)
     })
 
@@ -19,6 +36,7 @@ export default (function () {
         await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
           .then(() => browser.waitForAgentLoad())
 
+        await browser.pause(1000)
         const { agentSessions } = await browser.getAgentSessionInfo()
         const sessionClass = Object.values(agentSessions)[0]
         expect(sessionClass.sessionReplay).toEqual(MODE.FULL)
@@ -79,7 +97,7 @@ export default (function () {
         await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
           .then(() => browser.waitForAgentLoad())
 
-        await browser.pause(3000)
+        await browser.pause(1000)
 
         const { events: currentPayload } = await getSR()
 
@@ -89,9 +107,22 @@ export default (function () {
 
         const newTab = await browser.createWindow('tab')
         await browser.switchToWindow(newTab.handle)
+        await browser.testHandle.scheduleReply('bamServer', {
+          test: testRumRequest,
+          body: JSON.stringify({
+            stn: 1,
+            err: 1,
+            ins: 1,
+            cap: 1,
+            spa: 1,
+            loaded: 1,
+            sr: 1
+          })
+        })
         await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
           .then(() => browser.waitForAgentLoad())
 
+        await browser.pause(1000)
         const { events: resumedPayload } = await getSR()
 
         // payload was harvested, new vis change should trigger a new recording which includes a new full snapshot
@@ -109,14 +140,30 @@ export default (function () {
         await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
           .then(() => browser.waitForAgentLoad())
 
+        await browser.testHandle.expectBlob(5000)
+
         const newTab = await browser.createWindow('tab')
+        await browser.switchToWindow(newTab.handle)
+        await browser.testHandle.scheduleReply('bamServer', {
+          test: testRumRequest,
+          body: JSON.stringify({
+            stn: 1,
+            err: 1,
+            ins: 1,
+            cap: 1,
+            spa: 1,
+            loaded: 1,
+            sr: 1
+          })
+        })
         await Promise.all([
-          browser.testHandle.expectBlob(), browser.switchToWindow(newTab.handle), browser.url(await browser.testHandle.assetURL('instrumented.html', { ...config(), loader: 'full' }))])
-        await browser.waitForAgentLoad()
+          browser.url(await browser.testHandle.assetURL('instrumented.html', { ...config(), loader: 'full' })),
+          browser.waitForAgentLoad()
+        ])
 
         try {
         // wait longer than harvest interval
-          await browser.testHandle.expectBlob(6000)
+          await browser.testHandle.expectBlob(6000, true)
           // expect bam endpoint to have only been called once (instead of twice)
           fail('Should not have seen another blob request')
         } catch (err) {

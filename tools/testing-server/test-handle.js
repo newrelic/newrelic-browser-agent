@@ -170,6 +170,14 @@ module.exports = class TestHandle {
   }
 
   /**
+   * Clears the scheduled replies for a server
+   * @param {'assetServer'|'bamServer'} serverId Id of the server to clear
+   */
+  clearScheduledReplies (serverId) {
+    this.#scheduledReplies.set(serverId, new Set())
+  }
+
+  /**
    * Creates a deferred object that will resolve when a specific server request is seen or reject
    * when a timeout is met
    * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on

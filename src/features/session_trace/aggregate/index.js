@@ -10,6 +10,8 @@ import { now } from '../../../common/timing/now'
 import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { HandlerCache } from '../../utils/handler-cache'
+import { MODE, SESSION_EVENTS } from '../../../common/session/session-entity'
+import { getSessionReplayMode } from '../../session_replay/replay-mode'
 import { AggregateBase } from '../../utils/aggregate-base'
 
 const ignoredEvents = {
@@ -26,15 +28,17 @@ const toAggregate = {
   mousing: [1000, 2000],
   touching: [1000, 2000]
 }
-const MAX_TRACE_DURATION = 15 * 60 * 1000 // 15 minutes
+const MAX_TRACE_DURATION = 10 * 60 * 1000 // 10 minutes
+const REQ_THRESHOLD_TO_SEND = 30
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator, argsObj) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
+    this.agentRuntime = getRuntime(agentIdentifier)
 
     // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
-    if (!getRuntime(agentIdentifier).xhrWrappable) return
+    if (!this.agentRuntime.xhrWrappable) return
 
     this.resourceObserver = argsObj?.resourceObserver // undefined if observer couldn't be created
     this.ptid = ''
@@ -44,65 +48,131 @@ export class Aggregate extends AggregateBase {
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
     this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
     this.laststart = 0
+    this.isStandalone = false
+    const operationalGate = new HandlerCache() // acts as a controller-intermediary that can enable or disable this feature's collection dynamically
+    const sessionEntity = this.agentRuntime.session
 
-    const handlerCache = new HandlerCache()
+    /* --- The following section deals with user sessions concept & contains non-trivial control flow. --- */
+    const controlTraceOp = (traceMode) => {
+      switch (traceMode) {
+        case MODE.ERROR:
+        case MODE.FULL:
+        case true:
+          this.startTracing(operationalGate)
+          break
+        case MODE.OFF:
+        case false:
+        default: // this feature becomes "off" (does nothing & nothing is sent)
+          operationalGate.decide(false)
+          break
+      }
+    }
+    if (!sessionEntity) {
+      // Since session manager isn't around, do the old Trace behavior of waiting for RUM response to decide feature activation.
+      this.isStandalone = true
+      registerHandler('rumresp-stn', (on) => controlTraceOp(on), this.featureName, this.ee)
+    } else {
+      // Switch to full capture mode if any exception happens during agent life.
+      registerHandler('errorAgg', () => sessionEntity.state.sessionTraceMode = MODE.FULL, this.featureName, this.ee)
+      // *cli May'23 - For now, this is to match Replay's behavior of shutting down (perm) on first and any session reset.
+      this.ee.on(SESSION_EVENTS.RESET, () => operationalGate.permanentlyDecide(false))
 
-    registerHandler('feat-stn', () => {
-      if (typeof PerformanceNavigationTiming !== 'undefined') {
-        this.storeTiming(window.performance.getEntriesByType('navigation')[0])
-      } else {
-        this.storeTiming(window.performance.timing)
+      // CAUTION: everything inside this promise runs post-load; event subscribers must be pre-load aka synchronous with constructor
+      this.waitForFlags(['stn', 'sr']).then(async ([traceOn, replayOn]) => {
+        if (!replayOn) {
+          // When sr = 0 from BCS, also do the old Trace behavior:
+          this.isStandalone = true
+          controlTraceOp(traceOn)
+        } else {
+          if (!sessionEntity.isNew) controlTraceOp(sessionEntity.state.sessionTraceMode) // inherit the same mode as existing session's Trace
+          else { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
+            let startingMode
+            if (traceOn === true) { // CASE: both trace (entitlement+sampling) & replay (entitlement) flags are true from RUM
+              this.startTracing(operationalGate) // always full capture regardless of replay sampling decision
+
+              /* Future to-do: this should just change the Trace mode to "FULL" and write that to storage, since Trace ideally retains its own mode inheritance.
+                For alpha phase, the starting Trace mode will depend on SR feature's mode. !!This means all following Traces of this session will inherit this mode!! */
+              startingMode = await getSessionReplayMode(agentIdentifier)
+            } else { // CASE: trace flag is off, BUT it must still run if replay is on (possibly)
+              startingMode = await getSessionReplayMode(agentIdentifier)
+              controlTraceOp(startingMode)
+            }
+
+            if (startingMode === MODE.OFF) this.isStandalone = true // without SR, Traces are still subject to old harvest limits
+            /* The NEW session state's mode cannot be FULL already unless the 'errorAgg' handler won the race (exception was thrown), in which case we
+              should STILL capture in full when Replay is also on. */
+            else if (sessionEntity.state.sessionTraceMode === MODE.FULL) startingMode = MODE.FULL
+
+            sessionEntity.state.sessionTraceMode = startingMode
+          }
+        }
+      })
+    }
+    /* --- EoS --- */
+
+    // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...
+    registerHandler('bst', (...args) => operationalGate.settle(() => this.storeEvent(...args)), this.featureName, this.ee)
+    registerHandler('bstTimer', (...args) => operationalGate.settle(() => this.storeTimer(...args)), this.featureName, this.ee)
+    registerHandler('bstResource', (...args) => operationalGate.settle(() => this.storeResources(...args)), this.featureName, this.ee)
+    registerHandler('bstHist', (...args) => operationalGate.settle(() => this.storeHist(...args)), this.featureName, this.ee)
+    registerHandler('bstXhrAgg', (...args) => operationalGate.settle(() => this.storeXhrAgg(...args)), this.featureName, this.ee)
+    registerHandler('bstApi', (...args) => operationalGate.settle(() => this.storeSTN(...args)), this.featureName, this.ee)
+    registerHandler('errorAgg', (...args) => operationalGate.settle(() => this.storeErrorAgg(...args)), this.featureName, this.ee)
+    registerHandler('pvtAdded', (...args) => operationalGate.settle(() => this.processPVT(...args)), this.featureName, this.ee)
+    drain(this.agentIdentifier, this.featureName)
+  }
+
+  startTracing (startupBuffer) {
+    // TO DO: create error mode for this feature
+    if (typeof PerformanceNavigationTiming !== 'undefined') {
+      this.storeTiming(window.performance.getEntriesByType('navigation')[0])
+    } else {
+      this.storeTiming(window.performance.timing)
+    }
+
+    const scheduler = new HarvestScheduler('resources', {
+      onFinished: onHarvestFinished.bind(this),
+      retryDelay: this.harvestTimeSeconds
+    }, this)
+    scheduler.harvest.on('resources', prepareHarvest.bind(this))
+    scheduler.runHarvest({ needResponse: true }) // sends first stn harvest immediately
+    startupBuffer.decide(true) // signal to flush data that was pending RUM response flag for the next harvest
+
+    function onHarvestFinished (result) {
+      if (result.sent && result.responseText && !this.ptid) { // continue interval harvest only if ptid was returned by server on the first
+        this.agentRuntime.ptid = this.ptid = result.responseText
+        scheduler.startTimer(this.harvestTimeSeconds)
       }
 
-      const scheduler = new HarvestScheduler('resources', {
-        onFinished: onHarvestFinished.bind(this),
-        retryDelay: this.harvestTimeSeconds
-      }, this)
-      scheduler.harvest.on('resources', prepareHarvest.bind(this))
-      scheduler.runHarvest({ needResponse: true }) // sends first stn harvest immediately
-      handlerCache.decide(true)
+      if (result.sent && result.retry && this.sentTrace) { // merge previous trace back into buffer to retry for next harvest
+        Object.entries(this.sentTrace).forEach(([name, listOfSTNodes]) => {
+          if (this.nodeCount >= this.maxNodesPerHarvest) return
 
-      function onHarvestFinished (result) {
-        if (result.sent && result.responseText && !this.ptid) { // continue interval harvest only if ptid was returned by server on the first
-          getRuntime(this.agentIdentifier).ptid = this.ptid = result.responseText
-          scheduler.startTimer(this.harvestTimeSeconds)
-        }
-
-        if (result.sent && result.retry && this.sentTrace) { // merge previous trace back into buffer to retry for next harvest
-          Object.entries(this.sentTrace).forEach(([name, listOfSTNodes]) => {
-            if (this.nodeCount >= this.maxNodesPerHarvest) return
-
-            this.nodeCount += listOfSTNodes.length
-            this.trace[name] = this.trace[name] ? listOfSTNodes.concat(this.trace[name]) : listOfSTNodes
-          })
-          this.sentTrace = null
-        }
+          this.nodeCount += listOfSTNodes.length
+          this.trace[name] = this.trace[name] ? listOfSTNodes.concat(this.trace[name]) : listOfSTNodes
+        })
+        this.sentTrace = null
       }
-      function prepareHarvest (options) {
-        if (now() > MAX_TRACE_DURATION) { // been collecting for over 15 min, empty trace object and bail
+    }
+    function prepareHarvest (options) {
+      /* Standalone refers to the legacy version of ST before the idea of 'session' or the Replay feature existed.
+        It has a different behavior on returning a payload for harvest than when used in tandem with either of those concepts. */
+      if (this.isStandalone) {
+        if (now() > MAX_TRACE_DURATION) { // been collecting for over the longest duration we should run for, empty trace object so ST has nothing to send
           scheduler.stopTimer()
           this.trace = {}
           return
         }
-        // Only harvest when there are more than 30 nodes to send after the very first.
-        if (this.ptid && this.nodeCount <= 30) return
-
-        return this.takeSTNs(options.retry)
+        // Only harvest when more than some threshold of nodes are pending, after the very first harvest.
+        if (this.ptid && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
       }
-    }, this.featureName, this.ee)
+      // else { -- *cli May '26 - Update: Not rate limiting backgrounded pages either for now.
+      //   // With sessions on harvest intervals, visible pages will send payload regardless of pending nodes but backgrounded pages will still abide by threshold.
+      //   if (this.ptid && document.visibilityState === 'hidden' && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
+      // }
 
-    registerHandler('block-stn', () => handlerCache.decide(false), this.featureName, this.ee)
-
-    // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...
-    registerHandler('bst', (...args) => handlerCache.settle(() => this.storeEvent(...args)), this.featureName, this.ee)
-    registerHandler('bstTimer', (...args) => handlerCache.settle(() => this.storeTimer(...args)), this.featureName, this.ee)
-    registerHandler('bstResource', (...args) => handlerCache.settle(() => this.storeResources(...args)), this.featureName, this.ee)
-    registerHandler('bstHist', (...args) => handlerCache.settle(() => this.storeHist(...args)), this.featureName, this.ee)
-    registerHandler('bstXhrAgg', (...args) => handlerCache.settle(() => this.storeXhrAgg(...args)), this.featureName, this.ee)
-    registerHandler('bstApi', (...args) => handlerCache.settle(() => this.storeSTN(...args)), this.featureName, this.ee)
-    registerHandler('errorAgg', (...args) => handlerCache.settle(() => this.storeErrorAgg(...args)), this.featureName, this.ee)
-    registerHandler('pvtAdded', (...args) => handlerCache.settle(() => this.processPVT(...args)), this.featureName, this.ee)
-    drain(this.agentIdentifier, this.featureName)
+      return this.takeSTNs(options.retry)
+    }
   }
 
   // PageViewTiming (FEATURE) events and metrics, such as 'load', 'lcp', etc. pipes into ST here.

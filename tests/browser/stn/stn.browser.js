@@ -76,7 +76,7 @@ function runTests () {
     pvtAgg.addTiming('load', 20)
     pvtAgg.addTiming('fi', fiVal, { fid: fidVal })
 
-    ee.emit('feat-stn', [])
+    ee.emit('rumresp-stn', [true])
 
     const payload = stnAgg.takeSTNs()
 

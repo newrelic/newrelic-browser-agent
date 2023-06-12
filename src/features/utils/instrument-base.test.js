@@ -24,7 +24,8 @@ jest.mock('../../common/window/load', () => ({
 }))
 jest.mock('../../common/util/global-scope', () => ({
   __esModule: true,
-  isWorkerScope: false
+  isBrowserScope: undefined,
+  isWorkerScope: undefined
 }))
 jest.mock('../../common/config/config', () => ({
   __esModule: true,
@@ -49,6 +50,7 @@ let featureName
 let mockAggregate
 
 beforeEach(() => {
+  jest.replaceProperty(globalScopeModule, 'isBrowserScope', true)
   jest.replaceProperty(globalScopeModule, 'isWorkerScope', false)
 
   agentIdentifier = faker.datatype.uuid()
@@ -63,7 +65,7 @@ test('should construct a new instrument', () => {
   const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName)
 
   expect(FeatureBase).toHaveBeenCalledWith(agentIdentifier, aggregator, featureName)
-  expect(instrument.hasAggregator).toEqual(false)
+  expect(instrument.featAggregate).toBeUndefined()
   expect(instrument.auto).toEqual(true)
   expect(instrument.abortHandler).toBeUndefined()
   expect(registerDrain).toHaveBeenCalledWith(agentIdentifier, featureName)
@@ -89,6 +91,7 @@ test('should import aggregator on window load', async () => {
 })
 
 test('should immediately import aggregator in worker scope', async () => {
+  jest.replaceProperty(globalScopeModule, 'isBrowserScope', false)
   jest.replaceProperty(globalScopeModule, 'isWorkerScope', true)
 
   const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName)
@@ -167,7 +170,7 @@ test('should not import session aggregate when session is not new and a recordin
   expect(mockAggregate).not.toHaveBeenCalled()
 })
 
-test('should abort the feature when setupAgentSession throws an error', async () => {
+test('feature still imports by default even when setupAgentSession throws an error', async () => {
   jest.mocked(getConfigurationValue).mockReturnValue(true)
   jest.mocked(setupAgentSession).mockImplementation(() => { throw new Error(faker.lorem.sentence()) })
 
@@ -180,8 +183,8 @@ test('should abort the feature when setupAgentSession throws an error', async ()
   await windowLoadCallback()
 
   expect(onWindowLoad).toHaveBeenCalledWith(expect.any(Function), true)
-  expect(instrument.abortHandler).toHaveBeenCalled()
-  expect(warn).toHaveBeenCalledWith(expect.stringContaining(`Downloading ${featureName} failed`), expect.any(Error))
-  expect(lazyFeatureLoader).not.toHaveBeenCalled()
-  expect(mockAggregate).not.toHaveBeenCalled()
+  expect(instrument.abortHandler).not.toHaveBeenCalled()
+  expect(warn).toHaveBeenCalledWith(expect.stringContaining('A problem occurred when starting up session manager'), expect.any(Error))
+  expect(lazyFeatureLoader).toHaveBeenCalled()
+  expect(mockAggregate).toHaveBeenCalled()
 })

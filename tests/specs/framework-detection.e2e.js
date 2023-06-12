@@ -15,8 +15,10 @@ describe('framework detection', () => {
       browser.url(await browser.testHandle.assetURL('frameworks/react/simple-app/index.html', config))
         .then(() => browser.waitForAgentLoad())
     ])
-    browser.url(await browser.testHandle.assetURL('/'))
-    const response = await browser.testHandle.expectMetrics(3000)
+    const unloadSupportabilityMetrics = await Promise.all([
+      browser.testHandle.expectMetrics(3000)
+      browser.url(await browser.testHandle.assetURL('/'))
+    ])
     const supportabilityMetrics = response.request.body.sm || []
     expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
       params: { name: 'Framework/React/Detected' },

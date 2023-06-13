@@ -91,7 +91,7 @@ export function beacon ({ url, body }) {
   } catch (err) {
     // if sendBeacon still trys to throw an illegal invocation error,
     // we can catch here and return.  The harvest module will fallback to use
-    // .img to try to send
+    // fetchKeepAlive to try to send
     return false
   }
 }

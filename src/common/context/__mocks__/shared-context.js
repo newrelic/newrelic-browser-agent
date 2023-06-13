@@ -1,7 +1,8 @@
-export class SharedContext {
-  constructor () {
-    this.sharedContext = {
-      agentIdentifier: 'abcd'
+export const SharedContext = jest.fn(function () {
+  this.sharedContext = {
+    agentIdentifier: 'abcd',
+    ee: {
+      on: jest.fn()
     }
   }
-}
+})

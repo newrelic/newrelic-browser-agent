@@ -71,14 +71,13 @@ export class HarvestScheduler extends SharedContext {
 
   scheduleHarvest (delay, opts) {
     if (this.timeoutHandle) return
-    var timer = this
 
     if (delay == null) {
       delay = this.interval
     }
     this.timeoutHandle = setTimeout(() => {
-      timer.timeoutHandle = null
-      timer.runHarvest(opts)
+      this.timeoutHandle = null
+      this.runHarvest(opts)
     }, delay * 1000)
   }
 
@@ -96,14 +95,15 @@ export class HarvestScheduler extends SharedContext {
 
     let harvests = []
     let submitMethod
+    let payload
 
     if (this.opts.getPayload) {
       // Ajax & PVT & SR features provide a callback function to get data for harvesting
       submitMethod = submitData.getSubmitMethod({ isFinalHarvest: opts?.unload })
       if (!submitMethod) return false
 
-      const retry = !opts?.unload && submitMethod.method === submitData.xhr
-      var payload = this.opts.getPayload({ retry: retry })
+      const retry = !opts?.unload && submitMethod === submitData.xhr
+      payload = this.opts.getPayload({ retry: retry })
 
       if (!payload) {
         if (this.started) {
@@ -153,7 +153,7 @@ export class HarvestScheduler extends SharedContext {
     }
 
     if (result.sent && result.retry) {
-      var delay = result.delay || this.opts.retryDelay
+      const delay = result.delay || this.opts.retryDelay
       // reschedule next harvest if should be delayed longer
       if (this.started && delay) {
         clearTimeout(this.timeoutHandle)

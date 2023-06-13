@@ -6,6 +6,8 @@ export function getFeatureDependencyNames (feature) {
       return [FEATURE_NAMES.jserrors]
     case FEATURE_NAMES.sessionTrace:
       return [FEATURE_NAMES.ajax, FEATURE_NAMES.pageViewEvent]
+    case FEATURE_NAMES.sessionReplay:
+      return [FEATURE_NAMES.sessionTrace]
     case FEATURE_NAMES.pageViewTiming:
       return [FEATURE_NAMES.pageViewEvent] // this could change if we disconnect window load timings
     default:

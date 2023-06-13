@@ -116,7 +116,6 @@ export class Aggregate extends AggregateBase {
         }
       }, this.featureName, this.ee)
 
-      // new handler for waiting for multiple flags.  will be useful if/when backend designs multiple flags, or for evaluating multiple feature flags simultaneously (stn vs sr)
       this.waitForFlags(['sr']).then(([flagOn]) => this.initializeRecording(
         flagOn,
         Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.errorSampleRate'),

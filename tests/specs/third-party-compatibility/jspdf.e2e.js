@@ -9,7 +9,7 @@ describe('jspdf compatibility', () => {
       afterLoadCallback: async () => {
         const [errorsResults] = await Promise.all([
           browser.testHandle.expectErrors(10000, true),
-          browser.execute(function () { document.querySelector('body').click() }) // Setup expects before interacting with page
+          $('body').click() // Setup expects before interacting with page
         ])
         expect(errorsResults).not.toBeDefined()
 

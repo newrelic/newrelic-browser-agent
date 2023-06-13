@@ -11,7 +11,7 @@ describe('mootools compatibility', () => {
 
         const [eventsResults] = await Promise.all([
           browser.testHandle.expectInteractionEvents(),
-          browser.execute(function () { document.querySelector('body').click() }) // Setup expects before interacting with page
+          $('body').click() // Setup expects before interacting with page
         ])
 
         const jsonpRequest = eventsResults.request.body

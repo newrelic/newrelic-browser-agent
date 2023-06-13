@@ -32,6 +32,7 @@ export class Aggregate extends AggregateBase {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     this.stackReported = {}
+    this.observedAt = {}
     this.pageviewReported = {}
     this.errorCache = {}
     this.currentBody
@@ -171,7 +172,7 @@ export class Aggregate extends AggregateBase {
     if (!this.stackReported[bucketHash]) {
       this.stackReported[bucketHash] = true
       params.stack_trace = truncateSize(stackInfo.stackString)
-      params.firstSeenAt = agentRuntime.offset + time
+      this.observedAt[bucketHash] = agentRuntime.offset + time
     } else {
       params.browser_stack_hash = stringHashCode(stackInfo.stackString)
     }
@@ -188,6 +189,7 @@ export class Aggregate extends AggregateBase {
     }
 
     if (agentRuntime?.session?.state?.sessionReplay) params.hasReplay = true
+    params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
 
     var type = internal ? 'ierr' : 'err'
     var newMetrics = { time: time }

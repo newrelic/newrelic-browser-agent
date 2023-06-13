@@ -119,15 +119,15 @@ jobs:
         id: asset-size-report
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "results<<$EOF" >> "$GITHUB_ENV"
-          echo $(cat ./build/size_report.md) >> "$GITHUB_ENV"
-          echo "$EOF" >> "$GITHUB_ENV"
+          echo "results<<$EOF" >> "$GITHUB_OUTPUT"
+          cat ./build/size_report.md >> "$GITHUB_OUTPUT"
+          echo "$EOF" >> "$GITHUB_OUTPUT"
       - name: Comment pull request
         uses: ./.github/actions/comment-pull-request
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           pr_number: ${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}
-          comment: ${{ steps.asset-size-report.outputs }}
+          comment: ${{ steps.asset-size-report.outputs.results }}
           comment_tag: <!-- browser_agent asset size report -->
       - name: Archive asset size report results
         uses: actions/upload-artifact@v3

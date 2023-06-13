@@ -24,8 +24,6 @@ export default (function () {
     })
 
     describe('Feature flags', () => {
-      // this test needs to be able to override the SR flag to 0
-      // work needed to enable this in WDIO
       it('should not run if flag is 0', async () => {
         await browser.testHandle.clearScheduledReplies('bamServer')
         await browser.testHandle.scheduleReply('bamServer', {

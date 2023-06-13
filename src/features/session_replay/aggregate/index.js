@@ -23,7 +23,7 @@ import { sharedChannel } from '../../../common/constants/shared-channel'
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.8'
 
-export const avgCompression = 0.12
+export const AVG_COMPRESSION = 0.12
 
 let recorder, gzipper, u8
 
@@ -329,6 +329,6 @@ export class Aggregate extends AggregateBase {
    * https://staging.onenr.io/037jbJWxbjy
    * */
   estimateCompression (data) {
-    return data * avgCompression
+    return data * AVG_COMPRESSION
   }
 }

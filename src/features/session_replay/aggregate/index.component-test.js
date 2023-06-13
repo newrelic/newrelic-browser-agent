@@ -1,4 +1,4 @@
-import { Aggregate as SessionReplayAgg, avgCompression, MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE } from '.'
+import { Aggregate as SessionReplayAgg, AVG_COMPRESSION, MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE } from '.'
 import { Aggregator } from '../../../common/aggregate/aggregator'
 import { SESSION_EVENTS, SessionEntity, MODE } from '../../../common/session/session-entity'
 import { setConfiguration } from '../../../common/config/config'
@@ -321,7 +321,7 @@ describe('Session Replay', () => {
       let after = 0
       const spy = jest.spyOn(sr.scheduler, 'runHarvest').mockImplementation(() => { after = Date.now() })
       setConfiguration(agentIdentifier, { ...init })
-      sr.payloadBytesEstimation = IDEAL_PAYLOAD_SIZE / avgCompression
+      sr.payloadBytesEstimation = IDEAL_PAYLOAD_SIZE / AVG_COMPRESSION
       const before = Date.now()
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
@@ -332,7 +332,7 @@ describe('Session Replay', () => {
     test('Aborts if exceeds total limit', async () => {
       const spy = jest.spyOn(sr.scheduler, 'runHarvest')
       setConfiguration(agentIdentifier, { ...init })
-      sr.payloadBytesEstimation = (MAX_PAYLOAD_SIZE + 1) / avgCompression
+      sr.payloadBytesEstimation = (MAX_PAYLOAD_SIZE + 1) / AVG_COMPRESSION
       const before = Date.now()
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)

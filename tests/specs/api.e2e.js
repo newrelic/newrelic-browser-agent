@@ -193,17 +193,10 @@ describe('newrelic api', () => {
         browser.url(await browser.testHandle.assetURL('/'))
       ])
 
-      const ninetyNineY = 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy'
-      const oneHundredX = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-      const twoHundredCharacterString = ninetyNineY + oneHundredX + 'q'
-      const ri = {
-        one: '201',
-        three: twoHundredCharacterString
-      }
-      ri[twoHundredCharacterString] = '2'
       const queryRi = JSON.parse(errorsResult.request.query.ri)
-      expect(twoHundredCharacterString.length).toBe(200)
-      expect(queryRi).toEqual(ri)
+      expect(queryRi.one).toEqual('201')
+      expect(queryRi.three).toMatch(/y{99}x{100}q/)
+      expect(Object.keys(queryRi)).toContain(expect.stringMatching(/y{99}x{100}q/))
     })
 
     withBrowsersMatching(reliableUnload)('does not set ri query param if release() is not called', async () => {

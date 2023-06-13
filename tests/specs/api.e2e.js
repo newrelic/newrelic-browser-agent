@@ -1,4 +1,4 @@
-import { consistentTimingData, reliableUnload, notIE } from '../../tools/browser-matcher/common-matchers.mjs'
+import { reliableUnload, notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 
 describe('newrelic api', () => {
   it('should load when sessionStorage is not available', async () => {
@@ -47,8 +47,7 @@ describe('newrelic api', () => {
       expect(time).toBeGreaterThan(0)
     })
 
-    // Does not run for Firefox <= 19
-    withBrowsersMatching(consistentTimingData)('includes the optional 2nd argument for host in metrics call on unload', async () => {
+    it('includes the optional 2nd argument for host in metrics call on unload', async () => {
       await browser.url(await browser.testHandle.assetURL('api2.html'))
         .then(() => browser.waitForAgentLoad())
 
@@ -108,16 +107,7 @@ describe('newrelic api', () => {
       const [insResult] = await Promise.all([
         browser.testHandle.expectIns(),
         browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('api/finished.html', {
-          init: {
-            page_view_timing: {
-              enabled: false
-            },
-            ins: {
-              harvestTimeSeconds: 2
-            }
-          }
-        }))
+        browser.url(await browser.testHandle.assetURL('api/finished.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 
@@ -129,21 +119,12 @@ describe('newrelic api', () => {
   })
 
   describe('release()', () => {
-    const releaseApiConfig = {
-      init: {
-        page_view_timing: {
-          enabled: false
-        },
-        metrics: {
-          enabled: false
-        }
-      }
-    }
+    const releaseApiConfig = {}
 
     withBrowsersMatching(reliableUnload)('adds releases to jserrors', async () => {
       await Promise.all([
         browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('api/release.html', releaseApiConfig))
+        browser.url(await browser.testHandle.assetURL('api/release.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 
@@ -158,7 +139,7 @@ describe('newrelic api', () => {
     withBrowsersMatching(reliableUnload)('limits releases to jserrors', async () => {
       await Promise.all([
         browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('api/release-too-many.html', releaseApiConfig))
+        browser.url(await browser.testHandle.assetURL('api/release-too-many.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 
@@ -184,7 +165,7 @@ describe('newrelic api', () => {
     withBrowsersMatching(reliableUnload)('limits size in jserrors payload', async () => {
       await Promise.all([
         browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('api/release-too-long.html', releaseApiConfig))
+        browser.url(await browser.testHandle.assetURL('api/release-too-long.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 
@@ -196,13 +177,13 @@ describe('newrelic api', () => {
       const queryRi = JSON.parse(errorsResult.request.query.ri)
       expect(queryRi.one).toEqual('201')
       expect(queryRi.three).toMatch(/y{99}x{100}q/)
-      expect(Object.keys(queryRi)).toContain(expect.stringMatching(/y{99}x{100}q/))
+      expect(Object.keys(queryRi).find(element => element.match(/y{99}x{100}q/))).toBeTruthy()
     })
 
     withBrowsersMatching(reliableUnload)('does not set ri query param if release() is not called', async () => {
       await Promise.all([
         browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('api/no-release.html', releaseApiConfig))
+        browser.url(await browser.testHandle.assetURL('api/no-release.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 
@@ -250,7 +231,8 @@ describe('newrelic api', () => {
     const ERRORS_INBOX_UID = 'enduser.id' // this key should not be changed without consulting EI team on the data flow
 
     withBrowsersMatching(reliableUnload, notIE)('adds correct (persisted) attribute to payloads', async () => {
-      await Promise.all([
+      const [firstErrorsResult] = await Promise.all([
+        browser.testHandle.expectErrors(),
         browser.testHandle.expectRum(),
         browser.url(await browser.testHandle.assetURL('instrumented.html', {
           init: {
@@ -266,18 +248,17 @@ describe('newrelic api', () => {
           .then(() => browser.waitForAgentLoad())
       ])
 
-      const firstErrorsResult = await browser.testHandle.expectErrors(3000)
-
       expect(firstErrorsResult.request.body.err[0]).toHaveProperty('custom')
       expect(firstErrorsResult.request.body.err[0].custom[ERRORS_INBOX_UID]).not.toBeDefined() // Invalid data type (non-string) does not set user id
 
-      await browser.execute(function () {
-        newrelic.setUserId('user123')
-        newrelic.setUserId()
-        newrelic.noticeError('fake2')
-      })
-
-      const secondErrorsResult = await browser.testHandle.expectErrors(3000)
+      const [secondErrorsResult] = await Promise.all([
+        browser.testHandle.expectErrors(),
+        browser.execute(function () {
+          newrelic.setUserId('user123')
+          newrelic.setUserId()
+          newrelic.noticeError('fake2')
+        })
+      ])
 
       expect(secondErrorsResult.request.body.err[0]).toHaveProperty('custom')
       expect(secondErrorsResult.request.body.err[0].custom[ERRORS_INBOX_UID]).toBeDefined()

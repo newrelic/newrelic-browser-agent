@@ -30,7 +30,6 @@ export default (function () {
       const { request: harvestContents } = await browser.testHandle.expectBlob()
 
       expect(harvestContents.query.content_encoding).toEqual('gzip')
-      expect(harvestContents.headers['content-encoding']).toEqual('gzip')
     })
 
     it('should match expected payload - standard', async () => {

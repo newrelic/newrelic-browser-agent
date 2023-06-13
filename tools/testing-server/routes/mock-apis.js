@@ -5,7 +5,6 @@ const { PassThrough } = require('stream')
 const zlib = require('zlib')
 const assert = require('assert')
 const { paths } = require('../constants')
-const sessionReplayData = require('../utils/session-replay-data')
 
 /**
  * Fastify plugin to apply routes to the asset server that are used in various
@@ -82,12 +81,6 @@ module.exports = fp(async function (fastify, testServer) {
     compress: false
   }, (request, reply) => {
     reply.send(request.body)
-  })
-
-  fastify.get('/session-replay', {
-    compress: false
-  }, (request, reply) => {
-    return sessionReplayData[request.query.s]
   })
 
   fastify.get('/jsonp', {

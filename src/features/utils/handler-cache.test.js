@@ -57,17 +57,16 @@ test('should clear the timeout when a decision is made', () => {
   expect(global.clearTimeout).toHaveBeenCalledWith(timeout)
 })
 
-test('should not drain more than once', () => {
-  jest.spyOn(global, 'setTimeout')
+test('should not allow another decision after a permanent one', () => {
   jest.spyOn(global, 'clearTimeout')
 
   const handlerCache = new HandlerCache()
 
   const handler = jest.fn()
   handlerCache.settle(handler)
-  handlerCache.decide(true)
+  handlerCache.permanentlyDecide(false)
   handlerCache.decide(true)
 
   expect(global.clearTimeout).toHaveBeenCalledTimes(1)
-  expect(handler).toHaveBeenCalledTimes(1)
+  expect(handler).not.toHaveBeenCalled()
 })

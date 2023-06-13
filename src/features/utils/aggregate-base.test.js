@@ -95,8 +95,8 @@ test('should only configure the agent once', () => {
   expect(configure).not.toHaveBeenCalled()
 })
 
-test('should resolve waitForFlags when feature is enabled', async () => {
-  const flagNames = [faker.datatype.uuid()]
+test('should resolve waitForFlags correctly based on flags', async () => {
+  const flagNames = [faker.datatype.uuid(), faker.datatype.uuid()]
   const aggregateBase = new AggregateBase(agentIdentifier, aggregator, featureName)
   aggregateBase.ee = {
     [faker.datatype.uuid()]: faker.lorem.sentence()
@@ -106,41 +106,12 @@ test('should resolve waitForFlags when feature is enabled', async () => {
   }
 
   const flagWait = aggregateBase.waitForFlags(flagNames)
-  const featEnabledHandler = jest.mocked(registerHandler).mock.calls[0][1]
+  jest.mocked(registerHandler).mock.calls[0][1](true)
+  jest.mocked(registerHandler).mock.calls[1][1](false)
 
-  featEnabledHandler()
-
-  expect(registerHandler).toHaveBeenNthCalledWith(1, `feat-${flagNames[0]}`, expect.any(Function), featureName, aggregateBase.ee)
-  expect(registerHandler).toHaveBeenNthCalledWith(2, `block-${flagNames[0]}`, expect.any(Function), aggregateBase.feature, aggregateBase.ee)
-  expect(registerHandler).toHaveBeenCalledTimes(2)
-  await expect(flagWait).resolves.toEqual([{
-    name: flagNames[0],
-    value: true
-  }])
-})
-
-test('should resolve waitForFlags when feature is blocked', async () => {
-  const flagNames = [faker.datatype.uuid()]
-  const aggregateBase = new AggregateBase(agentIdentifier, aggregator, featureName)
-  aggregateBase.ee = {
-    [faker.datatype.uuid()]: faker.lorem.sentence()
-  }
-  aggregateBase.feature = {
-    [faker.datatype.uuid()]: faker.lorem.sentence()
-  }
-
-  const flagWait = aggregateBase.waitForFlags(flagNames)
-  const featEnabledHandler = jest.mocked(registerHandler).mock.calls[1][1]
-
-  featEnabledHandler()
-
-  expect(registerHandler).toHaveBeenNthCalledWith(1, `feat-${flagNames[0]}`, expect.any(Function), featureName, aggregateBase.ee)
-  expect(registerHandler).toHaveBeenNthCalledWith(2, `block-${flagNames[0]}`, expect.any(Function), aggregateBase.feature, aggregateBase.ee)
-  expect(registerHandler).toHaveBeenCalledTimes(2)
-  await expect(flagWait).resolves.toEqual([{
-    name: flagNames[0],
-    value: false
-  }])
+  expect(registerHandler).toHaveBeenCalledWith(`rumresp-${flagNames[0]}`, expect.any(Function), featureName, aggregateBase.ee)
+  expect(registerHandler).toHaveBeenCalledWith(`rumresp-${flagNames[1]}`, expect.any(Function), featureName, aggregateBase.ee)
+  await expect(flagWait).resolves.toEqual([true, false])
 })
 
 test('should not register any handlers when flagNames is empty', async () => {

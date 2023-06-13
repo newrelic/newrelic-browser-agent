@@ -8,6 +8,7 @@ import { SharedContext } from '../context/shared-context'
 import { Harvest } from './harvest'
 import { subscribeToEOL } from '../unload/eol'
 import { getConfigurationValue } from '../config/config'
+import { SESSION_EVENTS } from '../session/session-entity'
 
 /**
  * Periodically invokes harvest calls and handles retries
@@ -37,10 +38,16 @@ export class HarvestScheduler extends SharedContext {
     // unload if EOL mechanism fires
     subscribeToEOL(this.unload.bind(this), getConfigurationValue(this.sharedContext.agentIdentifier, 'allow_bfcache')) // TO DO: remove feature flag after rls stable
 
-    // unload if session resets
-    this.sharedContext?.ee.on('session-reset', this.unload.bind(this))
+    /* Flush all buffered data if session resets and give up retries. This should be synchronous to ensure that the correct `session` value is sent.
+      Since session-reset generates a new session ID and the ID is grabbed at send-time, any delays or retries would cause the payload to be sent under
+      the wrong session ID. */
+    this.sharedContext?.ee.on(SESSION_EVENTS.RESET, () => this.runHarvest({ forceNoRetry: true }))
   }
 
+  /**
+   * This function is only meant for the last outgoing harvest cycle of a page. It trickles down to using sendBeacon, which should not be used
+   * to send payloads while the page is still active, due to limitations on how much data can be buffered in the API at any one time.
+   */
   unload () {
     if (this.aborted) return
     // If opts.onUnload is defined, these are special actions to execute before attempting to send the final payload.
@@ -77,11 +84,6 @@ export class HarvestScheduler extends SharedContext {
 
   runHarvest (opts) {
     if (this.aborted) return
-
-    const onHarvestFinished = (result) => {
-      if (result.blocked) this.onHarvestBlocked(opts, result)
-      else this.onHarvestFinished(opts, result)
-    }
 
     let harvests = []
     let submitMethod
@@ -123,7 +125,7 @@ export class HarvestScheduler extends SharedContext {
         payload,
         opts,
         submitMethod,
-        cbFinished: onHarvestFinished,
+        cbFinished: cbRanAfterSend,
         customUrl: this.opts.customUrl,
         raw: this.opts.raw
       })
@@ -131,6 +133,17 @@ export class HarvestScheduler extends SharedContext {
 
     if (this.started) {
       this.scheduleHarvest()
+    }
+
+    return
+
+    /**
+     * This is executed immediately after harvest sends the data via XHR, or if there's nothing to send. Note that this excludes on unloading / sendBeacon.
+     * @param {Object} result
+     */
+    function cbRanAfterSend (result) {
+      if (opts?.forceNoRetry) result.retry = false // discard unsent data rather than re-queuing for next harvest attempt
+      scheduler.onHarvestFinished(opts, result)
     }
   }
 

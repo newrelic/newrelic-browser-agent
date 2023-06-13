@@ -9,7 +9,7 @@ import { ee } from '../../common/event-emitter/contextual-ee'
 import { now } from '../../common/timing/now'
 import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
-import { isWorkerScope } from '../../common/constants/runtime'
+import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { gosCDN } from '../../common/window/nreum'
@@ -157,7 +157,7 @@ export function setAPI (agentIdentifier, forceDrain) {
   }
 
   // theres no window.load event on non-browser scopes, lazy load immediately
-  if (isWorkerScope) lazyLoad()
+  if (!isBrowserScope) lazyLoad()
   // try to stay out of the way of the window.load event, lazy load once that has finished.
   else onWindowLoad(() => lazyLoad(), true)
 

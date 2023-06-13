@@ -25,16 +25,16 @@ export default (function () {
 
     it('Should harvest early if exceeds preferred size', async () => {
       const startTime = Date.now()
-      const [{ request: blobHarvest }] = await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ harvestTimeSeconds: 60 })))
-        .then(() => browser.waitForAgentLoad())
-        .then(() => Promise.all([
-          browser.testHandle.expectBlob(),
-          // preferred size = 64kb, compression estimation is 88%
-          browser.execute(function () {
-            Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.payloadBytesEstimation = 64000 / 0.12
-            document.querySelector('body').click()
-          })
-        ]))
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ harvestTimeSeconds: 60 })))
+      await browser.waitForAgentLoad()
+      const [{ request: blobHarvest }] = await Promise.all([
+        browser.testHandle.expectBlob(),
+        // preferred size = 64kb, compression estimation is 88%
+        browser.execute(function () {
+          Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.payloadBytesEstimation = 64000 / 0.12
+          document.querySelector('body').click()
+        })
+      ])
 
       expect(blobHarvest.body.blob.length).toBeGreaterThan(0)
       expect(Date.now() - startTime).toBeLessThan(60000)

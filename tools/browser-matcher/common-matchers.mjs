@@ -23,16 +23,6 @@ export const supportsFetch = new SpecMatcher()
   .include('ios>=11')
   .include('android')
 
-// Firefox <= 19 has inconsistent timing data.
-export const consistentTimingData = new SpecMatcher()
-  .include('safari')
-  .include('chrome')
-  .include('edge')
-  .include('firefox>19')
-  .include('ios')
-  .include('android')
-  .include('ie@11')
-
 export const notIE = new SpecMatcher()
   .include('safari')
   .include('chrome')

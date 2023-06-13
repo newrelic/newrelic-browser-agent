@@ -200,7 +200,7 @@ describe('newrelic api', () => {
     withBrowsersMatching(notIE)('persists attribute onto subsequent page loads until unset', async () => {
       const [rumResult] = await Promise.all([
         browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('instrumented.html', { scriptString: 'newrelic.setCustomAttribute(\'testing\', 123, true);' }))
+        browser.url(await browser.testHandle.assetURL('api/custom-attribute.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 
@@ -231,21 +231,21 @@ describe('newrelic api', () => {
     const ERRORS_INBOX_UID = 'enduser.id' // this key should not be changed without consulting EI team on the data flow
 
     withBrowsersMatching(reliableUnload, notIE)('adds correct (persisted) attribute to payloads', async () => {
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+        init: {
+          jserrors: { harvestTimeSeconds: 2 },
+          privacy: { cookies_enabled: true }
+        }
+      }))
+        .then(() => browser.waitForAgentLoad())
+
       const [firstErrorsResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('instrumented.html', {
-          init: {
-            jserrors: { harvestTimeSeconds: 2 },
-            privacy: { cookies_enabled: true }
-          },
-          scriptString: `
-            newrelic.setUserId(456)
-            newrelic.setUserId({'foo':'bar'})
-            newrelic.noticeError('fake1')
-            `
-        }))
-          .then(() => browser.waitForAgentLoad())
+        browser.execute(function () {
+          newrelic.setUserId(456)
+          newrelic.setUserId({ foo: 'bar' })
+          newrelic.noticeError('fake1')
+        })
       ])
 
       expect(firstErrorsResult.request.body.err[0]).toHaveProperty('custom')

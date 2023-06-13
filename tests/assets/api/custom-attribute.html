@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>setCustomAttribute API Test</title>
+    {init}
+    {config}
+    {loader}
+  </head>
+  <body>
+    <script>
+        // should persists attribute onto subsequent page loads until unset
+        newrelic.setCustomAttribute('testing', 123, true)
+    </script>
+  </body>
+</html>

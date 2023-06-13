@@ -85,6 +85,15 @@ export class HarvestScheduler extends SharedContext {
   runHarvest (opts) {
     if (this.aborted) return
 
+    /**
+     * This is executed immediately after harvest sends the data via XHR, or if there's nothing to send. Note that this excludes on unloading / sendBeacon.
+     * @param {Object} result
+     */
+    const cbRanAfterSend = (result) => {
+      if (opts?.forceNoRetry) result.retry = false // discard unsent data rather than re-queuing for next harvest attempt
+      this.onHarvestFinished(opts, result)
+    }
+
     let harvests = []
     let submitMethod
 
@@ -136,15 +145,6 @@ export class HarvestScheduler extends SharedContext {
     }
 
     return
-
-    /**
-     * This is executed immediately after harvest sends the data via XHR, or if there's nothing to send. Note that this excludes on unloading / sendBeacon.
-     * @param {Object} result
-     */
-    function cbRanAfterSend (result) {
-      if (opts?.forceNoRetry) result.retry = false // discard unsent data rather than re-queuing for next harvest attempt
-      scheduler.onHarvestFinished(opts, result)
-    }
   }
 
   onHarvestFinished (opts, result) {

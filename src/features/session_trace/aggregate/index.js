@@ -31,6 +31,7 @@ const toAggregate = {
 }
 const MAX_TRACE_DURATION = 10 * 60 * 1000 // 10 minutes
 const REQ_THRESHOLD_TO_SEND = 30
+const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -73,7 +74,7 @@ export class Aggregate extends AggregateBase {
       this.isStandalone = true
       registerHandler('rumresp-stn', (on) => controlTraceOp(on), this.featureName, this.ee)
     } else {
-      // Switch to full capture mode if any exception happens during agent life, but only if current mode is ERROR so that we don't reignite trace if MODE was turned OFF.
+      // Switch to full capture mode on next harvest if any exception happens, but only if current mode is ERROR so that we don't reignite trace if MODE was turned OFF.
       registerHandler('errorAgg', () => {
         if (sessionEntity.state.sessionTraceMode === MODE.ERROR) sessionEntity.state.sessionTraceMode = MODE.FULL
       }, this.featureName, this.ee)
@@ -135,7 +136,6 @@ export class Aggregate extends AggregateBase {
   }
 
   startTracing (startupBuffer) {
-    // TO DO: create error mode for this feature
     if (typeof PerformanceNavigationTiming !== 'undefined') {
       this.storeTiming(window.performance.getEntriesByType('navigation')[0])
     } else {
@@ -177,12 +177,19 @@ export class Aggregate extends AggregateBase {
         }
         // Only harvest when more than some threshold of nodes are pending, after the very first harvest.
         if (this.ptid && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
-      }
-      // else { -- *cli May '26 - Update: Not rate limiting backgrounded pages either for now.
-      //   // With sessions on harvest intervals, visible pages will send payload regardless of pending nodes but backgrounded pages will still abide by threshold.
+      } else {
+      //   -- *cli May '26 - Update: Not rate limiting backgrounded pages either for now.
       //   if (this.ptid && document.visibilityState === 'hidden' && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
-      // }
+        const currentMode = this.agentRuntime.session.state.sessionTraceMode
 
+        /* There could still be nodes previously collected even after Trace (w/ session mgmt) is turned off. Hence, continue to send the last batch.
+         * The intermediary controller SHOULD be already switched off so that no nodes are further queued. */
+        if (currentMode === MODE.OFF && Object.key(this.trace).length === 0) return
+        else if (currentMode === MODE.ERROR) {
+          this.trimSTNs(ERROR_MODE_SECONDS_WINDOW)
+          return // don't actually send anything while in observation mode awaiting any errors
+        }
+      }
       return this.takeSTNs(options.retry)
     }
   }
@@ -383,6 +390,21 @@ export class Aggregate extends AggregateBase {
     else this.trace[stn.n] = [stn]
 
     this.nodeCount++
+  }
+
+  /**
+   * Trim the collection of nodes awaiting harvest such that those seen outside a certain span of time are discarded.
+   * @param {Number} lookbackDuration - past length of time until now for which we care about nodes, in milliseconds
+   */
+  trimSTNs (lookbackDuration) {
+    const cutoffHighResTime = Math.max(now() - lookbackDuration, 0)
+    Object.values(this.trace).forEach(nodeList => {
+      /* Notice nodes are appending under their name's list as they end and are stored. This means each list is already (roughly) sorted in chronological order by end time.
+       * This isn't exact since nodes go through some processing & EE handlers chain, but it's close enough as we still capture nodes whose duration overlaps the lookback window.
+       * ASSUMPTION: all 'end' timings stored are relative to timeOrigin (DOMHighResTimeStamp) and not Unix epoch based. */
+      const cutoffIdx = nodeList.findIndex(node => cutoffHighResTime <= node.e)
+      nodeList.splice(0, cutoffIdx) // chop off everything outside our window i.e. before the last <lookbackDuration> timeframe
+    })
   }
 
   // Used by session trace's harvester to create the payload body.

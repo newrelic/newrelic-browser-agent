@@ -7,16 +7,13 @@ import { faker } from '@faker-js/faker'
 import * as runtimeModule from '../constants/runtime'
 import * as submitData from './submit-data'
 
-jest.mock('../constants/runtime', () => ({
-  __esModule: true,
-  isBrowserScope: false,
-  supportsSendBeacon: false
-}))
+jest.enableAutomock()
+jest.unmock('./submit-data')
 
 const url = 'https://example.com/api'
 
 afterEach(() => {
-  jest.restoreAllMocks()
+  jest.clearAllMocks()
 })
 
 describe('getSubmitMethod', () => {

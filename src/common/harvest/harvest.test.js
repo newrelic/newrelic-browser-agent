@@ -1,37 +1,15 @@
 import { faker } from '@faker-js/faker'
+
+import * as encodeModule from '../url/encode'
 import * as submitDataModule from '../util/submit-data'
 import * as configModule from '../config/config'
+import { applyFnToProps } from '../util/traverse'
+import * as runtimeModule from '../constants/runtime'
+
 import { Harvest } from './harvest'
 
-jest.mock('../context/shared-context', () => ({
-  __esModule: true,
-  SharedContext: function () {
-    this.sharedContext = {
-      agentIdentifier: 'abcd'
-    }
-  }
-}))
-jest.mock('../config/config', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn(),
-  getInfo: jest.fn().mockReturnValue({
-    errorBeacon: 'example.com',
-    licenseKey: 'abcd'
-  }),
-  getRuntime: jest.fn().mockReturnValue({
-    bytesSent: {},
-    queryBytesSent: {}
-  })
-}))
-jest.mock('../util/submit-data', () => ({
-  __esModule: true,
-  getSubmitMethod: jest.fn(),
-  xhr: jest.fn(() => ({
-    addEventListener: jest.fn()
-  })),
-  beacon: jest.fn(),
-  fetchKeepAlive: jest.fn()
-}))
+jest.enableAutomock()
+jest.unmock('./harvest')
 
 let harvestInstance
 
@@ -40,12 +18,12 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  jest.resetAllMocks()
+  jest.clearAllMocks()
 })
 
 describe('sendX', () => {
   beforeEach(() => {
-    jest.spyOn(submitDataModule, 'getSubmitMethod').mockReturnValue(jest.fn())
+    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(jest.fn())
     jest.spyOn(harvestInstance, '_send').mockImplementation(jest.fn())
     jest.spyOn(harvestInstance, 'obfuscateAndSend').mockImplementation(jest.fn())
     jest.spyOn(harvestInstance, 'createPayload').mockReturnValue({})
@@ -79,9 +57,7 @@ describe('sendX', () => {
   })
 
   test('should not use obfuscateAndSend', async () => {
-    harvestInstance.obfuscator = {
-      shouldObfuscate: jest.fn().mockReturnValue(false)
-    }
+    jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(false)
 
     const endpoint = faker.datatype.uuid()
     harvestInstance.sendX({ endpoint })
@@ -95,9 +71,7 @@ describe('sendX', () => {
   })
 
   test('should use obfuscateAndSend', async () => {
-    harvestInstance.obfuscator = {
-      shouldObfuscate: jest.fn().mockReturnValue(true)
-    }
+    jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(true)
 
     const endpoint = faker.datatype.uuid()
     harvestInstance.sendX({ endpoint })
@@ -139,9 +113,7 @@ describe('send', () => {
   })
 
   test('should not use obfuscateAndSend', async () => {
-    harvestInstance.obfuscator = {
-      shouldObfuscate: jest.fn().mockReturnValue(false)
-    }
+    jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(false)
 
     const endpoint = faker.datatype.uuid()
     harvestInstance.send({ endpoint })
@@ -157,9 +129,7 @@ describe('send', () => {
   })
 
   test('should use obfuscateAndSend', async () => {
-    harvestInstance.obfuscator = {
-      shouldObfuscate: jest.fn().mockReturnValue(true)
-    }
+    jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(true)
 
     const endpoint = faker.datatype.uuid()
     harvestInstance.send({ endpoint })
@@ -190,11 +160,14 @@ describe('_send', () => {
   let errorBeacon
   let submitMethod
   let spec
+  let licenseKey
 
   beforeEach(() => {
-    errorBeacon = faker.internet.url()
+    errorBeacon = faker.internet.domainName()
+    licenseKey = faker.datatype.uuid()
     jest.mocked(configModule.getInfo).mockReturnValue({
-      errorBeacon
+      errorBeacon,
+      licenseKey
     })
     jest.mocked(configModule.getRuntime).mockReturnValue({
       bytesSent: {},
@@ -205,18 +178,21 @@ describe('_send', () => {
     spec = {
       endpoint: faker.datatype.uuid(),
       payload: {
-        body: {},
-        qs: {}
+        body: {
+          [faker.datatype.uuid()]: faker.lorem.sentence()
+        },
+        qs: {
+          [faker.datatype.uuid()]: faker.lorem.sentence()
+        }
       },
       opts: {}
     }
-    submitMethod = jest.fn()
-    jest.spyOn(submitDataModule, 'getSubmitMethod').mockReturnValue(submitMethod)
+    submitMethod = jest.fn().mockReturnValue(true)
+    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitMethod)
   })
 
   test('should return false when info.errorBeacon is not defined', () => {
     jest.mocked(configModule.getInfo).mockReturnValue({})
-    spec.opts.sendEmptyBody = true
 
     const result = harvestInstance._send(spec)
 
@@ -224,18 +200,296 @@ describe('_send', () => {
     expect(submitMethod).not.toHaveBeenCalled()
   })
 
-  test('should return false when info.errorBeacon is not defined', () => {
-    jest.mocked(submitMethod).mockReturnValue(true)
-    spec.opts.sendEmptyBody = true
+  test('should return false when body is empty and sendEmptyBody is false', () => {
+    jest.spyOn(harvestInstance, 'cleanPayload').mockReturnValue({ body: {}, qs: {} })
+    spec.opts.sendEmptyBody = false
+    spec.cbFinished = jest.fn()
+
+    const result = harvestInstance._send(spec)
+
+    expect(result).toEqual(false)
+    expect(submitMethod).not.toHaveBeenCalled()
+    expect(spec.cbFinished).toHaveBeenCalledWith({ sent: false })
+  })
+
+  test('should construct the rum url', () => {
+    spec.endpoint = 'rum'
 
     const result = harvestInstance._send(spec)
 
     expect(result).toEqual(true)
     expect(submitMethod).toHaveBeenCalledWith({
-      body: {},
+      body: JSON.stringify(spec.payload.body),
       headers: [{ key: 'content-type', value: 'text/plain' }],
       sync: undefined,
-      url: expect.stringContaining(errorBeacon)
+      url: expect.stringContaining(`https://${errorBeacon}/1/${licenseKey}?`)
+    })
+  })
+
+  test('should construct the non-rum url', () => {
+    const result = harvestInstance._send(spec)
+
+    expect(result).toEqual(true)
+    expect(submitMethod).toHaveBeenCalledWith({
+      body: JSON.stringify(spec.payload.body),
+      headers: [{ key: 'content-type', value: 'text/plain' }],
+      sync: undefined,
+      url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
+    })
+  })
+
+  test('should use the custom defined url', () => {
+    spec.customUrl = faker.internet.url()
+
+    const result = harvestInstance._send(spec)
+
+    expect(result).toEqual(true)
+    expect(submitMethod).toHaveBeenCalledWith({
+      body: JSON.stringify(spec.payload.body),
+      headers: [{ key: 'content-type', value: 'text/plain' }],
+      sync: undefined,
+      url: expect.stringContaining(`${spec.customUrl}?`)
+    })
+  })
+
+  test('should not include the license key or base params in a raw url', () => {
+    spec.raw = true
+
+    const result = harvestInstance._send(spec)
+    const queryString = Object.entries(spec.payload.qs)
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join('&')
+
+    expect(result).toEqual(true)
+    expect(submitMethod).toHaveBeenCalledWith({
+      body: JSON.stringify(spec.payload.body),
+      headers: [{ key: 'content-type', value: 'text/plain' }],
+      sync: undefined,
+      url: `https://${errorBeacon}/${spec.endpoint}?${queryString}`
+    })
+  })
+
+  test('should remove leading ampersand from encoded payload params', () => {
+    const queryString = Object.entries(spec.payload.qs)
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join('&')
+
+    jest.mocked(encodeModule.obj).mockReturnValue(`&${queryString}`)
+    spec.raw = true
+
+    const result = harvestInstance._send(spec)
+
+    expect(result).toEqual(true)
+    expect(submitMethod).toHaveBeenCalledWith({
+      body: JSON.stringify(spec.payload.body),
+      headers: [{ key: 'content-type', value: 'text/plain' }],
+      sync: undefined,
+      url: `https://${errorBeacon}/${spec.endpoint}?${queryString}`
+    })
+  })
+
+  test('should not alter body when gzip qs is present', () => {
+    spec.payload.qs.content_encoding = 'gzip'
+
+    const result = harvestInstance._send(spec)
+
+    expect(result).toEqual(true)
+    expect(submitMethod).toHaveBeenCalledWith({
+      body: spec.payload.body,
+      headers: [{ key: 'content-type', value: 'text/plain' }],
+      sync: undefined,
+      url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
+    })
+  })
+
+  test('should set body to events when endpoint is events', () => {
+    spec.endpoint = 'events'
+    spec.payload.body.e = {
+      [faker.datatype.uuid()]: faker.lorem.sentence()
+    }
+
+    const result = harvestInstance._send(spec)
+
+    expect(result).toEqual(true)
+    expect(submitMethod).toHaveBeenCalledWith({
+      body: spec.payload.body.e,
+      headers: [{ key: 'content-type', value: 'text/plain' }],
+      sync: undefined,
+      url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
+    })
+  })
+
+  test.each([
+    null,
+    undefined,
+    {},
+    []
+  ])('should set body to empty string when %s', (inputBody) => {
+    spec.opts.sendEmptyBody = true
+    spec.payload.body = inputBody
+
+    const result = harvestInstance._send(spec)
+
+    expect(result).toEqual(true)
+    expect(submitMethod).toHaveBeenCalledWith({
+      body: '',
+      headers: [{ key: 'content-type', value: 'text/plain' }],
+      sync: undefined,
+      url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
+    })
+  })
+
+  test('should add a callback to XHR and call cbCallback when not a final harvest', () => {
+    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.xhr)
+    spec.cbFinished = jest.fn()
+
+    const result = harvestInstance._send(spec)
+    const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
+    const xhrLoadHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
+
+    const xhrState = {
+      status: faker.datatype.uuid()
+    }
+    xhrLoadHandler.call(xhrState)
+
+    expect(xhrAddEventListener).toHaveBeenCalledWith('load', expect.any(Function), expect.any(Object))
+    expect(result).toEqual(jest.mocked(submitDataModule.xhr).mock.results[0].value)
+    expect(submitMethod).not.toHaveBeenCalled()
+    expect(spec.cbFinished).toHaveBeenCalledWith({ ...xhrState, sent: true })
+  })
+
+  test('should set cbFinished state retry to true with delay when xhr has 429 status', () => {
+    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.xhr)
+    spec.cbFinished = jest.fn()
+
+    const result = harvestInstance._send(spec)
+    const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
+    const xhrLoadHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
+
+    const xhrState = {
+      status: 429,
+      tooManyRequestsDelay: 100
+    }
+    xhrLoadHandler.call(xhrState)
+
+    expect(xhrAddEventListener).toHaveBeenCalledWith('load', expect.any(Function), expect.any(Object))
+    expect(result).toEqual(jest.mocked(submitDataModule.xhr).mock.results[0].value)
+    expect(submitMethod).not.toHaveBeenCalled()
+    expect(spec.cbFinished).toHaveBeenCalledWith({
+      ...xhrState,
+      tooManyRequestsDelay: undefined,
+      sent: true,
+      retry: true,
+      delay: xhrState.tooManyRequestsDelay
+    })
+  })
+
+  test.each([
+    408, 500, 503
+  ])('should set cbFinished state retry to true without delay when xhr has %s status', (statusCode) => {
+    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.xhr)
+    spec.cbFinished = jest.fn()
+
+    const result = harvestInstance._send(spec)
+    const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
+    const xhrLoadHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
+
+    const xhrState = {
+      status: statusCode
+    }
+    xhrLoadHandler.call(xhrState)
+
+    expect(xhrAddEventListener).toHaveBeenCalledWith('load', expect.any(Function), expect.any(Object))
+    expect(result).toEqual(jest.mocked(submitDataModule.xhr).mock.results[0].value)
+    expect(submitMethod).not.toHaveBeenCalled()
+    expect(spec.cbFinished).toHaveBeenCalledWith({
+      ...xhrState,
+      sent: true,
+      retry: true
+    })
+  })
+
+  test('should include response in call to cbFinished when needResponse is true', () => {
+    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.xhr)
+    spec.cbFinished = jest.fn()
+    spec.opts.needResponse = true
+
+    const result = harvestInstance._send(spec)
+    const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
+    const xhrLoadHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
+
+    const xhrState = {
+      status: faker.datatype.uuid(),
+      responseText: faker.lorem.sentence()
+    }
+    xhrLoadHandler.call(xhrState)
+
+    expect(xhrAddEventListener).toHaveBeenCalledWith('load', expect.any(Function), expect.any(Object))
+    expect(result).toEqual(jest.mocked(submitDataModule.xhr).mock.results[0].value)
+    expect(submitMethod).not.toHaveBeenCalled()
+    expect(spec.cbFinished).toHaveBeenCalledWith({
+      ...xhrState,
+      sent: true
+    })
+  })
+
+  test('should not include response in call to cbFinished when needResponse is false', () => {
+    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.xhr)
+    spec.cbFinished = jest.fn()
+    spec.opts.needResponse = false
+
+    const result = harvestInstance._send(spec)
+    const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
+    const xhrLoadHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
+
+    const xhrState = {
+      status: faker.datatype.uuid(),
+      responseText: faker.lorem.sentence()
+    }
+    xhrLoadHandler.call(xhrState)
+
+    expect(xhrAddEventListener).toHaveBeenCalledWith('load', expect.any(Function), expect.any(Object))
+    expect(result).toEqual(jest.mocked(submitDataModule.xhr).mock.results[0].value)
+    expect(submitMethod).not.toHaveBeenCalled()
+    expect(spec.cbFinished).toHaveBeenCalledWith({
+      ...xhrState,
+      responseText: undefined,
+      sent: true
+    })
+  })
+
+  test('should fallback to fetchKeepAlive when beacon returns false', async () => {
+    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.beacon)
+    jest.mocked(submitDataModule.beacon).mockReturnValue(false)
+    spec.opts.unload = true
+
+    const results = harvestInstance._send(spec)
+    await new Promise(process.nextTick)
+
+    expect(results).toEqual(true)
+    expect(submitDataModule.fetchKeepAlive).toHaveBeenCalledWith({
+      body: JSON.stringify(spec.payload.body),
+      headers: [{ key: 'content-type', value: 'text/plain' }],
+      url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
+    })
+  })
+
+  test('should not throw an exception if fetchKeepAlive throws error', async () => {
+    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.beacon)
+    jest.mocked(submitDataModule.beacon).mockReturnValue(false)
+    jest.mocked(submitDataModule.fetchKeepAlive).mockImplementation(() => {
+      throw new Error(faker.lorem.sentence())
+    })
+    spec.opts.unload = true
+
+    const results = harvestInstance._send(spec)
+    await new Promise(process.nextTick)
+
+    expect(results).toEqual(true)
+    expect(submitDataModule.fetchKeepAlive).toHaveBeenCalledWith({
+      body: JSON.stringify(spec.payload.body),
+      headers: [{ key: 'content-type', value: 'text/plain' }],
+      url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
     })
   })
 })
@@ -245,12 +499,7 @@ describe('obfuscateAndSend', () => {
     jest.spyOn(harvestInstance, '_send').mockImplementation(jest.fn())
   })
 
-  test('should apply obfuscation to body and qs of payload', () => {
-    const obfuscatedString = faker.datatype.uuid()
-    harvestInstance.obfuscator = {
-      obfuscateString: jest.fn().mockReturnValue(obfuscatedString)
-    }
-
+  test('should apply obfuscation to payload', () => {
     const payload = {
       body: {
         foo: faker.lorem.sentence()
@@ -262,44 +511,23 @@ describe('obfuscateAndSend', () => {
 
     harvestInstance.obfuscateAndSend({ payload })
 
-    expect(harvestInstance._send).toHaveBeenCalledWith({
-      payload: {
-        body: {
-          foo: obfuscatedString
-        },
-        qs: {
-          foo: obfuscatedString
-        }
-      }
-    })
+    expect(applyFnToProps).toHaveBeenCalledWith(payload, expect.any(Function), 'string', ['e'])
+    expect(harvestInstance.obfuscator.obfuscateString).toHaveBeenCalledWith(payload)
   })
 
-  test('should skip obfuscation for qs.e param', () => {
-    const obfuscatedString = faker.datatype.uuid()
-    harvestInstance.obfuscator = {
-      obfuscateString: jest.fn().mockReturnValue(obfuscatedString)
-    }
+  test('should still call _send when spec is undefined', () => {
+    harvestInstance.obfuscateAndSend()
 
-    const payload = {
-      qs: {
-        e: faker.lorem.sentence()
-      }
-    }
+    expect(harvestInstance._send).toHaveBeenCalled()
+  })
 
+  test.each([
+    null,
+    undefined
+  ])('should still call _send when payload is %s', (payload) => {
     harvestInstance.obfuscateAndSend({ payload })
 
-    expect(harvestInstance.obfuscator.obfuscateString).not.toHaveBeenCalled()
-    expect(harvestInstance._send).toHaveBeenCalledWith({
-      payload
-    })
-  })
-
-  test.each([undefined, {}])('should still call _send when spec is %s', async (spec) => {
-    harvestInstance.obfuscateAndSend(spec)
-
-    expect(harvestInstance._send).toHaveBeenCalledWith({
-      payload: {}
-    })
+    expect(harvestInstance._send).toHaveBeenCalled()
   })
 })
 
@@ -326,14 +554,20 @@ describe('baseQueryString', () => {
     const results = harvestInstance.baseQueryString()
 
     expect(results).toContain(`a=${applicationID}`)
+    expect(encodeModule.param).toHaveBeenCalledWith('sa', sa)
     expect(results).toContain(`&sa=${sa}`)
+    expect(encodeModule.param).toHaveBeenCalledWith('v', expect.stringMatching(/\d{1,3}\.\d{1,3}\.\d{1,3}/))
     expect(results).toMatch(/&v=\d{1,3}\.\d{1,3}\.\d{1,3}/)
+    expect(encodeModule.param).toHaveBeenCalledWith('t', 'Unnamed Transaction')
     expect(results).toContain('&t=Unnamed%20Transaction')
+    expect(encodeModule.param).toHaveBeenCalledWith('ct', customTransaction)
     expect(results).toContain(`&ct=${customTransaction}`)
     expect(results).toMatch(/&rst=\d{1,9}/)
     expect(results).toContain('&ck=0')
     expect(results).toContain('&s=0')
-    expect(results).toContain(`&ref=${location}`)
+    expect(encodeModule.param).toHaveBeenCalledWith('ref', location)
+    expect(results).toContain(`&ref=${encodeURIComponent(location)}`)
+    expect(encodeModule.param).toHaveBeenCalledWith('ptid', ptid)
     expect(results).toContain(`&ptid=${ptid}`)
   })
 
@@ -345,6 +579,7 @@ describe('baseQueryString', () => {
 
     const results = harvestInstance.baseQueryString()
 
+    expect(encodeModule.param).toHaveBeenCalledWith('t', tNamePlain)
     expect(results).toContain(`&t=${tNamePlain}`)
   })
 
@@ -356,14 +591,17 @@ describe('baseQueryString', () => {
 
     const results = harvestInstance.baseQueryString()
 
+    expect(encodeModule.param).not.toHaveBeenCalledWith('t', expect.any(String))
     expect(results).not.toContain('&t=')
+    expect(encodeModule.param).toHaveBeenCalledWith('to', transactionName)
     expect(results).toContain(`&to=${transactionName}`)
   })
 
   test('should default sa to empty string', () => {
     const results = harvestInstance.baseQueryString()
 
-    expect(results).not.toContain('&sa=')
+    expect(encodeModule.param).toHaveBeenCalledWith('sa', '')
+    expect(results).toContain('&sa=')
   })
 
   test('should default s to 0', () => {
@@ -374,20 +612,20 @@ describe('baseQueryString', () => {
 
   test('should obfuscate ref', () => {
     const obfuscatedLocation = faker.datatype.uuid()
-    harvestInstance.obfuscator = {
-      shouldObfuscate: jest.fn().mockReturnValue(true),
-      obfuscateString: jest.fn().mockReturnValue(obfuscatedLocation)
-    }
+    jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(true)
+    jest.mocked(harvestInstance.obfuscator.obfuscateString).mockReturnValue(obfuscatedLocation)
 
     const results = harvestInstance.baseQueryString()
 
+    expect(harvestInstance.obfuscator.obfuscateString).toHaveBeenCalledWith(location)
     expect(results).toContain(`&ref=${obfuscatedLocation}`)
   })
 
   test('should default ptid to empty string', () => {
     const results = harvestInstance.baseQueryString()
 
-    expect(results).not.toContain('&ptid=')
+    expect(encodeModule.param).toHaveBeenCalledWith('ptid', '')
+    expect(results).toContain('&ptid=')
   })
 })
 
@@ -522,9 +760,10 @@ describe('createPayload', () => {
       qs: payloadB.qs
     })
   })
+})
 
+describe('cleanPayload', () => {
   test('should remove undefined properties from body and qs', () => {
-    const feature = faker.datatype.uuid()
     const payload = {
       body: {
         foo: undefined,
@@ -535,17 +774,14 @@ describe('createPayload', () => {
         [faker.datatype.uuid()]: faker.lorem.sentence()
       }
     }
-    const harvestCallback = jest.fn().mockReturnValue(payload)
 
-    harvestInstance.on(feature, harvestCallback)
-    const results = harvestInstance.createPayload(feature)
+    const results = harvestInstance.cleanPayload(payload)
 
     expect(Object.keys(results.body)).not.toContain('foo')
     expect(Object.keys(results.qs)).not.toContain('foo')
   })
 
   test('should remove null properties from body and qs', () => {
-    const feature = faker.datatype.uuid()
     const payload = {
       body: {
         foo: null,
@@ -556,17 +792,14 @@ describe('createPayload', () => {
         [faker.datatype.uuid()]: faker.lorem.sentence()
       }
     }
-    const harvestCallback = jest.fn().mockReturnValue(payload)
 
-    harvestInstance.on(feature, harvestCallback)
-    const results = harvestInstance.createPayload(feature)
+    const results = harvestInstance.cleanPayload(payload)
 
     expect(Object.keys(results.body)).not.toContain('foo')
     expect(Object.keys(results.qs)).not.toContain('foo')
   })
 
   test('should remove empty string properties from body and qs', () => {
-    const feature = faker.datatype.uuid()
     const payload = {
       body: {
         foo: '',
@@ -577,148 +810,10 @@ describe('createPayload', () => {
         [faker.datatype.uuid()]: faker.lorem.sentence()
       }
     }
-    const harvestCallback = jest.fn().mockReturnValue(payload)
 
-    harvestInstance.on(feature, harvestCallback)
-    const results = harvestInstance.createPayload(feature)
+    const results = harvestInstance.cleanPayload(payload)
 
     expect(Object.keys(results.body)).not.toContain('foo')
     expect(Object.keys(results.qs)).not.toContain('foo')
   })
 })
-
-// describe('sendX', () => {
-//   test.each([null, undefined, false])('should not send request when body is empty and sendEmptyBody is %s', (sendEmptyBody) => {
-//     const sendCallback = jest.fn()
-//     const harvester = new Harvest()
-//     harvester.on('jserrors', () => ({
-//       body: {},
-//       qs: {}
-//     }))
-
-//     harvester.sendX({ endpoint: 'jserrors', cbFinished: sendCallback })
-
-//     expect(sendCallback).toHaveBeenCalledWith({ sent: false })
-//     expect(submitData.xhr).not.toHaveBeenCalled()
-//     expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
-//     expect(submitData.beacon).not.toHaveBeenCalled()
-//   })
-
-//   test('should send request when body is empty and sendEmptyBody is true', () => {
-//     const harvester = new Harvest()
-//     harvester.on('jserrors', () => ({
-//       body: {},
-//       qs: {}
-//     }))
-
-//     harvester.sendX({ endpoint: 'jserrors', opts: { sendEmptyBody: true }, cbFinished: jest.fn() })
-
-//     expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
-//       url: expect.stringContaining('https://example.com/jserrors/1/abcd?'),
-//       body: undefined
-//     }))
-//     expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
-//     expect(submitData.beacon).not.toHaveBeenCalled()
-//   })
-
-//   test.each([null, undefined, []])('should remove %s values from the body and query string when sending', (emptyValue) => {
-//     const harvester = new Harvest()
-//     harvester.on('jserrors', () => ({
-//       body: { bar: 'foo', empty: emptyValue },
-//       qs: { foo: 'bar', empty: emptyValue }
-//     }))
-
-//     harvester.sendX({ endpoint: 'jserrors', cbFinished: jest.fn() })
-
-//     expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
-//       url: expect.stringContaining('&foo=bar'),
-//       body: JSON.stringify({ bar: 'foo' })
-//     }))
-//     expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
-//       url: expect.not.stringContaining('&empty'),
-//       body: expect.not.stringContaining('empty')
-//     }))
-//     expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
-//     expect(submitData.beacon).not.toHaveBeenCalled()
-//   })
-
-//   test.each([1, false, true])('should not remove value %s (when it doesn\'t have a length) from the body and query string when sending', (nonStringValue) => {
-//     const harvester = new Harvest()
-//     harvester.on('jserrors', () => ({
-//       body: { bar: 'foo', nonString: nonStringValue },
-//       qs: { foo: 'bar', nonString: nonStringValue }
-//     }))
-
-//     harvester.sendX({ endpoint: 'jserrors', cbFinished: jest.fn() })
-
-//     expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
-//       url: expect.stringContaining(`&nonString=${nonStringValue}`),
-//       body: JSON.stringify({ bar: 'foo', nonString: nonStringValue })
-//     }))
-//     expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
-//     expect(submitData.beacon).not.toHaveBeenCalled()
-//   })
-// })
-
-// describe('send', () => {
-//   test.each([null, undefined, false])('should not send request when body is empty and sendEmptyBody is %s', (sendEmptyBody) => {
-//     const sendCallback = jest.fn()
-//     const harvester = new Harvest()
-
-//     harvester.send({ endpoint: 'rum', payload: { qs: {}, body: {} }, opts: { sendEmptyBody }, cbFinished: sendCallback })
-
-//     expect(sendCallback).toHaveBeenCalledWith({ sent: false })
-//     expect(submitData.xhr).not.toHaveBeenCalled()
-//     expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
-//     expect(submitData.beacon).not.toHaveBeenCalled()
-//   })
-
-//   test('should send request when body is empty and sendEmptyBody is true', () => {
-//     const harvester = new Harvest()
-
-//     harvester.send({ endpoint: 'rum', payload: { qs: {}, body: {} }, opts: { sendEmptyBody: true } })
-
-//     expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
-//       url: expect.stringContaining('https://example.com/1/abcd?'),
-//       body: undefined
-//     }))
-//     expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
-//     expect(submitData.beacon).not.toHaveBeenCalled()
-//   })
-
-//   test.each([null, undefined, []])('should remove %s values from the body and query string when sending', (emptyValue) => {
-//     const harvester = new Harvest()
-
-//     harvester.send({
-//       endpoint: 'rum',
-//       payload: { qs: { foo: 'bar', empty: emptyValue }, body: { bar: 'foo', empty: emptyValue } }
-//     })
-
-//     expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
-//       url: expect.stringContaining('&foo=bar'),
-//       body: JSON.stringify({ bar: 'foo' })
-//     }))
-//     expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
-//       url: expect.not.stringContaining('&empty'),
-//       body: expect.not.stringContaining('empty')
-//     }))
-//     expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
-//     expect(submitData.beacon).not.toHaveBeenCalled()
-//   })
-
-//   test.each([1, false, true])('should not remove value %s (when it doesn\'t have a length) from the body and query string when sending', (nonStringValue) => {
-//     const harvester = new Harvest()
-
-//     harvester.send({
-//       endpoint: 'rum',
-//       payload: { qs: { foo: 'bar', nonString: nonStringValue }, body: { bar: 'foo', nonString: nonStringValue } }
-//     })
-
-//     expect(submitData.xhr).toHaveBeenCalledWith(expect.objectContaining({
-//       url: expect.stringContaining(`&nonString=${nonStringValue}`),
-//       body: JSON.stringify({ bar: 'foo', nonString: nonStringValue })
-//     }))
-//     expect(submitData.fetchKeepAlive).not.toHaveBeenCalled()
-//     expect(submitData.beacon).not.toHaveBeenCalled()
-//   })
-// })

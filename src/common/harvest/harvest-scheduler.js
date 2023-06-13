@@ -88,7 +88,7 @@ export class HarvestScheduler extends SharedContext {
 
     if (this.opts.getPayload) {
       // Ajax & PVT & SR features provide a callback function to get data for harvesting
-      submitMethod = submitData.getSubmitMethod(opts)
+      submitMethod = submitData.getSubmitMethod({ isFinalHarvest: opts?.unload })
       if (!submitMethod) return false
 
       const retry = !opts?.unload && submitMethod.method === submitData.xhr

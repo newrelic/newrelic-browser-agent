@@ -10,6 +10,10 @@ module.exports = function (api, ...args) {
     process.env.BUILD_ENV = 'CDN'
   }
 
+  const ignore = [
+    '**/*.test.js',
+    '**/__mocks__/*.js'
+  ]
   const presets = [
     '@babel/preset-env'
   ]
@@ -37,6 +41,7 @@ module.exports = function (api, ...args) {
       ]
     },
     webpack: {
+      ignore,
       plugins: [
         [
           './tools/scripts/babel-plugin-transform-import',
@@ -47,6 +52,7 @@ module.exports = function (api, ...args) {
       ]
     },
     'webpack-ie11': {
+      ignore,
       assumptions: {
         iterableIsArray: false
       },
@@ -75,6 +81,7 @@ module.exports = function (api, ...args) {
       ]
     },
     'npm-cjs': {
+      ignore,
       presets: [
         [
           '@babel/preset-env', {
@@ -92,6 +99,7 @@ module.exports = function (api, ...args) {
       ]
     },
     'npm-esm': {
+      ignore,
       presets: [
         [
           '@babel/preset-env', {

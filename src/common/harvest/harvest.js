@@ -39,15 +39,16 @@ export class Harvest extends SharedContext {
   /**
    * Initiate a harvest from multiple sources. An event that corresponds to the endpoint
    * name is emitted, which gives any listeners the opportunity to provide payload data.
+   * Note: Used by page_action
    * @param {NetworkSendSpec} spec Specification for sending data
    */
   sendX (spec = {}) {
     const submitMethod = submitData.getSubmitMethod({ isFinalHarvest: spec.opts?.unload })
-    var options = {
+    const options = {
       retry: !spec.opts?.unload && submitMethod === submitData.xhr
     }
     const payload = this.createPayload(spec.endpoint, options)
-    var caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
+    const caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
     return caller({ ...spec, payload, submitMethod })
   }
 
@@ -56,7 +57,7 @@ export class Harvest extends SharedContext {
    * @param {NetworkSendSpec} spec Specification for sending data
    */
   send (spec = {}) {
-    var caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
+    const caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
 
     return caller({ ...spec, payload: this.cleanPayload(spec.payload) })
   }
@@ -83,37 +84,38 @@ export class Harvest extends SharedContext {
     if (!info.errorBeacon) return false
 
     const agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
+    let { body, qs } = this.cleanPayload(payload)
 
-    if (!payload.body && !opts?.sendEmptyBody) { // no payload body? nothing to send, just run onfinish stuff and return
+    if (Object.keys(body).length === 0 && !opts?.sendEmptyBody) { // no payload body? nothing to send, just run onfinish stuff and return
       if (cbFinished) {
         cbFinished({ sent: false })
       }
       return false
     }
 
-    let url = ''
+    let url = `${this.getScheme()}://${info.errorBeacon}${endpoint !== 'rum' ? `/${endpoint}` : ''}/1/${info.licenseKey}`
     if (customUrl) url = customUrl
-    else if (raw) url = `${this.getScheme()}://${info.errorBeacon}/${endpoint}`
-    else url = `${this.getScheme()}://${info.errorBeacon}${endpoint !== 'rum' ? `/${endpoint}` : ''}/1/${info.licenseKey}`
+    if (raw) url = `${this.getScheme()}://${info.errorBeacon}/${endpoint}`
 
     const baseParams = !raw && includeBaseParams ? this.baseQueryString() : ''
-    const payloadParams = payload.qs ? encodeObj(payload.qs, agentRuntime.maxBytes) : ''
+    let payloadParams = encodeObj(qs, agentRuntime.maxBytes)
     if (!submitMethod) {
-      submitMethod = submitData.getSubmitMethod(opts)
+      submitMethod = submitData.getSubmitMethod({ isFinalHarvest: opts.unload })
+    }
+    if (baseParams === '' && payloadParams.startsWith('&')) {
+      payloadParams = payloadParams.substring(1)
     }
 
-    let body
     const fullUrl = `${url}?${baseParams}${payloadParams}`
-
-    const gzip = payload?.qs?.content_encoding === 'gzip'
+    const gzip = qs.content_encoding === 'gzip'
 
     if (!gzip) {
       if (endpoint === 'events') {
-        body = payload.body.e
+        body = body.e
       } else {
-        body = stringify(payload.body)
+        body = stringify(body)
       }
-    } else body = payload.body
+    }
 
     if (!body || body.length === 0 || body === '{}' || body === '[]') {
       // If body is null, undefined, or an empty object or array, send an empty string instead
@@ -133,23 +135,22 @@ export class Harvest extends SharedContext {
         Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
         we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon. */
 
-    var result = submitMethod({ url: fullUrl, body, sync: opts.unload && isWorkerScope, headers })
+    let result = submitMethod({ url: fullUrl, body, sync: opts.unload && isWorkerScope, headers })
 
     if (!opts.unload && cbFinished && submitMethod === submitData.xhr) {
-      var xhr = result
-      xhr.addEventListener('load', function () {
-        var result = { sent: true, status: this.status }
+      result.addEventListener('load', function () {
+        const cbResult = { sent: true, status: this.status }
         if (this.status === 429) {
-          result.retry = true
-          result.delay = this.tooManyRequestsDelay
+          cbResult.retry = true
+          cbResult.delay = this.tooManyRequestsDelay
         } else if (this.status === 408 || this.status === 500 || this.status === 503) {
-          result.retry = true
+          cbResult.retry = true
         }
 
         if (opts.needResponse) {
-          result.responseText = this.responseText
+          cbResult.responseText = this.responseText
         }
-        cbFinished(result)
+        cbFinished(cbResult)
       }, eventListenerOpts(false))
     }
 
@@ -157,7 +158,13 @@ export class Harvest extends SharedContext {
     if (!result && submitMethod === submitData.beacon) {
       // browsers that support sendBeacon also support fetch with keepalive - IE will not retry unload calls
       submitMethod = submitData.fetchKeepAlive
-      result = submitMethod({ url: fullUrl + encodeObj(payload.body, agentRuntime.maxBytes) })
+      try {
+        submitMethod({ url: fullUrl, body, headers })
+      } catch (e) {
+        // Ignore error in final harvest
+      } finally {
+        result = true
+      }
     }
 
     return result
@@ -165,11 +172,11 @@ export class Harvest extends SharedContext {
 
   // The stuff that gets sent every time.
   baseQueryString () {
-    var runtime = getRuntime(this.sharedContext.agentIdentifier)
-    var info = getInfo(this.sharedContext.agentIdentifier)
+    const runtime = getRuntime(this.sharedContext.agentIdentifier)
+    const info = getInfo(this.sharedContext.agentIdentifier)
 
-    var location = cleanURL(getLocation())
-    var ref = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateString(location) : location
+    const location = cleanURL(getLocation())
+    const ref = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateString(location) : location
 
     return ([
       'a=' + info.applicationID,
@@ -195,7 +202,10 @@ export class Harvest extends SharedContext {
    */
   createPayload (endpoint, options) {
     const listeners = this._events[endpoint]
-    const payload = {}
+    const payload = {
+      body: {},
+      qs: {}
+    }
 
     if (Array.isArray(listeners) && listeners.length > 0) {
       for (let i = 0; i < listeners.length; i++) {
@@ -214,7 +224,7 @@ export class Harvest extends SharedContext {
       }
     }
 
-    return this.cleanPayload(payload)
+    return payload
   }
 
   /**
@@ -226,7 +236,7 @@ export class Harvest extends SharedContext {
    * @returns {HarvestPayload} Cleaned payload payload to be sent to the endpoint.
    */
   cleanPayload (payload = {}) {
-    const clean = (input = {}) => Object.entries(input)
+    const clean = (input) => Object.entries(input || {})
       .reduce((accumulator, [key, value]) => {
         if (value !== null && value !== undefined && value.toString()?.length) {
           accumulator[key] = value
@@ -235,10 +245,10 @@ export class Harvest extends SharedContext {
         return accumulator
       }, {})
 
-    return clean({
-      body: payload.body,
-      qs: payload.qs
-    })
+    return {
+      body: clean(payload.body),
+      qs: clean(payload.qs)
+    }
   }
 
   /**

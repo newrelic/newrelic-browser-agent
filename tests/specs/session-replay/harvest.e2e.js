@@ -23,7 +23,7 @@ export default (function () {
       await browser.destroyAgentSession(browser.testHandle)
     })
 
-    it('Should harvest early if exceeds preferred size', async () => {
+    it('Should harvest early if exceeds preferred size - mocked', async () => {
       const startTime = Date.now()
       await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ harvestTimeSeconds: 60 })))
       await browser.waitForAgentLoad()
@@ -40,7 +40,7 @@ export default (function () {
       expect(Date.now() - startTime).toBeLessThan(60000)
     })
 
-    it('Should abort if exceeds maximum size', async () => {
+    it('Should abort if exceeds maximum size - mocked', async () => {
       const startTime = Date.now()
       await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ harvestTimeSeconds: 60 })))
         .then(() => browser.waitForAgentLoad())
@@ -49,6 +49,28 @@ export default (function () {
         Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.payloadBytesEstimation = 1000001 / 0.12
         document.querySelector('body').click()
       })
+
+      expect((await getSR())).toEqual(expect.objectContaining({
+        blocked: true,
+        initialized: true
+      }))
+      expect(Date.now() - startTime).toBeLessThan(60000)
+    })
+
+    it('Should harvest early if exceeds preferred size - real', async () => {
+      const startTime = Date.now()
+      await browser.url(await browser.testHandle.assetURL('64kb-dom.html', config({ harvestTimeSeconds: 60 })))
+      await browser.waitForAgentLoad()
+      const { request: blobHarvest } = await browser.testHandle.expectBlob()
+
+      expect(blobHarvest.body.blob.length).toBeGreaterThan(0)
+      expect(Date.now() - startTime).toBeLessThan(60000)
+    })
+
+    it('Should abort if exceeds maximum size - real', async () => {
+      const startTime = Date.now()
+      await browser.url(await browser.testHandle.assetURL('1mb-dom.html', config({ harvestTimeSeconds: 60 })))
+        .then(() => browser.waitForAgentLoad())
 
       expect((await getSR())).toEqual(expect.objectContaining({
         blocked: true,

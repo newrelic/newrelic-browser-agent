@@ -1,3 +1,4 @@
+import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 /**
  * This is a WDIO worker plugin that provides custom commands.
  */
@@ -90,6 +91,27 @@ export default class CustomCommands {
         return JSON.parse(window.localStorage.getItem('NRBA_SESSION') || '{}')
       })
       return { agentSessions, agentSessionInstances, localStorage }
+    })
+
+    /**
+     * Clears the current browser agent session from local storage by navigating
+     * to the index page where the agent is not loaded and clearing the `localStorage`
+     * in the browser. This completely destroys the current agent session ensuring that
+     * a new session is not created that could affect another test.
+     */
+    browser.addCommand('enableSessionReplay', async function () {
+      await browser.testHandle.scheduleReply('bamServer', {
+        test: testRumRequest,
+        body: JSON.stringify({
+          stn: 1,
+          err: 1,
+          ins: 1,
+          cap: 1,
+          spa: 1,
+          loaded: 1,
+          sr: 1
+        })
+      })
     })
   }
 }

@@ -3,18 +3,7 @@ import { testRumRequest, testBlobRequest } from '../../../tools/testing-server/u
 
 describe('Session Replay Ingest Behavior', () => {
   beforeEach(async () => {
-    await browser.testHandle.scheduleReply('bamServer', {
-      test: testRumRequest,
-      body: JSON.stringify({
-        stn: 1,
-        err: 1,
-        ins: 1,
-        cap: 1,
-        spa: 1,
-        loaded: 1,
-        sr: 1
-      })
-    })
+    await browser.enableSessionReplay()
   })
 
   afterEach(async () => {

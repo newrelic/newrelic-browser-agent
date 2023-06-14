@@ -1,9 +1,7 @@
 describe('error attributes with spa loader', () => {
-  const options = { loader: 'spa' }
-
   describe('custom attributes', () => {
     it('sets multiple custom attributes after page load with multiple JS errors occurring after page load', async () => {
-      await browser.url(await browser.testHandle.assetURL('js-error-with-custom-attribute.html', options))
+      await browser.url(await browser.testHandle.assetURL('js-error-with-custom-attribute.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -22,7 +20,7 @@ describe('error attributes with spa loader', () => {
     })
 
     it('sets single custom attribute before page load with single JS error occurring before page load', async () => {
-      await browser.url(await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', options))
+      await browser.url(await browser.testHandle.assetURL('js-error-with-error-before-page-load.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -35,7 +33,7 @@ describe('error attributes with spa loader', () => {
     })
 
     it('sets custom attribute before page load, after loader, before info', async () => {
-      await browser.url(await browser.testHandle.assetURL('custom-attribute-race-condition.html', options))
+      await browser.url(await browser.testHandle.assetURL('custom-attribute-race-condition.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -47,7 +45,7 @@ describe('error attributes with spa loader', () => {
     })
 
     it('sets custom attribute with pre-existing attributes before page load, after loader, before info', async () => {
-      await browser.url(await browser.testHandle.assetURL('pre-existing-custom-attribute-race-condition.html', options))
+      await browser.url(await browser.testHandle.assetURL('pre-existing-custom-attribute-race-condition.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -60,7 +58,7 @@ describe('error attributes with spa loader', () => {
     })
 
     it('sets custom attribute with pre-existing attributes before page load, after loader, before info precedence check', async () => {
-      await browser.url(await browser.testHandle.assetURL('pre-existing-custom-attribute-race-condition-precedence.html', options))
+      await browser.url(await browser.testHandle.assetURL('pre-existing-custom-attribute-race-condition-precedence.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -72,7 +70,7 @@ describe('error attributes with spa loader', () => {
     })
 
     it('sets multiple custom attributes before page load with multiple JS errors occurring after page load', async () => {
-      await browser.url(await browser.testHandle.assetURL('js-error-with-error-after-page-load.html', options))
+      await browser.url(await browser.testHandle.assetURL('js-error-with-error-after-page-load.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -91,7 +89,7 @@ describe('error attributes with spa loader', () => {
     })
 
     it('noticeError accepts custom attributes in an argument', async () => {
-      await browser.url(await browser.testHandle.assetURL('js-error-noticeerror-with-custom-attributes.html', options))
+      await browser.url(await browser.testHandle.assetURL('js-error-noticeerror-with-custom-attributes.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -107,7 +105,7 @@ describe('error attributes with spa loader', () => {
 
   describe('initial load interaction', () => {
     it('simple case - single error', async () => {
-      await browser.url(await browser.testHandle.assetURL('js-error-set-attribute-before-load.html', options))
+      await browser.url(await browser.testHandle.assetURL('js-error-set-attribute-before-load.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -120,7 +118,7 @@ describe('error attributes with spa loader', () => {
     })
 
     it('muliple errors - different attribute values', async () => {
-      await browser.url(await browser.testHandle.assetURL('js-error-multiple-set-attribute-before-load.html', options))
+      await browser.url(await browser.testHandle.assetURL('js-error-multiple-set-attribute-before-load.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -137,7 +135,7 @@ describe('error attributes with spa loader', () => {
 
   describe('click interaction', () => {
     it('simple case - single error', async () => {
-      await browser.url(await browser.testHandle.assetURL('js-error-set-attribute-on-click.html', options))
+      await browser.url(await browser.testHandle.assetURL('js-error-set-attribute-on-click.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -153,7 +151,7 @@ describe('error attributes with spa loader', () => {
     })
 
     it('multiple errors - different attribute values', async () => {
-      await browser.url(await browser.testHandle.assetURL('js-error-multiple-set-attribute-on-click.html', options))
+      await browser.url(await browser.testHandle.assetURL('js-error-multiple-set-attribute-on-click.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -171,7 +169,7 @@ describe('error attributes with spa loader', () => {
     })
 
     it('attributes captured in discarded interaction are still collected', async () => {
-      await browser.url(await browser.testHandle.assetURL('js-error-set-attribute-on-discarded.html', options))
+      await browser.url(await browser.testHandle.assetURL('js-error-set-attribute-on-discarded.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -189,7 +187,7 @@ describe('error attributes with spa loader', () => {
 
   describe('interaction attributes', () => {
     it('global and interaction attributes on same error', async () => {
-      await browser.url(await browser.testHandle.assetURL('js-error-global-and-interaction-attributes-on-same-error.html', options))
+      await browser.url(await browser.testHandle.assetURL('js-error-global-and-interaction-attributes-on-same-error.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -205,7 +203,7 @@ describe('error attributes with spa loader', () => {
 
   describe('precedence', () => {
     it('setAttribute takes precedence over setCustomAttribute', async () => {
-      await browser.url(await browser.testHandle.assetURL('js-error-attribute-precedence.html', options))
+      await browser.url(await browser.testHandle.assetURL('js-error-attribute-precedence.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -218,7 +216,7 @@ describe('error attributes with spa loader', () => {
     })
 
     it('noticeError takes precedence over setAttribute', async () => {
-      await browser.url(await browser.testHandle.assetURL('js-error-noticeerror-precedence.html', options))
+      await browser.url(await browser.testHandle.assetURL('js-error-noticeerror-precedence.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([
@@ -231,7 +229,7 @@ describe('error attributes with spa loader', () => {
     })
 
     it('noticeError takes precedence over setAttribute in discarded interactions', async () => {
-      await browser.url(await browser.testHandle.assetURL('js-error-noticeerror-precedence-discarded.html', options))
+      await browser.url(await browser.testHandle.assetURL('js-error-noticeerror-precedence-discarded.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [errorResult] = await Promise.all([

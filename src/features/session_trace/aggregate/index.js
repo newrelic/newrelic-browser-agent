@@ -72,6 +72,11 @@ export class Aggregate extends AggregateBase {
           break
       }
     }
+    const stopTracePerm = () => {
+      operationalGate.permanentlyDecide(false)
+      this.#scheduler?.stopTimer(true)
+      this.#scheduler = null
+    }
 
     if (!sessionEntity) {
       // Since session manager isn't around, do the old Trace behavior of waiting for RUM response to decide feature activation.
@@ -84,9 +89,12 @@ export class Aggregate extends AggregateBase {
         if (!seenAnError) {
           seenAnError = true
           /* If this cb executes before Trace has started, then no further action needed. But if...
-           - startTracing already ran under ERROR mode, then it will NOT have kicked off the harvest-scheduler so that needs to be done.
+           - startTracing already ran under ERROR mode, then it will NOT have kicked off the harvest-scheduler so that needs to be done & switch mode.
            - startTracing never ran because mode is OFF or Replay aborted or Traced turned off elsewhere OR trace already in FULL, then this should do nothing. */
-          if (operationalGate.hasDecided() && sessionEntity.state.sessionTraceMode === MODE.ERROR) this.#scheduler.runHarvest({ needResponse: true })
+          if (sessionEntity.state.sessionTraceMode === MODE.ERROR && this.#scheduler) {
+            sessionEntity.state.sessionTraceMode = MODE.FULL
+            this.#scheduler.runHarvest({ needResponse: true })
+          }
         }
       }, this.featureName, this.ee)
 
@@ -97,33 +105,39 @@ export class Aggregate extends AggregateBase {
           this.isStandalone = true
           controlTraceOp(traceOn)
         } else {
-          if (!sessionEntity.isNew) controlTraceOp(sessionEntity.state.sessionTraceMode) // inherit the same mode as existing session's Trace
-          else { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
+          // Whenever replay aborts, Trace can also shut down: stop processing nodes but allow existing buffer to harvest.
+          this.ee.on('REPLAY_ABORTED', () => {
+            sessionEntity.state.sessionTraceMode = MODE.OFF
+            stopTracePerm()
+          })
+          /* Assuming on page visible that the trace mode is updated from shared session,
+           - if trace is turned off from the other page, it should be likewise here.
+           - if trace switches to Full mode, harvest should start (prev: Error) if not already running (prev: Full). */
+          this.ee.on(SESSION_EVENTS.RESUME, () => {
+            const updatedTraceMode = sessionEntity.state.sessionTraceMode
+            if (updatedTraceMode === MODE.OFF) stopTracePerm()
+            else if (updatedTraceMode === MODE.FULL && this.#scheduler && !this.#scheduler.started) this.#scheduler.runHarvest({ needResponse: true })
+          })
+
+          if (!sessionEntity.isNew) { // inherit the same mode as existing session's Trace
+            const existingTraceMode = sessionEntity.state.sessionTraceMode
+            if (existingTraceMode === MODE.OFF) this.isStandalone = true
+            controlTraceOp(existingTraceMode)
+          } else { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
+            const replayMode = await getSessionReplayMode(agentIdentifier)
+            if (replayMode === MODE.OFF) this.isStandalone = true // without SR, Traces are still subject to old harvest limits
+
             let startingMode
             if (traceOn === true) { // CASE: both trace (entitlement+sampling) & replay (entitlement) flags are true from RUM
               startingMode = MODE.FULL // always full capture regardless of replay sampling decisions
             } else { // CASE: trace flag is off, BUT it must still run if replay is on (possibly)
-              startingMode = await getSessionReplayMode(agentIdentifier)
-
               // At this point, it's possible that 1 or more exception was thrown, in which case just start in full if Replay originally started in ERROR mode.
-              if (startingMode === MODE.ERROR && seenAnError) startingMode = MODE.FULL
+              if (replayMode === MODE.ERROR && seenAnError) startingMode = MODE.FULL
+              else startingMode = replayMode
             }
-
-            if (startingMode === MODE.OFF) this.isStandalone = true // without SR, Traces are still subject to old harvest limits
             sessionEntity.state.sessionTraceMode = startingMode
             controlTraceOp(startingMode)
           }
-        }
-        if (!this.isStandalone) {
-          // Whenever replay aborts, Trace can also shut down: stop processing nodes but allow existing buffer to harvest.
-          sharedChannel.sessionReplayAborted.signal.addEventListener('abort', () => {
-            operationalGate.permanentlyDecide(false)
-            sessionEntity.state.sessionTraceMode = MODE.OFF
-          })
-          // Assuming on page visible that the trace mode is updated from shared session, if trace is turned off from the other page, it should be likewise here.
-          this.ee.on(SESSION_EVENTS.RESUME, () => {
-            if (sessionEntity.state.sessionTraceMode === MODE.OFF) operationalGate.permanentlyDecide(false)
-          })
         }
       })
     }

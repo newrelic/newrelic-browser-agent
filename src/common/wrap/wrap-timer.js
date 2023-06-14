@@ -4,7 +4,7 @@
  */
 /**
  * @file Wraps native timeout and interval methods for instrumentation.
- * This module is used by: jserrors, session_trace, spa.
+ * This module is used by: jserrors, spa.
  */
 
 import { ee as baseEE } from '../event-emitter/contextual-ee'

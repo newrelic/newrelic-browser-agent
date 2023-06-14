@@ -145,7 +145,6 @@ export class Aggregate extends AggregateBase {
 
     // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...
     registerHandler('bst', (...args) => operationalGate.settle(() => this.storeEvent(...args)), this.featureName, this.ee)
-    registerHandler('bstTimer', (...args) => operationalGate.settle(() => this.storeTimer(...args)), this.featureName, this.ee)
     registerHandler('bstResource', (...args) => operationalGate.settle(() => this.storeResources(...args)), this.featureName, this.ee)
     registerHandler('bstHist', (...args) => operationalGate.settle(() => this.storeHist(...args)), this.featureName, this.ee)
     registerHandler('bstXhrAgg', (...args) => operationalGate.settle(() => this.storeXhrAgg(...args)), this.featureName, this.ee)
@@ -250,18 +249,6 @@ export class Aggregate extends AggregateBase {
         t: 'timing'
       })
     }
-  }
-
-  // Tracks duration of native APIs wrapped by wrap-timer & wrap-raf.
-  storeTimer (target, start, end, type) {
-    const evt = {
-      n: type,
-      s: start,
-      e: end,
-      o: 'window',
-      t: (type === 'requestAnimationFrame') ? type : 'timer'
-    }
-    this.storeSTN(evt)
   }
 
   // Tracks the events and their listener's duration on objects wrapped by wrap-events.

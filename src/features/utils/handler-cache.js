@@ -61,4 +61,8 @@ export class HandlerCache {
     this.decide(decision)
     this.#noMoreChanges = true
   }
+
+  hasDecided () {
+    return this.#decision !== undefined
+  }
 }

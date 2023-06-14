@@ -72,18 +72,21 @@ export class Aggregate extends AggregateBase {
           break
       }
     }
+
     if (!sessionEntity) {
       // Since session manager isn't around, do the old Trace behavior of waiting for RUM response to decide feature activation.
       this.isStandalone = true
       registerHandler('rumresp-stn', (on) => controlTraceOp(on), this.featureName, this.ee)
     } else {
+      let seenAnError = false
       registerHandler('errorAgg', () => {
-        // Switch to full capture mode on next harvest if any exception happens, but only if current mode is ERROR so that we don't reignite trace if MODE was turned OFF.
-        if (sessionEntity.state.sessionTraceMode === MODE.ERROR) {
-          sessionEntity.state.sessionTraceMode = MODE.FULL
-          /* If this cb executes before Trace has started, then all good. But if startTracing() already ran under ERROR mode, then it will NOT have kicked off the
-           * harvest-scheduler so that needs to be done similarly. */
-          if (!this.#scheduler?.started) this.#scheduler.runHarvest({ needResponse: true })
+        // Switch to full capture mode on next harvest on first exception thrown only. Only done once so that sessionTraceMode isn't constantly overwritten after decision block.
+        if (!seenAnError) {
+          seenAnError = true
+          /* If this cb executes before Trace has started, then no further action needed. But if...
+           - startTracing already ran under ERROR mode, then it will NOT have kicked off the harvest-scheduler so that needs to be done.
+           - startTracing never ran because mode is OFF or Replay aborted or Traced turned off elsewhere OR trace already in FULL, then this should do nothing. */
+          if (operationalGate.hasDecided() && sessionEntity.state.sessionTraceMode === MODE.ERROR) this.#scheduler.runHarvest({ needResponse: true })
         }
       }, this.featureName, this.ee)
 
@@ -98,22 +101,17 @@ export class Aggregate extends AggregateBase {
           else { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
             let startingMode
             if (traceOn === true) { // CASE: both trace (entitlement+sampling) & replay (entitlement) flags are true from RUM
-              controlTraceOp(true) // always full capture regardless of replay sampling decision
-
-              /* Future to-do: this should just change the Trace mode to "FULL" and write that to storage, since Trace ideally retains its own mode inheritance.
-                For alpha phase, the starting Trace mode will depend on SR feature's mode. !!This means all following Traces of this session will inherit this mode!! */
-              startingMode = await getSessionReplayMode(agentIdentifier)
+              startingMode = MODE.FULL // always full capture regardless of replay sampling decisions
             } else { // CASE: trace flag is off, BUT it must still run if replay is on (possibly)
               startingMode = await getSessionReplayMode(agentIdentifier)
-              controlTraceOp(startingMode)
+
+              // At this point, it's possible that 1 or more exception was thrown, in which case just start in full if Replay originally started in ERROR mode.
+              if (startingMode === MODE.ERROR && seenAnError) startingMode = MODE.FULL
             }
 
             if (startingMode === MODE.OFF) this.isStandalone = true // without SR, Traces are still subject to old harvest limits
-            /* The NEW session state's mode cannot be FULL already unless the 'errorAgg' handler won the race (exception was thrown), in which case we
-              should STILL capture in full when Replay is also on. */
-            else if (sessionEntity.state.sessionTraceMode === MODE.FULL) startingMode = MODE.FULL
-
             sessionEntity.state.sessionTraceMode = startingMode
+            controlTraceOp(startingMode)
           }
         }
         if (!this.isStandalone) {

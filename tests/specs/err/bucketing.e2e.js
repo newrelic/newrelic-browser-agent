@@ -1,15 +1,13 @@
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-const options = {
-  loader: 'full'
-}
+// IE11 actually does bucket these cases, so these tests will fail. Because the cases are niche, we exclude IE11.
 
 describe('error bucketing', () => {
   withBrowsersMatching(notIE)('NR-40043: Multiple errors with noticeError and unique messages should not bucket', async () => {
     const [errorResult] = await Promise.all([
       browser.testHandle.expectErrors(),
-      browser.url(await browser.testHandle.assetURL('js-errors-noticeerror-bucketing.html', options))
+      browser.url(await browser.testHandle.assetURL('js-errors-noticeerror-bucketing.html'))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -27,7 +25,7 @@ describe('error bucketing', () => {
 
     const [firstErrorResult] = await Promise.all([
       browser.testHandle.expectErrors(),
-      browser.url(await browser.testHandle.assetURL('js-errors-noticeerror-bucketing.html', options))
+      browser.url(await browser.testHandle.assetURL('js-errors-noticeerror-bucketing.html'))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -42,7 +40,7 @@ describe('error bucketing', () => {
   withBrowsersMatching(notIE)('NEWRELIC-3788: Multiple identical errors from the same line but different columns should not be bucketed', async () => {
     const [errorResult] = await Promise.all([
       browser.testHandle.expectErrors(),
-      browser.url(await browser.testHandle.assetURL('js-error-column-bucketing.html', options))
+      browser.url(await browser.testHandle.assetURL('js-error-column-bucketing.html'))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -60,7 +58,7 @@ describe('error bucketing', () => {
 
     const [firstErrorResult] = await Promise.all([
       browser.testHandle.expectErrors(),
-      browser.url(await browser.testHandle.assetURL('js-error-column-bucketing.html', options))
+      browser.url(await browser.testHandle.assetURL('js-error-column-bucketing.html'))
         .then(() => browser.waitForAgentLoad())
     ])
 

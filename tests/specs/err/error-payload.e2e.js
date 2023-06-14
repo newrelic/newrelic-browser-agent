@@ -4,7 +4,11 @@ const config = {
   }
 }
 
-describe('Error payloads', () => {
+describe('error payloads', () => {
+  afterEach(async () => {
+    await browser.destroyAgentSession()
+  })
+
   it('should add session replay flag if active', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', config)) // Setup expects before loading the page
       .then(() => browser.waitForAgentLoad())

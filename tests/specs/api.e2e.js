@@ -1,6 +1,10 @@
 import { reliableUnload, notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 
 describe('newrelic api', () => {
+  afterEach(async () => {
+    await browser.destroyAgentSession()
+  })
+
   it('should load when sessionStorage is not available', async () => {
     await browser.url(await browser.testHandle.assetURL('api/local-storage-disallowed.html')) // Setup expects before loading the page
       .then(() => browser.waitForAgentLoad())
@@ -29,13 +33,13 @@ describe('newrelic api', () => {
       expect(ajaxResults.request.query.ct).toEqual('http://custom.transaction/foo')
     })
 
-    it('includes the 1st argument (page name) in metrics call on unload', async () => {
+    withBrowsersMatching(reliableUnload)('includes the 1st argument (page name) in metrics call on unload', async () => {
       await browser.url(await browser.testHandle.assetURL('api.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [unloadCustomMetricsResults] = await Promise.all([
         browser.testHandle.expectCustomMetrics(),
-        await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
+        await browser.url(await browser.testHandle.assetURL('/'))
       ])
 
       expect(unloadCustomMetricsResults.request.query.ct).toEqual('http://custom.transaction/foo')
@@ -47,13 +51,13 @@ describe('newrelic api', () => {
       expect(time).toBeGreaterThan(0)
     })
 
-    it('includes the optional 2nd argument for host in metrics call on unload', async () => {
+    withBrowsersMatching(reliableUnload)('includes the optional 2nd argument for host in metrics call on unload', async () => {
       await browser.url(await browser.testHandle.assetURL('api2.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [unloadCustomMetricsResults] = await Promise.all([
         browser.testHandle.expectCustomMetrics(),
-        await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
+        await browser.url(await browser.testHandle.assetURL('/'))
       ])
 
       expect(unloadCustomMetricsResults.request.query.ct).toEqual('http://bar.baz/foo')
@@ -119,33 +123,21 @@ describe('newrelic api', () => {
   })
 
   describe('release()', () => {
-    const releaseApiConfig = {}
-
-    withBrowsersMatching(reliableUnload)('adds releases to jserrors', async () => {
-      await Promise.all([
-        browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('api/release.html'))
-          .then(() => browser.waitForAgentLoad())
-      ])
-
+    it('adds releases to jserrors', async () => {
       const [errorsResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        browser.url(await browser.testHandle.assetURL('/'))
+        browser.url(await browser.testHandle.assetURL('api/release.html'))
+          .then(() => browser.waitForAgentLoad())
       ])
 
       expect(errorsResult.request.query.ri).toEqual('{"example":"123","other":"456"}')
     })
 
-    withBrowsersMatching(reliableUnload)('limits releases to jserrors', async () => {
-      await Promise.all([
-        browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('api/release-too-many.html'))
-          .then(() => browser.waitForAgentLoad())
-      ])
-
+    it('limits releases to jserrors', async () => {
       const [errorsResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        browser.url(await browser.testHandle.assetURL('/'))
+        browser.url(await browser.testHandle.assetURL('api/release-too-many.html'))
+          .then(() => browser.waitForAgentLoad())
       ])
 
       expect(JSON.parse(errorsResult.request.query.ri)).toEqual({
@@ -162,16 +154,11 @@ describe('newrelic api', () => {
       })
     })
 
-    withBrowsersMatching(reliableUnload)('limits size in jserrors payload', async () => {
-      await Promise.all([
-        browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('api/release-too-long.html'))
-          .then(() => browser.waitForAgentLoad())
-      ])
-
+    it('limits size in jserrors payload', async () => {
       const [errorsResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        browser.url(await browser.testHandle.assetURL('/'))
+        browser.url(await browser.testHandle.assetURL('api/release-too-long.html'))
+          .then(() => browser.waitForAgentLoad())
       ])
 
       const queryRi = JSON.parse(errorsResult.request.query.ri)
@@ -180,16 +167,11 @@ describe('newrelic api', () => {
       expect(Object.keys(queryRi).find(element => element.match(/y{99}x{100}q/))).toBeTruthy()
     })
 
-    withBrowsersMatching(reliableUnload)('does not set ri query param if release() is not called', async () => {
-      await Promise.all([
-        browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('api/no-release.html'))
-          .then(() => browser.waitForAgentLoad())
-      ])
-
+    it('does not set ri query param if release() is not called', async () => {
       const [errorsResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        browser.url(await browser.testHandle.assetURL('/'))
+        browser.url(await browser.testHandle.assetURL('api/no-release.html'))
+          .then(() => browser.waitForAgentLoad())
       ])
 
       expect(errorsResult.request.query).not.toHaveProperty('ri')
@@ -197,21 +179,34 @@ describe('newrelic api', () => {
   })
 
   describe('setCustomAttribute()', () => {
-    withBrowsersMatching(notIE)('persists attribute onto subsequent page loads until unset', async () => {
+    it('persists attribute onto subsequent page loads until unset', async () => {
+      const testUrl = await browser.testHandle.assetURL('api/custom-attribute.html', {
+        init: {
+          privacy: { cookies_enabled: true }
+        }
+      })
+
       const [rumResult] = await Promise.all([
         browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('api/custom-attribute.html'))
+        browser.url(testUrl)
           .then(() => browser.waitForAgentLoad())
       ])
 
       expect(rumResult.request.body.ja).toEqual({ testing: 123 }) // initial page load has custom attribute
 
-      const [rumResultAfterRefresh] = await Promise.all([
+      const subsequentTestUrl = await browser.testHandle.assetURL('instrumented.html', {
+        init: {
+          privacy: { cookies_enabled: true }
+        }
+      })
+
+      const [rumResultAfterNavigate] = await Promise.all([
         browser.testHandle.expectRum(),
-        browser.refresh()
+        browser.url(subsequentTestUrl)
+          .then(() => browser.waitForAgentLoad())
       ])
 
-      expect(rumResultAfterRefresh.request.body.ja).toEqual({ testing: 123 }) // 2nd page load still has custom attribute from storage
+      expect(rumResultAfterNavigate.request.body.ja).toEqual({ testing: 123 }) // 2nd page load still has custom attribute from storage
 
       await browser.execute(function () {
         newrelic.setCustomAttribute('testing', null)
@@ -219,7 +214,7 @@ describe('newrelic api', () => {
 
       const [rumResultAfterUnset] = await Promise.all([
         browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('instrumented.html'))
+        browser.url(subsequentTestUrl)
           .then(() => browser.waitForAgentLoad())
       ])
 
@@ -230,10 +225,9 @@ describe('newrelic api', () => {
   describe('setUserId()', () => {
     const ERRORS_INBOX_UID = 'enduser.id' // this key should not be changed without consulting EI team on the data flow
 
-    withBrowsersMatching(reliableUnload, notIE)('adds correct (persisted) attribute to payloads', async () => {
+    it('adds correct (persisted) attribute to payloads', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented.html', {
         init: {
-          jserrors: { harvestTimeSeconds: 2 },
           privacy: { cookies_enabled: true }
         }
       }))
@@ -271,10 +265,6 @@ describe('newrelic api', () => {
 
       // We expect setUserId's attribute to be stored by the browser tab session, and retrieved on the next page load & agent init
       expect(rumResultAfterRefresh.request.body.ja).toEqual({ [ERRORS_INBOX_UID]: 'user123' }) // setUserId affects subsequent page loads in the same storage session
-
-      await browser.execute(function () {
-        newrelic.setUserId(null) // unset to not affect other tests running on same Sauce instance
-      })
     })
   })
 })

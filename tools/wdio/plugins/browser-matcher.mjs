@@ -12,6 +12,7 @@ export default class BrowserMatcher {
     this.#browserName = getBrowserName(capabilities)
     this.#browserVersion = getBrowserVersion(capabilities)
     global.withBrowsersMatching = this.#browserMatchTest.bind(this)
+    global.browserMatches = this.#browserMatches.bind(this)
   }
 
   #browserMatchTest (matcher) {
@@ -42,5 +43,9 @@ export default class BrowserMatcher {
         global.it.apply(this, args)
       }
     }
+  }
+
+  #browserMatches (matcher) {
+    return matcher.test(this.#browserName, this.#browserVersion)
   }
 }

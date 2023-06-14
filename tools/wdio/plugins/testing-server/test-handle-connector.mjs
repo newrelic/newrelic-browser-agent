@@ -67,9 +67,8 @@ export class TestHandleConnector {
   }
 
   /**
-   * Schedules a reply to a server request
+   * Clears all scheduled replies for the given server.
    * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
-   * @param {ScheduledReply} scheduledReply The reply options to apply to the server request
    */
   async clearScheduledReplies (serverId) {
     await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/clearScheduledReplies`, {

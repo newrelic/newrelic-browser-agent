@@ -29,7 +29,7 @@ module.exports = fp(async function (fastify) {
       if (!request.query.jsonp) {
         return reply
           .header('content-type', 'application/json')
-          .code(408)
+          .code(200)
           .send(JSON.stringify(rumFlags))
       } else {
         return reply

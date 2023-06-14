@@ -1,4 +1,3 @@
-import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 /**
  * This is a WDIO worker plugin that provides custom commands.
  */
@@ -101,7 +100,10 @@ export default class CustomCommands {
      */
     browser.addCommand('enableSessionReplay', async function () {
       await browser.testHandle.scheduleReply('bamServer', {
-        test: testRumRequest,
+        test: function testRumRequest (request) {
+          const url = new URL(request.url, 'resolve://')
+          return url.pathname === `/1/${this.testId}`
+        },
         body: JSON.stringify({
           stn: 1,
           err: 1,

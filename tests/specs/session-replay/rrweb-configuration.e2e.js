@@ -71,7 +71,7 @@ describe('Rrweb Configuration', () => {
 
       const { request: { body } } = await browser.testHandle.expectBlob()
 
-      expect(body.blob.includes('this is a generic page')).toBeFalsy()
+      expect(body.blob.includes('this is a page')).toBeFalsy()
     })
 
     it('maskTextSelector: "null" should convert NO text to "*"', async () => {
@@ -80,7 +80,7 @@ describe('Rrweb Configuration', () => {
 
       const { request: { body } } = await browser.testHandle.expectBlob()
 
-      expect(body.blob.includes('this is a generic page')).toBeTruthy()
+      expect(body.blob.includes('this is a page')).toBeTruthy()
     })
   })
 

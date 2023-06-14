@@ -22,14 +22,3 @@ export const supportsFetch = new SpecMatcher()
   .include('firefox>=40')
   .include('ios>=11')
   .include('android')
-
-// https://github.com/SeleniumHQ/selenium/issues/7649
-// Once the versions of Safari we test do not have this bug, we can remove this.
-export const notSafariWithSeleniumBug = new SpecMatcher()
-  .include('chrome')
-  .include('edge')
-  .include('firefox')
-  .include('ios')
-  .include('android')
-  .include('ie@11')
-  .include('safari<13')

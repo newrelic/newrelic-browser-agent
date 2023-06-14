@@ -1,121 +1,112 @@
-import { notSafariWithSeleniumBug } from '../../../tools/browser-matcher/common-matchers.mjs'
+describe('error attributes with spa loader', () => {
+  const options = { loader: 'spa' }
 
-describe('error attributes', () => {
-  runCustomAttributeTests('full')
-  runCustomAttributeTests('spa')
+  describe('custom attributes', () => {
+    it('sets multiple custom attributes after page load with multiple JS errors occurring after page load', async () => {
+      await browser.url(await browser.testHandle.assetURL('js-error-with-custom-attribute.html', options))
+        .then(() => browser.waitForAgentLoad())
 
-  function runCustomAttributeTests (loaderType) {
-    const options = { loader: loaderType }
+      const [errorResult] = await Promise.all([
+        browser.testHandle.expectErrors(),
+        await $('#trigger').then(async (trigger) => {
+          await trigger.click()
+          await trigger.click()
+          await trigger.click()
+        })
+      ])
 
-    describe(`custom attributes with ${loaderType} loader`, () => {
-      withBrowsersMatching(notSafariWithSeleniumBug)('sets multiple custom attributes after page load with multiple JS errors occurring after page load', async () => {
-        await browser.url(await browser.testHandle.assetURL('js-error-with-custom-attribute.html', options))
-          .then(() => browser.waitForAgentLoad())
-
-        const [errorResult] = await Promise.all([
-          browser.testHandle.expectErrors(),
-          await $('#trigger').then(async (trigger) => {
-            await trigger.click()
-            await trigger.click()
-            await trigger.click()
-          })
-        ])
-
-        expect(errorResult.request.body.err.length).toBe(3) // exactly 3 errors in payload
-        expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
-        expect(errorResult.request.body.err[1].custom.customParamKey).toBe(1)
-        expect(errorResult.request.body.err[2].custom.customParamKey).toBe(2)
-      })
-
-      withBrowsersMatching(notSafariWithSeleniumBug)('sets single custom attribute before page load with single JS error occurring before page load', async () => {
-        await browser.url(await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', options))
-          .then(() => browser.waitForAgentLoad())
-
-        const [errorResult] = await Promise.all([
-          browser.testHandle.expectErrors(),
-          browser.refresh()
-        ])
-
-        expect(errorResult.request.body.err.length).toBe(1)
-        expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
-      })
-
-      withBrowsersMatching(notSafariWithSeleniumBug)('sets custom attribute before page load, after loader, before info', async () => {
-        await browser.url(await browser.testHandle.assetURL('custom-attribute-race-condition.html', options))
-          .then(() => browser.waitForAgentLoad())
-
-        const [errorResult] = await Promise.all([
-          browser.testHandle.expectErrors(),
-          browser.refresh()
-        ])
-
-        expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
-      })
-
-      withBrowsersMatching(notSafariWithSeleniumBug)('sets custom attribute with pre-existing attributes before page load, after loader, before info', async () => {
-        await browser.url(await browser.testHandle.assetURL('pre-existing-custom-attribute-race-condition.html', options))
-          .then(() => browser.waitForAgentLoad())
-
-        const [errorResult] = await Promise.all([
-          browser.testHandle.expectErrors(),
-          browser.refresh()
-        ])
-
-        expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
-        expect(errorResult.request.body.err[0].custom.hi).toBe('mom')
-      })
-
-      withBrowsersMatching(notSafariWithSeleniumBug)('sets custom attribute with pre-existing attributes before page load, after loader, before info precedence check', async () => {
-        await browser.url(await browser.testHandle.assetURL('pre-existing-custom-attribute-race-condition-precedence.html', options))
-          .then(() => browser.waitForAgentLoad())
-
-        const [errorResult] = await Promise.all([
-          browser.testHandle.expectErrors(),
-          browser.refresh()
-        ])
-
-        expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
-      })
-
-      withBrowsersMatching(notSafariWithSeleniumBug)('sets multiple custom attributes before page load with multiple JS errors occurring after page load', async () => {
-        await browser.url(await browser.testHandle.assetURL('js-error-with-error-after-page-load.html', options))
-          .then(() => browser.waitForAgentLoad())
-
-        const [errorResult] = await Promise.all([
-          browser.testHandle.expectErrors(),
-          $('#trigger').then(async (trigger) => {
-            await trigger.click()
-            await trigger.click()
-            await trigger.click()
-            browser.refresh()
-          })
-        ])
-
-        expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
-        expect(errorResult.request.body.err[0].custom.customParamKey).toBe(2)
-        expect(errorResult.request.body.err[0].metrics.count).toBe(3)
-      })
-
-      withBrowsersMatching(notSafariWithSeleniumBug)('noticeError accepts custom attributes in an argument', async () => {
-        await browser.url(await browser.testHandle.assetURL('js-error-noticeerror-with-custom-attributes.html', options))
-          .then(() => browser.waitForAgentLoad())
-
-        const [errorResult] = await Promise.all([
-          browser.testHandle.expectErrors(),
-          browser.refresh()
-        ])
-
-        expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
-        expect(errorResult.request.body.err[0].custom.custom1).toBe('val1')
-        expect(errorResult.request.body.err[0].custom.custom2).toBe('val2')
-      })
+      expect(errorResult.request.body.err.length).toBe(3) // exactly 3 errors in payload
+      expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
+      expect(errorResult.request.body.err[1].custom.customParamKey).toBe(1)
+      expect(errorResult.request.body.err[2].custom.customParamKey).toBe(2)
     })
-  }
 
-  describe('initial load interaction with spa loader', () => {
-    const options = { loader: 'spa' }
+    it('sets single custom attribute before page load with single JS error occurring before page load', async () => {
+      await browser.url(await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', options))
+        .then(() => browser.waitForAgentLoad())
 
-    withBrowsersMatching(notSafariWithSeleniumBug)('simple case - single error', async () => {
+      const [errorResult] = await Promise.all([
+        browser.testHandle.expectErrors(),
+        browser.refresh()
+      ])
+
+      expect(errorResult.request.body.err.length).toBe(1)
+      expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
+    })
+
+    it('sets custom attribute before page load, after loader, before info', async () => {
+      await browser.url(await browser.testHandle.assetURL('custom-attribute-race-condition.html', options))
+        .then(() => browser.waitForAgentLoad())
+
+      const [errorResult] = await Promise.all([
+        browser.testHandle.expectErrors(),
+        browser.refresh()
+      ])
+
+      expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
+    })
+
+    it('sets custom attribute with pre-existing attributes before page load, after loader, before info', async () => {
+      await browser.url(await browser.testHandle.assetURL('pre-existing-custom-attribute-race-condition.html', options))
+        .then(() => browser.waitForAgentLoad())
+
+      const [errorResult] = await Promise.all([
+        browser.testHandle.expectErrors(),
+        browser.refresh()
+      ])
+
+      expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
+      expect(errorResult.request.body.err[0].custom.hi).toBe('mom')
+    })
+
+    it('sets custom attribute with pre-existing attributes before page load, after loader, before info precedence check', async () => {
+      await browser.url(await browser.testHandle.assetURL('pre-existing-custom-attribute-race-condition-precedence.html', options))
+        .then(() => browser.waitForAgentLoad())
+
+      const [errorResult] = await Promise.all([
+        browser.testHandle.expectErrors(),
+        browser.refresh()
+      ])
+
+      expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
+    })
+
+    it('sets multiple custom attributes before page load with multiple JS errors occurring after page load', async () => {
+      await browser.url(await browser.testHandle.assetURL('js-error-with-error-after-page-load.html', options))
+        .then(() => browser.waitForAgentLoad())
+
+      const [errorResult] = await Promise.all([
+        browser.testHandle.expectErrors(),
+        $('#trigger').then(async (trigger) => {
+          await trigger.click()
+          await trigger.click()
+          await trigger.click()
+          browser.refresh()
+        })
+      ])
+
+      expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
+      expect(errorResult.request.body.err[0].custom.customParamKey).toBe(2)
+      expect(errorResult.request.body.err[0].metrics.count).toBe(3)
+    })
+
+    it('noticeError accepts custom attributes in an argument', async () => {
+      await browser.url(await browser.testHandle.assetURL('js-error-noticeerror-with-custom-attributes.html', options))
+        .then(() => browser.waitForAgentLoad())
+
+      const [errorResult] = await Promise.all([
+        browser.testHandle.expectErrors(),
+        browser.refresh()
+      ])
+
+      expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
+      expect(errorResult.request.body.err[0].custom.custom1).toBe('val1')
+      expect(errorResult.request.body.err[0].custom.custom2).toBe('val2')
+    })
+  })
+
+  describe('initial load interaction', () => {
+    it('simple case - single error', async () => {
       await browser.url(await browser.testHandle.assetURL('js-error-set-attribute-before-load.html', options))
         .then(() => browser.waitForAgentLoad())
 
@@ -128,7 +119,7 @@ describe('error attributes', () => {
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(1)
     })
 
-    withBrowsersMatching(notSafariWithSeleniumBug)('muliple errors - different attribute values', async () => {
+    it('muliple errors - different attribute values', async () => {
       await browser.url(await browser.testHandle.assetURL('js-error-multiple-set-attribute-before-load.html', options))
         .then(() => browser.waitForAgentLoad())
 
@@ -144,10 +135,8 @@ describe('error attributes', () => {
     })
   })
 
-  describe('click interaction with spa loader', () => {
-    const options = { loader: 'spa' }
-
-    withBrowsersMatching(notSafariWithSeleniumBug)('simple case - single error', async () => {
+  describe('click interaction', () => {
+    it('simple case - single error', async () => {
       await browser.url(await browser.testHandle.assetURL('js-error-set-attribute-on-click.html', options))
         .then(() => browser.waitForAgentLoad())
 
@@ -163,7 +152,7 @@ describe('error attributes', () => {
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(1)
     })
 
-    withBrowsersMatching(notSafariWithSeleniumBug)('multiple errors - different attribute values', async () => {
+    it('multiple errors - different attribute values', async () => {
       await browser.url(await browser.testHandle.assetURL('js-error-multiple-set-attribute-on-click.html', options))
         .then(() => browser.waitForAgentLoad())
 
@@ -181,7 +170,7 @@ describe('error attributes', () => {
       expect(errorResult.request.body.err[2].custom.customParamKey).toBe(3)
     })
 
-    withBrowsersMatching(notSafariWithSeleniumBug)('attributes captured in discarded interaction are still collected', async () => {
+    it('attributes captured in discarded interaction are still collected', async () => {
       await browser.url(await browser.testHandle.assetURL('js-error-set-attribute-on-discarded.html', options))
         .then(() => browser.waitForAgentLoad())
 
@@ -198,10 +187,8 @@ describe('error attributes', () => {
     })
   })
 
-  describe('interaction attributes with spa loader', () => {
-    const options = { loader: 'spa' }
-
-    withBrowsersMatching(notSafariWithSeleniumBug)('global and interaction attributes on same error', async () => {
+  describe('interaction attributes', () => {
+    it('global and interaction attributes on same error', async () => {
       await browser.url(await browser.testHandle.assetURL('js-error-global-and-interaction-attributes-on-same-error.html', options))
         .then(() => browser.waitForAgentLoad())
 
@@ -216,10 +203,8 @@ describe('error attributes', () => {
     })
   })
 
-  describe('precedence with spa loader', () => {
-    const options = { loader: 'spa' }
-
-    withBrowsersMatching(notSafariWithSeleniumBug)('setAttribute takes precedence over setCustomAttribute', async () => {
+  describe('precedence', () => {
+    it('setAttribute takes precedence over setCustomAttribute', async () => {
       await browser.url(await browser.testHandle.assetURL('js-error-attribute-precedence.html', options))
         .then(() => browser.waitForAgentLoad())
 
@@ -232,7 +217,7 @@ describe('error attributes', () => {
       expect(errorResult.request.body.err[0].custom.localKey).toBe(2) // first error should have value from setAttribute
     })
 
-    withBrowsersMatching(notSafariWithSeleniumBug)('noticeError takes precedence over setAttribute', async () => {
+    it('noticeError takes precedence over setAttribute', async () => {
       await browser.url(await browser.testHandle.assetURL('js-error-noticeerror-precedence.html', options))
         .then(() => browser.waitForAgentLoad())
 
@@ -245,7 +230,7 @@ describe('error attributes', () => {
       expect(errorResult.request.body.err[0].custom.custom1).toBe('val2') // error should have value from noticeError
     })
 
-    withBrowsersMatching(notSafariWithSeleniumBug)('noticeError takes precedence over setAttribute in discarded interactions', async () => {
+    it('noticeError takes precedence over setAttribute in discarded interactions', async () => {
       await browser.url(await browser.testHandle.assetURL('js-error-noticeerror-precedence-discarded.html', options))
         .then(() => browser.waitForAgentLoad())
 

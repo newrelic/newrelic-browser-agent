@@ -282,6 +282,7 @@ describe('Session Replay', () => {
       }))
 
       setConfiguration(agentIdentifier, { ...init })
+      sr.shouldCompress = false
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
 
@@ -310,6 +311,7 @@ describe('Session Replay', () => {
 
     test('Clears the event buffer when staged for harvesting', async () => {
       setConfiguration(agentIdentifier, { ...init })
+      sr.shouldCompress = false
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
 

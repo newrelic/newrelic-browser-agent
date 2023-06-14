@@ -18,7 +18,6 @@ describe('Rrweb Configuration', () => {
   })
 
   afterEach(async () => {
-    await browser.testHandle.clearScheduledReplies('bamServer')
     await browser.destroyAgentSession(browser.testHandle)
   })
 

@@ -18,25 +18,12 @@ describe('Session Replay Initialization', () => {
   })
 
   afterEach(async () => {
-    await browser.testHandle.clearScheduledReplies('bamServer')
     await browser.destroyAgentSession(browser.testHandle)
   })
 
   describe('Feature flags', () => {
     it('should not run if flag is 0', async () => {
       await browser.testHandle.clearScheduledReplies('bamServer')
-      await browser.testHandle.scheduleReply('bamServer', {
-        test: testRumRequest,
-        body: JSON.stringify({
-          stn: 1,
-          err: 1,
-          ins: 1,
-          cap: 1,
-          spa: 1,
-          loaded: 1,
-          sr: 0
-        })
-      })
 
       const [rumResp] = await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
         .then(() => Promise.all([browser.testHandle.expectRum(), browser.waitForAgentLoad()]))

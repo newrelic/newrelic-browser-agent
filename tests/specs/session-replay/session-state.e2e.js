@@ -26,7 +26,6 @@ describe('session manager state behavior', () => {
   })
 
   afterEach(async () => {
-    await browser.testHandle.clearScheduledReplies('bamServer')
     await browser.destroyAgentSession(browser.testHandle)
   })
 

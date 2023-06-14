@@ -18,7 +18,6 @@ describe('Session Replay Ingest Behavior', () => {
   })
 
   afterEach(async () => {
-    await browser.testHandle.clearScheduledReplies('bamServer')
     await browser.destroyAgentSession(browser.testHandle)
   })
 

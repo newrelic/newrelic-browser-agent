@@ -18,8 +18,7 @@ describe('Session Replay Harvest Behavior', () => {
   })
 
   afterEach(async () => {
-    await browser.testHandle.clearScheduledReplies('bamServer')
-    await browser.destroyAgentSession(browser.testHandle)
+    await browser.destroyAgentSession()
   })
 
   it('Should harvest early if exceeds preferred size - mocked', async () => {
@@ -27,7 +26,7 @@ describe('Session Replay Harvest Behavior', () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ harvestTimeSeconds: 60 })))
     await browser.waitForAgentLoad()
     const [{ request: blobHarvest }] = await Promise.all([
-      browser.testHandle.expectBlob(),
+      browser.testHandle.expectBlob(10000),
       // preferred size = 64kb, compression estimation is 88%
       browser.execute(function () {
         Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.payloadBytesEstimation = 64000 / 0.12
@@ -58,9 +57,12 @@ describe('Session Replay Harvest Behavior', () => {
 
   it('Should harvest early if exceeds preferred size - real', async () => {
     const startTime = Date.now()
-    await browser.url(await browser.testHandle.assetURL('64kb-dom.html', config({ harvestTimeSeconds: 60 })))
-    await browser.waitForAgentLoad()
-    const { request: blobHarvest } = await browser.testHandle.expectBlob()
+
+    const [{ request: blobHarvest }] = await Promise.all([
+      browser.testHandle.expectBlob(),
+      browser.url(await browser.testHandle.assetURL('64kb-dom.html', config())),
+      browser.waitForAgentLoad()
+    ])
 
     expect(blobHarvest.body.blob.length).toBeGreaterThan(0)
     expect(Date.now() - startTime).toBeLessThan(60000)

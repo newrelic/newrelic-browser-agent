@@ -18,8 +18,7 @@ describe('Session Replay Payload Validation', () => {
   })
 
   afterEach(async () => {
-    await browser.testHandle.clearScheduledReplies('bamServer')
-    await browser.destroyAgentSession(browser.testHandle)
+    await browser.destroyAgentSession()
   })
 
   it('should be gzipped', async () => {

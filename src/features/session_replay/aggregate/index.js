@@ -52,6 +52,8 @@ export class Aggregate extends AggregateBase {
     this.blocked = false
     /** True when actively recording, false when paused or stopped */
     this.recording = false
+    /** can shut off efforts to compress the data */
+    this.shouldCompress = true
 
     /** Payload metadata -- Should indicate that the payload being sent is the first of a session */
     this.isFirstChunk = false
@@ -169,13 +171,19 @@ export class Aggregate extends AggregateBase {
 
     try {
       recorder = (await import(/* webpackChunkName: "recorder" */'rrweb')).record
-      this.startRecording()
+    } catch (err) {
+      return this.abort()
+    }
+
+    try {
       const { gzipSync, strToU8 } = await import(/* webpackChunkName: "compressor" */'fflate')
       gzipper = gzipSync
       u8 = strToU8
     } catch (err) {
-      return this.abort()
+      // compressor failed to load, but we can still record without compression as a last ditch effort
+      this.shouldCompress = false
     }
+    this.startRecording()
 
     this.isFirstChunk = !!session.isNew
 
@@ -185,11 +193,11 @@ export class Aggregate extends AggregateBase {
   prepareHarvest () {
     if (this.events.length === 0) return
     const payload = this.getHarvestContents()
-    try {
+
+    if (this.shouldCompress) {
       payload.body = gzipper(u8(stringify(payload.body)))
       this.scheduler.opts.gzip = true
-    } catch (err) {
-      // failed to gzip
+    } else {
       this.scheduler.opts.gzip = false
       delete payload.qs.content_encoding
     }
@@ -329,6 +337,7 @@ export class Aggregate extends AggregateBase {
    * https://staging.onenr.io/037jbJWxbjy
    * */
   estimateCompression (data) {
-    return data * AVG_COMPRESSION
+    if (this.shouldCompress) return data * AVG_COMPRESSION
+    return data
   }
 }

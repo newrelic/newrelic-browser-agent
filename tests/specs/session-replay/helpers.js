@@ -27,7 +27,8 @@ export async function getSR () {
         recording: sr.recording,
         mode: sr.mode,
         exists: true,
-        blocked: sr.blocked
+        blocked: sr.blocked,
+        harvestTimeSeconds: sr.harvestTimeSeconds
       }
     } catch (err) {
       return {

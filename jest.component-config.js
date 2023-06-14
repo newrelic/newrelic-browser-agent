@@ -3,6 +3,7 @@ module.exports = {
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'src/**/*.js',
+    '!src/**/*.component-test.js',
     '!src/**/*.test.js',
     '!src/index.js',
     '!src/cdn/**/*.js',

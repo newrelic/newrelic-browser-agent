@@ -6,14 +6,19 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init} {config} {loader} {script-injection}
+    {init} {config}
+    {loader} {script-injection}
   </head>
   <body>This is a page that builds a >64kb dom for testing
     <div id="content"></div>
     <script>
-        // not intended for IE
-        // 550kb string -> compressed to just over 64kb
-        document.querySelector('#content').innerHTML = 'x'.repeat(550000)
+        // generate compressed data to over 64kb but less than 1mb
+        window.addEventListener('load', function(){
+          var i =0
+          var body = document.querySelector('body')
+          setTimeout(function(){while(i++ < 10000) {body.click()}}, 2000)
+          
+        })
     </script>
   </body>
 </html>

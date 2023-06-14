@@ -163,10 +163,10 @@ export class Aggregate extends AggregateBase {
     }
 
     this.#scheduler = new HarvestScheduler('resources', {
-      onFinished: this.#onHarvestFinished,
+      onFinished: this.#onHarvestFinished.bind(this),
       retryDelay: this.harvestTimeSeconds
     }, this)
-    this.#scheduler.harvest.on('resources', this.#prepareHarvest)
+    this.#scheduler.harvest.on('resources', this.#prepareHarvest.bind(this))
     if (dontStartHarvestYet === false) this.#scheduler.runHarvest({ needResponse: true }) // sends first stn harvest immediately
     startupBuffer.decide(true) // signal to ALLOW & process data in EE's buffer into internal nodes queued for next harvest
   }

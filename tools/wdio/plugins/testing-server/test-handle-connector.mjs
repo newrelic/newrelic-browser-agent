@@ -51,6 +51,36 @@ export class TestHandleConnector {
   }
 
   /**
+   * Schedules a reply to a server request
+   * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
+   * @param {ScheduledReply} scheduledReply The reply options to apply to the server request
+   */
+  async scheduleReply (serverId, scheduledReply) {
+    await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/scheduleReply`, {
+      method: 'POST',
+      body: JSON.stringify({
+        serverId,
+        scheduledReply: { ...scheduledReply, test: SerAny.serialize(scheduledReply.test) }
+      }),
+      headers: { 'content-type': 'application/json' }
+    })
+  }
+
+  /**
+   * Clears all scheduled replies for the given server.
+   * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
+   */
+  async clearScheduledReplies (serverId) {
+    await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/clearScheduledReplies`, {
+      method: 'POST',
+      body: JSON.stringify({
+        serverId
+      }),
+      headers: { 'content-type': 'application/json' }
+    })
+  }
+
+  /**
    * Calls back to the testing server to create an expect for a specific server with a given test
    * function. The test can await the network call to resolve or reject to know if the expected
    * request was received.

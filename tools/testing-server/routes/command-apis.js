@@ -44,4 +44,24 @@ module.exports = fp(async function (fastify, testServer) {
       reply.code(400).send(e)
     }
   })
+
+  fastify.post('/test-handle/:testId/scheduleReply', async function (request, reply) {
+    const testHandle = testServer.getTestHandle(request.params.testId)
+    try {
+      testHandle.scheduleReply(request.body.serverId, request.body.scheduledReply)
+      reply.code(200).send()
+    } catch (e) {
+      reply.code(400).send(e)
+    }
+  })
+
+  fastify.post('/test-handle/:testId/clearScheduledReplies', async function (request, reply) {
+    const testHandle = testServer.getTestHandle(request.params.testId)
+    try {
+      testHandle.clearScheduledReplies(request.body.serverId)
+      reply.code(200).send()
+    } catch (e) {
+      reply.code(400).send(e)
+    }
+  })
 })

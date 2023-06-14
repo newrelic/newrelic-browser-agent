@@ -31,6 +31,7 @@ const model = () => {
     page_view_event: { enabled: true },
     page_view_timing: { enabled: true, harvestTimeSeconds: 30, long_task: false },
     session_trace: { enabled: true, harvestTimeSeconds: 10 },
+    harvest: { tooManyRequestsDelay: 60 },
     session_replay: {
       // feature settings
       enabled: false,

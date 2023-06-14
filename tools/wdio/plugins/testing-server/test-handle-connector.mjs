@@ -51,6 +51,17 @@ export class TestHandleConnector {
   }
 
   /**
+   * Retrieves information about the number and type of requests the testing server
+   * has seen.
+   */
+  async getRequestCounts () {
+    const result = await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/requestCounts`, {
+      method: 'POST'
+    })
+    return await result.json()
+  }
+
+  /**
    * Schedules a reply to a server request
    * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
    * @param {ScheduledReply} scheduledReply The reply options to apply to the server request

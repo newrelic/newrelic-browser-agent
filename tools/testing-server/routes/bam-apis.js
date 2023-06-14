@@ -7,6 +7,9 @@ const { rumFlags } = require('../constants')
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify) {
+  fastify.get('/health', async function (request, reply) {
+    reply.code(204).send()
+  })
   fastify.route({
     method: ['GET', 'POST'],
     url: '/debug',
@@ -26,7 +29,7 @@ module.exports = fp(async function (fastify) {
       if (!request.query.jsonp) {
         return reply
           .header('content-type', 'application/json')
-          .code(200)
+          .code(408)
           .send(JSON.stringify(rumFlags))
       } else {
         return reply

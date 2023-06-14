@@ -148,7 +148,7 @@ export class TestHandleConnector {
       method: 'POST',
       body: JSON.stringify({
         assetFile,
-        query: deepmerge(defaultAssetQuery, query)
+        query: SerAny.serialize(deepmerge(defaultAssetQuery, query))
       }),
       headers: { 'content-type': 'application/json' }
     })

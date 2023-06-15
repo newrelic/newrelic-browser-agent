@@ -23,12 +23,14 @@ import { sharedChannel } from '../../../common/constants/shared-channel'
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.8'
 
+export const AVG_COMPRESSION = 0.12
+
 let recorder, gzipper, u8
 
 /** Vortex caps payload sizes at 1MB */
-const MAX_PAYLOAD_SIZE = 1000000
+export const MAX_PAYLOAD_SIZE = 1000000
 /** Unloading caps around 64kb */
-const IDEAL_PAYLOAD_SIZE = 64000
+export const IDEAL_PAYLOAD_SIZE = 64000
 /** Interval between forcing new full snapshots in "error" mode */
 const CHECKOUT_MS = 30000
 
@@ -36,19 +38,22 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
-
     /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
     this.events = []
     /** The interval to harvest at.  This gets overridden if the size of the payload exceeds certain thresholds */
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'session_replay.harvestTimeSeconds') || 60
     /** Set once the recorder has fully initialized after flag checks and sampling */
     this.initialized = false
-    /** Set once an error has been detected on the page. */
+    /** Set once an error has been detected on the page. Never unset */
     this.errorNoticed = false
     /** The "mode" to record in.  Defaults to "OFF" until flags and sampling are checked. See "MODE" constant. */
     this.mode = MODE.OFF
     /** Set once the feature has been "aborted" to prevent other side-effects from continuing */
     this.blocked = false
+    /** True when actively recording, false when paused or stopped */
+    this.recording = false
+    /** can shut off efforts to compress the data */
+    this.shouldCompress = true
 
     /** Payload metadata -- Should indicate that the payload being sent is the first of a session */
     this.isFirstChunk = false
@@ -63,58 +68,64 @@ export class Aggregate extends AggregateBase {
     /** A value which increments with every new mutation node reported. Resets after a harvest is sent */
     this.payloadBytesEstimation = 0
 
+    const shouldSetup = (
+      getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true &&
+      getConfigurationValue(agentIdentifier, 'session_trace.enabled') === true
+    )
+
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
 
-    // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
-    this.ee.on(SESSION_EVENTS.RESET, () => {
-      this.abort()
-    })
+    if (shouldSetup) {
+      // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
+      this.ee.on(SESSION_EVENTS.RESET, () => {
+        this.abort()
+      })
 
-    // The SessionEntity class can emit a message indicating the session was paused (visibility change). This feature must stop recording if that occurs.
-    this.ee.on(SESSION_EVENTS.PAUSE, () => { this.stopRecording() })
-    // The SessionEntity class can emit a message indicating the session was resumed (visibility change). This feature must start running again (if already running) if that occurs.
-    this.ee.on(SESSION_EVENTS.RESUME, () => {
-      if (!this.initialized || this.mode === MODE.OFF) return
-      this.startRecording()
-      this.takeFullSnapshot()
-    })
+      // The SessionEntity class can emit a message indicating the session was paused (visibility change). This feature must stop recording if that occurs.
+      this.ee.on(SESSION_EVENTS.PAUSE, () => { this.stopRecording() })
+      // The SessionEntity class can emit a message indicating the session was resumed (visibility change). This feature must start running again (if already running) if that occurs.
+      this.ee.on(SESSION_EVENTS.RESUME, () => {
+        if (!this.initialized || this.mode === MODE.OFF) return
+        this.startRecording()
+      })
 
-    // Bespoke logic for new endpoint.  This will change as downstream dependencies become solidified.
-    this.scheduler = new HarvestScheduler('blob', {
-      onFinished: this.onHarvestFinished.bind(this),
-      retryDelay: this.harvestTimeSeconds,
-      getPayload: this.prepareHarvest.bind(this),
-      raw: true
-    }, this)
+      // Bespoke logic for new endpoint.  This will change as downstream dependencies become solidified.
+      this.scheduler = new HarvestScheduler('blob', {
+        onFinished: this.onHarvestFinished.bind(this),
+        retryDelay: this.harvestTimeSeconds,
+        getPayload: this.prepareHarvest.bind(this),
+        raw: true
+      }, this)
 
-    // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
-    // This was to ensure that all errors, including those on the page before load and those handled with "noticeError" are accounted for. Needs evalulation
-    registerHandler('errorAgg', (e) => {
-      this.hasError = true
-      // run once
-      if (this.mode === MODE.ERROR) {
-        this.mode = MODE.FULL
-        // if the error was noticed AFTER the recorder was already imported....
-        if (recorder && this.initialized) {
-          this.stopRecording()
-          this.startRecording()
-          this.scheduler.startTimer(this.harvestTimeSeconds)
+      // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
+      // This was to ensure that all errors, including those on the page before load and those handled with "noticeError" are accounted for. Needs evalulation
+      registerHandler('errorAgg', (e) => {
+        this.hasError = true
+        this.errorNoticed = true
+        // run once
+        if (this.mode === MODE.ERROR) {
+          this.mode = MODE.FULL
+          // if the error was noticed AFTER the recorder was already imported....
+          if (recorder && this.initialized) {
+            this.stopRecording()
+            this.startRecording()
+            this.scheduler.startTimer(this.harvestTimeSeconds)
 
-          const { session } = getRuntime(this.agentIdentifier)
-          session.state.sessionReplay = this.mode
+            const { session } = getRuntime(this.agentIdentifier)
+            session.state.sessionReplay = this.mode
+          }
         }
-      }
-    }, this.featureName, this.ee)
+      }, this.featureName, this.ee)
 
-    // new handler for waiting for multiple flags.  will be useful if/when backend designs multiple flags, or for evaluating multiple feature flags simultaneously (stn vs sr)
-    this.waitForFlags(['sr']).then(([flagOn]) => this.initializeRecording(
-      flagOn,
-      Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.errorSampleRate'),
-      Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.sampleRate')
-    )).then(() => sharedChannel.onReplayReady(this.mode)) // notify watchers that replay started with the mode
+      this.waitForFlags(['sr']).then(([flagOn]) => this.initializeRecording(
+        flagOn,
+        Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.errorSampleRate'),
+        Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.sampleRate')
+      )).then(() => sharedChannel.onReplayReady(this.mode)) // notify watchers that replay started with the mode
 
-    drain(this.agentIdentifier, this.featureName)
+      drain(this.agentIdentifier, this.featureName)
+    }
   }
 
   /**
@@ -145,6 +156,11 @@ export class Aggregate extends AggregateBase {
       else return
     }
 
+    // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
+    if (this.mode === MODE.ERROR && this.errorNoticed) {
+      this.mode = MODE.FULL
+    }
+
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
     // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
     // If an error happened in ERROR mode before we've gotten to this stage, it will have already set the mode to FULL
@@ -153,32 +169,37 @@ export class Aggregate extends AggregateBase {
       this.scheduler.startTimer(this.harvestTimeSeconds)
     }
 
-    // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
-    if (this.mode === MODE.ERROR && this.errorNoticed) {
-      this.mode = MODE.FULL
+    try {
+      recorder = (await import(/* webpackChunkName: "recorder" */'rrweb')).record
+    } catch (err) {
+      return this.abort()
     }
-    // We record in FULL or ERROR mode
 
-    recorder = (await import(/* webpackChunkName: "recorder" */'rrweb')).record
+    try {
+      const { gzipSync, strToU8 } = await import(/* webpackChunkName: "compressor" */'fflate')
+      gzipper = gzipSync
+      u8 = strToU8
+    } catch (err) {
+      // compressor failed to load, but we can still record without compression as a last ditch effort
+      this.shouldCompress = false
+    }
     this.startRecording()
-    const { gzipSync, strToU8 } = await import(/* webpackChunkName: "compressor" */'fflate')
-    gzipper = gzipSync
-    u8 = strToU8
 
     this.isFirstChunk = !!session.isNew
 
     session.state.sessionReplay = this.mode
   }
 
-  prepareHarvest (options) {
+  prepareHarvest () {
     if (this.events.length === 0) return
     const payload = this.getHarvestContents()
-    try {
+
+    if (this.shouldCompress) {
       payload.body = gzipper(u8(stringify(payload.body)))
       this.scheduler.opts.gzip = true
-    } catch (err) {
-      // failed to gzip
+    } else {
       this.scheduler.opts.gzip = false
+      delete payload.qs.content_encoding
     }
     // TODO -- Gracefully handle the buffer for retries.
     this.clearBuffer()
@@ -239,7 +260,7 @@ export class Aggregate extends AggregateBase {
     this.hasSnapshot = true
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
-    this.stopRecording = recorder({
+    const stop = recorder({
       emit: this.store.bind(this),
       blockClass,
       ignoreClass,
@@ -250,6 +271,13 @@ export class Aggregate extends AggregateBase {
       maskAllInputs,
       ...(this.mode === MODE.ERROR && { checkoutEveryNms: CHECKOUT_MS })
     })
+
+    this.recording = true
+
+    this.stopRecording = () => {
+      this.recording = false
+      stop()
+    }
   }
 
   /** Store a payload in the buffer (this.events).  This should be the callback to the recording lib noticing a mutation */
@@ -260,6 +288,7 @@ export class Aggregate extends AggregateBase {
     const payloadSize = this.getPayloadSize(eventBytes)
     // Vortex will block payloads at a certain size, we might as well not send.
     if (payloadSize > MAX_PAYLOAD_SIZE) {
+      this.clearBuffer()
       return this.abort()
     }
     // Checkout events are flags by the recording lib that indicate a fullsnapshot was taken every n ms. These are important
@@ -297,6 +326,7 @@ export class Aggregate extends AggregateBase {
   /** Abort the feature, once aborted it will not resume */
   abort () {
     this.blocked = true
+    this.mode = MODE.OFF
     this.stopRecording()
     const { session } = getRuntime(this.agentIdentifier)
     session.state.sessionReplay = this.mode
@@ -307,6 +337,7 @@ export class Aggregate extends AggregateBase {
    * https://staging.onenr.io/037jbJWxbjy
    * */
   estimateCompression (data) {
-    return data * 0.12
+    if (this.shouldCompress) return data * AVG_COMPRESSION
+    return data
   }
 }

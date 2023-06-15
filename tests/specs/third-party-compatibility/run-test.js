@@ -36,7 +36,7 @@ export default async function runTest ({
   const [unloadEventsResults, unloadMetricsResults] = await Promise.all([
     browser.testHandle.expectEvents(),
     browser.testHandle.expectMetrics(),
-    await browser.url(
+    browser.url(
       await browser.testHandle.assetURL('/')
     ) // Setup expects before navigating
   ])

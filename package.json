@@ -89,9 +89,8 @@
   "scripts": {
     "wdio": "node --max-old-space-size=8192 tools/wdio/bin/cli.js",
     "start": "npm-run-all --parallel cdn:watch test-server",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test:unit": "jest",
+    "test:component": "jest --config jest.component-config.js",
     "build:all": "npm run cdn:build:local && npm run build:npm && npm run tools:test-builds",
     "build:npm": "npm run npm:build:esm && npm run npm:build:cjs && npm run npm:build:types && npm run npm:pack",
     "build:browser-tests": "npm --prefix ./tools/test-builds/browser-tests run build",

@@ -12,5 +12,10 @@ module.exports = [
     name: 'spa',
     features: ['err', 'xhr', 'stn', 'ins', 'spa'],
     payload: 'spa'
+  },
+  {
+    name: 'experimental',
+    features: ['err', 'xhr', 'stn', 'ins', 'spa', 'sr'],
+    payload: 'experimental'
   }
 ]

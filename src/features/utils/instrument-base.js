@@ -61,13 +61,11 @@ export class InstrumentBase extends FeatureBase {
     })
 
     const importLater = async () => {
-      let importReplay = false
+      let session
       try {
         if (enableSessionTracking) { // would require some setup before certain features start
           const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
-          const sessionManager = setupAgentSession(this.agentIdentifier)
-
-          if (shouldImportSR(sessionManager)) importReplay = true
+          session = setupAgentSession(this.agentIdentifier)
         }
       } catch (e) {
         warn('A problem occurred when starting up session manager. This page will not start or extend any session.', e)
@@ -78,11 +76,10 @@ export class InstrumentBase extends FeatureBase {
        * it's only responsible for aborting its one specific feature, rather than all.
        */
       try {
-        if (this.featureName === FEATURE_NAMES.sessionReplay && !importReplay) { // replay is off if tracking is off
+        if (!this.shouldImportAgg(this.featureName, session)) {
           drain(this.agentIdentifier, this.featureName)
           return
         }
-
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
         this.featAggregate = new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)
@@ -100,17 +97,23 @@ export class InstrumentBase extends FeatureBase {
     if (!isBrowserScope) importLater()
     else onWindowLoad(() => importLater(), true)
   }
-}
-/**
+
+  /**
  * Make a determination if an aggregate class should even be imported
  * @param {string} featureName
  * @param {SessionEntity} session
  * @returns
  */
-function shouldImportSR (session) {
+  shouldImportAgg (featureName, session) {
   // if this isnt the FIRST load of a session AND
   // we are not actively recording SR... DO NOT run the aggregator
   // session replay samples can only be decided on the first load of a session
   // session replays can continue if in progress
-  return !!session?.isNew || !!session?.state.sessionReplayActive
+    if (featureName === FEATURE_NAMES.sessionReplay) {
+      if (getConfigurationValue(this.agentIdentifier, 'session_trace.enabled') === false) return false
+      return !!session?.isNew || !!session?.state.sessionReplay
+    }
+    // todo -- add case like above for session trace
+    return true
+  }
 }

@@ -361,14 +361,14 @@ describe('_send', () => {
   test('should set cbFinished state retry to true with delay when xhr has 429 status', () => {
     jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.xhr)
     spec.cbFinished = jest.fn()
+    harvestInstance.tooManyRequestsDelay = faker.datatype.number({ min: 100, max: 1000 })
 
     const result = harvestInstance._send(spec)
     const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
     const xhrLoadHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
     const xhrState = {
-      status: 429,
-      tooManyRequestsDelay: 100
+      status: 429
     }
     xhrLoadHandler.call(xhrState)
 
@@ -377,10 +377,9 @@ describe('_send', () => {
     expect(submitMethod).not.toHaveBeenCalled()
     expect(spec.cbFinished).toHaveBeenCalledWith({
       ...xhrState,
-      tooManyRequestsDelay: undefined,
       sent: true,
       retry: true,
-      delay: xhrState.tooManyRequestsDelay
+      delay: harvestInstance.tooManyRequestsDelay
     })
   })
 

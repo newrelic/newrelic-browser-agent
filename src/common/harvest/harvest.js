@@ -138,11 +138,13 @@ export class Harvest extends SharedContext {
     let result = submitMethod({ url: fullUrl, body, sync: opts.unload && isWorkerScope, headers })
 
     if (!opts.unload && cbFinished && submitMethod === submitData.xhr) {
+      const harvestScope = this
       result.addEventListener('load', function () {
+        // `this` refers to the XHR object in this scope, do not change this to a fat arrow
         const cbResult = { sent: true, status: this.status }
         if (this.status === 429) {
           cbResult.retry = true
-          cbResult.delay = this.tooManyRequestsDelay
+          cbResult.delay = harvestScope.tooManyRequestsDelay
         } else if (this.status === 408 || this.status === 500 || this.status === 503) {
           cbResult.retry = true
         }

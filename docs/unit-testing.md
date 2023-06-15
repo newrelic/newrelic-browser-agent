@@ -4,7 +4,7 @@ We utilize [Jest](https://jestjs.io/docs/getting-started) for the purposes of wr
 
 ## Running Unit Tests
 
-After making sure you have the project dependencies installed, execute `npm test` to run all the unit tests. To run just a specific test, you can pass the path of the test file to the test command like so: `npm test -- src/features/jserrors/aggregate/format-stack-trace.test.js`. There is also a watch command (`npm run test:watch`) for when you are making multiple edits to tests and would like those tests to run after each saved change. To check the state of coverage, use `npm run test:coverage`.
+After making sure you have the project dependencies installed, execute `npm test:unit` to run all the unit tests. Execute `npm test:component` to run all the component tests. To run just a specific test, you can pass the path of the test file to the test command like so: `npm test:<unit|component> -- src/features/jserrors/aggregate/format-stack-trace.test.js`. 
 
 ## Writing Tests - Basics
 

@@ -59,12 +59,22 @@ jobs:
             Checking merge of (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}) into [${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_ref }}](https://github.com/newrelic/newrelic-browser-agent/compare/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}..${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }}) (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }})
           comment_tag: <!-- browser_agent pull request checks -->
 
-  jest:
+  jest-unit:
     name: Jest unit tests
     needs: find-pull-request
     uses: ./.github/workflows/jest.yml
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
+      collection: 'unit'
+    secrets: inherit
+
+  jest-component:
+    name: Jest component tests
+    needs: find-pull-request
+    uses: ./.github/workflows/jest.yml
+    with:
+      ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
+      collection: 'component'
     secrets: inherit
 
   eslint:

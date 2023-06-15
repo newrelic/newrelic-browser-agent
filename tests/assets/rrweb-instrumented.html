@@ -16,23 +16,25 @@
   </style>
   {init}
   {config}
-  <script>
-    localStorage.clear()
-    // NREUM.init.session = {expiresMs: 5000}
-    NREUM.init.session_replay = {enabled: true, harvestTimeSeconds: 5, errorSampleRate: 0, sampleRate: 1}
-  </script>
   {loader}
   {script-injection}
 </head>
 <body>
-  this is a page intended to "manually" set up session replay and bypass the default "off" configs
+  this is a page that provides several types of elements with selectors that session_replay can interact with based on how it is configured
   <hr />
   <img class="left" src="/slowimage" />
   <hr />
-  <textarea></textarea>
+  <textarea id="plain"></textarea>
+  <textarea id="ignore" class="nr-ignore"></textarea>
+  <textarea id="block" class="nr-block"></textarea>
+  <textarea id="mask" class="nr-mask"></textarea>
+  <textarea id="nr-block" data-nr-block></textarea>
+  <textarea id="other-block" data-other-block></textarea>
+  <input type="password" id="pass-input">
+  <input type="text" id="text-input">
   <hr />
   <button onclick="moveImage()">Click</button>
-  <a href="./rrweb-record.html" target="_blank">New Tab</a>
+  <a href="./rrweb-instrumented.html" target="_blank">New Tab</a>
   <script>
     function moveImage(){
       document.querySelector("img").classList.toggle("left")

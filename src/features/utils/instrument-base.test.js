@@ -130,7 +130,7 @@ test('should import the session manager and replay aggregate when a recording is
   jest.mocked(setupAgentSession).mockReturnValue({
     isNew: false,
     state: {
-      sessionReplayActive: true
+      sessionReplay: 1
     }
   })
 
@@ -152,7 +152,7 @@ test('should not import session aggregate when session is not new and a recordin
   jest.mocked(setupAgentSession).mockReturnValue({
     isNew: false,
     state: {
-      sessionReplayActive: false
+      sessionReplay: 0
     }
   })
 

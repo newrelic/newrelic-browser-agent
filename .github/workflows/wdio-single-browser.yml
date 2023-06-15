@@ -48,7 +48,6 @@ jobs:
   wdio:
     name: WDIO Test - ${{ inputs.browser-target }}
     timeout-minutes: 60
-    continue-on-error: true
     runs-on: ubuntu-latest
     container:
       image: ubuntu:latest
@@ -73,16 +72,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build agent
-        run: npm run build:all
+        run: npm run cdn:build:local
       - name: Run WDIO Tests
         run: |
           node ./tools/wdio/bin/cli.js \
             -s \
             -b ${{ inputs.browser-target }} \
             --concurrent 10 \
-            ${{ runner.debug && '-v -L -D -d' }} \
-            ${{ inputs.coverage && '--coverage' }} \
-            ${{ inputs.additional-flags }}
+            ${{ runner.debug && '-v -L -D -d' || '' }} \
+            ${{ inputs.coverage && '--coverage' || '' }} \
+            ${{ inputs.additional-flags || '' }}
       - name: Find pull request
         id: pull-request-target
         uses: ./.github/actions/find-pull-request

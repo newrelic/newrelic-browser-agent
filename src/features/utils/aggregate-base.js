@@ -10,6 +10,11 @@ export class AggregateBase extends FeatureBase {
     this.checkConfiguration()
   }
 
+  /**
+   * New handler for waiting for multiple flags. Useful when expecting multiple flags simultaneously (ex. stn vs sr)
+   * @param {string[]} flagNames
+   * @returns
+   */
   waitForFlags (flagNames = []) {
     return Promise.all(
       flagNames.map(fName =>

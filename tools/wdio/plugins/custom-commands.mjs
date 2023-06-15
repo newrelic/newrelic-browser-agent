@@ -75,10 +75,45 @@ export default class CustomCommands {
             return aggregate
           }, {})
       })
+      const agentSessionInstances = await browser.execute(function () {
+        return Object.entries(newrelic.initializedAgents)
+          .reduce(function (aggregate, agentEntry) {
+            aggregate[agentEntry[0]] = {
+              key: agentEntry[1].runtime.session.key,
+              isNew: agentEntry[1].runtime.session.isNew,
+              initialized: agentEntry[1].runtime.session.initialized
+            }
+            return aggregate
+          }, {})
+      })
       const localStorage = await browser.execute(function () {
         return JSON.parse(window.localStorage.getItem('NRBA_SESSION') || '{}')
       })
-      return { agentSessions, localStorage }
+      return { agentSessions, agentSessionInstances, localStorage }
+    })
+
+    /**
+     * Clears the current browser agent session from local storage by navigating
+     * to the index page where the agent is not loaded and clearing the `localStorage`
+     * in the browser. This completely destroys the current agent session ensuring that
+     * a new session is not created that could affect another test.
+     */
+    browser.addCommand('enableSessionReplay', async function () {
+      await browser.testHandle.scheduleReply('bamServer', {
+        test: function testRumRequest (request) {
+          const url = new URL(request.url, 'resolve://')
+          return url.pathname === `/1/${this.testId}`
+        },
+        body: JSON.stringify({
+          stn: 1,
+          err: 1,
+          ins: 1,
+          cap: 1,
+          spa: 1,
+          loaded: 1,
+          sr: 1
+        })
+      })
     })
   }
 }

@@ -32,7 +32,6 @@ export class Agent {
     this.features = {}
 
     this.desiredFeatures = new Set(options.features || []) // expected to be a list of static Instrument/InstrumentBase classes, see "spa.js" for example
-
     // For Now... ALL agents must make the rum call whether the page_view_event feature was enabled or not.
     // NR1 creates an index on the rum call, and if not seen for a few days, will remove the browser app!
     // Future work is being planned to evaluate removing this behavior from the backend, but for now we must ensure this call is made

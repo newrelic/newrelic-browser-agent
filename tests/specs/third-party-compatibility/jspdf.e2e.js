@@ -1,15 +1,8 @@
-import SpecMatcher from '../../../tools/browser-matcher/spec-matcher.mjs'
+import { reliableUnload } from '../../../tools/browser-matcher/common-matchers.mjs'
 import runTest from './run-test'
 
-const supported = new SpecMatcher()
-  .include('safari')
-  .include('chrome')
-  .include('edge')
-  .include('firefox')
-  .include('android')
-
 describe('jspdf compatibility', () => {
-  withBrowsersMatching(supported)('2.5.1', async () => {
+  withBrowsersMatching(reliableUnload)('2.5.1', async () => {
     await runTest({
       browser,
       testAsset: 'third-party-compatibility/jspdf/2.5.1.html',

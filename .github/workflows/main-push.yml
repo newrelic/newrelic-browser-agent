@@ -11,9 +11,17 @@ on:
       - 'main'
 
 jobs:
-  jest:
+  jest-unit:
     uses: ./.github/workflows/jest.yml
     secrets: inherit
+    with:
+      collection: 'unit'
+
+  jest-component:
+    uses: ./.github/workflows/jest.yml
+    secrets: inherit
+    with:
+      collection: 'component'
 
   wdio-coverage:
     name: WDIO coverage

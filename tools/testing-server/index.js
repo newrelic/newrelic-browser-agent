@@ -1,7 +1,7 @@
 const fastify = require('fastify')
 const { urlFor } = require('./utils/url')
 const waitOn = require('wait-on')
-const { paths, defaultAgentConfig } = require('./constants')
+const { paths } = require('./constants')
 const TestHandle = require('./test-handle')
 const TestServerLogger = require('./logger')
 

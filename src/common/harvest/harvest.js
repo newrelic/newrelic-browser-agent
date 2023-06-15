@@ -238,14 +238,19 @@ export class Harvest extends SharedContext {
    * @returns {HarvestPayload} Cleaned payload payload to be sent to the endpoint.
    */
   cleanPayload (payload = {}) {
-    const clean = (input) => Object.entries(input || {})
-      .reduce((accumulator, [key, value]) => {
-        if (value !== null && value !== undefined && value.toString()?.length) {
-          accumulator[key] = value
-        }
+    const clean = (input) => {
+      if (typeof Uint8Array !== 'undefined' && input instanceof Uint8Array) {
+        return input.length > 0 ? input : null
+      }
+      return Object.entries(input || {})
+        .reduce((accumulator, [key, value]) => {
+          if (value !== null && value !== undefined && value.toString()?.length) {
+            accumulator[key] = value
+          }
 
-        return accumulator
-      }, {})
+          return accumulator
+        }, {})
+    }
 
     return {
       body: clean(payload.body),

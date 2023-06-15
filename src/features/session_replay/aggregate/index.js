@@ -91,7 +91,7 @@ export class Aggregate extends AggregateBase {
       })
 
       // Bespoke logic for new endpoint.  This will change as downstream dependencies become solidified.
-      this.scheduler = new HarvestScheduler('blob', {
+      this.scheduler = new HarvestScheduler('browser/blobs', {
         onFinished: this.onHarvestFinished.bind(this),
         retryDelay: this.harvestTimeSeconds,
         getPayload: this.prepareHarvest.bind(this),
@@ -218,13 +218,13 @@ export class Aggregate extends AggregateBase {
       body: {
         type: 'SessionReplay',
         appId: Number(info.applicationID),
-        timestamp: Date.now(),
         blob: JSON.stringify(this.events), // this needs to be a stringified JSON array of rrweb nodes
         attributes: {
+          'replay.timestamp': Date.now(),
+          agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,
           hasSnapshot: this.hasSnapshot,
           hasError: this.hasError,
-          agentVersion: agentRuntime.version,
           isFirstChunk: this.isFirstChunk,
           'nr.rrweb.version': RRWEB_VERSION
         }

@@ -191,7 +191,7 @@ export class Aggregate extends AggregateBase {
   }
 
   prepareHarvest () {
-    if (this.events.length === 0) return
+    if (this.events.length === 0 || (this.mode !== MODE.FULL && !this.blocked)) return
     const payload = this.getHarvestContents()
 
     if (this.shouldCompress) {

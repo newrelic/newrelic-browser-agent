@@ -173,7 +173,7 @@ export class Aggregate extends AggregateBase {
 
     function onEventsHarvestFinished (result) {
       if (result.retry && sentAjaxEvents.length > 0 && allAjaxIsEnabled()) {
-        ajaxEvents = ajaxEvents.concat(sentAjaxEvents)
+        ajaxEvents.unshift(...sentAjaxEvents)
         sentAjaxEvents = []
       }
     }

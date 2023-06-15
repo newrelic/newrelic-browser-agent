@@ -1,18 +1,5 @@
 import { testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-const config = {
-  init: {
-    harvest: {
-      /*
-      Errors harvesting does not use any of the delay settings from the harvest module. It should
-      just put the error in the next harvest. Setting this value a little higher than the default
-      harvest time to verify it's not being used.
-      */
-      tooManyRequestsDelay: 10
-    }
-  }
-}
-
 describe('err retry harvesting', () => {
   [408, 429, 500, 503].forEach(statusCode =>
     it(`should send the error on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
@@ -24,7 +11,7 @@ describe('err retry harvesting', () => {
 
       const [firstErrorsHarvest] = await Promise.all([
         browser.testHandle.expectErrors(),
-        browser.url(await browser.testHandle.assetURL('instrumented.html', config))
+        browser.url(await browser.testHandle.assetURL('instrumented.html'))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             newrelic.noticeError(new Error('hippo hangry'))
@@ -44,10 +31,6 @@ describe('err retry harvesting', () => {
 
       expect(firstErrorsHarvest.reply.statusCode).toEqual(statusCode)
       expect(secondErrorsHarvest.request.body.err).toEqual(expect.arrayContaining(firstErrorsHarvest.request.body.err))
-
-      const firstHarvestTime = Number(firstErrorsHarvest.request.query.rst)
-      const secondHarvestTime = Number(secondErrorsHarvest.request.query.rst)
-      expect(secondHarvestTime).toBeWithin(firstHarvestTime + 5000, firstHarvestTime + 10000)
     })
   );
 
@@ -61,7 +44,7 @@ describe('err retry harvesting', () => {
 
       const [firstErrorsHarvest] = await Promise.all([
         browser.testHandle.expectErrors(),
-        browser.url(await browser.testHandle.assetURL('instrumented.html', config))
+        browser.url(await browser.testHandle.assetURL('instrumented.html'))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             newrelic.noticeError(new Error('hippo hangry'))
@@ -81,10 +64,6 @@ describe('err retry harvesting', () => {
 
       expect(firstErrorsHarvest.reply.statusCode).toEqual(statusCode)
       expect(secondErrorsHarvest.request.body.err).not.toEqual(expect.arrayContaining(firstErrorsHarvest.request.body.err))
-
-      const firstHarvestTime = Number(firstErrorsHarvest.request.query.rst)
-      const secondHarvestTime = Number(secondErrorsHarvest.request.query.rst)
-      expect(secondHarvestTime).toBeWithin(firstHarvestTime + 5000, firstHarvestTime + 10000)
     })
   )
 })

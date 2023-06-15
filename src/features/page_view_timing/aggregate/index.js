@@ -196,7 +196,7 @@ export class Aggregate extends AggregateBase {
   onHarvestFinished (result) {
     if (result.retry && this.timingsSent.length > 0) {
       for (var i = 0; i < this.timingsSent.length; i++) {
-        this.timings.push(this.timingsSent[i])
+        this.timings.unshift(this.timingsSent[i])
       }
       this.timingsSent = []
     }

@@ -93,7 +93,7 @@ export class Aggregate extends AggregateBase {
       mapOwn(this.currentBody, (key, value) => {
         for (var i = 0; i < value.length; i++) {
           var bucket = value[i]
-          var name = this.getBucketName(bucket.params, bucket.custom)
+          var name = this.getBucketName(key, bucket.params, bucket.custom)
           this.aggregator.merge(key, name, bucket.metrics, bucket.params, bucket.custom)
         }
       })
@@ -105,7 +105,11 @@ export class Aggregate extends AggregateBase {
     return stringHashCode(`${params.exceptionClass}_${params.message}_${params.stack_trace || params.browser_stack_hash}`)
   }
 
-  getBucketName (params, customParams) {
+  getBucketName (objType, params, customParams) {
+    if (objType === 'xhr') {
+      return stringHashCode(stringify(params)) + ':' + stringHashCode(stringify(customParams))
+    }
+
     return this.nameHash(params) + ':' + stringHashCode(stringify(customParams))
   }
 

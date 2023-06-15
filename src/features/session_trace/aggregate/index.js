@@ -13,7 +13,6 @@ import { HandlerCache } from '../../utils/handler-cache'
 import { MODE, SESSION_EVENTS } from '../../../common/session/session-entity'
 import { getSessionReplayMode } from '../../session_replay/replay-mode'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { sharedChannel } from '../../../common/constants/shared-channel'
 
 const ignoredEvents = {
   // we find that certain events make the data too noisy to be useful
@@ -72,11 +71,6 @@ export class Aggregate extends AggregateBase {
           break
       }
     }
-    const stopTracePerm = () => {
-      operationalGate.permanentlyDecide(false)
-      this.#scheduler?.stopTimer(true)
-      this.#scheduler = null
-    }
 
     if (!sessionEntity) {
       // Since session manager isn't around, do the old Trace behavior of waiting for RUM response to decide feature activation.
@@ -84,6 +78,7 @@ export class Aggregate extends AggregateBase {
       registerHandler('rumresp-stn', (on) => controlTraceOp(on), this.featureName, this.ee)
     } else {
       let seenAnError = false
+      let mostRecentModeKnown
       registerHandler('errorAgg', () => {
         // Switch to full capture mode on next harvest on first exception thrown only. Only done once so that sessionTraceMode isn't constantly overwritten after decision block.
         if (!seenAnError) {
@@ -92,11 +87,20 @@ export class Aggregate extends AggregateBase {
            - startTracing already ran under ERROR mode, then it will NOT have kicked off the harvest-scheduler so that needs to be done & switch mode.
            - startTracing never ran because mode is OFF or Replay aborted or Traced turned off elsewhere OR trace already in FULL, then this should do nothing. */
           if (sessionEntity.state.sessionTraceMode === MODE.ERROR && this.#scheduler) {
-            sessionEntity.state.sessionTraceMode = MODE.FULL
+            sessionEntity.write({ sessionTraceMode: (mostRecentModeKnown = MODE.FULL) })
+            this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
             this.#scheduler.runHarvest({ needResponse: true })
           }
         }
       }, this.featureName, this.ee)
+
+      const stopTracePerm = () => {
+        if (sessionEntity.state.sessionTraceMode !== MODE.OFF) sessionEntity.write({ sessionTraceMode: MODE.OFF })
+        operationalGate.permanentlyDecide(false)
+        this.#scheduler?.stopTimer(true)
+        if (mostRecentModeKnown === MODE.FULL) this.#scheduler?.runHarvest() // allow queued nodes (past opGate) to final harvest, unless they were buffered in other modes
+        this.#scheduler = null
+      }
 
       // CAUTION: everything inside this promise runs post-load; event subscribers must be pre-load aka synchronous with constructor
       this.waitForFlags(['stn', 'sr']).then(async ([traceOn, replayOn]) => {
@@ -105,11 +109,7 @@ export class Aggregate extends AggregateBase {
           this.isStandalone = true
           controlTraceOp(traceOn)
         } else {
-          // Whenever replay aborts, Trace can also shut down: stop processing nodes but allow existing buffer to harvest.
-          this.ee.on('REPLAY_ABORTED', () => {
-            sessionEntity.state.sessionTraceMode = MODE.OFF
-            stopTracePerm()
-          })
+          this.ee.on('REPLAY_ABORTED', () => stopTracePerm())
           /* Assuming on page visible that the trace mode is updated from shared session,
            - if trace is turned off from the other page, it should be likewise here.
            - if trace switches to Full mode, harvest should start (prev: Error) if not already running (prev: Full). */
@@ -117,10 +117,12 @@ export class Aggregate extends AggregateBase {
             const updatedTraceMode = sessionEntity.state.sessionTraceMode
             if (updatedTraceMode === MODE.OFF) stopTracePerm()
             else if (updatedTraceMode === MODE.FULL && this.#scheduler && !this.#scheduler.started) this.#scheduler.runHarvest({ needResponse: true })
+            mostRecentModeKnown = updatedTraceMode
           })
+          this.ee.on(SESSION_EVENTS.PAUSE, () => mostRecentModeKnown = sessionEntity.state.sessionTraceMode)
 
           if (!sessionEntity.isNew) { // inherit the same mode as existing session's Trace
-            const existingTraceMode = sessionEntity.state.sessionTraceMode
+            const existingTraceMode = mostRecentModeKnown = sessionEntity.state.sessionTraceMode
             if (existingTraceMode === MODE.OFF) this.isStandalone = true
             controlTraceOp(existingTraceMode)
           } else { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
@@ -135,7 +137,7 @@ export class Aggregate extends AggregateBase {
               if (replayMode === MODE.ERROR && seenAnError) startingMode = MODE.FULL
               else startingMode = replayMode
             }
-            sessionEntity.state.sessionTraceMode = startingMode
+            sessionEntity.write({ sessionTraceMode: (mostRecentModeKnown = startingMode) })
             controlTraceOp(startingMode)
           }
         }
@@ -201,15 +203,12 @@ export class Aggregate extends AggregateBase {
     } else {
     //   -- *cli May '26 - Update: Not rate limiting backgrounded pages either for now.
     //   if (this.ptid && document.visibilityState === 'hidden' && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
-      const currentMode = this.agentRuntime.session.state.sessionTraceMode
 
+      const currentMode = this.agentRuntime.session.state.sessionTraceMode
       /* There could still be nodes previously collected even after Trace (w/ session mgmt) is turned off. Hence, continue to send the last batch.
        * The intermediary controller SHOULD be already switched off so that no nodes are further queued. */
-      if (currentMode === MODE.OFF && Object.key(this.trace).length === 0) return
-      else if (currentMode === MODE.ERROR) {
-        this.trimSTNs(ERROR_MODE_SECONDS_WINDOW)
-        return // don't actually send anything while in observation mode awaiting any errors
-      }
+      if (currentMode === MODE.OFF && Object.keys(this.trace).length === 0) return
+      if (currentMode === MODE.ERROR) return // Trace in this mode should never be harvesting, even on unload
     }
     return this.takeSTNs(options.retry)
   }
@@ -393,7 +392,11 @@ export class Aggregate extends AggregateBase {
 
   // Central function called by all the other store__ & addToTrace API to append a trace node.
   storeSTN (stn) {
-    if (this.nodeCount >= this.maxNodesPerHarvest) return // limit the amount of data that is stored at once
+    if (this.nodeCount >= this.maxNodesPerHarvest) { // limit the amount of pending data awaiting next harvest
+      if (this.isStandalone || this.agentRuntime.session.state.sessionTraceMode !== MODE.ERROR) return
+      const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
+      if (openedSpace == 0) return
+    }
 
     if (this.trace[stn.n]) this.trace[stn.n].push(stn)
     else this.trace[stn.n] = [stn]
@@ -403,19 +406,29 @@ export class Aggregate extends AggregateBase {
 
   /**
    * Trim the collection of nodes awaiting harvest such that those seen outside a certain span of time are discarded.
-   * @param {Number} lookbackDuration - past length of time until now for which we care about nodes, in milliseconds
+   * @param {number} lookbackDuration Past length of time until now for which we care about nodes, in milliseconds
+   * @returns {number} However many nodes were discarded after trimming.
    */
   trimSTNs (lookbackDuration) {
+    let prunedNodes = 0
     const cutoffHighResTime = Math.max(now() - lookbackDuration, 0)
-    Object.values(this.trace).forEach(nodeList => {
+    Object.keys(this.trace).forEach(nameCategory => {
+      const nodeList = this.trace[nameCategory]
       /* Notice nodes are appending under their name's list as they end and are stored. This means each list is already (roughly) sorted in chronological order by end time.
        * This isn't exact since nodes go through some processing & EE handlers chain, but it's close enough as we still capture nodes whose duration overlaps the lookback window.
        * ASSUMPTION: all 'end' timings stored are relative to timeOrigin (DOMHighResTimeStamp) and not Unix epoch based. */
-      const cutoffIdx = nodeList.findIndex(node => cutoffHighResTime <= node.e)
-      nodeList.splice(0, cutoffIdx) // chop off everything outside our window i.e. before the last <lookbackDuration> timeframe
+      let cutoffIdx = nodeList.findIndex(node => cutoffHighResTime <= node.e)
+
+      if (cutoffIdx == 0) return
+      else if (cutoffIdx < 0) { // whole list falls outside lookback window and is irrelevant
+        cutoffIdx = nodeList.length
+        delete this.trace[nameCategory]
+      } else nodeList.splice(0, cutoffIdx) // chop off everything outside our window i.e. before the last <lookbackDuration> timeframe
 
       this.nodeCount -= cutoffIdx
+      prunedNodes += cutoffIdx
     })
+    return prunedNodes
   }
 
   // Used by session trace's harvester to create the payload body.

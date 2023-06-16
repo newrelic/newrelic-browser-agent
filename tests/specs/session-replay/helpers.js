@@ -7,6 +7,29 @@ export const RRWEB_EVENT_TYPES = {
   Custom: 5
 }
 
+export function testExpectedReplay ({ data, session, hasSnapshot, hasError, isFirstChunk, contentEncoding }) {
+  expect(data.query).toMatchObject({
+    protocol_version: '0',
+    ...(contentEncoding && { content_encoding: 'gzip' }),
+    browser_monitoring_key: expect.any(String)
+  })
+
+  expect(data.body).toMatchObject({
+    type: 'SessionReplay',
+    appId: expect.any(Number),
+    blob: expect.any(String),
+    attributes: {
+      'replay.timestamp': expect.any(Number),
+      session: session || expect.any(String),
+      hasSnapshot: hasSnapshot || expect.any(Boolean),
+      hasError: hasError || expect.any(Boolean),
+      agentVersion: expect.any(String),
+      isFirstChunk: isFirstChunk || expect.any(Boolean),
+      'nr.rrweb.version': expect.any(String)
+    }
+  })
+}
+
 export function config (props = {}) {
   return {
     loader: 'experimental',

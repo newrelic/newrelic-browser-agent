@@ -1,6 +1,6 @@
 import { supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
-import { config, getSR } from './helpers'
+import { config, getSR, testExpectedReplay } from './helpers'
 
 describe('Session Replay Across Pages', () => {
   beforeEach(async () => {
@@ -18,26 +18,7 @@ describe('Session Replay Across Pages', () => {
     const { localStorage } = await browser.getAgentSessionInfo()
     const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
 
-    expect(page1Contents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(page1Contents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: true,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
+    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: true })
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
@@ -56,26 +37,7 @@ describe('Session Replay Across Pages', () => {
 
     const { request: page2Contents } = await browser.testHandle.expectBlob()
 
-    expect(page2Contents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(page2Contents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: false,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
+    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: false })
   })
 
   it('should record across same-tab page navigation', async () => {
@@ -83,27 +45,8 @@ describe('Session Replay Across Pages', () => {
       .then(() => browser.waitForAgentLoad())
     const { localStorage } = await browser.getAgentSessionInfo()
     const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
+    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: true })
 
-    expect(page1Contents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(page1Contents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: true,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: JSON.stringify({
@@ -120,27 +63,7 @@ describe('Session Replay Across Pages', () => {
       .then(() => browser.waitForAgentLoad())
 
     const { request: page2Contents } = await browser.testHandle.expectBlob(10000)
-
-    expect(page2Contents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(page2Contents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: false,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
+    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: false })
   })
 
   withBrowsersMatching(supportsMultipleTabs)('should record across new-tab page navigation', async () => {
@@ -149,26 +72,7 @@ describe('Session Replay Across Pages', () => {
     const { localStorage } = await browser.getAgentSessionInfo()
     const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
 
-    expect(page1Contents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(page1Contents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: true,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
+    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: true })
 
     const newTab = await browser.createWindow('tab')
     await browser.switchToWindow(newTab.handle)
@@ -189,26 +93,7 @@ describe('Session Replay Across Pages', () => {
 
     const { request: page2Contents } = await browser.testHandle.expectBlob(10000)
 
-    expect(page2Contents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(page2Contents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: false,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
+    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: false })
 
     await browser.closeWindow()
     await browser.switchToWindow((await browser.getWindowHandles())[0])
@@ -220,26 +105,7 @@ describe('Session Replay Across Pages', () => {
     const { localStorage } = await browser.getAgentSessionInfo()
     const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
 
-    expect(page1Contents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(page1Contents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: true,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
+    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: true })
 
     await browser.execute(function () {
       Object.values(NREUM.initializedAgents)[0].runtime.session.state.sessionReplay = 0

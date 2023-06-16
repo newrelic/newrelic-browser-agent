@@ -75,7 +75,7 @@ describe.withBrowsersMatching(reliableUnload)('metrics', () => {
     }]))
   })
 
-  it(reliableUnload)('should send SMs for resources seen', async () => {
+  it('should send SMs for resources seen', async () => {
     await browser.url(await browser.testHandle.assetURL('resources.html'))
       .then(() => browser.waitForAgentLoad())
 

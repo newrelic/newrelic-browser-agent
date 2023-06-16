@@ -130,6 +130,9 @@ function getIdFromUrl (url) {
       expires.setMonth(expires.getMonth() + 1)
 
       const uploads = await uploadToS3(filename, output, bucket, dry, 300, expires.toISOString())
+
+      console.log(output)
+      console.log('---------------------------------------')
       console.log(`Successfully uploaded ${filename} to S3`)
       process.exit(0)
     }).catch(err => {

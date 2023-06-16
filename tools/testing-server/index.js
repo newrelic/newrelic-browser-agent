@@ -38,6 +38,7 @@ class TestServer {
    * Default fastify server config
    */
   #defaultServerConfig = {
+    forceCloseConnections: true,
     maxParamLength: Number.MAX_SAFE_INTEGER,
     bodyLimit: Number.MAX_SAFE_INTEGER,
     logger: false

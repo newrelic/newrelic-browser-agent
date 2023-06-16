@@ -30,6 +30,10 @@ export default class TestingServerLauncher {
   }
 
   async onComplete () {
+    const shutdownStart = performance.now()
+
     await this.#testingServer.stop()
+
+    log.info(`Shutdown in ${Math.round(performance.now() - shutdownStart)}ms`)
   }
 }

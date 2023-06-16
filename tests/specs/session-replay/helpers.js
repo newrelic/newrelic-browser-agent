@@ -1,3 +1,5 @@
+import { deepmerge } from 'deepmerge-ts'
+
 export const RRWEB_EVENT_TYPES = {
   DomContentLoaded: 0,
   Load: 1,
@@ -7,14 +9,22 @@ export const RRWEB_EVENT_TYPES = {
   Custom: 5
 }
 
-export function config (props = {}) {
-  return {
-    loader: 'experimental',
-    init: {
-      privacy: { cookies_enabled: true },
-      session_replay: { enabled: true, harvestTimeSeconds: 5, sampleRate: 1, errorSampleRate: 0, ...props }
+export function config (initOverrides = {}) {
+  return deepmerge(
+    {
+      loader: 'experimental',
+      init: {
+        privacy: { cookies_enabled: true },
+        session_replay: { enabled: true, harvestTimeSeconds: 5, sampleRate: 1, errorSampleRate: 0 },
+        session_trace: { enabled: true }
+      }
+    },
+    {
+      init: {
+        ...initOverrides
+      }
     }
-  }
+  )
 }
 
 export async function getSR () {

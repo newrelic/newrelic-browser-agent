@@ -15,7 +15,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
     const startTime = Date.now()
 
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
-      .then(() => browser.waitForFeatureAggregate('session_replay'))
+      .then(() => browser.waitForSessionReplayRecording())
 
     const [{ request: blobHarvest }] = await Promise.all([
       browser.testHandle.expectBlob(10000),
@@ -34,7 +34,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
     const startTime = Date.now()
 
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
-      .then(() => browser.waitForFeatureAggregate('session_replay'))
+      .then(() => browser.waitForSessionReplayRecording())
 
     await browser.execute(function () {
       Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.payloadBytesEstimation = 1000001 / 0.12
@@ -53,8 +53,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
 
     const [{ request: blobHarvest }] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('64kb-dom.html', config()))
-        .then(() => browser.waitForAgentLoad())
+      browser.url(await browser.testHandle.assetURL('64kb-dom.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
+        .then(() => browser.waitForSessionReplayRecording())
     ])
 
     expect(blobHarvest.body.blob.length).toBeGreaterThan(0)
@@ -64,8 +64,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
   it('Should abort if exceeds maximum size - real', async () => {
     const startTime = Date.now()
 
-    await browser.url(await browser.testHandle.assetURL('1mb-dom.html', config({ harvestTimeSeconds: 60 })))
-      .then(() => browser.waitForFeatureAggregate('session_replay'))
+    await browser.url(await browser.testHandle.assetURL('1mb-dom.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
+      .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toEqual(expect.objectContaining({
       blocked: true,

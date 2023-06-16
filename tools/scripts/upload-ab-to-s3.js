@@ -68,6 +68,11 @@ const config = {
         'staging-bam.nr-data.net',
         'bam-cell.nr-data.net'
       ]
+    },
+    session_replay: {
+      enabled: true,
+      sampleRate: 0.5,
+      errorSampleRate: 1
     }
   },
 

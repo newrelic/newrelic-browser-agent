@@ -156,8 +156,6 @@ export class Aggregate extends AggregateBase {
       else return
     }
 
-    console.log('NRBA -- Session Replay running in ', this.mode, 'Mode')
-
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
     if (this.mode === MODE.ERROR && this.errorNoticed) {
       this.mode = MODE.FULL

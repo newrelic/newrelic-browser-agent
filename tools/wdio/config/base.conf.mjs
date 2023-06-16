@@ -47,7 +47,7 @@ export default function config () {
         buildIdentifier
       }]
     ],
-    specFileRetries: 1,
+    specFileRetries: args.retry ? 1 : 0,
     specFileRetriesDeferred: true,
     framework: 'mocha',
     mochaOpts: {

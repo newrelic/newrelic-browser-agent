@@ -15,8 +15,7 @@ export function config (initOverrides = {}) {
       loader: 'experimental',
       init: {
         privacy: { cookies_enabled: true },
-        session_replay: { enabled: true, harvestTimeSeconds: 5, sampleRate: 1, errorSampleRate: 0 },
-        session_trace: { enabled: true }
+        session_replay: { enabled: true, harvestTimeSeconds: 5, sampleRate: 1, errorSampleRate: 0 }
       }
     },
     {

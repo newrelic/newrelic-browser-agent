@@ -1,4 +1,4 @@
-import { reliableUnload, notIE } from '../../tools/browser-matcher/common-matchers.mjs'
+import { reliableUnload } from '../../tools/browser-matcher/common-matchers.mjs'
 
 describe('newrelic api', () => {
   afterEach(async () => {
@@ -33,7 +33,7 @@ describe('newrelic api', () => {
       expect(ajaxResults.request.query.ct).toEqual('http://custom.transaction/foo')
     })
 
-    withBrowsersMatching(reliableUnload)('includes the 1st argument (page name) in metrics call on unload', async () => {
+    it.withBrowsersMatching(reliableUnload)('includes the 1st argument (page name) in metrics call on unload', async () => {
       await browser.url(await browser.testHandle.assetURL('api.html'))
         .then(() => browser.waitForAgentLoad())
 
@@ -51,7 +51,7 @@ describe('newrelic api', () => {
       expect(time).toBeGreaterThan(0)
     })
 
-    withBrowsersMatching(reliableUnload)('includes the optional 2nd argument for host in metrics call on unload', async () => {
+    it.withBrowsersMatching(reliableUnload)('includes the optional 2nd argument for host in metrics call on unload', async () => {
       await browser.url(await browser.testHandle.assetURL('api2.html'))
         .then(() => browser.waitForAgentLoad())
 

@@ -1,7 +1,8 @@
 
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { config, getSR } from './helpers'
 
-describe('Session Replay Harvest Behavior', () => {
+describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })
@@ -14,7 +15,7 @@ describe('Session Replay Harvest Behavior', () => {
     const startTime = Date.now()
 
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
-      .then(() => browser.waitForAgentLoad())
+      .then(() => browser.waitForFeatureAggregate('session_replay'))
 
     const [{ request: blobHarvest }] = await Promise.all([
       browser.testHandle.expectBlob(10000),
@@ -33,16 +34,14 @@ describe('Session Replay Harvest Behavior', () => {
     const startTime = Date.now()
 
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
-      .then(() => browser.waitForAgentLoad())
+      .then(() => browser.waitForFeatureAggregate('session_replay'))
 
     await browser.execute(function () {
       Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.payloadBytesEstimation = 1000001 / 0.12
       document.querySelector('body').click()
     })
 
-    await browser.waitForFeatureAggregate('session_replay')
-
-    expect((await getSR())).toEqual(expect.objectContaining({
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
       blocked: true,
       initialized: true
     }))
@@ -68,7 +67,7 @@ describe('Session Replay Harvest Behavior', () => {
     await browser.url(await browser.testHandle.assetURL('1mb-dom.html', config({ harvestTimeSeconds: 60 })))
       .then(() => browser.waitForFeatureAggregate('session_replay'))
 
-    expect((await getSR())).toEqual(expect.objectContaining({
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
       blocked: true,
       initialized: true
     }))

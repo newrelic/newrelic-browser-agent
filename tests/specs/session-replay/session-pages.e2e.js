@@ -1,7 +1,7 @@
-import { supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsMultipleTabs, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { config } from './helpers'
 
-describe('Session Replay Across Pages', () => {
+describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })
@@ -122,7 +122,7 @@ describe('Session Replay Across Pages', () => {
     })
   })
 
-  withBrowsersMatching(supportsMultipleTabs)('should record across new-tab page navigation', async () => {
+  it.withBrowsersMatching(supportsMultipleTabs)('should record across new-tab page navigation', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
       .then(() => browser.waitForAgentLoad())
 

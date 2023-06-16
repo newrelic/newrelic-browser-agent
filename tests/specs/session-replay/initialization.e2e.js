@@ -1,6 +1,7 @@
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { config, getSR } from './helpers'
 
-describe('Session Replay Initialization', () => {
+describe.withBrowsersMatching(notIE)('Session Replay Initialization', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })
@@ -40,7 +41,7 @@ describe('Session Replay Initialization', () => {
   })
 
   it('should not run if session_trace is disabled', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', { session_trace: { enabled: false } }))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_trace: { enabled: false } })))
       .then(() => browser.waitForAgentLoad())
 
     await expect(browser.waitForFeatureAggregate('session_replay', 5000)).rejects.toThrow()

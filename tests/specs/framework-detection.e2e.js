@@ -8,8 +8,8 @@ const config = {
   }
 }
 
-describe('framework detection', () => {
-  withBrowsersMatching(supportsFetchExtended)('detects a page built with REACT and sends a supportability metric', async () => {
+describe.withBrowsersMatching(supportsFetchExtended)('framework detection', () => {
+  it('detects a page built with REACT and sends a supportability metric', async () => {
     await Promise.all([
       browser.testHandle.expectRum(),
       browser.url(await browser.testHandle.assetURL('frameworks/react/simple-app/index.html', config))
@@ -26,7 +26,7 @@ describe('framework detection', () => {
     }]))
   })
 
-  withBrowsersMatching(supportsFetchExtended)('detects a page built with ANGULAR and sends a supportability metric', async () => {
+  it('detects a page built with ANGULAR and sends a supportability metric', async () => {
     await Promise.all([
       browser.testHandle.expectRum(),
       browser.url(await browser.testHandle.assetURL('frameworks/angular/simple-app/index.html', config))
@@ -43,7 +43,7 @@ describe('framework detection', () => {
     }]))
   })
 
-  withBrowsersMatching(supportsFetchExtended)('detects a page built with NO FRAMEWORK and DOES NOT send a supportability metric', async () => {
+  it('detects a page built with NO FRAMEWORK and DOES NOT send a supportability metric', async () => {
     await Promise.all([
       browser.testHandle.expectRum(),
       browser.url(await browser.testHandle.assetURL('frameworks/control.html', config))

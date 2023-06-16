@@ -1,6 +1,7 @@
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { config, getSR } from './helpers'
 
-describe('Session Replay Sample Mode Validation', () => {
+describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })

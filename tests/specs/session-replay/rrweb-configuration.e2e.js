@@ -1,6 +1,7 @@
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { config } from './helpers'
 
-describe('RRWeb Configuration', () => {
+describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })

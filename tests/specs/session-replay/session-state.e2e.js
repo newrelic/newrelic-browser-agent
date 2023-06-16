@@ -1,4 +1,4 @@
-import { supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsMultipleTabs, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { RRWEB_EVENT_TYPES, config, getSR } from './helpers.js'
 
 /** The "mode" with which the session replay is recording */
@@ -8,7 +8,7 @@ const MODE = {
   ERROR: 2
 }
 
-describe('session manager state behavior', () => {
+describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })
@@ -51,8 +51,8 @@ describe('session manager state behavior', () => {
 
   describe('When session ends', () => {
     it('should end recording and unload', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', { session: { expiresMs: 7500 }, session_replay: { harvestTimeSeconds: 10 } }))
-        .then(() => browser.waitForFeatureAggregate('session_replay'))
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session: { expiresMs: 7500 }, session_replay: { harvestTimeSeconds: 10 } })))
+        .then(() => browser.waitForSessionReplayRecording())
 
       // session has started, replay should have set mode to "FULL"
       const { agentSessions: oldSession } = await browser.getAgentSessionInfo()
@@ -74,7 +74,7 @@ describe('session manager state behavior', () => {
   })
 
   describe('When session resumes', () => {
-    withBrowsersMatching(supportsMultipleTabs)('should take a full snapshot and continue recording', async () => {
+    it.withBrowsersMatching(supportsMultipleTabs)('should take a full snapshot and continue recording', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
         .then(() => browser.waitForSessionReplayRecording())
 
@@ -103,7 +103,7 @@ describe('session manager state behavior', () => {
   })
 
   describe('When session pauses', () => {
-    withBrowsersMatching(supportsMultipleTabs)('should pause recording', async () => {
+    it.withBrowsersMatching(supportsMultipleTabs)('should pause recording', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
         .then(() => browser.waitForAgentLoad())
 

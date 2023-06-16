@@ -1,7 +1,7 @@
 import { supportsFetch, reliableUnload } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe('final harvesting', () => {
-  withBrowsersMatching(reliableUnload)('should send final harvest when navigating away from page', async () => {
+  it.withBrowsersMatching(reliableUnload)('should send final harvest when navigating away from page', async () => {
     await browser.url(await browser.testHandle.assetURL('final-harvest.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -49,7 +49,7 @@ describe('final harvesting', () => {
     expect(resourcesResults.request.body.res.length).toBeGreaterThan(0)
   })
 
-  withBrowsersMatching(supportsFetch)('should use sendBeacon for unload harvests', async () => {
+  it.withBrowsersMatching(supportsFetch)('should use sendBeacon for unload harvests', async () => {
     await browser.url(await browser.testHandle.assetURL('final-harvest.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -115,7 +115,7 @@ describe('final harvesting', () => {
     expect(sendBeaconUsage).toContain('true')
   })
 
-  withBrowsersMatching(supportsFetch)('should use fetch with keepalive when sendBeacon returns false', async () => {
+  it.withBrowsersMatching(supportsFetch)('should use fetch with keepalive when sendBeacon returns false', async () => {
     await browser.url(await browser.testHandle.assetURL('final-harvest.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -167,7 +167,7 @@ describe('final harvesting', () => {
     expect(resourcesResults.request.body.res.length).toBeGreaterThan(0)
   })
 
-  withBrowsersMatching(reliableUnload)('should not send pageHide event twice', async () => {
+  it.withBrowsersMatching(reliableUnload)('should not send pageHide event twice', async () => {
     await browser.url(await browser.testHandle.assetURL('pagehide.html'))
       .then(() => browser.waitForAgentLoad())
 

@@ -1,8 +1,8 @@
 import { reliableUnload } from '../../../tools/browser-matcher/common-matchers.mjs'
 import runTest from './run-test'
 
-describe('jspdf compatibility', () => {
-  withBrowsersMatching(reliableUnload)('2.5.1', async () => {
+describe.withBrowsersMatching(reliableUnload)('jspdf compatibility', () => {
+  it('2.5.1', async () => {
     await runTest({
       browser,
       testAsset: 'third-party-compatibility/jspdf/2.5.1.html',

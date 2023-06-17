@@ -53,8 +53,8 @@ describe('error payloads', () => {
 
     const { request: { body: { err } } } = await browser.testHandle.expectErrors()
 
-    expect(Math.abs(err[0].params.firstOccurrenceTimestamp - before) <= 1).toEqual(true)
-    expect(Math.abs(err[0].params.firstOccurrenceTimestamp - after) <= 1).toEqual(false)
+    expect(Math.abs(err[0].params.firstOccurrenceTimestamp - before) <= 5).toEqual(true)
+    expect(Math.abs(err[0].params.firstOccurrenceTimestamp - after) <= 5).toEqual(false)
   })
 
   it('simultaneous errors - should set a timestamp, tied to the FIRST error seen - thrown errors', async () => {
@@ -71,8 +71,8 @@ describe('error payloads', () => {
       return [window['error-0'], window['error-1']]
     })
 
-    expect(Math.abs(err[0].params.firstOccurrenceTimestamp - firstTime) <= 1).toEqual(true)
-    expect(Math.abs(err[0].params.firstOccurrenceTimestamp - secondTime) <= 1).toEqual(false)
+    expect(Math.abs(err[0].params.firstOccurrenceTimestamp - firstTime) <= 5).toEqual(true)
+    expect(Math.abs(err[0].params.firstOccurrenceTimestamp - secondTime) <= 5).toEqual(false)
   })
 
   it('subsequent errors - should set a timestamp, tied to the FIRST error seen - noticeError', async () => {

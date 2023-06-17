@@ -48,7 +48,13 @@ export const initialLocation = '' + globalScope?.location
 
 export const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 
-// Shared Web Workers introduced in iOS 16.0+ and n/a in 15.6-
+/**
+ * Shared Web Workers introduced in iOS 16.0+ and n/a in 15.6-
+ *
+ * It was discovered in Safari 14 (https://bugs.webkit.org/show_bug.cgi?id=225305) that the buffered flag in PerformanceObserver
+ * did not work. This affects our onFCP metric in particular since web-vitals uses that flag to retrieve paint timing entries.
+ * This was fixed in v16+.
+ */
 export const iOS_below16 = (isiOS && typeof SharedWorker === 'undefined')
 
 export const ffVersion = (() => {

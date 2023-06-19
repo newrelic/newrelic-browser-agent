@@ -1,8 +1,8 @@
-// import { MicroAgent } from '@newrelic/browser-agent/micro-agent'
+import { MicroAgent } from '@newrelic/browser-agent/loaders/micro-agent'
 
-// const opts = {
-//   info: NREUM.info,
-//   init: NREUM.init
-// }
+const opts = {
+  info: NREUM.info,
+  init: NREUM.init
+}
 
-// new MicroAgent(opts)
+new MicroAgent(opts)

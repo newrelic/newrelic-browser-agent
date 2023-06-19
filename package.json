@@ -37,6 +37,11 @@
       "require": "./dist/cjs/loaders/browser-agent.js",
       "default": "./dist/esm/loaders/browser-agent.js"
     },
+    "./loaders/micro-agent": {
+      "types": "./dist/types/loaders/micro-agent.d.ts",
+      "require": "./dist/cjs/loaders/micro-agent.js",
+      "default": "./dist/esm/loaders/micro-agent.js"
+    },
     "./loaders/worker-agent": {
       "types": "./dist/types/loaders/worker-agent.d.ts",
       "require": "./dist/cjs/loaders/worker-agent.js",

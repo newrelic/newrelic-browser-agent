@@ -52,7 +52,7 @@ export class MicroAgent {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
 
       try {
-        new PVE(this.agentIdentifier, this.sharedAggregator)
+        this.features.page_view_event = new PVE(this.agentIdentifier, this.sharedAggregator)
       } catch (err) {
         warn('Something prevented the agent from instrumenting.', err)
       }

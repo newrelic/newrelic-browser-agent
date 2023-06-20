@@ -131,6 +131,45 @@ import { SessionTrace } from '@newrelic/browser-agent/features/session_trace';
 import { Spa } from '@newrelic/browser-agent/features/spa';
 ```
 
+## Deploying a "micro" agent, for use with segmented UI design involving manual implementations only
+
+The examples above use the `Agent` class at their core, which is ideal for most cases as it will automatically detect page-level events across your web application.
+
+Using the `MicroAgent` class, it is possible to skip the "auto" instrumentation phases of the other loader types, and provide a *very small* agent that only responds to user input via the 
+API interfaces.  The `MicroAgent` only supports capturing a `Page View Event` when first instrumented, or features tied to API implementations, which at this time are `PageActions` and `JavaScript Errors`. These events will only be captured by the `MicroAgent` if their relevant API methods are executed.  By not wrapping the page-level globals in the same way as the base `Agent` class, the `MicroAgent` can easily by instantiated multiple times on a single page with low overhead, and report to different entities based on the configurations supplied.  This allows for specialized use cases, such as those within MicroFrontEnd scenarios or in applications requiring subsets of data to be reported to different application entities.
+
+The example below illustrates how to instantiate and interact with two separate `MicroAgent` instances on one page.
+
+```javascript
+import { MicroAgent } from '@newrelic/browser-agent/loaders/micro-agent'
+
+const options_1 = {
+  info: { ... }, // configuration for application 1
+  loader_config: { ... },
+  init: { ... }
+}
+
+const microAgent1 = new MicroAgent(options_1)
+
+const options_2 = {
+  info: { ... }, // configuration for application 2
+  loader_config: { ... },
+  init: { ... }
+}
+
+const microAgent2 = new MicroAgent(options_2)
+
+// manually handle a JavaScript Error with microAgent1
+try{
+  ...
+} catch(err) {
+  microAgent1.noticeError(err)
+}
+
+// manually capture a Page Action with microAgent2
+microAgent2.addPageAction('myData', {hello: 'world'})
+```
+
 ## Supported Browsers
 
 Our supported browser list can be accessed [here](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types).

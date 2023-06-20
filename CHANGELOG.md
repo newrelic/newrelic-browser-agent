@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.235.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.234.0...v1.235.0) (2023-06-20)
+
+
+### Features
+
+* Add error mode to session trace - NEWRELIC-8666 NEWRELIC-9283 ([#583](https://github.com/newrelic/newrelic-browser-agent/issues/583)) ([98e3f18](https://github.com/newrelic/newrelic-browser-agent/commit/98e3f18c182be93b93386968026555c2575fd29d))
+* Decorate error objects to facilitate future UI experiences ([#574](https://github.com/newrelic/newrelic-browser-agent/issues/574)) ([1167c98](https://github.com/newrelic/newrelic-browser-agent/commit/1167c9826cd78be0f4a9c6cb5d74c6d37685ba0e))
+* Minor feature class changes to support testing new features ([#571](https://github.com/newrelic/newrelic-browser-agent/issues/571)) ([a717951](https://github.com/newrelic/newrelic-browser-agent/commit/a717951d12b41ec68f79548c68370cd89502e539))
+* Remove unused data from session trace requests ([276c4f6](https://github.com/newrelic/newrelic-browser-agent/commit/276c4f6ee35063e6b22cb2dc4c70729ffb89ca3d))
+* Use new shared session for Session Trace feature - NEWRELIC-8662 ([#545](https://github.com/newrelic/newrelic-browser-agent/issues/545)) ([dbd995a](https://github.com/newrelic/newrelic-browser-agent/commit/dbd995a995af27f4f99316860ece7bcb24f53e73))
+
 ## [1.234.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.233.1...v1.234.0) (2023-06-02)
 
 

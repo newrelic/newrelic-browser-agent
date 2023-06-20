@@ -4,7 +4,7 @@
  */
 /**
  * @file Wraps `window.requestAnimationFrame` for instrumentation.
- * This module is used by: jserror, session_trace.
+ * This module is used by: jserror.
  */
 
 import { ee as baseEE } from '../event-emitter/contextual-ee'

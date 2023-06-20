@@ -7,5 +7,4 @@ export const START = '-start'
 export const END = '-end'
 export const FN_START = 'fn' + START
 export const FN_END = 'fn' + END
-export const BST_TIMER = 'bstTimer'
 export const PUSH_STATE = 'pushState'

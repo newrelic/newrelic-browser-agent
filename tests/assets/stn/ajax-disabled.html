@@ -28,8 +28,8 @@
       // we need to have >30 nodes in the session trace to ensure it actually gets
       // sent, so make some nodes
       function generateNodes() {
-        for (var i = 0; i < 31; i++) {
-          setTimeout(function () {}, 0)
+        for (var i = 0; i < 30; i++) {
+          window.history.pushState({},"")
         }
       }
     </script>

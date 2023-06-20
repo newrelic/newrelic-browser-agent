@@ -186,7 +186,7 @@ export class SessionEntity {
       this.sync(data) // update the parent class "state" properties with the local storage values
       //
       // TODO - compression would need happen here if we decide to do it
-      this.storage.set(this.lookupKey, stringify(data))
+      this.storage.set(this.lookupKey, stringify(this.state))
       return data
     } catch (e) {
       // storage is inaccessible

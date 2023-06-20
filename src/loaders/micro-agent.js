@@ -18,10 +18,9 @@ const nonAutoFeatures = [
 ]
 
 /**
- * A minimal agent class designed to be loaded multiple times on the same page, each instance narrowly scoped to the
- * concerns of a particular component, as with the micro-frontend architectural pattern. This class does not
- * automatically instrument. Instead, each MicroAgent instance may be configured to lazy-load specific
- * instrumentations at runtime, and to report desired data, events, and errors programatically.
+ * A minimal agent class designed to only respond to manual user input. As such, this class does not
+ * automatically instrument. Instead, each MicroAgent instance will lazy load the required features and can support loading multiple instances on one page.
+ * Out of the box, it can manually handle and report Page View, Page Action, and Error events.
  */
 export class MicroAgent {
   /**
@@ -52,12 +51,14 @@ export class MicroAgent {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
 
       try {
+        // a biproduct of doing this is that the "session manager" is automatically handled through importing this feature
         this.features.page_view_event = new PVE(this.agentIdentifier, this.sharedAggregator)
       } catch (err) {
         warn('Something prevented the agent from instrumenting.', err)
       }
 
       onWindowLoad(() => {
+        // these features do not import an "instrument" file, meaning they are only hooked up to the API.
         nonAutoFeatures.forEach(f => {
           if (enabledFeatures[f]) {
             import(/* webpackChunkName: "lazy-feature-loader" */ '../features/utils/lazy-feature-loader').then(({ lazyFeatureLoader }) => {

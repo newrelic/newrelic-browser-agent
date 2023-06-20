@@ -19,11 +19,8 @@ describe('xhr retry harvesting', () => {
         browser.testHandle.expectAjaxTimeSlices(),
         browser.url(await browser.testHandle.assetURL('instrumented.html'))
           .then(() => browser.waitForAgentLoad())
-          .then(() => browser.executeAsync(function (done) {
+          .then(() => browser.execute(function () {
             var xhr = new XMLHttpRequest()
-            xhr.onload = function () {
-              done()
-            }
             xhr.open('GET', '/json')
             xhr.send()
           }))
@@ -36,11 +33,8 @@ describe('xhr retry harvesting', () => {
       const [secondAjaxEventsHarvest, secondAjaxTimeSlicesHarvest] = await Promise.all([
         browser.testHandle.expectAjaxEvents(),
         browser.testHandle.expectAjaxTimeSlices(),
-        browser.executeAsync(function (done) {
+        browser.execute(function () {
           var xhr = new XMLHttpRequest()
-          xhr.onload = function () {
-            done()
-          }
           xhr.open('GET', '/text')
           xhr.send()
         })
@@ -75,11 +69,8 @@ describe('xhr retry harvesting', () => {
         browser.testHandle.expectAjaxTimeSlices(),
         browser.url(await browser.testHandle.assetURL('instrumented.html'))
           .then(() => browser.waitForAgentLoad())
-          .then(() => browser.executeAsync(function (done) {
+          .then(() => browser.execute(function () {
             var xhr = new XMLHttpRequest()
-            xhr.onload = function () {
-              done()
-            }
             xhr.open('GET', '/json')
             xhr.send()
           }))
@@ -92,11 +83,8 @@ describe('xhr retry harvesting', () => {
       const [secondAjaxEventsHarvest, secondAjaxTimeSlicesHarvest] = await Promise.all([
         browser.testHandle.expectAjaxEvents(),
         browser.testHandle.expectAjaxTimeSlices(),
-        browser.executeAsync(function (done) {
+        browser.execute(function () {
           var xhr = new XMLHttpRequest()
-          xhr.onload = function () {
-            done()
-          }
           xhr.open('GET', '/text')
           xhr.send()
         })

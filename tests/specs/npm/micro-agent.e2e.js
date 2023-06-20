@@ -11,12 +11,15 @@ describe('micro-agent', () => {
       window.agent1 = new MicroAgent({ ...opts, info: { ...opts.info, applicationID: 1 } })
       window.agent2 = new MicroAgent({ ...opts, info: { ...opts.info, applicationID: 2 } })
 
+      // each payload in this test is decorated with data that matches its appId for ease of testing
       window.agent1.setCustomAttribute('customAttr', '1')
       window.agent2.setCustomAttribute('customAttr', '2')
 
+      // each payload in this test is decorated with data that matches its appId for ease of testing
       window.agent1.noticeError('1')
       window.agent2.noticeError('2')
 
+      // each payload in this test is decorated with data that matches its appId for ease of testing
       window.agent1.addPageAction('1', { val: 1 })
       window.agent2.addPageAction('2', { val: 2 })
     })
@@ -43,6 +46,9 @@ describe('micro-agent', () => {
       2: { rum: false, err: false, pa: false }
     }
 
+    // each type of test should check that:
+    // each payload exists once per appId
+    // each payload should have internal attributes matching it to the right appId
     rumCalls.forEach(({ request: { query, body } }) => {
       expect(ranOnce(query.a, 'rum')).toEqual(true)
       expect(payloadMatchesAppId(query.a, body.ja.customAttr)).toEqual(true)
@@ -50,7 +56,6 @@ describe('micro-agent', () => {
 
     errCalls.forEach(({ request: { query, body } }) => {
       expect(ranOnce(query.a, 'err')).toEqual(true)
-      // message is set ahead of time in this test to match the app id its reporting to.  Just check that the right payload also got the right body
       expect(payloadMatchesAppId(query.a, body.err[0].params.message)).toEqual(true)
     })
 
@@ -61,6 +66,7 @@ describe('micro-agent', () => {
     })
 
     function payloadMatchesAppId (appId, ...props) {
+      // each payload in this test is decorated with data that matches its appId for ease of testing
       return props.every(p => Number(appId) === Number(p))
     }
 

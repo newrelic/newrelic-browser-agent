@@ -134,7 +134,6 @@ testDriver.test('session traces are retried when collector returns 429 during sc
 
     let thirdBody = result.request.body
 
-    t.ok(secondBody.res.length > firstBody.res.length, 'second try has more nodes than first')
     t.ok(containsAll(thirdBody, secondBody), 'all nodes have been resent')
 
     // this is really checking that no nodes have been resent

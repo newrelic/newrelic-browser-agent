@@ -6,12 +6,11 @@ describe('error attributes with spa loader', () => {
 
       const [errorResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        (async () => {
-          const trigger = await $('#trigger')
-          await trigger.click()
-          await trigger.click()
-          await trigger.click()
-        })()
+        browser.execute(function () {
+          triggerError()
+          triggerError()
+          triggerError()
+        })
       ])
 
       expect(errorResult.request.body.err.length).toBe(3) // exactly 3 errors in payload
@@ -76,13 +75,13 @@ describe('error attributes with spa loader', () => {
 
       const [errorResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        (async () => {
-          const trigger = await $('#trigger')
-          await trigger.click()
-          await trigger.click()
-          await trigger.click()
-          return browser.refresh()
-        })()
+        browser.execute(function () {
+          triggerError()
+          triggerError()
+          triggerError()
+        }).then(() => {
+          browser.refresh()
+        })
       ])
 
       expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload

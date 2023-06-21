@@ -171,7 +171,7 @@ try{
 microAgent2.addPageAction('myData', {hello: 'world'})
 ```
 
-## Supported Browsers
+## Supported browsers
 
 Our supported browser list can be accessed [here](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types).
 

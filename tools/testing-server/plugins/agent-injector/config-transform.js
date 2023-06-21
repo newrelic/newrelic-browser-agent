@@ -30,7 +30,6 @@ function getConfigContent (request, reply, testServer) {
     }
   })()
   const config = {
-    agent: `${testServer.assetServer.host}:${testServer.assetServer.port}/cdn/build/nr.js`,
     beacon: `${testServer.bamServer.host}:${testServer.bamServer.port}`,
     errorBeacon: `${testServer.bamServer.host}:${testServer.bamServer.port}`,
     ...defaultAgentConfig,

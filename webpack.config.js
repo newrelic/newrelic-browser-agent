@@ -55,13 +55,6 @@ switch (PUBLISH) {
     PUBLIC_PATH = 'http://localhost:3333/dist/cdn/'
     MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/dist/cdn/[url]'
     break
-  case 'NPM':
-    // build for extension injection
-    PATH_VERSION = ''
-    SUBVERSION = 'NPM'
-    PUBLIC_PATH = '/dist/'
-    MAP_PATH = '\n//# sourceMappingURL=http://bam-test-1.nr-local.net:3333/dist/cdn/[url]'
-    break
   default:
     // local build
     PATH_VERSION = ''

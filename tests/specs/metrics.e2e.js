@@ -3,10 +3,10 @@ import { reliableUnload, supportsFetch } from '../../tools/browser-matcher/commo
 const loaderTypes = ['rum', 'full', 'spa']
 const loaderTypesMapped = { rum: 'lite', full: 'pro', spa: 'spa' }
 
-describe('metrics', () => {
+describe.withBrowsersMatching(reliableUnload)('metrics', () => {
   loaderTypes.forEach(lt => loaderTypeSupportabilityMetric(lt))
 
-  withBrowsersMatching(reliableUnload)('should send SMs for endpoint bytes', async () => {
+  it('should send SMs for endpoint bytes', async () => {
     await Promise.all([
       browser.testHandle.expectEvents(),
       browser.testHandle.expectResources(),
@@ -75,7 +75,7 @@ describe('metrics', () => {
     }]))
   })
 
-  withBrowsersMatching(reliableUnload)('should send SMs for resources seen', async () => {
+  it('should send SMs for resources seen', async () => {
     await browser.url(await browser.testHandle.assetURL('resources.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -103,7 +103,7 @@ describe('metrics', () => {
     }]))
   })
 
-  withBrowsersMatching(reliableUnload)('should send CMs and SMs when calling agent api methods', async () => {
+  it('should send CMs and SMs when calling agent api methods', async () => {
     await browser.url(await browser.testHandle.assetURL('api/customMetrics.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -160,7 +160,7 @@ describe('metrics', () => {
     }]))
   })
 
-  withBrowsersMatching(reliableUnload)('should create SMs for valid obfuscation rules', async () => {
+  it('should create SMs for valid obfuscation rules', async () => {
     await browser.url(await browser.testHandle.assetURL('obfuscate-pii-valid.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -180,7 +180,7 @@ describe('metrics', () => {
     }]))
   })
 
-  withBrowsersMatching(reliableUnload)('should create SMs for obfuscation rule containing invalid regex type', async () => {
+  it('should create SMs for obfuscation rule containing invalid regex type', async () => {
     await browser.url(await browser.testHandle.assetURL('obfuscate-pii-invalid-regex-type.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -200,7 +200,7 @@ describe('metrics', () => {
     }]))
   })
 
-  withBrowsersMatching(reliableUnload)('should create SMs for obfuscation rule containing undefined regex type', async () => {
+  it('should create SMs for obfuscation rule containing undefined regex type', async () => {
     await browser.url(await browser.testHandle.assetURL('obfuscate-pii-invalid-regex-undefined.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -220,7 +220,7 @@ describe('metrics', () => {
     }]))
   })
 
-  withBrowsersMatching(reliableUnload)('should create SMs for obfuscation rule containing invalid replacement type', async () => {
+  it('should create SMs for obfuscation rule containing invalid replacement type', async () => {
     await browser.url(await browser.testHandle.assetURL('obfuscate-pii-invalid-replacement-type.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -240,7 +240,7 @@ describe('metrics', () => {
     }]))
   })
 
-  withBrowsersMatching(reliableUnload)('should send SMs for polyfilled native functions', async () => {
+  it('should send SMs for polyfilled native functions', async () => {
     await browser.url(await browser.testHandle.assetURL('polyfill-metrics.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -308,7 +308,7 @@ describe('metrics', () => {
     }]))
   })
 
-  withBrowsersMatching(reliableUnload)('should send SMs for session trace duration', async () => {
+  it('should send SMs for session trace duration', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -324,7 +324,7 @@ describe('metrics', () => {
     }]))
   })
 
-  withBrowsersMatching(reliableUnload)('should send SMs for custom data size', async () => {
+  it('should send SMs for custom data size', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -346,7 +346,7 @@ describe('metrics', () => {
 })
 
 function loaderTypeSupportabilityMetric (loaderType) {
-  withBrowsersMatching([reliableUnload, supportsFetch])(`generic agent info captured for ${loaderType} loader`, async () => {
+  it.withBrowsersMatching([reliableUnload, supportsFetch])(`generic agent info captured for ${loaderType} loader`, async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: loaderType }))
       .then(() => browser.waitForAgentLoad())
 

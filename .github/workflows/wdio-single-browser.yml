@@ -16,7 +16,7 @@ on:
         required: false
         type: string
       coverage:
-        description: 'Flag indicating if code coverage should be collected and reported to codecov'
+        description: 'Enable code coverage'
         required: false
         type: boolean
         default: false
@@ -35,7 +35,7 @@ on:
         required: false
         type: string
       coverage:
-        description: 'Flag indicating if code coverage should be collected and reported to codecov'
+        description: 'Enable code coverage'
         required: false
         type: boolean
         default: false
@@ -56,6 +56,7 @@ jobs:
         shell: bash
     env:
       BUILD_NUMBER: ${{ inputs.build-number }}
+      COVERAGE: ${{ inputs.coverage }}
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
       JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
@@ -84,6 +85,7 @@ jobs:
             ${{ inputs.additional-flags || '' }}
       - name: Find pull request
         id: pull-request-target
+        if: ${{ inputs.coverage }}
         uses: ./.github/actions/find-pull-request
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

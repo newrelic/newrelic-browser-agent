@@ -1,7 +1,7 @@
-import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { config } from './helpers'
 
-describe('Session Replay Payload Validation', () => {
+describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })
@@ -22,8 +22,9 @@ describe('Session Replay Payload Validation', () => {
   it('should match expected payload - standard', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
       .then(() => browser.waitForAgentLoad())
-    const { localStorage } = await browser.getAgentSessionInfo()
+
     const { request: harvestContents } = await browser.testHandle.expectBlob()
+    const { localStorage } = await browser.getAgentSessionInfo()
 
     expect(harvestContents.query).toMatchObject({
       protocol_version: '0',
@@ -50,11 +51,14 @@ describe('Session Replay Payload Validation', () => {
   it('should match expected payload - error', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
       .then(() => browser.waitForAgentLoad())
+
+    const [{ request: harvestContents }] = await Promise.all([
+      browser.testHandle.expectBlob(),
+      browser.execute(function () {
+        newrelic.noticeError(new Error('test'))
+      })
+    ])
     const { localStorage } = await browser.getAgentSessionInfo()
-    await browser.execute(function () {
-      newrelic.noticeError(new Error('test'))
-    })
-    const { request: harvestContents } = await browser.testHandle.expectBlob()
 
     expect(harvestContents.query).toMatchObject({
       protocol_version: '0',

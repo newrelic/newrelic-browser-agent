@@ -6,16 +6,11 @@ import { TestHandleConnector } from './test-handle-connector.mjs'
  * a test handle connector.
  */
 export default class TestingServerWorker {
-  #testingServerIndex = 0
-  #commandServerPorts
+  #commandServerPort
 
   beforeSession (_, capabilities) {
-    this.#commandServerPorts = capabilities.testServerCommandPorts
-    delete capabilities.testServerCommandPorts
-
-    if (!Array.isArray(this.#commandServerPorts) || this.#commandServerPorts.length === 0) {
-      throw new Error('No testing server command ports were passed to the child WDIO process.')
-    }
+    this.#commandServerPort = capabilities.testServerCommandPort
+    delete capabilities.testServerCommandPort
   }
 
   /**
@@ -24,20 +19,10 @@ export default class TestingServerWorker {
    */
   async before () {
     browser.addCommand('getTestHandle', async () => {
-      const testHandle = new TestHandleConnector(this.#getNextTestingServer())
+      const testHandle = new TestHandleConnector(this.#commandServerPort)
       await testHandle.ready()
       return testHandle
     })
-  }
-
-  #getNextTestingServer () {
-    if (this.#testingServerIndex + 1 > this.#commandServerPorts.length) {
-      this.#testingServerIndex = 0
-    }
-
-    const nextTestingServerCommandPort = this.#commandServerPorts[this.#testingServerIndex]
-    this.#testingServerIndex = this.#testingServerIndex + 1
-    return nextTestingServerCommandPort
   }
 }
 export const launcher = TestingServerLauncher

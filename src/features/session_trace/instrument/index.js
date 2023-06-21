@@ -8,7 +8,7 @@ import { now } from '../../../common/timing/now'
 import { InstrumentBase } from '../../utils/instrument-base'
 import * as CONSTANTS from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { isBrowserScope } from '../../../common/util/global-scope'
+import { isBrowserScope } from '../../../common/constants/runtime'
 
 const {
   BST_RESOURCE, RESOURCE, START, END, FEATURE_NAME, FN_END, FN_START, PUSH_STATE

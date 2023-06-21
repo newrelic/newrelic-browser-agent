@@ -674,7 +674,7 @@ export class Aggregate extends AggregateBase {
     function onHarvestFinished (result) {
       if (result.sent && result.retry && state.interactionsSent.length > 0) {
         state.interactionsSent.forEach(function (interaction) {
-          state.interactionsToHarvest.push(interaction)
+          state.interactionsToHarvest.unshift(interaction)
         })
         state.interactionsSent = []
       }

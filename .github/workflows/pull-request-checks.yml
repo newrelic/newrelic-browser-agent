@@ -28,8 +28,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           pr_required: true
 
-  comment-pull-request:
-    name: Comment pull request
+  pending-comment-pull-request:
+    name: Pending comment pull request
     needs: [find-pull-request]
     runs-on: ubuntu-latest
     container:
@@ -53,7 +53,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           pr_number: ${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}
           comment: |
-            [![Pull Request Checks](https://github.com/newrelic/newrelic-browser-agent/actions/workflows/pull-request-checks.yml/badge.svg?branch=${{ github.ref_name }})](https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }})
+            [![Static Badge](https://img.shields.io/badge/Pull_Request_Checks-Pending-yellow)](https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }})
 
             Last ran on `${{ steps.workflow-time.outputs.results }}`
             Checking merge of (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}) into [${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_ref }}](https://github.com/newrelic/newrelic-browser-agent/compare/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}..${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }}) (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }})
@@ -66,6 +66,7 @@ jobs:
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
       collection: 'unit'
+      coverage: true
     secrets: inherit
 
   jest-component:
@@ -75,6 +76,7 @@ jobs:
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
       collection: 'component'
+      coverage: true
     secrets: inherit
 
   eslint:
@@ -94,3 +96,113 @@ jobs:
       build-number: PR${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number}}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
       coverage: true
     secrets: inherit
+
+  size-check:
+    runs-on: ubuntu-latest
+    needs: find-pull-request
+    timeout-minutes: 30
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Setup container
+        run: apt update && apt install -y git
+      - uses: actions/checkout@v3
+        with:
+          ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Running cdn build
+        run: npm run cdn:build:dev
+      - name: Running npm build
+        run: |
+          npm run build:npm
+          npm run tools:test-builds
+      - name: Generating npm build stats
+        run: node ./tools/scripts/npm-build-stats.js
+      - name: Generating asset size report
+        run: node ./tools/scripts/diff-sizes.mjs -o build
+      - name: Reading asset size report
+        id: asset-size-report
+        run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "results<<$EOF" >> "$GITHUB_OUTPUT"
+          cat ./build/size_report.md >> "$GITHUB_OUTPUT"
+          echo "$EOF" >> "$GITHUB_OUTPUT"
+      - name: Comment pull request
+        uses: ./.github/actions/comment-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}
+          comment: ${{ steps.asset-size-report.outputs.results }}
+          comment_tag: <!-- browser_agent asset size report -->
+      - name: Archive asset size report results
+        uses: actions/upload-artifact@v3
+        with:
+          name: asset-size-report
+          path: |
+            build/size_report.*
+            build/*.stats.html
+            build/*.stats.json
+
+  status-comment-pull-request:
+    name: Comment pull request
+    needs: [find-pull-request,jest-unit,jest-component,eslint,wdio-coverage]
+    if: ${{ always() && needs.find-pull-request.result == 'success' }}
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Setup container
+        run: apt update && DEBIAN_FRONTEND=noninteractive apt install -y git tzdata
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Get workflow time
+        id: workflow-time
+        run: echo "results=$(TZ=America/Chicago date +'%B %d, %Y %H:%M:%S %Z')" >> $GITHUB_OUTPUT
+      - name: Comment pull request success
+        if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+        uses: ./.github/actions/comment-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}
+          comment: |
+            [![Static Badge](https://img.shields.io/badge/Pull_Request_Checks-Success-green)](https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }})
+
+            Last ran on `${{ steps.workflow-time.outputs.results }}`
+            Checking merge of (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}) into [${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_ref }}](https://github.com/newrelic/newrelic-browser-agent/compare/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}..${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }}) (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }})
+          comment_tag: <!-- browser_agent pull request checks -->
+      - name: Comment pull request failed
+        if: ${{ contains(needs.*.result, 'failure') }}
+        uses: ./.github/actions/comment-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}
+          comment: |
+            [![Static Badge](https://img.shields.io/badge/Pull_Request_Checks-Failure-red)](https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }})
+
+            Last ran on `${{ steps.workflow-time.outputs.results }}`
+            Checking merge of (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}) into [${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_ref }}](https://github.com/newrelic/newrelic-browser-agent/compare/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}..${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }}) (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }})
+          comment_tag: <!-- browser_agent pull request checks -->
+      - name: Comment pull request cancelled
+        if: ${{ contains(needs.*.result, 'cancelled') }}
+        uses: ./.github/actions/comment-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}
+          comment: |
+            [![Static Badge](https://img.shields.io/badge/Pull_Request_Checks-Cancelled-orange)](https://github.com/newrelic/newrelic-browser-agent/actions/runs/${{ github.run_id }})
+
+            Last ran on `${{ steps.workflow-time.outputs.results }}`
+            Checking merge of (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}) into [${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_ref }}](https://github.com/newrelic/newrelic-browser-agent/compare/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}..${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }}) (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }})
+          comment_tag: <!-- browser_agent pull request checks -->

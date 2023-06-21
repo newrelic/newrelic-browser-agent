@@ -4,90 +4,58 @@
  */
 
 import { faker } from '@faker-js/faker'
-import { submitData } from './submit-data'
-import * as globalScope from './global-scope'
+import * as runtimeModule from '../constants/runtime'
+import * as submitData from './submit-data'
 
-jest.mock('./global-scope')
+jest.enableAutomock()
+jest.unmock('./submit-data')
 
 const url = 'https://example.com/api'
 
 afterEach(() => {
-  jest.restoreAllMocks()
+  jest.clearAllMocks()
 })
 
-describe('submitData.jsonp', () => {
-  beforeEach(() => {
-    jest.replaceProperty(globalScope, 'isWorkerScope', false)
+describe('getSubmitMethod', () => {
+  test('should use xhr for final harvest when isBrowserScope is false', () => {
+    jest.replaceProperty(runtimeModule, 'isBrowserScope', false)
+    jest.replaceProperty(runtimeModule, 'supportsSendBeacon', true)
+
+    expect(submitData.getSubmitMethod({ isFinalHarvest: true })).toEqual(submitData.xhr)
   })
 
-  afterEach(() => {
-    delete global.importScripts
+  test('should use xhr for final harvest when supportsSendBeacon is false', () => {
+    jest.replaceProperty(runtimeModule, 'isBrowserScope', true)
+    jest.replaceProperty(runtimeModule, 'supportsSendBeacon', false)
+
+    expect(submitData.getSubmitMethod({ isFinalHarvest: true })).toEqual(submitData.xhr)
   })
 
-  // This test requires a script tag to exist in the html set by this file's jest-environment-options header block.
-  test('should return an HTMLScriptElement when called from a web window environment', () => {
-    const jsonp = faker.datatype.uuid()
-    const result = submitData.jsonp({ url, jsonp })
+  test('should use beacon for final harvest when isBrowserScope and supportsSendBeacon is true', () => {
+    jest.replaceProperty(runtimeModule, 'isBrowserScope', true)
+    jest.replaceProperty(runtimeModule, 'supportsSendBeacon', true)
 
-    expect(result).toBeInstanceOf(HTMLScriptElement)
-    expect(result.type).toBe('text/javascript')
-    expect(result.src).toBe(url + '&jsonp=' + jsonp)
+    expect(submitData.getSubmitMethod({ isFinalHarvest: true })).toEqual(submitData.beacon)
   })
 
-  test('should try to use importScripts when called from a worker scope', () => {
-    jest.replaceProperty(globalScope, 'isWorkerScope', true)
-    global.importScripts = jest.fn()
+  test.each([
+    null, undefined, false
+  ])('should use xhr when final harvest is %s', (isFinalHarvest) => {
+    jest.replaceProperty(runtimeModule, 'isBrowserScope', true)
+    jest.replaceProperty(runtimeModule, 'supportsSendBeacon', true)
 
-    const jsonp = faker.datatype.uuid()
-    submitData.jsonp({ url, jsonp })
-
-    expect(global.importScripts).toHaveBeenCalledWith(url + '&jsonp=' + jsonp)
+    expect(submitData.getSubmitMethod({ isFinalHarvest })).toEqual(submitData.xhr)
   })
 
-  test('should fall back to an xhrGet call and return false when importScripts throws an error', () => {
-    jest.replaceProperty(globalScope, 'isWorkerScope', true)
-    jest.spyOn(submitData, 'xhrGet').mockImplementation(jest.fn())
-    global.importScripts = jest.fn().mockImplementation(() => { throw new Error(faker.lorem.sentence()) })
+  test('should use xhr when opts is undefined', () => {
+    jest.replaceProperty(runtimeModule, 'isBrowserScope', true)
+    jest.replaceProperty(runtimeModule, 'supportsSendBeacon', true)
 
-    const jsonp = faker.datatype.uuid()
-    const result = submitData.jsonp({ url, jsonp })
-
-    expect(result).toBe(false)
-    expect(global.importScripts).toHaveBeenCalledWith(url + '&jsonp=' + jsonp)
-    expect(submitData.xhrGet).toHaveBeenCalledWith({ url: url + '&jsonp=' + jsonp })
-  })
-
-  test('should not throw an error when xhrGet throws an error', () => {
-    jest.replaceProperty(globalScope, 'isWorkerScope', true)
-    jest.spyOn(submitData, 'xhrGet').mockImplementation(() => { throw new Error(faker.lorem.sentence()) })
-    global.importScripts = jest.fn().mockImplementation(() => { throw new Error(faker.lorem.sentence()) })
-
-    const jsonp = faker.datatype.uuid()
-
-    expect(() => submitData.jsonp({ url, jsonp })).not.toThrow()
-  })
-
-  test('should not throw an error when element insertion fails', () => {
-    jest.spyOn(document, 'createElement').mockImplementation(() => { throw new Error(faker.lorem.sentence()) })
-
-    const jsonp = faker.datatype.uuid()
-
-    expect(() => submitData.jsonp({ url, jsonp })).not.toThrow()
+    expect(submitData.getSubmitMethod()).toEqual(submitData.xhr)
   })
 })
 
-describe('submitData.xhrGet', () => {
-  test('xhrGet should call xhr with GET as the method', () => {
-    jest.spyOn(submitData, 'xhr').mockReturnValue(new XMLHttpRequest())
-
-    const result = submitData.xhrGet({ url })
-
-    expect(result).toBeInstanceOf(XMLHttpRequest)
-    expect(submitData.xhr).toHaveBeenCalledWith({ url, sync: false, method: 'GET' })
-  })
-})
-
-describe('submitData.xhr', () => {
+describe('xhr', () => {
   beforeEach(() => {
     jest.spyOn(global, 'XMLHttpRequest').mockImplementation(function () {
       this.prototype = XMLHttpRequest.prototype
@@ -173,18 +141,63 @@ describe('submitData.xhr', () => {
   })
 })
 
-describe('submitData.img', () => {
-  test('should return an HTMLImageElement', () => {
-    const imageUrl = 'https://example.com/image.png'
+describe('fetchKeepAlive', () => {
+  beforeEach(() => {
+    global.fetch = jest.fn().mockReturnValue(Promise.resolve())
+  })
 
-    const result = submitData.img({ url: imageUrl })
+  afterEach(() => {
+    delete global.fetch
+  })
 
-    expect(result).toBeInstanceOf(HTMLImageElement)
-    expect(result.src).toBe(imageUrl)
+  test('should make a fetch with default values', () => {
+    submitData.fetchKeepAlive({ url })
+
+    expect(global.fetch).toHaveBeenCalledWith(url, {
+      method: 'POST',
+      body: null,
+      keepalive: true,
+      headers: [['content-type', 'text/plain']]
+    })
+  })
+
+  test('should send the body when provided', () => {
+    const body = faker.lorem.paragraph()
+    submitData.fetchKeepAlive({ url, body })
+
+    expect(global.fetch).toHaveBeenCalledWith(url, {
+      method: 'POST',
+      body,
+      keepalive: true,
+      headers: [['content-type', 'text/plain']]
+    })
+  })
+
+  test('should use the provided method', () => {
+    submitData.fetchKeepAlive({ url, method: 'HEAD' })
+
+    expect(global.fetch).toHaveBeenCalledWith(url, {
+      method: 'HEAD',
+      body: null,
+      keepalive: true,
+      headers: [['content-type', 'text/plain']]
+    })
+  })
+
+  test('should use the provided headers', () => {
+    const headers = [{ key: faker.lorem.word(), value: faker.datatype.uuid() }]
+    submitData.fetchKeepAlive({ url, headers })
+
+    expect(global.fetch).toHaveBeenCalledWith(url, {
+      method: 'POST',
+      body: null,
+      keepalive: true,
+      headers: [[headers[0].key, headers[0].value]]
+    })
   })
 })
 
-describe('submitData.beacon', () => {
+describe('beacon', () => {
   afterEach(() => {
     delete window.navigator.sendBeacon
   })

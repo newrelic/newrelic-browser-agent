@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { getFrameworks } from './framework-detection'
 
-jest.mock('../../../common/util/global-scope', () => ({
+jest.mock('../../../common/constants/runtime', () => ({
   isBrowserScope: true
 }))
 
@@ -13,7 +13,7 @@ test('framework detection should not happen in non-browser scope', async () => {
   global.React = {}
 
   jest.resetModules()
-  jest.doMock('../../../common/util/global-scope', () => ({
+  jest.doMock('../../../common/constants/runtime', () => ({
     isBrowserScope: false
   }))
   const frameworkDetector = await import('./framework-detection')

@@ -1,7 +1,8 @@
 
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { config, getSR } from './helpers'
 
-describe('Session Replay Harvest Behavior', () => {
+describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })
@@ -12,8 +13,10 @@ describe('Session Replay Harvest Behavior', () => {
 
   it('Should harvest early if exceeds preferred size - mocked', async () => {
     const startTime = Date.now()
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ harvestTimeSeconds: 60 })))
-    await browser.waitForAgentLoad()
+
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
+      .then(() => browser.waitForSessionReplayRecording())
+
     const [{ request: blobHarvest }] = await Promise.all([
       browser.testHandle.expectBlob(10000),
       // preferred size = 64kb, compression estimation is 88%
@@ -29,15 +32,16 @@ describe('Session Replay Harvest Behavior', () => {
 
   it('Should abort if exceeds maximum size - mocked', async () => {
     const startTime = Date.now()
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ harvestTimeSeconds: 60 })))
-      .then(() => browser.waitForAgentLoad())
+
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
+      .then(() => browser.waitForSessionReplayRecording())
 
     await browser.execute(function () {
       Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.payloadBytesEstimation = 1000001 / 0.12
       document.querySelector('body').click()
     })
 
-    expect((await getSR())).toEqual(expect.objectContaining({
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
       blocked: true,
       initialized: true
     }))
@@ -49,8 +53,8 @@ describe('Session Replay Harvest Behavior', () => {
 
     const [{ request: blobHarvest }] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('64kb-dom.html', config())),
-      browser.waitForAgentLoad()
+      browser.url(await browser.testHandle.assetURL('64kb-dom.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
+        .then(() => browser.waitForSessionReplayRecording())
     ])
 
     expect(blobHarvest.body.blob.length).toBeGreaterThan(0)
@@ -59,10 +63,11 @@ describe('Session Replay Harvest Behavior', () => {
 
   it('Should abort if exceeds maximum size - real', async () => {
     const startTime = Date.now()
-    await browser.url(await browser.testHandle.assetURL('1mb-dom.html', config({ harvestTimeSeconds: 60 })))
-      .then(() => browser.waitForAgentLoad())
 
-    expect((await getSR())).toEqual(expect.objectContaining({
+    await browser.url(await browser.testHandle.assetURL('1mb-dom.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
+      .then(() => browser.waitForSessionReplayRecording())
+
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
       blocked: true,
       initialized: true
     }))

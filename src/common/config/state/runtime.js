@@ -1,6 +1,6 @@
 import { getModeledObject } from './configurable'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
-import { globalScope } from '../../util/global-scope'
+import { globalScope } from '../../constants/runtime'
 import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/env'
 
 const model = {

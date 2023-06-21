@@ -1,7 +1,7 @@
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { config, getSR } from './helpers'
-import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe('Session Replay Initialization', () => {
+describe.withBrowsersMatching(notIE)('Session Replay Initialization', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })
@@ -10,44 +10,40 @@ describe('Session Replay Initialization', () => {
     await browser.destroyAgentSession(browser.testHandle)
   })
 
-  describe('Feature flags', () => {
-    it('should not run if flag is 0', async () => {
-      await browser.testHandle.clearScheduledReplies('bamServer')
+  it('should not start recording if rum response sr flag is 0', async () => {
+    await browser.testHandle.clearScheduledReplies('bamServer')
 
-      const [rumResp] = await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
-        .then(() => Promise.all([browser.testHandle.expectRum(), browser.waitForAgentLoad()]))
+    const [rumResp] = await Promise.all([
+      browser.testHandle.expectRum(),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+        .then(() => browser.waitForFeatureAggregate('session_replay'))
+    ])
 
-      expect(JSON.parse(rumResp.reply.body)).toEqual(expect.objectContaining({
-        sr: 0
-      }))
-      const sr = await getSR()
-      expect(sr.initialized).toEqual(true)
-      expect(sr.recording).toEqual(false)
-    })
+    expect(JSON.parse(rumResp.reply.body).sr).toEqual(0)
 
-    it('should run if flag is 1', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
-        .then(() => browser.waitForAgentLoad())
+    const sr = await getSR()
+    expect(sr.initialized).toEqual(true)
+    expect(sr.recording).toEqual(false)
+  })
 
-      const { initialized, recording } = await getSR()
-      expect(initialized).toEqual(true)
-      expect(recording).toEqual(true)
-    })
+  it('should start recording if rum response sr flag is 1', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+      .then(() => browser.waitForAgentLoad())
 
-    it('should not run if cookies_enabled is false', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', { ...config(), init: { ...config().init, privacy: { cookies_enabled: false } } }))
-        .then(() => browser.waitForAgentLoad())
+    await expect(browser.waitForSessionReplayRecording()).resolves.toBeUndefined()
+  })
 
-      const { exists } = await getSR()
-      expect(exists).toEqual(false)
-    })
+  it('should not load the aggregate if cookies_enabled is false', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ privacy: { cookies_enabled: false } })))
+      .then(() => browser.waitForAgentLoad())
 
-    it('should not run if session_trace is disabled', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', { ...config(), init: { ...config().init, session_trace: { enabled: false } } }))
-        .then(() => browser.waitForAgentLoad())
+    await expect(browser.waitForFeatureAggregate('session_replay', 5000)).rejects.toThrow()
+  })
 
-      const { exists } = await getSR()
-      expect(exists).toEqual(false)
-    })
+  it('should not run if session_trace is disabled', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_trace: { enabled: false } })))
+      .then(() => browser.waitForAgentLoad())
+
+    await expect(browser.waitForFeatureAggregate('session_replay', 5000)).rejects.toThrow()
   })
 })

@@ -1,7 +1,7 @@
 import { Timer } from './timer'
 import { subscribeToVisibilityChange } from '../window/page-visibility'
 import { debounce } from '../util/invoke'
-import { isBrowserScope } from '../util/global-scope'
+import { isBrowserScope } from '../constants/runtime'
 
 export class InteractionTimer extends Timer {
   constructor (opts, ms) {

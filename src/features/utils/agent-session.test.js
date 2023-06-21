@@ -35,7 +35,7 @@ beforeEach(() => {
     __esModule: true,
     registerHandler: jest.fn()
   }))
-  jest.doMock('../../common/util/global-scope', () => ({
+  jest.doMock('../../common/constants/runtime', () => ({
     __esModule: true,
     isBrowserScope: true
   }))
@@ -161,7 +161,7 @@ test('should set custom session data', async () => {
 })
 
 test('should not set custom session data in worker scope', async () => {
-  const globalScope = await import('../../common/util/global-scope')
+  const globalScope = await import('../../common/constants/runtime')
   jest.replaceProperty(globalScope, 'isBrowserScope', false)
 
   const { setInfo } = await import('../../common/config/config')

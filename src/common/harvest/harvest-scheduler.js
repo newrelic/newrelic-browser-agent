@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { submitData } from '../util/submit-data'
+import * as submitData from '../util/submit-data'
 import { SharedContext } from '../context/shared-context'
-import { Harvest, getSubmitMethod } from './harvest'
+import { Harvest } from './harvest'
 import { subscribeToEOL } from '../unload/eol'
 import { getConfigurationValue } from '../config/config'
 import { SESSION_EVENTS } from '../session/session-entity'
@@ -71,30 +71,39 @@ export class HarvestScheduler extends SharedContext {
 
   scheduleHarvest (delay, opts) {
     if (this.timeoutHandle) return
-    var timer = this
 
     if (delay == null) {
       delay = this.interval
     }
     this.timeoutHandle = setTimeout(() => {
-      timer.timeoutHandle = null
-      timer.runHarvest(opts)
+      this.timeoutHandle = null
+      this.runHarvest(opts)
     }, delay * 1000)
   }
 
   runHarvest (opts) {
     if (this.aborted) return
-    var scheduler = this
+
+    /**
+     * This is executed immediately after harvest sends the data via XHR, or if there's nothing to send. Note that this excludes on unloading / sendBeacon.
+     * @param {Object} result
+     */
+    const cbRanAfterSend = (result) => {
+      if (opts?.forceNoRetry) result.retry = false // discard unsent data rather than re-queuing for next harvest attempt
+      this.onHarvestFinished(opts, result)
+    }
 
     let harvests = []
     let submitMethod
+    let payload
 
-    if (this.opts.getPayload) { // Ajax & PVT & SR
-      submitMethod = getSubmitMethod(this.endpoint, opts)
+    if (this.opts.getPayload) {
+      // Ajax & PVT & SR features provide a callback function to get data for harvesting
+      submitMethod = submitData.getSubmitMethod({ isFinalHarvest: opts?.unload })
       if (!submitMethod) return false
 
-      const retry = submitMethod.method === submitData.xhr
-      var payload = this.opts.getPayload({ retry: retry })
+      const retry = !opts?.unload && submitMethod === submitData.xhr
+      payload = this.opts.getPayload({ retry: retry })
 
       if (!payload) {
         if (this.started) {
@@ -134,16 +143,8 @@ export class HarvestScheduler extends SharedContext {
     if (this.started) {
       this.scheduleHarvest()
     }
-    return
 
-    /**
-     * This is executed immediately after harvest sends the data via XHR, or if there's nothing to send. Note that this excludes on unloading / sendBeacon.
-     * @param {Object} result
-     */
-    function cbRanAfterSend (result) {
-      if (opts?.forceNoRetry) result.retry = false // discard unsent data rather than re-queuing for next harvest attempt
-      scheduler.onHarvestFinished(opts, result)
-    }
+    return
   }
 
   onHarvestFinished (opts, result) {
@@ -152,7 +153,7 @@ export class HarvestScheduler extends SharedContext {
     }
 
     if (result.sent && result.retry) {
-      var delay = result.delay || this.opts.retryDelay
+      const delay = result.delay || this.opts.retryDelay
       // reschedule next harvest if should be delayed longer
       if (this.started && delay) {
         clearTimeout(this.timeoutHandle)

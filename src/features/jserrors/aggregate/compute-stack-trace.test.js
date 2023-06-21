@@ -4,7 +4,7 @@ import { browserErrorUtils } from '../../../../tools/testing-utils'
 const globalScopeLocation = 'https://example.com/'
 
 const mockGlobalScopeLocation = (url) => {
-  jest.doMock('../../../common/util/global-scope', () => ({
+  jest.doMock('../../../common/constants/runtime', () => ({
     initialLocation: url || globalScopeLocation
   }))
 }

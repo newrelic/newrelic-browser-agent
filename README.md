@@ -131,12 +131,13 @@ import { SessionTrace } from '@newrelic/browser-agent/features/session_trace';
 import { Spa } from '@newrelic/browser-agent/features/spa';
 ```
 
-## Deploying a "micro" agent, for use with segmented UI design involving manual implementations only
+## Deploying one or more "micro" agents per page
 
 The examples above use the `Agent` class at their core, which is ideal for most cases as it will automatically detect page-level events across your web application.
 
-Using the `MicroAgent` class, it is possible to skip the "auto" instrumentation phases of the other loader types, and provide a *very small* agent that only responds to user input via the 
-API interfaces.  The `MicroAgent` only supports capturing a `Page View Event` when first instrumented, or features tied to API implementations, which at this time are `PageActions` and `JavaScript Errors`. These events will only be captured by the `MicroAgent` if their relevant API methods are executed.  By not wrapping the page-level globals in the same way as the base `Agent` class, the `MicroAgent` can easily be instantiated multiple times on a single page with low overhead and report to different entities based on the configurations supplied.  This allows for specialized use cases, such as those within micro front-end scenarios or in applications requiring subsets of manually-handled data to be reported to different application entities.
+Using the `MicroAgent` class, it is possible to skip the "auto" instrumentation phases of the other loader types, and provide a *very small* agent designed for capturing data in a controlled manner via the API interfaces. The `MicroAgent` captures a distinct `PageView` event when instantiated, and additional `PageAction` and `JavaScriptError` events may be captured by calling the `noticeError` and `addPageAction` methods.
+
+Because it does not wrap the page-level globals in the same way as the base `Agent` class, the `MicroAgent` is not only smaller but can easily be instantiated multiple times on a single page with low overhead, with each instance configured to report to a different Browser App entity in New Relic One if desired. This accommodates specialized use cases, such as segmented UI designs (e.g., the micro front-end pattern) or applications requiring subsets of manually-handled data to be reported to different application entities.
 
 The example below illustrates how to instantiate and interact with two separate `MicroAgent` instances on one page.
 

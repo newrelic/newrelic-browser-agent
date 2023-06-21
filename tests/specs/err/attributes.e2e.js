@@ -11,7 +11,6 @@ describe('error attributes with spa loader', () => {
           await trigger.click()
           await trigger.click()
           await trigger.click()
-          return browser.refresh()
         })()
       ])
 

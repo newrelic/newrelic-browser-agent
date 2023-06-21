@@ -536,7 +536,11 @@ function runLongTasksTest (loader) {
         const timings = body && body.length ? body : querypack.decode(query.e)
 
         const ltEvents = timings.filter(t => t.name === 'lt')
-        t.ok(ltEvents.length == 2, 'expected number of long tasks (2) observed')
+        
+        /* Istanbul (for wdio code cov) adds a long task to the loader for webpack LOCAL testing, so we account for that here. It may be taken off in the future. 
+        * TODO - This should be changed from 3 to 2 once Istanbul is no longer included by default in the test agent build.
+        */
+        t.ok(ltEvents.length == 3, 'expected number of long tasks (2 -> temp 3) observed')
 
         ltEvents.forEach((lt) => {
           t.ok(lt.value >= 59, 'task duration is roughly as expected') // defined in some-long-task.js -- duration should be at least that value +/- 1ms

@@ -10,16 +10,19 @@ export class AggregateBase extends FeatureBase {
     this.checkConfiguration()
   }
 
+  /**
+   * New handler for waiting for multiple flags. Useful when expecting multiple flags simultaneously (ex. stn vs sr)
+   * @param {string[]} flagNames
+   * @returns
+   */
   waitForFlags (flagNames = []) {
-    return Promise.all(flagNames.map(fName => new Promise((resolve) => {
-      registerHandler(`feat-${fName}`, () => {
-        resolve({ name: fName, value: true })
-      }, this.featureName, this.ee)
-      registerHandler(`block-${fName}`, () => {
-        resolve({ name: fName, value: false })
-      }, this.feature, this.ee)
-    })
-    ))
+    return Promise.all(
+      flagNames.map(fName =>
+        new Promise((resolve) => {
+          registerHandler(`rumresp-${fName}`, isOn => resolve(isOn), this.featureName, this.ee)
+        })
+      )
+    )
   }
 
   /**

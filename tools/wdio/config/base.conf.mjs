@@ -38,7 +38,8 @@ export default function config () {
       path.resolve(__dirname, '../plugins/browser-matcher.mjs'),
       path.resolve(__dirname, '../plugins/custom-commands.mjs'),
       path.resolve(__dirname, '../plugins/newrelic-instrumentation.mjs'),
-      [path.resolve(__dirname, '../plugins/testing-server/index.mjs'), args]
+      [path.resolve(__dirname, '../plugins/testing-server/index.mjs'), args],
+      [path.resolve(__dirname, '../plugins/istanbul.mjs'), args]
     ],
     reporters: [
       'spec',

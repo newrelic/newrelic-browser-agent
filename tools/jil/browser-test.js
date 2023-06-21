@@ -6,10 +6,9 @@
 var through = require('through')
 var tape = require('tape')
 
-window.$ = require('jquery')
-
 var out = through(function (data) {
-  window.$('#tap').append(data)
+  // window.$('#tap').append(data)
+  document.getElementById('tap').innerHTML += data
   if (test._exitCode) window._jilUnitDone = true
 }, function () {
   window._jilUnitDone = true

@@ -31,11 +31,12 @@ export default async function runTest ({
   expect(ajaxResults.request.body.xhr.length).toBeGreaterThan(0)
 
   await afterLoadCallback({ rumResults, resourcesResults, eventsResults, ajaxResults })
+  await browser.collectCoverage()
 
   const [unloadEventsResults, unloadMetricsResults] = await Promise.all([
     browser.testHandle.expectEvents(),
     browser.testHandle.expectMetrics(),
-    await browser.url(
+    browser.url(
       await browser.testHandle.assetURL('/')
     ) // Setup expects before navigating
   ])

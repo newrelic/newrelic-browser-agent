@@ -14,29 +14,18 @@
       position: absolute; right: 50px; top: 200px;
     }
   </style>
-  <script>
-localStorage.clear()
-// ;window.NREUM||(NREUM={});NREUM.init={session_replay: {blockClass: 'new-value'},distributed_tracing:{enabled:true},privacy:{cookies_enabled:true},ajax:{deny_list:["staging-bam-cell.nr-data.net"], ssl: true}};
-
-// ;NREUM.loader_config={accountID:"550352",trustKey:"1",agentID:"35095249",licenseKey:"NRBR-feb8b6d3e7b1d294be1",applicationID:"35095249"};
-// ;NREUM.info={beacon:"staging-bam-cell.nr-data.net",errorBeacon:"staging-bam-cell.nr-data.net",licenseKey:"NRBR-feb8b6d3e7b1d294be1",applicationID:"35095249",sa:1};
-
-  </script>
   {init}
   {config}
   <script>
-    NREUM.init.session_replay = {
-      enabled: true,
-      harvestTimeSeconds: 5,
-      sampleRate: 1,
-      errorSampleRate: 1
-    }
+    localStorage.clear()
+    // NREUM.init.session = {expiresMs: 5000}
+    NREUM.init.session_replay = {enabled: true, harvestTimeSeconds: 5, errorSampleRate: 0, sampleRate: 1}
   </script>
   {loader}
   {script-injection}
 </head>
 <body>
-  this is a generic page that is instrumented by the JS agent
+  this is a page intended to "manually" set up session replay and bypass the default "off" configs
   <hr />
   <img class="left" src="/slowimage" />
   <hr />

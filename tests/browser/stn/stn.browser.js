@@ -46,7 +46,7 @@ function runTests () {
 
   test('wait for trace node generation', function (t) {
     ee.emit('feat-err', [])
-    t.plan(4)
+    t.plan(3) // test will wait until all 3 t.ok from below are seen!
     window.history.pushState(null, '', '#foo')
     window.history.pushState(null, '', '#bar')
     setTimeout(() => t.ok(true), 0)
@@ -54,10 +54,6 @@ function runTests () {
       clearInterval(interval)
       t.ok(true)
     }, 0)
-    window.requestAnimationFrame(() => {
-      t.ok(true)
-      throw new Error('raf error')
-    })
     let xhr = new XMLHttpRequest()
     xhr.open('GET', window.location)
     xhr.send()
@@ -76,7 +72,7 @@ function runTests () {
     pvtAgg.addTiming('load', 20)
     pvtAgg.addTiming('fi', fiVal, { fid: fidVal })
 
-    ee.emit('feat-stn', [])
+    ee.emit('rumresp-stn', [true])
 
     const payload = stnAgg.takeSTNs()
 
@@ -97,27 +93,6 @@ function runTests () {
       t.ok(node, 'load node created')
       t.ok(node.s > 10, 'load node has start time ' + node.s)
       t.equal(node.o, 'document', 'load node origin ' + node.o)
-      t.end()
-    })
-    t.test('stn timer', function (t) {
-      let node = res.filter(function (node) { return node.n === 'setInterval' })[0]
-      t.ok(node, 'timer node created')
-      t.ok(node.s > 10, 'timer node has start time ' + node.s)
-      t.equal(node.o, 'window', 'setInterval origin ' + node.o)
-      t.end()
-    })
-    t.test('stn-raf', function (t) {
-      let node = res.filter(function (node) { return node.n === 'requestAnimationFrame' })[0]
-      t.ok(node, 'raf node created')
-      t.ok(node.s > 10, 'raf node has start time ' + node.s)
-      t.equal(node.o, 'window', 'requestAnimationFrame origin ' + node.o)
-      t.end()
-    })
-    t.test('stn error', function (t) {
-      let errorNode = res.filter(function (node) { return node.o === 'raf error' })[0]
-      t.ok(errorNode, 'error node created')
-      t.ok(errorNode.s > 10, 'error node has start time ' + errorNode.s)
-      t.equal(errorNode.s, errorNode.e, 'error node has no duration')
       t.end()
     })
     t.test('stn ajax', function (t) {

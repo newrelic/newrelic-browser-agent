@@ -1,0 +1,78 @@
+# This workflow runs jest unit tests with coverage and uploads the coverage
+# report to codecov. The coverage report is also archived in the workflow.
+
+name: 'Jest: Unit Tests'
+
+on:
+  workflow_dispatch:
+    inputs:
+      collection:
+        description: 'The collection of jest tests to run'
+        required: true
+        type: choice
+        options: 
+        - unit
+        - component
+        default: 'unit'
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Github branch ref to checkout and run tests on.'
+        required: false
+        type: string
+      collection:
+        description: 'The collection of jest tests to run'
+        required: false
+        type: string
+        default: 'unit'
+
+jobs:
+  run:
+    name: Run Jest
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: ubuntu:latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Setup container
+        run: apt update && apt install -y git
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Install project dependencies
+        run: npm ci
+      - name: Run unit tests
+        run: npm run test:${{ inputs.collection }} -- --coverage
+      - name: Find pull request
+        id: pull-request-target
+        uses: ./.github/actions/find-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload pr code coverage
+        if: ${{ steps.pull-request-target.outputs.results }}
+        uses: codecov/codecov-action@v3
+        env:
+          GITHUB_HEAD_REF: ${{ inputs.ref }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          override_pr: ${{ fromJSON(steps.pull-request-target.outputs.results).pr_number }}
+          flags: jest-${{ inputs.collection }}
+          verbose: true
+      - name: Upload branch code coverage
+        if: ${{ !steps.pull-request-target.outputs.results }}
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: jest-${{ inputs.collection }}
+          verbose: true
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: jest-${{ inputs.collection }}-code-coverage-report
+          path: coverage/

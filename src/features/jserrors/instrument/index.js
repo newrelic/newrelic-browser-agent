@@ -38,7 +38,7 @@ export class Instrument extends InstrumentBase {
           return true
         })
         this.thrown = true
-        notice(err, undefined, thisInstrument.ee)
+        handle('err', [err, now()], undefined, FEATURE_NAMES.jserrors, thisInstrument.ee)
       }
     })
     thisInstrument.ee.on('fn-end', function () {
@@ -89,7 +89,7 @@ export class Instrument extends InstrumentBase {
 
     try {
       if (this.skipNext) this.skipNext -= 1
-      else notice(errorObj || new UncaughtException(message, filename, lineno), true, this.ee)
+      else handle('err', [errorObj || new UncaughtException(message, filename, lineno), now()], undefined, FEATURE_NAMES.jserrors, this.ee)
     } catch (e) {
       try {
         handle('ierr', [e, now(), true], undefined, FEATURE_NAMES.jserrors, this.ee)
@@ -111,19 +111,6 @@ function UncaughtException (message, filename, lineno) {
   this.message = message || 'Uncaught error with no additional information'
   this.sourceURL = filename
   this.line = lineno
-}
-
-/**
- * Adds a timestamp and emits the 'err' event, which the error aggregator listens for
- * @param {Error} err
- * @param {boolean} doNotStamp
- * @param {ContextualEE} ee
- */
-function notice (err, doNotStamp, ee) {
-  // by default add timestamp, unless specifically told not to
-  // this is to preserve existing behavior
-  var time = (!doNotStamp) ? now() : null
-  handle('err', [err, time], undefined, FEATURE_NAMES.jserrors, ee)
 }
 
 /**

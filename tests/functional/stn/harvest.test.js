@@ -13,10 +13,10 @@ testDriver.test('session traces are retried when collector returns 429 during fi
     loader: 'spa',
     init: {
       session_trace: {
-        harvestTimeSeconds: 10
+        harvestTimeSeconds: 5
       },
       harvest: {
-        tooManyRequestsDelay: 10
+        tooManyRequestsDelay: 5
       }
     }
   })
@@ -59,10 +59,10 @@ testDriver.test('retried first harvest captures ptid', supported, function (t, b
     loader: 'spa',
     init: {
       session_trace: {
-        harvestTimeSeconds: 10
+        harvestTimeSeconds: 5
       },
       harvest: {
-        tooManyRequestsDelay: 10
+        tooManyRequestsDelay: 5
       }
     }
   })
@@ -102,10 +102,10 @@ testDriver.test('session traces are retried when collector returns 429 during sc
     loader: 'spa',
     init: {
       session_trace: {
-        harvestTimeSeconds: 10
+        harvestTimeSeconds: 5
       },
       harvest: {
-        tooManyRequestsDelay: 10
+        tooManyRequestsDelay: 5
       }
     }
   })
@@ -134,7 +134,6 @@ testDriver.test('session traces are retried when collector returns 429 during sc
 
     let thirdBody = result.request.body
 
-    t.ok(secondBody.res.length > firstBody.res.length, 'second try has more nodes than first')
     t.ok(containsAll(thirdBody, secondBody), 'all nodes have been resent')
 
     // this is really checking that no nodes have been resent

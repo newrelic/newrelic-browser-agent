@@ -74,16 +74,4 @@ function extractWorkerSM (supportabilityMetrics) {
   return wsm
 }
 
-/** Accepts an object payload, fails test if stringified payload contains data that should be obfuscated. */
-function checkPayload (t, payload, name) {
-  t.ok(payload, `${name} payload exists`)
-
-  var strPayload = JSON.stringify(payload)
-  //var failed = strPayload.includes('bam-test') || strPayload.includes('fakeid') || strPayload.includes('pii')
-
-  t.ok(!strPayload.includes('pii'), `${name} -- pii was obfuscated`)
-  t.ok(!strPayload.includes('bam-test'), `${name} -- bam-test was obfuscated`)
-  t.ok(!strPayload.includes('fakeid'), `${name} -- fakeid was obfuscated`)
-}
-
-module.exports = { fail, failWithEndTimeout, getTime, asyncApiFns, extractWorkerSM, checkPayload, getMetricsFromResponse, url, cleanURL }
+module.exports = { fail, failWithEndTimeout, getTime, asyncApiFns, extractWorkerSM, getMetricsFromResponse, url, cleanURL }

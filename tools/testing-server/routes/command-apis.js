@@ -1,5 +1,6 @@
 const fp = require('fastify-plugin')
 const { v4: uuidV4 } = require('uuid')
+const SerAny = require('serialize-anything')
 
 /**
  * Fastify plugin to apply routes to the command server.
@@ -25,7 +26,7 @@ module.exports = fp(async function (fastify, testServer) {
     const testHandle = testServer.getTestHandle(request.params.testId)
 
     try {
-      const result = await testHandle.assetURL(request.body.assetFile, request.body.query)
+      const result = await testHandle.assetURL(request.body.assetFile, SerAny.deserialize(request.body.query))
       reply.code(200).send({
         assetURL: result
       })
@@ -39,6 +40,26 @@ module.exports = fp(async function (fastify, testServer) {
     try {
       const result = await testHandle.expect(request.body.serverId, request.body.expectOpts)
       reply.code(200).send(result)
+    } catch (e) {
+      reply.code(400).send(e)
+    }
+  })
+
+  fastify.post('/test-handle/:testId/scheduleReply', async function (request, reply) {
+    const testHandle = testServer.getTestHandle(request.params.testId)
+    try {
+      testHandle.scheduleReply(request.body.serverId, request.body.scheduledReply)
+      reply.code(200).send()
+    } catch (e) {
+      reply.code(400).send(e)
+    }
+  })
+
+  fastify.post('/test-handle/:testId/clearScheduledReplies', async function (request, reply) {
+    const testHandle = testServer.getTestHandle(request.params.testId)
+    try {
+      testHandle.clearScheduledReplies(request.body.serverId)
+      reply.code(200).send()
     } catch (e) {
       reply.code(400).send(e)
     }

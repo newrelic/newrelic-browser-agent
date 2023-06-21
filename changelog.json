@@ -4,6 +4,70 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "98e3f18c182be93b93386968026555c2575fd29d",
+          "message": "Add error mode to session trace - NEWRELIC-8666 NEWRELIC-9283",
+          "issues": [
+            "583"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "a717951d12b41ec68f79548c68370cd89502e539",
+          "message": "Minor feature class changes to support testing new features",
+          "issues": [
+            "571"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "1167c9826cd78be0f4a9c6cb5d74c6d37685ba0e",
+          "message": "Decorate error objects to facilitate future UI experiences",
+          "issues": [
+            "574"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "dbd995a995af27f4f99316860ece7bcb24f53e73",
+          "message": "Use new shared session for Session Trace feature - NEWRELIC-8662",
+          "issues": [
+            "545"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "276c4f6ee35063e6b22cb2dc4c70729ffb89ca3d",
+          "message": "Remove unused data from session trace requests",
+          "issues": []
+        }
+      ],
+      "version": "1.235.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "e676288e-512b-4297-9665-6d318bebf999",
+      "createTime": "2023-06-20T15:44:40.072Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "937812abdc561223028176df6c8bf2b7100b09b2",
+          "message": "Migrate RUM network call from GET to POST",
+          "issues": [
+            "521"
+          ]
+        }
+      ],
+      "version": "1.234.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "4c5375f6-08d6-464b-97b1-3e47b7135c34",
+      "createTime": "2023-06-02T03:04:22.032Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "cd2dc90f04bbce81cddaa408413c47596bfb2b2b",
           "message": "Address bug affecting XHR harvest re-schedule",
@@ -130,5 +194,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-05-31T20:07:26.135Z"
+  "updateTime": "2023-06-20T15:44:40.072Z"
 }

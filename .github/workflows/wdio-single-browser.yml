@@ -15,6 +15,11 @@ on:
         description: 'Additional flags to pass to the wdio cli'
         required: false
         type: string
+      coverage:
+        description: 'Flag indicating if code coverage should be collected and reported to codecov'
+        required: false
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       browser-target:
@@ -29,18 +34,20 @@ on:
         description: 'Additional flags to pass to the wdio cli'
         required: false
         type: string
-    secrets:
-      JIL_SAUCE_LABS_USERNAME:
-        required: true
-      JIL_SAUCE_LABS_ACCESS_KEY:
-        required: true
-      JIL_NODE_NEW_RELIC_LICENSE_KEY:
-        required: true
+      coverage:
+        description: 'Flag indicating if code coverage should be collected and reported to codecov'
+        required: false
+        type: boolean
+        default: false
+      ref:
+        description: 'Github branch ref to checkout and run tests on'
+        required: false
+        type: string
+
 jobs:
   wdio:
     name: WDIO Test - ${{ inputs.browser-target }}
     timeout-minutes: 60
-    continue-on-error: true
     runs-on: ubuntu-latest
     container:
       image: ubuntu:latest
@@ -57,18 +64,49 @@ jobs:
       - name: Setup Container
         run: apt update && apt install -y git
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref || github.ref }}
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
       - name: Install dependencies
         run: npm ci
       - name: Build agent
-        run: npm run build:all
+        run: npm run cdn:build:local
       - name: Run WDIO Tests
         run: |
           node ./tools/wdio/bin/cli.js \
             -s \
             -b ${{ inputs.browser-target }} \
             --concurrent 10 \
-            ${{ runner.debug && '-v -L -D -d' }} \
-            ${{ inputs.additional-flags }}
+            ${{ runner.debug && '-v -L -D -d' || '' }} \
+            ${{ inputs.coverage && '--coverage' || '' }} \
+            ${{ inputs.additional-flags || '' }}
+      - name: Find pull request
+        id: pull-request-target
+        uses: ./.github/actions/find-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload pr code coverage
+        if: ${{ inputs.coverage && steps.pull-request-target.outputs.results }}
+        uses: codecov/codecov-action@v3
+        env:
+          GITHUB_HEAD_REF: ${{ inputs.ref }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          override_pr: ${{ fromJSON(steps.pull-request-target.outputs.results).pr_number }}
+          flags: integration-tests
+          verbose: true
+      - name: Upload branch code coverage
+        if: ${{ inputs.coverage && !steps.pull-request-target.outputs.results }}
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: integration-tests
+          verbose: true
+      - name: Archive code coverage results
+        if: ${{ inputs.coverage }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: integration-code-coverage-report
+          path: coverage-e2e/

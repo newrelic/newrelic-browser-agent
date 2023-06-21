@@ -15,7 +15,8 @@ const {
   testInsRequest,
   testAjaxTimeSlicesRequest,
   testResourcesRequest,
-  testInteractionEventsRequest
+  testInteractionEventsRequest,
+  testBlobRequest
 } = require('./utils/expect-tests')
 const SerAny = require('serialize-anything')
 
@@ -166,6 +167,14 @@ module.exports = class TestHandle {
     }
 
     this.#scheduledReplies.get(serverId).add(scheduledReply)
+  }
+
+  /**
+   * Clears the scheduled replies for a server
+   * @param {'assetServer'|'bamServer'} serverId Id of the server to clear
+   */
+  clearScheduledReplies (serverId) {
+    this.#scheduledReplies.set(serverId, new Set())
   }
 
   /**
@@ -387,6 +396,14 @@ module.exports = class TestHandle {
     return this.expect('bamServer', {
       timeout,
       test: testResourcesRequest,
+      expectTimeout
+    })
+  }
+
+  expectBlob (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testBlobRequest,
       expectTimeout
     })
   }

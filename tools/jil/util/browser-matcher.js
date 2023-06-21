@@ -436,3 +436,7 @@ features.npmSrc = new BrowserMatcher([
   new MatcherRule(TYPE_INCLUDE, 'safari@>=15.4'),
   new MatcherRule(TYPE_INCLUDE, 'ios@>=15.4')
 ])
+
+/* Because safari @ 15 is giving us grief on Sauce Labs */
+features.notSafari15 = new BrowserMatcher()
+  .exclude('safari', '15')

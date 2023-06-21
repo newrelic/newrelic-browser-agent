@@ -64,15 +64,15 @@
       "browserName": "firefox",
       "platformName": "Windows 10",
       "platform": "Windows 10",
-      "version": "104",
-      "browserVersion": "104"
+      "version": "105",
+      "browserVersion": "105"
     },
     {
       "browserName": "firefox",
       "platformName": "Windows 10",
       "platform": "Windows 10",
-      "version": "107",
-      "browserVersion": "107"
+      "version": "108",
+      "browserVersion": "108"
     },
     {
       "browserName": "firefox",

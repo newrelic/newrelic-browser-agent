@@ -304,9 +304,7 @@ describe('_send', () => {
 
   test('should set body to events when endpoint is events', () => {
     spec.endpoint = 'events'
-    spec.payload.body.e = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
-    }
+    spec.payload.body.e = faker.lorem.sentence()
 
     const result = harvestInstance._send(spec)
 

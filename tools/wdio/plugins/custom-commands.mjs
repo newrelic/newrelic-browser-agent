@@ -60,8 +60,10 @@ export default class CustomCommands {
      * agents on the page.
      */
     browser.addCommand('getAgentSessionInfo', async function () {
-      const agentSessions = await browser.execute(function () {
-        return Object.entries(newrelic.initializedAgents)
+      // WDIO converts empty objects from IE to null (as with default session.state.custom).
+      // Sending back a JSON string and parsing it preserves the values.
+      const agentSessionsJSON = await browser.execute(function () {
+        return JSON.stringify(Object.entries(newrelic.initializedAgents)
           .reduce(function (aggregate, agentEntry) {
             aggregate[agentEntry[0]] = {
               value: agentEntry[1].runtime.session.state.value,
@@ -73,8 +75,9 @@ export default class CustomCommands {
               custom: agentEntry[1].runtime.session.state.custom
             }
             return aggregate
-          }, {})
+          }, {}))
       })
+      const agentSessions = JSON.parse(agentSessionsJSON)
       const agentSessionInstances = await browser.execute(function () {
         return Object.entries(newrelic.initializedAgents)
           .reduce(function (aggregate, agentEntry) {
@@ -86,9 +89,12 @@ export default class CustomCommands {
             return aggregate
           }, {})
       })
-      const localStorage = await browser.execute(function () {
-        return JSON.parse(window.localStorage.getItem('NRBA_SESSION') || '{}')
+      // WDIO converts empty objects from IE to null (as with default session.state.custom).
+      // Waiting to parse the JSON string until it is returned preserves the value.
+      const localStorageJSON = await browser.execute(function () {
+        return window.localStorage.getItem('NRBA_SESSION') || '{}'
       })
+      const localStorage = JSON.parse(localStorageJSON)
       return { agentSessions, agentSessionInstances, localStorage }
     })
 

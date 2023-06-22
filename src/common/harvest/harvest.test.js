@@ -109,7 +109,7 @@ describe('send', () => {
 
     harvestInstance.send(spec)
 
-    expect(harvestInstance._send).toHaveBeenCalledWith(expect.objectContaining(spec))
+    expect(harvestInstance._send).toHaveBeenCalledWith(spec)
   })
 
   test('should not use obfuscateAndSend', async () => {
@@ -119,11 +119,7 @@ describe('send', () => {
     harvestInstance.send({ endpoint })
 
     expect(harvestInstance._send).toHaveBeenCalledWith({
-      endpoint,
-      payload: {
-        body: {},
-        qs: {}
-      }
+      endpoint
     })
     expect(harvestInstance.obfuscateAndSend).not.toHaveBeenCalled()
   })
@@ -135,11 +131,7 @@ describe('send', () => {
     harvestInstance.send({ endpoint })
 
     expect(harvestInstance.obfuscateAndSend).toHaveBeenCalledWith({
-      endpoint,
-      payload: {
-        body: {},
-        qs: {}
-      }
+      endpoint
     })
     expect(harvestInstance._send).not.toHaveBeenCalled()
   })
@@ -147,12 +139,7 @@ describe('send', () => {
   test.each([undefined, {}])('should still call _send when spec is %s', async (spec) => {
     harvestInstance.send(spec)
 
-    expect(harvestInstance._send).toHaveBeenCalledWith({
-      payload: {
-        body: {},
-        qs: {}
-      }
-    })
+    expect(harvestInstance._send).toHaveBeenCalledWith(spec || {})
   })
 })
 

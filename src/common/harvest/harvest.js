@@ -59,7 +59,7 @@ export class Harvest extends SharedContext {
   send (spec = {}) {
     const caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
 
-    return caller({ ...spec, payload: this.cleanPayload(spec.payload) })
+    return caller(spec)
   }
 
   /**

@@ -4,7 +4,6 @@ import * as encodeModule from '../url/encode'
 import * as submitDataModule from '../util/submit-data'
 import * as configModule from '../config/config'
 import { applyFnToProps } from '../util/traverse'
-import * as runtimeModule from '../constants/runtime'
 
 import { Harvest } from './harvest'
 

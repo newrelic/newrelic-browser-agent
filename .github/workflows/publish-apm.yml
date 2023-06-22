@@ -28,5 +28,4 @@ jobs:
           node tools/scripts/upload-to-nr.js \
             --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
             --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
-            --eu-api-key=${{ secrets.NR_API_KEY_EU }} \
             --v=${{ github.event.inputs.version }}

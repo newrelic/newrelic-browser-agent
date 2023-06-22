@@ -18,7 +18,7 @@ this is a generic page that is instrumented by the JS agent
   function errorFn(){
     setTimeout(function(){
       var a
-      window[`error-${count++}`] = Date.now()
+      window['error-' + (count++)] = Date.now()
       a.click = true
     })
   }

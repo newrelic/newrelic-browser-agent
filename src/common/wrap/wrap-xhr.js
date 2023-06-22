@@ -12,7 +12,7 @@ import { ee as contextualEE } from '../event-emitter/contextual-ee'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { originals } from '../config/config'
-import { globalScope } from '../util/global-scope'
+import { globalScope } from '../constants/runtime'
 import { warn } from '../util/console'
 
 const wrapped = {}

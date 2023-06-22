@@ -60,8 +60,10 @@ export default class CustomCommands {
      * agents on the page.
      */
     browser.addCommand('getAgentSessionInfo', async function () {
-      const agentSessions = await browser.execute(function () {
-        return Object.entries(newrelic.initializedAgents)
+      // WDIO converts empty objects from IE to null (as with default session.state.custom).
+      // Sending back a JSON string and parsing it preserves the values.
+      const agentSessionsJSON = await browser.execute(function () {
+        return JSON.stringify(Object.entries(newrelic.initializedAgents)
           .reduce(function (aggregate, agentEntry) {
             aggregate[agentEntry[0]] = {
               value: agentEntry[1].runtime.session.state.value,
@@ -73,8 +75,9 @@ export default class CustomCommands {
               custom: agentEntry[1].runtime.session.state.custom
             }
             return aggregate
-          }, {})
+          }, {}))
       })
+      const agentSessions = JSON.parse(agentSessionsJSON)
       const agentSessionInstances = await browser.execute(function () {
         return Object.entries(newrelic.initializedAgents)
           .reduce(function (aggregate, agentEntry) {
@@ -86,9 +89,12 @@ export default class CustomCommands {
             return aggregate
           }, {})
       })
-      const localStorage = await browser.execute(function () {
-        return JSON.parse(window.localStorage.getItem('NRBA_SESSION') || '{}')
+      // WDIO converts empty objects from IE to null (as with default session.state.custom).
+      // Waiting to parse the JSON string until it is returned preserves the value.
+      const localStorageJSON = await browser.execute(function () {
+        return window.localStorage.getItem('NRBA_SESSION') || '{}'
       })
+      const localStorage = JSON.parse(localStorageJSON)
       return { agentSessions, agentSessionInstances, localStorage }
     })
 
@@ -114,6 +120,55 @@ export default class CustomCommands {
           sr: 1
         })
       })
+    })
+
+    /**
+     * Waits for a specific feature aggregate class to be loaded.
+     */
+    browser.addCommand('waitForFeatureAggregate', async function (feature, timeout) {
+      await browser.waitUntil(
+        () => browser.execute(function (feat) {
+          try {
+            var initializedAgent = Object.values(newrelic.initializedAgents)[0]
+            return !!(initializedAgent &&
+              initializedAgent.features &&
+              initializedAgent.features[feat] &&
+              initializedAgent.features[feat].featAggregate)
+          } catch (err) {
+            console.error(err)
+            return false
+          }
+        }, feature),
+        {
+          timeout: timeout || 30000,
+          timeoutMsg: `Aggregate never loaded for feature ${feature}`
+        })
+    })
+
+    /**
+     * Waits for the session replay feature to initialize and start recording.
+     */
+    browser.addCommand('waitForSessionReplayRecording', async function () {
+      await browser.waitForFeatureAggregate('session_replay')
+      await browser.waitUntil(
+        () => browser.execute(function () {
+          try {
+            var initializedAgent = Object.values(newrelic.initializedAgents)[0]
+            return !!(initializedAgent &&
+              initializedAgent.features &&
+              initializedAgent.features.session_replay &&
+              initializedAgent.features.session_replay.featAggregate &&
+              initializedAgent.features.session_replay.featAggregate.initialized &&
+              initializedAgent.features.session_replay.featAggregate.recording)
+          } catch (err) {
+            console.error(err)
+            return false
+          }
+        }),
+        {
+          timeout: 30000,
+          timeoutMsg: 'Session replay recording never started'
+        })
     })
   }
 }

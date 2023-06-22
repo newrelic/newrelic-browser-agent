@@ -7,7 +7,7 @@ import { lazyFeatureLoader } from './lazy-feature-loader'
 import { getConfigurationValue } from '../../common/config/config'
 import { setupAgentSession } from './agent-session'
 import { warn } from '../../common/util/console'
-import * as globalScopeModule from '../../common/util/global-scope'
+import * as globalScopeModule from '../../common/constants/runtime'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
 jest.enableAutomock()
@@ -22,7 +22,7 @@ jest.mock('../../common/window/load', () => ({
   __esModule: true,
   onWindowLoad: jest.fn()
 }))
-jest.mock('../../common/util/global-scope', () => ({
+jest.mock('../../common/constants/runtime', () => ({
   __esModule: true,
   isBrowserScope: undefined,
   isWorkerScope: undefined

@@ -1,8 +1,9 @@
-import { reliableUnload } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { reliableUnload, notIOS } from '../../../tools/browser-matcher/common-matchers.mjs'
 import runTest from './run-test'
 
-describe('jspdf compatibility', () => {
-  withBrowsersMatching(reliableUnload)('2.5.1', async () => {
+// iOS Appium hates the use of canvas
+describe.withBrowsersMatching([reliableUnload, notIOS])('jspdf compatibility', () => {
+  it('2.5.1', async () => {
     await runTest({
       browser,
       testAsset: 'third-party-compatibility/jspdf/2.5.1.html',

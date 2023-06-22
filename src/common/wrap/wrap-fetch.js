@@ -7,7 +7,7 @@
  * This module is used by: ajax, spa.
  */
 import { ee as baseEE } from '../event-emitter/contextual-ee'
-import { globalScope } from '../util/global-scope'
+import { globalScope } from '../constants/runtime'
 import { flag } from './wrap-function'
 
 var prefix = 'fetch-'

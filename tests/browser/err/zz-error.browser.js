@@ -7,7 +7,7 @@
 // Name prefixed with zz- to be the last file
 // included in the unit test bundle.
 import test from '../../../tools/jil/browser-test'
-import { ffVersion } from '../../../src/common/browser-version/firefox-version'
+import { ffVersion } from '../../../src/common/constants/runtime'
 import { windowAddEventListener } from '../../../src/common/event-listener/event-listener-opts'
 import { setup } from '../utils/setup'
 // Should be loaded first

@@ -28,21 +28,36 @@ module.exports = `
   var origOnError = window.onerror
   window.onerror = function() {
     NRDEBUG('error thrown: ' + JSON.stringify(arguments))
-    origOnError(arguments)
+    if (typeof origOnError === 'function') {
+      origOnError(arguments)
+    }
   }
   var origLog = window.console.log
   window.console.log = function() {
     NRDEBUG('console.log: ' + JSON.stringify(arguments))
-    origLog(arguments)
+    if (typeof origLog === 'function') {
+      origLog(arguments)
+    }
   }
   var origWarn = window.console.warn
   window.console.warn = function() {
     NRDEBUG('console.warn: ' + JSON.stringify(arguments))
-    origWarn(arguments)
+    if (typeof origWarn === 'function') {
+      origWarn(arguments)
+    }
   }
   var origErr = window.console.error
   window.console.error = function() {
     NRDEBUG('console.error: ' + JSON.stringify(arguments))
-    origErr(arguments)
+    if (typeof origErr === 'function') {
+      origErr(arguments)
+    }
+  }
+  var origTrace = window.console.trace
+  window.console.trace = function() {
+    NRDEBUG('console.trace: ' + JSON.stringify(arguments))
+    if (typeof origTrace === 'function') {
+      origTrace(arguments)
+    }
   }
 `

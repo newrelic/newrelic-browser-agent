@@ -8,7 +8,7 @@
  */
 import { ee as globalEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
-import { isBrowserScope } from '../util/global-scope'
+import { isBrowserScope } from '../constants/runtime'
 
 const wrapped = {}
 const HISTORY_FNS = ['pushState', 'replaceState']

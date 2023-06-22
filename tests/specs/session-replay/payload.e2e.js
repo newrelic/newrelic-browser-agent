@@ -1,6 +1,7 @@
 import { config, testExpectedReplay } from './helpers'
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
-describe('Session Replay Payload Validation', () => {
+describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })
@@ -21,8 +22,9 @@ describe('Session Replay Payload Validation', () => {
   it('should match expected payload - standard', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
       .then(() => browser.waitForAgentLoad())
-    const { localStorage } = await browser.getAgentSessionInfo()
+
     const { request: harvestContents } = await browser.testHandle.expectBlob()
+    const { localStorage } = await browser.getAgentSessionInfo()
 
     testExpectedReplay({ data: harvestContents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: true })
   })
@@ -30,11 +32,14 @@ describe('Session Replay Payload Validation', () => {
   it('should match expected payload - error', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
       .then(() => browser.waitForAgentLoad())
+
+    const [{ request: harvestContents }] = await Promise.all([
+      browser.testHandle.expectBlob(),
+      browser.execute(function () {
+        newrelic.noticeError(new Error('test'))
+      })
+    ])
     const { localStorage } = await browser.getAgentSessionInfo()
-    await browser.execute(function () {
-      newrelic.noticeError(new Error('test'))
-    })
-    const { request: harvestContents } = await browser.testHandle.expectBlob()
 
     testExpectedReplay({ data: harvestContents, session: localStorage.value, hasError: true, hasSnapshot: true, isFirstChunk: true })
   })

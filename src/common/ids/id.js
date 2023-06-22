@@ -4,7 +4,7 @@
  */
 
 import { getOrSet } from '../util/get-or-set'
-import { globalScope } from '../util/global-scope'
+import { globalScope } from '../constants/runtime'
 
 // Start assigning ids at 1 so 0 can always be used for Window or WorkerGlobalScope, without
 // actually setting it (which would create a global variable).

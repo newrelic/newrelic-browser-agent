@@ -9,7 +9,7 @@ import { setup } from '../utils/setup'
 const { agentIdentifier, aggregator } = setup()
 
 jil.browserTest('xhr with onreadystatechange assigned after send', async function (t) {
-  const ffVersion = await import('../../../src/common/browser-version/firefox-version')
+  const ffVersion = await import('../../../src/common/constants/runtime')
   const { Instrument: AjaxInstrum } = await import('../../../src/features/ajax/instrument/index')
   const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false)
 
@@ -43,7 +43,7 @@ jil.browserTest('xhr with onreadystatechange assigned after send', async functio
 })
 
 jil.browserTest('multiple XHRs with onreadystatechange assigned after send', async function (t) {
-  const ffVersion = await import('../../../src/common/browser-version/firefox-version')
+  const ffVersion = await import('../../../src/common/constants/runtime')
   const { Instrument: AjaxInstrum } = await import('../../../src/features/ajax/instrument/index')
   const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false)
 

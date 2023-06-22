@@ -23,8 +23,8 @@ const config = {
   }
 }
 
-describe('obfuscate rules', () => {
-  withBrowsersMatching(supportsFetchExtended)('should apply to all payloads', async () => {
+describe.withBrowsersMatching(supportsFetchExtended)('obfuscate rules', () => {
+  it('should apply to all payloads', async () => {
     const spaPromise = browser.testHandle.expectEvents()
     const ajaxPromise = browser.testHandle.expectAjaxEvents()
     const timingsPromise = browser.testHandle.expectTimings()

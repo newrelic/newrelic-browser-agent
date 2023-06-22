@@ -12,6 +12,7 @@ import { generateRandomHexString } from '../common/ids/unique-id'
 import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
 import { warn } from '../common/util/console'
 import { stringify } from '../common/util/stringify'
+import { globalScope } from '../common/constants/runtime'
 
 /**
  * A flexible class that may be used to compose an agent from a select subset of feature modules. In applications
@@ -19,6 +20,13 @@ import { stringify } from '../common/util/stringify'
  */
 export class Agent {
   constructor (options, agentIdentifier = generateRandomHexString(16)) {
+    if (!globalScope) {
+      // We could not determine the runtime environment. Short-circuite the agent here
+      // to avoid possible exceptions later that may cause issues with customer's application.
+      warn('Failed to initial the agent. Could not determine the runtime environment.')
+      return
+    }
+
     this.agentIdentifier = agentIdentifier
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}

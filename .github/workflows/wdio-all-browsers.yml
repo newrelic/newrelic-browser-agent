@@ -56,3 +56,11 @@ jobs:
       browser-target: android@*
       build-number: $BUILD_NUMBER
     secrets: inherit
+
+  ie:
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: ie@11
+      build-number: $BUILD_NUMBER
+      additional-flags: -P
+    secrets: inherit

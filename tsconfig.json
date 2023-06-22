@@ -10,5 +10,5 @@
     "skipLibCheck": true
   },
   "include": ["src/**/*"],
-  "exclude": ["**/*.test.js"]
+  "exclude": ["**/*.test.js", "**/*.component-test.js","**/__mocks__/*.js"]
 }

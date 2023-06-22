@@ -5,10 +5,11 @@ const fp = require('fastify-plugin')
  * @param {module:fastify.FastifyInstance} fastify the fastify server instance
  */
 module.exports = fp(async function (fastify) {
-  fastify.addHook('preHandler', (request, reply, done) => {
-    if (!request.url.startsWith('/debug')) {
-      fastify.testServerLogger.logNetworkRequest(request)
+  fastify.addHook('onSend', (request, reply, response, done) => {
+    if (!request.url.startsWith('/debug') && !request.url.startsWith('/health')) {
+      fastify.testServerLogger.logNetworkRequest(request, reply)
     }
-    done()
+
+    done(null, response)
   })
 })

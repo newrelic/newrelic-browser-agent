@@ -10,7 +10,7 @@ import { InstrumentBase } from '../../utils/instrument-base'
 import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import * as CONSTANTS from '../constants'
-import { isBrowserScope } from '../../../common/util/global-scope'
+import { isBrowserScope } from '../../../common/constants/runtime'
 
 const {
   FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, FN_START, CB_START, FN_END

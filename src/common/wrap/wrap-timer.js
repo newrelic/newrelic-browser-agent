@@ -4,12 +4,12 @@
  */
 /**
  * @file Wraps native timeout and interval methods for instrumentation.
- * This module is used by: jserrors, session_trace, spa.
+ * This module is used by: jserrors, spa.
  */
 
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
-import { globalScope } from '../util/global-scope'
+import { globalScope } from '../constants/runtime'
 
 const wrapped = {}
 const SET_TIMEOUT = 'setTimeout'

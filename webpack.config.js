@@ -7,7 +7,7 @@ const pkg = require('./package.json')
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
-let { PUBLISH, SOURCEMAPS = true, PR_NAME, BRANCH_NAME, VERSION_OVERRIDE } = process.env
+let { PUBLISH, SOURCEMAPS = true, COVERAGE = 'false', PR_NAME, BRANCH_NAME, VERSION_OVERRIDE } = process.env
 // this will change to package.json.version when it is aligned between all the packages
 let VERSION = VERSION_OVERRIDE || pkg.version
 let PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
@@ -79,6 +79,7 @@ console.log('SUBVERSION', SUBVERSION)
 console.log('PUBLIC_PATH', PUBLIC_PATH)
 console.log('MAP_PATH', MAP_PATH)
 console.log('IS_LOCAL', IS_LOCAL)
+console.log('COVERAGE', COVERAGE)
 if (PR_NAME) console.log('PR_NAME', PR_NAME)
 if (BRANCH_NAME) console.log('BRANCH_NAME', BRANCH_NAME)
 process.env.BUILD_VERSION = VERSION
@@ -169,7 +170,7 @@ const standardConfig = merge(commonConfig, {
       {
         test: /\.js$/,
         exclude: /(node_modules)/,
-        use: SUBVERSION === 'LOCAL'
+        use: COVERAGE === 'true'
           ? [
               { loader: './tools/webpack/loaders/istanbul/index.mjs' },
               {

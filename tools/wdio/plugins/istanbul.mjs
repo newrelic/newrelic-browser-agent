@@ -4,10 +4,12 @@ import url from 'url'
 import istanbulCoverage from 'istanbul-lib-coverage'
 import istanbulReport from 'istanbul-lib-report'
 import reports from 'istanbul-reports'
+import logger from '@wdio/logger'
 import { v4 as UUIDv4 } from 'uuid'
 import { getBrowserName, getBrowserVersion } from '../../browsers-lists/utils.mjs'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
+const log = logger('istanbul-coverage')
 
 export default class IstanbulCoverage {
   #coverageDir = path.join(
@@ -110,6 +112,8 @@ export default class IstanbulCoverage {
    * all the coverage files into a single report.
    */
   async onComplete () {
+    const coverageStart = performance.now()
+
     if (!this.#enabled) return
 
     const coverageFiles = await this.#findCoverageFiles(path.join(this.#coverageDir, 'raw'))
@@ -125,6 +129,8 @@ export default class IstanbulCoverage {
     })
     const lcovReport = reports.create('lcov')
     lcovReport.execute(lcovContext)
+
+    log.info(`Coverage generated in ${Math.round(performance.now() - coverageStart)}ms`)
   }
 
   async #findCoverageFiles (dirPath) {

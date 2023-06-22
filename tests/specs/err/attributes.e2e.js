@@ -6,10 +6,10 @@ describe('error attributes with spa loader', () => {
 
       const [errorResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        await $('#trigger').then(async (trigger) => {
-          await trigger.click()
-          await trigger.click()
-          await trigger.click()
+        browser.execute(function () {
+          triggerError()
+          triggerError()
+          triggerError()
         })
       ])
 
@@ -75,17 +75,20 @@ describe('error attributes with spa loader', () => {
 
       const [errorResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        $('#trigger').then(async (trigger) => {
-          await trigger.click()
-          await trigger.click()
-          await trigger.click()
-          browser.refresh()
+        browser.execute(function () {
+          // Using setTimeout asks each command to wait for the event loop to pick it up from the message queue rather
+          // than executing direcly as a synchronous frame on the stack. This plays better with our api calls, which
+          // use an event emitter architecture.
+          setTimeout(triggerError, 0)
+          setTimeout(triggerError, 0)
+          setTimeout(triggerError, 0)
+          setTimeout(function () { location.reload() }, 0)
         })
       ])
 
       expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(2)
-      expect(errorResult.request.body.err[0].metrics.count).toBe(3)
+      expect(errorResult.request.body.err[0].metrics.count).toBe(3) // the one error has a count of 3
     })
 
     it('noticeError accepts custom attributes in an argument', async () => {
@@ -140,9 +143,9 @@ describe('error attributes with spa loader', () => {
 
       const [errorResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        $('#trigger').then(async (trigger) => {
-          await trigger.click()
-          browser.refresh()
+        browser.execute(function () {
+          document.getElementById('trigger').click()
+          setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
         })
       ])
 
@@ -156,9 +159,9 @@ describe('error attributes with spa loader', () => {
 
       const [errorResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        $('#trigger').then(async (trigger) => {
-          await trigger.click()
-          browser.refresh()
+        browser.execute(function () {
+          document.getElementById('trigger').click()
+          setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
         })
       ])
 
@@ -174,9 +177,9 @@ describe('error attributes with spa loader', () => {
 
       const [errorResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        $('#trigger').then(async (trigger) => {
-          await trigger.click()
-          browser.refresh()
+        browser.execute(function () {
+          document.getElementById('trigger').click()
+          setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
         })
       ])
 
@@ -234,9 +237,9 @@ describe('error attributes with spa loader', () => {
 
       const [errorResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        $('#trigger').then(async (trigger) => {
-          await trigger.click()
-          browser.refresh() // forces harvest
+        browser.execute(function () {
+          document.getElementById('trigger').click()
+          setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
         })
       ])
 

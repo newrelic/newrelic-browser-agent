@@ -35,7 +35,7 @@ testDriver.test('session trace resources', supported, function (t, browser, rout
       .elementByCssSelector('body')
       .click()
 
-    resourcePromise = router.expectResources()
+    resourcePromise = router.expectResources(7000)
 
     return Promise.all([resourcePromise, clickPromise])
   })
@@ -89,7 +89,7 @@ testDriver.test('session trace ajax deny list', supported, function (t, browser,
       .elementByCssSelector('body')
       .click()
 
-    resourcePromise = router.expectResources()
+    resourcePromise = router.expectResources(7000)
 
     return Promise.all([resourcePromise, clickPromise])
   })

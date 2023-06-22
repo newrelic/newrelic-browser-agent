@@ -19,6 +19,7 @@ import { getConfigurationValue, getInfo, getRuntime } from '../../../common/conf
 import { SESSION_EVENTS, MODE } from '../../../common/session/session-entity'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
+import { obj as encodeObj } from '../../../common/url/encode'
 
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.8'
@@ -211,24 +212,23 @@ export class Aggregate extends AggregateBase {
     const info = getInfo(this.agentIdentifier)
     return {
       qs: {
+        browser_monitoring_key: info.licenseKey,
+        type: 'SessionReplay',
+        app_id: Number(info.applicationID),
         protocol_version: '0',
         content_encoding: 'gzip',
-        browser_monitoring_key: info.licenseKey
-      },
-      body: {
-        type: 'SessionReplay',
-        appId: Number(info.applicationID),
-        blob: JSON.stringify(this.events), // this needs to be a stringified JSON array of rrweb nodes
-        attributes: {
+        attributes: encodeObj({
           'replay.timestamp': Date.now(),
           agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,
           hasSnapshot: this.hasSnapshot,
           hasError: this.hasError,
           isFirstChunk: this.isFirstChunk,
+          uncompressedBytes: this.payloadBytesEstimation,
           'nr.rrweb.version': RRWEB_VERSION
-        }
-      }
+        }, MAX_PAYLOAD_SIZE - this.payloadBytesEstimation)
+      },
+      body: this.events
     }
   }
 

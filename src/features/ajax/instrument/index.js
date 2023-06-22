@@ -5,7 +5,7 @@
 import { originals, getLoaderConfig, getRuntime } from '../../../common/config/config'
 import { handle } from '../../../common/event-emitter/handle'
 import { id } from '../../../common/ids/id'
-import { ffVersion } from '../../../common/browser-version/firefox-version'
+import { ffVersion, globalScope } from '../../../common/constants/runtime'
 import { dataSize } from '../../../common/util/data-size'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
@@ -16,7 +16,6 @@ import { responseSizeFromXhr } from './response-size'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { globalScope } from '../../../common/util/global-scope'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length

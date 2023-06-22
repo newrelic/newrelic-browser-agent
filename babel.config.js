@@ -1,12 +1,20 @@
 const process = require('process')
 
-module.exports = function (api) {
+module.exports = function (api, ...args) {
   api.cache(true)
 
   if (!process.env.BUILD_VERSION) {
     process.env.BUILD_VERSION = process.env.VERSION_OVERRIDE || require('./package.json').version
   }
+  if (!process.env.BUILD_ENV) {
+    process.env.BUILD_ENV = 'CDN'
+  }
 
+  const ignore = [
+    '**/*.test.js',
+    '**/*.component-test.js',
+    '**/__mocks__/*.js'
+  ]
   const presets = [
     '@babel/preset-env'
   ]
@@ -34,6 +42,7 @@ module.exports = function (api) {
       ]
     },
     webpack: {
+      ignore,
       plugins: [
         [
           './tools/scripts/babel-plugin-transform-import',
@@ -44,6 +53,7 @@ module.exports = function (api) {
       ]
     },
     'webpack-ie11': {
+      ignore,
       assumptions: {
         iterableIsArray: false
       },
@@ -72,6 +82,7 @@ module.exports = function (api) {
       ]
     },
     'npm-cjs': {
+      ignore,
       presets: [
         [
           '@babel/preset-env', {
@@ -89,6 +100,7 @@ module.exports = function (api) {
       ]
     },
     'npm-esm': {
+      ignore,
       presets: [
         [
           '@babel/preset-env', {

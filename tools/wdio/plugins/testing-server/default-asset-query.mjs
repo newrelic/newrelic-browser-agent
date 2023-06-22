@@ -19,7 +19,9 @@ const query = {
     page_view_event: { enabled: true },
     page_view_timing: { enabled: true, harvestTimeSeconds: 5, long_task: false },
     session_trace: { enabled: true, harvestTimeSeconds: 5 },
-    spa: { enabled: true, harvestTimeSeconds: 5 }
+    spa: { enabled: true, harvestTimeSeconds: 5 },
+    harvest: { tooManyRequestsDelay: 5 },
+    session_replay: { enabled: false, harvestTimeSeconds: 5, sampleRate: 0, errorSampleRate: 0 }
   }
 }
 

@@ -10,7 +10,7 @@
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { originals } from '../config/config'
-import { isBrowserScope } from '../util/global-scope'
+import { isBrowserScope } from '../constants/runtime'
 
 const wrapped = {}
 

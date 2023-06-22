@@ -4,12 +4,12 @@
  */
 /**
  * @file Wraps `window.requestAnimationFrame` for instrumentation.
- * This module is used by: jserror, session_trace.
+ * This module is used by: jserror.
  */
 
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
-import { isBrowserScope } from '../util/global-scope'
+import { isBrowserScope } from '../constants/runtime'
 
 const wrapped = {}
 const RAF_NAME = 'requestAnimationFrame'

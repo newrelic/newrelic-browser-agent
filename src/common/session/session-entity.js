@@ -3,7 +3,7 @@ import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
 import { ee } from '../event-emitter/contextual-ee'
 import { Timer } from '../timer/timer'
-import { isBrowserScope } from '../util/global-scope'
+import { isBrowserScope } from '../constants/runtime'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, PREFIX } from './constants'
 import { InteractionTimer } from '../timer/interaction-timer'
 import { wrapEvents } from '../wrap'
@@ -186,7 +186,7 @@ export class SessionEntity {
       this.sync(data) // update the parent class "state" properties with the local storage values
       //
       // TODO - compression would need happen here if we decide to do it
-      this.storage.set(this.lookupKey, stringify(data))
+      this.storage.set(this.lookupKey, stringify(this.state))
       return data
     } catch (e) {
       // storage is inaccessible

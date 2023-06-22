@@ -16,8 +16,8 @@ if (!version) {
 
 const urls = [
   'https://staging-api.newrelic.com/v2/js_agent_loaders/version.json',
-  'https://api.newrelic.com/v2/js_agent_loaders/version.json',
-  'https://api.eu.newrelic.com/v2/js_agent_loaders/version.json'
+  'https://api.newrelic.com/v2/js_agent_loaders/version.json'
+  // 'https://api.eu.newrelic.com/v2/js_agent_loaders/version.json'
 ]
 
 var opts = {

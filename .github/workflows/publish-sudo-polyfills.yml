@@ -23,5 +23,4 @@ jobs:
         run: |
           node tools/scripts/upload-polyfills-to-nr.js \
             --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
-            --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
-            --eu-api-key=${{ secrets.NR_API_KEY_EU }}
+            --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }}

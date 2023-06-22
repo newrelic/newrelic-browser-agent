@@ -39,7 +39,7 @@ export function getSauceConnectTunnelName () {
  */
 export function buildSauceConnectOptions (cliArgs) {
   const opts = {
-    scVersion: '4.9.0',
+    scVersion: '4.9.1',
     tunnelName: getSauceConnectTunnelName(),
     noSslBumpDomains: 'all',
     logger: console.log,

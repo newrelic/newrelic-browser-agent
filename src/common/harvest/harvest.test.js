@@ -813,4 +813,20 @@ describe('cleanPayload', () => {
     expect(Object.keys(results.body)).not.toContain('foo')
     expect(Object.keys(results.qs)).not.toContain('foo')
   })
+
+  test.each([
+    { [faker.datatype.uuid()]: { [faker.datatype.uuid()]: faker.datatype.number({ min: 100, max: 1000 }) } },
+    { [faker.datatype.uuid()]: faker.datatype.number({ min: 100, max: 1000 }) },
+    { [faker.datatype.uuid()]: new Uint8Array(faker.datatype.number({ min: 100, max: 1000 })) }
+  ])('should retain %s properties in body and qs', (input) => {
+    const payload = {
+      body: input,
+      qs: input
+    }
+
+    const results = harvestInstance.cleanPayload(payload)
+
+    expect(results.body).toEqual(input)
+    expect(results.qs).toEqual(input)
+  })
 })

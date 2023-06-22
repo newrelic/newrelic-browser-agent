@@ -244,7 +244,14 @@ export class Harvest extends SharedContext {
       }
       return Object.entries(input || {})
         .reduce((accumulator, [key, value]) => {
-          if (value !== null && value !== undefined && value.length) {
+          if (
+            value !== null &&
+            value !== undefined && (
+              (typeof value === 'number') ||
+              (typeof value === 'string' && value.length > 0) ||
+              (Object.entries(value).length > 0)
+            )
+          ) {
             accumulator[key] = value
           }
 

@@ -59,7 +59,7 @@ export class Harvest extends SharedContext {
   send (spec = {}) {
     const caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
 
-    return caller({ ...spec, payload: this.cleanPayload(spec.payload) })
+    return caller(spec)
   }
 
   /**
@@ -244,7 +244,10 @@ export class Harvest extends SharedContext {
       }
       return Object.entries(input || {})
         .reduce((accumulator, [key, value]) => {
-          if (value !== null && value !== undefined && value.toString()?.length) {
+          if ((typeof value === 'number') ||
+              (typeof value === 'string' && value.length > 0) ||
+              (typeof value === 'object' && Object.keys(value || {}).length > 0)
+          ) {
             accumulator[key] = value
           }
 

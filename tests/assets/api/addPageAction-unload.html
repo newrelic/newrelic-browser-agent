@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NEWRELIC-9370: addPageAction Unload Test</title>
+  {init}
+  {config}
+  {loader}
+
+</head>
+
+<body>
+  <div id="content">
+    This page is used to call `addPageAction` immediately followed by a navigation.
+  </div>
+  <a id="btn" href="#btn">Click Me</a>
+  <script>
+    window.triggerPageActionNavigation = function () {
+      newrelic.addPageAction('pageaction', window.location)
+      location = '/'
+    }
+  </script>
+</body>
+
+</html>

@@ -4,7 +4,6 @@ import * as encodeModule from '../url/encode'
 import * as submitDataModule from '../util/submit-data'
 import * as configModule from '../config/config'
 import { applyFnToProps } from '../util/traverse'
-import * as runtimeModule from '../constants/runtime'
 
 import { Harvest } from './harvest'
 
@@ -109,7 +108,7 @@ describe('send', () => {
 
     harvestInstance.send(spec)
 
-    expect(harvestInstance._send).toHaveBeenCalledWith(expect.objectContaining(spec))
+    expect(harvestInstance._send).toHaveBeenCalledWith(spec)
   })
 
   test('should not use obfuscateAndSend', async () => {
@@ -119,11 +118,7 @@ describe('send', () => {
     harvestInstance.send({ endpoint })
 
     expect(harvestInstance._send).toHaveBeenCalledWith({
-      endpoint,
-      payload: {
-        body: {},
-        qs: {}
-      }
+      endpoint
     })
     expect(harvestInstance.obfuscateAndSend).not.toHaveBeenCalled()
   })
@@ -135,11 +130,7 @@ describe('send', () => {
     harvestInstance.send({ endpoint })
 
     expect(harvestInstance.obfuscateAndSend).toHaveBeenCalledWith({
-      endpoint,
-      payload: {
-        body: {},
-        qs: {}
-      }
+      endpoint
     })
     expect(harvestInstance._send).not.toHaveBeenCalled()
   })
@@ -147,12 +138,7 @@ describe('send', () => {
   test.each([undefined, {}])('should still call _send when spec is %s', async (spec) => {
     harvestInstance.send(spec)
 
-    expect(harvestInstance._send).toHaveBeenCalledWith({
-      payload: {
-        body: {},
-        qs: {}
-      }
-    })
+    expect(harvestInstance._send).toHaveBeenCalledWith(spec || {})
   })
 })
 
@@ -304,9 +290,7 @@ describe('_send', () => {
 
   test('should set body to events when endpoint is events', () => {
     spec.endpoint = 'events'
-    spec.payload.body.e = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
-    }
+    spec.payload.body.e = faker.lorem.sentence()
 
     const result = harvestInstance._send(spec)
 
@@ -814,5 +798,21 @@ describe('cleanPayload', () => {
 
     expect(Object.keys(results.body)).not.toContain('foo')
     expect(Object.keys(results.qs)).not.toContain('foo')
+  })
+
+  test.each([
+    { [faker.datatype.uuid()]: { [faker.datatype.uuid()]: faker.datatype.number({ min: 100, max: 1000 }) } },
+    { [faker.datatype.uuid()]: faker.datatype.number({ min: 100, max: 1000 }) },
+    { [faker.datatype.uuid()]: new Uint8Array(faker.datatype.number({ min: 100, max: 1000 })) }
+  ])('should retain %s properties in body and qs', (input) => {
+    const payload = {
+      body: input,
+      qs: input
+    }
+
+    const results = harvestInstance.cleanPayload(payload)
+
+    expect(results.body).toEqual(input)
+    expect(results.qs).toEqual(input)
   })
 })

@@ -41,24 +41,12 @@ const info = { licenseKey: 1234, applicationID: 9876 }
 const init = { session_replay: { enabled: true, sampleRate: 1, errorSampleRate: 0 } }
 
 const anyQuery = {
+  browser_monitoring_key: info.licenseKey,
+  type: 'SessionReplay',
+  app_id: Number(info.applicationID),
   protocol_version: '0',
   content_encoding: 'gzip',
-  browser_monitoring_key: info.licenseKey
-}
-
-const anyBody = {
-  type: 'SessionReplay',
-  appId: expect.any(Number),
-  blob: expect.any(String),
-  attributes: {
-    'replay.timestamp': expect.any(Number),
-    agentVersion: expect.any(String),
-    session: expect.any(String),
-    hasSnapshot: expect.any(Boolean),
-    hasError: expect.any(Boolean),
-    isFirstChunk: expect.any(Boolean),
-    'nr.rrweb.version': expect.any(String)
-  }
+  attributes: expect.any(String)
 }
 
 describe('Session Replay', () => {
@@ -244,9 +232,9 @@ describe('Session Replay', () => {
       // query attrs
       expect(harvestContents.qs).toMatchObject(anyQuery)
 
-      expect(harvestContents.body).toMatchObject(anyBody)
+      expect(harvestContents.body).toEqual(expect.any(Array))
 
-      expect(JSON.parse(harvestContents.body.blob).length).toBeGreaterThan(0)
+      expect(harvestContents.body.length).toBeGreaterThan(0)
     })
   })
 
@@ -259,7 +247,7 @@ describe('Session Replay', () => {
       const [harvestContents] = sr.prepareHarvest()
       expect(harvestContents.qs).toMatchObject(anyQuery)
       expect(harvestContents.body).toEqual(expect.any(Uint8Array))
-      expect(JSON.parse(strFromU8(gunzipSync(harvestContents.body)))).toMatchObject(anyBody)
+      expect(JSON.parse(strFromU8(gunzipSync(harvestContents.body)))).toMatchObject(expect.any(Array))
     })
 
     test('Uncompressed payload is provided to harvester', async () => {
@@ -280,7 +268,7 @@ describe('Session Replay', () => {
         browser_monitoring_key: info.licenseKey
       })
       expect(harvestContents.qs.content_encoding).toBeUndefined()
-      expect(harvestContents.body).toMatchObject(anyBody)
+      expect(harvestContents.body).toEqual(expect.any(Array))
     })
 
     test('Clears the event buffer when staged for harvesting', async () => {

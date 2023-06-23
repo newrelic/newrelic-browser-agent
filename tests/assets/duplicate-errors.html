@@ -15,11 +15,17 @@ this is a generic page that is instrumented by the JS agent
 
 <script>
   var count = 0
-  function errorFn(){
+  function errorFn() {
     setTimeout(function(){
       var a
-      window['error-' + (count++)] = Date.now()
+      window['error-' + (count++)] = performance.now()
       a.click = true
+    })
+  }
+  function noticeErrorFn() {
+    setTimeout(function(){
+      window['error-' + (count++)] = performance.now()
+      newrelic.noticeError(new Error('test'))
     })
   }
 </script>

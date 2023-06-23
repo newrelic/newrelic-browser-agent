@@ -15,8 +15,8 @@ export async function getSessionReplayMode (agentId) {
     const newrelic = gosNREUM()
     // Should be enabled by configuration and using an agent build that includes it (via checking that the instrument class was initialized).
     if (getConfigurationValue(agentId, 'session_replay.enabled') && typeof newrelic.initializedAgents[agentId].features.session_replay === 'object') {
-      const success = await newrelic.initializedAgents[agentId].features.session_replay.onAggregateImported // if Replay could not initialize, this throws a (uncaught) rejection
-      if (success) return await sharedChannel.sessionReplayInitialized // wait for replay to determine which mode it's after running its sampling logic
+      const srInitialized = await newrelic.initializedAgents[agentId].features.session_replay.onAggregateImported
+      if (srInitialized) return await sharedChannel.sessionReplayInitialized // wait for replay to determine which mode it's after running its sampling logic
     }
   } catch (e) { /* exception ==> off */ }
   return MODE.OFF // at any step of the way s.t. SR cannot be on by implication or is explicitly off

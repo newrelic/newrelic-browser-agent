@@ -275,8 +275,9 @@ module.exports.testBlobRequest = function testBlobRequest (request) {
 
   try {
     const body = request?.body
-    const blobContents = JSON.parse(body?.blob)
+    const blobContents = body // JSON array
     if (blobContents && Array.isArray(blobContents) && blobContents.length) return true
+    return false
   } catch (err) {
     return false
   }

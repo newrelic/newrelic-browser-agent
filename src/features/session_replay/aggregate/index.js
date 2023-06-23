@@ -214,7 +214,7 @@ export class Aggregate extends AggregateBase {
       qs: {
         browser_monitoring_key: info.licenseKey,
         type: 'SessionReplay',
-        app_id: Number(info.applicationID),
+        app_id: info.applicationID,
         protocol_version: '0',
         content_encoding: 'gzip',
         attributes: encodeObj({
@@ -224,9 +224,9 @@ export class Aggregate extends AggregateBase {
           hasSnapshot: this.hasSnapshot,
           hasError: this.hasError,
           isFirstChunk: this.isFirstChunk,
-          uncompressedBytes: this.payloadBytesEstimation,
+          decompressedBytes: this.payloadBytesEstimation,
           'nr.rrweb.version': RRWEB_VERSION
-        }, MAX_PAYLOAD_SIZE - this.payloadBytesEstimation)
+        }, MAX_PAYLOAD_SIZE - this.payloadBytesEstimation).substring(1) // remove the leading '&'
       },
       body: this.events
     }

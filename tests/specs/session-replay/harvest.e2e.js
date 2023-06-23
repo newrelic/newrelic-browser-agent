@@ -26,7 +26,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
       })
     ])
 
-    expect(blobHarvest.body.blob.length).toBeGreaterThan(0)
+    expect(blobHarvest.body.length).toBeGreaterThan(0)
     expect(Date.now() - startTime).toBeLessThan(60000)
   })
 
@@ -57,7 +57,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
         .then(() => browser.waitForSessionReplayRecording())
     ])
 
-    expect(blobHarvest.body.blob.length).toBeGreaterThan(0)
+    expect(blobHarvest.body.length).toBeGreaterThan(0)
     expect(Date.now() - startTime).toBeLessThan(60000)
   })
 

@@ -218,5 +218,5 @@ function getOpenPrNums () {
 
 async function getExperiments () {
   const objects = await getListOfObjects(bucket, 'experiments/')
-  return objects.filter(({ Key }) => Key.includes('nr-loader-spa.min.js')).map(({ Key }) => Key)
+  return objects.filter(({ Key }) => Key.includes('nr-loader-spa.min.js') && Key.endsWith('.js')).map(({ Key }) => Key)
 }

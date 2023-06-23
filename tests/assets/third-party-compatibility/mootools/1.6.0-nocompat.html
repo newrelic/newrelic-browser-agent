@@ -17,17 +17,15 @@
       This is a generic page that is instrumented by the JS agent and includes mootools to ensure compatibility.
     </div>
     <script>
-      document.addEventListener('click', function () {
+      window.run = function () {
         window.location.hash = Math.random()
         var myJSONP = new Request.JSONP({
           url: '/jsonp',
           onComplete: function (data) {
-            setTimeout(newrelic.interaction().createTracer('tacoTimer', function () {
-              window.location.hash = Math.random()
-            }), 500)
+            window.success = true
           }
         }).send();
-      }, false)
+      }
     </script>
     <p>Click me!</p>
   </body>

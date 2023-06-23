@@ -7,16 +7,12 @@ jobs:
   find-pull-request:
     name: Find pull request target
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
     defaults:
       run:
         shell: bash
     outputs:
       pull-request-target: ${{ steps.pull-request-target.outputs.results }}
     steps:
-      - name: Setup container
-        run: apt update && apt install -y git
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
@@ -32,15 +28,15 @@ jobs:
     name: Pending comment pull request
     needs: [find-pull-request]
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
     defaults:
       run:
         shell: bash
     steps:
-      - name: Setup container
-        run: apt update && DEBIAN_FRONTEND=noninteractive apt install -y git tzdata
+      - name: Setup runner
+        run: sudo apt update && DEBIAN_FRONTEND=noninteractive sudo apt install -y git tzdata
       - uses: actions/checkout@v3
+        with:
+          ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
@@ -101,14 +97,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: find-pull-request
     timeout-minutes: 30
-    container:
-      image: ubuntu:latest
     defaults:
       run:
         shell: bash
     steps:
-      - name: Setup container
-        run: apt update && apt install -y git
       - uses: actions/checkout@v3
         with:
           ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
@@ -150,20 +142,20 @@ jobs:
             build/*.stats.html
             build/*.stats.json
 
-  status-comment-pull-request:
+  complete-status-comment-pull-request:
     name: Comment pull request
     needs: [find-pull-request,jest-unit,jest-component,eslint,wdio-coverage]
     if: ${{ always() && needs.find-pull-request.result == 'success' }}
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
     defaults:
       run:
         shell: bash
     steps:
       - name: Setup container
-        run: apt update && DEBIAN_FRONTEND=noninteractive apt install -y git tzdata
+        run: sudo apt update && DEBIAN_FRONTEND=noninteractive sudo apt install -y git tzdata
       - uses: actions/checkout@v3
+        with:
+          ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*

@@ -66,6 +66,9 @@ export class Aggregate extends AggregateBase {
     /** Payload metadata -- Should indicate that the payload being sent contains an error.  Used for query/filter purposes in UI */
     this.hasError = false
 
+    /** Payload metadata -- Should indicate when a replay blob started recording.  Resets each time a harvest occurs. */
+    this.timestamp = undefined
+
     /** A value which increments with every new mutation node reported. Resets after a harvest is sent */
     this.payloadBytesEstimation = 0
 
@@ -217,7 +220,7 @@ export class Aggregate extends AggregateBase {
         protocol_version: '0',
         attributes: encodeObj({
           ...(this.shouldCompress && { content_encoding: 'gzip' }),
-          'replay.timestamp': Date.now(),
+          'replay.timestamp': this.timestamp,
           agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,
           hasSnapshot: this.hasSnapshot,
@@ -247,6 +250,7 @@ export class Aggregate extends AggregateBase {
     this.hasSnapshot = false
     this.hasError = false
     this.payloadBytesEstimation = 0
+    if (this.recording) this.timestamp = Date.now()
   }
 
   /** Begin recording using configured recording lib */
@@ -272,6 +276,7 @@ export class Aggregate extends AggregateBase {
     })
 
     this.recording = true
+    this.timestamp = Date.now()
 
     this.stopRecording = () => {
       this.recording = false
@@ -329,6 +334,7 @@ export class Aggregate extends AggregateBase {
     this.stopRecording()
     const { session } = getRuntime(this.agentIdentifier)
     session.state.sessionReplay = this.mode
+    this.timestamp = undefined
   }
 
   /** Extensive research has yielded about an 88% compression factor on these payloads.

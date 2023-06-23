@@ -1,5 +1,6 @@
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
-describe('micro-agent', () => {
+describe.withBrowsersMatching(notIE)('micro-agent', () => {
   it('Smoke Test - Can send distinct payloads of all relevant data types to 2 distinct app IDs', async () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/micro-agent.html'))
 

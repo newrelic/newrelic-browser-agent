@@ -45,7 +45,6 @@ const anyQuery = {
   type: 'SessionReplay',
   app_id: Number(info.applicationID),
   protocol_version: '0',
-  content_encoding: 'gzip',
   attributes: expect.any(String)
 }
 
@@ -264,10 +263,9 @@ describe('Session Replay', () => {
       const [harvestContents] = sr.prepareHarvest()
       expect(harvestContents.qs).toMatchObject({
         protocol_version: '0',
-        // content_encoding is omitted when the payload is not compressed
         browser_monitoring_key: info.licenseKey
       })
-      expect(harvestContents.qs.content_encoding).toBeUndefined()
+      expect(harvestContents.qs.attributes.includes('content_encoding')).toEqual(false)
       expect(harvestContents.body).toEqual(expect.any(Array))
     })
 

@@ -15,13 +15,13 @@ export function testExpectedReplay ({ data, session, hasSnapshot, hasError, isFi
     type: 'SessionReplay',
     app_id: expect.any(String),
     protocol_version: expect.any(String),
-    ...(contentEncoding && { content_encoding: 'gzip' }),
     attributes: expect.any(String)
   })
 
   const decodedObj = decodeAttributes(data.query.attributes)
 
   expect(decodedObj).toMatchObject({
+    ...(contentEncoding && { content_encoding: 'gzip' }),
     'replay.timestamp': expect.any(Number),
     session: session || expect.any(String),
     hasSnapshot: hasSnapshot || expect.any(Boolean),

@@ -200,7 +200,6 @@ export class Aggregate extends AggregateBase {
       this.scheduler.opts.gzip = true
     } else {
       this.scheduler.opts.gzip = false
-      delete payload.qs.content_encoding
     }
     // TODO -- Gracefully handle the buffer for retries.
     this.clearBuffer()
@@ -216,8 +215,8 @@ export class Aggregate extends AggregateBase {
         type: 'SessionReplay',
         app_id: info.applicationID,
         protocol_version: '0',
-        content_encoding: 'gzip',
         attributes: encodeObj({
+          ...(this.shouldCompress && { content_encoding: 'gzip' }),
           'replay.timestamp': Date.now(),
           agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,

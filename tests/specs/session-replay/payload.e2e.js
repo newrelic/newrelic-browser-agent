@@ -16,7 +16,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
 
     const { request: harvestContents } = await browser.testHandle.expectBlob()
 
-    expect(harvestContents.query.content_encoding).toEqual('gzip')
+    expect((
+      harvestContents.query.attributes.includes('content_encoding') &&
+      harvestContents.query.attributes.includes('gzip')
+    )).toEqual(true)
   })
 
   it('should match expected payload - standard', async () => {

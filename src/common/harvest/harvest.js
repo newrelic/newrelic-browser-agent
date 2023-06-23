@@ -107,7 +107,7 @@ export class Harvest extends SharedContext {
     }
 
     const fullUrl = `${url}?${baseParams}${payloadParams}`
-    const gzip = qs.content_encoding === 'gzip'
+    const gzip = !!qs?.attributes?.includes('gzip')
 
     if (!gzip) {
       if (endpoint === 'events') {

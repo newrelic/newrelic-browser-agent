@@ -15,7 +15,7 @@ import { Obfuscator } from '../util/obfuscate'
 import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/env'
-import { isWorkerScope } from '../constants/runtime'
+import { isWorkerScope, isIE } from '../constants/runtime'
 
 /**
  * @typedef {import('./types.js').NetworkSendSpec} NetworkSendSpec
@@ -131,11 +131,11 @@ export class Harvest extends SharedContext {
 
     headers.push({ key: 'content-type', value: 'text/plain' })
 
-    /* Since workers don't support sendBeacon right now, or Image(), they can only use XHR method.
+    /* Since workers don't support sendBeacon right now, they can only use XHR method.
         Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
-        we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon. */
-
-    let result = submitMethod({ url: fullUrl, body, sync: opts.unload && isWorkerScope, headers })
+        we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon.
+       Following the removal of img-element method, IE will also use sync XHR on page dismissal to ensure final analytics are sent. */
+    let result = submitMethod({ url: fullUrl, body, sync: opts.unload && (isWorkerScope || isIE), headers })
 
     if (!opts.unload && cbFinished && submitMethod === submitData.xhr) {
       const harvestScope = this

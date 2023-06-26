@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { testResourcesRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe('ins retry harvesting', () => {
+describe('stn retry harvesting', () => {
   [408, 429, 500, 503].forEach(statusCode =>
     it(`should send the session trace on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
       await browser.testHandle.scheduleReply('bamServer', {

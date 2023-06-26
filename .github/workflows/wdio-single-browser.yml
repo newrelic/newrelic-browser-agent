@@ -49,8 +49,6 @@ jobs:
     name: WDIO Test - ${{ inputs.browser-target }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
     defaults:
       run:
         shell: bash
@@ -62,8 +60,6 @@ jobs:
       JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
       NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
     steps:
-      - name: Setup Container
-        run: apt update && apt install -y git
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref || github.ref }}

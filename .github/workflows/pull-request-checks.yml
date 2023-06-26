@@ -91,7 +91,6 @@ jobs:
       browser-target: chrome@latest
       build-number: PR${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number}}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
       coverage: true
-      additional-flags: -v
     secrets: inherit
 
   size-check:

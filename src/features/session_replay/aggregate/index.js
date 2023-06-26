@@ -116,8 +116,7 @@ export class Aggregate extends AggregateBase {
             this.startRecording()
             this.scheduler.startTimer(this.harvestTimeSeconds)
 
-            const { session } = getRuntime(this.agentIdentifier)
-            session.state.sessionReplay = this.mode
+            this.syncWithSessionManager({ sessionReplay: this.mode })
           }
         }
       }, this.featureName, this.ee)
@@ -191,7 +190,7 @@ export class Aggregate extends AggregateBase {
 
     this.isFirstChunk = !!session.isNew
 
-    session.state.sessionReplay = this.mode
+    this.syncWithSessionManager({ sessionReplay: this.mode })
   }
 
   prepareHarvest () {
@@ -332,8 +331,7 @@ export class Aggregate extends AggregateBase {
     this.blocked = true
     this.mode = MODE.OFF
     this.stopRecording()
-    const { session } = getRuntime(this.agentIdentifier)
-    session.state.sessionReplay = this.mode
+    this.syncWithSessionManager({ sessionReplay: this.mode })
     this.timestamp = undefined
   }
 
@@ -344,5 +342,10 @@ export class Aggregate extends AggregateBase {
   estimateCompression (data) {
     if (this.shouldCompress) return data * AVG_COMPRESSION
     return data
+  }
+
+  syncWithSessionManager (state = {}) {
+    const { session } = getRuntime(this.agentIdentifier)
+    session.write(state)
   }
 }

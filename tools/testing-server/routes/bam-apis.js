@@ -1,4 +1,5 @@
 const fp = require('fastify-plugin')
+const { v4: uuidv4 } = require('uuid')
 const { rumFlags } = require('../constants')
 
 /**
@@ -91,7 +92,7 @@ module.exports = fp(async function (fastify) {
       }
 
       // This endpoint must reply with some text in the body or further resource harvests will be disabled
-      return reply.code(200).send('123-456')
+      return reply.code(200).send(uuidv4())
     }
   })
 })

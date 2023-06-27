@@ -122,9 +122,8 @@ export class Aggregate extends AggregateBase {
           this.ee.on(SESSION_EVENTS.PAUSE, () => mostRecentModeKnown = sessionEntity.state.sessionTraceMode)
 
           if (!sessionEntity.isNew) { // inherit the same mode as existing session's Trace
-            const existingTraceMode = mostRecentModeKnown = sessionEntity.state.sessionTraceMode
-            if (existingTraceMode === MODE.OFF) this.isStandalone = true
-            controlTraceOp(existingTraceMode)
+            if (sessionEntity.state.sessionReplay === MODE.OFF) this.isStandalone = true
+            controlTraceOp(mostRecentModeKnown = sessionEntity.state.sessionTraceMode)
           } else { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
             const replayMode = await getSessionReplayMode(agentIdentifier)
             if (replayMode === MODE.OFF) this.isStandalone = true // without SR, Traces are still subject to old harvest limits

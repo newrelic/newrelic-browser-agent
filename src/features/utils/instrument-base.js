@@ -55,7 +55,7 @@ export class InstrumentBase extends FeatureBase {
   importAggregator (argsObjFromInstrument = {}) {
     if (this.featAggregate || !this.auto) return
     const enableSessionTracking = isBrowserScope && getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true
-    let loadedSuccessfully, loadFailed
+    let loadedSuccessfully
     this.onAggregateImported = new Promise(resolve => {
       loadedSuccessfully = resolve
     })
@@ -78,6 +78,7 @@ export class InstrumentBase extends FeatureBase {
       try {
         if (!this.shouldImportAgg(this.featureName, session)) {
           drain(this.agentIdentifier, this.featureName)
+          loadedSuccessfully(false) // aggregate module isn't loaded at all
           return
         }
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')

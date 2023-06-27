@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.236.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.235.0...v1.236.0) (2023-06-27)
+
+
+### Features
+
+* Expose MicroLoader in the npm package ([#589](https://github.com/newrelic/newrelic-browser-agent/issues/589)) ([5175356](https://github.com/newrelic/newrelic-browser-agent/commit/5175356dfa3c959580ae26644948afc7a8f9cd6a))
+* Remove img, jsonp, and xhrGet methods ([#576](https://github.com/newrelic/newrelic-browser-agent/issues/576)) ([f92f88e](https://github.com/newrelic/newrelic-browser-agent/commit/f92f88ec7a90617d644019a32baeab5fd9595201))
+
+
+### Bug Fixes
+
+* Fix illegal invocation error on final harvest ([#594](https://github.com/newrelic/newrelic-browser-agent/issues/594)) ([de7049f](https://github.com/newrelic/newrelic-browser-agent/commit/de7049f6892424f607b6d09c90ebef2909d0b19f))
+* Handle chunk load promise error introduced in 1.235.0 - NR-129244 ([#603](https://github.com/newrelic/newrelic-browser-agent/issues/603)) ([a702e23](https://github.com/newrelic/newrelic-browser-agent/commit/a702e2333b31f9088e7076727eb4a6cf26615841))
+
 ## [1.235.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.234.0...v1.235.0) (2023-06-20)
 
 

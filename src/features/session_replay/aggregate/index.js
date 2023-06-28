@@ -67,7 +67,7 @@ export class Aggregate extends AggregateBase {
     this.hasError = false
 
     /** Payload metadata -- Should indicate when a replay blob started recording.  Resets each time a harvest occurs. */
-    this.timestamp = undefined
+    this.timestamp = { first: undefined, last: undefined }
 
     /** A value which increments with every new mutation node reported. Resets after a harvest is sent */
     this.payloadBytesEstimation = 0
@@ -219,7 +219,9 @@ export class Aggregate extends AggregateBase {
         protocol_version: '0',
         attributes: encodeObj({
           ...(this.shouldCompress && { content_encoding: 'gzip' }),
-          'replay.timestamp': this.timestamp,
+          'replay.firstTimestamp': this.timestamp.first,
+          'replay.lastTimestamp': this.timestamp.last,
+          'replay.durationMs': this.timestamp.last - this.timestamp.first,
           agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,
           hasSnapshot: this.hasSnapshot,
@@ -249,7 +251,7 @@ export class Aggregate extends AggregateBase {
     this.hasSnapshot = false
     this.hasError = false
     this.payloadBytesEstimation = 0
-    if (this.recording) this.timestamp = Date.now()
+    if (this.recording) this.clearTimestamps()
   }
 
   /** Begin recording using configured recording lib */
@@ -259,7 +261,6 @@ export class Aggregate extends AggregateBase {
       return this.abort()
     }
     const { blockClass, ignoreClass, maskTextClass, blockSelector, maskInputOptions, maskTextSelector, maskAllInputs } = getConfigurationValue(this.agentIdentifier, 'session_replay')
-    this.hasSnapshot = true
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
     const stop = recorder({
@@ -275,7 +276,6 @@ export class Aggregate extends AggregateBase {
     })
 
     this.recording = true
-    this.timestamp = Date.now()
 
     this.stopRecording = () => {
       this.recording = false
@@ -302,6 +302,10 @@ export class Aggregate extends AggregateBase {
       this.clearBuffer()
     }
 
+    this.setTimestamps(event)
+
+    if (event.type === 2) this.hasSnapshot = true
+
     this.events.push(event)
     this.payloadBytesEstimation += eventBytes
 
@@ -317,7 +321,16 @@ export class Aggregate extends AggregateBase {
   takeFullSnapshot () {
     if (!recorder) return
     recorder.takeFullSnapshot()
-    this.hasSnapshot = true
+  }
+
+  setTimestamps (rrwebEvent) {
+    if (!rrwebEvent) return
+    if (!this.timestamp.first) this.timestamp.first = rrwebEvent.timestamp
+    this.timestamp.last = rrwebEvent.timestamp
+  }
+
+  clearTimestamps () {
+    this.timestamp = { first: undefined, last: undefined }
   }
 
   /** Estimate the payload size */
@@ -332,7 +345,7 @@ export class Aggregate extends AggregateBase {
     this.mode = MODE.OFF
     this.stopRecording()
     this.syncWithSessionManager({ sessionReplay: this.mode })
-    this.timestamp = undefined
+    this.clearTimestamps()
   }
 
   /** Extensive research has yielded about an 88% compression factor on these payloads.

@@ -251,7 +251,7 @@ export class Aggregate extends AggregateBase {
     this.hasSnapshot = false
     this.hasError = false
     this.payloadBytesEstimation = 0
-    if (this.recording) this.clearTimestamps()
+    this.clearTimestamps()
   }
 
   /** Begin recording using configured recording lib */

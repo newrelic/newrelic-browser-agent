@@ -1,3 +1,8 @@
+/*
+ * The top half of this file tests for previous standalone Trace feature behavior in the absence of replay flag from RUM or feature in agent build.
+ * The bottom half tests the truth table defined in docs related to NR-137369 around how trace behaves in the prescence of replay feature.
+ */
+
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { config, MODE } from '../session-replay/helpers'
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
@@ -74,8 +79,8 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
     await browser.testHandle.clearScheduledReplies('bamServer')
   })
 
-  it('still runs when replay feature is missing', async () => {
-    const urlWithoutReplay = await browser.testHandle.assetURL('stn/instrumented.html', { init: { privacy: { cookies_enabled: true } } })
+  it('still runs when replay feature is missing or disabled', async () => {
+    const urlWithoutReplay = await browser.testHandle.assetURL('stn/instrumented.html', { init: { privacy: { cookies_enabled: true }, session_replay: { enabled: false } } })
     const getTraceValues = () => browser.execute(function () {
       return [
         Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.isStandalone,
@@ -166,7 +171,7 @@ describe.withBrowsersMatching(notIE)('Trace when replay entitlement is 1 and stn
     ['ERR', { sampleRate: 0, errorSampleRate: 1 }]
   ].forEach(([replayMode, replayConfig]) => {
     it(`still runs and in the same ${replayMode} mode as replay feature that's on`, async () => {
-      const urlReplayOn = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: replayConfig }))
+      const urlReplayOn = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: replayConfig, session_trace: { harvestTimeSeconds: 2 } }))
       await browser.url(urlReplayOn).then(() => browser.waitForAgentLoad()).then(async () => {
         const getAssumedValues = browser.execute(function () {
           const agent = Object.values(newrelic.initializedAgents)[0]
@@ -178,6 +183,11 @@ describe.withBrowsersMatching(notIE)('Trace when replay entitlement is 1 and stn
         if (replayMode === 'FULL') {
           await expect(getAssumedValues).resolves.toEqual([false, MODE.FULL])
           expect(initSTReceived).toBeTruthy()
+
+          // When not in standalone, trace bypasses the old rate limiting of only harvesting on 30+ nodes. In practice, we should get few-secs-span harvests without that threshold.
+          const second = await browser.testHandle.expectResources(3000).then(payload => payload.request.body.res.length) // 2nd harvest is usually riddled with a bunch of startup resource nodes
+          const third = await browser.testHandle.expectResources(3000).then(payload => payload.request.body.res.length)
+          expect([second, third].some(length => length < 30)).toBeTruthy()
         } else if (replayMode === 'ERR') {
           await expect(getAssumedValues).resolves.toEqual([false, MODE.ERROR])
           expect(initSTReceived).toBeUndefined() // trace in error mode is not expected to send anything on startup

@@ -1,5 +1,6 @@
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { config, MODE } from '../session-replay/helpers'
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 [
   ['session tracking is disabled', false],
@@ -49,38 +50,33 @@ import { config, MODE } from '../session-replay/helpers'
   })
 })
 
-describe('Trace behavior when session tracking enabled and replay entitlement is 1', () => {
-  const rumFlags = {
-    stn: 1,
-    err: 1,
-    ins: 1,
-    spa: 1,
-    sr: 1,
-    loaded: 1
-  }
-  // let getUrlString
+describe('Trace when replay entitlement is 1 and stn is 1', () => {
   let initSTReceived
   beforeEach(async () => {
     await browser.destroyAgentSession()
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      permanent: true, // note this is set since the tests in this block also tests subsequent load behavior
+      body: JSON.stringify({
+        stn: 1,
+        err: 1,
+        ins: 1,
+        spa: 1,
+        sr: 1,
+        loaded: 1
+      })
+    })
+
     initSTReceived = undefined
     browser.testHandle.expectResources().then(resPayload => initSTReceived = resPayload)
-    // getUrlString = browser.testHandle.assetURL('stn/instrumented.html', config({
-    //   session_trace: { harvestTimeSeconds: 5 }
-    // }))
   })
   afterEach(async () => {
     await browser.testHandle.clearScheduledReplies('bamServer')
   })
 
   it('still runs when replay feature is missing', async () => {
-    await browser.testHandle.scheduleReply('bamServer', {
-      test: testRumRequest,
-      permanent: true,
-      body: JSON.stringify(rumFlags)
-    })
-
     const urlWithoutReplay = await browser.testHandle.assetURL('stn/instrumented.html', { init: { privacy: { cookies_enabled: true } } })
-    const getTraceInfo = () => browser.execute(function () {
+    const getTraceValues = () => browser.execute(function () {
       return [
         Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.isStandalone,
         Object.values(newrelic.initializedAgents)[0].runtime.session.state.sessionTraceMode
@@ -89,44 +85,104 @@ describe('Trace behavior when session tracking enabled and replay entitlement is
 
     await browser.url(urlWithoutReplay).then(() => browser.waitForAgentLoad()).then(async () => {
       expect(initSTReceived).toBeTruthy() // that is, trace should still fully run when the replay feature isn't around
-      await expect(getTraceInfo()).resolves.toEqual([true, MODE.FULL])
+      await expect(getTraceValues()).resolves.toEqual([true, MODE.FULL])
 
       return Promise.all([browser.testHandle.expectResources(3000), browser.refresh().then(() => browser.waitForAgentLoad())])
     }).then(async ([secondInitST]) => {
       // On subsequent page load or refresh, trace should maintain the set mode, standalone, and same sessionid but have a new ptid corresponding to new page visit.
       expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)
       expect(secondInitST.request.query.ptid).not.toEqual(initSTReceived.request.query.ptid)
-      await expect(getTraceInfo()).resolves.toEqual([true, MODE.FULL]) // note it's expected & assumed that the replay mode is OFF
+      await expect(getTraceValues()).resolves.toEqual([true, MODE.FULL]) // note it's expected & assumed that the replay mode is OFF
     })
   })
 
-  it('still runs when replay feature is present but disabled', async () => {
+  ;[
+    ['OFF', { sampleRate: 0, errorSampleRate: 0 }],
+    ['FULL', { sampleRate: 1, errorSampleRate: 0 }],
+    ['ERR', { sampleRate: 0, errorSampleRate: 1 }]
+  ].forEach(([replayMode, replayConfig]) => {
+    it.withBrowsersMatching(notIE)(`runs in full when replay feature is present and in ${replayMode} mode`, async () => {
+      const urlWithReplay = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: replayConfig }))
+      const getRuntimeValues = () => browser.execute(function () {
+        const agent = Object.values(newrelic.initializedAgents)[0]
+        return [
+          agent.features.session_trace.featAggregate.isStandalone,
+          agent.runtime.session.state.sessionTraceMode,
+          agent.features.session_replay.featAggregate?.initialized // expect replay to be fully imported and intialized, but in OFF mode per config above, via isStandalone = true
+        ]
+      })
+
+      await browser.url(urlWithReplay).then(() => browser.waitForAgentLoad()).then(async () => {
+        expect(initSTReceived).toBeTruthy() // that is, trace should still fully run when the replay feature isn't around
+
+        if (replayMode === 'OFF') await expect(getRuntimeValues()).resolves.toEqual([true, MODE.FULL, true])
+        else await expect(getRuntimeValues()).resolves.toEqual([false, MODE.FULL, true]) // when replay is running, trace is no longer op in standalone mode
+
+        return Promise.all([browser.testHandle.expectResources(3000), browser.refresh().then(() => browser.waitForAgentLoad())])
+      }).then(async ([secondInitST]) => {
+        // On subsequent page load or refresh, trace should maintain the set mode, standalone, and same sessionid but have a new ptid corresponding to new page visit.
+        expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)
+        expect(secondInitST.request.query.ptid).not.toEqual(initSTReceived.request.query.ptid)
+
+        if (replayMode === 'OFF') {
+          await expect(getRuntimeValues()).resolves.toEqual([true, MODE.FULL, null]) // session_replay.featAggregate will be null as it's OFF and not imported on subsequent pages
+        } else {
+          await expect(getRuntimeValues()).resolves.toEqual([false, MODE.FULL, true])
+        }
+      })
+    })
+  })
+})
+
+describe.withBrowsersMatching(notIE)('Trace when replay entitlement is 1 and stn is 0', () => {
+  let initSTReceived
+  beforeEach(async () => {
+    await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      permanent: true,
-      body: JSON.stringify(rumFlags)
+      body: JSON.stringify({
+        stn: 0,
+        err: 1,
+        ins: 1,
+        spa: 1,
+        sr: 1,
+        loaded: 1
+      })
     })
 
-    const urlWithoutReplay = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 0 } }))
-    const getTraceInfo = () => browser.execute(function () {
-      const agent = Object.values(newrelic.initializedAgents)[0]
-      return [
-        agent.features.session_trace.featAggregate.isStandalone,
-        agent.runtime.session.state.sessionTraceMode,
-        agent.features.session_replay.featAggregate?.initialized // expect replay to be fully imported and intialized, but in OFF mode per config above, via isStandalone = true
-      ]
+    initSTReceived = undefined
+    browser.testHandle.expectResources().then(resPayload => initSTReceived = resPayload)
+  })
+
+  it('does not run when replay is OFF', async () => {
+    const urlReplayOff = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 0 } }))
+    await browser.url(urlReplayOff).then(() => browser.waitForAgentLoad()).then(() => {
+      expect(initSTReceived).toBeUndefined()
     })
+  })
 
-    await browser.url(urlWithoutReplay).then(() => browser.waitForAgentLoad()).then(async () => {
-      expect(initSTReceived).toBeTruthy() // that is, trace should still fully run when the replay feature isn't around
-      await expect(getTraceInfo()).resolves.toEqual([true, MODE.FULL, true])
-
-      return Promise.all([browser.testHandle.expectResources(3000), browser.refresh().then(() => browser.waitForAgentLoad())])
-    }).then(async ([secondInitST]) => {
-      // On subsequent page load or refresh, trace should maintain the set mode, standalone, and same sessionid but have a new ptid corresponding to new page visit.
-      expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)
-      expect(secondInitST.request.query.ptid).not.toEqual(initSTReceived.request.query.ptid)
-      await expect(getTraceInfo()).resolves.toEqual([true, MODE.FULL, null]) // session_replay.featAggregate will be null as it's OFF and not imported on subsequent pages
+  ;[
+    ['FULL', { sampleRate: 1, errorSampleRate: 0 }],
+    ['ERR', { sampleRate: 0, errorSampleRate: 1 }]
+  ].forEach(([replayMode, replayConfig]) => {
+    it(`still runs and in the same ${replayMode} mode as replay feature that's on`, async () => {
+      const urlReplayOn = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: replayConfig }))
+      await browser.url(urlReplayOn).then(() => browser.waitForAgentLoad()).then(async () => {
+        const getAssumedValues = browser.execute(function () {
+          const agent = Object.values(newrelic.initializedAgents)[0]
+          return [
+            agent.features.session_trace.featAggregate.isStandalone,
+            agent.runtime.session.state.sessionTraceMode
+          ]
+        })
+        if (replayMode === 'FULL') {
+          await expect(getAssumedValues).resolves.toEqual([false, MODE.FULL])
+          expect(initSTReceived).toBeTruthy()
+        } else if (replayMode === 'ERR') {
+          await expect(getAssumedValues).resolves.toEqual([false, MODE.ERROR])
+          expect(initSTReceived).toBeUndefined() // trace in error mode is not expected to send anything on startup
+        }
+      })
     })
   })
 })

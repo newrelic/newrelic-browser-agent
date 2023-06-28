@@ -303,7 +303,6 @@ export class Aggregate extends AggregateBase {
     }
 
     this.setTimestamps(event)
-
     if (event.type === 2) this.hasSnapshot = true
 
     this.events.push(event)

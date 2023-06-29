@@ -82,22 +82,30 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
   it('still runs when replay feature is missing or disabled', async () => {
     const urlWithoutReplay = await browser.testHandle.assetURL('stn/instrumented.html', { init: { privacy: { cookies_enabled: true }, session_replay: { enabled: false } } })
     const getTraceValues = () => browser.execute(function () {
+      const agent = Object.values(newrelic.initializedAgents)[0]
       return [
-        Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.isStandalone,
-        Object.values(newrelic.initializedAgents)[0].runtime.session.state.sessionTraceMode
+        agent.features.session_trace.featAggregate.isStandalone,
+        agent.runtime.session.state.sessionTraceMode,
+        agent.runtime.ptid
       ]
     })
 
+    let firstPageAgentVals, secondPageAgentVals
     await browser.url(urlWithoutReplay).then(() => browser.waitForAgentLoad()).then(async () => {
+      firstPageAgentVals = await getTraceValues()
       expect(initSTReceived).toBeTruthy() // that is, trace should still fully run when the replay feature isn't around
-      await expect(getTraceValues()).resolves.toEqual([true, MODE.FULL])
+      expect(initSTReceived.request.query.ptid).toBeUndefined() // trace doesn't have ptid on first initial harvest
+      expect(firstPageAgentVals).toEqual([true, MODE.FULL, expect.any(String)])
 
-      return Promise.all([browser.testHandle.expectResources(3000), browser.refresh().then(() => browser.waitForAgentLoad())])
-    }).then(async ([secondInitST]) => {
+      return browser.url(await browser.testHandle.assetURL('/')).then(() => browser.url(urlWithoutReplay))
+    }).then(() => Promise.all([browser.testHandle.expectResources(3000), browser.waitForAgentLoad()])).then(async ([secondInitST]) => {
+      secondPageAgentVals = await getTraceValues()
       // On subsequent page load or refresh, trace should maintain the set mode, standalone, and same sessionid but have a new ptid corresponding to new page visit.
       expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)
-      expect(secondInitST.request.query.ptid).not.toEqual(initSTReceived.request.query.ptid)
-      await expect(getTraceValues()).resolves.toEqual([true, MODE.FULL]) // note it's expected & assumed that the replay mode is OFF
+      expect(secondInitST.request.query.ptid).toBeUndefined()
+      expect(secondPageAgentVals).toEqual([true, MODE.FULL, expect.any(String)]) // note it's expected & assumed that the replay mode is OFF
+
+      expect(secondPageAgentVals[2]).not.toEqual(firstPageAgentVals[2]) // ptids
     })
   })
 
@@ -117,22 +125,26 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
         ]
       })
 
+      let firstPageAgentVals, secondPageAgentVals
       await browser.url(urlWithReplay).then(() => browser.waitForAgentLoad()).then(async () => {
-        expect(initSTReceived).toBeTruthy() // that is, trace should still fully run when the replay feature isn't around
+        firstPageAgentVals = await getRuntimeValues()
+        expect(initSTReceived).toBeTruthy()
+        expect(initSTReceived.request.query.ptid).toBeUndefined()
 
-        if (replayMode === 'OFF') await expect(getRuntimeValues()).resolves.toEqual([true, MODE.FULL, true])
-        else await expect(getRuntimeValues()).resolves.toEqual([false, MODE.FULL, true]) // when replay is running, trace is no longer op in standalone mode
+        if (replayMode === 'OFF') expect(firstPageAgentVals).toEqual([true, MODE.FULL, true])
+        else expect(firstPageAgentVals).toEqual([false, MODE.FULL, true]) // when replay is running, trace is no longer op in standalone mode
 
-        return Promise.all([browser.testHandle.expectResources(3000), browser.refresh().then(() => browser.waitForAgentLoad())])
-      }).then(async ([secondInitST]) => {
-        // On subsequent page load or refresh, trace should maintain the set mode, standalone, and same sessionid but have a new ptid corresponding to new page visit.
+        return browser.url(await browser.testHandle.assetURL('/')).then(() => browser.url(urlWithReplay))
+      }).then(() => Promise.all([browser.testHandle.expectResources(3000), browser.waitForAgentLoad()])).then(async ([secondInitST]) => {
+        secondPageAgentVals = await getRuntimeValues()
+        // On subsequent page load or refresh, trace should maintain FULL mode and session id.
         expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)
-        expect(secondInitST.request.query.ptid).not.toEqual(initSTReceived.request.query.ptid)
+        expect(secondInitST.request.query.ptid).toBeUndefined() // this validates we're actually getting the 2nd page's initial res, not 1st page's unload res
 
         if (replayMode === 'OFF') {
-          await expect(getRuntimeValues()).resolves.toEqual([true, MODE.FULL, null]) // session_replay.featAggregate will be null as it's OFF and not imported on subsequent pages
+          expect(secondPageAgentVals).toEqual([true, MODE.FULL, null]) // session_replay.featAggregate will be null as it's OFF and not imported on subsequent pages
         } else {
-          await expect(getRuntimeValues()).resolves.toEqual([false, MODE.FULL, true])
+          expect(secondPageAgentVals).toEqual([false, MODE.FULL, true])
         }
       })
     })
@@ -145,6 +157,7 @@ describe.withBrowsersMatching(notIE)('Trace when replay entitlement is 1 and stn
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
+      permanent: true,
       body: JSON.stringify({
         stn: 0,
         err: 1,
@@ -172,16 +185,17 @@ describe.withBrowsersMatching(notIE)('Trace when replay entitlement is 1 and stn
   ].forEach(([replayMode, replayConfig]) => {
     it(`still runs and in the same ${replayMode} mode as replay feature that's on`, async () => {
       const urlReplayOn = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: replayConfig, session_trace: { harvestTimeSeconds: 2 } }))
+      const getAssumedValues = () => browser.execute(function () {
+        const agent = Object.values(newrelic.initializedAgents)[0]
+        return [
+          agent.features.session_trace.featAggregate.isStandalone,
+          agent.runtime.session.state.sessionTraceMode
+        ]
+      })
+
       await browser.url(urlReplayOn).then(() => browser.waitForAgentLoad()).then(async () => {
-        const getAssumedValues = browser.execute(function () {
-          const agent = Object.values(newrelic.initializedAgents)[0]
-          return [
-            agent.features.session_trace.featAggregate.isStandalone,
-            agent.runtime.session.state.sessionTraceMode
-          ]
-        })
         if (replayMode === 'FULL') {
-          await expect(getAssumedValues).resolves.toEqual([false, MODE.FULL])
+          await expect(getAssumedValues()).resolves.toEqual([false, MODE.FULL])
           expect(initSTReceived).toBeTruthy()
 
           // When not in standalone, trace bypasses the old rate limiting of only harvesting on 30+ nodes. In practice, we should get few-secs-span harvests without that threshold.
@@ -189,9 +203,13 @@ describe.withBrowsersMatching(notIE)('Trace when replay entitlement is 1 and stn
           const third = await browser.testHandle.expectResources(3000).then(payload => payload.request.body.res.length)
           expect([second, third].some(length => length < 30)).toBeTruthy()
         } else if (replayMode === 'ERR') {
-          await expect(getAssumedValues).resolves.toEqual([false, MODE.ERROR])
+          await expect(getAssumedValues()).resolves.toEqual([false, MODE.ERROR])
           expect(initSTReceived).toBeUndefined() // trace in error mode is not expected to send anything on startup
         }
+
+        return browser.refresh().then(() => browser.waitForAgentLoad())
+      }).then(async () => {
+        await expect(getAssumedValues()).resolves.toEqual([false, replayMode === 'FULL' ? MODE.FULL : MODE.ERROR]) // page loads of existing session should use same trace mode even if stn = 0
       })
     })
   })

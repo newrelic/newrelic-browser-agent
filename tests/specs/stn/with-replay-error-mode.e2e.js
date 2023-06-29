@@ -6,6 +6,14 @@ import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests
 import { config, MODE } from '../session-replay/helpers'
 import { notIE, onlyChrome, supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
 
+const getTraceMode = () => browser.execute(function () {
+  const agent = Object.values(newrelic.initializedAgents)[0]
+  return [
+    agent.runtime.session.state.sessionTraceMode,
+    agent.features.session_trace.featAggregate.isStandalone
+  ]
+})
+
 describe.withBrowsersMatching(notIE)('Trace error mode', () => {
   let initSTReceived, getReplayOnErrorUrl
   beforeEach(async () => {
@@ -21,13 +29,6 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
     getReplayOnErrorUrl = browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 1 }, session_trace: { harvestTimeSeconds: 2 } }))
   })
 
-  const getTraceMode = () => browser.execute(function () {
-    const agent = Object.values(newrelic.initializedAgents)[0]
-    return [
-      agent.runtime.session.state.sessionTraceMode,
-      agent.features.session_trace.featAggregate.isStandalone
-    ]
-  })
   function simulateErrorInBrowser () { // this is a way to throw error in WdIO / Selenium without killing the test itself
     const errorElem = document.createElement('script')
     errorElem.textContent = 'throw new Error("triggered! 0__0");'
@@ -91,9 +92,57 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
       await getTraceMode().then(([traceMode]) => expect(traceMode).toEqual(MODE.ERROR))
       await browser.execute(simulateErrorInBrowser)
       await getTraceMode().then(([traceMode]) => expect(traceMode).toEqual(MODE.FULL))
+      // NOTE: replay entitlement must be on (sr = 1) for trace to exhibit this behavior, although this could change in the future to be applicable to standalone trace in a session.
 
       await browser.switchWindow(firstPageTitle)
       await getTraceMode().then(([traceMode]) => expect(traceMode).toEqual(MODE.FULL))
+    })
+  })
+
+  /* The mode transition should also work even when replay entitlement is 0 or it is off and trace is standalone, as long as session tracking is enabled.
+    However, this particular behavior currently does not need testing because trace can not yet end up in error mode when running by itself. Could change in the future. */
+})
+
+describe.withBrowsersMatching(notIE)('Trace when replay runs then is aborted', () => {
+  let initSTReceived
+  beforeEach(async () => {
+    await browser.destroyAgentSession()
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      permanent: true,
+      body: JSON.stringify({ stn: 0, err: 1, ins: 1, spa: 1, sr: 1, loaded: 1 })
+    })
+
+    initSTReceived = undefined
+    browser.testHandle.expectResources().then(resPayload => initSTReceived = resPayload)
+  })
+
+  const triggerReplayAbort = () => browser.execute(function () { Object.values(NREUM.initializedAgents)[0].runtime.session.reset() })
+
+  ;[
+    ['does a last harvest then stops, in full mode', MODE.FULL, { sampleRate: 1, errorSampleRate: 0 }],
+    ['does not harvest anything, in error mode', MODE.ERROR, { sampleRate: 0, errorSampleRate: 1 }]
+  ].forEach(([description, supposedMode, replayConfig]) => {
+    it(description, async () => {
+      let url = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: replayConfig, session_trace: { harvestTimeSeconds: 2 } }))
+      await browser.url(url)
+      await browser.waitForAgentLoad()
+      expect(await getTraceMode()).toEqual([supposedMode, false])
+      if (supposedMode === MODE.FULL) expect(initSTReceived).toBeTruthy()
+      else expect(initSTReceived).toBeUndefined() // in ERROR mode
+
+      let lastSTHarvest = browser.testHandle.expectResources(1000) // abort should cause a harvest right away (in FULL), rather than the usual interval
+      await triggerReplayAbort()
+      expect(await getTraceMode()).toEqual([MODE.OFF, false])
+      if (supposedMode === MODE.FULL) await expect(lastSTHarvest).resolves.toBeTruthy()
+      else await expect(lastSTHarvest).rejects.toThrow()
+
+      let anotherTraceHarvest = browser.testHandle.expectResources(3000, true)
+      await expect(anotherTraceHarvest).resolves.toBeUndefined() // we shouldn't see any more harvest after the previous one on abort
+
+      anotherTraceHarvest = browser.testHandle.expectResources(2000, true)
+      await browser.url(await browser.testHandle.assetURL('/'))
+      await expect(anotherTraceHarvest).resolves.toBeUndefined() // doubly check that nothing else is sent, i.e. on test page's unload logic
     })
   })
 })

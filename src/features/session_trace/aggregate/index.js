@@ -97,8 +97,8 @@ export class Aggregate extends AggregateBase {
       const stopTracePerm = () => {
         if (sessionEntity.state.sessionTraceMode !== MODE.OFF) sessionEntity.write({ sessionTraceMode: MODE.OFF })
         operationalGate.permanentlyDecide(false)
-        this.#scheduler?.stopTimer(true)
         if (mostRecentModeKnown === MODE.FULL) this.#scheduler?.runHarvest() // allow queued nodes (past opGate) to final harvest, unless they were buffered in other modes
+        this.#scheduler?.stopTimer(true) // the 'true' arg here will forcibly block any future call to runHarvest, so the last runHarvest above must be prior
         this.#scheduler = null
       }
 

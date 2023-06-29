@@ -97,8 +97,9 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
       expect(initSTReceived.request.query.ptid).toBeUndefined() // trace doesn't have ptid on first initial harvest
       expect(firstPageAgentVals).toEqual([true, MODE.FULL, expect.any(String)])
 
-      return browser.url(await browser.testHandle.assetURL('/')).then(() => browser.url(urlWithoutReplay))
-    }).then(() => Promise.all([browser.testHandle.expectResources(3000), browser.waitForAgentLoad()])).then(async ([secondInitST]) => {
+      return browser.url(await browser.testHandle.assetURL('/')).then(() => browser.pause(500)).then(() => // this page transition expecting the right trace is flaky, so pause 500
+        Promise.all([browser.testHandle.expectResources(5000), browser.url(urlWithoutReplay).then(() => browser.waitForAgentLoad())]))
+    }).then(async ([secondInitST]) => {
       secondPageAgentVals = await getTraceValues()
       // On subsequent page load or refresh, trace should maintain the set mode, standalone, and same sessionid but have a new ptid corresponding to new page visit.
       expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)
@@ -134,8 +135,9 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
         if (replayMode === 'OFF') expect(firstPageAgentVals).toEqual([true, MODE.FULL, true])
         else expect(firstPageAgentVals).toEqual([false, MODE.FULL, true]) // when replay is running, trace is no longer op in standalone mode
 
-        return browser.url(await browser.testHandle.assetURL('/')).then(() => browser.url(urlWithReplay))
-      }).then(() => Promise.all([browser.testHandle.expectResources(3000), browser.waitForAgentLoad()])).then(async ([secondInitST]) => {
+        return browser.url(await browser.testHandle.assetURL('/')).then(() => browser.pause(500)).then(() => // this page transition expecting the right trace is flaky, so pause 500
+          Promise.all([browser.testHandle.expectResources(5000), browser.url(urlWithReplay).then(() => browser.waitForAgentLoad())]))
+      }).then(async ([secondInitST]) => {
         secondPageAgentVals = await getRuntimeValues()
         // On subsequent page load or refresh, trace should maintain FULL mode and session id.
         expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)

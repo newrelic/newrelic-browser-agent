@@ -91,6 +91,7 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
       await browser.newWindow(await getReplayOnErrorUrl, { windowName: 'Second page' })
       await getTraceMode().then(([traceMode]) => expect(traceMode).toEqual(MODE.ERROR))
       await browser.execute(simulateErrorInBrowser)
+      await browser.pause(500)
       await getTraceMode().then(([traceMode]) => expect(traceMode).toEqual(MODE.FULL))
       // NOTE: replay entitlement must be on (sr = 1) for trace to exhibit this behavior, although this could change in the future to be applicable to standalone trace in a session.
 

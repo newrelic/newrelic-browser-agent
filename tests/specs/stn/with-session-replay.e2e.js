@@ -91,15 +91,17 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
     })
 
     let firstPageAgentVals, secondPageAgentVals
-    await browser.url(urlWithoutReplay).then(() => browser.waitForAgentLoad()).then(async () => {
-      firstPageAgentVals = await getTraceValues()
-      expect(initSTReceived).toBeTruthy() // that is, trace should still fully run when the replay feature isn't around
-      expect(initSTReceived.request.query.ptid).toBeUndefined() // trace doesn't have ptid on first initial harvest
-      expect(firstPageAgentVals).toEqual([true, MODE.FULL, expect.any(String)])
+    await browser.url(urlWithoutReplay).then(() => browser.waitForAgentLoad())
+    firstPageAgentVals = await getTraceValues()
+    expect(initSTReceived).toBeTruthy() // that is, trace should still fully run when the replay feature isn't around
+    expect(initSTReceived.request.query.ptid).toBeUndefined() // trace doesn't have ptid on first initial harvest
+    expect(firstPageAgentVals).toEqual([true, MODE.FULL, expect.any(String)])
 
-      return browser.url(await browser.testHandle.assetURL('/')).then(() => browser.pause(500)).then(() => // this page transition expecting the right trace is flaky, so pause 500
-        Promise.all([browser.testHandle.expectResources(5000), browser.url(urlWithoutReplay).then(() => browser.waitForAgentLoad())]))
-    }).then(async ([secondInitST]) => {
+    await browser.url(await browser.testHandle.assetURL('/'))
+
+    let anotherInitST = browser.testHandle.expectResources(3000)
+    await browser.url(urlWithoutReplay).then(() => browser.waitForAgentLoad())
+    await anotherInitST.then(async (secondInitST) => {
       secondPageAgentVals = await getTraceValues()
       // On subsequent page load or refresh, trace should maintain the set mode, standalone, and same sessionid but have a new ptid corresponding to new page visit.
       expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)
@@ -127,17 +129,19 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
       })
 
       let firstPageAgentVals, secondPageAgentVals
-      await browser.url(urlWithReplay).then(() => browser.waitForAgentLoad()).then(async () => {
-        firstPageAgentVals = await getRuntimeValues()
-        expect(initSTReceived).toBeTruthy()
-        expect(initSTReceived.request.query.ptid).toBeUndefined()
+      await browser.url(urlWithReplay).then(() => browser.waitForAgentLoad())
+      firstPageAgentVals = await getRuntimeValues()
+      expect(initSTReceived).toBeTruthy()
+      expect(initSTReceived.request.query.ptid).toBeUndefined()
 
-        if (replayMode === 'OFF') expect(firstPageAgentVals).toEqual([true, MODE.FULL, true])
-        else expect(firstPageAgentVals).toEqual([false, MODE.FULL, true]) // when replay is running, trace is no longer op in standalone mode
+      if (replayMode === 'OFF') expect(firstPageAgentVals).toEqual([true, MODE.FULL, true])
+      else expect(firstPageAgentVals).toEqual([false, MODE.FULL, true]) // when replay is running, trace is no longer op in standalone mode
 
-        return browser.url(await browser.testHandle.assetURL('/')).then(() => browser.pause(500)).then(() => // this page transition expecting the right trace is flaky, so pause 500
-          Promise.all([browser.testHandle.expectResources(5000), browser.url(urlWithReplay).then(() => browser.waitForAgentLoad())]))
-      }).then(async ([secondInitST]) => {
+      await browser.url(await browser.testHandle.assetURL('/'))
+
+      let anotherInitST = browser.testHandle.expectResources(3000)
+      await browser.url(urlWithReplay).then(() => browser.waitForAgentLoad())
+      await anotherInitST.then(async (secondInitST) => {
         secondPageAgentVals = await getRuntimeValues()
         // On subsequent page load or refresh, trace should maintain FULL mode and session id.
         expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)

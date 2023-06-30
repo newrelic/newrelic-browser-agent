@@ -63,9 +63,15 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
       await browser.waitUntil(() => browser.execute(function () { document.readyState === 'complete' }), { timeout: 5000 })
     } catch (e) {}
   }
+  async function loadPageAndGetResource (assetUrlArgs, timeout) {
+    const url = await browser.testHandle.assetURL(...assetUrlArgs)
+    const getSTPayload = browser.testHandle.expectResources(timeout)
+    await browser.url(url)
+    await browser.waitForAgentLoad()
+    return await getSTPayload
+  }
 
   it('still runs when replay feature is missing or disabled', async () => {
-    const urlWithoutReplay = await browser.testHandle.assetURL('stn/instrumented.html', { init: { privacy: { cookies_enabled: true }, session_replay: { enabled: false } } })
     const getTraceValues = () => browser.execute(function () {
       const agent = Object.values(newrelic.initializedAgents)[0]
       return [
@@ -75,10 +81,7 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
       ]
     })
 
-    let getFirstSTPayload = browser.testHandle.expectResources(3000)
-    await browser.url(urlWithoutReplay)
-    await browser.waitForAgentLoad()
-    let initSTReceived = await getFirstSTPayload
+    let initSTReceived = await loadPageAndGetResource(['stn/instrumented.html', { init: { privacy: { cookies_enabled: true }, session_replay: { enabled: false } } }], 3001)
     let firstPageAgentVals = await getTraceValues()
     expect(initSTReceived).toBeTruthy() // that is, trace should still fully run when the replay feature isn't around
     expect(initSTReceived.request.query.ptid).toBeUndefined() // trace doesn't have ptid on first initial harvest
@@ -86,11 +89,8 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
 
     await navigateToRootDir()
 
-    let nextResourceHarvest = browser.testHandle.expectResources(3000)
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { privacy: { cookies_enabled: true }, session_replay: { enabled: false } } }))
-    await browser.waitForAgentLoad() // ^for some reason, macOS Safari (up to 16.1) would fail if we navigated back to 'urlWithoutReplay' so we go to a diff asset page instead
-
-    let secondInitST = await nextResourceHarvest
+    // For some reason, macOS Safari (up to 16.1) would fail if we navigated back to 'urlWithoutReplay' so we go to a diff asset page instead:
+    let secondInitST = await loadPageAndGetResource(['instrumented.html', { init: { privacy: { cookies_enabled: true }, session_replay: { enabled: false } } }], 3002)
     let secondPageAgentVals = await getTraceValues()
     // On subsequent page load or refresh, trace should maintain the set mode, standalone, and same sessionid but have a new ptid corresponding to new page visit.
     expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)
@@ -106,7 +106,6 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
     ['ERR', { sampleRate: 0, errorSampleRate: 1 }]
   ].forEach(([replayMode, replayConfig]) => {
     it.withBrowsersMatching(notIE)(`runs in full when replay feature is present and in ${replayMode} mode`, async () => {
-      const urlWithReplay = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: replayConfig }))
       const getRuntimeValues = () => browser.execute(function () {
         const agent = Object.values(newrelic.initializedAgents)[0]
         return [
@@ -116,10 +115,7 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
         ]
       })
 
-      let getFirstSTPayload = browser.testHandle.expectResources(3000)
-      await browser.url(urlWithReplay)
-      await browser.waitForAgentLoad()
-      let initSTReceived = await getFirstSTPayload
+      let initSTReceived = await loadPageAndGetResource(['stn/instrumented.html', config({ session_replay: replayConfig })], 3003)
       let firstPageAgentVals = await getRuntimeValues()
       expect(initSTReceived).toBeTruthy()
       expect(initSTReceived.request.query.ptid).toBeUndefined()
@@ -128,11 +124,8 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
 
       await navigateToRootDir()
 
-      let nextResourceHarvest = browser.testHandle.expectResources(3000)
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: replayConfig })))
-      await browser.waitForAgentLoad() // ^for some reason, macOS Safari (up to 16.1) would fail if we navigated back to 'urlWithReplay' so we go to a diff asset page instead
-
-      let secondInitST = await nextResourceHarvest
+      // For some reason, macOS Safari (up to 16.1) would fail if we navigated back to 'urlWithoutReplay' so we go to a diff asset page instead:
+      let secondInitST = await loadPageAndGetResource(['instrumented.html', config({ session_replay: replayConfig })], 3004)
       let secondPageAgentVals = await getRuntimeValues()
       // On subsequent page load or refresh, trace should maintain FULL mode and session id.
       expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)

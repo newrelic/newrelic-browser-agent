@@ -15,7 +15,7 @@ const getTraceMode = () => browser.execute(function () {
 })
 
 describe.withBrowsersMatching(notIE)('Trace error mode', () => {
-  let initSTReceived, getReplayOnErrorUrl
+  let initSTReceived, getFirstSTPayload, getReplayOnErrorUrl
   beforeEach(async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
@@ -25,7 +25,7 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
     })
 
     initSTReceived = undefined
-    browser.testHandle.expectResources().then(resPayload => initSTReceived = resPayload)
+    getFirstSTPayload = browser.testHandle.expectResources().then(resPayload => initSTReceived = resPayload)
     getReplayOnErrorUrl = browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 1 }, session_trace: { harvestTimeSeconds: 2 } }))
   })
 
@@ -36,29 +36,34 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
   }
 
   it('switches to full mode when an error happens after page load', async () => {
-    await getReplayOnErrorUrl.then(builtUrl => browser.url(builtUrl)).then(() => browser.waitForAgentLoad()).then(async () => {
-      let startingMode = (await getTraceMode())[0]
-      expect(initSTReceived).toBeUndefined()
-      expect(startingMode).toEqual(MODE.ERROR)
+    await browser.url(await getReplayOnErrorUrl)
+    await browser.waitForAgentLoad()
+    await browser.waitUntil(() => browser.execute(async function () { // here for no-retry wdio stability
+      return await Object.values(newrelic.initializedAgents)[0].features.session_trace.onAggregateImported
+    }), { timeout: 5000 })
+    let startingMode = (await getTraceMode())[0]
+    expect(initSTReceived).toBeUndefined()
+    expect(startingMode).toEqual(MODE.ERROR)
 
-      await browser.execute(simulateErrorInBrowser)
-      let modeAfterErr = (await getTraceMode())[0]
-      expect(modeAfterErr).toEqual(MODE.FULL)
-      // The loadEventEnd is part of PT and PNT resource entry and is a node created at start of page life.
-      expect(initSTReceived.request.body.res.find(node => node.n === 'loadEventEnd')).toEqual(expect.objectContaining({ n: 'loadEventEnd', o: 'document', t: 'timing' }))
+    await browser.execute(simulateErrorInBrowser)
+    await getFirstSTPayload
+    let modeAfterErr = (await getTraceMode())[0]
+    expect(modeAfterErr).toEqual(MODE.FULL)
+    // The loadEventEnd is part of PT and PNT resource entry and is a node created at start of page life.
+    expect(initSTReceived.request.body.res.find(node => node.n === 'loadEventEnd')).toEqual(expect.objectContaining({ n: 'loadEventEnd', o: 'document', t: 'timing' }))
 
-      await expect(browser.testHandle.expectResources(3000)).resolves.toBeTruthy() // double check there's nothing wrong with full mdoe interval harvest
-    })
+    await expect(browser.testHandle.expectResources(3000)).resolves.toBeTruthy() // double check there's nothing wrong with full mdoe interval harvest
   })
 
   it('starts in full mode when an error happens before page load', async () => {
-    await getReplayOnErrorUrl.then(builtUrl => browser.url(builtUrl)).then(() => browser.execute(simulateErrorInBrowser)).then(() => browser.waitForAgentLoad()).then(async () => {
-      let startingMode = (await getTraceMode())[0]
-      expect(initSTReceived).toBeTruthy()
-      expect(startingMode).toEqual(MODE.FULL)
+    await browser.url(await getReplayOnErrorUrl)
+    await browser.execute(simulateErrorInBrowser)
+    await browser.waitForAgentLoad()
+    await expect(getFirstSTPayload).resolves.toBeTruthy()
+    let startingMode = (await getTraceMode())[0]
+    expect(startingMode).toEqual(MODE.FULL)
 
-      await expect(browser.testHandle.expectResources(3000)).resolves.toBeTruthy()
-    })
+    await expect(browser.testHandle.expectResources(3000)).resolves.toBeTruthy()
   })
 
   it.withBrowsersMatching(onlyChrome)('does not capture more than the last 30 seconds when error happens', async () => {
@@ -105,7 +110,6 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
 })
 
 describe.withBrowsersMatching(notIE)('Trace when replay runs then is aborted', () => {
-  let initSTReceived
   beforeEach(async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
@@ -113,9 +117,6 @@ describe.withBrowsersMatching(notIE)('Trace when replay runs then is aborted', (
       permanent: true,
       body: JSON.stringify({ stn: 0, err: 1, ins: 1, spa: 1, sr: 1, loaded: 1 })
     })
-
-    initSTReceived = undefined
-    browser.testHandle.expectResources().then(resPayload => initSTReceived = resPayload)
   })
 
   const triggerReplayAbort = () => browser.execute(function () { Object.values(NREUM.initializedAgents)[0].runtime.session.reset() })
@@ -126,11 +127,13 @@ describe.withBrowsersMatching(notIE)('Trace when replay runs then is aborted', (
   ].forEach(([description, supposedMode, replayConfig]) => {
     it(description, async () => {
       let url = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: replayConfig, session_trace: { harvestTimeSeconds: 2 } }))
+      let getFirstSTPayload = browser.testHandle.expectResources(3000)
       await browser.url(url)
       await browser.waitForAgentLoad()
+
+      if (supposedMode === MODE.FULL) await expect(getFirstSTPayload).resolves.toBeTruthy()
+      else await expect(getFirstSTPayload).rejects.toThrow() // in ERROR mode
       expect(await getTraceMode()).toEqual([supposedMode, false])
-      if (supposedMode === MODE.FULL) expect(initSTReceived).toBeTruthy()
-      else expect(initSTReceived).toBeUndefined() // in ERROR mode
 
       let lastSTHarvest = browser.testHandle.expectResources(1000) // abort should cause a harvest right away (in FULL), rather than the usual interval
       await triggerReplayAbort()

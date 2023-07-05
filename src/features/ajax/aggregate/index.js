@@ -19,11 +19,15 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
+    const allAjaxIsEnabled = getConfigurationValue(agentIdentifier, 'ajax.enabled') !== false
+
+    register('xhr', storeXhr, this.featureName, this.ee)
+    if (!allAjaxIsEnabled) return // feature will only collect timeslice metrics & ajax trace nodes if it's not fully enabled
+    setDenyList(getConfigurationValue(agentIdentifier, 'ajax.deny_list'))
+
     let ajaxEvents = []
     let spaAjaxEvents = {}
     let sentAjaxEvents = []
-    let scheduler
-
     const ee = this.ee
 
     const harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'ajax.harvestTimeSeconds') || 10
@@ -39,9 +43,8 @@ export class Aggregate extends AggregateBase {
       // remove from the spaAjaxEvents buffer, and let spa harvest it
       delete spaAjaxEvents[interaction.id]
     })
-
     ee.on('interactionDiscarded', (interaction) => {
-      if (!spaAjaxEvents[interaction.id] || !allAjaxIsEnabled()) return
+      if (!spaAjaxEvents[interaction.id]) return
 
       spaAjaxEvents[interaction.id].forEach(function (item) {
         // move it from the spaAjaxEvents buffer to the ajaxEvents buffer for harvesting here
@@ -50,18 +53,15 @@ export class Aggregate extends AggregateBase {
       delete spaAjaxEvents[interaction.id]
     })
 
-    if (allAjaxIsEnabled()) setDenyList(getConfigurationValue(agentIdentifier, 'ajax.deny_list'))
+    const scheduler = new HarvestScheduler('events', {
+      onFinished: onEventsHarvestFinished,
+      getPayload: prepareHarvest
+    }, this)
 
-    register('xhr', storeXhr, this.featureName, this.ee)
+    ee.on(`drain-${this.featureName}`, () => { scheduler.startTimer(harvestTimeSeconds) })
 
-    if (allAjaxIsEnabled()) {
-      scheduler = new HarvestScheduler('events', {
-        onFinished: onEventsHarvestFinished,
-        getPayload: prepareHarvest
-      }, this)
-
-      ee.on(`drain-${this.featureName}`, () => { scheduler.startTimer(harvestTimeSeconds) })
-    }
+    drain(this.agentIdentifier, this.featureName)
+    return
 
     function storeXhr (params, metrics, startTime, endTime, type) {
       metrics.time = startTime
@@ -79,9 +79,7 @@ export class Aggregate extends AggregateBase {
       // store as metric
       aggregator.store('xhr', hash, params, metrics)
 
-      if (!allAjaxIsEnabled()) {
-        return
-      }
+      if (!allAjaxIsEnabled) return
 
       if (!shouldCollectEvent(params)) {
         if (params.hostname === getInfo(agentIdentifier).errorBeacon) {
@@ -172,7 +170,7 @@ export class Aggregate extends AggregateBase {
     }
 
     function onEventsHarvestFinished (result) {
-      if (result.retry && sentAjaxEvents.length > 0 && allAjaxIsEnabled()) {
+      if (result.retry && sentAjaxEvents.length > 0) {
         ajaxEvents.unshift(...sentAjaxEvents)
         sentAjaxEvents = []
       }
@@ -234,15 +232,5 @@ export class Aggregate extends AggregateBase {
         return this.payload.length * 2 > maxPayloadSize
       }
     }
-
-    function allAjaxIsEnabled () {
-      var enabled = getConfigurationValue(agentIdentifier, 'ajax.enabled')
-      if (enabled === false) {
-        return false
-      }
-      return true
-    }
-
-    drain(this.agentIdentifier, this.featureName)
   }
 }

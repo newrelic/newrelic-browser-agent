@@ -6,7 +6,7 @@ import { registerHandler as register } from '../../../common/event-emitter/regis
 import { stringify } from '../../../common/util/stringify'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { handle } from '../../../common/event-emitter/handle'
-import { getConfigurationValue, getInfo } from '../../../common/config/config'
+import { getConfiguration, getInfo } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { FEATURE_NAME } from '../constants'
@@ -19,19 +19,23 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
-    const allAjaxIsEnabled = getConfigurationValue(agentIdentifier, 'ajax.enabled') !== false
+    const agentInit = getConfiguration(agentIdentifier)
+    const allAjaxIsEnabled = agentInit.ajax.enabled !== false
 
     register('xhr', storeXhr, this.featureName, this.ee)
     if (!allAjaxIsEnabled) return // feature will only collect timeslice metrics & ajax trace nodes if it's not fully enabled
-    setDenyList(getConfigurationValue(agentIdentifier, 'ajax.deny_list'))
+
+    const agentInfo = getInfo(agentIdentifier)
+    let denyList = agentInit.ajax.block_internal ? (agentInit.ajax.deny_list || []).concat(agentInfo.beacon, agentInfo.errorBeacon) : agentInit.ajax.deny_list
+    setDenyList(denyList)
 
     let ajaxEvents = []
     let spaAjaxEvents = {}
     let sentAjaxEvents = []
     const ee = this.ee
 
-    const harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'ajax.harvestTimeSeconds') || 10
-    const MAX_PAYLOAD_SIZE = getConfigurationValue(agentIdentifier, 'ajax.maxPayloadSize') || 1000000
+    const harvestTimeSeconds = agentInit.ajax.harvestTimeSeconds || 10
+    const MAX_PAYLOAD_SIZE = agentInit.ajax.maxPayloadSize || 1000000
 
     // Exposes these methods to browser test files -- future TO DO: can be removed once these fns are extracted from the constructor into class func
     this.storeXhr = storeXhr
@@ -82,7 +86,7 @@ export class Aggregate extends AggregateBase {
       if (!allAjaxIsEnabled) return
 
       if (!shouldCollectEvent(params)) {
-        if (params.hostname === getInfo(agentIdentifier).errorBeacon) {
+        if (params.hostname === agentInfo.errorBeacon) {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, ee)
         } else {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee)
@@ -213,7 +217,7 @@ export class Aggregate extends AggregateBase {
         var insert = '2,'
 
         // add custom attributes
-        var attrParts = addCustomAttributes(getInfo(agentIdentifier).jsAttributes || {}, this.addString)
+        var attrParts = addCustomAttributes(agentInfo.jsAttributes || {}, this.addString)
         fields.unshift(numeric(attrParts.length))
 
         insert += fields.join(',')

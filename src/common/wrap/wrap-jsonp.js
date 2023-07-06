@@ -98,13 +98,18 @@ export function wrapJsonP (sharedEE) {
     return matches ? matches[1] : null
   }
 
+  /**
+   * Traverse a nested object using a '.'-delimited string wherein each substring piece maps to each subsequent object property layer.
+   * @param {string} longKey
+   * @param {object} obj
+   * @returns The final nested object referred to by initial longKey.
+   */
   function discoverValue (longKey, obj) {
-    var matches = longKey.match(VALUE_REGEX)
-    var key = matches[1]
-    var remaining = matches[3]
-    if (!remaining) {
-      return obj[key]
-    }
+    if (!longKey) return obj // end of object recursion depth when no more key levels
+    const matches = longKey.match(VALUE_REGEX)
+    // if 'longKey' was not undefined, that is it at least had 1 level left, then the regexp would've at least matched 1st group
+    const key = matches[1]
+    const remaining = matches[3]
     return discoverValue(remaining, obj[key])
   }
 

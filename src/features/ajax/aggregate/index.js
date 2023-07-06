@@ -217,7 +217,7 @@ export class Aggregate extends AggregateBase {
         var insert = '2,'
 
         // add custom attributes
-        var attrParts = addCustomAttributes(agentInfo.jsAttributes || {}, this.addString)
+        var attrParts = addCustomAttributes(getInfo(agentIdentifier).jsAttributes || {}, this.addString)
         fields.unshift(numeric(attrParts.length))
 
         insert += fields.join(',')

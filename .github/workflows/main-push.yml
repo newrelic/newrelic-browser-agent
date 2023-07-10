@@ -16,12 +16,14 @@ jobs:
     secrets: inherit
     with:
       collection: 'unit'
+      coverage: true
 
   jest-component:
     uses: ./.github/workflows/jest.yml
     secrets: inherit
     with:
       collection: 'component'
+      coverage: true
 
   wdio-coverage:
     name: WDIO coverage

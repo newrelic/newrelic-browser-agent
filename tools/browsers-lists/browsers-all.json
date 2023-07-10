@@ -1741,7 +1741,7 @@
       "appium:platformVersion": "6.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       }
     },
     {
@@ -1754,7 +1754,7 @@
       "appium:platformVersion": "7.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       }
     },
     {
@@ -1767,7 +1767,7 @@
       "appium:platformVersion": "7.1",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       }
     },
     {
@@ -1780,7 +1780,7 @@
       "appium:platformVersion": "8.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       }
     },
     {
@@ -1793,7 +1793,7 @@
       "appium:platformVersion": "8.1",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       }
     },
     {
@@ -1806,7 +1806,7 @@
       "appium:platformVersion": "9.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       }
     },
     {
@@ -1819,7 +1819,7 @@
       "appium:platformVersion": "10.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       }
     },
     {
@@ -1832,7 +1832,7 @@
       "appium:platformVersion": "11.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       }
     },
     {
@@ -1845,7 +1845,7 @@
       "appium:platformVersion": "12.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       }
     },
     {
@@ -1957,7 +1957,7 @@
       "appium:platformVersion": "12.2",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },
@@ -1971,7 +1971,7 @@
       "appium:platformVersion": "12.4",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },
@@ -1985,7 +1985,7 @@
       "appium:platformVersion": "13.0",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },
@@ -1999,7 +1999,7 @@
       "appium:platformVersion": "13.2",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },
@@ -2013,7 +2013,7 @@
       "appium:platformVersion": "13.4",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },
@@ -2027,7 +2027,7 @@
       "appium:platformVersion": "14.0",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },
@@ -2041,7 +2041,7 @@
       "appium:platformVersion": "14.3",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },
@@ -2055,7 +2055,7 @@
       "appium:platformVersion": "14.4",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },
@@ -2069,7 +2069,7 @@
       "appium:platformVersion": "14.5",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },
@@ -2083,7 +2083,7 @@
       "appium:platformVersion": "15.0",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },
@@ -2097,7 +2097,7 @@
       "appium:platformVersion": "15.2",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },
@@ -2111,7 +2111,7 @@
       "appium:platformVersion": "15.4",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },
@@ -2125,7 +2125,7 @@
       "appium:platformVersion": "15.5",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },

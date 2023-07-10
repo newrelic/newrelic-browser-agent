@@ -1,4 +1,5 @@
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { gosNREUM } from '../../../common/window/nreum'
 
 /**
  * Get an array of flags required by downstream (NR UI) based on the features initialized in this agent
@@ -8,21 +9,24 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
  */
 export function getActivatedFeaturesFlags (agentId) {
   const flagArr = []
+  const newrelic = gosNREUM()
 
-  Object.keys(newrelic.initializedAgents[agentId].features).forEach(featName => {
-    switch (featName) {
-      case FEATURE_NAMES.ajax:
-        flagArr.push('xhr'); break
-      case FEATURE_NAMES.jserrors:
-        flagArr.push('err'); break
-      case FEATURE_NAMES.pageAction:
-        flagArr.push('ins'); break
-      case FEATURE_NAMES.sessionTrace:
-        flagArr.push('stn'); break
-      case FEATURE_NAMES.spa:
-        flagArr.push('spa'); break
-    }
-  })
+  try {
+    Object.keys(newrelic.initializedAgents[agentId].features).forEach(featName => {
+      switch (featName) {
+        case FEATURE_NAMES.ajax:
+          flagArr.push('xhr'); break
+        case FEATURE_NAMES.jserrors:
+          flagArr.push('err'); break
+        case FEATURE_NAMES.pageAction:
+          flagArr.push('ins'); break
+        case FEATURE_NAMES.sessionTrace:
+          flagArr.push('stn'); break
+        case FEATURE_NAMES.spa:
+          flagArr.push('spa'); break
+      }
+    })
+  } catch (e) {}
 
   return flagArr
 }

@@ -43,6 +43,13 @@ on:
         description: 'Github branch ref to checkout and run tests on'
         required: false
         type: string
+    secrets:
+      JIL_SAUCE_LABS_USERNAME:
+        required: true
+      JIL_SAUCE_LABS_ACCESS_KEY:
+        required: true
+      JIL_NODE_NEW_RELIC_LICENSE_KEY:
+        required: true
 
 jobs:
   wdio:

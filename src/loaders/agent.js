@@ -1,4 +1,5 @@
 // loader files
+import { AgentBase } from './agent-base'
 import { getEnabledFeatures } from './features/enabled-features'
 import { configure } from './configure/configure'
 import { getFeatureDependencyNames } from './features/featureDependencies'
@@ -18,8 +19,10 @@ import { globalScope } from '../common/constants/runtime'
  * A flexible class that may be used to compose an agent from a select subset of feature modules. In applications
  * sensitive to network load, this may result in smaller builds with slightly lower performance impact.
  */
-export class Agent {
+export class Agent extends AgentBase {
   constructor (options, agentIdentifier = generateRandomHexString(16)) {
+    super()
+
     if (!globalScope) {
       // We could not determine the runtime environment. Short-circuite the agent here
       // to avoid possible exceptions later that may cause issues with customer's application.

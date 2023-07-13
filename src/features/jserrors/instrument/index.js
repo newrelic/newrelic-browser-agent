@@ -41,10 +41,6 @@ export class Instrument extends InstrumentBase {
 
     globalScope.addEventListener('unhandledrejection', (promiseRejectionEvent) => {
       if (!this.abortHandler) return
-      if (this.#seenErrors.has(promiseRejectionEvent.reason)) {
-        this.#seenErrors.delete(promiseRejectionEvent.reason)
-        return
-      }
 
       handle('err', [this.#castPromiseRejectionEvent(promiseRejectionEvent), now(), false, { unhandledPromiseRejection: 1 }], undefined, FEATURE_NAMES.jserrors, this.ee)
     }, eventListenerOpts(false, this.removeOnAbort?.signal))

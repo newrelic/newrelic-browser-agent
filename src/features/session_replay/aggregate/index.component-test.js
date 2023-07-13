@@ -245,6 +245,7 @@ describe('Session Replay', () => {
       await wait(1)
       const [harvestContents] = sr.prepareHarvest()
       expect(harvestContents.qs).toMatchObject(anyQuery)
+      expect(harvestContents.qs.attributes.includes('content_encoding=gzip')).toEqual(true)
       expect(harvestContents.body).toEqual(expect.any(Uint8Array))
       expect(JSON.parse(strFromU8(gunzipSync(harvestContents.body)))).toMatchObject(expect.any(Array))
     })

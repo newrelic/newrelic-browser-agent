@@ -345,6 +345,7 @@ export class Aggregate extends AggregateBase {
     this.stopRecording()
     this.syncWithSessionManager({ sessionReplay: this.mode })
     this.clearTimestamps()
+    this.ee.emit('REPLAY_ABORTED')
   }
 
   /** Extensive research has yielded about an 88% compression factor on these payloads.

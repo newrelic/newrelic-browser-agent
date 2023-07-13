@@ -64,8 +64,8 @@
       "browserName": "firefox",
       "platformName": "Windows 10",
       "platform": "Windows 10",
-      "version": "105",
-      "browserVersion": "105"
+      "version": "106",
+      "browserVersion": "106"
     },
     {
       "browserName": "firefox",
@@ -78,8 +78,8 @@
       "browserName": "firefox",
       "platformName": "Windows 10",
       "platform": "Windows 10",
-      "version": "110",
-      "browserVersion": "110"
+      "version": "111",
+      "browserVersion": "111"
     },
     {
       "browserName": "firefox",
@@ -118,7 +118,7 @@
       "appium:platformVersion": "9.0",
       "appium:automationName": "UiAutomator2",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       }
     }
   ],
@@ -133,7 +133,7 @@
       "appium:platformVersion": "15.2",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },
@@ -147,7 +147,7 @@
       "appium:platformVersion": "15.4",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     },
@@ -161,7 +161,7 @@
       "appium:platformVersion": "15.5",
       "appium:automationName": "XCUITest",
       "sauce:options": {
-        "appiumVersion": "1.22.3"
+        "appiumVersion": "2.0.0"
       },
       "acceptInsecureCerts": false
     }

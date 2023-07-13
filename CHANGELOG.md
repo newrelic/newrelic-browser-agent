@@ -3,16 +3,30 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.236.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.235.0...v1.236.0) (2023-06-27)
+
+
+### Features
+
+* Expose MicroLoader in the npm package ([#589](https://github.com/newrelic/newrelic-browser-agent/issues/589)) ([5175356](https://github.com/newrelic/newrelic-browser-agent/commit/5175356dfa3c959580ae26644948afc7a8f9cd6a))
+* Remove img, jsonp, and xhrGet methods ([#576](https://github.com/newrelic/newrelic-browser-agent/issues/576)) ([f92f88e](https://github.com/newrelic/newrelic-browser-agent/commit/f92f88ec7a90617d644019a32baeab5fd9595201))
+
+
+### Bug Fixes
+
+* Fix illegal invocation error on final harvest ([#594](https://github.com/newrelic/newrelic-browser-agent/issues/594)) ([de7049f](https://github.com/newrelic/newrelic-browser-agent/commit/de7049f6892424f607b6d09c90ebef2909d0b19f))
+* Handle chunk load promise error introduced in 1.235.0 ([#603](https://github.com/newrelic/newrelic-browser-agent/issues/603)) ([a702e23](https://github.com/newrelic/newrelic-browser-agent/commit/a702e2333b31f9088e7076727eb4a6cf26615841))
+
 ## [1.235.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.234.0...v1.235.0) (2023-06-20)
 
 
 ### Features
 
-* Add error mode to session trace - NEWRELIC-8666 NEWRELIC-9283 ([#583](https://github.com/newrelic/newrelic-browser-agent/issues/583)) ([98e3f18](https://github.com/newrelic/newrelic-browser-agent/commit/98e3f18c182be93b93386968026555c2575fd29d))
+* Add error mode to session trace ([#583](https://github.com/newrelic/newrelic-browser-agent/issues/583)) ([98e3f18](https://github.com/newrelic/newrelic-browser-agent/commit/98e3f18c182be93b93386968026555c2575fd29d))
 * Decorate error objects to facilitate future UI experiences ([#574](https://github.com/newrelic/newrelic-browser-agent/issues/574)) ([1167c98](https://github.com/newrelic/newrelic-browser-agent/commit/1167c9826cd78be0f4a9c6cb5d74c6d37685ba0e))
 * Minor feature class changes to support testing new features ([#571](https://github.com/newrelic/newrelic-browser-agent/issues/571)) ([a717951](https://github.com/newrelic/newrelic-browser-agent/commit/a717951d12b41ec68f79548c68370cd89502e539))
 * Remove unused data from session trace requests ([276c4f6](https://github.com/newrelic/newrelic-browser-agent/commit/276c4f6ee35063e6b22cb2dc4c70729ffb89ca3d))
-* Use new shared session for Session Trace feature - NEWRELIC-8662 ([#545](https://github.com/newrelic/newrelic-browser-agent/issues/545)) ([dbd995a](https://github.com/newrelic/newrelic-browser-agent/commit/dbd995a995af27f4f99316860ece7bcb24f53e73))
+* Use new shared session for Session Trace feature ([#545](https://github.com/newrelic/newrelic-browser-agent/issues/545)) ([dbd995a](https://github.com/newrelic/newrelic-browser-agent/commit/dbd995a995af27f4f99316860ece7bcb24f53e73))
 
 ## [1.234.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.233.1...v1.234.0) (2023-06-02)
 
@@ -57,7 +71,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Features
 
 * Add internal session metrics ([bcfe6ff](https://github.com/newrelic/newrelic-browser-agent/commit/bcfe6ffff9d0be583bbd9d5d6ef78265aaa753cb))
-* Add new stateful Session Manager - NEWRELIC-7986 ([#464](https://github.com/newrelic/newrelic-browser-agent/issues/464)) ([32e1061](https://github.com/newrelic/newrelic-browser-agent/commit/32e1061646d89d6270f027acd5e35bc089323bda))
+* Add new stateful Session Manager ([#464](https://github.com/newrelic/newrelic-browser-agent/issues/464)) ([32e1061](https://github.com/newrelic/newrelic-browser-agent/commit/32e1061646d89d6270f027acd5e35bc089323bda))
 * Add query parameter supportability metrics ([#518](https://github.com/newrelic/newrelic-browser-agent/issues/518)) ([88c2d83](https://github.com/newrelic/newrelic-browser-agent/commit/88c2d83609c2b11aad81d4480fce25b007c4b4fa))
 * Allow custom error grouping ([f95630d](https://github.com/newrelic/newrelic-browser-agent/commit/f95630dfbbb7234950fc37216c059218237eeb11))
 

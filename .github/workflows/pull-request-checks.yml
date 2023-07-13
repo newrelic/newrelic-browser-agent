@@ -142,9 +142,18 @@ jobs:
             build/*.stats.html
             build/*.stats.json
 
+  wdio:
+    name: WDIO
+    needs: [find-pull-request,wdio-coverage]
+    uses: ./.github/workflows/wdio-all-browsers.yml
+    with:
+      ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
+      build-number: PR${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number}}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+    secrets: inherit
+
   complete-status-comment-pull-request:
     name: Comment pull request
-    needs: [find-pull-request,jest-unit,jest-component,eslint,wdio-coverage]
+    needs: [find-pull-request,jest-unit,jest-component,eslint,wdio-coverage,size-check,wdio]
     if: ${{ always() && needs.find-pull-request.result == 'success' }}
     runs-on: ubuntu-latest
     defaults:

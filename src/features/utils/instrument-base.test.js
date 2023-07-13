@@ -64,7 +64,7 @@ beforeEach(() => {
   aggregator = {}
   featureName = faker.datatype.uuid()
 
-  mockAggregate = jest.fn(() => { /* noop */ })
+  mockAggregate = jest.fn()
   jest.mocked(lazyFeatureLoader).mockResolvedValue({ Aggregate: mockAggregate })
 })
 
@@ -194,4 +194,23 @@ test('feature still imports by default even when setupAgentSession throws an err
   expect(warn).toHaveBeenCalledWith(expect.stringContaining('A problem occurred when starting up session manager'), expect.any(Error))
   expect(lazyFeatureLoader).toHaveBeenCalled()
   expect(mockAggregate).toHaveBeenCalled()
+  await expect(instrument.onAggregateImported).resolves.toBe(true)
+})
+
+test('no uncaught async exception is thrown when an import fails', async () => {
+  jest.mocked(lazyFeatureLoader).mockRejectedValue(new Error('ChunkLoadError')) // () => { throw new Error('ChunkLoadError: loading chunk xxx failed.') })
+  const mockOnError = jest.fn()
+  global.onerror = mockOnError
+
+  const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName)
+  instrument.abortHandler = jest.fn()
+  instrument.importAggregator()
+
+  const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
+  await windowLoadCallback()
+
+  expect(warn).toHaveBeenNthCalledWith(2, expect.stringContaining(`Downloading and initializing ${featureName} failed`), expect.any(Error))
+  expect(instrument.abortHandler).toHaveBeenCalled()
+  await expect(instrument.onAggregateImported).resolves.toBe(false)
+  expect(mockOnError).not.toHaveBeenCalled()
 })

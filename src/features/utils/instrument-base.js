@@ -56,8 +56,8 @@ export class InstrumentBase extends FeatureBase {
     if (this.featAggregate || !this.auto) return
     const enableSessionTracking = isBrowserScope && getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true
     let loadedSuccessfully, loadFailed
-    this.onAggregateImported = new Promise((resolve, reject) => {
-      loadedSuccessfully = resolve; loadFailed = reject
+    this.onAggregateImported = new Promise(resolve => {
+      loadedSuccessfully = resolve
     })
 
     const importLater = async () => {
@@ -83,12 +83,12 @@ export class InstrumentBase extends FeatureBase {
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
         this.featAggregate = new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)
-        loadedSuccessfully()
+        loadedSuccessfully(true)
       } catch (e) {
         warn(`Downloading and initializing ${this.featureName} failed...`, e)
         this.abortHandler?.() // undo any important alterations made to the page
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
-        loadFailed()
+        loadedSuccessfully(false)
       }
     }
 

@@ -251,7 +251,7 @@ export class Aggregate extends AggregateBase {
     this.hasSnapshot = false
     this.hasError = false
     this.payloadBytesEstimation = 0
-    if (this.recording) this.clearTimestamps()
+    this.clearTimestamps()
   }
 
   /** Begin recording using configured recording lib */
@@ -260,6 +260,7 @@ export class Aggregate extends AggregateBase {
       warn('Recording library was never imported')
       return this.abort()
     }
+    this.recording = true
     const { blockClass, ignoreClass, maskTextClass, blockSelector, maskInputOptions, maskTextSelector, maskAllInputs } = getConfigurationValue(this.agentIdentifier, 'session_replay')
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
@@ -274,8 +275,6 @@ export class Aggregate extends AggregateBase {
       maskAllInputs,
       ...(this.mode === MODE.ERROR && { checkoutEveryNms: CHECKOUT_MS })
     })
-
-    this.recording = true
 
     this.stopRecording = () => {
       this.recording = false

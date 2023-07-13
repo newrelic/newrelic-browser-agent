@@ -1,0 +1,92 @@
+name: 'JIL: Single browser'
+
+on:
+  workflow_dispatch:
+    inputs:
+      collection:
+        description: 'The collection of jil tests to run'
+        required: true
+        type: choice
+        options:
+        - unit
+        - functional
+        default: 'unit'
+      browser-target:
+        description: 'Which browser(s) and version(s) to target with the wdio test: chrome@latest OR chrome@* are examples'
+        required: true
+        type: string
+      build-number:
+        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
+        required: true
+        type: string
+      additional-flags:
+        description: 'Additional flags to pass to the jil cli'
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      collection:
+        description: 'The collection of jil tests to run'
+        required: false
+        type: string
+        default: 'unit'
+      browser-target:
+        description: 'Which browser(s) and version(s) to target with the wdio test: chrome@latest OR chrome@* are examples'
+        required: true
+        type: string
+      build-number:
+        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
+        required: true
+        type: string
+      additional-flags:
+        description: 'Additional flags to pass to the jil cli'
+        required: false
+        type: string
+      ref:
+        description: 'Github branch ref to checkout and run tests on'
+        required: false
+        type: string
+    secrets:
+      JIL_SAUCE_LABS_USERNAME:
+        required: true
+      JIL_SAUCE_LABS_ACCESS_KEY:
+        required: true
+      JIL_NODE_NEW_RELIC_LICENSE_KEY:
+        required: true
+
+jobs:
+  jil:
+    name: JIL Test - ${{ inputs.browser-target }} - ${{ inputs.collection }}
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      BUILD_NUMBER: ${{ inputs.build-number }}
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Build agent
+        run: npm run build:all
+      - name: Run JIL Tests
+        run: |
+          node --max-old-space-size=8192 ./tools/jil/bin/cli.js \
+            -f merged \
+            -s \
+            -b ${{ inputs.browser-target }} \
+            --concurrent 10 \
+            --${{ inputs.collection}}-only \
+            -t 85000 \
+            ${{ runner.debug && '-v -L -D -d' || '' }} \
+            ${{ inputs.additional-flags || '' }}

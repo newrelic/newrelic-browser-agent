@@ -148,14 +148,23 @@ jobs:
       browser-target: chrome@latest
       build-number: PR${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number}}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
       coverage: true
-      additional-flags: -v
     secrets: inherit
 
   wdio:
     name: WDIO
     if: github.event_name == 'workflow_dispatch'
-    needs: [find-pull-request,wdio-coverage]
+    needs: find-pull-request
     uses: ./.github/workflows/wdio-all-browsers.yml
+    with:
+      ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
+      build-number: PR${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number}}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+    secrets: inherit
+
+  jil:
+    name: JIL
+    if: github.event_name == 'workflow_dispatch'
+    needs: [find-pull-request,wdio-coverage,wdio]
+    uses: ./.github/workflows/jil-all-browsers.yml
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
       build-number: PR${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number}}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
@@ -164,7 +173,7 @@ jobs:
   complete-status-comment-pull-request:
     name: Comment pull request
     if: always() && github.event_name == 'workflow_dispatch' && needs.find-pull-request.result == 'success'
-    needs: [find-pull-request,wdio-coverage,wdio]
+    needs: [find-pull-request,wdio-coverage,wdio,jil]
     runs-on: ubuntu-latest
     defaults:
       run:

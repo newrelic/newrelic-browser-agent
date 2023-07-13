@@ -10,6 +10,11 @@ on:
     branches:
       - 'main'
 
+# Only allow one instance of this workflow to run at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   jest-unit:
     uses: ./.github/workflows/jest.yml

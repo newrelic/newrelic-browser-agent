@@ -49,7 +49,7 @@ testDriver.test('unhandledPromiseRejections are caught and are readable', suppor
       t.ok(!!err.params.stack_trace, 'stack_trace exists')
       t.ok(!!err.params.stackHash, 'stackHash exists')
     })
-    t.ok(expectedErrorMessages.every(x => x.tested), `All expected error messages were found ${expectedErrorMessages.filter(x => !x.tested)}`)
+    t.ok(expectedErrorMessages.every(x => x.tested), `All expected error messages were found ${JSON.stringify(expectedErrorMessages.filter(x => !x.tested))}`)
     t.end()
   }).catch(fail)
 

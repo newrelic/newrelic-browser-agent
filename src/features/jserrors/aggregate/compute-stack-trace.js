@@ -233,7 +233,7 @@ function computeStackTraceBySourceAndLine (ex) {
       mode: 'sourceline',
       name: className,
       message: ex.message,
-      stackString: getClassName(ex) + ': ' + ex.message + '\n    in evaluated code',
+      stackString: className + ': ' + ex.message + '\n    in evaluated code',
       frames: [{
         func: 'evaluated code'
       }]

@@ -54,6 +54,8 @@ export function createWrapperWithEmitter (emitter, always) {
    * @returns {function} The wrapped function.
    */
   function wrapFn (fn, prefix, getContext, methodName, bubble) {
+    if (typeof fn !== 'function') return fn
+
     // Unless fn is both wrappable and unwrapped, return it unchanged.
     if (notWrappable(fn)) return fn
 
@@ -107,26 +109,24 @@ export function createWrapperWithEmitter (emitter, always) {
 
   /**
    * Creates wrapper functions around each of an array of methods on a specified object.
-   * @param {Object} obj - The object to which the specified methods belong.
-   * @param {string[]} methods - An array of method names to be wrapped.
-   * @param {string} [prefix=''] - A prefix to add to the names of emitted events. If `-` is the first character, also
-   *     adds the method name before the prefix.
-   * @param {function|object} [getContext] - The function or object that will serve as the 'this' context for handlers
-   *     of events emitted by this wrapper.
-   * @param {boolean} [bubble=false] - If `true`, emitted events should also bubble up to the old emitter upon which
-   *     the `emitter` in the current scope was based (if it defines one).
+   * @param {Object} obj The object to which the specified methods belong.
+   * @param {string[]} methods An array of method names to be wrapped.
+   * @param {string} [prefix=''] A prefix to add to the names of emitted events. If `-` is the first character, also
+   * adds the method name before the prefix.
+   * @param {function|object} [getContext] The function or object that will serve as the 'this' context for handlers
+   * of events emitted by this wrapper.
+   * @param {boolean} [bubble=false] If `true`, emitted events should also bubble up to the old emitter upon which
+   * the `emitter` in the current scope was based (if it defines one).
    */
   function inPlace (obj, methods, prefix, getContext, bubble) {
     if (!prefix) prefix = ''
-    // If prefix starts with '-' set this boolean to add the method name to the prefix before passing each one to wrap.
-    var prependMethodPrefix = (prefix.charAt(0) === '-')
-    var fn
-    var method
-    var i
 
-    for (i = 0; i < methods.length; i++) {
-      method = methods[i]
-      fn = obj[method]
+    // If prefix starts with '-' set this boolean to add the method name to the prefix before passing each one to wrap.
+    const prependMethodPrefix = (prefix.charAt(0) === '-')
+
+    for (let i = 0; i < methods.length; i++) {
+      const method = methods[i]
+      const fn = obj[method]
 
       // Unless fn is both wrappable and unwrapped, bail so we don't add extra properties with undefined values.
       if (notWrappable(fn)) continue
@@ -215,7 +215,7 @@ function copy (from, to, emitter) {
  * @returns {boolean} Whether the passed function is ineligible to be wrapped.
  */
 function notWrappable (fn) {
-  return !(fn && fn instanceof Function && fn.apply && !fn[flag])
+  return !(fn && fn instanceof Function && fn.apply)
 }
 
 /**
@@ -227,6 +227,7 @@ function notWrappable (fn) {
  * @returns {function} A wrapped function with an internal reference to the original function.
  */
 export function wrapFunction (fn, wrapper) {
+  console.log('wrapFunction called')
   var wrapped = wrapper(fn)
   wrapped[flag] = fn
   copy(fn, wrapped, ee)
@@ -242,6 +243,7 @@ export function wrapFunction (fn, wrapper) {
  *     to the higher order function as an argument.
  */
 export function wrapInPlace (obj, fnName, wrapper) {
+  console.log('wrapInPlace called')
   var fn = obj[fnName]
   obj[fnName] = wrapFunction(fn, wrapper)
 }

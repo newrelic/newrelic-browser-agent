@@ -327,8 +327,8 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     var params = this.params
     var metrics = this.metrics
 
-    if (this.ended) return
-    this.ended = true
+    // if (this.ended) return
+    // this.ended = true
 
     for (var i = 0; i < handlersLen; i++) {
       xhr.removeEventListener(handlers[i], this.listener, false)

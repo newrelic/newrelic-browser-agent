@@ -7,6 +7,7 @@ import { gosNREUM } from '../window/nreum'
 import { getOrSet } from '../util/get-or-set'
 import { mapOwn } from '../util/map-own'
 import { getRuntime } from '../config/config'
+import { EventContext } from './event-context'
 
 var ctxId = 'nr@context'
 
@@ -22,8 +23,6 @@ if (nr.ee) {
 }
 
 export { globalInstance as ee }
-
-function EventContext () { }
 
 function ee (old, debugId) {
   var handlers = {}

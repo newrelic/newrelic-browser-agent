@@ -13,7 +13,7 @@ import { getOrSet } from '../util/get-or-set'
 import { globalScope, isBrowserScope } from '../constants/runtime'
 
 const wrapped = {}
-const XHR = XMLHttpRequest
+const XHR = globalScope.XMLHttpRequest
 const ADD_EVENT_LISTENER = 'addEventListener'
 const REMOVE_EVENT_LISTENER = 'removeEventListener'
 

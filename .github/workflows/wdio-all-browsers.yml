@@ -29,6 +29,7 @@ jobs:
   chrome:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
+      ref: ${{ inputs.ref || github.ref }}
       browser-target: chrome@*
       build-number: ${{ inputs.build-number }}
     secrets: inherit
@@ -36,6 +37,7 @@ jobs:
   firefox:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
+      ref: ${{ inputs.ref || github.ref }}
       browser-target: firefox@*
       build-number: ${{ inputs.build-number }}
     secrets: inherit
@@ -43,13 +45,16 @@ jobs:
   safari:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
-      browser-target: safari@*
+      ref: ${{ inputs.ref || github.ref }}
+      # Don't test safari@15
+      browser-target: safari@16
       build-number: ${{ inputs.build-number }}
     secrets: inherit
 
   edge:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
+      ref: ${{ inputs.ref || github.ref }}
       browser-target: edge@*
       build-number: ${{ inputs.build-number }}
     secrets: inherit
@@ -57,6 +62,7 @@ jobs:
   ios:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
+      ref: ${{ inputs.ref || github.ref }}
       browser-target: ios@*
       build-number: ${{ inputs.build-number }}
     secrets: inherit
@@ -64,6 +70,7 @@ jobs:
   android:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
+      ref: ${{ inputs.ref || github.ref }}
       browser-target: android@*
       build-number: ${{ inputs.build-number }}
     secrets: inherit
@@ -71,6 +78,7 @@ jobs:
   ie:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
+      ref: ${{ inputs.ref || github.ref }}
       browser-target: ie@11
       build-number: ${{ inputs.build-number }}
       additional-flags: -P

@@ -1,0 +1,155 @@
+name: 'JIL: All browsers'
+
+on:
+  workflow_dispatch:
+    inputs:
+      build-number:
+        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      build-number:
+        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
+        required: true
+        type: string
+      ref:
+        description: 'Github branch ref to checkout and run tests on'
+        required: false
+        type: string
+    secrets:
+      JIL_SAUCE_LABS_USERNAME:
+        required: true
+      JIL_SAUCE_LABS_ACCESS_KEY:
+        required: true
+      JIL_NODE_NEW_RELIC_LICENSE_KEY:
+        required: true
+
+jobs:
+  chrome-unit:
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: chrome@*
+      build-number: ${{ inputs.build-number }}
+      collection: unit
+    secrets: inherit
+
+  chrome-functional:
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: chrome@*
+      build-number: ${{ inputs.build-number }}
+      collection: functional
+    secrets: inherit
+
+  firefox-unit:
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: firefox@*
+      build-number: ${{ inputs.build-number }}
+      collection: unit
+    secrets: inherit
+
+  firefox-functional:
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: firefox@*
+      build-number: ${{ inputs.build-number }}
+      collection: functional
+    secrets: inherit
+
+  safari-unit:
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: safari@*
+      build-number: ${{ inputs.build-number }}
+      collection: unit
+    secrets: inherit
+
+  safari-functional:
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: safari@*
+      build-number: ${{ inputs.build-number }}
+      collection: functional
+    secrets: inherit
+
+  edge-unit:
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: edge@*
+      build-number: ${{ inputs.build-number }}
+      collection: unit
+    secrets: inherit
+
+  edge-functional:
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: edge@*
+      build-number: ${{ inputs.build-number }}
+      collection: functional
+    secrets: inherit
+
+  ios-unit:
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: ios@*
+      build-number: ${{ inputs.build-number }}
+      collection: unit
+    secrets: inherit
+
+  ios-functional:
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: ios@*
+      build-number: ${{ inputs.build-number }}
+      collection: functional
+    secrets: inherit
+
+  android-unit:
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: android@*
+      build-number: ${{ inputs.build-number }}
+      collection: unit
+    secrets: inherit
+
+  android-functional:
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: android@*
+      build-number: ${{ inputs.build-number }}
+      collection: functional
+    secrets: inherit
+
+  ie-unit:
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: ie@11
+      build-number: ${{ inputs.build-number }}
+      collection: unit
+      additional-flags: -P
+    secrets: inherit
+
+  ie-functional:
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: ie@11
+      build-number: ${{ inputs.build-number }}
+      collection: functional
+      additional-flags: -P
+    secrets: inherit

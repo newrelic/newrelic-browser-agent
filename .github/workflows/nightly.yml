@@ -17,3 +17,43 @@ jobs:
       browser-target: chrome@latest
       build-number: $BUILD_NUMBER
     secrets: inherit
+
+  jil-smoke-unit:
+    name: 'JIL: Smoke Unit Test'
+    needs: wdio-smoke
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      browser-target: chrome@latest
+      build-number: $BUILD_NUMBER
+      collection: unit
+    secrets: inherit
+
+  jil-smoke-functional:
+    name: 'JIL: Smoke Functional Test'
+    needs: wdio-smoke
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      browser-target: chrome@latest
+      build-number: $BUILD_NUMBER
+      collection: functional
+    secrets: inherit
+
+  jil-polyfill-unit:
+    name: 'JIL: Polyfill Unit Test'
+    needs: jil-smoke-unit
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      browser-target: chrome@latest
+      build-number: $BUILD_NUMBER
+      collection: unit
+    secrets: inherit
+
+  jil-polyfill-functional:
+    name: 'JIL: Polyfill Functional Test'
+    needs: jil-smoke-functional
+    uses: ./.github/workflows/jil-single-browser.yml
+    with:
+      browser-target: chrome@latest
+      build-number: $BUILD_NUMBER
+      collection: functional
+    secrets: inherit

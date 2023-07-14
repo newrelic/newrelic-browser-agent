@@ -86,7 +86,7 @@ export class Instrument extends InstrumentBase {
      * The thrown value may contain a message property. If it does, try to treat the thrown
      * value as an Error-like object.
      */
-    if (typeof error.message !== 'undefined') {
+    if (typeof error?.message !== 'undefined') {
       return new UncaughtError(
         error.message,
         error.filename || error.sourceURL,
@@ -95,7 +95,7 @@ export class Instrument extends InstrumentBase {
       )
     }
 
-    return new UncaughtError(stringify(error))
+    return new UncaughtError(typeof error === 'string' ? error : stringify(error))
   }
 
   /**

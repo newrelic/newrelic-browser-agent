@@ -47,6 +47,11 @@ export class Instrument extends InstrumentBase {
 
     globalScope.addEventListener('error', (errorEvent) => {
       if (!this.abortHandler) return
+
+      /**
+       * If the spa feature is loaded, errors may already have been captured in the `fn-err` listener above.
+       * This ensures those errors are not captured twice.
+       */
       if (this.#seenErrors.has(errorEvent.error)) {
         this.#seenErrors.delete(errorEvent.error)
         return
@@ -66,16 +71,31 @@ export class Instrument extends InstrumentBase {
     this.abortHandler = undefined // weakly allow this abort op to run only once
   }
 
+  /**
+   * Any value can be used with the `throw` keyword. This function ensures that the value is
+   * either a proper Error instance or attempts to convert it to an UncaughtError instance.
+   * @param {any} error The value thrown
+   * @returns {Error|UncaughtError} The converted error instance
+   */
   #castError (error) {
     if (error instanceof Error) {
       return error
     }
 
+    /**
+     * The thrown value may contain a message property. If it does, try to treat the thrown
+     * value as an Error-like object.
+     */
     if (typeof error.message !== 'undefined') {
-      return new UncaughtError(error.message, error.filename, error.lineno, error.colno)
+      return new UncaughtError(
+        error.message,
+        error.filename || error.sourceURL,
+        error.lineno || error.line,
+        error.colno || error.col
+      )
     }
 
-    return new UncaughtError(error)
+    return new UncaughtError(stringify(error))
   }
 
   /**
@@ -85,6 +105,7 @@ export class Instrument extends InstrumentBase {
    */
   #castPromiseRejectionEvent (promiseRejectionEvent) {
     let prefix = 'Unhandled Promise Rejection: '
+
     if (promiseRejectionEvent?.reason instanceof Error) {
       try {
         promiseRejectionEvent.reason.message = prefix + promiseRejectionEvent.reason.message
@@ -93,12 +114,12 @@ export class Instrument extends InstrumentBase {
         return promiseRejectionEvent.reason
       }
     }
-    if (typeof promiseRejectionEvent.reason === 'undefined') return new Error(prefix)
-    try {
-      return new Error(prefix + stringify(promiseRejectionEvent.reason))
-    } catch (e) {
-      return new Error(promiseRejectionEvent.reason)
-    }
+
+    if (typeof promiseRejectionEvent.reason === 'undefined') return new UncaughtError(prefix)
+
+    const error = this.#castError(promiseRejectionEvent.reason)
+    error.message = prefix + error.message
+    return error
   }
 
   /**
@@ -111,6 +132,10 @@ export class Instrument extends InstrumentBase {
       return errorEvent.error
     }
 
+    /**
+     * Older browsers do not contain the `error` property on the ErrorEvent instance.
+     * https://caniuse.com/mdn-api_errorevent_error
+     */
     return new UncaughtError(errorEvent.message, errorEvent.filename, errorEvent.lineno, errorEvent.colno)
   }
 }

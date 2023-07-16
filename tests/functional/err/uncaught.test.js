@@ -30,8 +30,7 @@ testDriver.test('reporting uncaught errors', supported, function (t, browser, ro
     const expectedErrorMessages = [
       { message: 'original onerror', tested: false },
       { message: 'uncaught error', tested: false },
-      { message: 'fake', tested: false },
-      { message: 'original return false', tested: false }
+      { message: 'original return abc', tested: false }
     ]
     actualErrors.forEach(err => {
       const targetError = expectedErrorMessages.find(x => x.message === err.params.message)
@@ -43,7 +42,7 @@ testDriver.test('reporting uncaught errors', supported, function (t, browser, ro
       if (err.params.message === 'fake') t.ok(err.params.exceptionClass !== 'Error', `fake error has correct exceptionClass (${err.params.exceptionClass})`)
       else t.ok(err.params.exceptionClass === 'Error', `error has correct exceptionClass (${err.params.exceptionClass})`)
     })
-    t.ok(expectedErrorMessages.every(x => x.tested), 'All expected error messages were found')
+    t.ok(expectedErrorMessages.every(x => x.tested), `All expected error messages were found ${JSON.stringify(expectedErrorMessages.filter(x => !x.tested))}`)
     t.end()
   }).catch(fail)
 

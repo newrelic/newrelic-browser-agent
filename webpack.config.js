@@ -154,7 +154,7 @@ const standardConfig = merge(commonConfig, {
     [`nr-loader-full${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/pro.js'),
     [`nr-loader-full${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/pro.js'),
     [`nr-loader-spa${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/spa.js'),
-    [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/spa.js'),
+    [`nr-loader-spa${PATH_VERSION}.min`]: path.resolve(__dirname, PUBLISH === 'EXPERIMENT' ? './src/cdn/experimental.js' : './src/cdn/spa.js'),
     ...(SUBVERSION === 'LOCAL' && { [`nr-loader-experimental${PATH_VERSION}`]: path.resolve(__dirname, './src/cdn/experimental.js') }),
     ...(SUBVERSION === 'LOCAL' && { [`nr-loader-experimental${PATH_VERSION}.min`]: path.resolve(__dirname, './src/cdn/experimental.js') })
   },

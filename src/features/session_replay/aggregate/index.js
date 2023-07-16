@@ -19,6 +19,7 @@ import { getConfigurationValue, getInfo, getRuntime } from '../../../common/conf
 import { SESSION_EVENTS, MODE } from '../../../common/session/session-entity'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
+import { obj as encodeObj } from '../../../common/url/encode'
 
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.8'
@@ -65,6 +66,9 @@ export class Aggregate extends AggregateBase {
     /** Payload metadata -- Should indicate that the payload being sent contains an error.  Used for query/filter purposes in UI */
     this.hasError = false
 
+    /** Payload metadata -- Should indicate when a replay blob started recording.  Resets each time a harvest occurs. */
+    this.timestamp = { first: undefined, last: undefined }
+
     /** A value which increments with every new mutation node reported. Resets after a harvest is sent */
     this.payloadBytesEstimation = 0
 
@@ -91,7 +95,7 @@ export class Aggregate extends AggregateBase {
       })
 
       // Bespoke logic for new endpoint.  This will change as downstream dependencies become solidified.
-      this.scheduler = new HarvestScheduler('blob', {
+      this.scheduler = new HarvestScheduler('browser/blobs', {
         onFinished: this.onHarvestFinished.bind(this),
         retryDelay: this.harvestTimeSeconds,
         getPayload: this.prepareHarvest.bind(this),
@@ -112,8 +116,7 @@ export class Aggregate extends AggregateBase {
             this.startRecording()
             this.scheduler.startTimer(this.harvestTimeSeconds)
 
-            const { session } = getRuntime(this.agentIdentifier)
-            session.state.sessionReplay = this.mode
+            this.syncWithSessionManager({ sessionReplay: this.mode })
           }
         }
       }, this.featureName, this.ee)
@@ -187,11 +190,11 @@ export class Aggregate extends AggregateBase {
 
     this.isFirstChunk = !!session.isNew
 
-    session.state.sessionReplay = this.mode
+    this.syncWithSessionManager({ sessionReplay: this.mode })
   }
 
   prepareHarvest () {
-    if (this.events.length === 0) return
+    if (this.events.length === 0 || (this.mode !== MODE.FULL && !this.blocked)) return
     const payload = this.getHarvestContents()
 
     if (this.shouldCompress) {
@@ -199,7 +202,6 @@ export class Aggregate extends AggregateBase {
       this.scheduler.opts.gzip = true
     } else {
       this.scheduler.opts.gzip = false
-      delete payload.qs.content_encoding
     }
     // TODO -- Gracefully handle the buffer for retries.
     this.clearBuffer()
@@ -211,24 +213,25 @@ export class Aggregate extends AggregateBase {
     const info = getInfo(this.agentIdentifier)
     return {
       qs: {
-        protocol_version: '0',
-        content_encoding: 'gzip',
-        browser_monitoring_key: info.licenseKey
-      },
-      body: {
+        browser_monitoring_key: info.licenseKey,
         type: 'SessionReplay',
-        appId: Number(info.applicationID),
-        timestamp: Date.now(),
-        blob: JSON.stringify(this.events), // this needs to be a stringified JSON array of rrweb nodes
-        attributes: {
+        app_id: info.applicationID,
+        protocol_version: '0',
+        attributes: encodeObj({
+          ...(this.shouldCompress && { content_encoding: 'gzip' }),
+          'replay.firstTimestamp': this.timestamp.first,
+          'replay.lastTimestamp': this.timestamp.last,
+          'replay.durationMs': this.timestamp.last - this.timestamp.first,
+          agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,
           hasSnapshot: this.hasSnapshot,
           hasError: this.hasError,
-          agentVersion: agentRuntime.version,
           isFirstChunk: this.isFirstChunk,
+          decompressedBytes: this.payloadBytesEstimation,
           'nr.rrweb.version': RRWEB_VERSION
-        }
-      }
+        }, MAX_PAYLOAD_SIZE - this.payloadBytesEstimation).substring(1) // remove the leading '&'
+      },
+      body: this.events
     }
   }
 
@@ -248,6 +251,7 @@ export class Aggregate extends AggregateBase {
     this.hasSnapshot = false
     this.hasError = false
     this.payloadBytesEstimation = 0
+    this.clearTimestamps()
   }
 
   /** Begin recording using configured recording lib */
@@ -256,8 +260,8 @@ export class Aggregate extends AggregateBase {
       warn('Recording library was never imported')
       return this.abort()
     }
+    this.recording = true
     const { blockClass, ignoreClass, maskTextClass, blockSelector, maskInputOptions, maskTextSelector, maskAllInputs } = getConfigurationValue(this.agentIdentifier, 'session_replay')
-    this.hasSnapshot = true
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
     const stop = recorder({
@@ -271,8 +275,6 @@ export class Aggregate extends AggregateBase {
       maskAllInputs,
       ...(this.mode === MODE.ERROR && { checkoutEveryNms: CHECKOUT_MS })
     })
-
-    this.recording = true
 
     this.stopRecording = () => {
       this.recording = false
@@ -299,12 +301,15 @@ export class Aggregate extends AggregateBase {
       this.clearBuffer()
     }
 
+    this.setTimestamps(event)
+    if (event.type === 2) this.hasSnapshot = true
+
     this.events.push(event)
     this.payloadBytesEstimation += eventBytes
 
     // We are making an effort to try to keep payloads manageable for unloading.  If they reach the unload limit before their interval,
     // it will send immediately.  This often happens on the first snapshot, which can be significantly larger than the other payloads.
-    if (payloadSize > IDEAL_PAYLOAD_SIZE) {
+    if (payloadSize > IDEAL_PAYLOAD_SIZE && this.mode !== MODE.ERROR) {
       // if we've made it to the ideal size of ~64kb before the interval timer, we should send early.
       this.scheduler.runHarvest()
     }
@@ -314,7 +319,16 @@ export class Aggregate extends AggregateBase {
   takeFullSnapshot () {
     if (!recorder) return
     recorder.takeFullSnapshot()
-    this.hasSnapshot = true
+  }
+
+  setTimestamps (rrwebEvent) {
+    if (!rrwebEvent) return
+    if (!this.timestamp.first) this.timestamp.first = rrwebEvent.timestamp
+    this.timestamp.last = rrwebEvent.timestamp
+  }
+
+  clearTimestamps () {
+    this.timestamp = { first: undefined, last: undefined }
   }
 
   /** Estimate the payload size */
@@ -328,9 +342,9 @@ export class Aggregate extends AggregateBase {
     this.blocked = true
     this.mode = MODE.OFF
     this.stopRecording()
+    this.syncWithSessionManager({ sessionReplay: this.mode })
+    this.clearTimestamps()
     this.ee.emit('REPLAY_ABORTED')
-    const { session } = getRuntime(this.agentIdentifier)
-    session.state.sessionReplay = this.mode
   }
 
   /** Extensive research has yielded about an 88% compression factor on these payloads.
@@ -340,5 +354,10 @@ export class Aggregate extends AggregateBase {
   estimateCompression (data) {
     if (this.shouldCompress) return data * AVG_COMPRESSION
     return data
+  }
+
+  syncWithSessionManager (state = {}) {
+    const { session } = getRuntime(this.agentIdentifier)
+    session.write(state)
   }
 }

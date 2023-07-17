@@ -1,7 +1,3 @@
-/**
- * @typedef {import('./api/interaction-types').InteractionInstance} InteractionInstance
- */
-
 export class AgentBase {
   /**
    * Reports a browser PageAction event along with a name and optional attributes.
@@ -36,13 +32,6 @@ export class AgentBase {
   setCustomAttribute (name, value, persist) {}
 
   /**
-   * Returns a new API object that is bound to the current SPA interaction.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/interaction/}
-   * @returns {InteractionInstance} An API object that is bound to a specific BrowserInteraction event. Each time this method is called for the same BrowserInteraction, a new object is created, but it still references the same interaction.
-   */
-  interaction () {}
-
-  /**
    * Identifies a browser error without disrupting your app's operations.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/noticeerror/}
    * @param {Error|string} error Provide a meaningful error message that you can use when analyzing data on browser's JavaScript errors page.
@@ -70,18 +59,6 @@ export class AgentBase {
    * @param {number} [timeStamp] Defaults to the current time of the call. If used, this marks the time that the page is "finished" according to your own criteria.
    */
   finished (timeStamp) {}
-
-  /**
-   * Adds a JavaScript object with a custom name, start time, etc. to an in-progress session trace.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/addtotrace/}
-   * @param {{name: string, start: number, end?: number, origin?: string, type?: string}} customAttributes Supply a JavaScript object with these required and optional name/value pairs:
-   *
-   * - Required name/value pairs: name, start
-   * - Optional name/value pairs: end, origin, type
-   *
-   * If you are sending the same event object to New Relic as a PageAction, omit the TYPE attribute. (type is a string to describe what type of event you are marking inside of a session trace.) If included, it will override the event type and cause the PageAction event to be sent incorrectly. Instead, use the name attribute for event information.
-   */
-  addToTrace (customAttributes) {}
 
   /**
    * Adds a unique name and ID to identify releases with multiple JavaScript bundles on the same page.

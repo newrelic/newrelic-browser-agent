@@ -8,4 +8,4 @@ const opts = {
 }
 
 const agent = new BrowserAgent(opts);
-agent.setPageViewName('vite-react-wrapper')
+agent.setPageViewName('vite-react-wrapper');

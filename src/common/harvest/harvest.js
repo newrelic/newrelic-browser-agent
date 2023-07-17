@@ -16,6 +16,7 @@ import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/env'
 import { isWorkerScope, isIE } from '../constants/runtime'
+import { warn } from '../util/console'
 
 /**
  * @typedef {import('./types.js').NetworkSendSpec} NetworkSendSpec
@@ -115,6 +116,7 @@ export class Harvest extends SharedContext {
       } else {
         body = stringify(body)
       }
+      if (body.length > 750000) warn('The Browser Agent is attempting to send a very large payload. This is usually tied to large amounts of custom attributes. Please check your configurations.')
     }
 
     if (!body || body.length === 0 || body === '{}' || body === '[]') {

@@ -3,6 +3,7 @@ import { faker } from '@faker-js/faker'
 import * as encodeModule from '../url/encode'
 import * as submitDataModule from '../util/submit-data'
 import * as configModule from '../config/config'
+import { warn } from '../util/console'
 import { applyFnToProps } from '../util/traverse'
 
 import { Harvest } from './harvest'
@@ -286,6 +287,15 @@ describe('_send', () => {
       sync: undefined,
       url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
     })
+  })
+
+  test('should warn if payload is large', () => {
+    spec.payload.body = 'x'.repeat(1024 * 1024) // ~1mb string
+
+    const result = harvestInstance._send(spec)
+
+    expect(result).toEqual(true)
+    expect(warn).toHaveBeenCalledWith('The Browser Agent is attempting to send a very large payload. This is usually tied to large amounts of custom attributes. Please check your configurations.')
   })
 
   test('should set body to events when endpoint is events', () => {

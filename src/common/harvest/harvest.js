@@ -107,7 +107,7 @@ export class Harvest extends SharedContext {
     }
 
     const fullUrl = `${url}?${baseParams}${payloadParams}`
-    const gzip = qs.content_encoding === 'gzip'
+    const gzip = !!qs?.attributes?.includes('gzip')
 
     if (!gzip) {
       if (endpoint === 'events') {
@@ -239,7 +239,7 @@ export class Harvest extends SharedContext {
    */
   cleanPayload (payload = {}) {
     const clean = (input) => {
-      if (typeof Uint8Array !== 'undefined' && input instanceof Uint8Array) {
+      if ((typeof Uint8Array !== 'undefined' && input instanceof Uint8Array) || typeof input === 'string') {
         return input.length > 0 ? input : null
       }
       return Object.entries(input || {})

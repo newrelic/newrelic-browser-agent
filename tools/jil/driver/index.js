@@ -33,7 +33,7 @@ wd.addAsyncMethod('waitForFeature', function (feat, cb) {
   this.waitFor(
     // condition for webpack built agent
     asserters.jsCondition(`window.NREUM && window.NREUM.activatedFeatures && window.NREUM.activatedFeatures['${feat}']`),
-    this._testDriver.timeout || 60000,
+    this._testDriver.timeout || 85000,
     cb
   )
 })

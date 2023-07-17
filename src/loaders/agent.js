@@ -104,19 +104,25 @@ export class Agent extends AgentBase {
    *
    * If you are sending the same event object to New Relic as a PageAction, omit the TYPE attribute. (type is a string to describe what type of event you are marking inside of a session trace.) If included, it will override the event type and cause the PageAction event to be sent incorrectly. Instead, use the name attribute for event information.
    */
-  addToTrace (customAttributes) {}
+  addToTrace (customAttributes) {
+    warn('Call to agent api addToTrace failed. The page action feature is not currently initialized.')
+  }
 
   /**
    * Gives SPA routes more accurate names than default names. Monitors specific routes rather than by default grouping.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setcurrentroutename/}
    * @param {string} name Current route name for the page.
    */
-  setCurrentRouteName (name) {}
+  setCurrentRouteName (name) {
+    warn('Call to agent api setCurrentRouteName failed. The spa feature is not currently initialized.')
+  }
 
   /**
    * Returns a new API object that is bound to the current SPA interaction.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/interaction/}
    * @returns {InteractionInstance} An API object that is bound to a specific BrowserInteraction event. Each time this method is called for the same BrowserInteraction, a new object is created, but it still references the same interaction.
    */
-  interaction () {}
+  interaction () {
+    warn('Call to agent api interaction failed. The spa feature is not currently initialized.')
+  }
 }

@@ -1,7 +1,8 @@
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { testBlobRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { config, getSR } from './helpers'
-import { testRumRequest, testBlobRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe('Session Replay Ingest Behavior', () => {
+describe.withBrowsersMatching(notIE)('Session Replay Ingest Behavior', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })
@@ -12,7 +13,7 @@ describe('Session Replay Ingest Behavior', () => {
 
   it('Should empty event buffer when sending', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
-      .then(() => browser.waitForAgentLoad())
+      .then(() => browser.waitForSessionReplayRecording())
 
     expect((await getSR()).events.length).toBeGreaterThan(0)
 
@@ -23,9 +24,9 @@ describe('Session Replay Ingest Behavior', () => {
 
   it('Should stop recording if 429 response', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
-      .then(() => browser.waitForAgentLoad())
+      .then(() => browser.waitForSessionReplayRecording())
 
-    expect(await getSR()).toEqual(expect.objectContaining({
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
       events: expect.any(Array),
       initialized: true,
       recording: true,
@@ -34,14 +35,14 @@ describe('Session Replay Ingest Behavior', () => {
     }))
 
     await Promise.all([
-      browser.testHandle.expectBlob(),
       browser.testHandle.scheduleReply('bamServer', {
         test: testBlobRequest,
         statusCode: 429
-      })
+      }),
+      browser.testHandle.expectBlob()
     ])
 
-    expect(await getSR()).toEqual(expect.objectContaining({
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
       events: [],
       initialized: true,
       recording: false,

@@ -13,6 +13,9 @@ const { paths } = require('../constants')
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify, testServer) {
+  fastify.get('/health', async function (request, reply) {
+    reply.code(204).send()
+  })
   fastify.get('/slowscript', {
     compress: false
   }, (request, reply) => {

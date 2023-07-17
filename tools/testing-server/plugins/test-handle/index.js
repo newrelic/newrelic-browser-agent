@@ -24,7 +24,7 @@ module.exports = fp(async function (fastify, testServer) {
       if (request.scheduledReply.statusCode) {
         reply.code(request.scheduledReply.statusCode)
       }
-      if (request.scheduledReply.body) {
+      if (Object.prototype.hasOwnProperty.call(request.scheduledReply, 'body')) {
         payload = request.scheduledReply.body
       }
     }

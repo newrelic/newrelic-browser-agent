@@ -7,10 +7,10 @@
 import { drain, registerDrain } from '../../common/drain/drain'
 import { FeatureBase } from './feature-base'
 import { onWindowLoad } from '../../common/window/load'
-import { isBrowserScope } from '../../common/util/global-scope'
+import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { FEATURE_NAMES } from '../../loaders/features/features'
-import { getConfigurationValue } from '../../common/config/config'
+import { getConfigurationValue, originals } from '../../common/config/config'
 
 /**
  * Base class for instrumenting a feature.
@@ -56,8 +56,8 @@ export class InstrumentBase extends FeatureBase {
     if (this.featAggregate || !this.auto) return
     const enableSessionTracking = isBrowserScope && getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true
     let loadedSuccessfully, loadFailed
-    this.onAggregateImported = new Promise((resolve, reject) => {
-      loadedSuccessfully = resolve; loadFailed = reject
+    this.onAggregateImported = new Promise(resolve => {
+      loadedSuccessfully = resolve
     })
 
     const importLater = async () => {
@@ -83,12 +83,12 @@ export class InstrumentBase extends FeatureBase {
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
         this.featAggregate = new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)
-        loadedSuccessfully()
+        loadedSuccessfully(true)
       } catch (e) {
         warn(`Downloading and initializing ${this.featureName} failed...`, e)
         this.abortHandler?.() // undo any important alterations made to the page
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
-        loadFailed()
+        loadedSuccessfully(false)
       }
     }
 
@@ -105,15 +105,11 @@ export class InstrumentBase extends FeatureBase {
  * @returns
  */
   shouldImportAgg (featureName, session) {
-  // if this isnt the FIRST load of a session AND
-  // we are not actively recording SR... DO NOT run the aggregator
-  // session replay samples can only be decided on the first load of a session
-  // session replays can continue if in progress
     if (featureName === FEATURE_NAMES.sessionReplay) {
-      if (getConfigurationValue(this.agentIdentifier, 'session_trace.enabled') === false) return false
-      return !!session?.isNew || !!session?.state.sessionReplay
+      if (!originals.MO) return false // Session Replay cannot work without Mutation Observer
+      if (getConfigurationValue(this.agentIdentifier, 'session_trace.enabled') === false) return false // Session Replay as of now is tightly coupled with Session Trace in the UI
+      return !!session?.isNew || !!session?.state.sessionReplay // Session Replay should only try to run if already running from a previous page, or at the beginning of a session
     }
-    // todo -- add case like above for session trace
     return true
   }
 }

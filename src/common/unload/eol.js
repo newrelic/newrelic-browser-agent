@@ -2,10 +2,9 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { ffVersion } from '../browser-version/firefox-version'
 import { windowAddEventListener } from '../event-listener/event-listener-opts'
 import { single } from '../util/invoke'
-import { globalScope, isWorkerScope, isBrowserScope } from '../util/global-scope'
+import { ffVersion, globalScope, isWorkerScope, isBrowserScope } from '../constants/runtime'
 import { subscribeToVisibilityChange } from '../window/page-visibility'
 
 if (isWorkerScope) {

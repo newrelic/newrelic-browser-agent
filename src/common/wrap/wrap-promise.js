@@ -10,7 +10,7 @@
 import { createWrapperWithEmitter as wrapFn, flag } from './wrap-function'
 import { ee as baseEE, getOrSetContext } from '../event-emitter/contextual-ee'
 import { originals } from '../config/config'
-import { globalScope } from '../util/global-scope'
+import { globalScope } from '../constants/runtime'
 
 const wrapped = {}
 

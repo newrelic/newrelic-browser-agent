@@ -11,8 +11,8 @@ const supportedBrowsers = new SpecMatcher()
   .include('edge>=14')
   .include('android')
 
-describe('stack trace', () => {
-  withBrowsersMatching(supportedBrowsers)('identifies <inline> for same-page scripts (but only same-page scripts)', async () => {
+describe.withBrowsersMatching(supportedBrowsers)('stack trace', () => {
+  it('identifies <inline> for same-page scripts (but only same-page scripts)', async () => {
     const [errorsResults] = await Promise.all([
       browser.testHandle.expectErrors(),
       browser.url(await browser.testHandle.assetURL('sub-path-script-error/')) // Setup expects before loading the page
@@ -35,7 +35,7 @@ describe('stack trace', () => {
     expect(stackTraceLines[3]).not.toContain('<inline>')
   })
 
-  withBrowsersMatching(supportedBrowsers)('still identifies <inline> for same-page scripts after SPA route changes', async () => {
+  it('still identifies <inline> for same-page scripts after SPA route changes', async () => {
     await browser.url(await browser.testHandle.assetURL('sub-path-script-error/index.html'))
       .then(() => browser.waitForAgentLoad())
 

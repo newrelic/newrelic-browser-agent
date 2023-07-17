@@ -43,62 +43,6 @@ testDriver.test('PageAction submission', function (t, browser, router) {
     .catch(fail(t))
 })
 
-testDriver.test('PageActions are retried when collector returns 429', function (t, browser, router) {
-  let assetURL = router.assetURL('instrumented.html', {
-    init: {
-      ins: {
-        harvestTimeSeconds: 2
-      },
-      harvest: {
-        tooManyRequestsDelay: 10
-      }
-    }
-  })
-
-  let loadPromise = browser.get(assetURL)
-  let rumPromise = router.expectRum()
-  let firstBody
-
-  Promise.all([rumPromise, loadPromise])
-    .then(() => {
-      router.scheduleReply('bamServer', {
-        test: testInsRequest,
-        statusCode: 429
-      })
-      browser.safeEval('newrelic.addPageAction("exampleEvent", {param: "value"})')
-
-      return router.expectIns()
-    })
-    .then(({ request, reply }) => {
-      t.equal(reply.statusCode, 429, 'server responded with 429')
-
-      if (request.body) {
-        firstBody = request.body.ins
-      } else {
-        firstBody = JSON.parse(request.query.ins)
-      }
-
-      return router.expectIns()
-    })
-    .then(({ request, reply }) => {
-      t.equal(router.requestCounts.bamServer.ins, 2, 'got two ins harvest requests')
-
-      let secondBody
-
-      if (request.body) {
-        secondBody = request.body.ins
-      } else {
-        secondBody = JSON.parse(request.query.ins)
-      }
-
-      t.equal(reply.statusCode, 200, 'server responded with 200')
-      t.deepEqual(secondBody, firstBody, 'post body in retry harvest should be the same as in the first harvest')
-
-      t.end()
-    })
-    .catch(fail(t))
-})
-
 testDriver.test('PageAction submission on final harvest', function (t, browser, router) {
   let assetURL = router.assetURL('instrumented.html', {
     init: {

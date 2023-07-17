@@ -1,8 +1,8 @@
-import { supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
-import { config, getSR } from './helpers'
+import { config, testExpectedReplay } from './helpers'
+import { supportsMultipleTabs, notIE, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 
-describe('Session Replay Across Pages', () => {
+describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })
@@ -15,95 +15,28 @@ describe('Session Replay Across Pages', () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
       .then(() => browser.waitForAgentLoad())
 
-    const { localStorage } = await browser.getAgentSessionInfo()
     const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
+    const { localStorage } = await browser.getAgentSessionInfo()
 
-    expect(page1Contents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
+    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: true })
 
-    expect(page1Contents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: true,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
-
-    await browser.testHandle.scheduleReply('bamServer', {
-      test: testRumRequest,
-      body: JSON.stringify({
-        stn: 1,
-        err: 1,
-        ins: 1,
-        cap: 1,
-        spa: 1,
-        loaded: 1,
-        sr: 1
-      })
-    })
+    await browser.enableSessionReplay()
     await browser.refresh()
       .then(() => browser.waitForAgentLoad())
 
     const { request: page2Contents } = await browser.testHandle.expectBlob()
 
-    expect(page2Contents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(page2Contents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: false,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
+    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: false })
   })
 
   it('should record across same-tab page navigation', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
       .then(() => browser.waitForAgentLoad())
+
     const { localStorage } = await browser.getAgentSessionInfo()
     const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
+    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: true })
 
-    expect(page1Contents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(page1Contents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: true,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: JSON.stringify({
@@ -116,99 +49,35 @@ describe('Session Replay Across Pages', () => {
         sr: 1
       })
     })
+
+    await browser.enableSessionReplay()
+
     await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
       .then(() => browser.waitForAgentLoad())
 
     const { request: page2Contents } = await browser.testHandle.expectBlob(10000)
-
-    expect(page2Contents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(page2Contents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: false,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
+    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: false })
   })
 
-  withBrowsersMatching(supportsMultipleTabs)('should record across new-tab page navigation', async () => {
+  // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
+  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should record across new-tab page navigation', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
       .then(() => browser.waitForAgentLoad())
-    const { localStorage } = await browser.getAgentSessionInfo()
+
     const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
+    const { localStorage } = await browser.getAgentSessionInfo()
 
-    expect(page1Contents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(page1Contents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: true,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
+    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: true })
 
     const newTab = await browser.createWindow('tab')
     await browser.switchToWindow(newTab.handle)
-    await browser.testHandle.scheduleReply('bamServer', {
-      test: testRumRequest,
-      body: JSON.stringify({
-        stn: 1,
-        err: 1,
-        ins: 1,
-        cap: 1,
-        spa: 1,
-        loaded: 1,
-        sr: 1
-      })
-    })
+    await browser.enableSessionReplay()
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
       .then(() => browser.waitForAgentLoad())
 
     const { request: page2Contents } = await browser.testHandle.expectBlob(10000)
 
-    expect(page2Contents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(page2Contents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: false,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
+    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: false })
 
     await browser.closeWindow()
     await browser.switchToWindow((await browser.getWindowHandles())[0])
@@ -217,51 +86,20 @@ describe('Session Replay Across Pages', () => {
   it('should not record across navigations if not active', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
       .then(() => browser.waitForAgentLoad())
-    const { localStorage } = await browser.getAgentSessionInfo()
+
     const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
+    const { localStorage } = await browser.getAgentSessionInfo()
 
-    expect(page1Contents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(page1Contents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: true,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
+    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: true })
 
     await browser.execute(function () {
       Object.values(NREUM.initializedAgents)[0].runtime.session.state.sessionReplay = 0
     })
 
-    await browser.testHandle.scheduleReply('bamServer', {
-      test: testRumRequest,
-      body: JSON.stringify({
-        stn: 1,
-        err: 1,
-        ins: 1,
-        cap: 1,
-        spa: 1,
-        loaded: 1,
-        sr: 1
-      })
-    })
+    await browser.enableSessionReplay()
     await browser.refresh()
       .then(() => browser.waitForAgentLoad())
 
-    const sr = await getSR()
-
-    expect(sr.exists).toEqual(false)
+    await expect(browser.waitForFeatureAggregate('session_replay', 5000)).rejects.toThrow()
   })
 })

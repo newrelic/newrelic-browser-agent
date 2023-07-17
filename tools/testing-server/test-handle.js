@@ -25,6 +25,7 @@ const SerAny = require('serialize-anything')
  * @typedef {object} ScheduledReply
  * @property {Function|string} test function that takes the fastify request object and returns true if the scheduled
  * response should be applied
+ * @property {boolean} permanent indicates if the reply should be left in place
  * @property {number} statusCode response code
  * @property {string} body response body
  * @property {number} delay delay the response by a number of milliseconds
@@ -121,11 +122,17 @@ module.exports = class TestHandle {
 
           if (test.call(this, request)) {
             request.scheduledReply = scheduledReply
-            scheduledReplies.delete(scheduledReply)
+
+            if (!scheduledReply.permanent) {
+              scheduledReplies.delete(scheduledReply)
+            }
             break
           }
         } catch (e) {
-          scheduledReplies.delete(scheduledReply)
+          fastify.log.error(e)
+          if (!scheduledReply.permanent) {
+            scheduledReplies.delete(scheduledReply)
+          }
         }
       }
     }
@@ -149,6 +156,7 @@ module.exports = class TestHandle {
             break
           }
         } catch (e) {
+          fastify.log.error(e)
           pendingExpect.reject(e)
           pendingExpects.delete(pendingExpect)
         }

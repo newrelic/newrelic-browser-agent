@@ -9,7 +9,7 @@ import { ee } from '../../common/event-emitter/contextual-ee'
 import { now } from '../../common/timing/now'
 import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
-import { isBrowserScope } from '../../common/util/global-scope'
+import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { gosCDN } from '../../common/window/nreum'
@@ -127,7 +127,7 @@ export function setAPI (agentIdentifier, forceDrain) {
           try {
             return cb.apply(this, arguments)
           } catch (err) {
-            tracerEE.emit('fn-err', [arguments, this, typeof err == 'string' ? new Error(err) : err], contextStore)
+            tracerEE.emit('fn-err', [arguments, this, err], contextStore)
             // the error came from outside the agent, so don't swallow
             throw err
           } finally {

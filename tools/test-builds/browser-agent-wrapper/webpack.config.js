@@ -37,7 +37,7 @@ const config = [
       'custom-agent-lite': './src/custom-agent-lite.js',
       'custom-agent-pro': './src/custom-agent-pro.js',
       'custom-agent-spa': './src/custom-agent-spa.js',
-      // 'micro-agent': './src/micro-agent.js',
+      'micro-agent': './src/micro-agent.js',
       // worker init script
       'worker-init': './src/worker-init.js'
     },

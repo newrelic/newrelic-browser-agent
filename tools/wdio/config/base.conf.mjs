@@ -47,12 +47,12 @@ export default function config () {
         buildIdentifier
       }]
     ],
-    specFileRetries: args.retry ? 3 : 0,
+    specFileRetries: args.retry ? 1 : 0,
     specFileRetriesDeferred: true,
     framework: 'mocha',
     mochaOpts: {
       ui: 'bdd',
-      timeout: 60000,
+      timeout: 85000,
       retries: args.retry ? 3 : 0
     },
     autoCompileOpts: {

@@ -19,7 +19,7 @@ const ajaxTestInstr = new AjaxInstrum(agentIdentifier, aggregator, false)
 const jserrTestInstr = new JsErrInstrum(agentIdentifier, aggregator, false)
 const jserrTestAgg = new JsErrAggreg(agentIdentifier, aggregator)
 
-import {ffVersion} from '../../../src/common/browser-version/firefox-version'
+import {ffVersion} from '../../../src/common/constants/runtime'
 const hasXhr = window.XMLHttpRequest && XMLHttpRequest.prototype && XMLHttpRequest.prototype.addEventListener
 
 let onloadtime = 2

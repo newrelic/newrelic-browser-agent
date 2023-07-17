@@ -14,9 +14,9 @@ class TestServerLogger {
     }
   }
 
-  logNetworkRequest (request) {
+  logNetworkRequest (request, reply) {
     if (this.#config.logRequests) {
-      this.#parentLogger.info(`${request.server.testServerId} -> ${request.method} ${request.url}`)
+      this.#parentLogger.info(`${request.server.testServerId} -> ${request.method} ${request.url} ${reply.statusCode}`)
     }
   }
 

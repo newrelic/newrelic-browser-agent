@@ -4,8 +4,8 @@ import { ee } from '../../common/event-emitter/contextual-ee'
 import { handle } from '../../common/event-emitter/handle'
 import { registerHandler } from '../../common/event-emitter/register-handler'
 import { single } from '../../common/util/invoke'
-import { submitData } from '../../common/util/submit-data'
-import { isBrowserScope } from '../../common/util/global-scope'
+import * as submitData from '../../common/util/submit-data'
+import { isBrowserScope } from '../../common/constants/runtime'
 import { CUSTOM_METRIC_CHANNEL } from '../../features/metrics/constants'
 
 export function setAPI (agentIdentifier) {
@@ -78,7 +78,7 @@ export function setAPI (agentIdentifier) {
     url += 'fe=' + ~~fe_time + '&'
     url += 'c=' + cycle
 
-    submitData.img({ url })
+    submitData.xhr({ url })
   }
 
   function setErrorHandler (t, handler) {

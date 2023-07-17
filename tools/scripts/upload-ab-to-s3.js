@@ -68,6 +68,11 @@ const config = {
         'staging-bam.nr-data.net',
         'bam-cell.nr-data.net'
       ]
+    },
+    session_replay: {
+      enabled: true,
+      sampleRate: 0.5,
+      errorSampleRate: 1
     }
   },
 
@@ -125,6 +130,9 @@ function getIdFromUrl (url) {
       expires.setMonth(expires.getMonth() + 1)
 
       const uploads = await uploadToS3(filename, output, bucket, dry, 300, expires.toISOString())
+
+      console.log(output)
+      console.log('---------------------------------------')
       console.log(`Successfully uploaded ${filename} to S3`)
       process.exit(0)
     }).catch(err => {
@@ -210,5 +218,5 @@ function getOpenPrNums () {
 
 async function getExperiments () {
   const objects = await getListOfObjects(bucket, 'experiments/')
-  return objects.filter(({ Key }) => Key.includes('nr-loader-spa.min.js')).map(({ Key }) => Key)
+  return objects.filter(({ Key }) => Key.includes('nr-loader-spa.min.js') && Key.endsWith('.js')).map(({ Key }) => Key)
 }

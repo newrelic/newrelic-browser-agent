@@ -7,6 +7,9 @@ const { rumFlags } = require('../constants')
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify) {
+  fastify.get('/health', async function (request, reply) {
+    reply.code(204).send()
+  })
   fastify.route({
     method: ['GET', 'POST'],
     url: '/debug',
@@ -48,10 +51,10 @@ module.exports = fp(async function (fastify) {
   })
   fastify.route({
     method: ['POST'],
-    url: '/blob',
+    url: '/browser/blobs',
     handler: async function (request, reply) {
       if (request.testHandle) {
-        request.testHandle.incrementRequestCount(fastify.testServerId, 'blob')
+        request.testHandle.incrementRequestCount(fastify.testServerId, 'blobs')
       }
 
       return reply.code(200).send('')

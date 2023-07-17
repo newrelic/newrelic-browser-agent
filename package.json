@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.235.0",
+  "version": "1.236.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "Tests for the New Relic JavaScript agent",
@@ -36,6 +36,11 @@
       "types": "./dist/types/loaders/browser-agent.d.ts",
       "require": "./dist/cjs/loaders/browser-agent.js",
       "default": "./dist/esm/loaders/browser-agent.js"
+    },
+    "./loaders/micro-agent": {
+      "types": "./dist/types/loaders/micro-agent.d.ts",
+      "require": "./dist/cjs/loaders/micro-agent.js",
+      "default": "./dist/esm/loaders/micro-agent.js"
     },
     "./loaders/worker-agent": {
       "types": "./dist/types/loaders/worker-agent.d.ts",

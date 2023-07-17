@@ -1,9 +1,9 @@
 import { faker } from '@faker-js/faker'
-import * as globalScopeModule from '../util/global-scope'
+import * as globalScopeModule from '../constants/runtime'
 import * as cleanUrlModule from './clean-url'
 import { canonicalizeUrl } from './canonicalize-url'
 
-jest.mock('../util/global-scope')
+jest.mock('../constants/runtime')
 jest.mock('./clean-url')
 
 beforeEach(() => {

@@ -1,7 +1,7 @@
 const fastify = require('fastify')
 const { urlFor } = require('./utils/url')
 const waitOn = require('wait-on')
-const { paths, defaultAgentConfig } = require('./constants')
+const { paths } = require('./constants')
 const TestHandle = require('./test-handle')
 const TestServerLogger = require('./logger')
 
@@ -38,6 +38,7 @@ class TestServer {
    * Default fastify server config
    */
   #defaultServerConfig = {
+    forceCloseConnections: true,
     maxParamLength: Number.MAX_SAFE_INTEGER,
     bodyLimit: Number.MAX_SAFE_INTEGER,
     logger: false
@@ -124,9 +125,9 @@ class TestServer {
   async ready () {
     await waitOn({
       resources: [
-        `http-get://127.0.0.1:${this.assetServer.port}/`,
-        `http-get://127.0.0.1:${this.corsServer.port}/json`,
-        `http-get://127.0.0.1:${this.bamServer.port}/1/${defaultAgentConfig.licenseKey}`,
+        `http-get://127.0.0.1:${this.assetServer.port}/health`,
+        `http-get://127.0.0.1:${this.corsServer.port}/health`,
+        `http-get://127.0.0.1:${this.bamServer.port}/health`,
         `http-get://127.0.0.1:${this.commandServer.port}/health`
       ]
     })

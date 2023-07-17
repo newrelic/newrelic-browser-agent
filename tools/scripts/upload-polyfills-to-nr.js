@@ -14,7 +14,7 @@ const { deepmerge } = require('deepmerge-ts')
 var argv = yargs
   .string('environments')
   .describe('environments', 'Comma-separated list of environments to upload loaders to')
-  .default('environments', 'staging,production,eu')
+  .default('environments', 'staging,production')
 
   .string('production-api-key')
   .describe('production-api-key', 'API key to use for talking to production RPM site to upload loaders')

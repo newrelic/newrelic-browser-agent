@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { initialLocation } from '../util/global-scope'
+import { initialLocation } from '../constants/runtime'
 import { cleanURL } from './clean-url'
 
 /**

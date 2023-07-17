@@ -4,6 +4,47 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "a702e2333b31f9088e7076727eb4a6cf26615841",
+          "message": "Handle chunk load promise error introduced in 1.235.0 - NR-129244",
+          "issues": [
+            "603"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "de7049f6892424f607b6d09c90ebef2909d0b19f",
+          "message": "Fix illegal invocation error on final harvest",
+          "issues": [
+            "594"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "5175356dfa3c959580ae26644948afc7a8f9cd6a",
+          "message": "Expose MicroLoader in the npm package",
+          "issues": [
+            "589"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f92f88ec7a90617d644019a32baeab5fd9595201",
+          "message": "Remove img, jsonp, and xhrGet methods",
+          "issues": [
+            "576"
+          ]
+        }
+      ],
+      "version": "1.236.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "5cef6ae6-1e6f-4d48-b9d3-59c55c240fe5",
+      "createTime": "2023-06-27T14:08:12.549Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "98e3f18c182be93b93386968026555c2575fd29d",
           "message": "Add error mode to session trace - NEWRELIC-8666 NEWRELIC-9283",
@@ -194,5 +235,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-06-20T15:44:40.072Z"
+  "updateTime": "2023-06-27T14:08:12.549Z"
 }

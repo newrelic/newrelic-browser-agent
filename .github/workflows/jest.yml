@@ -10,10 +10,15 @@ on:
         description: 'The collection of jest tests to run'
         required: true
         type: choice
-        options: 
+        options:
         - unit
         - component
         default: 'unit'
+      coverage:
+        description: 'Enable code coverage'
+        required: false
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       ref:
@@ -25,20 +30,23 @@ on:
         required: false
         type: string
         default: 'unit'
+      coverage:
+        description: 'Enable code coverage'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   run:
     name: Run Jest
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    container:
-      image: ubuntu:latest
     defaults:
       run:
         shell: bash
+    env:
+      COVERAGE: ${{ inputs.coverage }}
     steps:
-      - name: Setup container
-        run: apt update && apt install -y git
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref || github.ref }}
@@ -51,11 +59,12 @@ jobs:
         run: npm run test:${{ inputs.collection }} -- --coverage
       - name: Find pull request
         id: pull-request-target
+        if: ${{ inputs.coverage }}
         uses: ./.github/actions/find-pull-request
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload pr code coverage
-        if: ${{ steps.pull-request-target.outputs.results }}
+        if: ${{ inputs.coverage && steps.pull-request-target.outputs.results }}
         uses: codecov/codecov-action@v3
         env:
           GITHUB_HEAD_REF: ${{ inputs.ref }}
@@ -65,13 +74,14 @@ jobs:
           flags: jest-${{ inputs.collection }}
           verbose: true
       - name: Upload branch code coverage
-        if: ${{ !steps.pull-request-target.outputs.results }}
+        if: ${{ inputs.coverage && !steps.pull-request-target.outputs.results }}
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: jest-${{ inputs.collection }}
           verbose: true
       - name: Archive code coverage results
+        if: ${{ inputs.coverage }}
         uses: actions/upload-artifact@v3
         with:
           name: jest-${{ inputs.collection }}-code-coverage-report

@@ -76,6 +76,6 @@ export class AgentBase {
    * @param {string} id The ID or version of this release; for example, a version number, build number from your CI environment, GitHub SHA, GUID, or a hash of the contents.
    */
   addRelease (name, id) {
-    warn('Call to agent api finished failed. The agent is not currently initialized.')
+    warn('Call to agent api addRelease failed. The agent is not currently initialized.')
   }
 }

@@ -8,13 +8,6 @@ export class AgentBase {
   addPageAction (name, attributes) {}
 
   /**
-   * Gives SPA routes more accurate names than default names. Monitors specific routes rather than by default grouping.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setcurrentroutename/}
-   * @param {string} name Current route name for the page.
-   */
-  setCurrentRouteName (name) {}
-
-  /**
    * Groups page views to help URL structure or to capture the URL's routing information.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setpageviewname/}
    * @param {string} name The page name you want to use. Use alphanumeric characters.

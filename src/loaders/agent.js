@@ -107,6 +107,13 @@ export class Agent extends AgentBase {
   addToTrace (customAttributes) {}
 
   /**
+   * Gives SPA routes more accurate names than default names. Monitors specific routes rather than by default grouping.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setcurrentroutename/}
+   * @param {string} name Current route name for the page.
+   */
+  setCurrentRouteName (name) {}
+
+  /**
    * Returns a new API object that is bound to the current SPA interaction.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/interaction/}
    * @returns {InteractionInstance} An API object that is bound to a specific BrowserInteraction event. Each time this method is called for the same BrowserInteraction, a new object is created, but it still references the same interaction.

@@ -59,7 +59,7 @@ jobs:
       - name: Generating npm build stats
         run: node ./tools/scripts/npm-build-stats.js
       - name: Generating asset size report
-        run: node ./tools/scripts/diff-sizes.mjs -o build
+        run: node ./tools/scripts/diff-sizes.mjs -o dist/cdn
       - name: Reading asset size report
         id: asset-size-report
         run: |

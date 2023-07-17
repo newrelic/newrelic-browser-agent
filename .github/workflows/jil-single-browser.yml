@@ -1,8 +1,16 @@
-name: 'WDIO: Single browser'
+name: 'JIL: Single browser'
 
 on:
   workflow_dispatch:
     inputs:
+      collection:
+        description: 'The collection of jil tests to run'
+        required: true
+        type: choice
+        options:
+        - unit
+        - functional
+        default: 'unit'
       browser-target:
         description: 'Which browser(s) and version(s) to target with the wdio test: chrome@latest OR chrome@* are examples'
         required: true
@@ -12,16 +20,16 @@ on:
         required: true
         type: string
       additional-flags:
-        description: 'Additional flags to pass to the wdio cli'
+        description: 'Additional flags to pass to the jil cli'
         required: false
         type: string
-      coverage:
-        description: 'Enable code coverage'
-        required: false
-        type: boolean
-        default: false
   workflow_call:
     inputs:
+      collection:
+        description: 'The collection of jil tests to run'
+        required: false
+        type: string
+        default: 'unit'
       browser-target:
         description: 'Which browser(s) and version(s) to target with the wdio test: chrome@latest OR chrome@* are examples'
         required: true
@@ -31,14 +39,9 @@ on:
         required: true
         type: string
       additional-flags:
-        description: 'Additional flags to pass to the wdio cli'
+        description: 'Additional flags to pass to the jil cli'
         required: false
         type: string
-      coverage:
-        description: 'Enable code coverage'
-        required: false
-        type: boolean
-        default: false
       ref:
         description: 'Github branch ref to checkout and run tests on'
         required: false
@@ -52,8 +55,8 @@ on:
         required: true
 
 jobs:
-  wdio:
-    name: WDIO Test - ${{ inputs.browser-target }}
+  jil:
+    name: JIL Test - ${{ inputs.browser-target }} - ${{ inputs.collection }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
     defaults:
@@ -61,7 +64,6 @@ jobs:
         shell: bash
     env:
       BUILD_NUMBER: ${{ inputs.build-number }}
-      COVERAGE: ${{ inputs.coverage }}
       NEWRELIC_ENVIRONMENT: ci
       JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
       JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
@@ -77,41 +79,14 @@ jobs:
         run: npm ci
       - name: Build agent
         run: npm run build:all
-      - name: Run WDIO Tests
+      - name: Run JIL Tests
         run: |
-          node ./tools/wdio/bin/cli.js \
+          node --max-old-space-size=8192 ./tools/jil/bin/cli.js \
+            -f merged \
             -s \
             -b ${{ inputs.browser-target }} \
             --concurrent 10 \
+            --${{ inputs.collection}}-only \
+            -t 85000 \
             ${{ runner.debug && '-v -L -D -d' || '' }} \
-            ${{ inputs.coverage && '--coverage' || '' }} \
             ${{ inputs.additional-flags || '' }}
-      - name: Find pull request
-        id: pull-request-target
-        if: ${{ inputs.coverage }}
-        uses: ./.github/actions/find-pull-request
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload pr code coverage
-        if: ${{ inputs.coverage && steps.pull-request-target.outputs.results }}
-        uses: codecov/codecov-action@v3
-        env:
-          GITHUB_HEAD_REF: ${{ inputs.ref }}
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          override_pr: ${{ fromJSON(steps.pull-request-target.outputs.results).pr_number }}
-          flags: integration-tests
-          verbose: true
-      - name: Upload branch code coverage
-        if: ${{ inputs.coverage && !steps.pull-request-target.outputs.results }}
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          flags: integration-tests
-          verbose: true
-      - name: Archive code coverage results
-        if: ${{ inputs.coverage }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: integration-code-coverage-report
-          path: coverage-e2e/

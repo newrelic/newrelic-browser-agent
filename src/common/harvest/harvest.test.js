@@ -275,7 +275,7 @@ describe('_send', () => {
   })
 
   test('should not alter body when gzip qs is present', () => {
-    spec.payload.qs.content_encoding = 'gzip'
+    spec.payload.qs.attributes += '&content_encoding=gzip'
 
     const result = harvestInstance._send(spec)
 

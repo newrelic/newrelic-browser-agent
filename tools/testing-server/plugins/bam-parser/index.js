@@ -2,7 +2,7 @@ const fp = require('fastify-plugin')
 const querypack = require('@newrelic/nr-querypack')
 
 const beaconRequestsRegex = new RegExp(
-  '^/1/|/events/1/|/jserrors/1/|/ins/1/|/resources/1/|/blob',
+  '^/1/|/events/1/|/jserrors/1/|/ins/1/|/resources/1/|/browser/blobs',
   'i'
 )
 

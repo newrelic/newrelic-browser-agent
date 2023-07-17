@@ -9,7 +9,13 @@ const fp = require('fastify-plugin')
  */
 module.exports = fp(async function (fastify) {
   fastify.addHook('preParsing', (request, reply, payload, done) => {
-    if (request.query.content_encoding === 'gzip') request.headers['content-encoding'] = 'gzip'
+    let attrs = ''
+    try {
+      attrs = decodeURIComponent(request?.query?.attributes)
+    } catch (err) {
+      // failed
+    }
+    if (attrs.includes('content_encoding=gzip')) request.headers['content-encoding'] = 'gzip'
 
     // sendBeacon does not add content-type header, and fastify compress apparently fails if no content-type is found
     if (!request.headers['content-type']) request.headers['content-type'] = 'text/plain'

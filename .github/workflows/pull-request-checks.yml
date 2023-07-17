@@ -2,10 +2,92 @@ name: 'Pull Request Checks'
 
 on:
   workflow_dispatch:
+  pull_request:
 
 jobs:
+  # Jobs for pull_request events
+
+  jest-unit:
+    name: Jest unit tests
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/jest.yml
+    with:
+      ref: ${{ github.ref }}
+      collection: 'unit'
+      coverage: true
+    secrets: inherit
+
+  jest-component:
+    name: Jest component tests
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/jest.yml
+    with:
+      ref: ${{ github.ref }}
+      collection: 'component'
+      coverage: true
+    secrets: inherit
+
+  eslint:
+    name: ESLint
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/eslint.yml
+    with:
+      ref: ${{ github.ref }}
+
+  size-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Running cdn build
+        run: npm run cdn:build:dev
+      - name: Running npm build
+        run: |
+          npm run build:npm
+          npm run tools:test-builds
+      - name: Generating npm build stats
+        run: node ./tools/scripts/npm-build-stats.js
+      - name: Generating asset size report
+        run: node ./tools/scripts/diff-sizes.mjs -o build
+      - name: Reading asset size report
+        id: asset-size-report
+        run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "results<<$EOF" >> "$GITHUB_OUTPUT"
+          cat ./build/size_report.md >> "$GITHUB_OUTPUT"
+          echo "$EOF" >> "$GITHUB_OUTPUT"
+      - name: Comment pull request
+        uses: ./.github/actions/comment-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ github.event.number }}
+          comment: ${{ steps.asset-size-report.outputs.results }}
+          comment_tag: <!-- browser_agent asset size report -->
+      - name: Archive asset size report results
+        uses: actions/upload-artifact@v3
+        with:
+          name: asset-size-report
+          path: |
+            build/size_report.*
+            build/*.stats.html
+            build/*.stats.json
+
+  # Jobs for workflow_dispatch events
+
   find-pull-request:
     name: Find pull request target
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -26,7 +108,8 @@ jobs:
 
   pending-comment-pull-request:
     name: Pending comment pull request
-    needs: [find-pull-request]
+    if: github.event_name == 'workflow_dispatch'
+    needs: find-pull-request
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -55,35 +138,9 @@ jobs:
             Checking merge of (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}) into [${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_ref }}](https://github.com/newrelic/newrelic-browser-agent/compare/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}..${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }}) (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }})
           comment_tag: <!-- browser_agent pull request checks -->
 
-  jest-unit:
-    name: Jest unit tests
-    needs: find-pull-request
-    uses: ./.github/workflows/jest.yml
-    with:
-      ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
-      collection: 'unit'
-      coverage: true
-    secrets: inherit
-
-  jest-component:
-    name: Jest component tests
-    needs: find-pull-request
-    uses: ./.github/workflows/jest.yml
-    with:
-      ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
-      collection: 'component'
-      coverage: true
-    secrets: inherit
-
-  eslint:
-    name: ESLint
-    needs: find-pull-request
-    uses: ./.github/workflows/eslint.yml
-    with:
-      ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
-
   wdio-coverage:
     name: WDIO coverage
+    if: github.event_name == 'workflow_dispatch'
     needs: find-pull-request
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
@@ -91,62 +148,23 @@ jobs:
       browser-target: chrome@latest
       build-number: PR${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number}}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
       coverage: true
-      additional-flags: -v
     secrets: inherit
-
-  size-check:
-    runs-on: ubuntu-latest
-    needs: find-pull-request
-    timeout-minutes: 30
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
-      - uses: actions/setup-node@v3
-        with:
-          node-version: lts/*
-      - name: Install dependencies
-        run: npm ci
-      - name: Running cdn build
-        run: npm run cdn:build:dev
-      - name: Running npm build
-        run: |
-          npm run build:npm
-          npm run tools:test-builds
-      - name: Generating npm build stats
-        run: node ./tools/scripts/npm-build-stats.js
-      - name: Generating asset size report
-        run: node ./tools/scripts/diff-sizes.mjs -o build
-      - name: Reading asset size report
-        id: asset-size-report
-        run: |
-          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "results<<$EOF" >> "$GITHUB_OUTPUT"
-          cat ./build/size_report.md >> "$GITHUB_OUTPUT"
-          echo "$EOF" >> "$GITHUB_OUTPUT"
-      - name: Comment pull request
-        uses: ./.github/actions/comment-pull-request
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          pr_number: ${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}
-          comment: ${{ steps.asset-size-report.outputs.results }}
-          comment_tag: <!-- browser_agent asset size report -->
-      - name: Archive asset size report results
-        uses: actions/upload-artifact@v3
-        with:
-          name: asset-size-report
-          path: |
-            build/size_report.*
-            build/*.stats.html
-            build/*.stats.json
 
   wdio:
     name: WDIO
-    needs: [find-pull-request,wdio-coverage]
+    if: github.event_name == 'workflow_dispatch'
+    needs: find-pull-request
     uses: ./.github/workflows/wdio-all-browsers.yml
+    with:
+      ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
+      build-number: PR${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number}}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+    secrets: inherit
+
+  jil:
+    name: JIL
+    if: github.event_name == 'workflow_dispatch'
+    needs: [find-pull-request,wdio-coverage,wdio]
+    uses: ./.github/workflows/jil-all-browsers.yml
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
       build-number: PR${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number}}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
@@ -154,8 +172,8 @@ jobs:
 
   complete-status-comment-pull-request:
     name: Comment pull request
-    needs: [find-pull-request,jest-unit,jest-component,eslint,wdio-coverage,size-check,wdio]
-    if: ${{ always() && needs.find-pull-request.result == 'success' }}
+    if: always() && github.event_name == 'workflow_dispatch' && needs.find-pull-request.result == 'success'
+    needs: [find-pull-request,wdio-coverage,wdio,jil]
     runs-on: ubuntu-latest
     defaults:
       run:

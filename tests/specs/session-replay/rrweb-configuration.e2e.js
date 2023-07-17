@@ -42,7 +42,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         })
       ])
 
-      expect(body.blob.includes('testing')).toBeFalsy()
+      expect(JSON.stringify(body).includes('testing')).toBeFalsy()
     })
 
     it('maskAllInputs: false should NOT convert inputs to *', async () => {
@@ -56,7 +56,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         })
       ])
 
-      expect(body.blob.includes('testing')).toBeTruthy()
+      expect(JSON.stringify(body).includes('testing')).toBeTruthy()
     })
   })
 
@@ -67,7 +67,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
 
       const { request: { body } } = await browser.testHandle.expectBlob()
 
-      expect(body.blob.includes('this is a page')).toBeFalsy()
+      expect(JSON.stringify(body).includes('this is a page')).toBeFalsy()
     })
 
     it('maskTextSelector: "null" should convert NO text to "*"', async () => {
@@ -76,7 +76,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
 
       const { request: { body } } = await browser.testHandle.expectBlob()
 
-      expect(body.blob.includes('this is a page')).toBeTruthy()
+      expect(JSON.stringify(body).includes('this is a page')).toBeTruthy()
     })
   })
 
@@ -92,7 +92,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         })
       ])
 
-      expect(body.blob.includes('testing')).toBeFalsy()
+      expect(JSON.stringify(body).includes('testing')).toBeFalsy()
     })
 
     it('ignoreClass: cannot be overridden', async () => {
@@ -106,7 +106,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         })
       ])
 
-      expect(body.blob.includes('testing')).toBeFalsy()
+      expect(JSON.stringify(body).includes('testing')).toBeFalsy()
     })
   })
 
@@ -122,7 +122,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         })
       ])
 
-      expect(body.blob.includes('testing')).toBeFalsy()
+      expect(JSON.stringify(body).includes('testing')).toBeFalsy()
     })
 
     it('blockClass: cannot be overridden', async () => {
@@ -136,7 +136,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         })
       ])
 
-      expect(body.blob.includes('testing')).toBeFalsy()
+      expect(JSON.stringify(body).includes('testing')).toBeFalsy()
     })
   })
 
@@ -152,7 +152,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         })
       ])
 
-      expect(body.blob.includes('testing')).toBeFalsy()
+      expect(JSON.stringify(body).includes('testing')).toBeFalsy()
     })
 
     it('maskTextClass: cannot be overridden', async () => {
@@ -166,7 +166,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         })
       ])
 
-      expect(body.blob.includes('testing')).toBeFalsy()
+      expect(JSON.stringify(body).includes('testing')).toBeFalsy()
     })
   })
 
@@ -182,7 +182,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         })
       ])
 
-      expect(body.blob.includes('testing')).toBeFalsy()
+      expect(JSON.stringify(body).includes('testing')).toBeFalsy()
     })
 
     it('blockSelector: only applies to specified elem', async () => {
@@ -197,7 +197,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         })
       ])
 
-      expect(body.blob.includes('testing')).toBeTruthy()
+      expect(JSON.stringify(body).includes('testing')).toBeTruthy()
     })
 
     it('blockSelector: can be extended but not overridden', async () => {
@@ -212,7 +212,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         })
       ])
 
-      expect(body.blob.includes('testing')).toBeFalsy()
+      expect(JSON.stringify(body).includes('testing')).toBeFalsy()
     })
   })
 
@@ -228,7 +228,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         })
       ])
 
-      expect(body.blob.includes('testing')).toBeFalsy()
+      expect(JSON.stringify(body).includes('testing')).toBeFalsy()
     })
 
     it('maskInputOptions: can be extended but not overridden', async () => {
@@ -243,7 +243,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         })
       ])
 
-      expect(body.blob.includes('testing')).toBeFalsy()
+      expect(JSON.stringify(body).includes('testing')).toBeFalsy()
     })
   })
 })

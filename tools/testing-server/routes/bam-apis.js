@@ -51,10 +51,10 @@ module.exports = fp(async function (fastify) {
   })
   fastify.route({
     method: ['POST'],
-    url: '/blob',
+    url: '/browser/blobs',
     handler: async function (request, reply) {
       if (request.testHandle) {
-        request.testHandle.incrementRequestCount(fastify.testServerId, 'blob')
+        request.testHandle.incrementRequestCount(fastify.testServerId, 'blobs')
       }
 
       return reply.code(200).send('')

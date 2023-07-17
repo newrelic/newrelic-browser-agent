@@ -289,13 +289,18 @@ describe('_send', () => {
     })
   })
 
-  test('should warn if payload is large', () => {
+  test('should warn (once) if payload is large', () => {
     spec.payload.body = 'x'.repeat(1024 * 1024) // ~1mb string
 
     const result = harvestInstance._send(spec)
 
     expect(result).toEqual(true)
     expect(warn).toHaveBeenCalledWith('The Browser Agent is attempting to send a very large payload. This is usually tied to large amounts of custom attributes. Please check your configurations.')
+    expect(warn).toHaveBeenCalledTimes(1)
+
+    const result2 = harvestInstance._send(spec)
+    expect(result2).toEqual(true)
+    expect(warn).toHaveBeenCalledTimes(1)
   })
 
   test('should set body to events when endpoint is events', () => {

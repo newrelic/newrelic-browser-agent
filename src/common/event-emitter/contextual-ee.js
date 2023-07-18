@@ -63,9 +63,9 @@ function ee (old, debugId) {
     if (contextOrStore && contextOrStore instanceof EventContext) {
       return contextOrStore
     } else if (contextOrStore) {
-      return getOrSet(contextOrStore, contextId, () => new EventContext())
+      return getOrSet(contextOrStore, contextId, () => new EventContext(contextId))
     } else {
-      return new EventContext()
+      return new EventContext(contextId)
     }
   }
 

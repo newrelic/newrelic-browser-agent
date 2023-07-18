@@ -51,7 +51,7 @@ export function wrapPromise (sharedEE) {
      * @returns A new WrappedPromise object prototyped off the original.
      */
     function WrappedPromise (executor) {
-      var ctx = promiseEE.context(this)
+      var ctx = promiseEE.context()
       var wrappedExecutor = promiseWrapper(executor, 'executor-', ctx, null, false)
 
       const newCustomPromiseInst = Reflect.construct(prevPromiseObj, [wrappedExecutor], WrappedPromise) // new Promises will use WrappedPromise.prototype as theirs prototype

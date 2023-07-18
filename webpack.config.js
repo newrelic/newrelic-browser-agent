@@ -92,6 +92,7 @@ process.env.BUILD_ENV = SUBVERSION
  */
 const instantiateSourceMapPlugin = (filename) => {
   return new webpack.SourceMapDevToolPlugin({
+    namespace: `NRBA-${VERSION}`,
     append: MAP_PATH, // sourceMappingURL CDN route vs local route (for sourceMappingURL)
     filename: filename || (SUBVERSION !== 'LOCAL' ? '[name].[chunkhash:8].map' : '[name].map'),
     ...(JSON.parse(SOURCEMAPS) === false && { exclude: new RegExp('.*') }) // Exclude all files if disabled.
@@ -160,6 +161,8 @@ const standardConfig = merge(commonConfig, {
   },
   output: {
     globalObject: 'window',
+    chunkLoadingGlobal: `webpackChunk:NRBA-${VERSION}`,
+    uniqueName: `NRBA-${VERSION}`,
     library: {
       name: 'NRBA',
       type: 'window'
@@ -228,6 +231,8 @@ const polyfillsConfig = merge(commonConfig, {
   },
   output: {
     globalObject: 'window',
+    chunkLoadingGlobal: `webpackChunk:NRBA-${VERSION}`,
+    uniqueName: `NRBA-${VERSION}`,
     library: {
       name: 'NRBA',
       type: 'window'
@@ -263,6 +268,8 @@ const workerConfig = merge(commonConfig, {
   module: standardConfig.module,
   output: {
     globalObject: 'self',
+    chunkLoadingGlobal: `webpackChunk:NRBA-${VERSION}`,
+    uniqueName: `NRBA-${VERSION}`,
     library: {
       name: 'NRBA',
       type: 'self'

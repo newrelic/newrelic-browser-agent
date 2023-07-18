@@ -6,7 +6,7 @@ import { registerHandler as register } from '../../../common/event-emitter/regis
 import { stringify } from '../../../common/util/stringify'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { handle } from '../../../common/event-emitter/handle'
-import { getConfiguration, getInfo } from '../../../common/config/config'
+import { getConfiguration, getInfo, getRuntime } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { FEATURE_NAME } from '../constants'
@@ -23,10 +23,12 @@ export class Aggregate extends AggregateBase {
     const allAjaxIsEnabled = agentInit.ajax.enabled !== false
 
     register('xhr', storeXhr, this.featureName, this.ee)
-    if (!allAjaxIsEnabled) return // feature will only collect timeslice metrics & ajax trace nodes if it's not fully enabled
+    if (!allAjaxIsEnabled) {
+      drain(this.agentIdentifier, this.featureName)
+      return // feature will only collect timeslice metrics & ajax trace nodes if it's not fully enabled
+    }
 
-    const agentInfo = getInfo(agentIdentifier)
-    let denyList = agentInit.ajax.block_internal ? (agentInit.ajax.deny_list || []).concat(agentInfo.beacon, agentInfo.errorBeacon) : agentInit.ajax.deny_list
+    const denyList = getRuntime(agentIdentifier).denyList
     setDenyList(denyList)
 
     let ajaxEvents = []
@@ -86,7 +88,7 @@ export class Aggregate extends AggregateBase {
       if (!allAjaxIsEnabled) return
 
       if (!shouldCollectEvent(params)) {
-        if (params.hostname === agentInfo.errorBeacon) {
+        if (params.hostname === getInfo(agentIdentifier).errorBeacon) {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, ee)
         } else {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee)

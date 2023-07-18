@@ -11,10 +11,8 @@ import { wrapEvents } from './wrap-events'
 import { ee as contextualEE } from '../event-emitter/contextual-ee'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
-import { originals } from '../config/config'
 import { globalScope } from '../constants/runtime'
 import { warn } from '../util/console'
-import { EventContext } from '../event-emitter/event-context'
 
 const wrapped = {}
 const XHR_PROPS = ['open', 'send'] // these are the specific funcs being wrapped on all XMLHttpRequests(.prototype)
@@ -48,28 +46,23 @@ export function wrapXhr (sharedEE) {
   var handlers = ['onload', 'onerror', 'onabort', 'onloadstart', 'onloadend', 'onprogress', 'ontimeout']
   var pendingXhrs = []
 
-  var activeListeners = globalScope.XMLHttpRequest.listeners
-
   var XHR = globalScope.XMLHttpRequest = newXHR
 
   function newXHR (opts) {
-    var xhr = new OrigXHR(opts)
-    var context = new EventContext(xhr)
-    this.listeners = activeListeners ? [...activeListeners, intercept] : [intercept]
-    function intercept () {
+    const xhr = new OrigXHR(opts)
+    const context = ee.context(xhr)
+
+    try {
+      ee.emit('new-xhr', [xhr], context)
+      xhr.addEventListener(READY_STATE_CHANGE, wrapXHR(context), eventListenerOpts(false))
+    } catch (e) {
+      warn('An error occurred while intercepting XHR', e)
       try {
-        ee.emit('new-xhr', [xhr], context)
-        xhr.addEventListener(READY_STATE_CHANGE, wrapXHR(context), eventListenerOpts(false))
-      } catch (e) {
-        warn('An error occured while intercepting XHR', e)
-        try {
-          ee.emit('internal-error', [e])
-        } catch (err) {
-          // do nothing
-        }
+        ee.emit('internal-error', [e])
+      } catch (err) {
+        // do nothing
       }
     }
-    this.listeners.forEach(listener => listener())
     return xhr
   }
 

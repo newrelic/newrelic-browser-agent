@@ -8,21 +8,20 @@ import { getOrSet } from '../util/get-or-set'
 import { mapOwn } from '../util/map-own'
 import { getRuntime } from '../config/config'
 import { EventContext } from './event-context'
+import { bundleId } from '../ids/bundle-id'
 
-var ctxId = 'nr@context'
-
+// create a unique id to store event context data for the current agent bundle
+const contextId = `nr@context:${bundleId}`
 // create global emitter instance that can be shared among bundles
-let nr = gosNREUM()
-var globalInstance
+const globalInstance = ee(undefined, 'globalEE')
 
-if (nr.ee) {
-  globalInstance = nr.ee
-} else {
-  globalInstance = ee(undefined, 'globalEE')
+// Only override the exposed event emitter if one has not already been exposed
+const nr = gosNREUM()
+if (!nr.ee) {
   nr.ee = globalInstance
 }
 
-export { globalInstance as ee }
+export { globalInstance as ee, contextId }
 
 function ee (old, debugId) {
   var handlers = {}
@@ -64,9 +63,9 @@ function ee (old, debugId) {
     if (contextOrStore && contextOrStore instanceof EventContext) {
       return contextOrStore
     } else if (contextOrStore) {
-      return getOrSet(contextOrStore, ctxId, getNewContext)
+      return getOrSet(contextOrStore, contextId, () => new EventContext())
     } else {
-      return getNewContext()
+      return new EventContext()
     }
   }
 
@@ -141,15 +140,6 @@ function ee (old, debugId) {
   function getBuffer () {
     return emitter.backlog
   }
-}
-
-// get context object from store object, or create if does not exist
-export function getOrSetContext (obj) {
-  return getOrSet(obj, ctxId, getNewContext)
-}
-
-function getNewContext () {
-  return new EventContext()
 }
 
 function abort () {

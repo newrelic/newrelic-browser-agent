@@ -7,7 +7,9 @@
  */
 
 import { ee } from '../event-emitter/contextual-ee'
-export const flag = 'nr@original'
+import { bundleId } from '../ids/bundle-id'
+
+export const flag = `nr@original:${bundleId}`
 
 /**
  * A convenience alias of `hasOwnProperty`.
@@ -54,8 +56,6 @@ export function createWrapperWithEmitter (emitter, always) {
    * @returns {function} The wrapped function.
    */
   function wrapFn (fn, prefix, getContext, methodName, bubble) {
-    if (typeof fn !== 'function') return fn
-
     // Unless fn is both wrappable and unwrapped, return it unchanged.
     if (notWrappable(fn)) return fn
 
@@ -215,35 +215,5 @@ function copy (from, to, emitter) {
  * @returns {boolean} Whether the passed function is ineligible to be wrapped.
  */
 function notWrappable (fn) {
-  return !(fn && fn instanceof Function && fn.apply)
-}
-
-/**
- * Creates a wrapped version of a function using a specified wrapper function. The new wrapped function references the
- * original function. Also copies the properties of the original function to the wrapped function.
- * @param {function} fn - A function to be wrapped.
- * @param {function} wrapper - A higher order function that returns a new function, which executes the function passed
- *     to the higher order function as an argument.
- * @returns {function} A wrapped function with an internal reference to the original function.
- */
-export function wrapFunction (fn, wrapper) {
-  console.log('wrapFunction called')
-  var wrapped = wrapper(fn)
-  wrapped[flag] = fn
-  copy(fn, wrapped, ee)
-  return wrapped
-}
-
-/**
- * Replaces a function with a wrapped version of itself. To preserve object references, rather than taking the function
- * itself as an argument, takes the object on which the particular named function is a property.
- * @param {Object} obj - The object on which the named function is a property.
- * @param {string} fnName - The name of the function to be wrapped.
- * @param {function} wrapper - A higher order function that returns a new function, which executes the function passed
- *     to the higher order function as an argument.
- */
-export function wrapInPlace (obj, fnName, wrapper) {
-  console.log('wrapInPlace called')
-  var fn = obj[fnName]
-  obj[fnName] = wrapFunction(fn, wrapper)
+  return !(fn && fn instanceof Function && fn.apply && !fn[flag])
 }

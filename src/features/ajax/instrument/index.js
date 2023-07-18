@@ -21,7 +21,7 @@ var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
 
 var origRequest = originals.REQ
-var origXHR = globalScope.XMLHttpRequest
+var origXHR = originals.XHR
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -327,8 +327,8 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     var params = this.params
     var metrics = this.metrics
 
-    // if (this.ended) return
-    // this.ended = true
+    if (this.ended) return
+    this.ended = true
 
     for (var i = 0; i < handlersLen; i++) {
       xhr.removeEventListener(handlers[i], this.listener, false)

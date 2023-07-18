@@ -8,8 +8,7 @@
  */
 
 import { createWrapperWithEmitter as wrapFn, flag } from './wrap-function'
-import { ee as baseEE, getOrSetContext } from '../event-emitter/contextual-ee'
-import { originals } from '../config/config'
+import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
 
 const wrapped = {}
@@ -29,9 +28,9 @@ export function wrapPromise (sharedEE) {
   if (wrapped[promiseEE.debugId]) return promiseEE
   wrapped[promiseEE.debugId] = true // otherwise, first feature to wrap promise
 
-  var getContext = getOrSetContext
+  var getContext = promiseEE.context
   var promiseWrapper = wrapFn(promiseEE)
-  var prevPromiseObj = originals.PR
+  var prevPromiseObj = globalScope.Promise
 
   if (prevPromiseObj) { // ensure there's a Promise API (native or otherwise) to even wrap
     wrap()
@@ -52,7 +51,7 @@ export function wrapPromise (sharedEE) {
      * @returns A new WrappedPromise object prototyped off the original.
      */
     function WrappedPromise (executor) {
-      var ctx = promiseEE.context()
+      var ctx = promiseEE.context(this)
       var wrappedExecutor = promiseWrapper(executor, 'executor-', ctx, null, false)
 
       const newCustomPromiseInst = Reflect.construct(prevPromiseObj, [wrappedExecutor], WrappedPromise) // new Promises will use WrappedPromise.prototype as theirs prototype

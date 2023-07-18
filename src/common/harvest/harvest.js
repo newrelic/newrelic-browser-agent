@@ -239,9 +239,8 @@ export class Harvest extends SharedContext {
    */
   cleanPayload (payload = {}) {
     const clean = (input) => {
-      if ((typeof Uint8Array !== 'undefined' && input instanceof Uint8Array) || typeof input === 'string') {
-        return input.length > 0 ? input : null
-      }
+      if ((typeof Uint8Array !== 'undefined' && input instanceof Uint8Array) || Array.isArray(input)) return input
+      if (typeof input === 'string') return input.length > 0 ? input : null
       return Object.entries(input || {})
         .reduce((accumulator, [key, value]) => {
           if ((typeof value === 'number') ||

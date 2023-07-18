@@ -15,7 +15,7 @@ const getTraceMode = () => browser.execute(function () {
 })
 
 describe.withBrowsersMatching(notIE)('Trace error mode', () => {
-  let initSTReceived, getFirstSTPayload, getReplayOnErrorUrl
+  let getReplayOnErrorUrl
   beforeEach(async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
@@ -24,9 +24,7 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
       body: JSON.stringify({ stn: 0, err: 1, ins: 1, spa: 1, sr: 1, loaded: 1 })
     })
 
-    initSTReceived = undefined
-    getFirstSTPayload = browser.testHandle.expectResources().then(resPayload => initSTReceived = resPayload)
-    getReplayOnErrorUrl = browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 1 }, session_trace: { harvestTimeSeconds: 2 } }))
+    getReplayOnErrorUrl = browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 1 }, session_trace: { harvestTimeSeconds: 3 } }))
   })
 
   function simulateErrorInBrowser () { // this is a way to throw error in WdIO / Selenium without killing the test itself
@@ -36,41 +34,40 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
   }
 
   it('switches to full mode when an error happens after page load', async () => {
-    await browser.url(await getReplayOnErrorUrl)
-    await browser.waitForAgentLoad()
-    await browser.waitUntil(() => browser.execute(async function () { // here for no-retry wdio stability
-      return await Object.values(newrelic.initializedAgents)[0].features.session_trace.onAggregateImported
-    }), { timeout: 5000 })
-    let startingMode = (await getTraceMode())[0]
-    expect(initSTReceived).toBeUndefined()
-    expect(startingMode).toEqual(MODE.ERROR)
+    await Promise.all([
+      browser.testHandle.expectResources(5001, true),
+      browser.url(await getReplayOnErrorUrl).then(() => browser.waitForFeatureAggregate('session_trace'))
+    ])
+    await expect(getTraceMode()).resolves.toEqual([MODE.ERROR, false])
 
-    await browser.execute(simulateErrorInBrowser)
-    await getFirstSTPayload
-    let modeAfterErr = (await getTraceMode())[0]
-    expect(modeAfterErr).toEqual(MODE.FULL)
+    const [resources] = await Promise.all([
+      browser.testHandle.expectResources(),
+      browser.execute(simulateErrorInBrowser)
+    ])
+    await expect(getTraceMode()).resolves.toEqual([MODE.FULL, false])
     // The loadEventEnd is part of PT and PNT resource entry and is a node created at start of page life.
-    expect(initSTReceived.request.body.res.find(node => node.n === 'loadEventEnd')).toEqual(expect.objectContaining({ n: 'loadEventEnd', o: 'document', t: 'timing' }))
+    expect(resources.request.body.res).toEqual(expect.arrayContaining([expect.objectContaining({
+      n: 'loadEventEnd', o: 'document', t: 'timing'
+    })]))
 
-    await expect(browser.testHandle.expectResources(3000)).resolves.toBeTruthy() // double check there's nothing wrong with full mdoe interval harvest
+    await expect(browser.testHandle.expectResources(5002)).resolves.toBeTruthy() // double check there's nothing wrong with full mode interval harvest
   })
 
   it('starts in full mode when an error happens before page load', async () => {
-    await browser.url(await getReplayOnErrorUrl)
-    await browser.execute(simulateErrorInBrowser)
+    let getFirstSTPayload = browser.testHandle.expectResources(5010)
+    await browser.url(await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 1 }, session_trace: { harvestTimeSeconds: 3 } })))
     await browser.waitForAgentLoad()
     await expect(getFirstSTPayload).resolves.toBeTruthy()
-    let startingMode = (await getTraceMode())[0]
-    expect(startingMode).toEqual(MODE.FULL)
+    await expect(getTraceMode()).resolves.toEqual([MODE.FULL, false])
 
-    await expect(browser.testHandle.expectResources(3000)).resolves.toBeTruthy()
+    await expect(browser.testHandle.expectResources(5011)).resolves.toBeTruthy()
   })
 
   it.withBrowsersMatching(onlyChrome)('does not capture more than the last 30 seconds when error happens', async () => {
     await getReplayOnErrorUrl.then(builtUrl => browser.url(builtUrl)).then(() => browser.waitForAgentLoad()).then(async () => {
       await browser.pause(30000)
       await Promise.all([
-        browser.testHandle.expectResources(3000), // the setup expectRes promise would've timed out already -- you will see some console errors but they don't impact validity
+        browser.testHandle.expectResources(5020), // the setup expectRes promise would've timed out already -- you will see some console errors but they don't impact validity
         browser.execute(simulateErrorInBrowser)
       ]).then(async ([initSTAfterErr]) => {
         expect(initSTAfterErr.request.body.res.find(node => node.n === 'loadEventEnd')).toBeUndefined() // that node should've been tossed out by now
@@ -79,12 +76,15 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
   })
 
   it('does not perform final harvest while in this mode', async () => {
+    let resources = browser.testHandle.expectResources(5030, true)
     await getReplayOnErrorUrl.then(builtUrl => browser.url(builtUrl)).then(() => browser.waitForAgentLoad()).then(async () => {
-      await getTraceMode().then(traceState => expect(traceState).toEqual([MODE.ERROR, false])) // sanity check tbh
-      expect(initSTReceived).toBeUndefined()
+      await expect(getTraceMode()).resolves.toEqual([MODE.ERROR, false]) // sanity check tbh
+      await expect(resources).resolves.toBeUndefined()
+
+      resources = browser.testHandle.expectResources(5031, true)
     }).then(() => browser.refresh()).then(() => browser.waitForAgentLoad()).then(async () => {
-      await getTraceMode().then(traceState => expect(traceState).toEqual([MODE.ERROR, false]))
-      expect(initSTReceived).toBeUndefined() // no harvest from either previous unload or from new existing-session load
+      await expect(getTraceMode()).resolves.toEqual([MODE.ERROR, false])
+      await expect(resources).resolves.toBeUndefined() // no harvest from either previous unload or from new existing-session load
     })
   })
 

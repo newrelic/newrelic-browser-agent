@@ -295,7 +295,7 @@ describe('_send', () => {
     const result = harvestInstance._send(spec)
 
     expect(result).toEqual(true)
-    expect(warn).toHaveBeenCalledWith('The Browser Agent is attempting to send a very large payload. This is usually tied to large amounts of custom attributes. Please check your configurations.')
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('The Browser Agent is attempting to send a very large payload'))
     expect(warn).toHaveBeenCalledTimes(1)
 
     const result2 = harvestInstance._send(spec)

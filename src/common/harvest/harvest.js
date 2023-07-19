@@ -18,7 +18,7 @@ import { VERSION } from '../constants/env'
 import { isWorkerScope, isIE } from '../constants/runtime'
 import { warn } from '../util/console'
 
-let warnings = 0
+const warnings = {}
 
 /**
  * @typedef {import('./types.js').NetworkSendSpec} NetworkSendSpec
@@ -117,8 +117,8 @@ export class Harvest extends SharedContext {
       } else {
         body = stringify(body)
       }
-      /** Warn --once-- if the agent tries to send large payloads */
-      if (body.length > 750000 && warnings++ < 1) warn('The Browser Agent is attempting to send a very large payload. This is usually tied to large amounts of custom attributes. Please check your configurations.')
+      /** Warn --once per endpoint-- if the agent tries to send large payloads */
+      if (body.length > 750000 && (warnings[endpoint] = (warnings?.[endpoint] || 0) + 1) === 1) warn(`The Browser Agent is attempting to send a very large payload to /${endpoint}. This is usually tied to large amounts of custom attributes. Please check your configurations.`)
     }
 
     if (!body || body.length === 0 || body === '{}' || body === '[]') {

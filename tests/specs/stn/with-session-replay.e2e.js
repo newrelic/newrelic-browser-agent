@@ -23,11 +23,10 @@ import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
         body: JSON.stringify({ stn: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
       })
 
-      let stPayloadReceived
-      browser.testHandle.expectResources().then(res => stPayloadReceived = res)
+      let resources = browser.testHandle.expectResources(10000)
       await browser.url(await getUrlString)
       await browser.waitForAgentLoad()
-      expect(stPayloadReceived).toBeUndefined() // trace payload should've been received by now after page has loaded
+      await expect(resources).resolves.toBeUndefined() // trace payload should've been received by now after page has loaded
     })
 
     it('does run (standalone behavior) if stn flag is 1', async () => {

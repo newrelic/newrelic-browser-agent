@@ -10,13 +10,15 @@ module.exports = fp(async function (fastify, testServer) {
   fastify.decorateRequest('scheduledReply', null)
   fastify.decorateRequest('resolvingExpect', null)
   fastify.decorateRequest('testHandle', null)
-  fastify.addHook('preHandler', async (request) => {
+  fastify.addHook('preHandler', async (request, reply) => {
     const testId = testIdFromRequest(request)
     const testHandle = testServer.getTestHandle(testId)
-
     if (testHandle) {
       request.testHandle = testHandle
       testHandle.processRequest(fastify.testServerId, fastify, request)
+    }
+    if (!!testId && request.url.startsWith('/tests/assets') && request.url.includes('.html')) {
+      reply.header('set-cookie', `test-id=${testId};path=/build/`)
     }
   })
   fastify.addHook('onSend', (request, reply, payload, done) => {

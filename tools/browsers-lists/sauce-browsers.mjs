@@ -85,11 +85,6 @@ const minSupportedVersion = apiName => {
  */
 const maxSupportedVersion = apiName => {
   switch (apiName) {
-    case 'ios':
-    case 'iphone': // Sauce only uses Appium 2.0 for ios16 which requires W3C that we don't comply with yet
-      return 15.9 // TO DO: this can be removed once that work is incorporated into JIL
-    case 'android':
-      return 9 // See min value above.
     default:
       return 9999
   }
@@ -145,7 +140,9 @@ function getBrowsers (sauceBrowsers, sample = 4) {
               appiumVersion: sauceBrowser.recommended_backend_version
             }
           }),
-          ...(browserName.toLowerCase() === 'safari' && { acceptInsecureCerts: false })
+          ...(browserName.toLowerCase() === 'safari' && { acceptInsecureCerts: false }),
+          ...(platformName === 'iOS' && { device: 'iPhone Simulator', 'appium:deviceName': 'iPhone Simulator' }),
+          ...(platformName === 'Android' && { device: 'Android GoogleAPI Emulator', 'appium:deviceName': 'Android GoogleAPI Emulator' })
         }
       })
 

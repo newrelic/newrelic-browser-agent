@@ -50,6 +50,9 @@ export class Aggregate extends AggregateBase {
     this.sentTrace = null
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
     this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
+    /**
+     * Standalone (mode) refers to the legacy version of ST before the idea of 'session' or the Replay feature existed.
+     * It has some different behavior vs when used in tandem with replay. */
     this.isStandalone = false
     const operationalGate = new HandlerCache() // acts as a controller-intermediary that can enable or disable this feature's collection dynamically
     const sessionEntity = this.agentRuntime.session
@@ -145,6 +148,14 @@ export class Aggregate extends AggregateBase {
     }
     /* --- EoS --- */
 
+    setTimeout(() => {
+      if (this.isStandalone) { // hard stop Trace after this time, sending out whatever's buffered
+        operationalGate.permanentlyDecide(false)
+        this.#scheduler.runHarvest({ unload: true }) // this is ran like the final harvest so that even if there isn't enough nodeCount, it'll still send
+        this.#scheduler.stopTimer(true)
+      }
+    }, MAX_TRACE_DURATION)
+
     // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...
     registerHandler('bst', (...args) => operationalGate.settle(() => this.storeEvent(...args)), this.featureName, this.ee)
     registerHandler('bstResource', (...args) => operationalGate.settle(() => this.storeResources(...args)), this.featureName, this.ee)
@@ -190,16 +201,9 @@ export class Aggregate extends AggregateBase {
   }
 
   #prepareHarvest (options) {
-    /* Standalone refers to the legacy version of ST before the idea of 'session' or the Replay feature existed.
-      It has a different behavior on returning a payload for harvest than when used in tandem with either of those concepts. */
     if (this.isStandalone) {
-      if (now() > MAX_TRACE_DURATION) { // been collecting for over the longest duration we should run for, empty trace object so ST has nothing to send
-        this.#scheduler.stopTimer()
-        this.trace = {}
-        return
-      }
-      // Only harvest when more than some threshold of nodes are pending, after the very first harvest.
-      if (this.ptid && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
+      // Only harvest when more than some threshold of nodes are pending, after the very first harvest, with the exception of the last outgoing harvest.
+      if (this.ptid && this.nodeCount <= REQ_THRESHOLD_TO_SEND && !options.isFinalHarvest) return
     } else {
     //   -- *cli May '26 - Update: Not rate limiting backgrounded pages either for now.
     //   if (this.ptid && document.visibilityState === 'hidden' && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return

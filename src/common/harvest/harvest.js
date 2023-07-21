@@ -45,7 +45,8 @@ export class Harvest extends SharedContext {
   sendX (spec = {}) {
     const submitMethod = submitData.getSubmitMethod({ isFinalHarvest: spec.opts?.unload })
     const options = {
-      retry: !spec.opts?.unload && submitMethod === submitData.xhr
+      retry: !spec.opts?.unload && submitMethod === submitData.xhr,
+      isFinalHarvest: spec.opts?.unload === true
     }
     const payload = this.createPayload(spec.endpoint, options)
     const caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)

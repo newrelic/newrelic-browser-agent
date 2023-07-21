@@ -10,6 +10,7 @@ const model = {
   customTransaction: undefined,
   disabled: false,
   distMethod: DIST_METHOD,
+  interactions: [],
   isolatedBacklog: false,
   loaderType: undefined,
   maxBytes: 30000,

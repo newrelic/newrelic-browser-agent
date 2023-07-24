@@ -14,6 +14,7 @@ import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { FEATURE_TYPE, getFeatureState } from '../../../common/util/feature-state'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -134,8 +135,16 @@ export class Aggregate extends AggregateBase {
 
       var payloadObjs = []
       for (var i = 0; i < payload.length; i++) {
+        console.log('payload...', payload[i])
         payloadObjs.push({ body: { e: payload[i] } })
       }
+
+      // console.log('event...', event)
+
+      // const spaFeature = getFeatureState({ agentIdentifier, featureName: FEATURE_NAMES.basicSpa })
+
+      // console.log('spa feature..', spaFeature, Object.keys(spaFeature))
+      // console.log('ixn timing...', spaFeature?.hasInteraction?.({ timestamp: event.startTime }))
 
       if (options.retry) {
         sentAjaxEvents = ajaxEvents.slice()
@@ -191,9 +200,11 @@ export class Aggregate extends AggregateBase {
       this.addString = getAddStringContext(agentIdentifier) // pass agentIdentifier here
       this.events = events
       this.payload = 'bel.7;'
+      const spaFeature = getFeatureState({ agentIdentifier, featureName: FEATURE_NAMES.basicSpa })
 
       for (var i = 0; i < events.length; i++) {
         var event = events[i]
+
         var fields = [
           numeric(event.startTime),
           numeric(event.endTime - event.startTime),
@@ -214,8 +225,13 @@ export class Aggregate extends AggregateBase {
 
         var insert = '2,'
 
+        const hasIxn = spaFeature?.hasInteraction?.({ timestamp: event.startTime })
+        let browserInteractionId = hasIxn.interactions?.[0]?._id
+
+        console.log('add browserInteractionId to event', browserInteractionId)
+
         // add custom attributes
-        var attrParts = addCustomAttributes(getInfo(agentIdentifier).jsAttributes || {}, this.addString)
+        var attrParts = addCustomAttributes({ ...getInfo(agentIdentifier).jsAttributes, browserInteractionId } || {}, this.addString)
         fields.unshift(numeric(attrParts.length))
 
         insert += fields.join(',')

@@ -16,6 +16,8 @@ import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/env'
 import { isWorkerScope, isIE } from '../constants/runtime'
+import { FEATURE_TYPE, getFeatureState } from '../util/feature-state'
+import { FEATURE_NAMES } from '../../loaders/features/features'
 
 /**
  * @typedef {import('./types.js').NetworkSendSpec} NetworkSendSpec
@@ -116,6 +118,9 @@ export class Harvest extends SharedContext {
         body = stringify(body)
       }
     }
+
+    // TEST
+    console.log('featureState....', getFeatureState({ agentIdentifier: this.sharedContext.agentIdentifier, featureName: FEATURE_NAMES.basicSpa }))
 
     if (!body || body.length === 0 || body === '{}' || body === '[]') {
       // If body is null, undefined, or an empty object or array, send an empty string instead

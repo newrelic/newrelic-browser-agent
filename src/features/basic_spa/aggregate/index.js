@@ -49,12 +49,26 @@ export class Aggregate extends AggregateBase {
     drain(this.agentIdentifier, this.featureName)
   }
 
+  hasInteraction ({ timestamp }) {
+    console.log('hasInteraction?', timestamp)
+    if (!timestamp) return
+    let shouldHold = false
+    let interactions = this.state.interactionsToHarvest.filter(ixn => {
+      if (ixn._start < timestamp) {
+        console.log(ixn._start, 'is < than', timestamp, ixn._start < timestamp)
+        if (!ixn._end) {
+          shouldHold = true
+          return false
+        }
+        console.log(ixn._end, 'is > than', timestamp, ixn._end > timestamp)
+        return ixn._end > timestamp
+      }
+      return false
+    })
+    return { shouldHold, interactions }
+  }
+
   captureInitialPageLoad () {
-    const runtime = getRuntime(this.agentIdentifier)
-    runtime.interactions.push(new InitialPageLoadInteraction(this.agentIdentifier, {
-      initialPageURL: this.state.initialPageURL,
-      oldURL: this.state.initialPageURL,
-      newURL: this.state.initialPageURL
-    }))
+    this.state.interactionsToHarvest.push(new InitialPageLoadInteraction(this.agentIdentifier))
   }
 }

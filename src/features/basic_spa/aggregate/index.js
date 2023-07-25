@@ -1,9 +1,12 @@
 import { getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { drain } from '../../../common/drain/drain'
+import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
+import { debounce } from '../../../common/util/invoke'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_NAME } from '../constants'
+import { FEATURE_NAME, INTERACTION_EVENTS } from '../constants'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
+import { Interaction } from './interaction'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -15,6 +18,7 @@ export class Aggregate extends AggregateBase {
       lastSeenUrl: getRuntime(agentIdentifier).origin,
       lastSeenRouteName: null,
       harvestTimeSeconds: getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10,
+      interactionInProgress: null,
       interactionsToHarvest: [],
       interactionsSent: []
     }
@@ -36,7 +40,28 @@ export class Aggregate extends AggregateBase {
       if (isOn) this.captureInitialPageLoad()
     })
 
-    console.log('drain basic_spa...')
+    const debouncedIxn = debounce(() => {
+      this.state.interactionInProgress = new Interaction(this.agentIdentifier)
+      console.log('new IXN!', this.state.interactionInProgress)
+    }, 2000, { leading: true })
+
+    registerHandler('fn-end', evts => {
+      if (INTERACTION_EVENTS.includes(evts?.[0]?.type)) {
+        debouncedIxn()
+      }
+    }, this.featureName, eventsEE)
+
+    registerHandler('newURL', url => {
+      const ixn = this.state.interactionInProgress
+      if (!ixn) return
+      ixn.finish(url)
+
+      this.state.interactionsToHarvest.push(ixn)
+      this.state.interactionInProgress = null
+
+      console.log('ixn finished...', this.state.interactionsToHarvest)
+    }, this.featureName, historyEE)
+
     drain(this.agentIdentifier, this.featureName)
   }
 
@@ -44,12 +69,12 @@ export class Aggregate extends AggregateBase {
     if (!timestamp) return
     let shouldHold = false
     let interactions = this.state.interactionsToHarvest.filter(ixn => {
-      if (ixn._start < timestamp) {
+      if (ixn._start <= timestamp) {
         if (!ixn._end) {
           shouldHold = true
           return false
         }
-        return ixn._end > timestamp
+        return ixn._end >= timestamp
       }
       return false
     })

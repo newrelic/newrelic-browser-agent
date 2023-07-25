@@ -18,9 +18,11 @@
       xhr.open('POST', '/echo')
       xhr.send('123')
 
-      xhr.addEventListener('load', function () {}, true)
+      xhr.addEventListener('load', function () {window.location.hash = Math.random()}, true)
 
-      window.location.hash = Math.random()
+      newrelic.noticeError('test')
+      
+
     }, false)
     </script>
   </body>

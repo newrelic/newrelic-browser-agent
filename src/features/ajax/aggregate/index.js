@@ -200,6 +200,8 @@ export class Aggregate extends AggregateBase {
         if (shouldHold) continue
         let browserInteractionId = interactions?.[0]?._id
 
+        if (interactions.length) console.log('ajax', event, 'has FOUND AJAX INTERACTION!', interactions)
+
         var fields = [
           numeric(event.startTime),
           numeric(event.endTime - event.startTime),
@@ -221,7 +223,7 @@ export class Aggregate extends AggregateBase {
         var insert = '2,'
 
         // add custom attributes
-        var attrParts = addCustomAttributes({ ...getInfo(agentIdentifier).jsAttributes, browserInteractionId } || {}, this.addString)
+        var attrParts = addCustomAttributes({ ...getInfo(agentIdentifier).jsAttributes, ...(!!browserInteractionId && { browserInteractionId }) } || {}, this.addString)
         fields.unshift(numeric(attrParts.length))
 
         insert += fields.join(',')

@@ -1,4 +1,4 @@
-import { globalScope } from '../../../common/constants/runtime'
+import { globalScope, initialLocation } from '../../../common/constants/runtime'
 import { generateUuid } from '../../../common/ids/unique-id'
 import { getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
@@ -36,7 +36,8 @@ export class Interaction {
 
   constructor (agentIdentifier) {
     this.agentIdentifier = agentIdentifier
-    this.oldURL = globalScope.initialLocaltion
+    this.initialPageURL = initialLocation
+    this.oldURL = '' + globalScope?.location
     this.childCount = 0
   }
 
@@ -95,7 +96,11 @@ export class Interaction {
 
   countChild () { this.childCount = this.childCount + 1 }
 
-  finish () { this.end = now() }
+  finish (url) {
+    if (!url) throw new Error('Cannot finish ixn without a url')
+    this.newURL = url
+    this.end = now()
+  }
 
   get isFinished () { return this.start >= 0 && (this.end ?? -1) >= this.start }
 

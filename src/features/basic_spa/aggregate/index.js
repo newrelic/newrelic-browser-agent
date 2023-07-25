@@ -41,7 +41,6 @@ export class Aggregate extends AggregateBase {
   }
 
   hasInteraction ({ timestamp }) {
-    console.log('hasInteraction?', timestamp)
     if (!timestamp) return
     let shouldHold = false
     let interactions = this.state.interactionsToHarvest.filter(ixn => {

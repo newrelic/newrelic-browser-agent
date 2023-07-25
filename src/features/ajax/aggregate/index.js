@@ -204,6 +204,9 @@ export class Aggregate extends AggregateBase {
 
       for (var i = 0; i < events.length; i++) {
         var event = events[i]
+        const { shouldHold, interactions } = spaFeature?.hasInteraction?.({ timestamp: event.startTime })
+        if (shouldHold) continue
+        let browserInteractionId = interactions?.[0]?._id
 
         var fields = [
           numeric(event.startTime),
@@ -224,11 +227,6 @@ export class Aggregate extends AggregateBase {
         ]
 
         var insert = '2,'
-
-        const hasIxn = spaFeature?.hasInteraction?.({ timestamp: event.startTime })
-        let browserInteractionId = hasIxn.interactions?.[0]?._id
-
-        console.log('add browserInteractionId to event', browserInteractionId)
 
         // add custom attributes
         var attrParts = addCustomAttributes({ ...getInfo(agentIdentifier).jsAttributes, browserInteractionId } || {}, this.addString)

@@ -45,12 +45,10 @@ export class Aggregate extends AggregateBase {
     let shouldHold = false
     let interactions = this.state.interactionsToHarvest.filter(ixn => {
       if (ixn._start < timestamp) {
-        console.log(ixn._start, 'is < than', timestamp, ixn._start < timestamp)
         if (!ixn._end) {
           shouldHold = true
           return false
         }
-        console.log(ixn._end, 'is > than', timestamp, ixn._end > timestamp)
         return ixn._end > timestamp
       }
       return false

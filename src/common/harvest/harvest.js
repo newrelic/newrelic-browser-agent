@@ -119,9 +119,6 @@ export class Harvest extends SharedContext {
       }
     }
 
-    // TEST
-    console.log('featureState....', getFeatureState({ agentIdentifier: this.sharedContext.agentIdentifier, featureName: FEATURE_NAMES.basicSpa }))
-
     if (!body || body.length === 0 || body === '{}' || body === '[]') {
       // If body is null, undefined, or an empty object or array, send an empty string instead
       body = ''

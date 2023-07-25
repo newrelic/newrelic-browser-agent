@@ -135,16 +135,8 @@ export class Aggregate extends AggregateBase {
 
       var payloadObjs = []
       for (var i = 0; i < payload.length; i++) {
-        console.log('payload...', payload[i])
         payloadObjs.push({ body: { e: payload[i] } })
       }
-
-      // console.log('event...', event)
-
-      // const spaFeature = getFeatureState({ agentIdentifier, featureName: FEATURE_NAMES.basicSpa })
-
-      // console.log('spa feature..', spaFeature, Object.keys(spaFeature))
-      // console.log('ixn timing...', spaFeature?.hasInteraction?.({ timestamp: event.startTime }))
 
       if (options.retry) {
         sentAjaxEvents = ajaxEvents.slice()
@@ -204,7 +196,7 @@ export class Aggregate extends AggregateBase {
 
       for (var i = 0; i < events.length; i++) {
         var event = events[i]
-        const { shouldHold, interactions } = spaFeature?.hasInteraction?.({ timestamp: event.startTime })
+        const { shouldHold, interactions } = spaFeature?.hasInteraction?.({ timestamp: event.startTime }) || {}
         if (shouldHold) continue
         let browserInteractionId = interactions?.[0]?._id
 

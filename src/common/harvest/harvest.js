@@ -16,8 +16,6 @@ import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/env'
 import { isWorkerScope, isIE } from '../constants/runtime'
-import { FEATURE_TYPE, getFeatureState } from '../util/feature-state'
-import { FEATURE_NAMES } from '../../loaders/features/features'
 
 /**
  * @typedef {import('./types.js').NetworkSendSpec} NetworkSendSpec

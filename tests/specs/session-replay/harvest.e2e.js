@@ -75,13 +75,11 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
   })
 
   it('Should set timestamps on each payload', async () => {
-    const startTime = Date.now()
-
     const [{ request: blobHarvest }] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('64kb-dom.html', config({ session_replay: { harvestTimeSeconds: 5 } })))
-        .then(() => browser.waitForSessionReplayRecording())
+      browser.url(await browser.testHandle.assetURL('64kb-generated-dom.html', config({ session_replay: { harvestTimeSeconds: 5 } })))
     ])
+    console.log(blobHarvest)
 
     expect(blobHarvest.body.length).toBeGreaterThan(0)
     const attr1 = decodeAttributes(blobHarvest.query.attributes)
@@ -91,6 +89,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
     expect(attr1['replay.lastTimestamp']).toEqual(blobHarvest.body[blobHarvest.body.length - 1].timestamp)
 
     const { request: blobHarvest2 } = await browser.testHandle.expectBlob()
+    console.log(blobHarvest2)
     expect(blobHarvest2.body.length).toBeGreaterThan(0)
     const attr2 = decodeAttributes(blobHarvest2.query.attributes)
     expect(attr2['replay.firstTimestamp']).toBeGreaterThan(0)

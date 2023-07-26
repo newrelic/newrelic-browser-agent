@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config}
+    {loader} {script-injection}
+  </head>
+  <body>This is a page that generates a dom string that compresses to under 64kb
+    <div id="content"></div>
+    <script>
+      // not intended for IE
+      // .5mb string -> compressed to under 64kb
+      document.querySelector('#content').innerHTML = 'x'.repeat(0.5 * 1024 * 1024)
+    </script>
+  </body>
+</html>

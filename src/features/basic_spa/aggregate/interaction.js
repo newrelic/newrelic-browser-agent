@@ -101,11 +101,9 @@ export class Interaction {
     this.end = now()
   }
 
-  get isFinished () { return this.start >= 0 && (this.end ?? -1) >= this.start }
-
   containsEvent (timestamp) {
-    if (!this.isFinished) return this.#start <= timestamp
-    return this.#start <= timestamp && this.#end >= timestamp
+    if (!this.#end) return this.#start <= timestamp
+    return (this.#start <= timestamp && this.#end >= timestamp)
   }
 
   serialize (type) {

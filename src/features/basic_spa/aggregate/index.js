@@ -41,7 +41,7 @@ export class Aggregate extends AggregateBase {
       console.log('new IXN!', this.interactionInProgress)
     }, 2000, { leading: true })
 
-    registerHandler('fn-end', evts => {
+    registerHandler('fn-end', evts => { // click --> 2 fn-end events type "click"
       const type = evts?.[0]?.type
       if (INTERACTION_EVENTS.includes(type)) {
         debouncedIxn(type)
@@ -90,6 +90,7 @@ export class Aggregate extends AggregateBase {
     if (!timestamp) return { shouldHold: false, interaction: undefined }
     let shouldHold = false
     const interaction = [...this.interactionsToHarvest, ...this.interactionsSent].find(ixn => ixn.containsEvent(timestamp))
+    console.log('first check', interaction)
     if (!interaction && !!this.interactionInProgress) shouldHold = this.interactionInProgress.containsEvent(timestamp)
     return { shouldHold, interaction }
   }

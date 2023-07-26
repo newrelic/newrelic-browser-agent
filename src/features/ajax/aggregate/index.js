@@ -198,7 +198,7 @@ export class Aggregate extends AggregateBase {
         var event = events[i]
         const { shouldHold, interaction } = spaFeature?.hasInteraction?.({ timestamp: event.startTime }) || {}
         if (shouldHold) continue
-        let browserInteractionId = interaction?._id
+        let browserInteractionId = interaction?.id.replace('\'', '')
 
         if (interaction) console.log('ajax', event, 'has FOUND AJAX INTERACTION!', interaction)
 

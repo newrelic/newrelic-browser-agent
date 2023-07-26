@@ -1,10 +1,10 @@
-import { getConfigurationValue, getRuntime } from '../../../common/config/config'
+import { getConfigurationValue } from '../../../common/config/config'
 import { drain } from '../../../common/drain/drain'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { debounce } from '../../../common/util/invoke'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_NAME, INTERACTION_EVENTS } from '../constants'
+import { CATEGORY, FEATURE_NAME, INTERACTION_EVENTS } from '../constants'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
 
@@ -13,75 +13,89 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
-    this.state = {
-      initialPageURL: getRuntime(agentIdentifier).origin,
-      lastSeenUrl: getRuntime(agentIdentifier).origin,
-      lastSeenRouteName: null,
-      harvestTimeSeconds: getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10,
-      interactionInProgress: null,
-      interactionsToHarvest: [],
-      interactionsSent: []
-    }
+    this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10
+    this.interactionInProgress = null
+    this.interactionsToHarvest = []
+    this.interactionsSent = []
 
-    // this.serializer = new Serializer(this)
-    const { state, serializer } = this
+    this.blocked = false
 
     const historyEE = this.ee.get('history')
     const eventsEE = this.ee.get('events')
     const tracerEE = this.ee.get('tracer')
 
-    const scheduler = new HarvestScheduler('events', {
-      // onFinished: onHarvestFinished,
-      retryDelay: state.harvestTimeSeconds
+    this.scheduler = new HarvestScheduler('events', {
+      onFinished: this.onHarvestFinished.bind(this),
+      retryDelay: this.harvestTimeSeconds
     }, { agentIdentifier, ee: this.ee })
-    // scheduler.harvest.on('events', onHarvestStarted)
+    this.scheduler.harvest.on('events', this.onHarvestStarted.bind(this))
 
     this.waitForFlags(['spa']).then(([isOn]) => {
       if (isOn) this.captureInitialPageLoad()
     })
 
-    const debouncedIxn = debounce(() => {
-      this.state.interactionInProgress = new Interaction(this.agentIdentifier)
-      console.log('new IXN!', this.state.interactionInProgress)
+    const debouncedIxn = debounce((trigger) => {
+      this.interactionInProgress = new Interaction(this.agentIdentifier)
+      this.interactionInProgress.trigger = trigger
+      this.interactionInProgress.category = CATEGORY.ROUTE_CHANGE
+      console.log('new IXN!', this.interactionInProgress)
     }, 2000, { leading: true })
 
     registerHandler('fn-end', evts => {
-      if (INTERACTION_EVENTS.includes(evts?.[0]?.type)) {
-        debouncedIxn()
+      const type = evts?.[0]?.type
+      if (INTERACTION_EVENTS.includes(type)) {
+        debouncedIxn(type)
       }
     }, this.featureName, eventsEE)
 
     registerHandler('newURL', url => {
-      const ixn = this.state.interactionInProgress
+      const ixn = this.interactionInProgress
       if (!ixn) return
       ixn.finish(url)
+      console.log('ixn finished...', ixn)
 
-      this.state.interactionsToHarvest.push(ixn)
-      this.state.interactionInProgress = null
+      this.interactionsToHarvest.push(ixn)
+      this.interactionInProgress = null
 
-      console.log('ixn finished...', this.state.interactionsToHarvest)
+      this.scheduler.scheduleHarvest(0)
     }, this.featureName, historyEE)
 
     drain(this.agentIdentifier, this.featureName)
   }
 
+  onHarvestStarted (options) {
+    if (this.interactionsToHarvest.length === 0 || this.blocked) return {}
+    const payload = `bel.7;${this.interactionsToHarvest.map(ixn => ixn.serialize('bel')).join(';')}`
+
+    if (options.retry) {
+      this.interactionsToHarvest.forEach((interaction) => {
+        this.interactionsSent.push(interaction)
+      })
+    }
+    this.interactionsToHarvest = []
+
+    return { body: { e: payload } }
+  }
+
+  onHarvestFinished (result) {
+    if (result.sent && result.retry && this.interactionsSent.length > 0) {
+      this.interactionsSent.forEach((interaction) => {
+        this.interactionsToHarvest.unshift(interaction)
+      })
+      this.interactionsSent = []
+    }
+  }
+
   hasInteraction ({ timestamp }) {
-    if (!timestamp) return
+    if (!timestamp) return { shouldHold: false, interaction: undefined }
     let shouldHold = false
-    let interactions = this.state.interactionsToHarvest.filter(ixn => {
-      if (ixn._start <= timestamp) {
-        if (!ixn._end) {
-          shouldHold = true
-          return false
-        }
-        return ixn._end >= timestamp
-      }
-      return false
-    })
-    return { shouldHold, interactions }
+    const interaction = [...this.interactionsToHarvest, ...this.interactionsSent].find(ixn => ixn.containsEvent(timestamp))
+    if (!interaction && !!this.interactionInProgress) shouldHold = this.interactionInProgress.containsEvent(timestamp)
+    return { shouldHold, interaction }
   }
 
   captureInitialPageLoad () {
-    this.state.interactionsToHarvest.push(new InitialPageLoadInteraction(this.agentIdentifier))
+    this.interactionsToHarvest.push(new InitialPageLoadInteraction(this.agentIdentifier))
+    this.scheduler.scheduleHarvest(0)
   }
 }

@@ -196,11 +196,11 @@ export class Aggregate extends AggregateBase {
 
       for (var i = 0; i < events.length; i++) {
         var event = events[i]
-        const { shouldHold, interactions } = spaFeature?.hasInteraction?.({ timestamp: event.startTime }) || {}
+        const { shouldHold, interaction } = spaFeature?.hasInteraction?.({ timestamp: event.startTime }) || {}
         if (shouldHold) continue
-        let browserInteractionId = interactions?.[0]?._id
+        let browserInteractionId = interaction?._id
 
-        if (interactions.length) console.log('ajax', event, 'has FOUND AJAX INTERACTION!', interactions)
+        if (interaction) console.log('ajax', event, 'has FOUND AJAX INTERACTION!', interaction)
 
         var fields = [
           numeric(event.startTime),

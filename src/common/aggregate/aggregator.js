@@ -108,9 +108,9 @@ export class Aggregator extends SharedContext {
 
   checkInteractions (value) {
     const spaFeature = getFeatureState({ agentIdentifier: this.sharedContext.agentIdentifier, featureName: FEATURE_NAMES.basicSpa })
-    const { shouldHold, interactions } = spaFeature?.hasInteraction?.({ timestamp: value?.metrics?.time?.t }) || {}
+    const { shouldHold, interaction } = spaFeature?.hasInteraction?.({ timestamp: value?.metrics?.time?.t }) || {}
     if (shouldHold) return true
-    let browserInteractionId = interactions?.[0]?._id
+    let browserInteractionId = interaction?._id
     if (browserInteractionId) value.params.browserInteractionId = browserInteractionId
     return false
   }

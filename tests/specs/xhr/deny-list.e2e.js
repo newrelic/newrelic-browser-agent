@@ -1,6 +1,6 @@
 describe('Ajax events to beacon endpoint', () => {
   it('not captured when blocked', async () => {
-    let url = await browser.testHandle.assetURL('spa/ajax-deny-list.html') // requests going to beacon domain URL not collected by default
+    let url = await browser.testHandle.assetURL('spa/ajax-deny-list.html', { init: { ajax: { block_internal: true } } })
     let nextAjaxReq = browser.testHandle.expectAjaxEvents(10000, true)
     await browser.url(url)
 

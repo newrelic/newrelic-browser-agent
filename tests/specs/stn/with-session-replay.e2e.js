@@ -23,19 +23,19 @@ import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
         body: JSON.stringify({ stn: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
       })
 
-      let resources = browser.testHandle.expectResources(10000)
-      await browser.url(await getUrlString)
-      await browser.waitForAgentLoad()
-      await expect(resources).resolves.toBeUndefined() // trace payload should've been received by now after page has loaded
+      await Promise.all([
+        browser.url(await getUrlString).then(() => browser.waitForAgentLoad()),
+        browser.testHandle.expectResources(10000, true)
+      ])
     })
 
     it('does run (standalone behavior) if stn flag is 1', async () => {
       // The default rum response will include stn = 1 and sr = 0.
+      await Promise.all([
+        browser.url(await getUrlString).then(() => browser.waitForAgentLoad()),
+        browser.testHandle.expectResources()
+      ])
 
-      let getFirstSTPayload = browser.testHandle.expectResources(3000)
-      await browser.url(await getUrlString)
-      await browser.waitForAgentLoad()
-      await expect(getFirstSTPayload).resolves.toBeTruthy()
       const traceMode = await browser.execute(function () { // expect Trace to be running by itself
         return Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.isStandalone
       })

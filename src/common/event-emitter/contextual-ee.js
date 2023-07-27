@@ -5,7 +5,6 @@
 
 import { gosNREUM } from '../window/nreum'
 import { getOrSet } from '../util/get-or-set'
-import { mapOwn } from '../util/map-own'
 import { getRuntime } from '../config/config'
 import { EventContext } from './event-context'
 import { bundleId } from '../ids/bundle-id'
@@ -117,17 +116,18 @@ function ee (old, debugId) {
   }
 
   function bufferEventsByGroup (types, group) {
-    var eventBuffer = getBuffer()
+    const eventBuffer = getBuffer()
+    group = group || 'feature'
 
     // do not buffer events if agent has been aborted
     if (emitter.aborted) return
-    mapOwn(types, function (i, type) {
-      group = group || 'feature'
-      bufferGroupMap[type] = group
-      if (!(group in eventBuffer)) {
-        eventBuffer[group] = []
-      }
-    })
+    Object.entries(types || {})
+      .forEach(([_, type]) => {
+        bufferGroupMap[type] = group
+        if (!(group in eventBuffer)) {
+          eventBuffer[group] = []
+        }
+      })
   }
 
   function isBuffering (type) {

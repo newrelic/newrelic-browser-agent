@@ -34,7 +34,7 @@ test('storeXhr for a SPA ajax request buffers in spaAjaxEvents', function (t) {
     { // params
       method: 'PUT',
       status: 200,
-      host: 'https://example.com',
+      hostname: 'example.com',
       pathname: '/pathname'
     },
     { // metrics
@@ -69,7 +69,7 @@ test('storeXhr for a non-SPA ajax request buffers in ajaxEvents', function (t) {
     { // params
       method: 'PUT',
       status: 200,
-      host: 'https://example.com',
+      hostname: 'example.com',
       pathname: '/pathname'
     },
     { // metrics
@@ -107,7 +107,7 @@ test('on interactionDiscarded, saved SPA events are buffered in ajaxEvents', fun
     { // params
       method: 'PUT',
       status: 200,
-      host: 'https://example.com',
+      hostname: 'example.com',
       pathname: '/pathname'
     },
     { // metrics
@@ -160,6 +160,7 @@ test('prepareHarvest correctly serializes an AjaxRequest events payload', functi
       method: expected.method,
       status: expected.status,
       host: expected.domain,
+      hostname: 'example.com',
       pathname: expected.path
     },
     { // metrics
@@ -255,6 +256,7 @@ test('prepareHarvest correctly serializes a very large AjaxRequest events payloa
       method: expected().method,
       status: expected().status,
       host: expected().domain,
+      hostname: 'example.com',
       pathname: expected().path
     },
     { // metrics
@@ -345,6 +347,7 @@ test('prepareHarvest correctly exits if maxPayload is too small', function (t) {
       method: expected().method,
       status: expected().status,
       host: expected().domain,
+      hostname: 'example.com',
       pathname: expected().path
     },
     { // metrics

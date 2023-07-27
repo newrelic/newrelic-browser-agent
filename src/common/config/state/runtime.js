@@ -22,7 +22,8 @@ const model = {
   releaseIds: {},
   session: undefined,
   xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
-  version: VERSION
+  version: VERSION,
+  denyList: undefined
 }
 
 const _cache = {}

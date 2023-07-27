@@ -265,7 +265,8 @@ module.exports = class TestHandle {
           loader: 'full',
           config: {
             licenseKey: this.#testId
-          }
+          },
+          init: { ajax: { block_internal: false } }
         },
         query
       ),

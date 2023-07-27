@@ -156,19 +156,6 @@ export class Harvest extends SharedContext {
       }, eventListenerOpts(false))
     }
 
-    // if beacon request failed, retry with an alternative method -- will not happen for workers
-    if (!result && submitMethod === submitData.beacon) {
-      // browsers that support sendBeacon also support fetch with keepalive - IE will not retry unload calls
-      submitMethod = submitData.fetchKeepAlive
-      try {
-        submitMethod({ url: fullUrl, body, headers })
-      } catch (e) {
-        // Ignore error in final harvest
-      } finally {
-        result = true
-      }
-    }
-
     return result
   }
 

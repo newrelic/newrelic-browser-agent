@@ -440,41 +440,6 @@ describe('_send', () => {
       sent: true
     })
   })
-
-  test('should fallback to fetchKeepAlive when beacon returns false', async () => {
-    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.beacon)
-    jest.mocked(submitDataModule.beacon).mockReturnValue(false)
-    spec.opts.unload = true
-
-    const results = harvestInstance._send(spec)
-    await new Promise(process.nextTick)
-
-    expect(results).toEqual(true)
-    expect(submitDataModule.fetchKeepAlive).toHaveBeenCalledWith({
-      body: JSON.stringify(spec.payload.body),
-      headers: [{ key: 'content-type', value: 'text/plain' }],
-      url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
-    })
-  })
-
-  test('should not throw an exception if fetchKeepAlive throws error', async () => {
-    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.beacon)
-    jest.mocked(submitDataModule.beacon).mockReturnValue(false)
-    jest.mocked(submitDataModule.fetchKeepAlive).mockImplementation(() => {
-      throw new Error(faker.lorem.sentence())
-    })
-    spec.opts.unload = true
-
-    const results = harvestInstance._send(spec)
-    await new Promise(process.nextTick)
-
-    expect(results).toEqual(true)
-    expect(submitDataModule.fetchKeepAlive).toHaveBeenCalledWith({
-      body: JSON.stringify(spec.payload.body),
-      headers: [{ key: 'content-type', value: 'text/plain' }],
-      url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
-    })
-  })
 })
 
 describe('obfuscateAndSend', () => {

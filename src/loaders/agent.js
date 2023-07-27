@@ -1,4 +1,5 @@
 // loader files
+import { AgentBase } from './agent-base'
 import { getEnabledFeatures } from './features/enabled-features'
 import { configure } from './configure/configure'
 import { getFeatureDependencyNames } from './features/featureDependencies'
@@ -15,11 +16,17 @@ import { stringify } from '../common/util/stringify'
 import { globalScope } from '../common/constants/runtime'
 
 /**
+ * @typedef {import('./api/interaction-types').InteractionInstance} InteractionInstance
+ */
+
+/**
  * A flexible class that may be used to compose an agent from a select subset of feature modules. In applications
  * sensitive to network load, this may result in smaller builds with slightly lower performance impact.
  */
-export class Agent {
+export class Agent extends AgentBase {
   constructor (options, agentIdentifier = generateRandomHexString(16)) {
+    super()
+
     if (!globalScope) {
       // We could not determine the runtime environment. Short-circuite the agent here
       // to avoid possible exceptions later that may cause issues with customer's application.
@@ -83,5 +90,39 @@ export class Agent {
       delete newrelic.ee?.get(this.agentIdentifier) // clear this agent's own backlog too
       return false
     }
+  }
+
+  /* Below API methods are only available on a standard agent and not the micro agent */
+
+  /**
+   * Adds a JavaScript object with a custom name, start time, etc. to an in-progress session trace.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/addtotrace/}
+   * @param {{name: string, start: number, end?: number, origin?: string, type?: string}} customAttributes Supply a JavaScript object with these required and optional name/value pairs:
+   *
+   * - Required name/value pairs: name, start
+   * - Optional name/value pairs: end, origin, type
+   *
+   * If you are sending the same event object to New Relic as a PageAction, omit the TYPE attribute. (type is a string to describe what type of event you are marking inside of a session trace.) If included, it will override the event type and cause the PageAction event to be sent incorrectly. Instead, use the name attribute for event information.
+   */
+  addToTrace (customAttributes) {
+    warn('Call to agent api addToTrace failed. The page action feature is not currently initialized.')
+  }
+
+  /**
+   * Gives SPA routes more accurate names than default names. Monitors specific routes rather than by default grouping.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setcurrentroutename/}
+   * @param {string} name Current route name for the page.
+   */
+  setCurrentRouteName (name) {
+    warn('Call to agent api setCurrentRouteName failed. The spa feature is not currently initialized.')
+  }
+
+  /**
+   * Returns a new API object that is bound to the current SPA interaction.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/interaction/}
+   * @returns {InteractionInstance} An API object that is bound to a specific BrowserInteraction event. Each time this method is called for the same BrowserInteraction, a new object is created, but it still references the same interaction.
+   */
+  interaction () {
+    warn('Call to agent api interaction failed. The spa feature is not currently initialized.')
   }
 }

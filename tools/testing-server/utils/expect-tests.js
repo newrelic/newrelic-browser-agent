@@ -270,13 +270,14 @@ module.exports.testResourcesRequest = function testResourcesRequest (request) {
 
 module.exports.testBlobRequest = function testBlobRequest (request) {
   const url = new URL(request.url, 'resolve://')
-  if (url.pathname !== '/blob') return false
+  if (url.pathname !== '/browser/blobs') return false
   if (request?.query?.browser_monitoring_key !== this.testId) return false
 
   try {
     const body = request?.body
-    const blobContents = JSON.parse(body?.blob)
+    const blobContents = body // JSON array
     if (blobContents && Array.isArray(blobContents) && blobContents.length) return true
+    return false
   } catch (err) {
     return false
   }

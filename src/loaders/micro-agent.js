@@ -10,6 +10,7 @@ import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../commo
 import { FEATURE_NAMES } from './features/features'
 import { warn } from '../common/util/console'
 import { onWindowLoad } from '../common/window/load'
+import { AgentBase } from './agent-base'
 
 const nonAutoFeatures = [
   FEATURE_NAMES.jserrors,
@@ -22,12 +23,14 @@ const nonAutoFeatures = [
  * automatically instrument. Instead, each MicroAgent instance will lazy load the required features and can support loading multiple instances on one page.
  * Out of the box, it can manually handle and report Page View, Page Action, and Error events.
  */
-export class MicroAgent {
+export class MicroAgent extends AgentBase {
   /**
    * @param {Object} options - Specifies features and runtime configuration,
    * @param {string=} agentIdentifier - The optional unique ID of the agent.
    */
   constructor (options, agentIdentifier = generateRandomHexString(16)) {
+    super()
+
     this.agentIdentifier = agentIdentifier
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}

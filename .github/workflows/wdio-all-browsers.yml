@@ -2,7 +2,21 @@ name: 'WDIO: All browsers'
 
 on:
   workflow_dispatch:
+    inputs:
+      build-number:
+        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
+        required: true
+        type: string
   workflow_call:
+    inputs:
+      build-number:
+        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
+        required: true
+        type: string
+      ref:
+        description: 'Github branch ref to checkout and run tests on'
+        required: false
+        type: string
     secrets:
       JIL_SAUCE_LABS_USERNAME:
         required: true
@@ -11,56 +25,61 @@ on:
       JIL_NODE_NEW_RELIC_LICENSE_KEY:
         required: true
 
-env:
-  BUILD_NUMBER: PR${{ github.event.number }}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
-
 jobs:
   chrome:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
+      ref: ${{ inputs.ref || github.ref }}
       browser-target: chrome@*
-      build-number: $BUILD_NUMBER
+      build-number: ${{ inputs.build-number }}
     secrets: inherit
 
   firefox:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
+      ref: ${{ inputs.ref || github.ref }}
       browser-target: firefox@*
-      build-number: $BUILD_NUMBER
+      build-number: ${{ inputs.build-number }}
     secrets: inherit
 
   safari:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
-      browser-target: safari@*
-      build-number: $BUILD_NUMBER
+      ref: ${{ inputs.ref || github.ref }}
+      # Don't test safari@15
+      browser-target: safari@16
+      build-number: ${{ inputs.build-number }}
     secrets: inherit
 
   edge:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
+      ref: ${{ inputs.ref || github.ref }}
       browser-target: edge@*
-      build-number: $BUILD_NUMBER
+      build-number: ${{ inputs.build-number }}
     secrets: inherit
 
   ios:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
+      ref: ${{ inputs.ref || github.ref }}
       browser-target: ios@*
-      build-number: $BUILD_NUMBER
+      build-number: ${{ inputs.build-number }}
     secrets: inherit
 
   android:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
+      ref: ${{ inputs.ref || github.ref }}
       browser-target: android@*
-      build-number: $BUILD_NUMBER
+      build-number: ${{ inputs.build-number }}
     secrets: inherit
 
   ie:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
+      ref: ${{ inputs.ref || github.ref }}
       browser-target: ie@11
-      build-number: $BUILD_NUMBER
+      build-number: ${{ inputs.build-number }}
       additional-flags: -P
     secrets: inherit

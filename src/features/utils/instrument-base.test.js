@@ -31,6 +31,13 @@ jest.mock('../../common/config/config', () => ({
   __esModule: true,
   getConfigurationValue: jest.fn()
 }))
+jest.mock('../../common/config/config', () => ({
+  __esModule: true,
+  getConfigurationValue: jest.fn(),
+  originals: {
+    MO: jest.fn()
+  }
+}))
 jest.mock('./feature-base', () => ({
   __esModule: true,
   FeatureBase: jest.fn(function (...args) {

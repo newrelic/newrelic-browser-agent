@@ -1,4 +1,3 @@
-import { getRuntime } from '../../common/config/config'
 import { ee } from '../../common/event-emitter/contextual-ee'
 
 export class FeatureBase {
@@ -8,7 +7,7 @@ export class FeatureBase {
     /** @type {Aggregator} */
     this.aggregator = aggregator
     /** @type {ContextualEE} */
-    this.ee = ee.get(agentIdentifier, getRuntime(this.agentIdentifier).isolatedBacklog)
+    this.ee = ee.get(agentIdentifier)
     /** @type {string} */
     this.featureName = featureName
     /**

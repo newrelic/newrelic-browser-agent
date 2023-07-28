@@ -7,6 +7,10 @@ import { single } from '../../common/util/invoke'
 import * as submitData from '../../common/util/submit-data'
 import { isBrowserScope } from '../../common/constants/runtime'
 import { CUSTOM_METRIC_CHANNEL } from '../../features/metrics/constants'
+import { LocalStorage } from '../../common/storage/local-storage'
+import { LOCAL_STORAGE_KEY } from '../../common/debugger'
+import { log } from '../../common/util/console'
+import { gosCDN } from '../../common/window/nreum'
 
 export function setAPI (agentIdentifier) {
   var instanceEE = ee.get(agentIdentifier)
@@ -19,7 +23,9 @@ export function setAPI (agentIdentifier) {
     setErrorHandler,
     addToTrace,
     inlineHit,
-    addRelease
+    addRelease,
+    enableDebugging,
+    saveDebuggingLog
   }
 
   // Hook all of the api functions up to the queues/stubs created in loader/api.js
@@ -88,5 +94,23 @@ export function setAPI (agentIdentifier) {
   function addRelease (t, name, id) {
     if (++releaseCount > 10) return
     getRuntime(agentIdentifier).releaseIds[name.slice(-200)] = ('' + id).slice(-200)
+  }
+
+  function enableDebugging (enabled) {
+    const localStorage = new LocalStorage()
+    if (enabled === true) {
+      localStorage.set(LOCAL_STORAGE_KEY, 'true')
+      log('Browser Agent debugging enabled. Refresh page to start debugging.')
+    } else {
+      localStorage.remove(LOCAL_STORAGE_KEY)
+      log('Browser Agent debugging disabled. Refresh page to stop debugging.')
+    }
+  }
+
+  function saveDebuggingLog () {
+    const nr = gosCDN()
+    if (nr.initializedAgents[agentIdentifier]?.debugger) {
+      nr.initializedAgents[agentIdentifier].debugger.saveDebuggingLog()
+    }
   }
 }

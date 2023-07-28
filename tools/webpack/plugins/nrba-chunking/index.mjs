@@ -21,9 +21,9 @@ export default class NRBAChunkingPlugin {
         }
 
         for (const chunk of asyncChunks) {
-          if (chunkGraph.canChunksBeIntegrated(asyncChunks[0], chunk) && !['recorder', 'compressor'].includes(chunk.name)) {
+          if (chunkGraph.canChunksBeIntegrated(asyncChunks[0], chunk) && !['recorder', 'compressor', 'debugger'].includes(chunk.name)) {
             chunkGraph.integrateChunks(asyncChunks[0], chunk)
-          } else if (['recorder', 'compressor'].includes(chunk.name)) {
+          } else if (['recorder', 'compressor', 'debugger'].includes(chunk.name)) {
             chunk.name = `${this.#options.asyncChunkName}-${chunk.name}`
           }
         }

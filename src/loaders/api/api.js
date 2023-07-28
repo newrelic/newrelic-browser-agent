@@ -21,7 +21,8 @@ export function setTopLevelCallers () {
   const funcs = [
     'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
     'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
-    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion'
+    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'enableDebugging',
+    'saveDebuggingLog'
   ]
   funcs.forEach(f => {
     nr[f] = (...args) => caller(f, ...args)
@@ -49,7 +50,9 @@ export function setAPI (agentIdentifier, forceDrain) {
     'finished',
     'addToTrace',
     'inlineHit',
-    'addRelease'
+    'addRelease',
+    'enableDebugging',
+    'saveDebuggingLog'
   ]
 
   var prefix = 'api-'

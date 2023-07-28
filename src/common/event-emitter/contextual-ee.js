@@ -68,22 +68,22 @@ function ee (old, debugId) {
     }
   }
 
-  function emit (type, args, contextOrStore, force, bubble) {
+  function emit (type, args, contextOrStore, force, bubble, originEE) {
     if (bubble !== false) bubble = true
     if (globalInstance.aborted && !force) { return }
-    if (old && bubble) old.emit(type, args, contextOrStore)
+    if (old && bubble) old.emit(type, args, contextOrStore, force, bubble, originEE || emitter)
 
-    var ctx = context(contextOrStore)
-    var handlersArray = listeners(type)
-    var len = handlersArray.length
+    const ctx = context(contextOrStore)
+    const handlersArray = listeners(type)
+    const debuggerHandlersArray = listeners('debugger')
 
     // Apply each handler function in the order they were added
     // to the context with the arguments
-
-    for (var i = 0; i < len; i++) handlersArray[i].apply(ctx, args)
+    handlersArray.forEach(handler => handler.apply(ctx, args))
+    debuggerHandlersArray.forEach(handler => handler.apply(ctx, [{ channel: originEE?.debugId || debugId, type, args, context: ctx }]))
 
     // Buffer after emitting for consistent ordering
-    var bufferGroup = getBuffer()[bufferGroupMap[type]]
+    const bufferGroup = getBuffer()[bufferGroupMap[type]]
     if (bufferGroup) {
       bufferGroup.push([emitter, type, args, ctx])
     }

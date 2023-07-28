@@ -9,8 +9,8 @@ test('setAPI registers all async methods', () => {
   let callSpy = jest.spyOn(register, 'registerHandler')
   setAPI('abcd')
 
-  expect(callSpy).toHaveBeenCalledTimes(5)
-  for (let i = 0; i < 5; i++) {
+  expect(callSpy).toHaveBeenCalledTimes(7)
+  for (let i = 0; i < 7; i++) {
     expect(callSpy.mock.calls[i][0].startsWith('api-')).toBeTruthy()
     expect(callSpy.mock.calls[i][1]).toBeInstanceOf(Function)
   }

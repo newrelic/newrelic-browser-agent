@@ -1,16 +1,9 @@
 import { faker } from '@faker-js/faker'
 import { FeatureBase } from './feature-base'
-import { getRuntime } from '../../common/config/config'
 import { ee } from '../../common/event-emitter/contextual-ee'
 
 jest.enableAutomock()
 jest.unmock('./feature-base')
-jest.mock('../../common/config/config', () => ({
-  __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({
-    isolatedBacklog: true
-  })
-}))
 jest.mock('../../common/event-emitter/contextual-ee', () => ({
   __esModule: true,
   ee: {
@@ -40,6 +33,5 @@ it('should set instance defaults', () => {
   expect(feature.blocked).toEqual(false)
   expect(feature.ee).toEqual(mockEE)
 
-  expect(getRuntime).toHaveBeenCalledWith(agentIdentifier)
-  expect(ee.get).toHaveBeenCalledWith(agentIdentifier, true)
+  expect(ee.get).toHaveBeenCalledWith(agentIdentifier)
 })

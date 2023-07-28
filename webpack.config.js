@@ -30,9 +30,9 @@ switch (PUBLISH) {
   case 'DEV':
     PATH_VERSION = ''
     SUBVERSION = 'DEV'
-    PUBLIC_PATH = 'https://js-agent.newrelic.com/dev/'
-    MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/dev/[url]'
-    VERSION = `${VERSION}-dev`
+    PUBLIC_PATH = 'https://js-agent.newrelic.com/test/'
+    MAP_PATH = '\n//# sourceMappingURL=https://js-agent.newrelic.com/test/[url]'
+    VERSION = `${VERSION}-test`
     break
   case 'PR':
     PATH_VERSION = ''

@@ -16,18 +16,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  jest-unit:
+  jest-tests:
+    name: Jest tests
     uses: ./.github/workflows/jest.yml
     secrets: inherit
     with:
-      collection: 'unit'
-      coverage: true
-
-  jest-component:
-    uses: ./.github/workflows/jest.yml
-    secrets: inherit
-    with:
-      collection: 'component'
       coverage: true
 
   wdio-coverage:

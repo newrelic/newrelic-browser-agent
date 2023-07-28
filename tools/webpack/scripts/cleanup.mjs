@@ -1,28 +1,32 @@
 /* eslint-disable no-control-regex */
 
-const fs = require('fs')
-const path = require('path')
+import path from 'path'
+import url from 'url'
+import fs from 'fs-extra'
 
-const buildDir = path.resolve(__dirname, '../../build/')
-const builtFileNames = fs.readdirSync(buildDir)
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
+const buildDir = path.resolve(__dirname, '../../../build/')
 
-function removeNonASCII (fileName, text) {
+async function removeNonASCII (fileName, content) {
   const nonAsciiChars = /[^\x00-\x7F]/g
-  const matches = (text.match(nonAsciiChars) || []).length
+  const matches = (content.match(nonAsciiChars) || []).length
   if (!matches) return
+
   console.log(matches, 'Non-ASCII chars found in', fileName)
-  const newText = text.replace(nonAsciiChars, '')
-  return fs.promises.writeFile(`${buildDir}/${fileName}`, newText)
+  const newText = content.replace(nonAsciiChars, '')
+  await fs.writeFile(`${buildDir}/${fileName}`, newText)
 }
 
-function prependSemicolon (fileName, text) {
+async function prependSemicolon (fileName, text) {
   const newText = ';' + text
-  return fs.promises.writeFile(`${buildDir}/${fileName}`, newText)
+  await fs.writeFile(`${buildDir}/${fileName}`, newText)
 }
 
 (async () => {
+  const builtFileNames = await fs.readdir(buildDir)
+
   const files = await Promise.all(builtFileNames.map(fileName => {
-    return fs.promises.readFile(`${buildDir}/${fileName}`, 'utf-8')
+    return fs.readFile(`${buildDir}/${fileName}`, 'utf-8')
   }))
 
   let prepended = 0

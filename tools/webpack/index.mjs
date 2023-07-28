@@ -22,8 +22,6 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
  * build variable set according to the build mode.
  * @property {string} [publicPath] Override the default PUBLIC_PATH
  * build variable set according to the build mode.
- * @property {string} [mapPath] Override the default MAP_PATH
- * build variable set according to the build mode.
  * @property {string} [version] Override the default VERSION
  * build variable set according to the build mode.
  * @property {string} PATH_VERSION Calculated path version value
@@ -31,8 +29,6 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
  * @property {string} SUBVERSION Calculated subversion value
  * for the current webpack build.
  * @property {string} PUBLIC_PATH Calculated public path value
- * for the current webpack build.
- * @property {string} MAP_PATH Calculated map path value
  * for the current webpack build.
  * @property {string} VERSION Calculated version value
  * for the current webpack build.

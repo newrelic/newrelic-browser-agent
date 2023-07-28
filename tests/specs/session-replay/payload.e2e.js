@@ -1,5 +1,5 @@
+import { config, testExpectedReplay } from './helpers'
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { config } from './helpers'
 
 describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => {
   beforeEach(async () => {
@@ -16,7 +16,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
 
     const { request: harvestContents } = await browser.testHandle.expectBlob()
 
-    expect(harvestContents.query.content_encoding).toEqual('gzip')
+    expect((
+      harvestContents.query.attributes.includes('content_encoding') &&
+      harvestContents.query.attributes.includes('gzip')
+    )).toEqual(true)
   })
 
   it('should match expected payload - standard', async () => {
@@ -26,26 +29,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     const { request: harvestContents } = await browser.testHandle.expectBlob()
     const { localStorage } = await browser.getAgentSessionInfo()
 
-    expect(harvestContents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(harvestContents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: false,
-        agentVersion: expect.any(String),
-        isFirstChunk: true,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
+    testExpectedReplay({ data: harvestContents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: true })
   })
 
   it('should match expected payload - error', async () => {
@@ -60,25 +44,6 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     ])
     const { localStorage } = await browser.getAgentSessionInfo()
 
-    expect(harvestContents.query).toMatchObject({
-      protocol_version: '0',
-      content_encoding: 'gzip',
-      browser_monitoring_key: expect.any(String)
-    })
-
-    expect(harvestContents.body).toMatchObject({
-      type: 'SessionReplay',
-      appId: expect.any(Number),
-      timestamp: expect.any(Number),
-      blob: expect.any(String),
-      attributes: {
-        session: localStorage.value,
-        hasSnapshot: true,
-        hasError: true,
-        agentVersion: expect.any(String),
-        isFirstChunk: true,
-        'nr.rrweb.version': expect.any(String)
-      }
-    })
+    testExpectedReplay({ data: harvestContents, session: localStorage.value, hasError: true, hasSnapshot: true, isFirstChunk: true })
   })
 })

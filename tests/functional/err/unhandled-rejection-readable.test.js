@@ -28,7 +28,7 @@ testDriver.test('unhandledPromiseRejections are caught and are readable', suppor
     assertErrorAttributes(t, request.query)
     const actualErrors = getErrorsFromResponse(request, browser)
     const expectedErrorMessages = [
-      { message: 'Unhandled Promise Rejection: "Test"', tested: false, meta: 'string' },
+      { message: 'Unhandled Promise Rejection: Test', tested: false, meta: 'string' },
       { message: 'Unhandled Promise Rejection: 1', tested: false, meta: 'number' },
       { message: 'Unhandled Promise Rejection: {"a":1,"b":{"a":1}}', tested: false, meta: 'nested obj' },
       { message: 'Unhandled Promise Rejection: [1,2,3]', tested: false, meta: 'array' },

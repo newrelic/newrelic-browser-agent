@@ -56,3 +56,6 @@ export const notSafari = new SpecMatcher()
   .include('firefox')
   .include('ios')
   .include('android')
+
+export const onlyChrome = new SpecMatcher()
+  .include('chrome')

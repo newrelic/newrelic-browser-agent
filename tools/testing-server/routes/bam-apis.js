@@ -1,4 +1,5 @@
 const fp = require('fastify-plugin')
+const { v4: uuidv4 } = require('uuid')
 const { rumFlags } = require('../constants')
 
 /**
@@ -51,10 +52,10 @@ module.exports = fp(async function (fastify) {
   })
   fastify.route({
     method: ['POST'],
-    url: '/blob',
+    url: '/browser/blobs',
     handler: async function (request, reply) {
       if (request.testHandle) {
-        request.testHandle.incrementRequestCount(fastify.testServerId, 'blob')
+        request.testHandle.incrementRequestCount(fastify.testServerId, 'blobs')
       }
 
       return reply.code(200).send('')
@@ -91,7 +92,7 @@ module.exports = fp(async function (fastify) {
       }
 
       // This endpoint must reply with some text in the body or further resource harvests will be disabled
-      return reply.code(200).send('123-456')
+      return reply.code(200).send(uuidv4())
     }
   })
 })

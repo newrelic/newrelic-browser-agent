@@ -47,7 +47,8 @@ export function setDenyList (denyListConfig) {
   }
 
   for (var i = 0; i < denyListConfig.length; i++) {
-    var url = denyListConfig[i]
+    let url = denyListConfig[i]
+    if (!url) continue // ignore bad values like undefined or empty strings
 
     if (url.indexOf('http://') === 0) {
       url = url.substring(7)
@@ -55,19 +56,18 @@ export function setDenyList (denyListConfig) {
       url = url.substring(8)
     }
 
-    var firstSlash = url.indexOf('/')
-
+    const firstSlash = url.indexOf('/')
+    let host, pathname
     if (firstSlash > 0) {
-      denyList.push({
-        hostname: url.substring(0, firstSlash),
-        pathname: url.substring(firstSlash)
-      })
+      host = url.substring(0, firstSlash)
+      pathname = url.substring(firstSlash)
     } else {
-      denyList.push({
-        hostname: url,
-        pathname: ''
-      })
+      host = url
+      pathname = ''
     }
+    let [hostname, port] = host.split(':')
+
+    denyList.push({ hostname, pathname })
   }
 }
 /**

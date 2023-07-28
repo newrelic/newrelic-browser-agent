@@ -179,7 +179,6 @@ testDriver.test('string error in custom tracer', function (t, browser, router) {
       var nodeId = interactionTree.children[0].nodeId
 
       var error = errors[0]
-      console.log(JSON.stringify(error))
       t.equal(error.params.message, 'some error')
       t.equal(error.params.browserInteractionId, interactionId, 'should have the correct interaction id')
       t.equal(error.params.parentNodeId, nodeId, 'has the correct node id')

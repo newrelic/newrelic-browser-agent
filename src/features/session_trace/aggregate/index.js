@@ -97,8 +97,8 @@ export class Aggregate extends AggregateBase {
       const stopTracePerm = () => {
         if (sessionEntity.state.sessionTraceMode !== MODE.OFF) sessionEntity.write({ sessionTraceMode: MODE.OFF })
         operationalGate.permanentlyDecide(false)
-        this.#scheduler?.stopTimer(true)
         if (mostRecentModeKnown === MODE.FULL) this.#scheduler?.runHarvest() // allow queued nodes (past opGate) to final harvest, unless they were buffered in other modes
+        this.#scheduler?.stopTimer(true) // the 'true' arg here will forcibly block any future call to runHarvest, so the last runHarvest above must be prior
         this.#scheduler = null
       }
 
@@ -122,9 +122,8 @@ export class Aggregate extends AggregateBase {
           this.ee.on(SESSION_EVENTS.PAUSE, () => mostRecentModeKnown = sessionEntity.state.sessionTraceMode)
 
           if (!sessionEntity.isNew) { // inherit the same mode as existing session's Trace
-            const existingTraceMode = mostRecentModeKnown = sessionEntity.state.sessionTraceMode
-            if (existingTraceMode === MODE.OFF) this.isStandalone = true
-            controlTraceOp(existingTraceMode)
+            if (sessionEntity.state.sessionReplay === MODE.OFF) this.isStandalone = true
+            controlTraceOp(mostRecentModeKnown = sessionEntity.state.sessionTraceMode)
           } else { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
             const replayMode = await getSessionReplayMode(agentIdentifier)
             if (replayMode === MODE.OFF) this.isStandalone = true // without SR, Traces are still subject to old harvest limits

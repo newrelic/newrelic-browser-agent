@@ -4,6 +4,71 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "ca43edfd1c6d477a647e7ce97b6f975134ea1b35",
+          "message": "Stop reporting ajax events going to same beacon",
+          "issues": [
+            "609"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "d616f64e0b6369becea6007a428061932c534f48",
+          "message": "Add warning for large payloads",
+          "issues": [
+            "620"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "dc4fb1babb53b2dcb0abd045ba59390d47a58cb4",
+          "message": "Remove fetch keep-alive unhandled rejection",
+          "issues": [
+            "625"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "3d9f2c060d0c06b70c14fc8d2b57828ad78cf7ea",
+          "message": "prevent invalid error stack traces",
+          "issues": [
+            "617"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "14d42949668fad44f1553179f2c6897a84d4b771",
+          "message": "Defining agent api methods for ts types",
+          "issues": [
+            "613"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "e393c966239bae2054c6878ce0c0c53180fabc5d",
+          "message": "reduce jserrors wrapping and remove onerror use",
+          "issues": [
+            "614"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "389b5ad2c17b74574f98ec6bc24d726061b8a3c0",
+          "message": "Fix potential property of undefined errors",
+          "issues": [
+            "610"
+          ]
+        }
+      ],
+      "version": "1.237.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "cbb339b5-4ff3-4667-a644-d4626a9a09d3",
+      "createTime": "2023-07-28T00:04:01.802Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "a702e2333b31f9088e7076727eb4a6cf26615841",
           "message": "Handle chunk load promise error introduced in 1.235.0 - NR-129244",
@@ -235,5 +300,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-06-27T14:08:12.549Z"
+  "updateTime": "2023-07-28T00:04:01.802Z"
 }

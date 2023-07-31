@@ -116,59 +116,6 @@ describe('final harvesting', () => {
     expect(sendBeaconUsage).toContain('true')
   })
 
-  it.withBrowsersMatching(supportsFetch)('should use fetch with keepalive when sendBeacon returns false', async () => {
-    await Promise.all([
-      browser.testHandle.expectTimings(),
-      browser.url(await browser.testHandle.assetURL('final-harvest.html'))
-        .then(() => browser.waitForAgentLoad())
-    ])
-
-    const finalHarvest = Promise.all([
-      browser.testHandle.expectTimings(),
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectMetrics(),
-      browser.testHandle.expectErrors(),
-      browser.testHandle.expectResources()
-    ])
-
-    await browser.execute(function () {
-      newrelic.noticeError(new Error('hippo hangry'))
-      newrelic.addPageAction('DummyEvent', { free: 'tacos' })
-
-      navigator.sendBeacon = function () {
-        return false
-      }
-    })
-
-    await browser.url(await browser.testHandle.assetURL('/'))
-
-    const [timingsResults, ajaxEventsResults, metricsResults, errorsResults, resourcesResults] = await finalHarvest
-
-    expect(timingsResults.request.body).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        name: 'unload',
-        type: 'timing'
-      })
-    ]))
-    expect(timingsResults.request.body).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        name: 'pageHide',
-        type: 'timing'
-      })
-    ]))
-    expect(ajaxEventsResults.request.body.length).toBeGreaterThan(0)
-    expect(metricsResults.request.body.sm.length).toBeGreaterThan(0)
-    expect(errorsResults.request.body.err).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        params: expect.objectContaining({
-          message: 'hippo hangry'
-        })
-      })
-    ]))
-    expect(errorsResults.request.body.xhr.length).toBeGreaterThan(0)
-    expect(resourcesResults.request.body.res.length).toBeGreaterThan(0)
-  })
-
   it.withBrowsersMatching(reliableUnload)('should not send pageHide event twice', async () => {
     await Promise.all([
       browser.testHandle.expectTimings(),

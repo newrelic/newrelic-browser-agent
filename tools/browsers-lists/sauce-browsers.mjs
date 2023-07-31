@@ -85,6 +85,11 @@ const minSupportedVersion = apiName => {
  */
 const maxSupportedVersion = apiName => {
   switch (apiName) {
+    case 'android':
+      // Android version 13 does not currently work with WDIO/SauceLabs and version 9 through 12 all have
+      // the same version of chrome 100.
+      // https://changelog.saucelabs.com/en/update-to-google-chrome-version-100-on-android-emulators
+      return 9
     default:
       return 9999
   }

@@ -23,13 +23,15 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   setInfo(agentIdentifier, info)
 
   const updatedInit = getConfiguration(agentIdentifier)
-  if (updatedInit.ajax?.block_internal) {
-    runtime.denyList = [
-      ...(updatedInit.ajax.denyList || []),
-      info.beacon,
-      info.errorBeacon
-    ]
-  }
+  runtime.denyList = [
+    ...(updatedInit.ajax?.deny_list || []),
+    ...(updatedInit.ajax?.block_internal
+      ? [
+          info.beacon,
+          info.errorBeacon
+        ]
+      : [])
+  ]
   setRuntime(agentIdentifier, runtime)
 
   setTopLevelCallers()

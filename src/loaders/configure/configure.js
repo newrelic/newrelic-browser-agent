@@ -1,6 +1,6 @@
 import { setAPI, setTopLevelCallers } from '../api/api'
 import { addToNREUM, gosCDN, gosNREUMInitializedAgents } from '../../common/window/nreum'
-import { setConfiguration, setInfo, setLoaderConfig, setRuntime } from '../../common/config/config'
+import { getConfiguration, setConfiguration, setInfo, setLoaderConfig, setRuntime } from '../../common/config/config'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/constants/runtime'
 
@@ -22,7 +22,14 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   }
   setInfo(agentIdentifier, info)
 
-  runtime.denyList = init.ajax?.block_internal ? (init.ajax.deny_list || []).concat(info.beacon, info.errorBeacon) : init.ajax?.deny_list
+  const updatedInit = getConfiguration(agentIdentifier)
+  if (updatedInit.ajax?.block_internal) {
+    runtime.denyList = [
+      ...(updatedInit.ajax.denyList || []),
+      info.beacon,
+      info.errorBeacon
+    ]
+  }
   setRuntime(agentIdentifier, runtime)
 
   setTopLevelCallers()

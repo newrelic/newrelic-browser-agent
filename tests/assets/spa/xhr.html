@@ -18,12 +18,22 @@
       xhr.open('POST', '/echo')
       xhr.send('123')
 
-      xhr.addEventListener('load', function () {window.location.hash = Math.random()}, true)
+      xhr.addEventListener('load', function () {
+        window.location.hash = Math.random()
+        for (let i = 0; i < 1000; i++){
+          const elem = document.createElement('div')
+          elem.innerHTML = 'TEST' + i
+          document.body.appendChild(elem)
+        }
+      }, true)
 
       newrelic.noticeError('test')
       
 
     }, false)
+
+    document.querySelector('body').click()
+    window.addEventListener('load', () => {console.log("load"); document.querySelector('body').click() })
     </script>
   </body>
 </html>

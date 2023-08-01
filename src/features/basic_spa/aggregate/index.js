@@ -2,9 +2,8 @@ import { getConfigurationValue } from '../../../common/config/config'
 import { drain } from '../../../common/drain/drain'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { debounce } from '../../../common/util/invoke'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { CATEGORY, FEATURE_NAME, INTERACTION_EVENTS } from '../constants'
+import { CATEGORY, FEATURE_NAME } from '../constants'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
 
@@ -19,10 +18,9 @@ export class Aggregate extends AggregateBase {
     this.interactionsSent = []
 
     this.blocked = false
+    this.drained = false
 
-    const historyEE = this.ee.get('history')
-    const eventsEE = this.ee.get('events')
-    const tracerEE = this.ee.get('tracer')
+    // const tracerEE = this.ee.get('tracer') // used to get API-driven interactions
 
     this.scheduler = new HarvestScheduler('events', {
       onFinished: this.onHarvestFinished.bind(this),
@@ -30,37 +28,11 @@ export class Aggregate extends AggregateBase {
     }, { agentIdentifier, ee: this.ee })
     this.scheduler.harvest.on('events', this.onHarvestStarted.bind(this))
 
-    this.waitForFlags(['spa']).then(([isOn]) => {
-      if (isOn) this.captureInitialPageLoad()
-    })
+    this.startInteraction({ isInitial: true })
 
-    const debouncedIxn = debounce((trigger) => {
-      this.interactionInProgress = new Interaction(this.agentIdentifier)
-      this.interactionInProgress.trigger = trigger
-      this.interactionInProgress.category = CATEGORY.ROUTE_CHANGE
-      console.log('new IXN!', this.interactionInProgress)
-    }, 2000, { leading: true })
-
-    registerHandler('fn-end', evts => { // click --> 2 fn-end events type "click"
-      const type = evts?.[0]?.type
-      if (INTERACTION_EVENTS.includes(type)) {
-        debouncedIxn(type)
-      }
-    }, this.featureName, eventsEE)
-
-    registerHandler('newURL', url => {
-      const ixn = this.interactionInProgress
-      if (!ixn) return
-      ixn.finish(url)
-      console.log('ixn finished...', ixn)
-
-      this.interactionsToHarvest.push(ixn)
-      this.interactionInProgress = null
-
-      this.scheduler.scheduleHarvest(0)
-    }, this.featureName, historyEE)
-
-    drain(this.agentIdentifier, this.featureName)
+    registerHandler('newInteraction', (timestamp, trigger, category) => this.startInteraction({ category, trigger, startedAt: timestamp }), this.featureName, this.ee)
+    registerHandler('newURL', (timestamp, url, type) => this.interactionInProgress?.updateHistory(timestamp, url), this.featureName, this.ee)
+    registerHandler('newDom', timestamp => this.interactionInProgress?.updateDom(timestamp), this.featureName, this.ee)
   }
 
   onHarvestStarted (options) {
@@ -86,17 +58,28 @@ export class Aggregate extends AggregateBase {
     }
   }
 
+  startInteraction ({ isInitial, trigger, category, startedAt }) {
+    const Ixn = isInitial ? InitialPageLoadInteraction : Interaction
+    this.interactionInProgress = new Ixn(this.agentIdentifier, { onFinished: this.completeInteraction.bind(this) })
+    if (trigger) this.interactionInProgress.trigger = trigger
+    if (category) this.interactionInProgress.category = CATEGORY.ROUTE_CHANGE
+    if (startedAt) this.interactionInProgress.start = startedAt
+    console.log(performance.now(), 'start ixn...', this.interactionInProgress)
+  }
+
+  completeInteraction () {
+    console.log(performance.now(), 'interaction complete', this.interactionInProgress)
+    this.interactionsToHarvest.push(this.interactionInProgress)
+    this.interactionInProgress = null
+    this.scheduler.scheduleHarvest(0)
+    if (!this.drained) this.drain = true && drain(this.agentIdentifier, this.featureName)
+  }
+
   hasInteraction ({ timestamp }) {
     if (!timestamp) return { shouldHold: false, interaction: undefined }
     let shouldHold = false
     const interaction = [...this.interactionsToHarvest, ...this.interactionsSent].find(ixn => ixn.containsEvent(timestamp))
-    console.log('first check', interaction)
     if (!interaction && !!this.interactionInProgress) shouldHold = this.interactionInProgress.containsEvent(timestamp)
     return { shouldHold, interaction }
-  }
-
-  captureInitialPageLoad () {
-    this.interactionsToHarvest.push(new InitialPageLoadInteraction(this.agentIdentifier))
-    this.scheduler.scheduleHarvest(0)
   }
 }

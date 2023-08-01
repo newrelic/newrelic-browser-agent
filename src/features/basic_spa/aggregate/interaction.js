@@ -3,6 +3,7 @@ import { generateUuid } from '../../../common/ids/unique-id'
 import { getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
+import { debounce } from '../../../common/util/invoke'
 import { TYPE_IDS } from '../constants'
 
 let nodesSeen = 0
@@ -34,10 +35,21 @@ export class Interaction {
   #previousRouteName
   #targetRouteName
 
-  constructor (agentIdentifier) {
+  constructor (agentIdentifier, { onFinished }) {
+    if (!agentIdentifier || !onFinished) throw new Error('Interaction is missing core attributes')
     this.agentIdentifier = agentIdentifier
     this.initialPageURL = initialLocation
     this.oldURL = '' + globalScope?.location
+
+    this.domTimestamp = undefined
+    this.historyTimestamp = undefined
+
+    this.onFinished = onFinished
+
+    setTimeout(() => {
+      // make this interaction invalid as to not hold up any other events
+      if (!this.#end) this.#end = -1
+    }, 60000)
   }
 
   get belType () { return numeric(this.#belType) }
@@ -51,13 +63,15 @@ export class Interaction {
   get end () { return numeric(this.#end) }
   set end (v) { this.#end = v }
 
-  get callbackEnd () { return numeric(this.#callbackEnd) }
+  get callbackEnd () { return numeric(this.#callbackEnd) } // do we calculate this still?
+  set callbackEnd (v) { this.#callbackEnd = v }
 
   get callbackDuration () { return numeric(this.#callbackDuration) }
+  set callbackDuration (v) { this.#callbackDuration = v }
 
   get nodeId () { return getAddStringContext(this.agentIdentifier)(this.#nodeId) }
 
-  get initialPageURL () { getAddStringContext(this.agentIdentifier)(cleanURL(this.#initialPageURL)) }
+  get initialPageURL () { return getAddStringContext(this.agentIdentifier)(cleanURL(this.#initialPageURL)) }
   set initialPageURL (v) { this.#initialPageURL = v }
 
   get oldURL () { return getAddStringContext(this.agentIdentifier)(cleanURL(this.#oldURL)) }
@@ -95,16 +109,31 @@ export class Interaction {
 
   countChild () { this.childCount = this.childCount + 1 }
 
-  finish (url) {
-    if (!url) throw new Error('Cannot finish ixn without a url')
-    this.newURL = url
-    this.end = now()
+  finish () {
+    this.end = Math.max(this.domTimestamp, this.historyTimestamp) || now()
+    this.onFinished()
   }
 
   containsEvent (timestamp) {
     if (!this.#end) return this.#start <= timestamp
     return (this.#start <= timestamp && this.#end >= timestamp)
   }
+
+  updateDom (timestamp) {
+    this.domTimestamp = timestamp || now()
+    this.checkFinished()
+  }
+
+  updateHistory (timestamp, url) {
+    this.newURL = url || '' + globalScope?.location
+    this.historyTimestamp = timestamp || now()
+    this.checkFinished()
+  }
+
+  checkFinished = debounce(() => {
+    console.log(performance.now(), 'checking finish for', this, !!this.domTimestamp && !!this.historyTimestamp)
+    if (!!this.domTimestamp && !!this.historyTimestamp) this.finish()
+  }, 60)
 
   serialize (type) {
     const nodeList = []

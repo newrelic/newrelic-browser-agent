@@ -16,6 +16,8 @@ export class InitialPageLoadInteraction extends Interaction {
     this.start = 0
     this.end = Math.round(globalScope?.performance.timing.domInteractive - globalScope?.performance?.timeOrigin || globalScope?.performance?.timing?.navigationStart || Date.now())
     this.category = CATEGORY.INITIAL_PAGE_LOAD
+
+    setTimeout(() => this.finish(), 0)
   }
 
   get firstPaint () { return nullable(paintMetrics['first-paint'], numeric, true) }

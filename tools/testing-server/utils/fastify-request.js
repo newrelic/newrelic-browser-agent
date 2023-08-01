@@ -19,4 +19,9 @@ module.exports.testIdFromRequest = function testIdFromRequest (request) {
   if (request.query.testId) {
     return request.query.testId
   }
+
+  if (request.headers.cookie && request.headers.cookie.includes('test-id=')) {
+    const testId = request.headers.cookie.match(new RegExp('(^| )test-id=([^;]+)'))[2]
+    if (testId && testId !== 'undefined') return testId
+  }
 }

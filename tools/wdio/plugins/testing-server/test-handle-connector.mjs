@@ -154,7 +154,7 @@ export class TestHandleConnector {
    */
   async assetURL (assetFile, query = {}) {
     await this.ready()
-
+    query.testId = this.#testId
     const result = await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/asset-url`, {
       method: 'POST',
       body: JSON.stringify({

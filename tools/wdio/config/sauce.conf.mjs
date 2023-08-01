@@ -32,16 +32,11 @@ function sauceCapabilities () {
       platform: undefined,
       version: undefined,
       ...getMobileCapabilities(sauceBrowser),
-      'sauce:options': !args.sauce
-        ? {
-            tunnelName: getSauceConnectTunnelName(),
-            ...(() => {
-              if (args.sauceExtendedDebugging && browserSupportsExtendedDebugging(sauceBrowser)) {
-                return { extendedDebugging: true }
-              }
-            })()
-          }
-        : {}
+      'sauce:options': {
+        ...(sauceBrowser['sauce:options'] || {}),
+        ...(!args.sauce ? { tunnelName: getSauceConnectTunnelName() } : {}),
+        ...(args.sauceExtendedDebugging && browserSupportsExtendedDebugging(sauceBrowser) ? { extendedDebugging: true } : {})
+      }
     }))
 }
 

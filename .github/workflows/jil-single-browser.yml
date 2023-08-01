@@ -56,7 +56,7 @@ on:
 
 jobs:
   jil:
-    name: JIL Test - ${{ inputs.browser-target }} - ${{ inputs.collection }}
+    name: JIL Test - '${{ inputs.browser-target }}' - ${{ inputs.collection }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
     defaults:
@@ -84,7 +84,7 @@ jobs:
           node --max-old-space-size=8192 ./tools/jil/bin/cli.js \
             -f merged \
             -s \
-            -b ${{ inputs.browser-target }} \
+            -b '${{ inputs.browser-target }}' \
             --concurrent 10 \
             --${{ inputs.collection}}-only \
             -t 85000 \

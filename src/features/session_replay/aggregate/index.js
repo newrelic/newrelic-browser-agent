@@ -32,8 +32,8 @@ let recorder, gzipper, u8
 export const MAX_PAYLOAD_SIZE = 1000000
 /** Unloading caps around 64kb */
 export const IDEAL_PAYLOAD_SIZE = 64000
-/** Interval between forcing new full snapshots in "error" mode */
-const CHECKOUT_MS = 30000
+/** Interval between forcing new full snapshots -- 30 seconds in error mode, 5 minutes in full mode */
+const CHECKOUT_MS = { [MODE.ERROR]: 30000, [MODE.FULL]: 300000, [MODE.OFF]: 0 }
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -273,7 +273,7 @@ export class Aggregate extends AggregateBase {
       maskInputOptions,
       maskTextSelector,
       maskAllInputs,
-      ...(this.mode === MODE.ERROR && { checkoutEveryNms: CHECKOUT_MS })
+      checkoutEveryNms: CHECKOUT_MS[this.mode]
     })
 
     this.stopRecording = () => {

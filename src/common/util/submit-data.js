@@ -7,7 +7,7 @@
 import { isBrowserScope, supportsSendBeacon } from '../constants/runtime'
 
 /**
- * @typedef {xhr|fetchKeepAlive|beacon} NetworkMethods
+ * @typedef {xhr|beacon} NetworkMethods
  */
 
 /**
@@ -55,27 +55,6 @@ export function xhr ({ url, body = null, sync, method = 'POST', headers = [{ key
 }
 
 /**
- * Send via fetch with keepalive true
- * @param {Object} args - The args.
- * @param {string} args.url - The URL to send to.
- * @param {string=} args.body - The Stringified body.
- * @param {string=} [args.method=POST] - The XHR method to use.
- * @param {{key: string, value: string}[]} [args.headers] - The headers to attach.
- * @returns {XMLHttpRequest}
- */
-export function fetchKeepAlive ({ url, body = null, method = 'POST', headers = [{ key: 'content-type', value: 'text/plain' }] }) {
-  return fetch(url, {
-    method,
-    headers: headers.reduce((aggregator, header) => {
-      aggregator.push([header.key, header.value])
-      return aggregator
-    }, []),
-    body,
-    keepalive: true
-  })
-}
-
-/**
  * Send via sendBeacon. Do NOT call this function outside of a guaranteed web window environment.
  * @param {Object} args - The args
  * @param {string} args.url - The URL to send to
@@ -90,8 +69,7 @@ export function beacon ({ url, body }) {
     return send(url, body)
   } catch (err) {
     // if sendBeacon still trys to throw an illegal invocation error,
-    // we can catch here and return.  The harvest module will fallback to use
-    // fetchKeepAlive to try to send
+    // we can catch here and return
     return false
   }
 }

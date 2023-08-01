@@ -141,62 +141,6 @@ describe('xhr', () => {
   })
 })
 
-describe('fetchKeepAlive', () => {
-  beforeEach(() => {
-    global.fetch = jest.fn().mockReturnValue(Promise.resolve())
-  })
-
-  afterEach(() => {
-    delete global.fetch
-  })
-
-  test('should make a fetch with default values', () => {
-    submitData.fetchKeepAlive({ url })
-
-    expect(global.fetch).toHaveBeenCalledWith(url, {
-      method: 'POST',
-      body: null,
-      keepalive: true,
-      headers: [['content-type', 'text/plain']]
-    })
-  })
-
-  test('should send the body when provided', () => {
-    const body = faker.lorem.paragraph()
-    submitData.fetchKeepAlive({ url, body })
-
-    expect(global.fetch).toHaveBeenCalledWith(url, {
-      method: 'POST',
-      body,
-      keepalive: true,
-      headers: [['content-type', 'text/plain']]
-    })
-  })
-
-  test('should use the provided method', () => {
-    submitData.fetchKeepAlive({ url, method: 'HEAD' })
-
-    expect(global.fetch).toHaveBeenCalledWith(url, {
-      method: 'HEAD',
-      body: null,
-      keepalive: true,
-      headers: [['content-type', 'text/plain']]
-    })
-  })
-
-  test('should use the provided headers', () => {
-    const headers = [{ key: faker.lorem.word(), value: faker.datatype.uuid() }]
-    submitData.fetchKeepAlive({ url, headers })
-
-    expect(global.fetch).toHaveBeenCalledWith(url, {
-      method: 'POST',
-      body: null,
-      keepalive: true,
-      headers: [[headers[0].key, headers[0].value]]
-    })
-  })
-})
-
 describe('beacon', () => {
   afterEach(() => {
     delete window.navigator.sendBeacon

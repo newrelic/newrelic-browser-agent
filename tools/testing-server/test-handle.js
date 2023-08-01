@@ -220,6 +220,7 @@ module.exports = class TestHandle {
             `Expect ${testName} for ${serverId} timed out after ${testServerExpect.timeout || this.#testServer.config.timeout}ms for test ${this.#testId}`
           ))
         }
+        this.#pendingExpects.get(serverId).delete(deferred)
       }, testServerExpect.timeout || this.#testServer.config.timeout)
     }
 
@@ -265,7 +266,8 @@ module.exports = class TestHandle {
           loader: 'full',
           config: {
             licenseKey: this.#testId
-          }
+          },
+          init: { ajax: { block_internal: false } }
         },
         query
       ),

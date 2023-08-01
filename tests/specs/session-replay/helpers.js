@@ -1,5 +1,10 @@
 import { deepmerge } from 'deepmerge-ts'
 
+export const MODE = {
+  OFF: 0,
+  FULL: 1,
+  ERROR: 2
+}
 export const RRWEB_EVENT_TYPES = {
   DomContentLoaded: 0,
   Load: 1,

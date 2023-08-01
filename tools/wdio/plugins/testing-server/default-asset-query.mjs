@@ -8,7 +8,7 @@ const query = {
   init: {
     allow_bfcache: true,
     privacy: { cookies_enabled: false },
-    ajax: { deny_list: [], enabled: true, harvestTimeSeconds: 5 },
+    ajax: { deny_list: [], block_internal: false, enabled: true, harvestTimeSeconds: 5 },
     distributed_tracing: {},
     session: { domain: undefined, expiresMs: 14400000, inactiveMs: 1800000 },
     ssl: false,

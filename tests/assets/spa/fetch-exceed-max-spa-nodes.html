@@ -10,6 +10,7 @@
     {config}
     <script>
       window.NREUM.init = {
+        ...window.NREUM.init,
         distributed_tracing: {
           enabled: true,
           allowed_origins: ['http://test-1.fake-nr-beacon.com:3333']

@@ -1,7 +1,6 @@
 const path = require('path')
 const TerserPlugin = require('terser-webpack-plugin')
 const webpack = require('webpack')
-const fs = require('fs')
 const { merge } = require('webpack-merge')
 const pkg = require('./package.json')
 
@@ -130,7 +129,9 @@ const commonConfig = {
       include: [/\.min\.js$/, /^(?:[0-9])/],
       terserOptions: {
         mangle: {
-          keep_fnames: /nrWrapper/
+          keep_fnames: /nrWrapper/,
+          // Prevent terser from creating mangled variables names of just dollar symbols
+          reserved: ['$', '$$', '$$$', '$$$$']
         }
       }
     })],

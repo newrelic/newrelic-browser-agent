@@ -1,0 +1,30 @@
+# This composite action is used to verify one or more files are available via fastly cache.
+
+name: 'Fastly Verify'
+
+inputs:
+  fastly_key:
+    description: 'Fastly access key used for authentication.'
+    required: true
+  fastly_service:
+    description: 'Fastly service to perform the purge on.'
+    required: true
+  asset_path:
+    description: 'Path(s) to be verified. Separate multiple items by a space'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --prefix $GITHUB_ACTION_PATH
+      shell: bash
+    - name: Run action script
+      id: action-script
+      env:
+        FASTLY_API_TOKEN: ${{ inputs.fastly_key }}
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          --service ${{ inputs.fastly_service }} \
+          --asset-path ${{ inputs.asset_path }}
+      shell: bash

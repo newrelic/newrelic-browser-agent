@@ -31,7 +31,7 @@ const reportSettings = {
     { name: 'nr-loader-full-polyfills.min', matcher: /nr-loader-full-polyfills(?:-\d*?)?\.min\.js/ },
     { name: 'nr-loader-rum-polyfills.min', matcher: /nr-loader-rum-polyfills(?:-\d*?)?\.min\.js/ }
   ],
-  worker: [
+  workers: [
     { name: 'nr-loader-worker.min', matcher: /nr-loader-worker(?:-\d*?)?\.min\.js/ }
   ],
   npm: [
@@ -153,7 +153,7 @@ Merging this pull request will result in the following **CDN asset size changes*
 |------------|---------------|----------|------|
 ${generateDiffRows(assetSizes, 'standard')}
 ${generateDiffRows(assetSizes, 'polyfills')}
-${generateDiffRows(assetSizes, 'worker')}
+${generateDiffRows(assetSizes, 'workers')}
 
 Merging this pull request will result in the following **NPM package consumer size changes**:
 
@@ -202,13 +202,13 @@ Promise.all([
   Promise.all([
     getReleaseSize('standard'),
     getReleaseSize('polyfills'),
-    getReleaseSize('worker'),
+    getReleaseSize('workers'),
     getReleaseSize('npm')
   ]),
   Promise.all([
     getBuildSize('standard'),
     getBuildSize('polyfills'),
-    getBuildSize('worker'),
+    getBuildSize('workers'),
     getBuildSize('npm')
   ])
 ])
@@ -222,7 +222,7 @@ Promise.all([
         releaseStats: releaseStats[1],
         buildStats: buildStats[1]
       },
-      worker: {
+      workers: {
         releaseStats: releaseStats[2],
         buildStats: buildStats[2]
       },

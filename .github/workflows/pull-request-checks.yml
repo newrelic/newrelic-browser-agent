@@ -7,23 +7,12 @@ on:
 jobs:
   # Jobs for pull_request events
 
-  jest-unit:
-    name: Jest unit tests
+  jest-tests:
+    name: Jest tests
     if: github.event_name == 'pull_request'
     uses: ./.github/workflows/jest.yml
     with:
       ref: ${{ github.ref }}
-      collection: 'unit'
-      coverage: true
-    secrets: inherit
-
-  jest-component:
-    name: Jest component tests
-    if: github.event_name == 'pull_request'
-    uses: ./.github/workflows/jest.yml
-    with:
-      ref: ${{ github.ref }}
-      collection: 'component'
       coverage: true
     secrets: inherit
 

@@ -6,14 +6,6 @@ name: 'Jest: Unit Tests'
 on:
   workflow_dispatch:
     inputs:
-      collection:
-        description: 'The collection of jest tests to run'
-        required: true
-        type: choice
-        options:
-        - unit
-        - component
-        default: 'unit'
       coverage:
         description: 'Enable code coverage'
         required: false
@@ -25,11 +17,6 @@ on:
         description: 'Github branch ref to checkout and run tests on.'
         required: false
         type: string
-      collection:
-        description: 'The collection of jest tests to run'
-        required: false
-        type: string
-        default: 'unit'
       coverage:
         description: 'Enable code coverage'
         required: false
@@ -56,7 +43,7 @@ jobs:
       - name: Install project dependencies
         run: npm ci
       - name: Run unit tests
-        run: npm run test:${{ inputs.collection }} -- --coverage
+        run: npm run test -- --coverage
       - name: Find pull request
         id: pull-request-target
         if: ${{ inputs.coverage }}
@@ -71,18 +58,18 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           override_pr: ${{ fromJSON(steps.pull-request-target.outputs.results).pr_number }}
-          flags: jest-${{ inputs.collection }}
+          flags: jest
           verbose: true
       - name: Upload branch code coverage
         if: ${{ inputs.coverage && !steps.pull-request-target.outputs.results }}
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          flags: jest-${{ inputs.collection }}
+          flags: jest
           verbose: true
       - name: Archive code coverage results
         if: ${{ inputs.coverage }}
         uses: actions/upload-artifact@v3
         with:
-          name: jest-${{ inputs.collection }}-code-coverage-report
+          name: jest-code-coverage-report
           path: coverage/

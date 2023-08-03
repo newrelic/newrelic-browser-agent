@@ -1,3 +1,5 @@
+import { testRumRequest } from '../../testing-server/utils/expect-tests.js'
+
 /**
  * This is a WDIO worker plugin that provides custom commands.
  */
@@ -99,17 +101,13 @@ export default class CustomCommands {
     })
 
     /**
-     * Clears the current browser agent session from local storage by navigating
-     * to the index page where the agent is not loaded and clearing the `localStorage`
-     * in the browser. This completely destroys the current agent session ensuring that
-     * a new session is not created that could affect another test.
+     * Sets a permanent scheduled reply for the rum call to include the session
+     * replay flag with a value of 1 enabling the feature.
      */
     browser.addCommand('enableSessionReplay', async function () {
       await browser.testHandle.scheduleReply('bamServer', {
-        test: function testRumRequest (request) {
-          const url = new URL(request.url, 'resolve://')
-          return url.pathname === `/1/${this.testId}`
-        },
+        test: testRumRequest,
+        permanent: true,
         body: JSON.stringify({
           stn: 1,
           err: 1,

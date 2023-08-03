@@ -415,7 +415,7 @@ export class Aggregate extends AggregateBase {
     register(FETCH_DONE, function (err, res) {
       var node = this[SPA_NODE]
       if (node) {
-        if (err) {
+        if (err || !shouldCollectEvent(this.params)) {
           node.cancel()
           return
         }

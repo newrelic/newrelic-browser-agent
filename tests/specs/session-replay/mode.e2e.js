@@ -7,7 +7,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   afterEach(async () => {
-    await browser.destroyAgentSession(browser.testHandle)
+    await browser.destroyAgentSession()
   })
 
   it('Full 1 Error 1 === FULL', async () => {

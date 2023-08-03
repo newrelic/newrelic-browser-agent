@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.237.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.237.0...v1.237.1) (2023-08-02)
+
+
+### Bug Fixes
+
+* Fix serialization issue with array data ([#621](https://github.com/newrelic/newrelic-browser-agent/issues/621)) ([6887940](https://github.com/newrelic/newrelic-browser-agent/commit/6887940a01f74761840058742e04efd0f9130bb9))
+* prevent dollar symbol only variable names ([#631](https://github.com/newrelic/newrelic-browser-agent/issues/631)) ([cff7bc4](https://github.com/newrelic/newrelic-browser-agent/commit/cff7bc4fbc4cd9620e319b3f6f2861515f7b01a8))
+* SPA feature respects ajax deny_list for fetch ([#633](https://github.com/newrelic/newrelic-browser-agent/issues/633)) ([ccfe510](https://github.com/newrelic/newrelic-browser-agent/commit/ccfe51063cd59e946e20ec870ce5979b1ca73054))
+* Undefined deny list ignores block internal ([#629](https://github.com/newrelic/newrelic-browser-agent/issues/629)) ([27a1b04](https://github.com/newrelic/newrelic-browser-agent/commit/27a1b044ae239d83c85c7e25f69979b23b985e54))
+
 ## [1.237.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.236.0...v1.237.0) (2023-07-28)
 
 

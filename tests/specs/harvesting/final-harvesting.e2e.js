@@ -50,10 +50,11 @@ describe('final harvesting', () => {
   })
 
   it.withBrowsersMatching(supportsFetch)('should use sendBeacon for unload harvests', async () => {
-    await browser.url(await browser.testHandle.assetURL('final-harvest.html'))
-      .then(() => browser.waitForAgentLoad())
-
-    await browser.pause(500)
+    await Promise.all([
+      browser.testHandle.expectTimings(),
+      browser.url(await browser.testHandle.assetURL('final-harvest.html'))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
     const finalHarvest = Promise.all([
       browser.testHandle.expectTimings(),
@@ -116,26 +117,29 @@ describe('final harvesting', () => {
   })
 
   it.withBrowsersMatching(reliableUnload)('should not send pageHide event twice', async () => {
-    await browser.url(await browser.testHandle.assetURL('pagehide.html'))
-      .then(() => browser.waitForAgentLoad())
+    await Promise.all([
+      browser.testHandle.expectTimings(),
+      browser.url(await browser.testHandle.assetURL('pagehide.html'))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
-    await browser.pause(500)
+    await Promise.all([
+      browser.testHandle.expectTimings(),
+      $('#btn1').click()
+    ])
 
-    await $('#btn1').click()
+    const [unloadTimings] = await Promise.all([
+      browser.testHandle.expectTimings(),
+      browser.url(await browser.testHandle.assetURL('/'))
+    ])
 
-    const timingsPromise = browser.testHandle.expectTimings()
-
-    await browser.url(await browser.testHandle.assetURL('/'))
-
-    const timingsResults = await timingsPromise
-
-    expect(timingsResults.request.body).toEqual(expect.arrayContaining([
+    expect(unloadTimings.request.body).toEqual(expect.arrayContaining([
       expect.objectContaining({
         name: 'unload',
         type: 'timing'
       })
     ]))
-    expect(timingsResults.request.body).not.toEqual(expect.arrayContaining([
+    expect(unloadTimings.request.body).not.toEqual(expect.arrayContaining([
       expect.objectContaining({
         name: 'pageHide',
         type: 'timing'

@@ -1,4 +1,4 @@
-module.exports = {
+const commonConfig = {
   clearMocks: true,
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
@@ -13,12 +13,26 @@ module.exports = {
   ],
   modulePathIgnorePatterns: ['<rootDir>/temp'],
   testEnvironment: 'jsdom',
-  testMatch: ['<rootDir>/src/**/?(*.)+(test).[tj]s?(x)'],
   transform: {
     '\\.m?[jt]sx?$': 'babel-jest'
   },
   setupFilesAfterEnv: ['<rootDir>/tools/jest-matchers/index.mjs'],
   unmockedModulePathPatterns: [
     '@faker-js/faker'
+  ]
+}
+
+module.exports = {
+  projects: [
+    {
+      ...commonConfig,
+      displayName: 'unit',
+      testMatch: ['<rootDir>/src/**/?(*.)+(test).[tj]s?(x)']
+    },
+    {
+      ...commonConfig,
+      displayName: 'component',
+      testMatch: ['<rootDir>/src/**/?(*.)+(component-test).[tj]s?(x)']
+    }
   ]
 }

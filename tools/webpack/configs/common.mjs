@@ -21,7 +21,9 @@ export default (env) => {
         include: [/\.min\.js$/, /^(?:[0-9])/],
         terserOptions: {
           mangle: {
-            keep_fnames: /nrWrapper/
+            keep_fnames: /nrWrapper/,
+            // Prevent terser from creating mangled variables names of just dollar symbols
+            reserved: ['$', '$$', '$$$', '$$$$']
           }
         }
       })],

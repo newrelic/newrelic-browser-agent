@@ -53,7 +53,7 @@ on:
 
 jobs:
   wdio:
-    name: WDIO Test - ${{ inputs.browser-target }}
+    name: WDIO Test - '${{ inputs.browser-target }}'
     timeout-minutes: 60
     runs-on: ubuntu-latest
     defaults:
@@ -81,7 +81,7 @@ jobs:
         run: |
           node ./tools/wdio/bin/cli.js \
             -s \
-            -b ${{ inputs.browser-target }} \
+            -b '${{ inputs.browser-target }}' \
             --concurrent 10 \
             ${{ runner.debug && '-v -L -D -d' || '' }} \
             ${{ inputs.coverage && '--coverage' || '' }} \

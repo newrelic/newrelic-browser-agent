@@ -29,6 +29,15 @@ async function prependSemicolon (fileName, text) {
     return fs.readFile(`${buildDir}/${fileName}`, 'utf-8')
   }))
 
+  files.forEach((contents, i) => {
+    if (builtFileNames[i].includes('-loader') && builtFileNames[i].endsWith('.js')) {
+      const matches = contents.match(/\$&/)
+      if (Array.isArray(matches) && matches.length > 0) {
+        throw new Error(`Loader file ${builtFileNames[i]} contains a character sequence that could break injection due to string replacement: ${JSON.stringify(matches)}`)
+      }
+    }
+  })
+
   let prepended = 0
   await Promise.all(files
     .map((f, i) => {

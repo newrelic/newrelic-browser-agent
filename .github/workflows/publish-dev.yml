@@ -8,59 +8,116 @@ on:
   workflow_call:
 
 jobs:
-  publish-to-s3:
+  publish-dev-to-s3:
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
-      - name: Setup container
-        run: apt update && apt install -y git
       - uses: actions/checkout@v3
+        # with:
+        #   ref: main
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: install
+      - name: Install project dependencies
         run: npm ci
-      - name: build
+      - name: Build dev
         run: npm run cdn:build:dev
-      - name: Running npm build
-        run: |
-          npm run build:npm
-          npm run tools:test-builds
-      - name: Generating npm build stats
-        run: node ./tools/scripts/npm-build-stats.js
-      - name: upload artifacts to S3
-        run: |
-          node tools/scripts/upload-to-s3.js \
-            --bucket ${{ secrets.AWS_BUCKET }} \
-            --role ${{ secrets.AWS_ROLE_ARN }} \
-            --dir dev
-      - name: purge fastly dev cache url
-        run: |
-          node ./tools/scripts/fastly.js \
-            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
-            --purge-path dev/nr-loader-spa.min.js
-      - name: check files exist
-        run: node tools/scripts/check-version.js -e yes -d
-      - name: re-publish internal loader
-        run: |
-          node ./tools/scripts/upload-ab-to-s3.js \
-            --env staging \
-            --appId ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }} \
-            --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
-            --bucket ${{ secrets.AWS_BUCKET }} \
-            --sha $GITHUB_SHA \
-            --workflow $GITHUB_WORKFLOW \
-            --role ${{ secrets.AWS_ROLE_ARN }}
-      - name: purge fastly a-b cache url
-        run: |
-          node ./tools/scripts/fastly.js \
-            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
-            --env staging \
-            --purge-internal
+      - name: Upload dev
+        id: dev-s3-upload
+        uses: ./.github/actions/s3-upload
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          local_dir: $GITHUB_WORKSPACE/build
+          bucket_dir: temp/${{ steps.clean-branch-name.outputs.results }}
+      - name: Gather dev purge paths
+        id: dev-purge-paths
+        run: echo "results=$(echo '${{ steps.dev-s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test("nr-loader-.*?\\.js$") or test(".*stats\\.json$")) + " "')" >> $GITHUB_OUTPUT
+      - name: Purge dev fastly cache
+        uses: ./.github/actions/fastly-purge
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          purge_path: ${{ steps.dev-purge-paths.outputs.results }}
+      - name: Verify dev assets
+        uses: ./.github/actions/fastly-verify
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          asset_path: ${{ join(fromJson(steps.dev-s3-upload.outputs.results).*.Key, ' ') }}
+  publish-dev-ab:
+    needs: [publish-dev-to-s3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+        # with:
+        #   ref: main
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Install project dependencies
+        run: npm ci
+      - name: Publish dev a/b script
+        uses: ./.github/actions/internal-ab
+        with:
+          nr_environment: dev
+          nrba_app_id: ${{ secrets.INTERNAL_DEV_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+  publish-staging-ab:
+    needs: [publish-dev-to-s3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+        # with:
+        #   ref: main
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Install project dependencies
+        run: npm ci
+      - name: Deploy staging a/b script
+        uses: ./.github/actions/internal-ab
+        with:
+          nr_environment: staging
+          nrba_app_id: ${{ secrets.INTERNAL_DEV_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+
+      # - name: re-publish internal loader
+      #   run: |
+      #     node ./tools/scripts/upload-ab-to-s3.js \
+      #       --env staging \
+      #       --appId ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }} \
+      #       --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
+      #       --bucket ${{ secrets.AWS_BUCKET }} \
+      #       --sha $GITHUB_SHA \
+      #       --workflow $GITHUB_WORKFLOW \
+      #       --role ${{ secrets.AWS_ROLE_ARN }}
+      # - name: purge fastly a-b cache url
+      #   run: |
+      #     node ./tools/scripts/fastly.js \
+      #       --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
+      #       --env staging \
+      #       --purge-internal

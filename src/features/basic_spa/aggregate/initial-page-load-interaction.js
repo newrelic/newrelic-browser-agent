@@ -4,6 +4,7 @@ import { navTimingValues } from '../../../common/timing/nav-timing'
 import { Interaction } from './interaction'
 import { globalScope, initialLocation } from '../../../common/constants/runtime'
 import { nullable, numeric } from '../../../common/serialize/bel-serializer'
+import { now } from '../../../common/timing/now'
 
 export class InitialPageLoadInteraction extends Interaction {
   constructor (...args) {
@@ -17,7 +18,9 @@ export class InitialPageLoadInteraction extends Interaction {
     this.end = Math.round(globalScope?.performance.timing.domInteractive - globalScope?.performance?.timeOrigin || globalScope?.performance?.timing?.navigationStart || Date.now())
     this.category = CATEGORY.INITIAL_PAGE_LOAD
 
-    setTimeout(() => this.finish(), 0)
+    console.log('PAINT METRICS!', paintMetrics)
+
+    setTimeout(() => this.finish(now()), 0)
   }
 
   get firstPaint () { return nullable(paintMetrics['first-paint'], numeric, true) }
@@ -42,14 +45,11 @@ export class InitialPageLoadInteraction extends Interaction {
   }
 
   serialize () {
-    const nodeList = super.serialize()
-
+    let serializedIxn = super.serialize()
     // fp & fcp need to go in the first block of nodes, with the base node list
-    nodeList[0].push(this.firstPaint)
-    nodeList[0].push(this.firstContentfulPaint)
-
-    nodeList.push(this.navTiming)
-
-    return nodeList
+    serializedIxn += `,${this.firstPaint}`
+    serializedIxn += this.firstContentfulPaint
+    serializedIxn += `;${this.navTiming}`
+    return serializedIxn
   }
 }

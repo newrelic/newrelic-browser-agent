@@ -71,13 +71,13 @@ export class Interaction {
 
   get nodeId () { return getAddStringContext(this.agentIdentifier)(this.#nodeId) }
 
-  get initialPageURL () { return getAddStringContext(this.agentIdentifier)(cleanURL(this.#initialPageURL)) }
+  get initialPageURL () { return getAddStringContext(this.agentIdentifier)(cleanURL(this.#initialPageURL, true)) }
   set initialPageURL (v) { this.#initialPageURL = v }
 
-  get oldURL () { return getAddStringContext(this.agentIdentifier)(cleanURL(this.#oldURL)) }
+  get oldURL () { return getAddStringContext(this.agentIdentifier)(cleanURL(this.#oldURL, true)) }
   set oldURL (v) { this.#oldURL = v }
 
-  get newURL () { return getAddStringContext(this.agentIdentifier)(cleanURL(this.#newURL)) }
+  get newURL () { return getAddStringContext(this.agentIdentifier)(cleanURL(this.#newURL, true)) }
   set newURL (v) { this.#newURL = v }
 
   get customName () { return getAddStringContext(this.agentIdentifier)(this.#customName) }
@@ -109,8 +109,10 @@ export class Interaction {
 
   countChild () { this.childCount = this.childCount + 1 }
 
-  finish () {
-    this.end = Math.max(this.domTimestamp, this.historyTimestamp) || now()
+  finish (end) {
+    console.log('end before', this.#end)
+    this.end = end || Math.max(this.domTimestamp, this.historyTimestamp)
+    console.log('end after', this.#end)
     this.onFinished()
   }
 
@@ -135,7 +137,7 @@ export class Interaction {
     if (!!this.domTimestamp && !!this.historyTimestamp) this.finish()
   }, 60)
 
-  serialize (type) {
+  serialize () {
     const nodeList = []
     const fields = [
       this.belType,
@@ -155,7 +157,7 @@ export class Interaction {
     ]
 
     nodeList.push(fields)
-    if (type === 'bel') return this.serialize().join(';')
-    if (!type) return nodeList
+
+    return nodeList.join(';')
   }
 }

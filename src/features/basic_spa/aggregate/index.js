@@ -39,6 +39,7 @@ export class Aggregate extends AggregateBase {
     if (this.interactionsToHarvest.length === 0 || this.blocked) return {}
     const payload = `bel.7;${this.interactionsToHarvest.map(ixn => ixn.serialize('bel')).join(';')}`
 
+    console.log('PAYLOAD!', payload)
     if (options.retry) {
       this.interactionsToHarvest.forEach((interaction) => {
         this.interactionsSent.push(interaction)

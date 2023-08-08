@@ -9,7 +9,6 @@ import { shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { mapOwn } from '../../../common/util/map-own'
 import { navTimingValues as navTiming } from '../../../common/timing/nav-timing'
 import { generateUuid } from '../../../common/ids/unique-id'
-import { paintMetrics } from '../../../common/metrics/paint-metrics'
 import { Interaction } from './interaction'
 import { getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
@@ -20,6 +19,8 @@ import * as CONSTANTS from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { waitForFirstPaint } from '../../../common/vitals/first-paint'
+import { waitForFirstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -45,7 +46,9 @@ export class Aggregate extends AggregateBase {
       depth: 0,
       harvestTimeSeconds: getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10,
       interactionsToHarvest: [],
-      interactionsSent: []
+      interactionsSent: [],
+      fp: 0,
+      fcp: 0
     }
 
     this.serializer = new Serializer(this)
@@ -69,6 +72,9 @@ export class Aggregate extends AggregateBase {
       retryDelay: state.harvestTimeSeconds
     }, { agentIdentifier, ee: baseEE })
     scheduler.harvest.on('events', onHarvestStarted)
+
+    waitForFirstPaint().then(({ value }) => state.fp = value)
+    waitForFirstContentfulPaint().then(({ value }) => state.fcp = value)
 
     // childTime is used when calculating exclusive time for a cb duration.
     //
@@ -717,8 +723,8 @@ export class Aggregate extends AggregateBase {
       interaction.root.attrs.id = generateUuid()
 
       if (interaction.root.attrs.trigger === 'initialPageLoad') {
-        interaction.root.attrs.firstPaint = paintMetrics['first-paint']
-        interaction.root.attrs.firstContentfulPaint = paintMetrics['first-contentful-paint']
+        interaction.root.attrs.firstPaint = state.fp
+        interaction.root.attrs.firstContentfulPaint = state.fcp
       }
       baseEE.emit('interactionSaved', [interaction])
       state.interactionsToHarvest.push(interaction)

@@ -4,7 +4,6 @@ import { isiOS, globalScope, isBrowserScope } from '../../../common/constants/ru
 import { onTTFB } from 'web-vitals'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
-import { paintMetrics } from '../../../common/metrics/paint-metrics'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { Harvest } from '../../../common/harvest/harvest'
 import * as CONSTANTS from '../constants'
@@ -111,10 +110,7 @@ export class Aggregate extends AggregateBase {
         waitForFirstContentfulPaint()
       ]).then(([fp, fcp]) => {
         queryParameters.fp = String(fp.value)
-        paintMetrics.fp = fp.value
-
         queryParameters.fcp = String(fcp.value)
-        paintMetrics.fcp = fcp.value
 
         this.harvest({ queryParameters, body })
       })

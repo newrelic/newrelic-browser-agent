@@ -13,6 +13,8 @@ import { drain } from '../../../common/drain/drain'
 import { activateFeatures } from '../../../common/util/feature-flags'
 import { warn } from '../../../common/util/console'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { waitForFirstPaint } from '../../../common/vitals/first-paint'
+import { waitForFirstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -52,7 +54,6 @@ export class Aggregate extends AggregateBase {
   sendRum () {
     const info = getInfo(this.agentIdentifier)
     const agentRuntime = getRuntime(this.agentIdentifier)
-    const harvester = new Harvest(this)
 
     if (!info.beacon) return
     if (info.queueTime) this.aggregator.store('measures', 'qt', { value: info.queueTime })
@@ -104,20 +105,26 @@ export class Aggregate extends AggregateBase {
       }
     }
 
-    try { // PVTiming sends these too, albeit using web-vitals and slightly different; it's unknown why they're duplicated, but PVT should be the truth
-      var entries = globalScope.performance.getEntriesByType('paint')
-      entries.forEach(function (entry) {
-        if (!entry.startTime || entry.startTime <= 0) return
+    try {
+      Promise.all([
+        waitForFirstPaint(),
+        waitForFirstContentfulPaint()
+      ]).then(([fp, fcp]) => {
+        queryParameters.fp = String(fp.value)
+        paintMetrics.fp = fp.value
 
-        if (entry.name === 'first-paint') {
-          queryParameters.fp = String(Math.floor(entry.startTime))
-        } else if (entry.name === 'first-contentful-paint') {
-          queryParameters.fcp = String(Math.floor(entry.startTime))
-        }
-        paintMetrics[entry.name] = Math.floor(entry.startTime) // this is consumed by Spa module
+        queryParameters.fcp = String(fcp.value)
+        paintMetrics.fcp = fcp.value
+
+        this.harvest({ queryParameters, body })
       })
-    } catch (e) {}
+    } catch (e) {
+      this.harvest({ queryParameters, body })
+    }
+  }
 
+  harvest ({ queryParameters, body }) {
+    const harvester = new Harvest(this)
     harvester.send({
       endpoint: 'rum',
       payload: { qs: queryParameters, body },

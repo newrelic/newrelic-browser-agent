@@ -44,6 +44,8 @@ export const globalScope = isBrowserScope
       globalThis
   ))
 
+export const initiallyHidden = Boolean(globalScope?.document?.visibilityState === 'hidden')
+
 export const initialLocation = '' + globalScope?.location
 
 export const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent)

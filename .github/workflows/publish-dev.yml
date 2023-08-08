@@ -34,10 +34,10 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           local_dir: $GITHUB_WORKSPACE/build
-          bucket_dir: temp/${{ steps.clean-branch-name.outputs.results }}
+          bucket_dir: dev/${{ steps.clean-branch-name.outputs.results }}
       - name: Gather dev purge paths
         id: dev-purge-paths
-        run: echo "results=$(echo '${{ steps.dev-s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test("nr-loader-.*?\\.js$") or test(".*stats\\.json$")) + " "')" >> $GITHUB_OUTPUT
+        run: echo "results=$(echo '${{ steps.dev-s3-upload.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
       - name: Purge dev fastly cache
         uses: ./.github/actions/fastly-purge
         with:
@@ -104,20 +104,3 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-
-      # - name: re-publish internal loader
-      #   run: |
-      #     node ./tools/scripts/upload-ab-to-s3.js \
-      #       --env staging \
-      #       --appId ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }} \
-      #       --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
-      #       --bucket ${{ secrets.AWS_BUCKET }} \
-      #       --sha $GITHUB_SHA \
-      #       --workflow $GITHUB_WORKFLOW \
-      #       --role ${{ secrets.AWS_ROLE_ARN }}
-      # - name: purge fastly a-b cache url
-      #   run: |
-      #     node ./tools/scripts/fastly.js \
-      #       --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
-      #       --env staging \
-      #       --purge-internal

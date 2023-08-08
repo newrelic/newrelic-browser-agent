@@ -53,7 +53,7 @@ runs:
         aws_role: ${{ inputs.aws_role }}
         aws_bucket_name: ${{ inputs.aws_bucket_name }}
         local_dir: $GITHUB_WORKSPACE/temp
-        bucket_dir: temp/
+        bucket_dir: internal/
     - name: Gather a/b purge paths
       id: ab-purge-paths
       run: echo "results=$(echo '${{ steps.ab-s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test(".*?\\.js$")) + " "')" >> $GITHUB_OUTPUT

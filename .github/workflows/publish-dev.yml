@@ -16,8 +16,8 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v3
-        # with:
-        #   ref: main
+        with:
+          ref: main
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
@@ -59,8 +59,8 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v3
-        # with:
-        #   ref: main
+        with:
+          ref: main
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
@@ -86,8 +86,8 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v3
-        # with:
-        #   ref: main
+        with:
+          ref: main
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*

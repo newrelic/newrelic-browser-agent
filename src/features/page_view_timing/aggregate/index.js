@@ -14,14 +14,7 @@ import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { waitForFirstPaint } from '../../../common/vitals/first-paint'
-import { waitForFirstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
-import { waitForFirstInputDelay } from '../../../common/vitals/first-input-delay'
-import { waitForLargestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
-import { waitForInteractionToNextPaint } from '../../../common/vitals/interaction-to-next-paint'
-import { waitForVitalMetric } from '../../../common/vitals/vital-metric'
-import { cls } from '../../../common/vitals/cumulative-layout-shift'
-import { initiallyHidden } from '../../../common/constants/runtime'
+import { cumulativeLayoutShift, firstContentfulPaint, firstInputDelay, firstPaint, interactionToNextPaint, largestContentfulPaint } from '../../../common/vitals'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -31,33 +24,17 @@ export class Aggregate extends AggregateBase {
     this.timings = []
     this.timingsSent = []
     this.curSessEndRecorded = false
-    this.cls = null // this should be null unless set to a numeric value by web-vitals so that we differentiate if CLS is supported
 
-    // get value once
-    waitForVitalMetric(waitForFirstPaint, ({ name, value, attrs }) => {
-      if (initiallyHidden) return
+    const handleVitalMetric = ({ name, current: value, attrs }) => {
       this.addTiming(name, value, attrs)
-    })
+    }
 
-    // get value once
-    waitForVitalMetric(waitForFirstContentfulPaint, ({ name, value, attrs }) => {
-      this.addTiming(name, value, attrs)
-    })
-
-    // get value once
-    waitForVitalMetric(waitForFirstInputDelay, ({ name, value, attrs }) => {
-      this.addTiming(name, value, attrs)
-    })
-
-    // get value once
-    waitForVitalMetric(waitForLargestContentfulPaint, ({ name, value, attrs }) => {
-      this.addTiming(name, value, attrs)
-    })
-
-    // get value infinitely many times
-    waitForVitalMetric(waitForInteractionToNextPaint, ({ name, value, attrs }) => {
-      this.addTiming(name, value, attrs)
-    }, Infinity)
+    // cumulativeLayoutShift.subscribe(({ current }) => { this.cls = current })
+    firstPaint.subscribe(handleVitalMetric)
+    firstContentfulPaint.subscribe(handleVitalMetric)
+    firstInputDelay.subscribe(handleVitalMetric)
+    largestContentfulPaint.subscribe(handleVitalMetric)
+    interactionToNextPaint.subscribe(handleVitalMetric)
 
     // /* PerformanceLongTaskTiming API -- custom implementation that does not use web-vitals */
     if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) {
@@ -120,8 +97,8 @@ export class Aggregate extends AggregateBase {
     Mitigation: We've set initial CLS to null so that it's omitted from timings like 'pageHide' in that edge case. It should only be included if onCLS callback was executed at least once.
     Future: onCLS value changes should be reported directly & CLS separated into its own timing node so it's not beholden to 'pageHide' firing. It'd also be possible to report the real final CLS.
     */
-    if (cls.value >= 0) {
-      attrs.cls = cls.value
+    if (cumulativeLayoutShift.value.current >= 0) {
+      attrs.cls = cumulativeLayoutShift.value.current
     }
 
     this.timings.push({

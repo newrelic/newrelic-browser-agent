@@ -1,35 +1,51 @@
 export class VitalMetric {
-  #value
+  #values = []
   #roundingMethod = Math.floor
-  constructor (name, value, roundingMethod) {
+  #subscribers = new Set()
+
+  constructor (name, roundingMethod) {
     this.name = name
     this.attrs = {}
     if (typeof roundingMethod === 'function') this.#roundingMethod = roundingMethod
-    if (value !== undefined) this.#value = value
   }
 
-  get value () { return this.#roundingMethod(this.#value) }
-  set value (v) { this.#value = v }
+  get value () {
+    return {
+      previous: this.#values[this.#values.length - 2],
+      current: this.#values[this.#values.length - 1],
+      name: this.name,
+      attrs: this.attrs
+    }
+  }
 
-  get isValid () { return this.value >= 0 }
-}
+  set value (v) {
+    this.#values.push(this.#roundingMethod(v))
+    this.#subscribers.forEach(cb => {
+      try {
+        cb(this.value)
+      } catch (e) {
+        // ignore errors
+      }
+    })
+  }
 
-export const waitForVitalMetric = (reporter, cb, repeat = 0) => {
-  reporter().then(vitalMetric => {
-    cb(vitalMetric)
-    if (repeat > 0) waitForVitalMetric(reporter, cb, --repeat)
-  })
-}
+  get isValid () {
+    return this.value.current >= 0
+  }
 
-/** takes an attributes object and appends connection attributes if available */
-export function addConnectionAttributes (attributes) {
-  var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection // to date, both window & worker shares the same support for connection
-  if (!connection) return
+  subscribe (callback) {
+    this.#subscribers.add(callback)
+    if (this.isValid) callback(this.value)
+    return () => { this.#subscribers.remove(callback) }
+  }
 
-  if (connection.type) attributes['net-type'] = connection.type
-  if (connection.effectiveType) attributes['net-etype'] = connection.effectiveType
-  if (connection.rtt) attributes['net-rtt'] = connection.rtt
-  if (connection.downlink) attributes['net-dlink'] = connection.downlink
+  addConnectionAttributes () {
+    var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection // to date, both window & worker shares the same support for connection
+    if (!connection) return
 
-  return attributes
+    if (connection.type) this.attrs['net-type'] = connection.type
+    if (connection.effectiveType) this.attrs['net-etype'] = connection.effectiveType
+    if (connection.rtt) this.attrs['net-rtt'] = connection.rtt
+    if (connection.downlink) this.attrs['net-dlink'] = connection.downlink
+  }
 }

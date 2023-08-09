@@ -12,8 +12,7 @@ import { drain } from '../../../common/drain/drain'
 import { activateFeatures } from '../../../common/util/feature-flags'
 import { warn } from '../../../common/util/console'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { waitForFirstPaint } from '../../../common/vitals/first-paint'
-import { waitForFirstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
+import { firstContentfulPaint, firstPaint } from '../../../common/vitals'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -105,15 +104,10 @@ export class Aggregate extends AggregateBase {
     }
 
     try {
-      Promise.all([
-        waitForFirstPaint(),
-        waitForFirstContentfulPaint()
-      ]).then(([fp, fcp]) => {
-        queryParameters.fp = String(fp.value)
-        queryParameters.fcp = String(fcp.value)
+      queryParameters.fp = String(firstPaint.value.current)
+      queryParameters.fcp = String(firstContentfulPaint.value.current)
 
-        this.harvest({ queryParameters, body })
-      })
+      this.harvest({ queryParameters, body })
     } catch (e) {
       this.harvest({ queryParameters, body })
     }

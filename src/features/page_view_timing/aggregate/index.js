@@ -29,7 +29,6 @@ export class Aggregate extends AggregateBase {
       this.addTiming(name, value, attrs)
     }
 
-    // cumulativeLayoutShift.subscribe(({ current }) => { this.cls = current })
     firstPaint.subscribe(handleVitalMetric)
     firstContentfulPaint.subscribe(handleVitalMetric)
     firstInputDelay.subscribe(handleVitalMetric)

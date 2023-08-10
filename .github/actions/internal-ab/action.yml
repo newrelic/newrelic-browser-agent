@@ -11,6 +11,12 @@ inputs:
   nrba_license_key:
     description: 'License key to insert into the NRBA configuration.'
     required: true
+  nrba_current_script_url:
+    description: 'URL for the script to use as the "current" version NRBA loader.'
+    required: false
+  nrba_next_script_url:
+    description: 'URL for the script to use as the "next" version NRBA loader.'
+    required: false
   aws_access_key_id:
     description: 'AWS access key id used for authentication.'
     required: true
@@ -44,6 +50,8 @@ runs:
         nr_environment: ${{ inputs.nr_environment }}
         nrba_app_id: ${{ inputs.nrba_app_id }}
         nrba_license_key: ${{ inputs.nrba_license_key }}
+        nrba_current_script_url: ${{ inputs.nrba_current_script_url }}
+        nrba_next_script_url: ${{ inputs.nrba_next_script_url }}
     - name: Upload a/b script
       id: ab-s3-upload
       uses: ./.github/actions/s3-upload

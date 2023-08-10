@@ -10,7 +10,7 @@ const handleEntries = (entries) => {
       observer.disconnect()
 
       /* Initial hidden state and pre-rendering not yet considered for first paint. See web-vitals onFCP for example. */
-      firstPaint.value = entry.startTime
+      firstPaint.update({ value: entry.startTime, entries })
     }
   })
 }

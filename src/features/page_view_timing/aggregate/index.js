@@ -20,11 +20,12 @@ import { firstInputDelay } from '../../../common/vitals/first-input-delay'
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { interactionToNextPaint } from '../../../common/vitals/interaction-to-next-paint'
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
+import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
 
-  #handleVitalMetric ({ name, current: value, attrs }) {
+  #handleVitalMetric = ({ name, current: value, attrs }) => {
     this.addTiming(name, value, attrs)
   }
 
@@ -40,6 +41,9 @@ export class Aggregate extends AggregateBase {
     firstInputDelay.subscribe(this.#handleVitalMetric)
     largestContentfulPaint.subscribe(this.#handleVitalMetric)
     interactionToNextPaint.subscribe(this.#handleVitalMetric)
+    timeToFirstByte.subscribe(({ entries }) => {
+      this.addTiming('load', Math.round(entries[0].loadEventEnd))
+    })
 
     // /* PerformanceLongTaskTiming API -- custom implementation that does not use web-vitals */
     if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) {

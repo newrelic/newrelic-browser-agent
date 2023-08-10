@@ -5,14 +5,14 @@ import { initiallyHidden } from '../constants/runtime'
 
 export const firstInputDelay = new VitalMetric(VITAL_NAMES.FIRST_INPUT_DELAY)
 
-onFID(({ name, value, entries }) => {
+onFID(({ value, entries }) => {
   if (initiallyHidden || firstInputDelay.isValid || entries.length === 0) return
 
   // CWV will only report one (THE) first-input entry to us; fid isn't reported if there are no user interactions occurs before the *first* page hiding.
-  firstInputDelay.value = entries[0].startTime
-  firstInputDelay.attrs = {
-    type: entries[0].name,
-    fid: Math.round(value)
-  }
-  firstInputDelay.addConnectionAttributes()
+  firstInputDelay.update({
+    value: entries[0].startTime,
+    entries,
+    attrs: { type: entries[0].name, fid: Math.round(value) },
+    addConnectionAttributes: true
+  })
 })

@@ -2,6 +2,7 @@ export class VitalMetric {
   #values = []
   #roundingMethod = Math.floor
   #subscribers = new Set()
+  entries = undefined
 
   constructor (name, roundingMethod) {
     this.name = name
@@ -9,17 +10,11 @@ export class VitalMetric {
     if (typeof roundingMethod === 'function') this.#roundingMethod = roundingMethod
   }
 
-  get value () {
-    return {
-      previous: this.#values[this.#values.length - 2],
-      current: this.#values[this.#values.length - 1],
-      name: this.name,
-      attrs: this.attrs
-    }
-  }
-
-  set value (v) {
-    this.#values.push(this.#roundingMethod(v))
+  update ({ value, entries, attrs, addConnectionAttributes = false }) {
+    this.#values.push(this.#roundingMethod(value))
+    this.entries = entries
+    if (attrs) this.attrs = { ...this.attrs, ...attrs }
+    if (addConnectionAttributes) this.addConnectionAttributes()
     this.#subscribers.forEach(cb => {
       try {
         cb(this.value)
@@ -28,6 +23,27 @@ export class VitalMetric {
       }
     })
   }
+
+  get value () {
+    return {
+      previous: this.#values[this.#values.length - 2],
+      current: this.#values[this.#values.length - 1],
+      name: this.name,
+      attrs: this.attrs,
+      entries: this.entries
+    }
+  }
+
+  // set value (v) {
+  //   this.#values.push(this.#roundingMethod(v))
+  //   this.#subscribers.forEach(cb => {
+  //     try {
+  //       cb(this.value)
+  //     } catch (e) {
+  //       // ignore errors
+  //     }
+  //   })
+  // }
 
   get isValid () {
     return this.value.current >= 0

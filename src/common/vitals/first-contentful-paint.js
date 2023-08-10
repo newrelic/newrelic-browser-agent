@@ -20,8 +20,8 @@ if (iOS_below16) {
     // ignore
   }
 } else {
-  onFCP(({ value }) => {
+  onFCP(({ value, entries }) => {
     if (initiallyHidden || firstContentfulPaint.isValid) return
-    firstContentfulPaint.value = value
+    firstContentfulPaint.update({ value, entries })
   })
 }

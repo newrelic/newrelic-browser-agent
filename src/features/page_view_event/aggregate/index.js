@@ -1,7 +1,4 @@
-import { handle } from '../../../common/event-emitter/handle'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { isiOS, globalScope, isBrowserScope } from '../../../common/constants/runtime'
-import { onTTFB } from 'web-vitals'
+import { globalScope, isBrowserScope } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
@@ -14,36 +11,21 @@ import { warn } from '../../../common/util/console'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { firstPaint } from '../../../common/vitals/first-paint'
+import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME)
 
-    if (typeof PerformanceNavigationTiming !== 'undefined' && !isiOS) {
-      this.alreadySent = false // we don't support timings on BFCache restores
-      const agentRuntime = getRuntime(agentIdentifier) // we'll store timing values on the runtime obj to be read by the aggregate module
+    timeToFirstByte.subscribe(({ current: value, entries }) => {
+      const navEntry = entries[0]
+      this.timeToFirstByte = value
+      this.firstByteToWindowLoad = Math.max(Math.round(navEntry.loadEventEnd - this.timeToFirstByte), 0) // our "frontend" duration
+      this.firstByteToDomContent = Math.max(Math.round(navEntry.domContentLoadedEventEnd - this.timeToFirstByte), 0) // our "dom processing" duration
 
-      /* Time To First Byte
-        This listener must record these values *before* PVE's aggregate sends RUM. */
-      onTTFB(({ value, entries }) => {
-        if (this.alreadySent) return
-        this.alreadySent = true
-
-        agentRuntime[CONSTANTS.TTFB] = Math.round(value) // this is our "backend" duration; web-vitals will ensure it's lower bounded at 0
-
-        // Similar to what vitals does for ttfb, we have to factor in activation-start when calculating relative timings:
-        const navEntry = entries[0]
-        const respOrActivStart = Math.max(navEntry.responseStart, navEntry.activationStart || 0)
-        agentRuntime[CONSTANTS.FBTWL] = Math.max(Math.round(navEntry.loadEventEnd - respOrActivStart), 0) // our "frontend" duration
-        handle('timing', ['load', Math.round(navEntry.loadEventEnd)], undefined, FEATURE_NAMES.pageViewTiming, this.ee)
-        agentRuntime[CONSTANTS.FBTDC] = Math.max(Math.round(navEntry.domContentLoadedEventEnd - respOrActivStart), 0) // our "dom processing" duration
-
-        this.sendRum()
-      })
-    } else {
-      this.sendRum() // timings either already in runtime from instrument or is meant to get 0'd.
-    }
+      this.sendRum()
+    })
   }
 
   getScheme () {
@@ -61,9 +43,9 @@ export class Aggregate extends AggregateBase {
     // These 3 values should've been recorded after load and before this func runs. They are part of the minimum required for PageView events to be created.
     // Following PR #428, which demands that all agents send RUM call, these need to be sent even outside of the main window context where PerformanceTiming
     // or PerformanceNavigationTiming do not exists. Hence, they'll be filled in by 0s instead in, for example, worker threads that still init the PVE module.
-    this.aggregator.store('measures', 'be', { value: isBrowserScope ? agentRuntime[CONSTANTS.TTFB] : 0 })
-    this.aggregator.store('measures', 'fe', { value: isBrowserScope ? agentRuntime[CONSTANTS.FBTWL] : 0 })
-    this.aggregator.store('measures', 'dc', { value: isBrowserScope ? agentRuntime[CONSTANTS.FBTDC] : 0 })
+    this.aggregator.store('measures', 'be', { value: isBrowserScope ? this.timeToFirstByte : 0 })
+    this.aggregator.store('measures', 'fe', { value: isBrowserScope ? this.firstByteToWindowLoad : 0 })
+    this.aggregator.store('measures', 'dc', { value: isBrowserScope ? this.firstByteToDomContent : 0 })
 
     const queryParameters = {
       tt: info.ttGuid,

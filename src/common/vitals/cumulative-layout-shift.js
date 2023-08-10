@@ -4,7 +4,7 @@ import { VitalMetric } from './vital-metric'
 
 export const cumulativeLayoutShift = new VitalMetric(VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT, (x) => x)
 
-onCLS(({ value }) => {
+onCLS(({ value, entries }) => {
   if (value === cumulativeLayoutShift.value) return
-  cumulativeLayoutShift.value = value
+  cumulativeLayoutShift.update({ value, entries })
 }, { reportAllChanges: true })

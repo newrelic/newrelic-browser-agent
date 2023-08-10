@@ -6,21 +6,22 @@ import { cleanURL } from '../url/clean-url'
 
 export const largestContentfulPaint = new VitalMetric(VITAL_NAMES.LARGEST_CONTENTFUL_PAINT)
 
-onLCP(({ name, value, entries }) => {
+onLCP(({ value, entries }) => {
   /* Largest Contentful Paint - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
   if (initiallyHidden || largestContentfulPaint.isValid) return
 
-  largestContentfulPaint.value = value
-  if (entries.length > 0) {
-  // CWV will only ever report one (THE) lcp entry to us; lcp is also only reported *once* on earlier(user interaction, page hidden).
-    const lcpEntry = entries[entries.length - 1] // this looks weird if we only expect one, but this is how cwv-attribution gets it so to be sure...
-    largestContentfulPaint.attrs = {
-      size: lcpEntry.size,
-      eid: lcpEntry.id,
-      ...(!!lcpEntry.url && { elUrl: cleanURL(lcpEntry.url) }),
-      ...(!!lcpEntry.element?.tagName && { elTag: lcpEntry.element.tagName })
-    }
-  }
-
-  largestContentfulPaint.addConnectionAttributes()
+  const lcpEntry = entries[entries.length - 1] // this looks weird if we only expect one, but this is how cwv-attribution gets it so to be sure...
+  largestContentfulPaint.update({
+    value,
+    entries,
+    ...(entries.length > 0 && {
+      attrs: {
+        size: lcpEntry.size,
+        eid: lcpEntry.id,
+        ...(!!lcpEntry.url && { elUrl: cleanURL(lcpEntry.url) }),
+        ...(!!lcpEntry.element?.tagName && { elTag: lcpEntry.element.tagName })
+      }
+    }),
+    addConnectionAttributes: true
+  })
 })

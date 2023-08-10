@@ -23,6 +23,11 @@ import { largestContentfulPaint } from '../../../common/vitals/largest-contentfu
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
+
+  #handleVitalMetric ({ name, current: value, attrs }) {
+    this.addTiming(name, value, attrs)
+  }
+
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
@@ -30,15 +35,11 @@ export class Aggregate extends AggregateBase {
     this.timingsSent = []
     this.curSessEndRecorded = false
 
-    const handleVitalMetric = ({ name, current: value, attrs }) => {
-      this.addTiming(name, value, attrs)
-    }
-
-    firstPaint.subscribe(handleVitalMetric)
-    firstContentfulPaint.subscribe(handleVitalMetric)
-    firstInputDelay.subscribe(handleVitalMetric)
-    largestContentfulPaint.subscribe(handleVitalMetric)
-    interactionToNextPaint.subscribe(handleVitalMetric)
+    firstPaint.subscribe(this.#handleVitalMetric)
+    firstContentfulPaint.subscribe(this.#handleVitalMetric)
+    firstInputDelay.subscribe(this.#handleVitalMetric)
+    largestContentfulPaint.subscribe(this.#handleVitalMetric)
+    interactionToNextPaint.subscribe(this.#handleVitalMetric)
 
     // /* PerformanceLongTaskTiming API -- custom implementation that does not use web-vitals */
     if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) {

@@ -24,19 +24,18 @@ afterEach(() => {
 })
 
 describe('global event-emitter', () => {
-  test('it returns the event-emitter defined on window.NREUM', async () => {
-    const mockEE = {}
-    mockNREUM.ee = mockEE
-
-    const { ee } = await import('./contextual-ee')
-
-    expect(ee).toEqual(mockEE)
-  })
-
-  test('it sets the global event-emitter on window.NREUM', async () => {
+  test('it sets the global event-emitter on window.NREUM when it does not already exist', async () => {
     const { ee } = await import('./contextual-ee')
 
     expect(ee).toEqual(mockNREUM.ee)
+  })
+
+  test('it does not set the global event-emitter on window.NREUM when it already exists', async () => {
+    mockNREUM.ee = {}
+
+    const { ee } = await import('./contextual-ee')
+
+    expect(ee).not.toEqual(mockNREUM.ee)
   })
 })
 
@@ -79,7 +78,9 @@ describe('event-emitter context', () => {
 
     const result = ee.context()
 
-    expect(result).toEqual({})
+    expect(result).toEqual(expect.objectContaining({
+      contextId: expect.stringContaining('nr@context:')
+    }))
   })
 
   test('it returns the same context', async () => {
@@ -87,7 +88,7 @@ describe('event-emitter context', () => {
 
     const result = ee.context()
 
-    expect(result).toEqual(ee.context(result))
+    expect(result).toBe(ee.context(result))
   })
 
   test('it adds the context to the provided object', async () => {
@@ -95,8 +96,9 @@ describe('event-emitter context', () => {
 
     const obj = {}
     const result = ee.context(obj)
+    const ctxKey = Object.getOwnPropertyNames(obj).find(k => k.startsWith('nr@context'))
 
-    expect(result).toEqual(obj['nr@context'])
+    expect(result).toBe(obj[ctxKey])
   })
 })
 
@@ -281,30 +283,11 @@ describe('event-emitter emit', () => {
         scopeEE,
         eventType,
         eventArgs,
-        {}
+        expect.objectContaining({
+          contextId: expect.stringContaining('nr@context:')
+        })
       ])
     ]))
     expect(ee.backlog.feature).toEqual(scopeEE.backlog.feature)
-  })
-})
-
-describe('getOrSetContext', () => {
-  test('it returns a new context', async () => {
-    const { getOrSetContext } = await import('./contextual-ee')
-
-    const obj = {}
-    const result = getOrSetContext(obj)
-
-    expect(result).toEqual({})
-    expect(result).toEqual(obj['nr@context'])
-  })
-
-  test('it returns the same context', async () => {
-    const { getOrSetContext } = await import('./contextual-ee')
-
-    const obj = {}
-    const result = getOrSetContext(obj)
-
-    expect(getOrSetContext(obj)).toEqual(result)
   })
 })

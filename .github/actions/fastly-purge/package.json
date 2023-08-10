@@ -1,0 +1,10 @@
+{
+  "name": "@newrelic/browser-agent.actions.fastly-purge",
+  "description": "",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "fastly": "^6.0.0",
+    "yargs": "^17.7.2"
+  }
+}

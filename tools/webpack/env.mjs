@@ -15,7 +15,7 @@ import process from 'process'
  * using --mode production
  */
 export default async (env) => {
-  let VERSION, PATH_VERSION, SUBVERSION, PUBLIC_PATH, MAP_PATH
+  let VERSION, PATH_VERSION, SUBVERSION, PUBLIC_PATH
   VERSION = packageJSON.version
 
   switch ((env.mode || '').toString().toLocaleLowerCase()) {

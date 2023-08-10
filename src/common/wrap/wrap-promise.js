@@ -8,8 +8,7 @@
  */
 
 import { createWrapperWithEmitter as wrapFn, flag } from './wrap-function'
-import { ee as baseEE, getOrSetContext } from '../event-emitter/contextual-ee'
-import { originals } from '../config/config'
+import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
 
 const wrapped = {}
@@ -29,9 +28,9 @@ export function wrapPromise (sharedEE) {
   if (wrapped[promiseEE.debugId]) return promiseEE
   wrapped[promiseEE.debugId] = true // otherwise, first feature to wrap promise
 
-  var getContext = getOrSetContext
+  var getContext = promiseEE.context
   var promiseWrapper = wrapFn(promiseEE)
-  var prevPromiseObj = originals.PR
+  var prevPromiseObj = globalScope.Promise
 
   if (prevPromiseObj) { // ensure there's a Promise API (native or otherwise) to even wrap
     wrap()

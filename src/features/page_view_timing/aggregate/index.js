@@ -14,7 +14,12 @@ import { FEATURE_NAME } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { cumulativeLayoutShift, firstContentfulPaint, firstInputDelay, firstPaint, interactionToNextPaint, largestContentfulPaint } from '../../../common/vitals'
+import { cumulativeLayoutShift } from '../../../common/vitals/cumulative-layout-shift'
+import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
+import { firstInputDelay } from '../../../common/vitals/first-input-delay'
+import { firstPaint } from '../../../common/vitals/first-paint'
+import { interactionToNextPaint } from '../../../common/vitals/interaction-to-next-paint'
+import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME

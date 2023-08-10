@@ -12,7 +12,8 @@ import { drain } from '../../../common/drain/drain'
 import { activateFeatures } from '../../../common/util/feature-flags'
 import { warn } from '../../../common/util/console'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { firstContentfulPaint, firstPaint } from '../../../common/vitals'
+import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
+import { firstPaint } from '../../../common/vitals/first-paint'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME

@@ -19,7 +19,8 @@ import * as CONSTANTS from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { firstContentfulPaint, firstPaint } from '../../../common/vitals'
+import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
+import { firstPaint } from '../../../common/vitals/first-paint'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,

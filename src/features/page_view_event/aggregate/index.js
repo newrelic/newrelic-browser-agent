@@ -103,14 +103,10 @@ export class Aggregate extends AggregateBase {
       }
     }
 
-    try {
-      queryParameters.fp = String(firstPaint.value.current)
-      queryParameters.fcp = String(firstContentfulPaint.value.current)
+    queryParameters.fp = firstPaint.value.current
+    queryParameters.fcp = firstContentfulPaint.value.current
 
-      this.harvest({ queryParameters, body })
-    } catch (e) {
-      this.harvest({ queryParameters, body })
-    }
+    this.harvest({ queryParameters, body })
   }
 
   harvest ({ queryParameters, body }) {

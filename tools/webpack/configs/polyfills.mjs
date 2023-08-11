@@ -1,4 +1,5 @@
 import path from 'path'
+import webpack from 'webpack'
 import { merge } from 'webpack-merge'
 import commonConfig from './common.mjs'
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
@@ -14,47 +15,112 @@ import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
  * using --env foo=bar --env biz=baz
  */
 export default (env) => {
-  return merge(commonConfig(env), {
-    target: 'browserslist:ie >= 11',
-    entry: {
-      'nr-loader-rum-polyfills': path.resolve(env.paths.src, 'cdn/polyfills/lite.js'),
-      'nr-loader-rum-polyfills.min': path.resolve(env.paths.src, 'cdn/polyfills/lite.js'),
-      'nr-loader-full-polyfills': path.resolve(env.paths.src, 'cdn/polyfills/pro.js'),
-      'nr-loader-full-polyfills.min': path.resolve(env.paths.src, 'cdn/polyfills/pro.js'),
-      'nr-loader-spa-polyfills': path.resolve(env.paths.src, 'cdn/polyfills/spa.js'),
-      'nr-loader-spa-polyfills.min': path.resolve(env.paths.src, 'cdn/polyfills/spa.js'),
-      'nr-polyfills.min': path.resolve(env.paths.src, 'cdn/polyfills.js')
-    },
-    output: {
-      chunkFilename: env.SUBVERSION === 'PROD' ? `[name].[chunkhash:8]-es5${env.PATH_VERSION}.min.js` : `[name]-es5${env.PATH_VERSION}.js`
-    },
-    module: {
-      rules: [
-        {
-          test: /\.js$/,
-          exclude: /(node_modules)/,
-          use: {
-            loader: 'babel-loader',
-            options: {
-              envName: 'webpack-ie11'
+  const entryGroups = [
+    {
+      asyncChunkName: 'nr-rum-polyfills',
+      entry: {
+        'nr-loader-rum-polyfills': path.join(env.paths.src, 'cdn/lite.js'),
+        'nr-loader-rum-polyfills.min': path.join(env.paths.src, 'cdn/lite.js')
+      },
+      plugins: [
+        new webpack.IgnorePlugin({
+          checkResource: (resource, context) => {
+            if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
+              // Only allow page_view_event, page_view_timing, and metrics features
+              return !resource.match(/page_view_event\/aggregate|page_view_timing\/aggregate|metrics\/aggregate/)
             }
+
+            return false
           }
-        }
+        })
       ]
     },
-    plugins: [
-      new BundleAnalyzerPlugin({
-        analyzerMode: 'static',
-        openAnalyzer: false,
-        defaultSizes: 'stat',
-        reportFilename: `polyfills${env.PATH_VERSION}.stats.html`
-      }),
-      new BundleAnalyzerPlugin({
-        analyzerMode: 'json',
-        openAnalyzer: false,
-        defaultSizes: 'stat',
-        reportFilename: `polyfills${env.PATH_VERSION}.stats.json`
-      })
-    ]
+    {
+      asyncChunkName: 'nr-full-polyfills',
+      entry: {
+        'nr-loader-full-polyfills': path.join(env.paths.src, 'cdn/pro.js'),
+        'nr-loader-full-polyfills.min': path.join(env.paths.src, 'cdn/pro.js')
+      },
+      plugins: [
+        new webpack.IgnorePlugin({
+          checkResource: (resource, context) => {
+            if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
+              // Allow all features except spa and session_replay
+              return resource.match(/spa\/aggregate|session_replay\/aggregate/)
+            }
+
+            return false
+          }
+        })
+      ]
+    },
+    {
+      asyncChunkName: 'nr-spa-polyfills',
+      entry: {
+        'nr-loader-spa-polyfills': path.join(env.paths.src, 'cdn/spa.js'),
+        'nr-loader-spa-polyfills.min': path.join(env.paths.src, 'cdn/spa.js')
+      },
+      plugins: [
+        new webpack.IgnorePlugin({
+          checkResource: (resource, context) => {
+            if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
+              // Do not allow session_replay feature
+              return resource.match(/session_replay\/aggregate/)
+            }
+
+            return false
+          }
+        })
+      ]
+    },
+    {
+      asyncChunkName: 'nr-polyfills',
+      entry: {
+        'nr-polyfills.min': path.resolve(env.paths.src, 'cdn/polyfills.js')
+      },
+      plugins: [
+        new webpack.optimize.LimitChunkCountPlugin({
+          maxChunks: 1
+        })
+      ]
+    }
+  ]
+
+  return entryGroups.map(entryGroup => {
+    return merge(commonConfig(env, entryGroup.asyncChunkName), {
+      target: 'browserslist:ie >= 11',
+      entry: entryGroup.entry,
+      output: {
+        chunkFilename: env.SUBVERSION === 'PROD' ? `[name].[chunkhash:8]-es5${env.PATH_VERSION}.min.js` : `[name]-es5${env.PATH_VERSION}.js`
+      },
+      module: {
+        rules: [
+          {
+            test: /\.js$/,
+            exclude: /(node_modules)/,
+            use: {
+              loader: 'babel-loader',
+              options: {
+                envName: 'webpack-ie11'
+              }
+            }
+          }
+        ]
+      },
+      plugins: [
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          openAnalyzer: false,
+          defaultSizes: 'stat',
+          reportFilename: `${entryGroup.asyncChunkName}${env.PATH_VERSION}.stats.html`
+        }),
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'json',
+          openAnalyzer: false,
+          defaultSizes: 'stat',
+          reportFilename: `${entryGroup.asyncChunkName}${env.PATH_VERSION}.stats.json`
+        })
+      ]
+    })
   })
 }

@@ -12,7 +12,7 @@ if (iOS_below16) {
       const paintEntries = performance.getEntriesByType('paint')
       paintEntries.forEach(entry => {
         if (entry.name === 'first-contentful-paint') {
-          firstContentfulPaint.value = Math.floor(entry.startTime)
+          firstContentfulPaint.update({ value: Math.floor(entry.startTime), entries: paintEntries })
         }
       })
     }

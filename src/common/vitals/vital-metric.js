@@ -34,19 +34,8 @@ export class VitalMetric {
     }
   }
 
-  // set value (v) {
-  //   this.#values.push(this.#roundingMethod(v))
-  //   this.#subscribers.forEach(cb => {
-  //     try {
-  //       cb(this.value)
-  //     } catch (e) {
-  //       // ignore errors
-  //     }
-  //   })
-  // }
-
   get isValid () {
-    return this.value.current >= 0
+    return this.#values.length > 0 && this.value.current >= 0
   }
 
   subscribe (callback) {

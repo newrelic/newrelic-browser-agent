@@ -21,6 +21,7 @@ import { firstPaint } from '../../../common/vitals/first-paint'
 import { interactionToNextPaint } from '../../../common/vitals/interaction-to-next-paint'
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
+import { longTask } from '../../../common/vitals/long-task'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -45,11 +46,7 @@ export class Aggregate extends AggregateBase {
       this.addTiming('load', Math.round(entries[0].loadEventEnd))
     })
 
-    // /* PerformanceLongTaskTiming API -- custom implementation that does not use web-vitals */
-    if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) {
-      onLongTask(({ name, value, info }) => this.addTiming(name.toLowerCase(), value, info)) // lt context is passed as 'info'=attrs in the timing node
-    }
-    /* ------------------------------------End of ex-loader section */
+    if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) longTask.subscribe(this.#handleVitalMetric)
 
     /* It's important that CWV api, like "onLCP", is called before this scheduler is initialized. The reason is because they listen to the same
       on vis change or pagehide events, and we'd want ex. onLCP to record the timing (win the race) before we try to send "final harvest". */

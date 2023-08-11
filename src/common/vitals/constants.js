@@ -5,6 +5,6 @@ export const VITAL_NAMES = {
   LARGEST_CONTENTFUL_PAINT: 'lcp',
   CUMULATIVE_LAYOUT_SHIFT: 'cls',
   INTERACTION_TO_NEXT_PAINT: 'inp',
-  LONG_TASK: 'lt',
+  LONG_TASK: 'LT',
   TIME_TO_FIRST_BYTE: 'ttfb'
 }

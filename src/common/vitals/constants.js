@@ -1,5 +1,5 @@
 export const VITAL_NAMES = {
-  FIRST_PAINT: 'fp',
+  FIRST_PAINT: 'FP',
   FIRST_CONTENTFUL_PAINT: 'fcp',
   FIRST_INPUT_DELAY: 'fi',
   LARGEST_CONTENTFUL_PAINT: 'lcp',

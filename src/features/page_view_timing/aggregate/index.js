@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { onLongTask } from '../long-tasks'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { mapOwn } from '../../../common/util/map-own'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'

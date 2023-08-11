@@ -19,8 +19,8 @@ export default (env) => {
     {
       asyncChunkName: 'nr-rum-polyfills',
       entry: {
-        'nr-loader-rum-polyfills': path.join(env.paths.src, 'cdn/lite.js'),
-        'nr-loader-rum-polyfills.min': path.join(env.paths.src, 'cdn/lite.js')
+        'nr-loader-rum-polyfills': path.join(env.paths.src, 'cdn/polyfills/lite.js'),
+        'nr-loader-rum-polyfills.min': path.join(env.paths.src, 'cdn/polyfills/lite.js')
       },
       plugins: [
         new webpack.IgnorePlugin({
@@ -38,8 +38,8 @@ export default (env) => {
     {
       asyncChunkName: 'nr-full-polyfills',
       entry: {
-        'nr-loader-full-polyfills': path.join(env.paths.src, 'cdn/pro.js'),
-        'nr-loader-full-polyfills.min': path.join(env.paths.src, 'cdn/pro.js')
+        'nr-loader-full-polyfills': path.join(env.paths.src, 'cdn/polyfills/pro.js'),
+        'nr-loader-full-polyfills.min': path.join(env.paths.src, 'cdn/polyfills/pro.js')
       },
       plugins: [
         new webpack.IgnorePlugin({
@@ -57,8 +57,8 @@ export default (env) => {
     {
       asyncChunkName: 'nr-spa-polyfills',
       entry: {
-        'nr-loader-spa-polyfills': path.join(env.paths.src, 'cdn/spa.js'),
-        'nr-loader-spa-polyfills.min': path.join(env.paths.src, 'cdn/spa.js')
+        'nr-loader-spa-polyfills': path.join(env.paths.src, 'cdn/polyfills/spa.js'),
+        'nr-loader-spa-polyfills.min': path.join(env.paths.src, 'cdn/polyfills/spa.js')
       },
       plugins: [
         new webpack.IgnorePlugin({

@@ -35,6 +35,7 @@ export class Aggregate extends AggregateBase {
   sendRum () {
     const info = getInfo(this.agentIdentifier)
     const agentRuntime = getRuntime(this.agentIdentifier)
+    const harvester = new Harvest(this)
 
     if (!info.beacon) return
     if (info.queueTime) this.aggregator.store('measures', 'qt', { value: info.queueTime })
@@ -89,11 +90,6 @@ export class Aggregate extends AggregateBase {
     queryParameters.fp = firstPaint.value.current
     queryParameters.fcp = firstContentfulPaint.value.current
 
-    this.harvest({ queryParameters, body })
-  }
-
-  harvest ({ queryParameters, body }) {
-    const harvester = new Harvest(this)
     harvester.send({
       endpoint: 'rum',
       payload: { qs: queryParameters, body },

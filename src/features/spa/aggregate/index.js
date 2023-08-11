@@ -46,9 +46,7 @@ export class Aggregate extends AggregateBase {
       depth: 0,
       harvestTimeSeconds: getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10,
       interactionsToHarvest: [],
-      interactionsSent: [],
-      fp: 0,
-      fcp: 0
+      interactionsSent: []
     }
 
     this.serializer = new Serializer(this)

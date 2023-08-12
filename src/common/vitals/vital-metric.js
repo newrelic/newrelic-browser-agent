@@ -41,7 +41,7 @@ export class VitalMetric {
   subscribe (callback) {
     this.#subscribers.add(callback)
     if (this.isValid) callback(this.value)
-    return () => { this.#subscribers.remove(callback) }
+    return () => { this.#subscribers.delete(callback) }
   }
 
   addConnectionAttributes () {

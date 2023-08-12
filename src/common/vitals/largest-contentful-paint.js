@@ -1,5 +1,5 @@
 import { onLCP } from 'web-vitals'
-import { VitalMetric, addConnectionAttributes } from './vital-metric'
+import { VitalMetric } from './vital-metric'
 import { VITAL_NAMES } from './constants'
 import { initiallyHidden } from '../constants/runtime'
 import { cleanURL } from '../url/clean-url'

@@ -13,7 +13,8 @@ describe('lcp', () => {
   test('reports lcp from web-vitals', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
-      isiOS: false
+      isiOS: false,
+      isBrowserScope: true
     }))
     global.PerformanceNavigationTiming = jest.fn()
 
@@ -23,10 +24,26 @@ describe('lcp', () => {
     }))
   })
 
+  test('does NOT report if not browser scoped', (done) => {
+    jest.doMock('../constants/runtime', () => ({
+      __esModule: true,
+      isBrowserScope: false
+    }))
+
+    getFreshTTFBImport(metric => {
+      metric.subscribe(({ current: value, attrs }) => {
+        console.log('should not have reported...')
+        expect(1).toEqual(2)
+      })
+      setTimeout(done, 1000)
+    })
+  })
+
   test('does NOT report lcp from web-vitals if no PNT', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
-      isiOS: false
+      isiOS: false,
+      isBrowserScope: true
     }))
     global.PerformanceNavigationTiming = undefined
 
@@ -42,7 +59,8 @@ describe('lcp', () => {
   test('does NOT report lcp from web-vitals if is iOS', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
-      isiOS: true
+      isiOS: true,
+      isBrowserScope: true
     }))
     global.PerformanceNavigationTiming = jest.fn()
 
@@ -66,7 +84,8 @@ describe('lcp', () => {
           }
         }
       },
-      offset: 1
+      offset: 1,
+      isBrowserScope: true
     }))
     global.PerformanceNavigationTiming = undefined
 
@@ -89,7 +108,8 @@ describe('lcp', () => {
           }
         }
       },
-      offset: 1
+      offset: 1,
+      isBrowserScope: true
     }))
     let triggered = 0
     getFreshTTFBImport(metric => metric.subscribe(({ current: value }) => {

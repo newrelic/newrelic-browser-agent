@@ -1,4 +1,3 @@
-let firstContentfulPaint
 beforeEach(() => {
   jest.resetModules()
   jest.resetAllMocks()
@@ -22,7 +21,8 @@ describe('fcp', () => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
       iOS_below16: true,
-      initiallyHidden: false
+      initiallyHidden: false,
+      isBrowserScope: true
     }))
     global.performance.getEntriesByType = jest.fn(() => [{ name: 'first-contentful-paint', startTime: 1 }])
 
@@ -32,11 +32,27 @@ describe('fcp', () => {
     }))
   })
 
+  test('does NOT report if not browser scoped', (done) => {
+    jest.doMock('../constants/runtime', () => ({
+      __esModule: true,
+      isBrowserScope: false
+    }))
+
+    getFreshFCPImport(metric => {
+      metric.subscribe(({ current: value, attrs }) => {
+        console.log('should not have reported...')
+        expect(1).toEqual(2)
+      })
+      setTimeout(done, 1000)
+    })
+  })
+
   test('Does NOT report values from paintEntries other than fcp', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
       iOS_below16: true,
-      initiallyHidden: false
+      initiallyHidden: false,
+      isBrowserScope: true
     }))
     global.performance.getEntriesByType = jest.fn(() => [{ name: 'other-timing-name', startTime: 1 }])
 
@@ -53,7 +69,8 @@ describe('fcp', () => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
       iOS_below16: true,
-      initiallyHidden: true
+      initiallyHidden: true,
+      isBrowserScope: true
     }))
     global.performance.getEntriesByType = jest.fn(() => [{ name: 'first-contentful-paint', startTime: 1 }])
 
@@ -70,7 +87,8 @@ describe('fcp', () => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
       iOS_below16: false,
-      initiallyHidden: false
+      initiallyHidden: false,
+      isBrowserScope: true
     }))
     let triggered = 0
     getFreshFCPImport(firstContentfulPaint => firstContentfulPaint.subscribe(({ current: value }) => {

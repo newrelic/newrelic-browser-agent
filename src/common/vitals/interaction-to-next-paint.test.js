@@ -18,7 +18,26 @@ describe('inp', () => {
     }))
   })
 
+  test('does NOT report if not browser scoped', (done) => {
+    jest.doMock('../constants/runtime', () => ({
+      __esModule: true,
+      isBrowserScope: false
+    }))
+
+    getFreshINPImport(metric => {
+      metric.subscribe(({ current: value, attrs }) => {
+        console.log('should not have reported...')
+        expect(1).toEqual(2)
+      })
+      setTimeout(done, 1000)
+    })
+  })
+
   test('reports more than once', (done) => {
+    jest.doMock('../constants/runtime', () => ({
+      __esModule: true,
+      isBrowserScope: true
+    }))
     let triggered = 0
     getFreshINPImport(metric => {
       metric.subscribe(({ current: value }) => {

@@ -18,14 +18,23 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME)
 
-    timeToFirstByte.subscribe(({ current: value, entries }) => {
-      const navEntry = entries[0]
-      this.timeToFirstByte = value
-      this.firstByteToWindowLoad = Math.max(Math.round(navEntry.loadEventEnd - this.timeToFirstByte), 0) // our "frontend" duration
-      this.firstByteToDomContent = Math.max(Math.round(navEntry.domContentLoadedEventEnd - this.timeToFirstByte), 0) // our "dom processing" duration
+    this.timeToFirstByte = 0
+    this.firstByteToWindowLoad = 0 // our "frontend" duration
+    this.firstByteToDomContent = 0 // our "dom processing" duration
 
+    if (isBrowserScope) {
+      timeToFirstByte.subscribe(({ current: value, entries }) => {
+        const navEntry = entries[0]
+        this.timeToFirstByte = Math.max(value, this.timeToFirstByte)
+        this.firstByteToWindowLoad = Math.max(Math.round(navEntry.loadEventEnd - this.timeToFirstByte), this.firstByteToWindowLoad) // our "frontend" duration
+        this.firstByteToDomContent = Math.max(Math.round(navEntry.domContentLoadedEventEnd - this.timeToFirstByte), this.firstByteToDomContent) // our "dom processing" duration
+
+        this.sendRum()
+      })
+    } else {
+      // worker agent build does not get TTFB values, use default 0 values
       this.sendRum()
-    })
+    }
   }
 
   getScheme () {

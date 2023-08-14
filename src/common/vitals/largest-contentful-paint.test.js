@@ -23,10 +23,26 @@ describe('lcp', () => {
     }))
   })
 
+  test('does NOT report if not browser scoped', (done) => {
+    jest.doMock('../constants/runtime', () => ({
+      __esModule: true,
+      isBrowserScope: false
+    }))
+
+    getFreshLCPImport(metric => {
+      metric.subscribe(({ current: value, attrs }) => {
+        console.log('should not have reported...')
+        expect(1).toEqual(2)
+      })
+      setTimeout(done, 1000)
+    })
+  })
+
   test('Does NOT report values if initiallyHidden', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
-      initiallyHidden: true
+      initiallyHidden: true,
+      isBrowserScope: true
     }))
 
     getFreshLCPImport(metric => {
@@ -41,7 +57,8 @@ describe('lcp', () => {
   test('reports only once', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
-      initiallyHidden: false
+      initiallyHidden: false,
+      isBrowserScope: true
     }))
     let triggered = 0
     getFreshLCPImport(metric => metric.subscribe(({ current: value }) => {

@@ -33,5 +33,13 @@ describe('api', () => {
       apiInterface.setApplicationVersion({ version: '1.2.3' })
       expect(console.warn).toHaveBeenCalledWith('New Relic: Failed to execute setApplicationVersion. Expected <String | null>, but got <object>.')
     })
+
+    test('setApplicationVersion replaces existing data if called twice', () => {
+      apiInterface.setApplicationVersion('1.2.3')
+      expect(getInfo('abcd').jsAttributes).toMatchObject({ 'application.version': '1.2.3' })
+
+      apiInterface.setApplicationVersion('4.5.6')
+      expect(getInfo('abcd').jsAttributes).toMatchObject({ 'application.version': '4.5.6' })
+    })
   })
 })

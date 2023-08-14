@@ -1,6 +1,5 @@
 const testDriver = require('../../../tools/jil/index')
-const { fail, condition } = require('./helpers')
-const querypack = require('@newrelic/nr-querypack')
+const { fail } = require('./helpers')
 
 const fetchBrowsers = testDriver.Matcher.withFeature('fetch')
 

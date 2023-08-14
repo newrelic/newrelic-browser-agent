@@ -5,7 +5,7 @@
 import { originals, getLoaderConfig, getRuntime } from '../../../common/config/config'
 import { handle } from '../../../common/event-emitter/handle'
 import { id } from '../../../common/ids/id'
-import { ffVersion, globalScope } from '../../../common/constants/runtime'
+import { ffVersion, globalScope, isBrowserScope } from '../../../common/constants/runtime'
 import { dataSize } from '../../../common/util/data-size'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
@@ -208,15 +208,25 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   function onFetchBeforeStart (args) {
     var opts = args[1] || {}
     var url
-    // argument is USVString
     if (typeof args[0] === 'string') {
+      // argument is USVString
       url = args[0]
-      // argument is Request object
+
+      if (url.length === 0 && isBrowserScope) {
+        url = '' + globalScope.location.href
+      }
     } else if (args[0] && args[0].url) {
+      // argument is Request object
       url = args[0].url
-      // argument is URL object
     } else if (globalScope?.URL && args[0] && args[0] instanceof URL) {
+      // argument is URL object
       url = args[0].href
+    }
+
+    if (typeof url !== 'string' || url.length === 0) {
+      // Short-circuit DT since we could not determine the URL of the fetch call
+      // this is very unlikely to happen
+      return
     }
 
     if (url) {

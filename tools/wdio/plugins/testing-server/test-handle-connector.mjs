@@ -23,12 +23,36 @@ const log = logger('testing-server-connector')
  * expects and scheduling replies.
  */
 export class TestHandleConnector {
+  #assetServerConfig
+  #corsServerConfig
+  #bamServerConfig
+  #commandServerConfig
   #commandServerBase
   #testId
   #pendingExpects = new Set()
 
-  constructor (commandServerPort) {
-    this.#commandServerBase = `http://127.0.0.1:${commandServerPort}`
+  constructor (assetServerConfig, corsServerConfig, bamServerConfig, commandServerConfig) {
+    this.#assetServerConfig = assetServerConfig
+    this.#corsServerConfig = corsServerConfig
+    this.#bamServerConfig = bamServerConfig
+    this.#commandServerConfig = commandServerConfig
+    this.#commandServerBase = `http://127.0.0.1:${commandServerConfig.port}`
+  }
+
+  get assetServerConfig () {
+    return this.#assetServerConfig
+  }
+
+  get corsServerConfig () {
+    return this.#corsServerConfig
+  }
+
+  get bamServerConfig () {
+    return this.#bamServerConfig
+  }
+
+  get commandServerConfig () {
+    return this.#commandServerConfig
   }
 
   async ready () {

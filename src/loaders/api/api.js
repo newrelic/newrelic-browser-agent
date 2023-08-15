@@ -21,7 +21,7 @@ export function setTopLevelCallers () {
   const funcs = [
     'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
     'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
-    'interaction', 'noticeError', 'setUserId'
+    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion'
   ]
   funcs.forEach(f => {
     nr[f] = (...args) => caller(f, ...args)
@@ -107,6 +107,19 @@ export function setAPI (agentIdentifier, forceDrain) {
       return
     }
     return appendJsAttribute('enduser.id', value, 'setUserId', true)
+  }
+
+  /**
+   * Attach the 'applcation.version' attribute onto agent payloads. This may be used in NR queries to group all browser events by a specific customer-defined release.
+   * @param {string|null} value - Application version -- if null, will "unset" the value
+   * @returns @see apiCall
+   */
+  apiInterface.setApplicationVersion = function (value) {
+    if (!(typeof value === 'string' || value === null)) {
+      warn(`Failed to execute setApplicationVersion. Expected <String | null>, but got <${typeof value}>.`)
+      return
+    }
+    return appendJsAttribute('application.version', value, 'setApplicationVersion', false)
   }
 
   apiInterface.interaction = function () {

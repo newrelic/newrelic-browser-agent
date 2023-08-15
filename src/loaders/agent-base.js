@@ -52,9 +52,12 @@ export class AgentBase {
   }
 
   /**
-   * Adds a user-defined application version string to subsequent events on the page. This decorates all payloads with an attribute of `application.version` which is queryable in NR1.
+   * Adds a user-defined application version string to subsequent events on the page.
+   * This decorates all payloads with an attribute of `application.version` which is queryable in NR1.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setapplicationversion/}
-   * @param {string|null} value A string identifier for the application version, useful for tying all browser events to a specific release tag. The value parameter does not have to be unique. Passing a null value unsets any existing value.
+   * @param {string|null} value A string identifier for the application version, useful for
+   * tying all browser events to a specific release tag. The value parameter does not
+   * have to be unique. Passing a null value unsets any existing value.
    */
   setApplicationVersion (value) {
     warn('Call to agent api setApplicationVersion failed. The agent is not currently initialized.')

@@ -11,8 +11,7 @@
     {init}
     {loader}
     <script type="text/javascript">
-      var testId = window.location.search.match(/testId=([^&]*)/)[1]
-      var urlString = 'http://' + NREUM.info.beacon + '/dt/' + testId
+      var urlString = 'http://' + NREUM.info.beacon + '/dt/' + NREUM.info.licenseKey
       var url = new URL(urlString)
       window.fetch(url)
     </script>

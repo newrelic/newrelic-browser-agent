@@ -1,7 +1,7 @@
 import { supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
 
-describe('Ajax events to beacon endpoint', () => {
-  it('not captured when blocked', async () => {
+describe('xhr events deny list', () => {
+  it('does not capture events when blocked', async () => {
     const [ajaxEvents, interactionEvents] = await Promise.all([
       browser.testHandle.expectAjaxEvents(10000, true),
       browser.testHandle.expectInteractionEvents(),
@@ -37,7 +37,7 @@ describe('Ajax events to beacon endpoint', () => {
     ]))
   })
 
-  it('is captured when not blocked', async () => {
+  it('captures events when not blocked', async () => {
     const [ajaxEvents, interactionEvents] = await Promise.all([
       browser.testHandle.expectAjaxEvents(),
       browser.testHandle.expectInteractionEvents(),

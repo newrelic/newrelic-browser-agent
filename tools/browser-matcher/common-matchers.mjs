@@ -59,3 +59,15 @@ export const notSafari = new SpecMatcher()
 
 export const onlyChrome = new SpecMatcher()
   .include('chrome')
+
+/**
+ * Matcher based on ES2022 support
+ * This is a snapshot in time and would need to be updated.
+ */
+export const es2022Support = new SpecMatcher()
+  .include('chrome>=94')
+  .include('edge>=94')
+  .include('firefox>=93')
+  .include('android>=114')
+  .include('safari>=15.4')
+  .include('ios>=15.4')

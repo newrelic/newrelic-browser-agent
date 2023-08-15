@@ -1,5 +1,5 @@
 {
-  "name": "@newrelic/browser-agent.actions.find-pull-request",
+  "name": "@newrelic/browser-agent.actions.build-ab",
   "description": "",
   "private": true,
   "type": "module",

@@ -11,12 +11,13 @@
     {init}
     {loader}
     <script type="text/javascript">
-      var url = '/dt/' + NREUM.info.licenseKey
-      var headers = new Headers()
-      headers.set('initheader', 'initValue')
-      var init = {headers: headers}
-
-      window.fetch(url, init)
+      var stringifiableObject = {
+        urlString: 'http://' + NREUM.info.beacon + '/dt/' + NREUM.info.licenseKey,
+        toString: function () {
+          return this.urlString
+        }
+      }
+      window.fetch(stringifiableObject)
     </script>
   </head>
   <body>

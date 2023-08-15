@@ -6,9 +6,8 @@
  * @file Wraps `fetch` and related methods for instrumentation.
  * This module is used by: ajax, spa.
  */
-import { ee as baseEE } from '../event-emitter/contextual-ee'
+import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
-import { flag } from './wrap-function'
 
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
@@ -16,7 +15,6 @@ var bodyMethods = ['arrayBuffer', 'blob', 'json', 'text', 'formData']
 var Req = globalScope.Request
 var Res = globalScope.Response
 var proto = 'prototype'
-var ctxId = 'nr@context'
 
 const wrapped = {}
 
@@ -76,7 +74,7 @@ export function wrapFetch (sharedEE) {
         // we are wrapping args in an array so we can preserve the reference
         ee.emit(prefix + 'before-start', [args], ctx)
         var dtPayload
-        if (ctx[ctxId] && ctx[ctxId].dt) dtPayload = ctx[ctxId].dt
+        if (ctx[contextId] && ctx[contextId].dt) dtPayload = ctx[contextId].dt
 
         var origPromiseFromFetch = fn.apply(this, args)
 

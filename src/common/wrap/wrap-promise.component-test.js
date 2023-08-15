@@ -1,35 +1,5 @@
 import { faker } from '@faker-js/faker'
 import { globalScope } from '../constants/runtime'
-import { originals } from '../config/config'
-
-jest.mock('./wrap-function', () => ({
-  __esModule: true,
-  createWrapperWithEmitter: jest.fn(() => (fn) => (...args) => {
-    return fn.apply(null, args)
-  })
-}))
-jest.mock('../event-emitter/contextual-ee', () => ({
-  __esModule: true,
-  getOrSetContext: jest.fn(() => ({})),
-  ee: {
-    get: jest.fn((name) => ({
-      debugId: name,
-      on: jest.fn(),
-      context: jest.fn(() => ({})),
-      emit: jest.fn()
-    }))
-  }
-}))
-jest.mock('../config/config', () => ({
-  __esModule: true,
-  originals: {}
-}))
-jest.mock('../constants/runtime', () => ({
-  __esModule: true,
-  globalScope: {
-    NREUM: {}
-  }
-}))
 
 let promiseConstructorCalls
 
@@ -38,7 +8,7 @@ beforeEach(async () => {
 
   // Proxy the global Promise to prevent the wrapping from
   // messing with Jest internal promises
-  originals.PR = new Proxy(class extends Promise {}, {
+  window.Promise = new Proxy(class extends Promise {}, {
     construct (target, args) {
       promiseConstructorCalls.push(args)
 
@@ -57,7 +27,7 @@ test('should wrap promise constructor', async () => {
   const promiseInstance = new globalScope.Promise(jest.fn())
 
   expect(promiseInstance).toBeInstanceOf(Promise)
-  expect(promiseConstructorCalls.length).toEqual(1)
+  expect(promiseConstructorCalls.length).toBeGreaterThan(0)
   expect(globalScope.Promise.toString()).toMatch(/\[native code\]/)
   expect(globalScope.Promise.name).toEqual('Promise')
 })

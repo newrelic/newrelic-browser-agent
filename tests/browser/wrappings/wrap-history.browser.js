@@ -4,6 +4,7 @@
  */
 
 const jil = require('../../../tools/jil/driver/browser.js')
+const { bundleId } = require('../../../src/common/ids/bundle-id')
 
 jil.browserTest('history functions are wrapped', function (t) {
   // wrap
@@ -42,5 +43,5 @@ jil.browserTest('two modified properties are shown on the history object', funct
 })
 
 function isWrapped (fn) {
-  return fn && (typeof fn['nr@original'] === 'function')
+  return fn && (typeof fn[`nr@original:${bundleId}`] === 'function')
 }

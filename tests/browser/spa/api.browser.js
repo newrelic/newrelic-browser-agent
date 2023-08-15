@@ -7,6 +7,7 @@ let originalSetTimeout = global.setTimeout
 
 const jil = require('../../../tools/jil/driver/browser.js')
 const { getInfo } = require('../../../src/common/config/config')
+const { bundleId } = require('../../../src/common/ids/bundle-id')
 
 let raf = global.reqiestAnimationFrame || function (fn) {
   return originalSetTimeout(fn, 16)
@@ -906,7 +907,7 @@ jil.browserTest('interaction outside wrapped function', function (t) {
 
   t.plan(3 + validator.count)
 
-  setTimeout['nr@original'].call(window, function () {
+  setTimeout[`nr@original:${bundleId}`].call(window, function () {
     var interaction = newrelic.interaction()
 
     helpers.startInteraction(onInteractionStart, afterInteractionDone, {
@@ -1036,7 +1037,7 @@ jil.browserTest('createTracer no name, no callback', function (t) {
   function onInteractionStart (cb) {
     var start = helpers.now()
     cb()
-    setTimeout['nr@original'].call(window, newrelic.interaction().createTracer(), 50)
+    setTimeout[`nr@original:${bundleId}`].call(window, newrelic.interaction().createTracer(), 50)
     newrelic.interaction().onEnd(function () {
       t.ok(helpers.now() - start >= 50)
     })

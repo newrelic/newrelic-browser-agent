@@ -1,0 +1,10 @@
+{
+  "name": "@newrelic/browser-agent.actions.fastly-verify",
+  "description": "",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "node-fetch": "^3.3.2",
+    "yargs": "^17.7.2"
+  }
+}

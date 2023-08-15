@@ -28,7 +28,7 @@ const toAggregate = {
   mousing: [1000, 2000],
   touching: [1000, 2000]
 }
-const MAX_TRACE_DURATION = 1 * 60 * 1000 // 10 minutes
+const MAX_TRACE_DURATION = 10 * 60 * 1000 // 10 minutes
 const REQ_THRESHOLD_TO_SEND = 30
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
 

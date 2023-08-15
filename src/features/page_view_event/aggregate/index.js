@@ -53,9 +53,9 @@ export class Aggregate extends AggregateBase {
     // These 3 values should've been recorded after load and before this func runs. They are part of the minimum required for PageView events to be created.
     // Following PR #428, which demands that all agents send RUM call, these need to be sent even outside of the main window context where PerformanceTiming
     // or PerformanceNavigationTiming do not exists. Hence, they'll be filled in by 0s instead in, for example, worker threads that still init the PVE module.
-    this.aggregator.store('measures', 'be', { value: isBrowserScope ? this.timeToFirstByte : 0 })
-    this.aggregator.store('measures', 'fe', { value: isBrowserScope ? this.firstByteToWindowLoad : 0 })
-    this.aggregator.store('measures', 'dc', { value: isBrowserScope ? this.firstByteToDomContent : 0 })
+    this.aggregator.store('measures', 'be', { value: this.timeToFirstByte })
+    this.aggregator.store('measures', 'fe', { value: this.firstByteToWindowLoad })
+    this.aggregator.store('measures', 'dc', { value: this.firstByteToDomContent })
 
     const queryParameters = {
       tt: info.ttGuid,

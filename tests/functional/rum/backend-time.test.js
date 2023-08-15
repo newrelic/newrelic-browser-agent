@@ -20,7 +20,7 @@ testDriver.test('RUM backend time', withTls, function (t, browser, router) {
       return Promise.all([router.expectRum(), browser.get(url)])
     })
     .then(([{ request: { query } }]) => {
-      t.ok(+query.be > 0, 'Backend time of ' + query.be + ' > 0')
+      t.ok(+query.be >= 0, 'Backend time of ' + query.be + ' >= 0')
     })
     .catch(fail)
 

@@ -15,7 +15,7 @@ if (isBrowserScope && typeof PerformanceNavigationTiming !== 'undefined' && !isi
     // convert real timestamps to relative timestamps to match web-vitals behavior
     for (let key in globalScope?.performance?.timing || {}) entry[key] = Math.max(globalScope?.performance?.timing[key] - offset, 0)
 
-    // ttfb is equiv to document's responseStart property in timing API
+    // ttfb is equiv to document's responseStart property in timing API --> https://developer.mozilla.org/en-US/docs/Web/API/PerformanceTiming/responseStart
     timeToFirstByte.update({ value: entry.responseStart, entries: [entry] })
   }
 }

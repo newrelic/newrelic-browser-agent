@@ -10,7 +10,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     await browser.destroyAgentSession()
   })
 
-  it('should be gzipped', async () => {
+  it('should allow for gzip', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
       .then(() => browser.waitForAgentLoad())
 
@@ -20,6 +20,35 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
       harvestContents.query.attributes.includes('content_encoding') &&
       harvestContents.query.attributes.includes('gzip')
     )).toEqual(true)
+
+    expect(Array.isArray(harvestContents.body)).toEqual(true)
+    expect(harvestContents.body.length).toBeGreaterThan(0)
+    expect(Object.keys(harvestContents.body[0])).toEqual(expect.arrayContaining(['data', 'timestamp', 'type']))
+  })
+
+  it('should allow for json', async () => {
+    await browser.testHandle.scheduleReply('assetServer', {
+      test: function (request) {
+        const url = new URL(request.url, 'resolve://')
+        return (url.pathname.includes('compressor'))
+      },
+      statusCode: 500,
+      body: ''
+    })
+
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      .then(() => browser.waitForAgentLoad())
+
+    const { request: harvestContents } = await browser.testHandle.expectBlob()
+
+    expect((
+      harvestContents.query.attributes.includes('content_encoding') ||
+      harvestContents.query.attributes.includes('gzip')
+    )).toEqual(false)
+
+    expect(Array.isArray(harvestContents.body)).toEqual(true)
+    expect(harvestContents.body.length).toBeGreaterThan(0)
+    expect(Object.keys(harvestContents.body[0])).toEqual(expect.arrayContaining(['data', 'timestamp', 'type']))
   })
 
   it('should match expected payload - standard', async () => {

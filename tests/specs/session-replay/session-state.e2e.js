@@ -1,12 +1,5 @@
 import { supportsMultipleTabs, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { RRWEB_EVENT_TYPES, config, getSR } from './helpers.js'
-
-/** The "mode" with which the session replay is recording */
-const MODE = {
-  OFF: 0,
-  FULL: 1,
-  ERROR: 2
-}
+import { RRWEB_EVENT_TYPES, config, getSR, MODE } from './helpers.js'
 
 describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
   beforeEach(async () => {

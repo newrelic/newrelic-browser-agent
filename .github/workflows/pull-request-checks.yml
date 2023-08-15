@@ -7,25 +7,38 @@ on:
 jobs:
   # Jobs for pull_request events
 
-  jest-unit:
-    name: Jest unit tests
+  jest-tests:
+    name: Jest tests
     if: github.event_name == 'pull_request'
     uses: ./.github/workflows/jest.yml
     with:
       ref: ${{ github.ref }}
-      collection: 'unit'
       coverage: true
     secrets: inherit
 
-  jest-component:
-    name: Jest component tests
+  types-test:
+    runs-on: ubuntu-latest
+    name: Types Test
     if: github.event_name == 'pull_request'
-    uses: ./.github/workflows/jest.yml
-    with:
-      ref: ${{ github.ref }}
-      collection: 'component'
-      coverage: true
-    secrets: inherit
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Running types build
+        run: |
+          npm run npm:build:types
+      - name: Running types tests
+        run: |
+          npm run test:types
 
   eslint:
     name: ESLint

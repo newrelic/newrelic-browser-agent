@@ -5,6 +5,112 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "ccfe51063cd59e946e20ec870ce5979b1ca73054",
+          "message": "SPA feature respects ajax deny_list for fetch",
+          "issues": [
+            "633"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "cff7bc4fbc4cd9620e319b3f6f2861515f7b01a8",
+          "message": "prevent dollar symbol only variable names",
+          "issues": [
+            "631"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "27a1b044ae239d83c85c7e25f69979b23b985e54",
+          "message": "Undefined deny list ignores block internal",
+          "issues": [
+            "629"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "6887940a01f74761840058742e04efd0f9130bb9",
+          "message": "Fix serialization issue with array data",
+          "issues": [
+            "621"
+          ]
+        }
+      ],
+      "version": "1.237.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "9364f131-b496-4c7f-845f-8051d9009cb8",
+      "createTime": "2023-08-02T19:25:20.815Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "ca43edfd1c6d477a647e7ce97b6f975134ea1b35",
+          "message": "Stop reporting ajax events going to same beacon",
+          "issues": [
+            "609"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "d616f64e0b6369becea6007a428061932c534f48",
+          "message": "Add warning for large payloads",
+          "issues": [
+            "620"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "dc4fb1babb53b2dcb0abd045ba59390d47a58cb4",
+          "message": "Remove fetch keep-alive unhandled rejection",
+          "issues": [
+            "625"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "3d9f2c060d0c06b70c14fc8d2b57828ad78cf7ea",
+          "message": "prevent invalid error stack traces",
+          "issues": [
+            "617"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "14d42949668fad44f1553179f2c6897a84d4b771",
+          "message": "Defining agent api methods for ts types",
+          "issues": [
+            "613"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "e393c966239bae2054c6878ce0c0c53180fabc5d",
+          "message": "reduce jserrors wrapping and remove onerror use",
+          "issues": [
+            "614"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "389b5ad2c17b74574f98ec6bc24d726061b8a3c0",
+          "message": "Fix potential property of undefined errors",
+          "issues": [
+            "610"
+          ]
+        }
+      ],
+      "version": "1.237.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "cbb339b5-4ff3-4667-a644-d4626a9a09d3",
+      "createTime": "2023-07-28T00:04:01.802Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "a702e2333b31f9088e7076727eb4a6cf26615841",
           "message": "Handle chunk load promise error introduced in 1.235.0 - NR-129244",
           "issues": [
@@ -235,5 +341,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-06-27T14:08:12.549Z"
+  "updateTime": "2023-08-02T19:25:20.815Z"
 }

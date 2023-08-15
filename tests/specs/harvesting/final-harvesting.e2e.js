@@ -50,10 +50,11 @@ describe('final harvesting', () => {
   })
 
   it.withBrowsersMatching(supportsFetch)('should use sendBeacon for unload harvests', async () => {
-    await browser.url(await browser.testHandle.assetURL('final-harvest.html'))
-      .then(() => browser.waitForAgentLoad())
-
-    await browser.pause(500)
+    await Promise.all([
+      browser.testHandle.expectTimings(),
+      browser.url(await browser.testHandle.assetURL('final-harvest.html'))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
     const finalHarvest = Promise.all([
       browser.testHandle.expectTimings(),
@@ -115,79 +116,30 @@ describe('final harvesting', () => {
     expect(sendBeaconUsage).toContain('true')
   })
 
-  it.withBrowsersMatching(supportsFetch)('should use fetch with keepalive when sendBeacon returns false', async () => {
-    await browser.url(await browser.testHandle.assetURL('final-harvest.html'))
-      .then(() => browser.waitForAgentLoad())
-
-    await browser.pause(500)
-
-    const finalHarvest = Promise.all([
+  it.withBrowsersMatching(reliableUnload)('should not send pageHide event twice', async () => {
+    await Promise.all([
       browser.testHandle.expectTimings(),
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectMetrics(),
-      browser.testHandle.expectErrors(),
-      browser.testHandle.expectResources()
+      browser.url(await browser.testHandle.assetURL('pagehide.html'))
+        .then(() => browser.waitForAgentLoad())
     ])
 
-    await browser.execute(function () {
-      newrelic.noticeError(new Error('hippo hangry'))
-      newrelic.addPageAction('DummyEvent', { free: 'tacos' })
+    await Promise.all([
+      browser.testHandle.expectTimings(),
+      $('#btn1').click()
+    ])
 
-      navigator.sendBeacon = function () {
-        return false
-      }
-    })
+    const [unloadTimings] = await Promise.all([
+      browser.testHandle.expectTimings(),
+      browser.url(await browser.testHandle.assetURL('/'))
+    ])
 
-    await browser.url(await browser.testHandle.assetURL('/'))
-
-    const [timingsResults, ajaxEventsResults, metricsResults, errorsResults, resourcesResults] = await finalHarvest
-
-    expect(timingsResults.request.body).toEqual(expect.arrayContaining([
+    expect(unloadTimings.request.body).toEqual(expect.arrayContaining([
       expect.objectContaining({
         name: 'unload',
         type: 'timing'
       })
     ]))
-    expect(timingsResults.request.body).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        name: 'pageHide',
-        type: 'timing'
-      })
-    ]))
-    expect(ajaxEventsResults.request.body.length).toBeGreaterThan(0)
-    expect(metricsResults.request.body.sm.length).toBeGreaterThan(0)
-    expect(errorsResults.request.body.err).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        params: expect.objectContaining({
-          message: 'hippo hangry'
-        })
-      })
-    ]))
-    expect(errorsResults.request.body.xhr.length).toBeGreaterThan(0)
-    expect(resourcesResults.request.body.res.length).toBeGreaterThan(0)
-  })
-
-  it.withBrowsersMatching(reliableUnload)('should not send pageHide event twice', async () => {
-    await browser.url(await browser.testHandle.assetURL('pagehide.html'))
-      .then(() => browser.waitForAgentLoad())
-
-    await browser.pause(500)
-
-    await $('#btn1').click()
-
-    const timingsPromise = browser.testHandle.expectTimings()
-
-    await browser.url(await browser.testHandle.assetURL('/'))
-
-    const timingsResults = await timingsPromise
-
-    expect(timingsResults.request.body).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        name: 'unload',
-        type: 'timing'
-      })
-    ]))
-    expect(timingsResults.request.body).not.toEqual(expect.arrayContaining([
+    expect(unloadTimings.request.body).not.toEqual(expect.arrayContaining([
       expect.objectContaining({
         name: 'pageHide',
         type: 'timing'

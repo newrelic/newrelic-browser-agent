@@ -324,6 +324,6 @@ function wait (ms = 0) {
 
 function primeSessionAndReplay (sess = new SessionEntity({ agentIdentifier, key: 'SESSION', storage: new LocalMemory() })) {
   session = sess
-  configure(agentIdentifier, { info, runtime: { session } }, 'test', true)
+  configure(agentIdentifier, { info, runtime: { session }, init: {} }, 'test', true)
   sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
 }

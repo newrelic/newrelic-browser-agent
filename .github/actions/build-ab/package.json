@@ -1,0 +1,12 @@
+{
+  "name": "@newrelic/browser-agent.actions.build-ab",
+  "description": "",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.385.0",
+    "@aws-sdk/client-sts": "^3.385.0",
+    "node-fetch": "^3.3.2",
+    "yargs": "^17.7.2"
+  }
+}

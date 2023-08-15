@@ -5,8 +5,7 @@
 export FORCE_COLOR=1
 
 npm run lint
-npm run test:unit -- --onlyChanged
-npm run test:component -- --onlyChanged
+npm run test -- --onlyChanged
 
 # Include updated caniuse-lite database used by browserslist
 npx browserslist@latest --update-db

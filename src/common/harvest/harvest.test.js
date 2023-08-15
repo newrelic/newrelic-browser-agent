@@ -3,6 +3,7 @@ import { faker } from '@faker-js/faker'
 import * as encodeModule from '../url/encode'
 import * as submitDataModule from '../util/submit-data'
 import * as configModule from '../config/config'
+import { warn } from '../util/console'
 import { applyFnToProps } from '../util/traverse'
 
 import { Harvest } from './harvest'
@@ -288,6 +289,20 @@ describe('_send', () => {
     })
   })
 
+  test('should warn (once) if payload is large', () => {
+    spec.payload.body = 'x'.repeat(1024 * 1024) // ~1mb string
+
+    const result = harvestInstance._send(spec)
+
+    expect(result).toEqual(true)
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('The Browser Agent is attempting to send a very large payload'))
+    expect(warn).toHaveBeenCalledTimes(1)
+
+    const result2 = harvestInstance._send(spec)
+    expect(result2).toEqual(true)
+    expect(warn).toHaveBeenCalledTimes(1)
+  })
+
   test('should set body to events when endpoint is events', () => {
     spec.endpoint = 'events'
     spec.payload.body.e = faker.lorem.sentence()
@@ -438,41 +453,6 @@ describe('_send', () => {
       ...xhrState,
       responseText: undefined,
       sent: true
-    })
-  })
-
-  test('should fallback to fetchKeepAlive when beacon returns false', async () => {
-    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.beacon)
-    jest.mocked(submitDataModule.beacon).mockReturnValue(false)
-    spec.opts.unload = true
-
-    const results = harvestInstance._send(spec)
-    await new Promise(process.nextTick)
-
-    expect(results).toEqual(true)
-    expect(submitDataModule.fetchKeepAlive).toHaveBeenCalledWith({
-      body: JSON.stringify(spec.payload.body),
-      headers: [{ key: 'content-type', value: 'text/plain' }],
-      url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
-    })
-  })
-
-  test('should not throw an exception if fetchKeepAlive throws error', async () => {
-    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.beacon)
-    jest.mocked(submitDataModule.beacon).mockReturnValue(false)
-    jest.mocked(submitDataModule.fetchKeepAlive).mockImplementation(() => {
-      throw new Error(faker.lorem.sentence())
-    })
-    spec.opts.unload = true
-
-    const results = harvestInstance._send(spec)
-    await new Promise(process.nextTick)
-
-    expect(results).toEqual(true)
-    expect(submitDataModule.fetchKeepAlive).toHaveBeenCalledWith({
-      body: JSON.stringify(spec.payload.body),
-      headers: [{ key: 'content-type', value: 'text/plain' }],
-      url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
     })
   })
 })

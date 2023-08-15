@@ -147,6 +147,14 @@ export class Aggregate extends AggregateBase {
       // Capture metrics for size of custom attributes
       const jsAttributes = stringify(info.jsAttributes)
       this.storeSupportabilityMetrics('PageSession/Feature/CustomData/Bytes', jsAttributes === '{}' ? 0 : jsAttributes.length)
+
+      // Capture metrics for performance markers and measures
+      if (typeof performance !== 'undefined') {
+        const markers = performance.getEntriesByType('mark')
+        const measures = performance.getEntriesByType('measure')
+        this.storeSupportabilityMetrics('Generic/Performance/Mark/Seen', markers.length)
+        this.storeSupportabilityMetrics('Generic/Performance/Measure/Seen', measures.length)
+      }
     } catch (e) {
       // do nothing
     }

@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.237.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.237.0...v1.237.1) (2023-08-02)
+
+
+### Bug Fixes
+
+* Fix serialization issue with array data ([#621](https://github.com/newrelic/newrelic-browser-agent/issues/621)) ([6887940](https://github.com/newrelic/newrelic-browser-agent/commit/6887940a01f74761840058742e04efd0f9130bb9))
+* prevent dollar symbol only variable names ([#631](https://github.com/newrelic/newrelic-browser-agent/issues/631)) ([cff7bc4](https://github.com/newrelic/newrelic-browser-agent/commit/cff7bc4fbc4cd9620e319b3f6f2861515f7b01a8))
+* SPA feature respects ajax deny_list for fetch ([#633](https://github.com/newrelic/newrelic-browser-agent/issues/633)) ([ccfe510](https://github.com/newrelic/newrelic-browser-agent/commit/ccfe51063cd59e946e20ec870ce5979b1ca73054))
+* Undefined deny list ignores block internal ([#629](https://github.com/newrelic/newrelic-browser-agent/issues/629)) ([27a1b04](https://github.com/newrelic/newrelic-browser-agent/commit/27a1b044ae239d83c85c7e25f69979b23b985e54))
+
+## [1.237.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.236.0...v1.237.0) (2023-07-28)
+
+
+### Features
+
+* Add warning for large payloads ([#620](https://github.com/newrelic/newrelic-browser-agent/issues/620)) ([d616f64](https://github.com/newrelic/newrelic-browser-agent/commit/d616f64e0b6369becea6007a428061932c534f48))
+* reduce jserrors wrapping and remove onerror use ([#614](https://github.com/newrelic/newrelic-browser-agent/issues/614)) ([e393c96](https://github.com/newrelic/newrelic-browser-agent/commit/e393c966239bae2054c6878ce0c0c53180fabc5d))
+* Stop reporting ajax events going to same beacon ([#609](https://github.com/newrelic/newrelic-browser-agent/issues/609)) ([ca43edf](https://github.com/newrelic/newrelic-browser-agent/commit/ca43edfd1c6d477a647e7ce97b6f975134ea1b35))
+
+
+### Bug Fixes
+
+* Defining agent api methods for ts types ([#613](https://github.com/newrelic/newrelic-browser-agent/issues/613)) ([14d4294](https://github.com/newrelic/newrelic-browser-agent/commit/14d42949668fad44f1553179f2c6897a84d4b771))
+* Fix potential property of undefined errors ([#610](https://github.com/newrelic/newrelic-browser-agent/issues/610)) ([389b5ad](https://github.com/newrelic/newrelic-browser-agent/commit/389b5ad2c17b74574f98ec6bc24d726061b8a3c0))
+* prevent invalid error stack traces ([#617](https://github.com/newrelic/newrelic-browser-agent/issues/617)) ([3d9f2c0](https://github.com/newrelic/newrelic-browser-agent/commit/3d9f2c060d0c06b70c14fc8d2b57828ad78cf7ea))
+* Remove fetch keep-alive unhandled rejection ([#625](https://github.com/newrelic/newrelic-browser-agent/issues/625)) ([dc4fb1b](https://github.com/newrelic/newrelic-browser-agent/commit/dc4fb1babb53b2dcb0abd045ba59390d47a58cb4))
+
 ## [1.236.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.235.0...v1.236.0) (2023-06-27)
 
 

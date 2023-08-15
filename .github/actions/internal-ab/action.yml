@@ -1,0 +1,80 @@
+name: Internal A/B Testing
+descriptions: Builds and deploys a new A/B testing script for internal environments
+
+inputs:
+  nr_environment:
+    description: 'Target New Relic environment for the A/B script.'
+    required: true
+  nrba_app_id:
+    description: 'App id to insert into the NRBA configuration.'
+    required: true
+  nrba_license_key:
+    description: 'License key to insert into the NRBA configuration.'
+    required: true
+  nrba_current_script_url:
+    description: 'URL for the script to use as the "current" version NRBA loader.'
+    required: false
+  nrba_next_script_url:
+    description: 'URL for the script to use as the "next" version NRBA loader.'
+    required: false
+  aws_access_key_id:
+    description: 'AWS access key id used for authentication.'
+    required: true
+  aws_secret_access_key:
+    description: 'AWS secret access key used for authentication.'
+    required: true
+  aws_region:
+    description: "AWS region where S3 bucket is located."
+    required: false
+    default: us-east-1
+  aws_role:
+    description: "AWS role ARN that needs to be used for authentication."
+    required: true
+  aws_bucket_name:
+    description: "S3 bucket name where files need to be uploaded."
+    required: true
+  fastly_key:
+    description: 'Fastly access key used for authentication.'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build a/b script
+      uses: ./.github/actions/build-ab
+      with:
+        aws_access_key_id: ${{ inputs.aws_access_key_id }}
+        aws_secret_access_key: ${{ inputs.aws_secret_access_key }}
+        aws_role: ${{ inputs.aws_role }}
+        aws_bucket_name: ${{ inputs.aws_bucket_name }}
+        nr_environment: ${{ inputs.nr_environment }}
+        nrba_app_id: ${{ inputs.nrba_app_id }}
+        nrba_license_key: ${{ inputs.nrba_license_key }}
+        nrba_current_script_url: ${{ inputs.nrba_current_script_url }}
+        nrba_next_script_url: ${{ inputs.nrba_next_script_url }}
+    - name: Upload a/b script
+      id: ab-s3-upload
+      uses: ./.github/actions/s3-upload
+      with:
+        aws_access_key_id: ${{ inputs.aws_access_key_id }}
+        aws_secret_access_key: ${{ inputs.aws_secret_access_key }}
+        aws_role: ${{ inputs.aws_role }}
+        aws_bucket_name: ${{ inputs.aws_bucket_name }}
+        local_dir: $GITHUB_WORKSPACE/temp
+        bucket_dir: internal/
+    - name: Gather a/b purge paths
+      id: ab-purge-paths
+      run: echo "results=$(echo '${{ steps.ab-s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test(".*?\\.js$")) + " "')" >> $GITHUB_OUTPUT
+      shell: bash
+    - name: Purge a/b fastly cache
+      uses: ./.github/actions/fastly-purge
+      with:
+        fastly_key: ${{ inputs.fastly_key }}
+        fastly_service: js-agent.newrelic.com
+        purge_path: ${{ steps.ab-purge-paths.outputs.results }}
+    - name: Verify a/b assets
+      uses: ./.github/actions/fastly-verify
+      with:
+        fastly_key: ${{ inputs.fastly_key }}
+        fastly_service: js-agent.newrelic.com
+        asset_path: ${{ join(fromJson(steps.ab-s3-upload.outputs.results).*.Key, ' ') }}

@@ -7,7 +7,9 @@
  */
 
 import { ee } from '../event-emitter/contextual-ee'
-export const flag = 'nr@original'
+import { bundleId } from '../ids/bundle-id'
+
+export const flag = `nr@original:${bundleId}`
 
 /**
  * A convenience alias of `hasOwnProperty`.
@@ -107,26 +109,24 @@ export function createWrapperWithEmitter (emitter, always) {
 
   /**
    * Creates wrapper functions around each of an array of methods on a specified object.
-   * @param {Object} obj - The object to which the specified methods belong.
-   * @param {string[]} methods - An array of method names to be wrapped.
-   * @param {string} [prefix=''] - A prefix to add to the names of emitted events. If `-` is the first character, also
-   *     adds the method name before the prefix.
-   * @param {function|object} [getContext] - The function or object that will serve as the 'this' context for handlers
-   *     of events emitted by this wrapper.
-   * @param {boolean} [bubble=false] - If `true`, emitted events should also bubble up to the old emitter upon which
-   *     the `emitter` in the current scope was based (if it defines one).
+   * @param {Object} obj The object to which the specified methods belong.
+   * @param {string[]} methods An array of method names to be wrapped.
+   * @param {string} [prefix=''] A prefix to add to the names of emitted events. If `-` is the first character, also
+   * adds the method name before the prefix.
+   * @param {function|object} [getContext] The function or object that will serve as the 'this' context for handlers
+   * of events emitted by this wrapper.
+   * @param {boolean} [bubble=false] If `true`, emitted events should also bubble up to the old emitter upon which
+   * the `emitter` in the current scope was based (if it defines one).
    */
   function inPlace (obj, methods, prefix, getContext, bubble) {
     if (!prefix) prefix = ''
-    // If prefix starts with '-' set this boolean to add the method name to the prefix before passing each one to wrap.
-    var prependMethodPrefix = (prefix.charAt(0) === '-')
-    var fn
-    var method
-    var i
 
-    for (i = 0; i < methods.length; i++) {
-      method = methods[i]
-      fn = obj[method]
+    // If prefix starts with '-' set this boolean to add the method name to the prefix before passing each one to wrap.
+    const prependMethodPrefix = (prefix.charAt(0) === '-')
+
+    for (let i = 0; i < methods.length; i++) {
+      const method = methods[i]
+      const fn = obj[method]
 
       // Unless fn is both wrappable and unwrapped, bail so we don't add extra properties with undefined values.
       if (notWrappable(fn)) continue
@@ -216,32 +216,4 @@ function copy (from, to, emitter) {
  */
 function notWrappable (fn) {
   return !(fn && fn instanceof Function && fn.apply && !fn[flag])
-}
-
-/**
- * Creates a wrapped version of a function using a specified wrapper function. The new wrapped function references the
- * original function. Also copies the properties of the original function to the wrapped function.
- * @param {function} fn - A function to be wrapped.
- * @param {function} wrapper - A higher order function that returns a new function, which executes the function passed
- *     to the higher order function as an argument.
- * @returns {function} A wrapped function with an internal reference to the original function.
- */
-export function wrapFunction (fn, wrapper) {
-  var wrapped = wrapper(fn)
-  wrapped[flag] = fn
-  copy(fn, wrapped, ee)
-  return wrapped
-}
-
-/**
- * Replaces a function with a wrapped version of itself. To preserve object references, rather than taking the function
- * itself as an argument, takes the object on which the particular named function is a property.
- * @param {Object} obj - The object on which the named function is a property.
- * @param {string} fnName - The name of the function to be wrapped.
- * @param {function} wrapper - A higher order function that returns a new function, which executes the function passed
- *     to the higher order function as an argument.
- */
-export function wrapInPlace (obj, fnName, wrapper) {
-  var fn = obj[fnName]
-  obj[fnName] = wrapFunction(fn, wrapper)
 }

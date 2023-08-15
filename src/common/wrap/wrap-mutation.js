@@ -9,8 +9,7 @@
 
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
-import { originals } from '../config/config'
-import { isBrowserScope } from '../constants/runtime'
+import { globalScope, isBrowserScope } from '../constants/runtime'
 
 const wrapped = {}
 
@@ -30,7 +29,7 @@ export function wrapMutation (sharedEE) {
   wrapped[ee.debugId] = true // otherwise, first feature to wrap mutations
 
   var wrapFn = wfn(ee)
-  var OriginalObserver = originals.MO
+  var OriginalObserver = globalScope.MutationObserver
 
   if (OriginalObserver) {
     window.MutationObserver = function WrappedMutationObserver (cb) {

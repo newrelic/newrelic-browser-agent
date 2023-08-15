@@ -59,7 +59,8 @@ export default (env, asyncChunkName) => {
         namespace: `NRBA-${env.VERSION}.${env.SUBVERSION}`,
         filename: '[file].map[query]',
         moduleFilenameTemplate: 'nr-browser-agent://[namespace]/[resource-path]?[loaders]',
-        publicPath: env.PUBLIC_PATH
+        publicPath: env.PUBLIC_PATH,
+        append: env.SUBVERSION === 'PROD' ? false : '//# sourceMappingURL=[url]'
       }),
       new NRBAChunkingPlugin({
         asyncChunkName

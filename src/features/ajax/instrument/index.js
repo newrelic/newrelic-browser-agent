@@ -221,6 +221,8 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     } else if (globalScope?.URL && args[0] && args[0] instanceof URL) {
       // argument is URL object
       url = args[0].href
+    } else if (typeof args[0].toString === 'function') {
+      url = args[0].toString()
     }
 
     if (typeof url !== 'string' || url.length === 0) {
@@ -239,7 +241,11 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
       return
     }
 
-    if (typeof args[0] === 'string' || (globalScope?.URL && args[0] && args[0] instanceof URL)) {
+    if (args[0] && args[0].headers) {
+      if (addHeaders(args[0].headers, payload)) {
+        this.dt = payload
+      }
+    } else {
       var clone = {}
 
       for (var key in opts) {
@@ -255,10 +261,6 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
         args[1] = clone
       } else {
         args.push(clone)
-      }
-    } else if (args[0] && args[0].headers) {
-      if (addHeaders(args[0].headers, payload)) {
-        this.dt = payload
       }
     }
 

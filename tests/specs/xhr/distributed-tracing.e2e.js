@@ -111,6 +111,11 @@ const fetchScenarios = [
     name: 'when fetch is called with a URL object argument',
     sameOriginFile: 'spa/dt/fetch-dt-sameorigin-load-4.html',
     crossOriginFile: 'spa/dt/fetch-dt-crossorigin-load-4.html'
+  },
+  {
+    name: 'when fetch is called with an object argument containing a toString function',
+    sameOriginFile: 'spa/dt/fetch-dt-sameorigin-load-5.html',
+    crossOriginFile: 'spa/dt/fetch-dt-crossorigin-load-5.html'
   }
 ]
 

@@ -36,6 +36,9 @@ jobs:
       - name: Running types build
         run: |
           npm run npm:build:types
+      - name: Running types tests
+        run: |
+          npm run test:types
 
   eslint:
     name: ESLint

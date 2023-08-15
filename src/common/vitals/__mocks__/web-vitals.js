@@ -1,6 +1,6 @@
-const vital = { value: 1, entries: [{ startTime: 1, name: 'name', size: 1, id: 'id', url: 'url', element: { tagName: 'tagName' } }], id: 'id' }
-
 const continuouslyReportMetric = c => {
+  let count = 0
+  const vital = { value: 1, entries: [{ startTime: 1, name: 'name', size: 1, id: `id${++count}`, url: 'url', element: { tagName: 'tagName' } }], id: 'id' }
   // report a new metric every quarter second
   const callcb = () => {
     setTimeout(() => {

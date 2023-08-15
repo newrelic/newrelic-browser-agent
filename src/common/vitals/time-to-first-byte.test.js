@@ -9,8 +9,8 @@ const getFreshTTFBImport = async (codeToRun) => {
   codeToRun(timeToFirstByte)
 }
 
-describe('lcp', () => {
-  test('reports lcp from web-vitals', (done) => {
+describe('ttfb', () => {
+  test('reports ttfb from web-vitals', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
       isiOS: false,
@@ -39,7 +39,7 @@ describe('lcp', () => {
     })
   })
 
-  test('does NOT report lcp from web-vitals if no PNT', (done) => {
+  test('does NOT report ttfb from web-vitals if no PNT', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
       isiOS: false,
@@ -56,7 +56,7 @@ describe('lcp', () => {
     })
   })
 
-  test('does NOT report lcp from web-vitals if is iOS', (done) => {
+  test('does NOT report ttfb from web-vitals if is iOS', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
       isiOS: true,
@@ -93,6 +93,27 @@ describe('lcp', () => {
       metric.subscribe(({ current: value, attrs }) => {
         expect(value).toEqual(1) // responseStart (2) - offset (1) === 1
         done()
+      })
+    })
+  })
+
+  test('multiple subs get same value', done => {
+    jest.doMock('../constants/runtime', () => ({
+      __esModule: true,
+      isBrowserScope: true,
+      isiOS: false
+    }))
+    global.PerformanceNavigationTiming = jest.fn()
+    let sub1, sub2
+    getFreshTTFBImport(metric => {
+      const remove1 = metric.subscribe(({ entries }) => {
+        sub1 ??= entries[0].id
+        if (sub1 === sub2) { remove1(); remove2(); done() }
+      })
+
+      const remove2 = metric.subscribe(({ entries }) => {
+        sub2 ??= entries[0].id
+        if (sub1 === sub2) { remove1(); remove2(); done() }
       })
     })
   })

@@ -14,13 +14,13 @@ describe('vital-metric', () => {
     expect(vitalMetric).toMatchObject({
       name: 'test',
       attrs: {},
-      entries: undefined
+      entries: []
     })
 
     expect(vitalMetric.value).toMatchObject({
       name: 'test',
       attrs: {},
-      entries: undefined,
+      entries: [],
       previous: undefined,
       current: undefined
     })
@@ -41,7 +41,7 @@ describe('vital-metric', () => {
     expect(vitalMetric.value).toMatchObject({
       previous: i - 1,
       current: i,
-      entries: [{ test: i + 1 }],
+      entries: [{ test: i }, { test: i + 1 }],
       attrs: { test: i + 2 }
     })
   })
@@ -73,6 +73,21 @@ describe('vital-metric', () => {
     })
 
     vitalMetric.update({ value: 1 })
+  })
+
+  test('multiple subscribers get same update when valid', (done) => {
+    let sub1, sub2
+    let stop1 = vitalMetric.subscribe(({ entries }) => {
+      sub1 ??= entries[0].id
+      if (sub1 === sub2) { stop1(); stop2(); done() }
+    })
+
+    let stop2 = vitalMetric.subscribe(({ entries }) => {
+      sub2 ??= entries[0].id
+      if (sub1 === sub2) { stop1(); stop2(); done() }
+    })
+
+    vitalMetric.update({ value: 1, entries: [{ id: 'abcd' }] })
   })
 
   test('subscribers do not get updates when not valid', (done) => {

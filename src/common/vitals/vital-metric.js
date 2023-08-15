@@ -1,7 +1,7 @@
 export class VitalMetric {
   #values = []
   #subscribers = new Set()
-  entries = undefined
+  entries = []
 
   constructor (name, roundingMethod) {
     this.name = name
@@ -9,10 +9,10 @@ export class VitalMetric {
     this.roundingMethod = typeof roundingMethod === 'function' ? roundingMethod : Math.floor
   }
 
-  update ({ value, entries, attrs, addConnectionAttributes = false }) {
+  update ({ value, entries = [], attrs = {}, addConnectionAttributes = false }) {
     this.#values.push(this.roundingMethod(value))
-    this.entries = entries
-    if (attrs) this.attrs = { ...this.attrs, ...attrs }
+    this.entries.push(...entries)
+    this.attrs = { ...this.attrs, ...attrs }
     if (addConnectionAttributes) this.addConnectionAttributes()
     this.#subscribers.forEach(cb => {
       try {

@@ -4,8 +4,14 @@ beforeEach(() => {
   jest.clearAllMocks()
 
   const mockPerformanceObserver = jest.fn(cb => ({
-    // eslint-disable-next-line
-    observe: () => cb({getEntries: () => [{ name: 'first-paint', startTime: 1 }] }),
+    observe: () => {
+      const callCb = () => {
+        // eslint-disable-next-line
+        cb({getEntries: () => [{ name: 'first-paint', startTime: 1 }] })
+        setTimeout(callCb, 250)
+      }
+      setTimeout(callCb, 250)
+    },
     disconnect: jest.fn()
   }))
   global.PerformanceObserver = mockPerformanceObserver
@@ -78,6 +84,25 @@ describe('fp', () => {
         expect(1).toEqual(2)
       })
       setTimeout(done, 1000)
+    })
+  })
+
+  test('multiple subs get same value', done => {
+    jest.doMock('../constants/runtime', () => ({
+      __esModule: true,
+      isBrowserScope: true
+    }))
+    let sub1, sub2
+    getFreshFPImport(metric => {
+      const remove1 = metric.subscribe(({ entries }) => {
+        sub1 ??= entries[0].id
+        if (sub1 === sub2) { remove1(); remove2(); done() }
+      })
+
+      const remove2 = metric.subscribe(({ entries }) => {
+        sub2 ??= entries[0].id
+        if (sub1 === sub2) { remove1(); remove2(); done() }
+      })
     })
   })
 

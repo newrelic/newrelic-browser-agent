@@ -7,7 +7,7 @@ export const firstPaint = new VitalMetric(VITAL_NAMES.FIRST_PAINT)
 if (isBrowserScope) {
   const handleEntries = (entries) => {
     entries.forEach(entry => {
-      if (entry.name === 'first-paint') {
+      if (entry.name === 'first-paint' && !firstPaint.isValid) {
         observer.disconnect()
 
         /* Initial hidden state and pre-rendering not yet considered for first paint. See web-vitals onFCP for example. */

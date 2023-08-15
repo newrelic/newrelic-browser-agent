@@ -33,6 +33,25 @@ describe('inp', () => {
     })
   })
 
+  test('multiple subs get same value', done => {
+    jest.doMock('../constants/runtime', () => ({
+      __esModule: true,
+      isBrowserScope: true
+    }))
+    let sub1, sub2
+    getFreshINPImport(metric => {
+      const remove1 = metric.subscribe(({ entries }) => {
+        sub1 ??= entries[0].id
+        if (sub1 === sub2) { remove1(); remove2(); done() }
+      })
+
+      const remove2 = metric.subscribe(({ entries }) => {
+        sub2 ??= entries[0].id
+        if (sub1 === sub2) { remove1(); remove2(); done() }
+      })
+    })
+  })
+
   test('reports more than once', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,

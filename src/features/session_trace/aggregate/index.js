@@ -28,7 +28,7 @@ const toAggregate = {
   mousing: [1000, 2000],
   touching: [1000, 2000]
 }
-const MAX_TRACE_DURATION = 10 * 60 * 1000 // 10 minutes
+const MAX_TRACE_DURATION = 1 * 60 * 1000 // 10 minutes
 const REQ_THRESHOLD_TO_SEND = 30
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
 
@@ -56,6 +56,7 @@ export class Aggregate extends AggregateBase {
     this.isStandalone = false
     const operationalGate = new HandlerCache() // acts as a controller-intermediary that can enable or disable this feature's collection dynamically
     const sessionEntity = this.agentRuntime.session
+    this.operationalGate = operationalGate
 
     /* --- The following section deals with user sessions concept & contains non-trivial control flow. --- */
     const controlTraceOp = (traceMode) => {
@@ -148,14 +149,6 @@ export class Aggregate extends AggregateBase {
     }
     /* --- EoS --- */
 
-    setTimeout(() => {
-      if (this.isStandalone) { // hard stop Trace after this time, sending out whatever's buffered
-        operationalGate.permanentlyDecide(false)
-        this.#scheduler.runHarvest({ unload: true }) // this is ran like the final harvest so that even if there isn't enough nodeCount, it'll still send
-        this.#scheduler.stopTimer(true)
-      }
-    }, MAX_TRACE_DURATION)
-
     // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...
     registerHandler('bst', (...args) => operationalGate.settle(() => this.storeEvent(...args)), this.featureName, this.ee)
     registerHandler('bstResource', (...args) => operationalGate.settle(() => this.storeResources(...args)), this.featureName, this.ee)
@@ -202,8 +195,15 @@ export class Aggregate extends AggregateBase {
 
   #prepareHarvest (options) {
     if (this.isStandalone) {
-      // Only harvest when more than some threshold of nodes are pending, after the very first harvest, with the exception of the last outgoing harvest.
-      if (this.ptid && this.nodeCount <= REQ_THRESHOLD_TO_SEND && !options.isFinalHarvest) return
+      if (this.ptid && now() >= MAX_TRACE_DURATION) {
+        // Perform a final harvest once we hit or exceed the max session trace time
+        options.isFinalHarvest = true
+        this.operationalGate.permanentlyDecide(false)
+        this.#scheduler.stopTimer(true)
+      } else if (this.ptid && this.nodeCount <= REQ_THRESHOLD_TO_SEND && !options.isFinalHarvest) {
+        // Only harvest when more than some threshold of nodes are pending, after the very first harvest, with the exception of the last outgoing harvest.
+        return
+      }
     } else {
     //   -- *cli May '26 - Update: Not rate limiting backgrounded pages either for now.
     //   if (this.ptid && document.visibilityState === 'hidden' && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
@@ -214,6 +214,7 @@ export class Aggregate extends AggregateBase {
       if (currentMode === MODE.OFF && Object.keys(this.trace).length === 0) return
       if (currentMode === MODE.ERROR) return // Trace in this mode should never be harvesting, even on unload
     }
+
     return this.takeSTNs(options.retry)
   }
 
@@ -400,6 +401,10 @@ export class Aggregate extends AggregateBase {
       if (this.isStandalone || this.agentRuntime.session.state.sessionTraceMode !== MODE.ERROR) return
       const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
       if (openedSpace == 0) return
+    }
+
+    if (this.isStandalone && now() >= MAX_TRACE_DURATION) {
+      return
     }
 
     if (this.trace[stn.n]) this.trace[stn.n].push(stn)

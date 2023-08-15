@@ -1,5 +1,6 @@
 import webpack from 'webpack'
 import TerserPlugin from 'terser-webpack-plugin'
+import NRBAChunkingPlugin from '../plugins/nrba-chunking/index.mjs'
 
 /**
  * @typedef {import('../index.mjs').WebpackBuildOptions} WebpackBuildOptions
@@ -10,8 +11,9 @@ import TerserPlugin from 'terser-webpack-plugin'
  * builds.
  * @param {WebpackBuildOptions} env Build variables passed into the webpack cli
  * using --env foo=bar --env biz=baz
+ * @param {string} asyncChunkName Partial name to use for the loader's async chunk
  */
-export default (env) => {
+export default (env, asyncChunkName) => {
   return {
     devtool: false,
     mode: env.SUBVERSION === 'PROD' ? 'production' : 'development',
@@ -28,7 +30,14 @@ export default (env) => {
         }
       })],
       flagIncludedChunks: true,
-      mergeDuplicateChunks: true
+      mergeDuplicateChunks: true,
+      splitChunks: {
+        chunks: 'async',
+        cacheGroups: {
+          defaultVendors: false,
+          default: false
+        }
+      }
     },
     output: {
       filename: (pathData) => {
@@ -51,6 +60,9 @@ export default (env) => {
         filename: '[file].map[query]',
         moduleFilenameTemplate: 'nr-browser-agent://[namespace]/[resource-path]?[loaders]',
         publicPath: env.PUBLIC_PATH
+      }),
+      new NRBAChunkingPlugin({
+        asyncChunkName
       })
     ]
   }

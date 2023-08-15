@@ -173,12 +173,14 @@ export class Aggregate extends AggregateBase {
     }
 
     try {
+      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
       recorder = (await import(/* webpackChunkName: "recorder" */'rrweb')).record
     } catch (err) {
       return this.abort()
     }
 
     try {
+      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
       const { gzipSync, strToU8 } = await import(/* webpackChunkName: "compressor" */'fflate')
       gzipper = gzipSync
       u8 = strToU8

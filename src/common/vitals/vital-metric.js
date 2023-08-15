@@ -1,17 +1,16 @@
 export class VitalMetric {
   #values = []
-  #roundingMethod = Math.floor
   #subscribers = new Set()
   entries = undefined
 
   constructor (name, roundingMethod) {
     this.name = name
     this.attrs = {}
-    if (typeof roundingMethod === 'function') this.#roundingMethod = roundingMethod
+    this.roundingMethod = typeof roundingMethod === 'function' ? roundingMethod : Math.floor
   }
 
   update ({ value, entries, attrs, addConnectionAttributes = false }) {
-    this.#values.push(this.#roundingMethod(value))
+    this.#values.push(this.roundingMethod(value))
     this.entries = entries
     if (attrs) this.attrs = { ...this.attrs, ...attrs }
     if (addConnectionAttributes) this.addConnectionAttributes()

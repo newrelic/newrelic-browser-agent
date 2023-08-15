@@ -32,6 +32,7 @@ const asyncApiFns = [
   'setPageViewName',
   'setCustomAttribute',
   'setUserId',
+  'setApplicationVersion',
   'setErrorHandler',
   'finished',
   'addToTrace',

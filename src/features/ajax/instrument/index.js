@@ -21,7 +21,7 @@ var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
 
 var origRequest = originals.REQ
-var origXHR = globalScope.XMLHttpRequest
+var origXHR = originals.XHR
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME

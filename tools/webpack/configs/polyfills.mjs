@@ -108,6 +108,7 @@ export default (env) => {
         ]
       },
       plugins: [
+        ...entryGroup.plugins,
         new BundleAnalyzerPlugin({
           analyzerMode: 'static',
           openAnalyzer: false,

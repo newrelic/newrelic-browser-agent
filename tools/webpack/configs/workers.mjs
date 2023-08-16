@@ -1,4 +1,5 @@
 import path from 'path'
+import webpack from 'webpack'
 import { merge } from 'webpack-merge'
 import commonConfig from './common.mjs'
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
@@ -27,7 +28,18 @@ export default (env) => {
           chunkLoading: 'import-scripts'
         }
       },
-      plugins: []
+      plugins: [
+        new webpack.IgnorePlugin({
+          checkResource: (resource, context) => {
+            if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
+              // Only allow page_view_event, page_action, metrics, errors, and xhr features
+              return !resource.match(/page_view_event\/aggregate|page_action\/aggregate|metrics\/aggregate|jserrors\/aggregate|ajax\/aggregate/)
+            }
+
+            return false
+          }
+        })
+      ]
     }
   ]
 
@@ -39,6 +51,7 @@ export default (env) => {
         chunkFilename: env.SUBVERSION === 'PROD' ? `[name].[chunkhash:8]-worker${env.PATH_VERSION}.min.js` : `[name]-worker${env.PATH_VERSION}.js`
       },
       plugins: [
+        ...entryGroup.plugins,
         new BundleAnalyzerPlugin({
           analyzerMode: 'static',
           openAnalyzer: false,

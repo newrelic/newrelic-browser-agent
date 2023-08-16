@@ -90,9 +90,6 @@ export default (env) => {
     return merge(commonConfig(env, entryGroup.asyncChunkName), {
       target: 'browserslist:ie >= 11',
       entry: entryGroup.entry,
-      output: {
-        chunkFilename: env.SUBVERSION === 'PROD' ? `[name].[chunkhash:8]-es5${env.PATH_VERSION}.min.js` : `[name]-es5${env.PATH_VERSION}.js`
-      },
       module: {
         rules: [
           {

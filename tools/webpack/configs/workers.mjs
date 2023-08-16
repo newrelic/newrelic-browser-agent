@@ -47,9 +47,6 @@ export default (env) => {
     return merge(commonConfig(env, entryGroup.asyncChunkName), {
       target: 'webworker',
       entry: entryGroup.entry,
-      output: {
-        chunkFilename: env.SUBVERSION === 'PROD' ? `[name].[chunkhash:8]-worker${env.PATH_VERSION}.min.js` : `[name]-worker${env.PATH_VERSION}.js`
-      },
       plugins: [
         ...entryGroup.plugins,
         new BundleAnalyzerPlugin({

@@ -74,9 +74,9 @@ jobs:
         id: asset-size-report
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "results<<$EOF \n" >> "$GITHUB_OUTPUT"
-          echo "# Asset Size Report\n\n" >> "$GITHUB_OUTPUT"
-          echo "Merging this pull request will result in the following asset size changes:\n\n"
+          echo "results<<$EOF" >> "$GITHUB_OUTPUT"
+          echo "## Asset Size Report <br><br>" >> "$GITHUB_OUTPUT"
+          echo "Merging this pull request will result in the following asset size changes: <br><br>" >> "$GITHUB_OUTPUT"
           cat ./build/size_report.md >> "$GITHUB_OUTPUT"
           echo "$EOF" >> "$GITHUB_OUTPUT"
       - name: Comment pull request

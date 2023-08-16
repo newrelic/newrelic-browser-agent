@@ -33,7 +33,7 @@ export default (env) => {
           checkResource: (resource, context) => {
             if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
               // Only allow page_view_event, page_action, metrics, errors, and xhr features
-              return !resource.match(/page_view_event\/aggregate|page_action\/aggregate|metrics\/aggregate|jserrors\/aggregate|ajax\/aggregate/)
+              return !resource.match(/(page_view_event|page_action|metrics|jserrors|ajax)\/aggregate/)
             }
 
             return false

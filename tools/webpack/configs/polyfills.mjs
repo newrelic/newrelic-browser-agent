@@ -27,7 +27,7 @@ export default (env) => {
           checkResource: (resource, context) => {
             if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
               // Only allow page_view_event, page_view_timing, and metrics features
-              return !resource.match(/page_view_event\/aggregate|page_view_timing\/aggregate|metrics\/aggregate/)
+              return !resource.match(/(page_view_event|page_view_timing|metrics)\/aggregate/)
             }
 
             return false
@@ -46,7 +46,7 @@ export default (env) => {
           checkResource: (resource, context) => {
             if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
               // Allow all features except spa and session_replay
-              return resource.match(/spa\/aggregate|session_replay\/aggregate/)
+              return resource.match(/(spa|session_replay)\/aggregate/)
             }
 
             return false
@@ -65,7 +65,7 @@ export default (env) => {
           checkResource: (resource, context) => {
             if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
               // Do not allow session_replay feature
-              return resource.match(/session_replay\/aggregate/)
+              return resource.match(/(session_replay)\/aggregate/)
             }
 
             return false
@@ -108,6 +108,7 @@ export default (env) => {
         ]
       },
       plugins: [
+        ...entryGroup.plugins,
         new BundleAnalyzerPlugin({
           analyzerMode: 'static',
           openAnalyzer: false,

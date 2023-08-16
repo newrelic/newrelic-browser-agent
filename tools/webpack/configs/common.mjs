@@ -16,7 +16,7 @@ import NRBAChunkingPlugin from '../plugins/nrba-chunking/index.mjs'
 export default (env, asyncChunkName) => {
   return {
     devtool: false,
-    mode: env.SUBVERSION === 'PROD' ? 'production' : 'development',
+    mode: env.SUBVERSION === 'LOCAL' ? 'development' : 'production',
     optimization: {
       minimize: true,
       minimizer: [new TerserPlugin({
@@ -47,7 +47,7 @@ export default (env, asyncChunkName) => {
 
         return env.SUBVERSION === 'PROD' ? `[name]${env.PATH_VERSION}.js` : '[name].js'
       },
-      chunkFilename: env.SUBVERSION === 'PROD' ? `[name].[chunkhash:8]${env.PATH_VERSION}.min.js` : `[name]${env.PATH_VERSION}.js`,
+      chunkFilename: env.SUBVERSION === 'PROD' ? `[name].[chunkhash:8]${env.PATH_VERSION}.min.js` : `[name]${env.PATH_VERSION}.min.js`,
       path: env.paths.build,
       publicPath: env.PUBLIC_PATH,
       clean: false,
@@ -59,7 +59,8 @@ export default (env, asyncChunkName) => {
         namespace: `NRBA-${env.VERSION}.${env.SUBVERSION}`,
         filename: '[file].map[query]',
         moduleFilenameTemplate: 'nr-browser-agent://[namespace]/[resource-path]?[loaders]',
-        publicPath: env.PUBLIC_PATH
+        publicPath: env.PUBLIC_PATH,
+        append: env.SUBVERSION === 'PROD' ? false : '//# sourceMappingURL=[url]'
       }),
       new NRBAChunkingPlugin({
         asyncChunkName

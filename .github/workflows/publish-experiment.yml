@@ -1,9 +1,15 @@
-name: Build and publish EXPERIMENT to CDN
+# This workflow can be ran on any branch to build and publish
+# that branch as an internal experiment. Once published, the
+# dev and staging A/B scripts will be updated to include the
+# new experiment.
+
+name: Publish Experiment
 
 on:
   workflow_dispatch:
 
 jobs:
+  # Build and publish the branch to S3 experiments folder
   publish-experiment-to-s3:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -41,6 +47,8 @@ jobs:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: js-agent.newrelic.com
           purge_path: ${{ steps.purge-paths.outputs.results }}
+
+  # Rebuild and publish the dev environment A/B script
   publish-dev-ab:
     needs: [publish-experiment-to-s3]
     runs-on: ubuntu-latest
@@ -55,8 +63,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Install project dependencies
-        run: npm ci
       - name: Publish dev a/b script
         uses: ./.github/actions/internal-ab
         with:
@@ -70,6 +76,8 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+
+  # Rebuild and publish the staging environment A/B script
   publish-staging-ab:
     needs: [publish-experiment-to-s3]
     runs-on: ubuntu-latest
@@ -84,8 +92,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Install project dependencies
-        run: npm ci
       - name: Deploy staging a/b script
         uses: ./.github/actions/internal-ab
         with:

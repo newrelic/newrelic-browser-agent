@@ -1,0 +1,26 @@
+# This composite action is used to verify all loaders of a specific
+# version exist in NR environments.
+
+name: 'NR Verify'
+
+inputs:
+  environment:
+    description: 'Space delimited list of environments to verify.'
+    required: false
+  loader_version:
+    description: "Browser Agent version number"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --prefix $GITHUB_ACTION_PATH
+      shell: bash
+    - name: Run action script
+      id: action-script
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          ${{ inputs.environment && format('--environment {0}', inputs.environment) || '' }} \
+          --loader-version ${{ inputs.loader_version }}
+      shell: bash

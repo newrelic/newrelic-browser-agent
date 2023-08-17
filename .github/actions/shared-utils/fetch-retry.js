@@ -29,4 +29,6 @@ export async function fetchRetry (url, options) {
       retryLimit--
     }
   }
+
+  throw new Error(`Fetch ${url} failed with unknown error.`)
 }

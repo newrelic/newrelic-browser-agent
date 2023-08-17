@@ -19,7 +19,7 @@
     {init}
     {config}
     <script>
-      setTimeout(() => {
+      setTimeout(function(){
         console.log("injecting...", performance.now())
         const scrpt = document.createElement('script')
         scrpt.src = '/build/nr-loader-full.js'

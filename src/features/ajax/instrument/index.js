@@ -46,7 +46,7 @@ export class Instrument extends InstrumentBase {
     try {
       const initiators = { xmlhttprequest: 'xhr', fetch: 'fetch', beacon: 'beacon' }
       globalScope?.performance?.getEntriesByType('resource').forEach(resource => {
-        if (Object.keys(initiators).includes(resource.initiatorType)) {
+        if (Object.keys(initiators).includes(resource.initiatorType) && resource.responseStatus !== 0) {
           const params = { status: resource.responseStatus }
           const metrics = { rxSize: resource.transferSize, duration: Math.floor(resource.duration), cbTime: 0 }
           addUrl(params, resource.name)

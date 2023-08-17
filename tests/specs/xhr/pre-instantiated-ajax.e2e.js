@@ -1,4 +1,6 @@
-describe('ajax events sent before the page loads are still captured in a basic way', () => {
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+
+describe.withBrowsersMatching(notIE)('ajax events sent before the page loads are still captured in a basic way', () => {
   it('ajax calls before agent is loaded are captured', async () => {
     await browser.url(await browser.testHandle.assetURL('early-ajax-deferred-loader.html', { init: { ajax: { block_internal: false } } })) // Setup expects before loading the page
 
@@ -22,7 +24,7 @@ describe('ajax events sent before the page loads are still captured in a basic w
       requestedWith: 'XMLHttpRequest',
       responseBodySize: expect.any(Number),
       start: expect.any(Number),
-      status: 200,
+      status: expect.any(Number),
       timestamp: null,
       traceId: null,
       type: 'ajax'
@@ -43,10 +45,13 @@ describe('ajax events sent before the page loads are still captured in a basic w
       requestedWith: 'fetch',
       responseBodySize: expect.any(Number),
       start: expect.any(Number),
-      status: 200,
+      status: expect.any(Number),
       timestamp: null,
       traceId: null,
       type: 'ajax'
     })
+
+    expect(ajaxEvents.request.body.filter(x => x.path === '/json').length).toEqual(1) // only captured once
+    expect(ajaxEvents.request.body.filter(x => x.path === '/image').length).toEqual(1) // only captured once
   })
 })

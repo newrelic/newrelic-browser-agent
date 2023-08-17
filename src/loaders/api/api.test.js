@@ -60,6 +60,14 @@ describe('setAPI', () => {
     for (const k of Object.keys(apiI)) { expect(apiI[k]).toBeInstanceOf(Function) }
   })
 
+  test('sets up spa interaction api prototype/handle', () => {
+    let apiI = setAPI('abcd', true)
+    let interactionProto = Object.getPrototypeOf(apiI.interaction())
+
+    expect(Object.keys(interactionProto).length).toEqual(10)
+    for (const k of Object.keys(interactionProto)) { expect(interactionProto[k]).toBeInstanceOf(Function) }
+  })
+
   test('calls asyncApi setAPI as well', async () => {
     jest.resetModules()
     let setApiCalled

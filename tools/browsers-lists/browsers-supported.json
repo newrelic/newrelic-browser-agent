@@ -4,8 +4,8 @@
       "browserName": "chrome",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "106",
-      "browserVersion": "106"
+      "version": "107",
+      "browserVersion": "107"
     },
     {
       "browserName": "chrome",
@@ -18,8 +18,8 @@
       "browserName": "chrome",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "111",
-      "browserVersion": "111"
+      "version": "112",
+      "browserVersion": "112"
     },
     {
       "browserName": "chrome",

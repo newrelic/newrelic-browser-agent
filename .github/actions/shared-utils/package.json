@@ -1,0 +1,6 @@
+{
+  "name": "@newrelic/browser-agent.actions.shared-utils",
+  "description": "",
+  "private": true,
+  "type": "module"
+}

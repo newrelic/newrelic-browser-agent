@@ -1,4 +1,4 @@
-const { getMetricsFromResponse } = require('./err/assertion-helpers') // used by metrics tests
+const { getMetricsFromResponse } = require('../functional/err/assertion-helpers') // used by metrics tests
 const url = require('url') // used by harvest tests
 const cleanURL = require('../lib/clean-url.js') // used by harvest test
 
@@ -32,6 +32,7 @@ const asyncApiFns = [
   'setPageViewName',
   'setCustomAttribute',
   'setUserId',
+  'setApplicationVersion',
   'setErrorHandler',
   'finished',
   'addToTrace',

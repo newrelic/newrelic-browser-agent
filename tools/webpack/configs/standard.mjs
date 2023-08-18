@@ -1,4 +1,5 @@
 import path from 'path'
+import webpack from 'webpack'
 import { merge } from 'webpack-merge'
 import commonConfig from './common.mjs'
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
@@ -14,57 +15,122 @@ import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
  * using --env foo=bar --env biz=baz
  */
 export default (env) => {
-  return merge(commonConfig(env), {
-    target: 'web',
-    entry: {
-      'nr-loader-rum': path.join(env.paths.src, 'cdn/lite.js'),
-      'nr-loader-rum.min': path.join(env.paths.src, 'cdn/lite.js'),
-      'nr-loader-full': path.join(env.paths.src, 'cdn/pro.js'),
-      'nr-loader-full.min': path.join(env.paths.src, 'cdn/pro.js'),
-      'nr-loader-spa': path.join(env.paths.src, 'cdn/spa.js'),
-      'nr-loader-spa.min': path.join(env.paths.src, 'cdn/spa.js'),
-      ...(env.SUBVERSION !== 'PROD' && { 'nr-loader-experimental': path.resolve(env.paths.src, 'cdn/experimental.js') }),
-      ...(env.SUBVERSION !== 'PROD' && { 'nr-loader-experimental.min': path.resolve(env.paths.src, 'cdn/experimental.js') })
-    },
-    module: {
-      rules: [
-        {
-          test: /\.js$/,
-          exclude: /(node_modules)/,
-          use: (env.coverage || 'false').toLowerCase() === 'true'
-            ? [
-                { loader: './tools/webpack/loaders/istanbul/index.mjs' },
-                {
-                  loader: 'babel-loader',
-                  options: {
-                    envName: 'webpack'
-                  }
-                }
-              ]
-            : [
-                {
-                  loader: 'babel-loader',
-                  options: {
-                    envName: 'webpack'
-                  }
-                }
-              ]
-        }
+  const entryGroups = [
+    {
+      asyncChunkName: 'nr-rum',
+      entry: {
+        'nr-loader-rum': path.join(env.paths.src, 'cdn/lite.js'),
+        'nr-loader-rum.min': path.join(env.paths.src, 'cdn/lite.js')
+      },
+      plugins: [
+        new webpack.IgnorePlugin({
+          checkResource: (resource, context) => {
+            if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
+              // Only allow page_view_event, page_view_timing, and metrics features
+              return !resource.match(/(page_view_event|page_view_timing|metrics)\/aggregate/)
+            }
+
+            return false
+          }
+        })
       ]
     },
-    plugins: [
-      new BundleAnalyzerPlugin({
-        analyzerMode: 'static',
-        openAnalyzer: false,
-        defaultSizes: 'stat',
-        reportFilename: `standard${env.PATH_VERSION}.stats.html`
-      }),
-      new BundleAnalyzerPlugin({
-        analyzerMode: 'json',
-        openAnalyzer: false,
-        defaultSizes: 'stat',
-        reportFilename: `standard${env.PATH_VERSION}.stats.json`
-      })
-    ]
+    {
+      asyncChunkName: 'nr-full',
+      entry: {
+        'nr-loader-full': path.join(env.paths.src, 'cdn/pro.js'),
+        'nr-loader-full.min': path.join(env.paths.src, 'cdn/pro.js')
+      },
+      plugins: [
+        new webpack.IgnorePlugin({
+          checkResource: (resource, context) => {
+            if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
+              // Allow all features except spa and session_replay
+              return resource.match(/(spa|session_replay)\/aggregate/)
+            }
+
+            return false
+          }
+        })
+      ]
+    },
+    {
+      asyncChunkName: 'nr-spa',
+      entry: {
+        'nr-loader-spa': path.join(env.paths.src, 'cdn/spa.js'),
+        'nr-loader-spa.min': path.join(env.paths.src, 'cdn/spa.js')
+      },
+      plugins: [
+        new webpack.IgnorePlugin({
+          checkResource: (resource, context) => {
+            if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
+              // Do not allow session_replay feature
+              return resource.match(/(session_replay)\/aggregate/)
+            }
+
+            return false
+          }
+        })
+      ]
+    }
+  ]
+
+  if (env.SUBVERSION !== 'PROD') {
+    entryGroups.push({
+      asyncChunkName: 'nr-experimental',
+      entry: {
+        'nr-loader-experimental': path.join(env.paths.src, 'cdn/experimental.js'),
+        'nr-loader-experimental.min': path.join(env.paths.src, 'cdn/experimental.js')
+      },
+      plugins: []
+    })
+  }
+
+  return entryGroups.map(entryGroup => {
+    return merge(commonConfig(env, entryGroup.asyncChunkName), {
+      target: 'web',
+      entry: entryGroup.entry,
+      module: {
+        rules: [
+          {
+            test: /\.js$/,
+            exclude: /(node_modules)/,
+            use: (env.coverage || 'false').toLowerCase() === 'true'
+              ? [
+                  { loader: './tools/webpack/loaders/istanbul/index.mjs' },
+                  {
+                    loader: 'babel-loader',
+                    options: {
+                      envName: 'webpack'
+                    }
+                  }
+                ]
+              : [
+                  {
+                    loader: 'babel-loader',
+                    options: {
+                      envName: 'webpack'
+                    }
+                  }
+                ]
+          }
+        ]
+      },
+      plugins: [
+        ...entryGroup.plugins,
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          openAnalyzer: false,
+          defaultSizes: 'stat',
+          reportFilename: `${entryGroup.asyncChunkName}-standard${env.PATH_VERSION}.stats.html`
+        }),
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'json',
+          openAnalyzer: false,
+          defaultSizes: 'stat',
+          reportFilename: `${entryGroup.asyncChunkName}-standard${env.PATH_VERSION}.stats.json`
+        })
+      ]
+    })
   })
 }

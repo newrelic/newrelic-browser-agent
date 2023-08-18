@@ -11,10 +11,6 @@ import { stringify } from '../../../common/util/stringify'
 export class DT {
   constructor (agentIdentifier) {
     this.agentIdentifier = agentIdentifier
-    // Binds this class instance context to the following fn used in an external module (exported);
-    //  Alternatively, can make them class field arrow functions, but requires experimental features/plugin for eslint.
-    this.generateTracePayload = this.generateTracePayload.bind(this)
-    this.shouldGenerateTrace = this.shouldGenerateTrace.bind(this)
   }
 
   generateTracePayload (parsedOrigin) {

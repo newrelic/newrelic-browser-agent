@@ -6,11 +6,21 @@ import { TestHandleConnector } from './test-handle-connector.mjs'
  * a test handle connector.
  */
 export default class TestingServerWorker {
-  #commandServerPort
+  #assetServerConfig
+  #corsServerConfig
+  #bamServerConfig
+  #commandServerConfig
 
   beforeSession (_, capabilities) {
-    this.#commandServerPort = capabilities.testServerCommandPort
-    delete capabilities.testServerCommandPort
+    this.#assetServerConfig = JSON.parse(capabilities.assetServer)
+    this.#corsServerConfig = JSON.parse(capabilities.corsServer)
+    this.#bamServerConfig = JSON.parse(capabilities.bamServer)
+    this.#commandServerConfig = JSON.parse(capabilities.commandServer)
+
+    delete capabilities.assetServer
+    delete capabilities.corsServer
+    delete capabilities.bamServer
+    delete capabilities.commandServer
   }
 
   /**
@@ -19,7 +29,12 @@ export default class TestingServerWorker {
    */
   async before () {
     browser.addCommand('getTestHandle', async () => {
-      const testHandle = new TestHandleConnector(this.#commandServerPort)
+      const testHandle = new TestHandleConnector(
+        this.#assetServerConfig,
+        this.#corsServerConfig,
+        this.#bamServerConfig,
+        this.#commandServerConfig
+      )
       await testHandle.ready()
       return testHandle
     })

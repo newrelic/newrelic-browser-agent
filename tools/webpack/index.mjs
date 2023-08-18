@@ -61,8 +61,8 @@ export default async (env) => {
   await fs.emptyDir(env.paths.build)
 
   return [
-    standardConfig(env),
-    polyfillsConfig(env),
-    workersConfig(env)
+    ...standardConfig(env),
+    ...polyfillsConfig(env),
+    ...workersConfig(env)
   ]
 }

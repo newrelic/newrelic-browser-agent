@@ -1,10 +1,10 @@
 import fs from 'fs'
 import path from 'path'
 import url from 'url'
-import fetch from 'node-fetch'
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts'
 import { S3Client, ListObjectsCommand } from '@aws-sdk/client-s3'
 import { args } from './args.js'
+import { fetchRetry } from '../shared-utils/fetch-retry.js'
 
 const config = {
   init: {
@@ -64,7 +64,7 @@ await fs.promises.writeFile(
 
 // 2. Write the current loader script
 console.log(`Writing current loader ${args.current} in A/B script.`)
-const currentScript = await fetch(args.current)
+const currentScript = await fetchRetry(args.current, { retry: 3 })
 await fs.promises.appendFile(
   outputFile,
   await currentScript.text() + '\n\n',
@@ -73,7 +73,7 @@ await fs.promises.appendFile(
 
 // 3. Write the next loader script
 console.log(`Writing current loader ${args.next} in A/B script.`)
-const nextScript = await fetch(args.next)
+const nextScript = await fetchRetry(args.next, { retry: 3 })
 await fs.promises.appendFile(
   outputFile,
   await nextScript.text() + '\n\n',
@@ -123,7 +123,7 @@ if (['dev', 'staging'].includes(args.environment)) {
     for (const experiment of experimentsList) {
       const experimentLoader = `https://js-agent.newrelic.com/${experiment}nr-loader-spa.min.js`
       console.log(`Writing experiment loader ${experimentLoader} in A/B script.`)
-      const experimentScript = await fetch(experimentLoader)
+      const experimentScript = await fetchRetry(experimentLoader, { retry: 3 })
       await fs.promises.appendFile(
         outputFile,
         await experimentScript.text() + '\n\n',

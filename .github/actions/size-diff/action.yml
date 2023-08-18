@@ -1,0 +1,34 @@
+# This composite action is used to upload files to an S3 bucket.
+
+name: 'S3 File Upload'
+
+inputs:
+  compare_from:
+    description: 'Version to compare sizes against. Valid values are `dev` or any version number for a release.'
+    required: true
+  compare_to:
+    description: 'Version to compare sizes for. Valid values are `local` or any version number for a release.'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --prefix $GITHUB_ACTION_PATH
+      shell: bash
+    - name: Run action script
+      id: action-script
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          --compare-from ${{ inputs.compare_from }} \
+          --compare-to ${{ inputs.compare_to }} \
+          --format terminal json markdown
+      shell: bash
+    - name: Archive asset size report results
+      uses: actions/upload-artifact@v3
+      with:
+        name: asset-size-report
+        path: |
+          build/size_report.*
+          build/*.stats.html
+          build/*.stats.json

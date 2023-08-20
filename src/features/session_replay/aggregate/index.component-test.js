@@ -1,7 +1,7 @@
 import { Aggregate as SessionReplayAgg, AVG_COMPRESSION, MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE } from '.'
 import { Aggregator } from '../../../common/aggregate/aggregator'
 import { SESSION_EVENTS, SessionEntity, MODE } from '../../../common/session/session-entity'
-import { setConfiguration } from '../../../common/config/config'
+import { getConfiguration, setConfiguration } from '../../../common/config/config'
 import { configure } from '../../../loaders/configure/configure'
 
 class LocalMemory {
@@ -127,6 +127,21 @@ describe('Session Replay', () => {
       await wait(1)
       expect(sr.initialized).toEqual(true)
       expect(sr.recording).toEqual(false)
+      return
+    })
+
+    test('Waits for optIn if enabled', async () => {
+      setConfiguration(agentIdentifier, Object.assign(getConfiguration(agentIdentifier), init, { session_replay: { requireOptIn: true } }))
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
+      // call sr flag but do not opt in
+      sr.ee.emit('rumresp-sr', [true])
+      await wait(1000)
+      expect(sr.initialized).toEqual(false)
+
+      // opt in
+      sr.ee.emit('sr-opt-in')
+      await wait(100)
+      expect(sr.initialized).toEqual(true)
       return
     })
 

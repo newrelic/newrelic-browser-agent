@@ -30,6 +30,27 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
     })
   })
 
+  describe('optIn', async () => {
+    it('when enabled: should only import feature after opt in', async () => {
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: { requireOptIn: true } })))
+        .then(() => browser.waitForFeatureAggregate('session_replay'))
+
+      let wasInitialized = await browser.execute(function () {
+        return Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.initialized
+      })
+
+      expect(wasInitialized).toEqual(false)
+
+      await browser.execute(function () {
+        newrelic.sessionReplay().optIn()
+      })
+      wasInitialized = await browser.execute(function () {
+        return Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.initialized
+      })
+      expect(wasInitialized).toEqual(true)
+    })
+  })
+
   describe('maskAllInputs', () => {
     it('maskAllInputs: true should convert inputs to *', async () => {
       await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))

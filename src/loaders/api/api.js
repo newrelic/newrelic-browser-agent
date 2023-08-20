@@ -21,7 +21,7 @@ export function setTopLevelCallers () {
   const funcs = [
     'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
     'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
-    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion'
+    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'sessionReplay'
   ]
   funcs.forEach(f => {
     nr[f] = (...args) => caller(f, ...args)
@@ -120,6 +120,14 @@ export function setAPI (agentIdentifier, forceDrain) {
       return
     }
     return appendJsAttribute('application.version', value, 'setApplicationVersion', false)
+  }
+
+  apiInterface.sessionReplay = function () {
+    return {
+      optIn: function () {
+        handle('sr-opt-in', [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
+      }
+    }
   }
 
   apiInterface.interaction = function () {

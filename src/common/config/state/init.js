@@ -38,6 +38,7 @@ const model = () => {
       harvestTimeSeconds: 60,
       sampleRate: 0.1,
       errorSampleRate: 0.1,
+      requireOptIn: false,
       // recording config settings
       maskTextSelector: '*',
       maskAllInputs: true,

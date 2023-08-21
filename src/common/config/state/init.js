@@ -8,7 +8,6 @@ const model = () => {
     maskInputOptions: { password: true }
   }
   return {
-    allow_bfcache: true, // *cli - temporary feature flag for BFCache work
     privacy: { cookies_enabled: true }, // *cli - per discussion, default should be true
     ajax: { deny_list: undefined, block_internal: true, enabled: true, harvestTimeSeconds: 10 },
     distributed_tracing: {

@@ -6,7 +6,6 @@
 const query = {
   loader: 'spa',
   init: {
-    allow_bfcache: true,
     privacy: { cookies_enabled: false },
     ajax: { deny_list: [], block_internal: false, enabled: true, harvestTimeSeconds: 5 },
     distributed_tracing: {},

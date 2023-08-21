@@ -34,7 +34,6 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           local_dir: $GITHUB_WORKSPACE/build
-          bucket_dir: temp/foobar
       - name: Gather prod purge paths
         id: prod-purge-paths
         run: echo "results=$(echo '${{ steps.prod-s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test("nr-loader-.*?\\.js$") or test(".*stats\\.json$")) + " "')" >> $GITHUB_OUTPUT
@@ -64,14 +63,17 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Deploy staging a/b script
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Deploy prod a/b script
         uses: ./.github/actions/internal-ab
         with:
           nr_environment: prod
           nrba_app_id: ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}
           nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
           nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
-          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-spa-$(cat package.json | jq -r '.version').min.js
+          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-spa-${{ steps.agent-loader-version.outputs.results }}.min.js
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
@@ -91,14 +93,17 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Deploy staging a/b script
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Deploy eu-prod a/b script
         uses: ./.github/actions/internal-ab
         with:
           nr_environment: eu-prod
           nrba_app_id: ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}
           nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
           nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
-          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-spa-$(cat package.json | jq -r '.version').min.js
+          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-spa-${{ steps.agent-loader-version.outputs.results }}.min.js
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
@@ -189,9 +194,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3

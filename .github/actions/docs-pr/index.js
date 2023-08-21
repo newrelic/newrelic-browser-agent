@@ -107,7 +107,7 @@ console.log('##########################')
 await fs.promises.rm(DOCS_FORK_CLONE_PATH, { force: true, recursive: true })
 await fs.promises.mkdir(DOCS_FORK_CLONE_PATH, { recursive: true })
 
-const branchName = `add-browser-agent-${args.tag}-test`
+const branchName = `add-browser-agent-${args.tag}`
 
 console.log('Syncing docs fork')
 await octokit.rest.repos.mergeUpstream({

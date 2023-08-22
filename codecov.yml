@@ -1,3 +1,8 @@
 flag_management:
   default_rules:
-    carryforward: true
+    carryforward: false
+  individual_flags:
+    - name: unit-tests
+      carryforward: true
+    - name: integration-tests
+      carryforward: true

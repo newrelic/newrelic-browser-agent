@@ -95,7 +95,7 @@ export default (env) => {
           {
             test: /\.js$/,
             exclude: /(node_modules)/,
-            use: (env.coverage || 'false').toLowerCase() === 'true'
+            use: env.coverage
               ? [
                   { loader: './tools/webpack/loaders/istanbul/index.mjs' },
                   {

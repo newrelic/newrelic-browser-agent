@@ -7,4 +7,6 @@ export const gosNREUMOriginals = jest.fn(() => ({}))
 export const gosNREUMInitializedAgents = jest.fn(() => ({}))
 export const addToNREUM = jest.fn(() => ({}))
 export const NREUMinitialized = jest.fn(() => ({}))
-export const gosCDN = jest.fn(() => ({}))
+export const gosCDN = jest.fn(() => (newrelicGlob))
+
+const newrelicGlob = {}

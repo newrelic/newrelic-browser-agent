@@ -27,7 +27,6 @@ export function activateFeatures (flags, agentIdentifier) {
       bucketMap[flag].forEach(feat => {
         if (!num) handle('block-' + flag, [], undefined, feat, sharedEE)
         else handle('feat-' + flag, [], undefined, feat, sharedEE)
-
         handle('rumresp-' + flag, [Boolean(num)], undefined, feat, sharedEE) // this is a duplicate of feat-/block- but makes awaiting for 1 event easier than 2
       })
     } else if (num) handle('feat-' + flag, [], undefined, undefined, sharedEE) // not sure what other flags are overlooked, but there's a test for ones not in the map --

@@ -10,7 +10,6 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { FEATURE_NAME } from '../constants'
-import { drain } from '../../../common/drain/drain'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 
@@ -32,17 +31,15 @@ export class Aggregate extends AggregateBase {
 
     register('api-addPageAction', (...args) => this.addPageAction(...args), this.featureName, this.ee)
 
-    var scheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
-    scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
-    this.ee.on(`drain-${this.featureName}`, () => { if (!this.blocked) scheduler.startTimer(this.harvestTimeSeconds, 0) })
+    this.waitForFlags(['ins']).then(([enabled]) => {
+      if (enabled) {
+        var scheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
+        scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
+        scheduler.startTimer(this.harvestTimeSeconds, 0)
+      }
+    })
 
-    // if rum response determines that customer lacks entitlements for ins endpoint, block it
-    register('block-ins', () => {
-      this.blocked = true
-      scheduler.stopTimer(true)
-    }, this.featureName, this.ee)
-
-    drain(this.agentIdentifier, this.featureName)
+    this.drain()
   }
 
   onHarvestStarted (options) {

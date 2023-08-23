@@ -10,7 +10,6 @@
  * functionality is validated and a full user experience is curated.
  */
 
-import { drain } from '../../../common/drain/drain'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME } from '../constants'
@@ -130,7 +129,7 @@ export class Aggregate extends AggregateBase {
         Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.sampleRate')
       )).then(() => sharedChannel.onReplayReady(this.mode)) // notify watchers that replay started with the mode
 
-      drain(this.agentIdentifier, this.featureName)
+      this.drain()
     }
   }
 

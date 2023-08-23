@@ -42,9 +42,10 @@ function curateRegistry (agentIdentifier) {
  * @param {string} agentIdentifier - A unique 16 character ID corresponding to an instantiated agent.
  * @param {string} featureName - A named group into which the feature's buffered events are bucketed.
  */
-export function drain (agentIdentifier = '', featureName = 'feature') {
+export function drain (agentIdentifier = '', featureName = 'feature', force) {
   curateRegistry(agentIdentifier)
 
+  if (force) registry[agentIdentifier].delete(featureName)
   // If the feature for the specified agent is not in the registry, that means the instrument file was bypassed.
   // This could happen in tests, or loaders that directly import the aggregator. In these cases it is safe to
   // drain the feature group immediately rather than waiting to drain all at once.

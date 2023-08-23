@@ -8,7 +8,6 @@ import { parseUrl } from '../../../common/url/parse-url'
 import { getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { FEATURE_NAME } from '../constants'
-import { drain } from '../../../common/drain/drain'
 import { HandlerCache } from '../../utils/handler-cache'
 import { MODE, SESSION_EVENTS } from '../../../common/session/session-entity'
 import { getSessionReplayMode } from '../../session_replay/replay-mode'
@@ -156,7 +155,7 @@ export class Aggregate extends AggregateBase {
     registerHandler('bstApi', (...args) => operationalGate.settle(() => this.storeSTN(...args)), this.featureName, this.ee)
     registerHandler('errorAgg', (...args) => operationalGate.settle(() => this.storeErrorAgg(...args)), this.featureName, this.ee)
     registerHandler('pvtAdded', (...args) => operationalGate.settle(() => this.processPVT(...args)), this.featureName, this.ee)
-    drain(this.agentIdentifier, this.featureName)
+    this.drain()
   }
 
   startTracing (startupBuffer, dontStartHarvestYet = false) {

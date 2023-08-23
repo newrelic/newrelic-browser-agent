@@ -23,6 +23,18 @@ const model = () => {
       expiresMs: DEFAULT_EXPIRES_MS,
       inactiveMs: DEFAULT_INACTIVE_MS
     },
+    auto: {
+      ajax: true,
+      jserrors: true,
+      metrics: true,
+      page_action: true,
+      page_view_event: true,
+      page_view_timing: true,
+      session_replay: true,
+      session_trace: true,
+      spa: true
+    },
+
     ssl: undefined,
     obfuscate: undefined,
     jserrors: { enabled: true, harvestTimeSeconds: 10 },
@@ -38,7 +50,6 @@ const model = () => {
       harvestTimeSeconds: 60,
       sampleRate: 0.1,
       errorSampleRate: 0.1,
-      requireOptIn: false,
       // recording config settings
       maskTextSelector: '*',
       maskAllInputs: true,

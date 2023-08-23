@@ -18,7 +18,6 @@ import { now } from '../../../common/timing/now'
 import { globalScope } from '../../../common/constants/runtime'
 
 import { FEATURE_NAME } from '../constants'
-import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 
@@ -63,7 +62,7 @@ export class Aggregate extends AggregateBase {
       scheduler.stopTimer(true)
     }, this.featureName, this.ee)
 
-    drain(this.agentIdentifier, this.featureName)
+    this.drain()
   }
 
   onHarvestStarted (options) {

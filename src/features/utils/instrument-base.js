@@ -43,6 +43,8 @@ export class InstrumentBase extends FeatureBase {
     */
     this.onAggregateImported
 
+    this.optedIn = false
+
     if (auto) registerDrain(agentIdentifier, featureName)
   }
 
@@ -54,6 +56,17 @@ export class InstrumentBase extends FeatureBase {
    */
   importAggregator (argsObjFromInstrument = {}) {
     if (this.featAggregate || !this.auto) return
+
+    if (!getConfigurationValue(this.agentIdentifier, `auto.${this.featureName}`) && this.optedIn === false) {
+      // this feature requires an opt in...
+      // wait for API to be called
+      this.ee.on(`${this.featureName}-opt-in`, () => {
+        this.optedIn = true
+        this.importAggregator()
+      })
+      return
+    }
+
     const enableSessionTracking = isBrowserScope && getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true
     let loadedSuccessfully
     this.onAggregateImported = new Promise(resolve => {

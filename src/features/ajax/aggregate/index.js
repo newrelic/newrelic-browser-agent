@@ -10,7 +10,6 @@ import { getConfiguration, getInfo, getRuntime } from '../../../common/config/co
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { FEATURE_NAME } from '../constants'
-import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
@@ -24,7 +23,7 @@ export class Aggregate extends AggregateBase {
 
     register('xhr', storeXhr, this.featureName, this.ee)
     if (!allAjaxIsEnabled) {
-      drain(this.agentIdentifier, this.featureName)
+      this.drain()
       return // feature will only collect timeslice metrics & ajax trace nodes if it's not fully enabled
     }
 
@@ -66,7 +65,7 @@ export class Aggregate extends AggregateBase {
 
     ee.on(`drain-${this.featureName}`, () => { scheduler.startTimer(harvestTimeSeconds) })
 
-    drain(this.agentIdentifier, this.featureName)
+    this.drain()
     return
 
     function storeXhr (params, metrics, startTime, endTime, type) {
@@ -128,6 +127,7 @@ export class Aggregate extends AggregateBase {
     }
 
     function prepareHarvest (options) {
+      console.log('ajax harvest!')
       options = options || {}
 
       if (ajaxEvents.length === 0) {

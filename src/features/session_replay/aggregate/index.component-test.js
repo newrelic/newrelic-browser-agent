@@ -130,21 +130,6 @@ describe('Session Replay', () => {
       return
     })
 
-    test('Waits for optIn if enabled', async () => {
-      setConfiguration(agentIdentifier, Object.assign(getConfiguration(agentIdentifier), init, { session_replay: { requireOptIn: true } }))
-      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
-      // call sr flag but do not opt in
-      sr.ee.emit('rumresp-sr', [true])
-      await wait(1000)
-      expect(sr.initialized).toEqual(false)
-
-      // opt in
-      sr.ee.emit('sr-opt-in')
-      await wait(100)
-      expect(sr.initialized).toEqual(true)
-      return
-    })
-
     test('Does not run if cookies_enabled is false', async () => {
       setConfiguration(agentIdentifier, { ...init, privacy: { cookies_enabled: false } })
       sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))

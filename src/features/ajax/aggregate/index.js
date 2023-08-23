@@ -127,7 +127,6 @@ export class Aggregate extends AggregateBase {
     }
 
     function prepareHarvest (options) {
-      console.log('ajax harvest!')
       options = options || {}
 
       if (ajaxEvents.length === 0) {

@@ -1,0 +1,34 @@
+# This composite action is used to upload all loaders of a specific
+# version to the internal NR.
+
+name: 'NR Upload'
+
+inputs:
+  environment:
+    description: 'Space delimited list of environments to upload to.'
+    required: false
+  nr_prod_api_key:
+    description: 'API key to use for talking to production RPM site to upload loaders'
+    required: false
+  nr_stage_api_key:
+    description: 'API key to use for talking to staging RPM site to upload loaders'
+    required: false
+  loader_version:
+    description: "Browser Agent version number"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --prefix $GITHUB_ACTION_PATH
+      shell: bash
+    - name: Run action script
+      id: action-script
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          ${{ inputs.environment && format('--environment {0}', inputs.environment) || '' }} \
+          ${{ inputs.nr_prod_api_key && format('--prod-api-key {0}', inputs.nr_prod_api_key) || '' }} \
+          ${{ inputs.nr_stage_api_key && format('--stage-api-key {0}', inputs.nr_stage_api_key) || '' }} \
+          --loader-version ${{ inputs.loader_version }}
+      shell: bash

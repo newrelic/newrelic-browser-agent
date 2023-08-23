@@ -12,10 +12,6 @@ module.exports = {
     'tests/assets/test-builds/**/*',
     'tests/assets/modular/js-errors/js/vendor/**/*',
 
-    // Remove the below ignores once lint errors are fixed
-    'tools/scripts/publish-current.js',
-    'tools/scripts/upload-to-s3.js',
-
     // Ignore JIL code since it is being replaced with WDIO
     'tools/jil/**/*',
     'tests/browser/**/*',

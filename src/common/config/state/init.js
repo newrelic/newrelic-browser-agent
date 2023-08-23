@@ -34,7 +34,6 @@ const model = () => {
       session_trace: true,
       spa: true
     },
-
     ssl: undefined,
     obfuscate: undefined,
     jserrors: { enabled: true, harvestTimeSeconds: 10 },

@@ -102,6 +102,10 @@ const args = yargs(hideBin(process.argv))
   .alias('P', 'polyfills')
   .describe('P', 'inject polyfills and polyfill loaders into test pages')
 
+  .boolean('prod')
+  .default('prod', false)
+  .describe('prod', 'testing with prod cdn build (version appended loader)')
+
   .boolean('A')
   .default('A', false)
   .alias('A', 'all-browsers')

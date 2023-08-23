@@ -3,6 +3,7 @@ const path = require('path')
 const fs = require('fs')
 const sslShim = require('./ssl-shim')
 const { paths } = require('../../constants')
+const version = require('../../../../package.json').version
 
 /**
  * Constructs the agent script block based on the loader query and default
@@ -18,15 +19,18 @@ async function getLoaderContent (request, reply, testServer) {
     paths.builtAssetsDir,
     `nr-loader-${loader}${
       testServer.config.polyfills ? '-polyfills' : ''
+    }${
+      testServer.config.prod ? '-' + version : ''
     }.min.js`
   )
-  const loaderFileStats = await fs.promises.stat(loaderFilePath)
 
-  if (!loaderFileStats.isFile()) {
+  let file
+  try {
+    file = (await fs.promises.readFile(loaderFilePath)).toString()
+  } catch (_) {
     throw new Error(`Could not find loader file ${loaderFilePath}`)
   }
-
-  return (await fs.promises.readFile(loaderFilePath)).toString()
+  return file
 }
 
 /**

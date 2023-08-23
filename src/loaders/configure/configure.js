@@ -3,6 +3,9 @@ import { addToNREUM, gosCDN, gosNREUMInitializedAgents } from '../../common/wind
 import { getConfiguration, setConfiguration, setInfo, setLoaderConfig, setRuntime } from '../../common/config/config'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/constants/runtime'
+import { isValidAssetUrl } from '../../common/url/check-url'
+import { redefinePublicPath } from './public-path'
+import { warn } from '../../common/util/console'
 
 export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   let { init, info, loader_config, runtime = { loaderType }, exposed = true } = opts
@@ -19,6 +22,10 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   info.jsAttributes ??= {}
   if (isWorkerScope) { // add a default attr to all worker payloads
     info.jsAttributes.isWorker = true
+  }
+  if (info.assetsPath) {
+    if (isValidAssetUrl(info.assetsPath)) redefinePublicPath(info.assetsPath)
+    else warn('New assets path must be a valid URL. Chunk origin remains unchanged.')
   }
   setInfo(agentIdentifier, info)
 

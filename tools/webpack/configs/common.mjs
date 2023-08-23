@@ -49,7 +49,7 @@ export default (env, asyncChunkName) => {
       },
       chunkFilename: env.SUBVERSION === 'PROD' ? `[name].[chunkhash:8]${env.PATH_VERSION}.min.js` : `[name]${env.PATH_VERSION}.min.js`,
       path: env.paths.build,
-      publicPath: env.PUBLIC_PATH,
+      publicPath: '', // -- webpack chunk import source path (e.g. CDN domain) is defined at runtime now
       clean: false,
       chunkLoadingGlobal: `webpackChunk:NRBA-${env.VERSION}.${env.SUBVERSION}`,
       uniqueName: `NRBA-${env.VERSION}.${env.SUBVERSION}`
@@ -59,8 +59,11 @@ export default (env, asyncChunkName) => {
         namespace: `NRBA-${env.VERSION}.${env.SUBVERSION}`,
         filename: '[file].map[query]',
         moduleFilenameTemplate: 'nr-browser-agent://[namespace]/[resource-path]?[loaders]',
-        publicPath: env.PUBLIC_PATH,
+        publicPath: env.PUBLIC_PATH, // -- leaving source maps on CDN only as they're not strictly necessary
         append: env.SUBVERSION === 'PROD' ? false : '//# sourceMappingURL=[url]'
+      }),
+      new webpack.DefinePlugin({ // passing default asset path as string to agent
+        WEBP_CONST_PUBLIC_PATH: JSON.stringify(env.PUBLIC_PATH)
       }),
       new NRBAChunkingPlugin({
         asyncChunkName

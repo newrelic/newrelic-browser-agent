@@ -6,6 +6,7 @@ const model = {
   beacon: nrDefaults.beacon,
   errorBeacon: nrDefaults.errorBeacon,
   // others must be populated by user
+  assetsPath: undefined,
   licenseKey: undefined,
   applicationID: undefined,
   sa: undefined,

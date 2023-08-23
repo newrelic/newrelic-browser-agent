@@ -36,6 +36,8 @@ export class Aggregate extends AggregateBase {
         var scheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
         scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
         scheduler.startTimer(this.harvestTimeSeconds, 0)
+      } else {
+        this.blocked = true
       }
     })
 

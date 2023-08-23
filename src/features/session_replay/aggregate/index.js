@@ -120,10 +120,7 @@ export class Aggregate extends AggregateBase {
         }
       }, this.featureName, this.ee)
 
-      Promise.all([
-        this.waitForFlags(['sr']),
-        this.waitForOptIn()
-      ]).then(([[flagOn]]) => this.initializeRecording(
+      this.waitForFlags(['sr']).then(([flagOn]) => this.initializeRecording(
         flagOn,
         Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.errorSampleRate'),
         Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.sampleRate')
@@ -131,13 +128,6 @@ export class Aggregate extends AggregateBase {
 
       this.drain()
     }
-  }
-
-  waitForOptIn () {
-    return new Promise((resolve, reject) => {
-      if (!getConfigurationValue(this.agentIdentifier, 'session_replay.requireOptIn')) resolve()
-      registerHandler('sr-opt-in', () => resolve(), this.featureName, this.ee)
-    })
   }
 
   /**

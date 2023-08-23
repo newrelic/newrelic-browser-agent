@@ -81,11 +81,7 @@ function domainMatchesPattern (pattern, domain) {
     return false
   }
 
-  if (domain.indexOf(pattern) === (domain.length - pattern.length)) {
-    return true
-  }
-
-  return false
+  return domain.indexOf(pattern) === (domain.length - pattern.length)
 }
 
 /**
@@ -108,9 +104,5 @@ function comparePath (pattern, path) {
     return true
   }
 
-  if (pattern === path) {
-    return true
-  }
-
-  return false
+  return pattern === path
 }

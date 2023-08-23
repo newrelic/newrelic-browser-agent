@@ -14,6 +14,6 @@ export default function browserSupportsExtendedDebugging ({ browserName, browser
   }
 
   const latestChrome = browsersAll.chrome
-    .reduce((aggregator, sauceBrowser) => aggregator = Math.max(Number(sauceBrowser.version), Number(sauceBrowser.browserVersion), aggregator), 0)
+    .reduce((aggregator, sauceBrowser) => Math.max(Number(sauceBrowser.version), Number(sauceBrowser.browserVersion), aggregator), 0)
   return (Number(browserVersion) || Number(version)) >= latestChrome - 2
 }

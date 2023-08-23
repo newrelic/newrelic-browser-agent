@@ -14,11 +14,11 @@ export class Instrument extends InstrumentBase {
 
     if ((typeof PerformanceNavigationTiming === 'undefined' || isiOS) && typeof PerformanceTiming !== 'undefined') {
       // For majority browser versions in which PNT exists, we can get load timings later from the nav entry (in the aggregate portion). At minimum, PT should exist for main window.
-      // *cli Mar'23 - iOS 15.2 & 15.4 testing in Sauce still fails with onTTFB. Hence, all iOS will fallback to this for now. Unknown if this is similar in nature to iOS_below16 bug.
+      // *cli Mar'23 - iOS 15.2 & 15.4 testing in Sauce still fails with onTTFB. Hence, all iOS will fallback to this for now. Unknown if this is similar in nature to iOSBelow16 bug.
       const agentRuntime = getRuntime(agentIdentifier)
 
       agentRuntime[CONSTANTS.TTFB] = Math.max(Date.now() - agentRuntime.offset, 0)
-      onDOMContentLoaded(() => agentRuntime[CONSTANTS.FBTDC] = Math.max(now() - agentRuntime[CONSTANTS.TTFB], 0))
+      onDOMContentLoaded(() => { agentRuntime[CONSTANTS.FBTDC] = Math.max(now() - agentRuntime[CONSTANTS.TTFB], 0) })
       onWindowLoad(() => {
         const timeNow = now()
         agentRuntime[CONSTANTS.FBTWL] = Math.max(timeNow - agentRuntime[CONSTANTS.TTFB], 0)

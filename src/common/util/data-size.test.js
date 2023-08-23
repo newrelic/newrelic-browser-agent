@@ -47,7 +47,6 @@ describe('dataSize', () => {
     const input = {
       [faker.datatype.uuid()]: faker.lorem.sentence()
     }
-    const expectedSize = faker.datatype.number({ min: 1000, max: 10000 })
 
     jest.spyOn(stringifyModule, 'stringify').mockImplementation(() => { throw new Error(faker.lorem.sentence()) })
 

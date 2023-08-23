@@ -209,7 +209,7 @@ describe('xhr distributed tracing', () => {
           return url.pathname === '/tests/assets/spa/dt/fetch-dt-sameorigin-load-empty-string.html'
         }
 
-        const [_, ajaxRequest] = await Promise.all([
+        const [, ajaxRequest] = await Promise.all([
           browser.testHandle.expect('assetServer', { test: assetAjaxTest }), // This first one will be the actual asset getting loaded by the browser
           browser.testHandle.expect('assetServer', { test: assetAjaxTest }), // This second one will be the ajax call back to the same asset file
           browser.url(await browser.testHandle.assetURL('spa/dt/fetch-dt-sameorigin-load-empty-string.html', {

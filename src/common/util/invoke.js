@@ -26,7 +26,7 @@ export function debounce (func, timeout = 500, options = {}) {
   return (...args) => {
     if (leading && timer === undefined) {
       func.apply(this, args)
-      timer = setTimeout(() => timer = clearTimeout(timer), timeout)
+      timer = setTimeout(() => { timer = clearTimeout(timer) }, timeout)
     }
 
     if (!leading) {

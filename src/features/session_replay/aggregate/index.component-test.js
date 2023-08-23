@@ -13,6 +13,7 @@ class LocalMemory {
     try {
       return this.state[key]
     } catch (err) {
+      // Error is ignored
       return ''
     }
   }
@@ -22,7 +23,7 @@ class LocalMemory {
       if (value === undefined || value === null) return this.remove(key)
       this.state[key] = value
     } catch (err) {
-      return
+      // Error is ignored
     }
   }
 
@@ -30,7 +31,7 @@ class LocalMemory {
     try {
       delete this.state[key]
     } catch (err) {
-      return
+      // Error is ignored
     }
   }
 }
@@ -102,7 +103,6 @@ describe('Session Replay', () => {
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(session.state.sessionReplay).toEqual(sr.mode)
-      return
     })
 
     test('Session SR mode matches SR mode -- OFF', async () => {
@@ -110,7 +110,6 @@ describe('Session Replay', () => {
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(session.state.sessionReplay).toEqual(sr.mode)
-      return
     })
   })
 
@@ -127,7 +126,6 @@ describe('Session Replay', () => {
       await wait(1)
       expect(sr.initialized).toEqual(true)
       expect(sr.recording).toEqual(false)
-      return
     })
 
     test('Does not run if cookies_enabled is false', async () => {
@@ -137,7 +135,6 @@ describe('Session Replay', () => {
       await wait(1)
       expect(sr.initialized).toEqual(false)
       expect(sr.recording).toEqual(false)
-      return
     })
 
     test('Does not run if session_trace is disabled', async () => {
@@ -147,7 +144,6 @@ describe('Session Replay', () => {
       await wait(1)
       expect(sr.initialized).toEqual(false)
       expect(sr.recording).toEqual(false)
-      return
     })
   })
 
@@ -157,7 +153,6 @@ describe('Session Replay', () => {
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.FULL)
-      return
     })
 
     test('New Session -- Full 1 Error 0 === FULL', async () => {
@@ -165,7 +160,6 @@ describe('Session Replay', () => {
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.FULL)
-      return
     })
 
     test('New Session -- Full 0 Error 1 === ERROR', async () => {
@@ -173,7 +167,6 @@ describe('Session Replay', () => {
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.ERROR)
-      return
     })
 
     test('New Session -- Full 0 Error 0 === OFF', async () => {
@@ -181,7 +174,6 @@ describe('Session Replay', () => {
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.OFF)
-      return
     })
 
     test('Existing Session -- Should inherit mode from session entity and ignore samples', async () => {
@@ -194,7 +186,6 @@ describe('Session Replay', () => {
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.FULL)
-      return
     })
   })
 
@@ -206,7 +197,6 @@ describe('Session Replay', () => {
       await wait(1)
       expect(sr.mode).toEqual(MODE.FULL)
       expect(sr.scheduler.started).toEqual(true)
-      return
     })
 
     test('An error AFTER rrweb import changes mode and starts harvester', async () => {
@@ -218,7 +208,6 @@ describe('Session Replay', () => {
       sr.ee.emit('errorAgg')
       expect(sr.mode).toEqual(MODE.FULL)
       expect(sr.scheduler.started).toEqual(true)
-      return
     })
   })
 
@@ -296,7 +285,6 @@ describe('Session Replay', () => {
       const spy = jest.spyOn(sr.scheduler, 'runHarvest')
       setConfiguration(agentIdentifier, { ...init })
       sr.payloadBytesEstimation = (MAX_PAYLOAD_SIZE + 1) / AVG_COMPRESSION
-      const before = Date.now()
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(spy).not.toHaveBeenCalled()

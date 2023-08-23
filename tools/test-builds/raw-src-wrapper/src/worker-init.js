@@ -1,3 +1,6 @@
+/* eslint-disable no-global-assign */
+/* global workerCommands */
+
 const worker = new Worker('worker-wrapper.js')
 
 const opts = NREUM

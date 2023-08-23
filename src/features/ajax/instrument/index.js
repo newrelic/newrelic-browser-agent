@@ -97,9 +97,9 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   }
 
   function onOpenXhrEnd (args, xhr) {
-    var loader_config = getLoaderConfig(agentIdentifier)
-    if (loader_config.xpid && this.sameOrigin) {
-      xhr.setRequestHeader('X-NewRelic-ID', loader_config.xpid)
+    var loaderConfig = getLoaderConfig(agentIdentifier)
+    if (loaderConfig.xpid && this.sameOrigin) {
+      xhr.setRequestHeader('X-NewRelic-ID', loaderConfig.xpid)
     }
 
     var payload = dt.generateTracePayload(this.parsedOrigin)
@@ -312,7 +312,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
 
   // we capture failed call as status 0, the actual error is ignored
   // eslint-disable-next-line handle-callback-err
-  function onFetchDone (err, res) {
+  function onFetchDone (_, res) {
     this.endTime = now()
     if (!this.params) {
       this.params = {}

@@ -56,7 +56,7 @@ export function setAPI (agentIdentifier, forceDrain) {
   var spaPrefix = prefix + 'ixn-'
 
   // Setup stub functions that queue calls for later processing.
-  asyncApiFns.forEach(fnName => apiInterface[fnName] = apiCall(prefix, fnName, true, 'api'))
+  asyncApiFns.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })
 
   apiInterface.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.pageAction)
   apiInterface.setCurrentRouteName = apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
@@ -151,7 +151,7 @@ export function setAPI (agentIdentifier, forceDrain) {
     }
   }
 
-  void ['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach(name => {
+  ;['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach(name => {
     InteractionApiProto[name] = apiCall(spaPrefix, name, undefined, FEATURE_NAMES.spa)
   })
 
@@ -159,7 +159,7 @@ export function setAPI (agentIdentifier, forceDrain) {
     return function () {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
       if (bufferGroup) handle(prefix + name, [now(), ...arguments], notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
-      return notSpa ? void 0 : this
+      return notSpa ? undefined : this
     }
   }
 

@@ -1,7 +1,5 @@
-import logger from '@wdio/logger'
 import { getBrowserName, getBrowserVersion } from '../../browsers-lists/utils.mjs'
 
-const log = logger('browser-matcher')
 /**
  * This is a WDIO worker plugin that provides a global method allowing for the
  * filtering of tests by a browser match.

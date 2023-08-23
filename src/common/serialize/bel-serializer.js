@@ -32,7 +32,7 @@ export function getAddStringContext (agentIdentifier) {
 
   function addString (str) {
     if (typeof str === 'undefined' || str === '') return ''
-    var obfuscator = new Obfuscator({ agentIdentifier: agentIdentifier })
+    var obfuscator = new Obfuscator({ agentIdentifier })
     str = String(str)
     if (obfuscator.shouldObfuscate()) str = obfuscator.obfuscateString(str)
     if (hasOwnProp.call(stringTable, str)) {

@@ -41,16 +41,16 @@ function ee (old, debugId) {
 
   var emitter = {
     on: addEventListener,
-    addEventListener: addEventListener,
-    removeEventListener: removeEventListener,
-    emit: emit,
+    addEventListener,
+    removeEventListener,
+    emit,
     get: getOrCreate,
-    listeners: listeners,
-    context: context,
+    listeners,
+    context,
     buffer: bufferEventsByGroup,
     abort,
     aborted: false,
-    isBuffering: isBuffering,
+    isBuffering,
     debugId,
     backlog: isolatedBacklog ? {} : old && typeof old.backlog === 'object' ? old.backlog : {}
 

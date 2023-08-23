@@ -79,7 +79,7 @@ test('should construct a new instrument', () => {
 })
 
 test('should not immediately drain', () => {
-  const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName, false)
+  new InstrumentBase(agentIdentifier, aggregator, featureName, false)
 
   expect(registerDrain).not.toHaveBeenCalled()
 })

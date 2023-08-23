@@ -1,3 +1,5 @@
+/* globals triggerError */
+
 describe('error attributes with spa loader', () => {
   describe('custom attributes', () => {
     it('sets multiple custom attributes after page load with multiple JS errors occurring after page load', async () => {

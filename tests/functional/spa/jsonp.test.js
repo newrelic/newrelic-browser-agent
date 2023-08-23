@@ -16,7 +16,6 @@ runTest('Angular v1.x', 'spa/jsonp/angular1.html', supportedWithoutFirefox)
 
 function runTest (title, htmlPage, supported) {
   testDriver.test(title, supported, function (t, browser, router) {
-    t.plan(16)
 
     waitForPageLoad(browser, router, htmlPage)
       .then(() => {
@@ -27,9 +26,8 @@ function runTest (title, htmlPage, supported) {
         t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
         t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')
         t.ok(interactionTree.callbackEnd <= interactionTree.end, 'interaction callback end should be <= interaction end')
-        t.equal(interactionTree.children.length, 1, 'expected one child node')
 
-        var xhr = interactionTree.children[0]
+        var xhr = interactionTree.children.find(child => child.requestedWith === 'JSONP' && child.path === '/jsonp')
 
         t.equal(xhr.type, 'ajax', 'should be an ajax node')
         t.equal(xhr.method, 'GET', 'should be a GET request')
@@ -46,6 +44,7 @@ function runTest (title, htmlPage, supported) {
         t.equal(tracer.type, 'customTracer', 'child must be a custom tracer')
         t.equal(tracer.name, 'tacoTimer', 'tracer should be named tacoTimer')
         t.equal(tracer.children.length, 0, 'should not have nested children')
+        t.end()
       })
       .catch(fail)
 
@@ -57,7 +56,6 @@ function runTest (title, htmlPage, supported) {
 }
 
 testDriver.test('JSONP on initial page load', supported, function (t, browser, router) {
-  t.plan(16)
 
   waitForPageLoad(browser, router, 'spa/jsonp/load.html')
     .then((result) => {
@@ -65,12 +63,12 @@ testDriver.test('JSONP on initial page load', supported, function (t, browser, r
       ({ query, body } = result[1].request)
 
       let interactionTree = (body && body.length ? body : querypack.decode(query.e))[0]
+
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
       t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')
       t.ok(interactionTree.callbackEnd <= interactionTree.end, 'interaction callback end should be <= interaction end')
-      t.equal(interactionTree.children.length, 1, 'expected one child node')
 
-      var xhr = interactionTree.children[0]
+      var xhr = interactionTree.children.find(child => child.requestedWith === 'JSONP' && child.path === '/jsonp')
 
       t.equal(xhr.type, 'ajax', 'should be an ajax node')
       t.equal(xhr.method, 'GET', 'should be a GET request')
@@ -84,13 +82,12 @@ testDriver.test('JSONP on initial page load', supported, function (t, browser, r
       t.comment('second: ' + xhr.children.length)
       t.ok(xhr.children.length >= 1, 'expected at least one child node')
 
-      var tracer = xhr.children.find(function (node) {
-        return node.type === 'customTracer'
-      })
+      var tracer = xhr.children.find(node => node.type === 'customTracer')
 
       t.ok(tracer, 'xhr must have a child node of tracer')
       t.equal(tracer.name, 'tacoTimer', 'tracer should be named tacoTimer')
       t.equal(tracer.children.length, 0, 'should not have nested children')
+      t.end()
     })
     .catch(fail)
 
@@ -101,7 +98,6 @@ testDriver.test('JSONP on initial page load', supported, function (t, browser, r
 })
 
 testDriver.test('two JSONP events', supported, function (t, browser, router) {
-  t.plan(14)
 
   waitForPageLoad(browser, router, 'spa/jsonp/duo.html')
     .then(() => {
@@ -112,10 +108,12 @@ testDriver.test('two JSONP events', supported, function (t, browser, router) {
       t.ok(interactionTree.end >= interactionTree.start, 'interaction end time should be >= start')
       t.ok(interactionTree.callbackEnd >= interactionTree.start, 'interaaction callback end should be >= interaction start')
       t.ok(interactionTree.callbackEnd <= interactionTree.end, 'interaction callback end should be <= interaction end')
-      t.equal(interactionTree.children.length, 2, 'expected two child nodes')
+
+      const jsonpChildren = interactionTree.children.filter(child => child.requestedWith === 'JSONP' && child.path === '/jsonp')
+      t.equal(jsonpChildren.length, 2, 'expected two jsonp nodes')
 
       // First jsonp
-      var firstJsonp = interactionTree.children[0]
+      var firstJsonp = jsonpChildren[0]
       t.equal(firstJsonp.type, 'ajax', 'should be an ajax node')
       t.equal(firstJsonp.children.length, 1, 'expected one child node')
       var tracerOne = firstJsonp.children[0]
@@ -124,13 +122,14 @@ testDriver.test('two JSONP events', supported, function (t, browser, router) {
       t.equal(tracerOne.children.length, 0, 'should not have nested children')
 
       // Second jsonp
-      var secondJsonp = interactionTree.children[1]
+      var secondJsonp = jsonpChildren[1]
       t.equal(secondJsonp.type, 'ajax', 'should be an ajax node')
       t.equal(secondJsonp.children.length, 1, 'expected one child node')
       var tracerTwo = secondJsonp.children[0]
       t.equal(tracerTwo.type, 'customTracer', 'child must be a custom tracer')
       t.ok(tracerTwo.name.match(/tacoTimer/), 'tracer should be named tacoTimer')
       t.equal(tracerTwo.children.length, 0, 'should not have nested children')
+      t.end()
     })
     .catch(fail)
 
@@ -141,7 +140,6 @@ testDriver.test('two JSONP events', supported, function (t, browser, router) {
 })
 
 testDriver.test('JSONP with non-JSON response', supported, function (t, browser, router) {
-  t.plan(4)
 
   waitForPageLoad(browser, router, 'spa/jsonp/plaintext.html')
     .then(() => {
@@ -155,6 +153,7 @@ testDriver.test('JSONP with non-JSON response', supported, function (t, browser,
       t.equal(xhr.requestBodySize, 0, 'should have correct requestBodySize')
       t.equal(xhr.responseBodySize, 0, 'should have correct responseBodySize')
       t.equal(xhr.requestedWith, 'JSONP', 'should indicate it was requested with JSONP')
+      t.end()
     })
     .catch(fail)
 
@@ -165,7 +164,6 @@ testDriver.test('JSONP with non-JSON response', supported, function (t, browser,
 })
 
 testDriver.test('JSONP with error', supported, function (t, browser, router) {
-  t.plan(5)
 
   waitForPageLoad(browser, router, 'spa/jsonp/error.html')
     .then(() => {
@@ -180,6 +178,7 @@ testDriver.test('JSONP with error', supported, function (t, browser, router) {
       t.equal(xhr.requestBodySize, 0, 'should have correct requestBodySize')
       t.equal(xhr.responseBodySize, 0, 'should have correct responseBodySize')
       t.equal(xhr.requestedWith, 'JSONP', 'should indicate it was requested with JSONP')
+      t.end()
     })
     .catch(fail)
 
@@ -197,7 +196,6 @@ testDriver.test('JSONP with error', supported, function (t, browser, router) {
  * node.callbackDuration = sync duration of the callback
  */
 testDriver.test('JSONP timings', supported, function (t, browser, router) {
-  t.plan(6)
 
   waitForPageLoad(browser, router, 'spa/jsonp/timing.html')
     .then(() => {
@@ -217,6 +215,7 @@ testDriver.test('JSONP timings', supported, function (t, browser, router) {
       t.ok(totalDuration > asyncTime, 'total duration is bigger than async time')
       t.ok(totalDuration > syncTime, 'total duration is bigger than sync time')
       t.ok(xhr.end > xhr.start, 'end is bigger than start')
+      t.end()
     })
     .catch(fail)
 

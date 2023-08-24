@@ -307,7 +307,6 @@ describe('Manual Loader', () => {
 
     it('metrics', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented-manual.html')) // Setup expects before loading the page
-      // .then(() => browser.waitForAgentLoad())
 
       const rum = await browser.testHandle.expectRum(5000, true)
       expect(rum).toEqual(undefined)
@@ -317,16 +316,18 @@ describe('Manual Loader', () => {
         browser.testHandle.expectMetrics(),
         browser.execute(function () {
           newrelic.run('metrics')
-          window.location.reload()
+          setTimeout(function () {
+            window.location.reload()
+          }, 1000)
         })
       ])
+      await browser.pause(2000)
       checkRum(rum2.request)
       checkMetrics(metrics.request)
     })
 
     it('page_action', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented-manual.html')) // Setup expects before loading the page
-      // .then(() => browser.waitForAgentLoad())
 
       const rum = await browser.testHandle.expectRum(5000, true)
       expect(rum).toEqual(undefined)

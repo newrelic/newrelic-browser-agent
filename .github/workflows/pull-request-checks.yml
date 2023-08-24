@@ -1,3 +1,9 @@
+# This workflow runs on creation and update of pull
+# requests to execute jobs that do not require access
+# to repository secrets. Jobs that do require repository
+# secrets are executed when this workflow is manually
+# executed to ensure protection of those secrets.
+
 name: 'Pull Request Checks'
 
 on:
@@ -65,19 +71,18 @@ jobs:
         run: npm ci
       - name: Running cdn build
         run: npm run cdn:build:dev
-      - name: Running npm build
-        run: |
-          npm run build:npm
-          npm run tools:test-builds
-      - name: Generating npm build stats
-        run: node ./tools/scripts/npm-build-stats.js
       - name: Generating asset size report
-        run: node ./tools/scripts/diff-sizes.mjs -o build
+        uses: ./.github/actions/size-diff
+        with:
+          compare_from: dev
+          compare_to: local
       - name: Reading asset size report
         id: asset-size-report
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "results<<$EOF" >> "$GITHUB_OUTPUT"
+          echo "## Asset Size Report <br><br>" >> "$GITHUB_OUTPUT"
+          echo "Merging this pull request will result in the following asset size changes: <br><br>" >> "$GITHUB_OUTPUT"
           cat ./build/size_report.md >> "$GITHUB_OUTPUT"
           echo "$EOF" >> "$GITHUB_OUTPUT"
       - name: Comment pull request

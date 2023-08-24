@@ -1,213 +1,228 @@
-name: Push Release To All Platforms
+# This workflow is used to build and publish a github release
+# to all platforms. This workflow cannot be manually ran to
+# prevent the same release from being published more than once.
+
+name: Publish Release
 
 on:
-  workflow_dispatch:
   release:
     types: [published]
 
 jobs:
-  publish-to-s3:
+  # Build and publish the github release to S3
+  publish-prod-to-s3:
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash
-    env:
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: Release${{ github.event.number }}-${{ github.run_number }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
-      - name: Setup Container
-        run: apt update && apt install -y git
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: install
+      - name: Install project dependencies
         run: npm ci
-      - name: build:prod
+      - name: Build prod
         run: npm run cdn:build:prod
-      - name: upload artifacts to S3
-        run: |
-          node tools/scripts/upload-to-s3.js \
-            --bucket ${{ secrets.AWS_BUCKET }} \
-            --role ${{ secrets.AWS_ROLE_ARN }}
-      - name: check files exist
-        run: node tools/scripts/check-version.js -e yes -m
-  publish-to-internal-prod:
+      - name: Upload prod
+        id: prod-s3-upload
+        uses: ./.github/actions/s3-upload
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          local_dir: $GITHUB_WORKSPACE/build
+      - name: Gather prod purge paths
+        id: prod-purge-paths
+        run: echo "results=$(echo '${{ steps.prod-s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test("nr-loader-.*?\\.js$") or test(".*stats\\.json$")) + " "')" >> $GITHUB_OUTPUT
+      - name: Purge prod fastly cache
+        uses: ./.github/actions/fastly-purge
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          purge_path: ${{ steps.prod-purge-paths.outputs.results }}
+      - name: Verify prod assets
+        uses: ./.github/actions/fastly-verify
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          asset_path: ${{ join(fromJson(steps.prod-s3-upload.outputs.results).*.Key, ' ') }}
+
+  # Rebuild and publish the prod environment A/B script
+  publish-prod-ab:
+    needs: [publish-prod-to-s3]
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash
-    needs: [publish-to-s3]
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
-      - name: Setup Container
-        run: apt update && apt install -y git jq
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: install
-        run: npm ci
-      - name: re-publish internal loader (prod)
-        run: |
-          node ./tools/scripts/upload-ab-to-s3.js \
-            --env prod \
-            --current https://js-agent.newrelic.com/nr-loader-spa-current.min.js \
-            --next https://js-agent.newrelic.com/nr-loader-spa-$(cat package.json | jq -r '.version').min.js \
-            --appId ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }} \
-            --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
-            --bucket ${{ secrets.AWS_BUCKET }} \
-            --sha $GITHUB_SHA \
-            --workflow $GITHUB_WORKFLOW \
-            --role ${{ secrets.AWS_ROLE_ARN }}
-      - name: re-publish internal loader (eu-prod)
-        run: |
-          node ./tools/scripts/upload-ab-to-s3.js \
-            --env eu-prod \
-            --current https://js-agent.newrelic.com/nr-loader-spa-current.min.js \
-            --next https://js-agent.newrelic.com/nr-loader-spa-$(cat package.json | jq -r '.version').min.js \
-            --appId ${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }} \
-            --licenseKey ${{ secrets.INTERNAL_LICENSE_KEY }} \
-            --bucket ${{ secrets.AWS_BUCKET }} \
-            --sha $GITHUB_SHA \
-            --workflow $GITHUB_WORKFLOW \
-            --role ${{ secrets.AWS_ROLE_ARN }}
-      - name: purge fastly cache url
-        run: |
-          node ./tools/scripts/fastly.js \
-            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
-            --env prod \
-            --purge-internal
-      - name: purge fastly cache url
-        run: |
-          node ./tools/scripts/fastly.js \
-            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
-            --env eu-prod \
-            --purge-internal
-  publish-to-nrdb:
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Deploy prod a/b script
+        uses: ./.github/actions/internal-ab
+        with:
+          nr_environment: prod
+          nrba_app_id: ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
+          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-spa-${{ steps.agent-loader-version.outputs.results }}.min.js
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+
+  # Rebuild and publish the eu-prod environment A/B script
+  publish-eu-prod-ab:
+    needs: [publish-prod-to-s3]
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash
-    needs: [publish-to-s3]
-    env:
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
-      BUILD_NUMBER: Release${{ github.event.number }}-${{ github.run_number }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
-      - name: Setup Container
-        run: apt update && apt install -y git jq
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: install
-        run: npm ci
-      - name: upload artifacts to NR
-        run: |
-          node tools/scripts/upload-to-nr.js \
-            --staging-api-key=${{ secrets.NR_API_KEY_STAGING }} \
-            --production-api-key=${{ secrets.NR_API_KEY_PRODUCTION }} \
-            --v=$(cat package.json | jq -r '.version')
-      - name: validate file
-        run: |
-          node tools/scripts/check-nrdb.js -v $(cat package.json | jq -r '.version')
-  raise-release-notes-pr:
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Deploy eu-prod a/b script
+        uses: ./.github/actions/internal-ab
+        with:
+          nr_environment: eu-prod
+          nrba_app_id: ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
+          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-spa-${{ steps.agent-loader-version.outputs.results }}.min.js
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+
+  # Publish the loaders to nr
+  publish-prod-to-nr:
+    needs: [publish-prod-to-s3]
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash
-    needs: [publish-to-nrdb]
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      GITHUB_TOKEN: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
     steps:
-      - name: Setup Container
-        run: apt update && apt install -y git jq
-      - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.DOCS_SITE_FORK_TOKEN }}
-      - uses: actions/setup-node@v3
-        with:
-          node-version: lts/*
-      - name: install
-        run: npm ci
-      - name: Build and raise PR to docs-website
-        run: |
-          node tools/scripts/docs-website/create-docs-pr.mjs \
-            -t=v$(cat package.json | jq -r '.version')
-  publish-current-to-s3:
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
-    defaults:
-      run:
-        shell: bash
-    needs: [publish-to-nrdb]
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    steps:
-      - name: Setup Container
-        run: apt update && apt install -y git
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: install
-        run: npm ci
-      - name: build
-        run: npm run cdn:build:current
-      - name: upload artifacts to S3
-        run: |
-          node tools/scripts/upload-to-s3.js \
-            --bucket ${{ secrets.AWS_BUCKET }} \
-            --role ${{ secrets.AWS_ROLE_ARN }}
-      - name: check files exist
-        run: |
-          node tools/scripts/check-version.js \
-            -e yes
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Publish loader to nr
+        uses: ./.github/actions/nr-upload
+        with:
+          nr_prod_api_key: ${{ secrets.NR_API_KEY_PRODUCTION }}
+          nr_stage_api_key: ${{ secrets.NR_API_KEY_STAGING }}
+          loader_version: ${{ steps.agent-loader-version.outputs.results }}
+      - name: Verify loaders in nr
+        uses: ./.github/actions/nr-verify
+        with:
+          loader_version: ${{ steps.agent-loader-version.outputs.results }}
+
+  # Publish the agent to npmjs.org
   publish-npm:
+    needs: [publish-prod-to-s3]
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash
-    needs: [publish-to-nrdb]
     env:
       NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
     steps:
-      - name: Setup Container
-        run: apt update && apt install -y git
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: authenticate
+      - name: Authenticate npm
         run: |
           npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
-      - name: install
+      - name: Install project dependencies
         run: npm ci
-      - name: build:npm
+      - name: Build npm package
         run: npm run build:npm
-      - name: publish
-        run: |
-          npm publish
+      - name: Publish npm package
+        run: npm publish
+
+  # Raise the release notes pr on the docs website repo
+  raise-release-notes-pr:
+    needs: [publish-prod-to-s3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Raise release notes pr
+        uses: ./.github/actions/docs-pr
+        with:
+          tag: v${{ steps.agent-loader-version.outputs.results }}
+          github_login: ${{ secrets.BROWSER_GITHUB_BOT_NAME }}
+          github_token: ${{ secrets.BROWSER_GITHUB_BOT_PAT }}
+          github_email: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}
+
+  # Publish the new "current" version to s3 after the prod a/b scripts have been built
+  publish-current-to-s3:
+    needs: [publish-prod-ab, publish-eu-prod-ab]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Copy loaders to current
+        id: current-s3-update
+        uses: ./.github/actions/update-current
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          loader_version: ${{ steps.agent-loader-version.outputs.results }}
+      - name: Gather current purge paths
+        id: current-purge-paths
+        run: echo "results=$(echo '${{ steps.current-s3-update.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
+      - name: Purge current fastly cache
+        uses: ./.github/actions/fastly-purge
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          purge_path: ${{ steps.current-purge-paths.outputs.results }}
+      - name: Verify current assets
+        uses: ./.github/actions/fastly-verify
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          asset_path: ${{ join(fromJson(steps.current-s3-upload.outputs.results).*.Key, ' ') }}

@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.238.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.237.1...v1.238.0) (2023-08-16)
+
+
+### Features
+
+* Add API: setApplicationVersion ([#639](https://github.com/newrelic/newrelic-browser-agent/issues/639)) ([4bb3e81](https://github.com/newrelic/newrelic-browser-agent/commit/4bb3e81b9a2fb0c0f075f3f72e90d21ffdde06fb))
+* Reducing the agent chunk count ([#637](https://github.com/newrelic/newrelic-browser-agent/issues/637)) ([043becf](https://github.com/newrelic/newrelic-browser-agent/commit/043becf2d8c766516cecd614b54de3fc5acad1e2))
+
+
+### Bug Fixes
+
+* Capture potential missing tail data for session trace ([#624](https://github.com/newrelic/newrelic-browser-agent/issues/624)) ([1941427](https://github.com/newrelic/newrelic-browser-agent/commit/194142763a117b7c5ac30f22a73b0577d2112fba))
+* Fix distributed tracing handling of empty string fetch parameter ([#640](https://github.com/newrelic/newrelic-browser-agent/issues/640)) ([5dca741](https://github.com/newrelic/newrelic-browser-agent/commit/5dca741ae0c98ef50cf2170cdd4f075e0c8bbae9))
+* Typo in type declarations ([#634](https://github.com/newrelic/newrelic-browser-agent/issues/634)) ([ada8ad2](https://github.com/newrelic/newrelic-browser-agent/commit/ada8ad2e2c85065c46237fa45cce7ddec8368e53))
+
 ## [1.237.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.237.0...v1.237.1) (2023-08-02)
 
 

@@ -11,22 +11,22 @@
       "browserName": "chrome",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "109",
-      "browserVersion": "109"
+      "version": "110",
+      "browserVersion": "110"
     },
     {
       "browserName": "chrome",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "112",
-      "browserVersion": "112"
+      "version": "113",
+      "browserVersion": "113"
     },
     {
       "browserName": "chrome",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "114",
-      "browserVersion": "114"
+      "version": "116",
+      "browserVersion": "116"
     }
   ],
   "edge": [
@@ -41,22 +41,22 @@
       "browserName": "MicrosoftEdge",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "108",
-      "browserVersion": "108"
+      "version": "109",
+      "browserVersion": "109"
     },
     {
       "browserName": "MicrosoftEdge",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "111",
-      "browserVersion": "111"
+      "version": "112",
+      "browserVersion": "112"
     },
     {
       "browserName": "MicrosoftEdge",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "113",
-      "browserVersion": "113"
+      "version": "115",
+      "browserVersion": "115"
     }
   ],
   "firefox": [
@@ -71,15 +71,8 @@
       "browserName": "firefox",
       "platformName": "Windows 10",
       "platform": "Windows 10",
-      "version": "109",
-      "browserVersion": "109"
-    },
-    {
-      "browserName": "firefox",
-      "platformName": "Windows 10",
-      "platform": "Windows 10",
-      "version": "111",
-      "browserVersion": "111"
+      "version": "110",
+      "browserVersion": "110"
     },
     {
       "browserName": "firefox",
@@ -87,6 +80,13 @@
       "platform": "Windows 10",
       "version": "113",
       "browserVersion": "113"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "116",
+      "browserVersion": "116"
     }
   ],
   "safari": [

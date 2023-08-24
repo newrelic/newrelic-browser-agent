@@ -1,0 +1,14 @@
+{
+  "name": "@newrelic/browser-agent.actions.size-diff",
+  "description": "",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "chalk": "^5.3.0",
+    "console-table-printer": "^2.11.2",
+    "filesize": "^10.0.12",
+    "node-fetch": "^3.3.2",
+    "uuid": "^9.0.0",
+    "yargs": "^17.7.2"
+  }
+}

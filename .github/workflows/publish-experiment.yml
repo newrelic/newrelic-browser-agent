@@ -1,9 +1,15 @@
-name: Build and publish EXPERIMENT to CDN
+# This workflow can be ran on any branch to build and publish
+# that branch as an internal experiment. Once published, the
+# dev and staging A/B scripts will be updated to include the
+# new experiment.
+
+name: Publish Experiment
 
 on:
   workflow_dispatch:
 
 jobs:
+  # Build and publish the branch to S3 experiments folder
   publish-experiment-to-s3:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -41,7 +47,61 @@ jobs:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: js-agent.newrelic.com
           purge_path: ${{ steps.purge-paths.outputs.results }}
-  run-dev-process:
+
+  # Rebuild and publish the dev environment A/B script
+  publish-dev-ab:
     needs: [publish-experiment-to-s3]
-    uses: ./.github/workflows/publish-dev.yml
-    secrets: inherit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Publish dev a/b script
+        uses: ./.github/actions/internal-ab
+        with:
+          nr_environment: dev
+          nrba_app_id: ${{ secrets.INTERNAL_DEV_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
+          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-experimental.min.js
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+
+  # Rebuild and publish the staging environment A/B script
+  publish-staging-ab:
+    needs: [publish-experiment-to-s3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Deploy staging a/b script
+        uses: ./.github/actions/internal-ab
+        with:
+          nr_environment: staging
+          nrba_app_id: ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
+          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-experimental.min.js
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}

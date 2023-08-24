@@ -5,6 +5,55 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "194142763a117b7c5ac30f22a73b0577d2112fba",
+          "message": "Capture potential missing tail data for session trace",
+          "issues": [
+            "624"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "043becf2d8c766516cecd614b54de3fc5acad1e2",
+          "message": "Reducing the agent chunk count",
+          "issues": [
+            "637"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "5dca741ae0c98ef50cf2170cdd4f075e0c8bbae9",
+          "message": "Fix distributed tracing handling of empty string fetch parameter",
+          "issues": [
+            "640"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "ada8ad2e2c85065c46237fa45cce7ddec8368e53",
+          "message": "Typo in type declarations",
+          "issues": [
+            "634"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "4bb3e81b9a2fb0c0f075f3f72e90d21ffdde06fb",
+          "message": "Add API: setApplicationVersion",
+          "issues": [
+            "639"
+          ]
+        }
+      ],
+      "version": "1.238.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "ded102d2-5a8b-41dc-a385-0c1b9b653d4b",
+      "createTime": "2023-08-16T15:23:16.223Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "ccfe51063cd59e946e20ec870ce5979b1ca73054",
           "message": "SPA feature respects ajax deny_list for fetch",
           "issues": [
@@ -341,5 +390,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-08-02T19:25:20.815Z"
+  "updateTime": "2023-08-16T15:23:16.223Z"
 }

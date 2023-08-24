@@ -53,7 +53,7 @@ describe('sendX', () => {
 
     harvestInstance.sendX(spec)
 
-    expect(harvestInstance.createPayload).toHaveBeenCalledWith(spec.endpoint, { retry: true })
+    expect(harvestInstance.createPayload).toHaveBeenCalledWith(spec.endpoint, { retry: true, isFinalHarvest: false })
   })
 
   test('should not use obfuscateAndSend', async () => {

@@ -18,7 +18,6 @@ const sentIds = new Set()
 
 /** Note that this function only processes each unique flag ONCE, with the first occurrence of each flag and numeric value determining its switch on/off setting. */
 export function activateFeatures (flags, agentIdentifier) {
-  console.log('inside activate features....', flags, agentIdentifier, activatedFeatures)
   const sharedEE = ee.get(agentIdentifier)
   if (!(flags && typeof flags === 'object')) return
 

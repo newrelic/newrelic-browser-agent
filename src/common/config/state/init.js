@@ -9,7 +9,7 @@ const model = () => {
   }
   return {
     allow_bfcache: true, // *cli - temporary feature flag for BFCache work
-    assetsPath: undefined,
+    assetsPath: undefined, // if a value is set here by a customer, it will be used to overwrite the webpack asset path used to fetch assets
     privacy: { cookies_enabled: true }, // *cli - per discussion, default should be true
     ajax: { deny_list: undefined, block_internal: true, enabled: true, harvestTimeSeconds: 10 },
     distributed_tracing: {

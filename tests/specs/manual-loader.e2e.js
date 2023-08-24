@@ -61,14 +61,17 @@ describe('Manual Loader', () => {
         browser.testHandle.expectInteractionEvents(),
         browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { auto: true, ajax: { block_internal: false } } })) // Setup expects before loading the page
           .then(() => browser.execute(function () {
-            var xhr = new XMLHttpRequest()
-            xhr.open('GET', '/json')
-            xhr.send()
-            newrelic.noticeError('test')
-            newrelic.addPageAction('test', { test: 1 })
+            setTimeout(function () {
+              var xhr = new XMLHttpRequest()
+              xhr.open('GET', '/json')
+              xhr.send()
+              newrelic.noticeError('test')
+              newrelic.addPageAction('test', { test: 1 })
+            }, 1000)
           }))
       ])
 
+      await browser.pause(2000)
       checkRum(rum.request)
       checkPVT(pvt.request)
       checkAjax(ajax.request)
@@ -159,13 +162,16 @@ describe('Manual Loader', () => {
             }
           }
         })).then(() => browser.execute(function () {
-          var xhr = new XMLHttpRequest()
-          xhr.open('GET', '/json')
-          xhr.send()
-          newrelic.noticeError('test')
+          setTimeout(function () {
+            var xhr = new XMLHttpRequest()
+            xhr.open('GET', '/json')
+            xhr.send()
+            newrelic.noticeError('test')
+          }, 1000)
         }))
       ])
 
+      await browser.pause(2000)
       checkRum(rum.request)
       checkPVT(pvt.request)
       checkSessionTrace(st.request)
@@ -213,13 +219,16 @@ describe('Manual Loader', () => {
             }
           }
         })).then(() => browser.execute(function () {
-          var xhr = new XMLHttpRequest()
-          xhr.open('GET', '/json')
-          xhr.send()
-          newrelic.noticeError('test')
+          setTimeout(function () {
+            var xhr = new XMLHttpRequest()
+            xhr.open('GET', '/json')
+            xhr.send()
+            newrelic.noticeError('test')
+          }, 1000)
         }))
       ])
 
+      await browser.pause(2000)
       checkRum(rum.request)
       checkPVT(pvt.request)
       checkSessionTrace(st.request)

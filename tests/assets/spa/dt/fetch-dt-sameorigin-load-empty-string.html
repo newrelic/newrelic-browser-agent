@@ -11,7 +11,11 @@
     {init}
     {loader}
     <script type="text/javascript">
-      window.fetch('')
+      window.fetch('', {
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      })
     </script>
   </head>
   <body>

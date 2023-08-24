@@ -34,7 +34,7 @@ export class Aggregate extends AggregateBase {
     this.observedAt = {}
     this.pageviewReported = {}
     this.errorCache = {}
-    this.currentBody
+    this.currentBody = undefined
     this.errorOnPage = false
 
     // this will need to change to match whatever ee we use in the instrument
@@ -73,7 +73,7 @@ export class Aggregate extends AggregateBase {
       this.currentBody = body
     }
 
-    var payload = { body: body, qs: {} }
+    var payload = { body, qs: {} }
     var releaseIds = stringify(getRuntime(this.agentIdentifier).releaseIds)
 
     if (releaseIds !== '{}') {
@@ -195,7 +195,7 @@ export class Aggregate extends AggregateBase {
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
 
     var type = internal ? 'ierr' : 'err'
-    var newMetrics = { time: time }
+    var newMetrics = { time }
 
     // sr, stn and spa aggregators listen to this event - stn sends the error in its payload,
     // and spa annotates the error with interaction info

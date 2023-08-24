@@ -122,7 +122,7 @@ export class Aggregate extends AggregateBase {
             else if (updatedTraceMode === MODE.FULL && this.#scheduler && !this.#scheduler.started) this.#scheduler.runHarvest({ needResponse: true })
             mostRecentModeKnown = updatedTraceMode
           })
-          this.ee.on(SESSION_EVENTS.PAUSE, () => mostRecentModeKnown = sessionEntity.state.sessionTraceMode)
+          this.ee.on(SESSION_EVENTS.PAUSE, () => { mostRecentModeKnown = sessionEntity.state.sessionTraceMode })
 
           if (!sessionEntity.isNew) { // inherit the same mode as existing session's Trace
             if (sessionEntity.state.sessionReplay === MODE.OFF) this.isStandalone = true
@@ -278,8 +278,7 @@ export class Aggregate extends AggregateBase {
     const origin = this.evtOrigin(event.target, target)
     if (event.type in ignoredEvents.global) return true
     if (!!ignoredEvents[origin] && ignoredEvents[origin].ignoreAll) return true
-    if (!!ignoredEvents[origin] && event.type in ignoredEvents[origin]) return true
-    return false
+    return !!(!!ignoredEvents[origin] && event.type in ignoredEvents[origin])
   }
 
   evtName (type) {
@@ -398,7 +397,7 @@ export class Aggregate extends AggregateBase {
     if (this.nodeCount >= this.maxNodesPerHarvest) { // limit the amount of pending data awaiting next harvest
       if (this.isStandalone || this.agentRuntime.session.state.sessionTraceMode !== MODE.ERROR) return
       const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
-      if (openedSpace == 0) return
+      if (openedSpace === 0) return
     }
 
     if (this.isStandalone && now() >= MAX_TRACE_DURATION) {
@@ -426,7 +425,7 @@ export class Aggregate extends AggregateBase {
        * ASSUMPTION: all 'end' timings stored are relative to timeOrigin (DOMHighResTimeStamp) and not Unix epoch based. */
       let cutoffIdx = nodeList.findIndex(node => cutoffHighResTime <= node.e)
 
-      if (cutoffIdx == 0) return
+      if (cutoffIdx === 0) return
       else if (cutoffIdx < 0) { // whole list falls outside lookback window and is irrelevant
         cutoffIdx = nodeList.length
         delete this.trace[nameCategory]
@@ -492,8 +491,7 @@ export class Aggregate extends AggregateBase {
 
     function trivial (node) {
       const limit = 4
-      if (node && typeof node.e === 'number' && typeof node.s === 'number' && (node.e - node.s) < limit) return true
-      else return false
+      return !!(node && typeof node.e === 'number' && typeof node.s === 'number' && (node.e - node.s) < limit)
     }
   }
 }

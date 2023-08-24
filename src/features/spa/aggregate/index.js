@@ -121,8 +121,8 @@ export class Aggregate extends AggregateBase {
 
     // register plugins
     var pluginApi = {
-      getCurrentNode: getCurrentNode,
-      setCurrentNode: setCurrentNode
+      getCurrentNode,
+      setCurrentNode
     }
 
     register('spa-register', function (init) {
@@ -196,23 +196,21 @@ export class Aggregate extends AggregateBase {
         // If this event was emitted by an XHR, restore the node ID associated with
         // that XHR.
         setCurrentNode(baseEE.context(eventSource).spaNode)
-      } else if (!state.currentNode) {
+      } else if (!state.currentNode && INTERACTION_EVENTS.indexOf(evName) !== -1) {
         // Otherwise, if no interaction is currently active, create a new node ID,
         // and let the aggregator know that we entered a new event handler callback
         // so that it has a chance to possibly start an interaction.
-        if (INTERACTION_EVENTS.indexOf(evName) !== -1) {
-          var ixn = new Interaction(evName, this[FN_START], state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
+        var ixn = new Interaction(evName, this[FN_START], state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
 
-          // Store the interaction as prevInteraction in case it is prematurely discarded
-          state.prevInteraction = ixn
+        // Store the interaction as prevInteraction in case it is prematurely discarded
+        state.prevInteraction = ixn
 
-          setCurrentNode(ixn.root)
+        setCurrentNode(ixn.root)
 
-          if (evName === 'click') {
-            var value = getActionText(ev.target)
-            if (value) {
-              state.currentNode.attrs.custom.actionText = value
-            }
+        if (evName === 'click') {
+          var value = getActionText(ev.target)
+          if (value) {
+            state.currentNode.attrs.custom.actionText = value
           }
         }
       }
@@ -529,7 +527,7 @@ export class Aggregate extends AggregateBase {
     register(INTERACTION_API + 'get', function (t) {
       var interaction
       if (state?.currentNode?.[INTERACTION]) interaction = this.ixn = state.currentNode[INTERACTION]
-      else if (state?.prevNode?.end === null && state?.prevNode?.[INTERACTION]?.root?.[INTERACTION]?.eventName != 'initialPageLoad') interaction = this.ixn = state.prevNode[INTERACTION]
+      else if (state?.prevNode?.end === null && state?.prevNode?.[INTERACTION]?.root?.[INTERACTION]?.eventName !== 'initialPageLoad') interaction = this.ixn = state.prevNode[INTERACTION]
       else interaction = this.ixn = new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
       if (!state.currentNode) {
         interaction.checkFinish()
@@ -726,10 +724,7 @@ export class Aggregate extends AggregateBase {
 
     function isEnabled () {
       var enabled = getConfigurationValue(agentIdentifier, 'spa.enabled')
-      if (enabled === false) {
-        return false
-      }
-      return true
+      return enabled !== false
     }
 
     this.drain()

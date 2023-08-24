@@ -64,8 +64,8 @@ var debug = false
 var classNameRegex = /function (.+?)\s*\(/
 var chrome = /^\s*at (?:((?:\[object object\])?(?:[^(]*\([^)]*\))*[^()]*(?: \[as \S+\])?) )?\(?((?:file|http|https|chrome-extension):.*?)?:(\d+)(?::(\d+))?\)?\s*$/i
 var gecko = /^\s*(?:(\S*|global code)(?:\(.*?\))?@)?((?:file|http|https|chrome|safari-extension).*?):(\d+)(?::(\d+))?\s*$/i
-var chrome_eval = /^\s*at .+ \(eval at \S+ \((?:(?:file|http|https):[^)]+)?\)(?:, [^:]*:\d+:\d+)?\)$/i
-var ie_eval = /^\s*at Function code \(Function code:\d+:\d+\)\s*/i
+var chromeEval = /^\s*at .+ \(eval at \S+ \((?:(?:file|http|https):[^)]+)?\)(?:, [^:]*:\d+:\d+)?\)$/i
+var ieEval = /^\s*at Function code \(Function code:\d+:\d+\)\s*/i
 
 /**
  * Represents an error with a stack trace.
@@ -209,7 +209,7 @@ function getStackElement (line) {
     })
   }
 
-  if (line.match(chrome_eval) || line.match(ie_eval) || line === 'anonymous') {
+  if (line.match(chromeEval) || line.match(ieEval) || line === 'anonymous') {
     return { func: 'evaluated code' }
   }
 }
@@ -255,7 +255,7 @@ function computeStackTraceBySourceAndLine (ex) {
     mode: 'sourceline',
     name: className,
     message: ex.message,
-    stackString: stackString,
+    stackString,
     frames: [{
       url: canonicalUrl,
       line: ex.line,

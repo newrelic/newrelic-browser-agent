@@ -104,9 +104,9 @@ export class Aggregate extends AggregateBase {
         path: params.pathname,
         requestSize: metrics.txSize,
         responseSize: metrics.rxSize,
-        type: type,
-        startTime: startTime,
-        endTime: endTime,
+        type,
+        startTime,
+        endTime,
         callbackDuration: metrics.cbTime
       }
 

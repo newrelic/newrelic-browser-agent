@@ -27,7 +27,7 @@ function replacePath (importPath, state) {
   return newPath
 }
 
-module.exports = function ({ types }) {
+module.exports = function ({ types: t }) {
   /**
    * A visitor object containing methods for modifying specific types of nodes encountered in the Abstract Source Tree.
    * The state parameter is used to pass along the current state of the plugin as it traverses the AST. We use it
@@ -40,19 +40,6 @@ module.exports = function ({ types }) {
    * @property {Function} ExportAllDeclaration - A function to modify ExportAllDeclaration nodes.
    */
   const visitor = {
-    CallExpression (path, state) {
-      if (path.node.callee.name !== 'require') return
-
-      const args = path.node.arguments
-
-      if (!args.length) return
-
-      const firstArg = getArg(t, args[0])
-
-      if (firstArg) {
-        firstArg.value = replacePath(firstArg.value, state)
-      }
-    },
     ImportDeclaration (path, state) {
       if (path.node.source) {
         path.node.source.value = replacePath(path.node.source.value, state)

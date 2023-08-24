@@ -1727,8 +1727,8 @@
     },
     {
       "browserName": "safari",
-      "platformName": "Mac 10.14",
-      "platform": "Mac 10.14",
+      "platformName": "Mac 10.13",
+      "platform": "Mac 10.13",
       "version": "12",
       "browserVersion": "12",
       "acceptInsecureCerts": false

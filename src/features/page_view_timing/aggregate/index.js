@@ -6,7 +6,7 @@
 import { onFCP, onFID, onLCP, onCLS, onINP } from 'web-vitals'
 import { onFirstPaint } from '../first-paint'
 import { onLongTask } from '../long-tasks'
-import { iOS_below16 } from '../../../common/constants/runtime'
+import { iOSBelow16 } from '../../../common/constants/runtime'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { mapOwn } from '../../../common/util/map-own'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
@@ -40,7 +40,7 @@ export class Aggregate extends AggregateBase {
     })
 
     /* First Contentful Paint - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
-    if (iOS_below16) {
+    if (iOSBelow16) {
       try {
         if (!pageStartedHidden) { // see ios-version.js for detail on this following bug case; tldr: buffered flag doesn't work but getEntriesByType does
           const paintEntries = performance.getEntriesByType('paint')
@@ -100,7 +100,7 @@ export class Aggregate extends AggregateBase {
 
     /* Cumulative Layout Shift - We don't have to limit this callback since cls is stored as a state and only sent as attribute on other timings.
       reportAllChanges ensures our tracked cls has the most recent rolling value to attach to 'unload' and 'pagehide'. */
-    onCLS(({ value }) => this.cls = value, { reportAllChanges: true })
+    onCLS(({ value }) => { this.cls = value }, { reportAllChanges: true })
 
     /* Interaction-to-Next-Paint */
     onINP(({ name, value, id }) => this.addTiming(name.toLowerCase(), value, { metricId: id }))
@@ -184,9 +184,9 @@ export class Aggregate extends AggregateBase {
     }
 
     this.timings.push({
-      name: name,
-      value: value,
-      attrs: attrs
+      name,
+      value,
+      attrs
     })
 
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)

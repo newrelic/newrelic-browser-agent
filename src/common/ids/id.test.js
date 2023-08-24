@@ -67,25 +67,25 @@ test('id is zero on global scope', async () => {
 })
 
 test('id on prototype is correctly inherited', () => {
-  const fn = jest.fn()
+  const Ctor = jest.fn()
   const a = {}
 
   idFn(a)
-  fn.prototype = a
+  Ctor.prototype = a
 
-  const b = new fn()
+  const b = new Ctor()
 
   expect(b['nr@id']).toEqual(a['nr@id'])
 })
 
 test('id on prototype is different from instance', () => {
-  const fn = jest.fn()
+  const Ctor = jest.fn()
   const a = {}
 
   idFn(a)
-  fn.prototype = a
+  Ctor.prototype = a
 
-  const b = new fn()
+  const b = new Ctor()
   const result = idFn(b)
 
   expect(b['nr@id']).toEqual(result)

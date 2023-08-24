@@ -31,17 +31,19 @@ export class InstrumentBase extends FeatureBase {
     this.auto = auto
 
     /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
-    this.abortHandler
+    this.abortHandler = undefined
+
     /**
      * @type {Class} Holds the reference to the feature's aggregate module counterpart, if and after it has been initialized. This may not be assigned until after page loads!
      * The only purpose of this for now is to expose it to the NREUM interface, as the feature's instrument instance is already exposed.
     */
-    this.featAggregate
+    this.featAggregate = undefined
+
     /**
      * @type {Promise} Assigned immediately after @see importAggregator runs. Serves as a signal for when the inner async fn finishes execution. Useful for features to await
      * one another if there are inter-features dependencies.
     */
-    this.onAggregateImported
+    this.onAggregateImported = undefined
 
     this.requiresOptIn = (getConfigurationValue(this.agentIdentifier, `auto.${this.featureName}`) === false || getConfigurationValue(this.agentIdentifier, 'auto') === false)
     this.optedIn = false

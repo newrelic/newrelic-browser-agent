@@ -20,8 +20,8 @@ export class Aggregate extends AggregateBase {
     this.eventsPerMinute = 240
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_action.harvestTimeSeconds') || getConfigurationValue(this.agentIdentifier, 'ins.harvestTimeSeconds') || 30
     this.eventsPerHarvest = this.eventsPerMinute * this.harvestTimeSeconds / 60
-    this.referrerUrl
-    this.currentEvents
+    this.referrerUrl = undefined
+    this.currentEvents = undefined
 
     this.events = []
 

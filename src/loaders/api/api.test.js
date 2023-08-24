@@ -71,7 +71,7 @@ describe('setAPI', () => {
   test('calls asyncApi setAPI as well', async () => {
     jest.resetModules()
     let setApiCalled
-    let asyncSetApi = new Promise(resolve => setApiCalled = resolve)
+    let asyncSetApi = new Promise(resolve => { setApiCalled = resolve })
     jest.doMock('./apiAsync', () => {
       return {
         __esModule: true,

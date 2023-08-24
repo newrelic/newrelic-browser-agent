@@ -16,10 +16,10 @@ export function setAPI (agentIdentifier) {
 
   var api = {
     finished: single(finished),
-    setErrorHandler: setErrorHandler,
-    addToTrace: addToTrace,
-    inlineHit: inlineHit,
-    addRelease: addRelease
+    setErrorHandler,
+    addToTrace,
+    inlineHit,
+    addRelease
   }
 
   // Hook all of the api functions up to the queues/stubs created in loader/api.js
@@ -49,33 +49,32 @@ export function setAPI (agentIdentifier) {
     handle('bstApi', [report], undefined, FEATURE_NAMES.sessionTrace, instanceEE)
   }
 
-  // NREUM.inlineHit(request_name, queue_time, app_time, total_be_time, dom_time, fe_time)
+  // NREUM.inlineHit(requestName, queueTime, appTime, totalBackEndTime, domTime, frontEndTime)
   //
-  // request_name - the 'web page' name or service name
-  // queue_time - the amount of time spent in the app tier queue
-  // app_time - the amount of time spent in the application code
-  // total_be_time - the total roundtrip time of the remote service call
-  // dom_time - the time spent processing the result of the service call (or user defined)
-  // fe_time - the time spent rendering the result of the service call (or user defined)
-  function inlineHit (t, request_name, queue_time, app_time, total_be_time, dom_time, fe_time) {
+  // requestName - the 'web page' name or service name
+  // queueTime - the amount of time spent in the app tier queue
+  // appTime - the amount of time spent in the application code
+  // totalBackEndTime - the total roundtrip time of the remote service call
+  // domTime - the time spent processing the result of the service call (or user defined)
+  // frontEndTime - the time spent rendering the result of the service call (or user defined)
+  function inlineHit (t, requestName, queueTime, appTime, totalBackEndTime, domTime, frontEndTime) {
     if (!isBrowserScope) return
 
-    request_name = window.encodeURIComponent(request_name)
+    requestName = window.encodeURIComponent(requestName)
     cycle += 1
 
     const agentInfo = getInfo(agentIdentifier)
-    const agentRuntime = getRuntime(agentIdentifier)
     if (!agentInfo.beacon) return
 
     var url = scheme + '://' + agentInfo.beacon + '/1/' + agentInfo.licenseKey
 
     url += '?a=' + agentInfo.applicationID + '&'
-    url += 't=' + request_name + '&'
-    url += 'qt=' + ~~queue_time + '&'
-    url += 'ap=' + ~~app_time + '&'
-    url += 'be=' + ~~total_be_time + '&'
-    url += 'dc=' + ~~dom_time + '&'
-    url += 'fe=' + ~~fe_time + '&'
+    url += 't=' + requestName + '&'
+    url += 'qt=' + ~~queueTime + '&'
+    url += 'ap=' + ~~appTime + '&'
+    url += 'be=' + ~~totalBackEndTime + '&'
+    url += 'dc=' + ~~domTime + '&'
+    url += 'fe=' + ~~frontEndTime + '&'
     url += 'c=' + cycle
 
     submitData.xhr({ url })

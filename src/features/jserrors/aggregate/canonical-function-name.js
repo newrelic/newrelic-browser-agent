@@ -17,6 +17,4 @@ export function canonicalFunctionName (functionNameString) {
 
   const match = functionNameString.match(canonicalFunctionNameRe)
   if (match) return match[1]
-
-  return
 }

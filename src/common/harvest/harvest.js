@@ -96,7 +96,8 @@ export class Harvest extends SharedContext {
       return false
     }
 
-    let url = `${this.getScheme()}://${info.errorBeacon}${endpoint !== 'rum' ? `/${endpoint}` : ''}/1/${info.licenseKey}`
+    const endpointURLPart = endpoint !== 'rum' ? `/${endpoint}` : ''
+    let url = `${this.getScheme()}://${info.errorBeacon}${endpointURLPart}/1/${info.licenseKey}`
     if (customUrl) url = customUrl
     if (raw) url = `${this.getScheme()}://${info.errorBeacon}/${endpoint}`
 

@@ -176,7 +176,7 @@ export class Serializer extends SharedContext {
         // (since its the same as interaction.start)
         // and limit to just the first 20 values we know about
         mapOwn(navTiming.slice(1, 21), function (i, v) {
-          if (v !== void 0) {
+          if (v !== undefined) {
             navTimingNode += seperator + numeric(v - prev)
             seperator = ','
             prev = v

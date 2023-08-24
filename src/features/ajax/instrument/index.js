@@ -34,6 +34,29 @@ export class Instrument extends InstrumentBase {
     this.dt = new DT(agentIdentifier)
 
     this.handler = (type, args, ctx, group) => handle(type, args, ctx, group, this.ee)
+
+    // this is a best (but imperfect) effort at capturing AJAX calls that may have fired before the agent was instantiated
+    // this could happen because the agent was "improperly" set up (ie, not at the top of the head) or
+    // because it was deferred from loading in some way -- e.g. 'deferred' script loading tags or other lazy-loading techniques
+    //
+    // it is "imperfect" because we cannot capture the following with the API vs wrapping the events directly:
+    // * requestBodySize - (txSize -- request body size)
+    // * method - request type (GET, POST, etc)
+    // * callbackDuration - (cbTime -- sum of resulting callback time)
+    try {
+      const initiators = { xmlhttprequest: 'xhr', fetch: 'fetch', beacon: 'beacon' }
+      globalScope?.performance?.getEntriesByType('resource').forEach(resource => {
+        if (resource.initiatorType in initiators && resource.responseStatus !== 0) {
+          const params = { status: resource.responseStatus }
+          const metrics = { rxSize: resource.transferSize, duration: Math.floor(resource.duration), cbTime: 0 }
+          addUrl(params, resource.name)
+          this.handler('xhr', [params, metrics, resource.startTime, resource.responseEnd, initiators[resource.initiatorType]], undefined, FEATURE_NAMES.ajax)
+        }
+      })
+    } catch (err) {
+      // do nothing
+    }
+
     wrapFetch(this.ee)
     wrapXhr(this.ee)
     subscribeToEvents(agentIdentifier, this.ee, this.handler, this.dt)
@@ -97,9 +120,9 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   }
 
   function onOpenXhrEnd (args, xhr) {
-    var loader_config = getLoaderConfig(agentIdentifier)
-    if (loader_config.xpid && this.sameOrigin) {
-      xhr.setRequestHeader('X-NewRelic-ID', loader_config.xpid)
+    var loaderConfig = getLoaderConfig(agentIdentifier)
+    if (loaderConfig.xpid && this.sameOrigin) {
+      xhr.setRequestHeader('X-NewRelic-ID', loaderConfig.xpid)
     }
 
     var payload = dt.generateTracePayload(this.parsedOrigin)
@@ -312,7 +335,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
 
   // we capture failed call as status 0, the actual error is ignored
   // eslint-disable-next-line handle-callback-err
-  function onFetchDone (err, res) {
+  function onFetchDone (_, res) {
     this.endTime = now()
     if (!this.params) {
       this.params = {}
@@ -360,19 +383,6 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this, FEATURE_NAMES.ajax)
   }
 
-  function addUrl (ctx, url) {
-    var parsed = parseUrl(url)
-    var params = ctx.params
-
-    params.hostname = parsed.hostname
-    params.port = parsed.port
-    params.protocol = parsed.protocol
-    params.host = parsed.hostname + ':' + parsed.port
-    params.pathname = parsed.pathname
-    ctx.parsedOrigin = parsed
-    ctx.sameOrigin = parsed.sameOrigin
-  }
-
   function captureXhrData (ctx, xhr) {
     ctx.params.status = xhr.status
 
@@ -388,4 +398,17 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
 
     ctx.loadCaptureCalled = true
   }
+}
+
+function addUrl (ctx, url) {
+  var parsed = parseUrl(url)
+  var params = ctx.params || ctx
+
+  params.hostname = parsed.hostname
+  params.port = parsed.port
+  params.protocol = parsed.protocol
+  params.host = parsed.hostname + ':' + parsed.port
+  params.pathname = parsed.pathname
+  ctx.parsedOrigin = parsed
+  ctx.sameOrigin = parsed.sameOrigin
 }

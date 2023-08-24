@@ -19,6 +19,7 @@ export function applyFnToProps (obj, fn, type = 'string', ignoreKeys = []) {
     if (typeof obj[property] === 'object') {
       applyFnToProps(obj[property], fn, type, ignoreKeys)
     } else {
+      // eslint-disable-next-line valid-typeof
       if (typeof obj[property] === type && !ignoreKeys.includes(property)) obj[property] = fn(obj[property])
     }
   })

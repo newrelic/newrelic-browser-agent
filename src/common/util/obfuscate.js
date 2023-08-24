@@ -57,11 +57,9 @@ export function validateRules (rules) {
     }
 
     var replacement = rules[i].replacement
-    if (replacement) {
-      if (typeof replacement !== 'string') {
-        warn('An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string)')
-        invalidReplacementDetected = true
-      }
+    if (replacement && typeof replacement !== 'string') {
+      warn('An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string)')
+      invalidReplacementDetected = true
     }
   }
 

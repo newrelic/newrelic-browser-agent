@@ -66,7 +66,7 @@ describe('xhr', () => {
       this._withCredentials = false
       Object.defineProperty(this, 'withCredentials', {
         get: jest.fn(() => this._withCredentials),
-        set: jest.fn((val) => this._withCredentials = val)
+        set: jest.fn((val) => { this._withCredentials = val })
       })
     })
   })

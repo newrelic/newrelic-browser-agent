@@ -46,6 +46,7 @@ describe('object encoding', () => {
   })
 
   test('handles circular objects', () => {
+    // eslint-disable-next-line sonarjs/prefer-object-literal
     const circular = {}
     circular.circular = circular
     const input = { bar: ['a', circular, 'c'] }

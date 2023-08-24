@@ -8,11 +8,13 @@ import { redefinePublicPath } from './public-path'
 import { warn } from '../../common/util/console'
 
 export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
+  // eslint-disable-next-line camelcase
   let { init, info, loader_config, runtime = { loaderType }, exposed = true } = opts
   const nr = gosCDN()
   if (!info) {
     init = nr.init
     info = nr.info
+    // eslint-disable-next-line camelcase
     loader_config = nr.loader_config
   }
 
@@ -20,6 +22,7 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   if (retVal !== '') redefinePublicPath(retVal)
   else warn('New public path must be a valid URL. Chunk origin remains unchanged.')
   setConfiguration(agentIdentifier, init || {})
+  // eslint-disable-next-line camelcase
   setLoaderConfig(agentIdentifier, loader_config || {})
 
   info.jsAttributes ??= {}

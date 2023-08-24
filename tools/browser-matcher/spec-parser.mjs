@@ -1,4 +1,3 @@
-const specSyntax = '{browserVersion}{operator:@|<|>|<=|>=}[/platformName]'
 export const SPEC_OPERATOR = {
   AT: '@',
   LT: '<',

@@ -7,7 +7,7 @@ describe('Using proxy servers -', () => {
     /** This is where we expect the agent to fetch its chunk. '/build/' is necessary within the URL because the way our asset server
      * handles each test requests -- see /testing-server/plugins/test-handle/index.js. */
     const assetServerChangedUrl = `http://${host}:${port}/build/fakepath/`
-    let url = await browser.testHandle.assetURL('instrumented.html', { config: { assetsPath: assetServerChangedUrl } })
+    let url = await browser.testHandle.assetURL('instrumented.html', { init: { assetsPath: assetServerChangedUrl } })
 
     // Expecting a GET to http://bam-test-1.nr-local.net:<asset port>/build/fakepath/nr-spa.min.js for chunk and response of 404 (no cross-origin)
     let expectRequest = browser.testHandle.expect('assetServer', {

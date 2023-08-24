@@ -71,12 +71,6 @@ export default async (env) => {
   env.PUBLIC_PATH = PUBLIC_PATH
   env.VERSION = VERSION
 
-  // -- These are likely not being used(?)
-  // process.env.PATH_VERSION = PATH_VERSION
-  // process.env.SUBVERSION = SUBVERSION
-  // process.env.PUBLIC_PATH = PUBLIC_PATH
-  // process.env.VERSION = VERSION
-
   // These values are used in babel to replace ENV variables in src/common/constants/env.cdn.js
   process.env.BUILD_VERSION = VERSION
   process.env.BUILD_ENV = SUBVERSION

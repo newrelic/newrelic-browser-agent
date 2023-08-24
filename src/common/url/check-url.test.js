@@ -1,16 +1,15 @@
-import { isValidAssetUrl } from './check-url'
+import { validateAssetUrl } from './check-url'
 
-test('isValidAssetUrl works correctly', () => {
-  expect(isValidAssetUrl(undefined)).toEqual(false)
-  expect(isValidAssetUrl(123)).toEqual(false)
-  expect(isValidAssetUrl('')).toEqual(false)
-  expect(isValidAssetUrl('blah')).toEqual(false)
-  expect(isValidAssetUrl('/someRelativePath')).toEqual(false)
-  expect(isValidAssetUrl('www.missingscheme.com')).toEqual(false)
-  expect(isValidAssetUrl('http://noendingslash.net')).toEqual(false)
+test('validateAssetUrl works correctly', () => {
+  expect(validateAssetUrl(undefined)).toEqual('')
+  expect(validateAssetUrl(123)).toEqual('')
+  expect(validateAssetUrl('')).toEqual('')
+  expect(validateAssetUrl('/someRelativePath')).toEqual('')
+  expect(validateAssetUrl('data://anotherscheme.com/')).toEqual('')
 
-  expect(isValidAssetUrl('http://absolutepath.net/')).toEqual(true)
-  expect(isValidAssetUrl('https://www.absolutepath.org/')).toEqual(true)
-  expect(isValidAssetUrl('data://anotherscheme.com/')).toEqual(true)
-  expect(isValidAssetUrl('https://js-agent.nr.com/somepath/')).toEqual(true)
+  expect(validateAssetUrl('www.missingscheme.com/')).toEqual('https://www.missingscheme.com/')
+  expect(validateAssetUrl('http:/enforcescheme.net/')).toEqual('https://enforcescheme.net/')
+  expect(validateAssetUrl('enforceendslash.net:1234')).toEqual('https://enforceendslash.net:1234/')
+  expect(validateAssetUrl('https://www.absolutepath.org/somepath')).toEqual('https://www.absolutepath.org/')
+  expect(validateAssetUrl('js-agent.nr.com:9876/foo/bar?query=search')).toEqual('https://js-agent.nr.com:9876/')
 })

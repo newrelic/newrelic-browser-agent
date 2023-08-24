@@ -92,7 +92,8 @@ describe('vital-metric', () => {
 
   test('subscribers do not get updates when not valid', (done) => {
     vitalMetric.subscribe(({ current: value }) => {
-      fail('should not have reached subscriber')
+      console.log('should not have reached subscriber')
+      expect(1).toEqual(2)
     })
 
     vitalMetric.update({ value: -1 })
@@ -110,7 +111,8 @@ describe('vital-metric', () => {
 
   test('unsubscribe', (done) => {
     const unsubscribe = vitalMetric.subscribe(({ current: value }) => {
-      fail('should not have reached subscriber')
+      console.log('should not have reached subscriber')
+      expect(1).toEqual(2)
     })
 
     unsubscribe()

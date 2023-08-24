@@ -33,7 +33,7 @@ jest.mock('web-vitals', () => ({
 })
 )
 
-let pvtAgg, cumulativeLayoutShift, firstInputDelay
+let pvtAgg, cumulativeLayoutShift
 describe('pvt aggregate tests', () => {
   beforeEach(async () => {
     const { Aggregate } = await import('.')
@@ -52,9 +52,6 @@ describe('pvt aggregate tests', () => {
 
     const { cumulativeLayoutShift: cls } = await import('../../../common/vitals/cumulative-layout-shift')
     cumulativeLayoutShift = cls
-
-    const { firstInputDelay: fid } = await import('../../../common/vitals/first-input-delay')
-    firstInputDelay = fid
   })
   test('LCP event with CLS attribute', () => {
     cumulativeLayoutShift.update({ value: 1 })

@@ -9,8 +9,6 @@ function canonicalFunctionName (orig) {
 
   var match = orig.match(canonicalFunctionNameRe)
   if (match) return match[1]
-
-  return
 }
 
 module.exports = canonicalFunctionName

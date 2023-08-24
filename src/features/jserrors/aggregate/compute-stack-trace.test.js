@@ -305,7 +305,7 @@ describe('errors without stack property and with line property', () => {
       line: 100,
       column: 200,
       stack: undefined,
-      sourceURL: sourceURL
+      sourceURL
     })
 
     mockGlobalScopeLocation(pageLocation)

@@ -43,15 +43,13 @@ function getConfigContent (request, reply, testServer) {
   }
 
   for (const key in config) {
-    if (request.query.injectUpdatedLoaderConfig === 'true') {
-      if (loaderConfigKeys.includes(key)) {
-        // this simulates the collector injects only the primary app ID
-        if (key === 'applicationID') {
-          const primaryAppId = config[key].toString().split(',')[0]
-          updatedConfig.loaderConfig[key] = primaryAppId
-        } else {
-          updatedConfig.loaderConfig[key] = config[key]
-        }
+    if (request.query.injectUpdatedLoaderConfig === 'true' && loaderConfigKeys.includes(key)) {
+      // this simulates the collector injects only the primary app ID
+      if (key === 'applicationID') {
+        const primaryAppId = config[key].toString().split(',')[0]
+        updatedConfig.loaderConfig[key] = primaryAppId
+      } else {
+        updatedConfig.loaderConfig[key] = config[key]
       }
     }
 

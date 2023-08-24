@@ -94,7 +94,6 @@ export class Aggregate extends AggregateBase {
     // [Temporary] Report restores from BFCache to NR1 while feature flag is in place in lieu of sending pageshow events.
     windowAddEventListener('pageshow', (evt) => {
       if (evt.persisted) { this.storeSupportabilityMetrics('Generic/BFCache/PageRestored') }
-      return
     })
   }
 

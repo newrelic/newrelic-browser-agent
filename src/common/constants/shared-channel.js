@@ -5,7 +5,7 @@
  */
 
 let onReplayReady
-const sessionReplayInitialized = new Promise(resolve => onReplayReady = resolve)
+const sessionReplayInitialized = new Promise(resolve => { onReplayReady = resolve })
 
 export const sharedChannel = Object.freeze({
   onReplayReady,

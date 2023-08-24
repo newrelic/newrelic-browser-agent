@@ -28,7 +28,7 @@ var DOM_CONTENT_LOAD_EVENT = 'domContentLoadedEvent'
 export var navTimingValues = []
 
 function getPntType (type) {
-  if (typeof type == 'number') return type
+  if (typeof type === 'number') return type
   const types = {
     navigate: undefined,
     reload: 1,

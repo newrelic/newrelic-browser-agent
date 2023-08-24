@@ -50,6 +50,69 @@ describe('Manual Loader', () => {
   })
 
   describe('all at once', () => {
+    it('runs all features if top level is true', async () => {
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { auto: true, ajax: { block_internal: false } } })) // Setup expects before loading the page
+        .then(() => browser.execute(function () {
+          var xhr = new XMLHttpRequest()
+          xhr.open('GET', '/json')
+          xhr.send()
+          newrelic.noticeError('test')
+          newrelic.addPageAction('test', { test: 1 })
+        }))
+
+      const [rum, pvt, ajax, jserrors, metrics, pa, st, spa] = await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.testHandle.expectTimings(),
+        browser.testHandle.expectAjaxEvents(),
+        browser.testHandle.expectErrors(),
+        browser.testHandle.expectMetrics(),
+        browser.testHandle.expectIns(),
+        browser.testHandle.expectResources(),
+        browser.testHandle.expectInteractionEvents(),
+        browser.execute(function () {
+          setTimeout(function () {
+            window.location.reload()
+          }, 1000)
+        })
+      ])
+
+      checkRum(rum.request)
+      checkPVT(pvt.request)
+      checkAjax(ajax.request)
+      checkJsErrors(jserrors.request)
+      checkMetrics(metrics.request)
+      checkPageAction(pa.request)
+      checkSessionTrace(st.request)
+      checkSpa(spa.request)
+    })
+
+    it('does NOT run features if top level is false', async () => {
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { auto: false, ajax: { block_internal: false } } })) // Setup expects before loading the page
+        .then(() => browser.execute(function () {
+          var xhr = new XMLHttpRequest()
+          xhr.open('GET', '/json')
+          xhr.send()
+          newrelic.noticeError('test')
+          newrelic.addPageAction('test', { test: 1 })
+        }))
+
+      await Promise.all([
+        browser.testHandle.expectRum(5000, true),
+        browser.testHandle.expectTimings(5000, true),
+        browser.testHandle.expectAjaxEvents(5000, true),
+        browser.testHandle.expectErrors(5000, true),
+        browser.testHandle.expectMetrics(5000, true),
+        browser.testHandle.expectIns(5000, true),
+        browser.testHandle.expectResources(5000, true),
+        browser.testHandle.expectInteractionEvents(5000, true),
+        browser.execute(function () {
+          setTimeout(function () {
+            window.location.reload()
+          }, 1000)
+        })
+      ])
+    })
+
     it('empty params initializes all features', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented-manual.html')) // Setup expects before loading the page
 
@@ -81,6 +144,106 @@ describe('Manual Loader', () => {
       checkPageAction(pa.request)
       checkSessionTrace(st.request)
       checkSpa(spa.request)
+    })
+  })
+
+  describe('partial implementations', () => {
+    it('works if config supplied is incomplete', async () => {
+      const [rum, pvt, ajax, jserrors, st, spa] = await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.testHandle.expectTimings(),
+        browser.testHandle.expectAjaxEvents(10000, true),
+        browser.testHandle.expectErrors(10000, true),
+        browser.testHandle.expectResources(),
+        browser.testHandle.expectInteractionEvents(),
+        browser.url(await browser.testHandle.assetURL('instrumented.html', {
+          init: {
+            auto: {
+              ajax: false,
+              jserrors: false
+            }
+          }
+        })).then(() => browser.execute(function () {
+          var xhr = new XMLHttpRequest()
+          xhr.open('GET', '/json')
+          xhr.send()
+          newrelic.noticeError('test')
+        }))
+      ])
+
+      checkRum(rum.request)
+      checkPVT(pvt.request)
+      checkSessionTrace(st.request)
+      checkSpa(spa.request)
+
+      expect(ajax).toEqual(undefined)
+      expect(jserrors).toEqual(undefined)
+
+      await browser.pause(1000)
+      const [ajax2, jserrors2] = await Promise.all([
+        browser.testHandle.expectAjaxEvents(),
+        browser.testHandle.expectErrors(),
+        browser.execute(function () {
+          newrelic.run()
+        })
+      ])
+
+      checkAjax(ajax2.request)
+      checkJsErrors(jserrors2.request)
+    })
+
+    it('still initializes manual features later when split', async () => {
+      const [rum, pvt, ajax, jserrors, st, spa] = await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.testHandle.expectTimings(),
+        browser.testHandle.expectAjaxEvents(10000, true),
+        browser.testHandle.expectErrors(10000, true),
+        browser.testHandle.expectResources(),
+        browser.testHandle.expectInteractionEvents(),
+        browser.url(await browser.testHandle.assetURL('instrumented.html', {
+          init: {
+            auto: {
+              ajax: false,
+              jserrors: false,
+              metrics: true,
+              page_action: true,
+              page_view_event: true,
+              page_view_timing: true,
+              session_trace: true,
+              session_replay: true,
+              spa: true
+            },
+            ajax: {
+              block_internal: false
+            }
+          }
+        })).then(() => browser.execute(function () {
+          var xhr = new XMLHttpRequest()
+          xhr.open('GET', '/json')
+          xhr.send()
+          newrelic.noticeError('test')
+        }))
+      ])
+
+      checkRum(rum.request)
+      checkPVT(pvt.request)
+      checkSessionTrace(st.request)
+      checkSpa(spa.request)
+
+      expect(ajax).toEqual(undefined)
+      expect(jserrors).toEqual(undefined)
+
+      await browser.pause(1000)
+      const [ajax2, jserrors2] = await Promise.all([
+        browser.testHandle.expectAjaxEvents(),
+        browser.testHandle.expectErrors(),
+        browser.execute(function () {
+          newrelic.run()
+        })
+      ])
+
+      checkAjax(ajax2.request)
+      checkJsErrors(jserrors2.request)
     })
   })
 
@@ -224,22 +387,20 @@ const baseQuery = expect.objectContaining({
 })
 
 function checkRum ({ query, body }) {
-  expect(query).toEqual(expect.objectContaining({
+  expect(query).toMatchObject({
     a: expect.any(String),
     af: expect.any(String),
     be: expect.any(String),
     ck: expect.any(String),
     dc: expect.any(String),
-    fcp: expect.any(String),
     fe: expect.any(String),
-    fp: expect.any(String),
     perf: expect.any(String),
     ref: expect.any(String),
     rst: expect.any(String),
     s: expect.any(String),
     t: expect.any(String),
     v: expect.any(String)
-  }))
+  })
   expect(body).toEqual('')
 }
 

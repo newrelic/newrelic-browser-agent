@@ -43,7 +43,6 @@ export function activateFeatures (flags, agentIdentifier) {
       activatedFeatures[flag] = false
     }
   })
-  drain(agentIdentifier, FEATURE_NAMES.pageViewEvent)
 }
 
 export const activatedFeatures = {}

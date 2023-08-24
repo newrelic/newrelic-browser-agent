@@ -43,9 +43,10 @@ export class InstrumentBase extends FeatureBase {
     */
     this.onAggregateImported
 
+    this.requiresOptIn = (getConfigurationValue(this.agentIdentifier, `auto.${this.featureName}`) === false || getConfigurationValue(this.agentIdentifier, 'auto') === false)
     this.optedIn = false
 
-    if (auto) registerDrain(agentIdentifier, featureName)
+    if (auto && !this.requiresOptIn) registerDrain(agentIdentifier, featureName)
   }
 
   /**
@@ -57,10 +58,11 @@ export class InstrumentBase extends FeatureBase {
   importAggregator (argsObjFromInstrument = {}) {
     if (this.featAggregate || !this.auto) return
 
-    if (!getConfigurationValue(this.agentIdentifier, `auto.${this.featureName}`) && this.optedIn === false) {
+    if (this.requiresOptIn && !this.optedIn) {
       // this feature requires an opt in...
       // wait for API to be called
       this.ee.on(`${this.featureName}-opt-in`, () => {
+        registerDrain(this.agentIdentifier, this.featureName)
         this.optedIn = true
         this.importAggregator()
       })

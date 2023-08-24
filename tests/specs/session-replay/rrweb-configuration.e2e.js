@@ -32,18 +32,19 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
 
   describe('optIn', async () => {
     it('when enabled: should only import feature after opt in', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: { requireOptIn: true } })))
-        .then(() => browser.waitForFeatureAggregate('session_replay'))
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ auto: { session_replay: false } })))
+        .then(() => browser.waitForAgentLoad())
 
       let wasInitialized = await browser.execute(function () {
-        return Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.initialized
+        return !!Object.values(newrelic.initializedAgents)[0].features.session_replay?.featAggregate?.initialized
       })
 
       expect(wasInitialized).toEqual(false)
 
       await browser.execute(function () {
-        newrelic.sessionReplay().optIn()
+        newrelic.run('session_replay')
       })
+      await browser.pause(1000)
       wasInitialized = await browser.execute(function () {
         return Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.initialized
       })

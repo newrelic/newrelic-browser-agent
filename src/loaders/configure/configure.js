@@ -18,9 +18,11 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
     loader_config = nr.loader_config
   }
 
-  const retVal = validateAssetUrl(init.assetsPath)
-  if (retVal !== '') redefinePublicPath(retVal)
-  else warn('New public path must be a valid URL. Chunk origin remains unchanged.')
+  if (init.assetsPath) {
+    const retVal = validateAssetUrl(init.assetsPath)
+    if (retVal !== '') redefinePublicPath(retVal)
+    else warn('New public path must be a valid URL. Chunk origin remains unchanged.')
+  }
   setConfiguration(agentIdentifier, init || {})
   // eslint-disable-next-line camelcase
   setLoaderConfig(agentIdentifier, loader_config || {})

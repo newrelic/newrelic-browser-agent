@@ -6,7 +6,7 @@
 export function validateAssetUrl (string) {
   if (!string || typeof string !== 'string') return ''
 
-  if (string.indexOf(':/') != -1) {
+  if (string.indexOf(':/') !== -1) {
     if (!string.startsWith('http')) return '' // non http schemes, such as ftp, are not allowed to be an asset source
   } else { // there's no scheme on this supposed URL, so we'll assume https -- the api will require a scheme.
     if (string.startsWith('/')) return '' // no relative paths...

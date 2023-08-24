@@ -3,8 +3,6 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { args } from './args.js'
 
-console.log(args.githubRef)
-
 if (args.githubRef.startsWith('refs/tags/')) {
   errorResult('Tags cannot have associated pull requests.')
 }
@@ -31,7 +29,6 @@ if (args.githubRef.startsWith('refs/heads/')) {
 
 if (args.githubRef.startsWith('refs/pull/')) {
   pullNumber = args.githubRef.split('/')[2]
-  console.log(pullNumber)
 }
 
 const { data: pullRequest } = await octokit.rest.pulls.get({

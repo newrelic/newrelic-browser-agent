@@ -5,6 +5,7 @@ export class LocalStorage {
       // Cast it back to undefined if it doesnt exist
       return localStorage.getItem(key) || undefined
     } catch (err) {
+      // Error is ignored
       return ''
     }
   }
@@ -14,7 +15,7 @@ export class LocalStorage {
       if (value === undefined || value === null) return this.remove(key)
       return localStorage.setItem(key, value)
     } catch (err) {
-      return
+      // Error is ignored
     }
   }
 
@@ -22,7 +23,7 @@ export class LocalStorage {
     try {
       localStorage.removeItem(key)
     } catch (err) {
-      return
+      // Error is ignored
     }
   }
 }

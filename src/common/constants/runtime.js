@@ -57,7 +57,7 @@ export const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
  * did not work. This affects our onFCP metric in particular since web-vitals uses that flag to retrieve paint timing entries.
  * This was fixed in v16+.
  */
-export const iOS_below16 = (isiOS && typeof SharedWorker === 'undefined')
+export const iOSBelow16 = (isiOS && typeof SharedWorker === 'undefined')
 
 export const ffVersion = (() => {
   const match = navigator.userAgent.match(/Firefox[/\s](\d+\.\d+)/)

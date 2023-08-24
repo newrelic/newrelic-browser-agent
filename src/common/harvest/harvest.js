@@ -47,7 +47,8 @@ export class Harvest extends SharedContext {
   sendX (spec = {}) {
     const submitMethod = submitData.getSubmitMethod({ isFinalHarvest: spec.opts?.unload })
     const options = {
-      retry: !spec.opts?.unload && submitMethod === submitData.xhr
+      retry: !spec.opts?.unload && submitMethod === submitData.xhr,
+      isFinalHarvest: spec.opts?.unload === true
     }
     const payload = this.createPayload(spec.endpoint, options)
     const caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
@@ -95,7 +96,8 @@ export class Harvest extends SharedContext {
       return false
     }
 
-    let url = `${this.getScheme()}://${info.errorBeacon}${endpoint !== 'rum' ? `/${endpoint}` : ''}/1/${info.licenseKey}`
+    const endpointURLPart = endpoint !== 'rum' ? `/${endpoint}` : ''
+    let url = `${this.getScheme()}://${info.errorBeacon}${endpointURLPart}/1/${info.licenseKey}`
     if (customUrl) url = customUrl
     if (raw) url = `${this.getScheme()}://${info.errorBeacon}/${endpoint}`
 

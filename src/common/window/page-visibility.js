@@ -12,11 +12,10 @@ import { documentAddEventListener } from '../event-listener/event-listener-opts'
  */
 export function subscribeToVisibilityChange (cb, toHiddenOnly = false, capture, abortSignal) {
   documentAddEventListener('visibilitychange', handleVisibilityChange, capture, abortSignal)
-  return
 
   function handleVisibilityChange () {
     if (toHiddenOnly) { // trigger cb on change to hidden state only
-      if (document.visibilityState == 'hidden') cb()
+      if (document.visibilityState === 'hidden') cb()
       return
     }
     cb(document.visibilityState)

@@ -45,7 +45,9 @@ module.exports = fp(async function (fastify, testServer) {
         },
         reply: {
           statusCode: reply.statusCode,
-          body: payload
+          body: request.url.startsWith('/tests/assets')
+            ? 'HTML asset content'
+            : payload
         }
       })
     }

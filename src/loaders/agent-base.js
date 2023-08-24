@@ -1,3 +1,5 @@
+/* eslint-disable n/handle-callback-err */
+
 import { warn } from '../common/util/console'
 
 export class AgentBase {

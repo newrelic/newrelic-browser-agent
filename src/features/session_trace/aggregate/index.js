@@ -50,9 +50,13 @@ export class Aggregate extends AggregateBase {
     this.sentTrace = null
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
     this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
+    /**
+     * Standalone (mode) refers to the legacy version of ST before the idea of 'session' or the Replay feature existed.
+     * It has some different behavior vs when used in tandem with replay. */
     this.isStandalone = false
     const operationalGate = new HandlerCache() // acts as a controller-intermediary that can enable or disable this feature's collection dynamically
     const sessionEntity = this.agentRuntime.session
+    this.operationalGate = operationalGate
 
     /* --- The following section deals with user sessions concept & contains non-trivial control flow. --- */
     const controlTraceOp = (traceMode) => {
@@ -119,7 +123,7 @@ export class Aggregate extends AggregateBase {
             else if (updatedTraceMode === MODE.FULL && this.#scheduler && !this.#scheduler.started) this.#scheduler.runHarvest({ needResponse: true })
             mostRecentModeKnown = updatedTraceMode
           })
-          this.ee.on(SESSION_EVENTS.PAUSE, () => mostRecentModeKnown = sessionEntity.state.sessionTraceMode)
+          this.ee.on(SESSION_EVENTS.PAUSE, () => { mostRecentModeKnown = sessionEntity.state.sessionTraceMode })
 
           if (!sessionEntity.isNew) { // inherit the same mode as existing session's Trace
             if (sessionEntity.state.sessionReplay === MODE.OFF) this.isStandalone = true
@@ -189,16 +193,16 @@ export class Aggregate extends AggregateBase {
   }
 
   #prepareHarvest (options) {
-    /* Standalone refers to the legacy version of ST before the idea of 'session' or the Replay feature existed.
-      It has a different behavior on returning a payload for harvest than when used in tandem with either of those concepts. */
     if (this.isStandalone) {
-      if (now() > MAX_TRACE_DURATION) { // been collecting for over the longest duration we should run for, empty trace object so ST has nothing to send
-        this.#scheduler.stopTimer()
-        this.trace = {}
+      if (this.ptid && now() >= MAX_TRACE_DURATION) {
+        // Perform a final harvest once we hit or exceed the max session trace time
+        options.isFinalHarvest = true
+        this.operationalGate.permanentlyDecide(false)
+        this.#scheduler.stopTimer(true)
+      } else if (this.ptid && this.nodeCount <= REQ_THRESHOLD_TO_SEND && !options.isFinalHarvest) {
+        // Only harvest when more than some threshold of nodes are pending, after the very first harvest, with the exception of the last outgoing harvest.
         return
       }
-      // Only harvest when more than some threshold of nodes are pending, after the very first harvest.
-      if (this.ptid && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
     } else {
     //   -- *cli May '26 - Update: Not rate limiting backgrounded pages either for now.
     //   if (this.ptid && document.visibilityState === 'hidden' && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
@@ -209,6 +213,7 @@ export class Aggregate extends AggregateBase {
       if (currentMode === MODE.OFF && Object.keys(this.trace).length === 0) return
       if (currentMode === MODE.ERROR) return // Trace in this mode should never be harvesting, even on unload
     }
+
     return this.takeSTNs(options.retry)
   }
 
@@ -274,8 +279,7 @@ export class Aggregate extends AggregateBase {
     const origin = this.evtOrigin(event.target, target)
     if (event.type in ignoredEvents.global) return true
     if (!!ignoredEvents[origin] && ignoredEvents[origin].ignoreAll) return true
-    if (!!ignoredEvents[origin] && event.type in ignoredEvents[origin]) return true
-    return false
+    return !!(!!ignoredEvents[origin] && event.type in ignoredEvents[origin])
   }
 
   evtName (type) {
@@ -394,7 +398,11 @@ export class Aggregate extends AggregateBase {
     if (this.nodeCount >= this.maxNodesPerHarvest) { // limit the amount of pending data awaiting next harvest
       if (this.isStandalone || this.agentRuntime.session.state.sessionTraceMode !== MODE.ERROR) return
       const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
-      if (openedSpace == 0) return
+      if (openedSpace === 0) return
+    }
+
+    if (this.isStandalone && now() >= MAX_TRACE_DURATION) {
+      return
     }
 
     if (this.trace[stn.n]) this.trace[stn.n].push(stn)
@@ -418,7 +426,7 @@ export class Aggregate extends AggregateBase {
        * ASSUMPTION: all 'end' timings stored are relative to timeOrigin (DOMHighResTimeStamp) and not Unix epoch based. */
       let cutoffIdx = nodeList.findIndex(node => cutoffHighResTime <= node.e)
 
-      if (cutoffIdx == 0) return
+      if (cutoffIdx === 0) return
       else if (cutoffIdx < 0) { // whole list falls outside lookback window and is irrelevant
         cutoffIdx = nodeList.length
         delete this.trace[nameCategory]
@@ -484,8 +492,7 @@ export class Aggregate extends AggregateBase {
 
     function trivial (node) {
       const limit = 4
-      if (node && typeof node.e === 'number' && typeof node.s === 'number' && (node.e - node.s) < limit) return true
-      else return false
+      return !!(node && typeof node.e === 'number' && typeof node.s === 'number' && (node.e - node.s) < limit)
     }
   }
 }

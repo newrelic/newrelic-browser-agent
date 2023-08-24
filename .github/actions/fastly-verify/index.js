@@ -1,9 +1,9 @@
 import process from 'process'
-import fetch from 'node-fetch'
 import { args } from './args.js'
+import { fetchRetry } from '../shared-utils/fetch-retry.js'
 
 const results = await Promise.all(args.assetPath
-  .map(assetPath => fetch(`https://${args.service}/${assetPath}`)
+  .map(assetPath => fetchRetry(`https://${args.service}/${assetPath}`, { retry: 3 })
     .then(response => {
       if (response.status !== 200) {
         console.error(`Invalid response for ${assetPath}: ${response.status}`)

@@ -107,9 +107,9 @@ export class Aggregate extends AggregateBase {
     }
 
     this.timings.push({
-      name: name,
-      value: value,
-      attrs: attrs
+      name,
+      value,
+      attrs
     })
 
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)

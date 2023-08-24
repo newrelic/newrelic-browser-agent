@@ -1,6 +1,6 @@
 const testDriver = require('../../tools/jil/index')
 const { workerTypes, typeToMatcher } = require('./helpers')
-const { fail } = require('../functional/uncat-internal-help.cjs')
+const { fail } = require('./uncat-internal-help.cjs')
 
 const withFetch = testDriver.Matcher.withFeature('fetch')
 

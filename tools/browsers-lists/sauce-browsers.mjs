@@ -84,15 +84,14 @@ const minSupportedVersion = apiName => {
  * @returns {number} The maximum version we support of the specified browser name.
  */
 const maxSupportedVersion = apiName => {
-  switch (apiName) {
-    case 'android':
-      // Android version 13 does not currently work with WDIO/SauceLabs and version 9 through 12 all have
-      // the same version of chrome 100.
-      // https://changelog.saucelabs.com/en/update-to-google-chrome-version-100-on-android-emulators
-      return 9
-    default:
-      return 9999
+  if (apiName === 'android') {
+    // Android version 13 does not currently work with WDIO/SauceLabs and version 9 through 12 all have
+    // the same version of chrome 100.
+    // https://changelog.saucelabs.com/en/update-to-google-chrome-version-100-on-android-emulators
+    return 9
   }
+
+  return 9999
 }
 
 /**
@@ -186,7 +185,7 @@ function platformSelector (desiredBrowser, minVersion = 0, maxVersion = Infinity
         break
         // 'safari' will only ever be on MacOS
       case 'safari':
-        if (sauceBrowser.short_version == 12 && sauceBrowser.os == 'Mac 10.13') return false // this OS+safari combo has issues with functional/XHR tests
+        if (sauceBrowser.short_version === 12 && sauceBrowser.os === 'Mac 10.13') return false // this OS+safari combo has issues with functional/XHR tests
         break
     }
     return true
@@ -257,12 +256,11 @@ function mobilePlatformName (sauceBrowser) {
  * @returns {boolean} `true` if SauceLabs has a known issue connecting to the given browser.
  */
 function hasKnownConnectionIssue (sauceBrowser) {
-  switch (sauceBrowser.api_name) {
-    case 'firefox':
-      return ['59', '57', '49', '47'].includes(sauceBrowser.short_version)
-    default:
-      return false
+  if (sauceBrowser.api_name === 'firefox') {
+    return ['59', '57', '49', '47'].includes(sauceBrowser.short_version)
   }
+
+  return false
 }
 
 /**

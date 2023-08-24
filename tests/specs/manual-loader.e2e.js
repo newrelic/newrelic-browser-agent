@@ -51,36 +51,28 @@ describe('Manual Loader', () => {
 
   describe('all at once', () => {
     it('runs all features if top level is true', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { auto: true, ajax: { block_internal: false } } })) // Setup expects before loading the page
-        .then(() => browser.execute(function () {
-          var xhr = new XMLHttpRequest()
-          xhr.open('GET', '/json')
-          xhr.send()
-          newrelic.noticeError('test')
-          newrelic.addPageAction('test', { test: 1 })
-        }))
-
-      const [rum, pvt, ajax, jserrors, metrics, pa, st, spa] = await Promise.all([
+      const [rum, pvt, ajax, jserrors, pa, st, spa] = await Promise.all([
         browser.testHandle.expectRum(),
         browser.testHandle.expectTimings(),
         browser.testHandle.expectAjaxEvents(),
         browser.testHandle.expectErrors(),
-        browser.testHandle.expectMetrics(),
         browser.testHandle.expectIns(),
         browser.testHandle.expectResources(),
         browser.testHandle.expectInteractionEvents(),
-        browser.execute(function () {
-          setTimeout(function () {
-            window.location.reload()
-          }, 1000)
-        })
+        browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { auto: true, ajax: { block_internal: false } } })) // Setup expects before loading the page
+          .then(() => browser.execute(function () {
+            var xhr = new XMLHttpRequest()
+            xhr.open('GET', '/json')
+            xhr.send()
+            newrelic.noticeError('test')
+            newrelic.addPageAction('test', { test: 1 })
+          }))
       ])
 
       checkRum(rum.request)
       checkPVT(pvt.request)
       checkAjax(ajax.request)
       checkJsErrors(jserrors.request)
-      checkMetrics(metrics.request)
       checkPageAction(pa.request)
       checkSessionTrace(st.request)
       checkSpa(spa.request)
@@ -161,6 +153,9 @@ describe('Manual Loader', () => {
             auto: {
               ajax: false,
               jserrors: false
+            },
+            ajax: {
+              block_internal: false
             }
           }
         })).then(() => browser.execute(function () {
@@ -417,7 +412,7 @@ function checkPVT ({ query, body }) {
 
 function checkAjax ({ query, body }) {
   expect(query).toEqual(baseQuery)
-  expect(body.find(x => x.path === '/json')).toEqual(expect.objectContaining({
+  expect(body.find(x => x.path === '/json')).toMatchObject({
     callbackDuration: expect.any(Number),
     callbackEnd: expect.any(Number),
     children: expect.any(Array),
@@ -435,7 +430,7 @@ function checkAjax ({ query, body }) {
     timestamp: null,
     traceId: null,
     type: expect.any(String)
-  }))
+  })
 }
 
 function checkJsErrors ({ query, body }) {

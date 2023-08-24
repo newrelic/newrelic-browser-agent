@@ -4,7 +4,6 @@
  */
 import { ee } from '../event-emitter/contextual-ee'
 import { handle } from '../event-emitter/handle'
-import { drain } from '../drain/drain'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
 const bucketMap = {

@@ -1,7 +1,7 @@
 import { Aggregate as SessionReplayAgg, AVG_COMPRESSION, MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE } from '.'
 import { Aggregator } from '../../../common/aggregate/aggregator'
 import { SESSION_EVENTS, SessionEntity, MODE } from '../../../common/session/session-entity'
-import { getConfiguration, setConfiguration } from '../../../common/config/config'
+import { setConfiguration } from '../../../common/config/config'
 import { configure } from '../../../loaders/configure/configure'
 
 class LocalMemory {

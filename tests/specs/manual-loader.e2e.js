@@ -21,7 +21,7 @@ describe('Manual Loader', () => {
             window.location.reload()
           }, 1000)
         })
-      ]).then(expect(1).toEqual(1)).catch(err => expect(1).toEqual(2))
+      ]).then(expect(1).toEqual(1)).catch(() => expect(1).toEqual(2))
     })
 
     it('wrong type', async () => {
@@ -45,7 +45,7 @@ describe('Manual Loader', () => {
             window.location.reload()
           }, 1000)
         })
-      ]).then(expect(1).toEqual(1)).catch(err => expect(1).toEqual(2))
+      ]).then(expect(1).toEqual(1)).catch(() => expect(1).toEqual(2))
     })
   })
 
@@ -322,7 +322,7 @@ describe('Manual Loader', () => {
       const rum = await browser.testHandle.expectRum(5000, true)
       expect(rum).toEqual(undefined)
 
-      const [rum2, page_action] = await Promise.all([
+      const [rum2, pageAction] = await Promise.all([
         browser.testHandle.expectRum(),
         browser.testHandle.expectIns(),
         browser.execute(function () {
@@ -330,7 +330,7 @@ describe('Manual Loader', () => {
         })
       ])
       checkRum(rum2.request)
-      checkPageAction(page_action.request)
+      checkPageAction(pageAction.request)
     })
 
     it('session_trace', async () => {
@@ -340,7 +340,7 @@ describe('Manual Loader', () => {
       const rum = await browser.testHandle.expectRum(5000, true)
       expect(rum).toEqual(undefined)
 
-      const [rum2, session_trace] = await Promise.all([
+      const [rum2, sessionTrace] = await Promise.all([
         browser.testHandle.expectRum(),
         browser.testHandle.expectResources(),
         browser.execute(function () {
@@ -348,7 +348,7 @@ describe('Manual Loader', () => {
         })
       ])
       checkRum(rum2.request)
-      checkSessionTrace(session_trace.request)
+      checkSessionTrace(sessionTrace.request)
     })
 
     it('spa', async () => {

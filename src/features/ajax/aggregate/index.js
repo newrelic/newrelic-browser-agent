@@ -66,7 +66,6 @@ export class Aggregate extends AggregateBase {
     ee.on(`drain-${this.featureName}`, () => { scheduler.startTimer(harvestTimeSeconds) })
 
     this.drain()
-    return
 
     function storeXhr (params, metrics, startTime, endTime, type) {
       metrics.time = startTime

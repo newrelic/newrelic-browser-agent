@@ -271,7 +271,6 @@ describe('Manual Loader', () => {
 
     it('ajax', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented-manual.html')) // Setup expects before loading the page
-      // .then(() => browser.waitForAgentLoad())
 
       const rum = await browser.testHandle.expectRum(5000, true)
       expect(rum).toEqual(undefined)
@@ -289,7 +288,6 @@ describe('Manual Loader', () => {
 
     it('jserrors', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented-manual.html')) // Setup expects before loading the page
-      // .then(() => browser.waitForAgentLoad())
 
       const rum = await browser.testHandle.expectRum(5000, true)
       expect(rum).toEqual(undefined)
@@ -345,7 +343,6 @@ describe('Manual Loader', () => {
 
     it('session_trace', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented-manual.html')) // Setup expects before loading the page
-      // .then(() => browser.waitForAgentLoad())
 
       const rum = await browser.testHandle.expectRum(5000, true)
       expect(rum).toEqual(undefined)
@@ -363,7 +360,6 @@ describe('Manual Loader', () => {
 
     it('spa', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented-manual.html')) // Setup expects before loading the page
-      // .then(() => browser.waitForAgentLoad())
 
       const rum = await browser.testHandle.expectRum(5000, true)
       expect(rum).toEqual(undefined)

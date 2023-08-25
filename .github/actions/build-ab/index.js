@@ -23,7 +23,8 @@ const config = {
     session_replay: {
       enabled: true,
       sampleRate: 0.5,
-      errorSampleRate: 1
+      errorSampleRate: 1,
+      autoStart: false
     }
   },
 

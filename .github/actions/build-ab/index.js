@@ -1,20 +1,16 @@
 import fs from 'fs'
 import path from 'path'
 import url from 'url'
+import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts'
+import { S3Client, ListObjectsCommand } from '@aws-sdk/client-s3'
 import { v4 as uuidv4 } from 'uuid'
 import { args } from './args.js'
 import { fetchRetry } from '@newrelic/browser-agent.actions.shared-utils/fetch-retry.js'
 import Handlebars from 'handlebars'
-import { config } from './contents/config.js'
-import { experiments } from './contents/experiments.js'
 
-Handlebars.registerHelper('json', function(context) {
-  return JSON.stringify(context);
-});
-const template = Handlebars.compile(await fs.promises.readFile('./templates/index.handlebars', 'utf-8'))
+const template = Handlebars.compile(await fs.promises.readFile('./template.js', 'utf-8'))
 
-let current, next
-const postScripts = []
+const scripts = []
 
 // 0. Ensure the output directory is available and the target file does not exist
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
@@ -27,31 +23,64 @@ if (fs.existsSync(outputFile)) {
   await fs.promises.rm(outputFile)
 }
 
-// 1. Write the NRBA configuration
-console.log('Writing configuration in A/B script.')
-
-console.log(`Writing current loader ${args.current} in A/B script.`)
 const currentScript = await fetchRetry(`${args.current}?_nocache=${uuidv4()}`, { retry: 3 })
-current = await currentScript.text()
+scripts.push( {name: 'current', contents: await currentScript.text() })
 
-// 3. Write the next loader script
-console.log(`Writing current loader ${args.next} in A/B script.`)
 const nextScript = await fetchRetry(`${args.next}?_nocache=${uuidv4()}`, { retry: 3 })
-next = await nextScript.text()
+scripts.push( {name: 'next', contents: await nextScript.text() })
 
-console.log('writing', experiments.length, 'experiments')
+if (['dev', 'staging'].includes(args.environment)) {
+  const stsClient = new STSClient({ region: args.region })
+  const s3Credentials = await stsClient.send(new AssumeRoleCommand({
+    RoleArn: args.role,
+    RoleSessionName: 'downloadFromS3Session',
+    DurationSeconds: 900
+  }))
 
-postScripts.push({name: 'entitlement-check', contents: await fs.promises.readFile('./contents/entitlement-check.js', 'utf-8')})
-console.log("writing", postScripts.length, "post scripts")
+  const s3Client = new S3Client({
+    region: args.region,
+    credentials: {
+      accessKeyId: s3Credentials.Credentials.AccessKeyId,
+      secretAccessKey: s3Credentials.Credentials.SecretAccessKey,
+      sessionToken: s3Credentials.Credentials.SessionToken
+    }
+  })
+
+  let isTruncated = true
+  const listCommand = new ListObjectsCommand({
+    Bucket: args.bucket,
+    Prefix: 'experiments/',
+    Delimiter: '/'
+  });
+  let experimentsList = new Set()
+
+  while (isTruncated) {
+    const { IsTruncated, NextMarker, CommonPrefixes } = await s3Client.send(listCommand)
+    CommonPrefixes.forEach(prefix => experimentsList.add(prefix.Prefix))
+
+    if (IsTruncated) {
+      listCommand.input.Marker = NextMarker
+    } else {
+      isTruncated = false
+    }
+  }
+
+  if (experimentsList.size === 0) {
+    console.log('No experiments to include in A/B script.')
+  } else {
+    for (const experiment of experimentsList) {
+      const experimentLoader = `https://js-agent.newrelic.com/${experiment}nr-loader-spa.min.js`
+      const experimentScript = await fetchRetry(`${experimentLoader}?_nocache=${uuidv4()}`, { retry: 3 })
+      scripts.push({name: experiment, contents: await experimentScript.text()})
+    }
+  }
+}
+console.log('writing', scripts.length,'scripts:', scripts.map(x => x.name).join(", "))
 
 await fs.promises.writeFile(
   outputFile,
   template({
-    config,
-    current,
-    next,
-    experiments,
-    postScripts
+    args, scripts
   }),
   { encoding: 'utf-8' }
 )

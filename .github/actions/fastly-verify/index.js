@@ -1,6 +1,6 @@
 import process from 'process'
 import { args } from './args.js'
-import { fetchRetry } from '../shared-utils/fetch-retry.js'
+import { fetchRetry } from '@newrelic/browser-agent.actions.shared-utils/fetch-retry.js'
 
 const results = await Promise.all(args.assetPath
   .map(assetPath => fetchRetry(`https://${args.service}/${assetPath}`, { retry: 3 })

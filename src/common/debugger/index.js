@@ -1,16 +1,18 @@
-import { isBrowserScope } from '../constants/runtime'
+import { globalScope, isBrowserScope } from '../constants/runtime'
 import { ee } from '../event-emitter/contextual-ee'
 import { onWindowLoad } from '../window/load'
-import { LocalStorage } from '../storage/local-storage'
+import { warn } from '../util/console'
 
 export const LOCAL_STORAGE_KEY = 'NRBA_DEBUG'
 
 export const attachDebugger = async (agent) => {
   if (!agent || !agent.agentIdentifier) {
-    throw new Error('The debugger can only be attached to an instantiated agent.')
+    warn('The debugger can only be attached to an instantiated agent.')
+    return
   }
 
-  const localStorage = new LocalStorage()
+  if (!isBrowserScope) return
+
   let agentDebugger
   let debugEventQueue = []
 
@@ -23,17 +25,19 @@ export const attachDebugger = async (agent) => {
     }
   })
 
-  if (isBrowserScope && localStorage.get(LOCAL_STORAGE_KEY)?.toLowerCase() === 'true') {
-    onWindowLoad(async () => {
-      try {
-        agentDebugger = new (await import(/* webpackChunkName: "debugger" */'./agent-debugger')).AgentDebugger(agent)
+  onWindowLoad(async () => {
+    try {
+      if (globalScope.localStorage.getItem(LOCAL_STORAGE_KEY)?.toLowerCase() !== 'true') return
 
-        for (let i = 0; i < debugEventQueue.length; i++) {
-          agentDebugger.handleEvent(debugEventQueue[i])
-        }
-      } finally {
-        debugEventQueue = null
+      agentDebugger = new (await import(/* webpackChunkName: "debugger" */'./agent-debugger')).AgentDebugger(agent)
+
+      for (let i = 0; i < debugEventQueue.length; i++) {
+        agentDebugger.handleEvent(debugEventQueue[i])
       }
-    })
-  }
+    } catch (e) {
+      // Swallow any error regarding initializing the debugger
+    } finally {
+      debugEventQueue = null
+    }
+  })
 }

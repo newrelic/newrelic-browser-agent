@@ -5,7 +5,7 @@ import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts'
 import { S3Client, ListObjectsCommand } from '@aws-sdk/client-s3'
 import { v4 as uuidv4 } from 'uuid'
 import { args } from './args.js'
-import { fetchRetry } from '@newrelic/browser-agent.actions.shared-utils/fetch-retry.js'
+import { fetchRetry } from '../shared-utils/fetch-retry.js'
 
 const config = {
   init: {

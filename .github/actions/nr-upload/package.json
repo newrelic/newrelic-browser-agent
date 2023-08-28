@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "devDependencies": {
+    "@newrelic/browser-agent.actions.shared-utils": "file:../shared-utils",
     "node-fetch": "^3.3.2",
     "uuid": "^9.0.0",
     "yargs": "^17.7.2"

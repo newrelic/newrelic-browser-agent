@@ -2,5 +2,9 @@
   "name": "@newrelic/browser-agent.actions.shared-utils",
   "description": "",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "main": "index.js",
+  "devDependencies": {
+    "node-fetch": "^3.3.2"
+  }
 }

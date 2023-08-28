@@ -20,7 +20,7 @@ describe('fcp', () => {
   test('reports fcp from paintEntries if ios<16', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
-      iOS_below16: true,
+      iOSBelow16: true,
       initiallyHidden: false,
       isBrowserScope: true
     }))
@@ -50,7 +50,7 @@ describe('fcp', () => {
   test('Does NOT report values from paintEntries other than fcp', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
-      iOS_below16: true,
+      iOSBelow16: true,
       initiallyHidden: false,
       isBrowserScope: true
     }))
@@ -68,7 +68,7 @@ describe('fcp', () => {
   test('Does NOT report fcp from paintEntries if ios<16 && initiallyHidden', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
-      iOS_below16: true,
+      iOSBelow16: true,
       initiallyHidden: true,
       isBrowserScope: true
     }))
@@ -105,7 +105,7 @@ describe('fcp', () => {
   test('reports only once', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
-      iOS_below16: false,
+      iOSBelow16: false,
       initiallyHidden: false,
       isBrowserScope: true
     }))

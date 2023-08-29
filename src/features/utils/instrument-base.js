@@ -45,9 +45,11 @@ export class InstrumentBase extends FeatureBase {
     */
     this.onAggregateImported = undefined
 
-    this.requiresOptIn = (getConfigurationValue(this.agentIdentifier, `auto.${this.featureName}`) === false || getConfigurationValue(this.agentIdentifier, 'auto') === false)
+    /** used in conjunction with newrelic.start() to defer harvesting in features */
+    this.requiresOptIn = (getConfigurationValue(this.agentIdentifier, `${this.featureName}.autoStart`) === false || getConfigurationValue(this.agentIdentifier, 'auto') === false)
     this.optedIn = false
 
+    /** if the feature requires opt-in (!auto-start), it will get registered once the api has been called */
     if (auto && !this.requiresOptIn) registerDrain(agentIdentifier, featureName)
   }
 
@@ -64,6 +66,8 @@ export class InstrumentBase extends FeatureBase {
       // this feature requires an opt in...
       // wait for API to be called
       this.ee.on(`${this.featureName}-opt-in`, () => {
+        // register the feature to drain only once the API has been called, it will drain when importAggregator finishes for all the features
+        // called by the api in that cycle
         registerDrain(this.agentIdentifier, this.featureName)
         this.optedIn = true
         this.importAggregator()

@@ -1,6 +1,6 @@
 import { registerHandler } from '../../common/event-emitter/register-handler'
 import { FeatureBase } from './feature-base'
-import { getInfo, isConfigured, getRuntime, getConfigurationValue } from '../../common/config/config'
+import { getInfo, isConfigured, getRuntime } from '../../common/config/config'
 import { configure } from '../../loaders/configure/configure'
 import { gosCDN } from '../../common/window/nreum'
 import { drain } from '../../common/drain/drain'
@@ -27,7 +27,7 @@ export class AggregateBase extends FeatureBase {
   }
 
   drain () {
-    drain(this.agentIdentifier, this.featureName, !getConfigurationValue(this.agentIdentifier, `auto.${this.featureName}`))
+    drain(this.agentIdentifier, this.featureName)
   }
 
   /**

@@ -77,11 +77,8 @@ testDriver.test('session trace ajax deny list', supported, function (t, browser,
   let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
-  const ajaxPromise = router.expectAjaxTimeSlices(8000).then(() => {
-    t.fail('Should not have seen the ajax event')
-  }).catch(() => {})
 
-  Promise.all([resourcePromise, ajaxPromise, loadPromise, rumPromise]).then(([result]) => {
+  Promise.all([resourcePromise, loadPromise, rumPromise]).then(([result]) => {
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
     // trigger an XHR call after

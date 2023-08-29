@@ -236,7 +236,7 @@ function waitForPageLoad (browser, router, urlPath) {
 
 function clickPageAndWaitForEvents (browser, router) {
   return Promise.all([
-    router.expectEvents(),
+    router.expectInteractionEvents(),
     browser.elementByCssSelector('body').click()
   ]).then(([eventData, domData]) => {
     return eventData

@@ -16,7 +16,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectResources(10000, true),
         browser.testHandle.expectInteractionEvents(10000, true),
         browser.execute(function () {
-          newrelic.run('INVALID')
+          newrelic.start('INVALID')
           setTimeout(function () {
             window.location.reload()
           }, 1000)
@@ -40,7 +40,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectResources(10000, true),
         browser.testHandle.expectInteractionEvents(10000, true),
         browser.execute(function () {
-          newrelic.run(1)
+          newrelic.start(1)
           setTimeout(function () {
             window.location.reload()
           }, 1000)
@@ -50,64 +50,6 @@ describe('Manual Loader', () => {
   })
 
   describe('all at once', () => {
-    it('runs all features if top level is true', async () => {
-      const [rum, pvt, ajax, jserrors, pa, st, spa] = await Promise.all([
-        browser.testHandle.expectRum(),
-        browser.testHandle.expectTimings(),
-        browser.testHandle.expectAjaxEvents(),
-        browser.testHandle.expectErrors(),
-        browser.testHandle.expectIns(),
-        browser.testHandle.expectResources(),
-        browser.testHandle.expectInteractionEvents(),
-        browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { auto: true, ajax: { block_internal: false } } })) // Setup expects before loading the page
-          .then(() => browser.execute(function () {
-            setTimeout(function () {
-              var xhr = new XMLHttpRequest()
-              xhr.open('GET', '/json')
-              xhr.send()
-              newrelic.noticeError('test')
-              newrelic.addPageAction('test', { test: 1 })
-            }, 1000)
-          }))
-      ])
-
-      await browser.pause(2000)
-      checkRum(rum.request)
-      checkPVT(pvt.request)
-      checkAjax(ajax.request)
-      checkJsErrors(jserrors.request)
-      checkPageAction(pa.request)
-      checkSessionTrace(st.request)
-      checkSpa(spa.request)
-    })
-
-    it('does NOT run features if top level is false', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', { init: { auto: false, ajax: { block_internal: false } } })) // Setup expects before loading the page
-        .then(() => browser.execute(function () {
-          var xhr = new XMLHttpRequest()
-          xhr.open('GET', '/json')
-          xhr.send()
-          newrelic.noticeError('test')
-          newrelic.addPageAction('test', { test: 1 })
-        }))
-
-      await Promise.all([
-        browser.testHandle.expectRum(5000, true),
-        browser.testHandle.expectTimings(5000, true),
-        browser.testHandle.expectAjaxEvents(5000, true),
-        browser.testHandle.expectErrors(5000, true),
-        browser.testHandle.expectMetrics(5000, true),
-        browser.testHandle.expectIns(5000, true),
-        browser.testHandle.expectResources(5000, true),
-        browser.testHandle.expectInteractionEvents(5000, true),
-        browser.execute(function () {
-          setTimeout(function () {
-            window.location.reload()
-          }, 1000)
-        })
-      ])
-    })
-
     it('empty params initializes all features', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented-manual.html')) // Setup expects before loading the page
 
@@ -124,7 +66,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectResources(),
         browser.testHandle.expectInteractionEvents(),
         browser.execute(function () {
-          newrelic.run()
+          newrelic.start()
           setTimeout(function () {
             window.location.reload()
           }, 1000)
@@ -153,12 +95,12 @@ describe('Manual Loader', () => {
         browser.testHandle.expectInteractionEvents(),
         browser.url(await browser.testHandle.assetURL('instrumented.html', {
           init: {
-            auto: {
-              ajax: false,
-              jserrors: false
-            },
             ajax: {
-              block_internal: false
+              block_internal: false,
+              autoStart: false
+            },
+            jserrors: {
+              autoStart: false
             }
           }
         })).then(() => browser.execute(function () {
@@ -185,7 +127,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectAjaxEvents(),
         browser.testHandle.expectErrors(),
         browser.execute(function () {
-          newrelic.run()
+          newrelic.start()
         })
       ])
 
@@ -203,19 +145,12 @@ describe('Manual Loader', () => {
         browser.testHandle.expectInteractionEvents(),
         browser.url(await browser.testHandle.assetURL('instrumented.html', {
           init: {
-            auto: {
-              ajax: false,
-              jserrors: false,
-              metrics: true,
-              page_action: true,
-              page_view_event: true,
-              page_view_timing: true,
-              session_trace: true,
-              session_replay: true,
-              spa: true
-            },
             ajax: {
-              block_internal: false
+              block_internal: false,
+              autoStart: false
+            },
+            jserrors: {
+              autoStart: false
             }
           }
         })).then(() => browser.execute(function () {
@@ -242,7 +177,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectAjaxEvents(),
         browser.testHandle.expectErrors(),
         browser.execute(function () {
-          newrelic.run()
+          newrelic.start()
         })
       ])
 
@@ -262,7 +197,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectRum(),
         browser.testHandle.expectTimings(),
         browser.execute(function () {
-          newrelic.run('page_view_timing')
+          newrelic.start('page_view_timing')
         })
       ])
       checkRum(rum2.request)
@@ -279,7 +214,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectRum(),
         browser.testHandle.expectAjaxEvents(),
         browser.execute(function () {
-          newrelic.run('ajax')
+          newrelic.start('ajax')
         })
       ])
       checkRum(rum2.request)
@@ -296,7 +231,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectRum(),
         browser.testHandle.expectErrors(),
         browser.execute(function () {
-          newrelic.run('jserrors')
+          newrelic.start('jserrors')
         })
       ])
       checkRum(rum2.request)
@@ -313,7 +248,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectRum(),
         browser.testHandle.expectMetrics(),
         browser.execute(function () {
-          newrelic.run('metrics')
+          newrelic.start('metrics')
           setTimeout(function () {
             window.location.reload()
           }, 1000)
@@ -334,7 +269,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectRum(),
         browser.testHandle.expectIns(),
         browser.execute(function () {
-          newrelic.run('page_action')
+          newrelic.start('page_action')
         })
       ])
       checkRum(rum2.request)
@@ -351,7 +286,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectRum(),
         browser.testHandle.expectResources(),
         browser.execute(function () {
-          newrelic.run('session_trace')
+          newrelic.start('session_trace')
         })
       ])
       checkRum(rum2.request)
@@ -368,7 +303,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectRum(),
         browser.testHandle.expectInteractionEvents(),
         browser.execute(function () {
-          newrelic.run('spa')
+          newrelic.start('spa')
         })
       ])
       checkRum(rum2.request)

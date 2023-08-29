@@ -21,7 +21,7 @@ export function setTopLevelCallers () {
   const funcs = [
     'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
     'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
-    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'run'
+    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'start'
   ]
   funcs.forEach(f => {
     nr[f] = (...args) => caller(f, ...args)
@@ -122,7 +122,7 @@ export function setAPI (agentIdentifier, forceDrain) {
     return appendJsAttribute('application.version', value, 'setApplicationVersion', false)
   }
 
-  apiInterface.run = (features, cb) => {
+  apiInterface.start = (features, cb) => {
     try {
       const featNames = Object.values(FEATURE_NAMES)
       if (!features) features = featNames

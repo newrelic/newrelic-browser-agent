@@ -37,7 +37,7 @@ export class MicroAgent extends AgentBase {
 
     Object.assign(this, configure(this.agentIdentifier, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent'))
 
-    this.start()
+    this.run()
   }
 
   get config () {
@@ -49,7 +49,7 @@ export class MicroAgent extends AgentBase {
     }
   }
 
-  start () {
+  run () {
     try {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
 

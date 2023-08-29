@@ -10,18 +10,6 @@ import { warn } from '../../common/util/console'
 import * as globalScopeModule from '../../common/constants/runtime'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
-const auto = {
-  ajax: true,
-  jserrors: true,
-  metrics: true,
-  page_action: true,
-  page_view_event: true,
-  page_view_timing: true,
-  session_replay: true,
-  session_trace: true,
-  spa: true
-}
-
 jest.enableAutomock()
 jest.unmock('./instrument-base')
 jest.unmock('../../loaders/features/features')
@@ -45,7 +33,7 @@ jest.mock('../../common/config/config', () => ({
 }))
 jest.mock('../../common/config/config', () => ({
   __esModule: true,
-  getConfigurationValue: jest.fn().mockReturnValue({ auto }),
+  getConfigurationValue: jest.fn().mockReturnValue({}),
   originals: {
     MO: jest.fn()
   }

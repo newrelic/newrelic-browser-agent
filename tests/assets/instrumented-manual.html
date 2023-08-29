@@ -8,16 +8,14 @@
     <title>RUM Unit Test</title>
     {init} {config} 
     <script>
-      NREUM.init.auto = {
-              ajax: false,
-              jserrors: false,
-              metrics: false,
-              page_action: false,
-              page_view_event: false,
-              page_view_timing: false,
-              session_trace: false,
-              spa: false
-            }
+      NREUM.init.ajax.autoStart = false
+      NREUM.init.jserrors.autoStart = false
+      NREUM.init.metrics.autoStart = false
+      NREUM.init.page_action.autoStart = false
+      NREUM.init.page_view_event.autoStart = false
+      NREUM.init.page_view_timing.autoStart = false
+      NREUM.init.session_trace.autoStart = false
+      NREUM.init.spa.autoStart = false
     </script>
     {loader} {script-injection}
     <script>

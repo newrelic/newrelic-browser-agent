@@ -8,7 +8,7 @@ import { args } from './args.js'
 import { fetchRetry } from '@newrelic/browser-agent.actions.shared-utils/fetch-retry.js'
 import Handlebars from 'handlebars'
 
-const template = Handlebars.compile(await fs.promises.readFile('./template.js', 'utf-8'))
+const template = Handlebars.compile(await fs.promises.readFile(path.resolve(__dirname, './template.js'), 'utf-8'))
 
 const scripts = []
 

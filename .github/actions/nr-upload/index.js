@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 import { args } from './args.js'
-import { fetchRetry } from '@newrelic/browser-agent.actions.shared-utils/fetch-retry.js'
+import { fetchRetry } from '../shared-utils/fetch-retry.js'
 import { constructLoaderFileNames, constructFuzzyVersions } from '../shared-utils/loaders.js'
 
 const loaderFileNames = constructLoaderFileNames(args.loaderVersion)

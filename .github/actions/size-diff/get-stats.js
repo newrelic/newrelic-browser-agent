@@ -3,7 +3,7 @@ import path from 'path'
 import url from 'url'
 import { v4 as uuidv4 } from 'uuid'
 import { reportSettings } from './report-settings.js'
-import { fetchRetry } from '@newrelic/browser-agent.actions.shared-utils/fetch-retry.js'
+import { fetchRetry } from '../shared-utils/fetch-retry.js'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 

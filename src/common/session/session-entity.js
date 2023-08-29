@@ -62,8 +62,6 @@ export class SessionEntity {
   }
 
   setup ({ value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS }) {
-    console.log('Session.setup')
-
     this.state = {}
     this.sync(model)
 

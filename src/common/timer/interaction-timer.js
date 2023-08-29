@@ -24,12 +24,14 @@ export class InteractionTimer extends Timer {
 
     if (isBrowserScope && opts.ee) {
       if (opts.ee) {
+        this.ee = opts.ee
         const debouncedRefresh = debounce(this.refresh.bind(this), 500, { leading: true })
-        opts.ee.on('fn-end', (evts) => {
+        this.refreshHandler = (evts) => {
           if (opts.refreshEvents.includes(evts?.[0]?.type)) {
             debouncedRefresh()
           }
-        })
+        }
+        opts.ee.on('fn-end', this.refreshHandler)
       }
 
       // watch for the vis state changing.  If the page is hidden, the local inactivity timer should be paused
@@ -43,10 +45,7 @@ export class InteractionTimer extends Timer {
       subscribeToVisibilityChange((state) => {
         if (state === 'hidden') this.pause()
         // vis change --> visible is treated like a new interaction with the page
-        else {
-          this.refresh()
-          this.onResume() // emit resume event after state updated
-        }
+        else this.resume()
       }, false, false, this.abortController?.signal)
     }
   }
@@ -54,12 +53,22 @@ export class InteractionTimer extends Timer {
   abort () {
     this.clear()
     this.abortController?.abort()
+
+    if (this.refreshHandler) {
+      this.ee.removeEventListener('fn-end', this.refreshHandler)
+      this.refreshHandler = this.ee = null
+    }
   }
 
   pause () {
     this.onPause()
     clearTimeout(this.timer)
     this.remainingMs = this.initialMs - (Date.now() - this.startTimestamp)
+  }
+
+  resume () {
+    this.refresh()
+    this.onResume() // emit resume event after state updated
   }
 
   refresh (cb, ms) {

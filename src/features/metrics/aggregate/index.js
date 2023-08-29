@@ -1,19 +1,14 @@
-import { getRuntime, getInfo } from '../../../common/config/config'
+import { getRuntime } from '../../../common/config/config'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL } from '../constants'
 import { drain } from '../../../common/drain/drain'
 import { getFrameworks } from './framework-detection'
-import { getPolyfills } from './polyfill-detection'
 import { isFileProtocol } from '../../../common/url/protocol'
 import { getRules, validateRules } from '../../../common/util/obfuscate'
-import { VERSION } from '../../../common/constants/env'
 import { onDOMContentLoaded } from '../../../common/window/load'
-import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { stringify } from '../../../common/util/stringify'
-import { endpointMap } from './endpoint-map'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -32,7 +27,6 @@ export class Aggregate extends AggregateBase {
     registerHandler(CUSTOM_METRIC_CHANNEL, this.storeEventMetrics.bind(this), this.featureName, this.ee)
 
     this.singleChecks() // checks that are run only one time, at script load
-    this.eachSessionChecks() // the start of every time user engages with page
 
     // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
     scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
@@ -56,9 +50,6 @@ export class Aggregate extends AggregateBase {
   }
 
   singleChecks () {
-    // report generic info about the agent itself
-    // note the browser agent version
-    this.storeSupportabilityMetrics(`Generic/Version/${VERSION}/Detected`)
     // report loaderType
     const { distMethod, loaderType } = getRuntime(this.agentIdentifier)
     if (loaderType) this.storeSupportabilityMetrics(`Generic/LoaderType/${loaderType}/Detected`)
@@ -67,6 +58,8 @@ export class Aggregate extends AggregateBase {
     // frameworks on page
     if (isBrowserScope) {
       this.storeSupportabilityMetrics('Generic/Runtime/Browser/Detected')
+
+      // These SMs are used by the AppExp team
       onDOMContentLoaded(() => {
         getFrameworks().forEach(framework => {
           this.storeSupportabilityMetrics('Framework/' + framework + '/Detected')
@@ -78,39 +71,27 @@ export class Aggregate extends AggregateBase {
       this.storeSupportabilityMetrics('Generic/Runtime/Unknown/Detected')
     }
 
-    getPolyfills().forEach(polyfill => {
-      this.storeSupportabilityMetrics('Polyfill/' + polyfill + '/Detected')
-    })
-
-    // file protocol detection
+    // Track if the agent is being loaded using a file protocol such as is the case in some
+    // set-top box applications or Electron applications
     if (isFileProtocol()) {
       this.storeSupportabilityMetrics('Generic/FileProtocol/Detected')
     }
 
-    // obfuscation rules detection
+    // Capture SMs to assess customer engagement with the obfuscation config
     const rules = getRules(this.agentIdentifier)
     if (rules.length > 0) this.storeSupportabilityMetrics('Generic/Obfuscate/Detected')
     if (rules.length > 0 && !validateRules(rules)) this.storeSupportabilityMetrics('Generic/Obfuscate/Invalid')
   }
 
-  eachSessionChecks () {
-    if (!isBrowserScope) return
-
-    // [Temporary] Report restores from BFCache to NR1 while feature flag is in place in lieu of sending pageshow events.
-    windowAddEventListener('pageshow', (evt) => {
-      if (evt.persisted) { this.storeSupportabilityMetrics('Generic/BFCache/PageRestored') }
-    })
-  }
-
   unload () {
-    // Page Resources detection for estimations with resources feature work
-    // TODO - these SMs are to be removed when we implement the actual resources feature
     try {
       if (this.resourcesSent) return
+      this.resourcesSent = true // make sure this only gets sent once
+
       const agentRuntime = getRuntime(this.agentIdentifier)
-      const info = getInfo(this.agentIdentifier)
-      // make sure this only gets sent once
-      this.resourcesSent = true
+
+      // Capture SMs around network resources using the performance API to assess
+      // work to split this out from the ST nodes
       // differentiate between internal+external and ajax+non-ajax
       const ajaxResources = ['beacon', 'fetch', 'xmlhttprequest']
       const internalUrls = ['nr-data.net', 'newrelic.com', 'nr-local.net', 'localhost']
@@ -127,32 +108,14 @@ export class Aggregate extends AggregateBase {
         }
       })
 
-      // Capture per-agent bytes sent for each endpoint (see harvest) and RUM call (see page_view_event aggregator).
-      Object.keys(agentRuntime.bytesSent).forEach(endpoint => {
-        this.storeSupportabilityMetrics(
-          `PageSession/Endpoint/${endpointMap[endpoint]}/BytesSent`,
-          agentRuntime.bytesSent[endpoint]
-        )
-      })
-
-      // Capture per-agent query bytes sent for each endpoint (see harvest) and RUM call (see page_view_event aggregator).
-      Object.keys(agentRuntime.bytesSent).forEach(endpoint => {
-        this.storeSupportabilityMetrics(
-          `PageSession/Endpoint/${endpointMap[endpoint]}/QueryBytesSent`,
-          agentRuntime.queryBytesSent[endpoint]
-        )
-      })
-
-      // Capture metrics for session trace if active (`ptid` is set when returned by replay ingest).
+      // Capture SMs for session trace if active (`ptid` is set when returned by replay ingest).
+      // Retain these SMs while we are working through the session_replay feature
       if (agentRuntime.ptid) {
         this.storeSupportabilityMetrics('PageSession/Feature/SessionTrace/DurationMs', Math.round(performance.now()))
       }
 
-      // Capture metrics for size of custom attributes
-      const jsAttributes = stringify(info.jsAttributes)
-      this.storeSupportabilityMetrics('PageSession/Feature/CustomData/Bytes', jsAttributes === '{}' ? 0 : jsAttributes.length)
-
-      // Capture metrics for performance markers and measures
+      // Capture SMs for performance markers and measures to assess the usage and possible inclusion of this
+      // data in the agent for use in NR
       if (typeof performance !== 'undefined') {
         const markers = performance.getEntriesByType('mark')
         const measures = performance.getEntriesByType('measure')

@@ -2,7 +2,6 @@ import { faker } from '@faker-js/faker'
 
 import * as submitData from '../util/submit-data'
 import { subscribeToEOL } from '../unload/eol'
-import { getConfigurationValue } from '../config/config'
 import { Harvest } from './harvest'
 
 import { HarvestScheduler } from './harvest-scheduler'
@@ -31,13 +30,10 @@ describe('unload', () => {
     jest.spyOn(harvestSchedulerInstance, 'runHarvest').mockImplementation(jest.fn())
   })
 
-  test('should subscribe to eol with allow_bfcache setting', () => {
-    const mockedBFCacheSetting = faker.datatype.uuid()
-    jest.mocked(getConfigurationValue).mockReturnValue(mockedBFCacheSetting)
-
+  test('should subscribe to eol', () => {
     new HarvestScheduler()
 
-    expect(subscribeToEOL).toHaveBeenCalledWith(expect.any(Function), mockedBFCacheSetting)
+    expect(subscribeToEOL).toHaveBeenCalledWith(expect.any(Function))
   })
 
   test('should run onUnload callback', () => {

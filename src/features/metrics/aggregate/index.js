@@ -9,7 +9,7 @@ import { getRules, validateRules } from '../../../common/util/obfuscate'
 import { VERSION } from '../../../common/constants/env'
 import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
-import { isBrowserScope } from '../../../common/constants/runtime'
+import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { stringify } from '../../../common/util/stringify'
 import { endpointMap } from './endpoint-map'
@@ -65,11 +65,16 @@ export class Aggregate extends AggregateBase {
 
     // frameworks on page
     if (isBrowserScope) {
+      this.storeSupportabilityMetrics('Generic/Runtime/Browser/Detected')
       onDOMContentLoaded(() => {
         getFrameworks().forEach(framework => {
           this.storeSupportabilityMetrics('Framework/' + framework + '/Detected')
         })
       })
+    } else if (isWorkerScope) {
+      this.storeSupportabilityMetrics('Generic/Runtime/Worker/Detected')
+    } else {
+      this.storeSupportabilityMetrics('Generic/Runtime/Unknown/Detected')
     }
 
     getPolyfills().forEach(polyfill => {

@@ -54,10 +54,8 @@ export class SessionEntity {
     // key is intended to act as the k=v pair
     this.key = key
 
-    // Only setup EE and wrap events once per instance
     this.ee = ee.get(agentIdentifier)
     wrapEvents(this.ee)
-
     this.setup(opts)
   }
 

@@ -42,10 +42,8 @@ export class SessionEntity {
    * expiresMs and inactiveMs are used to "expire" the session, but can be overridden in the constructor. Pass 0 to disable expiration timers.
    */
   constructor (opts) {
-    this.setup(opts)
-  }
+    const { agentIdentifier, key, storage } = opts
 
-  setup ({ agentIdentifier, key, storage, value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS }) {
     if (!agentIdentifier || !key || !storage) {
       throw new Error(`Missing required field(s):${!agentIdentifier ? ' agentID' : ''}${!key ? ' key' : ''}${!storage ? ' storage' : ''}`)
     }
@@ -53,19 +51,27 @@ export class SessionEntity {
     this.storage = storage
     this.state = {}
 
-    this.sync(model)
-
     // key is intended to act as the k=v pair
     this.key = key
+
+    // Only setup EE and wrap events once per instance
+    this.ee = ee.get(agentIdentifier)
+    wrapEvents(this.ee)
+
+    this.setup(opts)
+  }
+
+  setup ({ value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS }) {
+    console.log('Session.setup')
+
+    this.state = {}
+    this.sync(model)
+
     // value is intended to act as the primary value of the k=v pair
     this.state.value = value
 
     this.expiresMs = expiresMs
     this.inactiveMs = inactiveMs
-
-    this.ee = ee.get(agentIdentifier)
-
-    wrapEvents(this.ee)
 
     // the first time the session entity class is instantiated, we check the storage API for an existing
     // object. If it exists, the values inside the object are used to inform the timers that run locally.

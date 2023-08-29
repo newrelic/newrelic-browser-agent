@@ -1,3 +1,5 @@
+/* globals MicroAgent */
+
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('micro-agent', () => {

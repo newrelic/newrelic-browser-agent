@@ -122,7 +122,7 @@ export function wrapJsonP (sharedEE) {
       }
     }
     return {
-      key: key,
+      key,
       parent: window
     }
   }

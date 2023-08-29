@@ -102,7 +102,7 @@ export class HarvestScheduler extends SharedContext {
       if (!submitMethod) return false
 
       const retry = !opts?.unload && submitMethod === submitData.xhr
-      payload = this.opts.getPayload({ retry: retry })
+      payload = this.opts.getPayload({ retry })
 
       if (!payload) {
         if (this.started) {
@@ -142,8 +142,6 @@ export class HarvestScheduler extends SharedContext {
     if (this.started) {
       this.scheduleHarvest()
     }
-
-    return
   }
 
   onHarvestFinished (opts, result) {

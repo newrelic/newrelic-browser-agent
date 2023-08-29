@@ -122,7 +122,7 @@ test.each([
   { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15', expected: false },
   { userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/114.0', expected: false },
   { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 13.4; rv:109.0) Gecko/20100101 Firefox/114.0', expected: false }
-])('should set iOS_below16 to $expected for $userAgent', async ({ userAgent, expected }) => {
+])('should set iOSBelow16 to $expected for $userAgent', async ({ userAgent, expected }) => {
   if (!expected) {
     global.SharedWorker = class SharedWorker {}
   }
@@ -132,7 +132,7 @@ test.each([
 
   delete global.SharedWorker
 
-  expect(runtime.iOS_below16).toEqual(expected)
+  expect(runtime.iOSBelow16).toEqual(expected)
 })
 
 test.each([

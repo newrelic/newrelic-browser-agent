@@ -36,8 +36,9 @@ export class HandlerCache {
    * @returns {void}
    */
   settle (handler) {
-    if (this.#decision === false) return
-    else if (this.#decision === undefined) this.#cache.push(handler)
+    if (this.#decision === false) {
+      // Do nothing
+    } else if (this.#decision === undefined) this.#cache.push(handler)
     else handler()
   }
 

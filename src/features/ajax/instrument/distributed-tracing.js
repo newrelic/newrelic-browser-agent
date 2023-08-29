@@ -18,14 +18,14 @@ export class DT {
       return null
     }
 
-    var loader_config = getLoaderConfig(this.agentIdentifier)
-    if (!loader_config) {
+    var loaderConfig = getLoaderConfig(this.agentIdentifier)
+    if (!loaderConfig) {
       return null
     }
 
-    var accountId = (loader_config.accountID || '').toString() || null
-    var agentId = (loader_config.agentID || '').toString() || null
-    var trustKey = (loader_config.trustKey || '').toString() || null
+    var accountId = (loaderConfig.accountID || '').toString() || null
+    var agentId = (loaderConfig.agentID || '').toString() || null
+    var trustKey = (loaderConfig.trustKey || '').toString() || null
 
     if (!accountId || !agentId) {
       return null
@@ -36,9 +36,9 @@ export class DT {
     var timestamp = Date.now()
 
     var payload = {
-      spanId: spanId,
-      traceId: traceId,
-      timestamp: timestamp
+      spanId,
+      traceId,
+      timestamp
     }
 
     if (parsedOrigin.sameOrigin ||

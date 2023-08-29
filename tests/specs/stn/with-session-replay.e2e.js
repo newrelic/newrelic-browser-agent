@@ -59,7 +59,7 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
   async function navigateToRootDir () {
     await browser.url(await browser.testHandle.assetURL('/'))
     try { // IE does not like this command, though the rest of the test below still works
-      await browser.waitUntil(() => browser.execute(function () { document.readyState === 'complete' }), { timeout: 5000 })
+      await browser.waitUntil(() => browser.execute(function () { return document.readyState === 'complete' }), { timeout: 5000 })
     } catch (e) {}
   }
   async function loadPageAndGetResource (assetUrlArgs, timeout) {
@@ -149,7 +149,7 @@ describe.withBrowsersMatching(notIE)('Trace when replay entitlement is 1 and stn
     })
 
     initSTReceived = undefined
-    browser.testHandle.expectResources().then(resPayload => initSTReceived = resPayload)
+    browser.testHandle.expectResources().then(resPayload => { initSTReceived = resPayload })
   })
 
   it('does not run when replay is OFF', async () => {

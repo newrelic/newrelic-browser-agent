@@ -7,7 +7,6 @@ import { getInfo, getRuntime, originals } from '../../../common/config/config'
 import { mapOwn } from '../../../common/util/map-own'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import { InteractionNode } from './interaction-node'
-import { now } from '../../../common/timing/now'
 
 var originalSetTimeout = originals.ST
 var originalClearTimeout = originals.CT
@@ -95,7 +94,6 @@ InteractionPrototype.finish = function finishInteraction () {
   var root = interaction.root
   if (root.end !== null) return
   var endTimestamp = Math.max(interaction.lastCb, interaction.lastFinish)
-  var delta = now() - endTimestamp
   var attrs = root.attrs
   var customAttrs = attrs.custom
 

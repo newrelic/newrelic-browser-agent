@@ -1,14 +1,43 @@
-name: Build and publish DEV to CDN
+# This workflow runs on push to the main branch. This is to execute checks
+# like jest, upload test coverage to keep codecov updates, and build and deploy
+# the main branch changes to our internal dev and stage environment. This workflow
+# can be manually executed but only on the main branch.
+
+name: Publish Dev
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - main
-  workflow_dispatch:
-  workflow_call:
+      - 'main'
+
+# Only allow one instance of this workflow to run at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  jest-tests:
+    if: github.ref == 'refs/heads/main'
+    name: Jest tests
+    uses: ./.github/workflows/jest.yml
+    secrets: inherit
+    with:
+      coverage: true
+
+  wdio-coverage:
+    if: github.ref == 'refs/heads/main'
+    name: WDIO coverage
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: chrome@latest
+      build-number: main-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+      coverage: true
+    secrets: inherit
+
+  # Build and publish the latest code from the main branch
   publish-dev-to-s3:
+    needs: [jest-tests, wdio-coverage]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -34,7 +63,7 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           local_dir: $GITHUB_WORKSPACE/build
-          bucket_dir: dev/${{ steps.clean-branch-name.outputs.results }}
+          bucket_dir: dev/
       - name: Gather dev purge paths
         id: dev-purge-paths
         run: echo "results=$(echo '${{ steps.dev-s3-upload.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
@@ -50,6 +79,8 @@ jobs:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.dev-s3-upload.outputs.results).*.Key, ' ') }}
+
+  # Rebuild and publish the dev environment A/B script
   publish-dev-ab:
     needs: [publish-dev-to-s3]
     runs-on: ubuntu-latest
@@ -64,8 +95,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Install project dependencies
-        run: npm ci
       - name: Publish dev a/b script
         uses: ./.github/actions/internal-ab
         with:
@@ -79,6 +108,8 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+
+  # Rebuild and publish the staging environment A/B script
   publish-staging-ab:
     needs: [publish-dev-to-s3]
     runs-on: ubuntu-latest
@@ -93,8 +124,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Install project dependencies
-        run: npm ci
       - name: Deploy staging a/b script
         uses: ./.github/actions/internal-ab
         with:

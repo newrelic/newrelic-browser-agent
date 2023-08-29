@@ -65,21 +65,22 @@ const model = () => {
 }
 
 const _cache = {}
+const missingAgentIdError = 'All configuration objects require an agent identifier!'
 
 export function getConfiguration (id) {
-  if (!id) throw new Error('All configuration objects require an agent identifier!')
+  if (!id) throw new Error(missingAgentIdError)
   if (!_cache[id]) throw new Error(`Configuration for ${id} was never set`)
   return _cache[id]
 }
 
 export function setConfiguration (id, obj) {
-  if (!id) throw new Error('All configuration objects require an agent identifier!')
+  if (!id) throw new Error(missingAgentIdError)
   _cache[id] = getModeledObject(obj, model())
   gosNREUMInitializedAgents(id, _cache[id], 'config')
 }
 
 export function getConfigurationValue (id, path) {
-  if (!id) throw new Error('All configuration objects require an agent identifier!')
+  if (!id) throw new Error(missingAgentIdError)
   var val = getConfiguration(id)
   if (val) {
     var parts = path.split('.')

@@ -13,6 +13,7 @@ class LocalMemory {
     try {
       return this.state[key]
     } catch (err) {
+      // Error is ignored
       return ''
     }
   }
@@ -22,7 +23,7 @@ class LocalMemory {
       if (value === undefined || value === null) return this.remove(key)
       this.state[key] = value
     } catch (err) {
-      return
+      // Error is ignored
     }
   }
 
@@ -30,7 +31,7 @@ class LocalMemory {
     try {
       delete this.state[key]
     } catch (err) {
-      return
+      // Error is ignored
     }
   }
 }

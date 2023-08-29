@@ -615,6 +615,20 @@
       "platform": "Windows 11",
       "version": "114",
       "browserVersion": "114"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "115",
+      "browserVersion": "115"
+    },
+    {
+      "browserName": "chrome",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "116",
+      "browserVersion": "116"
     }
   ],
   "edge": [
@@ -897,6 +911,20 @@
       "platform": "Windows 11",
       "version": "113",
       "browserVersion": "113"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "114",
+      "browserVersion": "114"
+    },
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "platform": "Windows 11",
+      "version": "115",
+      "browserVersion": "115"
     }
   ],
   "firefox": [
@@ -1641,6 +1669,27 @@
       "platform": "Windows 10",
       "version": "113",
       "browserVersion": "113"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "114",
+      "browserVersion": "114"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "115",
+      "browserVersion": "115"
+    },
+    {
+      "browserName": "firefox",
+      "platformName": "Windows 10",
+      "platform": "Windows 10",
+      "version": "116",
+      "browserVersion": "116"
     }
   ],
   "safari": [
@@ -1678,8 +1727,8 @@
     },
     {
       "browserName": "safari",
-      "platformName": "Mac 10.14",
-      "platform": "Mac 10.14",
+      "platformName": "Mac 10.13",
+      "platform": "Mac 10.13",
       "version": "12",
       "browserVersion": "12",
       "acceptInsecureCerts": false

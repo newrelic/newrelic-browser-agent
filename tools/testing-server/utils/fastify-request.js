@@ -21,7 +21,7 @@ module.exports.testIdFromRequest = function testIdFromRequest (request) {
   }
 
   if (request.headers.cookie && request.headers.cookie.includes('test-id=')) {
-    const testId = request.headers.cookie.match(new RegExp('(^| )test-id=([^;]+)'))[2]
+    const testId = request.headers.cookie.match(/(^| )test-id=([^;]+)/)[2]
     if (testId && testId !== 'undefined') return testId
   }
 }

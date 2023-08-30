@@ -3,7 +3,7 @@ import { addToNREUM, gosCDN, gosNREUMInitializedAgents } from '../../common/wind
 import { getConfiguration, setConfiguration, setInfo, setLoaderConfig, setRuntime } from '../../common/config/config'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/constants/runtime'
-import { validateAssetUrl } from '../../common/url/check-url'
+import { validateServerUrl } from '../../common/url/check-url'
 import { redefinePublicPath } from './public-path'
 import { warn } from '../../common/util/console'
 
@@ -19,7 +19,7 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   }
 
   if (init.assetsPath) {
-    init.assetsPath = validateAssetUrl(init.assetsPath)
+    init.assetsPath = validateServerUrl(init.assetsPath)
     if (init.assetsPath !== '') redefinePublicPath(init.assetsPath)
     else warn('New public path must be a valid URL. Chunk origin remains unchanged.')
   }

@@ -1,16 +1,19 @@
-import { validateAssetUrl } from './check-url'
+import { validateServerUrl } from './check-url'
 
-test('validateAssetUrl works correctly', () => {
-  expect(validateAssetUrl(undefined)).toEqual('')
-  expect(validateAssetUrl(123)).toEqual('')
-  expect(validateAssetUrl('')).toEqual('')
-  expect(validateAssetUrl('/someRelativePath')).toEqual('')
-  expect(validateAssetUrl('data://anotherscheme.com/')).toEqual('')
-  expect(validateAssetUrl('invalid url')).toEqual('')
+test('validateServerUrl works correctly', () => {
+  expect(validateServerUrl(undefined)).toEqual('')
+  expect(validateServerUrl(123)).toEqual('')
+  expect(validateServerUrl('')).toEqual('')
+  expect(validateServerUrl('/someRelativePath')).toEqual('') // should warn about rel path
+  expect(validateServerUrl('data://anotherscheme.com/')).toEqual('') // should warn about scheme
+  expect(validateServerUrl('http:/enforcescheme.net/')).toEqual('') // should warn about scheme
+  expect(validateServerUrl('invalid url')).toEqual('')
 
-  expect(validateAssetUrl('www.missingscheme.com/')).toEqual('https://www.missingscheme.com/')
-  expect(validateAssetUrl('http:/enforcescheme.net/')).toEqual('https://enforcescheme.net/')
-  expect(validateAssetUrl('enforceendslash.net:1234')).toEqual('https://enforceendslash.net:1234/')
-  expect(validateAssetUrl('https://www.absolutepath.org/somepath')).toEqual('https://www.absolutepath.org/somepath/')
-  expect(validateAssetUrl('js-agent.nr.com:9876/foo/bar?query=search')).toEqual('https://js-agent.nr.com:9876/foo/bar/')
+  expect(validateServerUrl('www.missingscheme.com/')).toEqual('https://www.missingscheme.com/')
+  expect(validateServerUrl('enforceendslash.net:1234')).toEqual('https://enforceendslash.net:1234/')
+  expect(validateServerUrl('https://www.absolutepath.org/somepath')).toEqual('https://www.absolutepath.org/somepath/')
+  expect(validateServerUrl('js-agent.nr.com:9876/foo/bar?query=search')).toEqual('https://js-agent.nr.com:9876/foo/bar/')
+
+  expect(validateServerUrl('missingscheme.unsecureparam.com/', true)).toEqual('http://missingscheme.unsecureparam.com/')
+  expect(validateServerUrl('http://hasscheme.unsecureparam.com/', true)).toEqual('') // should warn about scheme
 })

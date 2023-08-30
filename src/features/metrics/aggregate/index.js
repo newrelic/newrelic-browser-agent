@@ -7,6 +7,7 @@ import { getFrameworks } from './framework-detection'
 import { isFileProtocol } from '../../../common/url/protocol'
 import { getRules, validateRules } from '../../../common/util/obfuscate'
 import { onDOMContentLoaded } from '../../../common/window/load'
+import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 
@@ -27,6 +28,7 @@ export class Aggregate extends AggregateBase {
     registerHandler(CUSTOM_METRIC_CHANNEL, this.storeEventMetrics.bind(this), this.featureName, this.ee)
 
     this.singleChecks() // checks that are run only one time, at script load
+    this.eachSessionChecks() // the start of every time user engages with page
 
     // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
     scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
@@ -81,6 +83,15 @@ export class Aggregate extends AggregateBase {
     const rules = getRules(this.agentIdentifier)
     if (rules.length > 0) this.storeSupportabilityMetrics('Generic/Obfuscate/Detected')
     if (rules.length > 0 && !validateRules(rules)) this.storeSupportabilityMetrics('Generic/Obfuscate/Invalid')
+  }
+
+  eachSessionChecks () {
+    if (!isBrowserScope) return
+
+    // [Temporary] Report restores from BFCache to NR1 while feature flag is in place in lieu of sending pageshow events.
+    windowAddEventListener('pageshow', (evt) => {
+      if (evt.persisted) { this.storeSupportabilityMetrics('Generic/BFCache/PageRestored') }
+    })
   }
 
   unload () {

@@ -11,12 +11,9 @@ function fail (t) {
 }
 
 testDriver.test("Agent doesn't block page from back/fwd cache", bfCacheSupport, function (t, browser, router) {
-  const init = {
-    allow_bfcache: true
-  }
   const scriptString = `window.addEventListener('pagehide', (evt) => { navigator.sendBeacon('/echo?testId=${router.testId}&persisted='+evt.persisted) });`
   const rumPromise = router.expectRum()
-  const assetURL = router.assetURL('instrumented.html', { loader: 'spa', init, scriptString })
+  const assetURL = router.assetURL('instrumented.html', { loader: 'spa', scriptString })
   const loadPromise = browser.get(assetURL)
 
   Promise.all([rumPromise, loadPromise]).then(() => {
@@ -35,11 +32,9 @@ testDriver.test("Agent doesn't block page from back/fwd cache", bfCacheSupport, 
 })
 
 testDriver.test('EOL events are sent appropriately', excludeIE, function (t, browser, router) {
-  const init = {
-    allow_bfcache: true	// with this, all timings except "unload" event are expected to be harvested after the first time the page becomes hidden
-  }
+  // all timings except "unload" event are expected to be harvested after the first time the page becomes hidden
 
-  const assetURL = router.assetURL('pagehide.html', { loader: 'rum', init })
+  const assetURL = router.assetURL('pagehide.html', { loader: 'rum' })
   const loadPromise = browser.get(assetURL)
 
   Promise.all([loadPromise, router.expectRum()]).then(() => {

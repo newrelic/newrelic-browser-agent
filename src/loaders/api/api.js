@@ -122,14 +122,15 @@ export function setAPI (agentIdentifier, forceDrain) {
     return appendJsAttribute('application.version', value, 'setApplicationVersion', false)
   }
 
-  apiInterface.start = (features, cb) => {
+  apiInterface.start = (features) => {
     try {
       const featNames = Object.values(FEATURE_NAMES)
-      if (!features) features = featNames
-      features = Array.isArray(features) && features.length ? features : [features]
-      if (features.some(f => !featNames.includes(f))) return warn(`Invalid feature name supplied. Acceptable feature names are: ${featNames}`)
-
-      if (!features.includes(FEATURE_NAMES.pageViewEvent)) features.push(FEATURE_NAMES.pageViewEvent)
+      if (features === undefined) features = featNames
+      else {
+        features = Array.isArray(features) && features.length ? features : [features]
+        if (features.some(f => !featNames.includes(f))) return warn(`Invalid feature name supplied. Acceptable feature names are: ${featNames}`)
+        if (!features.includes(FEATURE_NAMES.pageViewEvent)) features.push(FEATURE_NAMES.pageViewEvent)
+      }
       features.forEach(feature => {
         instanceEE.emit(`${feature}-opt-in`)
       })

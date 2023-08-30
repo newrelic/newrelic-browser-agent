@@ -46,7 +46,7 @@ export class InstrumentBase extends FeatureBase {
     this.onAggregateImported = undefined
 
     /** used in conjunction with newrelic.start() to defer harvesting in features */
-    this.requiresOptIn = (getConfigurationValue(this.agentIdentifier, `${this.featureName}.autoStart`) === false || getConfigurationValue(this.agentIdentifier, 'auto') === false)
+    this.requiresOptIn = (getConfigurationValue(this.agentIdentifier, `${this.featureName}.autoStart`) === false)
     this.optedIn = false
 
     /** if the feature requires opt-in (!auto-start), it will get registered once the api has been called */

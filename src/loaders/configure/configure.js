@@ -19,8 +19,8 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   }
 
   if (init.assetsPath) {
-    const retVal = validateAssetUrl(init.assetsPath)
-    if (retVal !== '') redefinePublicPath(retVal)
+    init.assetsPath = validateAssetUrl(init.assetsPath)
+    if (init.assetsPath !== '') redefinePublicPath(init.assetsPath)
     else warn('New public path must be a valid URL. Chunk origin remains unchanged.')
   }
   setConfiguration(agentIdentifier, init || {})

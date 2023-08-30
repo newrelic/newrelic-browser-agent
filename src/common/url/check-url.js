@@ -22,6 +22,7 @@ export function validateAssetUrl (string) {
   } catch (_) {
     return ''
   }
-  // We want a url with scheme, domain, and port minus username|password => origin; webpack concats this verbatim, so an ending slash is required
-  return properUrl.origin + '/'
+  // We want a url with scheme, domain, port, and path minus username|password or query; webpack concats this verbatim, so an ending slash is required
+  let assetUrl = properUrl.origin + properUrl.pathname
+  return assetUrl.endsWith('/') ? assetUrl : assetUrl + '/'
 }

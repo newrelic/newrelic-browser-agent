@@ -39,7 +39,6 @@ module.exports.rumFlags = {
 }
 
 module.exports.defaultInitBlock = {
-  allow_bfcache: true,
   privacy: { cookies_enabled: false },
   ajax: { deny_list: [], block_internal: false, enabled: true, harvestTimeSeconds: 5, autoStart: true },
   distributed_tracing: {},

@@ -13,6 +13,45 @@
     ">=4.2": {
       "*": [
         "dist/types/*"
+      ],
+      "src/*": [
+        "dist/types/*"
+      ],
+      "loaders/agent": [
+        "dist/types/loaders/agent.d.ts"
+      ],
+      "loaders/browser-agent": [
+        "dist/types/loaders/browser-agent.d.ts"
+      ],
+      "loaders/micro-agent": [
+        "dist/types/loaders/micro-agent.d.ts"
+      ],
+      "loaders/worker-agent": [
+        "dist/types/loaders/worker-agent.d.ts"
+      ],
+      "features/ajax": [
+        "dist/types/features/ajax/index.d.ts"
+      ],
+      "features/jserrors": [
+        "dist/types/features/jserrors/index.d.ts"
+      ],
+      "features/metrics": [
+        "dist/types/features/metrics/index.d.ts"
+      ],
+      "features/page_action": [
+        "dist/types/features/page_action/index.d.ts"
+      ],
+      "features/page_view_event": [
+        "dist/types/features/page_view_event/index.d.ts"
+      ],
+      "features/page_view_timing": [
+        "dist/types/features/page_view_timing/index.d.ts"
+      ],
+      "features/session_trace": [
+        "dist/types/features/session_trace/index.d.ts"
+      ],
+      "features/spa": [
+        "dist/types/features/spa/index.d.ts"
       ]
     }
   },

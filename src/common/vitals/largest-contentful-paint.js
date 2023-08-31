@@ -23,7 +23,7 @@ if (isBrowserScope) {
           ...(!!lcpEntry.element?.tagName && { elTag: lcpEntry.element.tagName })
         }
       }),
-      addConnectionAttributes: true
+      shouldAddConnectionAttributes: true
     })
   })
 }

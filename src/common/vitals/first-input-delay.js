@@ -14,7 +14,7 @@ if (isBrowserScope) {
       value: entries[0].startTime,
       entries,
       attrs: { type: entries[0].name, fid: Math.round(value) },
-      addConnectionAttributes: true
+      shouldAddConnectionAttributes: true
     })
   })
 }

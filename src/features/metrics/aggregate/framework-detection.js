@@ -2,15 +2,30 @@ import { isBrowserScope } from '../../../common/constants/runtime'
 
 const FRAMEWORKS = {
   REACT: 'React',
+  NEXTJS: 'NextJS',
+
+  VUE: 'Vue',
+  NUXTJS: 'NuxtJS',
+
   ANGULAR: 'Angular',
+  ANGULARUNIVERSAL: 'AngularUniversal',
+
+  SVELTE: 'Svelte',
+  SVELTEKIT: 'SvelteKit',
+
+  PREACT: 'Preact',
+  PREACTSSR: 'PreactSSR',
+
   ANGULARJS: 'AngularJS',
   BACKBONE: 'Backbone',
   EMBER: 'Ember',
-  VUE: 'Vue',
   METEOR: 'Meteor',
   ZEPTO: 'Zepto',
   JQUERY: 'Jquery',
-  MOOTOOLS: 'MooTools'
+  MOOTOOLS: 'MooTools',
+  QWIK: 'Qwik',
+
+  ELECTRON: 'Electron'
 }
 
 export function getFrameworks () {
@@ -18,16 +33,42 @@ export function getFrameworks () {
 
   const frameworks = []
   try {
-    if (detectReact()) frameworks.push(FRAMEWORKS.REACT)
+    if (detectReact()) {
+      frameworks.push(FRAMEWORKS.REACT)
+
+      if (detectNextJS()) frameworks.push(FRAMEWORKS.NEXTJS)
+    }
+    if (detectVue()) {
+      frameworks.push(FRAMEWORKS.VUE)
+
+      if (detectNuxtJS()) frameworks.push(FRAMEWORKS.NUXTJS)
+    }
+    if (detectAngular()) {
+      frameworks.push(FRAMEWORKS.ANGULAR)
+
+      if (detectAngularUniversal()) frameworks.push(FRAMEWORKS.ANGULARUNIVERSAL)
+    }
+    if (detectSvelte()) {
+      frameworks.push(FRAMEWORKS.SVELTE)
+
+      if (detectSvelteKit()) frameworks.push(FRAMEWORKS.SVELTEKIT)
+    }
+    if (detectPreact()) {
+      frameworks.push(FRAMEWORKS.PREACT)
+
+      if (detectPreactSSR()) frameworks.push(FRAMEWORKS.PREACTSSR)
+    }
+
     if (detectAngularJs()) frameworks.push(FRAMEWORKS.ANGULARJS)
-    if (detectAngular()) frameworks.push(FRAMEWORKS.ANGULAR)
     if (Object.prototype.hasOwnProperty.call(window, 'Backbone')) frameworks.push(FRAMEWORKS.BACKBONE)
     if (Object.prototype.hasOwnProperty.call(window, 'Ember')) frameworks.push(FRAMEWORKS.EMBER)
-    if (Object.prototype.hasOwnProperty.call(window, 'Vue')) frameworks.push(FRAMEWORKS.VUE)
     if (Object.prototype.hasOwnProperty.call(window, 'Meteor')) frameworks.push(FRAMEWORKS.METEOR)
     if (Object.prototype.hasOwnProperty.call(window, 'Zepto')) frameworks.push(FRAMEWORKS.ZEPTO)
     if (Object.prototype.hasOwnProperty.call(window, 'jQuery')) frameworks.push(FRAMEWORKS.JQUERY)
     if (Object.prototype.hasOwnProperty.call(window, 'MooTools')) frameworks.push(FRAMEWORKS.MOOTOOLS)
+    if (Object.prototype.hasOwnProperty.call(window, 'qwikevents')) frameworks.push(FRAMEWORKS.QWIK)
+
+    if (detectElectron()) frameworks.push(FRAMEWORKS.ELECTRON)
   } catch (err) {
     // Possibly not supported
   }
@@ -53,6 +94,86 @@ function detectReact () {
   }
 }
 
+function detectNextJS () {
+  // React SSR
+  try {
+    return Object.prototype.hasOwnProperty.call(window, 'next') &&
+    Object.prototype.hasOwnProperty.call(window.next, 'version')
+  } catch (err) {
+    return false
+  }
+}
+
+function detectVue () {
+  try {
+    return Object.prototype.hasOwnProperty.call(window, 'Vue')
+  } catch (err) {
+    return false
+  }
+}
+
+function detectNuxtJS () {
+  // Vue SSR
+  try {
+    return Object.prototype.hasOwnProperty.call(window, '$nuxt') &&
+      Object.prototype.hasOwnProperty.call(window.$nuxt, 'nuxt')
+  } catch (err) {
+    return false
+  }
+}
+
+function detectAngular () {
+  try {
+    return Object.prototype.hasOwnProperty.call(window, 'ng') ||
+      document.querySelector('[ng-version]')
+  } catch (err) {
+    return false
+  }
+}
+
+function detectAngularUniversal () {
+  // Anguler SSR
+  try {
+    return document.querySelector('[ng-server-context]')
+  } catch (err) {
+    return false
+  }
+}
+
+function detectSvelte () {
+  try {
+    return Object.prototype.hasOwnProperty.call(window, '__svelte')
+  } catch (err) {
+    return false
+  }
+}
+
+function detectSvelteKit () {
+  // Svelte SSR
+  try {
+    return !!Object.keys(window).find(prop => prop.startsWith('__sveltekit'))
+  } catch (err) {
+    return false
+  }
+}
+
+function detectPreact () {
+  try {
+    return Object.prototype.hasOwnProperty.call(window, 'preact')
+  } catch (err) {
+    return false
+  }
+}
+
+function detectPreactSSR () {
+  // Svelte SSR
+  try {
+    return document.querySelector('script[type="__PREACT_CLI_DATA__"]')
+  } catch (err) {
+    return false
+  }
+}
+
 function detectAngularJs () {
   try {
     return Object.prototype.hasOwnProperty.call(window, 'angular') ||
@@ -63,10 +184,10 @@ function detectAngularJs () {
   }
 }
 
-function detectAngular () {
+function detectElectron () {
   try {
-    return Object.prototype.hasOwnProperty.call(window, 'ng') ||
-      document.querySelector('[ng-version]')
+    return typeof navigator === 'object' && typeof navigator.userAgent === 'string' &&
+      navigator.userAgent.indexOf('Electron') >= 0
   } catch (err) {
     return false
   }

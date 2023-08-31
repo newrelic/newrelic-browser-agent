@@ -63,17 +63,19 @@ await fs.promises.writeFile(
   { encoding: 'utf-8' }
 )
 
-// 2. Write the current loader script
-console.log(`Writing current loader ${args.current} in A/B script.`)
-const currentScript = await fetchRetry(`${args.current}?_nocache=${uuidv4()}`, { retry: 3 })
-await fs.promises.appendFile(
-  outputFile,
-  await currentScript.text() + '\n\n',
-  { encoding: 'utf-8' }
-)
+// 2. Write the current loader script if env is not prod or eu-prod
+if (['dev', 'staging'].includes(args.environment)) {
+  console.log(`Writing current loader ${args.current} in A/B script.`)
+  const currentScript = await fetchRetry(`${args.current}?_nocache=${uuidv4()}`, { retry: 3 })
+  await fs.promises.appendFile(
+    outputFile,
+    await currentScript.text() + '\n\n',
+    { encoding: 'utf-8' }
+  )
+}
 
 // 3. Write the next loader script
-console.log(`Writing current loader ${args.next} in A/B script.`)
+console.log(`Writing next loader ${args.next} in A/B script.`)
 const nextScript = await fetchRetry(`${args.next}?_nocache=${uuidv4()}`, { retry: 3 })
 await fs.promises.appendFile(
   outputFile,

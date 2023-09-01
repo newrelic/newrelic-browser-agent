@@ -6,6 +6,10 @@ import { isWorkerScope } from '../../common/constants/runtime'
 import { validateServerUrl } from '../../common/url/check-url'
 import { redefinePublicPath } from './public-path'
 import { warn } from '../../common/util/console'
+import { handle } from '../../common/event-emitter/handle'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
+import { ee } from '../../common/event-emitter/contextual-ee'
+import { FEATURE_NAMES } from '../features/features'
 
 export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   // eslint-disable-next-line camelcase
@@ -17,8 +21,9 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
     // eslint-disable-next-line camelcase
     loader_config = nr.loader_config
   }
+  const agentEE = ee.get(agentIdentifier)
 
-  if (init.assetsPath) tryConfigureAssetsPath(init)
+  if (init.assetsPath) tryConfigureAssetsPath(init, agentEE)
   setConfiguration(agentIdentifier, init || {})
   // eslint-disable-next-line camelcase
   setLoaderConfig(agentIdentifier, loader_config || {})
@@ -27,7 +32,7 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   if (isWorkerScope) { // add a default attr to all worker payloads
     info.jsAttributes.isWorker = true
   }
-  ['beacon', 'errorBeacon'].forEach(prop => tryConfigureBeacon(info, prop, init.ssl))
+  ['beacon', 'errorBeacon'].forEach(prop => tryConfigureBeacon(info, prop, init.ssl, agentEE))
   setInfo(agentIdentifier, info)
 
   const updatedInit = getConfiguration(agentIdentifier)
@@ -52,13 +57,21 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   return api
 }
 
-function tryConfigureAssetsPath (init) {
+let recordedAssetsChange = false
+function tryConfigureAssetsPath (init, agentEE) {
   init.assetsPath = validateServerUrl(init.assetsPath)
-  if (init.assetsPath !== '') redefinePublicPath(init.assetsPath)
-  else warn('New public path must be a valid URL. Chunk origin remains unchanged.')
+  if (init.assetsPath !== '') {
+    redefinePublicPath(init.assetsPath)
+
+    if (!recordedAssetsChange) {
+      recordedAssetsChange = true
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/AssetsUrl/Changed'], undefined, FEATURE_NAMES.metrics, agentEE)
+    }
+  } else warn('New public path must be a valid URL. Chunk origin remains unchanged.')
 }
 
-function tryConfigureBeacon (info, propName, ssl) {
+let recordedBeaconChange = false
+function tryConfigureBeacon (info, propName, ssl, agentEE) {
   // The defaults constant have the old exact beacon string. Comparison should support old-style configs.
   if (info[propName] === defaults[propName]) {
     delete info[propName] // however this means the new-style default defined in info.js should be used instead
@@ -68,6 +81,11 @@ function tryConfigureBeacon (info, propName, ssl) {
   const checkedUrl = validateServerUrl(info[propName], ssl === false) // Future to do: can remove ssl?
   if (checkedUrl !== '') {
     info[propName] = checkedUrl
+
+    if (!recordedBeaconChange) {
+      recordedBeaconChange = true
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/BeaconUrl/Changed'], undefined, FEATURE_NAMES.metrics, agentEE)
+    }
   } else {
     warn(`New ${propName} is not an acceptable URL. Reverting to static default.`)
     delete info[propName] // again, preventing the new-style default from being overwritten by setInfo(info)

@@ -27,7 +27,8 @@ describe('Using proxy servers -', () => {
     let url = await browser.testHandle.assetURL('instrumented.html', { config: { beacon: 'https://localhost:1234', errorBeacon: 'https://localhost:1234' } })
     await browser.setTimeout({ pageLoad: 10000 })
     await browser.url(url)
-    await browser.pause(5000) // takes RUM a while to get sent (< 3s but better more stable)
+    if (browser.capabilities.browserName === 'firefox') await browser.pause(10000) // for some reason firefox takes longer to fail & create entry, maybe it's the localhost
+    else await browser.pause(5000) // takes RUM a while to get sent (< 3s but better more stable)
 
     let resources = await browser.execute(function () {
       return performance.getEntriesByType('resource')
@@ -35,7 +36,7 @@ describe('Using proxy servers -', () => {
     expect(resources.some(entry => entry.name.startsWith('https://localhost:1234/1/'))).toBeTruthy()
   })
 
-  it.withBrowsersMatching([notSafari, notIOS])('setting a different invalid-URL beacon makes agent fall back to default', async () => {
+  it.withBrowsersMatching([notIE, notSafari, notIOS])('setting a different invalid-URL beacon makes agent fall back to default', async () => {
     let url = await browser.testHandle.assetURL('instrumented.html', { config: { beacon: 'invalid_url', errorBeacon: 'invalid_url' } })
     await browser.setTimeout({ pageLoad: 10000 })
     await browser.url(url)
@@ -44,7 +45,24 @@ describe('Using proxy servers -', () => {
     let resources = await browser.execute(function () {
       return performance.getEntriesByType('resource')
     })
-    console.log(resources)
     expect(resources.some(entry => entry.name.startsWith('https://' + defaults.errorBeacon))).toBeTruthy()
+  })
+
+  // Safari desktop & iOS can pass this following test since the agent should work "normally"
+  it.withBrowsersMatching(notIE)('should send SM when beacon is changed', async () => {
+    const { host, port } = browser.testHandle.bamServerConfig
+    // Even though the beacon isn't actually changed, this should still trigger the agent to emit sm due to difference between bam-test url vs actual default. Too bad the new assetsPath has no way to allow http.
+    let url = await browser.testHandle.assetURL('instrumented.html', { config: { beacon: `${host}:${port}`, errorBeacon: `${host}:${port}` } })
+    await browser.url(url).then(() => browser.waitForAgentLoad())
+    const [unloadSupportMetricsResults] = await Promise.all([
+      browser.testHandle.expectSupportMetrics(),
+      await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
+    ])
+
+    const supportabilityMetrics = unloadSupportMetricsResults.request.body.sm || []
+    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
+      params: { name: 'Config/BeaconUrl/Changed' },
+      stats: { c: 1 }
+    }]))
   })
 })

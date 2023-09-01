@@ -4,6 +4,63 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "9141a45cdb3fffd2306fcc5388ed74142d167c53",
+          "message": "Add mode to enable agent to not harvest until user consent",
+          "issues": [
+            "656"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "85336a43595bbf3d2793aafe665a47650a20ed21",
+          "message": "Issues with types resolution",
+          "issues": [
+            "670"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c17d344389eb2262ff5d3ca94a1748e519220921",
+          "message": "Removing old supportability metrics",
+          "issues": [
+            "669"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "6cb823842fab406a33b9698edee1932c29204df3",
+          "message": "Fixing issue with leaking event listeners",
+          "issues": [
+            "668"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "ec113af80fd565ff50ba825b82e5f4d1b74d09b7",
+          "message": "Remove allow_bfcache flag",
+          "issues": [
+            "652"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "2d3c9d36d4e59343a1b228322e1040d2f3f911b8",
+          "message": "Add best effort to detect Ajax events before instantiation",
+          "issues": [
+            "648"
+          ]
+        }
+      ],
+      "version": "1.239.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "4aa6986a-3ba4-438a-8255-e490b2b4894b",
+      "createTime": "2023-09-01T17:29:35.140Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "194142763a117b7c5ac30f22a73b0577d2112fba",
           "message": "Capture potential missing tail data for session trace",
@@ -390,5 +447,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-08-16T15:23:16.223Z"
+  "updateTime": "2023-09-01T17:29:35.140Z"
 }

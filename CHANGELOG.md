@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.239.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.238.0...v1.239.0) (2023-09-01)
+
+
+### Features
+
+* Add best effort to detect Ajax events before instantiation ([#648](https://github.com/newrelic/newrelic-browser-agent/issues/648)) ([2d3c9d3](https://github.com/newrelic/newrelic-browser-agent/commit/2d3c9d36d4e59343a1b228322e1040d2f3f911b8))
+* Add mode to enable agent to not harvest until user consent ([#656](https://github.com/newrelic/newrelic-browser-agent/issues/656)) ([9141a45](https://github.com/newrelic/newrelic-browser-agent/commit/9141a45cdb3fffd2306fcc5388ed74142d167c53))
+* Remove allow_bfcache flag ([#652](https://github.com/newrelic/newrelic-browser-agent/issues/652)) ([ec113af](https://github.com/newrelic/newrelic-browser-agent/commit/ec113af80fd565ff50ba825b82e5f4d1b74d09b7))
+* Removing old supportability metrics ([#669](https://github.com/newrelic/newrelic-browser-agent/issues/669)) ([c17d344](https://github.com/newrelic/newrelic-browser-agent/commit/c17d344389eb2262ff5d3ca94a1748e519220921))
+
+
+### Bug Fixes
+
+* Fixing issue with leaking event listeners ([#668](https://github.com/newrelic/newrelic-browser-agent/issues/668)) ([6cb8238](https://github.com/newrelic/newrelic-browser-agent/commit/6cb823842fab406a33b9698edee1932c29204df3))
+* Issues with types resolution ([#670](https://github.com/newrelic/newrelic-browser-agent/issues/670)) ([85336a4](https://github.com/newrelic/newrelic-browser-agent/commit/85336a43595bbf3d2793aafe665a47650a20ed21))
+
 ## [1.238.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.237.1...v1.238.0) (2023-08-16)
 
 

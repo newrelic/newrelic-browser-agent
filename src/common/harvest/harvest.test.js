@@ -157,8 +157,6 @@ describe('_send', () => {
       licenseKey
     })
     jest.mocked(configModule.getRuntime).mockReturnValue({
-      bytesSent: {},
-      queryBytesSent: {},
       maxBytes: Infinity
     })
 

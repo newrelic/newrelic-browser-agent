@@ -6,7 +6,7 @@ import { configure } from './configure/configure'
 import { Aggregator } from '../common/aggregate/aggregator'
 import { gosNREUMInitializedAgents } from '../common/window/nreum'
 import { generateRandomHexString } from '../common/ids/unique-id'
-import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
+import { getConfiguration, getConfigurationValue, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
 import { FEATURE_NAMES } from './features/features'
 import { warn } from '../common/util/console'
 import { onWindowLoad } from '../common/window/load'
@@ -37,7 +37,13 @@ export class MicroAgent extends AgentBase {
 
     Object.assign(this, configure(this.agentIdentifier, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent'))
 
-    this.run()
+    /**
+     * Starts a set of agent features if not running in "autoStart" mode
+     * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/start/}
+     * @param {string|string[]|undefined} name The feature name(s) to start.  If no name(s) are passed, all features will be started
+     */
+    this.start = features => this.run(features)
+    this.run(nonAutoFeatures.filter(featureName => getConfigurationValue(agentIdentifier, `${featureName}.autoStart`)))
   }
 
   get config () {
@@ -49,7 +55,19 @@ export class MicroAgent extends AgentBase {
     }
   }
 
-  run () {
+  run (features) {
+    try {
+      const featNames = nonAutoFeatures
+      if (features === undefined) features = featNames
+      else {
+        features = Array.isArray(features) && features.length ? features : [features]
+        if (features.some(f => !featNames.includes(f))) return warn(`Invalid feature name supplied. Acceptable feature names are: ${featNames}`)
+        if (!features.includes(FEATURE_NAMES.pageViewEvent)) features.push(FEATURE_NAMES.pageViewEvent)
+      }
+    } catch (err) {
+      warn('An unexpected issue occurred', err)
+    }
+
     try {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
 
@@ -63,7 +81,7 @@ export class MicroAgent extends AgentBase {
       onWindowLoad(() => {
         // these features do not import an "instrument" file, meaning they are only hooked up to the API.
         nonAutoFeatures.forEach(f => {
-          if (enabledFeatures[f]) {
+          if (enabledFeatures[f] && features.includes(f)) {
             import(/* webpackChunkName: "lazy-feature-loader" */ '../features/utils/lazy-feature-loader').then(({ lazyFeatureLoader }) => {
               return lazyFeatureLoader(f, 'aggregate')
             }).then(({ Aggregate }) => {

@@ -31,7 +31,8 @@ jest.mock('../../loaders/configure/configure', () => ({
 }))
 jest.mock('../../common/window/nreum', () => ({
   __esModule: true,
-  gosCDN: jest.fn().mockReturnValue({})
+  gosCDN: jest.fn().mockReturnValue({}),
+  gosNREUM: jest.fn().mockReturnValue({})
 }))
 
 let agentIdentifier

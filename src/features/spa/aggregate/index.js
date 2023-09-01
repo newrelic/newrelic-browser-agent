@@ -17,7 +17,6 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { Serializer } from './serializer'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import * as CONSTANTS from '../constants'
-import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 
@@ -728,6 +727,6 @@ export class Aggregate extends AggregateBase {
       return enabled !== false
     }
 
-    drain(this.agentIdentifier, this.featureName)
+    this.drain()
   }
 }

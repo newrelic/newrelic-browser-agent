@@ -92,4 +92,13 @@ export class AgentBase {
   addRelease (name, id) {
     warn('Call to agent api addRelease failed. The agent is not currently initialized.')
   }
+
+  /**
+   * Starts a set of agent features if not running in "autoStart" mode
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/start/}
+   * @param {string|string[]|undefined} name The feature name(s) to start.  If no name(s) are passed, all features will be started
+   */
+  start (featureNames) {
+    warn('Call to agent api addRelease failed. The agent is not currently initialized.')
+  }
 }

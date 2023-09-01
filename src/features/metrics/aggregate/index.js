@@ -2,7 +2,6 @@ import { getRuntime } from '../../../common/config/config'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL } from '../constants'
-import { drain } from '../../../common/drain/drain'
 import { getFrameworks } from './framework-detection'
 import { isFileProtocol } from '../../../common/url/protocol'
 import { getRules, validateRules } from '../../../common/util/obfuscate'
@@ -34,7 +33,7 @@ export class Aggregate extends AggregateBase {
     scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
     scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
 
-    drain(this.agentIdentifier, this.featureName) // regardless if this is blocked or not, drain is needed to unblock other features from harvesting (counteract registerDrain)
+    this.drain()
   }
 
   storeSupportabilityMetrics (name, value) {

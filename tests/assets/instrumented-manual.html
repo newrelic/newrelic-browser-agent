@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config} 
+    <script>
+      NREUM.init.ajax.autoStart = false
+      NREUM.init.jserrors.autoStart = false
+      NREUM.init.metrics.autoStart = false
+      NREUM.init.page_action.autoStart = false
+      NREUM.init.page_view_event.autoStart = false
+      NREUM.init.page_view_timing.autoStart = false
+      NREUM.init.session_trace.autoStart = false
+      NREUM.init.spa.autoStart = false
+    </script>
+    {loader} {script-injection}
+    <script>
+                var xhr = new XMLHttpRequest()
+          xhr.open('GET', '/json')
+          xhr.send()
+
+
+          newrelic.noticeError('test')
+
+
+          newrelic.addPageAction('test', { test: 1 })
+    </script>
+  </head>
+  <body>Instrumented</body>
+</html>

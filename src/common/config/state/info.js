@@ -1,11 +1,10 @@
 import { defaults as nrDefaults, gosNREUMInitializedAgents } from '../../window/nreum'
 import { getModeledObject } from './configurable'
-import { validateServerUrl } from '../../url/check-url'
 
 const model = {
   // preset defaults
-  beacon: validateServerUrl(nrDefaults.beacon),
-  errorBeacon: validateServerUrl(nrDefaults.errorBeacon),
+  beacon: `https://${nrDefaults.beacon}/`, // aka validateServerUrl(nrDefaults.beacon) but IE11 & Saf 14- can't run that fn
+  errorBeacon: `https://${nrDefaults.errorBeacon}/`,
   // others must be populated by user
   licenseKey: undefined,
   applicationID: undefined,

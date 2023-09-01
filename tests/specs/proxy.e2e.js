@@ -1,9 +1,10 @@
 import { notIE, notSafari, notIOS } from '../../tools/browser-matcher/common-matchers.mjs'
+import { defaults } from '../../src/common/window/nreum'
 
 describe('Using proxy servers -', () => {
   // Safari v14- doesn't support this feature either, but that's OoS of existing testing versions.
-  // Furthermore: Safari does not include resource entries for failed script resource, so it's totally excluded.
 
+  // Furthermore: Safari does not include resource entries for failed-to-load script & ajax requests, so it's totally excluded.
   it.withBrowsersMatching([notIE, notSafari, notIOS])('setting an assetsPath in info changes where agent fetches its chunks from', async () => {
     const { host, port } = browser.testHandle.assetServerConfig
     /** This is where we expect the agent to fetch its chunk. '/build/' is necessary within the URL because the way our asset server
@@ -20,5 +21,30 @@ describe('Using proxy servers -', () => {
     })
 
     expect(resources.some(entry => entry.name.includes('/build/fakepath/nr-spa') && entry.name.startsWith('https:'))).toBeTruthy()
+  })
+
+  it.withBrowsersMatching([notIE, notSafari, notIOS])('setting a different but valid-URL beacon (and errorBeacon) changes RUM call destination', async () => {
+    let url = await browser.testHandle.assetURL('instrumented.html', { config: { beacon: 'https://localhost:1234', errorBeacon: 'https://localhost:1234' } })
+    await browser.setTimeout({ pageLoad: 10000 })
+    await browser.url(url)
+    await browser.pause(5000) // takes RUM a while to get sent (< 3s but better more stable)
+
+    let resources = await browser.execute(function () {
+      return performance.getEntriesByType('resource')
+    })
+    expect(resources.some(entry => entry.name.startsWith('https://localhost:1234/1/'))).toBeTruthy()
+  })
+
+  it.withBrowsersMatching([notSafari, notIOS])('setting a different invalid-URL beacon makes agent fall back to default', async () => {
+    let url = await browser.testHandle.assetURL('instrumented.html', { config: { beacon: 'invalid_url', errorBeacon: 'invalid_url' } })
+    await browser.setTimeout({ pageLoad: 10000 })
+    await browser.url(url)
+    await browser.pause(5000) // takes RUM a while to get sent (< 3s but better more stable)
+
+    let resources = await browser.execute(function () {
+      return performance.getEntriesByType('resource')
+    })
+    console.log(resources)
+    expect(resources.some(entry => entry.name.startsWith('https://' + defaults.errorBeacon))).toBeTruthy()
   })
 })

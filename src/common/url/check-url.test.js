@@ -1,4 +1,5 @@
 import { validateServerUrl } from './check-url'
+import { defaults } from '../window/nreum'
 
 test('validateServerUrl works correctly', () => {
   expect(validateServerUrl(undefined)).toEqual('')
@@ -8,12 +9,16 @@ test('validateServerUrl works correctly', () => {
   expect(validateServerUrl('data://anotherscheme.com/')).toEqual('') // should warn about scheme
   expect(validateServerUrl('http:/enforcescheme.net/')).toEqual('') // should warn about scheme
   expect(validateServerUrl('invalid url')).toEqual('')
+  expect(validateServerUrl('another_illegal!url')).toEqual('')
 
-  expect(validateServerUrl('www.missingscheme.com/')).toEqual('https://www.missingscheme.com/')
+  expect(validateServerUrl('www.missing-scheme.com/')).toEqual('https://www.missing-scheme.com/')
   expect(validateServerUrl('enforceendslash.net:1234')).toEqual('https://enforceendslash.net:1234/')
   expect(validateServerUrl('https://www.absolutepath.org/somepath')).toEqual('https://www.absolutepath.org/somepath/')
   expect(validateServerUrl('js-agent.nr.com:9876/foo/bar?query=search')).toEqual('https://js-agent.nr.com:9876/foo/bar/')
+  expect(validateServerUrl('https://user:pass@www.absolutepath.org/somepath')).toEqual('https://www.absolutepath.org/somepath/')
 
   expect(validateServerUrl('missingscheme.unsecureparam.com/', true)).toEqual('http://missingscheme.unsecureparam.com/')
   expect(validateServerUrl('http://hasscheme.unsecureparam.com/', true)).toEqual('') // should warn about scheme
+
+  expect(validateServerUrl(defaults.beacon)).toEqual('https://bam.nr-data.net/') // sanity check!
 })

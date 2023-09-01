@@ -87,7 +87,8 @@ export class Aggregate extends AggregateBase {
       if (!allAjaxIsEnabled) return
 
       if (!shouldCollectEvent(params)) {
-        if (params.hostname === getInfo(agentIdentifier).errorBeacon) {
+        if (getInfo(agentIdentifier).errorBeacon.includes(params.hostname)) {
+          // This doesn't make a distinction if the same-domain request is going to a different port or path...
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, ee)
         } else {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee)

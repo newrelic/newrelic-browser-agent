@@ -1,10 +1,11 @@
 import { defaults as nrDefaults, gosNREUMInitializedAgents } from '../../window/nreum'
 import { getModeledObject } from './configurable'
+import { validateServerUrl } from '../../url/check-url'
 
 const model = {
   // preset defaults
-  beacon: nrDefaults.beacon,
-  errorBeacon: nrDefaults.errorBeacon,
+  beacon: validateServerUrl(nrDefaults.beacon),
+  errorBeacon: validateServerUrl(nrDefaults.errorBeacon),
   // others must be populated by user
   licenseKey: undefined,
   applicationID: undefined,

@@ -33,7 +33,6 @@ export class Harvest extends SharedContext {
 
     this.tooManyRequestsDelay = getConfigurationValue(this.sharedContext.agentIdentifier, 'harvest.tooManyRequestsDelay') || 60
     this.obfuscator = new Obfuscator(this.sharedContext)
-    this.getScheme = () => (getConfigurationValue(this.sharedContext.agentIdentifier, 'ssl') === false) ? 'http' : 'https'
 
     this._events = {}
   }
@@ -96,10 +95,10 @@ export class Harvest extends SharedContext {
       return false
     }
 
-    const endpointURLPart = endpoint !== 'rum' ? `/${endpoint}` : ''
-    let url = `${this.getScheme()}://${info.errorBeacon}${endpointURLPart}/1/${info.licenseKey}`
+    const endpointURLPart = endpoint !== 'rum' ? `${endpoint}/` : ''
+    let url = `${info.errorBeacon}${endpointURLPart}1/${info.licenseKey}`
     if (customUrl) url = customUrl
-    if (raw) url = `${this.getScheme()}://${info.errorBeacon}/${endpoint}`
+    if (raw) url = `${info.errorBeacon}${endpoint}`
 
     const baseParams = !raw && includeBaseParams ? this.baseQueryString() : ''
     let payloadParams = encodeObj(qs, agentRuntime.maxBytes)

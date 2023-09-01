@@ -5,7 +5,7 @@ import { onTTFB } from 'web-vitals'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
 import { paintMetrics } from '../../../common/metrics/paint-metrics'
-import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
+import { getInfo, getRuntime } from '../../../common/config/config'
 import { Harvest } from '../../../common/harvest/harvest'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
@@ -43,10 +43,6 @@ export class Aggregate extends AggregateBase {
     } else {
       this.sendRum() // timings either already in runtime from instrument or is meant to get 0'd.
     }
-  }
-
-  getScheme () {
-    return getConfigurationValue(this.agentIdentifier, 'ssl') === false ? 'http' : 'https'
   }
 
   sendRum () {

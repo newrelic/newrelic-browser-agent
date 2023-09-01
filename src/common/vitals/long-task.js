@@ -10,7 +10,7 @@ if (isBrowserScope) {
     entries.forEach(entry => {
       longTask.update({
         value: entry.duration,
-        entries,
+        entries: [entry],
         attrs: {
           ltFrame: entry.name, // MDN: the browsing context or frame that can be attributed to the long task
           ltStart: entry.startTime, // MDN: a double representing the time (millisec) when the task started

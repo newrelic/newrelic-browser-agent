@@ -1,5 +1,6 @@
 /* eslint-disable no-throw-literal */
 import { warn } from '../util/console'
+import { isIE } from '../constants/runtime'
 
 /**
  * Checks input string to see if it's acceptable as agent's public path for loading source code.
@@ -7,7 +8,7 @@ import { warn } from '../util/console'
  * @param {boolean} [allowUnsecure] - when scheme isn't included in url string, this allows http: to be prepended if true
  * @returns Absolute url if 'string' is accepted. Empty string if it's denied.
  */
-export function validateServerUrl (string, allowUnsecure = false) {
+export function validateServerUrl (string, allowUnsecure = false, localTest = false) {
   if (!string || typeof string !== 'string') return ''
 
   let properUrl
@@ -18,6 +19,8 @@ export function validateServerUrl (string, allowUnsecure = false) {
       if (string.startsWith('/')) throw 'Neither beacon nor assets URL can be a relative path. Please check your configurations.'
       string = allowUnsecure ? 'http://' + string : 'https://' + string // URL api requires a scheme or it'll throw
     }
+    if (localTest && isIE) return string + '/'
+
     /* Note: URL API is not available in IE11 and throws in Safari v14- when base is undefined. Hence, this will always return empty string for those environments.
     As it turns out, proper URL validation is a complex problem, and even the URL api doesn't (can't) do it correctly. https://snyk.io/blog/secure-javascript-url-validation/
     As such, we have to check the domain ourselves for illegal characters -- it should only allow numbers|letters|hyphen and the dot for subdomains

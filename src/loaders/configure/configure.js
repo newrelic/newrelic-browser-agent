@@ -78,7 +78,7 @@ function tryConfigureBeacon (info, propName, ssl, agentEE) {
     return
   }
 
-  const checkedUrl = validateServerUrl(info[propName], ssl === false) // Future to do: can remove ssl?
+  const checkedUrl = validateServerUrl(info[propName], ssl === false, info.prox) // Future to do: can remove ssl?
   if (checkedUrl !== '') {
     info[propName] = checkedUrl
 

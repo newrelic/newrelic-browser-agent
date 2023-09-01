@@ -34,7 +34,8 @@ function getConfigContent (request, reply, testServer) {
     beacon: `${testServer.bamServer.host}:${testServer.bamServer.port}`,
     errorBeacon: `${testServer.bamServer.host}:${testServer.bamServer.port}`,
     ...defaultAgentConfig,
-    ...queryConfig
+    ...queryConfig,
+    prox: true // this is to allow test suite to bypass validation for the beacon & errorBeacon url...
   }
 
   let updatedConfig = {

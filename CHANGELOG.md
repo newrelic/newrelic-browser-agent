@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.239.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.239.0...v1.239.1) (2023-09-02)
+
+
+### Bug Fixes
+
+* Fix internal release process ([#672](https://github.com/newrelic/newrelic-browser-agent/issues/672)) ([ab0309f](https://github.com/newrelic/newrelic-browser-agent/commit/ab0309fbed343b6dab4c2ec82cf7f22e071eb9df))
+
 ## [1.239.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.238.0...v1.239.0) (2023-09-01)
 
 

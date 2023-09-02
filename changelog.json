@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "ab0309fbed343b6dab4c2ec82cf7f22e071eb9df",
+          "message": "Fix internal release process",
+          "issues": [
+            "672"
+          ]
+        }
+      ],
+      "version": "1.239.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "33275955-65e5-4584-99f6-b7763d1a0730",
+      "createTime": "2023-09-02T03:12:08.306Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "9141a45cdb3fffd2306fcc5388ed74142d167c53",
           "message": "Add mode to enable agent to not harvest until user consent",
@@ -447,5 +464,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-09-01T17:29:35.140Z"
+  "updateTime": "2023-09-02T03:12:08.306Z"
 }

@@ -443,7 +443,11 @@ export class Aggregate extends AggregateBase {
       this.storeResources(window.performance.getEntriesByType('resource'))
     }
 
+    let earliestTimeStamp = Infinity
     const stns = Object.entries(this.trace).flatMap(([name, listOfSTNodes]) => { // basically take the "this.trace" map-obj and concat all the list-type values
+      const oldestNodeTS = listOfSTNodes.reduce((acc, next) => (!acc || next.s < acc) ? next.s : acc, undefined)
+      if (oldestNodeTS < earliestTimeStamp) earliestTimeStamp = oldestNodeTS
+
       if (!(name in toAggregate)) return listOfSTNodes
       // Special processing for event nodes dealing with user inputs:
       const reindexByOriginFn = this.smearEvtsByOrigin(name)
@@ -459,7 +463,11 @@ export class Aggregate extends AggregateBase {
     this.nodeCount = 0
 
     return {
-      qs: { st: String(getRuntime(this.agentIdentifier).offset) },
+      qs: {
+        st: String(getRuntime(this.agentIdentifier).offset),
+        fts: String(getRuntime(this.agentIdentifier).offset + earliestTimeStamp), // first time stamp,
+        n: stns.length // node count
+      },
       body: { res: stns }
     }
   }

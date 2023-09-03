@@ -11,7 +11,7 @@ const getFreshINPImport = async (codeToRun) => {
 
 describe('inp', () => {
   test('reports fcp from web-vitals', (done) => {
-    getFreshINPImport(metric => metric.subscribe(({ current: value, attrs }) => {
+    getFreshINPImport(metric => metric.subscribe(({ value, attrs }) => {
       expect(value).toEqual(1)
       expect(attrs.metricId).toEqual('id')
       done()
@@ -25,7 +25,7 @@ describe('inp', () => {
     }))
 
     getFreshINPImport(metric => {
-      metric.subscribe(({ current: value, attrs }) => {
+      metric.subscribe(() => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })
@@ -59,7 +59,7 @@ describe('inp', () => {
     }))
     let triggered = 0
     getFreshINPImport(metric => {
-      metric.subscribe(({ current: value }) => {
+      metric.subscribe(({ value }) => {
         triggered++
         expect(value).toEqual(1)
         expect(triggered).toEqual(1)

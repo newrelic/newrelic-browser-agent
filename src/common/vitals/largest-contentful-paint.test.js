@@ -11,7 +11,7 @@ const getFreshLCPImport = async (codeToRun) => {
 
 describe('lcp', () => {
   test('reports lcp from web-vitals', (done) => {
-    getFreshLCPImport(metric => metric.subscribe(({ current: value, attrs }) => {
+    getFreshLCPImport(metric => metric.subscribe(({ value, attrs }) => {
       expect(value).toEqual(1)
       expect(attrs).toMatchObject({
         size: expect.any(Number),
@@ -30,7 +30,7 @@ describe('lcp', () => {
     }))
 
     getFreshLCPImport(metric => {
-      metric.subscribe(({ current: value, attrs }) => {
+      metric.subscribe(() => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })
@@ -46,7 +46,7 @@ describe('lcp', () => {
     }))
 
     getFreshLCPImport(metric => {
-      metric.subscribe(({ current: value }) => {
+      metric.subscribe(() => {
         console.log('should not have reported')
         expect(1).toEqual(2)
       })
@@ -80,7 +80,7 @@ describe('lcp', () => {
       isBrowserScope: true
     }))
     let triggered = 0
-    getFreshLCPImport(metric => metric.subscribe(({ current: value }) => {
+    getFreshLCPImport(metric => metric.subscribe(({ value }) => {
       triggered++
       expect(value).toEqual(1)
       expect(triggered).toEqual(1)

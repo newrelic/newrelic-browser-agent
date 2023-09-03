@@ -23,7 +23,7 @@ export class Aggregate extends AggregateBase {
     this.firstByteToDomContent = 0 // our "dom processing" duration
 
     if (isBrowserScope) {
-      timeToFirstByte.subscribe(({ current: value, entries }) => {
+      timeToFirstByte.subscribe(({ value, entries }) => {
         const navEntry = entries[0]
         this.timeToFirstByte = Math.max(value, this.timeToFirstByte)
         this.firstByteToWindowLoad = Math.max(Math.round(navEntry.loadEventEnd - this.timeToFirstByte), this.firstByteToWindowLoad) // our "frontend" duration
@@ -96,8 +96,8 @@ export class Aggregate extends AggregateBase {
       }
     }
 
-    queryParameters.fp = firstPaint.value.current
-    queryParameters.fcp = firstContentfulPaint.value.current
+    queryParameters.fp = firstPaint.current.value
+    queryParameters.fcp = firstContentfulPaint.current.value
 
     harvester.send({
       endpoint: 'rum',

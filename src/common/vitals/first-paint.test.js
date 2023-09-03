@@ -25,7 +25,7 @@ const getFreshFPImport = async (codeToRun) => {
 
 describe('fp', () => {
   test('reports fp', (done) => {
-    getFreshFPImport(metric => metric.subscribe(({ current: value }) => {
+    getFreshFPImport(metric => metric.subscribe(({ value }) => {
       expect(value).toEqual(1)
       done()
     }))
@@ -39,7 +39,7 @@ describe('fp', () => {
     }))
 
     getFreshFPImport(metric => {
-      metric.subscribe(({ current: value }) => {
+      metric.subscribe(() => {
         console.log('should not have reported')
         expect(1).toEqual(2)
       })
@@ -55,7 +55,7 @@ describe('fp', () => {
     }))
 
     getFreshFPImport(metric => {
-      metric.subscribe(({ current: value, attrs }) => {
+      metric.subscribe(({ value, attrs }) => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })
@@ -79,7 +79,7 @@ describe('fp', () => {
     global.PerformanceObserver.supportedEntryTypes = ['paint']
 
     getFreshFPImport(metric => {
-      metric.subscribe(({ current: value, attrs }) => {
+      metric.subscribe(() => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })
@@ -113,7 +113,7 @@ describe('fp', () => {
       isBrowserScope: true
     }))
     let triggered = 0
-    getFreshFPImport(metric => metric.subscribe(({ current: value }) => {
+    getFreshFPImport(metric => metric.subscribe(({ value }) => {
       triggered++
       expect(value).toEqual(1)
       expect(triggered).toEqual(1)

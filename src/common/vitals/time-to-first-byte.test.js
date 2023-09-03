@@ -18,7 +18,7 @@ describe('ttfb', () => {
     }))
     global.PerformanceNavigationTiming = jest.fn()
 
-    getFreshTTFBImport(metric => metric.subscribe(({ current: value, attrs }) => {
+    getFreshTTFBImport(metric => metric.subscribe(({ value }) => {
       expect(value).toEqual(1)
       done()
     }))
@@ -31,7 +31,7 @@ describe('ttfb', () => {
     }))
 
     getFreshTTFBImport(metric => {
-      metric.subscribe(({ current: value, attrs }) => {
+      metric.subscribe(() => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })
@@ -48,7 +48,7 @@ describe('ttfb', () => {
     global.PerformanceNavigationTiming = undefined
 
     getFreshTTFBImport(metric => {
-      metric.subscribe(({ current: value, attrs }) => {
+      metric.subscribe(() => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })
@@ -65,7 +65,7 @@ describe('ttfb', () => {
     global.PerformanceNavigationTiming = jest.fn()
 
     getFreshTTFBImport(metric => {
-      metric.subscribe(({ current: value, attrs }) => {
+      metric.subscribe(() => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })
@@ -90,7 +90,7 @@ describe('ttfb', () => {
     global.PerformanceNavigationTiming = undefined
 
     getFreshTTFBImport(metric => {
-      metric.subscribe(({ current: value, attrs }) => {
+      metric.subscribe(({ value }) => {
         expect(value).toEqual(1) // responseStart (2) - offset (1) === 1
         done()
       })
@@ -133,7 +133,7 @@ describe('ttfb', () => {
       isBrowserScope: true
     }))
     let triggered = 0
-    getFreshTTFBImport(metric => metric.subscribe(({ current: value }) => {
+    getFreshTTFBImport(metric => metric.subscribe(({ value }) => {
       triggered++
       expect(value).toEqual(1)
       expect(triggered).toEqual(1)

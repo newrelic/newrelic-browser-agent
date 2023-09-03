@@ -11,7 +11,7 @@ export class VitalMetric {
   update ({ value, entries = [], attrs = {}, shouldAddConnectionAttributes = false }) {
     if (value < 0) return
     const state = {
-      current: this.roundingMethod(value),
+      value: this.roundingMethod(value),
       name: this.name,
       entries,
       attrs
@@ -20,16 +20,16 @@ export class VitalMetric {
     this.history.push(state)
     this.#subscribers.forEach(cb => {
       try {
-        cb(this.value)
+        cb(this.current)
       } catch (e) {
         // ignore errors
       }
     })
   }
 
-  get value () {
+  get current () {
     return this.history[this.history.length - 1] || {
-      current: undefined,
+      value: undefined,
       name: this.name,
       entries: [],
       attrs: {}
@@ -37,7 +37,7 @@ export class VitalMetric {
   }
 
   get isValid () {
-    return this.history.length > 0 && this.value.current >= 0
+    return this.current.value >= 0
   }
 
   subscribe (callback, buffered = true) {

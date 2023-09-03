@@ -716,8 +716,8 @@ export class Aggregate extends AggregateBase {
       interaction.root.attrs.id = generateUuid()
 
       if (interaction.root.attrs.trigger === 'initialPageLoad') {
-        interaction.root.attrs.firstPaint = firstPaint.value.current
-        interaction.root.attrs.firstContentfulPaint = firstContentfulPaint.value.current
+        interaction.root.attrs.firstPaint = firstPaint.current.value
+        interaction.root.attrs.firstContentfulPaint = firstContentfulPaint.current.value
       }
       baseEE.emit('interactionSaved', [interaction])
       state.interactionsToHarvest.push(interaction)

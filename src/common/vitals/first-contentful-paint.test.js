@@ -11,7 +11,7 @@ const getFreshFCPImport = async (codeToRun) => {
 
 describe('fcp', () => {
   test('reports fcp from web-vitals', (done) => {
-    getFreshFCPImport(firstContentfulPaint => firstContentfulPaint.subscribe(({ current: value }) => {
+    getFreshFCPImport(firstContentfulPaint => firstContentfulPaint.subscribe(({ value }) => {
       expect(value).toEqual(1)
       done()
     }))
@@ -26,7 +26,7 @@ describe('fcp', () => {
     }))
     global.performance.getEntriesByType = jest.fn(() => [{ name: 'first-contentful-paint', startTime: 1 }])
 
-    getFreshFCPImport(firstContentfulPaint => firstContentfulPaint.subscribe(({ current: value }) => {
+    getFreshFCPImport(firstContentfulPaint => firstContentfulPaint.subscribe(({ value }) => {
       expect(value).toEqual(1)
       done()
     }))
@@ -39,7 +39,7 @@ describe('fcp', () => {
     }))
 
     getFreshFCPImport(metric => {
-      metric.subscribe(({ current: value, attrs }) => {
+      metric.subscribe(({ value, attrs }) => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })
@@ -57,7 +57,7 @@ describe('fcp', () => {
     global.performance.getEntriesByType = jest.fn(() => [{ name: 'other-timing-name', startTime: 1 }])
 
     getFreshFCPImport(firstContentfulPaint => {
-      firstContentfulPaint.subscribe(({ current: value }) => {
+      firstContentfulPaint.subscribe(() => {
         console.log('should not have reported')
         expect(1).toEqual(2)
       })
@@ -75,7 +75,7 @@ describe('fcp', () => {
     global.performance.getEntriesByType = jest.fn(() => [{ name: 'first-contentful-paint', startTime: 1 }])
 
     getFreshFCPImport(firstContentfulPaint => {
-      firstContentfulPaint.subscribe(({ current: value }) => {
+      firstContentfulPaint.subscribe(() => {
         console.log('should not have reported....')
         expect(1).toEqual(2)
       })
@@ -110,7 +110,7 @@ describe('fcp', () => {
       isBrowserScope: true
     }))
     let triggered = 0
-    getFreshFCPImport(firstContentfulPaint => firstContentfulPaint.subscribe(({ current: value }) => {
+    getFreshFCPImport(firstContentfulPaint => firstContentfulPaint.subscribe(({ value }) => {
       triggered++
       expect(value).toEqual(1)
       expect(triggered).toEqual(1)

@@ -11,7 +11,7 @@ const getFreshFIDImport = async (codeToRun) => {
 
 describe('fid', () => {
   test('reports fcp from web-vitals', (done) => {
-    getFreshFIDImport(metric => metric.subscribe(({ current: value }) => {
+    getFreshFIDImport(metric => metric.subscribe(({ value }) => {
       expect(value).toEqual(1)
       done()
     }))
@@ -25,7 +25,7 @@ describe('fid', () => {
     }))
 
     getFreshFIDImport(metric => {
-      metric.subscribe(({ current: value }) => {
+      metric.subscribe(() => {
         console.log('should not have reported')
         expect(1).toEqual(2)
       })
@@ -40,7 +40,7 @@ describe('fid', () => {
     }))
 
     getFreshFIDImport(metric => {
-      metric.subscribe(({ current: value, attrs }) => {
+      metric.subscribe(() => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })
@@ -74,7 +74,7 @@ describe('fid', () => {
       isBrowserScope: true
     }))
     let triggered = 0
-    getFreshFIDImport(metric => metric.subscribe(({ current: value }) => {
+    getFreshFIDImport(metric => metric.subscribe(({ value }) => {
       triggered++
       expect(value).toEqual(1)
       expect(triggered).toEqual(1)

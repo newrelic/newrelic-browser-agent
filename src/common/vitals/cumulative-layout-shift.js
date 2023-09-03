@@ -7,7 +7,7 @@ export const cumulativeLayoutShift = new VitalMetric(VITAL_NAMES.CUMULATIVE_LAYO
 
 if (isBrowserScope) {
   onCLS(({ value, entries }) => {
-    if (cumulativeLayoutShift.roundingMethod(value) === cumulativeLayoutShift.value.current) return
+    if (cumulativeLayoutShift.roundingMethod(value) === cumulativeLayoutShift.current.value) return
     cumulativeLayoutShift.update({ value, entries })
   }, { reportAllChanges: true })
 }

@@ -25,7 +25,7 @@ import { longTask } from '../../../common/vitals/long-task'
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
 
-  #handleVitalMetric = ({ name, current: value, attrs }) => {
+  #handleVitalMetric = ({ name, value, attrs }) => {
     this.addTiming(name, value, attrs)
   }
 
@@ -102,8 +102,8 @@ export class Aggregate extends AggregateBase {
     Mitigation: We've set initial CLS to null so that it's omitted from timings like 'pageHide' in that edge case. It should only be included if onCLS callback was executed at least once.
     Future: onCLS value changes should be reported directly & CLS separated into its own timing node so it's not beholden to 'pageHide' firing. It'd also be possible to report the real final CLS.
     */
-    if (cumulativeLayoutShift.value.current >= 0) {
-      attrs.cls = cumulativeLayoutShift.value.current
+    if (cumulativeLayoutShift.current.value >= 0) {
+      attrs.cls = cumulativeLayoutShift.current.value
     }
 
     this.timings.push({

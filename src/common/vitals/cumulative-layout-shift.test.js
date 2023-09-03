@@ -12,7 +12,7 @@ const getFreshCLSImport = async (codeToRun) => {
 describe('cls', () => {
   test('reports cls', (done) => {
     getFreshCLSImport(metric => {
-      metric.subscribe(({ current: value }) => {
+      metric.subscribe(({ value }) => {
         expect(value).toEqual(1)
         done()
       })
@@ -25,7 +25,7 @@ describe('cls', () => {
     }))
 
     getFreshCLSImport(metric => {
-      metric.subscribe(({ current: value, attrs }) => {
+      metric.subscribe(() => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })
@@ -57,7 +57,7 @@ describe('cls', () => {
     }))
     let triggered = 0
     getFreshCLSImport(metric => {
-      metric.subscribe(({ current: value }) => {
+      metric.subscribe(({ value }) => {
         triggered++
         expect(value).toEqual(1)
         expect(triggered).toEqual(1)

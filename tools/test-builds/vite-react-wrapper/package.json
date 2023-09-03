@@ -10,6 +10,8 @@
   },
   "scripts": {
     "start": "vite",
+    "test:types-resolver": "tsc --project tsconfig.types-resolver.json",
+    "prebuild": "npm run test:types-resolver",
     "build": "tsc && vite build"
   },
   "devDependencies": {

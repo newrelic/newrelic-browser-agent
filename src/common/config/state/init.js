@@ -8,9 +8,8 @@ const model = () => {
     maskInputOptions: { password: true }
   }
   return {
-    allow_bfcache: true, // *cli - temporary feature flag for BFCache work
     privacy: { cookies_enabled: true }, // *cli - per discussion, default should be true
-    ajax: { deny_list: undefined, block_internal: true, enabled: true, harvestTimeSeconds: 10 },
+    ajax: { deny_list: undefined, block_internal: true, enabled: true, harvestTimeSeconds: 10, autoStart: true },
     distributed_tracing: {
       enabled: undefined,
       exclude_newrelic_header: undefined,
@@ -25,15 +24,16 @@ const model = () => {
     },
     ssl: undefined,
     obfuscate: undefined,
-    jserrors: { enabled: true, harvestTimeSeconds: 10 },
-    metrics: { enabled: true },
-    page_action: { enabled: true, harvestTimeSeconds: 30 },
-    page_view_event: { enabled: true },
-    page_view_timing: { enabled: true, harvestTimeSeconds: 30, long_task: false },
-    session_trace: { enabled: true, harvestTimeSeconds: 10 },
+    jserrors: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
+    metrics: { enabled: true, autoStart: true },
+    page_action: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
+    page_view_event: { enabled: true, autoStart: true },
+    page_view_timing: { enabled: true, harvestTimeSeconds: 30, long_task: false, autoStart: true },
+    session_trace: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
     harvest: { tooManyRequestsDelay: 60 },
     session_replay: {
       // feature settings
+      autoStart: true,
       enabled: false,
       harvestTimeSeconds: 60,
       sampleRate: 0.1,
@@ -61,7 +61,7 @@ const model = () => {
         hiddenState.maskInputOptions = { ...val, password: true }
       }
     },
-    spa: { enabled: true, harvestTimeSeconds: 10 }
+    spa: { enabled: true, harvestTimeSeconds: 10, autoStart: true }
   }
 }
 

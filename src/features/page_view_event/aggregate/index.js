@@ -9,7 +9,6 @@ import { getConfigurationValue, getInfo, getRuntime } from '../../../common/conf
 import { Harvest } from '../../../common/harvest/harvest'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
-import { drain } from '../../../common/drain/drain'
 import { activateFeatures } from '../../../common/util/feature-flags'
 import { warn } from '../../../common/util/console'
 import { AggregateBase } from '../../utils/aggregate-base'
@@ -131,7 +130,7 @@ export class Aggregate extends AggregateBase {
 
         try {
           activateFeatures(JSON.parse(responseText), this.agentIdentifier)
-          drain(this.agentIdentifier, this.featureName)
+          this.drain()
         } catch (err) {
           this.ee.abort()
           warn('RUM call failed. Agent shutting down.')

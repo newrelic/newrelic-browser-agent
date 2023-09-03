@@ -15,7 +15,6 @@ import { cleanURL } from '../../../common/url/clean-url'
 import { handle } from '../../../common/event-emitter/handle'
 import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { FEATURE_NAME } from '../constants'
-import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 
@@ -128,7 +127,7 @@ export class Aggregate extends AggregateBase {
     // send initial data sooner, then start regular
     this.ee.on(`drain-${this.featureName}`, () => { this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds) })
 
-    drain(this.agentIdentifier, this.featureName)
+    this.drain()
   }
 
   // takes an attributes object and appends connection attributes if available

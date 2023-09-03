@@ -44,7 +44,6 @@ function curateRegistry (agentIdentifier) {
  */
 export function drain (agentIdentifier = '', featureName = 'feature') {
   curateRegistry(agentIdentifier)
-
   // If the feature for the specified agent is not in the registry, that means the instrument file was bypassed.
   // This could happen in tests, or loaders that directly import the aggregator. In these cases it is safe to
   // drain the feature group immediately rather than waiting to drain all at once.
@@ -59,6 +58,7 @@ export function drain (agentIdentifier = '', featureName = 'feature') {
   if (items.every(([key, values]) => values.staged)) {
     items.sort((a, b) => a[1].priority - b[1].priority)
     items.forEach(([group]) => {
+      registry[agentIdentifier].delete(group)
       drainGroup(group)
     })
   }

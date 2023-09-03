@@ -5,15 +5,16 @@ import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts'
 import { S3Client, ListObjectsCommand } from '@aws-sdk/client-s3'
 import { v4 as uuidv4 } from 'uuid'
 import { args } from './args.js'
-import { fetchRetry } from '@newrelic/browser-agent.actions.shared-utils/fetch-retry.js'
+import { fetchRetry } from '../shared-utils/fetch-retry.js'
 import Handlebars from 'handlebars'
 
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const template = Handlebars.compile(await fs.promises.readFile(path.resolve(__dirname, './template.js'), 'utf-8'))
 
 const scripts = []
 
 // 0. Ensure the output directory is available and the target file does not exist
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
+
 const outputFile = path.join(
   path.resolve(__dirname, '../../../temp'),
   `${args.environment}.js`
@@ -23,13 +24,13 @@ if (fs.existsSync(outputFile)) {
   await fs.promises.rm(outputFile)
 }
 
-const currentScript = await fetchRetry(`${args.current}?_nocache=${uuidv4()}`, { retry: 3 })
-scripts.push( {name: 'current', contents: await currentScript.text() })
-
 const nextScript = await fetchRetry(`${args.next}?_nocache=${uuidv4()}`, { retry: 3 })
 scripts.push( {name: 'next', contents: await nextScript.text() })
 
 if (['dev', 'staging'].includes(args.environment)) {
+  const currentScript = await fetchRetry(`${args.current}?_nocache=${uuidv4()}`, { retry: 3 })
+  scripts.push( {name: 'current', contents: await currentScript.text() })
+
   const stsClient = new STSClient({ region: args.region })
   const s3Credentials = await stsClient.send(new AssumeRoleCommand({
     RoleArn: args.role,

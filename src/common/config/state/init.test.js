@@ -23,6 +23,6 @@ test('set/getConfiguration works correctly', () => {
 test('getConfigurationValue parses path correctly', () => {
   setConfiguration('ab', { page_action: { harvestTimeSeconds: 1000 } })
   expect(getConfigurationValue('ab', '')).toBeUndefined()
-  expect(getConfigurationValue('ab', 'page_action')).toEqual({ enabled: true, harvestTimeSeconds: 1000 })
+  expect(getConfigurationValue('ab', 'page_action')).toEqual({ enabled: true, harvestTimeSeconds: 1000, autoStart: true })
   expect(getConfigurationValue('ab', 'page_action.harvestTimeSeconds')).toEqual(1000)
 })

@@ -12,7 +12,7 @@ describe('setTopLevelCallers', () => {
   test('adds all api methods', () => {
     setTopLevelCallers()
 
-    expect(Object.keys(gosCDN()).length).toEqual(13)
+    expect(Object.keys(gosCDN()).length).toEqual(14)
   })
 
   test('and runs the corresponding fn under every exposed agent', () => {
@@ -56,7 +56,7 @@ describe('setAPI', () => {
   test('also adds all api methods', () => {
     let apiI = setAPI('abcd', true)
 
-    expect(Object.keys(apiI).length).toEqual(13)
+    expect(Object.keys(apiI).length).toEqual(14)
     for (const k of Object.keys(apiI)) { expect(apiI[k]).toBeInstanceOf(Function) }
   })
 

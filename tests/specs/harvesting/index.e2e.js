@@ -37,7 +37,7 @@ describe('harvesting', () => {
 
     const expectedURL = testURL.split('?')[0]
     verifyBaseQueryParameters(rumResults.request.query, expectedURL)
-    verifyBaseQueryParameters(resourcesResults.request.query, expectedURL)
+    verifyBaseQueryParameters(resourcesResults.request.query, expectedURL, 'session_trace')
     verifyBaseQueryParameters(interactionResults.request.query, expectedURL)
     verifyBaseQueryParameters(timingsResults.request.query, expectedURL)
     verifyBaseQueryParameters(ajaxSliceResults.request.query, expectedURL)
@@ -318,7 +318,13 @@ describe('harvesting', () => {
   })
 })
 
-function verifyBaseQueryParameters (queryParams, expectedURL) {
+function verifyBaseQueryParameters (queryParams, expectedURL, featureName) {
+  const extraParams = {
+    session_trace: {
+      fts: val => expect(Number(val)).toBeGreaterThanOrEqual(0) && expect(val.length).toBeGreaterThan(0),
+      n: val => expect(Number(val)).toBeGreaterThan(0) && expect(val.length).toBeGreaterThan(0)
+    }
+  }
   expect(queryParams.a).toEqual('42')
   expect(queryParams.sa).toEqual('1')
   expect(queryParams.v).toMatch(/^\d{1,3}\.\d{1,3}\.\d{1,3}$/)
@@ -326,4 +332,10 @@ function verifyBaseQueryParameters (queryParams, expectedURL) {
   expect(queryParams.rst).toMatch(/^\d{1,5}$/)
   expect(queryParams.s).toMatch(/^[A-F\d]{16}$/i)
   expect(queryParams.ref).toEqual(expectedURL)
+
+  if (featureName && extraParams[featureName]) {
+    Object.entries(extraParams[featureName]).forEach(([key, test]) => {
+      test(queryParams[key])
+    })
+  }
 }

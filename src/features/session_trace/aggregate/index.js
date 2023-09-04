@@ -465,7 +465,7 @@ export class Aggregate extends AggregateBase {
     return {
       qs: {
         st: String(getRuntime(this.agentIdentifier).offset),
-        fts: String(getRuntime(this.agentIdentifier).offset + earliestTimeStamp), // first time stamp,
+        fts: getRuntime(this.agentIdentifier).offset + earliestTimeStamp, // first timestamp,
         n: stns.length // node count
       },
       body: { res: stns }

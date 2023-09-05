@@ -2,7 +2,7 @@ import fetch from 'node-fetch'
 
 export async function fetchRetry (url, options) {
   let retryLimit
-
+  let status, statusText
   if (typeof options.retry !== 'number' || options.retry <= 1) {
     retryLimit = 1
   } else {
@@ -16,12 +16,16 @@ export async function fetchRetry (url, options) {
         retry: undefined
       })
 
-      if (result.ok) {
+      status = result?.status, 
+      statusText = result?.statusText
+
+      if (result?.ok) {
         return result
       } else {
         retryLimit--
       }
     } catch (error) {
+      errMsg = err
       if (retryLimit <= 1) {
         throw error
       }
@@ -30,5 +34,5 @@ export async function fetchRetry (url, options) {
     }
   }
 
-  throw new Error(`Fetch ${url} failed with unknown error.`)
+  return {status, statusText}
 }

@@ -44,7 +44,7 @@ runs:
   using: "composite"
   steps:
     - name: Install dependencies
-      run: npm install --prefix $GITHUB_ACTION_PATH
+      run: npm install --prefix $GITHUB_ACTION_PATH/..
       shell: bash
     - name: Run action script
       id: action-script

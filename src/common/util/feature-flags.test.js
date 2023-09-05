@@ -57,7 +57,6 @@ test('emits the right events when feature flag = 1', () => {
   expect(handleModule.handle).toHaveBeenCalledTimes(14)
   expect(handleModule.handle).toHaveBeenNthCalledWith(1, 'feat-stn', [], undefined, FEATURE_NAMES.sessionTrace, sharedEE)
   expect(handleModule.handle).toHaveBeenLastCalledWith('rumresp-sr', [true], undefined, FEATURE_NAMES.sessionTrace, sharedEE)
-  expect(drainModule.drain).toHaveBeenCalledWith(agentIdentifier, 'page_view_event')
 
   Object.keys(flags).forEach(flag => { flags[flag] = true })
   expect(activatedFeatures).toEqual(flags)
@@ -74,7 +73,6 @@ test('emits the right events when feature flag = 0', () => {
   expect(handleModule.handle).toHaveBeenCalledTimes(14)
   expect(handleModule.handle).toHaveBeenNthCalledWith(1, 'block-stn', [], undefined, FEATURE_NAMES.sessionTrace, sharedEE)
   expect(handleModule.handle).toHaveBeenLastCalledWith('rumresp-sr', [false], undefined, FEATURE_NAMES.sessionTrace, sharedEE)
-  expect(drainModule.drain).toHaveBeenCalledWith(agentIdentifier, 'page_view_event')
 
   Object.keys(flags).forEach(flag => { flags[flag] = false })
   expect(activatedFeatures).toEqual(flags)
@@ -92,7 +90,5 @@ test('only the first activate of the same feature is respected', () => {
   expect(handleModule.handle).toHaveBeenNthCalledWith(1, 'feat-stn', [], undefined, 'session_trace', sharedEE1)
   expect(handleModule.handle).toHaveBeenNthCalledWith(2, 'rumresp-stn', [true], undefined, 'session_trace', sharedEE1)
   expect(handleModule.handle).not.toHaveBeenNthCalledWith(1, 'feat-stn', [], undefined, 'session_trace', sharedEE2)
-  expect(drainModule.drain).toHaveBeenCalledWith(agentIdentifier, 'page_view_event')
-  expect(drainModule.drain).toHaveBeenCalledTimes(2)
   expect(activatedFeatures.stn).toBeTruthy()
 })

@@ -33,7 +33,7 @@ jest.mock('../../common/config/config', () => ({
 }))
 jest.mock('../../common/config/config', () => ({
   __esModule: true,
-  getConfigurationValue: jest.fn(),
+  getConfigurationValue: jest.fn().mockReturnValue({}),
   originals: {
     MO: jest.fn()
   }

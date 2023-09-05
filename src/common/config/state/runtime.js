@@ -5,8 +5,6 @@ import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/env'
 
 const model = {
   buildEnv: BUILD_ENV,
-  bytesSent: {}, // Used for SM to capture body bytes sent per endpoint
-  queryBytesSent: {}, // Used for SM to capture query parameter bytes sent per endpoint
   customTransaction: undefined,
   disabled: false,
   distMethod: DIST_METHOD,

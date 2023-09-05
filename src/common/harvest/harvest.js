@@ -128,11 +128,6 @@ export class Harvest extends SharedContext {
       body = ''
     }
 
-    // Get bytes harvested per endpoint as a supportability metric. See metrics aggregator (on unload).
-    agentRuntime.bytesSent[endpoint] = (agentRuntime.bytesSent[endpoint] || 0) + body?.length || 0
-    // Get query bytes harvested per endpoint as a supportability metric. See metrics aggregator (on unload).
-    agentRuntime.queryBytesSent[endpoint] = (agentRuntime.queryBytesSent[endpoint] || 0) + fullUrl.split('?').slice(-1)[0]?.length || 0
-
     const headers = []
 
     headers.push({ key: 'content-type', value: 'text/plain' })

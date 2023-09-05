@@ -7,7 +7,6 @@ import * as submitData from '../util/submit-data'
 import { SharedContext } from '../context/shared-context'
 import { Harvest } from './harvest'
 import { subscribeToEOL } from '../unload/eol'
-import { getConfigurationValue } from '../config/config'
 import { SESSION_EVENTS } from '../session/session-entity'
 
 /**
@@ -36,7 +35,7 @@ export class HarvestScheduler extends SharedContext {
     this.harvest = new Harvest(this.sharedContext)
 
     // unload if EOL mechanism fires
-    subscribeToEOL(this.unload.bind(this), getConfigurationValue(this.sharedContext.agentIdentifier, 'allow_bfcache')) // TO DO: remove feature flag after rls stable
+    subscribeToEOL(this.unload.bind(this))
 
     /* Flush all buffered data if session resets and give up retries. This should be synchronous to ensure that the correct `session` value is sent.
       Since session-reset generates a new session ID and the ID is grabbed at send-time, any delays or retries would cause the payload to be sent under

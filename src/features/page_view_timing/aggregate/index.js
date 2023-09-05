@@ -10,7 +10,6 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { handle } from '../../../common/event-emitter/handle'
 import { getInfo, getConfigurationValue } from '../../../common/config/config'
 import { FEATURE_NAME } from '../constants'
-import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { cumulativeLayoutShift } from '../../../common/vitals/cumulative-layout-shift'
@@ -63,7 +62,7 @@ export class Aggregate extends AggregateBase {
     // send initial data sooner, then start regular
     this.ee.on(`drain-${this.featureName}`, () => { this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds) })
 
-    drain(this.agentIdentifier, this.featureName)
+    this.drain()
   }
 
   /**

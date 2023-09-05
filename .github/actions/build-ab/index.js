@@ -6,46 +6,15 @@ import { S3Client, ListObjectsCommand } from '@aws-sdk/client-s3'
 import { v4 as uuidv4 } from 'uuid'
 import { args } from './args.js'
 import { fetchRetry } from '../shared-utils/fetch-retry.js'
+import Handlebars from 'handlebars'
 
-const config = {
-  init: {
-    distributed_tracing: {
-      enabled: true
-    },
-    ajax: {
-      deny_list: [
-        'nr-data.net',
-        'bam.nr-data.net',
-        'staging-bam.nr-data.net',
-        'bam-cell.nr-data.net'
-      ]
-    },
-    session_replay: {
-      enabled: true,
-      sampleRate: 0.5,
-      errorSampleRate: 1
-    }
-  },
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
+const template = Handlebars.compile(await fs.promises.readFile(path.resolve(__dirname, './template.js'), 'utf-8'))
 
-  loader_config: {
-    accountID: '1',
-    trustKey: '1',
-    agentID: args.appId,
-    licenseKey: args.licenseKey,
-    applicationID: args.appId
-  },
-
-  info: {
-    beacon: 'staging-bam.nr-data.net',
-    errorBeacon: 'staging-bam.nr-data.net',
-    licenseKey: args.licenseKey,
-    applicationID: args.appId,
-    sa: 1
-  }
-}
+const scripts = []
 
 // 0. Ensure the output directory is available and the target file does not exist
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
+
 const outputFile = path.join(
   path.resolve(__dirname, '../../../temp'),
   `${args.environment}.js`
@@ -55,34 +24,13 @@ if (fs.existsSync(outputFile)) {
   await fs.promises.rm(outputFile)
 }
 
-// 1. Write the NRBA configuration
-console.log('Writing configuration in A/B script.')
-await fs.promises.writeFile(
-  outputFile,
-  `window.NREUM=${JSON.stringify(config)}\n\n`,
-  { encoding: 'utf-8' }
-)
-
-// 2. Write the current loader script
-console.log(`Writing current loader ${args.current} in A/B script.`)
-const currentScript = await fetchRetry(`${args.current}?_nocache=${uuidv4()}`, { retry: 3 })
-await fs.promises.appendFile(
-  outputFile,
-  await currentScript.text() + '\n\n',
-  { encoding: 'utf-8' }
-)
-
-// 3. Write the next loader script
-console.log(`Writing current loader ${args.next} in A/B script.`)
 const nextScript = await fetchRetry(`${args.next}?_nocache=${uuidv4()}`, { retry: 3 })
-await fs.promises.appendFile(
-  outputFile,
-  await nextScript.text() + '\n\n',
-  { encoding: 'utf-8' }
-)
+scripts.push( {name: 'next', contents: await nextScript.text() })
 
-// 4. Find and write any experiments if env is not prod or eu-prod
 if (['dev', 'staging'].includes(args.environment)) {
+  const currentScript = await fetchRetry(`${args.current}?_nocache=${uuidv4()}`, { retry: 3 })
+  scripts.push( {name: 'current', contents: await currentScript.text() })
+
   const stsClient = new STSClient({ region: args.region })
   const s3Credentials = await stsClient.send(new AssumeRoleCommand({
     RoleArn: args.role,
@@ -123,13 +71,17 @@ if (['dev', 'staging'].includes(args.environment)) {
   } else {
     for (const experiment of experimentsList) {
       const experimentLoader = `https://js-agent.newrelic.com/${experiment}nr-loader-spa.min.js`
-      console.log(`Writing experiment loader ${experimentLoader} in A/B script.`)
       const experimentScript = await fetchRetry(`${experimentLoader}?_nocache=${uuidv4()}`, { retry: 3 })
-      await fs.promises.appendFile(
-        outputFile,
-        await experimentScript.text() + '\n\n',
-        { encoding: 'utf-8' }
-      )
+      scripts.push({name: experiment, contents: await experimentScript.text()})
     }
   }
 }
+console.log('writing', scripts.length,'scripts:', scripts.map(x => x.name).join(", "))
+
+await fs.promises.writeFile(
+  outputFile,
+  template({
+    args, scripts
+  }),
+  { encoding: 'utf-8' }
+)

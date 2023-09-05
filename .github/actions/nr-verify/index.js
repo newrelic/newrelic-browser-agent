@@ -34,21 +34,26 @@ const verifyJobs = args.environment.map(env => {
 
 const results = await Promise.allSettled(
   verifyJobs.map(async jobDetails => {
-    const verifyRequest = await fetchRetry(`${envOptions[jobDetails.env].url}?loader_version=${jobDetails.loaderFileName}`, {
-      retry: 3,
-      method: 'GET',
-      redirect: 'follow',
-      headers: {
-        'Accept-Encoding': 'gzip, deflate, br'
-      }
-    })
+    try {
+      const verifyRequest = await fetchRetry(`${envOptions[jobDetails.env].url}?loader_version=${jobDetails.loaderFileName}`, {
+        retry: 3,
+        method: 'GET',
+        redirect: 'follow',
+        headers: {
+          'Accept-Encoding': 'gzip, deflate, br'
+        }
+      })
 
-    if (!verifyRequest.ok) {
-      console.error(`Loader ${jobDetails.loaderFileName} appears to be missing in ${jobDetails.env} NR environment.`)
-      return false
-    } else {
-      console.log(`Verified existence of ${jobDetails.loaderFileName} in ${jobDetails.env} NR environment.`)
-      return true
+      if (!verifyRequest.ok) {
+        console.error(`Loader ${jobDetails.loaderFileName} appears to be missing in ${jobDetails.env} NR environment.`)
+        return false
+      } else {
+        console.log(`Verified existence of ${jobDetails.loaderFileName} in ${jobDetails.env} NR environment.`)
+        return true
+      }
+    } catch(err){
+      console.log(`FAILURE: ${jobDetails.loaderFileName}\n\n`)
+      throw new Error(err)
     }
   })
 )
@@ -57,7 +62,8 @@ if (
   results.find(result => result.status === 'rejected') ||
   results.find(result => result.value === false)
 ) {
-  throw new Error('Not all loaders could be verified in NR.')
+  throw new Error(`Not all loaders could be verified in NR.`)
 } else {
   console.log(`Verified ${results.length} loaders in NR`)
+  process.exit(0)
 }

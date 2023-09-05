@@ -53,6 +53,9 @@ module.exports = {
       },
       parserOptions: {
         sourceType: 'module'
+      },
+      rules: {
+        'n/no-callback-literal': 'off' // This is not NodeJS code and should not be forced to adhere to NodeJS callback parameter pattern
       }
     },
     {
@@ -66,7 +69,8 @@ module.exports = {
         sourceType: 'module'
       },
       rules: {
-        'sonarjs/no-duplicate-string': 'off'
+        'sonarjs/no-duplicate-string': 'off', // It is not worth deduplicating strings in test code
+        'n/no-callback-literal': 'off' // This is not NodeJS code and should not be forced to adhere to NodeJS callback parameter pattern
       }
     },
     {
@@ -86,7 +90,7 @@ module.exports = {
         sourceType: 'module'
       },
       rules: {
-        'sonarjs/no-duplicate-string': 'off'
+        'sonarjs/no-duplicate-string': 'off' // It is not worth deduplicating strings in test code
       }
     },
     {
@@ -100,7 +104,7 @@ module.exports = {
         jest: true
       },
       rules: {
-        'sonarjs/no-duplicate-string': 'off'
+        'sonarjs/no-duplicate-string': 'off' // It is not worth deduplicating strings in tooling code
       }
     },
     {
@@ -110,7 +114,7 @@ module.exports = {
         node: true
       },
       rules: {
-        'sonarjs/no-duplicate-string': 'off'
+        'sonarjs/no-duplicate-string': 'off' // It is not worth deduplicating strings in tooling code
       }
     },
     {
@@ -120,7 +124,7 @@ module.exports = {
         node: true
       },
       rules: {
-        'no-throw-literal': 'off'
+        'no-throw-literal': 'off' // We need to be able to test throwing literals
       }
     }
   ],

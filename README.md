@@ -210,6 +210,10 @@ import { Agent } from '@newrelic/browser-agent/loaders/agent'
 import { Metrics } from '@newrelic/browser-agent/src/features/metrics'
 ```
 
+## Disclaimers
+
+The session replay library shipping with this version of the browser agent is in *limited preview* and is not turned on by default. To use the feature, users will need to be part of the limited preview customer group and configure their browser application settings in the UI.
+
 ## Support
 
 New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. Like all official New Relic open source projects, there's a related Community topic in the New Relic Explorers Hub. You can find this project's topic/threads here:

@@ -67,5 +67,5 @@ Output example:
 ]
 */
 
-core.setOutput('results', JSON.stringify(uploads))
+core.setOutput('results', JSON.stringify(results))
 console.log(`Successfully copied ${results.length} files in S3`)

@@ -464,8 +464,14 @@ export class Aggregate extends AggregateBase {
 
     return {
       qs: {
-        st: String(getRuntime(this.agentIdentifier).offset),
-        fts: getRuntime(this.agentIdentifier).offset + earliestTimeStamp, // first timestamp,
+        st: this.agentRuntime.offset,
+        /** hr === "hasReplay" in NR1, standalone is always checked and processed before harvesting
+         * so a race condition between ST and SR states should not be a concern if implemented here */
+        hr: Number(!this.isStandalone),
+        /** fts === "firstTimestamp" in NR1, indicates what the earliest NODE timestamp was
+         * so that blob parsing doesn't need to happen to support UI/API functions  */
+        fts: this.agentRuntime.offset + earliestTimeStamp,
+        /** n === "nodeCount" in NR1, a count of nodes in the ST payload, so that blob parsing doesn't need to happen to support UI/API functions */
         n: stns.length // node count
       },
       body: { res: stns }

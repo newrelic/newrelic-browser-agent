@@ -321,6 +321,7 @@ describe('harvesting', () => {
 function verifyBaseQueryParameters (queryParams, expectedURL, featureName) {
   const extraParams = {
     session_trace: {
+      hr: val => expect(Boolean(val)).toEqual(expect.any(Boolean)),
       fts: val => expect(Number(val)).toBeGreaterThanOrEqual(0) && expect(val.length).toBeGreaterThan(0),
       n: val => expect(Number(val)).toBeGreaterThan(0) && expect(val.length).toBeGreaterThan(0)
     }

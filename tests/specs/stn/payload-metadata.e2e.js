@@ -1,5 +1,5 @@
 describe('STN Payload metadata checks', () => {
-  it('adds node count and timestamp metadata query attrs', async () => {
+  it('adds metadata query attrs', async () => {
     await browser.url(await browser.testHandle.assetURL('stn/instrumented.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -12,5 +12,8 @@ describe('STN Payload metadata checks', () => {
     const firstNode = resources.request.body.res.reduce((acc, next) => (!acc || next.s < acc) ? next.s : acc, undefined)
     expect(ms).toBeGreaterThanOrEqual(0)
     expect(ms).toEqual(firstNode)
+
+    // hr === hasReplay
+    expect(Boolean(resources.request.query.hr)).toEqual(false)
   })
 })

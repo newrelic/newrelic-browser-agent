@@ -1,0 +1,15 @@
+{
+  "name": "@newrelic/browser-agent.actions.build-ab",
+  "description": "",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.385.0",
+    "@aws-sdk/client-sts": "^3.385.0",
+    "@newrelic/browser-agent.actions.shared-utils": "file:../shared-utils",
+    "handlebars": "^4.7.8",
+    "node-fetch": "^3.3.2",
+    "uuid": "^9.0.0",
+    "yargs": "^17.7.2"
+  }
+}

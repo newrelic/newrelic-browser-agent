@@ -37,7 +37,7 @@ jobs:
 
   # Build and publish the latest code from the main branch
   publish-dev-to-s3:
-    needs: [jest-tests, wdio-coverage]
+    needs: [jest-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -102,7 +102,7 @@ jobs:
           nrba_app_id: ${{ secrets.INTERNAL_DEV_APPLICATION_ID }}
           nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
           nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
-          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-experimental.min.js
+          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-spa.min.js
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
@@ -131,7 +131,7 @@ jobs:
           nrba_app_id: ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}
           nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
           nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
-          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-experimental.min.js
+          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-spa.min.js
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}

@@ -124,6 +124,8 @@ export function setAPI (agentIdentifier, forceDrain) {
 
   apiInterface.start = (features) => {
     try {
+      const smTag = !features ? 'undefined' : 'defined'
+      handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/start/${smTag}/called`], undefined, FEATURE_NAMES.metrics, instanceEE)
       const featNames = Object.values(FEATURE_NAMES)
       if (features === undefined) features = featNames
       else {

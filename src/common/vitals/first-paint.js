@@ -1,28 +1,24 @@
-/**
- * Calls the `onReport` function when the 'first-paint' PerformancePaintTiming entry is observed.
- * The argument supplied is an object similar to the Metric type used by web-vitals library.
- *
- * @param {Function} onReport - callback that accepts a `metric` object as the single parameter
- */
-export const onFirstPaint = (onReport) => {
+import { initiallyHidden, isBrowserScope } from '../constants/runtime'
+import { VITAL_NAMES } from './constants'
+import { VitalMetric } from './vital-metric'
+
+export const firstPaint = new VitalMetric(VITAL_NAMES.FIRST_PAINT)
+
+if (isBrowserScope) {
   const handleEntries = (entries) => {
     entries.forEach(entry => {
-      if (entry.name === 'first-paint') {
+      if (entry.name === 'first-paint' && !firstPaint.isValid) {
         observer.disconnect()
 
         /* Initial hidden state and pre-rendering not yet considered for first paint. See web-vitals onFCP for example. */
-        const metric = {
-          name: 'FP',
-          value: entry.startTime
-        }
-        onReport(metric)
+        firstPaint.update({ value: entry.startTime, entries })
       }
     })
   }
 
   let observer
   try {
-    if (PerformanceObserver.supportedEntryTypes.includes('paint')) {
+    if (PerformanceObserver.supportedEntryTypes.includes('paint') && !initiallyHidden) {
       observer = new PerformanceObserver((list) => {
         // Delay by a microtask to workaround a bug in Safari where the
         // callback is invoked immediately, rather than in a separate task.
@@ -34,8 +30,6 @@ export const onFirstPaint = (onReport) => {
       observer.observe({ type: 'paint', buffered: true })
     }
   } catch (e) {
-    // Do nothing.
+  // Do nothing.
   }
-
-  /* BFCache restore not yet considered for first paint. See web-vitals onFCP for example. */
 }

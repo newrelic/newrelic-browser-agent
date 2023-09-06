@@ -3,8 +3,8 @@ import { getModeledObject } from './configurable'
 
 const model = {
   // preset defaults
-  beacon: `https://${nrDefaults.beacon}/`, // aka validateServerUrl(nrDefaults.beacon) but IE11 & Saf 14- can't run that fn
-  errorBeacon: `https://${nrDefaults.errorBeacon}/`,
+  beacon: nrDefaults.beacon,
+  errorBeacon: nrDefaults.errorBeacon,
   // others must be populated by user
   licenseKey: undefined,
   applicationID: undefined,

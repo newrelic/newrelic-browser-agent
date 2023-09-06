@@ -19,6 +19,8 @@ export function gosNREUMInfo () {
   const externallySupplied = nr.info || {}
 
   nr.info = {
+    beacon: defaults.beacon,
+    errorBeacon: defaults.errorBeacon,
     ...externallySupplied
   }
 

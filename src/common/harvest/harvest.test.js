@@ -150,7 +150,7 @@ describe('_send', () => {
   let licenseKey
 
   beforeEach(() => {
-    errorBeacon = faker.internet.url({ protocol: 'https' }) + '/' // appendSlash option broken
+    errorBeacon = faker.internet.domainName()
     licenseKey = faker.datatype.uuid()
     jest.mocked(configModule.getInfo).mockReturnValue({
       errorBeacon,
@@ -158,6 +158,10 @@ describe('_send', () => {
     })
     jest.mocked(configModule.getRuntime).mockReturnValue({
       maxBytes: Infinity
+    })
+    jest.mocked(configModule.getConfiguration).mockReturnValue({
+      ssl: undefined,
+      proxy: {}
     })
 
     spec = {
@@ -207,7 +211,7 @@ describe('_send', () => {
       body: JSON.stringify(spec.payload.body),
       headers: [{ key: 'content-type', value: 'text/plain' }],
       sync: undefined,
-      url: expect.stringContaining(`${errorBeacon}1/${licenseKey}?`)
+      url: expect.stringContaining(`https://${errorBeacon}/1/${licenseKey}?`)
     })
   })
 
@@ -219,7 +223,20 @@ describe('_send', () => {
       body: JSON.stringify(spec.payload.body),
       headers: [{ key: 'content-type', value: 'text/plain' }],
       sync: undefined,
-      url: expect.stringContaining(`${errorBeacon}${spec.endpoint}/1/${licenseKey}?`)
+      url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
+    })
+  })
+
+  test('able to use and send to proxy when defined', () => {
+    jest.mocked(configModule.getConfiguration).mockReturnValue({ proxy: { beacon: 'some_other_string' } })
+    const result = harvestInstance._send(spec)
+
+    expect(result).toEqual(true)
+    expect(submitMethod).toHaveBeenCalledWith({
+      body: JSON.stringify(spec.payload.body),
+      headers: [{ key: 'content-type', value: 'text/plain' }],
+      sync: undefined,
+      url: expect.stringContaining(`https://some_other_string/${spec.endpoint}/1/${licenseKey}?`)
     })
   })
 
@@ -250,7 +267,7 @@ describe('_send', () => {
       body: JSON.stringify(spec.payload.body),
       headers: [{ key: 'content-type', value: 'text/plain' }],
       sync: undefined,
-      url: `${errorBeacon}${spec.endpoint}?${queryString}`
+      url: `https://${errorBeacon}/${spec.endpoint}?${queryString}`
     })
   })
 
@@ -269,7 +286,7 @@ describe('_send', () => {
       body: JSON.stringify(spec.payload.body),
       headers: [{ key: 'content-type', value: 'text/plain' }],
       sync: undefined,
-      url: `${errorBeacon}${spec.endpoint}?${queryString}`
+      url: `https://${errorBeacon}/${spec.endpoint}?${queryString}`
     })
   })
 
@@ -283,7 +300,7 @@ describe('_send', () => {
       body: spec.payload.body,
       headers: [{ key: 'content-type', value: 'text/plain' }],
       sync: undefined,
-      url: expect.stringContaining(`${errorBeacon}${spec.endpoint}/1/${licenseKey}?`)
+      url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
     })
   })
 
@@ -312,7 +329,7 @@ describe('_send', () => {
       body: spec.payload.body.e,
       headers: [{ key: 'content-type', value: 'text/plain' }],
       sync: undefined,
-      url: expect.stringContaining(`${errorBeacon}${spec.endpoint}/1/${licenseKey}?`)
+      url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
     })
   })
 
@@ -332,7 +349,7 @@ describe('_send', () => {
       body: '',
       headers: [{ key: 'content-type', value: 'text/plain' }],
       sync: undefined,
-      url: expect.stringContaining(`${errorBeacon}${spec.endpoint}/1/${licenseKey}?`)
+      url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
     })
   })
 

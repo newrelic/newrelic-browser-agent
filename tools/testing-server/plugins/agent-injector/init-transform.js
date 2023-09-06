@@ -29,7 +29,7 @@ function getInitContent (request, reply, testServer) {
     initJSON = initJSON.replace(regexReplacementRegex, '/$1/$2')
   }
 
-  return `window.NREUM||(NREUM={});NREUM.init=${initJSON};NREUM.init.ssl=false;` // setting ssl=false is important for the agent to accept our http server as the beacon
+  return `window.NREUM||(NREUM={});NREUM.init=${initJSON};NREUM.init.ssl=false;`
 }
 
 /**

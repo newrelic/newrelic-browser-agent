@@ -134,7 +134,6 @@ export function setAPI (agentIdentifier, forceDrain) {
         if (!features.includes(FEATURE_NAMES.pageViewEvent)) features.push(FEATURE_NAMES.pageViewEvent)
       }
       features.forEach(feature => {
-        if (features.length !== featNames.length) handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/start/' + feature + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
         instanceEE.emit(`${feature}-opt-in`)
       })
     } catch (err) {

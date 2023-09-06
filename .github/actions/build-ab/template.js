@@ -22,15 +22,15 @@ window.NREUM={
   loader_config: {
     accountID: '1',
     trustKey: '1',
-    agentID: {{{args.appId}}},
-    licenseKey: {{{args.licenseKey}}},
-    applicationID: {{{args.appId}}}
+    agentID: '{{{args.appId}}}',
+    licenseKey: '{{{args.licenseKey}}}',
+    applicationID: '{{{args.appId}}}'
   },
   info: {
     beacon: 'staging-bam.nr-data.net',
     errorBeacon: 'staging-bam.nr-data.net',
-    licenseKey: {{{args.licenseKey}}},
-    applicationID: {{{args.appId}}},
+    licenseKey: '{{{args.licenseKey}}}',
+    applicationID: '{{{args.appId}}}',
     sa: 1
   }
 }

@@ -37,7 +37,7 @@ jobs:
 
   # Build and publish the latest code from the main branch
   publish-dev-to-s3:
-    needs: [jest-tests, wdio-coverage]
+    needs: [jest-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:

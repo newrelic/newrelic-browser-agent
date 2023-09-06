@@ -131,7 +131,9 @@ export function setAPI (agentIdentifier, forceDrain) {
         if (features.some(f => !featNames.includes(f))) return warn(`Invalid feature name supplied. Acceptable feature names are: ${featNames}`)
         if (!features.includes(FEATURE_NAMES.pageViewEvent)) features.push(FEATURE_NAMES.pageViewEvent)
       }
+      if (features.length === featNames.length) handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/start/undefined/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
       features.forEach(feature => {
+        if (features.length !== featNames.length) handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/start/' + feature + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
         instanceEE.emit(`${feature}-opt-in`)
       })
     } catch (err) {

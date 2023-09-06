@@ -48,7 +48,7 @@ export class Agent extends AgentBase {
 
     Object.assign(this, configure(this.agentIdentifier, options, options.loaderType || 'agent'))
 
-    this.start()
+    this.run()
   }
 
   get config () {
@@ -60,7 +60,7 @@ export class Agent extends AgentBase {
     }
   }
 
-  start () {
+  run () {
     const NR_FEATURES_REF_NAME = 'features'
     // Attempt to initialize all the requested features (sequentially in prio order & synchronously), with any failure aborting the whole process.
     try {

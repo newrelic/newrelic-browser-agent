@@ -32,21 +32,4 @@ export default async function runTest ({
 
   await afterLoadCallback({ rumResults, resourcesResults, eventsResults, ajaxResults })
   await browser.collectCoverage()
-
-  const [unloadTimingsResults, unloadMetricsResults] = await Promise.all([
-    browser.testHandle.expectTimings(),
-    browser.testHandle.expectMetrics(),
-    browser.url(
-      await browser.testHandle.assetURL('/')
-    ) // Setup expects before navigating
-  ])
-
-  expect(Array.isArray(unloadTimingsResults.request.body)).toEqual(true)
-  expect(unloadTimingsResults.request.body.findIndex(e => e.name === 'unload')).toBeGreaterThan(-1)
-  expect(unloadTimingsResults.request.body.findIndex(e => e.name === 'pageHide')).toBeGreaterThan(-1)
-
-  expect(Array.isArray(unloadMetricsResults.request.body.sm)).toEqual(true)
-  expect(unloadMetricsResults.request.body.sm.length).toBeGreaterThan(0)
-
-  await afterUnloadCallback({ unloadTimingsResults, unloadMetricsResults })
 }

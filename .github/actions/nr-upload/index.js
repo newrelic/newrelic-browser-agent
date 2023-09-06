@@ -9,13 +9,15 @@ const envOptions = {
   stage: {
     url: 'https://staging-api.newrelic.com/v2/js_agent_loaders/create.json',
     headers: {
-      'X-Api-Key': args.stageApiKey
+      'X-Api-Key': args.stageApiKey,
+      'Content-Type': 'application/json'
     }
   },
   prod: {
     url: 'https://api.newrelic.com/v2/js_agent_loaders/create.json',
     headers: {
-      'X-Api-Key': args.prodApiKey
+      'X-Api-Key': args.prodApiKey,
+      'Content-Type': 'application/json'
     }
   }
 }
@@ -59,14 +61,15 @@ const uploadJobs = args.environment.map(env => {
   }).flat()
 }).flat()
 
+let jobs = 0, success = true
 await Promise.allSettled(
-  uploadJobs.map(async jobDetails => {
+  uploadJobs.map(async (jobDetails, i, arr) => {
     try {
-      const uploadRequest = await fetchRetry(envOptions[jobDetails.env], {
+      const uploadRequest = await fetchRetry(envOptions[jobDetails.env].url, {
         retry: 3,
         method: 'PUT',
         redirect: 'follow',
-        headers: envOptions[env].headers,
+        headers: envOptions[jobDetails.env].headers,
         body: JSON.stringify({
           js_agent_loader: {
             version: jobDetails.loaderFileName,
@@ -76,13 +79,20 @@ await Promise.allSettled(
         })
       })
 
-      if (!uploadRequest.ok) {
-        throw new Error(`Upload failed with status code ${uploadRequest.status}.`)
+      if (!uploadRequest?.ok) {
+        success = false
+        throw new Error(`Upload failed with status code ${uploadRequest?.status}. ${uploadRequest?.statusText}`)
       } else {
         console.log(`Completed upload of ${jobDetails.loaderFileName} to ${jobDetails.env} environment.`)
       }
     } catch (error) {
+      success = false
       console.error(`Upload for ${jobDetails.loaderFileName} to ${jobDetails.env} environment failed. ${error.message}`)
+      throw new Error(`Upload for ${jobDetails.loaderFileName} to ${jobDetails.env} environment failed. ${error.message}`)
+    } finally {
+      console.log(`ran ${++jobs} of ${arr.length} jobs`)
     }
   })
-)
+).finally(() => {
+  process.exit(Number(!success))
+})

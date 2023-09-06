@@ -30,5 +30,5 @@ runs:
           --tag ${{ inputs.tag }} \
           --github-login ${{ inputs.github_login }} \
           --github-token ${{ inputs.github_token }} \
-          --github-user-name ${{ inputs.github_email }}
+          --github-email ${{ inputs.github_email }}
       shell: bash

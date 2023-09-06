@@ -44,6 +44,8 @@ export const globalScope = isBrowserScope
       globalThis
   ))
 
+export const initiallyHidden = Boolean(globalScope?.document?.visibilityState === 'hidden')
+
 export const initialLocation = '' + globalScope?.location
 
 export const isiOS = /iPad|iPhone|iPod/.test(globalScope.navigator?.userAgent)
@@ -69,3 +71,5 @@ export const ffVersion = (() => {
 export const isIE = Boolean(isBrowserScope && window.document.documentMode) // deprecated property that only works in IE
 
 export const supportsSendBeacon = !!globalScope.navigator?.sendBeacon
+
+export const offset = Math.floor(globalScope?.performance?.timeOrigin || globalScope?.performance?.timing?.navigationStart || Date.now())

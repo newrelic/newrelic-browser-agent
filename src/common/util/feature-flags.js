@@ -4,7 +4,6 @@
  */
 import { ee } from '../event-emitter/contextual-ee'
 import { handle } from '../event-emitter/handle'
-import { drain } from '../drain/drain'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
 const bucketMap = {
@@ -15,26 +14,25 @@ const bucketMap = {
   sr: [FEATURE_NAMES.sessionReplay, FEATURE_NAMES.sessionTrace]
 }
 
+const sentIds = new Set()
+
 /** Note that this function only processes each unique flag ONCE, with the first occurrence of each flag and numeric value determining its switch on/off setting. */
 export function activateFeatures (flags, agentIdentifier) {
   const sharedEE = ee.get(agentIdentifier)
   if (!(flags && typeof flags === 'object')) return
 
-  Object.entries(flags).forEach(([flag, num]) => {
-    if (activatedFeatures[flag] !== undefined) return
-
-    if (bucketMap[flag]) {
-      bucketMap[flag].forEach(feat => {
-        if (!num) handle('block-' + flag, [], undefined, feat, sharedEE)
-        else handle('feat-' + flag, [], undefined, feat, sharedEE)
-
-        handle('rumresp-' + flag, [Boolean(num)], undefined, feat, sharedEE) // this is a duplicate of feat-/block- but makes awaiting for 1 event easier than 2
-      })
-    } else if (num) handle('feat-' + flag, [], undefined, undefined, sharedEE) // not sure what other flags are overlooked, but there's a test for ones not in the map --
-    // ^^^ THIS DOESN'T ACTUALLY DO ANYTHHING AS UNDEFINED/FEATURE GROUP ISN'T DRAINED
-
-    activatedFeatures[flag] = Boolean(num)
-  })
+  if (!sentIds.has(agentIdentifier)) {
+    Object.entries(flags).forEach(([flag, num]) => {
+      if (bucketMap[flag]) {
+        bucketMap[flag].forEach(feat => {
+          if (!num) handle('block-' + flag, [], undefined, feat, sharedEE)
+          else handle('feat-' + flag, [], undefined, feat, sharedEE)
+          handle('rumresp-' + flag, [Boolean(num)], undefined, feat, sharedEE) // this is a duplicate of feat-/block- but makes awaiting for 1 event easier than 2
+        })
+      } else if (num) handle('feat-' + flag, [], undefined, undefined, sharedEE) // not sure what other flags are overlooked, but there's a test for ones not in the map --
+      activatedFeatures[flag] = Boolean(num)
+    })
+  }
 
   // Let the features waiting on their respective flags know that RUM response was received and that any missing flags are interpreted as bad entitlement / "off".
   // Hence, those features will not be hanging forever if their flags aren't included in the response.
@@ -44,7 +42,7 @@ export function activateFeatures (flags, agentIdentifier) {
       activatedFeatures[flag] = false
     }
   })
-  drain(agentIdentifier, FEATURE_NAMES.pageViewEvent)
+  sentIds.add(agentIdentifier)
 }
 
 export const activatedFeatures = {}

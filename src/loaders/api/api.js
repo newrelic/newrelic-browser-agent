@@ -21,7 +21,7 @@ export function setTopLevelCallers () {
   const funcs = [
     'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
     'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
-    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion'
+    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'start'
   ]
   funcs.forEach(f => {
     nr[f] = (...args) => caller(f, ...args)
@@ -120,6 +120,23 @@ export function setAPI (agentIdentifier, forceDrain) {
       return
     }
     return appendJsAttribute('application.version', value, 'setApplicationVersion', false)
+  }
+
+  apiInterface.start = (features) => {
+    try {
+      const featNames = Object.values(FEATURE_NAMES)
+      if (features === undefined) features = featNames
+      else {
+        features = Array.isArray(features) && features.length ? features : [features]
+        if (features.some(f => !featNames.includes(f))) return warn(`Invalid feature name supplied. Acceptable feature names are: ${featNames}`)
+        if (!features.includes(FEATURE_NAMES.pageViewEvent)) features.push(FEATURE_NAMES.pageViewEvent)
+      }
+      features.forEach(feature => {
+        instanceEE.emit(`${feature}-opt-in`)
+      })
+    } catch (err) {
+      warn('An unexpected issue occurred', err)
+    }
   }
 
   apiInterface.interaction = function () {

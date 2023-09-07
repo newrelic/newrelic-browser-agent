@@ -4,6 +4,7 @@
  */
 
 const jil = require('../../../tools/jil/driver/browser.js')
+const { bundleId } = require('../../../src/common/ids/bundle-id')
 import { setup } from '../utils/setup'
 
 const { agentIdentifier, aggregator } = setup()
@@ -23,7 +24,7 @@ jil.browserTest('xhr with onreadystatechange assigned after send', async functio
 
     xhr.onreadystatechange = function (e) {
       if (ffVersion > 10) {
-        t.ok(xhr.onreadystatechange['nr@original'], 'onreadystatechange should be wrapped for readyState ' + xhr.readyState)
+        t.ok(xhr.onreadystatechange[`nr@original:${bundleId}`], 'onreadystatechange should be wrapped for readyState ' + xhr.readyState)
       }
 
       if (xhr.readyState === 1) {

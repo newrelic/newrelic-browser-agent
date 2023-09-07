@@ -1,3 +1,5 @@
+/* eslint-disable n/handle-callback-err */
+
 import { warn } from '../common/util/console'
 
 export class AgentBase {
@@ -52,6 +54,18 @@ export class AgentBase {
   }
 
   /**
+   * Adds a user-defined application version string to subsequent events on the page.
+   * This decorates all payloads with an attribute of `application.version` which is queryable in NR1.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setapplicationversion/}
+   * @param {string|null} value A string identifier for the application version, useful for
+   * tying all browser events to a specific release tag. The value parameter does not
+   * have to be unique. Passing a null value unsets any existing value.
+   */
+  setApplicationVersion (value) {
+    warn('Call to agent api setApplicationVersion failed. The agent is not currently initialized.')
+  }
+
+  /**
    * Allows selective ignoring and grouping of known errors that the browser agent captures.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/seterrorhandler/}
    * @param {(error: Error|string) => boolean | { group: string }} callback When an error occurs, the callback is called with the error object as a parameter. The callback will be called with each error, so it is not specific to one error.
@@ -76,6 +90,15 @@ export class AgentBase {
    * @param {string} id The ID or version of this release; for example, a version number, build number from your CI environment, GitHub SHA, GUID, or a hash of the contents.
    */
   addRelease (name, id) {
+    warn('Call to agent api addRelease failed. The agent is not currently initialized.')
+  }
+
+  /**
+   * Starts a set of agent features if not running in "autoStart" mode
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/start/}
+   * @param {string|string[]|undefined} name The feature name(s) to start.  If no name(s) are passed, all features will be started
+   */
+  start (featureNames) {
     warn('Call to agent api addRelease failed. The agent is not currently initialized.')
   }
 }

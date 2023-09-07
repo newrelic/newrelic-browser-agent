@@ -1,4 +1,4 @@
-import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testInsRequest, testInteractionEventsRequest, testResourcesRequest, testRumRequest, testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('rum retry harvesting', () => {
   [400, 404, 408, 429, 500, 502, 503, 504, 512].forEach(statusCode => {

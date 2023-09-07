@@ -46,7 +46,7 @@ export class Agent extends AgentBase {
 
     Object.assign(this, configure(this.agentIdentifier, options, options.loaderType || 'agent'))
 
-    this.start()
+    this.run()
   }
 
   get config () {
@@ -58,20 +58,20 @@ export class Agent extends AgentBase {
     }
   }
 
-  start () {
+  run () {
     const NR_FEATURES_REF_NAME = 'features'
     // Attempt to initialize all the requested features (sequentially in prio order & synchronously), with any failure aborting the whole process.
     try {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
       const featuresToStart = [...this.desiredFeatures]
       featuresToStart.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
-      featuresToStart.forEach(f => {
+      featuresToStart.forEach(InstrumentCtor => {
         // pageViewEvent must be enabled because RUM calls are not optional. See comment in constructor and PR 428.
-        if (enabledFeatures[f.featureName] || f.featureName === FEATURE_NAMES.pageViewEvent) {
-          const dependencies = getFeatureDependencyNames(f.featureName)
+        if (enabledFeatures[InstrumentCtor.featureName] || InstrumentCtor.featureName === FEATURE_NAMES.pageViewEvent) {
+          const dependencies = getFeatureDependencyNames(InstrumentCtor.featureName)
           const hasAllDeps = dependencies.every(x => enabledFeatures[x])
-          if (!hasAllDeps) warn(`${f.featureName} is enabled but one or more dependent features has been disabled (${stringify(dependencies)}). This may cause unintended consequences or missing data...`)
-          this.features[f.featureName] = new f(this.agentIdentifier, this.sharedAggregator)
+          if (!hasAllDeps) warn(`${InstrumentCtor.featureName} is enabled but one or more dependent features has been disabled (${stringify(dependencies)}). This may cause unintended consequences or missing data...`)
+          this.features[InstrumentCtor.featureName] = new InstrumentCtor(this.agentIdentifier, this.sharedAggregator)
         }
       })
       gosNREUMInitializedAgents(this.agentIdentifier, this.features, NR_FEATURES_REF_NAME)

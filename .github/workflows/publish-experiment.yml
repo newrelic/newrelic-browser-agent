@@ -1,36 +1,107 @@
-name: Build and publish EXPERIMENT to CDN
+# This workflow can be ran on any branch to build and publish
+# that branch as an internal experiment. Once published, the
+# dev and staging A/B scripts will be updated to include the
+# new experiment.
+
+name: Publish Experiment
 
 on:
   workflow_dispatch:
 
 jobs:
+  # Build and publish the branch to S3 experiments folder
   publish-experiment-to-s3:
     runs-on: ubuntu-latest
-    container: node:14
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      BUILD_NUMBER: Release${{ github.event.number }}-${{ github.run_number }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      BRANCH_NAME: ${GITHUB_REF_NAME}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v3
-      - name: install
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Install project dependencies
         run: npm ci
-      - name: build:experiment
-        run: BRANCH_NAME=${{ env.BRANCH_NAME }} npm run cdn:build:experiment
-      - name: upload artifacts to S3
-        run: |
-          node tools/scripts/upload-to-s3.js \
-            --bucket ${{ secrets.AWS_BUCKET }} \
-            --role ${{ secrets.AWS_ROLE_ARN }} \
-            --dir experiments/${{ env.BRANCH_NAME }}
-      - name: purge fastly cache url
-        run: |
-          node ./tools/scripts/fastly.js \
-            --fastly-key ${{ secrets.FASTLY_PURGE_KEY }} \
-            --purge-path experiments/${{ env.BRANCH_NAME }}/nr-loader-spa.min.js
-  run-dev-process:
+      - name: Clean branch name
+        id: clean-branch-name
+        run: echo "results=$(echo '${{ github.ref }}' | sed 's/refs\/heads\///g' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
+      - name: Build experiment
+        run: npm run cdn:build:experiment -- --env branchName='${{ steps.clean-branch-name.outputs.results }}'
+      - name: Upload experiment
+        id: s3-upload
+        uses: ./.github/actions/s3-upload
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          local_dir: $GITHUB_WORKSPACE/build
+          bucket_dir: experiments/${{ steps.clean-branch-name.outputs.results }}
+      - name: Gather purge paths
+        id: purge-paths
+        run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test("nr-loader-.*?\\.js$") or test(".*stats\\.json$")) + " "')" >> $GITHUB_OUTPUT
+      - name: Purge fastly cache
+        uses: ./.github/actions/fastly-purge
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          purge_path: ${{ steps.purge-paths.outputs.results }}
+
+  # Rebuild and publish the dev environment A/B script
+  publish-dev-ab:
     needs: [publish-experiment-to-s3]
-    uses: ./.github/workflows/publish-dev.yml
-    secrets: inherit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Publish dev a/b script
+        uses: ./.github/actions/internal-ab
+        with:
+          nr_environment: dev
+          nrba_app_id: ${{ secrets.INTERNAL_DEV_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
+          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-experimental.min.js
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+
+  # Rebuild and publish the staging environment A/B script
+  publish-staging-ab:
+    needs: [publish-experiment-to-s3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Deploy staging a/b script
+        uses: ./.github/actions/internal-ab
+        with:
+          nr_environment: staging
+          nrba_app_id: ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
+          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-experimental.min.js
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}

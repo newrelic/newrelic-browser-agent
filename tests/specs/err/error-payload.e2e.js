@@ -1,3 +1,5 @@
+/* globals errorFn, noticeErrorFn */
+
 const config = {
   init: {
     privacy: { cookies_enabled: true }

@@ -32,7 +32,7 @@ export class InitialPageLoadInteraction extends Interaction {
     let prev = 0
 
     navTimingValues.slice(1, 21).forEach(v => {
-      if (v !== void 0) {
+      if (v !== undefined) {
         navTimingNode += seperator + numeric(v - prev)
         seperator = ','
         prev = v

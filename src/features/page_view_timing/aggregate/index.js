@@ -3,114 +3,48 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { onFCP, onFID, onLCP, onCLS, onINP } from 'web-vitals'
-import { onFirstPaint } from '../first-paint'
-import { onLongTask } from '../long-tasks'
-import { iOS_below16 } from '../../../common/constants/runtime'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { mapOwn } from '../../../common/util/map-own'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { cleanURL } from '../../../common/url/clean-url'
 import { handle } from '../../../common/event-emitter/handle'
-import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
+import { getInfo, getConfigurationValue } from '../../../common/config/config'
 import { FEATURE_NAME } from '../constants'
-import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { cumulativeLayoutShift } from '../../../common/vitals/cumulative-layout-shift'
+import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
+import { firstInputDelay } from '../../../common/vitals/first-input-delay'
+import { firstPaint } from '../../../common/vitals/first-paint'
+import { interactionToNextPaint } from '../../../common/vitals/interaction-to-next-paint'
+import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
+import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
+import { longTask } from '../../../common/vitals/long-task'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
+
+  #handleVitalMetric = ({ name, value, attrs }) => {
+    this.addTiming(name, value, attrs)
+  }
+
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     this.timings = []
     this.timingsSent = []
     this.curSessEndRecorded = false
-    this.cls = null // this should be null unless set to a numeric value by web-vitals so that we differentiate if CLS is supported
 
-    /* ! This is the section that used to be in the loader portion: ! */
-    /* ------------------------------------------------------------ */
-    const pageStartedHidden = getRuntime(agentIdentifier).initHidden // our attempt at recapturing initial vis state since this code runs post-load time
-    this.alreadySent = new Set() // since we don't support timings on BFCache restores, this tracks and helps cap metrics that web-vitals report more than once
-
-    /* PerformancePaintTiming API - BFC is not yet supported. */
-    onFirstPaint(({ name, value }) => {
-      if (pageStartedHidden) return
-      this.addTiming(name.toLowerCase(), Math.floor(value))
+    firstPaint.subscribe(this.#handleVitalMetric)
+    firstContentfulPaint.subscribe(this.#handleVitalMetric)
+    firstInputDelay.subscribe(this.#handleVitalMetric)
+    largestContentfulPaint.subscribe(this.#handleVitalMetric)
+    interactionToNextPaint.subscribe(this.#handleVitalMetric)
+    timeToFirstByte.subscribe(({ entries }) => {
+      this.addTiming('load', Math.round(entries[0].loadEventEnd))
     })
 
-    /* First Contentful Paint - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
-    if (iOS_below16) {
-      try {
-        if (!pageStartedHidden) { // see ios-version.js for detail on this following bug case; tldr: buffered flag doesn't work but getEntriesByType does
-          const paintEntries = performance.getEntriesByType('paint')
-          paintEntries.forEach(entry => {
-            if (entry.name === 'first-contentful-paint') {
-              this.addTiming('fcp', Math.floor(entry.startTime))
-            }
-          })
-        }
-      } catch (e) {}
-    } else {
-      onFCP(({ name, value }) => {
-        if (pageStartedHidden || this.alreadySent.has(name)) return
-        this.alreadySent.add(name)
-        this.addTiming(name.toLowerCase(), value)
-      })
-    }
-
-    /* First Input Delay (+"First Interaction") - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
-    onFID(({ name, value, entries }) => {
-      if (pageStartedHidden || this.alreadySent.has(name) || entries.length === 0) return
-      this.alreadySent.add(name)
-
-      // CWV will only report one (THE) first-input entry to us; fid isn't reported if there are no user interactions occurs before the *first* page hiding.
-      const fiEntry = entries[0]
-      const attributes = {
-        type: fiEntry.name,
-        fid: Math.round(value)
-      }
-      this.addConnectionAttributes(attributes)
-      this.addTiming('fi', Math.round(fiEntry.startTime), attributes)
-    })
-
-    /* Largest Contentful Paint - As of WV v3, it still imperfectly tries to detect document vis state asap and isn't supposed to report if page starts hidden. */
-    onLCP(({ name, value, entries }) => {
-      if (pageStartedHidden || this.alreadySent.has(name)) return
-      this.alreadySent.add(name)
-
-      const attributes = {}
-      if (entries.length > 0) {
-        // CWV will only ever report one (THE) lcp entry to us; lcp is also only reported *once* on earlier(user interaction, page hidden).
-        const lcpEntry = entries[entries.length - 1] // this looks weird if we only expect one, but this is how cwv-attribution gets it so to be sure...
-        attributes.size = lcpEntry.size
-        attributes.eid = lcpEntry.id
-
-        if (lcpEntry.url) {
-          attributes.elUrl = cleanURL(lcpEntry.url)
-        }
-        if (lcpEntry.element?.tagName) {
-          attributes.elTag = lcpEntry.element.tagName
-        }
-      }
-
-      this.addConnectionAttributes(attributes)
-      this.addTiming(name.toLowerCase(), value, attributes)
-    })
-
-    /* Cumulative Layout Shift - We don't have to limit this callback since cls is stored as a state and only sent as attribute on other timings.
-      reportAllChanges ensures our tracked cls has the most recent rolling value to attach to 'unload' and 'pagehide'. */
-    onCLS(({ value }) => this.cls = value, { reportAllChanges: true })
-
-    /* Interaction-to-Next-Paint */
-    onINP(({ name, value, id }) => this.addTiming(name.toLowerCase(), value, { metricId: id }))
-
-    /* PerformanceLongTaskTiming API */
-    if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) {
-      onLongTask(({ name, value, info }) => this.addTiming(name.toLowerCase(), value, info)) // lt context is passed as 'info'=attrs in the timing node
-    }
-    /* ------------------------------------End of ex-loader section */
+    if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) longTask.subscribe(this.#handleVitalMetric)
 
     /* It's important that CWV api, like "onLCP", is called before this scheduler is initialized. The reason is because they listen to the same
       on vis change or pagehide events, and we'd want ex. onLCP to record the timing (win the race) before we try to send "final harvest". */
@@ -128,20 +62,7 @@ export class Aggregate extends AggregateBase {
     // send initial data sooner, then start regular
     this.ee.on(`drain-${this.featureName}`, () => { this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds) })
 
-    drain(this.agentIdentifier, this.featureName)
-  }
-
-  // takes an attributes object and appends connection attributes if available
-  addConnectionAttributes (attributes) {
-    var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection // to date, both window & worker shares the same support for connection
-    if (!connection) return
-
-    if (connection.type) attributes['net-type'] = connection.type
-    if (connection.effectiveType) attributes['net-etype'] = connection.effectiveType
-    if (connection.rtt) attributes['net-rtt'] = connection.rtt
-    if (connection.downlink) attributes['net-dlink'] = connection.downlink
-
-    return attributes
+    this.drain()
   }
 
   /**
@@ -180,14 +101,14 @@ export class Aggregate extends AggregateBase {
     Mitigation: We've set initial CLS to null so that it's omitted from timings like 'pageHide' in that edge case. It should only be included if onCLS callback was executed at least once.
     Future: onCLS value changes should be reported directly & CLS separated into its own timing node so it's not beholden to 'pageHide' firing. It'd also be possible to report the real final CLS.
     */
-    if (this.cls !== null) {
-      attrs.cls = this.cls
+    if (cumulativeLayoutShift.current.value >= 0) {
+      attrs.cls = cumulativeLayoutShift.current.value
     }
 
     this.timings.push({
-      name: name,
-      value: value,
-      attrs: attrs
+      name,
+      value,
+      attrs
     })
 
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)

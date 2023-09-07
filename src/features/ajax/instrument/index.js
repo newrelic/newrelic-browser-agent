@@ -5,7 +5,7 @@
 import { originals, getLoaderConfig, getRuntime } from '../../../common/config/config'
 import { handle } from '../../../common/event-emitter/handle'
 import { id } from '../../../common/ids/id'
-import { ffVersion, globalScope } from '../../../common/constants/runtime'
+import { ffVersion, globalScope, isBrowserScope } from '../../../common/constants/runtime'
 import { dataSize } from '../../../common/util/data-size'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
@@ -21,7 +21,7 @@ var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
 
 var origRequest = originals.REQ
-var origXHR = globalScope.XMLHttpRequest
+var origXHR = originals.XHR
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -34,6 +34,29 @@ export class Instrument extends InstrumentBase {
     this.dt = new DT(agentIdentifier)
 
     this.handler = (type, args, ctx, group) => handle(type, args, ctx, group, this.ee)
+
+    // this is a best (but imperfect) effort at capturing AJAX calls that may have fired before the agent was instantiated
+    // this could happen because the agent was "improperly" set up (ie, not at the top of the head) or
+    // because it was deferred from loading in some way -- e.g. 'deferred' script loading tags or other lazy-loading techniques
+    //
+    // it is "imperfect" because we cannot capture the following with the API vs wrapping the events directly:
+    // * requestBodySize - (txSize -- request body size)
+    // * method - request type (GET, POST, etc)
+    // * callbackDuration - (cbTime -- sum of resulting callback time)
+    try {
+      const initiators = { xmlhttprequest: 'xhr', fetch: 'fetch', beacon: 'beacon' }
+      globalScope?.performance?.getEntriesByType('resource').forEach(resource => {
+        if (resource.initiatorType in initiators && resource.responseStatus !== 0) {
+          const params = { status: resource.responseStatus }
+          const metrics = { rxSize: resource.transferSize, duration: Math.floor(resource.duration), cbTime: 0 }
+          addUrl(params, resource.name)
+          this.handler('xhr', [params, metrics, resource.startTime, resource.responseEnd, initiators[resource.initiatorType]], undefined, FEATURE_NAMES.ajax)
+        }
+      })
+    } catch (err) {
+      // do nothing
+    }
+
     wrapFetch(this.ee)
     wrapXhr(this.ee)
     subscribeToEvents(agentIdentifier, this.ee, this.handler, this.dt)
@@ -97,9 +120,9 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   }
 
   function onOpenXhrEnd (args, xhr) {
-    var loader_config = getLoaderConfig(agentIdentifier)
-    if (loader_config.xpid && this.sameOrigin) {
-      xhr.setRequestHeader('X-NewRelic-ID', loader_config.xpid)
+    var loaderConfig = getLoaderConfig(agentIdentifier)
+    if (loaderConfig.xpid && this.sameOrigin) {
+      xhr.setRequestHeader('X-NewRelic-ID', loaderConfig.xpid)
     }
 
     var payload = dt.generateTracePayload(this.parsedOrigin)
@@ -208,15 +231,27 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   function onFetchBeforeStart (args) {
     var opts = args[1] || {}
     var url
-    // argument is USVString
     if (typeof args[0] === 'string') {
+      // argument is USVString
       url = args[0]
-      // argument is Request object
+
+      if (url.length === 0 && isBrowserScope) {
+        url = '' + globalScope.location.href
+      }
     } else if (args[0] && args[0].url) {
+      // argument is Request object
       url = args[0].url
-      // argument is URL object
     } else if (globalScope?.URL && args[0] && args[0] instanceof URL) {
+      // argument is URL object
       url = args[0].href
+    } else if (typeof args[0].toString === 'function') {
+      url = args[0].toString()
+    }
+
+    if (typeof url !== 'string' || url.length === 0) {
+      // Short-circuit DT since we could not determine the URL of the fetch call
+      // this is very unlikely to happen
+      return
     }
 
     if (url) {
@@ -229,7 +264,11 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
       return
     }
 
-    if (typeof args[0] === 'string' || (globalScope?.URL && args[0] && args[0] instanceof URL)) {
+    if (args[0] && args[0].headers) {
+      if (addHeaders(args[0].headers, payload)) {
+        this.dt = payload
+      }
+    } else {
       var clone = {}
 
       for (var key in opts) {
@@ -245,10 +284,6 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
         args[1] = clone
       } else {
         args.push(clone)
-      }
-    } else if (args[0] && args[0].headers) {
-      if (addHeaders(args[0].headers, payload)) {
-        this.dt = payload
       }
     }
 
@@ -300,7 +335,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
 
   // we capture failed call as status 0, the actual error is ignored
   // eslint-disable-next-line handle-callback-err
-  function onFetchDone (err, res) {
+  function onFetchDone (_, res) {
     this.endTime = now()
     if (!this.params) {
       this.params = {}
@@ -348,19 +383,6 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this, FEATURE_NAMES.ajax)
   }
 
-  function addUrl (ctx, url) {
-    var parsed = parseUrl(url)
-    var params = ctx.params
-
-    params.hostname = parsed.hostname
-    params.port = parsed.port
-    params.protocol = parsed.protocol
-    params.host = parsed.hostname + ':' + parsed.port
-    params.pathname = parsed.pathname
-    ctx.parsedOrigin = parsed
-    ctx.sameOrigin = parsed.sameOrigin
-  }
-
   function captureXhrData (ctx, xhr) {
     ctx.params.status = xhr.status
 
@@ -376,4 +398,17 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
 
     ctx.loadCaptureCalled = true
   }
+}
+
+function addUrl (ctx, url) {
+  var parsed = parseUrl(url)
+  var params = ctx.params || ctx
+
+  params.hostname = parsed.hostname
+  params.port = parsed.port
+  params.protocol = parsed.protocol
+  params.host = parsed.hostname + ':' + parsed.port
+  params.pathname = parsed.pathname
+  ctx.parsedOrigin = parsed
+  ctx.sameOrigin = parsed.sameOrigin
 }

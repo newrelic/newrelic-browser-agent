@@ -63,6 +63,7 @@ export function buildSauceConnectOptions (cliArgs) {
  * @returns {Promise<SauceConnectInstance>}
  */
 export async function startSauceConnect (cliArgs) {
+  // eslint-disable-next-line new-cap
   const sauce = new SauceLabs.default(getSauceLabsCreds())
   return await sauce.startSauceConnect(buildSauceConnectOptions(cliArgs))
 }

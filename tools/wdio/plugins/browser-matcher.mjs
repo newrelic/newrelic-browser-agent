@@ -1,7 +1,5 @@
-import logger from '@wdio/logger'
 import { getBrowserName, getBrowserVersion } from '../../browsers-lists/utils.mjs'
 
-const log = logger('browser-matcher')
 /**
  * This is a WDIO worker plugin that provides a global method allowing for the
  * filtering of tests by a browser match.
@@ -14,10 +12,6 @@ export default class BrowserMatcher {
     this.#browserName = getBrowserName(capabilities)
     this.#browserVersion = getBrowserVersion(capabilities)
     this.#setupMochaGlobals()
-    global.withBrowsersMatching = (matcher) => {
-      log.warn('withBrowsersMatching() global deprecated, use it.withBrowsersMatching() or describe.withBrowsersMatching()')
-      return this.#browserMatchTest(matcher, global.it)
-    }
   }
 
   #setupMochaGlobals () {
@@ -44,29 +38,22 @@ export default class BrowserMatcher {
         globalIt = value
       }
     })
+
+    global.browserMatch = (matcher) => {
+      return !this.#wrapFnWithBrowserMatcher(matcher)
+    }
   }
 
   #extendMochaGlobal (originalGlobal) {
     Object.defineProperty(originalGlobal, 'withBrowsersMatching', {
       value: (matcher) => {
-        return this.#browserMatchTest(matcher, originalGlobal)
+        return this.#wrapFnWithBrowserMatcher(matcher, originalGlobal)
       }
     })
   }
 
-  #browserMatchTest (matcher, originalGlobal) {
-    let skip = false
-
-    if (Array.isArray(matcher) && matcher.length > 0) {
-      for (const indexedMatcher of matcher) {
-        if (!indexedMatcher.test(this.#browserName, this.#browserVersion)) {
-          skip = true
-          break
-        }
-      }
-    } else if (matcher && typeof matcher.test === 'function') {
-      skip = !matcher.test(this.#browserName, this.#browserVersion)
-    }
+  #wrapFnWithBrowserMatcher (matcher, originalGlobal) {
+    const skip = this.#browserMatchTest(matcher)
 
     return function (...args) {
       /*
@@ -82,5 +69,22 @@ export default class BrowserMatcher {
         originalGlobal.apply(this, args)
       }
     }
+  }
+
+  #browserMatchTest (matcher) {
+    let skip = false
+
+    if (Array.isArray(matcher) && matcher.length > 0) {
+      for (const indexedMatcher of matcher) {
+        if (!indexedMatcher.test(this.#browserName, this.#browserVersion)) {
+          skip = true
+          break
+        }
+      }
+    } else if (matcher && typeof matcher.test === 'function') {
+      skip = !matcher.test(this.#browserName, this.#browserVersion)
+    }
+
+    return skip
   }
 }

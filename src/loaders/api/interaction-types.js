@@ -6,7 +6,7 @@
  * @property {getContext} getContext
  * @property {ignore} ignore
  * @property {onEnd} onEnd
- * @property {onEnd} save
+ * @property {save} save
  * @property {setAttribute} setAttribute
  * @property {setName} setName
  */
@@ -24,8 +24,8 @@
  * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/createtracer/}
  * @callback createTracer
  * @param {string} name This will be used as the name of the tracer.
- * @param {string} [callback] A callback that contains the synchronous work to run at the end of the async work. To execute this callback, call the wrapper function returned using createTracer().
- * @returns {Function} Returns a method that wraps the original callback. When this method is invoked, it calls the original callback and ends the async timing.
+ * @param {(...args: any[]) => any} [callback] A callback that contains the synchronous work to run at the end of the async work. To execute this callback, call the wrapper function returned using createTracer().
+ * @returns {(...args: any[]) => any} Returns a method that wraps the original callback. When this method is invoked, it calls the original callback and ends the async timing.
  */
 
 /**
@@ -40,6 +40,13 @@
  * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/getcontext/}
  * @callback getContext
  * @param {(ctx: object) => void} callback This function is called when the interaction ends. It is called with one parameter, which is the interaction context.
+ * @returns {InteractionInstance} Returns the same interaction object allowing method chaining.
+ */
+
+/**
+ * Overrides other SPA save() calls; ignores an interaction so it is not saved or sent to New Relic.
+ * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/ignore/}
+ * @callback ignore
  * @returns {InteractionInstance} Returns the same interaction object allowing method chaining.
  */
 
@@ -63,7 +70,7 @@
  * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setattribute/}
  * @callback setAttribute
  * @param {string} key Used as the attribute name on the BrowserInteraction event.
- * @param {any} key Used as the attribute value on the BrowserInteraction event. This can be a string, number, boolean, or object. If it is an object, New Relic serializes it to a JSON string.
+ * @param {any} value Used as the attribute value on the BrowserInteraction event. This can be a string, number, boolean, or object. If it is an object, New Relic serializes it to a JSON string.
  * @returns {InteractionInstance} Returns the same interaction object allowing method chaining.
  */
 

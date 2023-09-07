@@ -19,6 +19,7 @@ const { wrapTimer } = require('../../../src/common/wrap/index')
 const timerEE = wrapTimer(baseEE)
 const { drain } = require('../../../src/common/drain/drain')
 const { mapOwn } = require('../../../src/common/util/map-own')
+const { bundleId } = require('../../../src/common/ids/bundle-id')
 
 var currentNodeId = () => {
   try { return spaAgg.state.currentNode && spaAgg.state.currentNode.id }
@@ -57,7 +58,7 @@ if (afterLoad) {
 
 timerEE.on('setTimeout-end', function (args) {
   if (!isEdge()) return
-  if (args[0] && args[0]['nr@original'] && args[0]['nr@original'].toString().match(/\[native code\]/)) {
+  if (args[0] && args[0][`nr@original:${bundleId}`] && args[0][`nr@original:${bundleId}`].toString().match(/\[native code\]/)) {
     this.method = 'setTimeout (internal)'
   }
 })

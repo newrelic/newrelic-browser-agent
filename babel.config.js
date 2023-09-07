@@ -45,7 +45,7 @@ module.exports = function (api, ...args) {
       ignore,
       plugins: [
         [
-          './tools/scripts/babel-plugin-transform-import',
+          './tools/babel/plugins/transform-import',
           {
             '(constants/)env$': '$1env.cdn'
           }
@@ -73,7 +73,7 @@ module.exports = function (api, ...args) {
       ],
       plugins: [
         [
-          './tools/scripts/babel-plugin-transform-import',
+          './tools/babel/plugins/transform-import',
           {
             '(constants/)env$': '$1env.cdn',
             'polyfill-detection$': 'polyfill-detection.es5'
@@ -92,7 +92,7 @@ module.exports = function (api, ...args) {
       ],
       plugins: [
         [
-          './tools/scripts/babel-plugin-transform-import',
+          './tools/babel/plugins/transform-import',
           {
             '(constants/)env$': '$1env.npm'
           }
@@ -110,7 +110,7 @@ module.exports = function (api, ...args) {
       ],
       plugins: [
         [
-          './tools/scripts/babel-plugin-transform-import',
+          './tools/babel/plugins/transform-import',
           {
             '(constants/)env$': '$1env.npm'
           }

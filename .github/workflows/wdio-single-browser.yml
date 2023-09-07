@@ -53,7 +53,7 @@ on:
 
 jobs:
   wdio:
-    name: WDIO Test - ${{ inputs.browser-target }}
+    name: WDIO Test - '${{ inputs.browser-target }}'
     timeout-minutes: 60
     runs-on: ubuntu-latest
     defaults:
@@ -81,7 +81,7 @@ jobs:
         run: |
           node ./tools/wdio/bin/cli.js \
             -s \
-            -b ${{ inputs.browser-target }} \
+            -b '${{ inputs.browser-target }}' \
             --concurrent 10 \
             ${{ runner.debug && '-v -L -D -d' || '' }} \
             ${{ inputs.coverage && '--coverage' || '' }} \
@@ -95,10 +95,10 @@ jobs:
       - name: Upload pr code coverage
         if: ${{ inputs.coverage && steps.pull-request-target.outputs.results }}
         uses: codecov/codecov-action@v3
-        env:
-          GITHUB_HEAD_REF: ${{ inputs.ref }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          override_commit: ${{ fromJSON(steps.pull-request-target.outputs.results).head_sha }}
+          override_branch: refs/pull/${{ fromJSON(steps.pull-request-target.outputs.results).pr_number }}/merge
           override_pr: ${{ fromJSON(steps.pull-request-target.outputs.results).pr_number }}
           flags: integration-tests
           verbose: true

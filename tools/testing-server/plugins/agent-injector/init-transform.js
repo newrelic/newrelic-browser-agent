@@ -1,5 +1,6 @@
 const { Transform } = require('stream')
-const { regexReplacementRegex } = require('../../constants')
+const { regexReplacementRegex, defaultInitBlock } = require('../../constants')
+const { deepmerge } = require('deepmerge-ts')
 
 /**
  * Constructs the agent init script block based on the init query.
@@ -23,7 +24,7 @@ function getInitContent (request, reply, testServer) {
     }
   })()
 
-  let initJSON = JSON.stringify(queryInit)
+  let initJSON = JSON.stringify(deepmerge(defaultInitBlock, queryInit))
   if (initJSON.includes('new RegExp')) {
     // de-serialize RegExp obj from router
     initJSON = initJSON.replace(regexReplacementRegex, '/$1/$2')

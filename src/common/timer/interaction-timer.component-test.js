@@ -41,29 +41,25 @@ describe('constructor', () => {
   })
 
   test('refresh type timers set event listeners', () => {
-    // eslint-disable-next-line
     let ee = { on: jest.fn().mockImplementation((evt, cb) => { cb([{ type: 'click' }]) }) }
     let it = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn(), ee }, 100)
     // scroll, keypress, click
     expect(ee.on).toHaveBeenCalledTimes(1)
     expect(it.onRefresh).toHaveBeenCalledTimes(1)
 
-    // eslint-disable-next-line
-     ee = { on: jest.fn().mockImplementation((evt, cb) => { cb([{ type: 'scroll' }]) }) }
+    ee = { on: jest.fn().mockImplementation((evt, cb) => { cb([{ type: 'scroll' }]) }) }
     it = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn(), ee }, 100)
     // scroll, keypress, click
     expect(ee.on).toHaveBeenCalledTimes(1)
     expect(it.onRefresh).toHaveBeenCalledTimes(1)
 
-    // eslint-disable-next-line
-     ee = { on: jest.fn().mockImplementation((evt, cb) => { cb([{ type: 'keydown' }]) }) }
+    ee = { on: jest.fn().mockImplementation((evt, cb) => { cb([{ type: 'keydown' }]) }) }
     it = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn(), ee }, 100)
     // scroll, keypress, click
     expect(ee.on).toHaveBeenCalledTimes(1)
     expect(it.onRefresh).toHaveBeenCalledTimes(1)
 
     const aelSpy = jest.spyOn(document, 'addEventListener')
-    // eslint-disable-next-line
     ee = { on: jest.fn().mockImplementation((evt, cb) => { cb([{ type: 'keydown' }]) }) }
     it = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn(), ee }, 100)
     // visibility change
@@ -81,7 +77,6 @@ describe('create()', () => {
   })
 
   test('Create can fallback to use defaults', () => {
-    let called = 0
     const timer1 = new InteractionTimer({ onEnd: jest.fn() }, 100)
     timer1.create()
 
@@ -136,6 +131,26 @@ describe('pause()', () => {
   })
 })
 
+describe('resume()', () => {
+  test('resume allows the callback continue firing', () => {
+    const timer = new InteractionTimer({ onEnd: jest.fn() }, 100)
+    expect(timer.onEnd).toHaveBeenCalledTimes(0)
+    timer.pause()
+    jest.advanceTimersByTime(150)
+    expect(timer.onEnd).toHaveBeenCalledTimes(0)
+    timer.resume()
+    jest.advanceTimersByTime(150)
+    expect(timer.onEnd).toHaveBeenCalledTimes(1)
+  })
+
+  test('resume fires the refresh callback', () => {
+    const timer = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn() }, 100)
+    timer.pause()
+    timer.resume()
+    expect(timer.onRefresh).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('clear()', () => {
   test('clear prevents the callback from firing and deletes the pointer', () => {
     const timer = new InteractionTimer({ onEnd: jest.fn() }, 100)
@@ -163,5 +178,35 @@ describe('isValid', () => {
     expect(timer.isValid()).toEqual(true)
     timer.startTimestamp -= 100
     expect(timer.isValid()).toEqual(false)
+  })
+})
+
+describe('abort()', () => {
+  test('should unregister the event emitter listener', () => {
+    const ee = { on: jest.fn(), removeEventListener: jest.fn() }
+    const it = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn(), ee }, 100)
+
+    it.abort()
+
+    expect(ee.on).toHaveBeenCalledTimes(1)
+    expect(ee.on).toHaveBeenCalledWith('fn-end', expect.any(Function))
+
+    expect(ee.removeEventListener).toHaveBeenCalledTimes(1)
+    expect(ee.removeEventListener).toHaveBeenCalledWith('fn-end', expect.any(Function))
+
+    // Verify the same function is passed to both methods
+    expect(jest.mocked(ee.on).mock.calls[0][1]).toEqual(jest.mocked(ee.removeEventListener).mock.calls[0][1])
+  })
+
+  test('should not attempt to unregister the event emitter listener when an event emitter was not supplied', () => {
+    const it = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn() }, 100)
+
+    expect(it.ee).toBeUndefined()
+    expect(it.refreshHandler).toBeUndefined()
+
+    it.abort()
+
+    expect(it.ee).toBeUndefined()
+    expect(it.refreshHandler).toBeUndefined()
   })
 })

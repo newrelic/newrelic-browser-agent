@@ -51,7 +51,6 @@ describe('create()', () => {
   })
 
   test('Create can fallback to use defaults', () => {
-    let called = 0
     const timer1 = new Timer({ onEnd: jest.fn() }, 100)
     timer1.create()
 

@@ -19,6 +19,10 @@
         xhr.addEventListener('load', function () {}, true)
         xhr.send()
       }, true)
+
+      if (typeof fetch === 'function') {
+        fetch('/json').then(function () { fetch('/text') })
+      }
     </script>
   </head>
   <body>

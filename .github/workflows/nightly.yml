@@ -57,3 +57,37 @@ jobs:
       build-number: $BUILD_NUMBER
       collection: functional
     secrets: inherit
+
+  jil-workers:
+    name: JIL Test - workers
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      NEWRELIC_ENVIRONMENT: ci
+      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
+      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Build agent
+        run: npm run build:all
+      - name: Run JIL Tests
+        run: |
+          node --max-old-space-size=8192 ./tools/jil/bin/cli.js \
+            -f merged \
+            -s \
+            -b '*@*' \
+            --concurrent 30 \
+            -t 85000 \
+            ${{ runner.debug && '-v -L -D -d' || '' }} \
+            tests/worker/**/*.test.js
+
+  # TODO: Need to add a job for cleaning up experiments to run nightly

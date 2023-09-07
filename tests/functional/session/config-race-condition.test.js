@@ -3,7 +3,7 @@ const testDriver = require('../../../tools/jil/index')
 let notSafariWithSeleniumBug = testDriver.Matcher.withFeature('notSafariWithSeleniumBug')
 
 testDriver.test(`Session object exists when config is set after loader`, notSafariWithSeleniumBug, function (t, browser, router) {
-  let url = router.assetURL('custom-attribute-race-condition.html', {init: {jserrors: {enabled: true, harvestTimeSeconds: 5}}})
+  let url = router.assetURL('custom-attribute-race-condition.html', {init: {jserrors: {enabled: true, harvestTimeSeconds: 5}, privacy: {cookies_enabled: true}}})
 
   let loadPromise = browser.get(url)
   let rumPromise = router.expectRum()

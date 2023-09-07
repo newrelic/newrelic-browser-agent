@@ -4,6 +4,7 @@
  */
 
 const jil = require('../../../tools/jil/driver/browser.js')
+const { bundleId } = require('../../../src/common/ids/bundle-id')
 
 const { setup } = require('../utils/setup')
 const { wrapJsonP } = require('../../../src/common/wrap/wrap-jsonp')
@@ -40,5 +41,5 @@ jil.browserTest('new property is not added to HTMLElement', function (t) {
 })
 
 function isWrapped (fn) {
-  return fn && (typeof fn['nr@original'] === 'function')
+  return fn && (typeof fn[`nr@original:${bundleId}`] === 'function')
 }

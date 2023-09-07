@@ -73,7 +73,10 @@ export class Aggregate extends AggregateBase {
     this.interactionsToHarvest.push(this.interactionInProgress)
     this.interactionInProgress = null
     this.scheduler.scheduleHarvest(0)
-    if (!this.drained) this.drain = true && drain(this.agentIdentifier, this.featureName)
+    if (!this.drained) {
+      this.drain = true
+      drain(this.agentIdentifier, this.featureName)
+    }
   }
 
   hasInteraction ({ timestamp }) {

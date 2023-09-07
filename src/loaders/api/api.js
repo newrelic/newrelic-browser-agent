@@ -21,7 +21,7 @@ export function setTopLevelCallers () {
   const funcs = [
     'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
     'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
-    'interaction', 'noticeError', 'setUserId'
+    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'start'
   ]
   funcs.forEach(f => {
     nr[f] = (...args) => caller(f, ...args)
@@ -56,7 +56,7 @@ export function setAPI (agentIdentifier, forceDrain) {
   var spaPrefix = prefix + 'ixn-'
 
   // Setup stub functions that queue calls for later processing.
-  asyncApiFns.forEach(fnName => apiInterface[fnName] = apiCall(prefix, fnName, true, 'api'))
+  asyncApiFns.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })
 
   apiInterface.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.pageAction)
   apiInterface.setCurrentRouteName = apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
@@ -109,6 +109,38 @@ export function setAPI (agentIdentifier, forceDrain) {
     return appendJsAttribute('enduser.id', value, 'setUserId', true)
   }
 
+  /**
+   * Attach the 'applcation.version' attribute onto agent payloads. This may be used in NR queries to group all browser events by a specific customer-defined release.
+   * @param {string|null} value - Application version -- if null, will "unset" the value
+   * @returns @see apiCall
+   */
+  apiInterface.setApplicationVersion = function (value) {
+    if (!(typeof value === 'string' || value === null)) {
+      warn(`Failed to execute setApplicationVersion. Expected <String | null>, but got <${typeof value}>.`)
+      return
+    }
+    return appendJsAttribute('application.version', value, 'setApplicationVersion', false)
+  }
+
+  apiInterface.start = (features) => {
+    try {
+      const smTag = !features ? 'undefined' : 'defined'
+      handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/start/${smTag}/called`], undefined, FEATURE_NAMES.metrics, instanceEE)
+      const featNames = Object.values(FEATURE_NAMES)
+      if (features === undefined) features = featNames
+      else {
+        features = Array.isArray(features) && features.length ? features : [features]
+        if (features.some(f => !featNames.includes(f))) return warn(`Invalid feature name supplied. Acceptable feature names are: ${featNames}`)
+        if (!features.includes(FEATURE_NAMES.pageViewEvent)) features.push(FEATURE_NAMES.pageViewEvent)
+      }
+      features.forEach(feature => {
+        instanceEE.emit(`${feature}-opt-in`)
+      })
+    } catch (err) {
+      warn('An unexpected issue occurred', err)
+    }
+  }
+
   apiInterface.interaction = function () {
     return new InteractionHandle().get()
   }
@@ -138,7 +170,7 @@ export function setAPI (agentIdentifier, forceDrain) {
     }
   }
 
-  void ['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach(name => {
+  ;['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach(name => {
     InteractionApiProto[name] = apiCall(spaPrefix, name, undefined, FEATURE_NAMES.spa)
   })
 
@@ -146,7 +178,7 @@ export function setAPI (agentIdentifier, forceDrain) {
     return function () {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
       if (bufferGroup) handle(prefix + name, [now(), ...arguments], notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
-      return notSpa ? void 0 : this
+      return notSpa ? undefined : this
     }
   }
 

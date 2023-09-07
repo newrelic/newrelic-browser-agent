@@ -1,0 +1,34 @@
+# This composite action constructs and opens a pull request on the
+# docs website repository.
+
+name: 'Docs PR'
+
+inputs:
+  tag:
+    description: "Name of the tag to pull the release information for."
+    required: true
+  github_login:
+    description: 'Github login associated with github authentication token.'
+    required: true
+  github_token:
+    description: "The github token to use for interacting with the repositories."
+    required: true
+  github_email:
+    description: 'Email address associated with github login user.'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Run action script
+      id: action-script
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          --tag ${{ inputs.tag }} \
+          --github-login ${{ inputs.github_login }} \
+          --github-token ${{ inputs.github_token }} \
+          --github-email ${{ inputs.github_email }}
+      shell: bash

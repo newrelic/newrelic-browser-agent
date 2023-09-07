@@ -31,19 +31,24 @@ export class InstrumentBase extends FeatureBase {
     this.auto = auto
 
     /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
-    this.abortHandler
+    this.abortHandler = undefined
+
     /**
      * @type {Class} Holds the reference to the feature's aggregate module counterpart, if and after it has been initialized. This may not be assigned until after page loads!
      * The only purpose of this for now is to expose it to the NREUM interface, as the feature's instrument instance is already exposed.
     */
-    this.featAggregate
+    this.featAggregate = undefined
+
     /**
      * @type {Promise} Assigned immediately after @see importAggregator runs. Serves as a signal for when the inner async fn finishes execution. Useful for features to await
      * one another if there are inter-features dependencies.
     */
-    this.onAggregateImported
+    this.onAggregateImported = undefined
 
-    if (auto) registerDrain(agentIdentifier, featureName)
+    /** used in conjunction with newrelic.start() to defer harvesting in features */
+    if (getConfigurationValue(this.agentIdentifier, `${this.featureName}.autoStart`) === false) this.auto = false
+    /** if the feature requires opt-in (!auto-start), it will get registered once the api has been called */
+    if (this.auto) registerDrain(agentIdentifier, featureName)
   }
 
   /**
@@ -53,7 +58,21 @@ export class InstrumentBase extends FeatureBase {
    * @returns void
    */
   importAggregator (argsObjFromInstrument = {}) {
-    if (this.featAggregate || !this.auto) return
+    if (this.featAggregate) return
+
+    if (!this.auto) {
+      // this feature requires an opt in...
+      // wait for API to be called
+      this.ee.on(`${this.featureName}-opt-in`, () => {
+        // register the feature to drain only once the API has been called, it will drain when importAggregator finishes for all the features
+        // called by the api in that cycle
+        registerDrain(this.agentIdentifier, this.featureName)
+        this.auto = true
+        this.importAggregator()
+      })
+      return
+    }
+
     const enableSessionTracking = isBrowserScope && getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true
     let loadedSuccessfully
     this.onAggregateImported = new Promise(resolve => {
@@ -72,7 +91,7 @@ export class InstrumentBase extends FeatureBase {
       }
 
       /**
-       * Note this try-catch differs from the one in Agent.start() in that it's placed later in a page's lifecycle and
+       * Note this try-catch differs from the one in Agent.run() in that it's placed later in a page's lifecycle and
        * it's only responsible for aborting its one specific feature, rather than all.
        */
       try {

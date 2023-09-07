@@ -3,6 +3,54 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.239.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.239.0...v1.239.1) (2023-09-02)
+
+
+### Bug Fixes
+
+* Fix internal release process ([#672](https://github.com/newrelic/newrelic-browser-agent/issues/672)) ([ab0309f](https://github.com/newrelic/newrelic-browser-agent/commit/ab0309fbed343b6dab4c2ec82cf7f22e071eb9df))
+
+## [1.239.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.238.0...v1.239.0) (2023-09-01)
+
+
+### Features
+
+* Add best effort to detect Ajax events before instantiation ([#648](https://github.com/newrelic/newrelic-browser-agent/issues/648)) ([2d3c9d3](https://github.com/newrelic/newrelic-browser-agent/commit/2d3c9d36d4e59343a1b228322e1040d2f3f911b8))
+* Add mode to enable agent to not harvest until user consent ([#656](https://github.com/newrelic/newrelic-browser-agent/issues/656)) ([9141a45](https://github.com/newrelic/newrelic-browser-agent/commit/9141a45cdb3fffd2306fcc5388ed74142d167c53))
+* Remove allow_bfcache flag ([#652](https://github.com/newrelic/newrelic-browser-agent/issues/652)) ([ec113af](https://github.com/newrelic/newrelic-browser-agent/commit/ec113af80fd565ff50ba825b82e5f4d1b74d09b7))
+* Removing old supportability metrics ([#669](https://github.com/newrelic/newrelic-browser-agent/issues/669)) ([c17d344](https://github.com/newrelic/newrelic-browser-agent/commit/c17d344389eb2262ff5d3ca94a1748e519220921))
+
+
+### Bug Fixes
+
+* Fixing issue with leaking event listeners ([#668](https://github.com/newrelic/newrelic-browser-agent/issues/668)) ([6cb8238](https://github.com/newrelic/newrelic-browser-agent/commit/6cb823842fab406a33b9698edee1932c29204df3))
+* Issues with types resolution ([#670](https://github.com/newrelic/newrelic-browser-agent/issues/670)) ([85336a4](https://github.com/newrelic/newrelic-browser-agent/commit/85336a43595bbf3d2793aafe665a47650a20ed21))
+
+## [1.238.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.237.1...v1.238.0) (2023-08-16)
+
+
+### Features
+
+* Add API: setApplicationVersion ([#639](https://github.com/newrelic/newrelic-browser-agent/issues/639)) ([4bb3e81](https://github.com/newrelic/newrelic-browser-agent/commit/4bb3e81b9a2fb0c0f075f3f72e90d21ffdde06fb))
+* Reducing the agent chunk count ([#637](https://github.com/newrelic/newrelic-browser-agent/issues/637)) ([043becf](https://github.com/newrelic/newrelic-browser-agent/commit/043becf2d8c766516cecd614b54de3fc5acad1e2))
+
+
+### Bug Fixes
+
+* Capture potential missing tail data for session trace ([#624](https://github.com/newrelic/newrelic-browser-agent/issues/624)) ([1941427](https://github.com/newrelic/newrelic-browser-agent/commit/194142763a117b7c5ac30f22a73b0577d2112fba))
+* Fix distributed tracing handling of empty string fetch parameter ([#640](https://github.com/newrelic/newrelic-browser-agent/issues/640)) ([5dca741](https://github.com/newrelic/newrelic-browser-agent/commit/5dca741ae0c98ef50cf2170cdd4f075e0c8bbae9))
+* Typo in type declarations ([#634](https://github.com/newrelic/newrelic-browser-agent/issues/634)) ([ada8ad2](https://github.com/newrelic/newrelic-browser-agent/commit/ada8ad2e2c85065c46237fa45cce7ddec8368e53))
+
+## [1.237.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.237.0...v1.237.1) (2023-08-02)
+
+
+### Bug Fixes
+
+* Fix serialization issue with array data ([#621](https://github.com/newrelic/newrelic-browser-agent/issues/621)) ([6887940](https://github.com/newrelic/newrelic-browser-agent/commit/6887940a01f74761840058742e04efd0f9130bb9))
+* prevent dollar symbol only variable names ([#631](https://github.com/newrelic/newrelic-browser-agent/issues/631)) ([cff7bc4](https://github.com/newrelic/newrelic-browser-agent/commit/cff7bc4fbc4cd9620e319b3f6f2861515f7b01a8))
+* SPA feature respects ajax deny_list for fetch ([#633](https://github.com/newrelic/newrelic-browser-agent/issues/633)) ([ccfe510](https://github.com/newrelic/newrelic-browser-agent/commit/ccfe51063cd59e946e20ec870ce5979b1ca73054))
+* Undefined deny list ignores block internal ([#629](https://github.com/newrelic/newrelic-browser-agent/issues/629)) ([27a1b04](https://github.com/newrelic/newrelic-browser-agent/commit/27a1b044ae239d83c85c7e25f69979b23b985e54))
+
 ## [1.237.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.236.0...v1.237.0) (2023-07-28)
 
 

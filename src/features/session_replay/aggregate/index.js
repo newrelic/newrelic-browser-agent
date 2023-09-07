@@ -10,7 +10,6 @@
  * functionality is validated and a full user experience is curated.
  */
 
-import { drain } from '../../../common/drain/drain'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME } from '../constants'
@@ -20,6 +19,7 @@ import { SESSION_EVENTS, MODE } from '../../../common/session/session-entity'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
 import { obj as encodeObj } from '../../../common/url/encode'
+import { warn } from '../../../common/util/console'
 
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.8'
@@ -127,7 +127,7 @@ export class Aggregate extends AggregateBase {
         Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.sampleRate')
       )).then(() => sharedChannel.onReplayReady(this.mode)) // notify watchers that replay started with the mode
 
-      drain(this.agentIdentifier, this.featureName)
+      this.drain()
     }
   }
 
@@ -173,12 +173,14 @@ export class Aggregate extends AggregateBase {
     }
 
     try {
+      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
       recorder = (await import(/* webpackChunkName: "recorder" */'rrweb')).record
     } catch (err) {
       return this.abort()
     }
 
     try {
+      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
       const { gzipSync, strToU8 } = await import(/* webpackChunkName: "compressor" */'fflate')
       gzipper = gzipSync
       u8 = strToU8

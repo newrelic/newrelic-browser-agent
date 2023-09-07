@@ -37,3 +37,21 @@ module.exports.rumFlags = {
   loaded: 1,
   sr: 0 // this should be off, for now, if privacy.cookie_enabled is on (default) or Traces tests will fail
 }
+
+module.exports.defaultInitBlock = {
+  privacy: { cookies_enabled: false },
+  ajax: { deny_list: [], block_internal: false, enabled: true, harvestTimeSeconds: 5, autoStart: true },
+  distributed_tracing: {},
+  session: { domain: undefined, expiresMs: 14400000, inactiveMs: 1800000 },
+  ssl: false,
+  obfuscate: undefined,
+  jserrors: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
+  metrics: { enabled: true, autoStart: true },
+  page_action: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
+  page_view_event: { enabled: true, autoStart: true },
+  page_view_timing: { enabled: true, harvestTimeSeconds: 5, long_task: false, autoStart: true },
+  session_trace: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
+  spa: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
+  harvest: { tooManyRequestsDelay: 5 },
+  session_replay: { enabled: false, harvestTimeSeconds: 5, sampleRate: 0, errorSampleRate: 0, autoStart: true }
+}

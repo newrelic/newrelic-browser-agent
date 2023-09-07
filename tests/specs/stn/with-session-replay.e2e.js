@@ -59,7 +59,7 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
   async function navigateToRootDir () {
     await browser.url(await browser.testHandle.assetURL('/'))
     try { // IE does not like this command, though the rest of the test below still works
-      await browser.waitUntil(() => browser.execute(function () { document.readyState === 'complete' }), { timeout: 5000 })
+      await browser.waitUntil(() => browser.execute(function () { return document.readyState === 'complete' }), { timeout: 5000 })
     } catch (e) {}
   }
   async function loadPageAndGetResource (assetUrlArgs, timeout) {
@@ -118,8 +118,13 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
       let firstPageAgentVals = await getRuntimeValues()
       expect(initSTReceived).toBeTruthy()
       expect(initSTReceived.request.query.ptid).toBeUndefined()
-      if (replayMode === 'OFF') expect(firstPageAgentVals).toEqual([true, MODE.FULL, true])
-      else expect(firstPageAgentVals).toEqual([false, MODE.FULL, true]) // when replay is running, trace is no longer op in standalone mode
+      if (replayMode === 'OFF') {
+        expect(firstPageAgentVals).toEqual([true, MODE.FULL, true])
+        expect(Number(initSTReceived.request.query.hr)).toEqual(0)
+      } else {
+        expect(firstPageAgentVals).toEqual([false, MODE.FULL, true]) // when replay is running, trace is no longer op in standalone mode
+        if (replayMode === 'FULL') expect(Number(initSTReceived.request.query.hr)).toEqual(1)
+      }
 
       await navigateToRootDir()
 
@@ -131,8 +136,10 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
       expect(secondInitST.request.query.ptid).toBeUndefined() // this validates we're actually getting the 2nd page's initial res, not 1st page's unload res
       if (replayMode === 'OFF') {
         expect(secondPageAgentVals).toEqual([true, MODE.FULL, null]) // session_replay.featAggregate will be null as it's OFF and not imported on subsequent pages
+        expect(Number(secondInitST.request.query.hr)).toEqual(0)
       } else {
         expect(secondPageAgentVals).toEqual([false, MODE.FULL, true])
+        if (replayMode === 'FULL') expect(Number(secondInitST.request.query.hr)).toEqual(1)
       }
     })
   })
@@ -149,7 +156,7 @@ describe.withBrowsersMatching(notIE)('Trace when replay entitlement is 1 and stn
     })
 
     initSTReceived = undefined
-    browser.testHandle.expectResources().then(resPayload => initSTReceived = resPayload)
+    browser.testHandle.expectResources().then(resPayload => { initSTReceived = resPayload })
   })
 
   it('does not run when replay is OFF', async () => {

@@ -12,10 +12,6 @@ module.exports = {
     'tests/assets/test-builds/**/*',
     'tests/assets/modular/js-errors/js/vendor/**/*',
 
-    // Remove the below ignores once lint errors are fixed
-    'tools/scripts/publish-current.js',
-    'tools/scripts/upload-to-s3.js',
-
     // Ignore JIL code since it is being replaced with WDIO
     'tools/jil/**/*',
     'tests/browser/**/*',
@@ -51,16 +47,19 @@ module.exports = {
     },
     {
       files: ['src/**/*.js'],
-      excludedFiles: '*.test.js',
+      excludedFiles: ['*.test.js', '*.component-test.js', '__mocks__/**/*'],
       env: {
         browser: true
       },
       parserOptions: {
         sourceType: 'module'
+      },
+      rules: {
+        'n/no-callback-literal': 'off' // This is not NodeJS code and should not be forced to adhere to NodeJS callback parameter pattern
       }
     },
     {
-      files: ['src/**/*.test.js', 'tests/specs/**/*.e2e.js'],
+      files: ['src/**/*.test.js', 'src/**/*.component-test.js', 'src/**/__mocks__/**/*'],
       env: {
         browser: true,
         node: true,
@@ -68,59 +67,73 @@ module.exports = {
       },
       parserOptions: {
         sourceType: 'module'
+      },
+      rules: {
+        'sonarjs/no-duplicate-string': 'off', // It is not worth deduplicating strings in test code
+        'n/no-callback-literal': 'off' // This is not NodeJS code and should not be forced to adhere to NodeJS callback parameter pattern
       }
     },
     {
-      files: ['webpack.*.js', 'babel.*.js', 'babel-env-vars.js', '.eslintrc.js', 'jest.preset.js', 'newrelic.js'],
+      files: ['tests/specs/**/*'],
+      globals: {
+        browser: true,
+        expect: true,
+        $: true,
+        browserMatch: true
+      },
       env: {
         browser: true,
-        node: true
+        node: true,
+        jest: true
+      },
+      parserOptions: {
+        sourceType: 'module'
+      },
+      rules: {
+        'sonarjs/no-duplicate-string': 'off' // It is not worth deduplicating strings in test code
       }
     },
     {
-      files: ['tests/functional/**/*.test.js'],
+      files: ['tools/**/*'],
+      globals: {
+        browser: true
+      },
+      env: {
+        browser: true,
+        node: true,
+        jest: true
+      },
+      rules: {
+        'sonarjs/no-duplicate-string': 'off' // It is not worth deduplicating strings in tooling code
+      }
+    },
+    {
+      files: ['webpack.*.js', 'babel.config.js', 'babel-env-vars.js', '.eslintrc.js', 'jest.preset.js', 'newrelic.js'],
       env: {
         browser: true,
         node: true
       },
       rules: {
-        'no-throw-literal': 'off'
+        'sonarjs/no-duplicate-string': 'off' // It is not worth deduplicating strings in tooling code
+      }
+    },
+    {
+      files: ['tests/functional/**/*.test.js', 'tests/assets/**/*.js'],
+      env: {
+        browser: true,
+        node: true
+      },
+      rules: {
+        'no-throw-literal': 'off' // We need to be able to test throwing literals
       }
     }
   ],
   rules: {
     // Disable lint rules that need code changes to re-enabled
-    'no-unused-vars': 'off',
-    camelcase: 'off',
     'no-var': 'off',
-    'object-shorthand': 'off',
-    'no-void': 'off',
-    eqeqeq: 'off',
-    'prefer-regex-literals': 'off',
-    'new-cap': 'off',
     'no-new': 'off',
-    'no-useless-return': 'off',
-    'no-unused-expressions': 'off',
     'prefer-const': 'off',
-    'no-use-before-define': 'off',
-    'valid-typeof': 'off',
-    'no-undef': 'off',
-    'no-return-assign': 'off',
 
-    'n/handle-callback-err': 'off',
-
-    'sonarjs/cognitive-complexity': 'off',
-    'sonarjs/no-duplicate-string': 'off',
-    'sonarjs/no-collapsible-if': 'off',
-    'sonarjs/no-nested-template-literals': 'off',
-    'sonarjs/no-extra-arguments': 'off',
-    'sonarjs/no-small-switch': 'off',
-    'sonarjs/no-redundant-jump': 'off',
-    'sonarjs/no-identical-expressions': 'off',
-    'sonarjs/no-identical-functions': 'off',
-    'sonarjs/prefer-object-literal': 'off',
-    'sonarjs/prefer-single-boolean-return': 'off',
-    'sonarjs/no-redundant-boolean': 'off',
-    'sonarjs/no-duplicated-branches': 'off'
+    'sonarjs/cognitive-complexity': 'off'
   }
 }

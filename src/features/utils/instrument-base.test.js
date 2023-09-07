@@ -33,7 +33,7 @@ jest.mock('../../common/config/config', () => ({
 }))
 jest.mock('../../common/config/config', () => ({
   __esModule: true,
-  getConfigurationValue: jest.fn(),
+  getConfigurationValue: jest.fn().mockReturnValue({}),
   originals: {
     MO: jest.fn()
   }
@@ -79,7 +79,7 @@ test('should construct a new instrument', () => {
 })
 
 test('should not immediately drain', () => {
-  const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName, false)
+  new InstrumentBase(agentIdentifier, aggregator, featureName, false)
 
   expect(registerDrain).not.toHaveBeenCalled()
 })

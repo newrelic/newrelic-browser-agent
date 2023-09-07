@@ -1,0 +1,64 @@
+# This composite action finds, collects, and provides as outputs information
+# about a pull request that is currently opened for the branch targeted by
+# the workflow run ($GITHUB_REF). If no pull request is found, the action will
+# throw an error.
+
+name: 'Find Branch Pull Request'
+
+inputs:
+  nr_environment:
+    description: 'Target New Relic environment for the A/B script.'
+    required: true
+  nrba_current_script_url:
+    description: 'URL for the script to use as the "current" version NRBA loader.'
+    required: false
+    default: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
+  nrba_next_script_url:
+    description: 'URL for the script to use as the "next" version NRBA loader.'
+    required: false
+    default: https://js-agent.newrelic.com/dev/nr-loader-spa.min.js
+  nrba_app_id:
+    description: 'App id to insert into the NRBA configuration.'
+    required: true
+  nrba_license_key:
+    description: 'License key to insert into the NRBA configuration.'
+    required: true
+  aws_access_key_id:
+    description: 'AWS access key id used for authentication.'
+    required: false
+  aws_secret_access_key:
+    description: 'AWS secret access key used for authentication.'
+    required: false
+  aws_region:
+    description: "AWS region where S3 bucket is located."
+    required: false
+    default: us-east-1
+  aws_role:
+    description: "AWS role ARN that needs to be used for authentication."
+    required: false
+  aws_bucket_name:
+    description: "S3 bucket name where files need to be uploaded."
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Run action script
+      id: action-script
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          --environment ${{ inputs.nr_environment }} \
+          --current ${{ inputs.nrba_current_script_url }} \
+          --next ${{ inputs.nrba_next_script_url }} \
+          --app-id ${{ inputs.nrba_app_id }} \
+          --license-key ${{ inputs.nrba_license_key }} \
+          --region ${{ inputs.aws_region }} \
+          --bucket ${{ inputs.aws_bucket_name || '' }} \
+          --role ${{ inputs.aws_role || '' }} \
+      shell: bash

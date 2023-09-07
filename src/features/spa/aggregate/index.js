@@ -9,7 +9,6 @@ import { shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { mapOwn } from '../../../common/util/map-own'
 import { navTimingValues as navTiming } from '../../../common/timing/nav-timing'
 import { generateUuid } from '../../../common/ids/unique-id'
-import { paintMetrics } from '../../../common/metrics/paint-metrics'
 import { Interaction } from './interaction'
 import { getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
@@ -17,9 +16,10 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { Serializer } from './serializer'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import * as CONSTANTS from '../constants'
-import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
+import { firstPaint } from '../../../common/vitals/first-paint'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -122,8 +122,8 @@ export class Aggregate extends AggregateBase {
 
     // register plugins
     var pluginApi = {
-      getCurrentNode: getCurrentNode,
-      setCurrentNode: setCurrentNode
+      getCurrentNode,
+      setCurrentNode
     }
 
     register('spa-register', function (init) {
@@ -197,23 +197,21 @@ export class Aggregate extends AggregateBase {
         // If this event was emitted by an XHR, restore the node ID associated with
         // that XHR.
         setCurrentNode(baseEE.context(eventSource).spaNode)
-      } else if (!state.currentNode) {
+      } else if (!state.currentNode && INTERACTION_EVENTS.indexOf(evName) !== -1) {
         // Otherwise, if no interaction is currently active, create a new node ID,
         // and let the aggregator know that we entered a new event handler callback
         // so that it has a chance to possibly start an interaction.
-        if (INTERACTION_EVENTS.indexOf(evName) !== -1) {
-          var ixn = new Interaction(evName, this[FN_START], state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
+        var ixn = new Interaction(evName, this[FN_START], state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
 
-          // Store the interaction as prevInteraction in case it is prematurely discarded
-          state.prevInteraction = ixn
+        // Store the interaction as prevInteraction in case it is prematurely discarded
+        state.prevInteraction = ixn
 
-          setCurrentNode(ixn.root)
+        setCurrentNode(ixn.root)
 
-          if (evName === 'click') {
-            var value = getActionText(ev.target)
-            if (value) {
-              state.currentNode.attrs.custom.actionText = value
-            }
+        if (evName === 'click') {
+          var value = getActionText(ev.target)
+          if (value) {
+            state.currentNode.attrs.custom.actionText = value
           }
         }
       }
@@ -415,7 +413,7 @@ export class Aggregate extends AggregateBase {
     register(FETCH_DONE, function (err, res) {
       var node = this[SPA_NODE]
       if (node) {
-        if (err) {
+        if (err || !shouldCollectEvent(this.params)) {
           node.cancel()
           return
         }
@@ -530,7 +528,7 @@ export class Aggregate extends AggregateBase {
     register(INTERACTION_API + 'get', function (t) {
       var interaction
       if (state?.currentNode?.[INTERACTION]) interaction = this.ixn = state.currentNode[INTERACTION]
-      else if (state?.prevNode?.end === null && state?.prevNode?.[INTERACTION]?.root?.[INTERACTION]?.eventName != 'initialPageLoad') interaction = this.ixn = state.prevNode[INTERACTION]
+      else if (state?.prevNode?.end === null && state?.prevNode?.[INTERACTION]?.root?.[INTERACTION]?.eventName !== 'initialPageLoad') interaction = this.ixn = state.prevNode[INTERACTION]
       else interaction = this.ixn = new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
       if (!state.currentNode) {
         interaction.checkFinish()
@@ -717,8 +715,8 @@ export class Aggregate extends AggregateBase {
       interaction.root.attrs.id = generateUuid()
 
       if (interaction.root.attrs.trigger === 'initialPageLoad') {
-        interaction.root.attrs.firstPaint = paintMetrics['first-paint']
-        interaction.root.attrs.firstContentfulPaint = paintMetrics['first-contentful-paint']
+        interaction.root.attrs.firstPaint = firstPaint.current.value
+        interaction.root.attrs.firstContentfulPaint = firstContentfulPaint.current.value
       }
       baseEE.emit('interactionSaved', [interaction])
       state.interactionsToHarvest.push(interaction)
@@ -729,12 +727,9 @@ export class Aggregate extends AggregateBase {
 
     function isEnabled () {
       var enabled = getConfigurationValue(agentIdentifier, 'spa.enabled')
-      if (enabled === false) {
-        return false
-      }
-      return true
+      return enabled !== false
     }
 
-    drain(this.agentIdentifier, this.featureName)
+    this.drain()
   }
 }

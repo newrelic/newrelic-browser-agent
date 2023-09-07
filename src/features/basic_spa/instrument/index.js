@@ -40,12 +40,12 @@ export class Instrument extends InstrumentBase {
     })
 
     if (originals.MO) {
-      const dom_observer = new originals.MO((mutation) => {
+      const domObserver = new originals.MO((mutation) => {
         requestAnimationFrame(() => {
           handle('newDom', [now()], undefined, this.featureName, this.ee)
         })
       })
-      dom_observer.observe(document.documentElement || document.body, { attributes: true, childList: true, subtree: true, characterData: true })
+      domObserver.observe(document.documentElement || document.body, { attributes: true, childList: true, subtree: true, characterData: true })
     }
 
     this.abortHandler = this.#abort

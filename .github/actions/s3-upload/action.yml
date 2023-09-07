@@ -1,0 +1,60 @@
+# This composite action is used to upload files to an S3 bucket.
+
+name: 'S3 File Upload'
+
+inputs:
+  aws_access_key_id:
+    description: 'AWS access key id used for authentication.'
+    required: true
+  aws_secret_access_key:
+    description: 'AWS secret access key used for authentication.'
+    required: true
+  aws_region:
+    description: "AWS region where S3 bucket is located."
+    required: false
+    default: us-east-1
+  aws_role:
+    description: "AWS role ARN that needs to be used for authentication."
+    required: true
+  aws_bucket_name:
+    description: "S3 bucket name where files need to be uploaded."
+    required: true
+  local_dir:
+    description: "Local directory containing files to be uploaded."
+    required: true
+  dry_run:
+    description: "Indicates if we should just list files to upload without uploading."
+    required: false
+  bucket_dir:
+    description: 'A sub directory to put the files within the S3 bucket.'
+    required: false
+  asset_cache_duration:
+    description: 'Value to be set for the asset cache header.'
+    default: 3600
+
+outputs:
+  results:
+    description: "Array of objects containing information about each file uploaded"
+    value: ${{ steps.action-script.outputs.results }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Run action script
+      id: action-script
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          --region ${{ inputs.aws_region }} \
+          --bucket ${{ inputs.aws_bucket_name }} \
+          --role ${{ inputs.aws_role }} \
+          --input ${{ inputs.local_dir }} \
+          --asset-cache-duration ${{ inputs.asset_cache_duration }} \
+          ${{ inputs.dry_run && '--dry' || '' }} \
+          ${{ inputs.bucket_dir && format('--dir {0}', inputs.bucket_dir) || '' }}
+      shell: bash

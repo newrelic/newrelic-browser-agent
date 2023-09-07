@@ -85,3 +85,5 @@ try {
   // we failed our mission....
   if (!!newrelic && !!newrelic.noticeError) newrelic.noticeError(err)
 }
+
+if (!!newrelic && !!newrelic.setApplicationVersion) newrelic.setApplicationVersion( '' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) )

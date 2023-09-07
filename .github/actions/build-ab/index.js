@@ -70,7 +70,7 @@ if (['dev', 'staging'].includes(args.environment)) {
     console.log('No experiments to include in A/B script.')
   } else {
     for (const experiment of experimentsList) {
-      const experimentLoader = `https://js-agent.newrelic.com/${experiment}nr-loader-spa.min.js`
+      const experimentLoader = `https://js-agent.newrelic.com/${experiment}nr-loader-experimental.min.js`
       const experimentScript = await fetchRetry(`${experimentLoader}?_nocache=${uuidv4()}`, { retry: 3 })
       scripts.push({name: experiment, contents: await experimentScript.text()})
     }
@@ -81,7 +81,7 @@ console.log('writing', scripts.length,'scripts:', scripts.map(x => x.name).join(
 await fs.promises.writeFile(
   outputFile,
   template({
-    args, scripts, env: args.environment
+    args, scripts
   }),
   { encoding: 'utf-8' }
 )

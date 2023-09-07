@@ -81,7 +81,7 @@ console.log('writing', scripts.length,'scripts:', scripts.map(x => x.name).join(
 await fs.promises.writeFile(
   outputFile,
   template({
-    args, scripts
+    args, scripts, env: args.environment
   }),
   { encoding: 'utf-8' }
 )

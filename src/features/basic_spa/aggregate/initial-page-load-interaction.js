@@ -1,10 +1,12 @@
 import { CATEGORY } from '../constants'
-import { paintMetrics } from '../../../common/metrics/paint-metrics'
+// import { paintMetrics } from '../../../common/metrics/paint-metrics'
 import { navTimingValues } from '../../../common/timing/nav-timing'
 import { Interaction } from './interaction'
 import { globalScope, initialLocation } from '../../../common/constants/runtime'
 import { nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
+import { firstPaint } from '../../../common/vitals/first-paint'
+import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 
 export class InitialPageLoadInteraction extends Interaction {
   constructor (...args) {
@@ -18,13 +20,17 @@ export class InitialPageLoadInteraction extends Interaction {
     this.end = Math.round(globalScope?.performance.timing.domInteractive - globalScope?.performance?.timeOrigin || globalScope?.performance?.timing?.navigationStart || Date.now())
     this.category = CATEGORY.INITIAL_PAGE_LOAD
 
-    console.log('PAINT METRICS!', paintMetrics)
+    // console.log('PAINT METRICS!', paintMetrics)
 
     setTimeout(() => this.finish(now()), 0)
   }
 
-  get firstPaint () { return nullable(paintMetrics['first-paint'], numeric, true) }
-  get firstContentfulPaint () { return nullable(paintMetrics['first-contentful-paint'], numeric, true) }
+  // get firstPaint () { return nullable(paintMetrics['first-paint'], numeric, true) }
+  // get firstContentfulPaint () { return nullable(paintMetrics['first-contentful-paint'], numeric, true) }
+
+  get firstPaint () { return nullable(firstPaint.current.value, numeric, true) }
+  get firstContentfulPaint () { return nullable(firstContentfulPaint.current.value, numeric, true) }
+
   get navTiming () {
     if (!navTimingValues) return
     let seperator = ','

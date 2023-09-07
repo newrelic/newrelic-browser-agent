@@ -721,7 +721,7 @@ export class Aggregate extends AggregateBase {
       baseEE.emit('interactionSaved', [interaction])
       state.interactionsToHarvest.push(interaction)
 
-      console.log('Real spa -- ', state.interactionsToHarvest[0])
+      // console.log('Real spa -- ', state.interactionsToHarvest[0])
       scheduler.scheduleHarvest(0)
     }
 

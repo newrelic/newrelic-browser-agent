@@ -39,7 +39,7 @@ export class Aggregate extends AggregateBase {
     if (this.interactionsToHarvest.length === 0 || this.blocked) return {}
     const payload = `bel.7;${this.interactionsToHarvest.map(ixn => ixn.serialize('bel')).join(';')}`
 
-    console.log('PAYLOAD!', payload)
+    // console.log('PAYLOAD!', payload)
     if (options.retry) {
       this.interactionsToHarvest.forEach((interaction) => {
         this.interactionsSent.push(interaction)
@@ -65,11 +65,11 @@ export class Aggregate extends AggregateBase {
     if (trigger) this.interactionInProgress.trigger = trigger
     if (category) this.interactionInProgress.category = CATEGORY.ROUTE_CHANGE
     if (startedAt) this.interactionInProgress.start = startedAt
-    console.log(performance.now(), 'start ixn...', this.interactionInProgress)
+    // console.log(performance.now(), 'start ixn...', this.interactionInProgress)
   }
 
   completeInteraction () {
-    console.log(performance.now(), 'interaction complete', this.interactionInProgress)
+    // console.log(performance.now(), 'interaction complete', this.interactionInProgress)
     this.interactionsToHarvest.push(this.interactionInProgress)
     this.interactionInProgress = null
     this.scheduler.scheduleHarvest(0)

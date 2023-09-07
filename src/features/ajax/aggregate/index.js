@@ -202,7 +202,7 @@ export class Aggregate extends AggregateBase {
         if (shouldHold) continue
         let browserInteractionId = interaction?.id.replace('\'', '')
 
-        if (interaction) console.log('ajax', event, 'has FOUND AJAX INTERACTION!', interaction)
+        // if (interaction) console.log('ajax', event, 'has FOUND AJAX INTERACTION!', interaction)
 
         var fields = [
           numeric(event.startTime),

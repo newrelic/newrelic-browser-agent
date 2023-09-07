@@ -133,7 +133,7 @@ export class Interaction {
   }
 
   checkFinished = debounce(() => {
-    // console.log(performance.now(), 'checking finish for', this, !!this.domTimestamp && !!this.historyTimestamp)
+    console.log(performance.now(), 'checking finish for', this, !!this.domTimestamp && !!this.historyTimestamp)
     if (!!this.domTimestamp && !!this.historyTimestamp) this.finish()
   }, 60)
 

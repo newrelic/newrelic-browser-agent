@@ -156,6 +156,7 @@ export class TestHandleConnector {
           throw new Error('Expect failed with an unknown result')
         }
       } else if (testServerExpect.expectTimeout) {
+        // eslint-disable-next-line
         return
       } else {
         return await result.json()

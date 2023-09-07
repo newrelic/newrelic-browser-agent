@@ -70,7 +70,7 @@ jobs:
         uses: ./.github/actions/internal-ab
         with:
           nr_environment: prod
-          nrba_app_id: ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}
+          nrba_app_id: ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }}
           nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
           nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
           nrba_next_script_url: https://js-agent.newrelic.com/nr-loader-spa-${{ steps.agent-loader-version.outputs.results }}.min.js
@@ -100,7 +100,7 @@ jobs:
         uses: ./.github/actions/internal-ab
         with:
           nr_environment: eu-prod
-          nrba_app_id: ${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}
+          nrba_app_id: ${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }}
           nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
           nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
           nrba_next_script_url: https://js-agent.newrelic.com/nr-loader-spa-${{ steps.agent-loader-version.outputs.results }}.min.js

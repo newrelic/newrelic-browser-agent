@@ -86,4 +86,4 @@ try {
   if (!!newrelic && !!newrelic.noticeError) newrelic.noticeError(err)
 }
 
-if (!!newrelic && !!newrelic.setApplicationVersion) newrelic.setApplicationVersion( '' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) )
+if (!!newrelic && !!newrelic.setApplicationVersion && '{{{env}}}' === 'staging') newrelic.setApplicationVersion( '' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) )

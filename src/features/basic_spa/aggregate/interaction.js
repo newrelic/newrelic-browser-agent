@@ -112,7 +112,6 @@ export class Interaction {
   finish (end) {
     // console.log('end before', this.#end)
     this.end = end || Math.max(this.domTimestamp, this.historyTimestamp)
-    this.callbackEnd = this.#end
     // console.log('end after', this.#end)
     this.onFinished()
   }

@@ -74,7 +74,7 @@ export class Aggregate extends AggregateBase {
     this.interactionInProgress = null
     this.scheduler.scheduleHarvest(0)
     if (!this.drained) {
-      this.drain = true
+      this.drained = true
       drain(this.agentIdentifier, this.featureName)
     }
   }

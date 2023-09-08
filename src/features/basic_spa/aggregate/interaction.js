@@ -107,7 +107,10 @@ export class Interaction extends BelNode {
 
   serialize () {
     const customAttrs = addCustomAttributes(getInfo(this.agentIdentifier).jsAttributes, getAddStringContext(this.agentIdentifier), true)
-    const metadataAttrs = addCustomAttributes({ domTimestamp: this.domTimestamp, historyTimestamp: this.historyTimestamp }, getAddStringContext(this.agentIdentifier), true)
+    const metadataAttrs = addCustomAttributes({
+      ...(this.domTimestamp !== undefined && { domTimestamp: this.domTimestamp }),
+      ...(this.historyTimestamp !== undefined && { historyTimestamp: this.historyTimestamp })
+    }, getAddStringContext(this.agentIdentifier), true)
     const childrenAndAttrs = metadataAttrs.concat(customAttrs).concat(this.children)
     const nodeList = []
     const fields = [

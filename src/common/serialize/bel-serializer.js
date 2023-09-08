@@ -44,7 +44,7 @@ export function getAddStringContext (agentIdentifier) {
   }
 }
 
-export function addCustomAttributes (attrs, addString) {
+export function addCustomAttributes (attrs, addString, shouldSerialize) {
   var attrParts = []
 
   mapOwn(attrs, function (key, val) {
@@ -83,7 +83,7 @@ export function addCustomAttributes (attrs, addString) {
     attrParts.push([type, key + (serializedValue ? ',' + serializedValue : '')])
   })
 
-  return attrParts
+  return shouldSerialize ? attrParts.map(v => ({ serialize: () => v.join(',') })) : attrParts
 }
 
 var escapable = /([,\\;])/g

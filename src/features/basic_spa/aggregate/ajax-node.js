@@ -14,7 +14,7 @@ export class AjaxNode extends BelNode {
   #traceId
   #spanTimestamp
 
-  constructor (agentIdentifier, ajaxEvent) {
+  constructor (agentIdentifier, ajaxEvent, firstTimestamp) {
     super(agentIdentifier)
     this.belType = TYPE_IDS.AJAX
     this.#method = ajaxEvent.method
@@ -28,6 +28,7 @@ export class AjaxNode extends BelNode {
     this.#traceId = ajaxEvent.traceId
     this.#spanTimestamp = ajaxEvent.spanTimestamp
 
+    this.startTimestamp = ajaxEvent.startTime - firstTimestamp
     this.start = ajaxEvent.startTime
     this.end = ajaxEvent.endTime
   }
@@ -48,11 +49,11 @@ export class AjaxNode extends BelNode {
     const fields = [
       this.belType,
       this.childCount,
-      this.start,
+      this.startTimestamp,
       // this.end,
       this.calculatedEnd,
-      // this.callbackEnd,
-      this.calculatedCallbackEnd,
+      this.callbackEnd,
+      // this.calculatedCallbackEnd,
       this.callbackDuration,
       this.method,
       this.status,

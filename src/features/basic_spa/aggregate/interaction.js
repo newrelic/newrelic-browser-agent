@@ -1,6 +1,7 @@
+import { getInfo } from '../../../common/config/config'
 import { globalScope, initialLocation } from '../../../common/constants/runtime'
 // import { generateUuid } from '../../../common/ids/unique-id'
-import { getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
+import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
 import { debounce } from '../../../common/util/invoke'
@@ -105,10 +106,14 @@ export class Interaction extends BelNode {
   }, 60)
 
   serialize () {
+    const customAttrs = addCustomAttributes(getInfo(this.agentIdentifier).jsAttributes, getAddStringContext(this.agentIdentifier), true)
+    const metadataAttrs = addCustomAttributes({ domTimestamp: this.domTimestamp, historyTimestamp: this.historyTimestamp }, getAddStringContext(this.agentIdentifier), true)
+    const childrenAndAttrs = metadataAttrs.concat(customAttrs).concat(this.children)
     const nodeList = []
     const fields = [
       this.belType,
-      this.childCount,
+      // this.childCount,
+      childrenAndAttrs.length,
       this.start,
       // this.end,
       this.calculatedEnd,
@@ -127,7 +132,7 @@ export class Interaction extends BelNode {
 
     nodeList.push(fields)
 
-    this.children.forEach(child => nodeList.push(child.serialize()))
+    childrenAndAttrs.forEach(node => nodeList.push(node.serialize()))
 
     return nodeList.join(';')
   }

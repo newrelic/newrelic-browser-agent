@@ -39,7 +39,7 @@ export class Aggregate extends AggregateBase {
 
     registerHandler('ixnAjax', (ajaxEvent) => {
       this.heldAjaxEvents.push(ajaxEvent)
-      this.interactionInProgress.addChild(new AjaxNode(this.agentIdentifier, ajaxEvent))
+      this.interactionInProgress.addChild(new AjaxNode(this.agentIdentifier, ajaxEvent, this.interactionInProgress.startRaw))
     }, this.featureName, this.ee)
   }
 
@@ -86,6 +86,7 @@ export class Aggregate extends AggregateBase {
     console.log(performance.now(), 'interaction complete', this.interactionInProgress)
     this.interactionsToHarvest.push(this.interactionInProgress)
     this.interactionInProgress = null
+    this.heldAjaxEvents = []
     this.scheduler.scheduleHarvest(0)
     if (!this.drained) {
       this.drained = true

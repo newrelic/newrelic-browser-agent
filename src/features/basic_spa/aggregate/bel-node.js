@@ -25,6 +25,8 @@ export class BelNode {
   get start () { return numeric(this.#start) }
   set start (v) { this.#start = v }
 
+  get startRaw () { return this.#start }
+
   get end () { return numeric(this.#end) }
   set end (v) { this.#end = v }
 

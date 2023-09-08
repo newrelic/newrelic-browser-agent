@@ -113,10 +113,10 @@ export class Aggregate extends AggregateBase {
 
       // if the ajax happened inside an interaction, hold it until the interaction finishes
       if (shouldHold) {
-        console.log('ajax HELD', event, spaFeature)
+        // console.log('ajax HELD', event, spaFeature)
         handle('ixnAjax', [event], undefined, FEATURE_NAMES.basicSpa, ee)
       } else {
-        console.log('ajax DID NOT hold', event, spaFeature)
+        // console.log('ajax DID NOT hold', event, spaFeature)
         ajaxEvents.push(event)
       }
     }

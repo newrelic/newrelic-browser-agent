@@ -47,7 +47,6 @@ export class Aggregate extends AggregateBase {
     if (this.interactionsToHarvest.length === 0 || this.blocked) return {}
     const payload = `bel.7;${this.interactionsToHarvest.map(ixn => ixn.serialize('bel')).join(';')}`
 
-    // console.log('PAYLOAD!', payload)
     if (options.retry) {
       this.interactionsToHarvest.forEach((interaction) => {
         this.interactionsSent.push(interaction)
@@ -68,14 +67,19 @@ export class Aggregate extends AggregateBase {
   }
 
   startInteraction ({ isInitial, trigger, category, startedAt }) {
+    this.cancelInteraction()
     const Ixn = isInitial ? InitialPageLoadInteraction : Interaction
-    if (this.interactionInProgress && !!this.heldAjaxEvents.length) this.ee.emit('interactionDiscarded', [this.heldAjaxEvents])
-    this.heldAjaxEvents = []
-    this.interactionInProgress = new Ixn(this.agentIdentifier, { onFinished: this.completeInteraction.bind(this) })
+    this.interactionInProgress = new Ixn(this.agentIdentifier, { onFinished: this.completeInteraction.bind(this), onCancelled: this.cancelInteraction.bind(this) })
     if (trigger) this.interactionInProgress.trigger = trigger
     if (category) this.interactionInProgress.category = CATEGORY.ROUTE_CHANGE
     if (startedAt) this.interactionInProgress.start = startedAt
     console.log(performance.now(), 'start ixn...', this.interactionInProgress)
+  }
+
+  cancelInteraction () {
+    if (this.interactionInProgress && !!this.heldAjaxEvents.length) this.ee.emit('interactionDiscarded', [this.heldAjaxEvents])
+    this.heldAjaxEvents = []
+    this.interactionInProgress = null
   }
 
   completeInteraction () {

@@ -24,7 +24,7 @@ export class Interaction extends BelNode {
   #previousRouteName
   #targetRouteName
 
-  constructor (agentIdentifier, { onFinished }) {
+  constructor (agentIdentifier, { onFinished, onCancelled }) {
     super(agentIdentifier)
     if (!agentIdentifier || !onFinished) throw new Error('Interaction is missing core attributes')
     this.initialPageURL = initialLocation
@@ -35,31 +35,16 @@ export class Interaction extends BelNode {
     this.historyTimestamp = undefined
 
     this.onFinished = onFinished
+    this.onCancelled = onCancelled
 
     setTimeout(() => {
       // make this interaction invalid as to not hold up any other events
-      if (!this.end) this.end = -1
-    }, 60000)
+      this.cancel()
+    }, 30000)
   }
-
-  // get belType () { return numeric(this.#belType) }
 
   get trigger () { return getAddStringContext(this.agentIdentifier)(this.#trigger) }
   set trigger (v) { this.#trigger = v }
-
-  // get start () { return numeric(this.#start) }
-  // set start (v) { this.#start = v }
-
-  // get end () { return numeric(this.#end) }
-  // set end (v) { this.#end = v }
-
-  // get callbackEnd () { return numeric(this.#callbackEnd) } // do we calculate this still?
-  // set callbackEnd (v) { this.#callbackEnd = v }
-
-  // get callbackDuration () { return numeric(this.#callbackDuration) }
-  // set callbackDuration (v) { this.#callbackDuration = v }
-
-  // get nodeId () { return getAddStringContext(this.agentIdentifier)(this.#nodeId) }
 
   get initialPageURL () { return getAddStringContext(this.agentIdentifier)(cleanURL(this.#initialPageURL, true)) }
   set initialPageURL (v) { this.#initialPageURL = v }
@@ -88,8 +73,6 @@ export class Interaction extends BelNode {
   get newRoute () { return nullable(this.#newRoute, getAddStringContext(this.agentIdentifier), true) }
   set newRoute (v) { this.#newRoute = v }
 
-  // get id () { return getAddStringContext(this.agentIdentifier)(this.#id) }
-
   get previousRouteName () { return getAddStringContext(this.agentIdentifier)(this.#previousRouteName) }
 
   get targetRouteName () { return getAddStringContext(this.agentIdentifier)(this.#targetRouteName) }
@@ -97,16 +80,13 @@ export class Interaction extends BelNode {
   get childCount () { return numeric(this.children.length) }
 
   finish (end) {
-    // console.log('end before', this.#end)
     this.end = end || Math.max(this.domTimestamp, this.historyTimestamp)
-    // console.log('end after', this.#end)
     this.onFinished()
   }
 
-  // containsEvent (timestamp) {
-  //   if (!this.#end) return this.#start <= timestamp
-  //   return (this.#start <= timestamp && this.#end >= timestamp)
-  // }
+  cancel () {
+    this.onCancelled()
+  }
 
   updateDom (timestamp) {
     this.domTimestamp = timestamp || now()

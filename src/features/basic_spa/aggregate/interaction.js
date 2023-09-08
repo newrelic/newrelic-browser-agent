@@ -112,6 +112,7 @@ export class Interaction {
   finish (end) {
     // console.log('end before', this.#end)
     this.end = end || Math.max(this.domTimestamp, this.historyTimestamp)
+    this.callbackEnd = this.#end
     // console.log('end after', this.#end)
     this.onFinished()
   }
@@ -133,7 +134,7 @@ export class Interaction {
   }
 
   checkFinished = debounce(() => {
-    console.log(performance.now(), 'checking finish for', this, !!this.domTimestamp && !!this.historyTimestamp)
+    // console.log(performance.now(), 'checking finish for', this.#id, !!this.domTimestamp, !!this.historyTimestamp)
     if (!!this.domTimestamp && !!this.historyTimestamp) this.finish()
   }, 60)
 

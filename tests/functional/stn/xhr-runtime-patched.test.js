@@ -5,9 +5,7 @@
 
 const testDriver = require('../../../tools/jil/index')
 
-let supported = testDriver.Matcher.withFeature('stn')
-
-testDriver.test('posts session traces when xhr is runtime patched', supported, function (t, browser, router) {
+testDriver.test('posts session traces when xhr is runtime patched', function (t, browser, router) {
   let rumPromise = router.expectRum()
   let resourcePromise = router.expectResources()
   let loadPromise = browser.get(router.assetURL('instrumented.html', {

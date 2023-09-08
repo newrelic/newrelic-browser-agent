@@ -407,22 +407,7 @@ function runCustomAttributeTests (loader) {
   testDriver.test(`window load timing for ${loader} agent includes custom attributes`, function (t, browser, router) {
     t.plan(5)
 
-    let url = router.assetURL('instrumented.html', {
-      loader: loader,
-      scriptString: `newrelic.setCustomAttribute('test', 'testValue')
-      // default attributes reserved for PageViewTiming, should be dropped
-      newrelic.setCustomAttribute('size', 'invalid')
-      newrelic.setCustomAttribute('eid', 'invalid')
-      newrelic.setCustomAttribute('cls', 'invalid')
-      newrelic.setCustomAttribute('type', 'invalid')
-      newrelic.setCustomAttribute('fid', 'invalid')
-      newrelic.setCustomAttribute('elTag', 'invalid')
-      newrelic.setCustomAttribute('elUrl', 'invalid')
-      newrelic.setCustomAttribute('net-type', 'invalid')
-      newrelic.setCustomAttribute('net-etype', 'invalid')
-      newrelic.setCustomAttribute('net-rtt', 'invalid')
-      newrelic.setCustomAttribute('net-dlink', 'invalid')`
-    })
+    let url = router.assetURL('load-timing-attributes.html', { loader: loader })
     let loadPromise = browser.safeGet(url).waitForFeature('loaded')
     var reservedTimingAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elUrl', 'elTag',
       'net-type', 'net-etype', 'net-rtt', 'net-dlink']

@@ -44,19 +44,8 @@ export class Aggregate extends AggregateBase {
     this.prepareHarvest = prepareHarvest
     this.getStoredEvents = function () { return { ajaxEvents, spaAjaxEvents } }
 
-    ee.on('interactionSaved', (interaction) => {
-      if (!spaAjaxEvents[interaction.id]) return
-      // remove from the spaAjaxEvents buffer, and let spa harvest it
-      delete spaAjaxEvents[interaction.id]
-    })
-    ee.on('interactionDiscarded', (interaction) => {
-      if (!spaAjaxEvents[interaction.id]) return
-
-      spaAjaxEvents[interaction.id].forEach(function (item) {
-        // move it from the spaAjaxEvents buffer to the ajaxEvents buffer for harvesting here
-        ajaxEvents.push(item)
-      })
-      delete spaAjaxEvents[interaction.id]
+    ee.on('interactionDiscarded', (events = []) => {
+      ajaxEvents.push(...events)
     })
 
     const scheduler = new HarvestScheduler('events', {
@@ -116,11 +105,15 @@ export class Aggregate extends AggregateBase {
         event.spanTimestamp = xhrContext.dt.timestamp
       }
 
+      const spaFeature = getFeatureState({ agentIdentifier, featureName: FEATURE_NAMES.basicSpa })
+      const {
+        shouldHold
+        // interaction
+      } = spaFeature?.hasInteraction?.({ timestamp: event.startTime }) || {}
+
       // if the ajax happened inside an interaction, hold it until the interaction finishes
-      if (this.spaNode) {
-        var interactionId = this.spaNode.interaction.id
-        spaAjaxEvents[interactionId] = spaAjaxEvents[interactionId] || []
-        spaAjaxEvents[interactionId].push(event)
+      if (shouldHold) {
+        handle('ixnAjax', [event], undefined, FEATURE_NAMES.basicSpa, ee)
       } else {
         ajaxEvents.push(event)
       }
@@ -194,13 +187,9 @@ export class Aggregate extends AggregateBase {
       this.addString = getAddStringContext(agentIdentifier) // pass agentIdentifier here
       this.events = events
       this.payload = 'bel.7;'
-      const spaFeature = getFeatureState({ agentIdentifier, featureName: FEATURE_NAMES.basicSpa })
 
       for (var i = 0; i < events.length; i++) {
         var event = events[i]
-        const { shouldHold, interaction } = spaFeature?.hasInteraction?.({ timestamp: event.startTime }) || {}
-        if (shouldHold) continue
-        let browserInteractionId = interaction?.id.replace('\'', '')
 
         // if (interaction) console.log('ajax', event, 'has FOUND AJAX INTERACTION!', interaction)
 
@@ -225,7 +214,7 @@ export class Aggregate extends AggregateBase {
         var insert = '2,'
 
         // add custom attributes
-        var attrParts = addCustomAttributes({ ...getInfo(agentIdentifier).jsAttributes, ...(!!browserInteractionId && { browserInteractionId }) } || {}, this.addString)
+        var attrParts = addCustomAttributes(getInfo(agentIdentifier).jsAttributes || {}, this.addString)
         fields.unshift(numeric(attrParts.length))
 
         insert += fields.join(',')

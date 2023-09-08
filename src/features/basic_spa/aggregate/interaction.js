@@ -1,27 +1,16 @@
 import { globalScope, initialLocation } from '../../../common/constants/runtime'
-import { generateUuid } from '../../../common/ids/unique-id'
+// import { generateUuid } from '../../../common/ids/unique-id'
 import { getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
 import { debounce } from '../../../common/util/invoke'
 import { TYPE_IDS } from '../constants'
-
-let nodesSeen = 0
+import { BelNode } from './bel-node'
 
 /**
  * link https://github.com/newrelic/nr-querypack/blob/main/schemas/bel/7.qpschema
  **/
-export class Interaction {
-  #id = generateUuid()
-  #belType = TYPE_IDS.INTERACTION
-  #children = []
-  #start = now()
-  #end
-  #callbackEnd = 0
-  #callbackDuration = 0
-  #nodeId = String(++nodesSeen)
-  #childCount = 0
-
+export class Interaction extends BelNode {
   #trigger
   #initialPageURL
   #oldURL
@@ -36,10 +25,11 @@ export class Interaction {
   #targetRouteName
 
   constructor (agentIdentifier, { onFinished }) {
+    super(agentIdentifier)
     if (!agentIdentifier || !onFinished) throw new Error('Interaction is missing core attributes')
-    this.agentIdentifier = agentIdentifier
     this.initialPageURL = initialLocation
     this.oldURL = '' + globalScope?.location
+    this.belType = TYPE_IDS.INTERACTION
 
     this.domTimestamp = undefined
     this.historyTimestamp = undefined
@@ -48,28 +38,28 @@ export class Interaction {
 
     setTimeout(() => {
       // make this interaction invalid as to not hold up any other events
-      if (!this.#end) this.#end = -1
+      if (!this.end) this.end = -1
     }, 60000)
   }
 
-  get belType () { return numeric(this.#belType) }
+  // get belType () { return numeric(this.#belType) }
 
   get trigger () { return getAddStringContext(this.agentIdentifier)(this.#trigger) }
   set trigger (v) { this.#trigger = v }
 
-  get start () { return numeric(this.#start) }
-  set start (v) { this.#start = v }
+  // get start () { return numeric(this.#start) }
+  // set start (v) { this.#start = v }
 
-  get end () { return numeric(this.#end) }
-  set end (v) { this.#end = v }
+  // get end () { return numeric(this.#end) }
+  // set end (v) { this.#end = v }
 
-  get callbackEnd () { return numeric(this.#callbackEnd) } // do we calculate this still?
-  set callbackEnd (v) { this.#callbackEnd = v }
+  // get callbackEnd () { return numeric(this.#callbackEnd) } // do we calculate this still?
+  // set callbackEnd (v) { this.#callbackEnd = v }
 
-  get callbackDuration () { return numeric(this.#callbackDuration) }
-  set callbackDuration (v) { this.#callbackDuration = v }
+  // get callbackDuration () { return numeric(this.#callbackDuration) }
+  // set callbackDuration (v) { this.#callbackDuration = v }
 
-  get nodeId () { return getAddStringContext(this.agentIdentifier)(this.#nodeId) }
+  // get nodeId () { return getAddStringContext(this.agentIdentifier)(this.#nodeId) }
 
   get initialPageURL () { return getAddStringContext(this.agentIdentifier)(cleanURL(this.#initialPageURL, true)) }
   set initialPageURL (v) { this.#initialPageURL = v }
@@ -98,16 +88,13 @@ export class Interaction {
   get newRoute () { return nullable(this.#newRoute, getAddStringContext(this.agentIdentifier), true) }
   set newRoute (v) { this.#newRoute = v }
 
-  get id () { return getAddStringContext(this.agentIdentifier)(this.#id) }
+  // get id () { return getAddStringContext(this.agentIdentifier)(this.#id) }
 
   get previousRouteName () { return getAddStringContext(this.agentIdentifier)(this.#previousRouteName) }
 
   get targetRouteName () { return getAddStringContext(this.agentIdentifier)(this.#targetRouteName) }
 
-  get childCount () { return numeric(this.#childCount) }
-  set childCount (v) { this.#childCount = v }
-
-  countChild () { this.childCount = this.childCount + 1 }
+  get childCount () { return numeric(this.children.length) }
 
   finish (end) {
     // console.log('end before', this.#end)
@@ -116,10 +103,10 @@ export class Interaction {
     this.onFinished()
   }
 
-  containsEvent (timestamp) {
-    if (!this.#end) return this.#start <= timestamp
-    return (this.#start <= timestamp && this.#end >= timestamp)
-  }
+  // containsEvent (timestamp) {
+  //   if (!this.#end) return this.#start <= timestamp
+  //   return (this.#start <= timestamp && this.#end >= timestamp)
+  // }
 
   updateDom (timestamp) {
     this.domTimestamp = timestamp || now()
@@ -143,8 +130,10 @@ export class Interaction {
       this.belType,
       this.childCount,
       this.start,
-      this.end,
-      this.callbackEnd,
+      // this.end,
+      this.calculatedEnd,
+      // this.callbackEnd,
+      this.calculatedCallbackEnd,
       this.callbackDuration,
       this.trigger,
       this.initialPageURL,
@@ -157,6 +146,8 @@ export class Interaction {
     ]
 
     nodeList.push(fields)
+
+    this.children.forEach(child => nodeList.push(child.serialize()))
 
     return nodeList.join(';')
   }

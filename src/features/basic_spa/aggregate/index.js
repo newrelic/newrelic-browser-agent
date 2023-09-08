@@ -4,6 +4,7 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { CATEGORY, FEATURE_NAME } from '../constants'
+import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
 
@@ -20,6 +21,8 @@ export class Aggregate extends AggregateBase {
     this.blocked = false
     this.drained = false
 
+    this.heldAjaxEvents = []
+
     // const tracerEE = this.ee.get('tracer') // used to get API-driven interactions
 
     this.scheduler = new HarvestScheduler('events', {
@@ -33,6 +36,11 @@ export class Aggregate extends AggregateBase {
     registerHandler('newInteraction', (timestamp, trigger, category) => this.startInteraction({ category, trigger, startedAt: timestamp }), this.featureName, this.ee)
     registerHandler('newURL', (timestamp, url, type) => this.interactionInProgress?.updateHistory(timestamp, url), this.featureName, this.ee)
     registerHandler('newDom', timestamp => this.interactionInProgress?.updateDom(timestamp), this.featureName, this.ee)
+
+    registerHandler('ixnAjax', (ajaxEvent) => {
+      this.heldAjaxEvents.push(ajaxEvent)
+      this.interactionInProgress.addChild(new AjaxNode(this.agentIdentifier, ajaxEvent))
+    }, this.featureName, this.ee)
   }
 
   onHarvestStarted (options) {
@@ -61,6 +69,8 @@ export class Aggregate extends AggregateBase {
 
   startInteraction ({ isInitial, trigger, category, startedAt }) {
     const Ixn = isInitial ? InitialPageLoadInteraction : Interaction
+    if (this.interactionInProgress && !!this.heldAjaxEvents.length) this.ee.emit('interactionDiscarded', [this.heldAjaxEvents])
+    this.heldAjaxEvents = []
     this.interactionInProgress = new Ixn(this.agentIdentifier, { onFinished: this.completeInteraction.bind(this) })
     if (trigger) this.interactionInProgress.trigger = trigger
     if (category) this.interactionInProgress.category = CATEGORY.ROUTE_CHANGE

@@ -1,4 +1,4 @@
-import { getInfo } from '../../../common/config/config'
+// import { getInfo } from '../../../common/config/config'
 import { globalScope, initialLocation } from '../../../common/constants/runtime'
 // import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
@@ -106,7 +106,8 @@ export class Interaction extends BelNode {
   }, 60)
 
   serialize () {
-    const customAttrs = addCustomAttributes(getInfo(this.agentIdentifier).jsAttributes || {}, getAddStringContext(this.agentIdentifier), true)
+    // const customAttrs = addCustomAttributes(getInfo(this.agentIdentifier).jsAttributes || {}, getAddStringContext(this.agentIdentifier), true)
+    const customAttrs = []
     const metadataAttrs = this.domTimestamp && this.historyTimestamp
       ? addCustomAttributes({
         domTimestamp: this.domTimestamp,

@@ -81,7 +81,7 @@ export class Interaction extends BelNode {
   get childCount () { return numeric(this.children.length) }
 
   finish (end) {
-    this.end = end || Math.max(this.domTimestamp, this.historyTimestamp)
+    this.end = (end || Math.max(this.domTimestamp, this.historyTimestamp)) - this.startRaw
     this.onFinished()
   }
 
@@ -90,13 +90,13 @@ export class Interaction extends BelNode {
   }
 
   updateDom (timestamp) {
-    this.domTimestamp = timestamp || now()
+    this.domTimestamp = (timestamp || now())
     this.checkFinished()
   }
 
   updateHistory (timestamp, url) {
     this.newURL = url || '' + globalScope?.location
-    this.historyTimestamp = timestamp || now()
+    this.historyTimestamp = (timestamp || now())
     this.checkFinished()
   }
 
@@ -118,10 +118,12 @@ export class Interaction extends BelNode {
       // this.childCount,
       childrenAndAttrs.length,
       this.start,
-      // this.end,
-      this.calculatedEnd,
+      this.end,
+      // this.calculatedEnd,
       // this.callbackEnd,
-      this.calculatedCallbackEnd,
+      this.end,
+      // this.calculatedEnd,
+      // this.calculatedCallbackEnd,
       this.callbackDuration,
       this.trigger,
       this.initialPageURL,

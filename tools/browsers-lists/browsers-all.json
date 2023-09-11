@@ -1727,8 +1727,8 @@
     },
     {
       "browserName": "safari",
-      "platformName": "Mac 10.13",
-      "platform": "Mac 10.13",
+      "platformName": "Mac 10.14",
+      "platform": "Mac 10.14",
       "version": "12",
       "browserVersion": "12",
       "acceptInsecureCerts": false
@@ -1751,8 +1751,8 @@
     },
     {
       "browserName": "safari",
-      "platformName": "Mac 12",
-      "platform": "Mac 12",
+      "platformName": "Mac 10.15",
+      "platform": "Mac 10.15",
       "version": "15",
       "browserVersion": "15",
       "acceptInsecureCerts": false

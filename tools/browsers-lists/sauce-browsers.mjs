@@ -185,7 +185,8 @@ function platformSelector (desiredBrowser, minVersion = 0, maxVersion = Infinity
         break
         // 'safari' will only ever be on MacOS
       case 'safari':
-        if (sauceBrowser.short_version === 12 && sauceBrowser.os === 'Mac 10.13') return false // this OS+safari combo has issues with functional/XHR tests
+        if (sauceBrowser.short_version === '15' && sauceBrowser.os !== 'Mac 10.15') return false // Safari 15 has DNS issues on other versions of Mac
+        if (sauceBrowser.short_version === '12' && sauceBrowser.os === 'Mac 10.13') return false // this OS+safari combo has issues with functional/XHR tests
         break
     }
     return true

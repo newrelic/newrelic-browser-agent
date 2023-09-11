@@ -5,6 +5,7 @@ import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../
 import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
 import { debounce } from '../../../common/util/invoke'
+import { start as startTTI, timeToInteractive } from '../../../common/vitals/time-to-interactive'
 import { TYPE_IDS } from '../constants'
 import { BelNode } from './bel-node'
 
@@ -42,6 +43,14 @@ export class Interaction extends BelNode {
       // make this interaction invalid as to not hold up any other events
       this.cancel()
     }, 30000)
+
+    const unsub = timeToInteractive.subscribe(({ value, entries, attrs }) => {
+      this.tti = value
+      console.log('got tti in ', this.#trigger, 'interaction', value)
+      this.checkFinished()
+      unsub()
+    }, false)
+    startTTI(now(), false)
   }
 
   get trigger () { return getAddStringContext(this.agentIdentifier)(this.#trigger) }
@@ -88,9 +97,11 @@ export class Interaction extends BelNode {
   }
 
   finish (end) {
+    console.log('FINISH', this)
     if (this.#emitted) return
     clearTimeout(this.timer)
-    this.end = (end || Math.max(this.domTimestamp, this.historyTimestamp)) - this.startRaw
+    this.end = (end || Math.max(this.domTimestamp, this.historyTimestamp, this.tti)) - this.startRaw
+    console.log('finished...', (end || Math.max(this.domTimestamp, this.historyTimestamp, this.tti)) - this.startRaw)
     // this.onFinished()
     for (let [evt, cbs] of this.#subscribers) {
       if (evt === 'finished') cbs.forEach(cb => cb(this))
@@ -118,7 +129,7 @@ export class Interaction extends BelNode {
 
   checkFinished = debounce(() => {
     // console.log(performance.now(), 'checking finish for', this.#id, !!this.domTimestamp, !!this.historyTimestamp)
-    if (!!this.domTimestamp && !!this.historyTimestamp) this.finish()
+    if (!!this.domTimestamp && !!this.historyTimestamp && !!this.tti) this.finish()
   }, 60)
 
   serialize () {

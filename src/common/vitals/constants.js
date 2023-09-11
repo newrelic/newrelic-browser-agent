@@ -6,5 +6,6 @@ export const VITAL_NAMES = {
   CUMULATIVE_LAYOUT_SHIFT: 'cls',
   INTERACTION_TO_NEXT_PAINT: 'inp',
   LONG_TASK: 'lt',
-  TIME_TO_FIRST_BYTE: 'ttfb'
+  TIME_TO_FIRST_BYTE: 'ttfb',
+  TIME_TO_INTERACTIVE: 'tti'
 }

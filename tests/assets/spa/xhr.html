@@ -17,6 +17,11 @@
   </head>
   <body>
     <div>This page fires an XHR and calls pushState when clicked</div>
+    <script type="text/javascript" src="../js/some-long-task.js"></script>
+    <script>
+        someLongTask();	// trigger this again a 2nd time to generate another INP timing
+        setTimeout(someLongTask, 3000)
+    </script>
     <script type="text/javascript">
     document.addEventListener('click', function () {
       var xhr = new XMLHttpRequest()
@@ -30,6 +35,8 @@
           elem.innerHTML = 'TEST' + i
           document.body.appendChild(elem)
         }
+        someLongTask();
+        setTimeout(someLongTask, 1000)
       }, true)
 
       newrelic.noticeError('test')

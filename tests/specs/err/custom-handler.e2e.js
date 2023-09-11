@@ -41,7 +41,7 @@ describe('setErrorHandler API', () => {
     let errors = browser.testHandle.expectErrors()
     await browser.url(url).then(() => browser.waitForAgentLoad())
     await browser.execute(function () {
-      newrelic.setErrorHandler(err => {
+      newrelic.setErrorHandler(function (err) {
         switch (err.message) {
           case 'much':
           case 'wow':

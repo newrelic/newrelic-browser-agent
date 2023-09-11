@@ -7,6 +7,14 @@ name: Publish Experiment
 
 on:
   workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: The env to publish the experiment to
+        options:
+          - dev
+          - staging
+        required: true
 
 jobs:
   # Build and publish the branch to S3 experiments folder
@@ -50,6 +58,7 @@ jobs:
 
   # Rebuild and publish the dev environment A/B script
   publish-dev-ab:
+    if: ${{ github.event.inputs.env == 'dev'}}
     needs: [publish-experiment-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -79,6 +88,7 @@ jobs:
 
   # Rebuild and publish the staging environment A/B script
   publish-staging-ab:
+    if: ${{ github.event.inputs.env == 'staging'}}
     needs: [publish-experiment-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30

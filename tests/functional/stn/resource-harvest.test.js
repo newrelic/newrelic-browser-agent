@@ -5,9 +5,7 @@
 
 const testDriver = require('../../../tools/jil/index')
 
-let supported = testDriver.Matcher.withFeature('stn')
-
-testDriver.test('session trace resources', supported, function (t, browser, router) {
+testDriver.test('session trace resources', function (t, browser, router) {
   let assetURL = router.assetURL('stn/instrumented.html', {
     loader: 'full',
     init: {

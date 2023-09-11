@@ -46,8 +46,7 @@ jobs:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      # Don't test safari@15
-      browser-target: safari@16
+      browser-target: safari@*
       build-number: ${{ inputs.build-number }}
     secrets: inherit
 

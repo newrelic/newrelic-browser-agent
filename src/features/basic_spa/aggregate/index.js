@@ -4,7 +4,6 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { CATEGORY, FEATURE_NAME } from '../constants'
-import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
 
@@ -36,11 +35,6 @@ export class Aggregate extends AggregateBase {
     registerHandler('newInteraction', (timestamp, trigger, category) => this.startInteraction({ category, trigger, startedAt: timestamp }), this.featureName, this.ee)
     registerHandler('newURL', (timestamp, url, type) => this.interactionInProgress?.updateHistory(timestamp, url), this.featureName, this.ee)
     registerHandler('newDom', timestamp => this.interactionInProgress?.updateDom(timestamp), this.featureName, this.ee)
-
-    registerHandler('ixnAjax', (ajaxEvent) => {
-      this.heldAjaxEvents.push(ajaxEvent)
-      this.interactionInProgress.addChild(new AjaxNode(this.agentIdentifier, ajaxEvent, this.interactionInProgress.startRaw))
-    }, this.featureName, this.ee)
   }
 
   onHarvestStarted (options) {
@@ -69,7 +63,9 @@ export class Aggregate extends AggregateBase {
   startInteraction ({ isInitial, trigger, category, startedAt }) {
     this.cancelInteraction()
     const Ixn = isInitial ? InitialPageLoadInteraction : Interaction
-    this.interactionInProgress = new Ixn(this.agentIdentifier, { onFinished: this.completeInteraction.bind(this), onCancelled: this.cancelInteraction.bind(this) })
+    this.interactionInProgress = new Ixn(this.agentIdentifier)
+    this.interactionInProgress.on('finished', this.completeInteraction.bind(this))
+    this.interactionInProgress.on('cancelled', this.cancelInteraction.bind(this))
     if (trigger) this.interactionInProgress.trigger = trigger
     if (category) this.interactionInProgress.category = CATEGORY.ROUTE_CHANGE
     if (startedAt) this.interactionInProgress.start = startedAt
@@ -77,8 +73,8 @@ export class Aggregate extends AggregateBase {
   }
 
   cancelInteraction () {
-    if (this.interactionInProgress && !!this.heldAjaxEvents.length) this.ee.emit('interactionDiscarded', [this.heldAjaxEvents])
     this.heldAjaxEvents = []
+    this.interactionInProgress?.cancel()
     this.interactionInProgress = null
   }
 
@@ -87,7 +83,7 @@ export class Aggregate extends AggregateBase {
     this.interactionsToHarvest.push(this.interactionInProgress)
     this.interactionInProgress = null
     this.heldAjaxEvents = []
-    this.scheduler.scheduleHarvest(0)
+    this.scheduler.scheduleHarvest(0.1)
     if (!this.drained) {
       this.drained = true
       drain(this.agentIdentifier, this.featureName)
@@ -95,10 +91,8 @@ export class Aggregate extends AggregateBase {
   }
 
   hasInteraction ({ timestamp }) {
-    if (!timestamp) return { shouldHold: false, interaction: undefined }
-    let shouldHold = false
-    const interaction = [...this.interactionsToHarvest, ...this.interactionsSent].find(ixn => ixn.containsEvent(timestamp))
-    if (!interaction && !!this.interactionInProgress) shouldHold = this.interactionInProgress.containsEvent(timestamp)
-    return { shouldHold, interaction }
+    if (!timestamp) return { interaction: undefined }
+    const interaction = [this.interactionInProgress, ...this.interactionsToHarvest].filter(x => x).find(ixn => ixn.containsEvent(timestamp))
+    return { interaction }
   }
 }

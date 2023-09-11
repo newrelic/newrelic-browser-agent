@@ -17,7 +17,9 @@ export class InitialPageLoadInteraction extends Interaction {
     this.start = 0
     this.category = CATEGORY.INITIAL_PAGE_LOAD
 
-    setTimeout(() => this.finish(Math.round((globalScope?.performance?.timing?.domInteractive || globalScope?.performance?.timing?.navigationStart || globalScope?.performance?.now()) - globalScope?.performance?.timeOrigin)), 0)
+    const timing = globalScope?.performance?.getEntriesByType('navigation')?.[0]?.loadEventEnd || (globalScope?.performance?.timing?.domInteractive || globalScope?.performance?.timing?.navigationStart || globalScope?.performance?.now()) - globalScope?.performance?.timeOrigin
+
+    setTimeout(() => this.finish(Math.round(timing), 0))
   }
 
   get firstPaint () { return nullable(firstPaint.current.value, numeric, true) }

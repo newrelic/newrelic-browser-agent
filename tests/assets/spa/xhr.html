@@ -9,6 +9,11 @@
     {init}
     {config}
     {loader}
+    <script>
+      var xhr = new XMLHttpRequest()
+      xhr.open('POST', '/echo')
+      xhr.send('456')
+    </script>
   </head>
   <body>
     <div>This page fires an XHR and calls pushState when clicked</div>

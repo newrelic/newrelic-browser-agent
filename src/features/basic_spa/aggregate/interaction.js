@@ -25,9 +25,11 @@ export class Interaction extends BelNode {
   #previousRouteName
   #targetRouteName
 
-  constructor (agentIdentifier, { onFinished, onCancelled }) {
+  #subscribers = new Map()
+
+  constructor (agentIdentifier) {
     super(agentIdentifier)
-    if (!agentIdentifier || !onFinished) throw new Error('Interaction is missing core attributes')
+    if (!agentIdentifier) throw new Error('Interaction is missing core attributes')
     this.initialPageURL = initialLocation
     this.oldURL = '' + globalScope?.location
     this.belType = TYPE_IDS.INTERACTION
@@ -35,10 +37,7 @@ export class Interaction extends BelNode {
     this.domTimestamp = undefined
     this.historyTimestamp = undefined
 
-    this.onFinished = onFinished
-    this.onCancelled = onCancelled
-
-    setTimeout(() => {
+    this.timer = setTimeout(() => {
       // make this interaction invalid as to not hold up any other events
       this.cancel()
     }, 30000)
@@ -80,13 +79,29 @@ export class Interaction extends BelNode {
 
   get childCount () { return numeric(this.children.length) }
 
+  on (event, cb) {
+    if (typeof cb !== 'function') throw new Error('Must supply function as callback')
+    const cbs = this.#subscribers.get(event) || []
+    cbs.push(cb)
+    this.#subscribers.set(event, cbs)
+  }
+
   finish (end) {
+    clearTimeout(this.timer)
+    console.log('IXN FINISHED!', this)
     this.end = (end || Math.max(this.domTimestamp, this.historyTimestamp)) - this.startRaw
-    this.onFinished()
+    // this.onFinished()
+    for (let [evt, cbs] of this.#subscribers) {
+      if (evt === 'finished') cbs.forEach(cb => cb())
+    }
   }
 
   cancel () {
-    this.onCancelled()
+    clearTimeout(this.timer)
+    console.log('IXN CANCELLED!', this)
+    for (let [evt, cbs] of this.#subscribers) {
+      if (evt === 'cancelled') cbs.forEach(cb => cb())
+    }
   }
 
   updateDom (timestamp) {

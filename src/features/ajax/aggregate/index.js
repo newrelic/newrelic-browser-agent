@@ -14,6 +14,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { getFeatureState } from '../../../common/util/feature-state'
+import { AjaxNode } from '../../basic_spa/aggregate/ajax-node'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -107,16 +108,15 @@ export class Aggregate extends AggregateBase {
 
       const spaFeature = getFeatureState({ agentIdentifier, featureName: FEATURE_NAMES.basicSpa })
       const {
-        shouldHold
-        // interaction
+        interaction
       } = spaFeature?.hasInteraction?.({ timestamp: event.startTime }) || {}
 
-      // if the ajax happened inside an interaction, hold it until the interaction finishes
-      if (shouldHold) {
-        // console.log('ajax HELD', event, spaFeature)
-        handle('ixnAjax', [event], undefined, FEATURE_NAMES.basicSpa, ee)
+      // if the ajax happened inside an ixn window (found a match), add it to the ixn
+      if (interaction) {
+        interaction.addChild(new AjaxNode(agentIdentifier, event, interaction.startRaw))
+        // add the ajax event back to the ajax feature queue if the ixn cancels
+        interaction.on('cancelled', () => ajaxEvents.push(event))
       } else {
-        // console.log('ajax DID NOT hold', event, spaFeature)
         ajaxEvents.push(event)
       }
     }

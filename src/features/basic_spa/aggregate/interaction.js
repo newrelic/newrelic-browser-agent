@@ -13,9 +13,9 @@ import { BelNode } from './bel-node'
  **/
 export class Interaction extends BelNode {
   #trigger
-  #initialPageURL
-  #oldURL
-  #newURL
+  #initialPageURL = initialLocation
+  #oldURL = '' + globalScope?.location
+  #newURL = '' + globalScope?.location
   #customName
   #category
   #queueTime
@@ -26,6 +26,7 @@ export class Interaction extends BelNode {
   #targetRouteName
 
   #subscribers = new Map()
+  #emitted = false
 
   constructor (agentIdentifier) {
     super(agentIdentifier)
@@ -87,20 +88,20 @@ export class Interaction extends BelNode {
   }
 
   finish (end) {
+    if (this.#emitted) return
     clearTimeout(this.timer)
-    console.log('IXN FINISHED!', this)
     this.end = (end || Math.max(this.domTimestamp, this.historyTimestamp)) - this.startRaw
     // this.onFinished()
     for (let [evt, cbs] of this.#subscribers) {
-      if (evt === 'finished') cbs.forEach(cb => cb())
+      if (evt === 'finished') cbs.forEach(cb => cb(this))
     }
   }
 
   cancel () {
+    if (this.#emitted) return
     clearTimeout(this.timer)
-    console.log('IXN CANCELLED!', this)
     for (let [evt, cbs] of this.#subscribers) {
-      if (evt === 'cancelled') cbs.forEach(cb => cb())
+      if (evt === 'cancelled') cbs.forEach(cb => cb(this))
     }
   }
 

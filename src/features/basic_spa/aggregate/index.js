@@ -20,8 +20,6 @@ export class Aggregate extends AggregateBase {
     this.blocked = false
     this.drained = false
 
-    this.heldAjaxEvents = []
-
     // const tracerEE = this.ee.get('tracer') // used to get API-driven interactions
 
     this.scheduler = new HarvestScheduler('events', {
@@ -39,14 +37,12 @@ export class Aggregate extends AggregateBase {
 
   onHarvestStarted (options) {
     if (this.interactionsToHarvest.length === 0 || this.blocked) return {}
-    const payload = `bel.7;${this.interactionsToHarvest.map(ixn => ixn.serialize('bel')).join(';')}`
+    const ixn = this.interactionsToHarvest.shift()
+    const payload = `bel.7;${ixn.serialize('bel')}`
 
-    if (options.retry) {
-      this.interactionsToHarvest.forEach((interaction) => {
-        this.interactionsSent.push(interaction)
-      })
-    }
-    this.interactionsToHarvest = []
+    this.interactionsSent.push(ixn)
+
+    if (this.interactionsToHarvest.length) this.scheduler.scheduleHarvest(0.1)
 
     return { body: { e: payload } }
   }
@@ -61,7 +57,7 @@ export class Aggregate extends AggregateBase {
   }
 
   startInteraction ({ isInitial, trigger, category, startedAt }) {
-    this.cancelInteraction()
+    this.interactionInProgress?.cancel()
     const Ixn = isInitial ? InitialPageLoadInteraction : Interaction
     this.interactionInProgress = new Ixn(this.agentIdentifier)
     this.interactionInProgress.on('finished', this.completeInteraction.bind(this))
@@ -69,20 +65,16 @@ export class Aggregate extends AggregateBase {
     if (trigger) this.interactionInProgress.trigger = trigger
     if (category) this.interactionInProgress.category = CATEGORY.ROUTE_CHANGE
     if (startedAt) this.interactionInProgress.start = startedAt
-    console.log(performance.now(), 'start ixn...', this.interactionInProgress)
   }
 
   cancelInteraction () {
-    this.heldAjaxEvents = []
-    this.interactionInProgress?.cancel()
     this.interactionInProgress = null
   }
 
-  completeInteraction () {
-    console.log(performance.now(), 'interaction complete', this.interactionInProgress)
-    this.interactionsToHarvest.push(this.interactionInProgress)
+  completeInteraction (ixn) {
+    if (!ixn) return
+    this.interactionsToHarvest.push(ixn)
     this.interactionInProgress = null
-    this.heldAjaxEvents = []
     this.scheduler.scheduleHarvest(0.1)
     if (!this.drained) {
       this.drained = true

@@ -14,7 +14,7 @@ import {
   SUPPORT_STATEMENT,
   RELEASE_NOTES_PATH
 } from './constants.js'
-import { GitCliRunner } from './git-cli-runner.js'
+import { GitCliRunner } from '../shared-utils/git-cli-runner.js'
 
 const octokit = github.getOctokit(args.githubToken)
 

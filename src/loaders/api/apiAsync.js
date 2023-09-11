@@ -1,5 +1,5 @@
 import { FEATURE_NAMES } from '../features/features'
-import { getConfigurationValue, getInfo, getRuntime } from '../../common/config/config'
+import { getConfiguration, getInfo, getRuntime } from '../../common/config/config'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { handle } from '../../common/event-emitter/handle'
 import { registerHandler } from '../../common/event-emitter/register-handler'
@@ -64,8 +64,10 @@ export function setAPI (agentIdentifier) {
     const agentInfo = getInfo(agentIdentifier)
     if (!agentInfo.beacon) return
 
-    const scheme = (getConfigurationValue(agentIdentifier, 'ssl') === false) ? 'http' : 'https'
-    let url = `${scheme}://${agentInfo.beacon}/1/${agentInfo.licenseKey}`
+    const agentInit = getConfiguration(agentIdentifier)
+    const scheme = agentInit.ssl === false ? 'http' : 'https'
+    const beacon = agentInit.proxy.beacon || agentInfo.beacon
+    let url = `${scheme}://${beacon}/1/${agentInfo.licenseKey}`
 
     url += '?a=' + agentInfo.applicationID + '&'
     url += 't=' + requestName + '&'

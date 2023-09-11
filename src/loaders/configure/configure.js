@@ -34,23 +34,24 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   setInfo(agentIdentifier, info)
 
   const updatedInit = getConfiguration(agentIdentifier)
-  runtime.denyList = [
-    ...(updatedInit.ajax?.deny_list || []),
-    ...(updatedInit.ajax?.block_internal ? [info.beacon, info.errorBeacon] : [])
-  ]
+  const internalTrafficList = [info.beacon, info.errorBeacon]
   if (!alreadySetOnce) {
     alreadySetOnce = true
-    if (init.proxy?.assets) {
-      redefinePublicPath(init.proxy.assets + '/') // much like the info.beacon & init.proxy.beacon, this input should not end in a slash, but one is needed for webpack concat
+    if (updatedInit.proxy.assets) {
+      redefinePublicPath(updatedInit.proxy.assets + '/') // much like the info.beacon & init.proxy.beacon, this input should not end in a slash, but one is needed for webpack concat
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/AssetsUrl/Changed'], undefined, FEATURE_NAMES.metrics, agentEE)
-      runtime.denyList.push(init.proxy.assets)
+      internalTrafficList.push(updatedInit.proxy.assets)
     }
-    if (init.proxy?.beacon) {
+    if (updatedInit.proxy.beacon) {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/BeaconUrl/Changed'], undefined, FEATURE_NAMES.metrics, agentEE)
-      runtime.denyList.push(init.proxy.beacon)
+      internalTrafficList.push(updatedInit.proxy.beacon)
     }
   }
 
+  runtime.denyList = [
+    ...(updatedInit.ajax.deny_list || []),
+    ...(updatedInit.ajax.block_internal ? internalTrafficList : [])
+  ]
   setRuntime(agentIdentifier, runtime)
 
   setTopLevelCallers()

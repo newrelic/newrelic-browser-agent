@@ -55,6 +55,10 @@ export class TestHandleConnector {
     return this.#commandServerConfig
   }
 
+  get testId () {
+    return this.#testId
+  }
+
   async ready () {
     if (!this.#testId) {
       const result = await fetch(`${this.#commandServerBase}/test-handle`)

@@ -45,13 +45,6 @@ module.exports.urlFor = function urlFor (relativePath, query, testServer) {
     ).toString('base64')
   }
 
-  if (
-    Object.prototype.hasOwnProperty.call(query || {}, 'scriptString') &&
-    typeof query.scriptString === 'string'
-  ) {
-    query.scriptString = Buffer.from(query.scriptString).toString('base64')
-  }
-
   return new URL(
     `${relativePath}?${new URLSearchParams(query).toString()}`,
     new URL(

@@ -21,7 +21,6 @@ const supportedBrowsers = ['chrome', 'edge', 'firefox', 'safari', 'android', 'io
 
   // Filter list down to a sample of supported browsers and write metadata to a file for testing.
   await fs.writeJSON(path.resolve(__dirname, 'browsers-supported.json'), getBrowsers(json), { spaces: 2 })
-  await fs.writeJSON(path.resolve(__dirname, 'browsers-all.json'), getBrowsers(json, Infinity), { spaces: 2 })
   console.log('Saved browsers to tools/browsers-lists.')
 })()
 

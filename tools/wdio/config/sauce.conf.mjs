@@ -1,5 +1,4 @@
 import browsersSupported from '../../browsers-lists/browsers-supported.json' assert { type: 'json' }
-import browsersAll from '../../browsers-lists/browsers-all.json' assert { type: 'json' }
 import browsersPolyfill from '../../browsers-lists/browsers-polyfill.json' assert { type: 'json' }
 import browsersList from '../../browsers-lists/browsers-list.mjs'
 import browserSupportsExtendedDebugging from '../../browsers-lists/extended-debugging.mjs'
@@ -20,9 +19,7 @@ import { getBrowserName } from '../../browsers-lists/utils.mjs'
 function sauceCapabilities () {
   let browsers = browsersSupported
 
-  if (args.allBrowsers) {
-    browsers = browsersAll
-  } else if (args.polyfills) {
+  if (args.polyfills) {
     browsers = browsersPolyfill
   }
 
@@ -63,31 +60,27 @@ function getMobileCapabilities (sauceBrowser) {
 }
 
 export default function config () {
-  if (args.selenium) {
-    return {}
-  } else {
-    return {
-      ...getSauceLabsCreds(),
-      capabilities: sauceCapabilities(),
-      services: [
-        [
-          'sauce',
-          {
-            setJobName: (config, capabilities, suiteTitle) => `Browser Agent: ${suiteTitle}`,
-            ...(args.sauce
-              ? {
-                  sauceConnect: true,
-                  sauceConnectOpts: {
-                    scVersion: '4.9.0',
-                    noSslBumpDomains: 'all',
-                    tunnelDomains: args.host || 'bam-test-1.nr-local.net'
-                  }
+  return {
+    ...getSauceLabsCreds(),
+    capabilities: sauceCapabilities(),
+    services: [
+      [
+        'sauce',
+        {
+          setJobName: (config, capabilities, suiteTitle) => `Browser Agent: ${suiteTitle}`,
+          ...(args.sauce
+            ? {
+                sauceConnect: true,
+                sauceConnectOpts: {
+                  scVersion: '4.9.0',
+                  noSslBumpDomains: 'all',
+                  tunnelDomains: args.host || 'bam-test-1.nr-local.net'
                 }
-              : {}
-            )
-          }
-        ]
+              }
+            : {}
+          )
+        }
       ]
-    }
+    ]
   }
 }

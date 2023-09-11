@@ -37,27 +37,6 @@ const args = yargs(hideBin(process.argv))
   .alias('s', 'sauce')
   .describe('s', 'launch sauce before running tests')
 
-  .boolean('selenium')
-  .default('selenium', false)
-  .describe(
-    'selenium',
-    'run tests against a selenium server instead of sauce labs'
-  )
-
-  .string('selenium-host')
-  .default('selenium-host', 'localhost')
-  .describe(
-    'selenium-host',
-    'host of the Selenium server to run tests against, e.g. "localhost"'
-  )
-
-  .number('selenium-port')
-  .default('selenium-port', 4444)
-  .describe(
-    'selenium-port',
-    'port of the Selenium server to run tests against, e.g. "4444"'
-  )
-
   .string('H')
   .default('H', 'bam-test-1.nr-local.net')
   .alias('H', 'host')
@@ -101,11 +80,6 @@ const args = yargs(hideBin(process.argv))
   .boolean('P')
   .alias('P', 'polyfills')
   .describe('P', 'inject polyfills and polyfill loaders into test pages')
-
-  .boolean('A')
-  .default('A', false)
-  .alias('A', 'all-browsers')
-  .describe('A', 'Run tests against all browsers, even unsupported ones')
 
   .boolean('D')
   .default('D', false)

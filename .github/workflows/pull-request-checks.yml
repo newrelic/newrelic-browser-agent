@@ -181,7 +181,7 @@ jobs:
   jil:
     name: JIL
     if: github.event_name == 'workflow_dispatch'
-    needs: [find-pull-request,wdio-coverage,wdio]
+    needs: [find-pull-request]
     uses: ./.github/workflows/jil-all-browsers.yml
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'

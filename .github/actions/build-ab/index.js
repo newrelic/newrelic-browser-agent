@@ -57,7 +57,7 @@ if (['dev', 'staging'].includes(args.environment)) {
 
   while (isTruncated) {
     const { IsTruncated, NextMarker, CommonPrefixes } = await s3Client.send(listCommand)
-    CommonPrefixes.forEach(prefix => experimentsList.add(prefix.Prefix))
+    if (CommonPrefixes) CommonPrefixes.forEach(prefix => experimentsList.add(prefix.Prefix))
 
     if (IsTruncated) {
       listCommand.input.Marker = NextMarker
@@ -81,7 +81,7 @@ console.log('writing', scripts.length,'scripts:', scripts.map(x => x.name).join(
 await fs.promises.writeFile(
   outputFile,
   template({
-    args, scripts
+    args, scripts, env: args.environment
   }),
   { encoding: 'utf-8' }
 )

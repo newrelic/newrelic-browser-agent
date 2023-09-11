@@ -105,8 +105,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
       const newTab = await browser.createWindow('tab')
       await browser.switchToWindow(newTab.handle)
       await browser.enableSessionReplay()
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', { ...config(), loader: 'full' }))
-        .then(() => browser.waitForAgentLoad())
+      await browser.url(await browser.testHandle.assetURL('/'))
 
       // Waiting for the second blob should time out, indicating no second call to the BAM endpoint.
       // The wait must be longer than harvest interval.

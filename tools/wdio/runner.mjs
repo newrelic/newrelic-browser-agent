@@ -8,7 +8,6 @@ import { Launcher } from '@wdio/cli'
 import { serialize } from 'serialize-anything'
 import baseConfig from './config/base.conf.mjs'
 import specsConfig from './config/specs.conf.mjs'
-import seleniumConfig from './config/selenium.conf.mjs'
 import sauceConfig from './config/sauce.conf.mjs'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
@@ -20,7 +19,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
  * properly passed to the worker processes.
  */
 
-const wdioConfig = deepmerge(baseConfig(), specsConfig(), seleniumConfig(), sauceConfig())
+const wdioConfig = deepmerge(baseConfig(), specsConfig(), sauceConfig())
 const configFilePath = path.join(
   path.resolve(__dirname, '../../node_modules/.cache/wdio'),
   `wdio.conf_${crypto.randomBytes(16).toString('hex')}.mjs`

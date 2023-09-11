@@ -1,4 +1,4 @@
-import browsersAll from './browsers-all.json' assert { type: 'json' }
+import browsersSupported from './browsers-supported.json' assert { type: 'json' }
 
 export default function browserSupportsExtendedDebugging ({ browserName, browserVersion, version }) {
   if (!['chrome', 'firefox'].includes(browserName)) {
@@ -13,7 +13,7 @@ export default function browserSupportsExtendedDebugging ({ browserName, browser
     return Number(browserVersion) >= 53 || Number(version) >= 53
   }
 
-  const latestChrome = browsersAll.chrome
+  const latestChrome = browsersSupported.chrome
     .reduce((aggregator, sauceBrowser) => Math.max(Number(sauceBrowser.version), Number(sauceBrowser.browserVersion), aggregator), 0)
   return (Number(browserVersion) || Number(version)) >= latestChrome - 2
 }

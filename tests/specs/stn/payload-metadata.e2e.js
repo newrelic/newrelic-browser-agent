@@ -14,6 +14,6 @@ describe('STN Payload metadata checks', () => {
     expect(ms).toEqual(firstNode)
 
     // hr === hasReplay
-    expect(Boolean(resources.request.query.hr)).toEqual(false)
+    expect(resources.request.query.hr).toEqual('0')
   })
 })

@@ -45,8 +45,8 @@ export default (env) => {
         new webpack.IgnorePlugin({
           checkResource: (resource, context) => {
             if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
-              // Allow all features except spa and session_replay
-              return resource.match(/(spa|session_replay)\/aggregate/)
+              // Allow all features except spa
+              return resource.match(/(spa)\/aggregate/)
             }
 
             return false
@@ -63,11 +63,7 @@ export default (env) => {
       plugins: [
         new webpack.IgnorePlugin({
           checkResource: (resource, context) => {
-            if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
-              // Do not allow session_replay feature
-              return resource.match(/(session_replay)\/aggregate/)
-            }
-
+            // Spa allows all feature aggs
             return false
           }
         })

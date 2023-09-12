@@ -11,7 +11,8 @@ import Handlebars from 'handlebars'
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const template = Handlebars.compile(await fs.promises.readFile(path.resolve(__dirname, './template.js'), 'utf-8'))
 
-const scripts = []
+let nextScript
+const abScripts = []
 
 // 0. Ensure the output directory is available and the target file does not exist
 
@@ -24,12 +25,16 @@ if (fs.existsSync(outputFile)) {
   await fs.promises.rm(outputFile)
 }
 
-const nextScript = await fetchRetry(`${args.next}?_nocache=${uuidv4()}`, { retry: 3 })
-scripts.push( {name: 'next', contents: await nextScript.text() })
+const nextScriptRequest = await fetchRetry(`${args.next}?_nocache=${uuidv4()}`, { retry: 3 })
+nextScript = await nextScriptRequest.text()
 
 if (['dev', 'staging'].includes(args.environment)) {
+  if (!args.abAppId || !args.abLicenseKey) {
+    throw new Error('Cannot deploy current loader or experiments without A/B app id and license key.')
+  }
+
   const currentScript = await fetchRetry(`${args.current}?_nocache=${uuidv4()}`, { retry: 3 })
-  scripts.push( {name: 'current', contents: await currentScript.text() })
+  abScripts.push({ name: 'current', contents: await currentScript.text() })
 
   const stsClient = new STSClient({ region: args.region })
   const s3Credentials = await stsClient.send(new AssumeRoleCommand({
@@ -72,16 +77,16 @@ if (['dev', 'staging'].includes(args.environment)) {
     for (const experiment of experimentsList) {
       const experimentLoader = `https://js-agent.newrelic.com/${experiment}nr-loader-experimental.min.js`
       const experimentScript = await fetchRetry(`${experimentLoader}?_nocache=${uuidv4()}`, { retry: 3 })
-      scripts.push({name: experiment, contents: await experimentScript.text()})
+      abScripts.push({ name: experiment, contents: await experimentScript.text() })
     }
   }
 }
-console.log('writing', scripts.length,'scripts:', scripts.map(x => x.name).join(", "))
+console.log('writing', abScripts.length + 1,'scripts:', [{ name: 'next' }, ...abScripts].map(x => x.name).join(', '))
 
 await fs.promises.writeFile(
   outputFile,
   template({
-    args, scripts
+    args, nextScript, abScripts
   }),
   { encoding: 'utf-8' }
 )

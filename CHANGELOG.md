@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.240.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.239.1...v1.240.0) (2023-09-12)
+
+
+### Features
+
+* Add session trace metadata params ([#676](https://github.com/newrelic/newrelic-browser-agent/issues/676)) ([882b21c](https://github.com/newrelic/newrelic-browser-agent/commit/882b21c6e62eb08ea2571348bb9ae1f94bd06201))
+* Add SR to pro and spa builds (only runs for LP customers) ([#677](https://github.com/newrelic/newrelic-browser-agent/issues/677)) ([6d8ddb4](https://github.com/newrelic/newrelic-browser-agent/commit/6d8ddb4fd0eb4120ddfa097249a62e8b9866072d))
+* Centralize web vitals timings ([#635](https://github.com/newrelic/newrelic-browser-agent/issues/635)) ([d912e94](https://github.com/newrelic/newrelic-browser-agent/commit/d912e943470b4dbe8b2544fdcc3f89d757041c35))
+* Origin of agent webpack chunks now changeable ([#659](https://github.com/newrelic/newrelic-browser-agent/issues/659)) ([739e2dd](https://github.com/newrelic/newrelic-browser-agent/commit/739e2dd8032bc92cebd238159c42e8ceb81a6b37))
+
 ## [1.239.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.239.0...v1.239.1) (2023-09-02)
 
 

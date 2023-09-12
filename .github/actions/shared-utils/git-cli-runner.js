@@ -26,6 +26,10 @@ export class GitCliRunner {
         '.'
       ]
     )
+    await this.setUser()
+  }
+
+  async setUser() {
     await this.#runCommand(
       'config',
       [
@@ -42,6 +46,23 @@ export class GitCliRunner {
     )
   }
 
+  async checkoutBranch(branchName, force) {
+    if (force) {
+      await this.#runCommand(
+        'reset',
+        [
+          '--hard'
+        ]
+      )
+    }
+    await this.#runCommand(
+      'checkout',
+      [
+        branchName
+      ]
+    )
+  }
+
   async createBranch(branchName) {
     await this.#runCommand(
       'checkout',
@@ -52,7 +73,17 @@ export class GitCliRunner {
     )
   }
 
-  async commitFile(file, commitMessage) {
+  async deleteLocalBranch(branchName) {
+    await this.#runCommand(
+      'branch',
+      [
+        '-D',
+        branchName
+      ]
+    )
+  }
+
+  async commitFile(file, commitMessage, force) {
     await this.#runCommand(
       'add',
       [
@@ -63,18 +94,35 @@ export class GitCliRunner {
       'commit',
       [
         '-m',
-        commitMessage
+        commitMessage,
+        ...(force ? ['--no-verify'] : [])
       ]
     )
   }
 
-  async push(branchName) {
+  async commitFiles(files, commitMessage, force) {
+    await this.#runCommand(
+      'add',
+      files
+    )
+    await this.#runCommand(
+      'commit',
+      [
+        '-m',
+        commitMessage,
+        ...(force ? ['--no-verify'] : [])
+      ]
+    )
+  }
+
+  async push(branchName, force) {
     await this.#runCommand(
       'push',
       [
         '--set-upstream',
         'origin',
-        branchName
+        branchName,
+        ...(force ? ['--force'] : [])
       ]
     )
   }

@@ -3,9 +3,9 @@ import { globalScope, initialLocation } from '../../../common/constants/runtime'
 // import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
+import { TimeToInteractive } from '../../../common/timing/time-to-interactive'
 import { cleanURL } from '../../../common/url/clean-url'
 import { debounce } from '../../../common/util/invoke'
-import { start as startTTI, timeToInteractive } from '../../../common/vitals/time-to-interactive'
 import { TYPE_IDS } from '../constants'
 import { BelNode } from './bel-node'
 
@@ -44,13 +44,21 @@ export class Interaction extends BelNode {
       this.cancel()
     }, 30000)
 
-    const unsub = timeToInteractive.subscribe(({ value, entries, attrs }) => {
-      this.tti = value
+    new TimeToInteractive({
+      startTimestamp: now()
+    }).then(({ value }) => {
       console.log('got tti in ', this.#trigger, 'interaction', value)
+      this.tti = value
       this.checkFinished()
-      unsub()
-    }, false)
-    startTTI(now(), false)
+    })
+
+    // const unsub = timeToInteractive.subscribe(({ value, entries, attrs }) => {
+    //   this.tti = value
+    //   console.log('got tti in ', this.#trigger, 'interaction', value)
+    //   this.checkFinished()
+    //   unsub()
+    // }, false)
+    // startTTI(now(), false)
   }
 
   get trigger () { return getAddStringContext(this.agentIdentifier)(this.#trigger) }

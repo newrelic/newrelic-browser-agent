@@ -5,7 +5,7 @@ import { globalScope, initialLocation } from '../../../common/constants/runtime'
 import { nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
-import { start as startTTI, timeToInteractive } from '../../../common/vitals/time-to-interactive'
+import { TimeToInteractive } from '../../../common/timing/time-to-interactive'
 
 export class InitialPageLoadInteraction extends Interaction {
   constructor (...args) {
@@ -18,15 +18,27 @@ export class InitialPageLoadInteraction extends Interaction {
     this.start = 0
     this.category = CATEGORY.INITIAL_PAGE_LOAD
 
-    const unsub = timeToInteractive.subscribe(({ value, entries, attrs }) => {
+    new TimeToInteractive({
+      startTimestamp: globalScope?.performance?.getEntriesByType('navigation')?.[0]?.loadEventEnd ||
+      (globalScope?.performance?.timing?.domInteractive ||
+        globalScope?.performance?.timing?.navigationStart ||
+        globalScope?.performance?.now()
+      ) - globalScope?.performance?.timeOrigin,
+      buffered: true
+    }).then(({ value }) => {
+      console.log('got tti value...', value)
       this.finish(value)
-      unsub()
     })
-    startTTI(globalScope?.performance?.getEntriesByType('navigation')?.[0]?.loadEventEnd ||
-    (globalScope?.performance?.timing?.domInteractive ||
-      globalScope?.performance?.timing?.navigationStart ||
-      globalScope?.performance?.now()
-    ) - globalScope?.performance?.timeOrigin, true)
+
+    // const unsub = timeToInteractive.subscribe(({ value, entries, attrs }) => {
+    //   this.finish(value)
+    //   unsub()
+    // })
+    // startTTI(globalScope?.performance?.getEntriesByType('navigation')?.[0]?.loadEventEnd ||
+    // (globalScope?.performance?.timing?.domInteractive ||
+    //   globalScope?.performance?.timing?.navigationStart ||
+    //   globalScope?.performance?.now()
+    // ) - globalScope?.performance?.timeOrigin, true)
   }
 
   get firstPaint () { return nullable(firstPaint.current.value, numeric, true) }

@@ -1,7 +1,7 @@
 import { notIE, notSafari, notIOS } from '../../tools/browser-matcher/common-matchers.mjs'
 
-describe('Using proxy servers -', () => {
-  it.withBrowsersMatching(notIE)('setting an assets url changes where agent fetches its chunks from', async () => {
+describe.withBrowsersMatching(notIE)('Using proxy servers -', () => {
+  it('setting an assets url changes where agent fetches its chunks from', async () => {
     const { host, port } = browser.testHandle.assetServerConfig
     /** This is where we expect the agent to fetch its chunk. '/build/' is necessary within the URL because the way our asset server
      * handles each test requests -- see /testing-server/plugins/test-handle/index.js. */
@@ -20,7 +20,7 @@ describe('Using proxy servers -', () => {
   })
 
   // Safari does not include resource entries for failed-to-load script & ajax requests, so it's totally excluded.
-  it.withBrowsersMatching([notIE, notSafari, notIOS])('setting a beacon url changes RUM call destination', async () => {
+  it.withBrowsersMatching([notSafari, notIOS])('setting a beacon url changes RUM call destination', async () => {
     let url = await browser.testHandle.assetURL('instrumented.html', { init: { proxy: { beacon: 'localhost:1234' } } })
     await browser.setTimeout({ pageLoad: 10000 })
     await browser.url(url)
@@ -33,7 +33,7 @@ describe('Using proxy servers -', () => {
     expect(resources.some(entry => entry.name.startsWith('http://localhost:1234/1/'))).toBeTruthy()
   })
 
-  it.withBrowsersMatching(notIE)('should send SM when beacon is changed', async () => {
+  it('should send SM when beacon is changed', async () => {
     const { host: bamHost, port: bamPort } = browser.testHandle.bamServerConfig
     const { host: assetHost, port: assetPort } = browser.testHandle.assetServerConfig
     // Even though the beacon isn't actually changed, this should still trigger the agent to emit sm due to difference between bam-test url vs actual default.
